@@ -30,15 +30,18 @@ Un jeu de données réel issu d'une session de capture nocturne (22-23 avril 202
 **~10 Go zippés** (~11 Go décompressés) : 1572 WAV bruts + 2114 WAV redécoupés + 4031 observations Tadarida. Indispensable pour valider les stories de **volumétrie** ([O3](Objectifs%20qualités/Objectifs%20qualités/O3.md), [O5](Objectifs%20qualités/Objectifs%20qualités/O5.md)).
 
 !!! danger "À télécharger en priorité - lien valable jusqu'au 10/06/2026"
-    Récupérez l'archive sur **[Filesender RENATER](https://filesender.renater.fr/?s=download&token=5dc49594-dfa5-4778-8531-00d308f126aa)** (~10 Go) **dès le démarrage de la SAE** (sprint 0).
+    Récupérez l'archive (~10 Go) **dès le démarrage de la SAE** (sprint 0). Filesender est un service de partage de fichiers volumineux à durée de vie limitée. **Passé le 10/06/2026, le lien expirera.** En cas d'expiration, demandez à l'équipe pédagogique.
 
-    Filesender est un service de partage de fichiers volumineux à durée de vie limitée. **Passé le 10/06/2026, le lien expirera.** En cas d'expiration, demandez à l'équipe pédagogique.
+    **Depuis votre navigateur** : [page Filesender RENATER](https://filesender.renater.fr/?s=download&token=5dc49594-dfa5-4778-8531-00d308f126aa).
 
-    Une fois l'archive récupérée :
+    **Depuis la ligne de commande**, à la racine de votre clone du brief :
 
     ```bash
     mkdir -p data
-    unzip ~/Téléchargements/20260423-selected.zip -d data/
+    curl -L -o data/20260423-selected.zip \
+      "https://filesender.renater.fr/download.php?token=5dc49594-dfa5-4778-8531-00d308f126aa&files_ids=71231318"
+    unzip data/20260423-selected.zip -d data/
+    rm data/20260423-selected.zip   # optionnel, libère ~10 Go
     ```
 
     Le dossier `data/` est listé dans le `.gitignore` : aucun risque de commit accidentel.
