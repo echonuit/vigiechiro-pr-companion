@@ -30,7 +30,7 @@ L'application doit également :
 
 ## Le client réel : Samuel Busson (CEREMA)
 
-> 🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, site d'Aix-en-Provence). Sa thèse, en cotutelle avec le [CESCO](https://www.cesco.mnhn.fr/) du MNHN, porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, comparant les spectres 1800K (PC Amber) et 3000K (Neutre).
+> 🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, comparant les spectres 1800K (PC Amber) et 3000K (Neutre).
 >
 > Sa première campagne expérimentale s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû écrire ses propres scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
 >

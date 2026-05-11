@@ -7,9 +7,8 @@
 | | |
 |---|---|
 | **Affiliation** | [CEREMA](https://www.cerema.fr/), site d'Aix-en-Provence (équipe Climat & Territoires de demain) |
-| **Statut** | Doctorant en cotutelle CEREMA / [CESCO](https://www.cesco.mnhn.fr/) (MNHN) |
+| **Statut** | Doctorant au CEREMA |
 | **Sujet de thèse** | Effet de l'éclairage public LED sur l'activité acoustique des chiroptères : comparaison spectres 1800K (PC Amber) versus 3000K (Neutre) |
-| **Co-direction** | Christian Kerbiriou (CESCO/MNHN), Aurélien Besnard (CEFE Montpellier), partenariat Asellia Écologie |
 | **Contact** | <samuel.busson@cerema.fr> |
 
 ## Positionnement dans la SAE
