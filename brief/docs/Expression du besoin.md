@@ -11,7 +11,7 @@ Plusieurs scripts ad hoc circulent dans la communauté (Python, R), et il existe
 Un jeu de données réel issu d'une session de capture nocturne (PR n° 1925492, nuit du 22 au 23 avril 2026, point fixe en zone Z1 de la carrée 640380 du protocole Vigie-Chiro Carré) est mis à votre disposition comme support de développement et de test tout au long du projet. Il existe en deux variantes :
 
 - **[`samples/`](https://github.com/IUTInfoAix-S201/brief/tree/main/samples)** (518 Mo, versionné dans le dépôt) : sous-ensemble représentatif (191 WAV, 473 observations sur tous les taxa principaux). Disponible immédiatement après `git clone`.
-- **`data/`** (11 Go, à télécharger - gitignored) : full dataset (1572 WAV bruts + 2114 WAV redécoupés + 4031 observations). Nécessaire pour valider la volumétrie. Cf. l'[accueil](index.md#donnees-dexemple-fournies).
+- **`data/`** (~10 Go zippés / ~11 Go décompressés, à télécharger - gitignored) : full dataset (1572 WAV bruts + 2114 WAV redécoupés + 4031 observations). Nécessaire pour valider la volumétrie. Cf. l'[accueil](index.md#donnees-dexemple-fournies).
 
 Le tableau ci-dessous décrit la structure du **full dataset** ; le sample suit la même structure (sans `wav/` et avec les CSV filtrés).
 

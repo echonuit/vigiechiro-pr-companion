@@ -27,10 +27,14 @@ Un jeu de données réel issu d'une session de capture nocturne (22-23 avril 202
 
 ### 🔵 Full dataset à télécharger
 
-**11 Go** : 1572 WAV bruts + 2114 WAV redécoupés + 4031 observations Tadarida. Indispensable pour valider les stories de **volumétrie** ([O3](Objectifs%20qualités/Objectifs%20qualités/O3.md), [O5](Objectifs%20qualités/Objectifs%20qualités/O5.md)).
+**~10 Go zippés** (~11 Go décompressés) : 1572 WAV bruts + 2114 WAV redécoupés + 4031 observations Tadarida. Indispensable pour valider les stories de **volumétrie** ([O3](Objectifs%20qualités/Objectifs%20qualités/O3.md), [O5](Objectifs%20qualités/Objectifs%20qualités/O5.md)).
 
-!!! warning "Lien à venir"
-    Lien de téléchargement à venir (AmeTICE / Nextcloud AMU). En attendant, demandez-le à l'équipe pédagogique. Une fois l'archive récupérée :
+!!! danger "À télécharger en priorité - lien valable jusqu'au 10/06/2026"
+    Récupérez l'archive sur **[Filesender RENATER](https://filesender.renater.fr/?s=download&token=5dc49594-dfa5-4778-8531-00d308f126aa)** (~10 Go) **dès le démarrage de la SAE** (sprint 0).
+
+    Filesender est un service de partage de fichiers volumineux à durée de vie limitée. **Passé le 10/06/2026, le lien expirera.** En cas d'expiration, demandez à l'équipe pédagogique.
+
+    Une fois l'archive récupérée :
 
     ```bash
     mkdir -p data

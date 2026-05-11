@@ -20,7 +20,7 @@ Vous pouvez aussi explorer directement les sources Markdown dans [`docs/`](docs/
 ## 📦 Données fournies
 
 - 🟢 [`samples/`](samples/) - sample de 518 Mo versionné dans le dépôt (191 WAV, 473 observations).
-- 🔵 `data/` - full dataset 11 Go à télécharger séparément (lien à venir).
+- 🔵 `data/` - full dataset 10 Go à télécharger via [Filesender RENATER](https://filesender.renater.fr/?s=download&token=5dc49594-dfa5-4778-8531-00d308f126aa). ⚠️ **Lien valable jusqu'au 10/06/2026** - téléchargez l'archive **dès le démarrage de la SAE** (sprint 0), avant qu'elle n'expire. En cas d'expiration, demandez à l'équipe pédagogique.
 
 ## 🛠️ Construire le site localement
 

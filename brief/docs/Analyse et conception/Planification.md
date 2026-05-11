@@ -55,8 +55,11 @@ gantt
 
 ### Sprint 0 - Mise en place + assemblage du PR (27/04 → 29/04, 3 jours)
 
+> ⚠️ **Avant tout autre chose : téléchargez le full dataset** (~10 Go) depuis le lien Filesender RENATER fourni en page d'accueil. **Le lien expire le 10/06/2026** - passé cette date, vous serez bloqués pour valider les objectifs de volumétrie ([O3](../Objectifs%20qualités/Objectifs%20qualités/O3.md), [O5](../Objectifs%20qualités/Objectifs%20qualités/O5.md)).
+
 | Activité | Responsable | Sortie attendue |
 |---|---|---|
+| **Télécharger le full dataset** (priorité absolue) | Toute l'équipe | Archive `20260423-selected.zip` récupérée et décompressée dans `data/` |
 | Cloner le repo Classroom, vérifier que le squelette compile | Toute l'équipe | Une PR pilote fusionnée pour valider le workflow |
 | **Assembler le PR de l'équipe** (séance encadrée) | Toute l'équipe | PR opérationnel qui démarre, se met en veille, écrit sur la SD |
 | **Lancer une 1re nuit de capture test** avec ce PR | Toute l'équipe | Un dossier de session « maison » qui complète le sample fourni |
@@ -64,7 +67,7 @@ gantt
 | Planning poker des stories MUST | Toute l'équipe | Estimations partagées (révision possible des chiffres du dossier) |
 | Conception haute-niveau de l'architecture | Tech leads volontaires | Schéma de paquets (model / data / ui / parsing) |
 
-**Livrable du sprint 0** : repo opérationnel, CI verte sur `main`, première PR mergée, **PR matériel assemblé et fonctionnel**, accord d'équipe sur les estimations.
+**Livrable du sprint 0** : repo opérationnel, CI verte sur `main`, première PR mergée, **full dataset téléchargé**, **PR matériel assemblé et fonctionnel**, accord d'équipe sur les estimations.
 
 ### Sprint 1 - Import et journal (30/04 → 08/05, 1 semaine)
 
