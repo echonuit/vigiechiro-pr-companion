@@ -54,7 +54,7 @@ L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : p
 - L'**intégrité totale** des annotations : aucune action de l'application ne doit modifier ou écraser les validations sans consentement explicite.
 - Pouvoir **annoter une session** avec un commentaire libre suffisamment long (méthodo, anomalie matérielle, conditions du site - dimming, météo, lune).
 - Pouvoir **tagger ses sessions** par couple `site × condition` (`Site07_Controle`, `Site07_LED3000K`, `Site07_LED1800K`) pour retrouver les paires expérimentales en un coup d'œil.
-- Que la base de données soit **lisible et requêtable** par-dessus l'application (SQLite / H2 ouverts à un client externe pour les analyses R).
+- Que la base de données soit **lisible et requêtable** par-dessus l'application (la base SQLite peut être ouverte par un client externe pour les analyses R).
 - **Pas d'auto-update**, pas de télémétrie, pas d'envoi de rapports d'erreur sans demander.
 
 ## Ce qui le décourage

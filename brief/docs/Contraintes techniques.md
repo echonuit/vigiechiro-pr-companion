@@ -7,7 +7,7 @@ L'application doit respecter les contraintes suivantes :
 - **Indépendance plate-forme** : l'application doit fonctionner sans modification sur Windows 10/11, Linux (Ubuntu/Debian récents) et macOS récent.
 - **Langage** : **Java 25** (LTS de référence pour le semestre).
 - **Interface graphique** : **JavaFX 25**, écrite préférentiellement en **FXML** pour pouvoir être modifiée sans toucher au code des contrôleurs.
-- **Persistance** : couche d'accès aux données réalisée avec **JDBC** sur une base de données embarquée (SQLite ou H2 au choix - ne pas exiger l'installation d'un SGBD séparé chez l'utilisateur).
+- **Persistance** : couche d'accès aux données réalisée avec **JDBC** sur **SQLite** (driver `org.xerial:sqlite-jdbc`). Une session = un fichier `.sqlite` portable, lisible par DB Browser for SQLite ou par n'importe quel client tiers.
 
 ## Outillage et cycle de vie
 
