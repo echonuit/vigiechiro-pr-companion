@@ -1,0 +1,15 @@
+# Jeu de données pédagogique - téléchargé séparément (cf. README)
+data/
+*.zip
+*.tar.gz
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
