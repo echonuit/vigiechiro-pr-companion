@@ -5,7 +5,7 @@ Trois personas de référence représentent les utilisateurs cibles du *VigieChi
 | | [Marie](Personas/Marie.md) | [Karim](Personas/Karim.md) | [Samuel](Personas/Samuel.md) ⭐ |
 |---|---|---|---|
 | Profil | Naturaliste retraitée bénévole | Chargé d'études en BE | Chercheur écologue (CEREMA) |
-| Volume typique | 2-3 carrés VigieChiro / saison | 5+ PR en parallèle sur chantiers | Dizaines de sites × plusieurs nuits, plusieurs campagnes |
+| Volume typique | 2-3 carrés VigieChiro / saison | 5+ PR en parallèle sur chantiers | 24 enregistreurs en parallèle × 40-50 nuits / saison estivale |
 | Aisance numérique | Faible | Moyenne | Élevée |
 | Priorité | Comprendre, ne pas se tromper | Productivité, traçabilité | Reproductibilité scientifique |
 

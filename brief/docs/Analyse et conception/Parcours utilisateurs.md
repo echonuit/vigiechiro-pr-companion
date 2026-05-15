@@ -27,7 +27,7 @@ Marie vient de récupérer son PR du terrain, et n'a jamais ouvert l'application
 2. Un **écran d'accueil** lui propose une seule action mise en avant : « **Importer une nuit** ».
 3. Marie clique, sélectionne le dossier qu'elle a recopié de la SD, valide.
 4. L'application **affiche une barre de progression** détaillée (lecture du log, copie des WAV, indexation), puis un **récapitulatif** : nombre de fichiers, durée totale, plage horaire couverte, paramètres d'acquisition détectés.
-5. Marie est ensuite **invitée à charger les résultats Tadarida** : l'écran lui dit où télécharger le CSV depuis VigieChiro et lui propose un bouton « Importer le CSV d'observations ».
+5. Marie est ensuite **invitée à charger les résultats Tadarida** dès qu'ils seront disponibles : l'écran lui rappelle que le CSV n'arrivera **que plus tard dans le cycle** (après transformation des fichiers, dépôt sur VigieChiro et passage par l'analyse Tadarida côté serveur). Quand elle l'aura, elle pourra revenir et cliquer sur « Importer le CSV d'observations ».
 6. Une fois le CSV chargé, l'écran principal s'ouvre : la **liste des observations** à gauche, le **détail de l'observation sélectionnée** à droite (taxon proposé, probabilité, fréquence médiane, lecture audio).
 7. Marie écoute quelques évènements, valide ceux qu'elle reconnaît, met de côté les douteux.
 8. Elle ferme l'application sans paniquer, sachant que tout est sauvegardé.
@@ -44,8 +44,10 @@ Le matin du surlendemain, l'utilisateur a déjà 5 nuits dans l'application. Il 
 2. La page d'accueil affiche le **journal des sessions** : 5 sessions listées avec leur date, leur statut, le nombre d'observations restant à valider.
 3. Il clique sur « Importer une nuit », sélectionne son nouveau dossier. Import en quelques minutes.
 4. Une fois le CSV Tadarida chargé pour la nouvelle session, il **filtre** les observations : on cache les `noise` et les `piaf` pour ne garder que les chiroptères. Reste 200 observations.
-5. Il **trie** par probabilité décroissante : il valide en lot les évènements à haute probabilité sans même les écouter, et ne ralentit que sur les douteux.
-6. Il termine la session en **cochant « Validation terminée »** dans le journal des sessions.
+5. Il **trie** par probabilité décroissante. La probabilité Tadarida n'est pas une garantie absolue (il arrive régulièrement que des observations à 99 % soient fausses et que des observations à 20 % soient justes), mais elle reste une bonne **heuristique de tri** pour structurer le travail. Il valide rapidement les cas évidents, ralentit sur les douteux.
+6. Il peut quitter à tout moment en laissant les validations en cours **en suspens** : son contexte est restauré à la session suivante.
+7. Lorsqu'il a plusieurs nuits successives sur le même point, il peut **regrouper ces nuits** pour parcourir d'un coup les sons des espèces communes - utile pour valider rapidement les espèces déjà confirmées sur le site.
+8. Il termine la session en **cochant « Validation terminée »** dans le journal des sessions.
 
 ---
 
@@ -56,12 +58,13 @@ Le matin du surlendemain, l'utilisateur a déjà 5 nuits dans l'application. Il 
 L'utilisateur tombe sur un évènement étiqueté `Pippip` à seulement 0.45 de probabilité. Il veut creuser.
 
 1. L'utilisateur sélectionne l'observation. Le panneau de droite affiche le détail.
-2. Il clique sur ▶ pour écouter l'évènement, **ralenti ×10**. La forme d'onde s'affiche, le curseur défile.
-3. Il met en pause, change la vitesse à ×20, réécoute.
+2. Il clique sur ▶ pour écouter l'évènement (le fichier déposé sur Vigie-Chiro étant déjà ralenti ×10, la lecture est faite à vitesse normale sur ce fichier). La forme d'onde et le spectrogramme s'affichent, le curseur défile.
+3. Il **change le niveau de zoom du spectrogramme** pour mieux distinguer la structure fine des pulses. Cette opération de zoom est très courante en analyse acoustique.
 4. Il lit l'évènement précédent et l'évènement suivant pour avoir le contexte.
 5. Il décide que c'est en fait un *Pipistrellus kuhlii* (`Pipkuh`). Il **modifie le taxon observateur** dans le panneau de détail.
 6. Il **ajoute un commentaire libre** sur l'observation (« morphologie de pulse atypique, pic 39 kHz »).
 7. Il poursuit avec l'observation suivante, sans avoir à confirmer la sauvegarde - tout est persistant immédiatement.
+8. **Bonus pédagogique** : sur les observations qu'il considère comme particulièrement claires, il peut marquer le son comme « référence » pour l'inclure plus tard dans une **bibliothèque exportable** de cas-types par espèce (utile pour transmettre à un débutant ou pour archive personnelle).
 
 ---
 
@@ -73,7 +76,7 @@ L'utilisateur a fini de valider une session, il veut renvoyer le résultat à Vi
 
 1. Depuis le journal des sessions, l'utilisateur sélectionne une session marquée « Validation terminée ».
 2. Il clique sur « **Exporter pour VigieChiro** ».
-3. L'application **vérifie** : toutes les observations ont-elles bien été passées en revue ? S'il en reste sans validation, message d'avertissement avec proposition de continuer ou d'annuler.
+3. L'application **vérifie** : toutes les observations ont-elles bien été passées en revue ? S'il en reste sans validation, message d'avertissement avec proposition de continuer ou d'annuler. À noter : selon l'objectif de l'utilisateur, deux modes de validation peuvent coexister - **mode inventaire** (on cherche juste à savoir quelles espèces sont présentes sur le site, donc dès qu'une espèce est validée avec confiance sur une nuit, les autres détections de la même espèce sur la même nuit ne sont plus validées) ou **mode activité** (on quantifie toutes les détections, donc toutes les observations doivent être passées en revue).
 4. L'utilisateur confirme. L'application produit un fichier `<session>_Vu.csv` au format attendu, dans un dossier choisi par l'utilisateur, et **affiche un récapitulatif** : combien d'observations exportées, combien validées, combien laissées au taxon Tadarida.
 5. L'utilisateur peut **ouvrir le dossier d'export** d'un clic pour aller téléverser le fichier sur VigieChiro.
 6. La session passe au statut « Exportée ». Date et heure d'export tracées.

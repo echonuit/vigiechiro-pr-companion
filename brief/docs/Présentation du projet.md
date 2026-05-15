@@ -6,7 +6,7 @@
 
 Une partie de ce réseau utilise un **Passive Recorder (PR)** open-hardware basé sur la plateforme Teensy, dont le firmware est développé en open-source ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)). Le PR est laissé seul sur un point d'écoute pendant une nuit entière. Il s'allume au crépuscule, enregistre tout signal ultrason détecté en bande 8-120 kHz à 384 kHz d'échantillonnage, et se rendort à l'aube. Une nuit peut produire plusieurs centaines à plusieurs milliers de fichiers WAV - le [sample fourni](Expression%20du%20besoin.md#donnees-fournies) en contient 1572 - accompagnés d'un journal technique (`LogPR<sn>.txt`) et d'un journal de température / hygrométrie (`PaRec<sn>_THLog.csv`).
 
-Une fois la nuit terminée, le possesseur du PR récupère la carte SD, dépose les enregistrements sur la plateforme VigieChiro, qui les fait passer dans le pipeline d'analyse automatique **Tadarida** (logiciel scientifique de classification développé dans le cadre du programme Vigie-Nature du MNHN). Tadarida découpe les WAV en évènements sonores, les classifie en taxons (espèces de chauves-souris, mais aussi bruit ambiant et oiseaux), et restitue le résultat sous forme d'un **CSV d'observations**. Le possesseur du PR doit ensuite **valider ou corriger** les espèces proposées par Tadarida avant que les données ne soient consolidées dans la base nationale.
+Une fois la nuit terminée, le possesseur du PR récupère la carte SD, **extrait les fichiers sons produits, les renomme / découpe / ralentit ×10** par l'utilisation de deux logiciels distincts ([LupasRename](https://www.lupinho.net/lupas-rename.html) pour le renommage, [Kaléidoscope](https://www.wildlifeacoustics.com/products/kaleidoscope-pro) pour le découpage et l'expansion de temps), puis dépose les enregistrements obtenus sur la plateforme VigieChiro, qui les fait passer dans le pipeline d'analyse automatique **Tadarida** (logiciel scientifique de classification développé dans le cadre du programme Vigie-Nature du MNHN). Tadarida découpe les WAV en évènements sonores, les classifie en taxons (espèces de chauves-souris, mais aussi bruit ambiant, oiseaux, mammifères terrestres et insectes), et restitue le résultat sous forme d'un **CSV d'observations**. Le possesseur du PR doit ensuite **valider ou corriger** les espèces proposées par Tadarida avant que les données ne soient consolidées dans la base nationale.
 
 Aujourd'hui, ce travail de suivi des campagnes et de pré-validation des observations combine plusieurs outils : explorateur de fichiers, tableur, lecteur audio, plateforme VigieChiro en ligne. Il gagnerait à être unifié dans un **outil unique** pour rendre la démarche plus fluide et plus accessible.
 
@@ -30,9 +30,9 @@ L'application doit également :
 
 ## Le client réel : Samuel Busson (CEREMA)
 
-> 🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, comparant les spectres 1800K (PC Amber) et 3000K (Neutre).
+> 🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, Département Territoire Ville et Bâtiment, Groupe Territoire, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, et en particulier sur l'**influence de la visibilité des sources lumineuses** sur l'activité des chauves-souris **et des insectes volants**.
 >
-> Sa première campagne expérimentale s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû écrire ses propres scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
+> Une précédente campagne expérimentale, liée à un autre projet, s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû développer avec ses collègues informaticiens des scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
 >
 > Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire. Le *VigieChiro PR Companion* que vous allez développer **est l'outil qui manque à Samuel et à la communauté** pour exploiter sereinement le PR.
 >
@@ -40,7 +40,7 @@ L'application doit également :
 
 ## Construction de votre propre PR
 
-Pour vous mettre en condition réelle, **chaque équipe assemblera son propre PR au démarrage du projet**. Cette activité (encadrée, demi-journée à une journée selon les groupes) poursuit trois objectifs :
+Pour vous mettre en condition réelle (sous réserve d'avoir reçu les pièces détachées à temps), **chaque équipe assemblera son propre PR au démarrage du projet**. Cette activité (encadrée, demi-journée à une journée selon les groupes) poursuit trois objectifs :
 
 1. **Comprendre concrètement** la chaîne complète : du capteur Teensy à la carte SD, de la carte SD au dossier de session, du dossier de session à VigieChiro.
 2. **Vivre la complexité** de la récupération des fichiers, de leur renommage selon la convention `Car<carre>-<annee>-<passage>-<zone>-PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>.wav`, et de la mise au format attendu par la plateforme VigieChiro.

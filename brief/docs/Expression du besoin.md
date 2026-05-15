@@ -17,14 +17,16 @@ Le tableau ci-dessous décrit la structure du **full dataset** ; le sample suit 
 
 | Fichier / dossier | Contenu |
 |---|---|
-| `LogPR1925492.txt` | Log technique du PR : démarrage, paramètres d'acquisition (`Acquisi. 20:25-07:47, Fe384kHz, FL N, FPH 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%`), tensions batterie, mises en veille, alarmes wakeup. Une ligne par évènement, format `JJ/MM/AA - HH:MM:SS PR<sn> <message>`. |
+| `LogPR1925492.txt` | Log technique du PR : démarrage, paramètres d'acquisition (`Acquisi. 20:25-07:47, Fe384kHz, FL N, FPH 00, S. R. 16dB 1dt. GN0, Bd. Freq. 8-120kHz, Wav 2-30s SD 99%`), tensions batterie, mises en veille, alarmes wakeup. Une ligne par évènement, format `JJ/MM/AA - HH:MM:SS PR<sn> <message>`. **Note** : la place sur le PR étant limitée, le log écrase de l'information au fur et à mesure quand la SD sature - l'ordre exact d'éviction reste à confirmer auprès du concepteur du firmware. |
 | `PaRecPR1925492_THLog.csv` | Log température / hygrométrie produit par la sonde embarquée. Une mesure toutes les 600 s, colonnes `Date;Hour;Temperature;Humidity`. |
 | `wav/` | 1572 fichiers WAV bruts, format `Car<carre>-<annee>-<passage>-<zone>-PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>.wav` (ex. `Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_202623.wav`). Mono 16 bits 384 kHz. Durée variable (2 à 30 s, déclenchement sur seuil). |
-| `kal/` | 2114 fichiers : les WAV redécoupés par Tadarida (suffixe `_000`, `_001`...) **plus** deux CSV d'observations. |
-| `kal/8a4fa…-observations.csv` | CSV des observations brutes Tadarida. Colonnes : `nom du fichier;temps_debut;temps_fin;frequence_mediane;tadarida_taxon;tadarida_probabilite;tadarida_taxon_autre;observateur_taxon;observateur_probabilite;validateur_taxon;validateur_probabilite`. ~4031 lignes. Champs `observateur_*` et `validateur_*` vides au départ - c'est ce que votre application va aider à remplir. |
+| `kal/` | 2114 fichiers : les WAV bruts **renommés, découpés en séquences de 5 s et ralentis ×10** (suffixe `_000`, `_001`...) **plus** deux CSV d'observations. C'est cette version, prête au dépôt sur Vigie-Chiro, que Tadarida analyse. |
+| `kal/8a4fa…-observations.csv` | CSV des observations brutes Tadarida. Colonnes : `nom du fichier;temps_debut;temps_fin;frequence_mediane;tadarida_taxon;tadarida_probabilite;tadarida_taxon_autre;observateur_taxon;observateur_probabilite;validateur_taxon;validateur_probabilite`. ~4031 lignes. Champs `observateur_*` et `validateur_*` vides au départ - c'est ce que votre application va aider à remplir. Sur une séquence de 5 s, **plusieurs lignes peuvent coexister** (1 ligne par espèce distincte identifiée), avec timing début/fin précis dans la séquence. |
 | `kal/…-observations_Vu.csv` | Même format que ci-dessus, mais avec encodage CSV légèrement différent (séparateur `;` sans guillemets, doubles guillemets vides `""""` pour les champs nuls). Format réinjectable par la plateforme VigieChiro. |
 
-Distribution des classifications Tadarida sur cette session, à titre indicatif :
+> ℹ️ Les noms `wav/` et `kal/` sont une convention de travail héritée du chercheur qui a fourni le jeu de données : `wav/` pour les WAV bruts du capteur, `kal/` pour ceux qui ont subi les opérations de renommage / découpage / expansion ×10 (historiquement réalisées avec Kaléidoscope, d'où le `kal`). Vous pouvez les renommer dans votre application avec une convention plus parlante.
+
+Distribution des classifications Tadarida sur cette session, à titre indicatif. Cette distribution donne **l'identification la plus probable** d'un des sons ou d'une des séquences détectées dans la séquence ralentie de 5 s, mais **des erreurs sont possibles dans tous les sens** (faux positifs, faux négatifs) et plusieurs espèces ou natures de sons peuvent cohabiter dans une même séquence :
 
 | Taxon | Effectif | % | Nature |
 |---|--:|--:|---|
@@ -45,26 +47,31 @@ L'application **doit** offrir les fonctionnalités suivantes (priorité MUST). L
 
 ### MUST (périmètre minimum viable)
 
-- **Importer une session** depuis un dossier sur le disque : détection automatique du `LogPR*.txt`, du `PaRec*_THLog.csv` et du dossier `wav/`, métadonnées extraites (numéro de PR, date de la nuit, paramètres d'acquisition) et stockage en base.
-- **Afficher la liste des sessions** importées avec leurs caractéristiques principales (date, durée, nombre de WAV, statut).
+- **Importer une session** depuis un dossier sur le disque (à l'origine, le `LogPR*.txt`, le `PaRec*_THLog.csv` et les fichiers WAV sont à la racine de la carte SD) : détection automatique des trois éléments, métadonnées extraites (numéro de PR, date de la nuit, paramètres d'acquisition) et stockage en base.
+- **Afficher la liste des sessions** importées avec leurs caractéristiques principales (date, durée, nombre de WAV, statut, carré Vigie-Chiro, code du point - par exemple `Z1`).
+- **Regrouper les nuits successives** d'un même point de capture pour permettre une revue groupée (validation efficace des sons d'espèces communes à plusieurs nuits du même site).
 - **Charger un CSV d'observations Tadarida** et l'associer à une session existante.
 - **Parcourir les observations** dans une vue tabulaire avec tri et filtrage par taxon, par probabilité, par fichier.
-- **Écouter un évènement sonore** : sélectionner une observation, lecture du WAV correspondant en mode ralenti pour rendre l'ultrason audible (vitesse paramétrable).
+- **Écouter et visualiser un évènement sonore** : sélectionner une observation, lecture du WAV correspondant - **les fichiers déposés sur Vigie-Chiro étant déjà ralentis ×10**, la lecture est faite à vitesse normale sur ce fichier, sans transformation à la volée.
 - **Valider ou corriger** la classification d'une observation : remplir les champs `observateur_taxon` et `observateur_probabilite`.
 - **Exporter** un CSV au format `observations_Vu.csv` réinjectable par VigieChiro.
 
 ### SHOULD (utilité reconnue, à arbitrer)
 
 - **Visualiser** les courbes de température et d'hygrométrie de la nuit.
-- **Afficher** un spectrogramme statique de l'évènement sonore en cours d'écoute.
+- **Afficher un spectrogramme** statique de l'évènement sonore en cours d'écoute. Important : l'analyse acoustique se fait souvent en alternant écoute et observation visuelle d'un son isolé, puis d'une **séquence** de plusieurs sons supposés appartenir à la même espèce - l'intervalle entre deux sons, la variation de structure, durée et fréquence renseignent à la fois sur l'espèce et son comportement.
 - **Filtrer** les observations par plage horaire (utile pour ne traiter que la première moitié de nuit, par exemple).
-- **Annoter** une session avec un commentaire libre (contexte météo, intervention humaine, problème matériel...).
+- **Filtrer** les observations par espèce ou groupe d'espèces (par exemple tous les murins *Myotis*, toutes les pipistrelles).
+- **Annoter** une session avec un commentaire libre (contexte météo, intervention humaine, problème matériel...) ainsi que les **données météo structurées** attendues par Vigie-Chiro (température en début et fin de nuit, couverture nuageuse, vent). À voir comment l'application alimente ces champs en amont, ou s'en alimente en aval lors du retour CSV.
 
 ### COULD (idées d'extension)
 
 - **Spectrogramme interactif** : zoom, sélection d'une région, lecture de la sélection seule.
 - **Statistiques globales** sur l'ensemble des sessions d'un utilisateur (nombre d'espèces détectées, courbe d'activité par heure, comparaison entre points fixes).
+- **Liste des espèces** validées par l'utilisateur sur un point donné d'un carré (vue synthèse multi-passages).
+- **Vérification de cohérence** des horaires d'enregistrement avec le protocole Vigie-Chiro : le PR doit s'allumer 30 min avant le coucher du soleil et s'éteindre 30 min après son lever. Selon les coordonnées du site, calcul des heures astronomiques attendues et comparaison avec celles effectivement loguées dans le `LogPR*.txt`.
 - **Comparateur** : lecture en parallèle de l'évènement courant et d'un évènement de référence du même taxon, pour faciliter la confirmation visuelle/auditive.
+- **Export d'une bibliothèque de sons de référence** : sélection des observations validées de très bonne qualité, export sous forme de fichiers WAV nommés avec l'espèce validée et le moment de la séquence concerné. Utile pour transmettre des cas-types aux débutants ou pour archiver des références personnelles.
 
 ### WON'T (hors périmètre de cette première version)
 

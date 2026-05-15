@@ -4,7 +4,7 @@ L'application doit respecter les contraintes suivantes :
 
 ## Plate-forme et langage
 
-- **Indépendance plate-forme** : l'application doit fonctionner sans modification sur Windows 10/11, Linux (Ubuntu/Debian récents) et macOS récent.
+- **Indépendance plate-forme** : l'application doit fonctionner sans modification sur Windows 10/11, Linux (Ubuntu/Debian récents) et macOS récent. Le choix Java 25 / JavaFX 25 induit mécaniquement une exigence de JDK/JRE compatible, ce qui peut écarter les machines plus anciennes encore courantes dans la communauté VigieChiro - **ce n'est pas un point que vous aurez à vérifier** dans le cadre de la SAE.
 - **Langage** : **Java 25** (LTS de référence pour le semestre).
 - **Interface graphique** : **JavaFX 25**, écrite préférentiellement en **FXML** pour pouvoir être modifiée sans toucher au code des contrôleurs.
 - **Persistance** : couche d'accès aux données réalisée avec **JDBC** sur **SQLite** (driver `org.xerial:sqlite-jdbc`). Une session = un fichier `.sqlite` portable, lisible par DB Browser for SQLite ou par n'importe quel client tiers.
@@ -28,6 +28,7 @@ L'application doit respecter les contraintes suivantes :
 
 ## Données
 
-- L'application travaille sur des **fichiers locaux** : un dossier de session importé doit pouvoir contenir plusieurs giga-octets de WAV sans dégrader notablement les performances de l'IHM.
-- Les **CSV d'observations** suivent le format produit par Tadarida : séparateur point-virgule, champs entre guillemets quand nécessaire, encodage UTF-8 (cf. exemples dans [`samples/kal/`](https://github.com/IUTInfoAix-S201/brief/tree/main/samples/kal)).
-- Les **WAV** sont au format PCM 16 bits, mono, 384 kHz. La lecture audio doit appliquer un **ralentissement** (typiquement ×10 ou ×20) pour ramener le signal dans la bande audible.
+- L'application travaille sur des **fichiers locaux** : un dossier de session importé doit pouvoir contenir plusieurs giga-octets de WAV sans dégrader notablement les performances de l'IHM. À titre indicatif, **une grosse nuit peut peser ~40 Go par enregistreur** ; le client cible peut déployer **jusqu'à 24 enregistreurs en parallèle** pendant 40 à 50 nuits sur une saison estivale (volumétrie cumulée de l'ordre de plusieurs To).
+- Les **CSV d'observations** suivent le format produit par Tadarida : séparateur point-virgule, champs entre guillemets quand nécessaire, encodage UTF-8 (cf. exemples dans [`samples/kal/`](https://github.com/IUTInfoAix-S201/brief/tree/main/samples/kal)). Sur une séquence de 5 s ralentie ×10, Tadarida peut produire **plusieurs lignes** (une par espèce distincte identifiée), avec timing début/fin précis dans la séquence.
+- Les **WAV bruts** sont au format PCM 16 bits, mono, 384 kHz. Les **WAV transformés** déposés sur Vigie-Chiro sont des séquences de 5 s **déjà ralenties ×10** (signal ramené dans la bande audible) : c'est ce fichier qui est lu en lecture normale dans l'IHM, pas un ralentissement appliqué à la volée.
+

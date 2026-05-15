@@ -1,14 +1,14 @@
 # Samuel Busson - doctorant écologue au CEREMA
 
-> 👨‍🔬 « Sur ma thèse j'ai dû écrire mes propres scripts pour avaler les données. Ça marche, mais c'est imbuvable à transmettre. Mes prochaines campagnes seront sur des PR Teensy, et je veux un outil propre qui va avec. »
+> 👨‍🔬 « Sur le projet précédent, on a dû s'appuyer sur les collègues informaticiens pour avaler les données. Ça marche, mais c'est imbuvable à transmettre. Mes prochaines campagnes seront sur des PR Teensy, et je veux un outil propre qui va avec. »
 
 ## Identité
 
 | | |
 |---|---|
-| **Affiliation** | [CEREMA](https://www.cerema.fr/), site d'Aix-en-Provence (équipe Climat & Territoires de demain) |
+| **Affiliation** | [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, Département Territoire Ville et Bâtiment, Groupe Territoire), site d'Aix-en-Provence |
 | **Statut** | Doctorant au CEREMA |
-| **Sujet de thèse** | Effet de l'éclairage public LED sur l'activité acoustique des chiroptères : comparaison spectres 1800K (PC Amber) versus 3000K (Neutre) |
+| **Sujet de thèse** | Effet de l'éclairage public LED sur l'activité acoustique des chiroptères, et en particulier influence de la visibilité des sources lumineuses sur l'activité des chauves-souris et des insectes volants |
 | **Contact** | <samuel.busson@cerema.fr> |
 
 ## Positionnement dans la SAE
@@ -17,9 +17,9 @@
 >
 > Samuel n'est pas naturaliste amateur : c'est un **chercheur** qui a vécu de l'intérieur le manque d'outillage de la communauté acoustique chiroptères. Son avis qualitatif sur votre application **pèse autant que la note technique** de l'équipe pédagogique.
 
-## Ce qu'il a déjà fait (thèse en cours)
+## Ce qu'il a déjà fait (campagne précédente, autre projet)
 
-Sa première campagne expérimentale s'appuie sur un **protocole BACIP** (*Before-After Control-Impact Paired*) déployé sur **13 secteurs de Seine-et-Marne**, chaque secteur comportant 3 sites (Dark / LED Neutre 3000K / LED Ambre 1800K). Quatre nuits d'enregistrement par site et par campagne, deux saisons (avant/après l'installation des nouveaux luminaires). Captation simultanée des trois sites avec des **AudioMoth**, identification automatique des espèces via **Tadarida**, validation manuelle des observations à fort enjeu, modèles linéaires généralisés mixtes pour l'analyse.
+Une précédente campagne expérimentale (liée à un autre projet que sa thèse en cours) s'appuie sur un **protocole BACIP** (*Before-After Control-Impact Paired*) déployé sur **13 secteurs de Seine-et-Marne**, chaque secteur comportant 3 sites (Dark / LED Neutre 3000K / LED Ambre 1800K). Quatre nuits d'enregistrement par site et par campagne, deux saisons (avant/après l'installation des nouveaux luminaires). Captation simultanée des trois sites avec des **AudioMoth**, identification automatique des espèces via **Tadarida**, validation manuelle des observations à fort enjeu, modèles linéaires généralisés mixtes pour l'analyse.
 
 Premiers résultats publiés en 2025 :
 
@@ -27,7 +27,7 @@ Premiers résultats publiés en 2025 :
 - **525 399 contacts** chiroptères moyenne portée (Pipistrellus, Miniopterus, Hypsugo)
 - Conclusion partielle : **pas d'effet significatif du CCT** sur l'activité globale, en accord avec la littérature récente
 
-Pour avaler ce volume de données, Samuel **a écrit lui-même** des scripts R / Bash de pré-traitement, de renommage et de croisement avec les CSV Tadarida. Ces scripts marchent, mais sont impossibles à transmettre à un autre chercheur sans plusieurs jours d'onboarding. C'est précisément ce manque d'**outillage utilisable, partageable et durable** que la SAE doit combler.
+Pour avaler ce volume de données, Samuel a **développé avec ses collègues informaticiens** des scripts R / Bash de pré-traitement, de renommage et de croisement avec les CSV Tadarida. Ces scripts marchent, mais sont impossibles à transmettre à un autre chercheur sans plusieurs jours d'onboarding. C'est précisément ce manque d'**outillage utilisable, partageable et durable** que la SAE doit combler.
 
 ## Ce qu'il s'apprête à faire (futur protocole)
 
