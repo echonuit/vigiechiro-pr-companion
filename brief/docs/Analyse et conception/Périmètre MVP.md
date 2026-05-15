@@ -33,7 +33,7 @@ flowchart LR
     class E0,E1,E2,E3,E4 must
 ```
 
-**Chaîne MUST critique** : ~59 ★ (au format étoiles) ≈ **35-45 story points** selon la conversion Fibonacci adoptée par l'équipe au planning poker. C'est la cible **incompressible** du MVP.
+**Chaîne MUST critique** : 25 stories pour ~59 ★ au total. C'est la cible **incompressible** du MVP, à livrer en priorité absolue.
 
 ## La chaîne MUST critique - composition détaillée
 
@@ -205,7 +205,7 @@ Vue exhaustive des 50 stories. Tri par épopée puis par n°.
 | E8 — Productivité avancée | 2 | 7 | 0 | 0 | 2 / 7 ★ |
 | **TOTAL** | **50** | **132** | **25 / 59 ★** | **15 / 45 ★** | **10 / 28 ★** |
 
-**Lecture** : la chaîne MUST mobilise **25 stories** pour **~59 ★** (≈ 35-45 SP Fibonacci), c'est le périmètre incompressible. Au-dessus, ~45 ★ de SHOULD et ~28 ★ de COULD constituent la matière pour la cible étirée selon la vélocité réelle de l'équipe.
+**Lecture** : la chaîne MUST mobilise **25 stories** pour **~59 ★**, c'est le périmètre incompressible. Au-dessus, ~45 ★ de SHOULD et ~28 ★ de COULD constituent la matière pour la cible étirée selon la vélocité réelle de l'équipe.
 
 ## Risques principaux à surveiller
 
