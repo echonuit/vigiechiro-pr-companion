@@ -5,7 +5,7 @@ Ce dossier contient le **dossier de spécification opérationnel** du projet, pr
 ## Sommaire
 
 1. [Modèle conceptuel](Modèle%20conceptuel/index.md) - les classes métier, leurs relations, les règles, les glossaires (un fichier par classe dans le sous-dossier)
-2. [Personas](Personas.md) - les 3 utilisateurs cibles de référence
+2. [Personas](Personas/index.md) - les 3 utilisateurs cibles de référence
 3. [Parcours utilisateurs](Parcours%20utilisateurs/index.md) - les trajectoires d'usage principales (un fichier par parcours dans le sous-dossier)
 4. [Story mapping](Story%20mapping/index.md) - les 8 épopées, stories INVEST et critères d'acceptation, avec estimations en étoiles (un fichier par épopée dans le sous-dossier)
 5. [Périmètre MVP](Périmètre%20MVP.md) - le sous-ensemble à livrer en phase 1, justifié

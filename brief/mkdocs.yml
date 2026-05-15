@@ -111,7 +111,11 @@ nav:
           - Glossaire métier: Analyse et conception/Modèle conceptuel/Glossaire métier.md
           - Glossaire outils: Analyse et conception/Modèle conceptuel/Glossaire outils.md
           - Diagramme plein écran: Analyse et conception/Modèle conceptuel/Diagramme - plein écran.md
-      - Personas: Analyse et conception/Personas.md
+      - Personas:
+          - Vue d'ensemble: Analyse et conception/Personas/index.md
+          - Marie: Analyse et conception/Personas/Marie.md
+          - Karim: Analyse et conception/Personas/Karim.md
+          - Samuel: Analyse et conception/Personas/Samuel.md
       - Parcours utilisateurs:
           - Vue d'ensemble: Analyse et conception/Parcours utilisateurs/index.md
           - P0 - Première nuit de Marie (fil rouge): Analyse et conception/Parcours utilisateurs/P0 - Première nuit de Marie.md
