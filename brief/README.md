@@ -17,6 +17,17 @@ Le brief est conçu pour être lu en ligne. Voici les sections principales :
 7. [Calendrier de travail](https://iutinfoaix-s201.github.io/brief/Calendrier%20de%20travail/) — dates 2026 confirmées
 8. [Consignes générales](https://iutinfoaix-s201.github.io/brief/Consignes%20g%C3%A9n%C3%A9rales/) — règles du jeu
 
+## 🚀 Démarrer la SAE
+
+Au démarrage de la SAE, l'équipe pédagogique communiquera un **lien GitHub Classroom** que chaque équipe doit accepter. L'acceptation crée automatiquement un dépôt dans l'organisation **`IUTInfoAix-S201-2026`**. C'est dans ce dépôt — et **nulle part ailleurs** — que vous travaillerez.
+
+Le dépôt n'est pas vide : il embarque un **template d'application JavaFX déjà fonctionnel** avec :
+
+- Une arborescence Maven prête (`pom.xml`, Maven Wrapper, dépendances JavaFX 25 / SQLite JDBC / JUnit 5 / TestFX / AssertJ).
+- Une application JavaFX qui démarre (fenêtre principale, FXML, point d'entrée).
+- **L'outillage qualité pré-configuré** : Spotless en pre-commit, GitHub Actions CI, `.gitignore`, README de démarrage.
+- **Certains composants fonctionnels déjà implémentés** pour vous faire gagner du temps — notamment le composant de vue audio (sonogramme + spectrogramme avec zoom). Voir [Consignes générales](https://iutinfoaix-s201.github.io/brief/Consignes%20g%C3%A9n%C3%A9rales/).
+
 ## 📦 Données fournies
 
 - 🟢 [`samples/`](samples/) — sous-ensemble de **518 Mo** versionné dans le dépôt (191 WAV, 473 observations). Disponible immédiatement après `git clone`, suffisant pour développer et tester la chaîne fil rouge.

@@ -4,7 +4,18 @@
 
 Vous travaillerez en équipe constituée par l'équipe pédagogique au début de la SAE. Chaque membre de l'équipe doit contribuer **techniquement** au projet : pas de répartition « celui qui code, celui qui rédige, celui qui présente ». Le développement, l'analyse et la rédaction sont des tâches partagées et tournantes.
 
-Vous travaillerez **uniquement** dans le dépôt que vous aurez créé via le lien Classroom communiqué **au démarrage de la SAE**.
+## Repo GitHub Classroom
+
+Au démarrage de la SAE, l'équipe pédagogique communiquera **un lien GitHub Classroom** que chaque équipe doit accepter. L'acceptation du lien crée automatiquement un dépôt dans l'organisation **`IUTInfoAix-S201-2026`** (un dépôt par équipe). C'est **dans ce dépôt et nulle part ailleurs** que vous travaillerez tout au long de la SAE.
+
+Ce dépôt n'est pas un dépôt vide : il embarque un **template d'application JavaFX déjà fonctionnel** mis à votre disposition par l'équipe pédagogique. Vous trouverez en particulier :
+
+- Une **arborescence Maven** prête (`pom.xml` configuré, `mvnw` inclus, dépendances JavaFX 25 / SQLite JDBC / JUnit 5 / TestFX / AssertJ posées) ;
+- Une **application JavaFX qui démarre** (fenêtre principale, intégration FXML, point d'entrée) ;
+- L'**outillage qualité pré-configuré** : Spotless en pre-commit hook (formatage Google Java Format), workflow GitHub Actions CI qui exécute la compilation + les tests à chaque push, configuration `.gitignore` adaptée, README de démarrage ;
+- Certains **composants fonctionnels déjà implémentés** pour vous faire gagner du temps sur les briques techniques lourdes — notamment le **composant de vue audio (sonogramme + spectrogramme avec zoom et cursor synchronisé)** décrit dans les [Contraintes techniques](Contraintes%20techniques.md). Vous l'intégrez et le branchez sur votre logique, vous ne le réimplémentez pas.
+
+Cette base vous fait gagner plusieurs jours par rapport à un démarrage from scratch. Vous pouvez (et devez) la prendre comme acquise et vous concentrer sur la chaîne métier (parcours fil rouge P1 → P4) plutôt que sur le scaffolding.
 
 ## Conventions Git et workflow
 
