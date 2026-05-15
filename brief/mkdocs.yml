@@ -156,6 +156,7 @@ nav:
       - Maquettes:
           - M-Sites - Mes sites de suivi: Analyse et conception/Maquettes/M-Sites.md
           - M-Site-detail - Détail d'un site: Analyse et conception/Maquettes/M-Site-detail.md
+          - M-Import - Importer une nuit: Analyse et conception/Maquettes/M-Import.md
           - Vue d'ensemble: Analyse et conception/Maquettes/index.md
           - M1 - Accueil: Analyse et conception/Maquettes/M1-accueil.md
           - M2 - Détail session: Analyse et conception/Maquettes/M2-detail-session.md
