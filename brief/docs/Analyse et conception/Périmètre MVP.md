@@ -224,4 +224,11 @@ Ce périmètre n'est pas figé : les estimations en étoiles restent une **premi
 - **à mi-parcours**, quand vous avez assez de recul sur ce que vous arrivez à livrer en une journée de travail effective, pour réviser ce qui est encore atteignable,
 - **à tout moment** où une story se révèle plus difficile que prévu, plus simple que prévu, ou inutile sur le terrain.
 
-Le périmètre MUST défini ci-dessus est la **cible incompressible visée** pour la soutenance. Si une équipe se rend compte qu'elle ne pourra pas la livrer en entier, c'est un signal d'alerte à remonter **immédiatement** à l'équipe pédagogique - pas en fin de projet - pour décider ensemble de ce qu'on coupe.
+Le périmètre MUST défini ci-dessus représente la **cible idéale** vers laquelle tendre. C'est une cible **exigeante** au regard du temps disponible (~13 jours ouvrés de développement exclusif) et il est tout à fait **normal qu'une équipe n'arrive pas à la livrer entièrement**.
+
+Ce qui compte en soutenance, ce n'est pas d'avoir tout fait, c'est :
+
+- une **démo convaincante** sur la chaîne fil rouge P1 → P2 → P3 → P4, **même si certains écrans ne sont que des maquettes** (interface présente mais sans logique métier branchée derrière) ou si certaines étapes sont **simulées** (par exemple une transformation audio qui rejoue un fichier WAV pré-calculé au lieu de le générer à la volée),
+- un **plan d'action explicite** sur ce qui n'est pas terminé : quelles stories il vous resterait à faire pour atteindre le MVP complet, dans quel ordre, avec quel effort estimé. Ce plan d'action montre que vous avez compris le besoin et que vous sauriez où aller avec plus de temps.
+
+L'objectif est de **donner à voir une chaîne complète** de bout-en-bout, quitte à ce que certaines parties soient des maquettes ou simulées : une démo bout-en-bout, même partiellement « truquée », vaut mieux qu'une chaîne complète mais qui s'arrête à mi-parcours.
