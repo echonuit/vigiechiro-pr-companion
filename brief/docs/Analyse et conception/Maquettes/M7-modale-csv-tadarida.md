@@ -6,66 +6,112 @@
 
 ## Étape 1 - Sélection du fichier
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│  📊 Charger les observations Tadarida                             ✕  │
-├──────────────────────────────────────────────────────────────────────┤
-│                                                                      │
-│  Session cible : du 22/04/2026 - PR n° 1925492                        │
-│                                                                      │
-│  Sélectionnez le fichier CSV téléchargé depuis VigieChiro            │
-│  (généralement nommé `<uuid>-participation-<uuid>-observations.csv`).│
-│                                                                      │
-│       ┌────────────────────────────────────────────────────────┐    │
-│       │                                                        │    │
-│       │              📄                                        │    │
-│       │                                                        │    │
-│       │      Glisser-déposer le fichier CSV ici               │    │
-│       │                                                        │    │
-│       │                  ou                                    │    │
-│       │                                                        │    │
-│       │           [Parcourir...]                               │    │
-│       │                                                        │    │
-│       └────────────────────────────────────────────────────────┘    │
-│                                                                      │
-│  ℹ️ L'application accepte les deux formats produits par VigieChiro : │
-│     • `*-observations.csv`  (avec guillemets)                       │
-│     • `*-observations_Vu.csv` (déjà passé en validation)            │
-│                                                                      │
-│                                            [Annuler]                 │
-└──────────────────────────────────────────────────────────────────────┘
-```
+<div markdown="0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 460" role="img" aria-label="M7 étape 1 - sélection du CSV" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
+  <style>
+    .frame { fill:#ffffff; stroke:#2c3e50; stroke-width:1.5; }
+    .titlebar { fill:#2c3e50; }
+    .titletxt { fill:#ffffff; font:600 13px sans-serif; }
+    .label { font:13px sans-serif; fill:#2c3e50; }
+    .hint { font:12px sans-serif; fill:#6a737d; }
+    .btn-secondary { fill:#ffffff; stroke:#2c3e50; stroke-width:1; }
+    .btn-txt-dark { fill:#2c3e50; font:12px sans-serif; }
+    .dropzone { fill:#f6f8fa; stroke:#4a90d9; stroke-width:1.5; stroke-dasharray:6 4; }
+  </style>
+  <rect x="10" y="10" width="620" height="440" rx="4" class="frame"/>
+  <rect x="10" y="10" width="620" height="32" rx="4" class="titlebar"/>
+  <rect x="10" y="26" width="620" height="16" class="titlebar"/>
+  <text x="28" y="31" class="titletxt">📊 Charger les observations Tadarida</text>
+  <text x="610" y="31" class="titletxt" font-size="14" text-anchor="end">✕</text>
+
+  <text x="28" y="68" class="label">Session cible : <tspan font-weight="600">du 22/04/2026 — PR n° 1925492</tspan></text>
+  <text x="28" y="92" class="hint">Sélectionnez le fichier CSV téléchargé depuis VigieChiro</text>
+  <text x="28" y="108" class="hint">(généralement nommé <tspan font-family="monospace">&lt;uuid&gt;-participation-&lt;uuid&gt;-observations.csv</tspan>).</text>
+
+  <rect x="80" y="130" width="480" height="180" rx="6" class="dropzone"/>
+  <text x="320" y="200" font-size="36" text-anchor="middle">📄</text>
+  <text x="320" y="240" class="label" text-anchor="middle" font-weight="600">Glisser-déposer le fichier CSV ici</text>
+  <text x="320" y="260" class="hint" text-anchor="middle">ou</text>
+  <rect x="260" y="272" width="120" height="28" rx="3" class="btn-secondary"/>
+  <text x="320" y="290" class="btn-txt-dark" text-anchor="middle">Parcourir…</text>
+
+  <text x="28" y="346" class="hint" font-weight="600">ℹ Formats acceptés :</text>
+  <text x="40" y="364" class="hint">• <tspan font-family="monospace">*-observations.csv</tspan> (avec guillemets)</text>
+  <text x="40" y="382" class="hint">• <tspan font-family="monospace">*-observations_Vu.csv</tspan> (déjà passé en validation)</text>
+
+  <rect x="540" y="412" width="80" height="26" rx="3" class="btn-secondary"/>
+  <text x="580" y="429" class="btn-txt-dark" text-anchor="middle">Annuler</text>
+</svg>
+</div>
 
 ## Étape 2 - Vérification (après sélection)
 
-```
-┌──────────────────────────────────────────────────────────────────────┐
-│  📊 Charger les observations Tadarida                             ✕  │
-├──────────────────────────────────────────────────────────────────────┤
-│  ✅ Fichier reconnu                                                  │
-│     8a4fa63b…-participation-69e9db61…-observations.csv (1.2 Mo)      │
-│                                                                      │
-│  Format : observations brutes (avec guillemets)                      │
-│  Encodage : UTF-8                                                    │
-│  Lignes lues : 4 031 observations                                    │
-│                                                                      │
-│  Croisement avec la session :                                        │
-│   ✅ 4 031 / 4 031 observations correspondent à un WAV de la session │
-│                                                                      │
-│  Distribution des taxa :                                             │
-│   • noise   2 102 (52 %)    • Pippip  638 (16 %)                     │
-│   • piaf      649 (16 %)    • Nyclei  139 ( 3 %)                     │
-│   • Tadten     89 ( 2 %)    • Rhihip   80 ( 2 %)                     │
-│   • 22 autres taxa  ............ 363 ( 9 %)                          │
-│                                                                      │
-│  ⚠️ Si vous chargez ce CSV alors qu'un autre est déjà présent pour   │
-│     cette session, il sera **remplacé**.                              │
-│   ( ) Remplacer les observations existantes                          │
-│   (●) Fusionner (garder les validations utilisateur déjà saisies)    │
-│                                                                      │
-│                              [Annuler]    [Charger ce CSV]           │
-└──────────────────────────────────────────────────────────────────────┘
-```
+<div markdown="0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 500" role="img" aria-label="M7 étape 2 - vérification du CSV" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
+  <style>
+    .frame { fill:#ffffff; stroke:#2c3e50; stroke-width:1.5; }
+    .titlebar { fill:#2c3e50; }
+    .titletxt { fill:#ffffff; font:600 13px sans-serif; }
+    .label { font:13px sans-serif; fill:#2c3e50; }
+    .hint { font:12px sans-serif; fill:#6a737d; }
+    .btn-primary { fill:#4a90d9; stroke:#2c3e50; stroke-width:1; }
+    .btn-secondary { fill:#ffffff; stroke:#2c3e50; stroke-width:1; }
+    .btn-txt { fill:#ffffff; font:600 12px sans-serif; }
+    .btn-txt-dark { fill:#2c3e50; font:12px sans-serif; }
+    .section { font:600 13px sans-serif; fill:#4a90d9; }
+    .panel { fill:#f6f8fa; stroke:#d0d7de; stroke-width:1; }
+    .warn { fill:#fff5e6; stroke:#e8a838; stroke-width:1; }
+  </style>
+  <rect x="10" y="10" width="620" height="480" rx="4" class="frame"/>
+  <rect x="10" y="10" width="620" height="32" rx="4" class="titlebar"/>
+  <rect x="10" y="26" width="620" height="16" class="titlebar"/>
+  <text x="28" y="31" class="titletxt">📊 Charger les observations Tadarida</text>
+  <text x="610" y="31" class="titletxt" font-size="14" text-anchor="end">✕</text>
+
+  <text x="28" y="68" class="label" font-weight="600" fill="#27ae60">✅ Fichier reconnu</text>
+  <text x="28" y="86" class="cell" font-family="monospace" font-size="11">8a4fa63b…-participation-69e9db61…-observations.csv (1.2 Mo)</text>
+
+  <text x="28" y="116" class="hint">Format :</text>
+  <text x="100" y="116" class="cell">observations brutes (avec guillemets)</text>
+  <text x="28" y="134" class="hint">Encodage :</text>
+  <text x="100" y="134" class="cell">UTF-8</text>
+  <text x="28" y="152" class="hint">Lignes lues :</text>
+  <text x="100" y="152" class="cell" font-weight="600">4 031 observations</text>
+
+  <text x="28" y="184" class="section">Croisement avec la session</text>
+  <text x="40" y="204" class="cell" fill="#27ae60">✅ 4 031 / 4 031 observations correspondent à un WAV de la session</text>
+
+  <text x="28" y="236" class="section">Distribution des taxa</text>
+  <rect x="28" y="246" width="584" height="86" rx="3" class="panel"/>
+  <text x="44" y="266" class="cell">• noise</text>
+  <text x="180" y="266" class="cell" text-anchor="end">2 102 (52 %)</text>
+  <text x="320" y="266" class="cell">• Pippip</text>
+  <text x="460" y="266" class="cell" text-anchor="end">638 (16 %)</text>
+  <text x="44" y="286" class="cell">• piaf</text>
+  <text x="180" y="286" class="cell" text-anchor="end">649 (16 %)</text>
+  <text x="320" y="286" class="cell">• Nyclei</text>
+  <text x="460" y="286" class="cell" text-anchor="end">139 (3 %)</text>
+  <text x="44" y="306" class="cell">• Tadten</text>
+  <text x="180" y="306" class="cell" text-anchor="end">89 (2 %)</text>
+  <text x="320" y="306" class="cell">• Rhihip</text>
+  <text x="460" y="306" class="cell" text-anchor="end">80 (2 %)</text>
+  <text x="44" y="326" class="cell">• 22 autres taxa</text>
+  <text x="180" y="326" class="cell" text-anchor="end">363 (9 %)</text>
+
+  <rect x="28" y="350" width="584" height="60" rx="3" class="warn"/>
+  <text x="40" y="368" class="label" font-weight="600">⚠ Politique en cas de CSV déjà présent</text>
+  <circle cx="50" cy="386" r="5" fill="#fff" stroke="#6a737d" stroke-width="1"/>
+  <text x="62" y="390" class="label">Remplacer les observations existantes</text>
+  <circle cx="50" cy="403" r="5" fill="#fff" stroke="#2c3e50" stroke-width="1.5"/>
+  <circle cx="50" cy="403" r="2.5" fill="#2c3e50"/>
+  <text x="62" y="407" class="label" font-weight="600">Fusionner (garder les validations utilisateur)</text>
+
+  <rect x="380" y="450" width="80" height="28" rx="3" class="btn-secondary"/>
+  <text x="420" y="468" class="btn-txt-dark" text-anchor="middle">Annuler</text>
+  <rect x="470" y="450" width="150" height="28" rx="3" class="btn-primary"/>
+  <text x="545" y="468" class="btn-txt" text-anchor="middle">Charger ce CSV</text>
+</svg>
+</div>
 
 ## Composants & comportements
 

@@ -38,8 +38,8 @@
   <rect x="10" y="10" width="860" height="32" rx="4" class="titlebar"/>
   <rect x="10" y="26" width="860" height="16" class="titlebar"/>
   <text x="28" y="31" class="titletxt">🦇 VigieChiro PR Companion</text>
-  <rect x="700" y="17" width="100" height="18" rx="3" fill="#34495e" stroke="#fff" stroke-width="0.5"/>
-  <text x="710" y="30" class="titletxt" font-size="11">⚙ Préférences</text>
+  <rect x="685" y="17" width="115" height="18" rx="3" fill="#34495e" stroke="#fff" stroke-width="0.5"/>
+  <text x="742" y="30" class="titletxt" font-size="11" text-anchor="middle">⚙ Préférences</text>
   <text x="826" y="31" class="titletxt" font-size="14">─ □ ✕</text>
 
   <!-- Header section -->

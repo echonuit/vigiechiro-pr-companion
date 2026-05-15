@@ -6,51 +6,112 @@
 
 ## Wireframe
 
-```
-┌──────────────────────────────────────────────────────────────────────────────┐
-│  ← Retour au journal           Session du 22/04/2026 - PR n° 1925492          │
-├──────────────────────────────────────────────────────────────────────────────┤
-│  ╔═════════════╦═════════════╗                                                │
-│  ║ Métadonnées ║  Diagnostic ║                                                │
-│  ╚═════════════╩═════════════╝                                                │
-│  ┌──────────────────────────────────────────────────────────────────────┐    │
-│  │  📅 Capture                                                          │    │
-│  │     Début   : 22/04/2026 20:25:53                                    │    │
-│  │     Fin     : 23/04/2026 07:48:00                                    │    │
-│  │     Durée   : 11 h 22 min                                            │    │
-│  │                                                                      │    │
-│  │  📡 Acquisition                                                      │    │
-│  │     PR n°            : 1925492                                       │    │
-│  │     Fréquence éch.  : 384 kHz                                        │    │
-│  │     Bande de freq.  : 8 - 120 kHz                                    │    │
-│  │     Gain            : 0 dB                                           │    │
-│  │     Filtre passe-haut : 0 (aucun)                                    │    │
-│  │     Sensibilité      : 16 dB                                          │    │
-│  │                                                                      │    │
-│  │  📁 Fichiers                                                         │    │
-│  │     Dossier source  : /home/marie/PR_avril/22-04           [📂 Ouvrir]│    │
-│  │     WAV bruts       : 1572                                           │    │
-│  │     WAV redécoupés  : 2114 (Tadarida)                                │    │
-│  │     Observations    : 4031 (dont 1247 validées, 22 corrigées)        │    │
-│  │                                                                      │    │
-│  │  🏷️  Tag (optionnel)                                                  │    │
-│  │     [ Carré 640380 - Pass 2___________________________ ▼]            │    │
-│  │                                                                      │    │
-│  │  📝 Commentaire libre                                                │    │
-│  │     ┌────────────────────────────────────────────────────────────┐   │    │
-│  │     │ Nuit dégagée, légère brise. Capture lancée avant la pluie.│   │    │
-│  │     │ RAS sur le matériel.                                       │   │    │
-│  │     └────────────────────────────────────────────────────────────┘   │    │
-│  │                                                                      │    │
-│  └──────────────────────────────────────────────────────────────────────┘    │
-│                                                                              │
-│  [📊 Charger CSV Tadarida]   [🎧 Ouvrir la validation]   [📤 Exporter]   [🗑 Supprimer] │
-│                                                                              │
-│  Statut : 🟡 Validation en cours - 1 269 / 4 031 observations passées en revue│
-│  [✅ Marquer comme validation terminée]                                      │
-│                                                                              │
-└──────────────────────────────────────────────────────────────────────────────┘
-```
+<div markdown="0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 700" role="img" aria-label="Maquette M2 - Détail d'une session" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
+  <style>
+    .frame { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
+    .titlebar { fill: #2c3e50; }
+    .titletxt { fill: #ffffff; font: 600 14px sans-serif; }
+    .label { font: 13px sans-serif; fill: #2c3e50; }
+    .hint { font: 12px sans-serif; fill: #6a737d; }
+    .h2 { font: 600 15px sans-serif; fill: #2c3e50; }
+    .section { font: 600 13px sans-serif; fill: #4a90d9; }
+    .btn-primary { fill: #4a90d9; stroke: #2c3e50; stroke-width: 1; }
+    .btn-secondary { fill: #ffffff; stroke: #2c3e50; stroke-width: 1; }
+    .btn-danger { fill: #ffffff; stroke: #c0392b; stroke-width: 1; }
+    .btn-success { fill: #27ae60; stroke: #2c3e50; stroke-width: 1; }
+    .btn-txt { fill: #ffffff; font: 600 12px sans-serif; }
+    .btn-txt-dark { fill: #2c3e50; font: 12px sans-serif; }
+    .btn-txt-danger { fill: #c0392b; font: 12px sans-serif; }
+    .field { fill: #ffffff; stroke: #6a737d; stroke-width: 1; }
+    .tab-active { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
+    .tab-inactive { fill: #eef2f5; stroke: #6a737d; stroke-width: 1; }
+    .progress-bg { fill: #eef2f5; stroke: #d0d7de; stroke-width: 0.5; }
+    .progress-fill { fill: #f1c40f; }
+  </style>
+
+  <!-- Cadre fenêtre -->
+  <rect x="10" y="10" width="860" height="680" rx="4" class="frame"/>
+
+  <!-- Title bar -->
+  <rect x="10" y="10" width="860" height="32" rx="4" class="titlebar"/>
+  <rect x="10" y="26" width="860" height="16" class="titlebar"/>
+  <text x="28" y="31" class="titletxt" font-size="13">← Retour au journal</text>
+  <text x="440" y="31" class="titletxt" font-size="13" text-anchor="middle">Session du 22/04/2026 — PR n° 1925492</text>
+
+  <!-- Onglets -->
+  <rect x="28" y="60" width="120" height="30" rx="3" class="tab-active"/>
+  <text x="88" y="80" class="label" text-anchor="middle" font-weight="600">Métadonnées</text>
+  <rect x="148" y="60" width="120" height="30" rx="3" class="tab-inactive"/>
+  <text x="208" y="80" class="hint" text-anchor="middle">Diagnostic</text>
+
+  <!-- Section Capture -->
+  <text x="40" y="115" class="section">📅 Capture</text>
+  <text x="60" y="135" class="label">Début</text>
+  <text x="200" y="135" class="cell" font-family="monospace">22/04/2026 20:25:53</text>
+  <text x="60" y="153" class="label">Fin</text>
+  <text x="200" y="153" class="cell" font-family="monospace">23/04/2026 07:48:00</text>
+  <text x="60" y="171" class="label">Durée</text>
+  <text x="200" y="171" class="cell" font-family="monospace">11 h 22 min</text>
+
+  <!-- Section Acquisition -->
+  <text x="40" y="200" class="section">📡 Acquisition</text>
+  <text x="60" y="220" class="label">PR n°</text>
+  <text x="200" y="220" class="cell" font-family="monospace">1925492</text>
+  <text x="60" y="238" class="label">Fréquence éch.</text>
+  <text x="200" y="238" class="cell" font-family="monospace">384 kHz</text>
+  <text x="60" y="256" class="label">Bande de freq.</text>
+  <text x="200" y="256" class="cell" font-family="monospace">8 — 120 kHz</text>
+  <text x="60" y="274" class="label">Gain</text>
+  <text x="200" y="274" class="cell" font-family="monospace">0 dB</text>
+  <text x="60" y="292" class="label">Filtre passe-haut</text>
+  <text x="200" y="292" class="cell" font-family="monospace">aucun</text>
+  <text x="60" y="310" class="label">Sensibilité</text>
+  <text x="200" y="310" class="cell" font-family="monospace">16 dB</text>
+
+  <!-- Section Fichiers -->
+  <text x="40" y="340" class="section">📁 Fichiers</text>
+  <text x="60" y="360" class="label">Dossier source</text>
+  <text x="200" y="360" class="cell" font-family="monospace">/home/marie/PR_avril/22-04</text>
+  <rect x="500" y="348" width="80" height="20" rx="3" class="btn-secondary"/>
+  <text x="540" y="362" class="btn-txt-dark" text-anchor="middle">📂 Ouvrir</text>
+  <text x="60" y="378" class="label">WAV bruts</text>
+  <text x="200" y="378" class="cell" font-family="monospace">1 572</text>
+  <text x="60" y="396" class="label">WAV redécoupés</text>
+  <text x="200" y="396" class="cell" font-family="monospace">2 114 (Tadarida)</text>
+  <text x="60" y="414" class="label">Observations</text>
+  <text x="200" y="414" class="cell" font-family="monospace">4 031 (dont 1 247 validées, 22 corrigées)</text>
+
+  <!-- Section Tag -->
+  <text x="40" y="445" class="section">🏷 Tag (optionnel)</text>
+  <rect x="60" y="453" width="380" height="22" rx="3" class="field"/>
+  <text x="68" y="468" class="cell">Carré 640380 — Pass 2</text>
+  <text x="430" y="468" class="hint">▼</text>
+
+  <!-- Section Commentaire -->
+  <text x="40" y="500" class="section">📝 Commentaire libre</text>
+  <rect x="60" y="508" width="780" height="60" rx="3" class="field"/>
+  <text x="70" y="525" class="cell">Nuit dégagée, légère brise. Capture lancée avant la pluie.</text>
+  <text x="70" y="543" class="cell">RAS sur le matériel.</text>
+
+  <!-- Boutons d'action -->
+  <rect x="28" y="588" width="160" height="28" rx="3" class="btn-primary"/>
+  <text x="108" y="606" class="btn-txt" text-anchor="middle">📊 Charger CSV Tadarida</text>
+  <rect x="198" y="588" width="170" height="28" rx="3" class="btn-secondary"/>
+  <text x="283" y="606" class="btn-txt-dark" text-anchor="middle">🎧 Ouvrir la validation</text>
+  <rect x="378" y="588" width="110" height="28" rx="3" class="btn-secondary"/>
+  <text x="433" y="606" class="btn-txt-dark" text-anchor="middle">📤 Exporter</text>
+  <rect x="730" y="588" width="120" height="28" rx="3" class="btn-danger"/>
+  <text x="790" y="606" class="btn-txt-danger" text-anchor="middle">🗑 Supprimer</text>
+
+  <!-- Statut + barre de progression -->
+  <text x="28" y="648" class="label">Statut : <tspan font-weight="600" fill="#f1c40f">🟡 Validation en cours</tspan> — 1 269 / 4 031 observations passées en revue</text>
+  <rect x="28" y="655" width="500" height="8" rx="2" class="progress-bg"/>
+  <rect x="28" y="655" width="158" height="8" rx="2" class="progress-fill"/>
+  <rect x="558" y="650" width="290" height="22" rx="3" class="btn-success"/>
+  <text x="703" y="666" class="btn-txt" text-anchor="middle">✅ Marquer comme validation terminée</text>
+</svg>
+</div>
 
 ## Composants
 

@@ -6,45 +6,202 @@
 
 ## Wireframe
 
-```
-┌──────────────────────────────────────────────────────────────────────────────────────────┐
-│  ← Détail session    Validation - Session du 22/04/2026 - PR n° 1925492        ?  ─□✕   │
-├──────────────────────────────────────────────────────────────────────────────────────────┤
-│  [🔍 Filtres ▼]  4 031 obs • 1 269 validées • 22 corrigées • 2 740 à voir                │
-│  ┌────────────────────────────────────────────┬────────────────────────────────────────┐ │
-│  │ Fichier ▲ │ Début │ Fin   │ Freq │ Tax. │ │  Détail de l'observation               │ │
-│  │           │ (s)   │ (s)   │ (Hz) │ Tad. │ │  ──────────────────────────────────────│ │
-│  ├────────────────────────────────────────────┤                                        │ │
-│  │ ...20262_000 │ 0.4 │ 2.5 │ 153  │ noise │█│  📁 Car...20260422_202817_000.wav     │ │
-│  │ ...20262_000 │ 0.2 │ 0.3 │   9  │ piaf  │ │  ⏱ de 0.7 s à 1.2 s (durée 0.5 s)     │ │
-│  │ ...20264_000 │ 2.1 │ 2.2 │ 188  │ noise │ │  📊 Fréquence médiane : 47 kHz        │ │
-│  │ ...20264_000 │ 0.5 │ 4.4 │   8  │ piaf  │ │                                        │ │
-│  │ ◀ ...20281_000 │ 0.7 │ 1.2 │  47  │ Pippip │  Tadarida → Pippip (probabilité 0.45)│ │
-│  │ ...20281_000 │ 1.1 │ 1.4 │  41  │ Pippip │ │  Pipistrellus pipistrellus           │ │
-│  │ ...20283_000 │ 0.3 │ 1.8 │ 153  │ noise │ │                                        │ │
-│  │ ...20283_000 │ 0.4 │ 2.2 │  41  │ Pippip│ │  ┌────────────────────────────────┐ │ │ │
-│  │ ...20284_000 │ 0.6 │ 0.9 │  19  │ Tadten│ │  │ ▆▆▇█▇▆▅▃▂▁ ▁▂▃▅▆▇█▇▆▆▆▅▄▃▂▁    │ │ │ │
-│  │ ...20284_000 │ 0.2 │ 4.1 │ 154  │ noise │ │  │ Forme d'onde (E3.S3, COULD)    │ │ │ │
-│  │ ...                                       │ │  └────────────────────────────────┘ │ │ │
-│  │                                           │ │                                      │ │ │
-│  └────────────────────────────────────────────┘ │  ▶ Lecture ralentie  ×[10▼] 0:02/0:05│ │
-│                                                 │  [⏮]  [⏯]  [⏭]   [↺ Recommencer]    │ │
-│   Statut affiché : [Tous ▼]                     │                                      │ │
-│                                                 │  ──────────────────────────────────  │ │
-│   Légende :                                     │  Votre validation                    │ │
-│     ●  Non passée en revue                      │   (●) Tadarida est correct (Pippip)  │ │
-│     ✅ Validée (Tadarida correct)               │   ( ) Corriger en   [Pipkuh    ▼]    │ │
-│     🔄 Corrigée (autre taxon)                   │       Probabilité   [0.85___]        │ │
-│     💬 Avec commentaire                          │                                      │ │
-│                                                 │  📝 Commentaire (E4.S5)              │ │
-│                                                 │  ┌────────────────────────────────┐ │ │
-│                                                 │  │ Pic 39 kHz, morphologie atypique│ │ │
-│                                                 │  └────────────────────────────────┘ │ │
-│                                                 │                                      │ │
-│                                                 │  [✅ Valider]   [↺ Réinitialiser]    │ │
-│                                                 └────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────────────────────────────────┘
-```
+<div markdown="0">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 700" role="img" aria-label="Maquette M4 - Vue de validation" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
+  <style>
+    .frame { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
+    .titlebar { fill: #2c3e50; }
+    .titletxt { fill: #ffffff; font: 600 14px sans-serif; }
+    .label { font: 13px sans-serif; fill: #2c3e50; }
+    .hint { font: 12px sans-serif; fill: #6a737d; }
+    .section { font: 600 13px sans-serif; fill: #4a90d9; }
+    .btn-primary { fill: #4a90d9; stroke: #2c3e50; stroke-width: 1; }
+    .btn-secondary { fill: #ffffff; stroke: #2c3e50; stroke-width: 1; }
+    .btn-success { fill: #27ae60; stroke: #2c3e50; stroke-width: 1; }
+    .btn-txt { fill: #ffffff; font: 600 12px sans-serif; }
+    .btn-txt-dark { fill: #2c3e50; font: 12px sans-serif; }
+    .field { fill: #ffffff; stroke: #6a737d; stroke-width: 1; }
+    .table-head { fill: #eef2f5; stroke: #2c3e50; stroke-width: 1; }
+    .table-row { fill: #ffffff; stroke: #d0d7de; stroke-width: 0.5; }
+    .table-row-alt { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 0.5; }
+    .table-row-sel { fill: #e3edf7; stroke: #4a90d9; stroke-width: 1; }
+    .col-head { font: 600 11px sans-serif; fill: #2c3e50; }
+    .cell { font: 12px sans-serif; fill: #2c3e50; }
+    .panel { fill: #f6f8fa; stroke: #d0d7de; stroke-width: 1; }
+    .stat-todo { fill: #6a737d; }
+    .stat-validated { fill: #27ae60; }
+    .stat-corrected { fill: #e8a838; }
+  </style>
+
+  <!-- Cadre fenêtre -->
+  <rect x="10" y="10" width="1060" height="680" rx="4" class="frame"/>
+
+  <!-- Title bar -->
+  <rect x="10" y="10" width="1060" height="32" rx="4" class="titlebar"/>
+  <rect x="10" y="26" width="1060" height="16" class="titlebar"/>
+  <text x="28" y="31" class="titletxt" font-size="13">← Détail session</text>
+  <text x="540" y="31" class="titletxt" font-size="13" text-anchor="middle">Validation — Session du 22/04/2026 — PR n° 1925492</text>
+  <text x="1036" y="31" class="titletxt" font-size="14">─ □ ✕</text>
+
+  <!-- Barre filtres + compteur -->
+  <rect x="28" y="55" width="100" height="26" rx="3" class="btn-secondary"/>
+  <text x="78" y="73" class="btn-txt-dark" text-anchor="middle">🔍 Filtres ▼</text>
+  <text x="148" y="73" class="label">4 031 obs • <tspan fill="#27ae60" font-weight="600">1 269 validées</tspan> • <tspan fill="#e8a838" font-weight="600">22 corrigées</tspan> • 2 740 à voir</text>
+
+  <!-- Panneau gauche : tableau observations -->
+  <rect x="28" y="95" width="600" height="565" rx="3" class="panel"/>
+
+  <!-- Header tableau -->
+  <rect x="36" y="100" width="584" height="24" class="table-head"/>
+  <text x="50" y="116" class="col-head">St</text>
+  <text x="80" y="116" class="col-head">Fichier ▲</text>
+  <text x="290" y="116" class="col-head">Début</text>
+  <text x="350" y="116" class="col-head">Fin</text>
+  <text x="410" y="116" class="col-head">Freq</text>
+  <text x="475" y="116" class="col-head">Taxon</text>
+  <text x="555" y="116" class="col-head">Prob</text>
+
+  <!-- Lignes -->
+  <rect x="36" y="124" width="584" height="22" class="table-row"/>
+  <circle cx="52" cy="135" r="4" class="stat-todo"/>
+  <text x="80" y="139" class="cell" font-family="monospace">…20262_000</text>
+  <text x="290" y="139" class="cell">0.4</text>
+  <text x="350" y="139" class="cell">2.5</text>
+  <text x="410" y="139" class="cell">153</text>
+  <text x="475" y="139" class="cell">noise</text>
+  <text x="555" y="139" class="cell">0.86</text>
+
+  <rect x="36" y="146" width="584" height="22" class="table-row-alt"/>
+  <circle cx="52" cy="157" r="4" class="stat-todo"/>
+  <text x="80" y="161" class="cell" font-family="monospace">…20262_000</text>
+  <text x="290" y="161" class="cell">0.2</text>
+  <text x="350" y="161" class="cell">0.3</text>
+  <text x="410" y="161" class="cell">9</text>
+  <text x="475" y="161" class="cell">piaf</text>
+  <text x="555" y="161" class="cell">0.54</text>
+
+  <rect x="36" y="168" width="584" height="22" class="table-row"/>
+  <circle cx="52" cy="179" r="4" class="stat-validated"/>
+  <text x="80" y="183" class="cell" font-family="monospace">…20264_000</text>
+  <text x="290" y="183" class="cell">2.1</text>
+  <text x="350" y="183" class="cell">2.2</text>
+  <text x="410" y="183" class="cell">188</text>
+  <text x="475" y="183" class="cell">noise</text>
+  <text x="555" y="183" class="cell">0.59</text>
+
+  <!-- Ligne sélectionnée -->
+  <rect x="36" y="190" width="584" height="22" class="table-row-sel"/>
+  <circle cx="52" cy="201" r="4" class="stat-todo"/>
+  <text x="80" y="205" class="cell" font-family="monospace" font-weight="600">…20281_000</text>
+  <text x="290" y="205" class="cell">0.7</text>
+  <text x="350" y="205" class="cell">1.2</text>
+  <text x="410" y="205" class="cell">47</text>
+  <text x="475" y="205" class="cell">Pippip</text>
+  <text x="555" y="205" class="cell" fill="#c0392b" font-weight="600">0.45</text>
+
+  <rect x="36" y="212" width="584" height="22" class="table-row-alt"/>
+  <circle cx="52" cy="223" r="4" class="stat-validated"/>
+  <text x="80" y="227" class="cell" font-family="monospace">…20281_000</text>
+  <text x="290" y="227" class="cell">1.1</text>
+  <text x="350" y="227" class="cell">1.4</text>
+  <text x="410" y="227" class="cell">41</text>
+  <text x="475" y="227" class="cell">Pippip</text>
+  <text x="555" y="227" class="cell">0.92</text>
+
+  <rect x="36" y="234" width="584" height="22" class="table-row"/>
+  <circle cx="52" cy="245" r="4" class="stat-corrected"/>
+  <text x="80" y="249" class="cell" font-family="monospace">…20283_000</text>
+  <text x="290" y="249" class="cell">0.3</text>
+  <text x="350" y="249" class="cell">1.8</text>
+  <text x="410" y="249" class="cell">41</text>
+  <text x="475" y="249" class="cell">Pipkuh</text>
+  <text x="555" y="249" class="cell">0.78</text>
+
+  <rect x="36" y="256" width="584" height="22" class="table-row-alt"/>
+  <circle cx="52" cy="267" r="4" class="stat-validated"/>
+  <text x="80" y="271" class="cell" font-family="monospace">…20284_000</text>
+  <text x="290" y="271" class="cell">0.6</text>
+  <text x="350" y="271" class="cell">0.9</text>
+  <text x="410" y="271" class="cell">19</text>
+  <text x="475" y="271" class="cell">Tadten</text>
+  <text x="555" y="271" class="cell">0.83</text>
+
+  <text x="80" y="295" class="hint">…</text>
+
+  <!-- Légende statuts -->
+  <text x="40" y="615" class="hint" font-weight="600">Légende :</text>
+  <circle cx="115" cy="611" r="4" class="stat-todo"/>
+  <text x="125" y="615" class="hint">Non passée</text>
+  <circle cx="200" cy="611" r="4" class="stat-validated"/>
+  <text x="210" y="615" class="hint">Validée</text>
+  <circle cx="270" cy="611" r="4" class="stat-corrected"/>
+  <text x="280" y="615" class="hint">Corrigée</text>
+
+  <!-- Panneau droit : détail observation -->
+  <rect x="638" y="95" width="412" height="565" rx="3" class="panel"/>
+  <text x="650" y="118" class="section">Détail de l'observation</text>
+
+  <text x="650" y="142" class="hint">📁 Fichier</text>
+  <text x="720" y="142" class="cell" font-family="monospace" font-size="11">…_20260422_202817_000.wav</text>
+  <text x="650" y="160" class="hint">⏱ Plage</text>
+  <text x="720" y="160" class="cell">de 0.7 s à 1.2 s (durée 0.5 s)</text>
+  <text x="650" y="178" class="hint">📊 Fréq.</text>
+  <text x="720" y="178" class="cell">47 kHz (médiane)</text>
+
+  <rect x="650" y="195" width="390" height="40" rx="3" fill="#fff5e6" stroke="#e8a838" stroke-width="1"/>
+  <text x="660" y="213" class="label" font-weight="600">Tadarida → Pippip</text>
+  <text x="660" y="228" class="hint">Pipistrellus pipistrellus — probabilité <tspan font-weight="600" fill="#c0392b">0.45</tspan></text>
+
+  <!-- Forme d'onde -->
+  <rect x="650" y="248" width="390" height="60" rx="3" fill="#ffffff" stroke="#d0d7de" stroke-width="1"/>
+  <polyline points="660,278 670,275 680,272 690,265 700,260 710,255 720,260 730,268 740,275 750,283 760,290 770,295 780,288 790,280 800,272 810,266 820,260 830,256 840,252 850,256 860,262 870,270 880,278 890,283 900,288 910,290 920,287 930,283 940,278 950,275 960,272 970,275 980,278 990,280 1000,283 1010,285 1020,287" stroke="#4a90d9" stroke-width="1.2" fill="none"/>
+  <text x="660" y="265" class="hint" font-size="10">Forme d'onde</text>
+
+  <!-- Lecteur -->
+  <text x="650" y="328" class="label">▶ Lecture ralentie</text>
+  <rect x="785" y="316" width="50" height="18" rx="3" class="field"/>
+  <text x="810" y="329" class="cell" text-anchor="middle">×10 ▼</text>
+  <text x="850" y="328" class="hint">0:02 / 0:05</text>
+
+  <rect x="650" y="345" width="35" height="22" rx="3" class="btn-secondary"/>
+  <text x="667" y="360" class="btn-txt-dark" text-anchor="middle">⏮</text>
+  <rect x="690" y="345" width="35" height="22" rx="3" class="btn-secondary"/>
+  <text x="707" y="360" class="btn-txt-dark" text-anchor="middle">⏯</text>
+  <rect x="730" y="345" width="35" height="22" rx="3" class="btn-secondary"/>
+  <text x="747" y="360" class="btn-txt-dark" text-anchor="middle">⏭</text>
+  <rect x="780" y="345" width="115" height="22" rx="3" class="btn-secondary"/>
+  <text x="837" y="360" class="btn-txt-dark" text-anchor="middle">↺ Recommencer</text>
+
+  <!-- Séparateur -->
+  <line x1="650" y1="385" x2="1040" y2="385" stroke="#d0d7de" stroke-width="1"/>
+
+  <!-- Validation -->
+  <text x="650" y="408" class="section">Votre validation</text>
+  <circle cx="660" cy="430" r="6" fill="#fff" stroke="#2c3e50" stroke-width="1.5"/>
+  <circle cx="660" cy="430" r="3" fill="#2c3e50"/>
+  <text x="675" y="434" class="label">Tadarida est correct (Pippip)</text>
+
+  <circle cx="660" cy="455" r="6" fill="#fff" stroke="#6a737d" stroke-width="1"/>
+  <text x="675" y="459" class="label">Corriger en</text>
+  <rect x="755" y="448" width="100" height="20" rx="3" class="field"/>
+  <text x="763" y="462" class="cell">Pipkuh ▼</text>
+
+  <text x="675" y="482" class="hint">Probabilité</text>
+  <rect x="755" y="471" width="60" height="20" rx="3" class="field"/>
+  <text x="763" y="485" class="cell">0.85</text>
+
+  <!-- Commentaire -->
+  <text x="650" y="520" class="section">📝 Commentaire</text>
+  <rect x="650" y="528" width="390" height="50" rx="3" class="field"/>
+  <text x="660" y="546" class="cell">Pic 39 kHz, morphologie atypique</text>
+
+  <!-- Boutons -->
+  <rect x="650" y="600" width="120" height="28" rx="3" class="btn-success"/>
+  <text x="710" y="618" class="btn-txt" text-anchor="middle">✅ Valider</text>
+  <rect x="780" y="600" width="140" height="28" rx="3" class="btn-secondary"/>
+  <text x="850" y="618" class="btn-txt-dark" text-anchor="middle">↺ Réinitialiser</text>
+</svg>
+</div>
 
 ## Composants
 
