@@ -9,9 +9,10 @@ Ce dossier contient le **dossier de spécification opérationnel** du projet, pr
 3. [Story mapping](Story%20mapping.md) - les épopées, stories INVEST et critères d'acceptation, avec estimations
 4. [Périmètre MVP](Périmètre%20MVP.md) - le sous-ensemble à livrer en phase 1, justifié
 5. [Planification](Planification.md) - le Gantt prospectif des sprints de développement
+6. [Maquettes](Maquettes/README.md) - 9 wireframes basse fidélité des écrans clés
 
 ## Comment lire ce dossier
 
-L'ordre indiqué ci-dessus est l'ordre de lecture recommandé : on part du **qui** (personas), on regarde **ce qu'il fait** (parcours), on découpe ces parcours en **unités livrables** (stories), on **arbitre** ce qui sera dans le MVP et ce qui sera repoussé, et on **planifie**.
+L'ordre indiqué ci-dessus est l'ordre de lecture recommandé : on part du **qui** (personas), on regarde **ce qu'il fait** (parcours), on découpe ces parcours en **unités livrables** (stories), on **arbitre** ce qui sera dans le MVP et ce qui sera repoussé, on **planifie**, et on **maquette** les écrans clés.
 
 Si vous découvrez une incohérence ou si vous avez une meilleure idée, **discutez-en avec l'équipe pédagogique** avant de dévier de la spécification. Le dossier n'est pas un dogme, c'est un point de départ partagé.

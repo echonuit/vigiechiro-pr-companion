@@ -53,7 +53,7 @@ Un squelette de code Java vous sera fourni au démarrage de la SAE. Vous devrez 
 
 ## Outils à votre disposition
 
-Pour la conception graphique de l'IHM (à partir des wireframes basse fidélité fournis dans le dossier d'analyse) :
+Pour la conception graphique de l'IHM (à partir des [wireframes basse fidélité](Analyse%20et%20conception/Maquettes/README.md) fournis dans le dossier d'analyse) :
 
 - [SceneBuilder](https://gluonhq.com/products/scene-builder/) - éditeur visuel FXML, recommandé pour JavaFX
 - [Figma](https://www.figma.com/) ou [Excalidraw](https://excalidraw.com/) - retravailler les wireframes si vous proposez une variante

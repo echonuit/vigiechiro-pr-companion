@@ -91,6 +91,17 @@ nav:
       - Story mapping: Analyse et conception/Story mapping.md
       - Périmètre MVP: Analyse et conception/Périmètre MVP.md
       - Planification: Analyse et conception/Planification.md
+      - Maquettes:
+          - Vue d'ensemble: Analyse et conception/Maquettes/README.md
+          - M1 - Accueil: Analyse et conception/Maquettes/M1-accueil.md
+          - M2 - Détail session: Analyse et conception/Maquettes/M2-detail-session.md
+          - M3 - Diagnostic session: Analyse et conception/Maquettes/M3-diagnostic-session.md
+          - M4 - Validation: Analyse et conception/Maquettes/M4-validation.md
+          - M5 - Filtre observations: Analyse et conception/Maquettes/M5-filtre-observations.md
+          - M6 - Modale import: Analyse et conception/Maquettes/M6-modale-import.md
+          - M7 - Modale CSV Tadarida: Analyse et conception/Maquettes/M7-modale-csv-tadarida.md
+          - M8 - Modale export: Analyse et conception/Maquettes/M8-modale-export.md
+          - M9 - Modale suppression: Analyse et conception/Maquettes/M9-modale-suppression.md
   - 6. Jalons et livrables: Jalons et livrables.md
   - 7. Calendrier de travail: Calendrier de travail.md
   - 8. Consignes générales: Consignes générales.md
