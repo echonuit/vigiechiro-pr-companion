@@ -84,8 +84,22 @@ nav:
       - Vue d'ensemble: Objectifs qualités.md
       - Catégories ISO 25010: Objectifs qualités/Catégorie de qualité.md
       - Critères ISO 25010: Objectifs qualités/Critère de qualité.md
-      - Objectifs O1..O8: Objectifs qualités/Objectifs qualités.md
-      - Scénarios SC1..SC4: Objectifs qualités/Scénario.md
+      - Objectifs:
+          - Vue d'ensemble: Objectifs qualités/Objectifs qualités/index.md
+          - O1 - Portabilité multi-OS: Objectifs qualités/Objectifs qualités/O1.md
+          - O2 - Facilité d'apprentissage: Objectifs qualités/Objectifs qualités/O2.md
+          - O3 - Tenue dans la durée: Objectifs qualités/Objectifs qualités/O3.md
+          - O4 - Exactitude lecture audio: Objectifs qualités/Objectifs qualités/O4.md
+          - O5 - Capacité CSV: Objectifs qualités/Objectifs qualités/O5.md
+          - O6 - Modularité protocoles: Objectifs qualités/Objectifs qualités/O6.md
+          - O7 - Intégrité annotations: Objectifs qualités/Objectifs qualités/O7.md
+          - O8 - Confidentialité identifiants: Objectifs qualités/Objectifs qualités/O8.md
+      - Scénarios:
+          - Vue d'ensemble: Objectifs qualités/Scénario/index.md
+          - SC1 - Onboarding: Objectifs qualités/Scénario/SC1.md
+          - SC2 - Aucune fuite d'identifiants: Objectifs qualités/Scénario/SC2.md
+          - SC3 - Ajout d'un protocole: Objectifs qualités/Scénario/SC3.md
+          - SC4 - Internationalisation: Objectifs qualités/Scénario/SC4.md
   - 4. Expression du besoin: Expression du besoin.md
   - 5. Analyse et conception:
       - Vue d'ensemble: Analyse et conception/README.md

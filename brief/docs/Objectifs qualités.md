@@ -18,10 +18,10 @@ Définir la qualité d'un logiciel ne peut pas se faire de manière absolue. Il 
 
 Les objectifs qualités du *VigieChiro PR Companion* ordonnent les critères qualités les plus importants au regard du besoin exprimé par le client. Ils servent de boussole tout au long du développement et de grille d'analyse pour les arbitrages techniques.
 
-➡ [Liste des objectifs qualités O1..O8](Objectifs%20qualités/Objectifs%20qualités.md)
+➡ [Liste des objectifs qualités O1..O8](Objectifs%20qualités/Objectifs%20qualités/index.md)
 
 ## Scénarios
 
 Pour chaque objectif qualité majeur, un ou plusieurs scénarios concrétisent ce que l'on attend dans une situation d'usage donnée.
 
-➡ [Liste des scénarios SC1..SC4](Objectifs%20qualités/Scénario.md)
+➡ [Liste des scénarios SC1..SC4](Objectifs%20qualités/Scénario/index.md)
