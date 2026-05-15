@@ -86,6 +86,7 @@ nav:
   - 4. Expression du besoin: Expression du besoin.md
   - 5. Analyse et conception:
       - Vue d'ensemble: Analyse et conception/README.md
+      - Modèle conceptuel: Analyse et conception/Modèle conceptuel.md
       - Personas: Analyse et conception/Personas.md
       - Parcours utilisateurs: Analyse et conception/Parcours utilisateurs.md
       - Story mapping: Analyse et conception/Story mapping.md
