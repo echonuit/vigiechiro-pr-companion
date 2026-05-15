@@ -1,5 +1,9 @@
 # Samuel Busson - doctorant écologue au CEREMA
 
+<figure markdown="span" style="text-align: center; margin: 1.5rem 0;">
+  ![Illustration symbolique du sujet de recherche de Samuel : un lampadaire urbain à LED projette un cône de lumière chaude sur un parc de nuit, traversé par plusieurs chauves-souris et entouré de papillons nocturnes attirés par la lumière](../../assets/illustrations/persona-samuel.webp){ style="max-width: 240px; border-radius: 12px;" }
+</figure>
+
 > 👨‍🔬 « Sur le projet précédent, on a dû s'appuyer sur les collègues informaticiens pour avaler les données. Ça marche, mais c'est imbuvable à transmettre. Mes prochaines campagnes seront sur des PR Teensy, et je veux un outil propre qui va avec. »
 
 ## Identité

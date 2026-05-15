@@ -1,9 +1,13 @@
 # Karim Belkacem - 32 ans, chargé d'études en bureau d'environnement
 
+<figure markdown="span" style="text-align: center; margin: 1.5rem 0;">
+  ![Portrait illustré éditorial de Karim : trentenaire d'origine maghrébine, cheveux courts noirs avec quelques mèches grises, barbe courte, veste technique orange ouverte, montrant du doigt une tablette durcie qui affiche un détecteur PR sous un arbre avec des chauves-souris en vol](../../assets/illustrations/persona-karim.webp){ style="max-width: 240px; border-radius: 12px;" }
+</figure>
+
 !!! warning "Persona fictif"
     Karim est un persona composé à partir de profils types de chargés d'études faune, sans correspondance avec une personne réelle. Les détails biographiques servent à incarner le profil et à guider la conception de l'IHM.
 
-> 👨 « J'ai 5 chantiers en parallèle, chacun avec ses échéances, ses élus à rassurer et son préfet à éviter. Je n'ai pas le temps de bricoler avec un outil bancal. Je veux ouvrir, faire, fermer, livrer. »
+> « J'ai 5 chantiers en parallèle, chacun avec ses échéances, ses élus à rassurer et son préfet à éviter. Je n'ai pas le temps de bricoler avec un outil bancal. Je veux ouvrir, faire, fermer, livrer. »
 
 ## Identité
 

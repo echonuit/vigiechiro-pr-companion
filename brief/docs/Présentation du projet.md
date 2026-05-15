@@ -1,5 +1,9 @@
 # Présentation du projet
 
+<figure markdown="span" style="text-align: center; margin: 1.5rem 0;">
+  ![Illustration du pont entre la capture sur le terrain et l'analyse logicielle : à gauche un Passive Recorder sur son piquet en bordure de forêt au crépuscule capte les ondes ultrasonores d'une chauve-souris en vol, à droite un poste de travail intérieur avec un ordinateur portable affichant un sonogramme et des pastilles de verdict, lumière chaude du matin évoquant la session de qualification](assets/illustrations/presentation-ecosysteme.webp){ style="max-width: 100%; border-radius: 8px;" }
+</figure>
+
 ## Aperçu des exigences
 
 [VigieChiro](https://www.vigienature.fr/fr/chauves-souris) est un programme de sciences participatives porté par le **Muséum national d'Histoire naturelle** (MNHN) dans le cadre de Vigie-Nature. Il s'appuie sur un réseau de bénévoles - naturalistes amateurs ou professionnels, gestionnaires d'espaces naturels, associations - qui installent ponctuellement des **enregistreurs ultrasons** sur le terrain pour suivre l'évolution des populations de chauves-souris en France métropolitaine.
@@ -40,17 +44,17 @@ L'application doit également :
 - **fonctionner hors-ligne** : une nuit de terrain peut produire des giga-octets de données et l'utilisateur doit pouvoir travailler sans connexion ;
 - **être portable** sur Windows, Linux et macOS sans installation système lourde.
 
-> Le détail complet du périmètre, avec arbitrage MoSCoW par story, est dans le [Périmètre MVP](Analyse%20et%20conception/Périmètre%20MVP.md).
+Le détail complet du périmètre, avec arbitrage MoSCoW par story, est dans le [Périmètre MVP](Analyse%20et%20conception/Périmètre%20MVP.md).
 
 ## Le client réel : Samuel Busson (CEREMA)
 
-> 🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, Département Territoire Ville et Bâtiment, Groupe Territoire, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, et en particulier sur l'**influence de la visibilité des sources lumineuses** sur l'activité des chauves-souris **et des insectes volants**.
->
-> Une précédente campagne expérimentale, liée à un autre projet, s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû développer avec ses collègues informaticiens des scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
->
-> Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire. Le *VigieChiro PR Companion* que vous allez développer **est l'outil qui manque à Samuel et à la communauté** pour exploiter sereinement le PR.
->
-> Samuel viendra **réceptionner votre démonstration** en phase 2 et donnera son avis sur l'application. Cet avis pèse dans l'évaluation au même titre que la note technique de l'équipe pédagogique. Voir sa fiche persona détaillée : [Samuel](Analyse%20et%20conception/Personas/Samuel.md).
+🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, Département Territoire Ville et Bâtiment, Groupe Territoire, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, et en particulier sur l'**influence de la visibilité des sources lumineuses** sur l'activité des chauves-souris **et des insectes volants**.
+
+Une précédente campagne expérimentale, liée à un autre projet, s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû développer avec ses collègues informaticiens des scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
+
+Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire. Le *VigieChiro PR Companion* que vous allez développer **est l'outil qui manque à Samuel et à la communauté** pour exploiter sereinement le PR.
+
+Samuel viendra **réceptionner votre démonstration** en phase 2 et donnera son avis sur l'application. Cet avis pèse dans l'évaluation au même titre que la note technique de l'équipe pédagogique. Voir sa fiche persona détaillée : [Samuel](Analyse%20et%20conception/Personas/Samuel.md).
 
 ## Construction de votre propre PR
 
@@ -71,4 +75,4 @@ Le matériel (kits PR Teensy, cartes SD, micros) est fourni par l'équipe pédag
 | **Plateforme VigieChiro** (système amont/aval) | Reçoit les fichiers du possesseur et restitue les CSV Tadarida. L'application n'a pas à dialoguer en direct avec la plateforme - les échanges se font par téléversement / téléchargement de fichiers. |
 | **Équipe pédagogique R2.02 / R2.03** | Encadre, accompagne, évalue les livrables aux deux jalons. Donne les critères d'arbitrage en cas de doute. |
 
-> 💡 Dans la première version, l'application reste mono-utilisateur : pas de comptes, pas de synchronisation cloud, pas de gestion d'équipe. Le possesseur de PR est seul devant son ordinateur, l'application travaille sur ses fichiers locaux.
+💡 Dans la première version, l'application reste mono-utilisateur : pas de comptes, pas de synchronisation cloud, pas de gestion d'équipe. Le possesseur de PR est seul devant son ordinateur, l'application travaille sur ses fichiers locaux.

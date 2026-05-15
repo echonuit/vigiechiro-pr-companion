@@ -8,6 +8,10 @@ site/
 .venv/
 __pycache__/
 
+# Originaux d'illustrations (lourds, gardés en local comme master)
+# Les versions optimisées (.webp, .jpg, .png redimensionnés) sont commitées.
+docs/assets/illustrations/*-original.*
+
 # OS
 .DS_Store
 Thumbs.db

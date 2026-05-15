@@ -1,5 +1,11 @@
 # SAE 2.01 - VigieChiro PR Companion
 
+<div markdown="0" style="margin: 1rem 0 2rem 0;">
+  <img src="assets/illustrations/hero-bandeau.webp"
+       alt="Nuit de capture acoustique : un Passive Recorder sur son piquet, des chauves-souris en vol émettant des ondes d'écholocation sous une pleine lune en lisière de forêt"
+       style="width: 100%; height: auto; display: block; border-radius: 4px;">
+</div>
+
 > Énoncé pédagogique de la SAE 2.01 du semestre 2 du BUT Informatique, IUT d'Aix-Marseille.
 > SAE commune aux modules **R2.02 - Développement d'applications avec IHM** et **R2.03 - Qualité de développement**.
 
