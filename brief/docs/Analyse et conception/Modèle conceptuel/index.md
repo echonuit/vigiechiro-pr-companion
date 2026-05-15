@@ -1,0 +1,149 @@
+# Modèle conceptuel
+
+Ce document pose le **vocabulaire**, le **modèle de données** et les **règles métier** sur lesquels s'aligne tout le reste du dossier d'analyse et de conception. Toute évolution du brief qui touche ces concepts doit être répercutée ici **avant** de s'attaquer aux parcours, aux stories ou aux maquettes.
+
+> Convention de nommage : les noms d'entités, d'attributs et de statuts adoptés ici sont **les noms qui doivent apparaître dans l'IHM**. On évite à dessein le jargon technique (formats de fichiers, sigles, anglicismes) pour ne pas rendre l'application illisible aux utilisateurs cibles ([O2 - Facilité d'apprentissage](../../Objectifs%20qualités/Objectifs%20qualités/O2.md), [SC1 - Onboarding](../../Objectifs%20qualités/Scénario/SC1.md)).
+
+> 🛈 **Statut** : la **structure** des entités et de leurs associations est validée. Les **attributs** détaillés (types précis, contraintes, valeurs énumérées) restent à affiner au fil des étapes suivantes (parcours, stories, maquettes) en fonction des besoins concrets qui émergeront.
+
+## Vue d'ensemble
+
+L'application *VigieChiro PR Companion* organise les données autour d'un utilisateur unique (mono-utilisateur, hors-ligne). Cet utilisateur déclare un ou plusieurs **sites de suivi**, chaque site contenant un ou plusieurs **points d'écoute**. Sur chaque point, il réalise des **passages** (= une nuit complète d'enregistrement). Chaque passage produit une **capture** : les enregistrements originaux copiés depuis la SD, les séquences d'écoute (ralenties ×10 et découpées en 5 s) prêtes à être déposées sur Vigie-Chiro, ainsi que le journal du capteur et le relevé climatique de l'enregistreur utilisé.
+
+Une fois les séquences d'écoute produites, l'utilisateur **vérifie l'enregistrement** par échantillonnage (sound check global). S'il est satisfait, il prépare le lot prêt à déposer et téléverse manuellement sur le portail Vigie-Chiro. Le retour de **Tadarida** (résultats d'identification) arrive ensuite, et le passage entre alors en **validation taxonomique** (espèce par espèce).
+
+```mermaid
+classDiagram
+    direction LR
+
+    class Utilisateur {
+      identifiant local
+      nom affiché
+    }
+    class SiteDeSuivi["Site de suivi"] {
+      n° carré
+      nom convivial
+      protocole
+    }
+    class PointDEcoute["Point d'écoute"] {
+      code
+      coordonnées GPS
+      descriptif
+    }
+    class Enregistreur {
+      n° de série
+      modèle / version
+    }
+    class Passage {
+      n° de passage
+      année
+      date de capture
+      heure début / fin
+      verdict de vérification
+      statut workflow
+    }
+    class Capture {
+      chemin racine
+      volume total
+    }
+    class EnregistrementOriginal["Enregistrement original"] {
+      nom de fichier
+      durée
+      échantillonnage
+    }
+    class SequenceDEcoute["Séquence d'écoute"] {
+      nom de fichier
+      index
+      durée
+    }
+    class JournalDuCapteur["Journal du capteur"] {
+      chemin
+      évènements parsés
+      anomalies détectées
+    }
+    class ReleveClimatique["Relevé climatique"] {
+      chemin
+      mesures
+    }
+    class SelectionDEcoute["Sélection d'écoute"] {
+      méthode de constitution
+      taille
+    }
+    class ResultatsIdentification["Résultats d'identification"] {
+      chemin
+      format détecté
+      date d'import
+    }
+    class Observation {
+      temps début
+      temps fin
+      taxon Tadarida
+      probabilité Tadarida
+      taxon observateur
+      probabilité observateur
+    }
+    class Taxon {
+      code
+      nom latin
+      nom vernaculaire FR
+    }
+    class GroupeTaxonomique["Groupe taxonomique"] {
+      niveau
+      nom
+    }
+
+    Utilisateur "1" --> "1..*" SiteDeSuivi : possède
+    SiteDeSuivi "1" --> "1..*" PointDEcoute : contient
+    PointDEcoute "1" --> "0..*" Passage : fait l'objet de
+    Enregistreur "1" --> "1..*" Passage : a produit
+    Passage "1" --> "1" Capture : produit
+    Capture "1" --> "1..*" EnregistrementOriginal : contient
+    Capture "1" --> "1..*" SequenceDEcoute : contient
+    Capture "1" --> "1" JournalDuCapteur : référence
+    Capture "1" --> "0..1" ReleveClimatique : référence
+    EnregistrementOriginal "1" --> "1..*" SequenceDEcoute : découpé en
+    Passage "1" --> "0..1" SelectionDEcoute : à vérifier par
+    SelectionDEcoute "1" --> "1..*" SequenceDEcoute : porte sur
+    Passage "1" --> "0..1" ResultatsIdentification : annoté par
+    ResultatsIdentification "1" --> "1..*" Observation : agrège
+    Observation "0..*" --> "1" SequenceDEcoute : détectée dans
+    Observation "0..*" --> "1" Taxon : classée comme
+    Taxon "1..*" --> "1" GroupeTaxonomique : appartient
+```
+
+[🖼️ Ouvrir le diagramme dans une vue plein écran ↗](Diagramme%20-%20plein%20écran.md){ .md-button }
+
+Ce diagramme reste **conceptuel** (proche d'un MCD) plutôt qu'un diagramme de classes d'implémentation : pas de visibilité (`+`/`-`), pas de méthodes, pas de types Java. C'est le **vocabulaire métier** et la **topologie des associations** qui comptent. Vous re-spécifierez les classes Java de votre implémentation séparément, en y ajoutant typage, méthodes et héritages selon vos choix d'architecture.
+
+Le diagramme rend visible la **séparation entre deux moments du workflow** : la chaîne `Passage → Capture → Séquence d'écoute → Sélection d'écoute` (avant le dépôt VigieChiro, MUST du MVP), puis la chaîne `Résultats d'identification → Observation → Taxon` (après le retour Tadarida, SHOULD/cible étirable).
+
+## Sommaire des fiches
+
+Le modèle conceptuel est éclaté en plusieurs fiches pour rester lisible. Chaque fiche est accessible depuis la barre latérale ; les liens ci-dessous servent de table des matières.
+
+### Entités
+
+| # | Entité | Rôle métier |
+|---|---|---|
+| C1 | [Utilisateur](C1%20-%20Utilisateur.md) | L'unique utilisateur de l'app (mono-utilisateur, hors-ligne). |
+| C2 | [Site de suivi](C2%20-%20Site%20de%20suivi.md) | Unité géographique déclarée sur Vigie-Chiro web. |
+| C3 | [Point d'écoute](C3%20-%20Point%20d%27écoute.md) | Code 2 caractères dans un site. |
+| C4 | [Enregistreur](C4%20-%20Enregistreur.md) | Matériel terrain (Passive Recorder Teensy). |
+| C5 | [Passage](C5%20-%20Passage.md) | Une nuit complète sur un point. **Entité centrale**. |
+| C6 | [Capture](C6%20-%20Capture.md) | Agrégat de données produit par un passage. |
+| C7 | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | Fichier audio brut, ultrason, inaudible. |
+| C8 | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | Fichier audible (×10, 5 s) déposé sur Vigie-Chiro. |
+| C9 | [Journal du capteur](C9%20-%20Journal%20du%20capteur.md) | `LogPR<n>.txt` du firmware Teensy. |
+| C10 | [Relevé climatique](C10%20-%20Relevé%20climatique.md) | `*_THLog.csv` (optionnel). |
+| C11 | [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md) | Sous-ensemble de séquences pour la vérification. |
+| C12 | [Résultats d'identification](C12%20-%20Résultats%20d%27identification.md) | Fichier Tadarida (post-dépôt, SHOULD). |
+| C13 | [Observation](C13%20-%20Observation.md) | Une ligne de résultats Tadarida. |
+| C14 | [Taxon](C14%20-%20Taxon.md) | Code 6 lettres (genre + espèce). |
+| C15 | [Groupe taxonomique](C15%20-%20Groupe%20taxonomique.md) | Niveau hiérarchique au-dessus du taxon. |
+
+### Autres fiches
+
+- [Cardinalités](Cardinalités.md) - tableau récapitulatif des cardinalités d'association.
+- [Règles métier](Règles%20métier.md) - les 20 règles **R1** à **R20** (validations, conventions, workflow).
+- [Glossaire métier](Glossaire%20métier.md) - vocabulaire utilisateur (site, carré, passage, capture, séquence d'écoute, verdict…).
+- [Glossaire des outils & ressources externes](Glossaire%20outils.md) - Lupas Rename, Kaléidoscope, Tadarida, Chirosurf, vigiechiro.herokuapp.com, etc.

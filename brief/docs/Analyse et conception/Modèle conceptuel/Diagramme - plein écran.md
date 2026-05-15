@@ -6,7 +6,7 @@ hide:
 
 # Diagramme de classes - vue plein écran
 
-[← Retour au modèle conceptuel](Modèle%20conceptuel.md)
+[← Retour au modèle conceptuel](index.md)
 
 <style>
   /* Donne au diagramme Mermaid toute la largeur de la fenêtre, avec scroll si besoin. */
@@ -124,4 +124,4 @@ classDiagram
     Taxon "1..*" --> "1" GroupeTaxonomique : appartient
 ```
 
-[← Retour au modèle conceptuel](Modèle%20conceptuel.md)
+[← Retour au modèle conceptuel](index.md)
