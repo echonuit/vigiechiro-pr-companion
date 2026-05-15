@@ -45,33 +45,38 @@ Distribution des classifications Tadarida sur cette session, à titre indicatif.
 
 L'application **doit** offrir les fonctionnalités suivantes (priorité MUST). Les fonctionnalités SHOULD et COULD sont soumises à arbitrage en phase 1.
 
-### MUST (périmètre minimum viable)
+### MUST (chaîne fil rouge - remplace LupasRename + Kaléidoscope)
 
-- **Importer une session** depuis un dossier sur le disque (à l'origine, le `LogPR*.txt`, le `PaRec*_THLog.csv` et les fichiers WAV sont à la racine de la carte SD) : détection automatique des trois éléments, métadonnées extraites (numéro de PR, date de la nuit, paramètres d'acquisition) et stockage en base.
-- **Afficher la liste des sessions** importées avec leurs caractéristiques principales (date, durée, nombre de WAV, statut, carré Vigie-Chiro, code du point - par exemple `Z1`).
-- **Regrouper les nuits successives** d'un même point de capture pour permettre une revue groupée (validation efficace des sons d'espèces communes à plusieurs nuits du même site).
-- **Charger un CSV d'observations Tadarida** et l'associer à une session existante.
-- **Parcourir les observations** dans une vue tabulaire avec tri et filtrage par taxon, par probabilité, par fichier.
-- **Écouter et visualiser un évènement sonore** : sélectionner une observation, lecture du WAV correspondant - **les fichiers déposés sur Vigie-Chiro étant déjà ralentis ×10**, la lecture est faite à vitesse normale sur ce fichier, sans transformation à la volée.
-- **Valider ou corriger** la classification d'une observation : remplir les champs `observateur_taxon` et `observateur_probabilite`.
-- **Exporter** un CSV au format `observations_Vu.csv` réinjectable par VigieChiro.
+La chaîne minimale livrable est la **chaîne fil rouge** : depuis la récupération de la carte SD jusqu'au dépôt sur Vigie-Chiro, sans aucun outil tiers.
 
-### SHOULD (utilité reconnue, à arbitrer)
+- **Déclarer un site de suivi** dans l'application : n° de carré (6 chiffres) et codes des points d'écoute (1 lettre + 1 chiffre). Le site doit avoir été créé en amont sur le portail Vigie-Chiro pour récupérer ces identifiants.
+- **Importer une nuit de capture** depuis un dossier (typiquement la carte SD) : détection automatique du `LogPR*.txt`, du `PaRec*_THLog.csv` et des WAV bruts ; **copie protégée** des fichiers (aucune écriture sur la SD source) ; **renommage** automatique avec le préfixe `CarXXXXXX-AAAA-PassN-YY-` ; **transformation** de chaque WAV brut en séquences de 5 s ralenties ×10 (expansion temporelle).
+- **Vérifier l'enregistrement par échantillonnage** : sound check avant dépôt. L'application propose automatiquement une dizaine de séquences réparties sur la nuit, l'utilisateur en écoute quelques-unes pour confirmer que la qualité est exploitable, et saisit un **verdict global** (`OK`, `Douteux`, `À jeter`).
+- **Préparer un lot prêt à déposer** : vérification de cohérence (préfixes conformes, journal et climat présents, etc.), affichage du chemin du dossier, ouverture dans l'explorateur natif pour téléversement manuel via navigateur sur Vigie-Chiro. L'application **ne dialogue pas** directement avec la plateforme.
+- **Tracer le dépôt** : marquer le passage comme `Déposé` avec date de dépôt, pour distinguer ce qui a été livré de ce qui reste à traiter.
 
-- **Visualiser** les courbes de température et d'hygrométrie de la nuit.
-- **Afficher un spectrogramme** statique de l'évènement sonore en cours d'écoute. Important : l'analyse acoustique se fait souvent en alternant écoute et observation visuelle d'un son isolé, puis d'une **séquence** de plusieurs sons supposés appartenir à la même espèce - l'intervalle entre deux sons, la variation de structure, durée et fréquence renseignent à la fois sur l'espèce et son comportement.
-- **Filtrer** les observations par plage horaire (utile pour ne traiter que la première moitié de nuit, par exemple).
-- **Filtrer** les observations par espèce ou groupe d'espèces (par exemple tous les murins *Myotis*, toutes les pipistrelles).
-- **Annoter** une session avec un commentaire libre (contexte météo, intervention humaine, problème matériel...) ainsi que les **données météo structurées** attendues par Vigie-Chiro (température en début et fin de nuit, couverture nuageuse, vent). À voir comment l'application alimente ces champs en amont, ou s'en alimente en aval lors du retour CSV.
+### SHOULD (utilité reconnue, à arbitrer selon vélocité)
 
-### COULD (idées d'extension)
+Une fois la chaîne fil rouge livrée, ces capacités étendent la valeur en cas de marge :
 
-- **Spectrogramme interactif** : zoom, sélection d'une région, lecture de la sélection seule.
-- **Statistiques globales** sur l'ensemble des sessions d'un utilisateur (nombre d'espèces détectées, courbe d'activité par heure, comparaison entre points fixes).
-- **Liste des espèces** validées par l'utilisateur sur un point donné d'un carré (vue synthèse multi-passages).
-- **Vérification de cohérence** des horaires d'enregistrement avec le protocole Vigie-Chiro : le PR doit s'allumer 30 min avant le coucher du soleil et s'éteindre 30 min après son lever. Selon les coordonnées du site, calcul des heures astronomiques attendues et comparaison avec celles effectivement loguées dans le `LogPR*.txt`.
-- **Comparateur** : lecture en parallèle de l'évènement courant et d'un évènement de référence du même taxon, pour faciliter la confirmation visuelle/auditive.
-- **Export d'une bibliothèque de sons de référence** : sélection des observations validées de très bonne qualité, export sous forme de fichiers WAV nommés avec l'espèce validée et le moment de la séquence concerné. Utile pour transmettre des cas-types aux débutants ou pour archiver des références personnelles.
+- **Naviguer dans plusieurs sites et passages** via une vue tabulaire performante avec tri, filtres et actions de masse. **Devient MUST de fait** dès qu'on dépasse 3-4 sites (cas Karim et Samuel).
+- **Diagnostiquer le matériel** : visualiser les courbes de température et d'hygrométrie de la nuit, les niveaux de batterie début/fin, la liste des évènements anormaux du `LogPR*.txt` (réveils non programmés, erreurs SD, redémarrages).
+- **Vérifier la cohérence des horaires astronomiques** : le PR doit s'allumer 30 min avant le coucher du soleil et s'éteindre 30 min après son lever. L'application calcule localement ces heures d'après les coordonnées GPS du point et les compare avec celles loguées dans le `LogPR*.txt`. (Idée Samuel mai 2026.)
+- **Valider les résultats Tadarida** (cible étirable principale, filet de sécurité si la SAE déborde du fil rouge) : charger le CSV de résultats récupéré depuis Vigie-Chiro 24-48 h après le dépôt, parcourir les observations avec sonogramme + spectrogramme + zoom, valider ou corriger la classification, exporter un CSV `*_Vu.csv` réinjectable par la plateforme.
+- **Filtrer** les observations Tadarida par taxon, par groupe taxonomique (Pipistrelles, Murins, Noctules), par seuil de probabilité, par plage horaire.
+- **Annoter** une nuit avec un commentaire libre (contexte météo, intervention humaine, problème matériel) ainsi qu'avec les **données météo structurées** attendues par Vigie-Chiro (température début/fin de nuit, couverture nuageuse, vent).
+
+### COULD (idées d'extension, productivité avancée)
+
+À engager uniquement si la chaîne MUST et les SHOULD sont solides :
+
+- **Modifier rétroactivement** le rattachement (site / point / année / n° passage) d'un passage déjà importé, avec re-renommage automatique de tous les fichiers.
+- **Regrouper les nuits successives** d'un même point pour valider en un coup les espèces communes (productivité Samuel).
+- **Mode inventaire vs activité** pour la validation Tadarida : inventaire = liste des espèces présentes (valider une fois), activité = quantifier toutes les détections.
+- **Exporter une bibliothèque de sons de référence** : sélection des observations validées de très bonne qualité, export par espèce sous forme de dossiers WAV nommés, utile pour transmettre des cas-types aux débutants.
+- **Statistiques globales** sur l'ensemble des sessions (nombre d'espèces détectées, courbe d'activité par heure, comparaison entre points fixes).
+- **Filtres avancés multi-critères** avec sauvegarde de vues nommées.
+- **Reprise sur erreur** : un import ou une validation interrompus peuvent être repris au démarrage suivant.
 
 ### WON'T (hors périmètre de cette première version)
 

@@ -29,10 +29,10 @@ Elle traite ses nuits **le surlendemain matin**, avec son café, sur la table de
 
 ## Ce qu'elle attend de l'application
 
-- Pouvoir **importer une nuit entière en un seul geste** depuis un dossier.
-- **Voir clairement** où elle en est dans son cycle de validation (combien d'évènements vus, combien restent).
-- Que l'application lui rappelle si elle a oublié de valider une session avant de l'exporter.
-- Que rien ne se perde si elle ferme la fenêtre par mégarde.
+- Pouvoir **importer une nuit entière en un seul geste** depuis un dossier — copie protégée des fichiers + renommage + transformation en séquences ralenties, sans qu'elle n'ait à manipuler LupasRename ni Kaléidoscope.
+- **Voir clairement** où elle en est dans le cycle de chaque nuit : importée ? vérifiée ? prête à déposer ? déposée ? (et plus tard, validée taxonomiquement ?).
+- Que l'application lui rappelle si elle a oublié de **vérifier l'enregistrement** avant de préparer le lot, ou si une vérification a échoué.
+- Que **rien ne se perde** si elle ferme la fenêtre par mégarde.
 - Du **vocabulaire en français**, des libellés explicites (« Importer une nuit » plutôt que « Charger un dossier »).
 
 ## Ce qui la décourage

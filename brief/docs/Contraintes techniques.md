@@ -21,6 +21,12 @@ L'application doit respecter les contraintes suivantes :
 - L'application doit être **exécutable depuis la ligne de commande** : `./mvnw javafx:run` doit suffire à la lancer dans un environnement Java 25 + JavaFX 25.
 - Un mode **CLI minimal** (sans IHM) pour réaliser les opérations purement techniques (import d'une session, export d'un CSV) est apprécié mais pas obligatoire.
 
+## Composants fournis par l'équipe pédagogique
+
+Certaines briques techniques lourdes sont fournies pour vous permettre de vous concentrer sur la chaîne métier :
+
+- **Vue audio (sonogramme + spectrogramme)** : composant JavaFX qui prend un fichier WAV en entrée et affiche le sonogramme (amplitude/temps) + le spectrogramme (fréquence/temps) avec **cursor de lecture synchronisé** et **boutons de zoom temps/fréquence**. Le calcul FFT et le rendu graphique sont à l'intérieur du composant — vous l'instanciez avec un chemin de fichier et vous écoutez ses évènements. Utilisé dans [M-Qualification](Analyse%20et%20conception/Maquettes/M-Qualification.md) et [M-Vision-Tadarida](Analyse%20et%20conception/Maquettes/M-Vision-Tadarida.md). Cela élimine la nécessité d'implémenter une FFT (`JTransforms`) et un rendu Canvas performant — vous vous concentrez sur l'intégration et la synchronisation avec le reste de l'application.
+
 ## Licence et publication
 
 - **Licence open-source libérale** (Apache-2.0 ou MIT) pour permettre la réutilisation des composants par la communauté VigieChiro.
