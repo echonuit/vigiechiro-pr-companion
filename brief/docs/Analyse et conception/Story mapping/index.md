@@ -1,6 +1,6 @@
 # Story mapping
 
-Le travail des [parcours utilisateurs](../Parcours%20utilisateurs/index.md) est décomposé en **8 épopées**, chacune contenant **3 à 8 stories** [INVEST](https://fr.wikipedia.org/wiki/INVEST_(g%C3%A9nie_logiciel)) (Independent, Negotiable, Valuable, Estimable, Small, Testable).
+Le travail des [parcours utilisateurs](../Parcours%20utilisateurs/index.md) est décomposé en **9 épopées**, chacune contenant **2 à 8 stories** [INVEST](https://fr.wikipedia.org/wiki/INVEST_(g%C3%A9nie_logiciel)) (Independent, Negotiable, Valuable, Estimable, Small, Testable).
 
 Chaque story est :
 
@@ -33,7 +33,8 @@ Ces estimations sont **indicatives**. Vous les réviserez en équipe au début d
 | [E4](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md) | 📦 Préparer et tracer le dépôt VigieChiro | [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | ✅ MUST (S1-S3) + 🟠 SHOULD (S4) | 4 | ★★★★★ ★★★★ (9 ★) |
 | [E5](E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md) | 🗂 Naviguer dans le volume multi-sites | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | 🟠 SHOULD (S1-S2) + ⚪ COULD (S3-S5) | 5 | ★★★★★ ★★★★★ ★★★★ (14 ★) |
 | [E6](E6%20-%20Diagnostiquer%20le%20matériel.md) | 🩺 Diagnostiquer le matériel | [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | 🟠 SHOULD (S1-S2) + ⚪ COULD (S3-S5) | 5 | ★★★★★ ★★★★★ ★★★ (13 ★) |
-| E7 | ✅ Valider les résultats Tadarida + productivité avancée | [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md), [P9](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md), [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | 🟠 SHOULD (cible étirable) | _à venir_ | _à venir_ |
+| [E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md) | ✅ Valider les résultats Tadarida | [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md) | 🟠 SHOULD (S1-S5, S7) + ⚪ COULD (S6) | 7 | ★★★★★ ★★★★★ ★★★★★ ★★★★★ ★★ (22 ★) |
+| [E8](E8%20-%20Productivité%20avancée%20Tadarida.md) | 🚀 Productivité avancée Tadarida | [P9](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md), [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | ⚪ COULD (au mieux) | 2 | ★★★★★ ★★ (7 ★) |
 
 ## Convention des liens vers maquettes
 
