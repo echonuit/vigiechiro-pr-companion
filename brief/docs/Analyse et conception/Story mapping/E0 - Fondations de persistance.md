@@ -17,7 +17,7 @@
 **Critères d'acceptation** :
 
 - [ ] Au premier lancement, l'application crée un fichier `companion.db` dans le dossier de travail utilisateur si absent.
-- [ ] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel.md) (Utilisateur, Site, Point, Passage, Capture, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
+- [ ] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Capture, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
 - [ ] Une classe `DaoGenerique<T>` ou équivalent fournit les opérations CRUD de base (`create`, `findById`, `findAll`, `update`, `delete`).
 - [ ] La connexion JDBC est gérée avec un pool ou un singleton thread-safe.
 - [ ] Un test d'intégration crée la BD, exécute une opération CRUD, et vérifie le résultat.

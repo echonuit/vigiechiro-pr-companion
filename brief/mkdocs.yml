@@ -89,8 +89,28 @@ nav:
   - 4. Expression du besoin: Expression du besoin.md
   - 5. Analyse et conception:
       - Vue d'ensemble: Analyse et conception/README.md
-      - Modèle conceptuel: Analyse et conception/Modèle conceptuel.md
-      - Diagramme plein écran: Analyse et conception/Modèle conceptuel - Diagramme.md
+      - Modèle conceptuel:
+          - Vue d'ensemble: Analyse et conception/Modèle conceptuel/index.md
+          - C1 - Utilisateur: Analyse et conception/Modèle conceptuel/C1 - Utilisateur.md
+          - C2 - Site de suivi: Analyse et conception/Modèle conceptuel/C2 - Site de suivi.md
+          - C3 - Point d'écoute: Analyse et conception/Modèle conceptuel/C3 - Point d'écoute.md
+          - C4 - Enregistreur: Analyse et conception/Modèle conceptuel/C4 - Enregistreur.md
+          - C5 - Passage: Analyse et conception/Modèle conceptuel/C5 - Passage.md
+          - C6 - Capture: Analyse et conception/Modèle conceptuel/C6 - Capture.md
+          - C7 - Enregistrement original: Analyse et conception/Modèle conceptuel/C7 - Enregistrement original.md
+          - C8 - Séquence d'écoute: Analyse et conception/Modèle conceptuel/C8 - Séquence d'écoute.md
+          - C9 - Journal du capteur: Analyse et conception/Modèle conceptuel/C9 - Journal du capteur.md
+          - C10 - Relevé climatique: Analyse et conception/Modèle conceptuel/C10 - Relevé climatique.md
+          - C11 - Sélection d'écoute: Analyse et conception/Modèle conceptuel/C11 - Sélection d'écoute.md
+          - C12 - Résultats d'identification: Analyse et conception/Modèle conceptuel/C12 - Résultats d'identification.md
+          - C13 - Observation: Analyse et conception/Modèle conceptuel/C13 - Observation.md
+          - C14 - Taxon: Analyse et conception/Modèle conceptuel/C14 - Taxon.md
+          - C15 - Groupe taxonomique: Analyse et conception/Modèle conceptuel/C15 - Groupe taxonomique.md
+          - Cardinalités: Analyse et conception/Modèle conceptuel/Cardinalités.md
+          - Règles métier: Analyse et conception/Modèle conceptuel/Règles métier.md
+          - Glossaire métier: Analyse et conception/Modèle conceptuel/Glossaire métier.md
+          - Glossaire outils: Analyse et conception/Modèle conceptuel/Glossaire outils.md
+          - Diagramme plein écran: Analyse et conception/Modèle conceptuel/Diagramme - plein écran.md
       - Personas: Analyse et conception/Personas.md
       - Parcours utilisateurs:
           - Vue d'ensemble: Analyse et conception/Parcours utilisateurs/index.md
@@ -111,6 +131,7 @@ nav:
           - E0 - Fondations de persistance: Analyse et conception/Story mapping/E0 - Fondations de persistance.md
           - E1 - Gérer ses sites et points de suivi: Analyse et conception/Story mapping/E1 - Gérer ses sites et points de suivi.md
           - E2 - Importer et transformer une nuit: Analyse et conception/Story mapping/E2 - Importer et transformer une nuit.md
+          - E3 - Vérifier la qualité d'enregistrement: Analyse et conception/Story mapping/E3 - Vérifier la qualité d'enregistrement.md
       - Périmètre MVP: Analyse et conception/Périmètre MVP.md
       - Planification: Analyse et conception/Planification.md
       - Maquettes:

@@ -18,7 +18,7 @@
 
 **Critères d'acceptation** :
 
-- [ ] À l'ouverture de l'onglet « Vérifier l'enregistrement » d'un passage `Transformé`, l'application constitue automatiquement une sélection de **10 à 30 séquences** ([R12](../Modèle%20conceptuel.md#r12)).
+- [ ] À l'ouverture de l'onglet « Vérifier l'enregistrement » d'un passage `Transformé`, l'application constitue automatiquement une sélection de **10 à 30 séquences** ([R12](../Modèle%20conceptuel/Règles%20métier.md#r12)).
 - [ ] La méthode par défaut est `RéparTemporel` : les séquences sont **réparties uniformément** sur la plage horaire de la nuit (du premier au dernier enregistrement).
 - [ ] La sélection est **persistée** en BD pour pouvoir être reprise plus tard (cf. [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4)).
 - [ ] Si une sélection existe déjà pour ce passage, elle est rechargée plutôt que régénérée.
@@ -68,7 +68,7 @@
 **Critères d'acceptation** :
 
 - [ ] Le clic sur le bouton ▶ d'une séquence déclenche la lecture immédiate.
-- [ ] Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel.md#r10)), la lecture se fait à vitesse normale (pas de re-échantillonnage à la volée).
+- [ ] Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)), la lecture se fait à vitesse normale (pas de re-échantillonnage à la volée).
 - [ ] Les contrôles audio standards sont disponibles : lecture / pause, stop, slider de position avec timecode, contrôle de volume.
 - [ ] Une seule séquence joue à la fois : démarrer une nouvelle lecture stoppe la précédente.
 - [ ] La lecture d'une séquence en marque la séquence comme « écoutée » (cf. [E3.S4](#e3s4)).
@@ -96,7 +96,7 @@
 - [ ] L'utilisateur peut aussi **manuellement** marquer/démarquer une séquence comme écoutée via une checkbox ou un toggle dans la liste.
 - [ ] Un compteur visible affiche `N/M séquences écoutées` (ex. `12/30 séquences écoutées`).
 - [ ] L'état « écouté » est **persisté** : à la réouverture de l'onglet, on retrouve la progression.
-- [ ] L'utilisateur reste libre de saisir son verdict (cf. [E3.S5](#e3s5)) **sans avoir tout écouté** ([R13](../Modèle%20conceptuel.md#r13)).
+- [ ] L'utilisateur reste libre de saisir son verdict (cf. [E3.S5](#e3s5)) **sans avoir tout écouté** ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 4<br>
 **Maquettes cibles** : M-Qualification (compteur d'avancement, indicateur visuel par ligne)<br>
@@ -118,10 +118,10 @@
 
 - [ ] Un menu déroulant visible permet de choisir le verdict parmi `OK`, `Douteux`, `À jeter`.
 - [ ] Un champ texte libre (multi-ligne) permet d'ajouter un commentaire optionnel (ex. « vent fort vers 02:00, sons à vérifier »).
-- [ ] La saisie du verdict est possible **dès le premier clic** sur le menu, sans contrainte d'avoir écouté un nombre minimum de séquences ([R13](../Modèle%20conceptuel.md#r13)).
+- [ ] La saisie du verdict est possible **dès le premier clic** sur le menu, sans contrainte d'avoir écouté un nombre minimum de séquences ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
 - [ ] À la validation du verdict, le passage passe au statut `Vérifié` en BD ([E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3)).
 - [ ] Le verdict et le commentaire sont **persistés** : ils sont restaurés à la réouverture de l'onglet et peuvent être modifiés à tout moment.
-- [ ] Un verdict `À jeter` est mis en évidence visuelle (couleur d'alerte) et affiche un rappel : « Ce passage ne pourra pas être inclus dans un lot prêt à déposer » ([R14](../Modèle%20conceptuel.md#r14)).
+- [ ] Un verdict `À jeter` est mis en évidence visuelle (couleur d'alerte) et affiche un rappel : « Ce passage ne pourra pas être inclus dans un lot prêt à déposer » ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)).
 - [ ] L'utilisateur peut enchaîner sur la préparation du lot ([P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)) via un bouton mis en avant après saisie d'un verdict OK ou Douteux.
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 6 et 7<br>

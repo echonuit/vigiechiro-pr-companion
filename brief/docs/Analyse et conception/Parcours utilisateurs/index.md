@@ -6,7 +6,7 @@ Cette section présente les **parcours principaux** de l'application, organisés
 - **Section B — Approfondissements** : les six parcours **P1 à P6** qui détaillent ou enrichissent le fil rouge. P1 à P4 composent la chaîne minimale livrable (MUST). P5 et P6 absorbent la montée en charge multi-site et le diagnostic matériel.
 - **Section C — Cibles étirées** : les trois parcours **P7, P9 et P10** qui dépassent le périmètre MVP strict. P7 (validation Tadarida) est le **filet de sécurité MUST** si la SAE déborde du périmètre fil rouge. P9 et P10 sont des idées remontées par Samuel à arbitrer.
 
-Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel](../Modèle%20conceptuel.md).
+Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel](../Modèle%20conceptuel/index.md).
 
 ## Topologie des parcours
 

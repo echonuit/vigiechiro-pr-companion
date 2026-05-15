@@ -18,12 +18,12 @@
 
 **Critères d'acceptation** :
 
-- [ ] Le formulaire valide que le n° de carré fait exactement 6 chiffres ([R1](../Modèle%20conceptuel.md#r1) du [modèle conceptuel](../Modèle%20conceptuel.md)).
+- [ ] Le formulaire valide que le n° de carré fait exactement 6 chiffres ([R1](../Modèle%20conceptuel/Règles%20métier.md#r1) du [modèle conceptuel](../Modèle%20conceptuel/index.md)).
 - [ ] Le formulaire alerte si l'utilisateur saisit 5 chiffres pour les départements 1-9 (leading zero manquant) avec un message explicite (ex. « Pour le département 4, le n° de carré doit commencer par 0 »).
 - [ ] Le nom convivial est facultatif mais recommandé (placeholder « ex. Étang de la Tuilière »).
 - [ ] Le protocole est préselectionné sur `Point Fixe` et non modifiable (seul protocole supporté pour le MVP).
 - [ ] Au moins un point d'écoute est exigé pour valider le site.
-- [ ] Le code de point doit faire 1 lettre majuscule + 1 chiffre ([R2](../Modèle%20conceptuel.md#r2)), validé à la saisie.
+- [ ] Le code de point doit faire 1 lettre majuscule + 1 chiffre ([R2](../Modèle%20conceptuel/Règles%20métier.md#r2)), validé à la saisie.
 - [ ] Le site créé apparaît immédiatement dans la vue des sites après validation.
 - [ ] Le site est persisté en base et survit au redémarrage de l'application.
 
@@ -47,7 +47,7 @@
 
 - [ ] Depuis la fiche détail d'un site, l'utilisateur voit la liste de ses points avec un bouton « + Ajouter un point ».
 - [ ] Chaque point existant a une action « Modifier » et une action « Supprimer ».
-- [ ] La modification valide les mêmes règles que la création ([R2](../Modèle%20conceptuel.md#r2) : 1 lettre + 1 chiffre).
+- [ ] La modification valide les mêmes règles que la création ([R2](../Modèle%20conceptuel/Règles%20métier.md#r2) : 1 lettre + 1 chiffre).
 - [ ] La suppression d'un point est **bloquée** si des passages y sont rattachés, avec un message explicite (« Ce point est utilisé par 3 passages. Supprimez d'abord les passages ou modifiez le rattachement. »).
 - [ ] La modification du code d'un point (ex. `A1` → `A2`) **n'affecte pas** les fichiers déjà renommés des passages existants - une note d'avertissement informe l'utilisateur (« Le renommage d'un point ne re-renomme pas les fichiers des passages déjà importés »).
 - [ ] Test d'intégration sur la suppression bloquée par contrainte d'intégrité.
@@ -122,7 +122,7 @@
 - [ ] Dans la modale d'import ([P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 3), le combobox « Site » propose en plus une option « **+ Créer un nouveau site** » en tête de liste.
 - [ ] Le clic sur cette option ouvre le formulaire de [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) (E1.S1) en superposition sans fermer la modale d'import.
 - [ ] Après validation du nouveau site, la modale d'import se rafraîchit avec ce site présélectionné (et le combobox des points est mis à jour).
-- [ ] Si l'utilisateur annule la création du site, il revient à la modale d'import dans son état précédent (aucun fichier n'a été touché, [R9](../Modèle%20conceptuel.md#r9)).
+- [ ] Si l'utilisateur annule la création du site, il revient à la modale d'import dans son état précédent (aucun fichier n'a été touché, [R9](../Modèle%20conceptuel/Règles%20métier.md#r9)).
 - [ ] Cas particulier des fichiers déjà préfixés (extraction du quadruplet) : si le carré ne correspond à aucun site déclaré, la même option « + Créer un nouveau site » est proposée, avec le n° de carré pré-rempli depuis le préfixe.
 
 **Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) (variante), [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md)<br>

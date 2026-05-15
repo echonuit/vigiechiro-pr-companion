@@ -19,11 +19,11 @@
 **Critères d'acceptation** :
 
 - [ ] L'utilisateur peut sélectionner un dossier source via un sélecteur ou un drag-and-drop sur la modale d'import.
-- [ ] L'application **n'écrit rien** sur le dossier source pendant l'inspection ([R9](../Modèle%20conceptuel.md#r9)).
+- [ ] L'application **n'écrit rien** sur le dossier source pendant l'inspection ([R9](../Modèle%20conceptuel/Règles%20métier.md#r9)).
 - [ ] L'inspection détecte et signale : journal du capteur (`LogPR<n>.txt`), relevé climatique (`PaRec<sn>_THLog.csv`), N enregistrements WAV, taille totale du dossier, plage horaire couverte.
 - [ ] Le **n° de série de l'enregistreur** est extrait du journal du capteur quand celui-ci est présent.
 - [ ] Les paramètres d'acquisition (Fe, gain, bande de fréquence) sont extraits du journal et affichés dans le récapitulatif.
-- [ ] L'**état du nommage** des fichiers est classifié en `sans préfixe` / `tous préfixés` / `mélangé` (cf. [R6](../Modèle%20conceptuel.md#r6)).
+- [ ] L'**état du nommage** des fichiers est classifié en `sans préfixe` / `tous préfixés` / `mélangé` (cf. [R6](../Modèle%20conceptuel/Règles%20métier.md#r6)).
 - [ ] Si le journal du capteur est absent ou illisible, l'inspection se poursuit avec un avertissement explicite (« le diagnostic matériel sera limité ») mais n'est pas bloquante.
 
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 2<br>
@@ -48,7 +48,7 @@
 - [ ] Le combobox `Site` ne propose que les sites déclarés en base (cf. [E1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md)). Si aucun site n'existe, l'option « + Créer un nouveau site » est proposée (cf. E1.S5).
 - [ ] Si l'enregistreur (n° de série) a déjà été utilisé pour importer une nuit auparavant, la **dernière association connue (site + point) est présélectionnée** (cf. E2.S7).
 - [ ] Le n° de passage est pré-rempli en **auto-incrément** (max + 1 sur les passages déjà enregistrés pour ce point cette année, ou 1 si aucun) et reste **modifiable librement**.
-- [ ] La validation de la modale crée un nouveau passage en BD avec le statut `En cours d'import` et l'unicité du quadruplet `(carré, année, n° passage, point)` est vérifiée ([R5](../Modèle%20conceptuel.md#r5)). Conflit → message d'erreur explicite avec proposition d'aller modifier le n° de passage.
+- [ ] La validation de la modale crée un nouveau passage en BD avec le statut `En cours d'import` et l'unicité du quadruplet `(carré, année, n° passage, point)` est vérifiée ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)). Conflit → message d'erreur explicite avec proposition d'aller modifier le n° de passage.
 - [ ] Le clic sur « Importer » est bloqué tant que le quadruplet n'est pas valide.
 
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 3 (cas « sans préfixe »)<br>
@@ -93,7 +93,7 @@
 
 **Critères d'acceptation** :
 
-- [ ] La copie ne modifie **aucun fichier** sur la carte SD source ([R9](../Modèle%20conceptuel.md#r9)).
+- [ ] La copie ne modifie **aucun fichier** sur la carte SD source ([R9](../Modèle%20conceptuel/Règles%20métier.md#r9)).
 - [ ] Tous les fichiers du dossier source sont copiés (WAV, journal du capteur, relevé climatique).
 - [ ] La copie se fait **en arrière-plan** sans freezer l'IHM, avec une barre de progression détaillée (fichier en cours, % global, taille restante, ETA) (cf. [O3](../../Objectifs%20qualités/Objectifs%20qualités/O3.md)).
 - [ ] L'utilisateur peut fermer la fenêtre de progression sans annuler l'opération (la copie continue en tâche de fond).
@@ -110,7 +110,7 @@
 
 ---
 
-## E2.S5 - Renommer les fichiers copiés selon le préfixe Vigie-Chiro { #e2s5 }
+## E2.S5 - Renommer les fichiers avec le préfixe Vigie-Chiro { #e2s5 }
 
 **En tant que** Marie
 
@@ -121,8 +121,8 @@
 **Critères d'acceptation** :
 
 - [ ] Le préfixe `CarXXXXXX-AAAA-PassN-YY-` est appliqué à chaque fichier copié (WAV originaux, journal, climat) à partir du rattachement saisi (cf. E2.S2).
-- [ ] Les **tirets** utilisés sont des « tirets du 6 » (`-`, U+002D HYPHEN-MINUS), pas des cadratins ni demi-cadratins ([R6](../Modèle%20conceptuel.md#r6)).
-- [ ] Le suffixe original de l'enregistreur (`PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>.wav`) est **conservé tel quel** après le préfixe ([R7](../Modèle%20conceptuel.md#r7)).
+- [ ] Les **tirets** utilisés sont des « tirets du 6 » (`-`, U+002D HYPHEN-MINUS), pas des cadratins ni demi-cadratins ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6)).
+- [ ] Le suffixe original de l'enregistreur (`PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>.wav`) est **conservé tel quel** après le préfixe ([R7](../Modèle%20conceptuel/Règles%20métier.md#r7)).
 - [ ] Si les fichiers étaient **déjà préfixés** et l'utilisateur a validé sans modification (cf. E2.S3), aucun renommage n'a lieu.
 - [ ] Si l'utilisateur a choisi « Réaligner les noms sur la saisie » (cf. E2.S3), tous les fichiers sont re-renommés avec le nouveau préfixe.
 - [ ] Le renommage est **atomique** : soit tous les fichiers sont renommés, soit aucun ne l'est (en cas d'erreur, rollback).
@@ -146,10 +146,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] Pour chaque enregistrement original copié (E2.S4), l'application produit `ceil(durée × 10 / 5) = ceil(2 × durée)` séquences d'écoute ([R10](../Modèle%20conceptuel.md#r10)).
+- [ ] Pour chaque enregistrement original copié (E2.S4), l'application produit `ceil(durée × 10 / 5) = ceil(2 × durée)` séquences d'écoute ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)).
 - [ ] Chaque séquence est un fichier WAV de **5 s ralenti ×10** (expansion temporelle, pas un re-échantillonnage). La dernière séquence d'un enregistrement peut être plus courte que 5 s.
-- [ ] Le nom de chaque séquence reprend le nom de son enregistrement original source en insérant un suffixe `_000`, `_001`, etc. entre le nom de base et l'extension `.wav` ([R8](../Modèle%20conceptuel.md#r8)).
-- [ ] La transformation est **déterministe** : relancer la transformation sur les mêmes enregistrements produit les mêmes séquences au bit près ([R11](../Modèle%20conceptuel.md#r11)).
+- [ ] Le nom de chaque séquence reprend le nom de son enregistrement original source en insérant un suffixe `_000`, `_001`, etc. entre le nom de base et l'extension `.wav` ([R8](../Modèle%20conceptuel/Règles%20métier.md#r8)).
+- [ ] La transformation est **déterministe** : relancer la transformation sur les mêmes enregistrements produit les mêmes séquences au bit près ([R11](../Modèle%20conceptuel/Règles%20métier.md#r11)).
 - [ ] La transformation se fait **en arrière-plan** avec barre de progression (séquence en cours, % global). L'utilisateur peut fermer la fenêtre sans annuler.
 - [ ] Si la transformation est interrompue, elle peut reprendre au démarrage suivant (E0.S6).
 - [ ] Le passage passe au statut `Transformé` une fois toutes les séquences produites.
@@ -202,7 +202,7 @@
 - [ ] À la validation, l'application affiche un **récapitulatif explicite des conséquences** : « N fichiers vont être renommés, le passage va passer du quadruplet X au quadruplet Y ».
 - [ ] L'utilisateur doit confirmer explicitement avant que l'opération ne s'exécute (action irréversible).
 - [ ] Le re-renommage est atomique (rollback en cas d'erreur).
-- [ ] L'unicité du nouveau quadruplet est vérifiée avant l'opération ([R5](../Modèle%20conceptuel.md#r5)) ; conflit → message clair sans modification.
+- [ ] L'unicité du nouveau quadruplet est vérifiée avant l'opération ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)) ; conflit → message clair sans modification.
 - [ ] Tests d'intégration : passage importé → modification du rattachement → vérification que tous les fichiers sont renommés avec le nouveau préfixe et que le passage en BD a les nouvelles valeurs.
 
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), notes importantes (« changer rétroactivement »)<br>
