@@ -81,7 +81,7 @@ nav:
   - 1. Présentation du projet: Présentation du projet.md
   - 2. Contraintes techniques: Contraintes techniques.md
   - 3. Objectifs qualités:
-      - Vue d'ensemble: Objectifs qualités.md
+      - Objectifs qualités/index.md
       - Catégories ISO 25010: Objectifs qualités/Catégorie de qualité.md
       - Critères ISO 25010: Objectifs qualités/Critère de qualité.md
       - Objectifs:

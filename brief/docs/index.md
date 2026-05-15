@@ -10,7 +10,7 @@
 
 1. [Présentation du projet](Présentation%20du%20projet.md)
 2. [Contraintes techniques](Contraintes%20techniques.md)
-3. [Objectifs qualités](Objectifs%20qualités.md)
+3. [Objectifs qualités](Objectifs%20qualités/index.md)
 4. [Expression du besoin](Expression%20du%20besoin.md)
 5. [**Analyse et conception**](Analyse%20et%20conception/README.md) (dossier fourni : personas, parcours, story mapping, périmètre MVP, planification)
 6. [Jalons et livrables](Jalons%20et%20livrables.md)

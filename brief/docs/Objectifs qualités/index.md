@@ -8,20 +8,20 @@ Les normes **ISO/IEC 9126** puis **ISO/IEC 25010** définissent un ensemble de c
 
 La norme **ISO/IEC 25010** classe les critères de qualité en **8 catégories**. Chacune correspond à un axe d'analyse de la qualité d'un logiciel.
 
-➡ [Catégorie de qualité](Objectifs%20qualités/Catégorie%20de%20qualité.md)
+➡ [Catégorie de qualité](Catégorie%20de%20qualité.md)
 
 Définir la qualité d'un logiciel ne peut pas se faire de manière absolue. Il est impossible pour une application réelle non simpliste de satisfaire tous les critères de qualité simultanément. La démarche qualité d'une application consiste donc à **prioriser** les critères qui satisfont au mieux les objectifs de l'application.
 
-➡ [Critère de qualité](Objectifs%20qualités/Critère%20de%20qualité.md)
+➡ [Critère de qualité](Critère%20de%20qualité.md)
 
 ## Objectifs qualités
 
 Les objectifs qualités du *VigieChiro PR Companion* ordonnent les critères qualités les plus importants au regard du besoin exprimé par le client. Ils servent de boussole tout au long du développement et de grille d'analyse pour les arbitrages techniques.
 
-➡ [Liste des objectifs qualités O1..O8](Objectifs%20qualités/Objectifs%20qualités/index.md)
+➡ [Liste des objectifs qualités O1..O8](Objectifs%20qualités/index.md)
 
 ## Scénarios
 
 Pour chaque objectif qualité majeur, un ou plusieurs scénarios concrétisent ce que l'on attend dans une situation d'usage donnée.
 
-➡ [Liste des scénarios SC1..SC4](Objectifs%20qualités/Scénario/index.md)
+➡ [Liste des scénarios SC1..SC4](Scénario/index.md)
