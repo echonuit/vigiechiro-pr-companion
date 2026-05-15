@@ -2,7 +2,7 @@
 
 ## Phases
 
-La SAE 2.01 est une **SAE de développement**. La phase d'analyse et de conception qui précède habituellement le développement est **prise en charge par l'équipe pédagogique** et fournie aux groupes étudiants en début de SAE sous la forme du dossier [`Analyse et conception/`](Analyse%20et%20conception/README.md). Vous travaillez à partir de ce dossier comme s'il vous avait été remis par un client à l'issue d'une phase d'expression du besoin déjà menée.
+La SAE 2.01 est une **SAE de développement**. La phase d'analyse et de conception qui précède habituellement le développement est **prise en charge par l'équipe pédagogique** et fournie aux groupes étudiants en début de SAE sous la forme du dossier [`Analyse et conception/`](Analyse%20et%20conception/index.md). Vous travaillez à partir de ce dossier comme s'il vous avait été remis par un client à l'issue d'une phase d'expression du besoin déjà menée.
 
 Le projet est ainsi organisé en **2 phases** :
 

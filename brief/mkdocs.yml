@@ -81,7 +81,7 @@ nav:
   - 1. Présentation du projet: Présentation du projet.md
   - 2. Contraintes techniques: Contraintes techniques.md
   - 3. Objectifs qualités:
-      - Objectifs qualités/index.md
+      - Vue d'ensemble: Objectifs qualités/index.md
       - Catégories ISO 25010: Objectifs qualités/Catégorie de qualité.md
       - Critères ISO 25010: Objectifs qualités/Critère de qualité.md
       - Objectifs:
@@ -102,7 +102,7 @@ nav:
           - SC4 - Internationalisation: Objectifs qualités/Scénario/SC4.md
   - 4. Expression du besoin: Expression du besoin.md
   - 5. Analyse et conception:
-      - Vue d'ensemble: Analyse et conception/README.md
+      - Vue d'ensemble: Analyse et conception/index.md
       - Modèle conceptuel:
           - Vue d'ensemble: Analyse et conception/Modèle conceptuel/index.md
           - C1 - Utilisateur: Analyse et conception/Modèle conceptuel/C1 - Utilisateur.md
@@ -154,7 +154,7 @@ nav:
       - Périmètre MVP: Analyse et conception/Périmètre MVP.md
       - Planification: Analyse et conception/Planification.md
       - Maquettes:
-          - Vue d'ensemble: Analyse et conception/Maquettes/README.md
+          - Vue d'ensemble: Analyse et conception/Maquettes/index.md
           - M1 - Accueil: Analyse et conception/Maquettes/M1-accueil.md
           - M2 - Détail session: Analyse et conception/Maquettes/M2-detail-session.md
           - M3 - Diagnostic session: Analyse et conception/Maquettes/M3-diagnostic-session.md

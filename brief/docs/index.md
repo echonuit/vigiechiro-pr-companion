@@ -4,7 +4,7 @@
 > SAE commune aux modules **R2.02 - Développement d'applications avec IHM** et **R2.03 - Qualité de développement**.
 
 !!! info "SAE de développement"
-    La phase d'analyse et de conception est portée par l'équipe pédagogique. Vous recevez un dossier de spécification opérationnel (section [Analyse et conception](Analyse%20et%20conception/README.md)) et vous concentrez votre énergie sur le développement (R2.02) et la qualité de la production (R2.03).
+    La phase d'analyse et de conception est portée par l'équipe pédagogique. Vous recevez un dossier de spécification opérationnel (section [Analyse et conception](Analyse%20et%20conception/index.md)) et vous concentrez votre énergie sur le développement (R2.02) et la qualité de la production (R2.03).
 
 ## Sommaire
 
@@ -12,7 +12,7 @@
 2. [Contraintes techniques](Contraintes%20techniques.md)
 3. [Objectifs qualités](Objectifs%20qualités/index.md)
 4. [Expression du besoin](Expression%20du%20besoin.md)
-5. [**Analyse et conception**](Analyse%20et%20conception/README.md) (dossier fourni : personas, parcours, story mapping, périmètre MVP, planification)
+5. [**Analyse et conception**](Analyse%20et%20conception/index.md) (dossier fourni : personas, parcours, story mapping, périmètre MVP, planification)
 6. [Jalons et livrables](Jalons%20et%20livrables.md)
 7. [Calendrier de travail](Calendrier%20de%20travail.md)
 8. [Consignes générales](Consignes%20générales.md)

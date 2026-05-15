@@ -10,7 +10,7 @@ Ce dossier contient le **dossier de spécification opérationnel** du projet, pr
 4. [Story mapping](Story%20mapping/index.md) - les 8 épopées, stories INVEST et critères d'acceptation, avec estimations en étoiles (un fichier par épopée dans le sous-dossier)
 5. [Périmètre MVP](Périmètre%20MVP.md) - le sous-ensemble à livrer en phase 1, justifié
 6. [Planification](Planification.md) - le Gantt prospectif des sprints de développement
-7. [Maquettes](Maquettes/README.md) - les wireframes basse fidélité des écrans clés
+7. [Maquettes](Maquettes/index.md) - les wireframes basse fidélité des écrans clés
 
 ## Comment lire ce dossier
 

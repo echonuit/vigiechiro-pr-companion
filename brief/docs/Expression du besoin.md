@@ -82,7 +82,7 @@ L'application **doit** offrir les fonctionnalités suivantes (priorité MUST). L
 
 ## Et après ?
 
-Le présent document est l'**expression brute du besoin**, telle qu'elle pourrait être recueillie auprès du client. Il a été traduit par l'équipe pédagogique en un **dossier d'analyse et de conception opérationnel** que vous trouverez dans [`Analyse et conception/`](Analyse%20et%20conception/README.md) :
+Le présent document est l'**expression brute du besoin**, telle qu'elle pourrait être recueillie auprès du client. Il a été traduit par l'équipe pédagogique en un **dossier d'analyse et de conception opérationnel** que vous trouverez dans [`Analyse et conception/`](Analyse%20et%20conception/index.md) :
 
 - 3 [personas](Analyse%20et%20conception/Personas/index.md) représentatifs des utilisateurs cibles
 - les [parcours utilisateurs](Analyse%20et%20conception/Parcours%20utilisateurs/index.md) attendus
