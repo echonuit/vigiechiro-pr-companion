@@ -85,8 +85,8 @@ L'application **doit** offrir les fonctionnalités suivantes (priorité MUST). L
 Le présent document est l'**expression brute du besoin**, telle qu'elle pourrait être recueillie auprès du client. Il a été traduit par l'équipe pédagogique en un **dossier d'analyse et de conception opérationnel** que vous trouverez dans [`Analyse et conception/`](Analyse%20et%20conception/README.md) :
 
 - 3 [personas](Analyse%20et%20conception/Personas.md) représentatifs des utilisateurs cibles
-- les [parcours utilisateurs](Analyse%20et%20conception/Parcours%20utilisateurs.md) attendus
-- une [cartographie des histoires utilisateurs](Analyse%20et%20conception/Story%20mapping.md) (épopées + stories INVEST + critères d'acceptation + estimations en story points)
+- les [parcours utilisateurs](Analyse%20et%20conception/Parcours%20utilisateurs/index.md) attendus
+- une [cartographie des histoires utilisateurs](Analyse%20et%20conception/Story%20mapping/index.md) (épopées + stories INVEST + critères d'acceptation + estimations en étoiles)
 - le [périmètre fonctionnel MVP](Analyse%20et%20conception/Périmètre%20MVP.md) arbitré
 - la [planification prospective](Analyse%20et%20conception/Planification.md) sous forme de Gantt
 

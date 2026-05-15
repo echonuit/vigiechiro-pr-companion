@@ -1,8 +1,8 @@
 # M1 - Accueil / Journal des sessions
 
 > **Type** : vue principale (premier écran à l'ouverture de l'application)
-> **Parcours couverts** : [P2 Cycle régulier](../Parcours%20utilisateurs.md#p2-cycle-regulier)
-> **Stories couvertes** : [E1.S1 Voir le journal](../Story%20mapping.md#e1s1-voir-le-journal-de-mes-sessions-3-pts), [E1.S6 Tagger par chantier](../Story%20mapping.md#e1s6-tagger-une-session-par-chantier-projet-8-pts) (SHOULD)
+> **Parcours couverts** : [P2 Cycle régulier](../Parcours%20utilisateurs/index.md#p2-cycle-regulier)
+> **Stories couvertes** : [E1.S1 Voir le journal](../Story%20mapping/index.md#e1s1-voir-le-journal-de-mes-sessions-3-pts), [E1.S6 Tagger par chantier](../Story%20mapping/index.md#e1s6-tagger-une-session-par-chantier-projet-8-pts) (SHOULD)
 
 ## Wireframe
 

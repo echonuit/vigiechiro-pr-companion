@@ -1,7 +1,7 @@
 # M9 - Modale de suppression d'une session
 
 > **Type** : modale, déclenchée depuis [M2 - Détail session](M2-detail-session.md) (ou en sélection multiple depuis [M1](M1-accueil.md))
-> **Stories couvertes** : [E1.S5 Supprimer une session](../Story%20mapping.md#e1s5-supprimer-une-session-3-pts)
+> **Stories couvertes** : [E1.S5 Supprimer une session](../Story%20mapping/index.md#e1s5-supprimer-une-session-3-pts)
 
 ## Étape 1 - Choix du périmètre
 

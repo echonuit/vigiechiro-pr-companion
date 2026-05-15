@@ -1,8 +1,8 @@
 # M8 - Modale d'export VigieChiro
 
 > **Type** : modale, déclenchée depuis [M2 - Détail session](M2-detail-session.md)
-> **Parcours couverts** : [P4 Export VigieChiro](../Parcours%20utilisateurs.md#p4-export-vigiechiro)
-> **Stories couvertes** : [E5.S1 Exporter le CSV](../Story%20mapping.md#e5s1-exporter-le-csv-de-validation-3-pts), [E5.S2 Récapitulatif d'export](../Story%20mapping.md#e5s2-recapitulatif-dexport-2-pts) (SHOULD), [E5.S3 Marquer comme exportée](../Story%20mapping.md#e5s3-marquer-la-session-comme-exportee-3-pts)
+> **Parcours couverts** : [P4 Export VigieChiro](../Parcours%20utilisateurs/index.md#p4-export-vigiechiro)
+> **Stories couvertes** : [E5.S1 Exporter le CSV](../Story%20mapping/index.md#e5s1-exporter-le-csv-de-validation-3-pts), [E5.S2 Récapitulatif d'export](../Story%20mapping/index.md#e5s2-recapitulatif-dexport-2-pts) (SHOULD), [E5.S3 Marquer comme exportée](../Story%20mapping/index.md#e5s3-marquer-la-session-comme-exportee-3-pts)
 
 ## Étape 1 - Vérification pré-export
 

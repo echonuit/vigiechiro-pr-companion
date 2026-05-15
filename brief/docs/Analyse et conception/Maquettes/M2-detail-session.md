@@ -1,8 +1,8 @@
 # M2 - Fiche détail d'une session
 
 > **Type** : vue secondaire (ouverte depuis [M1 - Accueil](M1-accueil.md))
-> **Parcours couverts** : [P1 Première utilisation](../Parcours%20utilisateurs.md#p1-premiere-utilisation), [P2 Cycle régulier](../Parcours%20utilisateurs.md#p2-cycle-regulier)
-> **Stories couvertes** : [E1.S2](../Story%20mapping.md#e1s2-voir-le-detail-dune-session-3-pts), [E1.S3](../Story%20mapping.md#e1s3-annoter-une-session-avec-un-commentaire-libre-2-pts), [E1.S4](../Story%20mapping.md#e1s4-marquer-une-session-comme-validation-terminee-2-pts)
+> **Parcours couverts** : [P1 Première utilisation](../Parcours%20utilisateurs/index.md#p1-premiere-utilisation), [P2 Cycle régulier](../Parcours%20utilisateurs/index.md#p2-cycle-regulier)
+> **Stories couvertes** : [E1.S2](../Story%20mapping/index.md#e1s2-voir-le-detail-dune-session-3-pts), [E1.S3](../Story%20mapping/index.md#e1s3-annoter-une-session-avec-un-commentaire-libre-2-pts), [E1.S4](../Story%20mapping/index.md#e1s4-marquer-une-session-comme-validation-terminee-2-pts)
 
 ## Wireframe
 

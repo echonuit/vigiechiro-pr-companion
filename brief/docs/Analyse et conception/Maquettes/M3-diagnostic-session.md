@@ -1,8 +1,8 @@
 # M3 - Diagnostic de session
 
 > **Type** : onglet de [M2 - Détail session](M2-detail-session.md)
-> **Parcours couverts** : [P5 Suivi du matériel](../Parcours%20utilisateurs.md#p5-suivi-du-materiel)
-> **Stories couvertes** : [E6.S1 Courbe T°/H](../Story%20mapping.md#e6s1-visualiser-la-courbe-th-dune-session-5-pts), [E6.S2 Niveau de batterie](../Story%20mapping.md#e6s2-voir-le-niveau-de-batterie-debutfin-2-pts), [E6.S3 Évènements anormaux](../Story%20mapping.md#e6s3-lister-les-evenements-anormaux-du-logpr-3-pts) (COULD)
+> **Parcours couverts** : [P5 Suivi du matériel](../Parcours%20utilisateurs/index.md#p5-suivi-du-materiel)
+> **Stories couvertes** : [E6.S1 Courbe T°/H](../Story%20mapping/index.md#e6s1-visualiser-la-courbe-th-dune-session-5-pts), [E6.S2 Niveau de batterie](../Story%20mapping/index.md#e6s2-voir-le-niveau-de-batterie-debutfin-2-pts), [E6.S3 Évènements anormaux](../Story%20mapping/index.md#e6s3-lister-les-evenements-anormaux-du-logpr-3-pts) (COULD)
 
 ## Wireframe
 

@@ -1,8 +1,8 @@
 # M7 - Modale de chargement du CSV Tadarida
 
 > **Type** : modale, déclenchée depuis [M2 - Détail session](M2-detail-session.md)
-> **Parcours couverts** : [P1 Première utilisation](../Parcours%20utilisateurs.md#p1-premiere-utilisation), [P2 Cycle régulier](../Parcours%20utilisateurs.md#p2-cycle-regulier)
-> **Stories couvertes** : [E2.S4 Charger un CSV d'observations Tadarida](../Story%20mapping.md#e2s4-charger-un-csv-dobservations-tadarida-5-pts)
+> **Parcours couverts** : [P1 Première utilisation](../Parcours%20utilisateurs/index.md#p1-premiere-utilisation), [P2 Cycle régulier](../Parcours%20utilisateurs/index.md#p2-cycle-regulier)
+> **Stories couvertes** : [E2.S4 Charger un CSV d'observations Tadarida](../Story%20mapping/index.md#e2s4-charger-un-csv-dobservations-tadarida-5-pts)
 
 ## Étape 1 - Sélection du fichier
 

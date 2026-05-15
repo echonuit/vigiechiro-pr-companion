@@ -1,8 +1,8 @@
 # M4 - Vue principale de validation
 
 > **Type** : vue principale (l'écran le plus utilisé pendant la SAE)
-> **Parcours couverts** : [P2 Cycle régulier](../Parcours%20utilisateurs.md#p2-cycle-regulier), [P3 Validation approfondie](../Parcours%20utilisateurs.md#p3-validation-approfondie)
-> **Stories couvertes** : [E4.S1 Liste obs](../Story%20mapping.md#e4s1-voir-la-liste-des-observations-dune-session-3-pts), [E4.S3 Valider](../Story%20mapping.md#e4s3-valider-une-observation-tadarida-est-correct-3-pts), [E4.S4 Corriger](../Story%20mapping.md#e4s4-corriger-une-observation-proposer-un-autre-taxon-3-pts), [E4.S5 Commenter obs](../Story%20mapping.md#e4s5-annoter-une-observation-avec-un-commentaire-libre-2-pts) (SHOULD), [E3.S1 Lecture audio](../Story%20mapping.md#e3s1-lecture-audio-ralentie-dun-wav-8-pts), [E3.S2 Vitesse](../Story%20mapping.md#e3s2-regler-la-vitesse-de-lecture-3-pts) (SHOULD), [E3.S4 Navigation](../Story%20mapping.md#e3s4-lecture-des-observations-adjacentes-2-pts) (SHOULD)
+> **Parcours couverts** : [P2 Cycle régulier](../Parcours%20utilisateurs/index.md#p2-cycle-regulier), [P3 Validation approfondie](../Parcours%20utilisateurs/index.md#p3-validation-approfondie)
+> **Stories couvertes** : [E4.S1 Liste obs](../Story%20mapping/index.md#e4s1-voir-la-liste-des-observations-dune-session-3-pts), [E4.S3 Valider](../Story%20mapping/index.md#e4s3-valider-une-observation-tadarida-est-correct-3-pts), [E4.S4 Corriger](../Story%20mapping/index.md#e4s4-corriger-une-observation-proposer-un-autre-taxon-3-pts), [E4.S5 Commenter obs](../Story%20mapping/index.md#e4s5-annoter-une-observation-avec-un-commentaire-libre-2-pts) (SHOULD), [E3.S1 Lecture audio](../Story%20mapping/index.md#e3s1-lecture-audio-ralentie-dun-wav-8-pts), [E3.S2 Vitesse](../Story%20mapping/index.md#e3s2-regler-la-vitesse-de-lecture-3-pts) (SHOULD), [E3.S4 Navigation](../Story%20mapping/index.md#e3s4-lecture-des-observations-adjacentes-2-pts) (SHOULD)
 
 ## Wireframe
 

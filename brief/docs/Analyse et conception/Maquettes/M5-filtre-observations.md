@@ -1,8 +1,8 @@
 # M5 - Panneau de filtre des observations
 
 > **Type** : panneau latéral / popover, déclenché depuis [M4 - Validation](M4-validation.md)
-> **Parcours couverts** : [P2 Cycle régulier](../Parcours%20utilisateurs.md#p2-cycle-regulier)
-> **Stories couvertes** : [E4.S2 Filtrer les observations](../Story%20mapping.md#e4s2-filtrer-les-observations-5-pts)
+> **Parcours couverts** : [P2 Cycle régulier](../Parcours%20utilisateurs/index.md#p2-cycle-regulier)
+> **Stories couvertes** : [E4.S2 Filtrer les observations](../Story%20mapping/index.md#e4s2-filtrer-les-observations-5-pts)
 
 ## Wireframe
 

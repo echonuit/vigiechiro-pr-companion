@@ -6,8 +6,8 @@ Ce dossier contient le **dossier de spécification opérationnel** du projet, pr
 
 1. [Modèle conceptuel](Modèle%20conceptuel.md) - les entités métier, leurs relations, les règles, les glossaires
 2. [Personas](Personas.md) - les 3 utilisateurs cibles de référence
-3. [Parcours utilisateurs](Parcours%20utilisateurs.md) - les trajectoires d'usage principales
-4. [Story mapping](Story%20mapping.md) - les épopées, stories INVEST et critères d'acceptation, avec estimations
+3. [Parcours utilisateurs](Parcours%20utilisateurs/index.md) - les trajectoires d'usage principales (un fichier par parcours dans le sous-dossier)
+4. [Story mapping](Story%20mapping/index.md) - les 8 épopées, stories INVEST et critères d'acceptation, avec estimations en étoiles (un fichier par épopée dans le sous-dossier)
 5. [Périmètre MVP](Périmètre%20MVP.md) - le sous-ensemble à livrer en phase 1, justifié
 6. [Planification](Planification.md) - le Gantt prospectif des sprints de développement
 7. [Maquettes](Maquettes/README.md) - les wireframes basse fidélité des écrans clés

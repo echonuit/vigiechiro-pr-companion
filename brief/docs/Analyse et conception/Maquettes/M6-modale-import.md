@@ -1,8 +1,8 @@
 # M6 - Modale d'import d'une session
 
 > **Type** : modale plein écran ou centrée, déclenchée depuis [M1 - Accueil](M1-accueil.md)
-> **Parcours couverts** : [P1 Première utilisation](../Parcours%20utilisateurs.md#p1-premiere-utilisation), [P2 Cycle régulier](../Parcours%20utilisateurs.md#p2-cycle-regulier)
-> **Stories couvertes** : [E2.S1 Importer un dossier](../Story%20mapping.md#e2s1-importer-un-dossier-de-session-8-pts), [E2.S5 Reprendre import interrompu](../Story%20mapping.md#e2s5-reprendre-un-import-interrompu-3-pts) (COULD)
+> **Parcours couverts** : [P1 Première utilisation](../Parcours%20utilisateurs/index.md#p1-premiere-utilisation), [P2 Cycle régulier](../Parcours%20utilisateurs/index.md#p2-cycle-regulier)
+> **Stories couvertes** : [E2.S1 Importer un dossier](../Story%20mapping/index.md#e2s1-importer-un-dossier-de-session-8-pts), [E2.S5 Reprendre import interrompu](../Story%20mapping/index.md#e2s5-reprendre-un-import-interrompu-3-pts) (COULD)
 
 > Conventions communes des 4 SVG ci-dessous : largeur 640, titre sombre, boutons primaires bleus.
 

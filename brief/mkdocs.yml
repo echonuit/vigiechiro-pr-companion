@@ -73,6 +73,9 @@ plugins:
   - search:
       lang: fr
 
+extra_css:
+  - stylesheets/extra.css
+
 nav:
   - Accueil: index.md
   - 1. Présentation du projet: Présentation du projet.md
@@ -89,8 +92,25 @@ nav:
       - Modèle conceptuel: Analyse et conception/Modèle conceptuel.md
       - Diagramme plein écran: Analyse et conception/Modèle conceptuel - Diagramme.md
       - Personas: Analyse et conception/Personas.md
-      - Parcours utilisateurs: Analyse et conception/Parcours utilisateurs.md
-      - Story mapping: Analyse et conception/Story mapping.md
+      - Parcours utilisateurs:
+          - Vue d'ensemble: Analyse et conception/Parcours utilisateurs/index.md
+          - P0 - Première nuit de Marie (fil rouge): Analyse et conception/Parcours utilisateurs/P0 - Première nuit de Marie.md
+          - P0 plein écran: Analyse et conception/Parcours utilisateurs/P0 - plein écran.md
+          - P1 - Déclarer un site de suivi: Analyse et conception/Parcours utilisateurs/P1 - Déclarer un site de suivi.md
+          - P2 - Importer une nuit de capture: Analyse et conception/Parcours utilisateurs/P2 - Importer une nuit de capture.md
+          - P3 - Vérifier l'enregistrement: Analyse et conception/Parcours utilisateurs/P3 - Vérifier l'enregistrement par échantillonnage.md
+          - P4 - Préparer le lot à déposer: Analyse et conception/Parcours utilisateurs/P4 - Préparer un lot prêt à déposer.md
+          - P5 - Naviguer multi-sites: Analyse et conception/Parcours utilisateurs/P5 - Naviguer dans plusieurs sites et passages.md
+          - P6 - Diagnostiquer le matériel: Analyse et conception/Parcours utilisateurs/P6 - Diagnostiquer le matériel.md
+          - P7 - Valider les résultats Tadarida: Analyse et conception/Parcours utilisateurs/P7 - Valider les résultats Tadarida.md
+          - P9 - Regrouper les nuits par point: Analyse et conception/Parcours utilisateurs/P9 - Regrouper les nuits successives par point.md
+          - P10 - Exporter sons de référence: Analyse et conception/Parcours utilisateurs/P10 - Exporter une bibliothèque de sons de référence.md
+          - Topologie plein écran: Analyse et conception/Parcours utilisateurs/Topologie - plein écran.md
+      - Story mapping:
+          - Vue d'ensemble: Analyse et conception/Story mapping/index.md
+          - E0 - Fondations de persistance: Analyse et conception/Story mapping/E0 - Fondations de persistance.md
+          - E1 - Gérer ses sites et points de suivi: Analyse et conception/Story mapping/E1 - Gérer ses sites et points de suivi.md
+          - E2 - Importer et transformer une nuit: Analyse et conception/Story mapping/E2 - Importer et transformer une nuit.md
       - Périmètre MVP: Analyse et conception/Périmètre MVP.md
       - Planification: Analyse et conception/Planification.md
       - Maquettes:
