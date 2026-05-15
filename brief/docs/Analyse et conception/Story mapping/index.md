@@ -29,7 +29,7 @@ Ces estimations sont **indicatives**. Vous les réviserez en équipe au début d
 | [E0](E0%20-%20Fondations%20de%20persistance.md) | 🗄️ Fondations de persistance | (transverse, sert tout) | ✅ MUST socle (S1-S5) + 🟠 SHOULD (S6-S7) + ⚪ COULD (S8) | 8 | ★★★★★ ★★★★★ ★★★★★ ★★★★★ ★ (21 ★) |
 | [E1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md) | 🌐 Gérer ses sites et points de suivi | [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | ✅ MUST | 5 | ★★★★★ ★★★★★ (10 ★) |
 | [E2](E2%20-%20Importer%20et%20transformer%20une%20nuit.md) | 📥 Importer et transformer une nuit | [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md) | ✅ MUST (S1-S6) + 🟠 SHOULD (S8) | 8 | ★★★★★ ★★★★★ ★★★★★ ★★★★★ ★★★ (23 ★) |
-| E3 | 🎧 Vérifier la qualité d'enregistrement | [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | ✅ MUST | _à venir_ | _à venir_ |
+| [E3](E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md) | 🎧 Vérifier la qualité d'enregistrement | [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | ✅ MUST (S1-S5) + 🟠 SHOULD (S6) | 6 | ★★★★★ ★★★★★ ★ (11 ★) |
 | E4 | 📦 Préparer et tracer le dépôt VigieChiro | [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | ✅ MUST | _à venir_ | _à venir_ |
 | E5 | 🗂 Naviguer dans le volume multi-sites | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | 🟠 SHOULD | _à venir_ | _à venir_ |
 | E6 | 🩺 Diagnostiquer le matériel | [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | 🟠 SHOULD | _à venir_ | _à venir_ |
