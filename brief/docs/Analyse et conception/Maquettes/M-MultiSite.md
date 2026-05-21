@@ -443,7 +443,7 @@ Ouvert par clic sur **+ Filtre avancé...** dans la barre de filtres rapides. Pe
   <text x="184" y="318" class="multi-select-placeholder">+ tous (cliquez pour filtrer)</text>
 
   <!-- Plage dates -->
-  <text x="174" y="355" class="group-title">📅 Date de capture</text>
+  <text x="174" y="355" class="group-title">📅 Date de session d'enregistrement</text>
   <rect x="174" y="365" width="170" height="30" rx="3" class="field-input"/>
   <text x="184" y="384" class="field-text">01/06/2026</text>
   <text x="354" y="384" class="field-label">→</text>

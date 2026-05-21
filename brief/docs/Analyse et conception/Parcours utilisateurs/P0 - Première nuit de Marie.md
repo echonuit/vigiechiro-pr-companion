@@ -2,7 +2,7 @@
 
 [← Retour au hub des parcours](index.md) · **Section A — Fil rouge** · ⭐ scénario démo
 
-> **Persona** : Marie. **Préconditions** : enregistreur reçu, site choisi, première nuit de capture effectuée.
+> **Persona** : Marie. **Préconditions** : enregistreur reçu, site choisi, première nuit d'enregistrement effectuée.
 
 !!! info "À utiliser comme support de soutenance"
     Ce parcours raconte l'usage cible **vu par Marie**, persona débutante mono-site. Il vous donne en une page la chaîne complète de bout-en-bout. Chaque étape pointe vers le parcours détaillé `Pn` correspondant pour les règles métier précises.
@@ -57,7 +57,7 @@ flowchart LR
     class Marie actor
 ```
 
-Marie a participé à un atelier d'initiation Vigie-Chiro le mois dernier, fabriquée son enregistreur passif (PR) il y a deux semaines, et choisi un carré de suivi sur la plateforme Vigie-Chiro (un point d'eau au sud d'Aix-en-Provence). Ce soir, elle a réalisé sa première nuit de capture sur son point `A1`. Au matin, elle récupère la carte SD et démarre l'application pour la première fois.
+Marie a participé à un atelier d'initiation Vigie-Chiro le mois dernier, fabriquée son enregistreur passif (PR) il y a deux semaines, et choisi un carré de suivi sur la plateforme Vigie-Chiro (un point d'eau au sud d'Aix-en-Provence). Ce soir, elle a réalisé sa première nuit d'enregistrement sur son point `A1`. Au matin, elle récupère la carte SD et démarre l'application pour la première fois.
 
 ## Étape 1 - Déclarer le site
 
@@ -75,7 +75,7 @@ Marie programme l'enregistreur via les boutons physiques (allumage 30 min avant 
 
 Marie branche la SD sur son ordinateur, clique sur « Importer une nuit », choisit son site et son point. L'application copie les fichiers (sans toucher à la SD), les renomme avec le préfixe `CarXXXXXX-AAAA-PassN-YY-`, puis les transforme automatiquement en séquences d'écoute de 5 s ralenties ×10.
 
-→ **Détail complet** : [P2 - Importer une nuit de capture](P2%20-%20Importer%20une%20nuit%20de%20capture.md).
+→ **Détail complet** : [P2 - Importer une nuit d'enregistrement](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md).
 
 ## Étape 4 - Vérifier l'enregistrement
 

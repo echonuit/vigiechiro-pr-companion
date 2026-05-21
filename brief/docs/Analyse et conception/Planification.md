@@ -10,7 +10,7 @@ Le développement est découpé en **2 sprints** alignés sur la stratégie déf
 
 Le Gantt prospectif détaillé est sur la page plein écran (il est trop dense pour s'afficher proprement dans la largeur de cette page). Il couvre 4 phases :
 
-1. **Amorçage** (22/05 → 31/05, 6 jours en parallèle d'autres modules) - lecture du brief, repo, équipes, assemblage du PR si pièces reçues, première nuit de capture test.
+1. **Amorçage** (22/05 → 31/05, 6 jours en parallèle d'autres modules) - lecture du brief, repo, équipes, assemblage du PR si pièces reçues, première nuit d'enregistrement test.
 2. **Sprint 1** (01/06 → 09/06, 7 jours dev exclusif) - chaîne fil rouge MUST : [E0 socle](Story%20mapping/E0%20-%20Fondations%20de%20persistance.md) + [E1](Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md) + [E2](Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md) + [E3](Story%20mapping/E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md).
 3. **Sprint 2** (10/06 → 17/06, 6 jours dev exclusif) - finition [E4](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md), SHOULD opportunistes, stabilisation, préparation soutenance.
 4. **Livraison** (18/06) - code freeze + diaporama le matin, test individuel l'après-midi, soutenance + démo devant Samuel Busson en clôture.
@@ -29,7 +29,7 @@ L'amorçage ne demande **pas de développement intensif** : c'est le moment de p
 | Clonage du repo GitHub Classroom, vérification que le squelette compile | Une PR pilote fusionnée pour valider le workflow Git/CI |
 | Premières estimations en étoiles sur les stories MUST | Estimations partagées, désaccords identifiés pour discussion |
 | **Assemblage du PR de l'équipe** (séance encadrée, si pièces reçues) | PR matériel qui démarre, se met en veille, écrit sur la SD |
-| Première nuit de capture test avec ce PR | Un dossier de session « maison » qui complète le sample fourni |
+| Première nuit d'enregistrement test avec ce PR | Un dossier de session « maison » qui complète le sample fourni |
 
 **Sortie attendue à la fin de l'amorçage** : repo opérationnel CI verte sur `main`, full dataset téléchargé, équipe prête à coder le 01/06 au matin.
 
@@ -50,7 +50,7 @@ L'amorçage ne demande **pas de développement intensif** : c'est le moment de p
 
 **Point de risque principal** : [E2.S6](Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6) (transformation ×10 + chunks 5 s, ★★★★★). **À sécuriser dès le premier jour** : sans elle, toute la chaîne fil rouge dérape.
 
-**Démo de fin de Sprint 1** : importer le dossier d'une nuit de capture, voir les séquences ralenties générées, écouter quelques-unes via la vue échantillonnée, saisir un verdict global. La préparation du lot (E4) reste pour le Sprint 2.
+**Démo de fin de Sprint 1** : importer le dossier d'une nuit d'enregistrement, voir les séquences ralenties générées, écouter quelques-unes via la vue échantillonnée, saisir un verdict global. La préparation du lot (E4) reste pour le Sprint 2.
 
 ### Sprint 2 — 10/06 → 17/06 (6 jours ouvrés, dev exclusif)
 

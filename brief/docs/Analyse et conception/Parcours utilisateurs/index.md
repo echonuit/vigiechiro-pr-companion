@@ -41,7 +41,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4 (les nœuds ve
 |---|---|---|---|
 | **A. Fil rouge** | [P0 - Première nuit de Marie](P0%20-%20Première%20nuit%20de%20Marie.md) | Marie | ⭐ scénario démo |
 | **B. Approfondissements** | [P1 - Déclarer un site de suivi](P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | Marie | ✅ MUST |
-| | [P2 - Importer une nuit de capture](P2%20-%20Importer%20une%20nuit%20de%20capture.md) | tous | ✅ MUST |
+| | [P2 - Importer une nuit d'enregistrement](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | tous | ✅ MUST |
 | | [P3 - Vérifier l'enregistrement par échantillonnage](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | tous | ✅ MUST |
 | | [P4 - Préparer un lot prêt à déposer](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | tous | ✅ MUST |
 | | [P5 - Naviguer dans plusieurs sites et passages](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | Karim / Samuel | 🟠 SHOULD (MUST pour Karim/Samuel) |
@@ -56,7 +56,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4 (les nœuds ve
 |---|:---:|:---:|:---:|
 | [P0 - Première nuit (fil rouge)](P0%20-%20Première%20nuit%20de%20Marie.md) | ⭐ | (variante multi-site) | (variante volume) |
 | [P1 - Déclarer un site](P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | ✅ ⭐ | ✅ | ✅ |
-| [P2 - Importer une nuit](P2%20-%20Importer%20une%20nuit%20de%20capture.md) | ✅ ⭐ | ✅ ⭐ | ✅ ⭐ |
+| [P2 - Importer une nuit](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | ✅ ⭐ | ✅ ⭐ | ✅ ⭐ |
 | [P3 - Vérifier l'enregistrement](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | ✅ ⭐ | ✅ | ✅ |
 | [P4 - Préparer le lot](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | ✅ ⭐ | ✅ | ✅ |
 | [P5 - Multi-sites](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | (1 site) | ✅ ⭐ | ✅ ⭐ |

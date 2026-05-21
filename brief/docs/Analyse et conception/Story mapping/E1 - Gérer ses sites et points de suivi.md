@@ -14,7 +14,7 @@
 
 **Je veux** déclarer un nouveau site de suivi en saisissant son n° de carré et au moins un point d'écoute
 
-**Afin de** pouvoir y rattacher mes futures nuits de capture lors de l'import
+**Afin de** pouvoir y rattacher mes futures nuits d'enregistrement lors de l'import
 
 **Critères d'acceptation** :
 
@@ -101,7 +101,7 @@
 - [ ] Si aucun site n'est déclaré, la vue affiche un état vide explicite (« Vous n'avez encore aucun site. Commencez par en déclarer un. ») avec une seule action mise en avant.
 - [ ] La vue se met à jour automatiquement après création/modification d'un site.
 
-**Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md), point d'entrée vers [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md)<br>
+**Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md), point d'entrée vers [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)<br>
 **Maquettes cibles** : [M-Sites](../Maquettes/M-Sites.md)<br>
 **Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3) (pour les compteurs de passages), [E1.S1](#e1s1)<br>
 **Complexité** : ★★★ (moyen — vue avec agrégation, état vide, navigation)<br>
@@ -119,13 +119,13 @@
 
 **Critères d'acceptation** :
 
-- [ ] Dans la modale d'import ([P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 3), le combobox « Site » propose en plus une option « **+ Créer un nouveau site** » en tête de liste.
+- [ ] Dans la modale d'import ([P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 3), le combobox « Site » propose en plus une option « **+ Créer un nouveau site** » en tête de liste.
 - [ ] Le clic sur cette option ouvre le formulaire de [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) (E1.S1) en superposition sans fermer la modale d'import.
 - [ ] Après validation du nouveau site, la modale d'import se rafraîchit avec ce site présélectionné (et le combobox des points est mis à jour).
 - [ ] Si l'utilisateur annule la création du site, il revient à la modale d'import dans son état précédent (aucun fichier n'a été touché, [R9](../Modèle%20conceptuel/Règles%20métier.md#r9)).
 - [ ] Cas particulier des fichiers déjà préfixés (extraction du quadruplet) : si le carré ne correspond à aucun site déclaré, la même option « + Créer un nouveau site » est proposée, avec le n° de carré pré-rempli depuis le préfixe.
 
-**Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) (variante), [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md)<br>
+**Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) (variante), [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (avec l'option « + Créer un nouveau site » dans le combobox)<br>
 **Dépendances** : [E1.S1](#e1s1), E2 (la modale d'import existe)<br>
 **Complexité** : ★★ (simple — composition d'écrans déjà développés)<br>

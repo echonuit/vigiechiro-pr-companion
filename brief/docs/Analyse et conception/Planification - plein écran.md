@@ -35,7 +35,7 @@ gantt
     Lecture brief, équipes, repo   :a1, 2026-05-22, 4d
     Premières estimations          :a2, 2026-05-26, 1d
     Assemblage PR (si pièces OK)   :a3, 2026-05-27, 2d
-    Première nuit de capture test  :a4, 2026-05-28, 2d
+    Première nuit d'enregistrement test  :a4, 2026-05-28, 2d
 
     section Sprint 1 - dev exclusif
     Démarrage SAE temps plein      :milestone, m2, 2026-06-01, 0d

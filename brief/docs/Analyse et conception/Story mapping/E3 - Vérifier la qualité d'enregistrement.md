@@ -2,7 +2,7 @@
 
 [← Retour au hub story mapping](index.md) · **Parcours principal** : [P3 - Vérifier l'enregistrement par échantillonnage](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) · ✅ MUST
 
-**Portée** : permettre à l'utilisateur de **valider qu'une nuit de capture est exploitable** avant de la déposer sur Vigie-Chiro. Constitution automatique d'une sélection d'écoute échantillonnée, lecteur audio pour les séquences ralenties ×10, et saisie d'un verdict global. C'est un **sound check** distinct de la validation taxonomique espèce par espèce (qui est l'objet de E7).
+**Portée** : permettre à l'utilisateur de **valider qu'une nuit d'enregistrement est exploitable** avant de la déposer sur Vigie-Chiro. Constitution automatique d'une sélection d'écoute échantillonnée, lecteur audio pour les séquences ralenties ×10, et saisie d'un verdict global. C'est un **sound check** distinct de la validation taxonomique espèce par espèce (qui est l'objet de E7).
 
 **Persona principal** : tous (Marie en mono-site, Karim et Samuel en chaîne).
 
@@ -44,7 +44,7 @@
 **Critères d'acceptation** :
 
 - [ ] Les séquences de la sélection sont affichées sous forme de tableau ou de liste, **triées chronologiquement** (du plus ancien au plus récent).
-- [ ] Pour chaque séquence on voit : horodatage de capture (heure du fichier source), durée affichée (5 s par défaut, plus court pour la dernière séquence d'un fichier), fréquence dominante indicative (en kHz, calculée à partir du WAV).
+- [ ] Pour chaque séquence on voit : horodatage de session d'enregistrement (heure du fichier source), durée affichée (5 s par défaut, plus court pour la dernière séquence d'un fichier), fréquence dominante indicative (en kHz, calculée à partir du WAV).
 - [ ] Un indicateur visuel distingue les séquences déjà écoutées des séquences pas encore écoutées (cf. [E3.S4](#e3s4)).
 - [ ] Un bouton ▶ par ligne permet de déclencher la lecture d'une séquence (cf. [E3.S3](#e3s3)).
 - [ ] La liste reste lisible même avec 50 lignes (scroll vertical).

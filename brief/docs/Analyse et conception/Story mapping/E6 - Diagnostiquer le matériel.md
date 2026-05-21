@@ -62,11 +62,11 @@
 
 ---
 
-## E6.S3 - Vérifier la cohérence des horaires de capture vs astronomie locale { #e6s3 }
+## E6.S3 - Vérifier la cohérence des horaires d'enregistrement vs astronomie locale { #e6s3 }
 
 **En tant que** [Samuel](../Personas/Samuel.md)
 
-**Je veux** que l'application calcule les heures réelles de coucher/lever de soleil pour la date et le lieu de capture, et compare ces horaires avec la plage effective enregistrée par le PR
+**Je veux** que l'application calcule les heures réelles de coucher/lever de soleil pour la date et le lieu d'enregistrement, et compare ces horaires avec la plage effective enregistrée par le PR
 
 **Afin de** détecter un PR mal programmé qui a enregistré trop tôt, trop tard, ou pas du tout selon le protocole Vigie-Chiro (allumage 30 min avant coucher → 30 min après lever)
 
@@ -74,7 +74,7 @@
 
 - [ ] L'onglet « Diagnostic » affiche un encart « Cohérence horaires » uniquement si les coordonnées GPS du point sont saisies (cf. [E1.S3](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s3)).
 - [ ] L'encart affiche :
-    - heure de coucher du soleil **calculée localement** d'après les coordonnées GPS et la date de capture
+    - heure de coucher du soleil **calculée localement** d'après les coordonnées GPS et la date d'enregistrement
     - heure de lever du soleil idem
     - **plage théorique attendue** (coucher - 30 min → lever + 30 min)
     - **plage effective enregistrée** (extraite du journal du capteur : heure de premier déclenchement → heure de mise en veille)

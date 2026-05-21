@@ -47,7 +47,7 @@ Le matériel reste **propriété du département** et doit être restitué en fi
 À l'issue de la séance d'assemblage, vous devrez :
 
 1. Avoir un PR fonctionnel qui démarre, se met en veille, se réveille sur alarme et écrit des fichiers WAV sur la carte SD.
-2. Avoir effectué **au moins une nuit de capture test** (chez vous, sur le campus, dans un parc - n'importe où). Cette nuit deviendra votre **deuxième jeu de données de test**, à côté du sample fourni.
+2. Avoir effectué **au moins une nuit d'enregistrement test** (chez vous, sur le campus, dans un parc - n'importe où). Cette nuit deviendra votre **deuxième jeu de données de test**, à côté du sample fourni.
 3. Avoir compris le **cycle complet** : SD → renommage des fichiers → dépôt VigieChiro → CSV Tadarida.
 
 ## Squelette de code

@@ -1,6 +1,6 @@
 # SC1 - Onboarding d'un possesseur de PR débutant
 
-Un possesseur de PR qui **découvre l'application** doit pouvoir, après **quelques explications simples** (idéalement une démonstration d'une quinzaine de minutes par un pair), traiter de bout en bout sa première nuit de capture : import, lecture des observations, validation de quelques évènements, export du CSV pour VigieChiro.
+Un possesseur de PR qui **découvre l'application** doit pouvoir, après **quelques explications simples** (idéalement une démonstration d'une quinzaine de minutes par un pair), traiter de bout en bout sa première nuit d'enregistrement : import, lecture des observations, validation de quelques évènements, export du CSV pour VigieChiro.
 
 ## Contexte
 

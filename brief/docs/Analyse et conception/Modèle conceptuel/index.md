@@ -8,7 +8,7 @@ Ce document pose le **vocabulaire**, le **modèle de données** et les **règles
 
 ## Vue d'ensemble
 
-L'application *VigieChiro PR Companion* organise les données autour d'un utilisateur unique (mono-utilisateur, hors-ligne). Cet utilisateur déclare un ou plusieurs **sites de suivi**, chaque site contenant un ou plusieurs **points d'écoute**. Sur chaque point, il réalise des **passages** (= une nuit complète d'enregistrement). Chaque passage produit une **capture** : les enregistrements originaux copiés depuis la SD, les séquences d'écoute (ralenties ×10 et découpées en 5 s) prêtes à être déposées sur Vigie-Chiro, ainsi que le journal du capteur et le relevé climatique de l'enregistreur utilisé.
+L'application *VigieChiro PR Companion* organise les données autour d'un utilisateur unique (mono-utilisateur, hors-ligne). Cet utilisateur déclare un ou plusieurs **sites de suivi**, chaque site contenant un ou plusieurs **points d'écoute**. Sur chaque point, il réalise des **passages** (= une nuit complète d'enregistrement). Chaque passage produit une **session d'enregistrement** : les enregistrements originaux copiés depuis la SD, les séquences d'écoute (ralenties ×10 et découpées en 5 s) prêtes à être déposées sur Vigie-Chiro, ainsi que le journal du capteur et le relevé climatique de l'enregistreur utilisé.
 
 Une fois les séquences d'écoute produites, l'utilisateur **vérifie l'enregistrement** par échantillonnage (sound check global). S'il est satisfait, il prépare le lot prêt à déposer et téléverse manuellement sur le portail Vigie-Chiro. Le retour de **Tadarida** (résultats d'identification) arrive ensuite, et le passage entre alors en **validation taxonomique** (espèce par espèce).
 
@@ -37,12 +37,12 @@ classDiagram
     class Passage {
       n° de passage
       année
-      date de capture
+      date d'enregistrement
       heure début / fin
       verdict de vérification
       statut workflow
     }
-    class Capture {
+    class Session d'enregistrement {
       chemin racine
       volume total
     }
@@ -96,11 +96,11 @@ classDiagram
     SiteDeSuivi "1" --> "1..*" PointDEcoute : contient
     PointDEcoute "1" --> "0..*" Passage : fait l'objet de
     Enregistreur "1" --> "1..*" Passage : a produit
-    Passage "1" --> "1" Capture : produit
-    Capture "1" --> "1..*" EnregistrementOriginal : contient
-    Capture "1" --> "1..*" SequenceDEcoute : contient
-    Capture "1" --> "1" JournalDuCapteur : référence
-    Capture "1" --> "0..1" ReleveClimatique : référence
+    Passage "1" --> "1" Session d'enregistrement : produit
+    Session d'enregistrement "1" --> "1..*" EnregistrementOriginal : contient
+    Session d'enregistrement "1" --> "1..*" SequenceDEcoute : contient
+    Session d'enregistrement "1" --> "1" JournalDuCapteur : référence
+    Session d'enregistrement "1" --> "0..1" ReleveClimatique : référence
     EnregistrementOriginal "1" --> "1..*" SequenceDEcoute : découpé en
     Passage "1" --> "0..1" SelectionDEcoute : à vérifier par
     SelectionDEcoute "1" --> "1..*" SequenceDEcoute : porte sur
@@ -115,7 +115,7 @@ classDiagram
 
 Ce diagramme reste **conceptuel** (proche d'un MCD) plutôt qu'un diagramme de classes d'implémentation : pas de visibilité (`+`/`-`), pas de méthodes, pas de types Java. C'est le **vocabulaire métier** et la **topologie des associations** qui comptent. Vous re-spécifierez les classes Java de votre implémentation séparément, en y ajoutant typage, méthodes et héritages selon vos choix d'architecture.
 
-Le diagramme rend visible la **séparation entre deux moments du workflow** : la chaîne `Passage → Capture → Séquence d'écoute → Sélection d'écoute` (avant le dépôt VigieChiro, MUST du MVP), puis la chaîne `Résultats d'identification → Observation → Taxon` (après le retour Tadarida, SHOULD/cible étirable).
+Le diagramme rend visible la **séparation entre deux moments du workflow** : la chaîne `Passage → Session d'enregistrement → Séquence d'écoute → Sélection d'écoute` (avant le dépôt VigieChiro, MUST du MVP), puis la chaîne `Résultats d'identification → Observation → Taxon` (après le retour Tadarida, SHOULD/cible étirable).
 
 ## Sommaire des fiches
 
@@ -130,7 +130,7 @@ Le modèle conceptuel est éclaté en plusieurs fiches pour rester lisible. Chaq
 | C3 | [Point d'écoute](C3%20-%20Point%20d%27écoute.md) | Code 2 caractères dans un site. |
 | C4 | [Enregistreur](C4%20-%20Enregistreur.md) | Matériel terrain (Passive Recorder Teensy). |
 | C5 | [Passage](C5%20-%20Passage.md) | Une nuit complète sur un point. **Entité centrale**. |
-| C6 | [Capture](C6%20-%20Capture.md) | Agrégat de données produit par un passage. |
+| C6 | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | Agrégat de données produit par un passage. |
 | C7 | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | Fichier audio brut, ultrason, inaudible. |
 | C8 | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | Fichier audible (×10, 5 s) déposé sur Vigie-Chiro. |
 | C9 | [Journal du capteur](C9%20-%20Journal%20du%20capteur.md) | `LogPR<n>.txt` du firmware Teensy. |
@@ -145,5 +145,5 @@ Le modèle conceptuel est éclaté en plusieurs fiches pour rester lisible. Chaq
 
 - [Cardinalités](Cardinalités.md) - tableau récapitulatif des cardinalités d'association.
 - [Règles métier](Règles%20métier.md) - les 20 règles **R1** à **R20** (validations, conventions, workflow).
-- [Glossaire métier](Glossaire%20métier.md) - vocabulaire utilisateur (site, carré, passage, capture, séquence d'écoute, verdict…).
+- [Glossaire métier](Glossaire%20métier.md) - vocabulaire utilisateur (site, carré, passage, session d'enregistrement, séquence d'écoute, verdict…).
 - [Glossaire des outils & ressources externes](Glossaire%20outils.md) - Lupas Rename, Kaléidoscope, Tadarida, Chirosurf, vigiechiro.herokuapp.com, etc.

@@ -1,8 +1,8 @@
-# M-Import - Importer une nuit de capture
+# M-Import - Importer une nuit d'enregistrement
 
 > **Type** : assistant d'import (action « Importer une nuit » depuis la nav).
 > **Persona principal** : tous ([Marie](../Personas/Marie.md), [Karim](../Personas/Karim.md), [Samuel](../Personas/Samuel.md)). C'est l'écran le plus utilisé après la mise en route initiale.
-> **Parcours couverts** : [P2 - Importer une nuit de capture](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md).
+> **Parcours couverts** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md).
 > **Stories couvertes** : [E2.S1 - Inspecter dossier](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s1), [E2.S2 - Rattacher (sans préfixe)](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s2), [E2.S3 - Extraire (déjà préfixé)](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s3), [E2.S4 - Copie protégée](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s4), [E2.S5 - Renommage](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s5), [E2.S6 - Transformation](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6), [E2.S7 - Mémoriser association](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s7).
 
 C'est l'écran central de la chaîne fil rouge. L'assistant est conçu comme une **page unique en 4 sections** (dossier source → inspection → rattachement → action), pas comme un wizard multi-étapes, pour que l'utilisateur garde tout son contexte sous les yeux et puisse revenir en arrière sans naviguer entre écrans.
@@ -72,7 +72,7 @@ C'est l'écran central de la chaîne fil rouge. L'assistant est conçu comme une
   <text x="125" y="108" class="breadcrumb-sep">›</text>
   <text x="140" y="108" class="breadcrumb-curr">Importer une nuit</text>
 
-  <text x="40" y="148" class="pagetitle">Importer une nuit de capture</text>
+  <text x="40" y="148" class="pagetitle">Importer une nuit d'enregistrement</text>
   <text x="40" y="172" class="pagesub">L'application copie les fichiers depuis votre carte SD sans toucher aux originaux, les renomme et les transforme.</text>
 
   <!-- ============ Étape 1 : Dossier source ============ -->

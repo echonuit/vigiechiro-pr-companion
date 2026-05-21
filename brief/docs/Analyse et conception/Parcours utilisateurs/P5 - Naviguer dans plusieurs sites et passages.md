@@ -14,7 +14,7 @@ Karim revient d'une semaine de chantier sur 3 carrés différents avec 5 enregis
     - Site « Carré 752204 - ZAC NORD » (dernier passage il y a 5 jours)
        - …
 2. Une **vue tabulaire alternative** liste tous les passages tous sites confondus, triables et filtrables par site, point, n° de passage, statut workflow, verdict, date.
-3. Karim utilise la vue tabulaire pour repérer les 8 passages au statut `Importé` ou `Transformé` qui attendent sa vérification. Il peut faire un import groupé en sélectionnant plusieurs dossiers SD à la suite (variante du parcours [P2](P2%20-%20Importer%20une%20nuit%20de%20capture.md)).
+3. Karim utilise la vue tabulaire pour repérer les 8 passages au statut `Importé` ou `Transformé` qui attendent sa vérification. Il peut faire un import groupé en sélectionnant plusieurs dossiers SD à la suite (variante du parcours [P2](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)).
 4. Pour chaque passage, il enchaîne [P3](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) puis [P4](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) en gardant le contexte global de son chantier visible (badges colorés indiquant le site/chantier).
 
 ## Notes pour Samuel

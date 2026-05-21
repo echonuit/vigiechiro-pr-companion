@@ -21,7 +21,7 @@
 
 ## Quotidien VigieChiro
 
-Marie suit **2 à 3 carrés** par saison, avec environ **6 nuits de capture** par carré entre avril et septembre. Elle se déplace en voiture, installe le PR au crépuscule sur un point d'écoute repéré, le récupère à l'aube le lendemain, et rentre vider la carte SD chez elle.
+Marie suit **2 à 3 carrés** par saison, avec environ **6 nuits d'enregistrement** par carré entre avril et septembre. Elle se déplace en voiture, installe le PR au crépuscule sur un point d'écoute repéré, le récupère à l'aube le lendemain, et rentre vider la carte SD chez elle.
 
 Elle traite ses nuits **le surlendemain matin**, avec son café, sur la table de la cuisine. Cela lui prend une demi-journée par nuit aujourd'hui : sortir les WAV de la SD, les déposer sur VigieChiro, attendre les résultats, parcourir le tableau Excel exporté, écouter les évènements douteux dans Audacity. Elle aimerait que tout soit dans **un seul outil**.
 

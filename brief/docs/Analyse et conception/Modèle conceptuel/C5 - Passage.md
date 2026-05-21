@@ -6,7 +6,7 @@ L'unité métier centrale : une nuit complète d'enregistrement sur un point d'u
 |---|---|---|---|
 | n° de passage | entier | typiquement 1 ou 2 | Le protocole impose deux passages annuels (cf. [R3](Règles%20métier.md#r3)). |
 | année | entier | 4 chiffres | Ex. 2026. |
-| date de capture | date | obligatoire | Date du **soir** où l'enregistrement démarre. |
+| date d'enregistrement | date | obligatoire | Date du **soir** où l'enregistrement démarre. |
 | heure de début | heure | obligatoire | Lue du journal du capteur. |
 | heure de fin | heure | obligatoire | Lue du journal du capteur. |
 | paramètres d'acquisition | structure | extraits du journal du capteur | Fe, FL, FPH, S.R., gain, bande de fréquence, durée enregistrement, seuil SD. Sérialisés tels quels. |
@@ -29,7 +29,7 @@ L'unité métier centrale : une nuit complète d'enregistrement sur un point d'u
 
 - **Sur** un [Point d'écoute](C3%20-%20Point%20d%27écoute.md).
 - **Produit par** un [Enregistreur](C4%20-%20Enregistreur.md).
-- **Produit** exactement 1 [Capture](C6%20-%20Capture.md).
+- **Produit** exactement 1 [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md).
 - **À vérifier par** 0..1 [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md).
 - **Annoté par** 0..1 [Résultats d'identification](C12%20-%20Résultats%20d%27identification.md).
 

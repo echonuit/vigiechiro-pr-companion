@@ -1,6 +1,6 @@
 # E2 - 📥 Importer et transformer une nuit
 
-[← Retour au hub story mapping](index.md) · **Parcours principal** : [P2 - Importer une nuit de capture](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md) · ✅ MUST
+[← Retour au hub story mapping](index.md) · **Parcours principal** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) · ✅ MUST
 
 **Portée** : remplacer entièrement la chaîne d'outils manuels (LupasRename + Kaléidoscope 4.3.1). Inspecter un dossier source SD, rattacher la nuit à un site/point/passage, copier de manière protégée les fichiers, les renommer selon le préfixe Vigie-Chiro, et produire les séquences d'écoute (expansion ×10 + chunks 5 s). C'est l'**épopée la plus dense** et la plus à risque techniquement (volumétrie 40 Go, traitement audio).
 
@@ -26,7 +26,7 @@
 - [ ] L'**état du nommage** des fichiers est classifié en `sans préfixe` / `tous préfixés` / `mélangé` (cf. [R6](../Modèle%20conceptuel/Règles%20métier.md#r6)).
 - [ ] Si le journal du capteur est absent ou illisible, l'inspection se poursuit avec un avertissement explicite (« le diagnostic matériel sera limité ») mais n'est pas bloquante.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 2<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 2<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (récapitulatif d'inspection du dossier source)<br>
 **Dépendances** : aucune (lecture seule, pas besoin de la BD à ce stade)<br>
 **Complexité** : ★★★ (moyen — parsing de fichiers texte hétérogènes, détection de pattern de nommage)<br>
@@ -38,7 +38,7 @@
 
 **En tant que** [Marie](../Personas/Marie.md)
 
-**Je veux** indiquer à quelle session de capture (site, point, année, n° de passage) cette nuit appartient
+**Je veux** indiquer à quelle session de session d'enregistrement (site, point, année, n° de passage) cette nuit appartient
 
 **Afin que** les fichiers soient renommés correctement et que la nuit soit retrouvable plus tard dans la base
 
@@ -51,7 +51,7 @@
 - [ ] La validation de la modale crée un nouveau passage en BD avec le statut `En cours d'import` et l'unicité du quadruplet `(carré, année, n° passage, point)` est vérifiée ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)). Conflit → message d'erreur explicite avec proposition d'aller modifier le n° de passage.
 - [ ] Le clic sur « Importer » est bloqué tant que le quadruplet n'est pas valide.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 3 (cas « sans préfixe »)<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 3 (cas « sans préfixe »)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (formulaire de rattachement avec auto-incrément du n° de passage)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1.S1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s1), [E1.S2](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s2), [E2.S1](#e2s1)<br>
 **Complexité** : ★★★ (moyen — formulaire avec dépendances entre champs et calcul d'auto-incrément)<br>
@@ -75,7 +75,7 @@
 - [ ] L'utilisateur a alors deux choix explicites : (a) **Réaligner les noms de fichiers sur la saisie** (re-renommage de tous les fichiers à l'étape suivante, cf. E2.S5), (b) **Restaurer les valeurs extraites du préfixe** (annule la modification).
 - [ ] Si l'utilisateur valide sans modification, **aucun re-renommage** n'a lieu : les fichiers conservent leur nom d'origine après la copie protégée.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 3 (cas « déjà préfixés ») + étape 4 (incohérence)<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 3 (cas « déjà préfixés ») + étape 4 (incohérence)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (avec affichage du quadruplet extrait + alerte d'incohérence)<br>
 **Dépendances** : [E2.S1](#e2s1), [E2.S2](#e2s2)<br>
 **Complexité** : ★★★ (moyen — parsing du préfixe, scénario à branches, gestion de l'incohérence)<br>
@@ -102,7 +102,7 @@
 - [ ] Si la copie est interrompue (fermeture inopinée, crash), elle peut reprendre au démarrage suivant grâce à E0.S6.
 - [ ] Tests d'intégration avec un dossier source de plusieurs centaines de fichiers WAV.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 4<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 4<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (barre de progression et état de la copie)<br>
 **Dépendances** : [E0.S6](E0%20-%20Fondations%20de%20persistance.md#e0s6) (pour la reprise), [E2.S2](#e2s2) ou [E2.S3](#e2s3) (rattachement validé)<br>
 **Complexité** : ★★★★ (significatif — gestion arrière-plan, perf 40 Go, espace disque, reprise)<br>
@@ -128,7 +128,7 @@
 - [ ] Le renommage est **atomique** : soit tous les fichiers sont renommés, soit aucun ne l'est (en cas d'erreur, rollback).
 - [ ] Tests d'intégration avec les 3 cas : sans préfixe, déjà préfixé sans modif, déjà préfixé avec réalignement.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 4<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 4<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (étape de progression « renommage » dans la barre)<br>
 **Dépendances** : [E2.S4](#e2s4)<br>
 **Complexité** : ★★ (simple — manipulation de noms de fichiers selon un pattern bien défini)<br>
@@ -155,7 +155,7 @@
 - [ ] Le passage passe au statut `Transformé` une fois toutes les séquences produites.
 - [ ] Tests d'intégration : vérifier le nombre de séquences produites, leurs durées et leur déterminisme sur un jeu de données représentatif.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 5<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 5<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (barre de progression de la transformation)<br>
 **Dépendances** : [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4), [E2.S4](#e2s4), [E2.S5](#e2s5)<br>
 **Complexité** : ★★★★★ (lourd — c'est le cœur technique de l'application, choix d'une bibliothèque audio Java, perf, déterminisme à garantir)<br>
@@ -179,7 +179,7 @@
 - [ ] La modification du site/point réécrit l'association mémorisée pour les imports suivants.
 - [ ] Tests d'intégration : 2 imports successifs avec le même n° de série → la 2e modale doit présélectionner ce qui a été choisi à la 1ère.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), étape 7 (mémorisation), réutilisé en étape 3 (présélection au prochain import)<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 7 (mémorisation), réutilisé en étape 3 (présélection au prochain import)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (combobox avec valeur présélectionnée + indication discrète « dernière association connue pour cet enregistreur »)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E2.S2](#e2s2)<br>
 **Complexité** : ★ (trivial — clé/valeur en BD, lecture/écriture simple)<br>
@@ -205,7 +205,7 @@
 - [ ] L'unicité du nouveau quadruplet est vérifiée avant l'opération ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)) ; conflit → message clair sans modification.
 - [ ] Tests d'intégration : passage importé → modification du rattachement → vérification que tous les fichiers sont renommés avec le nouveau préfixe et que le passage en BD a les nouvelles valeurs.
 
-**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), notes importantes (« changer rétroactivement »)<br>
+**Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), notes importantes (« changer rétroactivement »)<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (avec action « Modifier le rattachement » et écran de confirmation)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E2.S2](#e2s2), [E2.S5](#e2s5)<br>
 **Complexité** : ★★★ (moyen — re-renommage cascade, confirmation utilisateur, gestion de conflits)<br>

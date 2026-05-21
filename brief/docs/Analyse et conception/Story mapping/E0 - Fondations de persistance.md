@@ -17,7 +17,7 @@
 **Critères d'acceptation** :
 
 - [ ] Au premier lancement, l'application crée un fichier `companion.db` dans le dossier de travail utilisateur si absent.
-- [ ] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Capture, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
+- [ ] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Session d'enregistrement, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
 - [ ] Une classe `DaoGenerique<T>` ou équivalent fournit les opérations CRUD de base (`create`, `findById`, `findAll`, `update`, `delete`).
 - [ ] La connexion JDBC est gérée avec un pool ou un singleton thread-safe.
 - [ ] Un test d'intégration crée la BD, exécute une opération CRUD, et vérifie le résultat.
@@ -71,7 +71,7 @@
 - [ ] L'association `Enregistreur ↔ Site/Point` (mémorisée pour faciliter les imports suivants) est persistée.
 - [ ] Tests d'intégration couvrant la création, la transition de statut et le verdict.
 
-**Parcours rattaché** : sert [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md), [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)<br>
+**Parcours rattaché** : sert [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S2](#e0s2)<br>
 **Complexité** : ★★★ (moyen — relations multiples, gestion des statuts, contraintes d'unicité métier)<br>
@@ -137,14 +137,14 @@
 
 **Critères d'acceptation** :
 
-- [ ] L'import [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md) écrit son état d'avancement en BD (file d'attente persistante : fichiers à copier, fichiers copiés, fichiers transformés).
+- [ ] L'import [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) écrit son état d'avancement en BD (file d'attente persistante : fichiers à copier, fichiers copiés, fichiers transformés).
 - [ ] Au redémarrage de l'application, si un import était en cours, l'utilisateur est notifié et peut choisir de reprendre, abandonner, ou repartir de zéro.
 - [ ] Les fichiers déjà copiés ne sont pas recopiés.
 - [ ] Les fichiers déjà transformés ne sont pas re-transformés.
 - [ ] Le statut workflow du passage reste cohérent (`En cours` jusqu'à complétion, puis `Transformé`).
 - [ ] Test d'intégration simulant une interruption à différents moments du pipeline.
 
-**Parcours rattaché** : transverse à [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20de%20capture.md)<br>
+**Parcours rattaché** : transverse à [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (modale d'import doit afficher la reprise éventuelle)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S3](#e0s3), E2 (l'import lui-même)<br>
 **Complexité** : ★★★★ (significatif — logique de reprise complexe, tests d'interruption)<br>

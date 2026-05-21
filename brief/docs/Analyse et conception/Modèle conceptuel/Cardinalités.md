@@ -8,12 +8,12 @@ Tableau récapitulatif des cardinalités d'association du modèle conceptuel. Le
 | [Site de suivi](C2%20-%20Site%20de%20suivi.md) | contient | [Point d'écoute](C3%20-%20Point%20d%27écoute.md) | 1..* | un site sans point n'a pas de sens |
 | [Point d'écoute](C3%20-%20Point%20d%27écoute.md) | fait l'objet de | [Passage](C5%20-%20Passage.md) | 0..* | un point peut n'avoir aucun passage encore |
 | [Enregistreur](C4%20-%20Enregistreur.md) | a produit | [Passage](C5%20-%20Passage.md) | 1..* | un même enregistreur peut faire plusieurs nuits |
-| [Passage](C5%20-%20Passage.md) | produit | [Capture](C6%20-%20Capture.md) | 1..1 | un passage donne exactement une capture |
-| [Capture](C6%20-%20Capture.md) | contient | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | 1..* | typiquement plusieurs centaines à plusieurs milliers |
-| [Capture](C6%20-%20Capture.md) | contient | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | typiquement 1,3 × le nombre d'enregistrements originaux |
+| [Passage](C5%20-%20Passage.md) | produit | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | 1..1 | un passage donne exactement une session d'enregistrement |
+| [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | contient | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | 1..* | typiquement plusieurs centaines à plusieurs milliers |
+| [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | contient | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | typiquement 1,3 × le nombre d'enregistrements originaux |
 | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | découpé en | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | un enregistrement original donne 1 à N séquences de 5 s ralenties ×10 |
-| [Capture](C6%20-%20Capture.md) | référence | [Journal du capteur](C9%20-%20Journal%20du%20capteur.md) | 1..1 | un seul journal par passage |
-| [Capture](C6%20-%20Capture.md) | référence | [Relevé climatique](C10%20-%20Relevé%20climatique.md) | 0..1 | absent si la sonde T°/H est défaillante |
+| [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | référence | [Journal du capteur](C9%20-%20Journal%20du%20capteur.md) | 1..1 | un seul journal par passage |
+| [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | référence | [Relevé climatique](C10%20-%20Relevé%20climatique.md) | 0..1 | absent si la sonde T°/H est défaillante |
 | [Passage](C5%20-%20Passage.md) | à vérifier par | [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md) | 0..1 | créée au moment de la vérification utilisateur |
 | [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md) | porte sur | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | typiquement 10-30 séquences |
 | [Passage](C5%20-%20Passage.md) | annoté par | [Résultats d'identification](C12%20-%20Résultats%20d%27identification.md) | 0..1 | rempli après retour Tadarida (SHOULD) |

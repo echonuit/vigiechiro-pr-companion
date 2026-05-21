@@ -4,7 +4,7 @@
 
 > **Persona principal** : Marie / Karim / Samuel. **MoSCoW** : MUST. **Objectifs qualité visés** : [O7 Intégrité](../../Objectifs%20qualités/Objectifs%20qualités/O7.md), [O8 Confidentialité](../../Objectifs%20qualités/Objectifs%20qualités/O8.md).
 
-Marie a importé et vérifié une nuit (parcours [P2](P2%20-%20Importer%20une%20nuit%20de%20capture.md) et [P3](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)). Elle veut maintenant **préparer un lot exploitable directement sur le portail Vigie-Chiro** et l'y téléverser manuellement.
+Marie a importé et vérifié une nuit (parcours [P2](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) et [P3](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)). Elle veut maintenant **préparer un lot exploitable directement sur le portail Vigie-Chiro** et l'y téléverser manuellement.
 
 1. Marie sélectionne un passage avec verdict `OK` ou `Douteux` (un passage `À jeter` est bloqué, R14).
 2. Elle clique sur « **Préparer le lot à déposer** ». L'application vérifie la cohérence du passage :

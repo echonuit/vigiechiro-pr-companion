@@ -50,12 +50,12 @@ classDiagram
     class Passage {
       n° de passage
       année
-      date de capture
+      date d'enregistrement
       heure début / fin
       verdict de vérification
       statut workflow
     }
-    class Capture {
+    class SessionDEnregistrement["Session d'enregistrement"] {
       chemin racine
       volume total
     }
@@ -109,11 +109,11 @@ classDiagram
     SiteDeSuivi "1" --> "1..*" PointDEcoute : contient
     PointDEcoute "1" --> "0..*" Passage : fait l'objet de
     Enregistreur "1" --> "1..*" Passage : a produit
-    Passage "1" --> "1" Capture : produit
-    Capture "1" --> "1..*" EnregistrementOriginal : contient
-    Capture "1" --> "1..*" SequenceDEcoute : contient
-    Capture "1" --> "1" JournalDuCapteur : référence
-    Capture "1" --> "0..1" ReleveClimatique : référence
+    Passage "1" --> "1" SessionDEnregistrement : produit
+    SessionDEnregistrement "1" --> "1..*" EnregistrementOriginal : contient
+    SessionDEnregistrement "1" --> "1..*" SequenceDEcoute : contient
+    SessionDEnregistrement "1" --> "1" JournalDuCapteur : référence
+    SessionDEnregistrement "1" --> "0..1" ReleveClimatique : référence
     EnregistrementOriginal "1" --> "1..*" SequenceDEcoute : découpé en
     Passage "1" --> "0..1" SelectionDEcoute : à vérifier par
     SelectionDEcoute "1" --> "1..*" SequenceDEcoute : porte sur

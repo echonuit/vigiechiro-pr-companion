@@ -1,10 +1,10 @@
-# P2 - Importer une nuit de capture 📥
+# P2 - Importer une nuit d'enregistrement 📥
 
 [← Retour au hub des parcours](index.md) · **Section B — Approfondissements** · ✅ MUST
 
 > **Persona principal** : Marie / Karim / Samuel. **MoSCoW** : MUST. **Objectifs qualité visés** : [O3 Tenue dans la durée](../../Objectifs%20qualités/Objectifs%20qualités/O3.md) (jusqu'à 40 Go), [O7 Intégrité](../../Objectifs%20qualités/Objectifs%20qualités/O7.md), [O8 Confidentialité](../../Objectifs%20qualités/Objectifs%20qualités/O8.md).
 
-Marie vient de récupérer la carte SD de son enregistreur après une nuit de capture. Elle veut importer cette nuit dans l'application. Le PR a déposé sur la SD un journal du capteur (`LogPR<n>.txt`), un relevé climatique (`PaRecPR<sn>_THLog.csv`) et plusieurs centaines de fichiers d'enregistrement.
+Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enregistrement. Elle veut importer cette nuit dans l'application. Le PR a déposé sur la SD un journal du capteur (`LogPR<n>.txt`), un relevé climatique (`PaRecPR<sn>_THLog.csv`) et plusieurs centaines de fichiers d'enregistrement.
 
 1. Marie ouvre l'application. Elle clique sur « **Importer une nuit** » depuis la vue des sites (parcours [P1](P1%20-%20Déclarer%20un%20site%20de%20suivi.md)) ou directement depuis la barre principale.
 2. Elle pointe sur le **dossier source** (sélecteur ou drag-and-drop sur la modale). L'application **inspecte le dossier** sans rien y écrire et affiche un premier récapitulatif :

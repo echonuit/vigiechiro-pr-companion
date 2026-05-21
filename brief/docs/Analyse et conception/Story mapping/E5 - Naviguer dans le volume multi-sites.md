@@ -45,7 +45,7 @@
 **Critères d'acceptation** :
 
 - [ ] Un toggle permet de basculer entre la vue arborescente ([E5.S1](#e5s1)) et la vue tabulaire.
-- [ ] La vue tabulaire affiche une ligne par passage avec colonnes : Site (n° carré + nom), Point, Année, N° passage, Date de capture, Statut workflow, Verdict, Date de dépôt.
+- [ ] La vue tabulaire affiche une ligne par passage avec colonnes : Site (n° carré + nom), Point, Année, N° passage, Date de session d'enregistrement, Statut workflow, Verdict, Date de dépôt.
 - [ ] Toutes les colonnes sont **triables** (clic sur l'en-tête).
 - [ ] Chaque colonne propose un **filtre rapide** :
     - colonnes textuelles : input texte avec match partiel (Site, Point)
@@ -74,7 +74,7 @@
 **Critères d'acceptation** :
 
 - [ ] Un bouton « Filtres avancés » ouvre un panneau de composition de filtres avec une logique ET entre les critères, OU à l'intérieur d'une même catégorie.
-- [ ] Les critères disponibles couvrent : site (multi-select), point (multi-select), année, plage de n° de passage, plage de dates de capture, plage de dates de dépôt, statut workflow (multi-select), verdict (multi-select), enregistreur (par n° de série).
+- [ ] Les critères disponibles couvrent : site (multi-select), point (multi-select), année, plage de n° de passage, plage de dates d'enregistrement, plage de dates de dépôt, statut workflow (multi-select), verdict (multi-select), enregistreur (par n° de série).
 - [ ] Un compteur en bas de panneau indique « N passages correspondent à ces critères ».
 - [ ] Bouton « Appliquer » : la vue tabulaire ([E5.S2](#e5s2)) se rafraîchit avec les résultats filtrés.
 - [ ] Bouton « Sauvegarder cette vue » : permet de nommer le jeu de filtres et de le retrouver dans un menu de « Vues sauvegardées ».

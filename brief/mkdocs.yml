@@ -108,7 +108,7 @@ nav:
           - C3 - Point d'écoute: Analyse et conception/Modèle conceptuel/C3 - Point d'écoute.md
           - C4 - Enregistreur: Analyse et conception/Modèle conceptuel/C4 - Enregistreur.md
           - C5 - Passage: Analyse et conception/Modèle conceptuel/C5 - Passage.md
-          - C6 - Capture: Analyse et conception/Modèle conceptuel/C6 - Capture.md
+          - C6 - Session d'enregistrement: Analyse et conception/Modèle conceptuel/C6 - Session d'enregistrement.md
           - C7 - Enregistrement original: Analyse et conception/Modèle conceptuel/C7 - Enregistrement original.md
           - C8 - Séquence d'écoute: Analyse et conception/Modèle conceptuel/C8 - Séquence d'écoute.md
           - C9 - Journal du capteur: Analyse et conception/Modèle conceptuel/C9 - Journal du capteur.md
@@ -133,7 +133,7 @@ nav:
           - P0 - Première nuit de Marie (fil rouge): Analyse et conception/Parcours utilisateurs/P0 - Première nuit de Marie.md
           - P0 plein écran: Analyse et conception/Parcours utilisateurs/P0 - plein écran.md
           - P1 - Déclarer un site de suivi: Analyse et conception/Parcours utilisateurs/P1 - Déclarer un site de suivi.md
-          - P2 - Importer une nuit de capture: Analyse et conception/Parcours utilisateurs/P2 - Importer une nuit de capture.md
+          - P2 - Importer une nuit d'enregistrement: Analyse et conception/Parcours utilisateurs/P2 - Importer une nuit d'enregistrement.md
           - P3 - Vérifier l'enregistrement: Analyse et conception/Parcours utilisateurs/P3 - Vérifier l'enregistrement par échantillonnage.md
           - P4 - Préparer le lot à déposer: Analyse et conception/Parcours utilisateurs/P4 - Préparer un lot prêt à déposer.md
           - P5 - Naviguer multi-sites: Analyse et conception/Parcours utilisateurs/P5 - Naviguer dans plusieurs sites et passages.md

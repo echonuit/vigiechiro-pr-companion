@@ -20,7 +20,7 @@ Karim soupçonne qu'un de ses enregistreurs a un problème (batterie qui faiblit
 
 Le protocole Vigie-Chiro Point Fixe demande que l'enregistreur soit **allumé 30 min avant le coucher du soleil et éteint 30 min après son lever**. L'encart « Cohérence horaires » de l'onglet Diagnostic présente :
 
-- heure de coucher de soleil **calculée localement** d'après les coordonnées GPS du point d'écoute et la date de capture
+- heure de coucher de soleil **calculée localement** d'après les coordonnées GPS du point d'écoute et la date d'enregistrement
 - heure de lever de soleil idem
 - **plage théorique attendue** (coucher - 30 min → lever + 30 min)
 - **plage effective enregistrée** (extraite du journal du capteur : heure de premier déclenchement → heure de mise en veille)

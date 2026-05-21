@@ -13,7 +13,7 @@ Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.hero
     - **Protocole** (préselectionné `Point Fixe`, seul protocole supporté pour le moment)
     - **Liste des points** : Marie ajoute autant de codes que nécessaire (ex. `A1`, `B2`). Pour chaque point, elle peut ajouter des coordonnées GPS et un descriptif (tous optionnels).
 3. Marie valide. Le site est enregistré localement. L'écran d'accueil bascule vers la **vue des sites** avec son site fraîchement créé.
-4. Elle peut désormais cliquer sur « Importer une nuit » et le formulaire suivant lui propose de choisir le site et le point concernés (parcours [P2 - Importer une nuit de capture](P2%20-%20Importer%20une%20nuit%20de%20capture.md)).
+4. Elle peut désormais cliquer sur « Importer une nuit » et le formulaire suivant lui propose de choisir le site et le point concernés (parcours [P2 - Importer une nuit d'enregistrement](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)).
 
 ## Règles métier visibles
 
@@ -23,4 +23,4 @@ Marie a créé son site sur le portail web Vigie-Chiro (<https://vigiechiro.hero
 
 ## Variante : créer un site directement depuis l'import
 
-Si l'utilisateur arrive avec une nuit à importer **sans avoir préalablement déclaré le site**, la modale d'import (parcours [P2](P2%20-%20Importer%20une%20nuit%20de%20capture.md)) propose un raccourci « **+ Créer un nouveau site** » qui ouvre le même formulaire que ci-dessus, puis ré-ouvre la modale d'import avec le site fraîchement créé pré-sélectionné. L'utilisateur n'a pas besoin de quitter son flux d'import.
+Si l'utilisateur arrive avec une nuit à importer **sans avoir préalablement déclaré le site**, la modale d'import (parcours [P2](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)) propose un raccourci « **+ Créer un nouveau site** » qui ouvre le même formulaire que ci-dessus, puis ré-ouvre la modale d'import avec le site fraîchement créé pré-sélectionné. L'utilisateur n'a pas besoin de quitter son flux d'import.

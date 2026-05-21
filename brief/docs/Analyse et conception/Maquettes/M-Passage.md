@@ -1,7 +1,7 @@
 # M-Passage - Détail d'un passage
 
 > **Type** : vue de détail (atteinte par clic sur une ligne de passage dans [M-Site-detail](M-Site-detail.md) ou [M-MultiSite](M-MultiSite.md)).
-> **Persona principal** : tous. C'est l'écran pivot qui agrège les fonctionnalités liées à une nuit de capture spécifique.
+> **Persona principal** : tous. C'est l'écran pivot qui agrège les fonctionnalités liées à une nuit d'enregistrement spécifique.
 > **Parcours couverts** : transverse — sert de point d'entrée pour [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md).
 > **Stories couvertes** : [E0.S3 - Persister passages avec statut](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s3), [E4.S4 - Stepper de statut + chronologie](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s4), [E2.S8 - Modifier le rattachement](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s8), [E6.S1 / E6.S2 / E6.S3 - Diagnostic](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md).
 
@@ -97,7 +97,7 @@ C'est l'**écran pivot** d'un passage. Il agrège la fiche d'identité (site, po
   <text x="60" y="240" class="info-value">640380 / A1</text>
   <text x="200" y="216" class="info-label">PASSAGE</text>
   <text x="200" y="240" class="info-value">N° 2 (2026)</text>
-  <text x="350" y="216" class="info-label">DATE DE CAPTURE</text>
+  <text x="350" y="216" class="info-label">DATE D'ENREGISTREMENT</text>
   <text x="350" y="240" class="info-value">22/06/2026 (mer)</text>
   <text x="540" y="216" class="info-label">PLAGE HORAIRE</text>
   <text x="540" y="240" class="info-value">20:25 → 07:47</text>
@@ -186,7 +186,7 @@ C'est l'**écran pivot** d'un passage. Il agrège la fiche d'identité (site, po
 
   <rect x="840" y="510" width="240" height="90" rx="4" class="stat-card"/>
   <text x="960" y="552" class="stat-num" text-anchor="middle">11h22</text>
-  <text x="960" y="572" class="stat-label" text-anchor="middle">plage de capture nocturne</text>
+  <text x="960" y="572" class="stat-label" text-anchor="middle">plage d'enregistrement nocturne</text>
   <text x="960" y="588" class="stat-detail" text-anchor="middle">20:25 → 07:47</text>
 
   <!-- Actions rapides -->

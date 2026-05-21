@@ -2,7 +2,7 @@
 
 <div markdown="0" style="margin: 1rem 0 2rem 0;">
   <img src="assets/illustrations/hero-bandeau.webp"
-       alt="Nuit de capture acoustique : un Passive Recorder sur son piquet, des chauves-souris en vol émettant des ondes d'écholocation sous une pleine lune en lisière de forêt"
+       alt="Nuit de session d'enregistrement acoustique : un Passive Recorder sur son piquet, des chauves-souris en vol émettant des ondes d'écholocation sous une pleine lune en lisière de forêt"
        style="width: 100%; height: auto; display: block; border-radius: 4px;">
 </div>
 
@@ -25,7 +25,7 @@
 
 ## Données d'exemple fournies
 
-Un jeu de données réel issu d'une session de capture nocturne (22-23 avril 2026, PR n° 1925492) vous est fourni en deux variantes complémentaires :
+Un jeu de données réel issu d'une session d'enregistrement nocturne (22-23 avril 2026, PR n° 1925492) vous est fourni en deux variantes complémentaires :
 
 ### 🟢 Sample versionné dans le dépôt
 

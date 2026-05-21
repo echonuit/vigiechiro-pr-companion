@@ -5,7 +5,7 @@
 | Jalon | Date | Détail |
 |---|---|---|
 | Présentation du projet | **vendredi 22/05/2026** | Lancement officiel. À partir de cette date les équipes connaissent le brief. |
-| Amorçage en parallèle d'autres modules | 22/05 → 31/05 | **6 jours ouvrés**. Activités légères : lecture du brief, formation des équipes, premières estimations, **assemblage du PR de l'équipe** si pièces reçues à temps, première nuit de capture test. |
+| Amorçage en parallèle d'autres modules | 22/05 → 31/05 | **6 jours ouvrés**. Activités légères : lecture du brief, formation des équipes, premières estimations, **assemblage du PR de l'équipe** si pièces reçues à temps, première nuit d'enregistrement test. |
 | Démarrage du travail exclusif sur la SAE | **lundi 01/06/2026** | Plus aucun autre module en parallèle. |
 | Sprint 1 (développement intensif) | 01/06 → 09/06 | **7 jours ouvrés**. Cible : chaîne fil rouge MUST ([P1](Analyse%20et%20conception/Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) → [P4](Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)). |
 | Sprint 2 (dev + finition + soutenance) | 10/06 → 17/06 | **6 jours ouvrés**. Finition MUST + SHOULD opportunistes (E5/E6/E7 selon vélocité) + préparation soutenance. |

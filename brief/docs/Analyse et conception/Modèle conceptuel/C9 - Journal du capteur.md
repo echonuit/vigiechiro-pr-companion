@@ -4,7 +4,7 @@ Le journal technique de l'enregistreur pour la nuit, lu et structuré par l'appl
 
 | Attribut | Type | Contraintes | Notes |
 |---|---|---|---|
-| chemin sur disque | texte | obligatoire | Fichier `LogPR<n>.txt` à la racine de la capture (cf. [R22](Règles%20métier.md#r22)). |
+| chemin sur disque | texte | obligatoire | Fichier `LogPR<n>.txt` à la racine de la session d'enregistrement (cf. [R22](Règles%20métier.md#r22)). |
 | évènements parsés | liste | structurée | Démarrage, paramètres, batterie, mises en veille, alarmes, anomalies. |
 | anomalies détectées | liste | dérivée | Réveils non programmés, erreurs SD, redémarrages, batterie critique. |
 
@@ -13,11 +13,11 @@ Le journal technique de l'enregistreur pour la nuit, lu et structuré par l'appl
 ## Règles applicables
 
 - [R19](Règles%20métier.md#r19) - journal circulaire, l'application exploite ce qui est présent sans tenter de reconstituer les pertes.
-- [R22](Règles%20métier.md#r22) - emplacement sur disque : à la racine du dossier de la capture.
+- [R22](Règles%20métier.md#r22) - emplacement sur disque : à la racine du dossier de la session d'enregistrement.
 
 ## Voisins dans le modèle
 
-- **Référencé par** une [Capture](C6%20-%20Capture.md).
+- **Référencé par** une [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md).
 - Fournit l'identité de l'[Enregistreur](C4%20-%20Enregistreur.md) (n° de série, modèle).
 
 ## Retour
