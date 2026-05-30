@@ -1,0 +1,38 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "JavaFX : lancer (via Maven)",
+            "type": "shell",
+            "command": "./mvnw verify javafx:run",
+            "group": { "kind": "build", "isDefault": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "Tests : tous",
+            "type": "shell",
+            "command": "./mvnw test",
+            "group": { "kind": "test", "isDefault": true },
+            "problemMatcher": []
+        },
+        {
+            "label": "Build complet",
+            "type": "shell",
+            "command": "./mvnw verify",
+            "group": "build",
+            "problemMatcher": []
+        },
+        {
+            "label": "Clean",
+            "type": "shell",
+            "command": "./mvnw clean",
+            "problemMatcher": []
+        },
+        {
+            "label": "Formater le code (Spotless)",
+            "type": "shell",
+            "command": "./mvnw spotless:apply",
+            "problemMatcher": []
+        }
+    ]
+}

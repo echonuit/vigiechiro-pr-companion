@@ -1,0 +1,43 @@
+# Quality gate strict : cohérence documentaire + PMD failOnViolation.
+# Ne tourne QUE sur la branche `solution` (branche enseignant). Sur la
+# branche `main` (version étudiante auto-générée), ce workflow est
+# absent : `generate-student.sh` supprime le fichier au stripping.
+name: Quality gate (solution)
+
+on:
+  push:
+    branches:
+      - solution
+  pull_request:
+    branches:
+      - solution
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    if: github.repository != 'IUTInfoAix-R203/template-tp-java'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0  # nécessaire pour que le hook / le lint voient
+                          # la branche 'solution' et distinguent mode
+                          # teacher vs student.
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'zulu'
+          cache: maven
+
+      - name: Doc coherence linter
+        run: |
+          chmod +x scripts/lint-doc-coherence.sh
+          ./scripts/lint-doc-coherence.sh
+
+      - name: PMD quality-gate (fail on violation)
+        run: ./mvnw -B -Pquality-gate verify

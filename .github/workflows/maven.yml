@@ -1,0 +1,30 @@
+# Build et tests Maven sur chaque push / PR.
+name: Java CI with Maven
+
+on:
+  - push
+  - pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up JDK 25 with JavaFX
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'zulu'
+          # Zulu standard ne contient pas JavaFX runtime ; jdk+fx ramène le
+          # JDK avec les natives openjfx (libGL, libGTK...) nécessaires aux
+          # tests TestFX headless.
+          java-package: 'jdk+fx'
+          cache: maven
+
+      - name: Run tests
+        # JavaFX/TestFX nécessite un display X11 ; xvfb-run en simule un.
+        run: xvfb-run --auto-servernum ./mvnw -B verify --file pom.xml

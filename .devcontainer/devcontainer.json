@@ -1,0 +1,55 @@
+{
+    "name": "SAÉ 2.01 Development Environment",
+    "build": { "dockerfile": "Dockerfile" },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "vscode",
+            "uid": "1000",
+            "gid": "1000"
+        },
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "25-zulu-fx",
+            "installMaven": "false",
+            "installGradle": "false"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
+            "password": "vscode",
+            "webPort": "6080",
+            "vncPort": "5901"
+        }
+    },
+    "forwardPorts": [6080, 5901],
+    // onCreateCommand : prébuild Maven test-compile pour que le Java LSP
+    // démarre instantanément sur Codespaces avec prebuilds activés. bash -lc
+    // pour charger SDKMAN. test-compile (et pas dependency:go-offline) pour
+    // que les CodeLens "Run | Debug" et les flèches de tests apparaissent
+    // sans attendre l'indexation à froid.
+    "onCreateCommand": "bash -lc './mvnw -q test-compile || true' && gh repo set-default \"$(git remote get-url origin | sed 's|.*github.com[:/]||' | sed 's|\\.git$||')\" 2>/dev/null || true",
+    "customizations": {
+        "vscode": {
+            "settings": {
+                "java.jdt.ls.java.home": "/usr/local/sdkman/candidates/java/current",
+                "terminal.integrated.profiles.linux": {
+                    "zsh": { "path": "zsh" }
+                },
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "redhat.telemetry.enabled": false
+            },
+            "extensions": [
+                "redhat.java",
+                "redhat.vscode-xml",
+                "vscjava.vscode-java-debug",
+                "vscjava.vscode-java-test",
+                "vscjava.vscode-maven",
+                "vscjava.vscode-java-dependency",
+                "eamodio.gitlens",
+                "GitHub.copilot-chat"
+            ]
+        }
+    },
+    "remoteUser": "vscode"
+}

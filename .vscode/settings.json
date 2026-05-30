@@ -1,0 +1,30 @@
+{
+    "java.server.launchMode": "Standard",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.compile.nullAnalysis.mode": "automatic",
+    "git.autofetch": true,
+    "files.autoSave": "onFocusChange",
+    "editor.formatOnSave": true,
+    "editor.formatOnType": true,
+    "files.exclude": {
+        "**/target": true,
+        "**/.idea": true,
+        "**/*.iml": true
+    },
+    "github.copilot.enable": {
+        "*": false
+    },
+    "chat.tools.terminal.outputLocation": "terminal",
+    "chat.tools.terminal.autoApprove": {
+        "./mvnw": true,
+        "./sync-upstream.sh": true,
+        "./grade-test.sh": true,
+        "/^git\\s+checkout\\b/": true,
+        "/^git\\s+add\\b/": true,
+        "/^git\\s+commit\\b/": true,
+        "/^git\\s+push\\b/": true,
+        "/^git\\s+pull\\b/": true,
+        "/^git\\s+stash\\b/": true,
+        "/^gh\\s+pr\\b/": true
+    }
+}

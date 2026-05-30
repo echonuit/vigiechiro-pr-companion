@@ -1,0 +1,30 @@
+version: 2
+updates:
+  # Dépendances Maven (junit, assertj, mockito, approvaltests, plugins...)
+  - package-ecosystem: "maven"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "maven"
+    commit-message:
+      prefix: "chore(deps)"
+    # Ne bump PAS JavaFX ni javafx-maven-plugin automatiquement :
+    # ces bumps ont un impact fort (rendu, plugin communautaire) et
+    # doivent être décidés à la main par l'enseignant·e.
+    ignore:
+      - dependency-name: "org.openjfx:*"
+
+  # Actions GitHub utilisées dans les workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "chore(deps)"

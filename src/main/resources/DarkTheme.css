@@ -1,0 +1,100 @@
+/*
+ * DarkTheme.css - Thème sombre pour JavaFX
+ * IUT d'Aix-Marseille - R2.02 Développement d'applications avec IHM
+ */
+
+/* ========== Couleurs de base ========== */
+.root {
+    -fx-base: #3d3d3d;
+    -fx-background: #2d2d2d;
+    -fx-control-inner-background: #3d3d3d;
+    -fx-accent: #0096c9;
+    -fx-focus-color: #0096c9;
+    -fx-faint-focus-color: #0096c922;
+}
+
+/* ========== Labels ========== */
+.label {
+    -fx-text-fill: #e0e0e0;
+}
+
+/* ========== Boutons ========== */
+.button {
+    -fx-background-color: #4d4d4d;
+    -fx-text-fill: #e0e0e0;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #5d5d5d;
+}
+
+.button:pressed {
+    -fx-background-color: #3d3d3d;
+}
+
+.button:focused {
+    -fx-border-color: -fx-accent;
+    -fx-border-width: 2;
+    -fx-border-radius: 4;
+}
+
+/* ========== Champs de texte ========== */
+.text-field, .text-area {
+    -fx-background-color: #3d3d3d;
+    -fx-text-fill: #e0e0e0;
+    -fx-prompt-text-fill: #808080;
+    -fx-background-radius: 4;
+    -fx-border-color: #5d5d5d;
+    -fx-border-radius: 4;
+}
+
+.text-field:focused, .text-area:focused {
+    -fx-border-color: -fx-accent;
+}
+
+/* ========== Sliders ========== */
+.slider .track {
+    -fx-background-color: #5d5d5d;
+}
+
+.slider .thumb {
+    -fx-background-color: -fx-accent;
+}
+
+/* ========== Menus ========== */
+.menu-bar {
+    -fx-background-color: #2d2d2d;
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+}
+
+.menu-item:focused {
+    -fx-background-color: #4d4d4d;
+}
+
+.menu-item .label {
+    -fx-text-fill: #e0e0e0;
+}
+
+/* ========== Scroll Panes ========== */
+.scroll-pane {
+    -fx-background-color: transparent;
+}
+
+.scroll-bar {
+    -fx-background-color: #3d3d3d;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: #5d5d5d;
+    -fx-background-radius: 4;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: #6d6d6d;
+}

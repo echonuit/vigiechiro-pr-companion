@@ -1,0 +1,32 @@
+name: ❓ Question sur un exercice
+description: Votre question n'est pas d'ordre technique, vous cherchez à comprendre un concept ou un énoncé
+labels:
+  - question
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Avant de poser votre question, vérifiez que vous avez bien **lu l'énoncé** et **essayé** d'activer le premier test rouge. Ça aide à cibler la question.
+
+  - type: input
+    id: exercise
+    attributes:
+      label: Exercice concerné
+      description: Numéro / nom du sous-paquet
+      placeholder: exercice3
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Ce que vous essayez de faire
+    validations:
+      required: true
+
+  - type: textarea
+    id: stuck
+    attributes:
+      label: Ce que vous ne comprenez pas (ou ce qui bloque)
+    validations:
+      required: true

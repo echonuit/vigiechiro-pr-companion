@@ -1,0 +1,105 @@
+# Régénère la branche main (version étudiante) à chaque push sur solution.
+#
+# La branche solution contient les implémentations complètes avec des
+# marqueurs // --solution-- ... // --end-solution--. Ce workflow :
+#   1. Appelle generate-student.sh pour produire la version étudiante
+#   2. Crée un commit orphelin à partir du résultat
+#   3. Pousse ce commit sur main
+#
+# main est un artefact purement dérivé : aucun commit manuel ne doit
+# y être fait (ils seraient écrasés au prochain push sur solution).
+
+name: Generate student version
+
+on:
+  push:
+    branches: [solution]
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout TP (all branches)
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'zulu'
+          cache: maven
+          check-latest: false
+
+      - name: Generate student version
+        run: |
+          chmod +x ./scripts/generate-student.sh
+          ./scripts/generate-student.sh --apply .
+
+      - name: Publish to main (orphan, force-push)
+        run: |
+          SOLUTION_SHA=$(git rev-parse solution)
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Créer une branche orpheline (sans historique)
+          git checkout --orphan main-generated
+          git add -A
+          git commit -m "Version étudiante générée depuis solution@${SOLUTION_SHA}"
+
+          # Force-push sur main (écrase tout l'historique)
+          git push origin main-generated:main --force
+
+      # Une fois main régénérée, déclenche le workflow sync.yml du repo
+      # IUTInfoAix-R203/classroom-sync (multi-module : R202 + R203) avec un
+      # filtre sur le repo courant. Évite à l'enseignant de lancer manuellement
+      # publish-to-classroom.sh, et garantit que le push Classroom se fait
+      # APRÈS la régénération de main (plus de race condition).
+      #
+      # Skip silencieux si CLASSROOM_SYNC_DISPATCH_TOKEN n'est pas configuré.
+      # Le secret doit être un Fine-Grained PAT avec Actions: write sur
+      # IUTInfoAix-R203/classroom-sync (idéalement défini en org-level secret
+      # sur IUTInfoAix-R203 pour être partagé entre tous les TPs).
+      - name: Trigger Classroom sync for this TP
+        env:
+          GH_TOKEN: ${{ secrets.CLASSROOM_SYNC_DISPATCH_TOKEN }}
+          TP_REPO: ${{ github.repository }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::CLASSROOM_SYNC_DISPATCH_TOKEN non configuré ; sync Classroom non déclenchée"
+            exit 0
+          fi
+          gh api -X POST \
+            repos/IUTInfoAix-R203/classroom-sync/actions/workflows/sync.yml/dispatches \
+            -f ref=main \
+            -f "inputs[tp_filter]=${TP_REPO}"
+          echo "::notice::Sync Classroom déclenchée pour ${TP_REPO} (filtre tp_filter)"
+
+      # Déclenche aussi la propagation de l'infra vers les repos étudiants
+      # déjà forkés (workflow sync-students.yml côté classroom-sync). Pousse
+      # uniquement l'infra (.github/, devcontainer, README, pom.xml...), JAMAIS
+      # src/ - sanity check côté Python. dry_run=false : push réel.
+      #
+      # Risque assumé : tous les étudiants inscrits reçoivent l'update à chaque
+      # push sur solution. Penser à grouper les modifs d'infra plutôt que faire
+      # plusieurs commits successifs.
+      - name: Trigger sync-students for this TP
+        env:
+          GH_TOKEN: ${{ secrets.CLASSROOM_SYNC_DISPATCH_TOKEN }}
+          TP_REPO: ${{ github.repository }}
+        run: |
+          if [ -z "${GH_TOKEN}" ]; then
+            echo "::warning::CLASSROOM_SYNC_DISPATCH_TOKEN non configuré ; sync-students non déclenchée"
+            exit 0
+          fi
+          gh api -X POST \
+            repos/IUTInfoAix-R203/classroom-sync/actions/workflows/sync-students.yml/dispatches \
+            -f ref=main \
+            -f "inputs[dry_run]=false" \
+            -f "inputs[tp_filter]=${TP_REPO}"
+          echo "::notice::Sync-students déclenchée pour ${TP_REPO} (dry_run=false, filtre tp_filter)"

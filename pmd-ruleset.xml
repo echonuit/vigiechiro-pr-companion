@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<ruleset name="R2.03 - Ruleset pédagogique pour le refactoring"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Ruleset R2.03 Qualité de développement. Les règles sont alignées sur les
+        refactorings enseignés dans le TP4 (Fowler, Refactoring, 2e éd.) :
+        chaque warning PMD pointe un smell et suggère implicitement le refactoring
+        correspondant. Les seuils sont conservateurs pour limiter les faux positifs
+        sur du code étudiant BUT1.
+
+        Usage :
+          ./mvnw verify           # PMD en warning, ne bloque pas
+          ./mvnw pmd:check        # rapport console seul
+          ./mvnw pmd:pmd          # rapport HTML (target/site/pmd.html)
+          ./mvnw -Pquality-gate verify   # PMD bloque (enseignant)
+
+        Bypass ponctuel : @SuppressWarnings("PMD.NomDeLaRegle") sur méthode/classe.
+    </description>
+
+    <!-- ============================================================
+         EXCLUSIONS GLOBALES
+         ============================================================ -->
+
+    <!-- App.java : menu console, switch inévitable sur le choix utilisateur.
+         Ne pas pénaliser l'étudiant sur un code d'infrastructure imposé. -->
+    <exclude-pattern>.*/fr/univ_amu/iut/App\.java</exclude-pattern>
+
+    <!-- ============================================================
+         LONG METHOD -> Extract Method
+         ============================================================ -->
+
+    <rule ref="category/java/design.xml/NcssCount">
+        <properties>
+            <!-- 40 lignes de code non-comment effectif. Plus tolérant que le
+                 défaut PMD (60) aurait été trop laxiste pour la pédagogie. -->
+            <property name="methodReportLevel" value="40"/>
+            <!-- 200 lignes par classe = God Class détectable en dernier recours,
+                 avant même que GodClass ne s'active. -->
+            <property name="classReportLevel" value="200"/>
+        </properties>
+    </rule>
+
+    <!-- ============================================================
+         LONG PARAMETER LIST -> Introduce Parameter Object
+         ============================================================ -->
+
+    <rule ref="category/java/design.xml/ExcessiveParameterList">
+        <properties>
+            <!-- 6 paramètres ou plus déclenche le warning. Au-dessus, c'est
+                 systématiquement un signe qu'un Parameter Object ou un Builder
+                 est attendu. -->
+            <property name="minimum" value="6"/>
+        </properties>
+    </rule>
+
+    <!-- ============================================================
+         CYCLOMATIC COMPLEXITY -> Extract Method / Polymorphisme
+         ============================================================ -->
+
+    <rule ref="category/java/design.xml/CyclomaticComplexity">
+        <properties>
+            <!-- Seuil 15 : plus tolérant que le défaut PMD (10). Les
+                 solutions TDD des kata (GrilleDemineur, StringCalculator)
+                 finissent parfois avec une complexité 10-13 sans être
+                 smelly ; le vrai smell commence >= 15. GildedRose du
+                 tp4 monte à 19 et sera bien détecté. -->
+            <property name="methodReportLevel" value="15"/>
+            <property name="classReportLevel" value="80"/>
+        </properties>
+    </rule>
+
+    <!-- ============================================================
+         DEEPLY NESTED IFS -> Early return / Guard clauses
+         ============================================================ -->
+
+    <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
+        <properties>
+            <!-- 4 niveaux d'imbrication ou plus. Le seuil 3 du défaut PMD
+                 est trop strict pour le code de départ smelly volontaire
+                 (GildedRose a du if-else à 3 niveaux par conception). -->
+            <property name="problemDepth" value="4"/>
+        </properties>
+    </rule>
+
+    <!-- ============================================================
+         GOD CLASS -> Extract Class
+         ============================================================ -->
+
+    <rule ref="category/java/design.xml/GodClass"/>
+
+    <!-- ============================================================
+         MAGIC NUMBER / MAGIC STRING -> Replace with Symbolic Constant
+         ============================================================ -->
+
+    <rule ref="category/java/errorprone.xml/AvoidDuplicateLiterals">
+        <properties>
+            <!-- Un littéral dupliqué 3 fois ou plus déclenche un warning.
+                 Les valeurs triviales (chaînes vides, indices, bornes) sont
+                 autorisées car légitimement répétées partout. -->
+            <property name="maxDuplicateLiterals" value="3"/>
+            <property name="minimumLength" value="3"/>
+            <property name="exceptionList" value="&quot;&quot;"/>
+            <property name="skipAnnotations" value="true"/>
+        </properties>
+    </rule>
+
+    <!-- ============================================================
+         FEATURE ENVY ~ Switch Statement sur un type -> Polymorphisme
+         Détection indirecte via une chaîne de if/else-if sur getClass()
+         ou sur un champ type. Pas de règle PMD directe "feature envy" /
+         "switch on type" ; la combinaison CyclomaticComplexity +
+         AvoidDeeplyNestedIfStmts couvre le cas en pratique.
+         ============================================================ -->
+
+    <!-- ============================================================
+         BEST PRACTICE : pas de réassignation de paramètre
+         ============================================================ -->
+
+    <rule ref="category/java/bestpractices.xml/AvoidReassigningParameters"/>
+
+</ruleset>
