@@ -20,15 +20,13 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * CRUD du {@link ResultatsIdentificationDao} + contraintes : FK vers le passage, unicité {@code
- * passage_id} (cardinalité 0:1), et suppression en cascade quand le passage parent disparaît
- * ({@code ON DELETE CASCADE}).
- *
- * <p>La chaîne de FK menant au passage (utilisateur → site → point → enregistreur → passage) n'a
- * pas encore de DAO dédié (autres features) : on la sème ici directement en SQL pour rester
- * autonome.
- */
+/// CRUD du [ResultatsIdentificationDao] + contraintes : FK vers le passage, unicité `passage_id`
+/// (cardinalité 0:1), et suppression en cascade quand le passage parent disparaît
+/// (`ON DELETE CASCADE`).
+///
+/// La chaîne de FK menant au passage (utilisateur → site → point → enregistreur → passage) n'a
+/// pas encore de DAO dédié (autres features) : on la sème ici directement en SQL pour rester
+/// autonome.
 class ResultatsIdentificationDaoTest {
 
   @TempDir Path dossier;

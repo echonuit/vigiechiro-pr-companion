@@ -41,13 +41,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Tests de {@link ServiceDiagnostic} de bout en bout sur une base SQLite jetable ({@code @TempDir}
- * + {@link MigrationSchema}), avec les vrais DAO des features {@code passage}/{@code sites} et une
- * {@link HorlogeFigee} (horodatage déterministe). Couvre les trois exigences du parcours P6 :
- * anomalies listées (R19), série climatique lue quand le relevé est présent, absence de relevé
- * signalée (R20).
- */
+/// Tests de [ServiceDiagnostic] de bout en bout sur une base SQLite jetable (`@TempDir` +
+/// [MigrationSchema]), avec les vrais DAO des features `passage`/`sites` et une
+/// [HorlogeFigee] (horodatage déterministe). Couvre les trois exigences du parcours P6 :
+/// anomalies listées (R19), série climatique lue quand le relevé est présent, absence de relevé
+/// signalée (R20).
 class ServiceDiagnosticTest {
 
   private static final String ID_USER = "u-1";
@@ -116,9 +114,7 @@ class ServiceDiagnosticTest {
         .id();
   }
 
-  /**
-   * Copie le THLog réel (ressource de test) dans le workspace jetable, comme le ferait l'import.
-   */
+  /// Copie le THLog réel (ressource de test) dans le workspace jetable, comme le ferait l'import.
   private Path copierThLogReel() {
     Path cible = dossier.resolve("PaRecPR" + SERIE + "_THLog.csv");
     try (InputStream in = getClass().getResourceAsStream("PaRecPR1925492_THLog.csv")) {

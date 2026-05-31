@@ -15,12 +15,10 @@ import org.approvaltests.reporters.QuietReporter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Validation par golden master (ApprovalTests) de l'export CSV du diagnostic (P6-CA6). La série
- * climatique est lue depuis le THLog réel (ressource de test {@code PaRecPR1925492_THLog.csv}) puis
- * exportée ; le CSV produit est comparé au fichier {@code *.approved.txt} versionné. Reporter
- * silencieux pour rester exécutable en CI headless.
- */
+/// Validation par golden master (ApprovalTests) de l'export CSV du diagnostic (P6-CA6). La série
+/// climatique est lue depuis le THLog réel (ressource de test `PaRecPR1925492_THLog.csv`) puis
+/// exportée ; le CSV produit est comparé au fichier `*.approved.txt` versionné. Reporter
+/// silencieux pour rester exécutable en CI headless.
 class ExportDiagnosticTest {
 
   private static final Options OPTIONS = new Options(new QuietReporter());

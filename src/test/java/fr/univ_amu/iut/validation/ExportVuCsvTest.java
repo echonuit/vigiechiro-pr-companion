@@ -10,12 +10,10 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests unitaires de {@link ExportVuCsv} : structure des colonnes du CSV {@code _Vu}, règle R17
- * (ligne non touchée conserve ses colonnes Tadarida, ligne validée/corrigée reflète l'observateur)
- * et colonne optionnelle {@code validation_mode} (R24). Pas de base : on travaille sur des {@link
- * LigneObservation} en mémoire.
- */
+/// Tests unitaires de [ExportVuCsv] : structure des colonnes du CSV `_Vu`, règle R17 (ligne non
+/// touchée conserve ses colonnes Tadarida, ligne validée/corrigée reflète l'observateur) et
+/// colonne optionnelle `validation_mode` (R24). Pas de base : on travaille sur des
+/// [LigneObservation] en mémoire.
 class ExportVuCsvTest {
 
   private final ExportVuCsv export = new ExportVuCsv();

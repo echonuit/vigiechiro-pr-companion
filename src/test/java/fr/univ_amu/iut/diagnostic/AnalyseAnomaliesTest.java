@@ -9,10 +9,8 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests purs de {@link AnalyseAnomalies} (R19) : classement par familles d'anomalies et tolérance
- * au journal circulaire (rien à reconstituer si les entrées manquent).
- */
+/// Tests purs de [AnalyseAnomalies] (R19) : classement par familles d'anomalies et tolérance au
+/// journal circulaire (rien à reconstituer si les entrées manquent).
 class AnalyseAnomaliesTest {
 
   @Test

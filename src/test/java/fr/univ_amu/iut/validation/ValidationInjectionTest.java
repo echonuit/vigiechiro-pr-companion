@@ -13,13 +13,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Filet d'intégration Guice de la feature {@code validation} : vérifie que la racine de composition
- * sait résoudre le {@link ServiceValidation} et ses moteurs CSV. Valide le câblage inter-modules
- * (le service reçoit {@code SessionDao} / {@code SequenceDao} de {@code passage} et l'{@code
- * Horloge} du socle). On surcharge le workspace vers un {@code @TempDir} pour ne pas toucher au
- * workspace réel.
- */
+/// Filet d'intégration Guice de la feature `validation` : vérifie que la racine de composition
+/// sait résoudre le [ServiceValidation] et ses moteurs CSV. Valide le câblage inter-modules (le
+/// service reçoit `SessionDao` / `SequenceDao` de `passage` et l'`Horloge` du socle). On
+/// surcharge le workspace vers un `@TempDir` pour ne pas toucher au workspace réel.
 class ValidationInjectionTest {
 
   @TempDir Path workspaceJetable;

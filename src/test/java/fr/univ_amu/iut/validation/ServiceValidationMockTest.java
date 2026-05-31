@@ -29,12 +29,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/**
- * Complément ciblé (Mockito) : isole la <b>logique de décision</b> du {@link ServiceValidation}
- * indépendamment de la base (cf. {@code ServiceSitesMockTest}). On mocke les DAO pour vérifier le
- * statut dérivé (R15/R16/R17), le comportement de {@link ServiceValidation#valider(Long)} (R24) et
- * le refus dur de {@link ServiceValidation#corriger(Long, String, Double)} sur taxon inconnu.
- */
+/// Complément ciblé (Mockito) : isole la **logique de décision** du
+/// [ServiceValidation] indépendamment de la base (cf. `ServiceSitesMockTest`). On mocke les DAO
+/// pour vérifier le statut dérivé (R15/R16/R17), le comportement de
+/// [ServiceValidation#valider(Long)] (R24) et le refus dur de
+/// [ServiceValidation#corriger(Long, String, Double)] sur taxon inconnu.
 @ExtendWith(MockitoExtension.class)
 class ServiceValidationMockTest {
 

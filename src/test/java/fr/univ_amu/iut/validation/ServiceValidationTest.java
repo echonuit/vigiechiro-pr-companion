@@ -51,16 +51,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Tests de bout en bout du {@link ServiceValidation} sur une base SQLite jetable ({@code @TempDir}
- * + {@link MigrationSchema}), avec les vrais DAO des features {@code validation} et {@code passage}
- * et une {@link HorlogeFigee}. Couvre l'import en masse, R15 (validation), R16 (correction), R24
- * ({@code validation_mode} persisté), R18 (modes inventaire / activité), R17 (export {@code _Vu})
- * et le round-trip import → export → reparse.
- *
- * <p>Les taxons sont déjà semés par {@code V02} (Pippip, Nyclei, noise…) : le jeu de test n'utilise
- * que des codes semés et des séquences semées à la main, pour rester autonome.
- */
+/// Tests de bout en bout du [ServiceValidation] sur une base SQLite jetable (`@TempDir` +
+/// [MigrationSchema]), avec les vrais DAO des features `validation` et `passage` et une
+/// [HorlogeFigee]. Couvre l'import en masse, R15 (validation), R16 (correction), R24
+/// (`validation_mode` persisté), R18 (modes inventaire / activité), R17 (export `_Vu`) et le
+/// round-trip import → export → reparse.
+///
+/// Les taxons sont déjà semés par `V02` (Pippip, Nyclei, noise…) : le jeu de test n'utilise que
+/// des codes semés et des séquences semées à la main, pour rester autonome.
 class ServiceValidationTest {
 
   private static final String ID_USER = "u-1";
@@ -155,7 +153,7 @@ class ServiceValidationTest {
             idSession));
   }
 
-  /** Écrit un petit CSV Brut (tout guillemeté) dans le {@code @TempDir} et renvoie son chemin. */
+  /// Écrit un petit CSV Brut (tout guillemeté) dans le `@TempDir` et renvoie son chemin.
   private Path ecrireBrut() {
     String contenu =
         guillemets(

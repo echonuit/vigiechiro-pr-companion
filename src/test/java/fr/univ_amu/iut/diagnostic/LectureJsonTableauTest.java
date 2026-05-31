@@ -8,11 +8,9 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests de {@link LectureJsonTableau}, le lecteur de tableau JSON de chaînes utilisé par le
- * diagnostic. On vérifie surtout qu'il est la <b>réciproque exacte</b> de {@code
- * JsonSimple.tableau} (le format d'écriture de l'import), y compris sur les caractères échappés.
- */
+/// Tests de [LectureJsonTableau], le lecteur de tableau JSON de chaînes utilisé par le
+/// diagnostic. On vérifie surtout qu'il est la **réciproque exacte** de `JsonSimple.tableau` (le
+/// format d'écriture de l'import), y compris sur les caractères échappés.
 class LectureJsonTableauTest {
 
   @Test

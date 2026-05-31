@@ -1,36 +1,29 @@
 package fr.univ_amu.iut.diagnostic.model;
 
-import fr.univ_amu.iut.commun.model.JsonSimple;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Lecture d'un <b>tableau JSON de chaînes</b> ({@code ["a","b"]}), exacte réciproque de {@link
- * JsonSimple#tableau(java.util.List)}.
- *
- * <p>L'utilitaire partagé {@link JsonSimple} (paquet {@code commun.model}) ne sait que
- * <b>sérialiser</b> ; il n'expose aucun parseur (et {@code commun/**} est gelé). La feature {@code
- * diagnostic} doit pourtant <b>relire</b> les colonnes {@code TEXT} JSON écrites à l'import ({@code
- * sensor_log.parsed_events} et {@code sensor_log.detected_anomalies}, alimentées via {@code
- * JsonSimple.tableau}). Ce lecteur vit donc dans la feature, en miroir documenté de {@link
- * JsonSimple} : il dés-échappe les séquences produites par {@link JsonSimple#echapper(String)}
- * (guillemet, antislash, retours chariot/ligne, tabulation et échappements Unicode des caractères
- * de contrôle).
- *
- * <p>Tolérant par construction (R19, journal circulaire) : une entrée {@code null}, vide, {@code
- * "null"} ou {@code "[]"} donne une liste vide ; un contenu mal formé est lu au mieux sans lever
- * d'exception.
- */
+/// Lecture d'un **tableau JSON de chaînes** (`["a","b"]`), exacte réciproque de
+/// [JsonSimple#tableau(java.util.List)].
+///
+/// L'utilitaire partagé [JsonSimple] (paquet `commun.model`) ne sait que **sérialiser** ; il
+/// n'expose aucun parseur (et `commun/**` est gelé). La feature `diagnostic` doit pourtant
+/// **relire** les colonnes `TEXT` JSON écrites à l'import (`sensor_log.parsed_events` et
+/// `sensor_log.detected_anomalies`, alimentées via `JsonSimple.tableau`). Ce lecteur vit donc
+/// dans la feature, en miroir documenté de [JsonSimple] : il dés-échappe les séquences produites
+/// par [JsonSimple#echapper(String)] (guillemet, antislash, retours chariot/ligne, tabulation et
+/// échappements Unicode des caractères de contrôle).
+///
+/// Tolérant par construction (R19, journal circulaire) : une entrée `null`, vide, `"null"` ou
+/// `"[]"` donne une liste vide ; un contenu mal formé est lu au mieux sans lever d'exception.
 public final class LectureJsonTableau {
 
   private LectureJsonTableau() {}
 
-  /**
-   * Lit un tableau JSON de chaînes et renvoie ses éléments dés-échappés, dans l'ordre.
-   *
-   * @param json le texte JSON (ex. {@code ["Réveil","Erreur SD"]}), éventuellement {@code null}
-   * @return la liste des chaînes (jamais {@code null}, immuable)
-   */
+  /// Lit un tableau JSON de chaînes et renvoie ses éléments dés-échappés, dans l'ordre.
+  ///
+  /// @param json le texte JSON (ex. `["Réveil","Erreur SD"]`), éventuellement `null`
+  /// @return la liste des chaînes (jamais `null`, immuable)
   public static List<String> lire(String json) {
     List<String> resultat = new ArrayList<>();
     if (json == null) {

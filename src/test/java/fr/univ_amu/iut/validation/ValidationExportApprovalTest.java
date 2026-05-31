@@ -10,17 +10,14 @@ import org.approvaltests.reporters.UseReporter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Golden master (ApprovalTests) du CSV {@code _Vu} exporté à partir des 473 observations réelles.
- * Verrouille la sortie canonique de {@link ExportVuCsv} : tout changement de format (ordre des
- * colonnes, sérialisation des nombres, gestion des champs vides) fait diverger le {@code
- * .received.txt} du {@code .approved.txt} et casse le test.
- *
- * <p>{@link QuietReporter} : pas de lancement d'outil de diff graphique (compatible CI headless).
- * Pour (re)générer la référence après un changement de format <b>assumé</b> : supprimer le {@code
- * .approved.txt}, relancer, puis renommer le {@code .received.txt} produit en {@code
- * .approved.txt}.
- */
+/// Golden master (ApprovalTests) du CSV `_Vu` exporté à partir des 473 observations réelles.
+/// Verrouille la sortie canonique de [ExportVuCsv] : tout changement de format (ordre des
+/// colonnes, sérialisation des nombres, gestion des champs vides) fait diverger le
+/// `.received.txt` du `.approved.txt` et casse le test.
+///
+/// [QuietReporter] : pas de lancement d'outil de diff graphique (compatible CI headless). Pour
+/// (re)générer la référence après un changement de format **assumé** : supprimer le
+/// `.approved.txt`, relancer, puis renommer le `.received.txt` produit en `.approved.txt`.
 @UseReporter(QuietReporter.class)
 class ValidationExportApprovalTest {
 

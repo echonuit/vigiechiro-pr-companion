@@ -15,21 +15,19 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 
-/**
- * Module Guice de la feature {@code validation} : fournit ses DAO, ses moteurs CSV ({@link
- * ParserCsvTadarida}, {@link ExportVuCsv}) et son service ({@link ServiceValidation}) à partir de
- * la {@link SourceDeDonnees} (binder en singleton par {@code CommunModule}).
- *
- * <p>Comme {@code SitesModule}, on utilise des méthodes {@code @Provides} (et non {@code @Inject}
- * sur les DAO ni le service) pour garder la couche {@code model} indépendante du framework
- * d'injection : DAO, parseur, écrivain et service restent de simples objets réutilisables, c'est ce
- * module qui sait les assembler.
- *
- * <p>L'assemblage du service est <b>inter-modules</b> : il reçoit les DAO de {@code passage}
- * ({@link SessionDao}, {@link SequenceDao}, pour raccrocher les observations à leurs séquences) et
- * l'{@link Horloge} du socle. Le sens des dépendances ({@code validation → passage}) reste
- * acyclique (contrôlé par {@code ArchitectureTest}).
- */
+/// Module Guice de la feature `validation` : fournit ses DAO, ses moteurs CSV
+/// ([ParserCsvTadarida], [ExportVuCsv]) et son service ([ServiceValidation]) à partir de la
+/// [SourceDeDonnees] (binder en singleton par `CommunModule`).
+///
+/// Comme `SitesModule`, on utilise des méthodes `@Provides` (et non `@Inject` sur les DAO ni le
+/// service) pour garder la couche `model` indépendante du framework d'injection : DAO, parseur,
+/// écrivain et service restent de simples objets réutilisables, c'est ce module qui sait les
+/// assembler.
+///
+/// L'assemblage du service est **inter-modules** : il reçoit les DAO de `passage` ([SessionDao],
+/// [SequenceDao], pour raccrocher les observations à leurs séquences) et l'[Horloge] du socle. Le
+/// sens des dépendances (`validation → passage`) reste acyclique (contrôlé par
+/// `ArchitectureTest`).
 public class ValidationModule extends AbstractModule {
 
   @Provides

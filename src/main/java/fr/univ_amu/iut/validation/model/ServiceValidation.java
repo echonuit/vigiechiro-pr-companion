@@ -19,42 +19,37 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
-/**
- * Service métier de la feature {@code validation} : valide les résultats d'identification Tadarida
- * (parcours P7, épopée E7). Suit le patron du service de référence {@code ServiceSites} : pure Java
- * testable, dépendances reçues par constructeur, distinction règles soft / règles dures, dates via
- * {@link Horloge}.
- *
- * <h2>Responsabilités</h2>
- *
- * <ul>
- *   <li><b>Import en masse</b> ({@link #importer(Long, Path)}) : parse un CSV Tadarida via {@link
- *       ParserCsvTadarida}, crée le {@link ResultatsIdentification} (format détecté + horodatage),
- *       résout chaque ligne sur sa séquence d'écoute en base, puis insère les {@link Observation}
- *       en une seule transaction ({@code ObservationDao.insererTout}). Les détections sont
- *       raccrochées à la séquence par <b>nom de fichier</b> (le CSV ne porte pas la clé technique).
- *   <li><b>Validation / correction</b> ({@link #valider(Long)} R15, {@link #corriger(Long, String,
- *       Double)} R16) : renseigne le taxon observateur en {@code manuel} (R24).
- *   <li><b>Modes de revue</b> ({@link #validerSelonMode(Long, ModeRevue)} R18) : en {@code
- *       INVENTAIRE}, valider une espèce propage automatiquement ({@code auto}, R24) la décision aux
- *       autres détections non touchées de la même espèce ; en {@code ACTIVITE}, aucune propagation.
- *   <li><b>Export {@code _Vu}</b> ({@link #exporter(Long, Path, boolean)} R17) : reconstitue un CSV
- *       réinjectable via {@link ExportVuCsv}, les lignes non touchées conservant leurs colonnes
- *       Tadarida à l'identique.
- *   <li><b>Statut dérivé</b> ({@link #statut(Observation)}) : NON_TOUCHEE / VALIDEE / CORRIGEE.
- * </ul>
- *
- * <h2>Dépendances inter-features</h2>
- *
- * Le service lit les DAO de la feature {@code passage} ({@link SessionDao}, {@link SequenceDao})
- * pour raccrocher les observations à leurs séquences. Le sens {@code validation → passage} reste
- * acyclique (contrôlé par {@code ArchitectureTest}).
- *
- * <h2>Règles dures</h2>
- *
- * Une séquence introuvable, un passage sans session ou un taxon Tadarida inconnu lèvent une {@link
- * RegleMetierException} (l'import est refusé en bloc, rien n'est laissé à demi-écrit).
- */
+/// Service métier de la feature `validation` : valide les résultats d'identification Tadarida
+/// (parcours P7, épopée E7). Suit le patron du service de référence `ServiceSites` : pure Java
+/// testable, dépendances reçues par constructeur, distinction règles soft / règles dures, dates
+/// via [Horloge].
+///
+/// ## Responsabilités
+///
+/// - **Import en masse** ([#importer(Long, Path)]) : parse un CSV Tadarida via
+///   [ParserCsvTadarida], crée le [ResultatsIdentification] (format détecté + horodatage), résout
+///   chaque ligne sur sa séquence d'écoute en base, puis insère les [Observation] en une seule
+///   transaction (`ObservationDao.insererTout`). Les détections sont raccrochées à la séquence
+///   par **nom de fichier** (le CSV ne porte pas la clé technique).
+/// - **Validation / correction** ([#valider(Long)] R15, [#corriger(Long, String, Double)] R16) :
+///   renseigne le taxon observateur en `manuel` (R24).
+/// - **Modes de revue** ([#validerSelonMode(Long, ModeRevue)] R18) : en `INVENTAIRE`, valider une
+///   espèce propage automatiquement (`auto`, R24) la décision aux autres détections non touchées
+///   de la même espèce ; en `ACTIVITE`, aucune propagation.
+/// - **Export `_Vu`** ([#exporter(Long, Path, boolean)] R17) : reconstitue un CSV réinjectable
+///   via [ExportVuCsv], les lignes non touchées conservant leurs colonnes Tadarida à l'identique.
+/// - **Statut dérivé** ([#statut(Observation)]) : NON_TOUCHEE / VALIDEE / CORRIGEE.
+///
+/// ## Dépendances inter-features
+///
+/// Le service lit les DAO de la feature `passage` ([SessionDao], [SequenceDao]) pour raccrocher
+/// les observations à leurs séquences. Le sens `validation → passage` reste acyclique (contrôlé
+/// par `ArchitectureTest`).
+///
+/// ## Règles dures
+///
+/// Une séquence introuvable, un passage sans session ou un taxon Tadarida inconnu lèvent une
+/// [RegleMetierException] (l'import est refusé en bloc, rien n'est laissé à demi-écrit).
 public class ServiceValidation {
 
   private final ResultatsIdentificationDao resultatsDao;
@@ -89,16 +84,14 @@ public class ServiceValidation {
   // Import (E7.S1)
   // ---------------------------------------------------------------------------------------------
 
-  /**
-   * Importe les résultats Tadarida d'un passage : parse le CSV, crée les résultats d'identification
-   * et insère les observations en masse, raccrochées à leurs séquences.
-   *
-   * @param idPassage passage annoté (doit posséder une session d'enregistrement)
-   * @param cheminCsv chemin du fichier {@code *-observations.csv} ou {@code _Vu.csv} (R23)
-   * @return les résultats d'identification insérés (avec leur id et le format détecté)
-   * @throws RegleMetierException si le passage n'a pas de session, si une séquence est introuvable
-   *     ou si un taxon Tadarida est inconnu
-   */
+  /// Importe les résultats Tadarida d'un passage : parse le CSV, crée les résultats
+  /// d'identification et insère les observations en masse, raccrochées à leurs séquences.
+  ///
+  /// @param idPassage passage annoté (doit posséder une session d'enregistrement)
+  /// @param cheminCsv chemin du fichier `*-observations.csv` ou `_Vu.csv` (R23)
+  /// @return les résultats d'identification insérés (avec leur id et le format détecté)
+  /// @throws RegleMetierException si le passage n'a pas de session, si une séquence est
+  /// introuvable ou si un taxon Tadarida est inconnu
   public ResultatsIdentification importer(Long idPassage, Path cheminCsv) {
     Objects.requireNonNull(idPassage, "idPassage");
     Objects.requireNonNull(cheminCsv, "cheminCsv");
@@ -166,13 +159,11 @@ public class ServiceValidation {
   // Validation / correction (E7.S2 ; R15, R16, R24)
   // ---------------------------------------------------------------------------------------------
 
-  /**
-   * Valide une observation « en un clic » (R15) : taxon observateur = taxon Tadarida, probabilité
-   * observateur renseignée (reprise de la probabilité Tadarida, ou 1.0 à défaut), mode {@code
-   * manuel} (R24).
-   *
-   * @throws RegleMetierException si l'observation est introuvable
-   */
+  /// Valide une observation « en un clic » (R15) : taxon observateur = taxon Tadarida,
+  /// probabilité observateur renseignée (reprise de la probabilité Tadarida, ou 1.0 à défaut),
+  /// mode `manuel` (R24).
+  ///
+  /// @throws RegleMetierException si l'observation est introuvable
   public Observation valider(Long idObservation) {
     Observation observation = chargerObservation(idObservation);
     Double prob = observation.probObservateur();
@@ -182,14 +173,12 @@ public class ServiceValidation {
     return majObservateur(observation, observation.taxonTadarida(), prob, ModeValidation.MANUEL);
   }
 
-  /**
-   * Corrige une observation (R16) : saisit un taxon observateur <b>différent</b> du taxon Tadarida,
-   * en mode {@code manuel} (R24).
-   *
-   * @param codeTaxonObservateur taxon retenu par l'observateur (doit exister en base)
-   * @param probObservateur probabilité saisie (optionnelle)
-   * @throws RegleMetierException si l'observation est introuvable ou si le taxon est inconnu
-   */
+  /// Corrige une observation (R16) : saisit un taxon observateur **différent** du taxon Tadarida,
+  /// en mode `manuel` (R24).
+  ///
+  /// @param codeTaxonObservateur taxon retenu par l'observateur (doit exister en base)
+  /// @param probObservateur probabilité saisie (optionnelle)
+  /// @throws RegleMetierException si l'observation est introuvable ou si le taxon est inconnu
   public Observation corriger(
       Long idObservation, String codeTaxonObservateur, Double probObservateur) {
     Observation observation = chargerObservation(idObservation);
@@ -201,19 +190,15 @@ public class ServiceValidation {
         observation, codeTaxonObservateur, probObservateur, ModeValidation.MANUEL);
   }
 
-  /**
-   * Valide une observation selon le {@link ModeRevue} (R18, R24).
-   *
-   * <ul>
-   *   <li>{@code ACTIVITE} : valide la seule observation visée (en {@code manuel}).
-   *   <li>{@code INVENTAIRE} : valide l'observation visée (en {@code manuel}), puis propage la
-   *       décision aux autres observations <b>non touchées</b> de la même espèce Tadarida dans le
-   *       même jeu de résultats (en {@code auto}).
-   * </ul>
-   *
-   * @return les observations affectées (la première étant celle validée à la main)
-   * @throws RegleMetierException si l'observation est introuvable
-   */
+  /// Valide une observation selon le [ModeRevue] (R18, R24).
+  ///
+  /// - `ACTIVITE` : valide la seule observation visée (en `manuel`).
+  /// - `INVENTAIRE` : valide l'observation visée (en `manuel`), puis propage la décision aux
+  ///   autres observations **non touchées** de la même espèce Tadarida dans le même jeu de
+  ///   résultats (en `auto`).
+  ///
+  /// @return les observations affectées (la première étant celle validée à la main)
+  /// @throws RegleMetierException si l'observation est introuvable
   public List<Observation> validerSelonMode(Long idObservation, ModeRevue mode) {
     Objects.requireNonNull(mode, "mode");
     Observation pivot = valider(idObservation);
@@ -232,11 +217,9 @@ public class ServiceValidation {
     return affectees;
   }
 
-  /**
-   * Statut dérivé d'une observation (R15/R16/R17) : NON_TOUCHEE (pas de taxon observateur), VALIDEE
-   * (taxon observateur = Tadarida et probabilité renseignée), CORRIGEE (taxon observateur
-   * différent).
-   */
+  /// Statut dérivé d'une observation (R15/R16/R17) : NON_TOUCHEE (pas de taxon observateur),
+  /// VALIDEE (taxon observateur = Tadarida et probabilité renseignée), CORRIGEE (taxon
+  /// observateur différent).
   public StatutObservation statut(Observation observation) {
     Objects.requireNonNull(observation, "observation");
     if (observation.taxonObservateur() == null) {
@@ -254,27 +237,22 @@ public class ServiceValidation {
   // Export _Vu (E7.S3 ; R17, R24)
   // ---------------------------------------------------------------------------------------------
 
-  /**
-   * Écrit le CSV {@code _Vu} réinjectable d'un jeu de résultats (R17). Les observations non
-   * touchées conservent leurs colonnes Tadarida ; les validées/corrigées reflètent le taxon
-   * observateur.
-   *
-   * @param inclureMode {@code true} pour ajouter la colonne {@code validation_mode} (R24)
-   * @return le chemin du fichier écrit
-   */
+  /// Écrit le CSV `_Vu` réinjectable d'un jeu de résultats (R17). Les observations non touchées
+  /// conservent leurs colonnes Tadarida ; les validées/corrigées reflètent le taxon observateur.
+  ///
+  /// @param inclureMode `true` pour ajouter la colonne `validation_mode` (R24)
+  /// @return le chemin du fichier écrit
   public Path exporter(Long idResultats, Path destination, boolean inclureMode) {
     export.ecrire(destination, lignesAExporter(idResultats), inclureMode);
     return destination;
   }
 
-  /** Sérialise le CSV {@code _Vu} d'un jeu de résultats en chaîne (golden master / aperçu). */
+  /// Sérialise le CSV `_Vu` d'un jeu de résultats en chaîne (golden master / aperçu).
   public String exporterVersChaine(Long idResultats, boolean inclureMode) {
     return export.versChaine(lignesAExporter(idResultats), inclureMode);
   }
 
-  /**
-   * Reconstitue les {@link LigneObservation} d'un jeu de résultats (séquence relue par son nom).
-   */
+  /// Reconstitue les [LigneObservation] d'un jeu de résultats (séquence relue par son nom).
   public List<LigneObservation> lignesAExporter(Long idResultats) {
     Map<Long, String> nomParSequence = new HashMap<>();
     List<LigneObservation> lignes = new ArrayList<>();
@@ -317,7 +295,7 @@ public class ServiceValidation {
             () -> new RegleMetierException("Observation introuvable : " + idObservation + "."));
   }
 
-  /** Met à jour le triplet observateur (taxon, probabilité, mode) d'une observation et la relit. */
+  /// Met à jour le triplet observateur (taxon, probabilité, mode) d'une observation et la relit.
   private Observation majObservateur(
       Observation o, String taxonObservateur, Double probObservateur, ModeValidation mode) {
     Observation mise =
@@ -340,7 +318,7 @@ public class ServiceValidation {
     return mise;
   }
 
-  /** Index nom de séquence (sans extension) → id, pour les séquences d'une session. */
+  /// Index nom de séquence (sans extension) → id, pour les séquences d'une session.
   private Map<String, Long> indexerSequences(Long idSession) {
     Map<String, Long> index = new HashMap<>();
     for (SequenceDEcoute sequence : sequenceDao.findBySession(idSession)) {
@@ -355,16 +333,14 @@ public class ServiceValidation {
     return codes;
   }
 
-  /** Renvoie le code s'il est connu (FK valide), sinon {@code null} (ex. liste multi-valuée). */
+  /// Renvoie le code s'il est connu (FK valide), sinon `null` (ex. liste multi-valuée).
   private static String codeOuNull(String code, Set<String> codesConnus) {
     return code != null && codesConnus.contains(code) ? code : null;
   }
 
-  /**
-   * Clé de raccrochage d'une séquence : nom de fichier sans extension. Le CSV Tadarida nomme les
-   * séquences sans extension ({@code …_000}), alors que la base stocke le nom complet ({@code
-   * …_000.wav}, R8). On compare donc sur la base du nom.
-   */
+  /// Clé de raccrochage d'une séquence : nom de fichier sans extension. Le CSV Tadarida nomme les
+  /// séquences sans extension (`…_000`), alors que la base stocke le nom complet (`…_000.wav`,
+  /// R8). On compare donc sur la base du nom.
   private static String cleSequence(String nomFichier) {
     if (nomFichier == null) {
       return null;

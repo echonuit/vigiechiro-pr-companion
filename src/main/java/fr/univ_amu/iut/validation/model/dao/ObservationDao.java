@@ -12,25 +12,19 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
-/**
- * DAO de l'entité {@link Observation} (table {@code observation}, clé auto-incrémentée).
- *
- * <p>Démontre plusieurs points :
- *
- * <ul>
- *   <li>le mapping de l'énum {@link ModeValidation} (colonne {@code validation_mode}, {@code null}
- *       → {@link ModeValidation#NON_VALIDE}) et du booléen {@code is_reference} ({@code INTEGER}
- *       0/1) ;
- *   <li>les colonnes numériques <b>nullable</b> : {@code REAL} lus via {@code rs.getObject}, {@code
- *       INTEGER} nullable ({@code median_freq_hz}) lu via {@code getInt} + {@link
- *       ResultSet#wasNull()} (robuste quel que soit le type retourné par le pilote) ;
- *   <li>un <b>insert en lot</b> ({@link #insererTout(List)}) regroupé en une seule transaction
- *       ({@code addBatch}/{@code executeBatch}) : l'import d'un CSV Tadarida crée des centaines
- *       d'observations d'un coup, un aller-retour par ligne serait coûteux ;
- *   <li>la requête métier {@link #findByResults(Long)} (toutes les observations d'un jeu de
- *       résultats).
- * </ul>
- */
+/// DAO de l'entité [Observation] (table `observation`, clé auto-incrémentée).
+///
+/// Démontre plusieurs points :
+///
+/// - le mapping de l'énum [ModeValidation] (colonne `validation_mode`, `null` →
+///   [ModeValidation#NON_VALIDE]) et du booléen `is_reference` (`INTEGER` 0/1) ;
+/// - les colonnes numériques **nullable** : `REAL` lus via `rs.getObject`, `INTEGER` nullable
+///   (`median_freq_hz`) lu via `getInt` + [ResultSet#wasNull()] (robuste quel que soit le type
+///   retourné par le pilote) ;
+/// - un **insert en lot** ([#insererTout(List)]) regroupé en une seule transaction
+///   (`addBatch`/`executeBatch`) : l'import d'un CSV Tadarida crée des centaines d'observations
+///   d'un coup, un aller-retour par ligne serait coûteux ;
+/// - la requête métier [#findByResults(Long)] (toutes les observations d'un jeu de résultats).
 public class ObservationDao extends DaoGenerique<Observation, Long> {
 
   private static final String SQL_INSERT =
@@ -77,12 +71,12 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     return MAPPER;
   }
 
-  /** Observations agrégées par un jeu de résultats, triées par id (ordre d'import). */
+  /// Observations agrégées par un jeu de résultats, triées par id (ordre d'import).
   public List<Observation> findByResults(Long idResultats) {
     return query("SELECT * FROM observation WHERE results_id = ? ORDER BY id", MAPPER, idResultats);
   }
 
-  /** Observations détectées dans une séquence d'écoute donnée, triées par temps de début. */
+  /// Observations détectées dans une séquence d'écoute donnée, triées par temps de début.
   public List<Observation> findBySequence(Long idSequence) {
     return query(
         "SELECT * FROM observation WHERE sequence_id = ? ORDER BY start_time_s",
@@ -110,10 +104,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
         observation.idResultats());
   }
 
-  /**
-   * Insère un lot d'observations dans une <b>transaction unique</b> (tout réussit ou tout est
-   * annulé). Renvoie le nombre de lignes insérées.
-   */
+  /// Insère un lot d'observations dans une **transaction unique** (tout réussit ou tout est
+  /// annulé). Renvoie le nombre de lignes insérées.
   public int insererTout(List<Observation> observations) {
     try (Connection connexion = source.getConnection();
         PreparedStatement ps = connexion.prepareStatement(SQL_INSERT)) {
@@ -164,7 +156,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
         observation.id());
   }
 
-  /** Valeurs positionnelles de {@link #SQL_INSERT}, dans l'ordre des colonnes. */
+  /// Valeurs positionnelles de [#SQL_INSERT], dans l'ordre des colonnes.
   private static Object[] valeurs(Observation observation) {
     return new Object[] {
       observation.idSequence(),
@@ -183,7 +175,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     };
   }
 
-  /** Lie des paramètres positionnels (1-based) en gérant explicitement les valeurs nulles. */
+  /// Lie des paramètres positionnels (1-based) en gérant explicitement les valeurs nulles.
   private static void lier(PreparedStatement ps, Object[] parametres) throws SQLException {
     for (int i = 0; i < parametres.length; i++) {
       if (parametres[i] == null) {
@@ -194,9 +186,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     }
   }
 
-  /**
-   * Lit un {@code INTEGER} nullable : {@code null} si la colonne vaut SQL NULL, sinon sa valeur.
-   */
+  /// Lit un `INTEGER` nullable : `null` si la colonne vaut SQL NULL, sinon sa valeur.
   private static Integer entierNullable(ResultSet rs, String colonne) throws SQLException {
     int valeur = rs.getInt(colonne);
     return rs.wasNull() ? null : valeur;

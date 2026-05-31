@@ -22,15 +22,14 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * CRUD du {@link ObservationDao} + contraintes. Vérifie en particulier les <b>trois</b> FK
- * distinctes vers {@code taxon} ({@code taxon_tadarida} obligatoire, {@code taxon_other_tadarida}
- * et {@code taxon_observer} optionnels), l'insertion en lot transactionnelle et la cascade depuis
- * les résultats parents. Les taxons fil rouge et pseudo-taxons sont déjà semés par {@code V02}.
- *
- * <p>La chaîne de FK (passage → session → original → séquence, et passage → résultats) n'a pas
- * encore de DAO dédié (autres features) : on la sème ici directement en SQL pour rester autonome.
- */
+/// CRUD du [ObservationDao] + contraintes. Vérifie en particulier les **trois** FK distinctes
+/// vers `taxon` (`taxon_tadarida` obligatoire, `taxon_other_tadarida` et `taxon_observer`
+/// optionnels), l'insertion en lot transactionnelle et la cascade depuis les résultats parents.
+/// Les taxons fil rouge et pseudo-taxons sont déjà semés par `V02`.
+///
+/// La chaîne de FK (passage → session → original → séquence, et passage → résultats) n'a pas
+/// encore de DAO dédié (autres features) : on la sème ici directement en SQL pour rester
+/// autonome.
 class ObservationDaoTest {
 
   @TempDir Path dossier;

@@ -6,13 +6,11 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.validation.model.GroupeTaxonomique;
 import java.util.List;
 
-/**
- * DAO de l'entité {@link GroupeTaxonomique} (table {@code taxonomic_group}, clé auto-incrémentée).
- *
- * <p>{@code findAll} / {@code findById} / {@code delete} sont hérités de {@link DaoGenerique}. Les
- * groupes de référence sont déjà semés par {@code V02__seed_taxons.sql} : ce DAO sert surtout à les
- * lire et à filtrer par niveau hiérarchique.
- */
+/// DAO de l'entité [GroupeTaxonomique] (table `taxonomic_group`, clé auto-incrémentée).
+///
+/// `findAll` / `findById` / `delete` sont hérités de [DaoGenerique]. Les groupes de référence
+/// sont déjà semés par `V02__seed_taxons.sql` : ce DAO sert surtout à les lire et à filtrer par
+/// niveau hiérarchique.
 public class GroupeTaxonomiqueDao extends DaoGenerique<GroupeTaxonomique, Long> {
 
   private static final RowMapper<GroupeTaxonomique> MAPPER =
@@ -37,7 +35,7 @@ public class GroupeTaxonomiqueDao extends DaoGenerique<GroupeTaxonomique, Long> 
     return MAPPER;
   }
 
-  /** Groupes d'un niveau hiérarchique donné (ex. {@code "Genre"}), triés par nom. */
+  /// Groupes d'un niveau hiérarchique donné (ex. `"Genre"`), triés par nom.
   public List<GroupeTaxonomique> findByNiveau(String niveau) {
     return query("SELECT * FROM taxonomic_group WHERE level = ? ORDER BY name", MAPPER, niveau);
   }

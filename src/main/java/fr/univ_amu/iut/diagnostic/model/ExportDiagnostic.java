@@ -6,14 +6,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Export CSV déterministe d'un diagnostic (P6-CA6 : « l'export produit un CSV ou un PDF du
- * diagnostic »), via l'utilitaire partagé {@link EcrivainCsv}.
- *
- * <p>Deux exports indépendants : la <b>série climatique</b> (graphe T°/hygrométrie) et la <b>liste
- * des anomalies</b> classées (R19). Sortie <b>déterministe</b> (ordre stable, aucun horodatage ni
- * hash), donc validable par golden master / ApprovalTests.
- */
+/// Export CSV déterministe d'un diagnostic (P6-CA6 : « l'export produit un CSV ou un PDF du
+/// diagnostic »), via l'utilitaire partagé [EcrivainCsv].
+///
+/// Deux exports indépendants : la **série climatique** (graphe T°/hygrométrie) et la
+/// **liste des anomalies** classées (R19). Sortie **déterministe** (ordre stable, aucun
+/// horodatage ni hash), donc validable par golden master / ApprovalTests.
 public final class ExportDiagnostic {
 
   private static final DateTimeFormatter HEURE =
@@ -21,10 +19,8 @@ public final class ExportDiagnostic {
 
   private ExportDiagnostic() {}
 
-  /**
-   * Série climatique en CSV : {@code Date;Heure;Temperature_C;Humidite_pct} puis une ligne par
-   * mesure. Date au format ISO {@code AAAA-MM-JJ}, heure {@code HH:MM:SS}.
-   */
+  /// Série climatique en CSV : `Date;Heure;Temperature_C;Humidite_pct` puis une ligne par mesure.
+  /// Date au format ISO `AAAA-MM-JJ`, heure `HH:MM:SS`.
   public static String climatVersCsv(SerieClimatique climat) {
     List<List<String>> lignes = new ArrayList<>();
     lignes.add(List.of("Date", "Heure", "Temperature_C", "Humidite_pct"));
@@ -39,11 +35,9 @@ public final class ExportDiagnostic {
     return EcrivainCsv.minimal().versChaine(lignes);
   }
 
-  /**
-   * Anomalies en CSV : {@code Categorie;Message}, regroupées par famille (réveils non programmés,
-   * erreurs SD, redémarrages, batterie). Une anomalie relevant de plusieurs familles apparaît dans
-   * chacune.
-   */
+  /// Anomalies en CSV : `Categorie;Message`, regroupées par famille (réveils non programmés,
+  /// erreurs SD, redémarrages, batterie). Une anomalie relevant de plusieurs familles apparaît
+  /// dans chacune.
   public static String anomaliesVersCsv(AnalyseAnomalies analyse) {
     List<List<String>> lignes = new ArrayList<>();
     lignes.add(List.of("Categorie", "Message"));

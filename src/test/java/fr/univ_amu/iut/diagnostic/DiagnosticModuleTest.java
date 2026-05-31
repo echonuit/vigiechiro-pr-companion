@@ -23,13 +23,11 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * Filet de câblage Guice de la feature {@code diagnostic} : {@link DiagnosticModule} n'étant pas
- * installé dans {@code RacineInjecteur} (fichier gelé pour cette tâche), on l'exerce ici au-dessus
- * d'un petit module local fournissant les feuilles dont il dépend (DAO des features {@code
- * passage}/{@code sites} + {@link Horloge}). On vérifie que la méthode {@code @Provides} de {@code
- * DiagnosticModule} assemble correctement {@link ServiceDiagnostic}.
- */
+/// Filet de câblage Guice de la feature `diagnostic` : [DiagnosticModule] n'étant pas installé
+/// dans `RacineInjecteur` (fichier gelé pour cette tâche), on l'exerce ici au-dessus d'un petit
+/// module local fournissant les feuilles dont il dépend (DAO des features `passage`/`sites` +
+/// [Horloge]). On vérifie que la méthode `@Provides` de `DiagnosticModule` assemble correctement
+/// [ServiceDiagnostic].
 class DiagnosticModuleTest {
 
   @TempDir Path workspaceJetable;

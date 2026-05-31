@@ -6,43 +6,36 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Predicate;
 
-/**
- * Analyse des anomalies et évènements techniques d'une nuit (R19), à partir de l'état déjà persisté
- * du {@link JournalDuCapteur} (feature {@code passage}). Classe <b>pure</b> (aucun DAO, aucune IO,
- * aucun JavaFX) : elle ne fait que <b>relire et classer</b> ce qui est présent dans les colonnes
- * JSON {@code parsed_events} / {@code detected_anomalies} — pas de re-parsing du fichier {@code
- * LogPR}.
- *
- * <p><b>R19 (journal circulaire)</b> : la SD pleine efface les entrées anciennes. L'analyse
- * n'essaie jamais de reconstituer les pertes : elle expose la liste brute des anomalies présentes
- * et propose un classement indicatif par familles (réveils non programmés, erreurs SD,
- * redémarrages, batterie). Une anomalie peut relever de plusieurs familles, chaque filtre est
- * indépendant.
- */
+/// Analyse des anomalies et évènements techniques d'une nuit (R19), à partir de l'état déjà
+/// persisté du [JournalDuCapteur] (feature `passage`). Classe **pure** (aucun DAO, aucune IO,
+/// aucun JavaFX) : elle ne fait que **relire et classer** ce qui est présent dans les colonnes
+/// JSON `parsed_events` / `detected_anomalies` — pas de re-parsing du fichier `LogPR`.
+///
+/// **R19 (journal circulaire)** : la SD pleine efface les entrées anciennes. L'analyse n'essaie
+/// jamais de reconstituer les pertes : elle expose la liste brute des anomalies présentes et
+/// propose un classement indicatif par familles (réveils non programmés, erreurs SD,
+/// redémarrages, batterie). Une anomalie peut relever de plusieurs familles, chaque filtre est
+/// indépendant.
 public final class AnalyseAnomalies {
 
   private final List<String> anomalies;
   private final List<String> evenements;
 
-  /**
-   * @param anomalies anomalies détectées (déjà dés-sérialisées), jamais {@code null}
-   * @param evenements évènements remarquables (déjà dés-sérialisés), jamais {@code null}
-   */
+  /// @param anomalies anomalies détectées (déjà dés-sérialisées), jamais `null`
+  /// @param evenements évènements remarquables (déjà dés-sérialisés), jamais `null`
   public AnalyseAnomalies(List<String> anomalies, List<String> evenements) {
     this.anomalies = List.copyOf(Objects.requireNonNull(anomalies, "anomalies"));
     this.evenements = List.copyOf(Objects.requireNonNull(evenements, "evenements"));
   }
 
-  /** Analyse vide : aucun journal exploitable (R19, entrées perdues ou journal absent). */
+  /// Analyse vide : aucun journal exploitable (R19, entrées perdues ou journal absent).
   public static AnalyseAnomalies vide() {
     return new AnalyseAnomalies(List.of(), List.of());
   }
 
-  /**
-   * Construit l'analyse en relisant les colonnes JSON du journal persisté ({@code
-   * detected_anomalies} et {@code parsed_events}), via {@link LectureJsonTableau} (réciproque de
-   * {@code JsonSimple.tableau} utilisé à l'import).
-   */
+  /// Construit l'analyse en relisant les colonnes JSON du journal persisté (`detected_anomalies`
+  /// et `parsed_events`), via [LectureJsonTableau] (réciproque de `JsonSimple.tableau` utilisé à
+  /// l'import).
   public static AnalyseAnomalies depuisJournal(JournalDuCapteur journal) {
     Objects.requireNonNull(journal, "journal");
     return new AnalyseAnomalies(
@@ -50,22 +43,22 @@ public final class AnalyseAnomalies {
         LectureJsonTableau.lire(journal.evenementsParses()));
   }
 
-  /** Toutes les anomalies présentes, dans l'ordre du journal (R19 : ce qui est présent). */
+  /// Toutes les anomalies présentes, dans l'ordre du journal (R19 : ce qui est présent).
   public List<String> anomalies() {
     return anomalies;
   }
 
-  /** Évènements remarquables présents (démarrages, mises en veille, réveils…). */
+  /// Évènements remarquables présents (démarrages, mises en veille, réveils…).
   public List<String> evenements() {
     return evenements;
   }
 
-  /** {@code true} si au moins une anomalie est présente. */
+  /// `true` si au moins une anomalie est présente.
   public boolean aDesAnomalies() {
     return !anomalies.isEmpty();
   }
 
-  /** Réveils non programmés (firmware {@code Wakeup} hors alarme). */
+  /// Réveils non programmés (firmware `Wakeup` hors alarme).
   public List<String> reveilsNonProgrammes() {
     return filtrer(
         a ->
@@ -74,12 +67,12 @@ public final class AnalyseAnomalies {
                 || a.contains("wakeup"));
   }
 
-  /** Erreurs liées à la carte SD (écriture/lecture en échec). */
+  /// Erreurs liées à la carte SD (écriture/lecture en échec).
   public List<String> erreursSD() {
     return filtrer(a -> a.contains("sd") && estErreur(a));
   }
 
-  /** Redémarrages inattendus de l'enregistreur. */
+  /// Redémarrages inattendus de l'enregistreur.
   public List<String> redemarrages() {
     return filtrer(
         a ->
@@ -89,7 +82,7 @@ public final class AnalyseAnomalies {
                 || a.contains("restart"));
   }
 
-  /** Alertes liées à la batterie (niveau faible/critique). */
+  /// Alertes liées à la batterie (niveau faible/critique).
   public List<String> alertesBatterie() {
     return filtrer(a -> a.contains("batterie") || a.contains("battery") || a.contains("bat."));
   }
@@ -102,7 +95,7 @@ public final class AnalyseAnomalies {
         || minuscule.contains("fail");
   }
 
-  /** Filtre les anomalies sur un prédicat appliqué à leur forme minuscule (Locale.ROOT). */
+  /// Filtre les anomalies sur un prédicat appliqué à leur forme minuscule (Locale.ROOT).
   private List<String> filtrer(Predicate<String> surMinuscule) {
     return anomalies.stream().filter(a -> surMinuscule.test(a.toLowerCase(Locale.ROOT))).toList();
   }

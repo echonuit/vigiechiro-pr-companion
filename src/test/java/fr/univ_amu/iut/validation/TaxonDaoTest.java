@@ -17,11 +17,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * CRUD du {@link TaxonDao} (clé naturelle {@code code}) + contraintes : FK vers le groupe
- * taxonomique, unicité de la clé naturelle, et refus de supprimer un groupe encore référencé. Les
- * taxons fil rouge et pseudo-taxons sont déjà semés par {@code V02__seed_taxons.sql}.
- */
+/// CRUD du [TaxonDao] (clé naturelle `code`) + contraintes : FK vers le groupe taxonomique,
+/// unicité de la clé naturelle, et refus de supprimer un groupe encore référencé. Les taxons fil
+/// rouge et pseudo-taxons sont déjà semés par `V02__seed_taxons.sql`.
 class TaxonDaoTest {
 
   @TempDir Path dossier;

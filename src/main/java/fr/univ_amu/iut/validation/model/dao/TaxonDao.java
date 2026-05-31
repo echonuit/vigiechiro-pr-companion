@@ -6,14 +6,12 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.util.List;
 
-/**
- * DAO de l'entité {@link Taxon} (table {@code taxon}).
- *
- * <p>Illustre une <b>clé naturelle</b> ({@code code}, TEXT) : comme {@code UtilisateurDao},
- * l'insertion n'utilise pas {@code insererEtRecupererCle} (aucune clé générée) mais {@link
- * #executerMaj(String, Object...)}, et renvoie l'entité telle quelle. Les colonnes nom latin / nom
- * vernaculaire sont nullable (lues directement via {@code rs.getString}, qui renvoie {@code null}).
- */
+/// DAO de l'entité [Taxon] (table `taxon`).
+///
+/// Illustre une **clé naturelle** (`code`, TEXT) : comme `UtilisateurDao`, l'insertion n'utilise
+/// pas `insererEtRecupererCle` (aucune clé générée) mais [#executerMaj(String, Object...)], et
+/// renvoie l'entité telle quelle. Les colonnes nom latin / nom vernaculaire sont nullable (lues
+/// directement via `rs.getString`, qui renvoie `null`).
 public class TaxonDao extends DaoGenerique<Taxon, String> {
 
   private static final RowMapper<Taxon> MAPPER =
@@ -43,7 +41,7 @@ public class TaxonDao extends DaoGenerique<Taxon, String> {
     return MAPPER;
   }
 
-  /** Taxons rattachés à un groupe taxonomique donné, triés par code. */
+  /// Taxons rattachés à un groupe taxonomique donné, triés par code.
   public List<Taxon> findByGroupe(Long idGroupe) {
     return query("SELECT * FROM taxon WHERE group_id = ? ORDER BY code", MAPPER, idGroupe);
   }

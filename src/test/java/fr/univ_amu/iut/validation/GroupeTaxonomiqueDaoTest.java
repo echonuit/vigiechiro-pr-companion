@@ -13,11 +13,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/**
- * CRUD du {@link GroupeTaxonomiqueDao} sur une base SQLite jetable (@TempDir), initialisée par
- * {@link MigrationSchema}. {@code V02__seed_taxons.sql} sème déjà 5 groupes de référence : les
- * tests s'appuient dessus.
- */
+/// CRUD du [GroupeTaxonomiqueDao] sur une base SQLite jetable (@TempDir), initialisée par
+/// [MigrationSchema]. `V02__seed_taxons.sql` sème déjà 5 groupes de référence : les tests
+/// s'appuient dessus.
 class GroupeTaxonomiqueDaoTest {
 
   @TempDir Path dossier;

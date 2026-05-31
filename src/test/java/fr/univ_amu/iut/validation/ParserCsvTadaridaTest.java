@@ -14,18 +14,14 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/**
- * Tests du {@link ParserCsvTadarida} sur les <b>fixtures réelles</b> (473 observations, copiées
- * dans {@code src/test/resources/validation/} depuis le jeu de données SAÉ). Couvre :
- *
- * <ul>
- *   <li>la détection de format Brut (tout guillemeté) vs Vu (entête nue), parcours P7 / R17 ;
- *   <li>le mapping des 11 colonnes Tadarida en {@link LigneObservation} ;
- *   <li>l'équivalence Brut ↔ Vu (les deux fichiers se parsent en observations identiques, malgré
- *       l'encodage différent des champs vides) ;
- *   <li>le round-trip parseur ↔ {@link ExportVuCsv} sur les 473 lignes réelles.
- * </ul>
- */
+/// Tests du [ParserCsvTadarida] sur les **fixtures réelles** (473 observations, copiées dans
+/// `src/test/resources/validation/` depuis le jeu de données SAÉ). Couvre :
+///
+/// - la détection de format Brut (tout guillemeté) vs Vu (entête nue), parcours P7 / R17 ;
+/// - le mapping des 11 colonnes Tadarida en [LigneObservation] ;
+/// - l'équivalence Brut ↔ Vu (les deux fichiers se parsent en observations identiques, malgré
+///   l'encodage différent des champs vides) ;
+/// - le round-trip parseur ↔ [ExportVuCsv] sur les 473 lignes réelles.
 class ParserCsvTadaridaTest {
 
   private final ParserCsvTadarida parser = new ParserCsvTadarida();

@@ -10,26 +10,24 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-/**
- * Lecture du relevé climatique brut {@code PaRecPR<sn>_THLog.csv} (C10) en une série de {@link
- * MesureClimatique}, via l'utilitaire partagé {@link LecteurCsv} (séparateur tabulation).
- *
- * <p>Pourquoi relire le fichier plutôt que la colonne JSON {@code climate_log.measurements} ?
- * L'import persiste aujourd'hui le relevé en ne renseignant que son {@code file_path} (la colonne
- * {@code measurements} reste {@code null}, cf. {@code ServiceImport}). La source canonique de la
- * série est donc le THLog lui-même, exactement l'option « relecture brute via {@code LecteurCsv} »
- * du cahier des charges.
- *
- * <p>Format observé (entête comprise) :
- *
- * <pre>{@code
- * Date        Hour       Temperature  Humidity
- * 22/04/2026  16:02:21   +23.9        64
- * }</pre>
- *
- * <p>Tolérant (R19) : une ligne mal formée (journal circulaire tronqué, champ illisible) est
- * <b>ignorée</b> sans interrompre la lecture. Déterministe : l'ordre du fichier est préservé.
- */
+/// Lecture du relevé climatique brut `PaRecPR<sn>_THLog.csv` (C10) en une série de
+/// [MesureClimatique], via l'utilitaire partagé [LecteurCsv] (séparateur tabulation).
+///
+/// Pourquoi relire le fichier plutôt que la colonne JSON `climate_log.measurements` ? L'import
+/// persiste aujourd'hui le relevé en ne renseignant que son `file_path` (la colonne
+/// `measurements` reste `null`, cf. `ServiceImport`). La source canonique de la série est donc le
+/// THLog lui-même, exactement l'option « relecture brute via `LecteurCsv` » du cahier des
+/// charges.
+///
+/// Format observé (entête comprise) :
+///
+/// ```
+/// Date        Hour       Temperature  Humidity
+/// 22/04/2026  16:02:21   +23.9        64
+/// ```
+///
+/// Tolérant (R19) : une ligne mal formée (journal circulaire tronqué, champ illisible) est
+/// **ignorée** sans interrompre la lecture. Déterministe : l'ordre du fichier est préservé.
 public final class LectureThLog {
 
   private static final DateTimeFormatter DATE_THLOG =
@@ -39,10 +37,8 @@ public final class LectureThLog {
 
   private LectureThLog() {}
 
-  /**
-   * Lit le THLog pointé par {@code fichier}. Renvoie une liste vide si le chemin est {@code null},
-   * inexistant ou illisible (le relevé existe peut-être en base mais son fichier a disparu).
-   */
+  /// Lit le THLog pointé par `fichier`. Renvoie une liste vide si le chemin est `null`,
+  /// inexistant ou illisible (le relevé existe peut-être en base mais son fichier a disparu).
   public static List<MesureClimatique> lire(Path fichier) {
     if (fichier == null || !Files.isReadable(fichier)) {
       return List.of();
@@ -50,7 +46,7 @@ public final class LectureThLog {
     return analyser(new LecteurCsv('\t').lireSansEntete(fichier));
   }
 
-  /** Variante sur contenu déjà chargé (utile aux tests), entête comprise. */
+  /// Variante sur contenu déjà chargé (utile aux tests), entête comprise.
   public static List<MesureClimatique> lireContenu(String contenu) {
     if (contenu == null) {
       return List.of();

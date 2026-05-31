@@ -6,14 +6,12 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import java.util.Optional;
 
-/**
- * DAO de l'entité {@link ResultatsIdentification} (table {@code identification_results}, clé
- * auto-incrémentée).
- *
- * <p>Chaque jeu de résultats annote un seul passage ({@code passage_id} unique) : {@link
- * #findByPassage(Long)} renvoie donc un {@link Optional}. La suppression du passage supprime ses
- * résultats en cascade ({@code ON DELETE CASCADE}).
- */
+/// DAO de l'entité [ResultatsIdentification] (table `identification_results`, clé
+/// auto-incrémentée).
+///
+/// Chaque jeu de résultats annote un seul passage (`passage_id` unique) :
+/// [#findByPassage(Long)] renvoie donc un [Optional]. La suppression du passage supprime ses
+/// résultats en cascade (`ON DELETE CASCADE`).
 public class ResultatsIdentificationDao extends DaoGenerique<ResultatsIdentification, Long> {
 
   private static final RowMapper<ResultatsIdentification> MAPPER =
@@ -44,7 +42,7 @@ public class ResultatsIdentificationDao extends DaoGenerique<ResultatsIdentifica
     return MAPPER;
   }
 
-  /** Résultats annotant un passage donné (au plus un, {@code passage_id} unique). */
+  /// Résultats annotant un passage donné (au plus un, `passage_id` unique).
   public Optional<ResultatsIdentification> findByPassage(Long idPassage) {
     return queryUnique(
         "SELECT * FROM identification_results WHERE passage_id = ?", MAPPER, idPassage);
