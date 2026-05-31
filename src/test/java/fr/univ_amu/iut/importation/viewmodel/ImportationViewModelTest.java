@@ -2,14 +2,18 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -224,6 +228,61 @@ class ImportationViewModelTest {
     assertThat(viewModel.estInspecte()).isFalse();
     assertThat(viewModel.peutImporter().get()).isFalse();
     assertThat(viewModel.nombreOriginauxProperty().get()).isZero();
+  }
+
+  // --- Étape 4 : exécution ---
+
+  @Test
+  @DisplayName("Importer un rattachement complet expose le résultat et passe l'état à TERMINE")
+  void importer_termine_avec_resultat() {
+    Site site = site(1L, "640380");
+    PointDEcoute point = point(10L, "A1", site.id());
+    when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+    when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+    when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class)))
+        .thenReturn(new ResultatImport(null, null, "1925492", 2, 6, List.of()));
+    prepareRattachement(site, point);
+
+    viewModel.importer();
+
+    assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
+    assertThat(viewModel.resultatProperty().get().nombreSequences()).isEqualTo(6);
+    assertThat(viewModel.messageErreurProperty().get()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Un refus métier passe l'état à ECHEC et expose le message (résultat null)")
+  void importer_echec_expose_le_message() {
+    Site site = site(1L, "640380");
+    PointDEcoute point = point(10L, "A1", site.id());
+    when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+    when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+    when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class)))
+        .thenThrow(new RegleMetierException("R5 : un passage existe déjà pour ce point."));
+    prepareRattachement(site, point);
+
+    viewModel.importer();
+
+    assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.ECHEC);
+    assertThat(viewModel.messageErreurProperty().get()).contains("R5");
+    assertThat(viewModel.resultatProperty().get()).isNull();
+  }
+
+  @Test
+  @DisplayName("Importer sans rattachement complet est refusé sans appeler le service")
+  void importer_sans_rattachement_refuse() {
+    viewModel.importer();
+
+    assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.PRET);
+    assertThat(viewModel.messageErreurProperty().get()).contains("rattachement");
+    verifyNoInteractions(serviceImport);
+  }
+
+  private void prepareRattachement(Site site, PointDEcoute point) {
+    viewModel.dossierSourceProperty().set(sd);
+    viewModel.inspecter();
+    viewModel.siteSelectionneProperty().set(site);
+    viewModel.pointSelectionneProperty().set(point);
   }
 
   private static Site site(Long id, String carre) {

@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.RapportInspection;
+import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -30,14 +31,16 @@ import javafx.collections.ObservableList;
 
 /// ViewModel de l'assistant **M-Import** (« Importer une nuit »).
 ///
-/// Couvre les **étapes 1 à 3** de la maquette :
+/// Couvre les **étapes 1 à 4** de la maquette :
 ///  1. choisir un dossier source ;
 ///  2. l'**inspecter en lecture seule** (R9) via [ServiceImport#inspecter] ;
 ///  3. **rattacher** la nuit à un site / point / année / n° de passage et prévisualiser le préfixe
-///     Vigie-Chiro qui sera appliqué (R6).
+///     Vigie-Chiro qui sera appliqué (R6) ;
+///  4. **lancer l'import** via [ServiceImport#importer], puis exposer le résultat et l'état.
 ///
-/// L'exécution de l'import (copie + renommage + transformation) viendra dans la tranche suivante.
-/// Les sites/points de l'utilisateur courant viennent de [ServiceSites] : une dépendance
+/// [#importer()] est **synchrone** : la vue le lancera sur un fil d'arrière-plan pour ne pas
+/// figer l'IHM (progression à venir). Les sites/points de l'utilisateur courant viennent de
+/// [ServiceSites] : une dépendance
 /// `importation → sites` sur le `model` d'une autre feature (autorisée par ArchUnit, jamais
 /// sur son `view`/`viewmodel`). Seul `javafx.beans`/`javafx.collections` est importé ici,
 /// jamais `javafx.scene` (règle `viewmodel_sans_javafx_ui`).
@@ -84,6 +87,12 @@ public class ImportationViewModel {
   /// Rapport d'inspection courant, conservé pour l'aperçu du préfixe (exemple de nom d'origine) et
   /// les tranches suivantes (extraction du quadruplet, exécution de l'import).
   private RapportInspection rapport;
+
+  /// Étape 4 : exécution de l'import (état + résultat), pilotée par [#importer()].
+  private final ReadOnlyObjectWrapper<EtatImport> etat =
+      new ReadOnlyObjectWrapper<>(this, "etat", EtatImport.PRET);
+  private final ReadOnlyObjectWrapper<ResultatImport> resultat =
+      new ReadOnlyObjectWrapper<>(this, "resultat", null);
 
   public ImportationViewModel(
       ServiceImport serviceImport,
@@ -213,6 +222,18 @@ public class ImportationViewModel {
     return peutImporter;
   }
 
+  /// État de l'exécution de l'import (PRET / EN_COURS / TERMINE / ECHEC) : pilote l'affichage de la
+  /// vue (assistant, progression, résumé, erreur).
+  public ReadOnlyObjectProperty<EtatImport> etatProperty() {
+    return etat.getReadOnlyProperty();
+  }
+
+  /// Résultat du dernier import réussi (passage/session créés, compteurs, anomalies) ; `null` tant
+  /// qu'aucun import n'a abouti.
+  public ReadOnlyObjectProperty<ResultatImport> resultatProperty() {
+    return resultat.getReadOnlyProperty();
+  }
+
   /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un
   /// site).
   public void chargerSites() {
@@ -244,6 +265,32 @@ public class ImportationViewModel {
     }
   }
 
+  /// Lance l'import de la nuit (copie protégée R9 + renommage R6/R7 + transformation R10/R11) via
+  /// [ServiceImport#importer], expose le [ResultatImport] et passe l'état à `TERMINE`. Un refus
+  /// métier (R5 doublon, journal manquant…) passe l'état à `ECHEC` et renseigne
+  /// [#messageErreurProperty()]. Méthode **synchrone** : la vue la lancera hors du fil JavaFX.
+  public void importer() {
+    if (!peutImporter.get()) {
+      messageErreur.set(
+          "Complétez le rattachement (dossier inspecté, site, point) avant d'importer.");
+      return;
+    }
+    Site site = siteSelectionne.get();
+    PointDEcoute point = pointSelectionne.get();
+    Prefixe prefixe =
+        new Prefixe(site.numeroCarre(), annee.get(), numeroPassage.get(), point.code());
+    etat.set(EtatImport.EN_COURS);
+    messageErreur.set("");
+    try {
+      resultat.set(serviceImport.importer(dossierSource.get(), point.id(), prefixe));
+      etat.set(EtatImport.TERMINE);
+    } catch (RuntimeException echec) {
+      resultat.set(null);
+      messageErreur.set(echec.getMessage());
+      etat.set(EtatImport.ECHEC);
+    }
+  }
+
   private void echouer(String message) {
     reinitialiserInspection();
     messageErreur.set(message);
@@ -262,12 +309,13 @@ public class ImportationViewModel {
     etatNommage.set(null);
     resumeJournal.set("");
     messageErreur.set("");
+    etat.set(EtatImport.PRET);
+    resultat.set(null);
     majApercu();
   }
 
-  /// Recalcule l'aperçu du préfixe à partir du quadruplet (carré, année, n° passage, point)
-  // appliqué
-  /// à un exemple de nom d'origine ; vide tant que le site ou le point manque.
+  /// Recalcule l'aperçu du préfixe (appliqué à un exemple de nom d'origine) ; vide tant que le
+  /// site ou le point n'est pas choisi.
   private void majApercu() {
     Site site = siteSelectionne.get();
     PointDEcoute point = pointSelectionne.get();
