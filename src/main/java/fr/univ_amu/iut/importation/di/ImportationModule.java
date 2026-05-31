@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -14,6 +15,8 @@ import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
+import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 
 /// Module Guice de la feature `importation` : fournit les moteurs du parcours d'import P2
 /// (inspection du journal, copie protégée, renommage, transformation audio), le DAO transactionnel
@@ -90,5 +93,18 @@ public class ImportationModule extends AbstractModule {
         uniteDeTravail,
         workspace,
         horloge);
+  }
+
+  /// ViewModel de l'assistant M-Import. **Non-singleton** (un VM frais par chargement FXML : un
+  /// écran rouvert ne réutilise pas l'état d'un précédent, cf. patron `SitesModule`). Dépend de
+  /// [ServiceSites] et de l'utilisateur courant (fournis par `SitesModule`) pour lister les
+  /// sites/points : dépendance `importation → sites` sur le `model` d'une autre feature.
+  @Provides
+  ImportationViewModel fournirImportationViewModel(
+      ServiceImport serviceImport,
+      ServiceSites serviceSites,
+      Horloge horloge,
+      @Named("idUtilisateurCourant") String idUtilisateur) {
+    return new ImportationViewModel(serviceImport, serviceSites, horloge, idUtilisateur);
   }
 }

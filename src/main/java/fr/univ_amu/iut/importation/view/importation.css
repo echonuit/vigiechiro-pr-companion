@@ -1,0 +1,144 @@
+/*
+ * importation.css - feuille de style de l'assistant M-Import (« Importer une nuit »).
+ *
+ * Assistant en page unique, 4 sections (dossier source / inspection / rattachement / action).
+ * Reprend la palette sémantique des maquettes : primaire bleu #4a90d9, succès vert #1e8449,
+ * warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Couleurs en dur pour que
+ * la vue reste stylée même chargée isolément dans les tests TestFX (hors chrome principal).
+ */
+
+.ecran-import {
+    -fx-padding: 24;
+    -fx-background-color: #ffffff;
+}
+
+.titre-page {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.sous-titre-page {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6a737d;
+}
+
+/* ----- Sections numérotées ----- */
+.section-titre {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.section-sous {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6a737d;
+}
+
+.section-carte {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 16;
+    -fx-spacing: 10;
+}
+
+/* ----- Champs ----- */
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.field-hint {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6a737d;
+}
+
+.champ-lecture-seule {
+    -fx-background-color: #f6f8fa;
+    -fx-text-fill: #2c3e50;
+}
+
+/* ----- Lignes d'inspection ----- */
+.insp-ok {
+    -fx-font-size: 13px;
+    -fx-text-fill: #1e8449;
+    -fx-font-weight: bold;
+}
+
+.insp-absent {
+    -fx-font-size: 13px;
+    -fx-text-fill: #b9770e;
+    -fx-font-weight: bold;
+}
+
+.insp-detail {
+    -fx-font-size: 13px;
+    -fx-text-fill: #2c3e50;
+}
+
+/* ----- Aperçu du préfixe ----- */
+.apercu-box {
+    -fx-background-color: #fef9e7;
+    -fx-border-color: #b9770e;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 12;
+    -fx-spacing: 4;
+}
+
+.apercu-label {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #5d4e00;
+}
+
+.apercu-valeur {
+    -fx-font-family: monospace;
+    -fx-font-size: 13px;
+    -fx-text-fill: #5d4e00;
+}
+
+/* ----- Boutons ----- */
+.bouton-primaire {
+    -fx-background-color: #4a90d9;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-padding: 10 20 10 20;
+    -fx-cursor: hand;
+}
+
+.bouton-primaire:hover {
+    -fx-background-color: #2563a3;
+}
+
+.bouton-primaire:disabled {
+    -fx-opacity: 0.45;
+}
+
+.bouton-secondaire {
+    -fx-background-color: white;
+    -fx-text-fill: #2c3e50;
+    -fx-font-weight: bold;
+    -fx-border-color: #2c3e50;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+}
+
+/* ----- Messages ----- */
+.message-erreur {
+    -fx-font-size: 13px;
+    -fx-text-fill: #a93226;
+    -fx-font-weight: bold;
+}
+
+.message-succes {
+    -fx-font-size: 13px;
+    -fx-text-fill: #1e6f3f;
+    -fx-font-weight: bold;
+}

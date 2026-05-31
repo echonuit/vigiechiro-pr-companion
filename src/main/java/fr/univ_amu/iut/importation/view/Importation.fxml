@@ -1,0 +1,90 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Import - assistant « Importer une nuit » (parcours P2), en page unique à 4 sections :
+  dossier source -> inspection (lecture seule) -> rattachement -> action. Pur câblage : tous les
+  contrôles sont liés aux propriétés de ImportationViewModel par ImportationController. La
+  progression en arrière-plan et les cas limites (mélange, incohérence) viendront dans une tranche
+  ultérieure.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.importation.view.ImportationController"
+      stylesheets="@importation.css"
+      styleClass="ecran-import"
+      spacing="18.0">
+
+  <VBox spacing="2.0">
+    <Label text="Importer une nuit d'enregistrement" styleClass="titre-page"/>
+    <Label styleClass="sous-titre-page" wrapText="true"
+           text="L'application copie les fichiers de la carte SD sans toucher aux originaux (R9), les renomme et les transforme."/>
+  </VBox>
+
+  <!-- 1. Dossier source -->
+  <VBox styleClass="section-carte" spacing="6.0">
+    <Label text="1. Dossier source" styleClass="section-titre"/>
+    <Label text="Le dossier de votre carte SD ou une copie déjà présente sur disque."
+           styleClass="section-sous"/>
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+      <TextField fx:id="champDossier" editable="false" promptText="Aucun dossier sélectionné"
+                 styleClass="champ-lecture-seule" HBox.hgrow="ALWAYS"/>
+      <Button fx:id="boutonParcourir" text="📂 Parcourir…" styleClass="bouton-secondaire"
+              onAction="#parcourir"/>
+    </HBox>
+  </VBox>
+
+  <!-- 2. Inspection -->
+  <VBox fx:id="sectionInspection" styleClass="section-carte" spacing="6.0">
+    <Label text="2. Inspection du dossier" styleClass="section-titre"/>
+    <Label text="Lecture seule : aucun fichier n'est modifié pour l'instant."
+           styleClass="section-sous"/>
+    <Label fx:id="labelJournal" styleClass="insp-detail"/>
+    <Label fx:id="labelReleve" styleClass="insp-detail"/>
+    <Label fx:id="labelOriginaux" styleClass="insp-detail"/>
+    <Label fx:id="labelNommage" styleClass="insp-detail"/>
+  </VBox>
+
+  <!-- 3. Rattachement -->
+  <VBox styleClass="section-carte" spacing="10.0">
+    <Label text="3. Rattachement de la nuit" styleClass="section-titre"/>
+    <Label text="À quel site / point / passage du protocole cette nuit appartient-elle ?"
+           styleClass="section-sous"/>
+    <HBox spacing="14.0" alignment="BOTTOM_LEFT">
+      <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+        <Label text="Site de suivi" styleClass="field-label"/>
+        <ComboBox fx:id="comboSites" maxWidth="Infinity"/>
+      </VBox>
+      <VBox spacing="4.0">
+        <Label text="Point d'écoute" styleClass="field-label"/>
+        <ComboBox fx:id="comboPoints" prefWidth="150.0"/>
+      </VBox>
+      <VBox spacing="4.0">
+        <Label text="Année" styleClass="field-label"/>
+        <TextField fx:id="champAnnee" prefWidth="90.0"/>
+      </VBox>
+      <VBox spacing="4.0">
+        <Label text="N° de passage" styleClass="field-label"/>
+        <TextField fx:id="champPassage" prefWidth="100.0"/>
+      </VBox>
+    </HBox>
+    <VBox styleClass="apercu-box" spacing="4.0">
+      <Label text="📝 Aperçu du préfixe appliqué aux fichiers (R6) :" styleClass="apercu-label"/>
+      <Label fx:id="labelApercu" styleClass="apercu-valeur" wrapText="true"/>
+    </VBox>
+  </VBox>
+
+  <!-- 4. Action -->
+  <HBox spacing="14.0" alignment="CENTER_LEFT">
+    <Button fx:id="boutonImporter" text="📥 Importer cette nuit" styleClass="bouton-primaire"
+            onAction="#importer"/>
+    <Label fx:id="labelMessage" styleClass="message-erreur" wrapText="true" HBox.hgrow="ALWAYS"/>
+  </HBox>
+  <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>
+</VBox>
