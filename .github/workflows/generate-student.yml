@@ -33,13 +33,18 @@ jobs:
         with:
           java-version: '25'
           distribution: 'zulu'
+          # Zulu standard ne contient pas JavaFX runtime ; jdk+fx ramène le
+          # JDK avec les natives openjfx nécessaires aux tests TestFX headless.
+          java-package: 'jdk+fx'
           cache: maven
           check-latest: false
 
       - name: Generate student version
+        # Le script lance des tests en interne (vérif compilation/tests) qui
+        # exigent un display X11 ; xvfb-run en simule un.
         run: |
           chmod +x ./scripts/generate-student.sh
-          ./scripts/generate-student.sh --apply .
+          xvfb-run --auto-servernum ./scripts/generate-student.sh --apply .
 
       - name: Publish to main (orphan, force-push)
         run: |

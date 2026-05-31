@@ -32,6 +32,9 @@ jobs:
         with:
           java-version: '25'
           distribution: 'zulu'
+          # Zulu standard ne contient pas JavaFX runtime ; jdk+fx ramène le
+          # JDK avec les natives openjfx nécessaires aux tests TestFX headless.
+          java-package: 'jdk+fx'
           cache: maven
 
       - name: Doc coherence linter
@@ -40,4 +43,5 @@ jobs:
           ./scripts/lint-doc-coherence.sh
 
       - name: PMD quality-gate (fail on violation)
-        run: ./mvnw -B -Pquality-gate verify
+        # AppTest (TestFX) nécessite un display X11 ; xvfb-run en simule un.
+        run: xvfb-run --auto-servernum ./mvnw -B -Pquality-gate verify
