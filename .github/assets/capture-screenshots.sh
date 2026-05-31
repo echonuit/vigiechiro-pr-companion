@@ -11,6 +11,7 @@
 #   .github/assets/capture-screenshots.sh
 #
 # Sorties (dans .github/assets/) :
+#   apercu-accueil.png              ecran d'accueil (chrome + cartes d'activites des features)
 #   apercu-sites-mes-sites.png      ecran d'accueil M-Sites (cartes des sites)
 #   apercu-sites-detail.png         M-Site-detail (fiche + points + tableau des passages)
 #   apercu-sites-modale-point.png   modale d'edition d'un point d'ecoute
@@ -22,6 +23,7 @@ RACINE="$(cd "$ICI/../.." && pwd)"
 cd "$RACINE"
 
 MAINS=(
+  "fr.univ_amu.iut.commun.outils.CaptureAccueil"
   "fr.univ_amu.iut.sites.outils.CaptureEcrans"
   "fr.univ_amu.iut.importation.outils.CaptureImport"
 )

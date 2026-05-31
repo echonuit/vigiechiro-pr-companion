@@ -1,0 +1,77 @@
+// --solution-only--
+package fr.univ_amu.iut.commun.outils;
+
+import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+
+/// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+///
+/// Capture l'ecran d'accueil (chrome principal `MainView.fxml` + cartes d'activites) en PNG, pour
+/// le comparer a la maquette du brief. Contrairement aux `CaptureEcrans` / `CaptureImport` des
+/// features, l'accueil appartient au socle `commun` : il agrege les
+// [fr.univ_amu.iut.commun.view.ActiviteAccueil]
+/// publiees par toutes les features. On utilise donc l'injecteur applicatif complet
+/// ([RacineInjecteur#creer()]) afin que **toutes** les cartes soient presentes.
+///
+/// Demarche : workspace SQLite jetable (le rendu de l'accueil ne touche pas la base, mais on evite
+/// d'ecrire dans le workspace reel), chargement du chrome via la `controllerFactory` Guice du
+/// `FXMLLoader` (le `MainController` peuple les cartes a l'initialisation), puis rendu hors-ecran
+/// par [ApercuFx] dans `.github/assets/`.
+///
+/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+public final class CaptureAccueil {
+
+  private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";
+
+  private CaptureAccueil() {}
+
+  public static void main(String[] args) throws InterruptedException {
+    CountDownLatch fini = new CountDownLatch(1);
+    AtomicReference<Throwable> erreur = new AtomicReference<>();
+    Platform.startup(
+        () -> {
+          try {
+            capturer();
+          } catch (RuntimeException | IOException probleme) {
+            erreur.set(probleme);
+          } finally {
+            fini.countDown();
+          }
+        });
+    fini.await();
+    Platform.exit();
+    Throwable probleme = erreur.get();
+    if (probleme != null) {
+      probleme.printStackTrace();
+      System.exit(1);
+    }
+    System.exit(0);
+  }
+
+  private static void capturer() throws IOException {
+    Path workspace = Files.createTempDirectory("vc-capture-accueil");
+    System.setProperty("vigiechiro.workspace", workspace.toString());
+    Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
+
+    Injector injecteur = RacineInjecteur.creer();
+    Parent chrome = chargerFxml(injecteur, CHROME);
+    ApercuFx.enregistrerPng(new Scene(chrome, 1100, 720), sortie.resolve("apercu-accueil.png"));
+
+    System.out.println("Apercu d'accueil ecrit dans " + sortie.toAbsolutePath());
+  }
+
+  private static Parent chargerFxml(Injector injecteur, String chemin) throws IOException {
+    FXMLLoader loader = new FXMLLoader(CaptureAccueil.class.getResource(chemin));
+    loader.setControllerFactory(injecteur::getInstance);
+    return loader.load();
+  }
+}

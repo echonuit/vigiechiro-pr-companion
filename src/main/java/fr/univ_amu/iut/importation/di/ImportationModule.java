@@ -3,11 +3,13 @@ package fr.univ_amu.iut.importation.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
@@ -15,6 +17,7 @@ import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
+import fr.univ_amu.iut.importation.view.ActiviteImporterNuit;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 
@@ -36,6 +39,16 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 /// [ServiceImport] est donc résoluble par l'injecteur applicatif. Le câblage en isolation reste
 /// validé par `ImportationModuleTest` (injecteur local socle + passage + importation).
 public class ImportationModule extends AbstractModule {
+
+  /// Enregistre la carte d'accueil de la feature dans le point d'extension du socle. Le
+  /// `MainController` la découvre via `Set<ActiviteAccueil>` sans que `commun` dépende de
+  /// `importation`.
+  @Override
+  protected void configure() {
+    Multibinder.newSetBinder(binder(), ActiviteAccueil.class)
+        .addBinding()
+        .to(ActiviteImporterNuit.class);
+  }
 
   @Provides
   @Singleton
