@@ -3,7 +3,10 @@ package fr.univ_amu.iut.passage.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -72,5 +75,24 @@ public class PassageModule extends AbstractModule {
   @Singleton
   ReleveClimatiqueDao fournirReleveClimatiqueDao(SourceDeDonnees source) {
     return new ReleveClimatiqueDao(source);
+  }
+
+  /** Moteur (pur) des transitions de workflow d'un passage. */
+  @Provides
+  @Singleton
+  MoteurWorkflowPassage fournirMoteurWorkflowPassage() {
+    return new MoteurWorkflowPassage();
+  }
+
+  /**
+   * Service métier transverse de la feature. Comme le service de référence {@code ServiceSites}, il
+   * reste sans annotation d'injection : c'est ce module qui assemble ses dépendances (le {@link
+   * PassageDao} de la feature, le {@link MoteurWorkflowPassage} et l'{@link Horloge} du socle).
+   */
+  @Provides
+  @Singleton
+  ServicePassage fournirServicePassage(
+      PassageDao passageDao, MoteurWorkflowPassage moteur, Horloge horloge) {
+    return new ServicePassage(passageDao, moteur, horloge);
   }
 }

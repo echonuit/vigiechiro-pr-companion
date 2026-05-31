@@ -11,6 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -147,5 +148,72 @@ public class SelectionDao extends DaoGenerique<SelectionDEcoute, Long> {
         "UPDATE selection_sequence SET listened = 1 WHERE selection_id = ? AND sequence_id = ?",
         idSelection,
         idSequence);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Surcharges « connection-aware » pour les écritures atomiques multi-tables
+  // ---------------------------------------------------------------------------
+  //
+  // Constituer une sélection = insérer la ligne listening_selection PUIS N lignes
+  // selection_sequence : c'est une opération multi-tables qui doit être « tout ou rien ».
+  // Conformément à SERVICE-CONVENTIONS §2.5, on ne peut PAS envelopper les méthodes DAO
+  // standard (chacune ouvre sa propre connexion auto-commit) dans une UniteDeTravail sans
+  // créer une fausse transaction (et risquer un « database is locked » sous SQLite). On
+  // expose donc des surcharges qui réutilisent la connexion transactionnelle fournie par
+  // UniteDeTravail.executer(cx -> ...). Le SQL reste dans le DAO (convention IMPL §3).
+
+  /**
+   * Insère une sélection sur la connexion transactionnelle fournie et renvoie sa clé générée. À
+   * appeler dans un bloc {@code UniteDeTravail.executer}.
+   */
+  public long insererDansTransaction(
+      Connection connexion, MethodeSelection methode, int taille, Long idPassage)
+      throws SQLException {
+    try (PreparedStatement ps =
+        connexion.prepareStatement(
+            "INSERT INTO listening_selection (selection_method, size, passage_id) VALUES (?, ?, ?)",
+            Statement.RETURN_GENERATED_KEYS)) {
+      ps.setString(1, methode.libelle());
+      ps.setInt(2, taille);
+      ps.setObject(3, idPassage);
+      ps.executeUpdate();
+      try (ResultSet cles = ps.getGeneratedKeys()) {
+        if (cles.next()) {
+          return cles.getLong(1);
+        }
+        throw new SQLException("Aucune clé générée pour l'insertion de la sélection.");
+      }
+    }
+  }
+
+  /**
+   * Rattache une séquence à une sélection sur la connexion transactionnelle fournie. À appeler dans
+   * un bloc {@code UniteDeTravail.executer}.
+   */
+  public void attacherDansTransaction(
+      Connection connexion, long idSelection, long idSequence, int position, boolean ecoutee)
+      throws SQLException {
+    try (PreparedStatement ps =
+        connexion.prepareStatement(
+            "INSERT INTO selection_sequence (selection_id, sequence_id, position, listened)"
+                + " VALUES (?, ?, ?, ?)")) {
+      ps.setObject(1, idSelection);
+      ps.setObject(2, idSequence);
+      ps.setInt(3, position);
+      ps.setInt(4, ecoutee ? 1 : 0);
+      ps.executeUpdate();
+    }
+  }
+
+  /**
+   * Supprime une sélection (et, par cascade, ses rattachements) sur la connexion transactionnelle
+   * fournie. Sert à reconstituer atomiquement une sélection lors d'un changement de méthode/taille.
+   */
+  public void supprimerDansTransaction(Connection connexion, long idSelection) throws SQLException {
+    try (PreparedStatement ps =
+        connexion.prepareStatement("DELETE FROM listening_selection WHERE id = ?")) {
+      ps.setObject(1, idSelection);
+      ps.executeUpdate();
+    }
   }
 }

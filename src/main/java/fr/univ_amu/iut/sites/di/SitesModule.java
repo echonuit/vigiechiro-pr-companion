@@ -3,7 +3,10 @@ package fr.univ_amu.iut.sites.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 
@@ -27,5 +30,18 @@ public class SitesModule extends AbstractModule {
   @Singleton
   PointDao fournirPointDao(SourceDeDonnees source) {
     return new PointDao(source);
+  }
+
+  /**
+   * Service métier de référence. Reçoit ses DAO (dont {@link PassageDao}, fourni par {@code
+   * PassageModule} pour la protection de suppression) et l'{@link Horloge} (socle). C'est ici, dans
+   * le module de feature, que les briques sont assemblées : le service lui-même reste sans
+   * annotation d'injection.
+   */
+  @Provides
+  @Singleton
+  ServiceSites fournirServiceSites(
+      SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+    return new ServiceSites(siteDao, pointDao, passageDao, horloge);
   }
 }

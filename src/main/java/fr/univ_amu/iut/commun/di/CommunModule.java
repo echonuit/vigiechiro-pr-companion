@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.nio.file.Path;
@@ -34,5 +35,17 @@ public class CommunModule extends AbstractModule {
   @Singleton
   SourceDeDonnees fournirSourceDeDonnees(Workspace workspace) {
     return new SourceDeDonnees(workspace);
+  }
+
+  /**
+   * Horloge applicative : l'horloge système en production. Transverse (les règles de dates R3/R4 et
+   * les horodatages des features la réclament), elle est donc bindée au niveau du socle. Les tests
+   * n'utilisent pas ce binding : ils injectent directement une {@link
+   * fr.univ_amu.iut.commun.model.HorlogeFigee}.
+   */
+  @Provides
+  @Singleton
+  Horloge fournirHorloge() {
+    return Horloge.systeme();
   }
 }

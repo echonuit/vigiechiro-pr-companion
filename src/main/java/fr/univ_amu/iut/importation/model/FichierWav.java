@@ -1,0 +1,142 @@
+package fr.univ_amu.iut.importation.model;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
+
+/**
+ * Lecture / écriture d'un fichier WAV PCM, en {@code java.base} <b>pur</b> (aucun recours à {@code
+ * javax.sound.sampled}).
+ *
+ * <p><b>Pourquoi pas {@code javax.sound.sampled} ?</b> Cette API vit dans le module {@code
+ * java.desktop}, que le module applicatif {@code tp1.javafx} ne {@code requires} pas (et {@code
+ * module-info.java} est gelé). Le code de production compile sur le <i>module path</i> : un import
+ * {@code javax.sound.sampled.*} ne compilerait pas. Surtout, le parsing manuel de l'en-tête RIFF
+ * donne un contrôle <b>au bit près</b> sur les octets écrits, indispensable au déterminisme R11
+ * (l'API standard peut réordonner/ajouter des sous-chunks selon l'implémentation).
+ *
+ * <p>Lecture robuste : on balaie les sous-chunks RIFF pour localiser {@code "fmt "} et {@code
+ * "data"} (en tolérant des chunks intercalés comme {@code LIST}/{@code fact} et le padding de
+ * word-alignment). Écriture canonique : en-tête fixe de 44 octets ({@code RIFF/WAVE/fmt /data}),
+ * little-endian, donc <b>reproductible</b> pour des octets PCM identiques.
+ *
+ * @param nombreCanaux nombre de canaux (1 = mono, attendu pour les ultrasons VigieChiro)
+ * @param frequenceEchantillonnageHz fréquence d'échantillonnage en Hz
+ * @param bitsParEchantillon profondeur en bits (16 attendu)
+ * @param donneesPcm octets PCM bruts (le chunk {@code data}, sans en-tête)
+ */
+record FichierWav(
+    int nombreCanaux, int frequenceEchantillonnageHz, int bitsParEchantillon, byte[] donneesPcm) {
+
+  private static final int TAILLE_ENTETE = 44;
+  private static final short FORMAT_PCM = 1;
+
+  /** Octets par trame (échantillon multi-canal) : {@code canaux * bits/8}. */
+  int octetsParTrame() {
+    return nombreCanaux * (bitsParEchantillon / 8);
+  }
+
+  /** Nombre de trames contenues dans {@link #donneesPcm}. */
+  long nombreTrames() {
+    return (long) donneesPcm.length / octetsParTrame();
+  }
+
+  /** Durée en secondes du signal porté par ce fichier (trames / fréquence). */
+  double dureeSecondes() {
+    return nombreTrames() / (double) frequenceEchantillonnageHz;
+  }
+
+  /** Lit un fichier WAV PCM depuis le disque. */
+  static FichierWav lire(Path fichier) throws IOException {
+    byte[] o = Files.readAllBytes(fichier);
+    if (o.length < 12 || !tag(o, 0, "RIFF") || !tag(o, 8, "WAVE")) {
+      throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
+    }
+    Integer canaux = null;
+    Integer frequence = null;
+    Integer bits = null;
+    int formatAudio = 0;
+    int dataDebut = -1;
+    int dataLongueur = -1;
+
+    int pos = 12;
+    while (pos + 8 <= o.length) {
+      String id = new String(o, pos, 4, StandardCharsets.US_ASCII);
+      long taille = lireUint32(o, pos + 4);
+      int corps = pos + 8;
+      if ("fmt ".equals(id) && corps + 16 <= o.length) {
+        formatAudio = lireUint16(o, corps);
+        canaux = lireUint16(o, corps + 2);
+        frequence = (int) lireUint32(o, corps + 4);
+        bits = lireUint16(o, corps + 14);
+      } else if ("data".equals(id)) {
+        dataDebut = corps;
+        dataLongueur = (int) Math.min(taille, (long) o.length - corps);
+      }
+      // Avance au chunk suivant (taille + padding éventuel pour rester aligné sur un mot).
+      pos = corps + (int) taille + (taille % 2 == 1 ? 1 : 0);
+    }
+
+    if (canaux == null || frequence == null || bits == null || dataDebut < 0) {
+      throw new IOException("Fichier WAV incomplet (chunk fmt/data manquant) : " + fichier);
+    }
+    if (formatAudio != FORMAT_PCM) {
+      throw new IOException(
+          "Seul le PCM non compressé est géré (format=" + formatAudio + ") : " + fichier);
+    }
+    byte[] pcm = Arrays.copyOfRange(o, dataDebut, dataDebut + dataLongueur);
+    return new FichierWav(canaux, frequence, bits, pcm);
+  }
+
+  /**
+   * Écrit un WAV canonique (en-tête 44 octets) avec la fréquence et le format donnés, en copiant
+   * <b>tels quels</b> les octets {@code pcm[offset, offset+longueur)}.
+   */
+  static void ecrire(
+      Path fichier,
+      int nombreCanaux,
+      int frequenceEchantillonnageHz,
+      int bitsParEchantillon,
+      byte[] pcm,
+      int offset,
+      int longueur)
+      throws IOException {
+    int blocAlign = nombreCanaux * (bitsParEchantillon / 8);
+    int debitOctets = frequenceEchantillonnageHz * blocAlign;
+    ByteBuffer buf = ByteBuffer.allocate(TAILLE_ENTETE + longueur).order(ByteOrder.LITTLE_ENDIAN);
+    buf.put("RIFF".getBytes(StandardCharsets.US_ASCII));
+    buf.putInt(36 + longueur); // taille du fichier - 8
+    buf.put("WAVE".getBytes(StandardCharsets.US_ASCII));
+    buf.put("fmt ".getBytes(StandardCharsets.US_ASCII));
+    buf.putInt(16); // taille du sous-chunk fmt (PCM)
+    buf.putShort(FORMAT_PCM);
+    buf.putShort((short) nombreCanaux);
+    buf.putInt(frequenceEchantillonnageHz);
+    buf.putInt(debitOctets);
+    buf.putShort((short) blocAlign);
+    buf.putShort((short) bitsParEchantillon);
+    buf.put("data".getBytes(StandardCharsets.US_ASCII));
+    buf.putInt(longueur);
+    buf.put(pcm, offset, longueur);
+    Files.write(fichier, buf.array());
+  }
+
+  private static boolean tag(byte[] o, int pos, String attendu) {
+    return new String(o, pos, 4, StandardCharsets.US_ASCII).equals(attendu);
+  }
+
+  private static int lireUint16(byte[] o, int pos) {
+    return (o[pos] & 0xFF) | ((o[pos + 1] & 0xFF) << 8);
+  }
+
+  private static long lireUint32(byte[] o, int pos) {
+    return (o[pos] & 0xFFL)
+        | ((o[pos + 1] & 0xFFL) << 8)
+        | ((o[pos + 2] & 0xFFL) << 16)
+        | ((o[pos + 3] & 0xFFL) << 24);
+  }
+}

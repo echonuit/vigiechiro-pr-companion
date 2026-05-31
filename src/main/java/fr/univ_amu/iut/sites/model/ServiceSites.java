@@ -1,0 +1,182 @@
+package fr.univ_amu.iut.sites.model;
+
+import fr.univ_amu.iut.commun.model.Alerte;
+import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.ResultatVerification;
+import fr.univ_amu.iut.commun.model.validation.ValidateurCarre;
+import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import java.util.List;
+import java.util.Objects;
+
+/**
+ * Service métier de la feature {@code sites} : <b>service de référence</b> du projet (le patron à
+ * recopier pour {@code passage}, {@code qualification}, etc.).
+ *
+ * <p>Principes (cf. CM4) :
+ *
+ * <ul>
+ *   <li><b>Pure Java, testable JUnit, sans aucun import JavaFX</b> : la logique métier vit en
+ *       {@code <feature>/model}, l'IHM viendra par-dessus.
+ *   <li><b>Reçoit ses dépendances par constructeur</b> (DAO + {@link Horloge}), fournies par Guice
+ *       en production ({@code SitesModule}) et instanciées à la main dans les tests.
+ *   <li><b>Orchestre les DAO</b> : il ne contient pas de SQL (qui reste dans {@code model.dao}),
+ *       seulement des règles et des enchaînements d'appels.
+ *   <li><b>Distingue règles soft et dures</b> : les rappels non bloquants (R3/R4) sont renvoyés
+ *       sous forme de {@link ResultatVerification} ; les refus (R5, intégrité) lèvent une {@link
+ *       RegleMetierException} ; les saisies mal formées (R1/R2) lèvent une {@link
+ *       IllegalArgumentException} via les validateurs.
+ * </ul>
+ *
+ * <p>Dépendance inter-feature assumée : le service connaît {@link PassageDao} (lecture seule) pour
+ * protéger la suppression d'un site. La dépendance va {@code sites → passage} (et jamais
+ * l'inverse), le graphe reste acyclique (contrôlé par {@code ArchitectureTest}).
+ */
+public class ServiceSites {
+
+  private final SiteDao siteDao;
+  private final PointDao pointDao;
+  private final PassageDao passageDao;
+  private final Horloge horloge;
+
+  public ServiceSites(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+    this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
+    this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
+    this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
+    this.horloge = Objects.requireNonNull(horloge, "horloge");
+  }
+
+  /**
+   * Crée un site de suivi (P1).
+   *
+   * <ul>
+   *   <li>R1 (dur) : le numéro de carré doit être valide (6 chiffres) — {@link ValidateurCarre}.
+   *   <li>Protocole : {@code PointFixeStandard} par défaut si {@code null} (P1).
+   *   <li>R5 (dur) : le carré doit être unique pour cet utilisateur.
+   *   <li>Date de création : lue de l'{@link Horloge} (déterministe en test).
+   * </ul>
+   *
+   * @return le site inséré, avec son {@code id} auto-généré
+   * @throws IllegalArgumentException si le numéro de carré est mal formé (R1)
+   * @throws RegleMetierException si le carré est déjà déclaré pour cet utilisateur (R5)
+   */
+  public Site creerSite(
+      String numeroCarre,
+      String nomConvivial,
+      Protocole protocole,
+      String commentaire,
+      String idUtilisateur) {
+    ValidateurCarre.exigerValide(numeroCarre); // R1
+    Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+    Protocole effectif = protocole != null ? protocole : Protocole.STANDARD;
+    exigerCarreUniquePourUtilisateur(numeroCarre, idUtilisateur); // R5
+    Site aCreer =
+        new Site(
+            null,
+            numeroCarre,
+            nomConvivial,
+            effectif,
+            commentaire,
+            horloge.aujourdhui().toString(),
+            idUtilisateur);
+    return siteDao.insert(aCreer);
+  }
+
+  /**
+   * Ajoute un point d'écoute à un site existant.
+   *
+   * <ul>
+   *   <li>Le site doit exister.
+   *   <li>R2 (dur) : le code de point doit valider {@code [A-Z][0-9]} — {@link
+   *       ValidateurCodePoint}.
+   *   <li>Unicité (dur) : le code doit être unique dans le site.
+   * </ul>
+   *
+   * @return le point inséré, avec son {@code id} auto-généré
+   * @throws RegleMetierException si le site est introuvable ou si le code existe déjà dans le site
+   * @throws IllegalArgumentException si le code de point est mal formé (R2)
+   */
+  public PointDEcoute ajouterPoint(
+      Long idSite, String code, Double latitude, Double longitude, String description) {
+    Site site =
+        siteDao
+            .findById(idSite)
+            .orElseThrow(() -> new RegleMetierException("Site introuvable : " + idSite));
+    ValidateurCodePoint.exigerValide(code); // R2
+    boolean codeDejaPris =
+        pointDao.findBySite(site.id()).stream().anyMatch(p -> p.code().equals(code));
+    if (codeDejaPris) {
+      throw new RegleMetierException(
+          "Le code de point « " + code + " » existe déjà dans ce site (unicité code/point).");
+    }
+    PointDEcoute aCreer = new PointDEcoute(null, code, latitude, longitude, description, site.id());
+    return pointDao.insert(aCreer);
+  }
+
+  /** Sites d'un utilisateur, triés par numéro de carré. */
+  public List<Site> listerSites(String idUtilisateur) {
+    return siteDao.findByUtilisateur(idUtilisateur);
+  }
+
+  /** Points d'écoute d'un site, triés par code. */
+  public List<PointDEcoute> listerPoints(Long idSite) {
+    return pointDao.findBySite(idSite);
+  }
+
+  /**
+   * Supprime un site <b>si et seulement si</b> aucun passage n'est rattaché à ses points (règle
+   * dure).
+   *
+   * <p>Le schéma cascade {@code monitoring_site → listening_point → passage} : sans ce garde-fou,
+   * un simple {@code DELETE} sur le site détruirait silencieusement les passages (et leurs
+   * sessions, séquences…) via {@code ON DELETE CASCADE}. Le service refuse donc tant qu'un passage
+   * existe ; une fois les passages supprimés, le {@code delete} ne fait disparaître que les points
+   * (sans passage) du site, par cascade.
+   *
+   * @throws RegleMetierException si au moins un point du site porte un passage
+   */
+  public void supprimerSite(Long idSite) {
+    for (PointDEcoute point : pointDao.findBySite(idSite)) {
+      if (!passageDao.findByPoint(point.id()).isEmpty()) {
+        throw new RegleMetierException(
+            "Suppression refusée : le point « "
+                + point.code()
+                + " » porte au moins un passage. Supprimez d'abord les passages rattachés.");
+      }
+    }
+    siteDao.delete(idSite);
+  }
+
+  /**
+   * Rappels non bloquants à présenter après création d'un site (R3, règle soft).
+   *
+   * <p>Sur un site {@code PointFixeStandard}, l'application rappelle (sans bloquer) les deux
+   * passages annuels attendus. Sur un site {@code PointFixeRecherche}, la règle est <b>muette</b> :
+   * le résultat est conforme (aucune alerte). Démontre le patron « règle soft → {@link
+   * ResultatVerification} ».
+   */
+  public ResultatVerification rappelsProtocole(Protocole protocole) {
+    if (protocole == Protocole.STANDARD) {
+      return ResultatVerification.de(
+          Alerte.soft(
+              "Site PointFixeStandard : 2 passages attendus par an (R3) — passage 1 entre le"
+                  + " 15 juin et le 31 juillet, passage 2 entre le 15 août et le 30 septembre."
+                  + " Rappel non bloquant."));
+    }
+    return ResultatVerification.ok();
+  }
+
+  private void exigerCarreUniquePourUtilisateur(String numeroCarre, String idUtilisateur) {
+    boolean dejaPris =
+        siteDao.findByUtilisateur(idUtilisateur).stream()
+            .anyMatch(site -> site.numeroCarre().equals(numeroCarre));
+    if (dejaPris) {
+      throw new RegleMetierException(
+          "R5 : le carré " + numeroCarre + " est déjà déclaré pour cet utilisateur.");
+    }
+  }
+}
