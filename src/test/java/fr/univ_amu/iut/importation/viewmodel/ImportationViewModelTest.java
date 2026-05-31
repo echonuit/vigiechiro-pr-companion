@@ -5,14 +5,21 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -21,13 +28,16 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Tests unitaires de la tranche « inspection » du [ImportationViewModel]. Le [ServiceImport] est
-/// mocké (Mockito) et les [fr.univ_amu.iut.importation.model.RapportInspection] sont produits par
-/// un vrai [InspecteurDossier] sur un dossier jetable (`@TempDir`) : on vérifie que le VM mappe
-/// fidèlement le rapport en propriétés observables, sans dépendre d'une base de données.
+/// Tests unitaires de l'[ImportationViewModel] (tranches « inspection » + « rattachement »).
+/// [ServiceImport] et [ServiceSites] sont mockés (Mockito) ; les
+/// [fr.univ_amu.iut.importation.model.RapportInspection] sont produits par un vrai
+/// [InspecteurDossier] sur un dossier jetable (`@TempDir`). On vérifie ainsi le mapping du VM en
+/// propriétés observables sans dépendre d'une base de données.
 @ExtendWith(MockitoExtension.class)
 class ImportationViewModelTest {
 
+  private static final String ID_USER = "u-1";
+  private static final LocalDate JOUR = LocalDate.of(2026, 5, 31);
   private static final String LOG =
       "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
           + " CPU 600000000, T4.1\n"
@@ -37,14 +47,16 @@ class ImportationViewModelTest {
           + " 8-120kHz\n";
 
   @TempDir Path racine;
-  @Mock private ServiceImport service;
+  @Mock private ServiceImport serviceImport;
+  @Mock private ServiceSites serviceSites;
   private final InspecteurDossier inspecteur = new InspecteurDossier(new AnalyseurLogPR());
   private ImportationViewModel viewModel;
   private Path sd;
 
   @BeforeEach
   void preparer() throws IOException {
-    viewModel = new ImportationViewModel(service);
+    viewModel =
+        new ImportationViewModel(serviceImport, serviceSites, new HorlogeFigee(JOUR), ID_USER);
     sd = Files.createDirectories(racine.resolve("sd"));
     Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
     Files.writeString(
@@ -53,10 +65,12 @@ class ImportationViewModelTest {
     Files.writeString(sd.resolve("PaRecPR1925492_20260422_204326.wav"), "wav2");
   }
 
+  // --- Étape 2 : inspection ---
+
   @Test
   @DisplayName("Inspecter un dossier brut expose journal, relevé, compte et état de nommage")
   void inspecter_dossier_brut() {
-    when(service.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+    when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
     viewModel.dossierSourceProperty().set(sd);
 
     viewModel.inspecter();
@@ -74,7 +88,7 @@ class ImportationViewModelTest {
   @DisplayName("R20 : un dossier sans relevé climatique est signalé (aUnReleveClimatique == false)")
   void inspecter_sans_releve_climatique() throws IOException {
     Files.delete(sd.resolve("PaRecPR1925492_THLog.csv"));
-    when(service.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+    when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
     viewModel.dossierSourceProperty().set(sd);
 
     viewModel.inspecter();
@@ -87,7 +101,7 @@ class ImportationViewModelTest {
   @Test
   @DisplayName("Un chemin invalide renseigne le message d'erreur et laisse inspecte à false")
   void inspecter_chemin_invalide() {
-    when(service.inspecter(any()))
+    when(serviceImport.inspecter(any()))
         .thenThrow(new IllegalArgumentException("Le chemin n'est pas un dossier."));
     viewModel.dossierSourceProperty().set(racine.resolve("inexistant"));
 
@@ -104,20 +118,21 @@ class ImportationViewModelTest {
 
     assertThat(viewModel.estInspecte()).isFalse();
     assertThat(viewModel.messageErreurProperty().get()).contains("dossier source");
-    verifyNoInteractions(service);
+    verifyNoInteractions(serviceImport);
   }
 
   @Test
   @DisplayName(
       "Un échec après une inspection réussie réinitialise l'état (pas de rapport obsolète)")
   void echec_apres_succes_reinitialise_l_etat() {
-    when(service.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+    when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
     viewModel.dossierSourceProperty().set(sd);
     viewModel.inspecter();
     assertThat(viewModel.nombreOriginauxProperty().get()).isEqualTo(2);
 
     Path invalide = racine.resolve("inexistant");
-    when(service.inspecter(invalide)).thenThrow(new IllegalArgumentException("Chemin invalide."));
+    when(serviceImport.inspecter(invalide))
+        .thenThrow(new IllegalArgumentException("Chemin invalide."));
     viewModel.dossierSourceProperty().set(invalide);
     viewModel.inspecter();
 
@@ -128,5 +143,73 @@ class ImportationViewModelTest {
     assertThat(viewModel.etatNommageProperty().get()).isNull();
     assertThat(viewModel.resumeJournalProperty().get()).isEmpty();
     assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+  }
+
+  // --- Étape 3 : rattachement ---
+
+  @Test
+  @DisplayName("chargerSites alimente la liste des sites de l'utilisateur courant")
+  void charger_sites() {
+    Site a = site(1L, "640380");
+    Site b = site(2L, "752204");
+    when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(a, b));
+
+    viewModel.chargerSites();
+
+    assertThat(viewModel.sites()).containsExactly(a, b);
+  }
+
+  @Test
+  @DisplayName("Choisir un site recharge ses points et réinitialise le point sélectionné")
+  void selectionner_un_site_charge_ses_points() {
+    Site site = site(1L, "640380");
+    PointDEcoute point = point(10L, "A1", site.id());
+    when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+
+    viewModel.siteSelectionneProperty().set(site);
+
+    assertThat(viewModel.points()).containsExactly(point);
+    assertThat(viewModel.pointSelectionneProperty().get()).isNull();
+  }
+
+  @Test
+  @DisplayName("L'aperçu du préfixe compose le quadruplet (carré, année, n° passage, point)")
+  void apercu_prefixe_compose_le_quadruplet() {
+    Site site = site(1L, "640380");
+    PointDEcoute point = point(10L, "A1", site.id());
+    when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+
+    viewModel.siteSelectionneProperty().set(site);
+    viewModel.pointSelectionneProperty().set(point);
+    viewModel.numeroPassageProperty().set(2);
+
+    assertThat(viewModel.apercuPrefixeProperty().get()).startsWith("Car640380-2026-Pass2-A1-");
+  }
+
+  @Test
+  @DisplayName("peutImporter exige une inspection réussie ET un rattachement complet")
+  void peut_importer_exige_inspection_et_rattachement() {
+    Site site = site(1L, "640380");
+    PointDEcoute point = point(10L, "A1", site.id());
+    when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+    when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+
+    assertThat(viewModel.peutImporter().get()).isFalse();
+
+    viewModel.dossierSourceProperty().set(sd);
+    viewModel.inspecter();
+    assertThat(viewModel.peutImporter().get()).as("inspecté mais sans site/point").isFalse();
+
+    viewModel.siteSelectionneProperty().set(site);
+    viewModel.pointSelectionneProperty().set(point);
+    assertThat(viewModel.peutImporter().get()).isTrue();
+  }
+
+  private static Site site(Long id, String carre) {
+    return new Site(id, carre, "Site " + carre, Protocole.STANDARD, null, "2026-05-31", ID_USER);
+  }
+
+  private static PointDEcoute point(Long id, String code, Long idSite) {
+    return new PointDEcoute(id, code, null, null, null, idSite);
   }
 }
