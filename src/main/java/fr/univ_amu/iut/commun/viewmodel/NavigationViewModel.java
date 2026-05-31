@@ -5,10 +5,11 @@ import javafx.beans.property.StringProperty;
 
 /// ViewModel du socle de navigation : porte l'état observable du chrome principal.
 ///
-/// Trois informations transverses, exposées en propriétés JavaFX observables :
+/// Quatre informations transverses, exposées en propriétés JavaFX observables :
 ///  - le titre de l'application (barre haute),
 ///  - la vue courante (identifiant logique de la zone centrale affichée),
-///  - le fil d'Ariane (libellé lisible du chemin de navigation).
+///  - le fil d'Ariane (libellé lisible du chemin de navigation),
+///  - le pied de page (mention affichée en bas du chrome).
 ///
 /// Cette classe est volontairement **agnostique de l'IHM** : elle n'importe que
 /// `javafx.beans.property` (le modèle observable), jamais `javafx.scene`, `javafx.fxml`
