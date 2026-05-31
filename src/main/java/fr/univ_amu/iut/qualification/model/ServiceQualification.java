@@ -65,6 +65,9 @@ public class ServiceQualification {
   /// Horodatage de l'enregistreur dans le nom de fichier (R7) : `_AAAAMMJJ_HHMMSS`.
   private static final Pattern HORODATAGE = Pattern.compile("_(\\d{8})_(\\d{6})");
 
+  /// Message d'erreur métier émis quand l'`id` de passage ne correspond à aucune ligne.
+  private static final String PASSAGE_INTROUVABLE = "Passage introuvable : ";
+
   private final SelectionDao selectionDao;
   private final SequenceDao sequenceDao;
   private final SessionDao sessionDao;
@@ -134,7 +137,7 @@ public class ServiceQualification {
     Objects.requireNonNull(methode, "methode");
     passageDao
         .findById(idPassage)
-        .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+        .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     SessionDEnregistrement session =
         sessionDao
             .trouverParPassage(idPassage)
@@ -207,7 +210,7 @@ public class ServiceQualification {
     Passage passage =
         passageDao
             .findById(idPassage)
-            .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+            .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     String commentaireFinal = commentaire != null ? commentaire : passage.commentaire();
     Passage verifie =
         new Passage(
@@ -238,7 +241,7 @@ public class ServiceQualification {
     Passage passage =
         passageDao
             .findById(idPassage)
-            .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+            .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     return passage.verdictVerification() == Verdict.A_JETER;
   }
 
@@ -263,7 +266,7 @@ public class ServiceQualification {
     Passage passage =
         passageDao
             .findById(idPassage)
-            .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+            .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     List<EnregistrementOriginal> originaux =
         sessionDao
             .trouverParPassage(idPassage)

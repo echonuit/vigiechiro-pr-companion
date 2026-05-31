@@ -72,6 +72,9 @@ Thumbs.db
 local.properties
 tmp/
 
+# ApprovalTests : dossier de travail des comparaisons (received/approved temporaires)
+.approval_tests_temp/
+
 # ========== Logs ==========
 *.log
 logs/

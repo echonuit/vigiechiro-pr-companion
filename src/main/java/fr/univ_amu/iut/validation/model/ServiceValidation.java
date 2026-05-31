@@ -52,6 +52,9 @@ import java.util.Set;
 /// [RegleMetierException] (l'import est refusé en bloc, rien n'est laissé à demi-écrit).
 public class ServiceValidation {
 
+  /// Fin de citation `« … ».` des messages d'erreur métier (guillemet fermant + point).
+  private static final String GUILLEMET_FERMANT = " ».";
+
   private final ResultatsIdentificationDao resultatsDao;
   private final ObservationDao observationDao;
   private final TaxonDao taxonDao;
@@ -114,11 +117,13 @@ public class ServiceValidation {
     for (LigneObservation ligne : parse.lignes()) {
       if (!sequenceParNom.containsKey(cleSequence(ligne.nomSequence()))) {
         throw new RegleMetierException(
-            "Séquence d'écoute introuvable en base pour « " + ligne.nomSequence() + " ».");
+            "Séquence d'écoute introuvable en base pour « "
+                + ligne.nomSequence()
+                + GUILLEMET_FERMANT);
       }
       if (ligne.taxonTadarida() == null || !taxonsConnus.contains(ligne.taxonTadarida())) {
         throw new RegleMetierException(
-            "Taxon Tadarida inconnu (non semé) : « " + ligne.taxonTadarida() + " ».");
+            "Taxon Tadarida inconnu (non semé) : « " + ligne.taxonTadarida() + GUILLEMET_FERMANT);
       }
     }
 
@@ -184,7 +189,7 @@ public class ServiceValidation {
     Observation observation = chargerObservation(idObservation);
     if (codeTaxonObservateur == null || taxonDao.findById(codeTaxonObservateur).isEmpty()) {
       throw new RegleMetierException(
-          "Taxon observateur inconnu : « " + codeTaxonObservateur + " ».");
+          "Taxon observateur inconnu : « " + codeTaxonObservateur + GUILLEMET_FERMANT);
     }
     return majObservateur(
         observation, codeTaxonObservateur, probObservateur, ModeValidation.MANUEL);

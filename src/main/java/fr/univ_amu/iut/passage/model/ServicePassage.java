@@ -37,6 +37,9 @@ import java.util.Optional;
 /// `ServiceSites.rappelsProtocole(Protocole)`.
 public class ServicePassage {
 
+  /// Nom du paramètre `passage` (messages `requireNonNull`).
+  private static final String PASSAGE = "passage";
+
   private final PassageDao passageDao;
   private final MoteurWorkflowPassage moteur;
   private final Horloge horloge;
@@ -112,7 +115,7 @@ public class ServicePassage {
   /// bloquante. Sur [Protocole#RECHERCHE], ou pour un n° de passage sans fenêtre définie (autre
   /// que 1 ou 2), la règle est muette.
   public ResultatVerification verifierFenetreSaisonniere(Passage passage, Protocole protocole) {
-    Objects.requireNonNull(passage, "passage");
+    Objects.requireNonNull(passage, PASSAGE);
     if (protocole != Protocole.STANDARD || passage.dateEnregistrement() == null) {
       return ResultatVerification.ok();
     }
@@ -147,7 +150,7 @@ public class ServicePassage {
   /// est une lecture fidèle de la règle. Sur [Protocole#RECHERCHE], muette.
   public ResultatVerification verifierIntervalleEntrePassages(
       Passage passage, Protocole protocole) {
-    Objects.requireNonNull(passage, "passage");
+    Objects.requireNonNull(passage, PASSAGE);
     if (protocole != Protocole.STANDARD || passage.dateEnregistrement() == null) {
       return ResultatVerification.ok();
     }
@@ -184,7 +187,7 @@ public class ServicePassage {
   /// @throws RegleMetierException si le passage est déjà au statut terminal
   /// ([StatutWorkflow#DEPOSE])
   public Passage avancerStatut(Passage passage) {
-    Objects.requireNonNull(passage, "passage");
+    Objects.requireNonNull(passage, PASSAGE);
     StatutWorkflow suivant =
         moteur
             .suivant(passage.statutWorkflow())
@@ -205,7 +208,7 @@ public class ServicePassage {
   /// @return le passage mis à jour (persisté)
   /// @throws RegleMetierException si la transition n'est pas le passage à l'étape suivante
   public Passage changerStatut(Passage passage, StatutWorkflow nouveauStatut) {
-    Objects.requireNonNull(passage, "passage");
+    Objects.requireNonNull(passage, PASSAGE);
     Objects.requireNonNull(nouveauStatut, "nouveauStatut");
     moteur.exigerTransitionAutorisee(passage.statutWorkflow(), nouveauStatut);
     String deposeLe =
@@ -241,7 +244,7 @@ public class ServicePassage {
   /// @return le passage mis à jour (persisté)
   /// @throws RegleMetierException si le passage est déjà déposé
   public Passage poserVerdict(Passage passage, Verdict verdict) {
-    Objects.requireNonNull(passage, "passage");
+    Objects.requireNonNull(passage, PASSAGE);
     Objects.requireNonNull(verdict, "verdict");
     if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
       throw new RegleMetierException(

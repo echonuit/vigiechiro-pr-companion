@@ -176,21 +176,22 @@ public class VerificationCoherence {
   /// Journal obligatoire (bloquant) ; relevé climatique optionnel (soft, R20).
   private ResultatVerification verifierJournalEtReleve(
       ResultatVerification resultat, SessionDEnregistrement session) {
+    ResultatVerification cumul = resultat;
     if (journalDao.trouverParSession(session.id()).isEmpty()) {
-      resultat =
-          resultat.avec(
+      cumul =
+          cumul.avec(
               Alerte.bloquante(
                   "Journal du capteur (LogPR<n>.txt) absent : il doit accompagner les séquences"
                       + " déposées."));
     }
     if (releveDao.trouverParSession(session.id()).isEmpty()) {
-      resultat =
-          resultat.avec(
+      cumul =
+          cumul.avec(
               Alerte.soft(
                   "Relevé climatique absent (R20) : sonde non installée ou défaillante. Le dépôt"
                       + " reste possible."));
     }
-    return resultat;
+    return cumul;
   }
 
   /// Préfixe `Car<carré>-<année>-Pass<n>-<point>-` attendu, calculé depuis le point et le

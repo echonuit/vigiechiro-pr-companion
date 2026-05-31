@@ -42,6 +42,9 @@ public class ServiceMultisite {
   private static final List<String> ENTETE =
       List.of("site", "point", "annee", "passage", "date", "statut", "verdict");
 
+  /// Nom du paramètre `filtres` (messages `requireNonNull`).
+  private static final String FILTRES = "filtres";
+
   private final SavedViewDao savedViewDao;
   private final SiteDao siteDao;
   private final PointDao pointDao;
@@ -84,7 +87,7 @@ public class ServiceMultisite {
   public List<LignePassage> listerPassages(
       String idUtilisateur, FiltresMultisite filtres, TriMultisite tri) {
     Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-    Objects.requireNonNull(filtres, "filtres");
+    Objects.requireNonNull(filtres, FILTRES);
     Objects.requireNonNull(tri, "tri");
     List<LignePassage> lignes = new ArrayList<>();
     for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
@@ -146,7 +149,7 @@ public class ServiceMultisite {
   /// @return la vue insérée, avec son `id` auto-généré
   public SavedView enregistrerVue(String nom, FiltresMultisite filtres) {
     Objects.requireNonNull(nom, "nom");
-    Objects.requireNonNull(filtres, "filtres");
+    Objects.requireNonNull(filtres, FILTRES);
     return savedViewDao.insert(new SavedView(null, nom, FiltresMultisiteJson.serialiser(filtres)));
   }
 
@@ -181,7 +184,7 @@ public class ServiceMultisite {
   /// @throws RegleMetierException si aucune vue ne porte cet identifiant
   public SavedView mettreAJourVue(Long idVue, String nouveauNom, FiltresMultisite filtres) {
     Objects.requireNonNull(nouveauNom, "nouveauNom");
-    Objects.requireNonNull(filtres, "filtres");
+    Objects.requireNonNull(filtres, FILTRES);
     SavedView existante =
         savedViewDao
             .findById(idVue)

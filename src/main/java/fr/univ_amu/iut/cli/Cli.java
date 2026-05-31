@@ -62,6 +62,9 @@ public final class Cli {
   /// Mauvaise invocation : commande inconnue, argument requis manquant ou mal formé.
   public static final int CODE_ERREUR_ARGUMENTS = 2;
 
+  /// Nom de l'option commune `--passage` (importer / exporter-lot / exporter-vu).
+  private static final String ARG_PASSAGE = "passage";
+
   private final Injector injecteur;
 
   /// @param injecteur injecteur Guice résolvant le socle, les features et le [CliModule]
@@ -184,7 +187,7 @@ public final class Cli {
 
     int annee = arguments.entierOptionnel("annee").orElseGet(() -> anneeCourante());
     int numeroPassage =
-        arguments.entierOptionnel("passage").orElseGet(() -> prochainNumero(passageDao, idPoint));
+        arguments.entierOptionnel(ARG_PASSAGE).orElseGet(() -> prochainNumero(passageDao, idPoint));
 
     Prefixe prefixe = new Prefixe(site.numeroCarre(), annee, numeroPassage, point.code());
 
@@ -210,7 +213,7 @@ public final class Cli {
   }
 
   private int exporterLot(ArgumentsCli arguments, PrintStream sortie) {
-    long idPassage = arguments.exigerLong("passage");
+    long idPassage = arguments.exigerLong(ARG_PASSAGE);
     Lot lot = injecteur.getInstance(ServiceLot.class).preparerLot(idPassage);
     sortie.println("Lot prêt à déposer pour le passage #" + lot.idPassage() + ".");
     sortie.println("  Séquences : " + lot.nombreSequences());
@@ -224,7 +227,7 @@ public final class Cli {
   }
 
   private int exporterVu(ArgumentsCli arguments, PrintStream sortie) {
-    long idPassage = arguments.exigerLong("passage");
+    long idPassage = arguments.exigerLong(ARG_PASSAGE);
     Path sortieFichier = Path.of(arguments.exiger("sortie"));
 
     // L'export canonique vit dans la feature validation (ServiceValidation.exporter prend l'id du
