@@ -24,7 +24,7 @@
         <google.java.format.version>1.35.0</google.java.format.version>
         <git.build.hook.plugin.version>3.6.0</git.build.hook.plugin.version>
         <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
-        <javafx.version>25</javafx.version>
+        <javafx.version>26</javafx.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
         <testfx.version>4.0.18</testfx.version>
 
@@ -206,6 +206,21 @@
                 <configuration>
                     <!-- TestFX requires classpath mode (not module path) -->
                     <useModulePath>false</useModulePath>
+                    <!-- Headless Platform JavaFX 26 (Gluon) : plateforme Glass logicielle, sans
+                         natif ni serveur d'affichage. Aucune fenêtre TestFX/JavaFX n'apparaît à
+                         l'écran, localement comme en CI, et plus besoin de xvfb. Le robot Glass
+                         pilote la plateforme Headless, le pipeline de rendu logiciel (sw)
+                         remplace le GPU. Remplace l'ancien bricolage Monocle.
+                         NB : on NE met PAS testfx.headless=true : ce flag déclencherait le vieux
+                         bootstrap Monocle de TestFX (recherche de MonoclePlatformFactory, classe
+                         absente sans la dépendance monocle). Le headless vient ici de
+                         glass.platform=Headless, pas de TestFX. -->
+                    <systemPropertyVariables>
+                        <glass.platform>Headless</glass.platform>
+                        <prism.order>sw</prism.order>
+                        <java.awt.headless>true</java.awt.headless>
+                        <testfx.robot>glass</testfx.robot>
+                    </systemPropertyVariables>
                     <argLine>
                         @{jacocoArgLine}
                         --enable-native-access=ALL-UNNAMED
@@ -214,6 +229,8 @@
                         --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
                         --add-opens javafx.base/com.sun.javafx.runtime=ALL-UNNAMED
                         --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
+                        --add-exports javafx.graphics/com.sun.javafx.util=ALL-UNNAMED
+                        --add-exports javafx.base/com.sun.javafx.logging=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>
