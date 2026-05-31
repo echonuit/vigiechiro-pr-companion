@@ -106,4 +106,27 @@ class ImportationViewModelTest {
     assertThat(viewModel.messageErreurProperty().get()).contains("dossier source");
     verifyNoInteractions(service);
   }
+
+  @Test
+  @DisplayName(
+      "Un échec après une inspection réussie réinitialise l'état (pas de rapport obsolète)")
+  void echec_apres_succes_reinitialise_l_etat() {
+    when(service.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+    viewModel.dossierSourceProperty().set(sd);
+    viewModel.inspecter();
+    assertThat(viewModel.nombreOriginauxProperty().get()).isEqualTo(2);
+
+    Path invalide = racine.resolve("inexistant");
+    when(service.inspecter(invalide)).thenThrow(new IllegalArgumentException("Chemin invalide."));
+    viewModel.dossierSourceProperty().set(invalide);
+    viewModel.inspecter();
+
+    assertThat(viewModel.estInspecte()).isFalse();
+    assertThat(viewModel.aUnJournalProperty().get()).isFalse();
+    assertThat(viewModel.aUnReleveClimatiqueProperty().get()).isFalse();
+    assertThat(viewModel.nombreOriginauxProperty().get()).isZero();
+    assertThat(viewModel.etatNommageProperty().get()).isNull();
+    assertThat(viewModel.resumeJournalProperty().get()).isEmpty();
+    assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+  }
 }

@@ -124,7 +124,14 @@ public class ImportationViewModel {
   }
 
   private void echouer(String message) {
+    // Réinitialise tout l'état d'inspection : sinon, après une inspection réussie, un échec
+    // ultérieur laisserait les propriétés dérivées sur les valeurs (obsolètes) de l'ancien dossier.
     inspecte.set(false);
+    aUnJournal.set(false);
+    aUnReleveClimatique.set(false);
+    nombreOriginaux.set(0);
+    etatNommage.set(null);
+    resumeJournal.set("");
     messageErreur.set(message);
   }
 }
