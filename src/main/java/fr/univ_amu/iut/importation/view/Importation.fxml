@@ -85,7 +85,8 @@
   <HBox spacing="14.0" alignment="CENTER_LEFT">
     <Button fx:id="boutonImporter" text="📥 Importer cette nuit" styleClass="bouton-primaire"
             onAction="#importer"/>
-    <ProgressIndicator fx:id="indicateurProgression" prefWidth="26.0" prefHeight="26.0"/>
+    <ProgressIndicator fx:id="indicateurProgression" prefWidth="26.0" prefHeight="26.0"
+                       visible="false" managed="false"/>
     <Label fx:id="labelMessage" styleClass="message-erreur" wrapText="true" HBox.hgrow="ALWAYS"/>
   </HBox>
   <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>

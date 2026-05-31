@@ -292,7 +292,7 @@ class ImportationViewModelTest {
     viewModel.marquerEnCours();
     assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.EN_COURS);
 
-    ResultatImport obtenu = viewModel.executerImport();
+    ResultatImport obtenu = viewModel.executerImport(viewModel.preparerImport());
     assertThat(obtenu).isSameAs(attendu);
     assertThat(viewModel.etatProperty().get())
         .as("executerImport ne mute aucun état")

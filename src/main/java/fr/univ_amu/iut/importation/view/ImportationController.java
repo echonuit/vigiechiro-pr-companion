@@ -157,13 +157,14 @@ public class ImportationController {
     if (!viewModel.peutImporter().get()) {
       return;
     }
+    var demande = viewModel.preparerImport();
     viewModel.marquerEnCours();
     Thread.ofVirtual()
         .name("import-vigiechiro")
         .start(
             () -> {
               try {
-                ResultatImport resultatImport = viewModel.executerImport();
+                ResultatImport resultatImport = viewModel.executerImport(demande);
                 Platform.runLater(() -> viewModel.marquerTermine(resultatImport));
               } catch (RuntimeException echec) {
                 Platform.runLater(() -> viewModel.marquerEchec(echec.getMessage()));

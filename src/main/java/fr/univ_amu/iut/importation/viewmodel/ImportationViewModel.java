@@ -267,48 +267,60 @@ public class ImportationViewModel {
 
   /// Lance l'import de la nuit **de façon synchrone** (copie protégée R9 + renommage R6/R7 +
   /// transformation R10/R11). Pratique pour les tests et le chemin simple ; pour ne pas figer
-  /// l'IHM, la vue préfère le découpage [#marquerEnCours()] / [#executerImport()] /
-  /// [#marquerTermine] / [#marquerEchec], le travail lourd tournant sur un fil d'arrière-plan.
+  /// l'IHM, la vue préfère le découpage `preparerImport` (instantané) + `executerImport`
+  /// (hors-thread) + `marquerEnCours`/`marquerTermine`/`marquerEchec` (sur le fil JavaFX).
   public void importer() {
     if (!peutImporter.get()) {
       messageErreur.set(
           "Complétez le rattachement (dossier inspecté, site, point) avant d'importer.");
       return;
     }
+    DemandeImport demande = preparerImport();
     marquerEnCours();
     try {
-      marquerTermine(executerImport());
+      marquerTermine(executerImport(demande));
     } catch (RuntimeException echec) {
       marquerEchec(echec.getMessage());
     }
   }
 
   /// Passe l'état à `EN_COURS` et efface le message. À appeler sur le fil JavaFX, avant de
-  /// lancer [#executerImport()] en arrière-plan.
+  /// lancer l'exécution en arrière-plan.
   public void marquerEnCours() {
     messageErreur.set("");
     etat.set(EtatImport.EN_COURS);
   }
 
+  /// Capture (sur le fil JavaFX) les entrées du rattachement courant dans un instantané immuable,
+  /// pour les passer à [#executerImport(DemandeImport)] sans relire de `Property` hors-thread.
+  /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
+  public DemandeImport preparerImport() {
+    Site site = siteSelectionne.get();
+    PointDEcoute point = pointSelectionne.get();
+    return new DemandeImport(
+        dossierSource.get(),
+        point.id(),
+        new Prefixe(site.numeroCarre(), annee.get(), numeroPassage.get(), point.code()));
+  }
+
   /// Exécute le travail lourd de l'import (copie + renommage + transformation) via
-  /// [ServiceImport#importer] et renvoie le résultat. **Ne mute aucune propriété** : conçu pour
-  /// tourner sur un fil d'arrière-plan. Précondition : rattachement complet ([#peutImporter()]
-  /// vrai), garanti par l'appelant.
+  /// [ServiceImport#importer], à partir d'un instantané. **Ne lit aucune `Property` et ne mute
+  /// rien** : sûr sur un fil d'arrière-plan.
   ///
   /// @return le résultat de l'import
   /// @throws RuntimeException si l'import échoue (refus métier R5, journal manquant…)
-  public ResultatImport executerImport() {
-    Site site = siteSelectionne.get();
-    PointDEcoute point = pointSelectionne.get();
-    Prefixe prefixe =
-        new Prefixe(site.numeroCarre(), annee.get(), numeroPassage.get(), point.code());
-    return serviceImport.importer(dossierSource.get(), point.id(), prefixe);
+  public ResultatImport executerImport(DemandeImport demande) {
+    return serviceImport.importer(demande.dossier(), demande.idPoint(), demande.prefixe());
   }
+
+  /// Instantané immuable des entrées d'un import, capturé sur le fil JavaFX par preparerImport.
+  public record DemandeImport(Path dossier, Long idPoint, Prefixe prefixe) {}
 
   /// Applique un import réussi (résultat exposé, état `TERMINE`). À appeler sur le fil JavaFX
   /// (depuis `Platform.runLater`).
   public void marquerTermine(ResultatImport resultatImport) {
     resultat.set(resultatImport);
+    messageErreur.set("");
     etat.set(EtatImport.TERMINE);
   }
 
