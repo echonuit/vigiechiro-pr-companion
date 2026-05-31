@@ -23,6 +23,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -69,6 +70,11 @@ class MesSitesViewTest {
     service.ajouterPoint(etang.id(), "A1", 43.5, 5.4, "Chêne");
     Site zac = service.creerSite("752204", "ZAC Nord", Protocole.STANDARD, null, ID_USER);
     service.ajouterPoint(zac.id(), "A1", null, null, null);
+  }
+
+  @AfterEach
+  void nettoyerWorkspace() {
+    System.clearProperty("vigiechiro.workspace");
   }
 
   @Test

@@ -22,6 +22,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -60,6 +61,11 @@ class ModalePointViewTest {
     stage.setScene(new Scene(racine, 1100, 720));
     injector.getInstance(NavigationSites.class).ouvrirDetail(site);
     stage.show();
+  }
+
+  @AfterEach
+  void nettoyerWorkspace() {
+    System.clearProperty("vigiechiro.workspace");
   }
 
   @Test
