@@ -105,6 +105,38 @@ public class ServiceSites {
     return pointDao.insert(aCreer);
   }
 
+  /// Met à jour un point d'écoute existant (édition depuis la modale).
+  ///
+  /// - R2 (dur) : le code doit valider `[A-Z][0-9]`, cf. [ValidateurCodePoint].
+  /// - Unicité (dur) : le code doit rester unique dans le site, **en excluant le point courant**
+  ///   (un point conserve son propre code). Sans ce contrôle, viser un code déjà pris ferait
+  ///   remonter la contrainte SQL `UNIQUE(site_id, code)` en erreur technique plutôt qu'un refus
+  ///   métier lisible. Symétrique d'[#ajouterPoint] pour le chemin d'édition.
+  ///
+  /// @return le point mis à jour
+  /// @throws IllegalArgumentException si le code est mal formé (R2)
+  /// @throws RegleMetierException si le code est déjà pris par un AUTRE point du site
+  public PointDEcoute modifierPoint(
+      Long idPoint,
+      Long idSite,
+      String code,
+      Double latitude,
+      Double longitude,
+      String description) {
+    ValidateurCodePoint.exigerValide(code); // R2
+    boolean codeDejaPris =
+        pointDao.findBySite(idSite).stream()
+            .anyMatch(p -> p.code().equals(code) && !p.id().equals(idPoint));
+    if (codeDejaPris) {
+      throw new RegleMetierException(
+          "Le code de point « " + code + " » existe déjà dans ce site (unicité code/point).");
+    }
+    PointDEcoute aMettreAJour =
+        new PointDEcoute(idPoint, code, latitude, longitude, description, idSite);
+    pointDao.update(aMettreAJour);
+    return aMettreAJour;
+  }
+
   /// Sites d'un utilisateur, triés par numéro de carré.
   public List<Site> listerSites(String idUtilisateur) {
     return siteDao.findByUtilisateur(idUtilisateur);

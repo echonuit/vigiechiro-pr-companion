@@ -23,8 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Tests du [PointEditViewModel] : validation R2 du code, validation des coordonnées (optionnelles,
-/// virgule décimale), pilotage du bouton, et enregistrement (création via le service, édition via
-/// le DAO) sur base SQLite jetable.
+/// virgule décimale), pilotage du bouton, et enregistrement (création et édition via le service)
+/// sur base SQLite jetable.
 class PointEditViewModelTest {
 
   private static final String ID_USER = "u-1";
@@ -44,7 +44,7 @@ class PointEditViewModelTest {
     pointDao = new PointDao(source);
     PassageDao passageDao = new PassageDao(source);
     service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()));
-    viewModel = new PointEditViewModel(service, pointDao);
+    viewModel = new PointEditViewModel(service);
     site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
   }
 
@@ -138,5 +138,20 @@ class PointEditViewModelTest {
         .get()
         .extracting(PointDEcoute::description)
         .isEqualTo("Nouvelle note");
+  }
+
+  @Test
+  @DisplayName("En édition, viser le code d'un AUTRE point est refusé (unicité, message lisible)")
+  void edition_vers_code_existant_refuse() {
+    service.ajouterPoint(site.id(), "A1", null, null, null);
+    PointDEcoute b1 = service.ajouterPoint(site.id(), "B1", null, null, null);
+    viewModel.preparerEdition(site, b1);
+
+    viewModel.codeProperty().set("A1");
+    boolean ok = viewModel.enregistrer();
+
+    assertThat(ok).isFalse();
+    assertThat(viewModel.messageErreurProperty().get()).contains("A1").contains("existe déjà");
+    assertThat(pointDao.findById(b1.id())).get().extracting(PointDEcoute::code).isEqualTo("B1");
   }
 }

@@ -4,7 +4,6 @@ import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -23,8 +22,9 @@ import javafx.beans.property.StringProperty;
 ///    virgule décimale tolérée) ;
 ///  - [#peutEnregistrer()] combine ces validités pour piloter l'état du bouton de validation.
 ///
-/// La création délègue à [ServiceSites#ajouterPoint] (qui rejoue R2 + l'unicité du code dans le
-/// site) ; l'édition met à jour via [PointDao] après re-validation du code. Les refus métier
+/// La création délègue à [ServiceSites#ajouterPoint] et l'édition à [ServiceSites#modifierPoint] :
+/// tous deux rejouent R2 + l'unicité du code dans le site (en excluant le point courant en
+/// édition), pour ne jamais court-circuiter le service vers le DAO. Les refus métier
 /// (code déjà pris…) sont restitués dans [#messageErreurProperty()] et l'enregistrement renvoie
 /// `false` (la modale reste ouverte).
 public class PointEditViewModel {
@@ -36,7 +36,6 @@ public class PointEditViewModel {
   private static final double LONGITUDE_MAX = 180.0;
 
   private final ServiceSites service;
-  private final PointDao pointDao;
 
   private final StringProperty code = new SimpleStringProperty(this, "code", "");
   private final StringProperty description = new SimpleStringProperty(this, "description", "");
@@ -56,9 +55,8 @@ public class PointEditViewModel {
   private Long idSite;
   private Long idPointEnEdition;
 
-  public PointEditViewModel(ServiceSites service, PointDao pointDao) {
+  public PointEditViewModel(ServiceSites service) {
     this.service = Objects.requireNonNull(service, "service");
-    this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
     codeValide =
         Bindings.createBooleanBinding(() -> ValidateurCodePoint.estValide(code.get()), code);
     latitudeValide =
@@ -111,7 +109,7 @@ public class PointEditViewModel {
       if (idPointEnEdition == null) {
         service.ajouterPoint(idSite, code.get(), lat, lon, desc);
       } else {
-        pointDao.update(new PointDEcoute(idPointEnEdition, code.get(), lat, lon, desc, idSite));
+        service.modifierPoint(idPointEnEdition, idSite, code.get(), lat, lon, desc);
       }
       messageErreur.set("");
       return true;

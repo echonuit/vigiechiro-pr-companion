@@ -89,8 +89,8 @@ public class SitesModule extends AbstractModule {
 
   @Provides
   @Singleton
-  PointEditViewModel fournirPointEditViewModel(ServiceSites service, PointDao pointDao) {
-    return new PointEditViewModel(service, pointDao);
+  PointEditViewModel fournirPointEditViewModel(ServiceSites service) {
+    return new PointEditViewModel(service);
   }
 
   private static String creerUtilisateurLocal(UtilisateurDao utilisateurDao) {
