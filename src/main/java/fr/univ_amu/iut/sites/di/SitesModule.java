@@ -70,8 +70,12 @@ public class SitesModule extends AbstractModule {
         .orElseGet(() -> creerUtilisateurLocal(utilisateurDao));
   }
 
+  // Les ViewModels de feature ne sont volontairement PAS @Singleton. Le FXMLLoader recrée le
+  // controller (et ses bindings) à chaque chargement de vue/modale ; un VM frais par chargement
+  // évite que des bindings/listeners de vues fermées restent accrochés (fuite de contrôles) et que
+  // l'état d'une modale précédente fuite vers la suivante. Le NavigationViewModel du socle, lui,
+  // reste @Singleton car il porte de l'état de chrome partagé entre toutes les features.
   @Provides
-  @Singleton
   SitesViewModel fournirSitesViewModel(
       ServiceSites service,
       PassageDao passageDao,
@@ -81,14 +85,12 @@ public class SitesModule extends AbstractModule {
   }
 
   @Provides
-  @Singleton
   SiteDetailViewModel fournirSiteDetailViewModel(
       ServiceSites service, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
     return new SiteDetailViewModel(service, pointDao, passageDao, horloge);
   }
 
   @Provides
-  @Singleton
   PointEditViewModel fournirPointEditViewModel(ServiceSites service) {
     return new PointEditViewModel(service);
   }
