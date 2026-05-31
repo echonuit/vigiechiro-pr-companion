@@ -117,6 +117,13 @@
     -fx-background-color: #f6f8fa;
 }
 
+/* Focus clavier : anneau visible pour l'utilisateur qui navigue au Tab (a11y). */
+.carte-site:focused {
+    -fx-border-color: #4a90d9;
+    -fx-border-width: 2;
+    -fx-background-color: #f6f8fa;
+}
+
 .carte-colonne {
     -fx-spacing: 4;
     -fx-min-width: 150;
