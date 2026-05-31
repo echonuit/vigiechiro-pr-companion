@@ -1,10 +1,19 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.ServiceSites;
+import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -14,21 +23,29 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 /// ViewModel de l'assistant **M-Import** (« Importer une nuit »).
 ///
-/// Cette première tranche couvre les **étapes 1 et 2** de la maquette : choisir un dossier source
-/// puis l'**inspecter en lecture seule** (R9 : aucun fichier n'est modifié). L'inspection délègue
-/// à [ServiceImport#inspecter] et expose le [RapportInspection] sous forme de propriétés
-/// observables dérivées, auxquelles la vue se lie. Le rattachement (site/point/préfixe) et
-/// l'exécution de l'import viendront dans les tranches suivantes de la feature.
+/// Couvre les **étapes 1 à 3** de la maquette :
+///  1. choisir un dossier source ;
+///  2. l'**inspecter en lecture seule** (R9) via [ServiceImport#inspecter] ;
+///  3. **rattacher** la nuit à un site / point / année / n° de passage et prévisualiser le préfixe
+///     Vigie-Chiro qui sera appliqué (R6).
 ///
-/// Conformément à la règle ArchUnit `viewmodel_sans_javafx_ui`, seul `javafx.beans` est importé ici
-/// (jamais `javafx.scene`/`javafx.fxml`/`javafx.stage`).
+/// L'exécution de l'import (copie + renommage + transformation) viendra dans la tranche suivante.
+/// Les sites/points de l'utilisateur courant viennent de [ServiceSites] : une dépendance
+/// `importation → sites` sur le `model` d'une autre feature (autorisée par ArchUnit, jamais
+/// sur son `view`/`viewmodel`). Seul `javafx.beans`/`javafx.collections` est importé ici,
+/// jamais `javafx.scene` (règle `viewmodel_sans_javafx_ui`).
 public class ImportationViewModel {
 
-  private final ServiceImport service;
+  private final ServiceImport serviceImport;
+  private final ServiceSites serviceSites;
+  private final String idUtilisateur;
 
   /// Étape 1 : dossier source choisi (carte SD ou copie disque), modifiable par la vue (champ +
   /// bouton « Parcourir »).
@@ -51,8 +68,58 @@ public class ImportationViewModel {
   private final ReadOnlyStringWrapper messageErreur =
       new ReadOnlyStringWrapper(this, "messageErreur", "");
 
-  public ImportationViewModel(ServiceImport service) {
-    this.service = Objects.requireNonNull(service, "service");
+  /// Étape 3 : rattachement de la nuit (site / point / année / n° de passage).
+  private final ObservableList<Site> sites = FXCollections.observableArrayList();
+  private final ObjectProperty<Site> siteSelectionne =
+      new SimpleObjectProperty<>(this, "siteSelectionne");
+  private final ObservableList<PointDEcoute> points = FXCollections.observableArrayList();
+  private final ObjectProperty<PointDEcoute> pointSelectionne =
+      new SimpleObjectProperty<>(this, "pointSelectionne");
+  private final IntegerProperty annee = new SimpleIntegerProperty(this, "annee");
+  private final IntegerProperty numeroPassage = new SimpleIntegerProperty(this, "numeroPassage", 1);
+  private final ReadOnlyStringWrapper apercuPrefixe =
+      new ReadOnlyStringWrapper(this, "apercuPrefixe", "");
+  private final BooleanBinding peutImporter;
+
+  /// Rapport d'inspection courant, conservé pour l'aperçu du préfixe (exemple de nom d'origine) et
+  /// les tranches suivantes (extraction du quadruplet, exécution de l'import).
+  private RapportInspection rapport;
+
+  public ImportationViewModel(
+      ServiceImport serviceImport,
+      ServiceSites serviceSites,
+      Horloge horloge,
+      String idUtilisateur) {
+    this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
+    this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
+    this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+    Objects.requireNonNull(horloge, "horloge");
+
+    // Valeur initiale avant d'installer les écouteurs (évite un recalcul d'aperçu prématuré).
+    annee.set(horloge.aujourdhui().getYear());
+
+    // Changer de site recharge ses points et réinitialise le point sélectionné.
+    siteSelectionne.addListener(
+        (obs, ancien, nouveau) -> {
+          points.setAll(nouveau == null ? List.of() : serviceSites.listerPoints(nouveau.id()));
+          pointSelectionne.set(null);
+          majApercu();
+        });
+    pointSelectionne.addListener((obs, ancien, nouveau) -> majApercu());
+    annee.addListener((obs, ancien, nouveau) -> majApercu());
+    numeroPassage.addListener((obs, ancien, nouveau) -> majApercu());
+
+    peutImporter =
+        Bindings.createBooleanBinding(
+            () ->
+                inspecte.get()
+                    && siteSelectionne.get() != null
+                    && pointSelectionne.get() != null
+                    && numeroPassage.get() >= 1,
+            inspecte,
+            siteSelectionne,
+            pointSelectionne,
+            numeroPassage);
   }
 
   /// Dossier source à inspecter puis importer (lié au champ + bouton « Parcourir » de la vue).
@@ -99,6 +166,54 @@ public class ImportationViewModel {
     return messageErreur.getReadOnlyProperty();
   }
 
+  /// Liste observable des sites de l'utilisateur, alimentée par [#chargerSites()] (combobox Site).
+  public ObservableList<Site> sites() {
+    return sites;
+  }
+
+  /// Site auquel rattacher la nuit (sélection dans la combobox).
+  public ObjectProperty<Site> siteSelectionneProperty() {
+    return siteSelectionne;
+  }
+
+  /// Points du site sélectionné (recalculée à chaque changement de site).
+  public ObservableList<PointDEcoute> points() {
+    return points;
+  }
+
+  /// Point d'écoute auquel rattacher la nuit.
+  public ObjectProperty<PointDEcoute> pointSelectionneProperty() {
+    return pointSelectionne;
+  }
+
+  /// Année du passage (préremplie à l'année de l'horloge applicative).
+  public IntegerProperty anneeProperty() {
+    return annee;
+  }
+
+  /// Numéro de passage dans l'année pour ce point (défaut 1, éditable).
+  public IntegerProperty numeroPassageProperty() {
+    return numeroPassage;
+  }
+
+  /// Aperçu du nom préfixé appliqué aux fichiers (R6), recalculé dès qu'un champ change ; vide tant
+  /// que le site ou le point n'est pas choisi.
+  public ReadOnlyStringProperty apercuPrefixeProperty() {
+    return apercuPrefixe.getReadOnlyProperty();
+  }
+
+  /// Conjonction d'activation du bouton « Importer cette nuit » : dossier inspecté + site + point +
+  /// n° de passage valides.
+  public BooleanBinding peutImporter() {
+    return peutImporter;
+  }
+
+  /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un
+  /// site).
+  public void chargerSites() {
+    sites.setAll(serviceSites.listerSites(idUtilisateur));
+  }
+
   /// Inspecte le dossier source courant **en lecture seule** (R9) et met à jour les propriétés
   /// d'inspection. Sur un dossier non choisi ou un chemin invalide, renseigne
   /// [#messageErreurProperty()] et laisse `inspecte` à `false`.
@@ -109,7 +224,7 @@ public class ImportationViewModel {
       return;
     }
     try {
-      RapportInspection rapport = service.inspecter(dossier);
+      rapport = serviceImport.inspecter(dossier);
       aUnJournal.set(rapport.aUnJournal());
       aUnReleveClimatique.set(rapport.aUnReleveClimatique());
       nombreOriginaux.set(rapport.nombreOriginaux());
@@ -118,6 +233,7 @@ public class ImportationViewModel {
           rapport.journalOptionnel().map(journal -> "PR n° " + journal.numeroSerie()).orElse(""));
       messageErreur.set("");
       inspecte.set(true);
+      majApercu();
     } catch (RuntimeException echec) {
       echouer(echec.getMessage());
     }
@@ -126,6 +242,7 @@ public class ImportationViewModel {
   private void echouer(String message) {
     // Réinitialise tout l'état d'inspection : sinon, après une inspection réussie, un échec
     // ultérieur laisserait les propriétés dérivées sur les valeurs (obsolètes) de l'ancien dossier.
+    rapport = null;
     inspecte.set(false);
     aUnJournal.set(false);
     aUnReleveClimatique.set(false);
@@ -133,5 +250,28 @@ public class ImportationViewModel {
     etatNommage.set(null);
     resumeJournal.set("");
     messageErreur.set(message);
+    majApercu();
+  }
+
+  /// Recalcule l'aperçu du préfixe à partir du quadruplet (carré, année, n° passage, point)
+  // appliqué
+  /// à un exemple de nom d'origine ; vide tant que le site ou le point manque.
+  private void majApercu() {
+    Site site = siteSelectionne.get();
+    PointDEcoute point = pointSelectionne.get();
+    if (site == null || point == null) {
+      apercuPrefixe.set("");
+      return;
+    }
+    Prefixe prefixe =
+        new Prefixe(site.numeroCarre(), annee.get(), numeroPassage.get(), point.code());
+    apercuPrefixe.set(prefixe.nommerOriginal(exempleNomOriginal()));
+  }
+
+  private String exempleNomOriginal() {
+    if (rapport != null && !rapport.originaux().isEmpty()) {
+      return rapport.originaux().get(0).getFileName().toString();
+    }
+    return "PaRec…_AAAAMMJJ_HHMMSS.wav";
   }
 }
