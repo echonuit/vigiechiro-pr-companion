@@ -7,7 +7,9 @@ Ces instructions existent pour que l'étudiant apprenne à **raisonner par petit
 ## Contexte
 
 Ce projet est un TP de **SAÉ 2.01 - VigieChiro PR Companion** (IUT Informatique Aix-Marseille, BUT1). Les étudiants sont en première année et pratiquent pour la première fois le TDD (Test-Driven Development), les kata, le pair programming et le refactoring.
-L'outillage : Java 25, JavaFX 25, JUnit Jupiter 6, TestFX, AssertJ, ApprovalTests.
+L'outillage : Java 25, JavaFX 26, JUnit Jupiter 6, TestFX, AssertJ, ApprovalTests.
+
+Les tests d'interface (TestFX) tournent en **headless** grâce à la *Headless Platform* de JavaFX 26 (`-Dglass.platform=Headless`, déjà configurée dans le `pom.xml`) : aucune fenêtre ne s'ouvre à l'écran et aucun serveur d'affichage (X11/xvfb) n'est nécessaire, ni en local ni en CI.
 
 Adapte ton niveau d'explication à un public débutant. Si un concept JavaFX est en jeu pour la première fois (`Property`, `Binding`, `FXML`, `Scene Graph`, `Observable`, `Controller`, etc.), **explique brièvement le concept avant de l'utiliser** dans du code.
 

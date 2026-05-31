@@ -12,7 +12,8 @@ import org.testfx.framework.junit5.Start;
 
 /// Smoke test JavaFX du bootstrap : vérifie que le chrome principal (`MainView`) est chargé via
 /// le `FXMLLoader` + la `controllerFactory` Guice, et que la barre de navigation affiche bien le
-/// titre de l'application. Tourne en headless sous TestFX (xvfb en CI).
+/// titre de l'application. Tourne en headless via la Headless Platform JavaFX 26
+/// (glass.platform=Headless), sans fenêtre ni serveur d'affichage, localement comme en CI.
 @ExtendWith(ApplicationExtension.class)
 class AppTest {
 
