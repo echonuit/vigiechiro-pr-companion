@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
@@ -31,10 +32,13 @@
   </top>
 
   <center>
-    <VBox fx:id="zoneAccueil" styleClass="zone-accueil" alignment="CENTER" spacing="12.0">
+    <VBox fx:id="zoneAccueil" styleClass="zone-accueil" alignment="CENTER" spacing="20.0">
       <Label styleClass="titre-accueil" text="Bienvenue dans VigieChiro PR Companion"/>
       <Label styleClass="sous-titre-accueil"
-             text="Sélectionnez une activité pour traiter un Point Relais."/>
+             text="Sélectionnez une activité pour traiter une nuit d'enregistrement (Passive Recorder)."/>
+      <!-- Cartes d'activités peuplées par MainController à partir des ActiviteAccueil des features. -->
+      <FlowPane fx:id="cartesActivites" styleClass="cartes-activites"
+                alignment="CENTER" hgap="16.0" vgap="16.0"/>
     </VBox>
   </center>
 
