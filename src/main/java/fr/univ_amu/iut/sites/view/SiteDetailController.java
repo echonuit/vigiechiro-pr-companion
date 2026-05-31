@@ -180,7 +180,7 @@ public class SiteDetailController {
       @Override
       protected void updateItem(String valeur, boolean vide) {
         super.updateItem(valeur, vide);
-        getStyleClass().removeIf(classe -> classe.startsWith("badge-"));
+        getStyleClass().removeIf(classe -> classe.startsWith("badge"));
         if (vide || valeur == null || getTableRow() == null || getTableRow().getItem() == null) {
           setText(null);
         } else {
