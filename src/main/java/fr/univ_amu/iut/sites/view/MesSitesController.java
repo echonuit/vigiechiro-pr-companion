@@ -20,6 +20,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -99,6 +100,15 @@ public class MesSitesController {
             separateur(),
             colonneActions(carte));
     boite.setOnMouseClicked(evenement -> navigation.ouvrirDetail(carte.site()));
+    // Accessibilité clavier : la carte (HBox, pas un Control) doit être atteignable au Tab et
+    // activable à Entrée/Espace, comme un bouton (opérabilité ISO 25010).
+    boite.setFocusTraversable(true);
+    boite.setOnKeyPressed(
+        evenement -> {
+          if (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE) {
+            navigation.ouvrirDetail(carte.site());
+          }
+        });
     return boite;
   }
 
@@ -142,7 +152,8 @@ public class MesSitesController {
     importer.setTooltip(new Tooltip("Disponible avec la feature « Importer une nuit »."));
     Label chevron = new Label("›");
     chevron.getStyleClass().add("carte-chevron");
-    chevron.setOnMouseClicked(evenement -> navigation.ouvrirDetail(carte.site()));
+    // Pas de handler propre sur le chevron : la carte entière est déjà cliquable et focusable.
+    // Un handler ici déclencherait une double navigation par propagation de l'événement au parent.
     return colonne(importer, chevron);
   }
 
