@@ -34,7 +34,7 @@
   <center>
     <VBox fx:id="zoneAccueil" styleClass="zone-accueil" alignment="CENTER" spacing="20.0">
       <Label styleClass="titre-accueil" text="Bienvenue dans VigieChiro PR Companion"/>
-      <Label styleClass="sous-titre-accueil"
+      <Label styleClass="sous-titre-accueil" wrapText="true" textAlignment="CENTER"
              text="Sélectionnez une activité pour traiter une nuit d'enregistrement (Passive Recorder)."/>
       <!-- Cartes d'activités peuplées par MainController à partir des ActiviteAccueil des features. -->
       <FlowPane fx:id="cartesActivites" styleClass="cartes-activites"
