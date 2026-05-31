@@ -15,6 +15,12 @@ open module tp1.javafx {
   requires transitive javafx.fxml;
   requires transitive javafx.media;
 
+  // javafx.swing (SwingFXUtils) + java.desktop (ImageIO / BufferedImage) : capture d'écran
+  // hors-écran de l'outil enseignant `commun.outils.ApercuFx`. À retirer en passe A2 si l'outil
+  // de capture est supprimé de la version étudiante.
+  requires javafx.swing;
+  requires java.desktop;
+
   // Persistance : API JDBC + driver SQLite (module automatique).
   requires java.sql;
   requires org.xerial.sqlitejdbc;
