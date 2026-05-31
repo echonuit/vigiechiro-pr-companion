@@ -108,6 +108,13 @@
             <artifactId>javafx-media</artifactId>
             <version>${javafx.version}</version>
         </dependency>
+        <!-- javafx-swing : SwingFXUtils pour la capture d'écran hors-écran (outil enseignant,
+             cf. commun.outils.ApercuFx). Version alignée sur le reste de JavaFX. -->
+        <dependency>
+            <groupId>org.openjfx</groupId>
+            <artifactId>javafx-swing</artifactId>
+            <version>${javafx.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.testfx</groupId>
             <artifactId>testfx-core</artifactId>
@@ -158,6 +165,19 @@
                 <includes>
                     <include>**/*</include>
                 </includes>
+            </resource>
+            <!--
+              Convention TP3 : les .fxml/.css de vue vivent À CÔTÉ de leur controller
+              dans src/main/java/.../view/, sans naviguer entre src/main/java et
+              src/main/resources. Tous les fichiers non-Java de src/main/java sont
+              copiés dans target/classes au même chemin de paquetage (les ressources
+              PARTAGÉES (db/migration, DarkTheme.css) restent dans src/main/resources).
+            -->
+            <resource>
+                <directory>src/main/java</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                </excludes>
             </resource>
         </resources>
 
