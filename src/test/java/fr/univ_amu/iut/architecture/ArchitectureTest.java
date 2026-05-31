@@ -114,12 +114,16 @@ class ArchitectureTest {
   void pas_de_dependance_inter_feature_vers_la_vue() {
     // Règle volontairement permissive sur model/dao/services (bibliotheque → validation.model,
     // cli → plusieurs services sont légitimes). Seuls view/viewmodel restent privés à leur feature.
+    // Exception : le socle `commun.view` (notamment le Navigateur) est PARTAGÉ - les features
+    // l'utilisent légitimement pour piloter la zone centrale du chrome (cf. Javadoc Navigateur).
     classes().should(neDependentPasDuViewDuneAutreFeature()).check(classes);
   }
 
   /// Condition : une classe ne doit dépendre d'aucune classe résidant dans un paquet `view` ou
   /// `viewmodel` appartenant à une **autre** feature (le `view`/`viewmodel` de
-  /// sa propre feature reste autorisé).
+  /// sa propre feature reste autorisé). Le socle `commun` est exclu : c'est la couche partagée
+  /// (le [fr.univ_amu.iut.commun.view.Navigateur] est explicitement destiné aux features), pas une
+  /// feature « voisine ».
   private static ArchCondition<JavaClass> neDependentPasDuViewDuneAutreFeature() {
     return new ArchCondition<>("ne pas dépendre du view/viewmodel d'une autre feature") {
       @Override
@@ -127,7 +131,10 @@ class ArchitectureTest {
         String featureOrigine = feature(origine);
         for (Dependency dependance : origine.getDirectDependenciesFromSelf()) {
           JavaClass cible = dependance.getTargetClass();
-          if (estVueOuViewModel(cible) && !feature(cible).equals(featureOrigine)) {
+          String featureCible = feature(cible);
+          if (estVueOuViewModel(cible)
+              && !featureCible.equals(featureOrigine)
+              && !featureCible.equals("commun")) {
             events.add(SimpleConditionEvent.violated(dependance, dependance.getDescription()));
           }
         }
