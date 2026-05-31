@@ -32,9 +32,9 @@ jobs:
         with:
           java-version: '25'
           distribution: 'zulu'
-          # Zulu standard ne contient pas JavaFX runtime ; jdk+fx ramène le
-          # JDK avec les natives openjfx nécessaires aux tests TestFX headless.
-          java-package: 'jdk+fx'
+          # JDK Zulu standard (sans JavaFX) : JavaFX 26 vient des dépendances
+          # Maven org.openjfx. La Headless Platform (glass.platform=Headless)
+          # est 100 % logicielle, donc pas besoin du runtime natif jdk+fx.
           cache: maven
 
       - name: Doc coherence linter
@@ -43,5 +43,6 @@ jobs:
           ./scripts/lint-doc-coherence.sh
 
       - name: PMD quality-gate (fail on violation)
-        # AppTest (TestFX) nécessite un display X11 ; xvfb-run en simule un.
-        run: xvfb-run --auto-servernum ./mvnw -B -Pquality-gate verify
+        # AppTest (TestFX) tourne en headless via la Headless Platform JavaFX 26
+        # (glass.platform=Headless) : aucun display X11 requis, plus besoin de xvfb.
+        run: ./mvnw -B -Pquality-gate verify

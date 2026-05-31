@@ -33,18 +33,19 @@ jobs:
         with:
           java-version: '25'
           distribution: 'zulu'
-          # Zulu standard ne contient pas JavaFX runtime ; jdk+fx ramène le
-          # JDK avec les natives openjfx nécessaires aux tests TestFX headless.
-          java-package: 'jdk+fx'
+          # JDK Zulu standard (sans JavaFX) : JavaFX 26 vient des dépendances
+          # Maven org.openjfx. La Headless Platform (glass.platform=Headless)
+          # est 100 % logicielle, donc pas besoin du runtime natif jdk+fx.
           cache: maven
           check-latest: false
 
       - name: Generate student version
-        # Le script lance des tests en interne (vérif compilation/tests) qui
-        # exigent un display X11 ; xvfb-run en simule un.
+        # Le script lance des tests en interne (vérif compilation/tests). Ils
+        # tournent en headless via la Headless Platform JavaFX 26
+        # (glass.platform=Headless) : aucun display X11 requis, plus besoin de xvfb.
         run: |
           chmod +x ./scripts/generate-student.sh
-          xvfb-run --auto-servernum ./scripts/generate-student.sh --apply .
+          ./scripts/generate-student.sh --apply .
 
       - name: Publish to main (orphan, force-push)
         run: |

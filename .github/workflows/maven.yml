@@ -14,17 +14,18 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up JDK 25 with JavaFX
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'zulu'
-          # Zulu standard ne contient pas JavaFX runtime ; jdk+fx ramène le
-          # JDK avec les natives openjfx (libGL, libGTK...) nécessaires aux
-          # tests TestFX headless.
-          java-package: 'jdk+fx'
+          # JDK Zulu standard (sans JavaFX) : JavaFX 26 vient des dépendances
+          # Maven org.openjfx. La Headless Platform (glass.platform=Headless)
+          # est 100 % logicielle, donc pas besoin du runtime natif jdk+fx.
           cache: maven
 
       - name: Run tests
-        # JavaFX/TestFX nécessite un display X11 ; xvfb-run en simule un.
-        run: xvfb-run --auto-servernum ./mvnw -B verify --file pom.xml
+        # Tests UI en headless via la Headless Platform JavaFX 26
+        # (glass.platform=Headless, cf. pom.xml) : aucun display X11 requis,
+        # plus besoin de xvfb.
+        run: ./mvnw -B verify --file pom.xml
