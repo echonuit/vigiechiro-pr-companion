@@ -1,0 +1,158 @@
+// --solution-only--
+package fr.univ_amu.iut.importation.outils;
+
+import com.google.inject.Guice;
+import com.google.inject.Injector;
+import com.google.inject.util.Modules;
+import fr.univ_amu.iut.commun.di.CommunModule;
+import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.Utilisateur;
+import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.importation.di.ImportationModule;
+import fr.univ_amu.iut.importation.view.ImportationController;
+import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.sites.di.SitesModule;
+import fr.univ_amu.iut.sites.model.ServiceSites;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+
+/// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+///
+/// Capture l'assistant M-Import en PNG, pour le comparer a la maquette du brief. Pour montrer le
+/// « cas standard » (sections inspection + rattachement remplies, et non l'ecran vide), on pilote
+/// directement le [ImportationViewModel] :
+///
+/// 1. base SQLite temporaire seedee (un utilisateur, un site avec un point) + un dossier
+///    d'echantillon (journal LogPR, releve climatique, deux WAV) ;
+/// 2. injecteur Guice minimal (socle + sites + passage + importation) avec une [HorlogeFigee] pour
+///    une annee de passage deterministe ;
+/// 3. la vue est chargee avec une `controllerFactory` qui injecte un VM connu, qu'on pilote ensuite
+///    (choix du dossier -> inspection -> selection site/point) avant le rendu hors-ecran par
+///    [ApercuFx].
+///
+/// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
+public final class CaptureImport {
+
+  private static final String ID_UTILISATEUR = "demo-enseignant";
+  private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 20);
+  private static final String IMPORT_FXML = "/fr/univ_amu/iut/importation/view/Importation.fxml";
+
+  private static final String LOG =
+      "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
+          + " CPU 600000000, T4.1\n"
+          + "22/04/26 - 16:02:21 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
+          + " les 600s\n"
+          + "22/04/26 - 16:02:21 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
+          + " 8-120kHz\n";
+
+  private CaptureImport() {}
+
+  public static void main(String[] args) throws InterruptedException {
+    CountDownLatch fini = new CountDownLatch(1);
+    AtomicReference<Throwable> erreur = new AtomicReference<>();
+    Platform.startup(
+        () -> {
+          try {
+            capturer();
+          } catch (RuntimeException | IOException probleme) {
+            erreur.set(probleme);
+          } finally {
+            fini.countDown();
+          }
+        });
+    fini.await();
+    Platform.exit();
+    Throwable probleme = erreur.get();
+    if (probleme != null) {
+      probleme.printStackTrace();
+      System.exit(1);
+    }
+    System.exit(0);
+  }
+
+  private static void capturer() throws IOException {
+    Path workspace = Files.createTempDirectory("vc-capture-import");
+    System.setProperty("vigiechiro.workspace", workspace.toString());
+    Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
+
+    Injector injecteur = creerInjecteur();
+    injecteur.getInstance(MigrationSchema.class).migrer();
+    seeder(injecteur);
+    Path dossierSd = creerDossierEchantillon();
+
+    // VM connu, injecte dans le controller via une controllerFactory dediee, puis piloté pour
+    // remplir l'assistant comme le « cas standard » de la maquette.
+    ImportationViewModel vm = injecteur.getInstance(ImportationViewModel.class);
+    FXMLLoader loader = new FXMLLoader(CaptureImport.class.getResource(IMPORT_FXML));
+    loader.setControllerFactory(
+        type ->
+            type == ImportationController.class
+                ? new ImportationController(vm)
+                : injecteur.getInstance(type));
+    Parent vue = loader.load();
+
+    vm.dossierSourceProperty().set(dossierSd);
+    vm.inspecter();
+    if (!vm.sites().isEmpty()) {
+      vm.siteSelectionneProperty().set(vm.sites().get(0));
+    }
+    if (!vm.points().isEmpty()) {
+      vm.pointSelectionneProperty().set(vm.points().get(0));
+    }
+
+    Path fichier = sortie.resolve("apercu-import-assistant.png");
+    ApercuFx.enregistrerPng(new Scene(vue, 1100, 760), fichier);
+    System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+  }
+
+  private static Injector creerInjecteur() {
+    return Guice.createInjector(
+        Modules.override(
+                new CommunModule(),
+                new PersistenceModule(),
+                new SitesModule(),
+                new PassageModule(),
+                new ImportationModule())
+            .with(liaison -> liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE))));
+  }
+
+  private static void seeder(Injector injecteur) {
+    SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+    new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
+    ServiceSites service = injecteur.getInstance(ServiceSites.class);
+    var site =
+        service.creerSite(
+            "640380",
+            "Etang de la Tuiliere",
+            Protocole.STANDARD,
+            "Aix-en-Provence",
+            ID_UTILISATEUR);
+    service.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, "Pres du grand chene");
+  }
+
+  private static Path creerDossierEchantillon() throws IOException {
+    Path sd = Files.createTempDirectory("vc-sd-demo");
+    Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+    Files.writeString(
+        sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+    Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");
+    Files.writeString(sd.resolve("PaRecPR1925492_20260422_204326.wav"), "wav2");
+    return sd;
+  }
+}
