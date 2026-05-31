@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.JsonSimple;
 import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;

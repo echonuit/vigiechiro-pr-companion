@@ -1,4 +1,4 @@
-package fr.univ_amu.iut.importation.model;
+package fr.univ_amu.iut.commun.model;
 
 import java.util.List;
 import java.util.Map;
@@ -7,17 +7,18 @@ import java.util.Map;
  * Sérialisation JSON minimale, sans dépendance externe (le module ne {@code requires} aucune
  * bibliothèque JSON, et {@code pom.xml}/{@code module-info.java} sont gelés).
  *
- * <p>Suffit aux colonnes {@code TEXT} JSON du schéma alimentées à l'import : {@code
- * passage.acquisition_params}, {@code sensor_log.parsed_events} et {@code
- * sensor_log.detected_anomalies}. Les méthodes préservent un ordre d'insertion stable ({@link
- * java.util.LinkedHashMap}) pour rester <b>déterministes</b> (cohérent avec R11).
+ * <p>Utilitaire <b>partagé</b> (paquet {@code commun.model}) : l'import l'utilise pour alimenter
+ * les colonnes {@code TEXT} JSON du schéma ({@code passage.acquisition_params}, {@code
+ * sensor_log.parsed_events}, {@code sensor_log.detected_anomalies}) et le diagnostic doit pouvoir
+ * relire ces colonnes <b>avec le même format</b>. Les méthodes préservent un ordre d'insertion
+ * stable ({@link java.util.LinkedHashMap}) pour rester <b>déterministes</b> (cohérent avec R11).
  */
-final class JsonSimple {
+public final class JsonSimple {
 
   private JsonSimple() {}
 
   /** Échappe une chaîne pour l'insérer entre guillemets dans du JSON. */
-  static String echapper(String valeur) {
+  public static String echapper(String valeur) {
     StringBuilder sb = new StringBuilder(valeur.length() + 2);
     for (int i = 0; i < valeur.length(); i++) {
       char c = valeur.charAt(i);
@@ -40,7 +41,7 @@ final class JsonSimple {
   }
 
   /** Tableau JSON de chaînes : {@code ["a","b"]}. */
-  static String tableau(List<String> valeurs) {
+  public static String tableau(List<String> valeurs) {
     StringBuilder sb = new StringBuilder("[");
     for (int i = 0; i < valeurs.size(); i++) {
       if (i > 0) {
@@ -56,7 +57,7 @@ final class JsonSimple {
    * clés sont émises dans l'ordre d'itération de la {@code Map} fournie (utiliser une {@link
    * java.util.LinkedHashMap} pour un rendu déterministe).
    */
-  static String objet(Map<String, String> champs) {
+  public static String objet(Map<String, String> champs) {
     StringBuilder sb = new StringBuilder("{");
     boolean premier = true;
     for (Map.Entry<String, String> e : champs.entrySet()) {

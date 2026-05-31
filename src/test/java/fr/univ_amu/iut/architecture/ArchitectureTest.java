@@ -1,19 +1,29 @@
 package fr.univ_amu.iut.architecture;
 
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
+import com.tngtech.archunit.core.domain.Dependency;
+import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaClasses;
 import com.tngtech.archunit.core.importer.ClassFileImporter;
 import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.lang.ArchCondition;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /**
- * Règles d'architecture (ArchUnit) garanties dès la fondation. Les règles UI (vue ne touche pas
- * JDBC, viewmodel sans JavaFX scene/fxml, point d'extension Protocole) seront ajoutées avec les
- * features correspondantes.
+ * Règles d'architecture (ArchUnit) garanties dès la fondation. Les règles UI restantes (vue ne
+ * touche pas JDBC, viewmodel sans JavaFX scene/fxml, point d'extension Protocole) seront ajoutées
+ * avec les features correspondantes.
+ *
+ * <p>Dépendances inter-features : une feature PEUT dépendre du paquet {@code model} d'une autre
+ * feature (entités, {@code model.dao}, services métier), mais JAMAIS de son {@code view} ni de son
+ * {@code viewmodel}. Le graphe de slices {@code fr.univ_amu.iut.(*)} reste par ailleurs sans cycle.
  *
  * <p>Écrit avec l'API « core » d'ArchUnit ({@link ClassFileImporter} + {@code @Test}) plutôt
  * qu'avec {@code @AnalyzeClasses}/{@code @ArchTest} : c'est la convention du projet (cf.
@@ -71,5 +81,55 @@ class ArchitectureTest {
         .should()
         .beFreeOfCycles()
         .check(horsRacineDeComposition);
+  }
+
+  @Test
+  @DisplayName("Une feature ne dépend pas du view ni du viewmodel d'une AUTRE feature")
+  void pas_de_dependance_inter_feature_vers_la_vue() {
+    // Règle volontairement permissive sur model/dao/services (bibliotheque → validation.model,
+    // cli → plusieurs services sont légitimes). Seuls view/viewmodel restent privés à leur feature.
+    classes().should(neDependentPasDuViewDuneAutreFeature()).check(classes);
+  }
+
+  /**
+   * Condition : une classe ne doit dépendre d'aucune classe résidant dans un paquet {@code view} ou
+   * {@code viewmodel} appartenant à une <b>autre</b> feature (le {@code view}/{@code viewmodel} de
+   * sa propre feature reste autorisé).
+   */
+  private static ArchCondition<JavaClass> neDependentPasDuViewDuneAutreFeature() {
+    return new ArchCondition<>("ne pas dépendre du view/viewmodel d'une autre feature") {
+      @Override
+      public void check(JavaClass origine, ConditionEvents events) {
+        String featureOrigine = feature(origine);
+        for (Dependency dependance : origine.getDirectDependenciesFromSelf()) {
+          JavaClass cible = dependance.getTargetClass();
+          if (estVueOuViewModel(cible) && !feature(cible).equals(featureOrigine)) {
+            events.add(SimpleConditionEvent.violated(dependance, dependance.getDescription()));
+          }
+        }
+      }
+    };
+  }
+
+  /** Vrai si un segment du paquet de {@code classe} est {@code view} ou {@code viewmodel}. */
+  private static boolean estVueOuViewModel(JavaClass classe) {
+    for (String segment : classe.getPackageName().split("\\.")) {
+      if (segment.equals("view") || segment.equals("viewmodel")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Nom de la feature : segment juste après {@code fr.univ_amu.iut.} (ex. {@code sites}). */
+  private static String feature(JavaClass classe) {
+    String prefixe = "fr.univ_amu.iut.";
+    String paquet = classe.getPackageName();
+    if (!paquet.startsWith(prefixe)) {
+      return "";
+    }
+    String reste = paquet.substring(prefixe.length());
+    int point = reste.indexOf('.');
+    return point < 0 ? reste : reste.substring(0, point);
   }
 }
