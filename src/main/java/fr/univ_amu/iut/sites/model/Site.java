@@ -10,7 +10,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 /// par SQLite.
 ///
 /// @param id clé technique, `null` avant insertion
-/// @param numeroCarre numéro de carré (6 chiffres, R1) — unique par utilisateur
+/// @param numeroCarre numéro de carré (6 chiffres, R1) - unique par utilisateur
 /// @param nomConvivial nom convivial (optionnel)
 /// @param protocole protocole de suivi (R3/R4)
 /// @param commentaire commentaire libre (optionnel)

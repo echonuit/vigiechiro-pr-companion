@@ -48,7 +48,7 @@ public class ServiceSites {
 
   /// Crée un site de suivi (P1).
   ///
-  /// - R1 (dur) : le numéro de carré doit être valide (6 chiffres) — [ValidateurCarre].
+  /// - R1 (dur) : le numéro de carré doit être valide (6 chiffres), cf. [ValidateurCarre].
   /// - Protocole : `PointFixeStandard` par défaut si `null` (P1).
   /// - R5 (dur) : le carré doit être unique pour cet utilisateur.
   /// - Date de création : lue de l'[Horloge] (déterministe en test).
@@ -81,7 +81,7 @@ public class ServiceSites {
   /// Ajoute un point d'écoute à un site existant.
   ///
   /// - Le site doit exister.
-  /// - R2 (dur) : le code de point doit valider `[A-Z][0-9]` — [ValidateurCodePoint].
+  /// - R2 (dur) : le code de point doit valider `[A-Z][0-9]`, cf. [ValidateurCodePoint].
   /// - Unicité (dur) : le code doit être unique dans le site.
   ///
   /// @return le point inséré, avec son `id` auto-généré
@@ -146,7 +146,7 @@ public class ServiceSites {
     if (protocole == Protocole.STANDARD) {
       return ResultatVerification.de(
           Alerte.soft(
-              "Site PointFixeStandard : 2 passages attendus par an (R3) — passage 1 entre le"
+              "Site PointFixeStandard : 2 passages attendus par an (R3) - passage 1 entre le"
                   + " 15 juin et le 31 juillet, passage 2 entre le 15 août et le 30 septembre."
                   + " Rappel non bloquant."));
     }
