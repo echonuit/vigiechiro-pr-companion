@@ -16,9 +16,9 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Règles d'architecture (ArchUnit) garanties dès la fondation. Les règles UI restantes (vue ne
-/// touche pas JDBC, viewmodel sans JavaFX scene/fxml, point d'extension Protocole) seront ajoutées
-/// avec les features correspondantes.
+/// Règles d'architecture (ArchUnit) garanties dès la fondation, complétées par les règles de
+/// couches UI du socle MVVM (viewmodel sans JavaFX scene/fxml/stage, vue sans JDBC). Le point
+/// d'extension Protocole reste à verrouiller avec la feature correspondante.
 ///
 /// Dépendances inter-features : une feature PEUT dépendre du paquet `model` d'une autre
 /// feature (entités, `model.dao`, services métier), mais JAMAIS de son `view` ni de son
@@ -60,6 +60,34 @@ class ArchitectureTest {
         .should()
         .dependOnClassesThat()
         .resideInAnyPackage("javafx..")
+        .check(classes);
+  }
+
+  @Test
+  @DisplayName("La couche viewmodel ne dépend pas de javafx.scene/fxml/stage (javafx.beans OK)")
+  void viewmodel_sans_javafx_ui() {
+    // Le ViewModel porte l'état observable (javafx.beans.property) mais reste agnostique de
+    // l'IHM : aucune dépendance vers les widgets (scene), le FXML ou les fenêtres (stage).
+    noClasses()
+        .that()
+        .resideInAPackage("..viewmodel..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("javafx.scene..", "javafx.fxml..", "javafx.stage..")
+        .check(classes);
+  }
+
+  @Test
+  @DisplayName("La couche view ne touche jamais JDBC (ni model.dao ni java.sql)")
+  void view_sans_jdbc() {
+    // L'UI passe toujours par les ViewModels / services : elle ne dialogue jamais en direct
+    // avec la couche d'accès aux données ni avec l'API JDBC.
+    noClasses()
+        .that()
+        .resideInAPackage("..view..")
+        .should()
+        .dependOnClassesThat()
+        .resideInAnyPackage("..model.dao..", "java.sql..")
         .check(classes);
   }
 
