@@ -108,6 +108,8 @@ public class ServiceSites {
   /// Met à jour un point d'écoute existant (édition depuis la modale).
   ///
   /// - R2 (dur) : le code doit valider `[A-Z][0-9]`, cf. [ValidateurCodePoint].
+  /// - Intégrité (dur) : le point doit exister et appartenir au site fourni (on refuse un couple
+  ///   `idPoint`/`idSite` incohérent qui déplacerait silencieusement un point d'un site à l'autre).
   /// - Unicité (dur) : le code doit rester unique dans le site, **en excluant le point courant**
   ///   (un point conserve son propre code). Sans ce contrôle, viser un code déjà pris ferait
   ///   remonter la contrainte SQL `UNIQUE(site_id, code)` en erreur technique plutôt qu'un refus
@@ -115,7 +117,8 @@ public class ServiceSites {
   ///
   /// @return le point mis à jour
   /// @throws IllegalArgumentException si le code est mal formé (R2)
-  /// @throws RegleMetierException si le code est déjà pris par un AUTRE point du site
+  /// @throws RegleMetierException si le point est introuvable, n'appartient pas au site, ou si le
+  ///     code est déjà pris par un AUTRE point du site
   public PointDEcoute modifierPoint(
       Long idPoint,
       Long idSite,
@@ -124,6 +127,14 @@ public class ServiceSites {
       Double longitude,
       String description) {
     ValidateurCodePoint.exigerValide(code); // R2
+    PointDEcoute existant =
+        pointDao
+            .findById(idPoint)
+            .orElseThrow(() -> new RegleMetierException("Point introuvable : " + idPoint));
+    if (!existant.idSite().equals(idSite)) {
+      throw new RegleMetierException(
+          "Le point " + idPoint + " n'appartient pas au site " + idSite + ".");
+    }
     boolean codeDejaPris =
         pointDao.findBySite(idSite).stream()
             .anyMatch(p -> p.code().equals(code) && !p.id().equals(idPoint));

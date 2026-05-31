@@ -165,6 +165,75 @@ class ServiceSitesTest {
         .isInstanceOf(RegleMetierException.class);
   }
 
+  // --- Modification de point (R2, intégrité point/site, unicité hors soi) ---
+
+  @Test
+  @DisplayName("Modifier un point met à jour code et coordonnées")
+  void modifier_point_valide() {
+    Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+    PointDEcoute point = service.ajouterPoint(site.id(), "A1", null, null, "Avant");
+
+    service.modifierPoint(point.id(), site.id(), "B2", 43.5, 5.4, "Après");
+
+    assertThat(pointDao.findById(point.id()))
+        .get()
+        .satisfies(
+            p -> {
+              assertThat(p.code()).isEqualTo("B2");
+              assertThat(p.latitude()).isEqualTo(43.5);
+              assertThat(p.description()).isEqualTo("Après");
+            });
+  }
+
+  @Test
+  @DisplayName("Conserver son propre code en modification est autorisé (pas de faux conflit)")
+  void modifier_point_conserve_son_code() {
+    Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+    PointDEcoute point = service.ajouterPoint(site.id(), "A1", null, null, "Avant");
+
+    PointDEcoute maj = service.modifierPoint(point.id(), site.id(), "A1", null, null, "Après");
+
+    assertThat(maj.code()).isEqualTo("A1");
+    assertThat(pointDao.findById(point.id()))
+        .get()
+        .extracting(PointDEcoute::description)
+        .isEqualTo("Après");
+  }
+
+  @Test
+  @DisplayName("Modifier vers le code d'un AUTRE point du site est refusé (unicité)")
+  void modifier_point_code_duplique_refuse() {
+    Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+    service.ajouterPoint(site.id(), "A1", null, null, null);
+    PointDEcoute b1 = service.ajouterPoint(site.id(), "B1", null, null, null);
+
+    assertThatThrownBy(() -> service.modifierPoint(b1.id(), site.id(), "A1", null, null, null))
+        .isInstanceOf(RegleMetierException.class)
+        .hasMessageContaining("A1");
+  }
+
+  @Test
+  @DisplayName("Modifier un point introuvable est refusé")
+  void modifier_point_introuvable() {
+    Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+
+    assertThatThrownBy(() -> service.modifierPoint(9999L, site.id(), "A1", null, null, null))
+        .isInstanceOf(RegleMetierException.class)
+        .hasMessageContaining("introuvable");
+  }
+
+  @Test
+  @DisplayName("Modifier un point avec un site incohérent est refusé (intégrité)")
+  void modifier_point_autre_site_refuse() {
+    Site site1 = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+    Site site2 = service.creerSite("640381", null, Protocole.STANDARD, null, ID_USER);
+    PointDEcoute point = service.ajouterPoint(site1.id(), "A1", null, null, null);
+
+    assertThatThrownBy(() -> service.modifierPoint(point.id(), site2.id(), "A1", null, null, null))
+        .isInstanceOf(RegleMetierException.class)
+        .hasMessageContaining("n'appartient pas");
+  }
+
   // --- Suppression de site (refus si passage rattaché) ---
 
   @Test
