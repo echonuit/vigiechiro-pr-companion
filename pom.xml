@@ -20,7 +20,7 @@
         <maven.surefire.plugin.version>3.5.5</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
-        <spotless.maven.plugin.version>3.4.0</spotless.maven.plugin.version>
+        <spotless.maven.plugin.version>3.6.0</spotless.maven.plugin.version>
         <google.java.format.version>1.35.0</google.java.format.version>
         <git.build.hook.plugin.version>3.6.0</git.build.hook.plugin.version>
         <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
