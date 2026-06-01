@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Passage - écran pivot d'un passage (détail). Cette tranche pose la coquille : fil d'Ariane
+  (affichage), bandeau d'identité et stepper de statut workflow. Les onglets (Vue d'ensemble,
+  Diagnostic, Validation Tadarida), les cartes d'action et le câblage « Vérifier » → M-Qualification
+  arrivent dans la tranche suivante. Pur câblage : tout est lié au PassageViewModel par
+  PassageController.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:id="racine"
+            fx:controller="fr.univ_amu.iut.passage.view.PassageController"
+            stylesheets="@passage.css"
+            styleClass="ecran-passage">
+
+  <top>
+    <VBox spacing="12.0" styleClass="entete">
+      <Label fx:id="lblFilAriane" styleClass="fil-ariane"/>
+      <Label fx:id="lblTitre" styleClass="titre-page"/>
+
+      <!-- Bandeau d'identité du passage -->
+      <HBox spacing="28.0" styleClass="bandeau">
+        <VBox spacing="2.0">
+          <Label text="DATE / PLAGE" styleClass="bandeau-label"/>
+          <Label fx:id="lblPlageHoraire" styleClass="bandeau-valeur"/>
+        </VBox>
+        <VBox spacing="2.0">
+          <Label text="ENREGISTREUR" styleClass="bandeau-label"/>
+          <Label fx:id="lblEnregistreur" styleClass="bandeau-valeur"/>
+        </VBox>
+        <VBox spacing="2.0">
+          <Label text="STATUT" styleClass="bandeau-label"/>
+          <Label fx:id="lblStatut" styleClass="bandeau-valeur"/>
+        </VBox>
+        <VBox spacing="2.0">
+          <Label text="VERDICT" styleClass="bandeau-label"/>
+          <Label fx:id="lblVerdict" styleClass="bandeau-valeur"/>
+        </VBox>
+      </HBox>
+
+      <!-- Stepper de statut workflow -->
+      <VBox spacing="4.0">
+        <Label text="Statut du workflow" styleClass="section-sous"/>
+        <HBox fx:id="stepper" spacing="8.0" styleClass="stepper"/>
+      </VBox>
+
+      <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
+    </VBox>
+  </top>
+
+  <center>
+    <!-- Onglets (Vue d'ensemble / Diagnostic / Validation) + actions : tranche suivante. -->
+    <VBox alignment="CENTER" styleClass="zone-centrale">
+      <Label text="Vue d'ensemble, diagnostic et validation : à la tranche suivante."
+             styleClass="section-sous"/>
+    </VBox>
+  </center>
+</BorderPane>
