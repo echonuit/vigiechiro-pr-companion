@@ -22,10 +22,9 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// Test d'intégration TestFX de la **façade** [NavigationQualification] : on boote le vrai
-// injecteur
-/// applicatif ([RacineInjecteur]) sur une base SQLite jetable, on charge le chrome, puis on appelle
-/// `ouvrir(idPassage)`. On vérifie que la vue M-Qualification se charge et s'affiche réellement via
+/// Test d'intégration TestFX de la **façade** [NavigationQualification] : démarre le vrai
+/// injecteur applicatif ([RacineInjecteur]) sur une base SQLite jetable, charge le chrome, puis
+/// appelle `ouvrir(idPassage)`. On vérifie que la vue M-Qualification se charge et s'affiche via
 /// Guice + le `Navigateur` du socle (chemin de ressource FXML, controllerFactory, publication),
 /// comme `ImportationViewTest` / `MesSitesViewTest` pour leurs façades.
 ///
