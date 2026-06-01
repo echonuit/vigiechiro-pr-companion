@@ -47,21 +47,18 @@ import javafx.scene.Scene;
 
 /// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
 ///
-/// Capture l'écran pivot M-Passage en PNG, pour le comparer à la maquette du brief. Pour montrer le
-/// « cas standard » de la maquette (passage vérifié, verdict OK, statistiques de nuit renseignées),
-/// on seede une nuit complète puis on charge la vue dans l'état correspondant :
+/// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, dans le « cas
+/// standard » : passage vérifié, verdict OK, statistiques de nuit renseignées.
 ///
-/// 1. base SQLite temporaire seedée : un utilisateur, un site/point, un passage `VERIFIE` (verdict
-///    `OK`, non encore déposé) et une session de **60 séquences** horodatées sur toute la nuit,
-// avec
-///    des volumes d'originaux et de séquences renseignés. Le site et le point d'écoute (cibles de
-///    clé étrangère) sont insérés en **SQL brut** : la feature `passage` ne doit pas dépendre de
-///    `sites` (règle ArchUnit `features_sans_cycle`, et `sites` dépend déjà de `passage`) ;
-/// 2. injecteur Guice (socle + passage) pour fabriquer le [ServicePassage] ;
-/// 3. la vue est chargée avec une `controllerFactory` qui injecte un [PassageViewModel] connu et
-// des
-///    contrats de navigation neutres (la capture ne navigue pas), puis on `ouvrirSur` le passage
-///    avant le rendu hors-écran par [ApercuFx].
+/// On seede une base SQLite temporaire (un utilisateur, un site/point, un passage `VERIFIE` non
+/// déposé, une session de 60 séquences avec volumes). On fabrique le [ServicePassage] via Guice
+/// (socle + passage), puis on charge `Passage.fxml` avec une `controllerFactory` qui injecte un
+/// [PassageViewModel] connu et des contrats de navigation neutres (la capture ne navigue pas).
+/// La vue est enfin rendue hors-écran par [ApercuFx].
+///
+/// Le site et le point (cibles de clé étrangère) sont insérés en SQL brut, sans les DAO de la
+/// feature `sites` : `passage` ne doit pas en dépendre (cycle ArchUnit `features_sans_cycle`, et
+/// `sites` dépend déjà de `passage`).
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CapturePassage {
