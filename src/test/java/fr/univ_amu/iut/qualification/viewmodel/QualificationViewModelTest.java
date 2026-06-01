@@ -9,7 +9,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit.Feu;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
@@ -20,10 +22,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Tests unitaires du noyau de [QualificationViewModel] (pré-check + verdict différé). Le
-/// [ServiceQualification] est mocké (Mockito) : on vérifie le mapping des 3 feux, l'activation du
-/// bouton selon le verdict choisi, l'enregistrement (état `ENREGISTRE`), l'avertissement R14 et la
-/// restitution d'un passage introuvable, sans base de données.
+/// Tests unitaires de [QualificationViewModel] (noyau verdict : pré-check + verdict différé +
+/// bandeau statut/verdict). Le [ServiceQualification] est mocké (Mockito) : aucune base de données.
+/// La liste de la sélection d'écoute est couverte par [SelectionEcouteViewModelTest].
 @ExtendWith(MockitoExtension.class)
 class QualificationViewModelTest {
 
@@ -37,11 +38,31 @@ class QualificationViewModelTest {
     viewModel = new QualificationViewModel(service);
   }
 
+  /// Stub du contexte lu par `ouvrirSur` après le pré-check : passage transformé, pas encore de
+  /// verdict persisté (le bandeau affiche donc `A_VERIFIER`).
+  private void stubContexte() {
+    when(service.chargerContexte(ID_PASSAGE))
+        .thenReturn(
+            new ContexteVerification(
+                "640380",
+                "A1",
+                2,
+                2026,
+                "2026-06-22",
+                "20:25:00",
+                "07:47:00",
+                20,
+                100.0,
+                StatutWorkflow.TRANSFORME,
+                null));
+  }
+
   @Test
-  @DisplayName("ouvrirSur mappe le pré-check en 3 feux + indicateur d'anomalie")
+  @DisplayName("ouvrirSur mappe le pré-check en 3 feux et amorce le bandeau verdict")
   void ouvrir_mappe_le_precheck() {
     when(service.precheck(ID_PASSAGE))
         .thenReturn(new PreCheckNuit.Diagnostic(Feu.VERT, Feu.ORANGE, Feu.ROUGE));
+    stubContexte();
 
     viewModel.ouvrirSur(ID_PASSAGE);
 
@@ -49,6 +70,8 @@ class QualificationViewModelTest {
     assertThat(viewModel.feuNombreProperty().get()).isEqualTo(Feu.ORANGE);
     assertThat(viewModel.feuRenommageProperty().get()).isEqualTo(Feu.ROUGE);
     assertThat(viewModel.preCheckAnomalieProperty().get()).isTrue();
+    assertThat(viewModel.statutProperty().get()).isEqualTo(StatutWorkflow.TRANSFORME);
+    assertThat(viewModel.verdictActuelProperty().get()).isEqualTo(Verdict.A_VERIFIER);
     assertThat(viewModel.messageProperty().get()).isEmpty();
   }
 
@@ -70,6 +93,7 @@ class QualificationViewModelTest {
   void enregistrer_ok() {
     when(service.precheck(ID_PASSAGE))
         .thenReturn(new PreCheckNuit.Diagnostic(Feu.VERT, Feu.VERT, Feu.VERT));
+    stubContexte();
     when(service.estAJeter(ID_PASSAGE)).thenReturn(false);
     viewModel.ouvrirSur(ID_PASSAGE);
     viewModel.commentaireProperty().set("Beaux contacts de pipistrelle.");
@@ -80,8 +104,9 @@ class QualificationViewModelTest {
 
     verify(service).enregistrerVerdict(ID_PASSAGE, Verdict.OK, "Beaux contacts de pipistrelle.");
     assertThat(viewModel.etatVerdictProperty().get()).isEqualTo(EtatVerdict.ENREGISTRE);
+    assertThat(viewModel.verdictActuelProperty().get()).isEqualTo(Verdict.OK);
+    assertThat(viewModel.statutProperty().get()).isEqualTo(StatutWorkflow.VERIFIE);
     assertThat(viewModel.avertissementAJeterProperty().get()).isEmpty();
-    assertThat(viewModel.messageProperty().get()).isEmpty();
   }
 
   @Test
@@ -89,6 +114,7 @@ class QualificationViewModelTest {
   void verdict_a_jeter_avertit() {
     when(service.precheck(ID_PASSAGE))
         .thenReturn(new PreCheckNuit.Diagnostic(Feu.VERT, Feu.VERT, Feu.VERT));
+    stubContexte();
     when(service.estAJeter(ID_PASSAGE)).thenReturn(true);
     viewModel.ouvrirSur(ID_PASSAGE);
     viewModel.choisirVerdict(Verdict.A_JETER);
@@ -104,6 +130,7 @@ class QualificationViewModelTest {
   void commentaire_vide_devient_null() {
     when(service.precheck(ID_PASSAGE))
         .thenReturn(new PreCheckNuit.Diagnostic(Feu.VERT, Feu.VERT, Feu.VERT));
+    stubContexte();
     when(service.estAJeter(ID_PASSAGE)).thenReturn(false);
     viewModel.ouvrirSur(ID_PASSAGE);
     viewModel.choisirVerdict(Verdict.DOUTEUX);

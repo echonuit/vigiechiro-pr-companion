@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.qualification.viewmodel;
 
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import java.util.Objects;
@@ -17,21 +19,21 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
-/// ViewModel de l'écran **M-Qualification** (vérifier l'enregistrement par échantillonnage, P3).
+/// ViewModel du **noyau verdict** de l'écran M-Qualification (vérifier l'enregistrement, P3).
 ///
-/// Cette première tranche porte le **noyau de décision** : le pré-check synthétique de la nuit (3
-/// feux consultatifs, R13, jamais bloquants) et le **verdict différé** (OK / douteux / à jeter)
-/// avec son commentaire, persisté en une fois via [ServiceQualification#enregistrerVerdict]. La
-/// liste de la sélection, l'écoute audio et la modale de personnalisation viendront ensuite.
+/// Porte le **pré-check** synthétique (3 feux consultatifs R13), le **verdict différé**
+/// (OK / douteux / à jeter, persisté en une fois) et le statut/verdict actuels du passage
+/// affichés dans le bandeau. La liste de la sélection d'écoute est portée par un VM dédié
+/// ([SelectionEcouteViewModel]) : le controller câble les deux sur le même `idPassage`.
 ///
-/// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seul `javafx.beans` est
-/// importé, jamais `javafx.scene`. Construit non-singleton (un VM frais par chargement FXML).
+/// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls `javafx.beans`
+/// sont importés, jamais `javafx.scene`. Construit non-singleton (un VM frais par FXML).
 public class QualificationViewModel {
 
   private final ServiceQualification service;
   private Long idPassage;
 
-  // Pré-check (etape 1) : 3 feux consultatifs + indicateur d'anomalie.
+  // Pré-check (étape 1) : 3 feux consultatifs + indicateur d'anomalie.
   private final ReadOnlyObjectWrapper<PreCheckNuit.Feu> feuCouverture =
       new ReadOnlyObjectWrapper<>(this, "feuCouverture");
   private final ReadOnlyObjectWrapper<PreCheckNuit.Feu> feuNombre =
@@ -41,7 +43,13 @@ public class QualificationViewModel {
   private final ReadOnlyBooleanWrapper preCheckAnomalie =
       new ReadOnlyBooleanWrapper(this, "preCheckAnomalie", false);
 
-  // Verdict differe (etape 3) : choix + commentaire, persiste en une fois.
+  // Statut/verdict persistés du passage (bandeau), mutés à l'enregistrement.
+  private final ReadOnlyObjectWrapper<Verdict> verdictActuel =
+      new ReadOnlyObjectWrapper<>(this, "verdictActuel", Verdict.A_VERIFIER);
+  private final ReadOnlyObjectWrapper<StatutWorkflow> statut =
+      new ReadOnlyObjectWrapper<>(this, "statut");
+
+  // Verdict différé (étape 3) : choix + commentaire, persiste en une fois.
   private final ObjectProperty<Verdict> verdictChoisi =
       new SimpleObjectProperty<>(this, "verdictChoisi");
   private final StringProperty commentaire = new SimpleStringProperty(this, "commentaire", "");
@@ -61,17 +69,17 @@ public class QualificationViewModel {
             verdictChoisi);
   }
 
-  /// Ouvre la vérification du passage `idPassage` et calcule le pré-check (3 feux). Appelée par la
-  /// navigation après le chargement du FXML. Un passage introuvable est restitué dans
-  /// [#messageProperty()] (consultatif), sans lever.
+  /// Ouvre la vérification du passage `idPassage` : pré-check (3 feux) et amorçage du bandeau
+  /// verdict (statut workflow + verdict déjà persisté). Appelée par la navigation après le
+  /// chargement du FXML. Une erreur (passage introuvable) est restituée dans [#messageProperty()]
+  /// sans lever.
   public void ouvrirSur(Long idPassage) {
     this.idPassage = idPassage;
     try {
-      PreCheckNuit.Diagnostic diagnostic = service.precheck(idPassage);
-      feuCouverture.set(diagnostic.couvertureHoraire());
-      feuNombre.set(diagnostic.nombreFichiers());
-      feuRenommage.set(diagnostic.coherenceRenommage());
-      preCheckAnomalie.set(diagnostic.presenteUneAnomalie());
+      appliquerPrecheck(service.precheck(idPassage));
+      ContexteVerification contexte = service.chargerContexte(idPassage);
+      statut.set(contexte.statut());
+      verdictActuel.set(contexte.verdict() == null ? Verdict.A_VERIFIER : contexte.verdict());
       message.set("");
     } catch (RuntimeException echec) {
       message.set(echec.getMessage());
@@ -92,6 +100,8 @@ public class QualificationViewModel {
     }
     try {
       service.enregistrerVerdict(idPassage, verdictChoisi.get(), commentaireOuNull());
+      verdictActuel.set(verdictChoisi.get());
+      statut.set(StatutWorkflow.VERIFIE);
       avertissementAJeter.set(
           service.estAJeter(idPassage)
               ? "⚠ Passage marqué « à jeter » : il sera exclu du prochain lot de dépôt (R14)."
@@ -101,6 +111,13 @@ public class QualificationViewModel {
     } catch (RuntimeException refus) {
       message.set(refus.getMessage());
     }
+  }
+
+  private void appliquerPrecheck(PreCheckNuit.Diagnostic diagnostic) {
+    feuCouverture.set(diagnostic.couvertureHoraire());
+    feuNombre.set(diagnostic.nombreFichiers());
+    feuRenommage.set(diagnostic.coherenceRenommage());
+    preCheckAnomalie.set(diagnostic.presenteUneAnomalie());
   }
 
   private String commentaireOuNull() {
@@ -127,6 +144,16 @@ public class QualificationViewModel {
   /// bloquant (R13).
   public ReadOnlyBooleanProperty preCheckAnomalieProperty() {
     return preCheckAnomalie.getReadOnlyProperty();
+  }
+
+  /// Verdict persisté du passage (`A_VERIFIER` tant qu'aucun verdict n'est enregistré).
+  public ReadOnlyObjectProperty<Verdict> verdictActuelProperty() {
+    return verdictActuel.getReadOnlyProperty();
+  }
+
+  /// Statut workflow courant du passage (`TRANSFORME` → `VERIFIE` après enregistrement).
+  public ReadOnlyObjectProperty<StatutWorkflow> statutProperty() {
+    return statut.getReadOnlyProperty();
   }
 
   /// Verdict choisi mais pas encore enregistré (sélection différée des boutons O / D / J).
