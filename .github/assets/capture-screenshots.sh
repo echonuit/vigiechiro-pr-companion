@@ -17,6 +17,7 @@
 #   apercu-sites-modale-point.png   modale d'edition d'un point d'ecoute
 #   apercu-import-assistant.png     M-Import (assistant « Importer une nuit », cas standard)
 #   apercu-qualification.png        M-Qualification (verification par echantillonnage, cas standard)
+#   apercu-passage.png              M-Passage (ecran pivot d'un passage verifie, cas standard)
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -28,6 +29,7 @@ MAINS=(
   "fr.univ_amu.iut.sites.outils.CaptureEcrans"
   "fr.univ_amu.iut.importation.outils.CaptureImport"
   "fr.univ_amu.iut.qualification.outils.CaptureQualification"
+  "fr.univ_amu.iut.passage.outils.CapturePassage"
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 
