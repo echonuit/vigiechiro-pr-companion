@@ -117,9 +117,8 @@ public class PassageController {
   /// [OuvrirVerification] (la feature `qualification` en fournit l'implémentation).
   @FXML
   private void verifier() {
-    if (idPassage != null) {
-      ouvrirVerification.ouvrir(idPassage);
-    }
+    // Le bouton n'est actif qu'après ouvrirSur (verificationDisponible) : idPassage est défini.
+    ouvrirVerification.ouvrir(idPassage);
   }
 
   private void majStepper() {

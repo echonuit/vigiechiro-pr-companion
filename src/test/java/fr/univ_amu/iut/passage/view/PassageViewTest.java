@@ -111,7 +111,7 @@ class PassageViewTest {
   @DisplayName("« Vérifier » ouvre la qualification du passage courant (contrat socle)")
   void verifier_ouvre_la_qualification(FxRobot robot) {
     Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
-    assertThat(verifier.isDisabled()).isFalse(); // nuit vérifiée -> vérification disponible
+    assertThat(verifier.isDisabled()).isFalse(); // statut ≥ transformé → vérification disponible
 
     robot.interact(verifier::fire);
 
