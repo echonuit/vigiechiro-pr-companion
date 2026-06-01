@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.qualification.view;
 
 import com.google.inject.Inject;
+import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
@@ -51,6 +52,7 @@ public class QualificationController {
   @FXML private TableColumn<SequenceEnSelection, String> colEcoute;
   @FXML private Label lblSeqNumero;
   @FXML private Label lblSeqMeta;
+  @FXML private AudioView audioView;
   @FXML private Button boutonOk;
   @FXML private Button boutonDouteux;
   @FXML private Button boutonAJeter;
@@ -127,6 +129,26 @@ public class QualificationController {
             Bindings.createStringBinding(
                 () -> metaSequence(selectionVm.sequenceCouranteProperty().get()),
                 selectionVm.sequenceCouranteProperty()));
+
+    // Vue audio (composant fourni) : la source suit la séquence courante ; le marquage écouté (R10)
+    // se déclenche au début de la lecture ; le clip est libéré quand la vue quitte la scène.
+    audioView.audioFileProperty().bind(selectionVm.cheminSequenceCouranteProperty());
+    audioView
+        .playingProperty()
+        .addListener(
+            (obs, avant, lecture) -> {
+              if (Boolean.TRUE.equals(lecture)) {
+                selectionVm.marquerCouranteEcoutee();
+              }
+            });
+    audioView
+        .sceneProperty()
+        .addListener(
+            (obs, avant, scene) -> {
+              if (scene == null) {
+                audioView.dispose();
+              }
+            });
 
     // Verdict différé : surbrillance du bouton choisi + liaison du commentaire.
     marquerChoisi(boutonOk, Verdict.OK);

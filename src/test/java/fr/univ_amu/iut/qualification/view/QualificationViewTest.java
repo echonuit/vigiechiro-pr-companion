@@ -9,6 +9,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
@@ -138,10 +139,35 @@ class QualificationViewTest {
   }
 
   @Test
-  @DisplayName("Les boutons de verdict reçoivent bien leurs classes CSS (séparateur espace)")
+  @DisplayName("Les boutons de verdict reçoivent bien leurs classes CSS (liste FXML à virgules)")
   void boutons_verdict_recoivent_leurs_classes_css(FxRobot robot) {
     Button ok = robot.lookup("#boutonOk").queryAs(Button.class);
 
     assertThat(ok.getStyleClass()).contains("verdict", "verdict-ok");
+  }
+
+  @Test
+  @DisplayName("La vue audio suit le fichier de la séquence sélectionnée")
+  void audio_suit_la_sequence_selectionnee(FxRobot robot) {
+    TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+    AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+
+    robot.interact(() -> table.getSelectionModel().select(0));
+
+    assertThat(audio.getAudioFile()).isNotNull();
+    assertThat(audio.getAudioFile().toString()).endsWith("seq0.wav");
+  }
+
+  @Test
+  @DisplayName("Le début de lecture marque la séquence courante comme écoutée (R10)")
+  void debut_de_lecture_marque_ecoutee(FxRobot robot) {
+    TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+    AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+    robot.interact(() -> table.getSelectionModel().select(0));
+
+    robot.interact(() -> audio.setPlaying(true));
+
+    SequenceEnSelection premiere = (SequenceEnSelection) table.getItems().get(0);
+    assertThat(premiere.ecoutee()).isTrue();
   }
 }

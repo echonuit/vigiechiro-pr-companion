@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import fr.nedjar.vigiechiro.audio.AudioView?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
@@ -113,11 +114,11 @@
           </VBox>
         </VBox>
 
-        <!-- Emplacement réservé pour la vue audio (sonogramme + spectrogramme + player), PR5 -->
-        <VBox spacing="4.0" styleClass="audio-placeholder" alignment="CENTER">
-          <Label text="🎵 Vue audio (sonogramme + spectrogramme)" styleClass="audio-placeholder-titre"/>
-          <Label text="Le composant d'écoute sera branché à l'étape suivante."
-                 styleClass="audio-placeholder-sous" wrapText="true"/>
+        <!-- Vue audio : sonogramme + spectrogramme + player. Composant fourni (boîte noire) ;
+             la source suit la séquence courante, le marquage R10 se fait au début de lecture. -->
+        <VBox spacing="4.0" VBox.vgrow="ALWAYS">
+          <Label text="🎵 Vue audio (sonogramme + spectrogramme)" styleClass="section-titre"/>
+          <AudioView fx:id="audioView" VBox.vgrow="ALWAYS"/>
         </VBox>
 
         <VBox spacing="6.0">
