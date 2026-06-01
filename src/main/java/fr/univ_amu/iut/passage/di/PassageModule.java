@@ -15,6 +15,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 
 /// Module Guice de la feature `passage` : fournit ses DAO à partir de la [SourceDeDonnees]
 /// (singleton fourni par `CommunModule`).
@@ -95,5 +96,12 @@ public class PassageModule extends AbstractModule {
       SessionDao sessionDao,
       SequenceDao sequenceDao) {
     return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao);
+  }
+
+  /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les
+  /// autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
+  @Provides
+  PassageViewModel fournirPassageViewModel(ServicePassage service) {
+    return new PassageViewModel(service);
   }
 }
