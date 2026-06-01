@@ -13,6 +13,8 @@ import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
+import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
+import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 
@@ -74,5 +76,20 @@ public class QualificationModule extends AbstractModule {
         generateur,
         preCheck,
         uniteDeTravail);
+  }
+
+  /// ViewModel du noyau verdict de M-Qualification. **Non-singleton** (un VM frais par chargement
+  /// FXML, comme les autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
+  @Provides
+  QualificationViewModel fournirQualificationViewModel(ServiceQualification service) {
+    return new QualificationViewModel(service);
+  }
+
+  /// ViewModel de la sélection d'écoute de M-Qualification. **Non-singleton** (idem). Câblé au même
+  /// [ServiceQualification] que le noyau verdict : le controller ouvre les deux VM sur le même
+  /// passage.
+  @Provides
+  SelectionEcouteViewModel fournirSelectionEcouteViewModel(ServiceQualification service) {
+    return new SelectionEcouteViewModel(service);
   }
 }
