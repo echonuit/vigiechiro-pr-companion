@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -143,5 +144,16 @@ class PassageViewModelTest {
     assertThat(viewModel.messageProperty().get()).contains("introuvable");
     assertThat(viewModel.statutProperty().get()).isNull();
     assertThat(viewModel.etapes()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("supprimer délègue au service avec l'identifiant du passage courant")
+  void supprimer_delegue_au_service() {
+    when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));
+    viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+    viewModel.supprimer();
+
+    verify(service).supprimer(ID_PASSAGE);
   }
 }

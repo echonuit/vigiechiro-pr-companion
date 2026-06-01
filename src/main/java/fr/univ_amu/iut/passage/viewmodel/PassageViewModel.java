@@ -57,6 +57,9 @@ public class PassageViewModel {
       new ReadOnlyBooleanWrapper(this, "validationVerrouillee", true);
   private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
+  /// Identifiant du passage affiché, mémorisé pour les actions (ex. suppression).
+  private Long idPassage;
+
   public PassageViewModel(ServicePassage service) {
     this.service = Objects.requireNonNull(service, "service");
   }
@@ -64,6 +67,7 @@ public class PassageViewModel {
   /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
   /// Une erreur (passage introuvable) est restituée dans [#messageProperty()] sans lever.
   public void ouvrirSur(Long idPassage, ContexteSite contexte) {
+    this.idPassage = idPassage;
     reinitialiser();
     try {
       appliquer(service.detailPassage(idPassage), contexte);
@@ -72,6 +76,13 @@ public class PassageViewModel {
       reinitialiser();
       message.set(echec.getMessage());
     }
+  }
+
+  /// Supprime le passage courant (action « Supprimer » de M-Passage). Délègue à
+  /// [ServicePassage#supprimer] ; la [fr.univ_amu.iut.commun.model.RegleMetierException] d'un
+  /// passage déposé remonte à la vue, qui l'affiche (même patron que la suppression d'un site).
+  public void supprimer() {
+    service.supprimer(idPassage);
   }
 
   private void appliquer(DetailPassage detail, ContexteSite contexte) {
