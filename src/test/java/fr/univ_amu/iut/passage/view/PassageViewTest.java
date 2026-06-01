@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -40,6 +41,7 @@ class PassageViewTest {
   private static final long ID_PASSAGE = 42L;
 
   private final AtomicReference<Long> verificationOuverte = new AtomicReference<>();
+  private final AtomicReference<Long> diagnosticOuvert = new AtomicReference<>();
 
   @Start
   void start(Stage stage) throws Exception {
@@ -71,6 +73,11 @@ class PassageViewTest {
               @Provides
               OuvrirVerification ouvrirVerification() {
                 return verificationOuverte::set;
+              }
+
+              @Provides
+              OuvrirDiagnostic ouvrirDiagnostic() {
+                return diagnosticOuvert::set;
               }
             });
     FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
@@ -116,5 +123,17 @@ class PassageViewTest {
     robot.interact(verifier::fire);
 
     assertThat(verificationOuverte.get()).isEqualTo(ID_PASSAGE);
+  }
+
+  @Test
+  @DisplayName("« Diagnostic matériel » ouvre M-Diagnostic du passage courant (contrat socle)")
+  void diagnostic_ouvre_le_diagnostic(FxRobot robot) {
+    Button diagnostic = robot.lookup("#boutonDiagnostic").queryAs(Button.class);
+    assertThat(diagnostic.isDisabled())
+        .isFalse(); // toujours disponible (relevé climatique + journal)
+
+    robot.interact(diagnostic::fire);
+
+    assertThat(diagnosticOuvert.get()).isEqualTo(ID_PASSAGE);
   }
 }

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
@@ -20,14 +21,16 @@ import javafx.scene.layout.HBox;
 /// Controller de l'écran pivot **M-Passage** (`Passage.fxml`) : fil d'Ariane (affichage), bandeau
 /// d'identité, stepper de statut et onglet « Vue d'ensemble » (stats + actions rapides).
 ///
-/// Pur câblage (patron CM4) : lie les contrôles aux propriétés du [PassageViewModel]. Le bouton
-/// « Vérifier » ouvre M-Qualification via le contrat socle [OuvrirVerification] (sans dépendre de
-/// la feature `qualification`). Aucun accès base de données ni logique métier ici (règle ArchUnit
-/// `view_sans_jdbc`). Diagnostic et validation Tadarida : tranches suivantes.
+/// Pur câblage (patron CM4) : lie les contrôles aux propriétés du [PassageViewModel]. Les boutons
+/// « Vérifier » et « Diagnostic » ouvrent M-Qualification et M-Diagnostic via les contrats socle
+/// [OuvrirVerification] et [OuvrirDiagnostic] (sans dépendre des features `qualification` ni
+/// `diagnostic`). Aucun accès base de données ni logique métier ici (règle ArchUnit
+/// `view_sans_jdbc`). La validation Tadarida : tranche suivante.
 public class PassageController {
 
   private final PassageViewModel viewModel;
   private final OuvrirVerification ouvrirVerification;
+  private final OuvrirDiagnostic ouvrirDiagnostic;
   private Long idPassage;
 
   @FXML private BorderPane racine;
@@ -48,9 +51,13 @@ public class PassageController {
   @FXML private Label lblIndiceAction;
 
   @Inject
-  public PassageController(PassageViewModel viewModel, OuvrirVerification ouvrirVerification) {
+  public PassageController(
+      PassageViewModel viewModel,
+      OuvrirVerification ouvrirVerification,
+      OuvrirDiagnostic ouvrirDiagnostic) {
     this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
     this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
+    this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
   }
 
   @FXML
@@ -119,6 +126,15 @@ public class PassageController {
   private void verifier() {
     // Le bouton n'est actif qu'après ouvrirSur (verificationDisponible) : idPassage est défini.
     ouvrirVerification.ouvrir(idPassage);
+  }
+
+  /// « Diagnostic matériel » : ouvre M-Diagnostic sur ce passage via le contrat socle
+  /// [OuvrirDiagnostic] (la feature `diagnostic` en fournit l'implémentation). Toujours disponible
+  // :
+  /// le relevé climatique et le journal existent dès l'import de la nuit.
+  @FXML
+  private void diagnostiquer() {
+    ouvrirDiagnostic.ouvrir(idPassage);
   }
 
   private void majStepper() {

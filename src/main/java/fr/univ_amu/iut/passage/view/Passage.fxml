@@ -10,11 +10,11 @@
 <?import javafx.scene.layout.VBox?>
 
 <!--
-  M-Passage - écran pivot d'un passage (détail). Cette tranche pose la coquille : fil d'Ariane
-  (affichage), bandeau d'identité et stepper de statut workflow. Les onglets (Vue d'ensemble,
-  Diagnostic, Validation Tadarida), les cartes d'action et le câblage « Vérifier » → M-Qualification
-  arrivent dans la tranche suivante. Pur câblage : tout est lié au PassageViewModel par
-  PassageController.
+  M-Passage - écran pivot d'un passage (détail) : fil d'Ariane (affichage), bandeau d'identité,
+  stepper de statut workflow et onglets (Vue d'ensemble, Diagnostic, Validation Tadarida). Le bouton
+  « Vérifier » ouvre M-Qualification et « Diagnostic » ouvre M-Diagnostic (contrats socle). La
+  validation Tadarida arrive dans la tranche suivante. Pur câblage : tout est lié au
+  PassageViewModel par PassageController.
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -90,7 +90,7 @@
               <Button fx:id="boutonVerifier" text="🎧 Vérifier l'enregistrement"
                       styleClass="action-primaire" onAction="#verifier"/>
               <Button fx:id="boutonDiagnostic" text="🔧 Diagnostic matériel"
-                      styleClass="action-secondaire" disable="true"/>
+                      styleClass="action-secondaire" onAction="#diagnostiquer"/>
               <Button fx:id="boutonValidation" text="✅ Validation Tadarida 🔒"
                       styleClass="action-secondaire"/>
               <Region HBox.hgrow="ALWAYS"/>
@@ -99,9 +99,11 @@
           </VBox>
         </Tab>
         <Tab text="Diagnostic matériel">
-          <VBox alignment="CENTER" styleClass="onglet-contenu">
-            <Label text="Diagnostic (T°/hygrométrie, batterie, événements) : tranche suivante."
-                   styleClass="section-sous"/>
+          <VBox alignment="CENTER" spacing="14.0" styleClass="onglet-contenu">
+            <Label text="Le diagnostic matériel (T°/hygrométrie, anomalies, journal) s'affiche en plein écran."
+                   styleClass="section-sous" wrapText="true"/>
+            <Button fx:id="boutonOuvrirDiagnostic" text="🔧 Ouvrir le diagnostic matériel"
+                    styleClass="action-primaire" onAction="#diagnostiquer"/>
           </VBox>
         </Tab>
         <Tab text="Validation Tadarida">
