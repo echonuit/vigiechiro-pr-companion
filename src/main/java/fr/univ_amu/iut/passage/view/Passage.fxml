@@ -107,9 +107,8 @@
           </VBox>
         </Tab>
         <Tab text="Validation Tadarida">
-          <VBox alignment="CENTER" styleClass="onglet-contenu">
-            <Label text="🔒 Disponible une fois le passage déposé (tranche suivante)."
-                   styleClass="section-sous"/>
+          <VBox alignment="CENTER" spacing="8.0" styleClass="onglet-contenu">
+            <Label fx:id="lblValidation" styleClass="section-sous" wrapText="true"/>
           </VBox>
         </Tab>
       </tabs>

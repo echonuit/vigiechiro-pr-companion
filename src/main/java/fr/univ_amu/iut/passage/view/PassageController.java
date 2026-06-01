@@ -49,6 +49,7 @@ public class PassageController {
   @FXML private Button boutonVerifier;
   @FXML private Button boutonValidation;
   @FXML private Label lblIndiceAction;
+  @FXML private Label lblValidation;
 
   @Inject
   public PassageController(
@@ -111,6 +112,17 @@ public class PassageController {
                         ? ""
                         : "🔒 La vérification sera possible une fois la nuit transformée.",
                 viewModel.verificationDisponibleProperty()));
+
+    lblValidation
+        .textProperty()
+        .bind(
+            Bindings.createStringBinding(
+                () ->
+                    viewModel.validationVerrouilleeProperty().get()
+                        ? "🔒 La validation Tadarida sera disponible une fois le passage déposé."
+                        : "✅ Passage déposé : la validation des identifications Tadarida"
+                            + " (M-Vision-Tadarida) s'ouvrira depuis cet onglet.",
+                viewModel.validationVerrouilleeProperty()));
   }
 
   /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.

@@ -136,4 +136,14 @@ class PassageViewTest {
 
     assertThat(diagnosticOuvert.get()).isEqualTo(ID_PASSAGE);
   }
+
+  @Test
+  @DisplayName(
+      "L'onglet « Validation Tadarida » est verrouillé tant que le passage n'est pas déposé")
+  void validation_verrouillee_tant_que_non_depose(FxRobot robot) {
+    // Le passage de la fixture est « Vérifié » (≠ Déposé) → validation verrouillée.
+    Label validation = robot.lookup("#lblValidation").queryAs(Label.class);
+
+    assertThat(validation.getText()).contains("🔒").contains("déposé");
+  }
 }
