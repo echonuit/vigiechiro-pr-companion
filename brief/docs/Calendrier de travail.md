@@ -31,4 +31,4 @@
 ## Risque calendrier à anticiper
 
 - **Pièces détachées du PR** : la construction du PR de chaque équipe pendant l'amorçage (22/05 → 31/05) suppose que les composants soient arrivés à temps. Si l'arrivage est en retard, l'assemblage est repoussé sans impact bloquant sur le développement (le [jeu de données fourni](index.md#donnees-dexemple-fournies) permet de travailler indépendamment).
-- **Téléchargement du full dataset** : le lien Filesender RENATER expire (date à confirmer en page d'accueil). Téléchargez-le **dès le démarrage** pour pouvoir tester sur les volumes réels.
+- **Téléchargement du full dataset** : la nuit complète est archivée sur Zenodo (DOI [10.5281/zenodo.20492247](https://doi.org/10.5281/zenodo.20492247), lien permanent). Récupérez-la **dès le démarrage** pour pouvoir tester sur les volumes réels.

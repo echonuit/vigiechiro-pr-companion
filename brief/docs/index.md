@@ -34,21 +34,21 @@ Un jeu de données réel issu d'une session d'enregistrement nocturne (22-23 avr
 
 Un **échantillon représentatif** d'une nuit (audio réduit + observations complètes) est versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit), disponible immédiatement après `git clone`. Suffit pour démarrer, pour la CI, et pour tester la majorité des stories. Le détail du contenu est décrit dans le `README` de ce dépôt.
 
-### 🔵 Full dataset à télécharger
+### 🔵 Full dataset sur Zenodo
 
 **~4,2 Go zippés** (~11 Go décompressés) : 1572 WAV bruts + 2109 WAV redécoupés + 4031 observations Tadarida. Indispensable pour valider les stories de **volumétrie** ([O3](Objectifs%20qualités/Objectifs%20qualités/O3.md), [O5](Objectifs%20qualités/Objectifs%20qualités/O5.md)).
 
-!!! danger "À télécharger en priorité - lien valable jusqu'au 15/06/2026"
-    Récupérez l'archive (~4,2 Go) **dès le démarrage de la SAE** (sprint 0). Filesender est un service de partage de fichiers volumineux à durée de vie limitée. **Passé le 15/06/2026, le lien expirera.** En cas d'expiration, demandez à l'équipe pédagogique.
+!!! tip "Archive permanente : DOI Zenodo"
+    La nuit complète est archivée sur Zenodo, DOI [10.5281/zenodo.20492247](https://doi.org/10.5281/zenodo.20492247) (lien permanent, accès libre). Récupérez-la **dès le démarrage de la SAE** (sprint 0) pour tester sur les volumes réels.
 
-    **Depuis votre navigateur** : [page Filesender RENATER](https://filesender.renater.fr/?s=download&token=d18d33a0-3175-45e6-894f-de838850180c).
+    **Depuis votre navigateur** : [fiche Zenodo du jeu de données](https://zenodo.org/records/20492247).
 
     **Depuis la ligne de commande**, à la racine de votre clone du brief :
 
     ```bash
     mkdir -p data
     curl -L -o data/Car640380-2026-Pass2-Z1.zip \
-      "https://filesender.renater.fr/download.php?token=d18d33a0-3175-45e6-894f-de838850180c&files_ids=71480536"
+      "https://zenodo.org/records/20492247/files/Car640380-2026-Pass2-Z1.zip?download=1"
     unzip data/Car640380-2026-Pass2-Z1.zip -d data/
     rm data/Car640380-2026-Pass2-Z1.zip   # optionnel, libère ~4,2 Go
     ```

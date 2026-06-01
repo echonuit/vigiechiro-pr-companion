@@ -25,7 +25,7 @@ L'amorçage ne demande **pas de développement intensif** : c'est le moment de p
 |---|---|
 | Lecture du brief par toute l'équipe | Vocabulaire partagé sur le modèle conceptuel, les parcours et les épopées |
 | Constitution des équipes | Rôles informels assumés (lead BD, lead UI, lead audio…) |
-| **Téléchargement du full dataset** (~4,2 Go via Filesender RENATER) | Archive décompressée dans `data/`, lien expire — à faire en priorité |
+| **Téléchargement du full dataset** (~4,2 Go depuis Zenodo, DOI 10.5281/zenodo.20492247) | Archive décompressée dans `data/`, à faire en priorité |
 | Clonage du repo GitHub Classroom, vérification que le squelette compile | Une PR pilote fusionnée pour valider le workflow Git/CI |
 | Premières estimations en étoiles sur les stories MUST | Estimations partagées, désaccords identifiés pour discussion |
 | **Assemblage du PR de l'équipe** (séance encadrée, si pièces reçues) | PR matériel qui démarre, se met en veille, écrit sur la SD |
