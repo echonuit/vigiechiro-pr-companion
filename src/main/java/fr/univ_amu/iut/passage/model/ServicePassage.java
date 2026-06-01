@@ -68,6 +68,7 @@ public class ServicePassage {
   ///
   /// @throws RegleMetierException si le passage est introuvable
   public DetailPassage detailPassage(Long idPassage) {
+    Objects.requireNonNull(idPassage, "idPassage");
     Passage passage =
         passageDao
             .findById(idPassage)
