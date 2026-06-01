@@ -30,9 +30,9 @@
 
 Un jeu de données réel issu d'une session d'enregistrement nocturne (22-23 avril 2026, PR n° 1925492) vous est fourni en deux variantes complémentaires :
 
-### 🟢 Sample versionné dans le dépôt
+### 🟢 Échantillon versionné dans un dépôt dédié
 
-**~518 Mo** disponibles immédiatement après `git clone`. Suffit pour démarrer, pour la CI, et pour tester la majorité des stories. Contient le LogPR + THLog complets, **191 WAV** redécoupés couvrant tous les taxa principaux, et les **2 CSV d'observations** filtrés en cohérence (473 obs sur 4031). Détails : [`samples/`](https://github.com/IUTInfoAix-S201/brief/tree/main/samples) sur GitHub.
+Un **échantillon représentatif** d'une nuit (audio réduit + observations complètes) est versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit), disponible immédiatement après `git clone`. Suffit pour démarrer, pour la CI, et pour tester la majorité des stories. Le détail du contenu est décrit dans le `README` de ce dépôt.
 
 ### 🔵 Full dataset à télécharger
 
