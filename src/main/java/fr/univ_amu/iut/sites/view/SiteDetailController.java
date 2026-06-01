@@ -22,8 +22,10 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -93,14 +95,18 @@ public class SiteDetailController {
     boutonModifier.setTooltip(new Tooltip("Édition de la fiche site : à venir."));
     configurerColonnes();
     tablePassages.setItems(viewModel.passages());
-    tablePassages.setOnMouseClicked(
-        evenement -> {
-          if (evenement.getClickCount() == 2) {
-            LignePassage ligne = tablePassages.getSelectionModel().getSelectedItem();
-            if (ligne != null) {
-              ouvrirPassage.ouvrir(ligne.idPassage(), contexteSite(ligne));
-            }
-          }
+    tablePassages.setRowFactory(
+        tableau -> {
+          TableRow<LignePassage> ligne = new TableRow<>();
+          ligne.setOnMouseClicked(
+              evenement -> {
+                if (evenement.getButton() == MouseButton.PRIMARY
+                    && evenement.getClickCount() == 2
+                    && !ligne.isEmpty()) {
+                  ouvrirPassage.ouvrir(ligne.getItem().idPassage(), contexteSite(ligne.getItem()));
+                }
+              });
+          return ligne;
         });
     viewModel
         .points()
