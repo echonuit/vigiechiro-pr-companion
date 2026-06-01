@@ -11,13 +11,16 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -35,6 +38,8 @@ import org.testfx.framework.junit5.Start;
 class PassageViewTest {
 
   private static final long ID_PASSAGE = 42L;
+
+  private final AtomicReference<Long> verificationOuverte = new AtomicReference<>();
 
   @Start
   void start(Stage stage) throws Exception {
@@ -62,6 +67,11 @@ class PassageViewTest {
               PassageViewModel viewModel() {
                 return new PassageViewModel(service);
               }
+
+              @Provides
+              OuvrirVerification ouvrirVerification() {
+                return verificationOuverte::set;
+              }
             });
     FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
     loader.setControllerFactory(injector::getInstance);
@@ -88,5 +98,23 @@ class PassageViewTest {
     HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);
 
     assertThat(stepper.getChildren()).hasSize(5);
+  }
+
+  @Test
+  @DisplayName("L'onglet « Vue d'ensemble » affiche les statistiques de la nuit")
+  void affiche_les_statistiques(FxRobot robot) {
+    assertThat(robot.lookup("#lblVolBruts").queryAs(Label.class).getText()).isEqualTo("4 Ko");
+    assertThat(robot.lookup("#lblNbSequences").queryAs(Label.class).getText()).isEqualTo("30");
+  }
+
+  @Test
+  @DisplayName("« Vérifier » ouvre la qualification du passage courant (contrat socle)")
+  void verifier_ouvre_la_qualification(FxRobot robot) {
+    Button verifier = robot.lookup("#boutonVerifier").queryAs(Button.class);
+    assertThat(verifier.isDisabled()).isFalse(); // nuit vérifiée -> vérification disponible
+
+    robot.interact(verifier::fire);
+
+    assertThat(verificationOuverte.get()).isEqualTo(ID_PASSAGE);
   }
 }
