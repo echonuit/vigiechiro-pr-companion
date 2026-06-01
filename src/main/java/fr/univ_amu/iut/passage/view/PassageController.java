@@ -20,9 +20,8 @@ import javafx.scene.layout.HBox;
 ///
 /// Pur câblage (patron CM4) : lie les contrôles aux propriétés du [PassageViewModel]. Aucun accès
 /// base de données ni logique métier ici (règle ArchUnit `view_sans_jdbc`). Les onglets, les cartes
-/// d'action et le câblage « Vérifier » → M-Qualification (via le contrat socle
-// `OuvrirVerification`)
-/// arrivent dans la tranche suivante.
+/// d'action et le câblage « Vérifier » → M-Qualification (contrat socle
+/// `OuvrirVerification`) arrivent dans la tranche suivante.
 public class PassageController {
 
   private final PassageViewModel viewModel;
