@@ -190,15 +190,10 @@ public class QualificationController {
 
     boutonEnregistrer.disableProperty().bind(verdictVm.peutEnregistrer().not());
 
-    // Raccourcis clavier (O/D/J, Entrée, Espace) attachés à la scène une fois la vue affichée.
-    racine
-        .sceneProperty()
-        .addListener(
-            (obs, ancienne, scene) -> {
-              if (scene != null) {
-                scene.setOnKeyPressed(this::gererRaccourci);
-              }
-            });
+    // Raccourcis clavier (O/D/J, Entrée, Espace) sur la racine de l'écran : addEventHandler (et non
+    // setOnKeyPressed) pour coexister avec d'autres handlers, et limité à cette vue plutôt qu'à la
+    // scène partagée du chrome. Les événements remontent depuis le nœud focalisé jusqu'à la racine.
+    racine.addEventHandler(KeyEvent.KEY_PRESSED, this::gererRaccourci);
   }
 
   /// Ouvre l'écran sur le passage `idPassage` : les deux VM se synchronisent sur le même passage.
@@ -280,7 +275,7 @@ public class QualificationController {
                 taille,
                 avert));
 
-    if (dialogue.showAndWait().orElse(null) == boutonRegenerer) {
+    if (dialogue.showAndWait().filter(bouton -> bouton == boutonRegenerer).isPresent()) {
       selectionVm
           .methodeProperty()
           .set(
