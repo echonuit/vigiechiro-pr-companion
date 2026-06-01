@@ -26,6 +26,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.passage.view.NavigationPassage;
 import fr.univ_amu.iut.passage.view.PassageController;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
@@ -113,7 +114,8 @@ public final class CapturePassage {
     loader.setControllerFactory(
         type ->
             type == PassageController.class
-                ? new PassageController(passageVm, idp -> {}, idp -> {})
+                ? new PassageController(
+                    passageVm, idp -> {}, idp -> {}, injecteur.getInstance(NavigationPassage.class))
                 : injecteur.getInstance(type));
     Parent vue = loader.load();
     PassageController controleur = loader.getController();
