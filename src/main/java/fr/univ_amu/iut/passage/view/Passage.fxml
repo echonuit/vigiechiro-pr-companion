@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -55,10 +59,58 @@
   </top>
 
   <center>
-    <!-- Onglets (Vue d'ensemble / Diagnostic / Validation) + actions : tranche suivante. -->
-    <VBox alignment="CENTER" styleClass="zone-centrale">
-      <Label text="Vue d'ensemble, diagnostic et validation : à la tranche suivante."
-             styleClass="section-sous"/>
-    </VBox>
+    <TabPane styleClass="onglets" tabClosingPolicy="UNAVAILABLE">
+      <tabs>
+        <Tab text="Vue d'ensemble">
+          <VBox spacing="16.0" styleClass="onglet-contenu">
+
+            <!-- Statistiques de la nuit -->
+            <HBox spacing="14.0" styleClass="stats">
+              <VBox spacing="2.0" styleClass="stat-carte">
+                <Label text="VOLUME BRUTS" styleClass="stat-label"/>
+                <Label fx:id="lblVolBruts" styleClass="stat-valeur"/>
+              </VBox>
+              <VBox spacing="2.0" styleClass="stat-carte">
+                <Label text="VOLUME TRANSFORMÉ" styleClass="stat-label"/>
+                <Label fx:id="lblVolTransformes" styleClass="stat-valeur"/>
+              </VBox>
+              <VBox spacing="2.0" styleClass="stat-carte">
+                <Label text="DURÉE AUDIBLE" styleClass="stat-label"/>
+                <Label fx:id="lblDureeAudible" styleClass="stat-valeur"/>
+              </VBox>
+              <VBox spacing="2.0" styleClass="stat-carte">
+                <Label text="SÉQUENCES" styleClass="stat-label"/>
+                <Label fx:id="lblNbSequences" styleClass="stat-valeur"/>
+              </VBox>
+            </HBox>
+
+            <!-- Actions rapides -->
+            <Label text="Actions rapides" styleClass="section-sous"/>
+            <HBox spacing="14.0">
+              <Button fx:id="boutonVerifier" text="🎧 Vérifier l'enregistrement"
+                      styleClass="action-primaire" onAction="#verifier"/>
+              <Button fx:id="boutonDiagnostic" text="🔧 Diagnostic matériel"
+                      styleClass="action-secondaire" disable="true"/>
+              <Button fx:id="boutonValidation" text="✅ Validation Tadarida 🔒"
+                      styleClass="action-secondaire"/>
+              <Region HBox.hgrow="ALWAYS"/>
+            </HBox>
+            <Label fx:id="lblIndiceAction" styleClass="section-sous" wrapText="true"/>
+          </VBox>
+        </Tab>
+        <Tab text="Diagnostic matériel">
+          <VBox alignment="CENTER" styleClass="onglet-contenu">
+            <Label text="Diagnostic (T°/hygrométrie, batterie, événements) : tranche suivante."
+                   styleClass="section-sous"/>
+          </VBox>
+        </Tab>
+        <Tab text="Validation Tadarida">
+          <VBox alignment="CENTER" styleClass="onglet-contenu">
+            <Label text="🔒 Disponible une fois le passage déposé (tranche suivante)."
+                   styleClass="section-sous"/>
+          </VBox>
+        </Tab>
+      </tabs>
+    </TabPane>
   </center>
 </BorderPane>
