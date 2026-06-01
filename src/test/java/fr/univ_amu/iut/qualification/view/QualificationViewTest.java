@@ -29,6 +29,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -178,5 +179,16 @@ class QualificationViewTest {
 
     assertThat(personnaliser.getText()).contains("Personnaliser");
     assertThat(personnaliser.isDisabled()).isFalse();
+  }
+
+  @Test
+  @DisplayName("Le raccourci clavier O choisit le verdict OK (active « Enregistrer »)")
+  void raccourci_o_choisit_verdict_ok(FxRobot robot) {
+    Button enregistrer = robot.lookup("#boutonEnregistrer").queryAs(Button.class);
+    assertThat(enregistrer.isDisabled()).isTrue();
+
+    robot.push(KeyCode.O);
+
+    assertThat(enregistrer.isDisabled()).isFalse();
   }
 }

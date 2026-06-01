@@ -28,20 +28,25 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextInputControl;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 
 /// Controller de l'écran **M-Qualification** (`Qualification.fxml`).
 ///
 /// Pur câblage (patron CM4) : relie la liste de la sélection (colonne gauche) au
 /// [SelectionEcouteViewModel] et le verdict différé (colonne droite) au [QualificationViewModel],
-/// branche la vue audio fournie ([AudioView]) et ouvre la modale de personnalisation de la
-/// sélection. Aucun accès base de données ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
+/// branche la vue audio fournie ([AudioView]), ouvre la modale de personnalisation et gère les
+/// raccourcis clavier (O/D/J, Entrée, Espace). Aucun accès base de données ni logique métier ici
+/// (règle ArchUnit `view_sans_jdbc`).
 public class QualificationController {
 
   private final QualificationViewModel verdictVm;
   private final SelectionEcouteViewModel selectionVm;
 
+  @FXML private BorderPane racine;
   @FXML private Label lblTitreContexte;
   @FXML private Label lblPlageHoraire;
   @FXML private Label lblVolumetrie;
@@ -173,6 +178,16 @@ public class QualificationController {
     lblMessage.managedProperty().bind(verdictVm.messageProperty().isNotEmpty());
 
     boutonEnregistrer.disableProperty().bind(verdictVm.peutEnregistrer().not());
+
+    // Raccourcis clavier (O/D/J, Entrée, Espace) attachés à la scène une fois la vue affichée.
+    racine
+        .sceneProperty()
+        .addListener(
+            (obs, ancienne, scene) -> {
+              if (scene != null) {
+                scene.setOnKeyPressed(this::gererRaccourci);
+              }
+            });
   }
 
   /// Ouvre l'écran sur le passage `idPassage` : les deux VM se synchronisent sur le même passage.
@@ -264,6 +279,32 @@ public class QualificationController {
       selectionVm.tailleProperty().set((int) Math.round(taille.getValue()));
       selectionVm.regenerer();
     }
+  }
+
+  /// Raccourcis clavier (footer de la maquette) : O / D / J posent le verdict, Entrée enregistre,
+  /// Espace lance/met en pause la lecture. Inhibés pendant la saisie du commentaire (focus dans un
+  /// champ texte) ; ↑/↓ restent gérés nativement par la liste.
+  private void gererRaccourci(KeyEvent evenement) {
+    if (racine.getScene().getFocusOwner() instanceof TextInputControl) {
+      return;
+    }
+    switch (evenement.getCode()) {
+      case O -> consommer(evenement, () -> verdictVm.choisirVerdict(Verdict.OK));
+      case D -> consommer(evenement, () -> verdictVm.choisirVerdict(Verdict.DOUTEUX));
+      case J -> consommer(evenement, () -> verdictVm.choisirVerdict(Verdict.A_JETER));
+      case ENTER -> {
+        if (verdictVm.peutEnregistrer().get()) {
+          consommer(evenement, verdictVm::enregistrer);
+        }
+      }
+      case SPACE -> consommer(evenement, audioView::togglePlay);
+      default -> {}
+    }
+  }
+
+  private static void consommer(KeyEvent evenement, Runnable action) {
+    action.run();
+    evenement.consume();
   }
 
   private void marquerChoisi(Button bouton, Verdict verdict) {

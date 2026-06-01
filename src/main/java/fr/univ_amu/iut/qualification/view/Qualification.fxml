@@ -24,6 +24,7 @@
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
+            fx:id="racine"
             fx:controller="fr.univ_amu.iut.qualification.view.QualificationController"
             stylesheets="@qualification.css"
             styleClass="ecran-qualification">
