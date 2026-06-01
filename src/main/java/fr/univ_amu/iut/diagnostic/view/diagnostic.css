@@ -1,0 +1,45 @@
+/*
+ * M-Diagnostic - feuille de style de l'écran de diagnostic matériel.
+ */
+
+.ecran-diagnostic {
+  -fx-background-color: #fafbfc;
+  -fx-padding: 18;
+}
+
+.titre-page {
+  -fx-font-size: 20px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #2c3e50;
+}
+
+.sous-titre-page {
+  -fx-font-size: 13px;
+  -fx-text-fill: #6a737d;
+}
+
+.section-titre {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #2c3e50;
+}
+
+.section-sous {
+  -fx-font-size: 12px;
+  -fx-text-fill: #6a737d;
+}
+
+.alerte-r20 {
+  -fx-font-size: 12px;
+  -fx-text-fill: #7e5109;
+  -fx-background-color: #fef9e7;
+  -fx-border-color: #b9770e;
+  -fx-border-radius: 4;
+  -fx-background-radius: 4;
+  -fx-padding: 8;
+}
+
+.message-erreur {
+  -fx-font-size: 12px;
+  -fx-text-fill: #a93226;
+}

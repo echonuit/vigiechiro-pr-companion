@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.chart.CategoryAxis?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Diagnostic - état matériel d'une nuit (parcours P6). Atteint depuis l'onglet « Diagnostic » de
+  M-Passage via le contrat socle OuvrirDiagnostic. Pur câblage : tout est lié au DiagnosticViewModel
+  par DiagnosticController (graphe T°/hygrométrie, anomalies et évènements du journal).
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.diagnostic.view.DiagnosticController"
+      stylesheets="@diagnostic.css"
+      styleClass="ecran-diagnostic"
+      spacing="14.0">
+
+  <VBox spacing="2.0">
+    <Label text="🔧 Diagnostic matériel" styleClass="titre-page"/>
+    <Label fx:id="lblEnregistreur" styleClass="sous-titre-page"/>
+  </VBox>
+
+  <Label fx:id="lblReleveAbsent" styleClass="alerte-r20" wrapText="true"
+         text="⚠ Relevé climatique absent : la température et l'hygrométrie ne sont pas disponibles pour cette nuit (R20)."/>
+
+  <Label fx:id="lblResumeClimat" styleClass="section-sous"/>
+  <LineChart fx:id="grapheClimat" VBox.vgrow="ALWAYS" legendVisible="true" animated="false">
+    <xAxis>
+      <CategoryAxis label="Heure"/>
+    </xAxis>
+    <yAxis>
+      <NumberAxis label="T° (°C) / Humidité (%)"/>
+    </yAxis>
+  </LineChart>
+
+  <HBox spacing="14.0" VBox.vgrow="ALWAYS">
+    <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+      <Label text="⚠ Anomalies (R19)" styleClass="section-titre"/>
+      <ListView fx:id="listeAnomalies" VBox.vgrow="ALWAYS"/>
+    </VBox>
+    <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+      <Label text="📋 Évènements du journal" styleClass="section-titre"/>
+      <ListView fx:id="listeEvenements" VBox.vgrow="ALWAYS"/>
+    </VBox>
+  </HBox>
+
+  <Label fx:id="lblGps" styleClass="section-sous"/>
+  <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
+</VBox>
