@@ -80,11 +80,14 @@ class DiagnosticViewTest {
   void affiche_graphe_et_listes(FxRobot robot) {
     LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
     ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
+    ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
     Label enregistreur = robot.lookup("#lblEnregistreur").queryAs(Label.class);
 
     assertThat(graphe.getData()).hasSize(2);
-    assertThat(graphe.getData().get(0).getData()).hasSize(2);
+    assertThat(graphe.getData().get(0).getData()).hasSize(2); // température
+    assertThat(graphe.getData().get(1).getData()).hasSize(2); // humidité
     assertThat(anomalies.getItems()).hasSize(1);
+    assertThat(evenements.getItems()).hasSize(1);
     assertThat(enregistreur.getText()).isEqualTo("PR 1925492");
   }
 }
