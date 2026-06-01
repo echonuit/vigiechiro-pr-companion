@@ -52,7 +52,10 @@ public class MainController {
 
     // La zone d'accueil déclarée dans le FXML devient la vue centrale initiale, puis le centre
     // du BorderPane suit la propriété du Navigateur : toute navigation passe par afficher(...).
-    navigateur.afficher((Parent) racine.getCenter());
+    // On la mémorise pour que les features puissent y revenir (Navigateur.afficherAccueil()).
+    Parent accueil = (Parent) racine.getCenter();
+    navigateur.memoriserAccueil(accueil);
+    navigateur.afficher(accueil);
     racine.centerProperty().bind(navigateur.vueCentraleProperty());
   }
 
