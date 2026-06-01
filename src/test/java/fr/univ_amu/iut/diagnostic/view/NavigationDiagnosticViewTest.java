@@ -54,7 +54,9 @@ class NavigationDiagnosticViewTest {
   @DisplayName("ouvrir(idPassage) charge l'écran M-Diagnostic via Guice")
   void ouvrir_affiche_l_ecran(FxRobot robot) {
     Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+    Label gps = robot.lookup("#lblGps").queryAs(Label.class);
 
     assertThat(message.getText()).contains("introuvable");
+    assertThat(gps.isVisible()).isFalse(); // pas de note GPS tant qu'aucun diagnostic n'est chargé
   }
 }

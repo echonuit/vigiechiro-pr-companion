@@ -3,6 +3,8 @@ package fr.univ_amu.iut.diagnostic.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -20,6 +22,8 @@ import javafx.scene.control.ListView;
 /// d'absence de relevé (R20) et disponibilité GPS. Aucun accès base de données ni logique métier
 /// ici (règle ArchUnit `view_sans_jdbc`).
 public class DiagnosticController {
+
+  private static final DateTimeFormatter MOMENT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
 
   private final DiagnosticViewModel viewModel;
 
@@ -61,6 +65,10 @@ public class DiagnosticController {
                         ? "📍 GPS du point disponible (cohérence horaires possible)."
                         : "📍 GPS du point non renseigné : cohérence horaires indisponible.",
                 viewModel.gpsDisponibleProperty()));
+    // La note GPS n'a de sens qu'une fois un diagnostic chargé : masquée à l'erreur / au démarrage.
+    var diagnosticCharge = viewModel.enregistreurProperty().isNotEmpty();
+    lblGps.visibleProperty().bind(diagnosticCharge);
+    lblGps.managedProperty().bind(diagnosticCharge);
 
     lblMessage.textProperty().bind(viewModel.messageProperty());
     var messagePresent = viewModel.messageProperty().isNotEmpty();
@@ -80,9 +88,9 @@ public class DiagnosticController {
     XYChart.Series<String, Number> humidite = new XYChart.Series<>();
     humidite.setName("Humidité (%)");
     for (MesureClimatique mesure : viewModel.mesures()) {
-      String heure = mesure.heure().toString();
-      temperature.getData().add(new XYChart.Data<>(heure, mesure.temperatureCelsius()));
-      humidite.getData().add(new XYChart.Data<>(heure, mesure.humiditePourcent()));
+      String moment = LocalDateTime.of(mesure.date(), mesure.heure()).format(MOMENT);
+      temperature.getData().add(new XYChart.Data<>(moment, mesure.temperatureCelsius()));
+      humidite.getData().add(new XYChart.Data<>(moment, mesure.humiditePourcent()));
     }
     grapheClimat.getData().setAll(List.of(temperature, humidite));
   }
