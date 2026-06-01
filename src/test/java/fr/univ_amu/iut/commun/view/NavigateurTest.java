@@ -13,9 +13,8 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 /// Tests unitaires du [Navigateur] (socle) : mémorisation de l'accueil et retour à celui-ci.
-/// [ApplicationExtension] sert uniquement à initialiser le toolkit JavaFX (construction de
-// `Parent`)
-/// ; aucune scène n'est affichée.
+/// [ApplicationExtension] initialise le toolkit JavaFX (construction de nœuds) ; aucune scène
+/// n'est affichée.
 @ExtendWith(ApplicationExtension.class)
 class NavigateurTest {
 
