@@ -50,7 +50,7 @@ public class PassageController {
             Bindings.createStringBinding(
                 () -> {
                   String titre = viewModel.titreContexteProperty().get();
-                  return titre.isEmpty() ? "" : "‹ Mes sites  ›  " + titre;
+                  return titre.isEmpty() ? "" : "‹ Mes sites › " + titre;
                 },
                 viewModel.titreContexteProperty()));
     lblPlageHoraire.textProperty().bind(viewModel.plageHoraireProperty());
@@ -71,8 +71,9 @@ public class PassageController {
     majStepper();
 
     lblMessage.textProperty().bind(viewModel.messageProperty());
-    lblMessage.visibleProperty().bind(viewModel.messageProperty().isNotEmpty());
-    lblMessage.managedProperty().bind(viewModel.messageProperty().isNotEmpty());
+    var messagePresent = viewModel.messageProperty().isNotEmpty();
+    lblMessage.visibleProperty().bind(messagePresent);
+    lblMessage.managedProperty().bind(messagePresent);
   }
 
   /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
@@ -85,7 +86,7 @@ public class PassageController {
     stepper.getChildren().clear();
     for (EtapeWorkflow etape : viewModel.etapes()) {
       Label puce = new Label(etape.statut().libelle());
-      puce.getStyleClass().setAll("etape", "etape-" + etape.etat().name().toLowerCase(Locale.ROOT));
+      puce.getStyleClass().addAll("etape", "etape-" + etape.etat().name().toLowerCase(Locale.ROOT));
       stepper.getChildren().add(puce);
     }
   }
