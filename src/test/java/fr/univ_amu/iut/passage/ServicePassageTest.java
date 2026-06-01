@@ -17,6 +17,7 @@ import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -46,13 +47,14 @@ class ServicePassageTest {
   private static final LocalDate JOUR_FIXE = LocalDate.of(2026, 5, 31);
 
   @TempDir Path dossier;
+  private SourceDeDonnees source;
   private ServicePassage service;
   private PassageDao passageDao;
   private Long idPoint;
 
   @BeforeEach
   void preparer() {
-    SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+    source = new SourceDeDonnees(new Workspace(dossier));
     new MigrationSchema(source).migrer();
     new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
     Site site =
@@ -406,5 +408,64 @@ class ServicePassageTest {
 
     assertThatThrownBy(() -> service.poserVerdict(depose, Verdict.A_JETER))
         .isInstanceOf(RegleMetierException.class);
+  }
+
+  // --- Suppression (un passage déposé est protégé) ---
+
+  @Test
+  @DisplayName("Supprimer efface le passage de la base")
+  void supprimer_efface_le_passage() {
+    long id = passageDao.insert(candidat(1, "2026-06-20")).id();
+
+    service.supprimer(id);
+
+    assertThat(passageDao.findById(id)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Supprimer un passage efface aussi sa session par cascade")
+  void supprimer_cascade_la_session() {
+    long id = passageDao.insert(candidat(1, "2026-06-20")).id();
+    SessionDao sessionDao = new SessionDao(source);
+    sessionDao.insert(new SessionDEnregistrement(null, "/tmp/nuit", null, null, id));
+
+    service.supprimer(id);
+
+    assertThat(sessionDao.trouverParPassage(id)).isEmpty();
+  }
+
+  @Test
+  @DisplayName("Supprimer refuse un passage déposé (donnée officielle transmise)")
+  void supprimer_refuse_un_passage_depose() {
+    Passage depose =
+        passageDao.insert(
+            new Passage(
+                null,
+                1,
+                2026,
+                "2026-06-20",
+                "21:30:00",
+                "05:15:00",
+                null,
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                null,
+                null,
+                "2026-06-21T08:00",
+                idPoint,
+                SERIE));
+
+    assertThatThrownBy(() -> service.supprimer(depose.id()))
+        .isInstanceOf(RegleMetierException.class)
+        .hasMessageContaining("déposé");
+    assertThat(passageDao.findById(depose.id())).isPresent();
+  }
+
+  @Test
+  @DisplayName("Supprimer un passage introuvable lève une RegleMetierException")
+  void supprimer_passage_introuvable() {
+    assertThatThrownBy(() -> service.supprimer(999L))
+        .isInstanceOf(RegleMetierException.class)
+        .hasMessageContaining("introuvable");
   }
 }

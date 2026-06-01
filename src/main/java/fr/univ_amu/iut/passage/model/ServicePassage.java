@@ -318,6 +318,29 @@ public class ServicePassage {
     return misAJour;
   }
 
+  /// Supprime définitivement un passage. Par cascade DB (`ON DELETE CASCADE`), sa session, ses
+  /// originaux, séquences, sélection et relevés capteur/climat disparaissent aussi : un seul
+  /// `DELETE` sur la table `passage` suffit. Les fichiers du workspace (bruts, transformés) ne
+  /// sont pas touchés, comme pour [fr.univ_amu.iut.sites.model.ServiceSites#supprimerSite] : seule
+  /// la base est nettoyée.
+  ///
+  /// **Refuse** un passage déposé : une nuit déposée est une donnée officielle transmise à
+  /// Vigie-Chiro, on ne la détruit pas depuis l'IHM.
+  ///
+  /// @throws RegleMetierException si le passage est introuvable ou déjà déposé
+  public void supprimer(Long idPassage) {
+    Objects.requireNonNull(idPassage, "idPassage");
+    Passage passage =
+        passageDao
+            .findById(idPassage)
+            .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+    if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
+      throw new RegleMetierException(
+          "Suppression refusée : un passage déposé ne peut pas être supprimé.");
+    }
+    passageDao.delete(idPassage);
+  }
+
   private void exigerQuadrupletUnique(Long idPoint, int annee, int numeroPassage) {
     if (passageDao.trouverParPointAnneePassage(idPoint, annee, numeroPassage).isPresent()) {
       throw new RegleMetierException(
