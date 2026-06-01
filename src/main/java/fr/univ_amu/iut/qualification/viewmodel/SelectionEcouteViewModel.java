@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.qualification.viewmodel;
 
 import fr.univ_amu.iut.commun.model.MethodeSelection;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
@@ -154,7 +155,7 @@ public class SelectionEcouteViewModel {
     volumetrie.set(
         contexte.sequencesTotales()
             + " séquences · durée audible "
-            + formatDuree(contexte.dureeAudibleSecondes()));
+            + Formats.dureeLisible(contexte.dureeAudibleSecondes()));
   }
 
   private void majCheminCourant(SequenceEnSelection ligne) {
@@ -175,13 +176,6 @@ public class SelectionEcouteViewModel {
                 + " écoutées ("
                 + Math.round(progression.get() * 100)
                 + " %)");
-  }
-
-  private static String formatDuree(double secondes) {
-    long total = Math.round(secondes);
-    long heures = total / 3600;
-    long minutes = (total % 3600) / 60;
-    return heures > 0 ? heures + " h " + minutes + " min" : minutes + " min " + (total % 60) + " s";
   }
 
   /// Titre de contexte du bandeau (ex. `Carré 640380 / A1 / N° 2 (2026)`).

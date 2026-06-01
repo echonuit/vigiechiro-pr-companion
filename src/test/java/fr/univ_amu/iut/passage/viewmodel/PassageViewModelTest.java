@@ -64,6 +64,10 @@ class PassageViewModelTest {
     assertThat(viewModel.enregistreurProperty().get()).isEqualTo("PR 1925492");
     assertThat(viewModel.statutProperty().get()).isEqualTo(StatutWorkflow.TRANSFORME);
     assertThat(viewModel.nombreSequencesProperty().get()).isEqualTo(30);
+    assertThat(viewModel.verdictProperty().get()).isEqualTo(Verdict.OK);
+    assertThat(viewModel.volumeBrutsProperty().get()).isEqualTo("4 Ko");
+    assertThat(viewModel.volumeTransformesProperty().get()).isEqualTo("1 Ko");
+    assertThat(viewModel.dureeAudibleProperty().get()).isEqualTo("2 min 30 s");
     assertThat(viewModel.messageProperty().get()).isEmpty();
   }
 

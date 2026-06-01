@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import java.util.ArrayList;
@@ -90,7 +91,7 @@ public class PassageViewModel {
     verdict.set(detail.verdict());
     volumeBruts.set(formatOctets(detail.volumeOriginauxOctets()));
     volumeTransformes.set(formatOctets(detail.volumeSequencesOctets()));
-    dureeAudible.set(formatDuree(detail.dureeAudibleSecondes()));
+    dureeAudible.set(Formats.dureeLisible(detail.dureeAudibleSecondes()));
     nombreSequences.set(detail.nombreSequences());
     etapes.setAll(construireEtapes(detail.statut()));
     verificationDisponible.set(detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal());
@@ -137,13 +138,6 @@ public class PassageViewModel {
       return String.format(Locale.FRANCE, "%.0f Mo", valeur / 1_048_576.0);
     }
     return String.format(Locale.FRANCE, "%d Ko", valeur / 1024);
-  }
-
-  private static String formatDuree(double secondes) {
-    long total = Math.round(secondes);
-    long heures = total / 3600;
-    long minutes = (total % 3600) / 60;
-    return heures > 0 ? heures + " h " + minutes + " min" : minutes + " min " + (total % 60) + " s";
   }
 
   /// Titre d'identité du passage (`Carré 640380 / A1 / N° 2 (2026)`).
