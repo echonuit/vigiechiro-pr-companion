@@ -140,26 +140,6 @@
   -fx-text-fill: #6a737d;
 }
 
-.audio-placeholder {
-  -fx-padding: 20;
-  -fx-background-color: #eef2f5;
-  -fx-border-color: #d0d7de;
-  -fx-border-style: segments(6, 6) line-cap round;
-  -fx-border-radius: 4;
-  -fx-background-radius: 4;
-}
-
-.audio-placeholder-titre {
-  -fx-font-size: 13px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #4a90d9;
-}
-
-.audio-placeholder-sous {
-  -fx-font-size: 11px;
-  -fx-text-fill: #6a737d;
-}
-
 /* ---- Boutons de verdict ---- */
 .verdict {
   -fx-text-fill: white;
