@@ -112,7 +112,7 @@ public final class CaptureQualification {
             new QualificationModule());
     SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
     new MigrationSchema(source).migrer();
-    long idPassage = seeder(source);
+    long idPassage = seeder(source, workspace);
 
     QualificationViewModel verdictVm = injecteur.getInstance(QualificationViewModel.class);
     SelectionEcouteViewModel selectionVm = injecteur.getInstance(SelectionEcouteViewModel.class);
@@ -144,8 +144,9 @@ public final class CaptureQualification {
     System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
   }
 
-  /// Seede une nuit complète et renvoie l'identifiant du passage à vérifier.
-  private static long seeder(SourceDeDonnees source) {
+  /// Seede une nuit complète (chemins sous le `workspace` temporaire) et renvoie l'identifiant du
+  /// passage à vérifier.
+  private static long seeder(SourceDeDonnees source, Path workspace) {
     new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
     SiteDao siteDao = new SiteDao(source);
     PointDao pointDao = new PointDao(source);
@@ -188,7 +189,11 @@ public final class CaptureQualification {
     SessionDEnregistrement session =
         sessionDao.insert(
             new SessionDEnregistrement(
-                null, "/ws/" + PREFIXE.nomDossierSession(), null, null, passage.id()));
+                null,
+                workspace.resolve(PREFIXE.nomDossierSession()).toString(),
+                null,
+                null,
+                passage.id()));
 
     LocalDateTime debut = LocalDateTime.of(2026, 6, 22, 20, 25, 0);
     DateTimeFormatter horodatage = DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss");
@@ -199,7 +204,13 @@ public final class CaptureQualification {
       EnregistrementOriginal original =
           originalDao.insert(
               new EnregistrementOriginal(
-                  null, nomOriginal, "/ws/bruts/" + nomOriginal, 5.0, 384000, null, session.id()));
+                  null,
+                  nomOriginal,
+                  workspace.resolve("bruts").resolve(nomOriginal).toString(),
+                  5.0,
+                  384000,
+                  null,
+                  session.id()));
       String nomSequence = PREFIXE.nommerSequence(nomOriginal, 0);
       sequenceDao.insert(
           new SequenceDEcoute(
@@ -209,7 +220,7 @@ public final class CaptureQualification {
               0,
               0.0,
               5.0,
-              "/ws/transformes/" + nomSequence,
+              workspace.resolve("transformes").resolve(nomSequence).toString(),
               false,
               session.id()));
     }
