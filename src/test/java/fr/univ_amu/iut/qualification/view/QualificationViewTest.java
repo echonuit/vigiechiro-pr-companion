@@ -136,4 +136,12 @@ class QualificationViewTest {
     Button enregistrer = robot.lookup("#boutonEnregistrer").queryAs(Button.class);
     assertThat(enregistrer.isDisabled()).isFalse();
   }
+
+  @Test
+  @DisplayName("Les boutons de verdict reçoivent bien leurs classes CSS (séparateur espace)")
+  void boutons_verdict_recoivent_leurs_classes_css(FxRobot robot) {
+    Button ok = robot.lookup("#boutonOk").queryAs(Button.class);
+
+    assertThat(ok.getStyleClass()).contains("verdict", "verdict-ok");
+  }
 }
