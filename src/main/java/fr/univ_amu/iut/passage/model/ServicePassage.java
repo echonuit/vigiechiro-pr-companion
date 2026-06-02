@@ -391,8 +391,8 @@ public class ServicePassage {
 
     Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(idPassage);
     Long idSession = session.map(SessionDEnregistrement::id).orElse(null);
-    // Une session en base implique un dossier sur disque : on le re-préfixe (et
-    // [ReprefixeurSession]
+    String ancienneRacine = session.map(SessionDEnregistrement::cheminRacine).orElse(null);
+    // Une session en base implique un dossier sur disque : on le re-préfixe ([ReprefixeurSession]
     // échoue, avant toute écriture base, si le dossier est absent ou la cible occupée). Seul un
     // passage sans session du tout (jamais importé) saute l'étape disque.
     Path nouvelleRacine =
@@ -409,6 +409,7 @@ public class ServicePassage {
                   cx,
                   idPassage,
                   idSession,
+                  ancienneRacine,
                   ancien.nomDossierSession(),
                   nouveau.nomDossierSession());
             }
