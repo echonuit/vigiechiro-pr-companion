@@ -116,6 +116,23 @@ public abstract class DaoGenerique<T, ID> implements Dao<T, ID> {
     }
   }
 
+  /// Variante transactionnelle : insère sur la **connexion fournie** (sans l'ouvrir ni la
+  /// commiter) pour grouper l'écriture avec d'autres dans une même [UniteDeTravail]. Propage la
+  /// [SQLException] afin que l'unité de travail décide du commit / rollback.
+  protected long insererEtRecupererCle(Connection connexion, String sql, Object... parametres)
+      throws SQLException {
+    try (PreparedStatement ps = connexion.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+      lier(ps, parametres);
+      ps.executeUpdate();
+      try (ResultSet cles = ps.getGeneratedKeys()) {
+        if (cles.next()) {
+          return cles.getLong(1);
+        }
+        throw new DataAccessException("Aucune clé générée pour : " + sql, null);
+      }
+    }
+  }
+
   /// Lie les paramètres positionnels (1-based), en gérant explicitement les valeurs nulles.
   private static void lier(PreparedStatement ps, Object... parametres) throws SQLException {
     for (int i = 0; i < parametres.length; i++) {

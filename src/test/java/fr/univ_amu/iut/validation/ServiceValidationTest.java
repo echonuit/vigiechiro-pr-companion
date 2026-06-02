@@ -11,8 +11,10 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -132,6 +134,7 @@ class ServiceValidationTest {
             sequenceDao,
             parser,
             new ExportVuCsv(),
+            new UniteDeTravail(source),
             new HorlogeFigee(LocalDate.of(2026, 5, 31)));
   }
 
@@ -233,6 +236,22 @@ class ServiceValidationTest {
     assertThat(observationDao.findByResults(idResultats))
         .extracting(Observation::idSequence)
         .doesNotContainNull();
+  }
+
+  @Test
+  @DisplayName(
+      "Import atomique : un second import (passage_id unique) échoue sans altérer le premier")
+  void import_second_echec_preserve_le_premier() {
+    Long idResultats1 = service.importer(idPassage, ecrireBrut()).id();
+    int nbObs1 = observationDao.findByResults(idResultats1).size();
+
+    // Le 2e import insère d'abord le jeu de résultats : passage_id étant unique, l'écriture échoue
+    // et la transaction est annulée (rollback) sans laisser de jeu vide durable.
+    assertThatThrownBy(() -> service.importer(idPassage, ecrireBrut()))
+        .isInstanceOf(DataAccessException.class);
+
+    assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().id()).isEqualTo(idResultats1);
+    assertThat(observationDao.findByResults(idResultats1)).hasSize(nbObs1);
   }
 
   @Test

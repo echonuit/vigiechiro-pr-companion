@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
@@ -42,6 +43,7 @@ class ServiceValidationMockTest {
   @Mock TaxonDao taxonDao;
   @Mock SessionDao sessionDao;
   @Mock SequenceDao sequenceDao;
+  @Mock UniteDeTravail uniteDeTravail;
 
   private ServiceValidation service() {
     return new ServiceValidation(
@@ -52,6 +54,7 @@ class ServiceValidationMockTest {
         sequenceDao,
         new ParserCsvTadarida(),
         new ExportVuCsv(),
+        uniteDeTravail,
         new HorlogeFigee(LocalDate.of(2026, 5, 31)));
   }
 

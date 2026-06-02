@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -86,9 +87,18 @@ public class ValidationModule extends AbstractModule {
       SequenceDao sequenceDao,
       ParserCsvTadarida parser,
       ExportVuCsv export,
+      UniteDeTravail uniteDeTravail,
       Horloge horloge) {
     return new ServiceValidation(
-        resultatsDao, observationDao, taxonDao, sessionDao, sequenceDao, parser, export, horloge);
+        resultatsDao,
+        observationDao,
+        taxonDao,
+        sessionDao,
+        sequenceDao,
+        parser,
+        export,
+        uniteDeTravail,
+        horloge);
   }
 
   /// ViewModel de M-Vision-Tadarida. **Non-singleton** (un VM frais par chargement FXML).

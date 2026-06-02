@@ -104,6 +104,21 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
         observation.idResultats());
   }
 
+  /// Variante transactionnelle : insère le lot sur la `connexion` fournie, sans gérer le
+  /// commit/rollback (c'est l'unité de travail appelante qui s'en charge). Permet de grouper
+  /// l'insertion des observations avec la création de leur jeu de résultats en une seule
+  /// transaction (import atomique). Propage la [SQLException].
+  public void insererTout(Connection connexion, List<Observation> observations)
+      throws SQLException {
+    try (PreparedStatement ps = connexion.prepareStatement(SQL_INSERT)) {
+      for (Observation observation : observations) {
+        lier(ps, valeurs(observation));
+        ps.addBatch();
+      }
+      ps.executeBatch();
+    }
+  }
+
   /// Insère un lot d'observations dans une **transaction unique** (tout réussit ou tout est
   /// annulé). Renvoie le nombre de lignes insérées.
   public int insererTout(List<Observation> observations) {

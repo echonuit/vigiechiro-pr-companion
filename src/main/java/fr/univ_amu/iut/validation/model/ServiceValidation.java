@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.model;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -63,6 +64,7 @@ public class ServiceValidation {
   private final SequenceDao sequenceDao;
   private final ParserCsvTadarida parser;
   private final ExportVuCsv export;
+  private final UniteDeTravail uniteDeTravail;
   private final Horloge horloge;
 
   public ServiceValidation(
@@ -73,6 +75,7 @@ public class ServiceValidation {
       SequenceDao sequenceDao,
       ParserCsvTadarida parser,
       ExportVuCsv export,
+      UniteDeTravail uniteDeTravail,
       Horloge horloge) {
     this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
     this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
@@ -81,6 +84,7 @@ public class ServiceValidation {
     this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
     this.parser = Objects.requireNonNull(parser, "parser");
     this.export = Objects.requireNonNull(export, "export");
+    this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
     this.horloge = Objects.requireNonNull(horloge, "horloge");
   }
 
@@ -128,15 +132,33 @@ public class ServiceValidation {
       }
     }
 
-    ResultatsIdentification resultats =
-        resultatsDao.insert(
-            new ResultatsIdentification(
-                null,
-                cheminCsv.toString(),
-                parse.format().libelle(),
-                horloge.maintenant().toString(),
-                idPassage));
+    ResultatsIdentification aCreer =
+        new ResultatsIdentification(
+            null,
+            cheminCsv.toString(),
+            parse.format().libelle(),
+            horloge.maintenant().toString(),
+            idPassage);
 
+    // Le jeu de résultats et ses observations sont écrits dans une **seule transaction** : un arrêt
+    // entre les deux laisserait sinon un jeu vide durable, bloquant à jamais la reprise de l'import
+    // (passage_id unique). Tout réussit ou tout est annulé (rollback).
+    ResultatsIdentification[] insere = {null};
+    uniteDeTravail.executer(
+        connexion -> {
+          insere[0] = resultatsDao.insert(connexion, aCreer);
+          observationDao.insererTout(
+              connexion,
+              construireObservations(parse, sequenceParNom, taxonsConnus, insere[0].id()));
+        });
+    return insere[0];
+  }
+
+  private List<Observation> construireObservations(
+      ResultatParseTadarida parse,
+      Map<String, Long> sequenceParNom,
+      Set<String> taxonsConnus,
+      Long idResultats) {
     List<Observation> aInserer = new ArrayList<>();
     for (LigneObservation ligne : parse.lignes()) {
       Long idSequence = sequenceParNom.get(cleSequence(ligne.nomSequence()));
@@ -155,10 +177,9 @@ public class ServiceValidation {
               null,
               false,
               ligne.modeValidation(),
-              resultats.id()));
+              idResultats));
     }
-    observationDao.insererTout(aInserer);
-    return resultats;
+    return aInserer;
   }
 
   // ---------------------------------------------------------------------------------------------
