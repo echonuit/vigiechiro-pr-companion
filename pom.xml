@@ -21,7 +21,7 @@
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
         <spotless.maven.plugin.version>3.6.0</spotless.maven.plugin.version>
-        <google.java.format.version>1.35.0</google.java.format.version>
+        <palantir.java.format.version>2.91.0</palantir.java.format.version>
         <git.build.hook.plugin.version>3.6.0</git.build.hook.plugin.version>
         <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
         <javafx.version>26</javafx.version>
@@ -258,7 +258,7 @@
                 </configuration>
             </plugin>
 
-            <!-- Spotless : formatage Google Java Format. Opt-in via
+            <!-- Spotless : formatage Palantir Java Format. Opt-in via
                  ./mvnw spotless:apply, déclenché par .githooks/pre-commit. -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
@@ -267,17 +267,15 @@
                 <configuration>
                     <java>
                         <palantirJavaFormat>
-                            <version>2.91.0</version>                     <!-- optional -->
-                            <style>PALANTIR</style>                       <!-- or AOSP/GOOGLE (optional) -->
-                            <formatJavadoc>false</formatJavadoc>          <!-- defaults to false (optional,
-                            requires at least Palantir 2.39.0) -->
+                            <version>${palantir.java.format.version}</version>
+                            <style>PALANTIR</style>
+                            <!-- formatJavadoc=false : on préserve les doc-comments Markdown
+                                 Java (JEP 467, ///) sans que Palantir les reformate. -->
+                            <formatJavadoc>false</formatJavadoc>
                         </palantirJavaFormat>
-                        <tableTestFormatter /> <!-- has its own section below -->
-
-                        <importOrder /> <!-- standard import order -->
+                        <importOrder />
                         <removeUnusedImports />
-                        <formatAnnotations />  <!-- fixes formatting of type annotations, see below -->
-
+                        <formatAnnotations />
                         <trimTrailingWhitespace />
                         <endWithNewline />
                     </java>
