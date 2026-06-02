@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.qualification.viewmodel;
 
 import fr.univ_amu.iut.commun.model.MethodeSelection;
+import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
@@ -38,6 +39,7 @@ public class SelectionEcouteViewModel {
   private final ServiceQualification service;
   private Long idPassage;
   private Long idSelection;
+  private ContexteSite contexteSite;
 
   // Bandeau identité de la nuit (lecture seule, dérivé de ContexteVerification).
   private final ReadOnlyStringWrapper titreContexte =
@@ -46,6 +48,7 @@ public class SelectionEcouteViewModel {
       new ReadOnlyStringWrapper(this, "plageHoraire", "");
   private final ReadOnlyStringWrapper volumetrie =
       new ReadOnlyStringWrapper(this, "volumetrie", "");
+  private final ReadOnlyStringWrapper filAriane = new ReadOnlyStringWrapper(this, "filAriane", "");
 
   // Liste de la sélection + progression d'écoute + séquence courante.
   private final ObservableList<SequenceEnSelection> lignes = FXCollections.observableArrayList();
@@ -94,9 +97,11 @@ public class SelectionEcouteViewModel {
   /// est non-singleton, mais rien n'empêche une réouverture sur un autre passage).
   private void reinitialiser() {
     idSelection = null;
+    contexteSite = null;
     titreContexte.set("");
     plageHoraire.set("");
     volumetrie.set("");
+    filAriane.set("");
     sequenceCourante.set(null);
     lignes.clear();
     recalculerProgression();
@@ -141,21 +146,27 @@ public class SelectionEcouteViewModel {
   }
 
   private void appliquerContexte(ContexteVerification contexte) {
-    titreContexte.set(
-        "Carré "
-            + contexte.numeroCarre()
-            + " / "
-            + contexte.codePoint()
-            + " / N° "
-            + contexte.numeroPassage()
-            + " ("
-            + contexte.annee()
-            + ")");
+    String quadruplet = quadrupletLisible(contexte);
+    titreContexte.set(quadruplet + " (" + contexte.annee() + ")");
     plageHoraire.set(contexte.date() + "  " + contexte.heureDebut() + " → " + contexte.heureFin());
     volumetrie.set(
         contexte.sequencesTotales()
             + " séquences · durée audible "
             + Formats.dureeLisible(contexte.dureeAudibleSecondes()));
+    filAriane.set("‹ Mes sites › " + quadruplet + " › Vérifier l'enregistrement");
+    contexteSite =
+        new ContexteSite(contexte.numeroCarre(), contexte.codePoint(), contexte.nomSite());
+  }
+
+  /// Identité lisible du passage partagée par le bandeau et le fil d'Ariane : `Carré X / Point / N°
+  /// K`.
+  private static String quadrupletLisible(ContexteVerification contexte) {
+    return "Carré "
+        + contexte.numeroCarre()
+        + " / "
+        + contexte.codePoint()
+        + " / N° "
+        + contexte.numeroPassage();
   }
 
   private void majCheminCourant(SequenceEnSelection ligne) {
@@ -191,6 +202,18 @@ public class SelectionEcouteViewModel {
   /// Volumétrie de la nuit (`N séquences · durée audible Xh Ymin`).
   public ReadOnlyStringProperty volumetrieProperty() {
     return volumetrie.getReadOnlyProperty();
+  }
+
+  /// Fil d'Ariane affiché en tête : `‹ Mes sites › Carré X / Point › N° K › Vérifier
+  /// l'enregistrement`.
+  public ReadOnlyStringProperty filArianeProperty() {
+    return filAriane.getReadOnlyProperty();
+  }
+
+  /// Contexte site (carré, code point, nom) du passage courant, pour la navigation de retour vers
+  /// M-Passage. `null` tant qu'aucun passage n'est chargé.
+  public ContexteSite contexteSite() {
+    return contexteSite;
   }
 
   /// Liste observable de la sélection d'écoute (séquences retenues, ordonnées par position).

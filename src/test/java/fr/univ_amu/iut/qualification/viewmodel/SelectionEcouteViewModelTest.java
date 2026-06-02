@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
@@ -48,6 +49,7 @@ class SelectionEcouteViewModelTest {
             new ContexteVerification(
                 "640380",
                 "A1",
+                "Étang de la Tuilière",
                 2,
                 2026,
                 "2026-06-22",
@@ -87,6 +89,12 @@ class SelectionEcouteViewModelTest {
     assertThat(viewModel.volumetrieProperty().get()).contains("20 séquences");
     assertThat(viewModel.lignes()).hasSize(20);
     assertThat(viewModel.messageProperty().get()).isEmpty();
+    assertThat(viewModel.filArianeProperty().get())
+        .contains("Mes sites")
+        .contains("640380")
+        .contains("Vérifier");
+    assertThat(viewModel.contexteSite())
+        .isEqualTo(new ContexteSite("640380", "A1", "Étang de la Tuilière"));
   }
 
   @Test
@@ -144,6 +152,7 @@ class SelectionEcouteViewModelTest {
             new ContexteVerification(
                 "640380",
                 "A1",
+                "Étang de la Tuilière",
                 2,
                 2026,
                 "2026-06-22",
@@ -168,6 +177,8 @@ class SelectionEcouteViewModelTest {
     assertThat(viewModel.lignes()).isEmpty();
     assertThat(viewModel.cheminSequenceCouranteProperty().get()).isNull();
     assertThat(viewModel.titreContexteProperty().get()).isEmpty();
+    assertThat(viewModel.filArianeProperty().get()).isEmpty();
+    assertThat(viewModel.contexteSite()).isNull();
     assertThat(viewModel.messageProperty().get()).contains("introuvable");
   }
 }

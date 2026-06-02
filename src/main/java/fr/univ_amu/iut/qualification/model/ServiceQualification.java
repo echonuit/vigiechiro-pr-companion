@@ -199,10 +199,13 @@ public class ServiceQualification {
             .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     String numeroCarre = "?";
     String codePoint = "?";
+    String nomSite = "";
     Optional<PointDEcoute> point = pointDao.findById(passage.idPoint());
     if (point.isPresent()) {
       codePoint = point.get().code();
-      numeroCarre = siteDao.findById(point.get().idSite()).map(Site::numeroCarre).orElse("?");
+      Optional<Site> site = siteDao.findById(point.get().idSite());
+      numeroCarre = site.map(Site::numeroCarre).orElse("?");
+      nomSite = site.map(Site::nomConvivial).orElse("");
     }
     List<SequenceDEcoute> sequences =
         sessionDao
@@ -218,6 +221,7 @@ public class ServiceQualification {
     return new ContexteVerification(
         numeroCarre,
         codePoint,
+        nomSite,
         passage.numeroPassage(),
         passage.annee(),
         passage.dateEnregistrement(),

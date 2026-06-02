@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
@@ -62,6 +63,7 @@ class QualificationViewTest {
             new ContexteVerification(
                 "640380",
                 "A1",
+                "Étang de la Tuilière",
                 2,
                 2026,
                 "2026-06-22",
@@ -88,6 +90,11 @@ class QualificationViewTest {
               @Provides
               SelectionEcouteViewModel selection() {
                 return new SelectionEcouteViewModel(service);
+              }
+
+              @Provides
+              OuvrirPassage ouvrirPassage() {
+                return (id, contexte) -> {};
               }
             });
     FXMLLoader loader =
@@ -119,6 +126,18 @@ class QualificationViewTest {
 
     assertThat(titre.getText()).contains("640380").contains("A1");
     assertThat(table.getItems()).hasSize(3);
+  }
+
+  @Test
+  @DisplayName("Le fil d'Ariane affiche le chemin de navigation jusqu'à la vérification (#32)")
+  void affiche_le_fil_ariane(FxRobot robot) {
+    Label fil = robot.lookup("#lblFilAriane").queryAs(Label.class);
+
+    assertThat(fil.getText())
+        .contains("Mes sites")
+        .contains("640380")
+        .contains("A1")
+        .contains("Vérifier");
   }
 
   @Test
