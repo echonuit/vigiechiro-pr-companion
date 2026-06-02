@@ -28,6 +28,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.input.KeyCode;
@@ -132,12 +133,14 @@ class QualificationViewTest {
   @DisplayName("Le fil d'Ariane affiche le chemin de navigation jusqu'à la vérification (#32)")
   void affiche_le_fil_ariane(FxRobot robot) {
     Label fil = robot.lookup("#lblFilAriane").queryAs(Label.class);
+    Hyperlink retour = robot.lookup("#lienRetourPassage").queryAs(Hyperlink.class);
 
     assertThat(fil.getText())
         .contains("Mes sites")
         .contains("640380")
         .contains("A1")
         .contains("Vérifier");
+    assertThat(retour.isDisabled()).isFalse(); // contexte chargé → retour possible
   }
 
   @Test

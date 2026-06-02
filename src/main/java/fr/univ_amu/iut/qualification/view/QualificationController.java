@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
@@ -22,6 +23,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.RadioButton;
@@ -51,6 +53,7 @@ public class QualificationController {
   private Long idPassage;
 
   @FXML private BorderPane racine;
+  @FXML private Hyperlink lienRetourPassage;
   @FXML private Label lblFilAriane;
   @FXML private Label lblTitreContexte;
   @FXML private Label lblPlageHoraire;
@@ -94,6 +97,9 @@ public class QualificationController {
   @FXML
   private void initialize() {
     lblFilAriane.textProperty().bind(selectionVm.filArianeProperty());
+    // Retour au passage désactivé tant qu'aucun contexte n'est chargé (échec/écran vierge) : évite
+    // de passer un ContexteSite null à OuvrirPassage.
+    lienRetourPassage.disableProperty().bind(selectionVm.filArianeProperty().isEmpty());
     // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
     lblTitreContexte.textProperty().bind(selectionVm.titreContexteProperty());
     lblPlageHoraire.textProperty().bind(selectionVm.plageHoraireProperty());
@@ -216,7 +222,10 @@ public class QualificationController {
   /// [OuvrirPassage], avec le contexte site résolu par le ViewModel (sans dépendre de `passage`).
   @FXML
   private void retourPassage() {
-    ouvrirPassage.ouvrir(idPassage, selectionVm.contexteSite());
+    ContexteSite contexte = selectionVm.contexteSite();
+    if (contexte != null) {
+      ouvrirPassage.ouvrir(idPassage, contexte);
+    }
   }
 
   @FXML
