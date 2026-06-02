@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
+import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -42,6 +43,7 @@ class PassageViewTest {
 
     private final AtomicReference<Long> verificationOuverte = new AtomicReference<>();
     private final AtomicReference<Long> diagnosticOuvert = new AtomicReference<>();
+    private final AtomicReference<Long> validationOuverte = new AtomicReference<>();
 
     @Start
     void start(Stage stage) throws Exception {
@@ -75,6 +77,11 @@ class PassageViewTest {
             @Provides
             OuvrirDiagnostic ouvrirDiagnostic() {
                 return diagnosticOuvert::set;
+            }
+
+            @Provides
+            OuvrirValidation ouvrirValidation() {
+                return validationOuverte::set;
             }
         });
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
@@ -157,5 +164,17 @@ class PassageViewTest {
         Button rattachement = robot.lookup("#boutonRattachement").queryAs(Button.class);
 
         assertThat(rattachement.isDisabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Les boutons « Validation Tadarida » sont désactivés tant que le passage n'est pas déposé")
+    void boutons_validation_verrouilles(FxRobot robot) {
+        Button boutonValidation = robot.lookup("#boutonValidation").queryAs(Button.class);
+        Button boutonOuvrir = robot.lookup("#boutonOuvrirValidation").queryAs(Button.class);
+
+        // Le passage de test est VERIFIE (pas encore déposé) : la validation reste verrouillée.
+        assertThat(boutonValidation.isDisabled()).isTrue();
+        assertThat(boutonOuvrir.isDisabled()).isTrue();
+        assertThat(validationOuverte.get()).isNull(); // rien n'est ouvert
     }
 }
