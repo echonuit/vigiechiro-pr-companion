@@ -133,11 +133,13 @@ class ValidationViewTest {
 
   @Test
   @DisplayName(
-      "Panneau d'export : case « inclure le mode » cochée, bouton actif si résultats chargés")
-  void export_panneau_actif(FxRobot robot) {
+      "Barre d'actions : import toujours actif, export actif si résultats, case mode cochée")
+  void barre_actions_active(FxRobot robot) {
+    Button btnImporter = robot.lookup("#btnImporter").queryAs(Button.class);
     CheckBox chkInclureMode = robot.lookup("#chkInclureMode").queryAs(CheckBox.class);
     Button btnExporter = robot.lookup("#btnExporter").queryAs(Button.class);
 
+    assertThat(btnImporter.isDisabled()).isFalse(); // import : point d'entrée, toujours actif
     assertThat(chkInclureMode.isSelected()).isTrue(); // vrai par défaut (lié au VM)
     assertThat(btnExporter.isDisabled()).isFalse(); // un jeu de résultats est chargé
   }

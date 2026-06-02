@@ -30,6 +30,7 @@ public class ValidationController {
   private final ValidationViewModel viewModel;
 
   @FXML private Label lblProgression;
+  @FXML private Button btnImporter;
   @FXML private TableView<ObservationStatut> tableObservations;
   @FXML private TableColumn<ObservationStatut, String> colEspece;
   @FXML private TableColumn<ObservationStatut, String> colStatut;
@@ -99,6 +100,19 @@ public class ValidationController {
   /// chargement du FXML.
   public void ouvrirSur(Long idPassage) {
     viewModel.ouvrirSur(idPassage);
+  }
+
+  /// « Importer un CSV Tadarida » : ouvre le sélecteur de fichier natif (ouverture) puis délègue
+  /// l'import au VM. Le dialog vit dans la vue (non testé en TestFX) ; l'import est testé côté VM.
+  @FXML
+  private void importer() {
+    FileChooser selecteur = new FileChooser();
+    selecteur.setTitle("Importer un CSV Tadarida (observations ou _Vu)");
+    selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
+    File fichier = selecteur.showOpenDialog(btnImporter.getScene().getWindow());
+    if (fichier != null) {
+      viewModel.importer(fichier.toPath());
+    }
   }
 
   @FXML

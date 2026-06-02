@@ -119,6 +119,19 @@ public class ValidationViewModel {
     return appliquerAction(() -> service.corriger(courant.observation().id(), taxon.code(), null));
   }
 
+  /// Importe un CSV Tadarida (`*-observations.csv` ou `_Vu.csv`, R23) pour le passage courant, puis
+  /// recharge la vue. Sans passage ouvert ni fichier, l'appel est ignoré. Une erreur d'import
+  /// (passage sans session, séquence ou taxon inconnu) est restituée dans [#messageProperty()].
+  ///
+  /// @param cheminCsv fichier CSV choisi par l'observateur
+  /// @return `true` si l'import a réussi
+  public boolean importer(Path cheminCsv) {
+    if (idPassage == null || cheminCsv == null) {
+      return false;
+    }
+    return appliquerAction(() -> service.importer(idPassage, cheminCsv));
+  }
+
   private boolean appliquerAction(Runnable action) {
     try {
       action.run();

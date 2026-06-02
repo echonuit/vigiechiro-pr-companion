@@ -335,4 +335,31 @@ class ValidationViewModelTest {
     assertThat(viewModel.exporter(dest)).isFalse();
     assertThat(viewModel.messageProperty().get()).isEqualTo("Disque plein");
   }
+
+  @Test
+  @DisplayName("importer : importe le CSV pour le passage puis recharge la vue avec les résultats")
+  void importer_charge_les_resultats() {
+    Path csv = Path.of("nuit-observations.csv");
+    when(service.chargerValidation(ID_PASSAGE))
+        .thenReturn(new VueValidation(null, List.of()), vueTrois());
+    viewModel.ouvrirSur(ID_PASSAGE);
+    assertThat(viewModel.observations()).isEmpty();
+
+    assertThat(viewModel.importer(csv)).isTrue();
+    verify(service).importer(ID_PASSAGE, csv);
+    assertThat(viewModel.observations()).hasSize(3);
+  }
+
+  @Test
+  @DisplayName("importer : une erreur d'import (session/séquence/taxon) passe dans le message")
+  void importer_en_erreur_restitue_le_message() {
+    Path csv = Path.of("nuit-observations.csv");
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(new VueValidation(null, List.of()));
+    when(service.importer(ID_PASSAGE, csv))
+        .thenThrow(new RegleMetierException("Aucune session d'enregistrement"));
+    viewModel.ouvrirSur(ID_PASSAGE);
+
+    assertThat(viewModel.importer(csv)).isFalse();
+    assertThat(viewModel.messageProperty().get()).isEqualTo("Aucune session d'enregistrement");
+  }
 }

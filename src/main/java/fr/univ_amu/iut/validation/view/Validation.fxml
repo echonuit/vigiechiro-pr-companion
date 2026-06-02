@@ -28,6 +28,10 @@
     <Label fx:id="lblProgression" styleClass="sous-titre-page"/>
   </VBox>
 
+  <HBox spacing="8.0" alignment="CENTER_LEFT">
+    <Button fx:id="btnImporter" text="📥 Importer un CSV Tadarida…" onAction="#importer"/>
+  </HBox>
+
   <HBox spacing="14.0" VBox.vgrow="ALWAYS">
     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
       <Label text="📋 Observations" styleClass="section-titre"/>
