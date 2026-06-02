@@ -34,7 +34,8 @@
     <VBox spacing="12.0" styleClass="entete">
       <!-- Fil d'Ariane (#32) : contexte de navigation + retour cliquable vers M-Passage. -->
       <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Hyperlink text="‹ Retour au passage" styleClass="lien-retour" onAction="#retourPassage"/>
+        <Hyperlink fx:id="lienRetourPassage" text="‹ Retour au passage" styleClass="lien-retour"
+                   onAction="#retourPassage"/>
         <Label fx:id="lblFilAriane" styleClass="fil-ariane" wrapText="true"/>
       </HBox>
       <VBox spacing="2.0">
