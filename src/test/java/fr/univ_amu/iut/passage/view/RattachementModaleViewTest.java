@@ -97,14 +97,13 @@ class RattachementModaleViewTest {
   }
 
   @Test
-  @DisplayName(
-      "Le spinner n° accepte une valeur > 99 (bornes alignées sur le domaine, pas d'écrêtage)")
-  void spinner_numero_accepte_au_dela_de_99(FxRobot robot) {
+  @DisplayName("Le spinner n° n'a pas de borne haute arbitraire (pas d'écrêtage sous le domaine)")
+  void spinner_numero_sans_borne_haute(FxRobot robot) {
     @SuppressWarnings("unchecked")
     Spinner<Integer> numero = robot.lookup("#spinnerNumero").queryAs(Spinner.class);
 
-    robot.interact(() -> numero.getValueFactory().setValue(100));
+    robot.interact(() -> numero.getValueFactory().setValue(100000));
 
-    assertThat(numero.getValue()).isEqualTo(100);
+    assertThat(numero.getValue()).isEqualTo(100000);
   }
 }
