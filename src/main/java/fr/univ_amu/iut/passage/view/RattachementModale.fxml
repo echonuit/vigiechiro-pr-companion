@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Modale « Modifier le rattachement » (E2.S8), ouverte depuis M-Passage dans un Stage modal. Les
+  deux Spinner (année, n° de passage) sont liés en bidirectionnel au RattachementViewModel ; le
+  récapitulatif des conséquences et le message d'erreur en sont pilotés. « Appliquer » délègue au
+  ViewModel ; en cas de succès la modale se ferme et rafraîchit l'écran appelant.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:id="racine"
+      fx:controller="fr.univ_amu.iut.passage.view.RattachementModaleController"
+      stylesheets="@passage.css"
+      styleClass="modale-rattachement"
+      prefWidth="520.0"
+      spacing="12.0">
+
+  <Label text="✏ Modifier le rattachement" styleClass="titre-page"/>
+  <Label text="Corrige l'année et/ou le n° de passage. Le site et le point ne changent pas."
+         styleClass="section-sous" wrapText="true"/>
+
+  <HBox spacing="24.0">
+    <VBox spacing="4.0">
+      <Label text="Année" styleClass="bandeau-label"/>
+      <Spinner fx:id="spinnerAnnee" editable="true" prefWidth="130.0"/>
+    </VBox>
+    <VBox spacing="4.0">
+      <Label text="N° de passage" styleClass="bandeau-label"/>
+      <Spinner fx:id="spinnerNumero" editable="true" prefWidth="110.0"/>
+    </VBox>
+  </HBox>
+
+  <Label fx:id="labelRecap" styleClass="recap-rattachement" wrapText="true"/>
+  <Label fx:id="messageErreur" styleClass="message-erreur" wrapText="true"/>
+
+  <HBox alignment="CENTER_RIGHT" spacing="8.0">
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="Annuler" styleClass="action-secondaire" onAction="#annuler"/>
+    <Button text="Appliquer" styleClass="action-primaire" onAction="#valider"/>
+  </HBox>
+</VBox>
