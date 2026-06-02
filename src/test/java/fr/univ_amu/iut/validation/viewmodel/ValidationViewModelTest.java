@@ -1,6 +1,11 @@
 package fr.univ_amu.iut.validation.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.ModeValidation;
@@ -9,6 +14,7 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.VueValidation;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,12 +32,19 @@ class ValidationViewModelTest {
   private static final long ID_PASSAGE = 42L;
   private static final long ID_RESULTATS = 7L;
 
+  private static final Taxon PIPISTRELLE =
+      new Taxon("PIPPIP", "Pipistrellus pipistrellus", "Pipistrelle commune", 1L);
+  private static final Taxon NOCTULE =
+      new Taxon("NYCNOC", "Nyctalus noctula", "Noctule commune", 1L);
+
   @Mock private ServiceValidation service;
   private ValidationViewModel viewModel;
 
   @BeforeEach
   void preparer() {
     viewModel = new ValidationViewModel(service);
+    // ouvrirSur charge toujours les taxons ; stub permissif pour ne pas dépendre du test.
+    lenient().when(service.taxonsDisponibles()).thenReturn(List.of(PIPISTRELLE, NOCTULE));
   }
 
   private static Observation observation(Long id, String taxonObservateur, Double probObservateur) {
@@ -152,5 +165,99 @@ class ValidationViewModelTest {
     assertThat(viewModel.idResultats()).isNull();
     assertThat(viewModel.detailProperty().get()).isEmpty();
     assertThat(viewModel.messageProperty().get()).isEqualTo("Passage introuvable : 42");
+  }
+
+  @Test
+  @DisplayName("ouvrirSur : charge la liste des taxons pour le sélecteur de correction")
+  void ouvrir_charge_les_taxons() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+
+    viewModel.ouvrirSur(ID_PASSAGE);
+
+    assertThat(viewModel.taxons()).containsExactly(PIPISTRELLE, NOCTULE);
+  }
+
+  @Test
+  @DisplayName("selectionPresente suit la présence d'une sélection")
+  void selection_presente_suit_la_selection() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+    viewModel.ouvrirSur(ID_PASSAGE);
+
+    assertThat(viewModel.selectionPresenteProperty().get()).isFalse();
+    viewModel.selectionProperty().set(viewModel.observations().get(0));
+    assertThat(viewModel.selectionPresenteProperty().get()).isTrue();
+    viewModel.selectionProperty().set(null);
+    assertThat(viewModel.selectionPresenteProperty().get()).isFalse();
+  }
+
+  @Test
+  @DisplayName("valider : applique la validation sur la sélection puis recharge les compteurs")
+  void valider_applique_et_recharge() {
+    VueValidation apres =
+        new VueValidation(
+            ID_RESULTATS,
+            List.of(
+                new ObservationStatut(observation(1L, "PIPPIP", 0.92), StatutObservation.VALIDEE),
+                new ObservationStatut(observation(2L, "PIPPIP", 0.9), StatutObservation.VALIDEE),
+                new ObservationStatut(observation(3L, "NYCNOC", 0.8), StatutObservation.CORRIGEE)));
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois(), apres);
+    viewModel.ouvrirSur(ID_PASSAGE);
+    viewModel.selectionProperty().set(viewModel.observations().get(0)); // obs 1, non touchée
+
+    boolean ok = viewModel.valider();
+
+    assertThat(ok).isTrue();
+    verify(service).valider(1L);
+    assertThat(viewModel.nombreValideesProperty().get()).isEqualTo(2);
+    assertThat(viewModel.messageProperty().get()).isEmpty();
+  }
+
+  @Test
+  @DisplayName("corriger : applique le taxon observateur choisi sur la sélection")
+  void corriger_applique_le_taxon() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+    viewModel.ouvrirSur(ID_PASSAGE);
+    viewModel.selectionProperty().set(viewModel.observations().get(0)); // obs 1
+
+    boolean ok = viewModel.corriger(NOCTULE);
+
+    assertThat(ok).isTrue();
+    verify(service).corriger(1L, "NYCNOC", null);
+  }
+
+  @Test
+  @DisplayName("valider sans sélection est ignoré (aucun appel service)")
+  void valider_sans_selection_est_ignore() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+    viewModel.ouvrirSur(ID_PASSAGE);
+
+    assertThat(viewModel.valider()).isFalse();
+    verify(service, never()).valider(anyLong());
+  }
+
+  @Test
+  @DisplayName("corriger sans taxon est ignoré (aucun appel service)")
+  void corriger_sans_taxon_est_ignore() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+    viewModel.ouvrirSur(ID_PASSAGE);
+    viewModel.selectionProperty().set(viewModel.observations().get(0));
+
+    assertThat(viewModel.corriger(null)).isFalse();
+    verify(service, never()).corriger(anyLong(), any(), any());
+  }
+
+  @Test
+  @DisplayName("valider : une erreur métier est restituée dans le message, la vue est préservée")
+  void valider_en_erreur_restitue_le_message() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+    when(service.valider(1L)).thenThrow(new RegleMetierException("Observation introuvable : 1"));
+    viewModel.ouvrirSur(ID_PASSAGE);
+    viewModel.selectionProperty().set(viewModel.observations().get(0));
+
+    boolean ok = viewModel.valider();
+
+    assertThat(ok).isFalse();
+    assertThat(viewModel.messageProperty().get()).isEqualTo("Observation introuvable : 1");
+    assertThat(viewModel.observations()).hasSize(3); // la vue n'est pas vidée par l'échec
   }
 }

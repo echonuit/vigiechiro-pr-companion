@@ -4,9 +4,12 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.VueValidation;
 import java.util.Objects;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -23,8 +26,8 @@ import javafx.collections.ObservableList;
 /// compteurs de progression (validées / corrigées / total). VM agnostique de l'IHM (règle ArchUnit
 /// `viewmodel_sans_javafx_ui`) : seuls `javafx.beans`/`javafx.collections`. Non-singleton.
 ///
-/// La revue proprement dite (valider / corriger, R15/R16) sera branchée dans un incrément ultérieur
-/// (PR-V4) ; cet incrément couvre la lecture : liste, sélection, détail, compteurs.
+/// La revue est portée par [#valider()] (R15) et [#corriger(Taxon)] (R16) : chaque action
+/// délègue au service, puis recharge la vue. L'export `_Vu` et l'import CSV restent à part.
 public class ValidationViewModel {
 
   /// Affichage des valeurs optionnelles absentes (probabilité, taxon observateur non saisi).
@@ -32,14 +35,20 @@ public class ValidationViewModel {
 
   private final ServiceValidation service;
 
+  /// Passage courant, conservé pour recharger la vue après une action de revue (valider/corriger).
+  private Long idPassage;
+
   /// Identifiant du jeu de résultats courant (`identification_results`), `null` si aucun import.
   /// Conservé pour les actions d'export et de revue des incréments suivants.
   private Long idResultats;
 
   private final ObservableList<ObservationStatut> observations =
       FXCollections.observableArrayList();
+  private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
   private final ObjectProperty<ObservationStatut> selection =
       new SimpleObjectProperty<>(this, "selection");
+  private final ReadOnlyBooleanWrapper selectionPresente =
+      new ReadOnlyBooleanWrapper(this, "selectionPresente", false);
 
   private final ReadOnlyIntegerWrapper nombreTotal =
       new ReadOnlyIntegerWrapper(this, "nombreTotal", 0);
@@ -55,19 +64,57 @@ public class ValidationViewModel {
 
   public ValidationViewModel(ServiceValidation service) {
     this.service = Objects.requireNonNull(service, "service");
-    selection.addListener((obs, ancien, nouveau) -> majDetail(nouveau));
+    selection.addListener((obs, ancien, nouveau) -> majSelection(nouveau));
   }
 
   /// Ouvre la validation du passage `idPassage`. Une erreur (passage/résultats illisibles) est
   /// restituée dans [#messageProperty()] sans lever, l'écran restant vide. Un passage sans CSV
   /// importé n'est pas une erreur : la liste est vide et un message d'état neutre l'explique.
   public void ouvrirSur(Long idPassage) {
+    this.idPassage = idPassage;
     reinitialiser();
     try {
+      taxons.setAll(service.taxonsDisponibles());
       appliquer(service.chargerValidation(idPassage));
     } catch (RuntimeException echec) {
       reinitialiser();
       message.set(echec.getMessage());
+    }
+  }
+
+  /// Valide l'observation sélectionnée (R15 : retient la proposition Tadarida), puis recharge.
+  /// Sans sélection, l'appel est ignoré. Une erreur métier est restituée dans [#messageProperty()].
+  ///
+  /// @return `true` si la validation a été appliquée
+  public boolean valider() {
+    ObservationStatut courant = selection.get();
+    if (courant == null || courant.observation().id() == null) {
+      return false;
+    }
+    return appliquerAction(() -> service.valider(courant.observation().id()));
+  }
+
+  /// Corrige l'observation sélectionnée (R16 : retient le `taxon` de l'observateur, distinct de
+  /// Tadarida) puis recharge la vue. Sans sélection ni taxon, l'appel est ignoré.
+  ///
+  /// @param taxon taxon retenu par l'observateur
+  /// @return `true` si la correction a été appliquée
+  public boolean corriger(Taxon taxon) {
+    ObservationStatut courant = selection.get();
+    if (courant == null || courant.observation().id() == null || taxon == null) {
+      return false;
+    }
+    return appliquerAction(() -> service.corriger(courant.observation().id(), taxon.code(), null));
+  }
+
+  private boolean appliquerAction(Runnable action) {
+    try {
+      action.run();
+      appliquer(service.chargerValidation(idPassage));
+      return true;
+    } catch (RuntimeException echec) {
+      message.set(echec.getMessage());
+      return false;
     }
   }
 
@@ -105,7 +152,8 @@ public class ValidationViewModel {
     return (int) observations.stream().filter(o -> o.statut() == statut).count();
   }
 
-  private void majDetail(ObservationStatut courant) {
+  private void majSelection(ObservationStatut courant) {
+    selectionPresente.set(courant != null);
     if (courant == null) {
       detail.set("");
       return;
@@ -130,6 +178,7 @@ public class ValidationViewModel {
     idResultats = null;
     selection.set(null);
     observations.clear();
+    taxons.clear();
     detail.set("");
     nombreTotal.set(0);
     nombreValidees.set(0);
@@ -168,6 +217,16 @@ public class ValidationViewModel {
   /// Observation sélectionnée dans la liste (liée au modèle de sélection de la table par la vue).
   public ObjectProperty<ObservationStatut> selectionProperty() {
     return selection;
+  }
+
+  /// `true` dès qu'une observation est sélectionnée (activation des boutons valider/corriger).
+  public ReadOnlyBooleanProperty selectionPresenteProperty() {
+    return selectionPresente.getReadOnlyProperty();
+  }
+
+  /// Taxons connus en base, pour le sélecteur de correction (R16).
+  public ObservableList<Taxon> taxons() {
+    return taxons;
   }
 
   /// Détail multi-ligne de l'observation sélectionnée, vide quand aucune n'est sélectionnée.
