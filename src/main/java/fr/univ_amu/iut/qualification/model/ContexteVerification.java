@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 ///
 /// @param numeroCarre numéro de carré du site (6 chiffres), `?` si le site est introuvable
 /// @param codePoint code du point d'écoute (R2), `?` si le point est introuvable
+/// @param nomSite nom convivial du site (peut être vide), pour le contexte de navigation
 /// @param numeroPassage numéro du passage dans l'année
 /// @param annee année de campagne
 /// @param date date d'enregistrement (`AAAA-MM-JJ`)
@@ -24,6 +25,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 public record ContexteVerification(
     String numeroCarre,
     String codePoint,
+    String nomSite,
     int numeroPassage,
     int annee,
     String date,

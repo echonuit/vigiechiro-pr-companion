@@ -120,7 +120,7 @@ public final class CaptureQualification {
     loader.setControllerFactory(
         type ->
             type == QualificationController.class
-                ? new QualificationController(verdictVm, selectionVm)
+                ? new QualificationController(verdictVm, selectionVm, (id, contexte) -> {})
                 : injecteur.getInstance(type));
     Parent vue = loader.load();
     QualificationController controleur = loader.getController();

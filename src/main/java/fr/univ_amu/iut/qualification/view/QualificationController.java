@@ -5,6 +5,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
@@ -46,8 +47,11 @@ public class QualificationController {
 
   private final QualificationViewModel verdictVm;
   private final SelectionEcouteViewModel selectionVm;
+  private final OuvrirPassage ouvrirPassage;
+  private Long idPassage;
 
   @FXML private BorderPane racine;
+  @FXML private Label lblFilAriane;
   @FXML private Label lblTitreContexte;
   @FXML private Label lblPlageHoraire;
   @FXML private Label lblVolumetrie;
@@ -79,13 +83,17 @@ public class QualificationController {
 
   @Inject
   public QualificationController(
-      QualificationViewModel verdictVm, SelectionEcouteViewModel selectionVm) {
+      QualificationViewModel verdictVm,
+      SelectionEcouteViewModel selectionVm,
+      OuvrirPassage ouvrirPassage) {
     this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
     this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
+    this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
   }
 
   @FXML
   private void initialize() {
+    lblFilAriane.textProperty().bind(selectionVm.filArianeProperty());
     // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
     lblTitreContexte.textProperty().bind(selectionVm.titreContexteProperty());
     lblPlageHoraire.textProperty().bind(selectionVm.plageHoraireProperty());
@@ -199,8 +207,16 @@ public class QualificationController {
   /// Ouvre l'écran sur le passage `idPassage` : les deux VM se synchronisent sur le même passage.
   /// Appelée par [NavigationQualification] après le chargement du FXML.
   public void ouvrirSur(Long idPassage) {
+    this.idPassage = idPassage;
     verdictVm.ouvrirSur(idPassage);
     selectionVm.ouvrirSur(idPassage);
+  }
+
+  /// « ‹ Retour au passage » du fil d'Ariane : rouvre M-Passage sur ce passage via le contrat socle
+  /// [OuvrirPassage], avec le contexte site résolu par le ViewModel (sans dépendre de `passage`).
+  @FXML
+  private void retourPassage() {
+    ouvrirPassage.ouvrir(idPassage, selectionVm.contexteSite());
   }
 
   @FXML

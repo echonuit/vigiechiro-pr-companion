@@ -46,6 +46,7 @@ class QualificationViewModelTest {
             new ContexteVerification(
                 "640380",
                 "A1",
+                "Étang de la Tuilière",
                 2,
                 2026,
                 "2026-06-22",
