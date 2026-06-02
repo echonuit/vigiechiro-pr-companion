@@ -75,8 +75,20 @@ public class ValidationViewModel {
     idResultats = vue.idResultats();
     observations.setAll(vue.observations());
     majCompteurs();
-    message.set(
-        vue.observations().isEmpty() ? "Aucun résultat Tadarida importé pour ce passage." : "");
+    message.set(messageEtat(vue));
+  }
+
+  /// État neutre de l'écran : distingue l'absence d'import (`idResultats == null`) d'un CSV
+  /// effectivement importé mais sans aucune détection (en-tête seul) ; vide en présence
+  /// d'observations.
+  private static String messageEtat(VueValidation vue) {
+    if (vue.idResultats() == null) {
+      return "Aucun résultat Tadarida importé pour ce passage.";
+    }
+    if (vue.observations().isEmpty()) {
+      return "Résultats Tadarida importés, mais aucune détection à valider.";
+    }
+    return "";
   }
 
   private void majCompteurs() {
