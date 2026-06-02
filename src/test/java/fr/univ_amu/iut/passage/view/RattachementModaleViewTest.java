@@ -95,4 +95,16 @@ class RattachementModaleViewTest {
         .contains("Car040962-2026-Pass1-A1")
         .contains("Car040962-2026-Pass2-A1");
   }
+
+  @Test
+  @DisplayName(
+      "Le spinner n° accepte une valeur > 99 (bornes alignées sur le domaine, pas d'écrêtage)")
+  void spinner_numero_accepte_au_dela_de_99(FxRobot robot) {
+    @SuppressWarnings("unchecked")
+    Spinner<Integer> numero = robot.lookup("#spinnerNumero").queryAs(Spinner.class);
+
+    robot.interact(() -> numero.getValueFactory().setValue(100));
+
+    assertThat(numero.getValue()).isEqualTo(100);
+  }
 }
