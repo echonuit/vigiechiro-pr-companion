@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 
 /// Service métier de la feature `validation` : valide les résultats d'identification Tadarida
@@ -236,6 +237,26 @@ public class ServiceValidation {
           : StatutObservation.NON_TOUCHEE;
     }
     return StatutObservation.CORRIGEE;
+  }
+
+  /// Charge la **vue de validation** d'un passage pour M-Vision-Tadarida : le jeu de résultats
+  /// Tadarida associé (s'il a été importé) et ses observations, chacune avec son [#statut] de
+  // revue.
+  ///
+  /// Renvoie une vue **vide** (`idResultats` null, liste vide) si aucun CSV Tadarida n'a encore été
+  /// importé pour le passage — l'écran affiche alors un état vide plutôt que de lever.
+  public VueValidation chargerValidation(Long idPassage) {
+    Objects.requireNonNull(idPassage, "idPassage");
+    Optional<ResultatsIdentification> resultats = resultatsDao.findByPassage(idPassage);
+    if (resultats.isEmpty()) {
+      return new VueValidation(null, List.of());
+    }
+    Long idResultats = resultats.get().id();
+    List<ObservationStatut> observations =
+        observationDao.findByResults(idResultats).stream()
+            .map(observation -> new ObservationStatut(observation, statut(observation)))
+            .toList();
+    return new VueValidation(idResultats, observations);
   }
 
   // ---------------------------------------------------------------------------------------------

@@ -36,6 +36,7 @@ import fr.univ_amu.iut.validation.model.ResultatParseTadarida;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import fr.univ_amu.iut.validation.model.VueValidation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
@@ -406,5 +407,27 @@ class ServiceValidationTest {
     assertThatThrownBy(() -> service.importer(999_999L, ecrireBrut()))
         .isInstanceOf(RegleMetierException.class)
         .hasMessageContaining("session");
+  }
+
+  @Test
+  @DisplayName("chargerValidation : le jeu de résultats importé + ses observations (statut dérivé)")
+  void charger_validation_avec_resultats() {
+    long idResultats = service.importer(idPassage, ecrireBrut()).id();
+
+    VueValidation vue = service.chargerValidation(idPassage);
+
+    assertThat(vue.idResultats()).isEqualTo(idResultats);
+    assertThat(vue.observations()).isNotEmpty();
+    assertThat(vue.observations())
+        .allSatisfy(o -> assertThat(o.statut()).isEqualTo(StatutObservation.NON_TOUCHEE));
+  }
+
+  @Test
+  @DisplayName("chargerValidation : vue vide tant qu'aucun CSV n'a été importé pour le passage")
+  void charger_validation_sans_resultats() {
+    VueValidation vue = service.chargerValidation(idPassage);
+
+    assertThat(vue.idResultats()).isNull();
+    assertThat(vue.observations()).isEmpty();
   }
 }
