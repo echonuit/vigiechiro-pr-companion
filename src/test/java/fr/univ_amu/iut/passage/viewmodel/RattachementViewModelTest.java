@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -13,6 +14,8 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -106,5 +109,35 @@ class RattachementViewModelTest {
 
     assertThat(ok).isFalse();
     assertThat(viewModel.messageErreurProperty().get()).contains("R5");
+  }
+
+  @Test
+  @DisplayName("valider refuse un n° de passage < 1 sans appeler le service")
+  void valider_refuse_numero_invalide() {
+    when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+    viewModel.ouvrirSur(ID, "040962", "A1");
+    viewModel.numeroPassageProperty().set(0);
+
+    boolean ok = viewModel.valider();
+
+    assertThat(ok).isFalse();
+    assertThat(viewModel.messageErreurProperty().get()).contains("numéro de passage");
+    verify(service, never()).modifierRattachement(any(), any());
+  }
+
+  @Test
+  @DisplayName("valider surface une défaillance disque/base dans le message au lieu de la propager")
+  void valider_surface_une_defaillance_operationnelle() {
+    when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+    viewModel.ouvrirSur(ID, "040962", "A1");
+    viewModel.numeroPassageProperty().set(2);
+    doThrow(new UncheckedIOException("Déplacement du dossier impossible", new IOException()))
+        .when(service)
+        .modifierRattachement(eq(ID), any());
+
+    boolean ok = viewModel.valider();
+
+    assertThat(ok).isFalse();
+    assertThat(viewModel.messageErreurProperty().get()).contains("Déplacement");
   }
 }

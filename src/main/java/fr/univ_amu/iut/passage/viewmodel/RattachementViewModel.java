@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import java.util.Objects;
@@ -56,18 +55,29 @@ public class RattachementViewModel {
     majRecap();
   }
 
-  /// Applique le nouveau rattachement (année + n° saisis).
+  /// Applique le nouveau rattachement (année + n° saisis), après validation des bornes.
   ///
-  /// @return `true` si l'opération a réussi (la vue peut fermer la modale) ; `false` si une règle
-  ///     métier l'a refusée (motif dans [#messageErreurProperty], ex. R5 : quadruplet déjà pris)
+  /// @return `true` si l'opération a réussi (la vue peut fermer la modale) ; `false` sinon (saisie
+  ///     invalide, ou échec opérationnel — R5, disque, base — dont le motif est dans
+  ///     [#messageErreurProperty])
   public boolean valider() {
+    if (numeroPassage.get() < 1) {
+      messageErreur.set("Le numéro de passage doit être supérieur ou égal à 1.");
+      return false;
+    }
+    if (annee.get() < 1000 || annee.get() > 9999) {
+      messageErreur.set("L'année doit comporter quatre chiffres.");
+      return false;
+    }
     try {
       service.modifierRattachement(
           idPassage, new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint));
       messageErreur.set("");
       return true;
-    } catch (RegleMetierException refus) {
-      messageErreur.set(refus.getMessage());
+    } catch (RuntimeException echec) {
+      // Surface toute défaillance opérationnelle dans la modale (règle métier R5, disque, base)
+      // plutôt que de la laisser échapper au gestionnaire d'action JavaFX (cf. PassageViewModel).
+      messageErreur.set(echec.getMessage());
       return false;
     }
   }
