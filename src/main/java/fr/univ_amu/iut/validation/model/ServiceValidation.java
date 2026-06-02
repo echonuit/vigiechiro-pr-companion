@@ -259,6 +259,12 @@ public class ServiceValidation {
     return new VueValidation(idResultats, observations);
   }
 
+  /// Liste tous les taxons connus en base (pour le sélecteur de correction de l'observateur, R16).
+  /// L'ordre est celui du DAO ; le tri d'affichage est laissé à la couche présentation.
+  public List<Taxon> taxonsDisponibles() {
+    return taxonDao.findAll();
+  }
+
   // ---------------------------------------------------------------------------------------------
   // Export _Vu (E7.S3 ; R17, R24)
   // ---------------------------------------------------------------------------------------------

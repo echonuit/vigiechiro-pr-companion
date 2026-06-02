@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
@@ -14,12 +15,15 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.VueValidation;
 import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -35,6 +39,8 @@ import org.testfx.framework.junit5.Start;
 /// colonne « Statut », sélection qui alimente le détail, progression). Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
 class ValidationViewTest {
+
+  private ServiceValidation service;
 
   private static Observation observation(long id, String taxonObservateur) {
     return new Observation(
@@ -56,7 +62,7 @@ class ValidationViewTest {
 
   @Start
   void start(Stage stage) throws Exception {
-    ServiceValidation service = mock(ServiceValidation.class);
+    service = mock(ServiceValidation.class);
     when(service.chargerValidation(anyLong()))
         .thenReturn(
             new VueValidation(
@@ -64,6 +70,11 @@ class ValidationViewTest {
                 List.of(
                     new ObservationStatut(observation(1L, null), StatutObservation.NON_TOUCHEE),
                     new ObservationStatut(observation(2L, "PIPPIP"), StatutObservation.VALIDEE))));
+    when(service.taxonsDisponibles())
+        .thenReturn(
+            List.of(
+                new Taxon("PIPPIP", "Pipistrellus pipistrellus", "Pipistrelle commune", 1L),
+                new Taxon("NYCNOC", "Nyctalus noctula", "Noctule commune", 1L)));
     Injector injector =
         Guice.createInjector(
             new AbstractModule() {
@@ -100,5 +111,22 @@ class ValidationViewTest {
     assertThat(detail.getText()).isEmpty();
     robot.interact(() -> table.getSelectionModel().select(1));
     assertThat(detail.getText()).contains("Tadarida : PIPPIP").contains("Statut : Validée");
+  }
+
+  @Test
+  @DisplayName("Le sélecteur de taxon est peuplé ; les boutons de revue s'activent à la sélection")
+  void revue_activee_par_la_selection(FxRobot robot) {
+    TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+    ComboBox<?> choixTaxon = robot.lookup("#choixTaxon").queryAs(ComboBox.class);
+    Button btnValider = robot.lookup("#btnValider").queryAs(Button.class);
+
+    assertThat(choixTaxon.getItems()).hasSize(2);
+    assertThat(btnValider.isDisabled()).isTrue(); // pas de sélection au départ
+
+    robot.interact(() -> table.getSelectionModel().select(0));
+    assertThat(btnValider.isDisabled()).isFalse();
+
+    robot.clickOn("#btnValider");
+    verify(service).valider(1L); // l'observation sélectionnée (id = 1) est validée
   }
 }
