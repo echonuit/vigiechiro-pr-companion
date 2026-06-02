@@ -123,6 +123,20 @@ class ValidationViewModelTest {
   }
 
   @Test
+  @DisplayName("ouvrirSur : un CSV importé sans détection est distingué de l'absence d'import")
+  void ouvrir_csv_sans_detection() {
+    when(service.chargerValidation(ID_PASSAGE))
+        .thenReturn(new VueValidation(ID_RESULTATS, List.of()));
+
+    viewModel.ouvrirSur(ID_PASSAGE);
+
+    assertThat(viewModel.observations()).isEmpty();
+    assertThat(viewModel.idResultats()).isEqualTo(ID_RESULTATS);
+    assertThat(viewModel.messageProperty().get())
+        .isEqualTo("Résultats Tadarida importés, mais aucune détection à valider.");
+  }
+
+  @Test
   @DisplayName("ouvrirSur : une erreur de chargement vide l'écran et expose le message")
   void ouvrir_en_erreur() {
     // d'abord un chargement valide, pour vérifier que le second ouvrirSur réinitialise tout
