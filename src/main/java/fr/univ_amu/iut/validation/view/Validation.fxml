@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Vision-Tadarida - validation taxonomique des résultats Tadarida d'une nuit (parcours P7).
+  Atteint depuis l'onglet « Validation Tadarida » de M-Passage via le contrat socle OuvrirValidation.
+  Pur câblage : la liste des observations, la sélection, le détail et les compteurs sont liés au
+  ValidationViewModel par ValidationController. La revue (valider / corriger) arrivera en PR-V4.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.validation.view.ValidationController"
+      stylesheets="@validation.css"
+      styleClass="ecran-validation"
+      spacing="14.0">
+
+  <VBox spacing="2.0">
+    <Label text="🦇 Validation Tadarida" styleClass="titre-page"/>
+    <Label fx:id="lblProgression" styleClass="sous-titre-page"/>
+  </VBox>
+
+  <HBox spacing="14.0" VBox.vgrow="ALWAYS">
+    <VBox spacing="4.0" HBox.hgrow="ALWAYS">
+      <Label text="📋 Observations" styleClass="section-titre"/>
+      <TableView fx:id="tableObservations" VBox.vgrow="ALWAYS">
+        <columns>
+          <TableColumn fx:id="colEspece" text="Espèce (Tadarida)" prefWidth="220.0"/>
+          <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
+        </columns>
+      </TableView>
+    </VBox>
+    <VBox spacing="4.0" HBox.hgrow="ALWAYS" styleClass="panneau-detail">
+      <Label text="🔍 Détail de l'observation" styleClass="section-titre"/>
+      <Label fx:id="lblDetail" styleClass="section-sous" wrapText="true"/>
+    </VBox>
+  </HBox>
+
+  <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
+</VBox>

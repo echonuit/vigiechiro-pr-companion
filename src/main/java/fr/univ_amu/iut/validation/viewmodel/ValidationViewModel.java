@@ -123,7 +123,7 @@ public class ValidationViewModel {
             + ")\nFréquence médiane : "
             + frequence(o.frequenceMedianeHz())
             + "\nStatut : "
-            + libelle(courant.statut()));
+            + libelleStatut(courant.statut()));
   }
 
   private void reinitialiser() {
@@ -150,8 +150,9 @@ public class ValidationViewModel {
     return hz == null ? NON_RENSEIGNE : hz + " Hz";
   }
 
-  /// Libellé d'affichage du statut de revue d'une observation.
-  static String libelle(StatutObservation statut) {
+  /// Libellé d'affichage du statut de revue d'une observation. Source unique partagée par le détail
+  /// (ce VM) et la colonne « Statut » de la table (le controller de la vue).
+  public static String libelleStatut(StatutObservation statut) {
     return switch (statut) {
       case NON_TOUCHEE -> "À revoir";
       case VALIDEE -> "Validée";

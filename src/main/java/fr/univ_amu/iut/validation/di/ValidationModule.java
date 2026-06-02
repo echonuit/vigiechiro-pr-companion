@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
+import fr.univ_amu.iut.validation.view.NavigationValidation;
 import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
 
 /// Module Guice de la feature `validation` : fournit ses DAO, ses moteurs CSV
@@ -30,6 +32,13 @@ import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
 /// sens des dépendances (`validation → passage`) reste acyclique (contrôlé par
 /// `ArchitectureTest`).
 public class ValidationModule extends AbstractModule {
+
+  /// Fournit le contrat de navigation socle [OuvrirValidation] : M-Passage l'injecte pour ouvrir la
+  /// validation Tadarida sans dépendre de la vue de cette feature (graphe de slices acyclique).
+  @Override
+  protected void configure() {
+    bind(OuvrirValidation.class).to(NavigationValidation.class);
+  }
 
   @Provides
   @Singleton
