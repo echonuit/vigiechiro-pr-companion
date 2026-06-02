@@ -33,11 +33,19 @@ public class RattachementDao {
   }
 
   /// Réécrit les chemins persistés qui pointent dans le dossier de la session, en remplaçant
-  /// l'ancien nom de dossier par le nouveau : session, originaux, séquences, journal, relevé, et le
-  /// CSV des résultats Tadarida (`identification_results`, sous `transformes/` — R23, rattaché au
-  /// passage). Connection-aware.
+  /// l'ancien nom de dossier par le nouveau : session, originaux, séquences, journal, relevé.
+  ///
+  /// Le CSV des résultats Tadarida (`identification_results`) n'est réécrit que s'il est
+  /// **effectivement sous l'ancienne racine** (`ancienneRacine`) : `ServiceValidation` stocke le
+  /// chemin fourni tel quel (R23 le situe sous `transformes/`, mais il peut être externe et
+  /// n'aurait alors pas été déplacé sur disque). Connection-aware.
   public void reprefixerChemins(
-      Connection cx, long idPassage, long idSession, String ancienDossier, String nouveauDossier)
+      Connection cx,
+      long idPassage,
+      long idSession,
+      String ancienneRacine,
+      String ancienDossier,
+      String nouveauDossier)
       throws SQLException {
     chemin(
         cx,
@@ -71,12 +79,16 @@ public class RattachementDao {
         idSession,
         ancienDossier,
         nouveauDossier);
-    chemin(
-        cx,
-        "UPDATE identification_results SET file_path = replace(file_path, ?, ?) WHERE passage_id = ?",
-        idPassage,
-        ancienDossier,
-        nouveauDossier);
+    try (PreparedStatement ps =
+        cx.prepareStatement(
+            "UPDATE identification_results SET file_path = replace(file_path, ?, ?)"
+                + " WHERE passage_id = ? AND instr(file_path, ?) = 1")) {
+      ps.setString(1, ancienDossier);
+      ps.setString(2, nouveauDossier);
+      ps.setLong(3, idPassage);
+      ps.setString(4, ancienneRacine);
+      ps.executeUpdate();
+    }
   }
 
   private static void chemin(Connection cx, String sql, long cle, String ancien, String nouveau)

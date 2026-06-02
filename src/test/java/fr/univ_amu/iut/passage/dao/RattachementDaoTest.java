@@ -57,6 +57,7 @@ class RattachementDaoTest {
   private JournalDuCapteurDao journalDao;
   private ReleveClimatiqueDao releveDao;
   private ResultatsIdentificationDao resultatsDao;
+  private Path racine;
   private long idPassage;
   private long idSession;
 
@@ -82,7 +83,7 @@ class RattachementDaoTest {
     releveDao = new ReleveClimatiqueDao(source);
     resultatsDao = new ResultatsIdentificationDao(source);
 
-    Path racine = dossier.resolve(ANCIEN);
+    racine = dossier.resolve(ANCIEN);
     idPassage =
         passageDao
             .insert(
@@ -132,22 +133,23 @@ class RattachementDaoTest {
             null, racine.resolve("foo_LogPR.txt").toString(), "[]", "[]", idSession));
     releveDao.insert(
         new ReleveClimatique(null, racine.resolve("foo_THLog.csv").toString(), null, idSession));
+  }
+
+  /// Seede les résultats Tadarida du passage avec le `chemin` de CSV donné.
+  private void seederResultats(String chemin) {
     resultatsDao.insert(
-        new ResultatsIdentification(
-            null,
-            racine.resolve("transformes").resolve(ANCIEN + "-observations.csv").toString(),
-            "Vu",
-            "2026-06-23T08:00",
-            idPassage));
+        new ResultatsIdentification(null, chemin, "Vu", "2026-06-23T08:00", idPassage));
   }
 
   @Test
   @DisplayName("Réécrit le quadruplet et re-préfixe les chemins des sept tables en une transaction")
   void modifie_quadruplet_et_reprefixe_les_chemins() {
+    seederResultats(racine.resolve("transformes").resolve(ANCIEN + "-observations.csv").toString());
+
     uniteDeTravail.executer(
         cx -> {
           dao.majQuadruplet(cx, idPassage, 2026, 2);
-          dao.reprefixerChemins(cx, idPassage, idSession, ANCIEN, NOUVEAU);
+          dao.reprefixerChemins(cx, idPassage, idSession, racine.toString(), ANCIEN, NOUVEAU);
         });
 
     Passage passage = passageDao.findById(idPassage).orElseThrow();
@@ -173,5 +175,18 @@ class RattachementDaoTest {
     assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().cheminFichier())
         .contains(NOUVEAU)
         .doesNotContain(ANCIEN);
+  }
+
+  @Test
+  @DisplayName("Ne réécrit pas le CSV Tadarida importé depuis un chemin externe à la session")
+  void preserve_un_csv_tadarida_externe() {
+    String externe = "/tmp/export/" + ANCIEN + "-resultats.csv"; // hors de la racine de session
+    seederResultats(externe);
+
+    uniteDeTravail.executer(
+        cx -> dao.reprefixerChemins(cx, idPassage, idSession, racine.toString(), ANCIEN, NOUVEAU));
+
+    assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().cheminFichier())
+        .isEqualTo(externe);
   }
 }
