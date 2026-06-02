@@ -36,7 +36,7 @@
 
         <!-- Persistance + injection de dépendances (cf. TP5 / TP4). -->
         <guice.version>7.0.0</guice.version>
-        <sqlite.jdbc.version>3.49.1.0</sqlite.jdbc.version>
+        <sqlite.jdbc.version>3.53.1.0</sqlite.jdbc.version>
 
         <!-- Couverture (JaCoCo) + mutation (PIT, profil -Pmutation uniquement). -->
         <jacoco.version>0.8.14</jacoco.version>
