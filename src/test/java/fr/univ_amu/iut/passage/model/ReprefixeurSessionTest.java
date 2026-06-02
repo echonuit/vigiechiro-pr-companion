@@ -56,4 +56,69 @@ class ReprefixeurSessionTest {
         .isInstanceOf(IllegalStateException.class);
     assertThat(racine.resolve("bruts").resolve("Car040962-2026-Pass1-A1-PaRec.wav")).exists();
   }
+
+  // --- cheminApres : recalcul des chemins persistés (pur, sans disque) ---
+
+  @Test
+  @DisplayName("cheminApres relocalise sous la session et re-préfixe le nom des fichiers préfixés")
+  void cheminApres_relocalise_sous_la_session() {
+    Path ancienne = Path.of("/ws/Car040962-2026-Pass1-A1");
+    Path nouvelle = Path.of("/ws/Car040962-2026-Pass2-A1");
+
+    assertThat(
+            ReprefixeurSession.cheminApres(
+                "/ws/Car040962-2026-Pass1-A1/bruts/Car040962-2026-Pass1-A1-x.wav",
+                ancienne,
+                nouvelle,
+                ANCIEN.prefixeFichier(),
+                NOUVEAU.prefixeFichier()))
+        .isEqualTo("/ws/Car040962-2026-Pass2-A1/bruts/Car040962-2026-Pass2-A1-x.wav");
+
+    // fichier non préfixé (journal) : relocalisé, nom conservé
+    assertThat(
+            ReprefixeurSession.cheminApres(
+                "/ws/Car040962-2026-Pass1-A1/foo_LogPR.txt",
+                ancienne,
+                nouvelle,
+                ANCIEN.prefixeFichier(),
+                NOUVEAU.prefixeFichier()))
+        .isEqualTo("/ws/Car040962-2026-Pass2-A1/foo_LogPR.txt");
+  }
+
+  @Test
+  @DisplayName("cheminApres laisse inchangé un chemin externe, même un frère au nom préfixe")
+  void cheminApres_laisse_un_chemin_externe_inchange() {
+    Path ancienne = Path.of("/ws/Car040962-2026-Pass1-A1");
+    Path nouvelle = Path.of("/ws/Car040962-2026-Pass2-A1");
+    String externe = "/autre/Car040962-2026-Pass1-A1-export.csv";
+    String frere = "/ws/Car040962-2026-Pass1-A1-export/x.csv"; // frère dont le nom commence pareil
+
+    assertThat(
+            ReprefixeurSession.cheminApres(
+                externe, ancienne, nouvelle, ANCIEN.prefixeFichier(), NOUVEAU.prefixeFichier()))
+        .isEqualTo(externe);
+    assertThat(
+            ReprefixeurSession.cheminApres(
+                frere, ancienne, nouvelle, ANCIEN.prefixeFichier(), NOUVEAU.prefixeFichier()))
+        .isEqualTo(frere);
+  }
+
+  @Test
+  @DisplayName("cheminApres préserve un parent contenant par coïncidence le nom de dossier")
+  void cheminApres_preserve_le_parent() {
+    Path ancienne = Path.of("/tmp/Car040962-2026-Pass1-A1-arch/Car040962-2026-Pass1-A1");
+    Path nouvelle = Path.of("/tmp/Car040962-2026-Pass1-A1-arch/Car040962-2026-Pass2-A1");
+
+    assertThat(
+            ReprefixeurSession.cheminApres(
+                "/tmp/Car040962-2026-Pass1-A1-arch/Car040962-2026-Pass1-A1/bruts/"
+                    + "Car040962-2026-Pass1-A1-x.wav",
+                ancienne,
+                nouvelle,
+                ANCIEN.prefixeFichier(),
+                NOUVEAU.prefixeFichier()))
+        .isEqualTo(
+            "/tmp/Car040962-2026-Pass1-A1-arch/Car040962-2026-Pass2-A1/bruts/"
+                + "Car040962-2026-Pass2-A1-x.wav");
+  }
 }

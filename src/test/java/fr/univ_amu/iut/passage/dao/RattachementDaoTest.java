@@ -38,7 +38,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Tests d'intégration de [RattachementDao] sur une base SQLite jetable : les écritures
-/// connection-aware (quadruplet + re-préfixage des chemins par `replace`) réécrivent les six
+/// connection-aware (quadruplet + re-préfixage des chemins via `cheminApres`) réécrivent les sept
 /// tables d'une session en une transaction ([UniteDeTravail]).
 class RattachementDaoTest {
 
@@ -149,7 +149,14 @@ class RattachementDaoTest {
     uniteDeTravail.executer(
         cx -> {
           dao.majQuadruplet(cx, idPassage, 2026, 2);
-          dao.reprefixerChemins(cx, idPassage, idSession, racine.toString(), ANCIEN, NOUVEAU);
+          dao.reprefixerChemins(
+              cx,
+              idPassage,
+              idSession,
+              racine,
+              dossier.resolve(NOUVEAU),
+              ANCIEN + "-",
+              NOUVEAU + "-");
         });
 
     Passage passage = passageDao.findById(idPassage).orElseThrow();
@@ -184,7 +191,15 @@ class RattachementDaoTest {
     seederResultats(externe);
 
     uniteDeTravail.executer(
-        cx -> dao.reprefixerChemins(cx, idPassage, idSession, racine.toString(), ANCIEN, NOUVEAU));
+        cx ->
+            dao.reprefixerChemins(
+                cx,
+                idPassage,
+                idSession,
+                racine,
+                dossier.resolve(NOUVEAU),
+                ANCIEN + "-",
+                NOUVEAU + "-"));
 
     assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().cheminFichier())
         .isEqualTo(externe);

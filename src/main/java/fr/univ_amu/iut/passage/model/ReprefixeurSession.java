@@ -68,6 +68,33 @@ public class ReprefixeurSession {
     }
   }
 
+  /// Nouveau chemin d'un fichier persisté après le re-préfixage d'une session.
+  ///
+  /// Si `stocke` est **structurellement sous** `ancienneRacine` (comparaison composant par
+  /// composant via [Path#startsWith], donc insensible à un parent contenant par coïncidence le nom
+  /// de dossier), il est relocalisé sous `nouvelleRacine` (relativize + resolve) et le préfixe de
+  /// son nom est remplacé s'il est présent. Sinon (chemin **externe** à la session, p. ex. un CSV
+  /// Tadarida importé d'ailleurs et non déplacé sur disque), il est renvoyé **inchangé**. Permet à
+  /// `RattachementDao` de réécrire les chemins persistés exactement comme le disque, sans les
+  /// fragilités d'un `replace` textuel.
+  public static String cheminApres(
+      String stocke,
+      Path ancienneRacine,
+      Path nouvelleRacine,
+      String ancienPrefixe,
+      String nouveauPrefixe) {
+    Path chemin = Path.of(stocke);
+    if (!chemin.startsWith(ancienneRacine)) {
+      return stocke;
+    }
+    Path cible = nouvelleRacine.resolve(ancienneRacine.relativize(chemin));
+    String nom = cible.getFileName().toString();
+    if (nom.startsWith(ancienPrefixe)) {
+      cible = cible.resolveSibling(nouveauPrefixe + nom.substring(ancienPrefixe.length()));
+    }
+    return cible.toString();
+  }
+
   private static List<Path> fichiersPrefixes(Path racine, String ancienPrefixe) throws IOException {
     try (Stream<Path> flux = Files.walk(racine)) {
       return flux.filter(Files::isRegularFile)

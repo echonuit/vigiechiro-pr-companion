@@ -1,8 +1,13 @@
 package fr.univ_amu.iut.passage.model.dao;
 
+import fr.univ_amu.iut.passage.model.ReprefixeurSession;
+import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /// Écritures **connection-aware** de la modification rétroactive du rattachement d'un passage
 /// (E2.S8) : nouveau quadruplet (année + n° de passage) et re-préfixage des chemins persistés.
@@ -13,11 +18,11 @@ import java.sql.SQLException;
 /// (passage, session, originaux, séquences, journal, relevé, résultats Tadarida) est ainsi **tout
 /// ou rien**.
 ///
-/// Le re-préfixage des chemins se fait par `replace(colonne, ancienDossier, nouveauDossier)` : le
-/// nom de dossier de session (`Car<carré>-<année>-Pass<n>-<point>`) apparaît verbatim dans chaque
-/// chemin stocké — comme segment de répertoire et, pour les fichiers préfixés, comme préfixe de nom
-/// — si bien qu'un seul remplacement reproduit exactement le re-préfixage disque de
-/// [fr.univ_amu.iut.passage.model.ReprefixeurSession].
+/// Chaque chemin est recalculé par [ReprefixeurSession#cheminApres] (relocalisation sous la
+/// nouvelle racine, à l'identique du disque), jamais par un `replace` textuel : un parent qui
+/// contiendrait par coïncidence le nom de dossier, ou un CSV Tadarida importé d'un chemin externe,
+/// ne sont pas corrompus. Le SQL reste dans `model.dao` et ne référence aucune classe d'une autre
+/// feature (la table `identification_results` est touchée par requête, sans cycle).
 public class RattachementDao {
 
   /// Met à jour le quadruplet du passage (année + n° de passage). Connection-aware.
@@ -32,85 +37,117 @@ public class RattachementDao {
     }
   }
 
-  /// Réécrit les chemins persistés qui pointent dans le dossier de la session, en remplaçant
-  /// l'ancien nom de dossier par le nouveau : session, originaux, séquences, journal, relevé.
-  ///
-  /// Le CSV des résultats Tadarida (`identification_results`) n'est réécrit que s'il est
-  /// **effectivement sous l'ancienne racine** (`ancienneRacine`) : `ServiceValidation` stocke le
-  /// chemin fourni tel quel (R23 le situe sous `transformes/`, mais il peut être externe et
-  /// n'aurait alors pas été déplacé sur disque). Connection-aware.
+  /// Réécrit les chemins persistés sous le dossier de la session : `root_path` (fixé à la nouvelle
+  /// racine), `file_path`/`file_name` des originaux et séquences, `file_path` du journal, du relevé
+  /// et du CSV Tadarida. Connection-aware. Un chemin hors de l'ancienne racine reste inchangé (cf.
+  /// `cheminApres`).
   public void reprefixerChemins(
       Connection cx,
       long idPassage,
       long idSession,
-      String ancienneRacine,
-      String ancienDossier,
-      String nouveauDossier)
+      Path ancienneRacine,
+      Path nouvelleRacine,
+      String ancienPrefixe,
+      String nouveauPrefixe)
       throws SQLException {
-    chemin(
-        cx,
-        "UPDATE recording_session SET root_path = replace(root_path, ?, ?) WHERE id = ?",
-        idSession,
-        ancienDossier,
-        nouveauDossier);
-    nomEtChemin(
-        cx,
-        "UPDATE original_recording SET file_path = replace(file_path, ?, ?),"
-            + " file_name = replace(file_name, ?, ?) WHERE session_id = ?",
-        idSession,
-        ancienDossier,
-        nouveauDossier);
-    nomEtChemin(
-        cx,
-        "UPDATE listening_sequence SET file_path = replace(file_path, ?, ?),"
-            + " file_name = replace(file_name, ?, ?) WHERE session_id = ?",
-        idSession,
-        ancienDossier,
-        nouveauDossier);
-    chemin(
-        cx,
-        "UPDATE sensor_log SET file_path = replace(file_path, ?, ?) WHERE session_id = ?",
-        idSession,
-        ancienDossier,
-        nouveauDossier);
-    chemin(
-        cx,
-        "UPDATE climate_log SET file_path = replace(file_path, ?, ?) WHERE session_id = ?",
-        idSession,
-        ancienDossier,
-        nouveauDossier);
     try (PreparedStatement ps =
-        cx.prepareStatement(
-            "UPDATE identification_results SET file_path = replace(file_path, ?, ?)"
-                + " WHERE passage_id = ? AND instr(file_path, ?) = 1")) {
-      ps.setString(1, ancienDossier);
-      ps.setString(2, nouveauDossier);
-      ps.setLong(3, idPassage);
-      ps.setString(4, ancienneRacine);
+        cx.prepareStatement("UPDATE recording_session SET root_path = ? WHERE id = ?")) {
+      ps.setString(1, nouvelleRacine.toString());
+      ps.setLong(2, idSession);
       ps.executeUpdate();
     }
+    reprefixerTable(
+        cx,
+        "SELECT id, file_path FROM original_recording WHERE session_id = ?",
+        "UPDATE original_recording SET file_path = ?, file_name = ? WHERE id = ?",
+        idSession,
+        true,
+        ancienneRacine,
+        nouvelleRacine,
+        ancienPrefixe,
+        nouveauPrefixe);
+    reprefixerTable(
+        cx,
+        "SELECT id, file_path FROM listening_sequence WHERE session_id = ?",
+        "UPDATE listening_sequence SET file_path = ?, file_name = ? WHERE id = ?",
+        idSession,
+        true,
+        ancienneRacine,
+        nouvelleRacine,
+        ancienPrefixe,
+        nouveauPrefixe);
+    reprefixerTable(
+        cx,
+        "SELECT id, file_path FROM sensor_log WHERE session_id = ?",
+        "UPDATE sensor_log SET file_path = ? WHERE id = ?",
+        idSession,
+        false,
+        ancienneRacine,
+        nouvelleRacine,
+        ancienPrefixe,
+        nouveauPrefixe);
+    reprefixerTable(
+        cx,
+        "SELECT id, file_path FROM climate_log WHERE session_id = ?",
+        "UPDATE climate_log SET file_path = ? WHERE id = ?",
+        idSession,
+        false,
+        ancienneRacine,
+        nouvelleRacine,
+        ancienPrefixe,
+        nouveauPrefixe);
+    reprefixerTable(
+        cx,
+        "SELECT id, file_path FROM identification_results WHERE passage_id = ?",
+        "UPDATE identification_results SET file_path = ? WHERE id = ?",
+        idPassage,
+        false,
+        ancienneRacine,
+        nouvelleRacine,
+        ancienPrefixe,
+        nouveauPrefixe);
   }
 
-  private static void chemin(Connection cx, String sql, long cle, String ancien, String nouveau)
+  /// Recalcule, pour chaque ligne sélectionnée par `selectSql` (paramètre = `cle`), le `file_path`
+  /// via [ReprefixeurSession#cheminApres] et l'écrit avec `updateSql`. `avecNom` ajoute le
+  /// `file_name` (basename du nouveau chemin). Les chemins inchangés (hors session) sont ignorés.
+  private static void reprefixerTable(
+      Connection cx,
+      String selectSql,
+      String updateSql,
+      long cle,
+      boolean avecNom,
+      Path ancienneRacine,
+      Path nouvelleRacine,
+      String ancienPrefixe,
+      String nouveauPrefixe)
       throws SQLException {
-    try (PreparedStatement ps = cx.prepareStatement(sql)) {
-      ps.setString(1, ancien);
-      ps.setString(2, nouveau);
-      ps.setLong(3, cle);
-      ps.executeUpdate();
+    Map<Long, String> chemins = new LinkedHashMap<>();
+    try (PreparedStatement ps = cx.prepareStatement(selectSql)) {
+      ps.setLong(1, cle);
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          chemins.put(rs.getLong(1), rs.getString(2));
+        }
+      }
     }
-  }
-
-  private static void nomEtChemin(
-      Connection cx, String sql, long idSession, String ancien, String nouveau)
-      throws SQLException {
-    try (PreparedStatement ps = cx.prepareStatement(sql)) {
-      ps.setString(1, ancien);
-      ps.setString(2, nouveau);
-      ps.setString(3, ancien);
-      ps.setString(4, nouveau);
-      ps.setLong(5, idSession);
-      ps.executeUpdate();
+    try (PreparedStatement ps = cx.prepareStatement(updateSql)) {
+      for (Map.Entry<Long, String> ligne : chemins.entrySet()) {
+        String nouveau =
+            ReprefixeurSession.cheminApres(
+                ligne.getValue(), ancienneRacine, nouvelleRacine, ancienPrefixe, nouveauPrefixe);
+        if (nouveau.equals(ligne.getValue())) {
+          continue; // chemin externe à la session : non déplacé sur disque, donc inchangé
+        }
+        ps.setString(1, nouveau);
+        if (avecNom) {
+          ps.setString(2, Path.of(nouveau).getFileName().toString());
+          ps.setLong(3, ligne.getKey());
+        } else {
+          ps.setLong(2, ligne.getKey());
+        }
+        ps.executeUpdate();
+      }
     }
   }
 }

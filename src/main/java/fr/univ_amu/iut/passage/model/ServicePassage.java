@@ -391,14 +391,12 @@ public class ServicePassage {
 
     Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(idPassage);
     Long idSession = session.map(SessionDEnregistrement::id).orElse(null);
-    String ancienneRacine = session.map(SessionDEnregistrement::cheminRacine).orElse(null);
+    Path ancienneRacine = session.map(s -> Path.of(s.cheminRacine())).orElse(null);
     // Une session en base implique un dossier sur disque : on le re-préfixe ([ReprefixeurSession]
     // échoue, avant toute écriture base, si le dossier est absent ou la cible occupée). Seul un
     // passage sans session du tout (jamais importé) saute l'étape disque.
     Path nouvelleRacine =
-        session
-            .map(s -> reprefixeur.reprefixer(Path.of(s.cheminRacine()), ancien, nouveau))
-            .orElse(null);
+        ancienneRacine == null ? null : reprefixeur.reprefixer(ancienneRacine, ancien, nouveau);
 
     try {
       uniteDeTravail.executer(
@@ -410,8 +408,9 @@ public class ServicePassage {
                   idPassage,
                   idSession,
                   ancienneRacine,
-                  ancien.nomDossierSession(),
-                  nouveau.nomDossierSession());
+                  nouvelleRacine,
+                  ancien.prefixeFichier(),
+                  nouveau.prefixeFichier());
             }
           });
     } catch (RuntimeException echec) {
