@@ -68,22 +68,6 @@ public class ReprefixeurSession {
     }
   }
 
-  /// Nouveau chemin d'un fichier de la session après re-préfixage : relocalisé sous la nouvelle
-  /// racine, avec le préfixe de son nom remplacé s'il est présent. Permet à [ServicePassage] de
-  /// mettre à jour les chemins persistés exactement comme le disque.
-  public static Path cheminApres(
-      Path stocke, Path ancienneRacine, Path nouvelleRacine, Prefixe ancien, Prefixe nouveau) {
-    Path relatif = ancienneRacine.relativize(stocke);
-    Path cible = nouvelleRacine.resolve(relatif);
-    String nom = cible.getFileName().toString();
-    String ancienPrefixe = ancien.prefixeFichier();
-    if (nom.startsWith(ancienPrefixe)) {
-      String nouveauNom = nouveau.prefixeFichier() + nom.substring(ancienPrefixe.length());
-      return cible.resolveSibling(nouveauNom);
-    }
-    return cible;
-  }
-
   private static List<Path> fichiersPrefixes(Path racine, String ancienPrefixe) throws IOException {
     try (Stream<Path> flux = Files.walk(racine)) {
       return flux.filter(Files::isRegularFile)

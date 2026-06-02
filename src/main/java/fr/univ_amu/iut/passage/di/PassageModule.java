@@ -5,14 +5,17 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.MicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -92,10 +95,25 @@ public class PassageModule extends AbstractModule {
     return new MoteurWorkflowPassage();
   }
 
+  /// Re-préfixage disque du dossier de session (modification du rattachement, E2.S8).
+  @Provides
+  @Singleton
+  ReprefixeurSession fournirReprefixeurSession() {
+    return new ReprefixeurSession();
+  }
+
+  /// Écritures transactionnelles de la modification du rattachement (E2.S8). Sans état : toutes ses
+  /// méthodes reçoivent la connexion transactionnelle de l'[UniteDeTravail].
+  @Provides
+  @Singleton
+  RattachementDao fournirRattachementDao() {
+    return new RattachementDao();
+  }
+
   /// Service métier transverse de la feature. Comme le service de référence `ServiceSites`, il
-  /// reste sans annotation d'injection : c'est ce module qui assemble ses dépendances (les
-  /// [PassageDao], [SessionDao] et [SequenceDao] de la feature, le [MoteurWorkflowPassage] et
-  /// l'[Horloge] du socle).
+  /// reste sans annotation d'injection : c'est ce module qui assemble ses dépendances (DAO de la
+  /// feature, [MoteurWorkflowPassage], [Horloge], et pour E2.S8 le [ReprefixeurSession],
+  /// l'[UniteDeTravail] du socle et le [RattachementDao]).
   @Provides
   @Singleton
   ServicePassage fournirServicePassage(
@@ -103,8 +121,19 @@ public class PassageModule extends AbstractModule {
       MoteurWorkflowPassage moteur,
       Horloge horloge,
       SessionDao sessionDao,
-      SequenceDao sequenceDao) {
-    return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao);
+      SequenceDao sequenceDao,
+      ReprefixeurSession reprefixeur,
+      UniteDeTravail uniteDeTravail,
+      RattachementDao rattachementDao) {
+    return new ServicePassage(
+        passageDao,
+        moteur,
+        horloge,
+        sessionDao,
+        sequenceDao,
+        reprefixeur,
+        uniteDeTravail,
+        rattachementDao);
   }
 
   /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les
