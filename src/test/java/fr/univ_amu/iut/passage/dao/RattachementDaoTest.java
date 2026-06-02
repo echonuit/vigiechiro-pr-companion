@@ -29,6 +29,8 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.validation.model.ResultatsIdentification;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +56,7 @@ class RattachementDaoTest {
   private SequenceDao sequenceDao;
   private JournalDuCapteurDao journalDao;
   private ReleveClimatiqueDao releveDao;
+  private ResultatsIdentificationDao resultatsDao;
   private long idPassage;
   private long idSession;
 
@@ -77,6 +80,7 @@ class RattachementDaoTest {
     sequenceDao = new SequenceDao(source);
     journalDao = new JournalDuCapteurDao(source);
     releveDao = new ReleveClimatiqueDao(source);
+    resultatsDao = new ResultatsIdentificationDao(source);
 
     Path racine = dossier.resolve(ANCIEN);
     idPassage =
@@ -128,15 +132,22 @@ class RattachementDaoTest {
             null, racine.resolve("foo_LogPR.txt").toString(), "[]", "[]", idSession));
     releveDao.insert(
         new ReleveClimatique(null, racine.resolve("foo_THLog.csv").toString(), null, idSession));
+    resultatsDao.insert(
+        new ResultatsIdentification(
+            null,
+            racine.resolve("transformes").resolve(ANCIEN + "-observations.csv").toString(),
+            "Vu",
+            "2026-06-23T08:00",
+            idPassage));
   }
 
   @Test
-  @DisplayName("Réécrit le quadruplet et re-préfixe les chemins des six tables en une transaction")
+  @DisplayName("Réécrit le quadruplet et re-préfixe les chemins des sept tables en une transaction")
   void modifie_quadruplet_et_reprefixe_les_chemins() {
     uniteDeTravail.executer(
         cx -> {
           dao.majQuadruplet(cx, idPassage, 2026, 2);
-          dao.reprefixerChemins(cx, idSession, ANCIEN, NOUVEAU);
+          dao.reprefixerChemins(cx, idPassage, idSession, ANCIEN, NOUVEAU);
         });
 
     Passage passage = passageDao.findById(idPassage).orElseThrow();
@@ -157,6 +168,9 @@ class RattachementDaoTest {
         .contains(NOUVEAU)
         .doesNotContain(ANCIEN);
     assertThat(releveDao.trouverParSession(idSession).orElseThrow().cheminFichier())
+        .contains(NOUVEAU)
+        .doesNotContain(ANCIEN);
+    assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().cheminFichier())
         .contains(NOUVEAU)
         .doesNotContain(ANCIEN);
   }

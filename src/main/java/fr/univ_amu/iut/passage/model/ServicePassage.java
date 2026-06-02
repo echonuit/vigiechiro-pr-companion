@@ -404,7 +404,11 @@ public class ServicePassage {
             rattachementDao.majQuadruplet(cx, idPassage, nouveau.annee(), nouveau.numeroPassage());
             if (idSession != null) {
               rattachementDao.reprefixerChemins(
-                  cx, idSession, ancien.nomDossierSession(), nouveau.nomDossierSession());
+                  cx,
+                  idPassage,
+                  idSession,
+                  ancien.nomDossierSession(),
+                  nouveau.nomDossierSession());
             }
           });
     } catch (RuntimeException echec) {

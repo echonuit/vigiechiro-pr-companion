@@ -9,8 +9,9 @@ import java.sql.SQLException;
 ///
 /// Comme [fr.univ_amu.iut.importation.model.dao.AgregatImportDao], et pour la même raison
 /// (SERVICE-CONVENTIONS §2.5), les méthodes prennent une [Connection] et sont conçues pour être
-/// appelées **dans** un bloc `UniteDeTravail.executer(cx -> …)` : la mise à jour des six tables
-/// (passage, session, originaux, séquences, journal, relevé) est ainsi **tout ou rien**.
+/// appelées **dans** un bloc `UniteDeTravail.executer(cx -> …)` : la mise à jour des sept tables
+/// (passage, session, originaux, séquences, journal, relevé, résultats Tadarida) est ainsi **tout
+/// ou rien**.
 ///
 /// Le re-préfixage des chemins se fait par `replace(colonne, ancienDossier, nouveauDossier)` : le
 /// nom de dossier de session (`Car<carré>-<année>-Pass<n>-<point>`) apparaît verbatim dans chaque
@@ -31,11 +32,12 @@ public class RattachementDao {
     }
   }
 
-  /// Réécrit les chemins persistés de la session en remplaçant l'ancien nom de dossier par le
-  /// nouveau, dans la session, les originaux, les séquences, le journal et le relevé.
-  /// Connection-aware.
+  /// Réécrit les chemins persistés qui pointent dans le dossier de la session, en remplaçant
+  /// l'ancien nom de dossier par le nouveau : session, originaux, séquences, journal, relevé, et le
+  /// CSV des résultats Tadarida (`identification_results`, sous `transformes/` — R23, rattaché au
+  /// passage). Connection-aware.
   public void reprefixerChemins(
-      Connection cx, long idSession, String ancienDossier, String nouveauDossier)
+      Connection cx, long idPassage, long idSession, String ancienDossier, String nouveauDossier)
       throws SQLException {
     chemin(
         cx,
@@ -67,6 +69,12 @@ public class RattachementDao {
         cx,
         "UPDATE climate_log SET file_path = replace(file_path, ?, ?) WHERE session_id = ?",
         idSession,
+        ancienDossier,
+        nouveauDossier);
+    chemin(
+        cx,
+        "UPDATE identification_results SET file_path = replace(file_path, ?, ?) WHERE passage_id = ?",
+        idPassage,
         ancienDossier,
         nouveauDossier);
   }
