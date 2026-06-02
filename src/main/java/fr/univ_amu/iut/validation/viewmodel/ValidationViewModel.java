@@ -97,11 +97,21 @@ public class ValidationViewModel {
   /// Corrige l'observation sélectionnée (R16 : retient le `taxon` de l'observateur, distinct de
   /// Tadarida) puis recharge la vue. Sans sélection ni taxon, l'appel est ignoré.
   ///
+  /// Corriger vers la proposition Tadarida elle-même est refusé : ce serait une **validation**, pas
+  /// une correction (le service la reclasserait `NON_TOUCHEE`, laissant la ligne « À revoir »
+  /// malgré une saisie manuelle). On invite alors à utiliser [#valider()].
+  ///
   /// @param taxon taxon retenu par l'observateur
   /// @return `true` si la correction a été appliquée
   public boolean corriger(Taxon taxon) {
     ObservationStatut courant = selection.get();
     if (courant == null || courant.observation().id() == null || taxon == null) {
+      return false;
+    }
+    if (taxon.code().equals(courant.observation().taxonTadarida())) {
+      message.set(
+          "Pour retenir la proposition Tadarida, utilisez « Valider » : corriger attend"
+              + " un autre taxon.");
       return false;
     }
     return appliquerAction(() -> service.corriger(courant.observation().id(), taxon.code(), null));

@@ -247,6 +247,18 @@ class ValidationViewModelTest {
   }
 
   @Test
+  @DisplayName("corriger vers le taxon Tadarida lui-même est refusé (ce serait une validation)")
+  void corriger_vers_taxon_tadarida_est_refuse() {
+    when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+    viewModel.ouvrirSur(ID_PASSAGE);
+    viewModel.selectionProperty().set(viewModel.observations().get(0)); // taxonTadarida = PIPPIP
+
+    assertThat(viewModel.corriger(PIPISTRELLE)).isFalse(); // PIPISTRELLE.code() == "PIPPIP"
+    verify(service, never()).corriger(anyLong(), any(), any());
+    assertThat(viewModel.messageProperty().get()).contains("Valider");
+  }
+
+  @Test
   @DisplayName("valider : une erreur métier est restituée dans le message, la vue est préservée")
   void valider_en_erreur_restitue_le_message() {
     when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
