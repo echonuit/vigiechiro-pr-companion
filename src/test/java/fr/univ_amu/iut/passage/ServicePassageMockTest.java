@@ -10,10 +10,13 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.time.LocalDate;
@@ -34,6 +37,8 @@ class ServicePassageMockTest {
   @Mock private PassageDao passageDao;
   @Mock private SessionDao sessionDao;
   @Mock private SequenceDao sequenceDao;
+  @Mock private UniteDeTravail uniteDeTravail;
+  @Mock private RattachementDao rattachementDao;
 
   private ServicePassage service() {
     return new ServicePassage(
@@ -41,7 +46,10 @@ class ServicePassageMockTest {
         new MoteurWorkflowPassage(),
         new HorlogeFigee(LocalDate.of(2026, 6, 20)),
         sessionDao,
-        sequenceDao);
+        sequenceDao,
+        new ReprefixeurSession(),
+        uniteDeTravail,
+        rattachementDao);
   }
 
   @Test

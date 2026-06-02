@@ -47,26 +47,6 @@ class ReprefixeurSessionTest {
   }
 
   @Test
-  @DisplayName(
-      "cheminApres relocalise et re-préfixe un fichier préfixé, relocalise seulement sinon")
-  void cheminApres_recalcule_les_chemins(@TempDir Path tmp) {
-    Path ancienneRacine = tmp.resolve("Car040962-2026-Pass1-A1");
-    Path nouvelleRacine = tmp.resolve("Car040962-2026-Pass2-A1");
-
-    Path original = ancienneRacine.resolve("bruts").resolve("Car040962-2026-Pass1-A1-PaRec.wav");
-    assertThat(
-            ReprefixeurSession.cheminApres(
-                original, ancienneRacine, nouvelleRacine, ANCIEN, NOUVEAU))
-        .isEqualTo(nouvelleRacine.resolve("bruts").resolve("Car040962-2026-Pass2-A1-PaRec.wav"));
-
-    Path journal = ancienneRacine.resolve("journal.txt");
-    assertThat(
-            ReprefixeurSession.cheminApres(
-                journal, ancienneRacine, nouvelleRacine, ANCIEN, NOUVEAU))
-        .isEqualTo(nouvelleRacine.resolve("journal.txt"));
-  }
-
-  @Test
   @DisplayName("Refuse si le dossier cible existe déjà et laisse la source intacte")
   void refuse_si_cible_existe(@TempDir Path tmp) throws IOException {
     Path racine = creerSession(tmp);

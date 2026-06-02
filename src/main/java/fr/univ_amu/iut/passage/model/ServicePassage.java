@@ -2,14 +2,19 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.Alerte;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
@@ -43,23 +48,38 @@ public class ServicePassage {
   /// Nom du paramètre `passage` (messages `requireNonNull`).
   private static final String PASSAGE = "passage";
 
+  /// Nom du paramètre `idPassage` (messages `requireNonNull`).
+  private static final String ID_PASSAGE = "idPassage";
+
+  /// Préfixe du message d'erreur « passage introuvable ».
+  private static final String PASSAGE_INTROUVABLE = "Passage introuvable : ";
+
   private final PassageDao passageDao;
   private final MoteurWorkflowPassage moteur;
   private final Horloge horloge;
   private final SessionDao sessionDao;
   private final SequenceDao sequenceDao;
+  private final ReprefixeurSession reprefixeur;
+  private final UniteDeTravail uniteDeTravail;
+  private final RattachementDao rattachementDao;
 
   public ServicePassage(
       PassageDao passageDao,
       MoteurWorkflowPassage moteur,
       Horloge horloge,
       SessionDao sessionDao,
-      SequenceDao sequenceDao) {
+      SequenceDao sequenceDao,
+      ReprefixeurSession reprefixeur,
+      UniteDeTravail uniteDeTravail,
+      RattachementDao rattachementDao) {
     this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
     this.moteur = Objects.requireNonNull(moteur, "moteur");
     this.horloge = Objects.requireNonNull(horloge, "horloge");
     this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
     this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
+    this.reprefixeur = Objects.requireNonNull(reprefixeur, "reprefixeur");
+    this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
+    this.rattachementDao = Objects.requireNonNull(rattachementDao, "rattachementDao");
   }
 
   /// Projection de lecture pour l'écran **M-Passage** : le passage `idPassage` et les agrégats de
@@ -68,11 +88,11 @@ public class ServicePassage {
   ///
   /// @throws RegleMetierException si le passage est introuvable
   public DetailPassage detailPassage(Long idPassage) {
-    Objects.requireNonNull(idPassage, "idPassage");
+    Objects.requireNonNull(idPassage, ID_PASSAGE);
     Passage passage =
         passageDao
             .findById(idPassage)
-            .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+            .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(idPassage);
     List<SequenceDEcoute> sequences =
         session.map(s -> sequenceDao.findBySession(s.id())).orElseGet(List::of);
@@ -329,16 +349,81 @@ public class ServicePassage {
   ///
   /// @throws RegleMetierException si le passage est introuvable ou déjà déposé
   public void supprimer(Long idPassage) {
-    Objects.requireNonNull(idPassage, "idPassage");
+    Objects.requireNonNull(idPassage, ID_PASSAGE);
     Passage passage =
         passageDao
             .findById(idPassage)
-            .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+            .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
     if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
       throw new RegleMetierException(
           "Suppression refusée : un passage déposé ne peut pas être supprimé.");
     }
     passageDao.delete(idPassage);
+  }
+
+  /// Modifie rétroactivement le rattachement d'un passage (E2.S8) : nouvelle année et/ou n° de
+  /// passage, **même site/point**. Le préfixe `Car<carré>-<année>-Pass<n>-<point>` change : tous
+  /// les fichiers de la nuit (dossier, originaux, séquences) sont re-renommés.
+  ///
+  /// Ordre (atomicité best-effort base/disque) : (1) contrôle **R5** du nouveau quadruplet ;
+  /// (2) re-préfixage **disque** ([ReprefixeurSession], rollback interne) ; (3) transaction
+  /// **base** ([UniteDeTravail]) du quadruplet et des chemins (session, originaux, séquences,
+  /// journal, relevé — [RattachementDao]). Si la transaction échoue, le disque est **remis dans
+  /// son état initial** (compensation) avant que l'erreur ne soit propagée.
+  ///
+  /// Le carré et le code point (inchangés) sont fournis par l'appelant via `nouveau` (le `model` ne
+  /// dépend pas de `sites`) ; l'ancien préfixe est reconstruit depuis l'année/n° courants.
+  ///
+  /// @param nouveau préfixe cible (même carré/point, nouvelle année et/ou n° de passage)
+  /// @throws RegleMetierException si le passage est introuvable ou si le nouveau quadruplet existe
+  public void modifierRattachement(Long idPassage, Prefixe nouveau) {
+    Objects.requireNonNull(idPassage, ID_PASSAGE);
+    Objects.requireNonNull(nouveau, "nouveau");
+    Passage passage =
+        passageDao
+            .findById(idPassage)
+            .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
+    Prefixe ancien =
+        new Prefixe(nouveau.carre(), passage.annee(), passage.numeroPassage(), nouveau.codePoint());
+    if (ancien.equals(nouveau)) {
+      return; // ni l'année ni le n° de passage n'ont changé : rien à faire
+    }
+    exigerQuadrupletUnique(passage.idPoint(), nouveau.annee(), nouveau.numeroPassage());
+
+    Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(idPassage);
+    Long idSession = session.map(SessionDEnregistrement::id).orElse(null);
+    Path ancienneRacine = session.map(s -> Path.of(s.cheminRacine())).orElse(null);
+    Path nouvelleRacine =
+        ancienneRacine != null && Files.exists(ancienneRacine)
+            ? reprefixeur.reprefixer(ancienneRacine, ancien, nouveau)
+            : null;
+
+    try {
+      uniteDeTravail.executer(
+          cx -> {
+            rattachementDao.majQuadruplet(cx, idPassage, nouveau.annee(), nouveau.numeroPassage());
+            if (idSession != null) {
+              rattachementDao.reprefixerChemins(
+                  cx, idSession, ancien.nomDossierSession(), nouveau.nomDossierSession());
+            }
+          });
+    } catch (RuntimeException echec) {
+      if (nouvelleRacine != null) {
+        compenser(nouvelleRacine, nouveau, ancien, echec);
+      }
+      throw echec;
+    }
+  }
+
+  /// Remet le dossier de session dans son état initial après un échec de la transaction base ; une
+  /// erreur de compensation est rattachée à l'erreur d'origine plutôt que de la masquer.
+  private void compenser(
+      Path nouvelleRacine, Prefixe nouveau, Prefixe ancien, RuntimeException origine) {
+    try {
+      reprefixeur.reprefixer(nouvelleRacine, nouveau, ancien);
+    } catch (RuntimeException echecCompensation) {
+      origine.addSuppressed(echecCompensation);
+    }
   }
 
   private void exigerQuadrupletUnique(Long idPoint, int annee, int numeroPassage) {

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -13,19 +14,27 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.ReprefixeurSession;
+import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
+import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,7 +80,10 @@ class ServicePassageTest {
             new MoteurWorkflowPassage(),
             new HorlogeFigee(JOUR_FIXE),
             new SessionDao(source),
-            new SequenceDao(source));
+            new SequenceDao(source),
+            new ReprefixeurSession(),
+            new UniteDeTravail(source),
+            new RattachementDao());
   }
 
   /// Construit un passage candidat (non persisté) pour les vérifications R3/R4.
@@ -467,5 +479,107 @@ class ServicePassageTest {
     assertThatThrownBy(() -> service.supprimer(999L))
         .isInstanceOf(RegleMetierException.class)
         .hasMessageContaining("introuvable");
+  }
+
+  // --- Modifier le rattachement (E2.S8 : année + n° de passage) ---
+
+  @Test
+  @DisplayName("Modifier le rattachement renomme les fichiers sur disque et met à jour la base")
+  void modifier_rattachement_renomme_et_met_a_jour() throws IOException {
+    long id = seederNuit(2026, 1);
+
+    service.modifierRattachement(id, new Prefixe("040962", 2026, 2, "A1"));
+
+    assertThat(dossier.resolve("Car040962-2026-Pass1-A1")).doesNotExist();
+    Path nouvelle = dossier.resolve("Car040962-2026-Pass2-A1");
+    assertThat(nouvelle.resolve("bruts").resolve("Car040962-2026-Pass2-A1-PaRec.wav")).exists();
+    assertThat(nouvelle.resolve("transformes").resolve("Car040962-2026-Pass2-A1-PaRec_000.wav"))
+        .exists();
+    assertThat(passageDao.findById(id).orElseThrow().numeroPassage()).isEqualTo(2);
+    SessionDEnregistrement session = new SessionDao(source).trouverParPassage(id).orElseThrow();
+    assertThat(session.cheminRacine()).contains("Pass2").doesNotContain("Pass1");
+  }
+
+  @Test
+  @DisplayName("Modifier vers un quadruplet déjà pris est refusé (R5) sans rien changer")
+  void modifier_rattachement_refuse_si_quadruplet_pris() throws IOException {
+    long id = seederNuit(2026, 1);
+    seederNuit(2026, 2); // occupe le quadruplet cible
+
+    assertThatThrownBy(() -> service.modifierRattachement(id, new Prefixe("040962", 2026, 2, "A1")))
+        .isInstanceOf(RegleMetierException.class);
+    assertThat(dossier.resolve("Car040962-2026-Pass1-A1")).exists(); // source intacte
+    assertThat(passageDao.findById(id).orElseThrow().numeroPassage()).isEqualTo(1);
+  }
+
+  @Test
+  @DisplayName("Modifier vers le même quadruplet ne touche à rien")
+  void modifier_rattachement_sans_changement_est_neutre() throws IOException {
+    long id = seederNuit(2026, 1);
+
+    service.modifierRattachement(id, new Prefixe("040962", 2026, 1, "A1"));
+
+    assertThat(dossier.resolve("Car040962-2026-Pass1-A1")).exists();
+    assertThat(passageDao.findById(id).orElseThrow().numeroPassage()).isEqualTo(1);
+  }
+
+  /// Seede une nuit (dossier + fichiers préfixés sur disque, lignes passage/session/original/
+  /// séquence en base) pour le carré 040962 / point A1, et renvoie l'identifiant du passage.
+  private long seederNuit(int annee, int numero) throws IOException {
+    String nom = "Car040962-" + annee + "-Pass" + numero + "-A1";
+    Path racine = dossier.resolve(nom);
+    Files.createDirectories(racine.resolve("bruts"));
+    Files.createDirectories(racine.resolve("transformes"));
+    String original = nom + "-PaRec.wav";
+    String sequence = nom + "-PaRec_000.wav";
+    Files.writeString(racine.resolve("bruts").resolve(original), "o");
+    Files.writeString(racine.resolve("transformes").resolve(sequence), "s");
+    long id =
+        passageDao
+            .insert(
+                new Passage(
+                    null,
+                    numero,
+                    annee,
+                    "2026-06-20",
+                    "21:00:00",
+                    "05:00:00",
+                    null,
+                    StatutWorkflow.TRANSFORME,
+                    null,
+                    null,
+                    null,
+                    null,
+                    idPoint,
+                    SERIE))
+            .id();
+    long idSession =
+        new SessionDao(source)
+            .insert(new SessionDEnregistrement(null, racine.toString(), 100L, 50L, id))
+            .id();
+    EnregistrementOriginal orig =
+        new EnregistrementOriginalDao(source)
+            .insert(
+                new EnregistrementOriginal(
+                    null,
+                    original,
+                    racine.resolve("bruts").resolve(original).toString(),
+                    5.0,
+                    384000,
+                    null,
+                    idSession));
+    new SequenceDao(source)
+        .insert(
+            new SequenceDEcoute(
+                null,
+                sequence,
+                orig.id(),
+                0,
+                0.0,
+                5.0,
+                racine.resolve("transformes").resolve(sequence).toString(),
+                false,
+                idSession));
+    return id;
   }
 }
