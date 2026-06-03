@@ -11,6 +11,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.ModeValidation;
+import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -124,7 +125,8 @@ class ValidationViewTest {
         assertThat(btnValider.isDisabled()).isFalse();
 
         robot.clickOn("#btnValider");
-        verify(service).valider(1L); // l'observation sélectionnée (id = 1) est validée
+        // mode par défaut = Activité (validerSelonMode ACTIVITE = valide la seule observation)
+        verify(service).validerSelonMode(1L, ModeRevue.ACTIVITE);
     }
 
     @Test

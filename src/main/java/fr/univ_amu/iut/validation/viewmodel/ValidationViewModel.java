@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.validation.viewmodel;
 
+import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -49,6 +50,8 @@ public class ValidationViewModel {
     private final ReadOnlyBooleanWrapper resultatsDisponibles =
             new ReadOnlyBooleanWrapper(this, "resultatsDisponibles", false);
     private final BooleanProperty inclureMode = new SimpleBooleanProperty(this, "inclureMode", true);
+    private final ObjectProperty<ModeRevue> modeRevue =
+            new SimpleObjectProperty<>(this, "modeRevue", ModeRevue.ACTIVITE);
 
     private final ReadOnlyIntegerWrapper nombreTotal = new ReadOnlyIntegerWrapper(this, "nombreTotal", 0);
     private final ReadOnlyIntegerWrapper nombreValidees = new ReadOnlyIntegerWrapper(this, "nombreValidees", 0);
@@ -78,8 +81,10 @@ public class ValidationViewModel {
         }
     }
 
-    /// Valide l'observation sélectionnée (R15 : retient la proposition Tadarida), puis recharge.
-    /// Sans sélection, l'appel est ignoré. Une erreur métier est restituée dans [#messageProperty()].
+    /// Valide l'observation sélectionnée selon le [#modeRevueProperty()] (R15, R18), puis recharge.
+    /// En `ACTIVITE`, seule l'observation visée est validée ; en `INVENTAIRE`, la décision est
+    /// propagée (`auto`) aux autres détections non touchées de la même espèce Tadarida. Sans
+    /// sélection, l'appel est ignoré. Une erreur métier est restituée dans [#messageProperty()].
     ///
     /// @return `true` si la validation a été appliquée
     public boolean valider() {
@@ -87,7 +92,8 @@ public class ValidationViewModel {
         if (courant == null || courant.observation().id() == null) {
             return false;
         }
-        return appliquerAction(() -> service.valider(courant.observation().id()));
+        return appliquerAction(
+                () -> service.validerSelonMode(courant.observation().id(), modeRevue.get()));
     }
 
     /// Corrige l'observation sélectionnée (R16 : retient le `taxon` de l'observateur, distinct de
@@ -246,6 +252,12 @@ public class ValidationViewModel {
     /// Inclure la colonne `validation_mode` (R24) à l'export `_Vu` (case à cocher, vraie par défaut).
     public BooleanProperty inclureModeProperty() {
         return inclureMode;
+    }
+
+    /// Mode de revue (R18) pilotant [#valider()] : `ACTIVITE` (une par une, défaut) ou `INVENTAIRE`
+    /// (valider une espèce propage aux autres détections non touchées de la même espèce).
+    public ObjectProperty<ModeRevue> modeRevueProperty() {
+        return modeRevue;
     }
 
     /// Détail multi-ligne de l'observation sélectionnée, vide quand aucune n'est sélectionnée.

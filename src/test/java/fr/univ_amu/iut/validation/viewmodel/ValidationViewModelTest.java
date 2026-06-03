@@ -11,6 +11,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -206,9 +207,21 @@ class ValidationViewModelTest {
         boolean ok = viewModel.valider();
 
         assertThat(ok).isTrue();
-        verify(service).valider(1L);
+        verify(service).validerSelonMode(1L, ModeRevue.ACTIVITE); // mode par défaut
         assertThat(viewModel.nombreValideesProperty().get()).isEqualTo(2);
         assertThat(viewModel.messageProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("valider : en mode inventaire, propage la décision (validerSelonMode INVENTAIRE)")
+    void valider_en_inventaire_propage() {
+        when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+        viewModel.ouvrirSur(ID_PASSAGE);
+        viewModel.modeRevueProperty().set(ModeRevue.INVENTAIRE);
+        viewModel.selectionProperty().set(viewModel.observations().get(0));
+
+        assertThat(viewModel.valider()).isTrue();
+        verify(service).validerSelonMode(1L, ModeRevue.INVENTAIRE);
     }
 
     @Test
@@ -261,7 +274,8 @@ class ValidationViewModelTest {
     @DisplayName("valider : une erreur métier est restituée dans le message, la vue est préservée")
     void valider_en_erreur_restitue_le_message() {
         when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
-        when(service.valider(1L)).thenThrow(new RegleMetierException("Observation introuvable : 1"));
+        when(service.validerSelonMode(1L, ModeRevue.ACTIVITE))
+                .thenThrow(new RegleMetierException("Observation introuvable : 1"));
         viewModel.ouvrirSur(ID_PASSAGE);
         viewModel.selectionProperty().set(viewModel.observations().get(0));
 

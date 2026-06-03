@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.validation.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.viewmodel.FormatObservation;
@@ -48,6 +49,9 @@ public class ValidationController {
     private Label lblDetail;
 
     @FXML
+    private ComboBox<ModeRevue> choixMode;
+
+    @FXML
     private Button btnValider;
 
     @FXML
@@ -88,6 +92,20 @@ public class ValidationController {
 
         lblProgression.textProperty().bind(viewModel.progressionProperty());
         lblDetail.textProperty().bind(viewModel.detailProperty());
+
+        choixMode.getItems().setAll(ModeRevue.values());
+        choixMode.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(ModeRevue mode) {
+                return mode == null ? "" : libelleMode(mode);
+            }
+
+            @Override
+            public ModeRevue fromString(String libelle) {
+                return null; // ComboBox non éditable : conversion inverse inutile
+            }
+        });
+        choixMode.valueProperty().bindBidirectional(viewModel.modeRevueProperty());
 
         choixTaxon.setItems(viewModel.taxons());
         choixTaxon.setConverter(new StringConverter<>() {
@@ -171,5 +189,12 @@ public class ValidationController {
     private static String libelleTaxon(Taxon taxon) {
         String nom = taxon.nomVernaculaireFr();
         return nom == null || nom.isBlank() ? taxon.code() : taxon.code() + " (" + nom + ")";
+    }
+
+    private static String libelleMode(ModeRevue mode) {
+        return switch (mode) {
+            case ACTIVITE -> "Activité (une par une)";
+            case INVENTAIRE -> "Inventaire (propage l'espèce)";
+        };
     }
 }

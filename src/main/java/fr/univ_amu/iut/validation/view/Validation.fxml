@@ -50,6 +50,9 @@
       <Label text="✍ Revue" styleClass="section-titre"/>
       <Label text="Valider retient la proposition Tadarida ; corriger retient un autre taxon."
              styleClass="section-sous" wrapText="true"/>
+      <Label text="Mode de revue (R18) : en inventaire, valider une espèce propage aux autres détections."
+             styleClass="section-sous" wrapText="true"/>
+      <ComboBox fx:id="choixMode"/>
       <HBox spacing="8.0" alignment="CENTER_LEFT">
         <Button fx:id="btnValider" text="✔ Valider" onAction="#valider"/>
       </HBox>
