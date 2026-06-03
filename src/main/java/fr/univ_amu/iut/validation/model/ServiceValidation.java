@@ -268,6 +268,16 @@ public class ServiceValidation {
         return taxonDao.findAll();
     }
 
+    /// Chemin du fichier audio (séquence transformée, R22) d'une observation, à partir de sa séquence
+    /// d'écoute source. Sert à l'écoute dans M-Vision-Tadarida (E7.S3). Vide si la séquence est
+    /// introuvable ou si `idSequence` est `null`.
+    public Optional<Path> cheminAudio(Long idSequence) {
+        if (idSequence == null) {
+            return Optional.empty();
+        }
+        return sequenceDao.findById(idSequence).map(sequence -> Path.of(sequence.cheminFichier()));
+    }
+
     // ---------------------------------------------------------------------------------------------
     // Export _Vu (E7.S3 ; R17, R24)
     // ---------------------------------------------------------------------------------------------

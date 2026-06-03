@@ -10,6 +10,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Observation;
@@ -19,7 +20,9 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.VueValidation;
 import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -75,6 +78,7 @@ class ValidationViewTest {
                 .thenReturn(List.of(
                         new Taxon("PIPPIP", "Pipistrellus pipistrellus", "Pipistrelle commune", 1L),
                         new Taxon("NYCNOC", "Nyctalus noctula", "Noctule commune", 1L)));
+        when(service.cheminAudio(anyLong())).thenReturn(Optional.of(Path.of("/ws/seq.wav")));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             ValidationViewModel viewModel() {
@@ -152,5 +156,16 @@ class ValidationViewTest {
         // Items : [Tous(null), NON_TOUCHEE, VALIDEE, CORRIGEE] → l'index 2 sélectionne « Validée ».
         robot.interact(() -> choixFiltre.getSelectionModel().select(2));
         assertThat(table.getItems()).hasSize(1); // seule l'observation validée
+    }
+
+    @Test
+    @DisplayName("La vue audio suit l'observation sélectionnée (E7.S3)")
+    void audio_suit_la_selection(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+
+        assertThat(audio.getAudioFile()).isNull(); // aucune sélection au départ
+        robot.interact(() -> table.getSelectionModel().select(0));
+        assertThat(audio.getAudioFile().toString()).endsWith("seq.wav");
     }
 }

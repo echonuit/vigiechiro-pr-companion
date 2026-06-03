@@ -14,6 +14,8 @@ import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -51,6 +53,8 @@ public class ValidationViewModel {
     private final ObjectProperty<ObservationStatut> selection = new SimpleObjectProperty<>(this, "selection");
     private final ReadOnlyBooleanWrapper selectionPresente =
             new ReadOnlyBooleanWrapper(this, "selectionPresente", false);
+    private final ReadOnlyObjectWrapper<Path> cheminAudioCourant =
+            new ReadOnlyObjectWrapper<>(this, "cheminAudioCourant");
     private final ReadOnlyBooleanWrapper resultatsDisponibles =
             new ReadOnlyBooleanWrapper(this, "resultatsDisponibles", false);
     private final BooleanProperty inclureMode = new SimpleBooleanProperty(this, "inclureMode", true);
@@ -161,7 +165,15 @@ public class ValidationViewModel {
         resultatsDisponibles.set(vue.idResultats() != null);
         observations.setAll(vue.observations());
         majCompteurs();
-        message.set(messageEtat(vue));
+        // État neutre : absence d'import (idResultats null) vs CSV importé mais sans détection.
+        if (vue.idResultats() == null) {
+            message.set("Aucun résultat Tadarida importé pour ce passage.");
+        } else {
+            message.set(
+                    vue.observations().isEmpty()
+                            ? "Résultats Tadarida importés, mais aucune détection à valider."
+                            : "");
+        }
     }
 
     /// Exporte le CSV `_Vu` réinjectable du jeu de résultats courant vers `destination` (R17). La
@@ -187,16 +199,6 @@ public class ValidationViewModel {
     /// État neutre de l'écran : distingue l'absence d'import (`idResultats == null`) d'un CSV
     /// effectivement importé mais sans aucune détection (en-tête seul) ; vide en présence
     /// d'observations.
-    private static String messageEtat(VueValidation vue) {
-        if (vue.idResultats() == null) {
-            return "Aucun résultat Tadarida importé pour ce passage.";
-        }
-        if (vue.observations().isEmpty()) {
-            return "Résultats Tadarida importés, mais aucune détection à valider.";
-        }
-        return "";
-    }
-
     private void majCompteurs() {
         ComptageRevue comptage = ComptageRevue.de(observations);
         nombreTotal.set(comptage.total());
@@ -208,6 +210,11 @@ public class ValidationViewModel {
     private void majSelection(ObservationStatut courant) {
         selectionPresente.set(courant != null);
         detail.set(courant == null ? "" : FormatObservation.detail(courant));
+        cheminAudioCourant.set(
+                courant == null
+                        ? null
+                        : service.cheminAudio(courant.observation().idSequence())
+                                .orElse(null));
     }
 
     private void reinitialiser() {
@@ -274,6 +281,12 @@ public class ValidationViewModel {
     /// Détail multi-ligne de l'observation sélectionnée, vide quand aucune n'est sélectionnée.
     public ReadOnlyStringProperty detailProperty() {
         return detail.getReadOnlyProperty();
+    }
+
+    /// Chemin du fichier audio (séquence transformée) de l'observation sélectionnée, ou `null` si
+    /// aucune sélection / séquence introuvable. Lié à la source de la vue audio (E7.S3).
+    public ReadOnlyObjectProperty<Path> cheminAudioCourantProperty() {
+        return cheminAudioCourant.getReadOnlyProperty();
     }
 
     /// Nombre total d'observations du passage.
