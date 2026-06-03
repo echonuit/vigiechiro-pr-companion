@@ -33,9 +33,9 @@
       <Label text="📚 Sons de référence" styleClass="section-titre"/>
       <TableView fx:id="tableEntrees" VBox.vgrow="ALWAYS">
         <columns>
-          <TableColumn fx:id="colTaxon" text="Espèce retenue" prefWidth="180.0"/>
-          <TableColumn fx:id="colSequence" text="Séquence source" prefWidth="210.0"/>
-          <TableColumn fx:id="colFrequence" text="Fréquence (Hz)" prefWidth="120.0"/>
+          <TableColumn fx:id="colTaxon" text="Espèce retenue" prefWidth="150.0"/>
+          <TableColumn fx:id="colSequence" text="Séquence source" prefWidth="170.0"/>
+          <TableColumn fx:id="colFrequence" text="Fréquence (Hz)" prefWidth="110.0"/>
         </columns>
       </TableView>
     </VBox>
