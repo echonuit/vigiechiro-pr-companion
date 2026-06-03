@@ -29,6 +29,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -105,6 +106,18 @@ class MultisiteViewTest {
     void export_actif_quand_non_vide(FxRobot robot) {
         Button boutonExporter = robot.lookup("#boutonExporter").queryAs(Button.class);
         assertThat(boutonExporter.isDisabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Réinitialiser vide aussi une saisie de carré non validée (sans Entrée)")
+    void reinitialiser_vide_la_saisie_non_validee(FxRobot robot) {
+        TextField champCarre = robot.lookup("#champCarre").queryAs(TextField.class);
+        robot.clickOn("#champCarre").write("640380"); // saisie sans Entrée → VM inchangé
+        assertThat(champCarre.getText()).isEqualTo("640380");
+
+        robot.clickOn("#boutonReinitialiser");
+
+        assertThat(champCarre.getText()).isEmpty();
     }
 
     @Test

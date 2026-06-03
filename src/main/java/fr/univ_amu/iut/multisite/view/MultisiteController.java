@@ -187,6 +187,10 @@ public class MultisiteController {
 
     @FXML
     private void reinitialiser() {
+        // Vide d'abord les champs texte : une saisie non validée (sans Entrée) n'a pas mis à jour le
+        // VM, donc reinitialiserFiltres seul laisserait ce texte affiché (P3 revue codex).
+        champCarre.clear();
+        champAnnee.clear();
         viewModel.reinitialiserFiltres();
     }
 
