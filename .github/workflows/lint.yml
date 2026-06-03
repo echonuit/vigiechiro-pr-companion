@@ -42,6 +42,12 @@ jobs:
           chmod +x scripts/lint-doc-coherence.sh
           ./scripts/lint-doc-coherence.sh
 
+      - name: Captures completeness (#86)
+        # Chaque vue FXML doit avoir au moins une capture de reference declaree au manifeste.
+        run: |
+          chmod +x .github/assets/check-captures.sh
+          ./.github/assets/check-captures.sh
+
       - name: PMD quality-gate (fail on violation)
         # AppTest (TestFX) tourne en headless via la Headless Platform JavaFX 26
         # (glass.platform=Headless) : aucun display X11 requis, plus besoin de xvfb.
