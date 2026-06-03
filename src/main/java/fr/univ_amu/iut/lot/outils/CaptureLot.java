@@ -58,9 +58,9 @@ import javafx.scene.Scene;
 ///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé.
 ///
 /// On seede une base SQLite temporaire (deux passages sur un même point : un cohérent, un
-/// incohérent), puis on charge l'écran via une `controllerFactory` Guice (socle + passage + lot) et
-/// on le rend hors-écran par [ApercuFx]. La feature `lot` dépendant déjà de `sites` (vérification de
-/// cohérence), le seed utilise directement les DAO `sites`.
+/// incohérent), puis on charge l'écran via une `controllerFactory` Guice (socle + sites + passage +
+/// lot) et on le rend hors-écran par [ApercuFx]. La feature `lot` dépendant déjà de `sites`
+/// (vérification de cohérence), le seed utilise directement les DAO `sites`.
 ///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureLot {
@@ -74,6 +74,11 @@ public final class CaptureLot {
     private static final Prefixe PREFIXE_INCOHERENT = new Prefixe(NUMERO_CARRE, 2026, 2, CODE_POINT);
     private static final String NOM_ORIGINAL = PREFIXE.nommerOriginal("PaRecPR" + SERIE + "_20260620_213000.wav");
     private static final long VOLUME_SEQUENCES_OCTETS = 180L * 1024 * 1024; // 180 Mo
+
+    /// Racine d'affichage **déterministe** du dossier de session (R22) montrée à l'écran. On
+    /// n'utilise pas le `@TempDir` aléatoire : son suffixe se retrouverait dans les PNG commités et
+    /// salirait les assets à chaque régénération (le contenu réel n'est de toute façon pas lu).
+    private static final String RACINE_DEMO = "/home/observateur/VigieChiro";
 
     private CaptureLot() {}
 
@@ -110,8 +115,8 @@ public final class CaptureLot {
         ServiceLot service = injecteur.getInstance(ServiceLot.class);
 
         long idPoint = seederSiteEtPoint(source);
-        long idCoherent = seederPassageCoherent(source, idPoint, workspace);
-        long idIncoherent = seederPassageIncoherent(source, idPoint, workspace);
+        long idCoherent = seederPassageCoherent(source, idPoint);
+        long idIncoherent = seederPassageIncoherent(source, idPoint);
 
         // 1) Vérifié cohérent : « Préparer le lot » actif.
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-preparer.png"));
@@ -150,13 +155,13 @@ public final class CaptureLot {
     }
 
     /// Passage Vérifié entièrement cohérent (6 séquences préfixées + journal) prêt à être préparé.
-    private static long seederPassageCoherent(SourceDeDonnees source, long idPoint, Path workspace) {
+    private static long seederPassageCoherent(SourceDeDonnees source, long idPoint) {
         new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
         Passage passage = insererPassage(source, idPoint, 1, Verdict.OK);
         SessionDEnregistrement session = new SessionDao(source)
                 .insert(new SessionDEnregistrement(
                         null,
-                        workspace.resolve(PREFIXE.nomDossierSession()).toString(),
+                        RACINE_DEMO + "/" + PREFIXE.nomDossierSession(),
                         5L * 1024 * 1024 * 1024,
                         VOLUME_SEQUENCES_OCTETS,
                         passage.id()));
@@ -176,17 +181,11 @@ public final class CaptureLot {
     }
 
     /// Passage Vérifié incohérent : une session sans séquences ni journal → alertes bloquantes (R14).
-    private static long seederPassageIncoherent(SourceDeDonnees source, long idPoint, Path workspace) {
+    private static long seederPassageIncoherent(SourceDeDonnees source, long idPoint) {
         Passage passage = insererPassage(source, idPoint, 2, Verdict.OK);
         new SessionDao(source)
                 .insert(new SessionDEnregistrement(
-                        null,
-                        workspace
-                                .resolve(PREFIXE_INCOHERENT.nomDossierSession())
-                                .toString(),
-                        null,
-                        null,
-                        passage.id()));
+                        null, RACINE_DEMO + "/" + PREFIXE_INCOHERENT.nomDossierSession(), null, null, passage.id()));
         return passage.id();
     }
 
