@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Modale de gestion des vues sauvegardées de M-Multisite (story E5.S3).
+  Partage le MultisiteViewModel de l'écran (état de filtres commun) : enregistrer la combinaison
+  courante, appliquer une vue (rejoue ses filtres et ferme), la renommer/mettre à jour ou la
+  supprimer. Pur câblage : tout est lié au ViewModel par le ModaleVuesController.
+-->
+<VBox fx:id="racine"
+      xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.multisite.view.ModaleVuesController"
+      stylesheets="@multisite.css"
+      styleClass="ecran-multisite"
+      spacing="10.0"
+      prefWidth="440.0"
+      prefHeight="440.0">
+
+  <Label text="⭐ Vues sauvegardées" styleClass="titre-page"/>
+  <Label text="Enregistrez la combinaison de filtres courante, puis rejouez-la d'un clic."
+         styleClass="section-sous" wrapText="true"/>
+
+  <ListView fx:id="listeVues" VBox.vgrow="ALWAYS"/>
+
+  <HBox spacing="8.0" alignment="CENTER_LEFT">
+    <Button fx:id="boutonAppliquer" text="Appliquer" onAction="#appliquer"/>
+    <Button fx:id="boutonMettreAJour" text="Mettre à jour" onAction="#mettreAJour"/>
+    <Button fx:id="boutonSupprimer" text="Supprimer" onAction="#supprimer"/>
+  </HBox>
+
+  <Separator/>
+
+  <Label text="Nom de la vue :" styleClass="section-sous"/>
+  <HBox spacing="8.0" alignment="CENTER_LEFT">
+    <TextField fx:id="champNom" promptText="Ex. Déposés 2026" HBox.hgrow="ALWAYS"/>
+    <Button fx:id="boutonEnregistrer" text="Enregistrer" onAction="#enregistrer"/>
+  </HBox>
+
+  <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
+
+  <HBox alignment="CENTER_RIGHT">
+    <Button text="Fermer" onAction="#fermer"/>
+  </HBox>
+</VBox>
