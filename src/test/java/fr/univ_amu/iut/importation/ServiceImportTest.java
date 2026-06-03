@@ -190,6 +190,38 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("#12 : le découpage parallélisé traite tous les originaux, progression complète et ordonnée")
+    void decoupage_parallele_traite_tous_les_originaux() throws IOException {
+        Path multi = racine.resolve("sd-multi");
+        Files.createDirectories(multi);
+        Files.writeString(multi.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        int nb = 6;
+        for (int i = 0; i < nb; i++) {
+            // 6 originaux distincts (secondes croissantes) → 6 découpages lancés en parallèle.
+            ecrireWav(multi.resolve("PaRecPR1925492_20260422_2039" + String.format("%02d", i) + ".wav"));
+        }
+        List<Progression> points = new ArrayList<>();
+
+        ResultatImport resultat = service.importer(multi, idPoint, prefixe, points::add);
+
+        // Aucun résultat perdu par la parallélisation : les 6 originaux sont persistés.
+        assertThat(originalDao.findBySession(resultat.session().id())).hasSize(nb);
+        // L'émission de progression est sérialisée + comptée sous verrou → libellés monotones 1..N,
+        // même si l'ordre d'achèvement des threads virtuels est quelconque.
+        assertThat(points)
+                .filteredOn(p -> p.libelle().startsWith("Transformation"))
+                .extracting(Progression::libelle)
+                .containsExactly(
+                        "Transformation 1/6",
+                        "Transformation 2/6",
+                        "Transformation 3/6",
+                        "Transformation 4/6",
+                        "Transformation 5/6",
+                        "Transformation 6/6");
+        assertThat(points).extracting(Progression::fraction).isSorted().endsWith(1.0);
+    }
+
+    @Test
     @DisplayName("Upsert enregistreur + micro depuis le journal, journal et relevé persistés")
     void upsert_materiel_et_annexes() {
         ResultatImport resultat = service.importer(sd, idPoint, prefixe);

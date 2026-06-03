@@ -19,10 +19,14 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 /// Service métier de la feature `importation` : orchestre le parcours d'import P2 d'une nuit
@@ -193,14 +197,33 @@ public class ServiceImport {
 
         // 2) Renommage R6/R7 sur la copie, puis 3) transformation R10/R11.
         List<Path> originauxRenommes = renommeur.renommer(dossierBruts, prefixe);
-        List<TransformationOriginal> transformations = new ArrayList<>();
-        int indiceTransfo = 0;
-        for (Path original : originauxRenommes) {
-            transformations.add(transformation.transformer(original, dossierTransformes, prefixe));
-            indiceTransfo++;
-            faites++;
-            progres.accept(new Progression(
-                    "Transformation " + indiceTransfo + "/" + nbOriginaux, (double) faites / totalEtapes));
+
+        // Découpage parallélisé (#12) : chaque transformation est indépendante par fichier. On lance
+        // **un thread virtuel par original** (Java 25, version la plus simple — le bornage mémoire
+        // sera arbitré plus tard, banc de mesure #29 à l'appui). L'ordre d'origine est préservé : on
+        // récupère les Future dans l'ordre de soumission → résultat déterministe (persistance et tests
+        // inchangés). La progression (#33) est émise **sous verrou + compteur** pour rester appelée un
+        // à un (sûre pour tout consommateur) avec des libellés « Transformation k/N » monotones.
+        AtomicInteger transfosFaites = new AtomicInteger(0);
+        Object verrouProgression = new Object();
+        List<TransformationOriginal> transformations;
+        try (ExecutorService executeur = Executors.newVirtualThreadPerTaskExecutor()) {
+            List<Future<TransformationOriginal>> decoupagesEnCours = originauxRenommes.stream()
+                    .map(original -> executeur.submit(() -> {
+                        TransformationOriginal resultat =
+                                transformation.transformer(original, dossierTransformes, prefixe);
+                        synchronized (verrouProgression) {
+                            int faits = transfosFaites.incrementAndGet();
+                            progres.accept(new Progression(
+                                    "Transformation " + faits + "/" + nbOriginaux,
+                                    (double) (nbOriginaux + faits) / totalEtapes));
+                        }
+                        return resultat;
+                    }))
+                    .toList();
+            transformations = decoupagesEnCours.stream()
+                    .map(ServiceImport::resultatDecoupage)
+                    .toList();
         }
 
         // 4) Construction des entités de l'agrégat.
@@ -270,6 +293,24 @@ public class ServiceImport {
                 transformations.size(),
                 nombreSequences,
                 journal.anomalies());
+    }
+
+    /// Récupère le résultat d'un découpage lancé sur un thread virtuel (#12), en **dévoilant** la
+    /// cause d'un éventuel échec : une [RuntimeException] (ex. [UncheckedIOException] d'écriture) est
+    /// relancée telle quelle, pour conserver le comportement de l'import séquentiel ; une interruption
+    /// restaure le drapeau du thread avant de remonter l'erreur.
+    private static TransformationOriginal resultatDecoupage(Future<TransformationOriginal> decoupage) {
+        try {
+            return decoupage.get();
+        } catch (InterruptedException interruption) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Découpage audio interrompu.", interruption);
+        } catch (ExecutionException echec) {
+            if (echec.getCause() instanceof RuntimeException relancable) {
+                throw relancable;
+            }
+            throw new IllegalStateException("Échec du découpage audio.", echec.getCause());
+        }
     }
 
     private Passage construirePassage(JournalParse journal, Long idPoint, Prefixe prefixe) {
