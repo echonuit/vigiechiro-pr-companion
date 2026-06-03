@@ -110,7 +110,22 @@ public final class CaptureEcrans {
 
         capturerMesSites(creerInjecteur(), sortie.resolve("apercu-sites-mes-sites.png"));
         capturerDetail(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-detail.png"));
-        capturerModale(creerInjecteur(), seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point.png"));
+        // Détail d'un site sans passage : montre l'état « aucun passage » du tableau.
+        capturerDetail(
+                creerInjecteur(), seed.siteSansPassage(), sortie.resolve("apercu-sites-detail-sans-passage.png"));
+        // Modale point : édition (champs pré-remplis) puis création (formulaire vierge).
+        capturerModaleEdition(
+                creerInjecteur(), seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point.png"));
+        capturerModaleCreation(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-point-creation.png"));
+
+        // État vide : base neuve (juste un utilisateur, aucun site) → accueil M-Sites en état initial.
+        Path workspaceVide = Files.createTempDirectory("vc-capture-sites-vide");
+        System.setProperty("vigiechiro.workspace", workspaceVide.toString());
+        Injector amorceVide = creerInjecteur();
+        amorceVide.getInstance(MigrationSchema.class).migrer();
+        new UtilisateurDao(amorceVide.getInstance(SourceDeDonnees.class))
+                .insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
+        capturerMesSites(creerInjecteur(), sortie.resolve("apercu-sites-mes-sites-vide.png"));
 
         System.out.println("Apercus ecrits dans " + sortie.toAbsolutePath());
     }
@@ -129,14 +144,22 @@ public final class CaptureEcrans {
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
     }
 
-    /// Modale d'edition d'un point d'ecoute, rendue seule (c'est une fenetre modale, hors chrome).
-    private static void capturerModale(Injector injecteur, Site site, PointDEcoute point, Path fichier)
+    /// Modale d'edition d'un point d'ecoute (champs pre-remplis), rendue seule (fenetre modale).
+    private static void capturerModaleEdition(Injector injecteur, Site site, PointDEcoute point, Path fichier)
             throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
-        ModalePointController controller = loader.getController();
-        controller.demarrerEdition(site, point, () -> {});
+        ((ModalePointController) loader.getController()).demarrerEdition(site, point, () -> {});
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+    }
+
+    /// Modale de creation d'un point d'ecoute (formulaire vierge), rendue seule (fenetre modale).
+    private static void capturerModaleCreation(Injector injecteur, Site site, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {});
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
@@ -181,11 +204,11 @@ public final class CaptureEcrans {
         PointDEcoute zacA1 = service.ajouterPoint(zac.id(), "A1", 43.3400, 5.3600, null);
         passages.insert(passage(1, "2026-09-15", zacA1.id(), SERIE_PR1, StatutWorkflow.IMPORTE, null, null));
 
-        // Site 3 (froid) : aucun passage, protocole recherche.
+        // Site 3 (froid) : aucun passage, protocole recherche. Capture en detail « sans passage ».
         Site calanques = service.creerSite("130010", "Calanques", Protocole.RECHERCHE, null, ID_UTILISATEUR);
         service.ajouterPoint(calanques.id(), "A1", 43.2100, 5.4400, "Crete sud");
 
-        return new Seed(etang, a1);
+        return new Seed(etang, a1, calanques);
     }
 
     private static Passage passage(
@@ -214,5 +237,5 @@ public final class CaptureEcrans {
     }
 
     /// Donnees seedees reutilisees par les ecrans detail et modale.
-    private record Seed(Site site, PointDEcoute point) {}
+    private record Seed(Site site, PointDEcoute point, Site siteSansPassage) {}
 }

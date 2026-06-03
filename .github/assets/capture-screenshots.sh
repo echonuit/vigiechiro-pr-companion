@@ -13,8 +13,11 @@
 # Sorties (dans .github/assets/) :
 #   apercu-accueil.png              ecran d'accueil (chrome + cartes d'activites des features)
 #   apercu-sites-mes-sites.png      ecran d'accueil M-Sites (cartes des sites)
+#   apercu-sites-mes-sites-vide.png M-Sites etat initial (aucun site : onboarding « premier site »)
 #   apercu-sites-detail.png         M-Site-detail (fiche + points + tableau des passages)
-#   apercu-sites-modale-point.png   modale d'edition d'un point d'ecoute
+#   apercu-sites-detail-sans-passage.png  M-Site-detail d'un site sans passage (tableau vide)
+#   apercu-sites-modale-point.png   modale point : edition (champs pre-remplis)
+#   apercu-sites-modale-point-creation.png  modale point : creation (formulaire vierge)
 #   apercu-import-assistant.png     M-Import (assistant « Importer une nuit », cas standard)
 #   apercu-qualification.png        M-Qualification (verification par echantillonnage, cas standard)
 #   apercu-passage.png              M-Passage (pivot, statut Verifie : preparer le depot actif, validation verrouillee)
