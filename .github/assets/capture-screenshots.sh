@@ -20,6 +20,7 @@
 #   apercu-sites-modale-point-creation.png  modale point : creation (formulaire vierge)
 #   apercu-import-assistant.png     M-Import (assistant « Importer une nuit », cas standard)
 #   apercu-import-en-cours.png      M-Import (import en cours : barre de progression deterministe, form gele)
+#   apercu-import-melange.png       M-Import (cas « melange » : 2 enregistreurs detectes, avertissement non bloquant)
 #   apercu-qualification-initial.png  M-Qualification (etat initial : selection generee, rien d'ecoute, sans verdict)
 #   apercu-qualification.png        M-Qualification (avance : sequences ecoutees, verdict OK pose)
 #   apercu-passage.png              M-Passage (pivot, statut Verifie : preparer le depot actif, validation verrouillee)

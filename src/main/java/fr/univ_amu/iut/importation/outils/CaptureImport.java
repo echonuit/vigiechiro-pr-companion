@@ -114,17 +114,38 @@ public final class CaptureImport {
         }
 
         Scene scene = new Scene(vue, 1100, 860);
-        Path fichier = sortie.resolve("apercu-import-assistant.png");
-        ApercuFx.enregistrerPng(scene, fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        rendre(scene, sortie.resolve("apercu-import-assistant.png"));
 
         // État « import en cours » (#33) : barre de progression déterminée à mi-parcours, formulaire
         // gelé (le rattachement ne peut plus changer pendant le traitement). Même scène, VM piloté.
         vm.marquerEnCours();
         vm.appliquerProgression(new Progression("Transformation 120/191", 0.66));
-        Path enCours = sortie.resolve("apercu-import-en-cours.png");
-        ApercuFx.enregistrerPng(scene, enCours);
-        System.out.println("Apercu ecrit dans " + enCours.toAbsolutePath());
+        rendre(scene, sortie.resolve("apercu-import-en-cours.png"));
+
+        // État « mélange » (#33) : dossier mêlant deux enregistreurs → avertissement à l'inspection
+        // (non bloquant). Changer le dossier source réinitialise l'état, on ré-inspecte.
+        vm.dossierSourceProperty().set(creerDossierMelange());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-melange.png"));
+    }
+
+    /// Rend `scene` hors-écran en PNG et journalise (helper : évite la répétition du libellé de log,
+    /// interdite par PMD `AvoidDuplicateLiterals` au-delà de 3 occurrences).
+    private static void rendre(Scene scene, Path fichier) {
+        ApercuFx.enregistrerPng(scene, fichier);
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Dossier d'exemple **mélangé** (chemin déterministe) : un journal + deux WAV de **deux
+    /// enregistreurs** distincts → l'inspection lève l'avertissement « mélange ».
+    private static Path creerDossierMelange() throws IOException {
+        Path sd = Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-sd-melange");
+        Files.createDirectories(sd);
+        Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");
+        Files.writeString(sd.resolve("PaRecPR1648011_20260422_204326.wav"), "wav2"); // 2e enregistreur
+        return sd;
     }
 
     private static Injector creerInjecteur() {
