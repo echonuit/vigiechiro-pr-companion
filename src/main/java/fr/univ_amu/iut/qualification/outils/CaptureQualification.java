@@ -120,10 +120,17 @@ public final class CaptureQualification {
         Parent vue = loader.load();
         QualificationController controleur = loader.getController();
 
-        // Pilotage vers l'état « standard » de la maquette.
+        Scene scene = new Scene(vue, 1240, 900);
         controleur.ouvrirSur(idPassage);
         selectionVm.tailleProperty().set(TAILLE_SELECTION);
         selectionVm.regenerer();
+
+        // État initial : sélection générée, aucune séquence écoutée, aucun verdict posé.
+        Path initial = sortie.resolve("apercu-qualification-initial.png");
+        ApercuFx.enregistrerPng(scene, initial);
+        System.out.println("Apercu ecrit dans " + initial.toAbsolutePath());
+
+        // État avancé : quelques séquences écoutées (progression) et verdict OK posé.
         for (int i = 0; i < NB_ECOUTEES && i < selectionVm.lignes().size(); i++) {
             selectionVm.selectionner(selectionVm.lignes().get(i));
             selectionVm.marquerCouranteEcoutee();
@@ -134,7 +141,7 @@ public final class CaptureQualification {
         verdictVm.choisirVerdict(Verdict.OK);
 
         Path fichier = sortie.resolve("apercu-qualification.png");
-        ApercuFx.enregistrerPng(new Scene(vue, 1240, 900), fichier);
+        ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
