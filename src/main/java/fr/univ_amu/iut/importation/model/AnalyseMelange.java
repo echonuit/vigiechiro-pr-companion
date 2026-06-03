@@ -44,11 +44,15 @@ public record AnalyseMelange(SortedSet<String> series, SortedSet<LocalDate> nuit
         for (Path original : originaux) {
             Matcher correspondance = MOTIF.matcher(original.getFileName().toString());
             if (correspondance.find()) {
-                series.add(correspondance.group(1));
                 try {
-                    nuits.add(LocalDate.parse(correspondance.group(2), FORMAT_DATE));
+                    // On valide la date AVANT d'enregistrer la série : un nom au motif correct mais à
+                    // la date impossible (ex. 20269999) est ignoré *entièrement*, sinon sa série
+                    // gonflerait à tort le compte d'enregistreurs.
+                    LocalDate jour = LocalDate.parse(correspondance.group(2), FORMAT_DATE);
+                    series.add(correspondance.group(1));
+                    nuits.add(jour);
                 } catch (DateTimeParseException illisible) {
-                    // Date impossible (ex. 20269999) : on ignore ce nom sans interrompre l'analyse.
+                    // Date impossible : on ignore ce nom sans interrompre l'analyse.
                 }
             }
         }

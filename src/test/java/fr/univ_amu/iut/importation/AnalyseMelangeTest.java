@@ -69,4 +69,16 @@ class AnalyseMelangeTest {
         assertThat(analyse.nuits()).hasSize(1);
         assertThat(analyse.melange()).isFalse();
     }
+
+    @Test
+    @DisplayName("Un nom au motif correct mais à date impossible est ignoré (série non comptée)")
+    void date_impossible_serie_non_comptee() {
+        AnalyseMelange analyse = AnalyseMelange.depuis(List.of(
+                Path.of("PaRecPR1925492_20260422_203000.wav"),
+                Path.of("PaRecPR1648011_20269999_120000.wav"))); // date impossible : à ignorer en entier
+
+        assertThat(analyse.series()).containsExactly("1925492"); // pas 1648011
+        assertThat(analyse.plusieursEnregistreurs()).isFalse();
+        assertThat(analyse.melange()).isFalse();
+    }
 }
