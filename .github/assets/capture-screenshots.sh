@@ -20,6 +20,9 @@
 #   apercu-passage.png              M-Passage (ecran pivot d'un passage verifie, cas standard)
 #   apercu-validation-import.png    M-Vision-Tadarida (etat d'entree : avant import, bouton import)
 #   apercu-validation-revue.png     M-Vision-Tadarida (revue : statuts varies + detail selectionne)
+#   apercu-lot-preparer.png         M-Lot (Verifie coherent : recap + dossier, preparer actif)
+#   apercu-lot-deposer.png          M-Lot (Pret a deposer : marquer depose actif)
+#   apercu-lot-alertes.png          M-Lot (Verifie incoherent : alertes de coherence R14)
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,6 +36,7 @@ MAINS=(
   "fr.univ_amu.iut.qualification.outils.CaptureQualification"
   "fr.univ_amu.iut.passage.outils.CapturePassage"
   "fr.univ_amu.iut.validation.outils.CaptureValidation"
+  "fr.univ_amu.iut.lot.outils.CaptureLot"
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 
