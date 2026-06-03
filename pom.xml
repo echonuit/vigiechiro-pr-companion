@@ -389,8 +389,11 @@
                     <launcher>launcher</launcher>
                     <mainClass>tp1.javafx/fr.univ_amu.iut.App</mainClass>
                     <options>
-                        <!-- Native access JavaFX (Java 25 strict). -->
+                        <!-- Native access (Java 25 strict) : JavaFX + driver natif SQLite (JNI).
+                             Sans la ligne sqlitejdbc, le premier accès base affiche le WARNING
+                             « restricted method java.lang.System::load ... ». -->
                         <option>--enable-native-access=javafx.graphics</option>
+                        <option>--enable-native-access=org.xerial.sqlitejdbc</option>
                     </options>
                 </configuration>
             </plugin>
