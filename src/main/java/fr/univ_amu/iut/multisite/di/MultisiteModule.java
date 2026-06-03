@@ -3,10 +3,12 @@ package fr.univ_amu.iut.multisite.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
+import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -35,5 +37,14 @@ public class MultisiteModule extends AbstractModule {
     ServiceMultisite fournirServiceMultisite(
             SavedViewDao savedViewDao, SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
         return new ServiceMultisite(savedViewDao, siteDao, pointDao, passageDao, horloge);
+    }
+
+    // Le ViewModel n'est volontairement PAS @Singleton (cf. SitesModule) : un VM frais par
+    // chargement de vue évite que des listeners de vues fermées restent accrochés. Reçoit l'identité
+    // de l'utilisateur courant publiée par SitesModule.
+    @Provides
+    MultisiteViewModel fournirMultisiteViewModel(
+            ServiceMultisite service, @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new MultisiteViewModel(service, idUtilisateur);
     }
 }
