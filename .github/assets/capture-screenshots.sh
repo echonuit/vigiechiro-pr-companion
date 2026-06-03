@@ -23,6 +23,8 @@
 #   apercu-lot-preparer.png         M-Lot (Verifie coherent : recap + dossier, preparer actif)
 #   apercu-lot-deposer.png          M-Lot (Pret a deposer : marquer depose actif)
 #   apercu-lot-alertes.png          M-Lot (Verifie incoherent : alertes de coherence R14)
+#   apercu-bibliotheque-vide.png    M-Bibliotheque (etat vide : aucun son de reference, export inactif)
+#   apercu-bibliotheque-sons.png    M-Bibliotheque (peuplee : sons de reference, detail + ecoute, export actif)
 set -euo pipefail
 
 ICI="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -37,6 +39,7 @@ MAINS=(
   "fr.univ_amu.iut.passage.outils.CapturePassage"
   "fr.univ_amu.iut.validation.outils.CaptureValidation"
   "fr.univ_amu.iut.lot.outils.CaptureLot"
+  "fr.univ_amu.iut.bibliotheque.outils.CaptureBibliotheque"
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 
