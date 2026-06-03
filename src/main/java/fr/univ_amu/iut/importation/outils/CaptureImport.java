@@ -127,6 +127,12 @@ public final class CaptureImport {
         vm.dossierSourceProperty().set(creerDossierMelange());
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-melange.png"));
+
+        // État « incohérence » (#33) : le journal (série 1925492, nuit du 22/04) contredit les WAV
+        // (série 1648011, nuit du 30/04) → bandeau rouge non bloquant (série ET date).
+        vm.dossierSourceProperty().set(creerDossierIncoherence());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-incoherence.png"));
     }
 
     /// Rend `scene` hors-écran en PNG et journalise (helper : évite la répétition du libellé de log,
@@ -136,15 +142,37 @@ public final class CaptureImport {
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// Dossier d'exemple **mélangé** (chemin déterministe) : un journal + deux WAV de **deux
-    /// enregistreurs** distincts → l'inspection lève l'avertissement « mélange ».
+    /// Dossier d'exemple **mélangé** (chemin déterministe) : journal + relevé de la série 1925492 mais
+    /// deux WAV de **deux enregistreurs** distincts → l'inspection lève l'avertissement « mélange ».
     private static Path creerDossierMelange() throws IOException {
-        Path sd = Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-sd-melange");
+        return creerDossier(
+                "vigiechiro-sd-melange",
+                "PaRecPR1925492_20260422_203922.wav",
+                "PaRecPR1648011_20260422_204326.wav"); // 2e enregistreur
+    }
+
+    /// Dossier d'exemple **incohérent** (chemin déterministe) : journal et relevé de la série 1925492
+    /// (nuit du 22/04) alors que les WAV portent la série 1648011 et la nuit du 30/04 → l'inspection
+    /// lève l'avertissement « incohérence » (série ET date).
+    private static Path creerDossierIncoherence() throws IOException {
+        return creerDossier(
+                "vigiechiro-sd-incoherence",
+                "PaRecPR1648011_20260430_203922.wav",
+                "PaRecPR1648011_20260430_204326.wav");
+    }
+
+    /// Fabrique un dossier d'échantillon **déterministe** (sous `java.io.tmpdir/<nom>`) : journal
+    /// `LogPR` + relevé climatique de la série 1925492, plus deux WAV nommés `wavA`/`wavB`. Chemin
+    /// fixe (et non un dossier temporaire aléatoire) car il est affiché dans le champ « Dossier
+    /// source », donc une racine stable garde les PNG reproductibles. Réécrit à chaque appel
+    /// (idempotent). Helper unique : factorise les libellés communs (PMD `AvoidDuplicateLiterals`).
+    private static Path creerDossier(String nom, String wavA, String wavB) throws IOException {
+        Path sd = Path.of(System.getProperty("java.io.tmpdir"), nom);
         Files.createDirectories(sd);
         Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");
-        Files.writeString(sd.resolve("PaRecPR1648011_20260422_204326.wav"), "wav2"); // 2e enregistreur
+        Files.writeString(sd.resolve(wavA), "wav1");
+        Files.writeString(sd.resolve(wavB), "wav2");
         return sd;
     }
 
@@ -167,16 +195,10 @@ public final class CaptureImport {
         service.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, "Pres du grand chene");
     }
 
+    /// Dossier d'exemple **standard** (chemin déterministe) : journal + relevé + deux WAV cohérents
+    /// (même série 1925492, même nuit) → inspection sans avertissement.
     private static Path creerDossierEchantillon() throws IOException {
-        // Chemin DÉTERMINISTE (et non un dossier temporaire aléatoire) : il est affiché dans le champ
-        // « Dossier source », donc une racine fixe garde les PNG reproductibles (cf. CaptureLot). Les
-        // fichiers sont réécrits à chaque exécution (idempotent).
-        Path sd = Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-sd-demo");
-        Files.createDirectories(sd);
-        Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");
-        Files.writeString(sd.resolve("PaRecPR1925492_20260422_204326.wav"), "wav2");
-        return sd;
+        return creerDossier(
+                "vigiechiro-sd-demo", "PaRecPR1925492_20260422_203922.wav", "PaRecPR1925492_20260422_204326.wav");
     }
 }
