@@ -17,7 +17,9 @@
 #   apercu-sites-modale-point.png   modale d'edition d'un point d'ecoute
 #   apercu-import-assistant.png     M-Import (assistant « Importer une nuit », cas standard)
 #   apercu-qualification.png        M-Qualification (verification par echantillonnage, cas standard)
-#   apercu-passage.png              M-Passage (ecran pivot d'un passage verifie, cas standard)
+#   apercu-passage.png              M-Passage (pivot, statut Verifie : preparer le depot actif, validation verrouillee)
+#   apercu-passage-depose.png       M-Passage (pivot, statut Depose : depot fait, validation deverrouillee)
+#   apercu-passage-rattachement.png M-Passage (modale Modifier le rattachement : annee + n de passage)
 #   apercu-validation-import.png    M-Vision-Tadarida (etat d'entree : avant import, bouton import)
 #   apercu-validation-revue.png     M-Vision-Tadarida (revue : statuts varies + detail selectionne)
 #   apercu-lot-preparer.png         M-Lot (Verifie coherent : recap + dossier, preparer actif)

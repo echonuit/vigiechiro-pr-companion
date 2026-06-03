@@ -28,6 +28,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.passage.view.NavigationPassage;
 import fr.univ_amu.iut.passage.view.PassageController;
+import fr.univ_amu.iut.passage.view.RattachementModaleController;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -48,14 +49,21 @@ import javafx.scene.Scene;
 
 /// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
 ///
-/// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, dans le « cas
-/// standard » : passage vérifié, verdict OK, statistiques de nuit renseignées.
+/// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, en **trois
+/// états** afin d'en montrer les particularités :
 ///
-/// On seede une base SQLite temporaire (un utilisateur, un site/point, un passage `VERIFIE` non
-/// déposé, une session de 60 séquences avec volumes). On fabrique le [ServicePassage] via Guice
-/// (socle + passage), puis on charge `Passage.fxml` avec une `controllerFactory` qui injecte un
-/// [PassageViewModel] connu et des contrats de navigation neutres (la capture ne navigue pas).
-/// La vue est enfin rendue hors-écran par [ApercuFx].
+/// - `apercu-passage.png` : passage **vérifié** — « Préparer le dépôt » actif, validation Tadarida
+///   verrouillée (le passage n'est pas encore déposé) ;
+/// - `apercu-passage-depose.png` : passage **déposé** — stepper au bout, « Préparer le dépôt »
+///   désactivé, validation Tadarida déverrouillée ;
+/// - `apercu-passage-rattachement.png` : la **modale « Modifier le rattachement »** (année + n° de
+///   passage).
+///
+/// On seede une base SQLite temporaire (un utilisateur, un site/point, deux passages vérifié/déposé
+/// avec leur session de 60 séquences). On fabrique le [ServicePassage] via Guice (socle + passage),
+/// puis on charge `Passage.fxml` / `RattachementModale.fxml` avec une `controllerFactory` qui injecte
+/// un [PassageViewModel] connu et des contrats de navigation neutres (la capture ne navigue pas).
+/// Les vues sont rendues hors-écran par [ApercuFx].
 ///
 /// Le site et le point (cibles de clé étrangère) sont insérés en SQL brut, sans les DAO de la
 /// feature `sites` : `passage` ne doit pas en dépendre (cycle ArchUnit `features_sans_cycle`, et
@@ -69,7 +77,6 @@ public final class CapturePassage {
     private static final String NUMERO_CARRE = "640380";
     private static final String CODE_POINT = "A1";
     private static final String NOM_SITE = "Étang de la Tuilière";
-    private static final Prefixe PREFIXE = new Prefixe(NUMERO_CARRE, 2026, 2, CODE_POINT);
     private static final int NB_SEQUENCES = 60;
     private static final long VOLUME_ORIGINAUX_OCTETS = 5L * 1024 * 1024 * 1024; // 5 Go
     private static final long VOLUME_SEQUENCES_OCTETS = 180L * 1024 * 1024; // 180 Mo
@@ -105,8 +112,24 @@ public final class CapturePassage {
         Injector injecteur = Guice.createInjector(new CommunModule(), new PersistenceModule(), new PassageModule());
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        long idPassage = seeder(source, workspace);
 
+        new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
+        new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
+        long idPoint = seederSiteEtPoint(source);
+        long idVerifie = seederPassage(source, workspace, idPoint, StatutWorkflow.VERIFIE, 2);
+        long idDepose = seederPassage(source, workspace, idPoint, StatutWorkflow.DEPOSE, 1);
+
+        // Pivot : deux statuts pour montrer l'évolution des actions disponibles (préparer le dépôt
+        // quand vérifié ; validation déverrouillée une fois déposé).
+        rendrePivot(injecteur, idVerifie, sortie.resolve("apercu-passage.png"));
+        rendrePivot(injecteur, idDepose, sortie.resolve("apercu-passage-depose.png"));
+        // Modale « Modifier le rattachement » (année + n° de passage) ouverte sur le passage vérifié.
+        rendreRattachement(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement.png"));
+    }
+
+    /// Charge `Passage.fxml` sur `idPassage` (ViewModel connu + contrats de navigation neutres) et
+    /// rend le pivot hors-écran.
+    private static void rendrePivot(Injector injecteur, long idPassage, Path fichier) throws IOException {
         PassageViewModel passageVm = new PassageViewModel(injecteur.getInstance(ServicePassage.class));
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(type -> type == PassageController.class
@@ -121,32 +144,42 @@ public final class CapturePassage {
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
         controleur.ouvrirSur(idPassage, new ContexteSite(NUMERO_CARRE, CODE_POINT, NOM_SITE));
-
-        Path fichier = sortie.resolve("apercu-passage.png");
         ApercuFx.enregistrerPng(new Scene(vue, 1100, 540), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// Seede une nuit complète vérifiée (chemins sous le `workspace` temporaire) et renvoie
-    /// l'identifiant du passage à afficher.
-    private static long seeder(SourceDeDonnees source, Path workspace) {
-        new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
+    /// Charge `RattachementModale.fxml` (controller injecté par Guice), la démarre sur le passage et
+    /// rend la modale hors-écran.
+    private static void rendreRattachement(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("RattachementModale.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        RattachementModaleController controleur = loader.getController();
+        controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Seede une nuit complète (chemins sous le `workspace` temporaire) avec le `statut` et le
+    /// `numero` de passage donnés, et renvoie l'identifiant du passage. Le site/point (FK) est seedé
+    /// à part et partagé.
+    private static long seederPassage(
+            SourceDeDonnees source, Path workspace, long idPoint, StatutWorkflow statut, int numero) {
         PassageDao passageDao = new PassageDao(source);
         SessionDao sessionDao = new SessionDao(source);
         EnregistrementOriginalDao originalDao = new EnregistrementOriginalDao(source);
         SequenceDao sequenceDao = new SequenceDao(source);
-        new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
 
-        long idPoint = seederSiteEtPoint(source);
+        Prefixe prefixe = new Prefixe(NUMERO_CARRE, 2026, numero, CODE_POINT);
         Passage passage = passageDao.insert(new Passage(
                 null,
-                2,
+                numero,
                 2026,
                 "2026-06-22",
                 "20:25:00",
                 "07:47:00",
                 null,
-                StatutWorkflow.VERIFIE,
+                statut,
                 Verdict.OK,
                 null,
                 null,
@@ -155,7 +188,7 @@ public final class CapturePassage {
                 ENREGISTREUR));
         SessionDEnregistrement session = sessionDao.insert(new SessionDEnregistrement(
                 null,
-                workspace.resolve(PREFIXE.nomDossierSession()).toString(),
+                workspace.resolve(prefixe.nomDossierSession()).toString(),
                 VOLUME_ORIGINAUX_OCTETS,
                 VOLUME_SEQUENCES_OCTETS,
                 passage.id()));
@@ -165,7 +198,7 @@ public final class CapturePassage {
         for (int i = 0; i < NB_SEQUENCES; i++) {
             String suffixe =
                     "PaRecPR" + ENREGISTREUR + "_" + debut.plusMinutes(12L * i).format(horodatage) + ".wav";
-            String nomOriginal = PREFIXE.nommerOriginal(suffixe);
+            String nomOriginal = prefixe.nommerOriginal(suffixe);
             EnregistrementOriginal original = originalDao.insert(new EnregistrementOriginal(
                     null,
                     nomOriginal,
@@ -174,7 +207,7 @@ public final class CapturePassage {
                     384000,
                     null,
                     session.id()));
-            String nomSequence = PREFIXE.nommerSequence(nomOriginal, 0);
+            String nomSequence = prefixe.nommerSequence(nomOriginal, 0);
             sequenceDao.insert(new SequenceDEcoute(
                     null,
                     nomSequence,
