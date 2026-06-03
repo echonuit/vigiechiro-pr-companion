@@ -7,6 +7,7 @@ import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
@@ -30,6 +31,7 @@ import org.testfx.framework.junit5.Start;
 class MainViewTest {
 
     private Navigateur navigateur;
+    private NavigationViewModel navigation;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -39,6 +41,7 @@ class MainViewTest {
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         navigateur = injector.getInstance(Navigateur.class);
+        navigation = injector.getInstance(NavigationViewModel.class);
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent racine = loader.load();
@@ -72,5 +75,19 @@ class MainViewTest {
 
         assertThat(lien.isVisible()).isFalse();
         assertThat(robot.lookup("#cartesActivites").tryQuery()).isPresent();
+    }
+
+    @Test
+    @DisplayName("#54 : le lien « Accueil » est grisé quand la navigation est verrouillée")
+    void lien_accueil_grise_si_navigation_verrouillee(FxRobot robot) {
+        robot.interact(() -> navigateur.afficher(new Group(), "import", "Importer une nuit"));
+        Hyperlink lien = robot.lookup("#lienAccueil").queryAs(Hyperlink.class);
+        assertThat(lien.isDisabled()).isFalse();
+
+        robot.interact(() -> navigation.setNavigationVerrouillee(true));
+        assertThat(lien.isDisabled()).isTrue();
+
+        robot.interact(() -> navigation.setNavigationVerrouillee(false));
+        assertThat(lien.isDisabled()).isFalse();
     }
 }

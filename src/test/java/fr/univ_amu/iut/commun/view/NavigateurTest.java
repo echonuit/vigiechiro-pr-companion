@@ -50,4 +50,25 @@ class NavigateurTest {
 
         assertThat(navigateur.getVueCentrale()).isSameAs(vue);
     }
+
+    @Test
+    @DisplayName("#54 : afficherAccueil est neutralisé tant que la navigation est verrouillée")
+    void afficherAccueil_neutralise_si_navigation_verrouillee() {
+        NavigationViewModel navigation = new NavigationViewModel();
+        Navigateur navigateur = new Navigateur(navigation);
+        navigateur.memoriserAccueil(new Group());
+        Parent ecranFeature = new Group();
+        navigateur.afficher(ecranFeature, "import", "Importer une nuit");
+
+        navigation.setNavigationVerrouillee(true);
+        navigateur.afficherAccueil(); // doit être ignoré : opération en cours
+
+        assertThat(navigateur.getVueCentrale()).isSameAs(ecranFeature);
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("import");
+
+        navigation.setNavigationVerrouillee(false);
+        navigateur.afficherAccueil(); // une fois déverrouillé, le retour fonctionne
+
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
+    }
 }

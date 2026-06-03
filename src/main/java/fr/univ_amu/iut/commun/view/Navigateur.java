@@ -59,9 +59,11 @@ public class Navigateur {
 
     /// Réaffiche l'accueil global (cartes des features) et réinitialise le fil d'Ariane à son état de
     /// départ. Permet à une feature de « revenir à l'accueil » sans dépendre d'une autre feature (ex.
-    /// après suppression de l'écran courant). Sans effet si l'accueil n'a pas encore été mémorisé.
+    /// après suppression de l'écran courant). Sans effet si l'accueil n'a pas encore été mémorisé,
+    /// **ou si la navigation est verrouillée** (#54) : une opération longue est en cours et ne doit pas
+    /// être quittée (le lien « Accueil » est déjà grisé ; ce garde couvre aussi les appels programmatiques).
     public void afficherAccueil() {
-        if (accueil != null) {
+        if (accueil != null && !navigation.isNavigationVerrouillee()) {
             afficher(accueil, "accueil", "Accueil");
         }
     }

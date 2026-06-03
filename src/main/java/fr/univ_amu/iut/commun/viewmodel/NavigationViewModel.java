@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -24,6 +26,13 @@ public class NavigationViewModel {
     private final StringProperty filAriane = new SimpleStringProperty(this, "filAriane", "Accueil");
     private final StringProperty piedDePage =
             new SimpleStringProperty(this, "piedDePage", "SAÉ 2.01 · IUT d'Aix-Marseille");
+
+    /// Verrou de navigation (#54) : `true` pendant une opération longue (ex. un import en cours) qui ne
+    /// doit pas être quittée. Le chrome lie le `disable` du lien « 🏠 Accueil » à cette propriété et le
+    /// [fr.univ_amu.iut.commun.view.Navigateur] neutralise le retour à l'accueil tant qu'elle est vraie.
+    /// La feature concernée la met à `true` au démarrage de l'opération et à `false` à sa fin.
+    private final BooleanProperty navigationVerrouillee =
+            new SimpleBooleanProperty(this, "navigationVerrouillee", false);
 
     /// Propriété observable du titre de l'application affiché dans la barre haute.
     public StringProperty titreApplicationProperty() {
@@ -75,6 +84,19 @@ public class NavigationViewModel {
 
     public void setPiedDePage(String valeur) {
         piedDePage.set(valeur);
+    }
+
+    /// Propriété observable du verrou de navigation (#54) : `true` interdit de quitter l'écran courant.
+    public BooleanProperty navigationVerrouilleeProperty() {
+        return navigationVerrouillee;
+    }
+
+    public boolean isNavigationVerrouillee() {
+        return navigationVerrouillee.get();
+    }
+
+    public void setNavigationVerrouillee(boolean valeur) {
+        navigationVerrouillee.set(valeur);
     }
 
     /// Met à jour l'état de navigation en une étape : la vue courante et son libellé de fil

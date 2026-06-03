@@ -64,6 +64,9 @@ public class MainController {
         var horsAccueil = navigation.vueCouranteProperty().isNotEqualTo("accueil");
         lienAccueil.visibleProperty().bind(horsAccueil);
         lienAccueil.managedProperty().bind(horsAccueil);
+        // Verrou de navigation (#54) : grisé pendant une opération longue (import en cours) qu'on ne
+        // doit pas quitter, pour ne pas perdre le résultat de l'opération en détachant son écran.
+        lienAccueil.disableProperty().bind(navigation.navigationVerrouilleeProperty());
 
         peuplerCartes();
 
