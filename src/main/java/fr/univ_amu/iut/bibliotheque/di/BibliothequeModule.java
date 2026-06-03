@@ -3,8 +3,11 @@ package fr.univ_amu.iut.bibliotheque.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.bibliotheque.view.ActiviteBibliotheque;
 import fr.univ_amu.iut.bibliotheque.viewmodel.BibliothequeViewModel;
+import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 
@@ -17,13 +20,18 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 /// les tests). Les DAO inter-feature sont reçus en lecture seule (sens autorisé `bibliotheque →
 /// validation` et `bibliotheque → passage`, graphe acyclique).
 ///
-/// **Intégration** : ce module n'est **pas (encore) installé** dans `RacineInjecteur` (fichier gelé
-/// pour cette tâche). Son câblage est validé en isolation par `BibliothequeModuleTest` (injecteur
-/// local fournissant les DAO feuilles). Pour le rendre résoluble par l'injecteur applicatif,
-/// ajouter `new BibliothequeModule()` à `RacineInjecteur.creer()` (et installer aussi
-/// `ValidationModule` et `PassageModule` qui fournissent ses DAO — `PassageModule` et
-/// `ValidationModule` y sont déjà).
+/// **Intégration** : ce module est installé dans `RacineInjecteur` (aux côtés de `ValidationModule`
+/// et `PassageModule` qui fournissent ses DAO). Il enregistre la carte d'accueil
+/// [ActiviteBibliotheque] dans le `Multibinder<ActiviteAccueil>` du socle : le `MainController` la
+/// découvre via `Set<ActiviteAccueil>` sans que `commun` dépende de `bibliotheque` (graphe de slices
+/// acyclique, cf. `ArchitectureTest`).
 public class BibliothequeModule extends AbstractModule {
+
+    /// Enregistre la carte d'accueil de la feature dans le point d'extension du socle.
+    @Override
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(ActiviteBibliotheque.class);
+    }
 
     @Provides
     @Singleton
