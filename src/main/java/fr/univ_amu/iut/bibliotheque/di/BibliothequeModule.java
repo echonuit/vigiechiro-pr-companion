@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.bibliotheque.viewmodel.BibliothequeViewModel;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 
@@ -28,5 +29,13 @@ public class BibliothequeModule extends AbstractModule {
     @Singleton
     ServiceBibliotheque fournirServiceBibliotheque(ObservationDao observationDao, SequenceDao sequenceDao) {
         return new ServiceBibliotheque(observationDao, sequenceDao);
+    }
+
+    // Le ViewModel n'est volontairement PAS @Singleton : le FXMLLoader recrée le controller (et ses
+    // bindings) à chaque chargement de l'écran ; un VM frais évite que des listeners de vues fermées
+    // restent accrochés. Même choix que les VM de `sites` (cf. SitesModule).
+    @Provides
+    BibliothequeViewModel fournirBibliothequeViewModel(ServiceBibliotheque service) {
+        return new BibliothequeViewModel(service);
     }
 }
