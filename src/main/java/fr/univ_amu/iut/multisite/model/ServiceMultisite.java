@@ -10,6 +10,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -118,6 +119,20 @@ public class ServiceMultisite {
     /// l'écrivain partagé [EcrivainCsv]. Format identique à toute exécution (support des exports
     /// P5-CA5 et des tests « golden »). Un verdict absent est rendu par une cellule vide.
     public String exporterCsv(List<LignePassage> lignes) {
+        return new EcrivainCsv().versChaine(tableCsv(lignes));
+    }
+
+    /// Écrit la vue agrégée en CSV déterministe dans `destination` (export P5-CA5 : c'est le service
+    /// qui matérialise sur disque, la couche IHM ne fait que choisir le fichier). Crée les dossiers
+    /// parents au besoin.
+    ///
+    /// @throws java.io.UncheckedIOException si l'écriture échoue
+    public void exporterCsvVers(Path destination, List<LignePassage> lignes) {
+        Objects.requireNonNull(destination, "destination");
+        new EcrivainCsv().ecrire(destination, tableCsv(lignes));
+    }
+
+    private static List<List<String>> tableCsv(List<LignePassage> lignes) {
         Objects.requireNonNull(lignes, "lignes");
         List<List<String>> table = new ArrayList<>();
         table.add(ENTETE);
@@ -131,7 +146,7 @@ public class ServiceMultisite {
                     ligne.statut().libelle(),
                     ligne.verdict() == null ? "" : ligne.verdict().libelle()));
         }
-        return new EcrivainCsv().versChaine(table);
+        return table;
     }
 
     // --- Vues sauvegardées (CRUD) ---
