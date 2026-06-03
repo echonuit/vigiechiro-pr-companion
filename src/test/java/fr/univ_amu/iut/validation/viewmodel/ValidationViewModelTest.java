@@ -20,6 +20,7 @@ import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.VueValidation;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -398,5 +399,19 @@ class ValidationViewModelTest {
 
         viewModel.filtreStatutProperty().set(null);
         assertThat(viewModel.observationsFiltrees()).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("sélection : le chemin audio courant suit la séquence de l'observation sélectionnée")
+    void selection_alimente_chemin_audio() {
+        when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+        when(service.cheminAudio(101L)).thenReturn(Optional.of(Path.of("/ws/seq-PIPPIP.wav")));
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.cheminAudioCourantProperty().get()).isNull(); // pas de sélection
+        viewModel.selectionProperty().set(viewModel.observations().get(0)); // obs 1 → idSequence 101
+        assertThat(viewModel.cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/seq-PIPPIP.wav"));
+        viewModel.selectionProperty().set(null);
+        assertThat(viewModel.cheminAudioCourantProperty().get()).isNull();
     }
 }

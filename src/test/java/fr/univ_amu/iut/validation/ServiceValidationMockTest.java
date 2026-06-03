@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
@@ -22,6 +23,7 @@ import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -140,5 +142,24 @@ class ServiceValidationMockTest {
         assertThat(corrigee.taxonObservateur()).isEqualTo("Pippip");
         assertThat(service().statut(corrigee)).isEqualTo(StatutObservation.CORRIGEE);
         verify(observationDao).update(any(Observation.class));
+    }
+
+    @Test
+    @DisplayName("cheminAudio : résout le WAV transformé (R22) de la séquence (E7.S3)")
+    void chemin_audio_resout_le_wav() {
+        when(sequenceDao.findById(10L))
+                .thenReturn(Optional.of(new SequenceDEcoute(
+                        10L, "seq_000.wav", 1L, 0, 0.0, 5.0, "/ws/transformes/seq_000.wav", true, 1L)));
+
+        assertThat(service().cheminAudio(10L)).contains(Path.of("/ws/transformes/seq_000.wav"));
+    }
+
+    @Test
+    @DisplayName("cheminAudio : vide si idSequence null ou séquence introuvable")
+    void chemin_audio_vide_si_introuvable() {
+        assertThat(service().cheminAudio(null)).isEmpty();
+
+        when(sequenceDao.findById(99L)).thenReturn(Optional.empty());
+        assertThat(service().cheminAudio(99L)).isEmpty();
     }
 }

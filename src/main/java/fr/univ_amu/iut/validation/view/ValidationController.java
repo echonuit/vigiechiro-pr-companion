@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.validation.view;
 
 import com.google.inject.Inject;
+import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -51,6 +52,9 @@ public class ValidationController {
 
     @FXML
     private Label lblDetail;
+
+    @FXML
+    private AudioView audioView;
 
     @FXML
     private ComboBox<ModeRevue> choixMode;
@@ -112,6 +116,15 @@ public class ValidationController {
 
         lblProgression.textProperty().bind(viewModel.progressionProperty());
         lblDetail.textProperty().bind(viewModel.detailProperty());
+
+        // Vue audio (composant fourni, E7.S3) : la source suit l'observation sélectionnée ; le clip
+        // est libéré quand la vue quitte la scène (pas de marquage écouté ici, contrairement à R10).
+        audioView.audioFileProperty().bind(viewModel.cheminAudioCourantProperty());
+        audioView.sceneProperty().addListener((obs, avant, scene) -> {
+            if (scene == null) {
+                audioView.dispose();
+            }
+        });
 
         choixMode.getItems().setAll(ModeRevue.values());
         choixMode.setConverter(new StringConverter<>() {
