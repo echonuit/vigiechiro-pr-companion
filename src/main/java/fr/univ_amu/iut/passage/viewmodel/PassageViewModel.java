@@ -8,7 +8,6 @@ import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -90,8 +89,8 @@ public class PassageViewModel {
         enregistreur.set("PR " + detail.idEnregistreur());
         statut.set(detail.statut());
         verdict.set(detail.verdict());
-        volumeBruts.set(formatOctets(detail.volumeOriginauxOctets()));
-        volumeTransformes.set(formatOctets(detail.volumeSequencesOctets()));
+        volumeBruts.set(Formats.octetsLisibles(detail.volumeOriginauxOctets()));
+        volumeTransformes.set(Formats.octetsLisibles(detail.volumeSequencesOctets()));
         dureeAudible.set(Formats.dureeLisible(detail.dureeAudibleSecondes()));
         nombreSequences.set(detail.nombreSequences());
         etapes.setAll(construireEtapes(detail.statut()));
@@ -128,17 +127,6 @@ public class PassageViewModel {
             liste.add(new EtapeWorkflow(etape, etat));
         }
         return liste;
-    }
-
-    private static String formatOctets(long octets) {
-        long valeur = Math.max(0, octets);
-        if (valeur >= 1_073_741_824L) {
-            return String.format(Locale.FRANCE, "%.1f Go", valeur / 1_073_741_824.0);
-        }
-        if (valeur >= 1_048_576L) {
-            return String.format(Locale.FRANCE, "%.0f Mo", valeur / 1_048_576.0);
-        }
-        return String.format(Locale.FRANCE, "%d Ko", valeur / 1024);
     }
 
     /// Titre d'identité du passage (`Carré 640380 / A1 / N° 2 (2026)`).

@@ -6,6 +6,7 @@ import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
+import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -54,5 +55,11 @@ public class LotModule extends AbstractModule {
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge) {
         return new ServiceLot(passageDao, sessionDao, sequenceDao, verification, moteurWorkflow, horloge);
+    }
+
+    /// ViewModel de M-Lot. **Non-singleton** (un VM frais par chargement FXML).
+    @Provides
+    LotViewModel fournirLotViewModel(ServiceLot service) {
+        return new LotViewModel(service);
     }
 }
