@@ -105,14 +105,16 @@ public final class AnalyseCoherence {
         return !seriesFichiers.isEmpty() && !seriesDeclareesAbsentes().isEmpty();
     }
 
-    /// Vrai si la date du journal ne tombe pas dans la nuit des WAV (`[dateJournal, dateJournal + 1]`).
-    /// Neutre si la date du journal ou les dates des WAV manquent.
+    /// Vrai si **au moins une** date de fichier sort de la nuit du journal (`[dateJournal,
+    /// dateJournal + 1]`). On exige que **toutes** les dates des WAV tiennent dans cette fenêtre : un
+    /// simple recouvrement ne suffit pas, sinon des fichiers de la nuit *suivante* (`{J+1, J+2}`)
+    /// passeraient à la faveur du seul `J+1`. Neutre si la date du journal ou les dates des WAV manquent.
     public boolean dateIncoherente() {
         if (dateJournal == null || nuitsFichiers.isEmpty()) {
             return false;
         }
         LocalDate matin = dateJournal.plusDays(1);
-        return nuitsFichiers.stream().noneMatch(nuit -> !nuit.isBefore(dateJournal) && !nuit.isAfter(matin));
+        return nuitsFichiers.stream().anyMatch(nuit -> nuit.isBefore(dateJournal) || nuit.isAfter(matin));
     }
 
     /// Vrai si une incohérence (série ou date) est détectée → avertissement à l'inspection.

@@ -72,6 +72,20 @@ class AnalyseCoherenceTest {
     }
 
     @Test
+    @DisplayName(
+            "WAV de la nuit suivante (J+1, J+2) : une seule date recouvre la fenêtre, mais l'autre déborde → incohérence")
+    void nuit_suivante_chevauchement_partiel_incoherent() {
+        AnalyseCoherence c = AnalyseCoherence.depuis(
+                journal("1925492", NUIT), // nuit du 22/04 (fenêtre [22, 23])
+                null,
+                List.of(
+                        Path.of("PaRecPR1925492_20260423_203000.wav"),
+                        Path.of("PaRecPR1925492_20260424_050000.wav"))); // 24/04 hors fenêtre
+
+        assertThat(c.dateIncoherente()).isTrue();
+    }
+
+    @Test
     @DisplayName("Aucun WAV exploitable : rien à comparer, pas d'incohérence")
     void sans_fichier_neutre() {
         AnalyseCoherence c = AnalyseCoherence.depuis(journal("1925492", NUIT), null, List.of());
