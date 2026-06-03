@@ -74,6 +74,23 @@ class BibliothequeViewModelTest {
     }
 
     @Test
+    @DisplayName("Recharger remet la sélection (et le chemin audio) à zéro")
+    void recharger_reinitialise_la_selection() {
+        when(service.exporterBibliotheque())
+                .thenReturn(new ExportBiblioSons(List.of(entree("NYCNOC", "/ws/n.wav"))))
+                .thenReturn(new ExportBiblioSons(List.of()));
+        BibliothequeViewModel vm = new BibliothequeViewModel(service);
+        vm.charger();
+        vm.selectionProperty().set(vm.entrees().get(0));
+        assertThat(vm.cheminAudioCourantProperty().get()).isNotNull();
+
+        vm.charger(); // bibliothèque désormais vide : la sélection précédente n'existe plus
+
+        assertThat(vm.selectionProperty().get()).isNull();
+        assertThat(vm.cheminAudioCourantProperty().get()).isNull();
+    }
+
+    @Test
     @DisplayName("exporter() écrit le CSV et copie les sons dans le dossier choisi")
     void exporter_materialise_dans_le_dossier(@TempDir Path source, @TempDir Path dest) throws Exception {
         Path wav = Files.writeString(source.resolve("ref.wav"), "RIFF");

@@ -51,6 +51,10 @@ public class BibliothequeViewModel {
     /// Charge (ou recharge) la bibliothèque : sélectionne les observations de référence, peuple la
     /// table et met à jour le résumé. À appeler à l'ouverture de l'écran.
     public void charger() {
+        // Reset de la sélection avant de remplacer la liste : sur un rechargement, l'ancienne entrée
+        // (et donc le chemin audio) pourrait avoir disparu de la bibliothèque rafraîchie. Le listener
+        // de sélection remet alors cheminAudioCourant à null : on repart d'un état neutre cohérent.
+        selection.set(null);
         export = service.exporterBibliotheque();
         entrees.setAll(export.entrees());
         biblioNonVide.set(!entrees.isEmpty());
