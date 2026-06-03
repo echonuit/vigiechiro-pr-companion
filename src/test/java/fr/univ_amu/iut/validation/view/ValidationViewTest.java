@@ -141,4 +141,16 @@ class ValidationViewTest {
         assertThat(chkInclureMode.isSelected()).isTrue(); // vrai par défaut (lié au VM)
         assertThat(btnExporter.isDisabled()).isFalse(); // un jeu de résultats est chargé
     }
+
+    @Test
+    @DisplayName("Le filtre de statut restreint la table aux observations correspondantes")
+    void filtre_statut_restreint_la_table(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        ComboBox<?> choixFiltre = robot.lookup("#choixFiltre").queryAs(ComboBox.class);
+
+        assertThat(table.getItems()).hasSize(2); // tous au départ (filtre null)
+        // Items : [Tous(null), NON_TOUCHEE, VALIDEE, CORRIGEE] → l'index 2 sélectionne « Validée ».
+        robot.interact(() -> choixFiltre.getSelectionModel().select(2));
+        assertThat(table.getItems()).hasSize(1); // seule l'observation validée
+    }
 }

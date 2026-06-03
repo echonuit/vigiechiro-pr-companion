@@ -35,6 +35,10 @@
   <HBox spacing="14.0" VBox.vgrow="ALWAYS">
     <VBox spacing="4.0" HBox.hgrow="ALWAYS">
       <Label text="📋 Observations" styleClass="section-titre"/>
+      <HBox spacing="8.0" alignment="CENTER_LEFT">
+        <Label text="Filtrer :" styleClass="section-sous"/>
+        <ComboBox fx:id="choixFiltre"/>
+      </HBox>
       <TableView fx:id="tableObservations" VBox.vgrow="ALWAYS">
         <columns>
           <TableColumn fx:id="colEspece" text="Espèce (Tadarida)" prefWidth="220.0"/>
