@@ -146,7 +146,7 @@
         <dependency>
             <groupId>com.github.IUTInfoAix-S201</groupId>
             <artifactId>audio-view</artifactId>
-            <version>v1.3.0</version>
+            <version>v1.4.0</version>
         </dependency>
 
         <!-- ArchUnit : tests d'architecture (règles de couches / absence de cycles). -->

@@ -154,13 +154,18 @@ public final class CaptureValidation {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ((ValidationController) loader.getController()).ouvrirSur(idPassage);
-        Scene scene = new Scene(vue, 1100, 640);
+        // Scène plus haute que l'état d'entrée : on laisse à l'AudioView la place d'afficher à la fois
+        // le spectrogramme ET le sonogramme (depuis v1.4.0 il masque la légende et le sonogramme
+        // quand il est trop court — on lui donne donc une hauteur suffisante).
+        Scene scene = new Scene(vue, 1100, 820);
         if (vue.lookup("#tableObservations") instanceof TableView<?> table
                 && table.getItems().size() > ligne) {
             table.getSelectionModel().select(ligne); // déclenche le chargement audio de la séquence
         }
 
         if (vue.lookup("#audioView") instanceof AudioView audio) {
+            audio.setMinHeight(340);
+            audio.setPrefHeight(340);
             attendreChargementAudio(audio);
         }
         ApercuFx.enregistrerPng(scene, fichier);
