@@ -113,6 +113,26 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("Le dépôt est disponible en phase Vérifié / Prêt à déposer, pas avant ni après")
+    void depot_disponible_en_phase_de_depot() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.depotDisponibleProperty().get()).isTrue();
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.PRET_A_DEPOSER));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.depotDisponibleProperty().get()).isTrue();
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.TRANSFORME));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.depotDisponibleProperty().get()).isFalse(); // trop tôt
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.depotDisponibleProperty().get()).isFalse(); // déjà déposé
+    }
+
+    @Test
     @DisplayName("La validation Tadarida est verrouillée tant que le passage n'est pas déposé")
     void validation_verrouillee_avant_depot() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));

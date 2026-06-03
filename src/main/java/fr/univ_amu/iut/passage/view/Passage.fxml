@@ -97,6 +97,8 @@
                       styleClass="action-primaire" onAction="#verifier"/>
               <Button fx:id="boutonDiagnostic" text="🔧 Diagnostic matériel"
                       styleClass="action-secondaire" onAction="#diagnostiquer"/>
+              <Button fx:id="boutonDepot" text="📦 Préparer le dépôt"
+                      styleClass="action-secondaire" onAction="#preparerDepot"/>
               <Button fx:id="boutonValidation" text="✅ Validation Tadarida 🔒"
                       styleClass="action-secondaire" onAction="#validerTadarida"/>
               <Region HBox.hgrow="ALWAYS"/>

@@ -45,6 +45,7 @@ public class PassageViewModel {
             new ReadOnlyBooleanWrapper(this, "verificationDisponible", false);
     private final ReadOnlyBooleanWrapper validationVerrouillee =
             new ReadOnlyBooleanWrapper(this, "validationVerrouillee", true);
+    private final ReadOnlyBooleanWrapper depotDisponible = new ReadOnlyBooleanWrapper(this, "depotDisponible", false);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
     /// Identifiant du passage affiché, mémorisé pour les actions (ex. suppression).
@@ -96,6 +97,8 @@ public class PassageViewModel {
         etapes.setAll(construireEtapes(detail.statut()));
         verificationDisponible.set(detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal());
         validationVerrouillee.set(detail.statut() != StatutWorkflow.DEPOSE);
+        depotDisponible.set(
+                detail.statut() == StatutWorkflow.VERIFIE || detail.statut() == StatutWorkflow.PRET_A_DEPOSER);
     }
 
     private void reinitialiser() {
@@ -111,6 +114,7 @@ public class PassageViewModel {
         etapes.clear();
         verificationDisponible.set(false);
         validationVerrouillee.set(true);
+        depotDisponible.set(false);
     }
 
     private static List<EtapeWorkflow> construireEtapes(StatutWorkflow courant) {
@@ -187,6 +191,11 @@ public class PassageViewModel {
     /// `true` tant que la validation Tadarida est verrouillée (passage non encore déposé).
     public ReadOnlyBooleanProperty validationVerrouilleeProperty() {
         return validationVerrouillee.getReadOnlyProperty();
+    }
+
+    /// `true` quand la préparation/dépôt est pertinente (passage Vérifié ou Prêt à déposer).
+    public ReadOnlyBooleanProperty depotDisponibleProperty() {
+        return depotDisponible.getReadOnlyProperty();
     }
 
     /// Message d'erreur (passage introuvable), vide en fonctionnement nominal.

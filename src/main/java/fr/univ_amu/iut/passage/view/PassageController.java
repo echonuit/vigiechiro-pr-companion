@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
+import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -27,16 +28,18 @@ import javafx.scene.layout.HBox;
 /// d'identité, stepper de statut et onglet « Vue d'ensemble » (stats + actions rapides).
 ///
 /// Pur câblage (patron CM4) : lie les contrôles aux propriétés du [PassageViewModel]. Les boutons
-/// « Vérifier », « Diagnostic » et « Validation Tadarida » ouvrent M-Qualification, M-Diagnostic et
-/// M-Vision-Tadarida via les contrats socle [OuvrirVerification], [OuvrirDiagnostic] et
-/// [OuvrirValidation] (sans dépendre des features `qualification`, `diagnostic` ni `validation`).
-/// Aucun accès base de données ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
+/// « Vérifier », « Diagnostic », « Préparer le dépôt » et « Validation Tadarida » ouvrent
+/// M-Qualification, M-Diagnostic, M-Lot et M-Vision-Tadarida via les contrats socle
+/// [OuvrirVerification], [OuvrirDiagnostic], [OuvrirLot] et [OuvrirValidation] (sans dépendre des
+/// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
+/// logique métier ici (règle ArchUnit `view_sans_jdbc`).
 public class PassageController {
 
     private final PassageViewModel viewModel;
     private final OuvrirVerification ouvrirVerification;
     private final OuvrirDiagnostic ouvrirDiagnostic;
     private final OuvrirValidation ouvrirValidation;
+    private final OuvrirLot ouvrirLot;
     private final NavigationPassage navigation;
     private Long idPassage;
     private ContexteSite contexte;
@@ -90,6 +93,9 @@ public class PassageController {
     private Button boutonOuvrirValidation;
 
     @FXML
+    private Button boutonDepot;
+
+    @FXML
     private Label lblIndiceAction;
 
     @FXML
@@ -101,11 +107,13 @@ public class PassageController {
             OuvrirVerification ouvrirVerification,
             OuvrirDiagnostic ouvrirDiagnostic,
             OuvrirValidation ouvrirValidation,
+            OuvrirLot ouvrirLot,
             NavigationPassage navigation) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
         this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
         this.ouvrirValidation = Objects.requireNonNull(ouvrirValidation, "ouvrirValidation");
+        this.ouvrirLot = Objects.requireNonNull(ouvrirLot, "ouvrirLot");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
     }
 
@@ -150,6 +158,7 @@ public class PassageController {
                 .bind(viewModel.verificationDisponibleProperty().not());
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonOuvrirValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
+        boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
         lblIndiceAction
                 .textProperty()
                 .bind(Bindings.createStringBinding(
@@ -198,6 +207,14 @@ public class PassageController {
     @FXML
     private void validerTadarida() {
         ouvrirValidation.ouvrir(idPassage);
+    }
+
+    /// « Préparer le dépôt » : ouvre M-Lot sur ce passage via le contrat socle [OuvrirLot]
+    /// (implémenté par la feature `lot`). Le bouton n'est actif que dans la phase de dépôt (Vérifié
+    /// ou Prêt à déposer) : idPassage est alors défini.
+    @FXML
+    private void preparerDepot() {
+        ouvrirLot.ouvrir(idPassage);
     }
 
     /// « Supprimer » : après confirmation, supprime le passage (et sa nuit, par cascade) puis revient

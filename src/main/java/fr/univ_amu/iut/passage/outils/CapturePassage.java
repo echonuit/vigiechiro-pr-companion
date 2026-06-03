@@ -111,7 +111,12 @@ public final class CapturePassage {
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(type -> type == PassageController.class
                 ? new PassageController(
-                        passageVm, idp -> {}, idp -> {}, idp -> {}, injecteur.getInstance(NavigationPassage.class))
+                        passageVm,
+                        idp -> {},
+                        idp -> {},
+                        idp -> {},
+                        idp -> {},
+                        injecteur.getInstance(NavigationPassage.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();

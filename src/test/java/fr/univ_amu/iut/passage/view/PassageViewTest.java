@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
+import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -44,6 +45,7 @@ class PassageViewTest {
     private final AtomicReference<Long> verificationOuverte = new AtomicReference<>();
     private final AtomicReference<Long> diagnosticOuvert = new AtomicReference<>();
     private final AtomicReference<Long> validationOuverte = new AtomicReference<>();
+    private final AtomicReference<Long> depotOuvert = new AtomicReference<>();
 
     @Start
     void start(Stage stage) throws Exception {
@@ -82,6 +84,11 @@ class PassageViewTest {
             @Provides
             OuvrirValidation ouvrirValidation() {
                 return validationOuverte::set;
+            }
+
+            @Provides
+            OuvrirLot ouvrirLot() {
+                return depotOuvert::set;
             }
         });
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
@@ -139,6 +146,17 @@ class PassageViewTest {
         robot.interact(diagnostic::fire);
 
         assertThat(diagnosticOuvert.get()).isEqualTo(ID_PASSAGE);
+    }
+
+    @Test
+    @DisplayName("« Préparer le dépôt » ouvre M-Lot du passage courant (Vérifié → actif)")
+    void depot_ouvre_le_lot(FxRobot robot) {
+        Button depot = robot.lookup("#boutonDepot").queryAs(Button.class);
+        assertThat(depot.isDisabled()).isFalse(); // passage Vérifié → phase de dépôt
+
+        robot.interact(depot::fire);
+
+        assertThat(depotOuvert.get()).isEqualTo(ID_PASSAGE);
     }
 
     @Test
