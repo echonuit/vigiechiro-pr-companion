@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,6 +13,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
@@ -118,5 +120,72 @@ class MultisiteViewModelTest {
         assertThat(ok).isTrue();
         verify(service).exporterCsvVers(eq(Path.of("/tmp/vue-multisite.csv")), anyList());
         assertThat(vm.messageProperty().get()).contains("exporté");
+    }
+
+    @Test
+    @DisplayName("enregistrerVue enregistre la combinaison courante et recharge la liste des vues")
+    void enregistrer_vue() {
+        when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
+        when(service.listerVues()).thenReturn(List.of(new SavedView(1L, "Déposés 2026", "{}")));
+        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE);
+
+        boolean ok = vm.enregistrerVue("Déposés 2026");
+
+        assertThat(ok).isTrue();
+        ArgumentCaptor<FiltresMultisite> capteur = ArgumentCaptor.forClass(FiltresMultisite.class);
+        verify(service).enregistrerVue(eq("Déposés 2026"), capteur.capture());
+        assertThat(capteur.getValue().statut()).isEqualTo(StatutWorkflow.DEPOSE);
+        assertThat(vm.vues()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("enregistrerVue refuse un nom vide")
+    void enregistrer_vue_refuse_nom_vide() {
+        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+
+        assertThat(vm.enregistrerVue("   ")).isFalse();
+        assertThat(vm.messageProperty().get()).contains("nom");
+    }
+
+    @Test
+    @DisplayName("appliquerVue rejoue les filtres de la vue et ne recharge le tableau qu'une fois")
+    void appliquer_vue() {
+        when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
+        when(service.chargerVue(5L)).thenReturn(new FiltresMultisite("640380", StatutWorkflow.VERIFIE, null, 2026));
+        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+
+        boolean ok = vm.appliquerVue(new SavedView(5L, "Ma vue", "{}"));
+
+        assertThat(ok).isTrue();
+        assertThat(vm.filtreNumeroCarreProperty().get()).isEqualTo("640380");
+        assertThat(vm.filtreStatutProperty().get()).isEqualTo(StatutWorkflow.VERIFIE);
+        assertThat(vm.filtreAnneeProperty().get()).isEqualTo(2026);
+        // Les 4 critères sont posés sous garde → un seul rafraîchissement (un seul appel service).
+        verify(service, times(1)).listerPassages(eq(ID), any(), any());
+    }
+
+    @Test
+    @DisplayName("mettreAJourVue met à jour la vue avec la combinaison courante")
+    void mettre_a_jour_vue() {
+        when(service.listerVues()).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+
+        boolean ok = vm.mettreAJourVue(new SavedView(8L, "Ancien", "{}"), "Nouveau");
+
+        assertThat(ok).isTrue();
+        verify(service).mettreAJourVue(eq(8L), eq("Nouveau"), any(FiltresMultisite.class));
+    }
+
+    @Test
+    @DisplayName("supprimerVue supprime la vue et recharge la liste")
+    void supprimer_vue() {
+        when(service.listerVues()).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+
+        boolean ok = vm.supprimerVue(new SavedView(3L, "X", "{}"));
+
+        assertThat(ok).isTrue();
+        verify(service).supprimerVue(3L);
     }
 }
