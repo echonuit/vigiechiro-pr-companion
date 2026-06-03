@@ -34,6 +34,7 @@ public class MultisiteController {
 
     private final MultisiteViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
+    private final NavigationMultisite navigation;
 
     @FXML
     private Label lblResume;
@@ -55,6 +56,9 @@ public class MultisiteController {
 
     @FXML
     private Button boutonExporter;
+
+    @FXML
+    private Button boutonGererVues;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -84,9 +88,11 @@ public class MultisiteController {
     private Label lblMessage;
 
     @Inject
-    public MultisiteController(MultisiteViewModel viewModel, OuvrirPassage ouvrirPassage) {
+    public MultisiteController(
+            MultisiteViewModel viewModel, OuvrirPassage ouvrirPassage, NavigationMultisite navigation) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.navigation = Objects.requireNonNull(navigation, "navigation");
     }
 
     @FXML
@@ -183,6 +189,13 @@ public class MultisiteController {
         // Le nom convivial du site n'est pas porté par la vue agrégée : carré + point suffisent au
         // fil d'Ariane de M-Passage (nomSite n'y est pas utilisé).
         ouvrirPassage.ouvrir(ligne.idPassage(), new ContexteSite(ligne.numeroCarre(), ligne.codePoint(), null));
+    }
+
+    /// « Vues enregistrées… » : ouvre la modale de gestion, branchée sur ce même ViewModel
+    /// (appliquer une vue met donc à jour les filtres et le tableau de cet écran).
+    @FXML
+    private void gererVues() {
+        navigation.ouvrirModaleVues(boutonGererVues.getScene().getWindow(), viewModel);
     }
 
     @FXML

@@ -65,6 +65,7 @@ class MultisiteViewTest {
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
+                bind(NavigationMultisite.class).toInstance(mock(NavigationMultisite.class));
             }
 
             @Provides

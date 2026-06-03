@@ -39,6 +39,7 @@
     <Label text="Année :" styleClass="section-sous"/>
     <TextField fx:id="champAnnee" promptText="2026" prefWidth="70.0"/>
     <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
+    <Button fx:id="boutonGererVues" text="⭐ Vues…" onAction="#gererVues"/>
     <Region HBox.hgrow="ALWAYS"/>
     <Label text="Tri :" styleClass="section-sous"/>
     <ComboBox fx:id="choixTri"/>
