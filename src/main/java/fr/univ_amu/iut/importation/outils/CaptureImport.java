@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.di.ImportationModule;
+import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
@@ -112,9 +113,18 @@ public final class CaptureImport {
             vm.pointSelectionneProperty().set(vm.points().get(0));
         }
 
+        Scene scene = new Scene(vue, 1100, 860);
         Path fichier = sortie.resolve("apercu-import-assistant.png");
-        ApercuFx.enregistrerPng(new Scene(vue, 1100, 760), fichier);
+        ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+
+        // État « import en cours » (#33) : barre de progression déterminée à mi-parcours, formulaire
+        // gelé (le rattachement ne peut plus changer pendant le traitement). Même scène, VM piloté.
+        vm.marquerEnCours();
+        vm.appliquerProgression(new Progression("Transformation 120/191", 0.66));
+        Path enCours = sortie.resolve("apercu-import-en-cours.png");
+        ApercuFx.enregistrerPng(scene, enCours);
+        System.out.println("Apercu ecrit dans " + enCours.toAbsolutePath());
     }
 
     private static Injector creerInjecteur() {
@@ -137,7 +147,11 @@ public final class CaptureImport {
     }
 
     private static Path creerDossierEchantillon() throws IOException {
-        Path sd = Files.createTempDirectory("vc-sd-demo");
+        // Chemin DÉTERMINISTE (et non un dossier temporaire aléatoire) : il est affiché dans le champ
+        // « Dossier source », donc une racine fixe garde les PNG reproductibles (cf. CaptureLot). Les
+        // fichiers sont réécrits à chaque exécution (idempotent).
+        Path sd = Path.of(System.getProperty("java.io.tmpdir"), "vigiechiro-sd-demo");
+        Files.createDirectories(sd);
         Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_20260422_203922.wav"), "wav1");

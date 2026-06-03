@@ -9,7 +9,7 @@ fr/univ_amu/iut/commun/view/MainView.fxml                : apercu-accueil.png
 fr/univ_amu/iut/sites/view/MesSites.fxml                 : apercu-sites-mes-sites.png apercu-sites-mes-sites-vide.png
 fr/univ_amu/iut/sites/view/SiteDetail.fxml               : apercu-sites-detail.png apercu-sites-detail-sans-passage.png
 fr/univ_amu/iut/sites/view/ModalePoint.fxml              : apercu-sites-modale-point.png apercu-sites-modale-point-creation.png
-fr/univ_amu/iut/importation/view/Importation.fxml        : apercu-import-assistant.png
+fr/univ_amu/iut/importation/view/Importation.fxml        : apercu-import-assistant.png apercu-import-en-cours.png
 fr/univ_amu/iut/qualification/view/Qualification.fxml    : apercu-qualification.png apercu-qualification-initial.png
 fr/univ_amu/iut/passage/view/Passage.fxml                : apercu-passage.png apercu-passage-depose.png
 fr/univ_amu/iut/passage/view/RattachementModale.fxml     : apercu-passage-rattachement.png
