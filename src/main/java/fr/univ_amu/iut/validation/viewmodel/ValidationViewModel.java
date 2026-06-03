@@ -20,6 +20,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 
 /// ViewModel de l'écran **M-Vision-Tadarida** (validation taxonomique des résultats Tadarida d'un
 /// passage, parcours P7).
@@ -43,6 +44,9 @@ public class ValidationViewModel {
     private Long idResultats;
 
     private final ObservableList<ObservationStatut> observations = FXCollections.observableArrayList();
+    private final FilteredList<ObservationStatut> observationsFiltrees = new FilteredList<>(observations);
+    private final ObjectProperty<StatutObservation> filtreStatut =
+            new SimpleObjectProperty<>(this, "filtreStatut", null);
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
     private final ObjectProperty<ObservationStatut> selection = new SimpleObjectProperty<>(this, "selection");
     private final ReadOnlyBooleanWrapper selectionPresente =
@@ -64,6 +68,8 @@ public class ValidationViewModel {
     public ValidationViewModel(ServiceValidation service) {
         this.service = Objects.requireNonNull(service, "service");
         selection.addListener((obs, ancien, nouveau) -> majSelection(nouveau));
+        filtreStatut.addListener((obs, ancien, nouveau) ->
+                observationsFiltrees.setPredicate(nouveau == null ? null : os -> os.statut() == nouveau));
     }
 
     /// Ouvre la validation du passage `idPassage`. Une erreur (passage/résultats illisibles) est
@@ -192,17 +198,11 @@ public class ValidationViewModel {
     }
 
     private void majCompteurs() {
-        int validees = compter(StatutObservation.VALIDEE);
-        int corrigees = compter(StatutObservation.CORRIGEE);
-        int total = observations.size();
-        nombreTotal.set(total);
-        nombreValidees.set(validees);
-        nombreCorrigees.set(corrigees);
-        progression.set(total == 0 ? "" : (validees + corrigees) + " / " + total + " revues");
-    }
-
-    private int compter(StatutObservation statut) {
-        return (int) observations.stream().filter(o -> o.statut() == statut).count();
+        ComptageRevue comptage = ComptageRevue.de(observations);
+        nombreTotal.set(comptage.total());
+        nombreValidees.set(comptage.validees());
+        nombreCorrigees.set(comptage.corrigees());
+        progression.set(comptage.progression());
     }
 
     private void majSelection(ObservationStatut courant) {
@@ -224,9 +224,20 @@ public class ValidationViewModel {
         message.set("");
     }
 
-    /// Observations du passage (avec statut de revue), dans l'ordre d'import.
+    /// Observations du passage (avec statut de revue), dans l'ordre d'import. **Source non filtrée** :
+    /// les compteurs de progression la reflètent intégralement.
     public ObservableList<ObservationStatut> observations() {
         return observations;
+    }
+
+    /// Vue **filtrée** des observations (par [#filtreStatutProperty()]) à afficher dans la table.
+    public ObservableList<ObservationStatut> observationsFiltrees() {
+        return observationsFiltrees;
+    }
+
+    /// Filtre de statut de la table (`null` = tous) : À revoir / Validée / Corrigée.
+    public ObjectProperty<StatutObservation> filtreStatutProperty() {
+        return filtreStatut;
     }
 
     /// Observation sélectionnée dans la liste (liée au modèle de sélection de la table par la vue).

@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
+import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.viewmodel.FormatObservation;
 import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
@@ -35,6 +36,9 @@ public class ValidationController {
 
     @FXML
     private Button btnImporter;
+
+    @FXML
+    private ComboBox<StatutObservation> choixFiltre;
 
     @FXML
     private TableView<ObservationStatut> tableObservations;
@@ -81,7 +85,23 @@ public class ValidationController {
         colStatut.setCellValueFactory(cellule -> new ReadOnlyStringWrapper(
                 FormatObservation.libelleStatut(cellule.getValue().statut())));
 
-        tableObservations.setItems(viewModel.observations());
+        tableObservations.setItems(viewModel.observationsFiltrees());
+        // Filtre de statut : la 1re entrée (null) = « Tous », les suivantes filtrent la table.
+        choixFiltre.getItems().add(null);
+        choixFiltre.getItems().addAll(StatutObservation.values());
+        choixFiltre.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(StatutObservation statut) {
+                return statut == null ? "Tous les statuts" : FormatObservation.libelleStatut(statut);
+            }
+
+            @Override
+            public StatutObservation fromString(String libelle) {
+                return null; // ComboBox non éditable : conversion inverse inutile
+            }
+        });
+        choixFiltre.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
+
         // La sélection de la table pilote le VM (un listener, pas un bind : selectedItemProperty est en
         // lecture seule, et le VM remet lui-même la sélection à null lors d'une réinitialisation).
         tableObservations

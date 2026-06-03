@@ -381,4 +381,22 @@ class ValidationViewModelTest {
         verify(service, never()).importer(anyLong(), any());
         assertThat(viewModel.messageProperty().get()).contains("déjà importés");
     }
+
+    @Test
+    @DisplayName("filtreStatut : la vue filtrée ne montre que le statut choisi ; null = tous")
+    void filtre_statut_restreint_la_vue() {
+        when(service.chargerValidation(ID_PASSAGE)).thenReturn(vueTrois());
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.observationsFiltrees()).hasSize(3); // null = tous
+
+        viewModel.filtreStatutProperty().set(StatutObservation.VALIDEE);
+        assertThat(viewModel.observationsFiltrees()).hasSize(1);
+        assertThat(viewModel.observationsFiltrees().get(0).statut()).isEqualTo(StatutObservation.VALIDEE);
+        // les compteurs restent calculés sur l'ensemble complet, pas sur la vue filtrée
+        assertThat(viewModel.nombreTotalProperty().get()).isEqualTo(3);
+
+        viewModel.filtreStatutProperty().set(null);
+        assertThat(viewModel.observationsFiltrees()).hasSize(3);
+    }
 }
