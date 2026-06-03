@@ -38,6 +38,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 
 /// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
@@ -106,7 +107,22 @@ public final class CaptureMultisite {
         seeder(injecteur, source);
 
         rendreEcran(injecteur, sortie.resolve("apercu-multisite.png"));
+        rendreEcranFiltre(injecteur, sortie.resolve("apercu-multisite-filtre.png"));
         rendreModale(injecteur, sortie.resolve("apercu-multisite-vues.png"));
+    }
+
+    /// Rend le tableau **filtré** par verdict « OK » (sélection dans le ComboBox de filtre), pour
+    /// montrer la restriction du tableau et le résumé recalculé.
+    private static void rendreEcranFiltre(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        // Items du filtre verdict : [Tous(null), A_VERIFIER, OK, DOUTEUX, A_JETER] → index 2 = OK.
+        if (vue.lookup("#choixVerdict") instanceof ComboBox<?> choixVerdict) {
+            choixVerdict.getSelectionModel().select(2);
+        }
+        ApercuFx.enregistrerPng(new Scene(vue, 1100, 620), fichier);
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
     /// Charge `Multisite.fxml` (le controller auto-charge le tableau en `initialize()`) et le rend.
