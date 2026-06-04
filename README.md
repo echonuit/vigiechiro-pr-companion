@@ -4,9 +4,11 @@
 
 - **Ressource :** [SAÉ 2.01](https://cache.media.enseignementsup-recherche.gouv.fr/file/SPE4-MESRI-17-6-2021/35/5/Annexe_17_INFO_BUT_annee_1_1411355.pdf) <!-- TODO enseignant·e : remplacer par le lien PN propre au module -->
 - **Responsable :** [Sébastien Nedjar](mailto:sebastien.nedjar@univ-amu.fr)
-- **Enseignantes :**
+- **Équipe pédagogique** (ressources R2.02 et R2.03) :
+  - [Frédéric Flouvat](mailto:frederic.flouvat@univ-amu.fr)
   - [Sophie Nabitz](mailto:sophie.nabitz@univ-avignon.fr)
   - [Leïla Sakli Miled](mailto:leila.SAKLI@univ-amu.fr)
+  - [Olivier Gérard](mailto:olivier.GERARD@univ-amu.fr) (ergonomie / préparation SAÉ 2.01)
 - **Besoin d'aide ?** Les [issues](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues) de votre dépôt (une par tâche) ou un [email](mailto:sebastien.nedjar@univ-amu.fr).
 
 ---
@@ -41,8 +43,8 @@ src/main/java/fr/univ_amu/iut/
 │
 ├── commun/                      ← LE SOCLE partagé par toutes les features
 │   ├── persistence/             ·   infrastructure DAO (SQLite, transactions, migrations)
-│   ├── model/                   ·   domaine transverse (Horloge, Prefixe, Verdict, Statut…)
-│   ├── viewmodel/               ·   état observable du chrome (NavigationViewModel…)
+│   ├── model/                   ·   domaine transverse (Horloge, Prefixe, Verdict, Statut...)
+│   ├── viewmodel/               ·   état observable du chrome (NavigationViewModel...)
 │   ├── view/                    ·   chrome de l'appli (MainView, Navigateur, contrats Ouvrir*)
 │   ├── di/                      ·   modules Guice du socle (Persistence, Commun)
 │   └── outils/                  ·   outils enseignant (capture d'écran), hors version étudiante
@@ -63,7 +65,7 @@ Chaque **feature** (ex. `sites/`) suit le même découpage en **4 couches MVVM**
 | `view/` | **Vue** : `Controller` + `*.fxml` + `*.css` (l'interface visible) | Se **lie** (binding) aux propriétés du ViewModel ; ne parle jamais à la base |
 | `di/` | **Injection** : le module Guice qui assemble la feature | Publie ses services/VM au conteneur |
 
-> **Le sens MVVM :** le `model` ne connaît pas l'IHM ; le `viewmodel` porte l'état sous forme de **propriétés observables** (`IntegerProperty`, `ObservableList`…) sans toucher aux composants graphiques ; la `view` **observe** le viewmodel via le *data binding* JavaFX. C'est cette frontière que vous travaillez.
+> **Le sens MVVM :** le `model` ne connaît pas l'IHM ; le `viewmodel` porte l'état sous forme de **propriétés observables** (`IntegerProperty`, `ObservableList`...) sans toucher aux composants graphiques ; la `view` **observe** le viewmodel via le *data binding* JavaFX. C'est cette frontière que vous travaillez.
 
 ### 2.2. Le domaine métier
 
@@ -104,7 +106,7 @@ L'écoute (sonogramme + spectrogramme d'un WAV) est fournie par un **composant e
 | Fourni **clé en main** (testé) | À **construire** (votre travail) |
 |---|---|
 | Tout le **socle** `commun/` (persistance, chrome, navigation, DI) | L'**IHM (MVVM)** des features qui n'en ont pas encore |
-| **Toute la couche métier** : entités, services, DAO de **toutes** les features | … en suivant le modèle de la feature de référence |
+| **Toute la couche métier** : entités, services, DAO de **toutes** les features | ... en suivant le modèle de la feature de référence |
 | La feature **`sites` complète** (model + viewmodel + view) : votre **modèle de référence** | |
 | Le composant `audio-view`, l'outillage qualité, la CI | |
 
