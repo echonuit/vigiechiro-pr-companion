@@ -12,6 +12,7 @@
 |---|---|
 | [`perf.outils.GenerateurJeuDeDonnees`](../../src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite : `perf.passages` passages (déf. 1000) + `perf.observations` observations (déf. 4031). Déterministe, base réécrite à neuf. |
 | [`perf.outils.BancMesure`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java) | Génère le jeu puis chronomètre les opérations O5 **à froid** (1ᵉʳ appel) et **à chaud** (médiane), et imprime l'`EXPLAIN QUERY PLAN` de chaque requête. |
+| [`perf.outils.BancImport`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancImport.java) | Génère une **nuit synthétique** de vrais WAV + journal `LogPR`, lance le **vrai** import (`ServiceImport`) et mesure temps (copie/transfo), débit (fichiers/s, Mo/s) et **mémoire crête** (O3). |
 
 ## Lancer le banc (couche données, O5)
 
@@ -26,6 +27,26 @@ export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
 ```
 
 Volumes paramétrables : `-Dperf.passages=...`, `-Dperf.observations=...` (à ajouter dans `exec.args`).
+
+## Lancer le banc d'import (O3 — tenue sur nuit volumineuse)
+
+`BancImport` génère une nuit de **vrais WAV** (en-tête RIFF, 384 kHz par défaut) puis lance le vrai
+import et mesure temps / débit / mémoire :
+
+```bash
+./mvnw -q org.codehaus.mojo:exec-maven-plugin:exec \
+  -Dexec.executable="$JAVA_HOME/bin/java" -Dexec.classpathScope=runtime \
+  -Dexec.args="--enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace=/tmp/vigiechiro-bench-import \
+               -Dperf.import.go=20 -cp %classpath fr.univ_amu.iut.perf.outils.BancImport"
+```
+
+Dimensionnement : `-Dperf.import.fichiers=N` **ou** `-Dperf.import.go=<Gio>` (prime sur `fichiers`),
+plus `-Dperf.import.secondes` (déf. 5.0) et `-Dperf.import.frequenceHz` (déf. 384000, **multiple de 10**).
+Sortie : taille, temps total (copie vs transformation #12), débit, nb séquences, **mémoire crête**.
+
+> ⚠️ L'import recopie puis transforme : prévoir **2 à 3× la taille source** en espace disque. Pour viser
+> 20 Gio à 384 kHz / 5 s, c'est ~5500 fichiers ; commencer petit (`-Dperf.import.fichiers=100`) pour
+> calibrer le temps, puis monter.
 
 ## Protocole de mesure (à respecter pour des chiffres comparables)
 
@@ -54,5 +75,9 @@ la contrainte `UNIQUE(point_id, year, passage_number)`.
 
 - **#28** ✓ : index prioritaires ajoutés (`V03__perf_indexes.sql`). `SCAN observation` → `SEARCH …
   USING INDEX`. Index « faibles » restants (microphone, monitoring_site, taxon) laissés de côté.
-- **O3** (nuits volumineuses ≤ 40 Go, 0 freeze IHM > 200 ms, mémoire stable) : générateur de nuit
-  volumineuse + sonde import + procédure semi-manuelle (à venir, lot 29c/29d).
+- **O3 / 29c** ✓ : `BancImport` mesure l'import d'une nuit volumineuse (temps copie/transfo, débit,
+  mémoire crête). Chiffres à relever sur machine IUT. Repère dev : 30 WAV × 1 s (22 Mo) → ~0,14 s,
+  ~210 fichiers/s, crête ~28 Mo.
+- **29d** (restitution finale) : consigner les chiffres IUT (O5 + O3) dans les tableaux ci-dessus, et
+  documenter les procédures **semi-manuelles** restantes : **freeze IHM > 200 ms** (sonde sur le pulse
+  JavaFX pendant import/navigation) et **mémoire stabilisée** après plusieurs minutes.
