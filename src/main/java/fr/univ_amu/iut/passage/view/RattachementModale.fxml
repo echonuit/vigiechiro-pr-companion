@@ -12,7 +12,12 @@
   deux Spinner (année, n° de passage) sont liés en bidirectionnel au RattachementViewModel ; le
   récapitulatif des conséquences et le message d'erreur en sont pilotés. « Appliquer » délègue au
   ViewModel ; en cas de succès la modale se ferme et rafraîchit l'écran appelant.
+
+  TODO (M-Passage, modale rattachement) : à construire avec M-Passage. Le placeholder ci-dessous
+  n'affiche qu'un titre ; remplacez-le par la vraie modale (spinners année / n° de passage, récap,
+  message, boutons) reliée au RattachementModaleController par des fx:id et des onAction.
 -->
+<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:id="racine"
@@ -46,3 +51,14 @@
     <Button text="Appliquer" styleClass="action-primaire" onAction="#valider"/>
   </HBox>
 </VBox>
+<!-- @@end-solution@@ -->
+<!-- @@student@@
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.passage.view.RattachementModaleController"
+      spacing="10.0">
+  <Label text="Modifier le rattachement"/>
+  <Label text="TODO (M-Passage, modale rattachement) : à construire (année, n° de passage, récap, boutons)."/>
+</VBox>
+@@end-student@@ -->
+

@@ -44,6 +44,11 @@ public class PassageController {
     private Long idPassage;
     private ContexteSite contexte;
 
+    // TODO (M-Passage) : déclarez les @FXML correspondant aux fx:id de Passage.fxml (bandeau d'identité,
+    //   stepper de statut, stats, boutons Vérifier/Diagnostic/Validation/Préparer le dépôt...), câblez-
+    //   les au PassageViewModel dans « @FXML private void initialize() » et ajoutez les handlers @FXML
+    //   (qui ouvrent les autres écrans via les contrats socle Ouvrir*). Patron de référence : feature sites.
+    // --solution--
     @FXML
     private BorderPane racine;
 
@@ -101,6 +106,8 @@ public class PassageController {
     @FXML
     private Label lblValidation;
 
+    // --end-solution--
+
     @Inject
     public PassageController(
             PassageViewModel viewModel,
@@ -117,6 +124,7 @@ public class PassageController {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
     }
 
+    // --solution--
     @FXML
     private void initialize() {
         lblTitre.textProperty().bind(viewModel.titreContexteProperty());
@@ -176,6 +184,7 @@ public class PassageController {
                                         + " (M-Vision-Tadarida) s'ouvrira depuis cet onglet.",
                         viewModel.validationVerrouilleeProperty()));
     }
+    // --end-solution--
 
     /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
     /// Appelée par [NavigationPassage] après le chargement du FXML.
@@ -185,6 +194,7 @@ public class PassageController {
         viewModel.ouvrirSur(idPassage, contexte);
     }
 
+    // --solution--
     /// « Vérifier l'enregistrement » : ouvre M-Qualification sur ce passage via le contrat socle
     /// [OuvrirVerification] (la feature `qualification` en fournit l'implémentation).
     @FXML
@@ -273,4 +283,5 @@ public class PassageController {
         alerte.setHeaderText("Suppression impossible");
         alerte.showAndWait();
     }
+    // --end-solution--
 }

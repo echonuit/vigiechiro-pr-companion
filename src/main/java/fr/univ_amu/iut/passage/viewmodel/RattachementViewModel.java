@@ -17,6 +17,9 @@ import javafx.beans.property.SimpleIntegerProperty;
 /// conséquences ([#recapProperty] : « X → Y, N séquences renommées ») et un message d'erreur. Le
 /// carré et le code point (inchangés) sont fournis par la navigation : le `model`/`viewmodel` ne
 /// dépend pas de `sites`. [#valider] délègue à [ServicePassage#modifierRattachement].
+///
+/// TODO (M-Passage, modale rattachement) : implémentez les corps des méthodes publiques (ouvrirSur,
+/// valider) ; les propriétés observables sont fournies. Patron de référence : feature sites.
 public class RattachementViewModel {
 
     private final ServicePassage service;
@@ -34,8 +37,10 @@ public class RattachementViewModel {
 
     public RattachementViewModel(ServicePassage service) {
         this.service = Objects.requireNonNull(service, "service");
+        // --solution--
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
+        // --end-solution--
     }
 
     /// Initialise la modale sur le passage `idPassage` (carré et code point fournis par la
@@ -44,6 +49,9 @@ public class RattachementViewModel {
         this.idPassage = Objects.requireNonNull(idPassage, "idPassage");
         this.carre = Objects.requireNonNull(carre, "carre");
         this.codePoint = Objects.requireNonNull(codePoint, "codePoint");
+        // TODO (M-Passage, modale rattachement) : lisez le détail du passage (service.detailPassage),
+        //   mémorisez les valeurs actuelles, pré-remplissez année + numéro et recalculez le récap.
+        // --solution--
         DetailPassage detail = service.detailPassage(idPassage);
         anneeActuelle = detail.annee();
         numeroActuel = detail.numeroPassage();
@@ -52,6 +60,7 @@ public class RattachementViewModel {
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
         majRecap();
+        // --end-solution--
     }
 
     /// Applique le nouveau rattachement (année + n° saisis), après validation des bornes.
@@ -60,6 +69,9 @@ public class RattachementViewModel {
     ///     invalide, ou échec opérationnel — R5, disque, base — dont le motif est dans
     ///     [#messageErreurProperty])
     public boolean valider() {
+        // TODO (M-Passage, modale rattachement) : validez les bornes (n° >= 1, année 4 chiffres) puis
+        //   appliquez le nouveau rattachement (service.modifierRattachement) ; renvoyez true si OK.
+        // --solution--
         if (numeroPassage.get() < 1) {
             messageErreur.set("Le numéro de passage doit être supérieur ou égal à 1.");
             return false;
@@ -78,8 +90,13 @@ public class RattachementViewModel {
             messageErreur.set(echec.getMessage());
             return false;
         }
+        // --end-solution--
+        /* --student--
+        throw new UnsupportedOperationException("À implémenter (M-Passage, modale rattachement)");
+        --end-student-- */
     }
 
+    // --solution--
     private void majRecap() {
         if (carre == null) {
             recap.set("");
@@ -99,6 +116,7 @@ public class RattachementViewModel {
                     + " séquence(s) de la nuit seront renommées. Action irréversible.");
         }
     }
+    // --end-solution--
 
     public IntegerProperty anneeProperty() {
         return annee;
