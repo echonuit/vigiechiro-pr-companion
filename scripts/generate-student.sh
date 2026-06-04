@@ -340,7 +340,6 @@ if [ "$APPLY" = true ]; then
         --exclude='.git' \
         --exclude='target' \
         --exclude='generate-student.sh' \
-        --exclude='update-autograding.sh' \
         --exclude='.github/workflows/generate-student.yml' \
         --exclude='.github/workflows/template-sync.yml' \
         "$TMP_DIR/" "$TP_DIR/"
@@ -350,7 +349,6 @@ if [ "$APPLY" = true ]; then
     # voulu pour .git et target). Pour les artefacts enseignant, on
     # veut explicitement les retirer de la version etudiante generee.
     rm -f "$TP_DIR/generate-student.sh" \
-          "$TP_DIR/update-autograding.sh" \
           "$TP_DIR/.github/workflows/generate-student.yml" \
           "$TP_DIR/.github/workflows/template-sync.yml"
 
@@ -394,7 +392,6 @@ else
         DIFF_OUTPUT=$(diff -rq \
             --exclude='.git' --exclude='target' \
             --exclude='generate-student.sh' \
-            --exclude='update-autograding.sh' \
             --exclude='generate-student.yml' \
             --exclude='template-sync.yml' \
             "$TMP_DIR" "$TP_DIR" 2>/dev/null || true)

@@ -1,7 +1,7 @@
 /// Module JavaFX pour le SAÉ 2.01 - VigieChiro PR Companion.
 ///
-/// Ce module exporte les paquetages nécessaires pour les exercices. Ajoutez les exports des
-/// nouveaux paquetages d'exercices au fur et à mesure.
+/// Ce module exporte les paquetages des features. Ajoutez les exports des paquetages `view` des
+/// features que vous construisez au fur et à mesure.
 ///
 /// `open module` (et pas `module` + `opens fr.univ_amu.iut to javafx.fxml`) : choix volontaire
 /// par cohérence avec l'ancien R202/template-tp-javafx (qui ouvrait tout pour simplifier la vie

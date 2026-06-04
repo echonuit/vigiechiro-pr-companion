@@ -18,7 +18,6 @@
     "chat.tools.terminal.autoApprove": {
         "./mvnw": true,
         "./sync-upstream.sh": true,
-        "./grade-test.sh": true,
         "/^git\\s+checkout\\b/": true,
         "/^git\\s+add\\b/": true,
         "/^git\\s+commit\\b/": true,

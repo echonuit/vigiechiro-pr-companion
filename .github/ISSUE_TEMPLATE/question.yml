@@ -1,19 +1,19 @@
-name: ❓ Question sur un exercice
-description: Votre question n'est pas d'ordre technique, vous cherchez à comprendre un concept ou un énoncé
+name: ❓ Question sur une tâche
+description: Votre question n'est pas d'ordre technique, vous cherchez à comprendre un concept ou une consigne
 labels:
   - question
 body:
   - type: markdown
     attributes:
       value: |
-        Avant de poser votre question, vérifiez que vous avez bien **lu l'énoncé** et **essayé** d'activer le premier test rouge. Ça aide à cibler la question.
+        Avant de poser votre question, vérifiez que vous avez bien **lu la description de la tâche (issue)** et **essayé** d'activer le test d'acceptation. Ça aide à cibler la question.
 
   - type: input
-    id: exercise
+    id: feature
     attributes:
-      label: Exercice concerné
-      description: Numéro / nom du sous-paquet
-      placeholder: exercice3
+      label: Tâche concernée
+      description: Le nom de la feature (sous-paquet) sur laquelle vous travaillez
+      placeholder: importation
     validations:
       required: true
 

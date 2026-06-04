@@ -6,9 +6,7 @@
 # Vérifie qu'un TP ne contient pas d'incohérence entre ce qui est
 # écrit dans sa doc (README, AGENTS.md, Copilot instructions,
 # commentaires de scripts) et ce qui est réellement implémenté
-# (tests, barème autograding, marqueurs pédagogiques). Inspiré
-# directement des 5 findings corrigés lors de la session du
-# 2026-04-23 sur tp4.
+# (tests, marqueurs pédagogiques).
 #
 # Usage :
 #   ./scripts/lint-doc-coherence.sh
@@ -50,8 +48,8 @@ header() {
 }
 
 # ------------------------------------------------------------
-# Détection du mode (TDD ou refactoring) — même règle que
-# generate-student.sh et update-autograding.sh.
+# Détection du mode (TDD ou refactoring) - même règle que
+# generate-student.sh.
 # ------------------------------------------------------------
 detect_mode() {
     if grep -rq '/\* --student--' src/ 2>/dev/null; then
@@ -106,44 +104,6 @@ else
             fail "README.md:$line mentionne des \"tests de caractérisation\" mais aucun marqueur refactoring détecté dans src/."
         fi
         [ $ERRORS -eq 0 ] && pass "README.md est cohérent avec le mode TDD."
-    fi
-fi
-
-# ------------------------------------------------------------
-# 2. Barème README vs update-autograding.sh.
-# ------------------------------------------------------------
-header "Barème README vs update-autograding.sh"
-
-if [ ! -f update-autograding.sh ]; then
-    yellow "  ⊙ update-autograding.sh absent (TP sans autograding, OK)."
-else
-    COMPILE=$(awk -F= '/^COMPILE_POINTS=/ {gsub(/[^0-9]/,"",$2); print $2}' update-autograding.sh | head -1)
-    TOTAL_EX=$(awk -F= '/^TOTAL_EXERCISE_POINTS=/ {gsub(/[^0-9]/,"",$2); print $2}' update-autograding.sh | head -1)
-    CARACT=$(awk -F= '/^CARACT_POINTS=/ {gsub(/[^0-9]/,"",$2); print $2}' update-autograding.sh | head -1)
-    STRUCTURE=$(awk -F= '/^STRUCTURE_POINTS=/ {gsub(/[^0-9]/,"",$2); print $2}' update-autograding.sh | head -1)
-    TOTAL=$((${COMPILE:-0} + ${TOTAL_EX:-0}))
-
-    echo "  COMPILE=${COMPILE:-?}  TOTAL_EX=${TOTAL_EX:-?}  CARACT=${CARACT:-?}  STRUCTURE=${STRUCTURE:-?}"
-
-    if [ "$MODE" = "refactoring" ]; then
-        # On attend 100 + 100 + 800 = 1000.
-        if [ "${CARACT:-0}" -ne 100 ] || [ "${STRUCTURE:-0}" -ne 800 ]; then
-            fail "update-autograding.sh : CARACT_POINTS=${CARACT:-?} / STRUCTURE_POINTS=${STRUCTURE:-?} (attendu 100 / 800 en mode refactoring)."
-        fi
-        # README doit mentionner 100 caract + 800 structure (ou équivalent).
-        if ! grep -qE '100 points.*caract' README.md 2>/dev/null; then
-            fail "README.md ne mentionne pas \"100 points\" pour la caractérisation (attendu en mode refactoring)."
-        fi
-        if ! grep -qE '800 points.*structure' README.md 2>/dev/null; then
-            fail "README.md ne mentionne pas \"800 points\" pour la structure (attendu en mode refactoring)."
-        fi
-        [ $ERRORS -eq 0 ] && pass "README.md mentionne bien le barème 100/100/800."
-    else
-        # Mode TDD : 100 + 900.
-        if [ "${TOTAL_EX:-0}" -ne 900 ]; then
-            fail "update-autograding.sh : TOTAL_EXERCISE_POINTS=${TOTAL_EX:-?} (attendu 900 en mode TDD)."
-        fi
-        [ $ERRORS -eq 0 ] && pass "update-autograding.sh cohérent avec le mode TDD (100 + 900)."
     fi
 fi
 
@@ -236,28 +196,6 @@ else
     pass "Tous les marqueurs sont balancés."
 fi
 rm -f /tmp/lint-markers.$$.log
-
-# ------------------------------------------------------------
-# 5. Autograding à jour : relancer update-autograding.sh ne
-#    doit rien changer (sinon commit stale).
-# ------------------------------------------------------------
-header "Autograding à jour (classroom.yml)"
-
-if [ ! -f update-autograding.sh ] || [ ! -f .github/workflows/classroom.yml ]; then
-    yellow "  ⊙ update-autograding.sh ou classroom.yml absent, skip."
-else
-    BEFORE=$(mktemp)
-    cp .github/workflows/classroom.yml "$BEFORE"
-    ./update-autograding.sh >/dev/null 2>&1
-    if ! diff -q "$BEFORE" .github/workflows/classroom.yml >/dev/null 2>&1; then
-        # Restaurer le fichier avant de fail.
-        cp "$BEFORE" .github/workflows/classroom.yml
-        fail "classroom.yml aurait été modifié par update-autograding.sh. Relance-le et commit le résultat."
-    else
-        pass "classroom.yml est à jour."
-    fi
-    rm -f "$BEFORE"
-fi
 
 # ------------------------------------------------------------
 # Bilan
