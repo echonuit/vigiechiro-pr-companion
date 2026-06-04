@@ -22,6 +22,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  contents: read
   issues: write
 
 jobs:
@@ -39,8 +40,8 @@ jobs:
           shopt -s nullglob
 
           # Idempotence : si des issues existent déjà, on ne refait rien.
-          dejà=$(gh issue list --state all --limit 1 --json number --jq 'length')
-          if [ "$dejà" -gt 0 ]; then
+          deja=$(gh issue list --state all --limit 1 --json number --jq 'length')
+          if [ "$deja" -gt 0 ]; then
             echo "Le dépôt a déjà des issues : rien à créer (bootstrap déjà fait)."
             exit 0
           fi
