@@ -1,6 +1,6 @@
 # Banc de mesure des performances (#29)
 
-> Outillage **enseignant** (hors version étudiante). Sert à vérifier les objectifs d'efficience
+> Outillage **fourni** (conservé dans la version étudiante). Sert à vérifier les objectifs d'efficience
 > **O3** (tenue dans la durée, nuits volumineuses) et **O5** (capacité : ~4031 observations,
 > ~1000 passages). Les cibles chiffrées du brief sont des **ordres de grandeur**, à affiner par un
 > premier benchmark **sur les machines IUT en début de Sprint 1** : ce banc est ce benchmark,

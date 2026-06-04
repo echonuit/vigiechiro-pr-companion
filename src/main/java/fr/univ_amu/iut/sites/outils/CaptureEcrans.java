@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.sites.outils;
 
 import com.google.inject.Guice;
@@ -38,7 +37,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Capture les ecrans de la feature « sites » (M-Sites, M-Site-detail, modale point) en PNG, pour
 /// les comparer visuellement aux maquettes du brief. Demarche :

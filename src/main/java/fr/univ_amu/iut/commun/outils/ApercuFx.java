@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.commun.outils;
 
 import java.io.IOException;
@@ -11,7 +10,7 @@ import javafx.scene.image.WritableImage;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
 
-/// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Brique reutilisable qui rend une [Scene] JavaFX hors-ecran et l'ecrit en PNG, sans laisser de
 /// fenetre a l'ecran. Le patron : placer un ecran (ou le chrome complet) dans une `Scene`, forcer

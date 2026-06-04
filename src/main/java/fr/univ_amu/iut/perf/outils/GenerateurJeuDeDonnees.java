@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.perf.outils;
 
 import fr.univ_amu.iut.commun.model.ModeValidation;
@@ -37,13 +36,13 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/// OUTIL ENSEIGNANT (hors version étudiante, retiré en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Générateur de **jeux de données de benchmark** (#29) : peuple une base SQLite avec un grand
 /// nombre de **passages** (cible O5 « tri/filtre ~1000 passages ») et d'**observations** (cible O5
 /// « sélection ~4031 observations »), pour alimenter le banc de mesure (#29) et mesurer l'effet des
 /// index (#28). Mêmes conventions que les outils `Capture*` : DAO réels sur une base de la
-/// `SourceDeDonnees`, marqueur `// --solution-only--`.
+/// `SourceDeDonnees`.
 ///
 /// **Déterministe** (aucun aléa) → base reproductible : même nombre de lignes ⇒ même contenu.
 ///

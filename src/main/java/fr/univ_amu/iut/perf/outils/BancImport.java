@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.perf.outils;
 
 import com.google.inject.Guice;
@@ -39,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
-/// OUTIL ENSEIGNANT (hors version étudiante, retiré en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Banc de mesure de l'**import** (#29, objectif O3) : génère une **nuit synthétique** de vrais WAV
 /// (en-tête RIFF canonique, fréquence multiple de 10 — R10) + un journal `LogPR`, puis lance le

@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.commun.outils;
 
 import com.google.inject.Injector;
@@ -13,7 +12,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Capture l'ecran d'accueil (chrome principal `MainView.fxml` + cartes d'activites) en PNG, pour
 /// le comparer a la maquette du brief. Contrairement aux `CaptureEcrans` / `CaptureImport` des

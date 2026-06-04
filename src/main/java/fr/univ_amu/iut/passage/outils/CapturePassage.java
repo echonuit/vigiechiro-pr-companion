@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.passage.outils;
 
 import com.google.inject.Guice;
@@ -47,7 +46,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, en **trois
 /// états** afin d'en montrer les particularités :

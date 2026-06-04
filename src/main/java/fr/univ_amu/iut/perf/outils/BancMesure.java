@@ -1,4 +1,3 @@
-// --solution-only--
 package fr.univ_amu.iut.perf.outils;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -27,7 +26,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.IntSupplier;
 
-/// OUTIL ENSEIGNANT (hors version étudiante, retiré en passe A2).
+/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
 ///
 /// Banc **micro-benchmark de la couche données** (#29) : peuple une base de mesure
 /// ([GenerateurJeuDeDonnees]) puis chronomètre les deux opérations cibles de l'objectif O5 et

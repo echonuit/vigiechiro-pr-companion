@@ -47,13 +47,13 @@ src/main/java/fr/univ_amu/iut/
 │   ├── viewmodel/               ·   état observable du chrome (NavigationViewModel...)
 │   ├── view/                    ·   chrome de l'appli (MainView, Navigateur, contrats Ouvrir*)
 │   ├── di/                      ·   modules Guice du socle (Persistence, Commun)
-│   └── outils/                  ·   outils enseignant (capture d'écran), hors version étudiante
+│   └── outils/                  ·   outils de capture d'écran (fournis, conservés côté étudiant)
 │
 ├── sites/        passage/       importation/   qualification/   lot/
 ├── validation/   multisite/     diagnostic/    bibliotheque/                ← les 9 features
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
-└── perf/outils/                 ← bancs de mesure (benchmark), hors version étudiante
+└── perf/outils/                 ← bancs de mesure (benchmark, fournis)
 ```
 
 Chaque **feature** (ex. `sites/`) suit le même découpage en **4 couches MVVM** :
