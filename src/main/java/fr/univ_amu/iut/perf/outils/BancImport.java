@@ -24,6 +24,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -32,6 +33,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,7 +48,8 @@ import java.util.function.Consumer;
 /// À exécuter **sur une machine représentative** (IUT, JIT froid) pour fixer les ordres de grandeur.
 ///
 /// Paramètres système :
-///  - `vigiechiro.workspace` : dossier de travail (défaut : `<tmp>/vigiechiro-bench-import`) ;
+///  - `vigiechiro.workspace` : dossier de travail, **entièrement réinitialisé** à chaque lancement
+///    (dossier de benchmark jetable ; défaut : `<tmp>/vigiechiro-bench-import`) ;
 ///  - `perf.import.fichiers` : nombre de WAV de la nuit (défaut 100) ;
 ///  - `perf.import.go` : si fourni, **prime** sur `fichiers` et fixe la taille source cible en Gio ;
 ///  - `perf.import.secondes` : durée d'un WAV (défaut 5.0) ;
@@ -82,8 +85,11 @@ public final class BancImport {
         int nbFichiers = nombreDeFichiers(octetsParWav);
 
         System.setProperty("vigiechiro.workspace", racine.toString());
-        Files.createDirectories(racine);
-        Files.deleteIfExists(racine.resolve("vigiechiro.db"));
+        // Workspace entièrement réinitialisé : sinon, en relançant avec un autre nombre de fichiers
+        // (calibrer puis monter en charge), les WAV de `source-sd` et les sessions copiées/transformées
+        // de la passe précédente subsisteraient → mesure faussée, voire échec du renommage (R7) sur des
+        // originaux déjà préfixés. C'est un dossier de **benchmark** jetable (cf. doc).
+        reinitialiser(racine);
 
         Injector injecteur = creerInjecteur();
         injecteur.getInstance(MigrationSchema.class).migrer();
@@ -148,6 +154,23 @@ public final class BancImport {
             return (int) Math.max(1, Math.ceil(cibleOctets / (double) octetsParWav));
         }
         return Math.max(1, Integer.getInteger("perf.import.fichiers", 100));
+    }
+
+    /// Vide complètement le dossier de benchmark (base + `source-sd` + sessions) puis le recrée, pour
+    /// une mesure reproductible quel que soit le contenu d'une passe précédente.
+    private static void reinitialiser(Path racine) throws IOException {
+        if (Files.exists(racine)) {
+            try (var chemins = Files.walk(racine)) {
+                chemins.sorted(Comparator.reverseOrder()).forEach(chemin -> {
+                    try {
+                        Files.delete(chemin);
+                    } catch (IOException echec) {
+                        throw new UncheckedIOException("Nettoyage du workspace impossible : " + chemin, echec);
+                    }
+                });
+            }
+        }
+        Files.createDirectories(racine);
     }
 
     /// Écrit le journal `LogPR`, un relevé `THLog` vide et `nbFichiers` WAV valides nommés
