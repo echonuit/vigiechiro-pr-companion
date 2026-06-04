@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-# OUTIL ENSEIGNANT (hors version etudiante, retire en passe A2).
+# OUTIL FOURNI : conserve dans la version etudiante. Relance en CI a chaque push sur main
+# (workflow .github/workflows/capture-vues.yml) pour tenir la galerie d'apercus a jour : cote
+# enseignant elle montre les ecrans de depart (placeholders + sites/accueil), cote etudiant elle
+# suit l'avancement de son IHM.
 #
 # Rend les ecrans des features (sites, importation, qualification) en PNG pour les comparer aux maquettes du brief.
 # S'appuie sur les <feature>.outils.CaptureEcrans / CaptureImport (rendu hors-ecran via SwingFXUtils).

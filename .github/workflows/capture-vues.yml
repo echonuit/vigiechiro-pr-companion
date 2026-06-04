@@ -1,0 +1,63 @@
+# Met à jour les aperçus PNG des vues (.github/assets/apercu-*.png) à chaque push sur `main`.
+#
+# - Sur le repo enseignant, `main` est la version étudiante auto-générée : les aperçus reflètent
+#   alors les écrans de DÉPART (placeholders « à construire » pour les 8 features à coder, écrans
+#   complets pour `sites` + l'accueil, qui restent la référence).
+# - Sur un repo étudiant, ils se mettent à jour au fur et à mesure que l'étudiant construit son IHM
+#   (à chaque PR mergée dans `main`) : la galerie suit son avancement.
+#
+# Rendu hors-écran via la Headless Platform JavaFX 26 (glass.platform=Headless, rendu logiciel sw) :
+# aucun display X11 requis. Le commit de mise à jour porte `[skip ci]` pour ne pas se redéclencher
+# (et ne déclenche aucune autre CI : un commit d'aperçus n'a pas de code à valider).
+#
+# Ce workflow est CONSERVÉ dans la version étudiante (contrairement à generate-student.yml / lint.yml,
+# retirés au stripping) : c'est lui qui régénère la galerie des étudiants.
+name: Aperçus des vues (main)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+# Évite que deux régénérations de main (ex. push enseignant rapprochés) se marchent dessus.
+concurrency:
+  group: captures-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  capturer:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: main
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'zulu'
+          # JDK Zulu standard : JavaFX 26 vient des dépendances Maven org.openjfx, la Headless
+          # Platform est 100 % logicielle (pas de runtime natif jdk+fx requis).
+          cache: maven
+          check-latest: false
+
+      - name: Générer les aperçus PNG (hors-écran)
+        run: |
+          chmod +x .github/assets/capture-screenshots.sh
+          .github/assets/capture-screenshots.sh
+
+      - name: Committer les aperçus modifiés
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add .github/assets/apercu-*.png
+          if git diff --cached --quiet; then
+            echo "Aucun aperçu modifié : rien à committer."
+          else
+            git commit -m "chore(captures): mise à jour des aperçus des vues [skip ci]"
+            git push origin HEAD:main
+          fi
