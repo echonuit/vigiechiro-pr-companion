@@ -58,28 +58,86 @@ débit, nb séquences, **mémoire crête**.
   **avant / après index** (#28).
 - Relancer 2-3 fois et garder l'ordre de grandeur ; ne pas sur-interpréter quelques ms.
 
-## Cibles (brief) et relevés
+## Relevés (machine de référence)
 
-> Les colonnes « froid / chaud » sont à **remplir sur machine IUT**. Les valeurs ci-dessous sont des
-> repères obtenus sur une machine de dev (JIT déjà chaud) : indicatives, **non** représentatives de l'IUT.
+> **Machine de référence** : poste comparable à ceux de l'IUT (_préciser CPU / RAM / SSD si besoin_).
+> JDK 25 standard. Chiffres **mesurés** (pas des placeholders) ; relancer 2-3 fois et garder l'ordre de
+> grandeur. La 1ʳᵉ utilisation du jour (JIT + cache disque froids) donne les valeurs « froid ».
 
-| Opération | Cible | Plan d'exécution (SQLite, après #28) | Froid (IUT) | Chaud (IUT) |
+### O5 — couche données (`BancMesure`)
+
+| Opération | Cible | Plan d'exécution (après #28) | Froid | Chaud (méd.) |
 |---|---|---|---|---|
-| Sélection ~4031 observations (`findByResults`) | < 100 ms | `SEARCH observation USING INDEX idx_obs_results (results_id=?)` (#28 ✓, était `SCAN`) | _à remplir_ | _à remplir_ |
-| Tri/filtre ~1000 passages (multisite, verdict) | < 200 ms | `SEARCH passage USING INDEX sqlite_autoindex_passage_1 (point_id=?)` (déjà indexé) | _à remplir_ | _à remplir_ |
+| Sélection ~4031 observations (`findByResults`) | < 100 ms | `SEARCH observation USING INDEX idx_obs_results` (#28, était `SCAN`) | **~25 ms** ✅ | ~8-13 ms |
+| Tri/filtre ~1000 passages (multisite, verdict) | < 200 ms | `SEARCH passage USING INDEX sqlite_autoindex_passage_1 (point_id=?)` | **~18 ms** ✅ | ~7-9 ms |
 
-**Lecture clé** : la sélection des observations faisait un **balayage complet** (`SCAN`) faute d'index
-sur `observation(results_id)` ; **#28** a ajouté `idx_obs_results` → le plan passe à `SEARCH … USING
-INDEX` (sur machine de dev : froid ~75 ms → ~37 ms). Les passages profitaient déjà de l'auto-index de
-la contrainte `UNIQUE(point_id, year, passage_number)`.
+Les deux opérations sont **largement sous les cibles** (facteur ~4 à ~10). Rappel #28 : sans
+`idx_obs_results` la sélection faisait un `SCAN` (~75 ms froid sur cette machine) ; avec l'index,
+~25 ms.
 
-## Suite
+### O3 — import d'une nuit (`BancImport`, WAV de 2 s @ 384 kHz)
 
-- **#28** ✓ : index prioritaires ajoutés (`V03__perf_indexes.sql`). `SCAN observation` → `SEARCH …
-  USING INDEX`. Index « faibles » restants (microphone, monitoring_site, taxon) laissés de côté.
-- **O3 / 29c** ✓ : `BancImport` mesure l'import d'une nuit volumineuse (temps copie/transfo, débit,
-  mémoire crête). Chiffres à relever sur machine IUT. Repère dev : 30 WAV × 1 s (22 Mo) → ~0,14 s,
-  ~210 fichiers/s, crête ~28 Mo.
-- **29d** (restitution finale) : consigner les chiffres IUT (O5 + O3) dans les tableaux ci-dessus, et
-  documenter les procédures **semi-manuelles** restantes : **freeze IHM > 200 ms** (sonde sur le pulse
-  JavaFX pendant import/navigation) et **mémoire stabilisée** après plusieurs minutes.
+| Fichiers | Taille src | Temps total | copie (R9) | transfo (#12) | persist. (O7) | Débit | Mémoire crête | Séquences |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 100 | 146 Mo | 0,55 s | 0,33 s | 0,18 s | 0,04 s | ~184 f/s · 269 Mo/s | 172 Mo | 400 |
+| 500 | 732 Mo | 2,38 s | 1,56 s | 0,75 s | 0,07 s | ~210 f/s · 308 Mo/s | 569 Mo | 2000 |
+| 1000 | 1,43 Gio | 3,97 s | 2,77 s | 1,09 s | 0,11 s | ~252 f/s · 369 Mo/s | 626 Mo | 4000 |
+
+**Lectures clés (O3)** :
+- Le temps **croît ~linéairement** avec la taille (débit ~stable 180-250 fichiers/s) → tenue dans la
+  durée confirmée. La **copie SD→workspace (I/O) domine** (~65-70 %), la transformation parallélisée
+  (#12) ~25-30 %, la persistance est négligeable (~3 %).
+- **Mémoire** : la crête plafonne (≈ 600-700 Mo pour ~1000-1500 fichiers) — le découpage est borné aux
+  cœurs (#12) ; elle croît surtout avec le **nombre de séquences** d'**une** nuit (résultats agrégés
+  avant la transaction unique O7), puis est récupérée par le GC entre deux nuits → stable d'un import à
+  l'autre.
+
+**Ordre de grandeur à annoncer aux étudiants** : une **vraie nuit** (~1572 fichiers) s'importe en
+**~6-8 s** (~200 fichiers/s), produit ~3600 séquences, avec une empreinte ~600-700 Mo. _(Chiffres
+machine de référence ; un poste plus modeste sera plus lent — refaire la mesure le cas échéant.)_
+
+## Réactivité IHM (freeze > 200 ms) — procédure semi-manuelle
+
+Dans l'application réelle, l'import s'exécute sur un **thread virtuel** (cf. `ImportationController`),
+et la navigation est **verrouillée** pendant `EN_COURS` (#54) : le fil JavaFX n'est jamais bloqué par
+le travail lourd, seul `Platform.runLater` y relaie la progression.
+
+**Vérifier l'absence de freeze** :
+1. lancer l'application (`./mvnw -q javafx:run`), ouvrir **« Importer une nuit »** ;
+2. pointer un dossier de nuit volumineuse (généré par `BancImport`, dossier `source-sd`) et lancer
+   l'import ;
+3. observer que la **barre de progression avance régulièrement** (pas de gel) et que le reste de la
+   fenêtre reste réactif.
+
+**Instrumentation optionnelle** (horodatage du pulse JavaFX) : ajouter temporairement un
+`AnimationTimer` qui journalise les écarts entre frames et signale ceux **> 200 ms** :
+
+```java
+new AnimationTimer() {
+    private long precedent = 0;
+    @Override public void handle(long maintenant) { // maintenant en nanosecondes
+        if (precedent != 0) {
+            double ecartMs = (maintenant - precedent) / 1e6;
+            if (ecartMs > 200) System.out.println("FREEZE IHM : " + Math.round(ecartMs) + " ms");
+        }
+        precedent = maintenant;
+    }
+}.start();
+```
+
+Aucun `FREEZE IHM` ne doit apparaître pendant un import (le découpage étant hors fil JavaFX).
+
+## Mémoire stabilisée — procédure
+
+`BancImport` imprime déjà la **crête** d'une nuit. Pour vérifier la **stabilité dans la durée** (O3,
+plusieurs nuits) : enchaîner plusieurs imports (relancer `BancImport`, ou importer plusieurs nuits dans
+l'application) et confirmer que la crête **ne croît pas** de nuit en nuit (le GC récupère entre les
+imports). Pour un suivi fin, lancer avec `-Xlog:gc` ou échantillonner avec `jcmd <pid> GC.heap_info`.
+
+## Bilan du cluster perf
+
+- **O5 (#26)** : cibles tenues largement (sélection ~25 ms < 100 ms ; tri/filtre ~18 ms < 200 ms),
+  index `#28` en place et verrouillé par un test CI.
+- **O3 (#27)** : import linéaire et borné en mémoire ; nuit réelle ~6-8 s, crête ~600-700 Mo.
+- Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`
+  (`// --solution-only--`).
