@@ -8,7 +8,7 @@
 
 ## Outils
 
-| Outil (`// --solution-only--`) | Rôle |
+| Outil (fourni) | Rôle |
 |---|---|
 | [`perf.outils.GenerateurJeuDeDonnees`](../../src/main/java/fr/univ_amu/iut/perf/outils/GenerateurJeuDeDonnees.java) | Peuple une base SQLite : `perf.passages` passages (déf. 1000) + `perf.observations` observations (déf. 4031). Déterministe, base réécrite à neuf. |
 | [`perf.outils.BancMesure`](../../src/main/java/fr/univ_amu/iut/perf/outils/BancMesure.java) | Génère le jeu puis chronomètre les opérations O5 **à froid** (1ᵉʳ appel) et **à chaud** (médiane), et imprime l'`EXPLAIN QUERY PLAN` de chaque requête. |
@@ -153,4 +153,4 @@ Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
   index `#28` en place et verrouillé par un test CI.
 - **O3 (#27)** : import linéaire et borné en mémoire ; nuit réelle ~6-8 s, crête ~600-700 Mo.
 - Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`
-  (`// --solution-only--`).
+  (fournis, conservés côté étudiant).
