@@ -1,32 +1,31 @@
 #!/bin/bash
 # ============================================================
-# Génère la version étudiante d'un TP à partir de la branche
+# Génère la version étudiante du starter à partir de la branche
 # solution.
 #
-# La branche "solution" peut combiner trois marqueurs :
+# La branche "solution" combine plusieurs marqueurs (détaillés dans
+# scripts/lib/student-transforms.sh) :
 #
-#   // --solution--                       (bloc à SUPPRIMER côté étudiant)
-#   code propre que l'étudiant doit produire
-#   // --end-solution--
-#
-#   /* --student--                        (bloc à ACTIVER côté étudiant)
-#   code de départ commenté inerte côté solution,
-#   décommenté côté étudiant
-#   --end-student-- */
-#
-#   // --solution-only--                  (en en-tête de fichier, 20 premières lignes)
-#   classe entière qui n'existe que côté solution
-#   (le fichier est supprimé côté étudiant)
+#   // --solution-- ... // --end-solution--     (.java)  bloc SUPPRIMÉ étudiant
+#   /* --student-- ... --end-student-- */        (.java)  stub DÉCOMMENTÉ étudiant
+#   // --solution-only--                         (.java)  fichier ENTIER supprimé
+#   <!-- @@solution@@ --> ... <!-- @@end-solution@@ -->   (.fxml) bloc supprimé
+#   <!-- @@student@@ ... @@end-student@@ -->               (.fxml) placeholder décommenté
+#   // --masquer-etudiant-- ... // --fin-masquer-etudiant-- (.java) bloc mis entre /* */
 #
 # Le script :
 #   1a. Copie la branche solution dans un répertoire temporaire
 #   1b. Supprime les fichiers marqués // --solution-only--
-#   1c. Supprime les blocs // --solution-- ... // --end-solution--
-#   1d. Décommente les blocs /* --student-- ... --end-student-- */
-#   2.  Ajoute @Disabled aux tests des exercices
+#   1c. Supprime les blocs // --solution-- ... // --end-solution-- (.java)
+#   1d. Traite les .fxml (@@solution@@ supprimé, @@student@@ décommenté)
+#   1e. Décommente les blocs /* --student-- ... --end-student-- */ (.java)
+#   1f. Masque (/* */) les blocs // --masquer-etudiant-- (.java)
+#   2.  Ajoute @Disabled aux tests des exercices (mode TP) PUIS aux tests
+#       hors paquets de référence (commun, sites) — couvre la SAÉ (e2e, cli,
+#       8 features non construites)
 #   3.  Lance Spotless (supprime imports inutilisés, reformate)
 #   4.  Vérifie que la version étudiante compile
-#   5.  Copie le résultat dans le TP cible (si --apply)
+#   5.  Copie le résultat dans le repo cible (si --apply)
 #
 # Mode par défaut : DRY-RUN (affiche les fichiers qui seraient
 # modifiés sans rien écrire). Ajoute --apply pour appliquer.
@@ -63,91 +62,30 @@ ok()    { echo -e "${GREEN}✓${NC} $*"; }
 warn()  { echo -e "${YELLOW}⚠${NC} $*"; }
 fail()  { echo -e "${RED}✗${NC} $*" >&2; exit 1; }
 
+# --- Bibliothèque de transformations (partagée avec les tests Bats) ---
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib/student-transforms.sh
+source "$SCRIPT_DIR/lib/student-transforms.sh"
+
+# Paquets livrés complets (référence) : leurs tests restent actifs côté étudiant.
+REFERENCE_PACKAGES=(commun sites)
+
+# Affiche (indentées) les lignes émises par une passe.
+show_indent() {
+    [ -n "$1" ] && printf '%s\n' "$1" | sed 's/^/  /'
+    return 0
+}
+
+# Nombre de lignes non vides (fichiers touchés par une passe).
+nb_lines() {
+    printf '%s' "$1" | grep -c . || true
+}
+
 ensure_clean_worktree() {
     local status
     status=$(git -C "$TP_DIR" status --short --untracked-files=all)
     if [ -n "$status" ]; then
         fail "Le worktree de $TP_DIR n'est pas propre. Commit/stash/review manuellement avant --apply."
-    fi
-}
-
-insert_disabled_import() {
-    local file=$1
-    local insert_after
-
-    if grep -q '^import org\.junit\.jupiter\.api\.Disabled;$' "$file"; then
-        return 0
-    fi
-
-    insert_after=$(grep -n '^import org\.junit\.jupiter\.api\.' "$file" | tail -1 | cut -d: -f1 || true)
-    if [ -z "$insert_after" ]; then
-        insert_after=$(grep -n '^import ' "$file" | head -1 | cut -d: -f1 || true)
-    fi
-    if [ -z "$insert_after" ]; then
-        insert_after=$(grep -n '^package ' "$file" | head -1 | cut -d: -f1 || true)
-    fi
-    [ -n "$insert_after" ] || fail "Impossible d'insérer l'import Disabled dans $file"
-
-    awk -v line_no="$insert_after" '
-    NR == line_no {
-        print
-        print "import org.junit.jupiter.api.Disabled;"
-        next
-    }
-    { print }
-    ' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
-}
-
-disable_exercise_tests_in_file() {
-    local file=$1
-
-    awk -v disabled="$DISABLED_TEXT" '
-    function flush_annotations(    i, has_test, has_disabled, indent) {
-        if (annotation_count == 0) {
-            return
-        }
-
-        has_test = 0
-        has_disabled = 0
-        for (i = 1; i <= annotation_count; i++) {
-            if (annotation_lines[i] ~ /^[[:space:]]*@Disabled(\(|$)/) {
-                has_disabled = 1
-            }
-            if (annotation_lines[i] ~ /^[[:space:]]*@(Test|ParameterizedTest|RepeatedTest|TestFactory|TestTemplate)(\(|[[:space:]]|$)/) {
-                has_test = 1
-            }
-        }
-
-        if (has_test && !has_disabled) {
-            match(annotation_lines[1], /^[[:space:]]*/)
-            indent = substr(annotation_lines[1], RSTART, RLENGTH)
-            print indent "@Disabled(\"" disabled "\")"
-        }
-
-        for (i = 1; i <= annotation_count; i++) {
-            print annotation_lines[i]
-            delete annotation_lines[i]
-        }
-        annotation_count = 0
-    }
-
-    /^[[:space:]]*@/ {
-        annotation_lines[++annotation_count] = $0
-        next
-    }
-
-    {
-        flush_annotations()
-        print $0
-    }
-
-    END {
-        flush_annotations()
-    }
-    ' "$file" > "${file}.tmp" && mv "${file}.tmp" "$file"
-
-    if grep -q '@Disabled("' "$file"; then
-        insert_disabled_import "$file"
     fi
 }
 
@@ -185,8 +123,6 @@ TP_DIR="$(cd "$1" && pwd)"
 git -C "$TP_DIR" rev-parse --verify solution >/dev/null 2>&1 \
     || fail "La branche 'solution' n'existe pas dans $TP_DIR"
 
-DISABLED_TEXT='Retire cette annotation pour activer le test'
-
 if [ "$APPLY" = true ]; then
     ensure_clean_worktree
 fi
@@ -207,85 +143,63 @@ info "Extraction de la branche solution..."
 git -C "$TP_DIR" archive solution | tar -C "$TMP_DIR" -x
 
 # --- Détection du mode refactoring ---
-# Si au moins une source ou test contient un bloc /* --student-- ...
-# --end-student-- */, on bascule en mode refactoring : smelly et refactored
-# cohabitent dans la meme source, l'auto-@Disabled est skippe (les tests
-# de caracterisation doivent rester actifs cote etudiant). La detection
-# scanne tout src/, y compris le launcher App.java.
+# Si au moins une source contient un bloc /* --student-- ... --end-student-- */,
+# on bascule en mode refactoring : l'auto-@Disabled des exercices est skippé (les
+# tests de caractérisation doivent rester actifs). La désactivation des tests de
+# la SAÉ passe de toute façon par disable_tests_outside_reference (inconditionnel).
 REFACTORING_MODE=false
 if find "$TMP_DIR/src" -name '*.java' -print0 2>/dev/null \
     | xargs -0 grep -l '/\* --student--' 2>/dev/null | grep -q .; then
     REFACTORING_MODE=true
-    info "Mode refactoring detecte (bloc /* --student-- */ present)"
+    info "Mode refactoring détecté (bloc /* --student-- */ présent)"
 fi
 
-# --- 1a. Suppression des fichiers marques // --solution-only-- ---
-# Les fichiers qui contiennent le marqueur // --solution-only-- sur une
-# ligne sont entierement absents de la version etudiante. Typique pour
-# une classe extraite par Extract Class : elle est presente cote
-# enseignant comme reference, absente cote etudiant·e qui doit la creer.
-info "Suppression des fichiers marques // --solution-only--"
-DELETED=0
-while IFS= read -r -d '' file; do
-    if head -20 "$file" | grep -q '// --solution-only--'; then
-        echo "  deleted: ${file#"$TMP_DIR"/}"
-        rm -f "$file"
-        DELETED=$((DELETED + 1))
-    fi
-done < <(find "$TMP_DIR/src" -name '*.java' -print0 2>/dev/null)
-ok "$DELETED fichier(s) entier(s) supprime(s)"
+# --- 1a. Suppression des fichiers marqués // --solution-only-- ---
+info "Suppression des fichiers marqués // --solution-only--"
+OUT=$(strip_solution_only_files "$TMP_DIR")
+show_indent "$OUT"
+ok "$(nb_lines "$OUT") fichier(s) entier(s) supprimé(s)"
 
-# --- 1b. Strip des blocs solution (source) ---
+# --- 1b. Strip des blocs // --solution-- ... // --end-solution-- (.java) ---
 info "Suppression des blocs // --solution-- ... // --end-solution--"
+OUT=$(strip_solution_blocks "$TMP_DIR")
+show_indent "$OUT"
+ok "$(nb_lines "$OUT") fichier(s) source strippé(s)"
 
-STRIPPED=0
-while IFS= read -r -d '' file; do
-    if grep -q '// --solution--' "$file"; then
-        sed -i '/\/\/ --solution--/,/\/\/ --end-solution--/d' "$file"
-        STRIPPED=$((STRIPPED + 1))
-        echo "  stripped: ${file#"$TMP_DIR"/}"
-    fi
-done < <(find "$TMP_DIR/src" -name '*.java' -print0 2>/dev/null)
+# --- 1c. Traitement des .fxml (@@solution@@ / @@student@@) ---
+info "Traitement des .fxml (@@solution@@ supprimé, @@student@@ décommenté)"
+OUT=$(process_fxml_blocks "$TMP_DIR")
+show_indent "$OUT"
+ok "$(nb_lines "$OUT") fichier(s) FXML transformé(s)"
 
-ok "$STRIPPED fichier(s) source strippe(s)"
-
-# --- 1bis. Decommentage des blocs /* --student-- ... --end-student-- */ ---
-# Sur la branche solution ces blocs sont un commentaire Java inerte (ils
-# portent la version smelly du code, cote-a-cote avec la version
-# refactorisee). On retire juste les delimiteurs pour rendre le bloc
-# actif cote etudiant.
+# --- 1e. Décommentage des blocs /* --student-- ... --end-student-- */ ---
 if [ "$REFACTORING_MODE" = "true" ]; then
-    info "Decommentage des blocs /* --student-- ... --end-student-- */"
-    UNCOMMENTED=0
-    while IFS= read -r -d '' file; do
-        if grep -q '/\* --student--' "$file"; then
-            sed -i '/\/\* --student--/d; /--end-student-- \*\//d' "$file"
-            UNCOMMENTED=$((UNCOMMENTED + 1))
-            echo "  uncommented: ${file#"$TMP_DIR"/}"
-        fi
-    done < <(find "$TMP_DIR/src" -name '*.java' -print0 2>/dev/null)
-    ok "$UNCOMMENTED fichier(s) source decommente(s)"
+    info "Décommentage des blocs /* --student-- ... --end-student-- */"
+    OUT=$(uncomment_student_blocks "$TMP_DIR")
+    show_indent "$OUT"
+    ok "$(nb_lines "$OUT") fichier(s) source décommenté(s)"
 fi
+
+# --- 1f. Masquage des blocs // --masquer-etudiant-- (mise entre /* */) ---
+info "Masquage (/* */) des blocs // --masquer-etudiant--"
+OUT=$(mask_student_blocks "$TMP_DIR")
+show_indent "$OUT"
+ok "$(nb_lines "$OUT") fichier(s) avec bloc(s) masqué(s)"
 
 # --- 2. Ajout de @Disabled aux tests ---
 if [ "$REFACTORING_MODE" = "true" ]; then
-    info "Mode refactoring : auto-@Disabled des tests skippe (les caracterisation tests restent actifs)"
+    info "Mode refactoring : auto-@Disabled des exercices skippé (les tests de caractérisation restent actifs)"
 else
-    info "Ajout de @Disabled aux tests des exercices..."
-
-    DISABLED_COUNT=0
-    while IFS= read -r -d '' file; do
-        disable_exercise_tests_in_file "$file"
-
-        ADDED=$(grep -c "@Disabled" "$file" || true)
-        if [ "$ADDED" -gt 0 ]; then
-            DISABLED_COUNT=$((DISABLED_COUNT + ADDED))
-            echo "  @Disabled: ${file#"$TMP_DIR"/} ($ADDED tests)"
-        fi
-    done < <(find "$TMP_DIR/src/test/java" \( -path '*/exercice*/*.java' -o -path '*/bonus*/*.java' \) -print0 2>/dev/null)
-
-    ok "$DISABLED_COUNT annotation(s) @Disabled ajoutee(s)"
+    info "Ajout de @Disabled aux tests des exercices (exercice*/bonus*)..."
+    OUT=$(disable_exercise_path_tests "$TMP_DIR")
+    show_indent "$OUT"
+    ok "$(nb_lines "$OUT") fichier(s) de tests d'exercice désactivé(s)"
 fi
+
+info "Ajout de @Disabled aux tests hors paquets de référence (${REFERENCE_PACKAGES[*]})..."
+OUT=$(disable_tests_outside_reference "$TMP_DIR" "${REFERENCE_PACKAGES[@]}")
+show_indent "$OUT"
+ok "$(nb_lines "$OUT") fichier(s) de tests non-référence désactivé(s)"
 
 # --- 3. Spotless (supprime imports inutilisés, reformate) ---
 info "Exécution de Spotless (formatage + nettoyage imports)..."
@@ -344,21 +258,21 @@ if [ "$APPLY" = true ]; then
         --exclude='.github/workflows/template-sync.yml' \
         "$TMP_DIR/" "$TP_DIR/"
 
-    # Les --exclude empechent la COPIE depuis TMP_DIR, mais preservent
-    # aussi les fichiers --exclude'd cote destination (comportement
+    # Les --exclude empêchent la COPIE depuis TMP_DIR, mais préservent
+    # aussi les fichiers --exclude'd côté destination (comportement
     # voulu pour .git et target). Pour les artefacts enseignant, on
-    # veut explicitement les retirer de la version etudiante generee.
+    # veut explicitement les retirer de la version étudiante générée.
     rm -f "$TP_DIR/generate-student.sh" \
           "$TP_DIR/.github/workflows/generate-student.yml" \
           "$TP_DIR/.github/workflows/template-sync.yml"
 
     # Le hook pre-commit contient deux blocs enseignant qui n'ont aucun
-    # sens cote etudiant :
-    #   1. "Protection main" : detection branche solution, cree une fuite
+    # sens côté étudiant :
+    #   1. "Protection main" : détection branche solution, crée une fuite
     #      de contexte (mention de generate-student.sh, ../template-tp-java)
     #   2. "@@@TEACHER-LINT-BEGIN@@@ ... @@@TEACHER-LINT-END@@@" : appels
     #      aux linters enseignant (lint-doc-coherence.sh et PMD gate).
-    # On strip les deux lors de la generation etudiante.
+    # On strip les deux lors de la génération étudiante.
     if [ -f "$TP_DIR/.githooks/pre-commit" ]; then
         sed -i '/^# Protection : bloquer les commits sur main/,/^fi$/d' \
             "$TP_DIR/.githooks/pre-commit"
@@ -366,13 +280,12 @@ if [ "$APPLY" = true ]; then
             "$TP_DIR/.githooks/pre-commit"
     fi
 
-    # Le script scripts/lint-doc-coherence.sh est un outil enseignant ;
-    # pas d'utilite cote etudiant.
+    # Le script scripts/ (outils enseignant : generate-student, lib,
+    # lint-doc-coherence) n'a pas d'utilité côté étudiant.
     rm -rf "$TP_DIR/scripts"
 
-    # Le workflow .github/workflows/lint.yml est le gate strict cote
-    # branche solution uniquement. Son chemin serait inutile cote main
-    # etudiant meme si le filtre sur `on:` aurait suffi.
+    # Le workflow .github/workflows/lint.yml est le gate strict côté
+    # branche solution uniquement.
     rm -f "$TP_DIR/.github/workflows/lint.yml"
 
     ok "Version étudiante générée dans $TP_DIR/"
