@@ -49,8 +49,8 @@ Pour **chaque** issue :
 
 ## Ordre conseillé des features
 
-De la plus simple à la plus complète :
-**diagnostic → lot → bibliotheque → importation → qualification → validation → multisite → passage**.
+De la plus simple à la plus complète (c'est l'ordre des numéros d'issue) :
+**diagnostic → lot → bibliotheque → validation → importation → qualification → multisite → passage**.
 
 Les écrans `passage`, `qualification`, `lot`, `validation`, `diagnostic` s'atteignent depuis l'écran
 pivot **M-Passage** : construire `passage` en dernier permet de **tout relier** (le fil rouge complet

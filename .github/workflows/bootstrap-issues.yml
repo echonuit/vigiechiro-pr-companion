@@ -25,6 +25,12 @@ permissions:
   contents: read
   issues: write
 
+# Sérialise les runs d'un même dépôt (un push + un dispatch ne se chevauchent pas) : combiné à
+# l'idempotence par titre, garantit l'absence de doublon même en cas de déclenchements rapprochés.
+concurrency:
+  group: bootstrap-issues-${{ github.repository }}
+  cancel-in-progress: false
+
 jobs:
   creer-issues:
     if: startsWith(github.event.repository.name, 'vigiechiro-pr-companion-')
