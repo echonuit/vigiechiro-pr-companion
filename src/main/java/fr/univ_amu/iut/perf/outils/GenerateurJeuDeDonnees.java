@@ -13,7 +13,6 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -103,7 +102,11 @@ public final class GenerateurJeuDeDonnees {
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
         List<Long> points = creerPoints(source);
         int passages = genererPassages(source, points, nbPassages);
-        int observations = genererObservations(source, points.get(0), nbObservations);
+        // Les observations se rattachent à l'**un des passages générés** (pas un passage de plus) : le
+        // compte rendu reflète ainsi le nombre exact de lignes `passage` de la base.
+        long idPassage =
+                new PassageDao(source).findByPoint(points.get(0)).get(0).id();
+        int observations = genererObservations(source, idPassage, nbObservations);
         return new Bilan(passages, observations);
     }
 
@@ -163,11 +166,11 @@ public final class GenerateurJeuDeDonnees {
         }
     }
 
-    /// Crée la chaîne de clés étrangères d'une nuit (passage → session → original → séquence) puis un
-    /// jeu de résultats, et insère `nb` observations qui le référencent (cible O5 : sélection par
-    /// `results_id` via `ObservationDao.findByResults`). Insertion en lot (`insererTout`).
-    private static int genererObservations(SourceDeDonnees source, Long idPoint, int nb) {
-        long idPassage = genererPassagePourObservations(source, idPoint);
+    /// Sur le passage `idPassage` (l'un des passages générés), crée la chaîne de clés étrangères d'une
+    /// nuit (session → original → séquence) puis un jeu de résultats, et insère `nb` observations qui le
+    /// référencent (cible O5 : sélection par `results_id` via `ObservationDao.findByResults`). Insertion
+    /// en lot (`insererTout`).
+    private static int genererObservations(SourceDeDonnees source, long idPassage, int nb) {
         SessionDEnregistrement session =
                 new SessionDao(source).insert(new SessionDEnregistrement(null, "bench/session", null, null, idPassage));
         EnregistrementOriginal original = new EnregistrementOriginalDao(source)
@@ -208,28 +211,5 @@ public final class GenerateurJeuDeDonnees {
                     resultats.id()));
         }
         return new ObservationDao(source).insererTout(observations);
-    }
-
-    /// Passage dédié aux observations (un de plus que les `nbPassages` du tri/filtre), à une année hors
-    /// de la plage générée pour éviter toute collision de triplet `(point, année, n° passage)`. Un seul
-    /// `INSERT` : on passe par le DAO (qui renvoie la clé générée), pas de SQL en lot ici.
-    private static long genererPassagePourObservations(SourceDeDonnees source, Long idPoint) {
-        return new PassageDao(source)
-                .insert(new Passage(
-                        null,
-                        1,
-                        ANNEE_BASE - 1,
-                        (ANNEE_BASE - 1) + "-06-22",
-                        "20:25:00",
-                        "07:47:00",
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        Verdict.OK,
-                        null,
-                        null,
-                        null,
-                        idPoint,
-                        ENREGISTREUR))
-                .id();
     }
 }
