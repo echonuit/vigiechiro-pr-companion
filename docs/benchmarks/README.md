@@ -40,18 +40,19 @@ Volumes paramétrables : `-Dperf.passages=...`, `-Dperf.observations=...` (à aj
 > Les colonnes « froid / chaud » sont à **remplir sur machine IUT**. Les valeurs ci-dessous sont des
 > repères obtenus sur une machine de dev (JIT déjà chaud) : indicatives, **non** représentatives de l'IUT.
 
-| Opération | Cible | Plan d'exécution (SQLite) | Froid (IUT) | Chaud (IUT) |
+| Opération | Cible | Plan d'exécution (SQLite, après #28) | Froid (IUT) | Chaud (IUT) |
 |---|---|---|---|---|
-| Sélection ~4031 observations (`findByResults`) | < 100 ms | `SCAN observation` **(sans index sur `results_id` → #28)** | _à remplir_ | _à remplir_ |
+| Sélection ~4031 observations (`findByResults`) | < 100 ms | `SEARCH observation USING INDEX idx_obs_results (results_id=?)` (#28 ✓, était `SCAN`) | _à remplir_ | _à remplir_ |
 | Tri/filtre ~1000 passages (multisite, verdict) | < 200 ms | `SEARCH passage USING INDEX sqlite_autoindex_passage_1 (point_id=?)` (déjà indexé) | _à remplir_ | _à remplir_ |
 
-**Lecture clé** : la sélection des observations fait un **balayage complet** (`SCAN`) faute d'index sur
-`observation(results_id)` — c'est la cible prioritaire de **#28**. Les passages profitent déjà de
-l'auto-index de la contrainte `UNIQUE(point_id, year, passage_number)`.
+**Lecture clé** : la sélection des observations faisait un **balayage complet** (`SCAN`) faute d'index
+sur `observation(results_id)` ; **#28** a ajouté `idx_obs_results` → le plan passe à `SEARCH … USING
+INDEX` (sur machine de dev : froid ~75 ms → ~37 ms). Les passages profitaient déjà de l'auto-index de
+la contrainte `UNIQUE(point_id, year, passage_number)`.
 
 ## Suite
 
-- **#28** : ajouter l'index manquant (`observation(results_id)`, et autres colonnes filtrées), puis
-  **relancer ce banc** pour comparer le plan (`SCAN` → `SEARCH … USING INDEX`) et les temps.
+- **#28** ✓ : index prioritaires ajoutés (`V03__perf_indexes.sql`). `SCAN observation` → `SEARCH …
+  USING INDEX`. Index « faibles » restants (microphone, monitoring_site, taxon) laissés de côté.
 - **O3** (nuits volumineuses ≤ 40 Go, 0 freeze IHM > 200 ms, mémoire stable) : générateur de nuit
   volumineuse + sonde import + procédure semi-manuelle (à venir, lot 29c/29d).
