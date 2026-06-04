@@ -52,6 +52,11 @@ public class QualificationController {
     private final OuvrirPassage ouvrirPassage;
     private Long idPassage;
 
+    // TODO (M-Qualification) : déclarez les @FXML correspondant aux fx:id de Qualification.fxml
+    //   (bandeau, 3 feux, liste de la sélection, AudioView, boutons de verdict, commentaire...),
+    //   câblez-les aux deux ViewModels dans « @FXML private void initialize() » et ajoutez les
+    //   handlers @FXML (verdict, enregistrer, régénérer, retour passage). Référence : feature sites.
+    // --solution--
     @FXML
     private BorderPane racine;
 
@@ -145,6 +150,8 @@ public class QualificationController {
     @FXML
     private Button boutonEnregistrer;
 
+    // --end-solution--
+
     @Inject
     public QualificationController(
             QualificationViewModel verdictVm, SelectionEcouteViewModel selectionVm, OuvrirPassage ouvrirPassage) {
@@ -153,6 +160,7 @@ public class QualificationController {
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
+    // --solution--
     @FXML
     private void initialize() {
         lblFilAriane.textProperty().bind(selectionVm.filArianeProperty());
@@ -262,6 +270,7 @@ public class QualificationController {
         // scène partagée du chrome. Les événements remontent depuis le nœud focalisé jusqu'à la racine.
         racine.addEventHandler(KeyEvent.KEY_PRESSED, this::gererRaccourci);
     }
+    // --end-solution--
 
     /// Ouvre l'écran sur le passage `idPassage` : les deux VM se synchronisent sur le même passage.
     /// Appelée par [NavigationQualification] après le chargement du FXML.
@@ -271,6 +280,7 @@ public class QualificationController {
         selectionVm.ouvrirSur(idPassage);
     }
 
+    // --solution--
     /// « ‹ Retour au passage » du fil d'Ariane : rouvre M-Passage sur ce passage via le contrat socle
     /// [OuvrirPassage], avec le contexte site résolu par le ViewModel (sans dépendre de `passage`).
     @FXML
@@ -430,4 +440,5 @@ public class QualificationController {
     private static String formatDuree(double secondes) {
         return String.format(Locale.FRANCE, "%.1f s", secondes);
     }
+    // --end-solution--
 }
