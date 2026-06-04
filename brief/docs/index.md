@@ -22,9 +22,10 @@
 3. [Objectifs qualités](Objectifs%20qualités/index.md)
 4. [Expression du besoin](Expression%20du%20besoin.md)
 5. [**Analyse et conception**](Analyse%20et%20conception/index.md) (dossier fourni : personas, parcours, story mapping, périmètre MVP, planification)
-6. [Jalons et livrables](Jalons%20et%20livrables.md)
-7. [Calendrier de travail](Calendrier%20de%20travail.md)
-8. [Consignes générales](Consignes%20générales.md)
+6. [**Travail à faire**](Travail%20à%20faire.md) (vue synthétique des écrans à construire et méthode)
+7. [Jalons et livrables](Jalons%20et%20livrables.md)
+8. [Calendrier de travail](Calendrier%20de%20travail.md)
+9. [Consignes générales](Consignes%20générales.md)
 
 ## Données d'exemple fournies
 
