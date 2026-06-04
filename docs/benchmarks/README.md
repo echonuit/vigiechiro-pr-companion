@@ -46,7 +46,8 @@ Sortie : taille, temps total (copie vs transformation #12), débit, nb séquence
 
 > ⚠️ L'import recopie puis transforme : prévoir **2 à 3× la taille source** en espace disque. Pour viser
 > 20 Gio à 384 kHz / 5 s, c'est ~5500 fichiers ; commencer petit (`-Dperf.import.fichiers=100`) pour
-> calibrer le temps, puis monter.
+> calibrer le temps, puis monter. Le `vigiechiro.workspace` est un **dossier jetable, réinitialisé à
+> chaque lancement** (n'y pointez pas un vrai workspace).
 
 ## Protocole de mesure (à respecter pour des chiffres comparables)
 
