@@ -83,6 +83,10 @@ Les deux opérations sont **largement sous les cibles** (facteur ~4 à ~10). Rap
 | 500 | 732 Mo | 2,38 s | 1,56 s | 0,75 s | 0,07 s | ~210 f/s · 308 Mo/s | 569 Mo | 2000 |
 | 1000 | 1,43 Gio | 3,97 s | 2,77 s | 1,09 s | 0,11 s | ~252 f/s · 369 Mo/s | 626 Mo | 4000 |
 
+_Reproduire une ligne : `-Dperf.import.fichiers=<100|500|1000> -Dperf.import.secondes=2.0`
+(fréquence par défaut 384000). La commande d'exemple plus haut utilise la durée par défaut de 5 s :
+ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
+
 **Lectures clés (O3)** :
 - Le temps **croît ~linéairement** avec la taille (débit ~stable 180-250 fichiers/s) → tenue dans la
   durée confirmée. La **copie SD→workspace (I/O) domine** (~65-70 %), la transformation parallélisée
@@ -129,10 +133,19 @@ Aucun `FREEZE IHM` ne doit apparaître pendant un import (le découpage étant h
 
 ## Mémoire stabilisée — procédure
 
-`BancImport` imprime déjà la **crête** d'une nuit. Pour vérifier la **stabilité dans la durée** (O3,
-plusieurs nuits) : enchaîner plusieurs imports (relancer `BancImport`, ou importer plusieurs nuits dans
-l'application) et confirmer que la crête **ne croît pas** de nuit en nuit (le GC récupère entre les
-imports). Pour un suivi fin, lancer avec `-Xlog:gc` ou échantillonner avec `jcmd <pid> GC.heap_info`.
+`BancImport` imprime la **crête d'une nuit**, mais chaque lancement démarre un **JVM neuf** (heap
+remis à zéro) : **relancer l'outil ne teste donc pas** la stabilité « de nuit en nuit » ni une fuite
+qui ne se révélerait qu'au fil de plusieurs imports **dans le même processus**.
+
+Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
+1. lancer l'**application** (`./mvnw -q javafx:run`) avec `-Xlog:gc` (ou attacher `jcmd <pid>
+   GC.heap_info`) ;
+2. **importer plusieurs nuits** successivement (générées par `BancImport`, dossier `source-sd`), en
+   forçant un GC entre chacune (`jcmd <pid> GC.run`) ;
+3. relever le heap **après GC** après chaque nuit : il doit **revenir à un palier stable** (pas de
+   dérive croissante) → pas de rétention d'état d'import entre les nuits.
+
+`BancImport` reste l'outil pour la **crête d'une seule nuit** (pic mémoire pendant l'import).
 
 ## Bilan du cluster perf
 
