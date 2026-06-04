@@ -1,0 +1,58 @@
+# Crée les issues « tâches à faire » dans le dépôt de chaque équipe.
+#
+# - Garde par nom de dépôt : ne s'exécute que sur les dépôts d'ÉQUIPE
+#   `vigiechiro-pr-companion-<EQUIPE>`. Cela exclut d'office le dépôt enseignant
+#   (`vigiechiro-pr-companion`, sans suffixe) ET le dépôt template Classroom
+#   (`iutinfoaix-s201-2026-…`, autre préfixe) alimenté par le sync.
+# - Idempotent par CONTRÔLE D'EXISTENCE : si le dépôt a déjà au moins une issue, on ne crée rien.
+#   Donc : le 1er push (population Classroom) crée les tâches ; les pushs suivants ne font rien ;
+#   et `workflow_dispatch` (lancement manuel) ne crée les tâches que si elles manquent encore — pas
+#   de doublon possible.
+#
+# Les tâches sont décrites une par fichier dans `.github/classroom/issues/*.md` (ordre = ordre
+# alphabétique des fichiers, d'où les préfixes numériques ; les extensions `e…` viennent en dernier).
+# Format d'un fichier : la 1re ligne est le titre (`# Titre`), le reste est le corps de l'issue.
+#
+# Conservé dans la version étudiante (non retiré au stripping).
+name: Bootstrap des tâches (issues)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  creer-issues:
+    if: startsWith(github.event.repository.name, 'vigiechiro-pr-companion-')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Créer une issue par tâche (si le dépôt n'en a pas déjà)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          # Idempotence : si des issues existent déjà, on ne refait rien.
+          dejà=$(gh issue list --state all --limit 1 --json number --jq 'length')
+          if [ "$dejà" -gt 0 ]; then
+            echo "Le dépôt a déjà des issues : rien à créer (bootstrap déjà fait)."
+            exit 0
+          fi
+
+          n=0
+          for f in .github/classroom/issues/*.md; do
+            title=$(head -n 1 "$f" | sed 's/^#[[:space:]]*//')
+            tail -n +2 "$f" > /tmp/corps-issue.md
+            gh issue create --title "$title" --body-file /tmp/corps-issue.md
+            n=$((n + 1))
+            echo "  + $title"
+            # Petite pause : évite la limite secondaire (anti-abus) de GitHub sur ~54 créations.
+            sleep 2
+          done
+          echo "$n issue(s) créée(s)."
