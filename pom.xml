@@ -16,6 +16,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
 
+        <audio.view.version>1.10.1</audio.view.version>
+
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.6</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
@@ -47,14 +49,6 @@
              casser ./mvnw test (Surefire le réinjecte via @{jacocoArgLine}). -->
         <jacocoArgLine></jacocoArgLine>
     </properties>
-
-    <!-- JitPack : dépôt du composant audio-view de la SAÉ 2.01 (boîte noire fournie). -->
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
 
     <dependencies>
         <dependency>
@@ -127,7 +121,11 @@
             <version>${testfx.version}</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>fr.nedjar.vigiechiro</groupId>
+            <artifactId>audio-view</artifactId>
+            <version>${audio.view.version}</version>
+        </dependency>
         <!-- Persistance JDBC : driver SQLite (module automatique org.xerial.sqlitejdbc). -->
         <dependency>
             <groupId>org.xerial</groupId>
@@ -140,13 +138,6 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>${guice.version}</version>
-        </dependency>
-
-        <!-- Composant audio (sonogramme/spectrogramme) fourni pour la SAÉ, via JitPack. -->
-        <dependency>
-            <groupId>com.github.IUTInfoAix-S201</groupId>
-            <artifactId>audio-view</artifactId>
-            <version>v1.4.0</version>
         </dependency>
 
         <!-- ArchUnit : tests d'architecture (règles de couches / absence de cycles). -->
@@ -387,7 +378,7 @@
                 <configuration>
                     <jlinkImageName>app</jlinkImageName>
                     <launcher>launcher</launcher>
-                    <mainClass>tp1.javafx/fr.univ_amu.iut.App</mainClass>
+                    <mainClass>vigiechiro/fr.univ_amu.iut.App</mainClass>
                     <options>
                         <!-- Native access (Java 25 strict) : JavaFX + driver natif SQLite (JNI).
                              Sans la ligne sqlitejdbc, le premier accès base affiche le WARNING

@@ -32,14 +32,14 @@
 # modifiés sans rien écrire). Ajoute --apply pour appliquer.
 #
 # Usage :
-#   ./generate-student.sh <tp_dir>                # dry-run
-#   ./generate-student.sh --apply <tp_dir>        # applique
+#   ./scripts/generate-student.sh <repo_dir>            # dry-run
+#   ./scripts/generate-student.sh --apply <repo_dir>    # applique
 #
-# Exemples :
-#   ./generate-student.sh ../tp1
-#   ./generate-student.sh --apply ../tp1
+# Exemples (depuis la racine du dépôt) :
+#   ./scripts/generate-student.sh .
+#   ./scripts/generate-student.sh --apply .
 #
-# Prérequis : le TP doit avoir une branche "solution" et un
+# Prérequis : le dépôt doit avoir une branche "solution" et un
 # worktree propre pour --apply. Le script ne modifie jamais la
 # branche solution.
 # ============================================================

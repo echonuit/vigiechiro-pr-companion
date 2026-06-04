@@ -12,7 +12,7 @@ import java.util.Arrays;
 /// `javax.sound.sampled`).
 ///
 /// **Pourquoi pas `javax.sound.sampled` ?** Cette API vit dans le module `java.desktop`, que le
-/// module applicatif `tp1.javafx` ne `requires` pas (et `module-info.java` est gelé). Le code de
+/// module applicatif `vigiechiro` ne `requires` pas (et `module-info.java` est gelé). Le code de
 /// production compile sur le *module path* : un import `javax.sound.sampled.*` ne compilerait pas.
 /// Surtout, le parsing manuel de l'en-tête RIFF donne un contrôle **au bit près** sur les octets
 /// écrits, indispensable au déterminisme R11 (l'API standard peut réordonner/ajouter des

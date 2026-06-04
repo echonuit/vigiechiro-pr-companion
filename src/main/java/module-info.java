@@ -7,7 +7,7 @@
 /// par cohérence avec l'ancien R202/template-tp-javafx (qui ouvrait tout pour simplifier la vie
 /// de l'étudiant·e qui n'a pas à comprendre les nuances JPMS la première fois). Plus permissif
 /// mais pédagogiquement plus simple.
-open module tp1.javafx {
+open module vigiechiro {
     // JavaFX dependencies (alignées sur les 4 deps + javafx-media du pom).
     requires transitive javafx.base;
     requires transitive javafx.controls;

@@ -5,7 +5,7 @@
             "type": "java",
             "name": "JavaFX : debug l'application",
             "request": "launch",
-            "mainClass": "tp1.javafx/fr.univ_amu.iut.App",
+            "mainClass": "vigiechiro/fr.univ_amu.iut.App",
             "preLaunchTask": "Build complet",
             "vmArgs": [
                 "--enable-native-access=ALL-UNNAMED",
