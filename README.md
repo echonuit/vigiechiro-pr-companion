@@ -178,7 +178,7 @@ Pour **chaque** tâche (issue), le même cycle, qui reproduit le travail en entr
    ```bash
    gh pr create --fill
    ```
-   Consultez les **checks CI**, le **score** et la **revue automatique** (Copilot) sur la PR.
+   Consultez les **checks CI** et la **revue automatique** (Copilot) sur la PR.
 8. **Traiter la revue**, puis **merger** quand tout est vert :
    ```bash
    gh pr merge --rebase --delete-branch
@@ -211,16 +211,18 @@ Les outils en jeu :
 - **CI GitHub Actions** : à chaque push, **3 portails** s'exécutent (build/tests, *quality gate* PMD, génération de la version étudiante). Une PR ne se merge **que** si la CI est verte.
 
 > [!NOTE]
-> **SonarLint** (extension VS Code, installée dans le Codespace) souligne les *smells* en direct dans l'éditeur. En cas de désaccord avec PMD, **PMD fait foi** (c'est lui qui décide du score).
+> **SonarLint** (extension VS Code, installée dans le Codespace) souligne les *smells* en direct dans l'éditeur. En cas de désaccord avec PMD, **PMD fait foi** (c'est la référence officielle du projet, et le portail qualité de la CI).
 
 ---
 
 ## 8. Évaluation
 
-L'évaluation s'appuie sur un **autograding automatique** : à chaque `push`, vos tests sont exécutés et un score est calculé (compilation + tests d'acceptation des features). Consultez-le sur l'onglet **« Actions »** de votre dépôt (workflow *GitHub Classroom Workflow*). Votre score progresse au fil des features livrées ; il n'y a pas de date couperet brutale, chaque push le met à jour.
+Il n'y a **pas de notation automatique** sur ce projet : la SAÉ est évaluée par l'**équipe pédagogique**. <!-- TODO enseignant·e : préciser les modalités exactes (livrables, soutenance, pondération R2.02/R2.03). -->
+
+Ce qui est regardé : les **features livrées** (et leurs tests d'acceptation au vert), la **qualité** du code et des tests (le portail qualité de la CI doit rester vert), et la **rigueur du processus** (commits clairs, branches, Pull Requests, prise en compte des revues). La CI et la suite de tests sont là pour **vous** donner un retour immédiat sur votre avancement, pas pour vous attribuer un score.
 
 > [!IMPORTANT]
-> L'évaluation finale du module se fera **sur papier, sans assistant**. Construisez vos automatismes en écrivant le code **vous-même** : l'assistant IA est un filet de sécurité, pas un substitut à la réflexion.
+> Construisez vos automatismes en écrivant le code **vous-même** : l'assistant IA est un filet de sécurité pour débloquer, pas un substitut à la réflexion.
 
 ---
 
