@@ -205,7 +205,7 @@ Le projet embarque une chaîne qualité **professionnelle** (cœur de R2.03). To
 Les outils en jeu :
 
 - **Tests** : JUnit 5, AssertJ, Mockito, **TestFX** (tests d'IHM headless), **ApprovalTests** (CSV Tadarida).
-- **PMD** : linter de *code smells* (sert de checklist de refactoring) ; **Spotless** formate automatiquement (hook pre-commit invisible).
+- **PMD** : linter de *code smells* (défauts de conception) ; **Spotless** formate automatiquement (hook pre-commit invisible).
 - **ArchUnit** : vérifie l'**architecture** (model sans JavaFX, viewmodel sans `javafx.scene`, slices sans cycle) : ces tests **échouent** si vous cassez le MVVM.
 - **JaCoCo** : mesure la **couverture** des tests.
 - **CI GitHub Actions** : à chaque push, **3 portails** s'exécutent (build/tests, *quality gate* PMD, génération de la version étudiante). Une PR ne se merge **que** si la CI est verte.
