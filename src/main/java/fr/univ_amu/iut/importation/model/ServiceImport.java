@@ -28,6 +28,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /// Service métier de la feature `importation` : orchestre le parcours d'import P2 d'une nuit
@@ -292,6 +293,7 @@ public class ServiceImport {
             int totalEtapes,
             Consumer<Progression> progres) {
         AtomicInteger transfosFaites = new AtomicInteger(0);
+        AtomicReference<RuntimeException> echecDecoupage = new AtomicReference<>();
         Object verrouProgression = new Object();
         Semaphore creneaux = new Semaphore(PARALLELISME_DECOUPAGE);
         try (ExecutorService executeur = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -299,6 +301,13 @@ public class ServiceImport {
                     .map(original -> executeur.submit(() -> {
                         creneaux.acquire();
                         try {
+                            // Fail-fast (#12) : si un découpage a déjà échoué (n'importe lequel, quel que
+                            // soit l'ordre), on n'en lance pas un nouveau et on propage l'échec d'origine
+                            // → plus aucun fichier décodé inutilement une fois l'erreur connue.
+                            RuntimeException dejaEchoue = echecDecoupage.get();
+                            if (dejaEchoue != null) {
+                                throw dejaEchoue;
+                            }
                             TransformationOriginal resultat =
                                     transformation.transformer(original, dossierTransformes, prefixe);
                             synchronized (verrouProgression) {
@@ -308,6 +317,9 @@ public class ServiceImport {
                                         (double) (nbOriginaux + faits) / totalEtapes));
                             }
                             return resultat;
+                        } catch (RuntimeException echec) {
+                            echecDecoupage.compareAndSet(null, echec);
+                            throw echec;
                         } finally {
                             creneaux.release();
                         }
