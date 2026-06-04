@@ -51,6 +51,10 @@ import javafx.collections.ObservableList;
 /// `importation → sites` sur le `model` d'une autre feature (autorisée par ArchUnit, jamais
 /// sur son `view`/`viewmodel`). Seul `javafx.beans`/`javafx.collections` est importé ici,
 /// jamais `javafx.scene` (règle `viewmodel_sans_javafx_ui`).
+///
+/// TODO (M-Import) : implémentez les corps des méthodes publiques (chargerSites, inspecter, importer,
+/// preparerImport, executerImport, marquer*) ; les propriétés observables et le binding peutImporter
+/// sont fournis. Patron de référence : SitesViewModel (feature sites).
 public class ImportationViewModel {
 
     private final ServiceImport serviceImport;
@@ -124,6 +128,7 @@ public class ImportationViewModel {
         // Valeur initiale avant d'installer les écouteurs (évite un recalcul d'aperçu prématuré).
         annee.set(horloge.aujourdhui().getYear());
 
+        // --solution--
         // Changer de dossier source invalide l'inspection précédente : un nouveau dossier doit être
         // ré-inspecté (sinon le bouton Importer resterait actif et l'aperçu garderait l'ancien
         // rapport).
@@ -138,6 +143,7 @@ public class ImportationViewModel {
         pointSelectionne.addListener((obs, ancien, nouveau) -> majApercu());
         annee.addListener((obs, ancien, nouveau) -> majApercu());
         numeroPassage.addListener((obs, ancien, nouveau) -> majApercu());
+        // --end-solution--
 
         peutImporter = Bindings.createBooleanBinding(
                 () -> inspecte.get()
@@ -271,13 +277,20 @@ public class ImportationViewModel {
     /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un
     /// site).
     public void chargerSites() {
+        // TODO (M-Import) : rechargez les sites de l'utilisateur courant (serviceSites.listerSites).
+        // --solution--
         sites.setAll(serviceSites.listerSites(idUtilisateur));
+        // --end-solution--
     }
 
     /// Inspecte le dossier source courant **en lecture seule** (R9) et met à jour les propriétés
     /// d'inspection. Sur un dossier non choisi ou un chemin invalide, renseigne
     /// [#messageErreurProperty()] et laisse `inspecte` à `false`.
     public void inspecter() {
+        // TODO (M-Import) : inspectez le dossier source (serviceImport.inspecter), alimentez les
+        //   propriétés d'inspection + avertissements (AvertissementMelange/Incoherence.rediger), passez
+        //   inspecte à true et recalculez l'aperçu ; en cas d'erreur, appelez echouer(...).
+        // --solution--
         Path dossier = dossierSource.get();
         if (dossier == null) {
             echouer("Choisissez d'abord un dossier source.");
@@ -300,6 +313,7 @@ public class ImportationViewModel {
         } catch (RuntimeException echec) {
             echouer(echec.getMessage());
         }
+        // --end-solution--
     }
 
     /// Lance l'import de la nuit **de façon synchrone** (copie protégée R9 + renommage R6/R7 +
@@ -307,6 +321,9 @@ public class ImportationViewModel {
     /// l'IHM, la vue préfère le découpage `preparerImport` (instantané) + `executerImport`
     /// (hors-thread) + `marquerEnCours`/`marquerTermine`/`marquerEchec` (sur le fil JavaFX).
     public void importer() {
+        // TODO (M-Import) : import synchrone : vérifiez peutImporter, préparez (preparerImport),
+        //   marquerEnCours, exécutez (executerImport) puis marquerTermine / marquerEchec.
+        // --solution--
         if (!peutImporter.get()) {
             messageErreur.set("Complétez le rattachement (dossier inspecté, site, point) avant d'importer.");
             return;
@@ -318,11 +335,14 @@ public class ImportationViewModel {
         } catch (RuntimeException echec) {
             marquerEchec(echec.getMessage());
         }
+        // --end-solution--
     }
 
     /// Passe l'état à `EN_COURS` et efface le message. À appeler sur le fil JavaFX, avant de
     /// lancer l'exécution en arrière-plan.
     public void marquerEnCours() {
+        // TODO (M-Import) : passez l'état à EN_COURS (progression 0, verrou de navigation #54).
+        // --solution--
         messageErreur.set("");
         progression.set(0.0);
         messageProgression.set("Préparation…");
@@ -330,26 +350,37 @@ public class ImportationViewModel {
         // Verrou de navigation (#54) : on ne doit pas quitter l'assistant tant que l'import tourne,
         // sinon son résultat (marquerTermine/marquerEchec) serait perdu en détachant la vue.
         navigation.setNavigationVerrouillee(true);
+        // --end-solution--
     }
 
     /// Applique un point de progression de l'import en cours (#33) : met à jour la fraction et le
     /// libellé d'étape. À appeler sur le fil JavaFX (depuis `Platform.runLater`), car le callback du
     /// service s'exécute hors-thread.
     public void appliquerProgression(Progression p) {
+        // TODO (M-Import) : mettez à jour la fraction et le libellé de progression (#33).
+        // --solution--
         progression.set(p.fraction());
         messageProgression.set(p.libelle());
+        // --end-solution--
     }
 
     /// Capture (sur le fil JavaFX) les entrées du rattachement courant dans un instantané immuable,
     /// pour les passer à [#executerImport(DemandeImport)] sans relire de `Property` hors-thread.
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
     public DemandeImport preparerImport() {
+        // TODO (M-Import) : capturez le rattachement courant (dossier, point, préfixe) dans un
+        //   DemandeImport immuable (à passer à executerImport hors-thread).
+        // --solution--
         Site site = siteSelectionne.get();
         PointDEcoute point = pointSelectionne.get();
         return new DemandeImport(
                 dossierSource.get(),
                 point.id(),
                 new Prefixe(site.numeroCarre(), annee.get(), numeroPassage.get(), point.code()));
+        // --end-solution--
+        /* --student--
+        throw new UnsupportedOperationException("À implémenter (M-Import)");
+        --end-student-- */
     }
 
     /// Exécute le travail lourd de l'import (copie + renommage + transformation) via
@@ -359,14 +390,26 @@ public class ImportationViewModel {
     /// @return le résultat de l'import
     /// @throws RuntimeException si l'import échoue (refus métier R5, journal manquant…)
     public ResultatImport executerImport(DemandeImport demande) {
+        // TODO (M-Import) : déléguez à la variante avec suivi de progression (no-op).
+        // --solution--
         return executerImport(demande, progres -> {});
+        // --end-solution--
+        /* --student--
+        throw new UnsupportedOperationException("À implémenter (M-Import)");
+        --end-student-- */
     }
 
     /// Variante avec **suivi de progression** (#33) : `progres` est notifié sur le fil d'exécution de
     /// l'import ; la vue le relaie au fil JavaFX (via [#appliquerProgression]). **Ne mute aucune
     /// `Property`** ici : sûr sur un fil d'arrière-plan.
     public ResultatImport executerImport(DemandeImport demande, Consumer<Progression> progres) {
+        // TODO (M-Import) : exécutez l'import (serviceImport.importer) en relayant la progression.
+        // --solution--
         return serviceImport.importer(demande.dossier(), demande.idPoint(), demande.prefixe(), progres);
+        // --end-solution--
+        /* --student--
+        throw new UnsupportedOperationException("À implémenter (M-Import)");
+        --end-student-- */
     }
 
     /// Instantané immuable des entrées d'un import, capturé sur le fil JavaFX par preparerImport.
@@ -375,21 +418,28 @@ public class ImportationViewModel {
     /// Applique un import réussi (résultat exposé, état `TERMINE`). À appeler sur le fil JavaFX
     /// (depuis `Platform.runLater`).
     public void marquerTermine(ResultatImport resultatImport) {
+        // TODO (M-Import) : exposez le résultat, passez l'état à TERMINE, déverrouillez la navigation (#54).
+        // --solution--
         resultat.set(resultatImport);
         messageErreur.set("");
         etat.set(EtatImport.TERMINE);
         navigation.setNavigationVerrouillee(false); // l'import est fini : on peut de nouveau naviguer (#54)
+        // --end-solution--
     }
 
     /// Applique un échec d'import : efface le résultat, renseigne le message, état `ECHEC`. À
     /// appeler sur le fil JavaFX (depuis `Platform.runLater`).
     public void marquerEchec(String message) {
+        // TODO (M-Import) : effacez le résultat, publiez le message, passez l'état à ECHEC, déverrouillez (#54).
+        // --solution--
         resultat.set(null);
         messageErreur.set(message);
         etat.set(EtatImport.ECHEC);
         navigation.setNavigationVerrouillee(false); // l'import s'est arrêté : on déverrouille (#54)
+        // --end-solution--
     }
 
+    // --solution--
     private void echouer(String message) {
         reinitialiserInspection();
         messageErreur.set(message);
@@ -436,4 +486,5 @@ public class ImportationViewModel {
         }
         return "PaRec…_AAAAMMJJ_HHMMSS.wav";
     }
+    // --end-solution--
 }

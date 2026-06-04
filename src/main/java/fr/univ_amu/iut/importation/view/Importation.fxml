@@ -14,7 +14,12 @@
   contrôles sont liés aux propriétés de ImportationViewModel par ImportationController. La
   progression en arrière-plan et les cas limites (mélange, incohérence) viendront dans une tranche
   ultérieure.
+
+  TODO (M-Import) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ; remplacez-le
+  par la vraie mise en page (4 sections : dossier, inspection, rattachement, action/progression)
+  reliée à l'ImportationController par des fx:id et des onAction. Réf : sites/view/SiteDetail.fxml.
 -->
+<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.importation.view.ImportationController"
@@ -100,3 +105,14 @@
   </VBox>
   <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>
 </VBox>
+<!-- @@end-solution@@ -->
+<!-- @@student@@
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.importation.view.ImportationController"
+      spacing="14.0">
+  <Label text="📥 Importer une nuit"/>
+  <Label text="TODO (M-Import) : écran à construire (dossier, inspection, rattachement, action). Voir sites/view/SiteDetail.fxml."/>
+</VBox>
+@@end-student@@ -->
+
