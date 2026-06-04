@@ -52,7 +52,13 @@ header() {
 # generate-student.sh.
 # ------------------------------------------------------------
 detect_mode() {
-    if grep -rq '/\* --student--' src/ 2>/dev/null; then
+    # Starter SAÉ (A2) : les coquilles FXML à jetons @@solution@@ signent le projet
+    # « construis l'IHM », distinct des TP TDD/refactoring. Ses ViewModels utilisent aussi
+    # /* --student-- */ pour des stubs compilants, ce qui ne doit PAS le faire passer pour un
+    # TP de refactoring (sinon le README serait exigé en vocabulaire « tests de caractérisation »).
+    if grep -rq '@@solution@@' src/ 2>/dev/null; then
+        echo "sae"
+    elif grep -rq '/\* --student--' src/ 2>/dev/null; then
         echo "refactoring"
     else
         echo "tdd"
@@ -73,7 +79,12 @@ header "README vs mode"
 if [ ! -f README.md ]; then
     fail "README.md introuvable."
 else
-    if [ "$MODE" = "refactoring" ]; then
+    if [ "$MODE" = "sae" ]; then
+        # Starter SAÉ « construis l'IHM » : ni TDD baby-steps ni refactoring de
+        # caractérisation. Le README décrit « fourni vs à construire » (validé ailleurs) :
+        # la dichotomie tdd/refactoring ne s'applique pas.
+        pass "README.md : mode SAÉ, dichotomie tdd/refactoring non applicable."
+    elif [ "$MODE" = "refactoring" ]; then
         # Formulations interdites en mode refactoring (héritées de
         # templates TDD et inadaptées à un TP de refactoring).
         BAD_PATTERNS=(
