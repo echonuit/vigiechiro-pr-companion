@@ -48,6 +48,14 @@ jobs:
           chmod +x .github/assets/check-captures.sh
           ./.github/assets/check-captures.sh
 
+      - name: Transform unit tests (bats)
+        # Vérifie les transformations de generate-student.sh (marqueurs solution/
+        # student/fxml/masquer + @Disabled par paquet). Outil enseignant : le
+        # dossier scripts/ est stripé de la version étudiante.
+        run: |
+          sudo apt-get update && sudo apt-get install -y bats
+          bats scripts/test/student-transforms.bats
+
       - name: PMD quality-gate (fail on violation)
         # AppTest (TestFX) tourne en headless via la Headless Platform JavaFX 26
         # (glass.platform=Headless) : aucun display X11 requis, plus besoin de xvfb.
