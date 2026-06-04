@@ -48,6 +48,9 @@
         <!-- Rempli à la volée par jacoco:prepare-agent. Vide par défaut pour ne JAMAIS
              casser ./mvnw test (Surefire le réinjecte via @{jacocoArgLine}). -->
         <jacocoArgLine></jacocoArgLine>
+
+        <!-- Seuil de couverture bloquant : false par défaut, true sous -Pquality-gate (CI solution). -->
+        <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
     </properties>
 
     <dependencies>
@@ -345,6 +348,11 @@
                         <goals>
                             <goal>report</goal>
                         </goals>
+                        <configuration>
+                            <excludes>
+                                <exclude>**/outils/**</exclude>
+                            </excludes>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>check</id>
@@ -353,7 +361,15 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <haltOnFailure>false</haltOnFailure>
+                            <!-- Bloquant uniquement sous -Pquality-gate (CI solution), comme PMD :
+                                 un ./mvnw verify nu (côté étudiant) reporte sans casser le build. -->
+                            <haltOnFailure>${jacoco.haltOnFailure}</haltOnFailure>
+                            <!-- Les outils (capture d'écran, bancs de mesure) sont validés par
+                                 exécution, pas par des tests unitaires : exclus du calcul de
+                                 couverture (sinon ils la tireraient artificiellement vers le bas). -->
+                            <excludes>
+                                <exclude>**/outils/**</exclude>
+                            </excludes>
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
@@ -361,7 +377,12 @@
                                         <limit>
                                             <counter>LINE</counter>
                                             <value>COVEREDRATIO</value>
-                                            <minimum>0.00</minimum>
+                                            <minimum>0.85</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <minimum>0.70</minimum>
                                         </limit>
                                     </limits>
                                 </rule>
@@ -430,6 +451,10 @@
         <!-- Profil enseignant : PMD bloque sur violation. -->
         <profile>
             <id>quality-gate</id>
+            <properties>
+                <!-- Rend le seuil de couverture JaCoCo bloquant (CI solution uniquement). -->
+                <jacoco.haltOnFailure>true</jacoco.haltOnFailure>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
