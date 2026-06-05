@@ -28,6 +28,7 @@
         <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
         <javafx.version>26</javafx.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+        <javafx.mainClass>vigiechiro/fr.univ_amu.iut.App</javafx.mainClass>
         <testfx.version>4.0.18</testfx.version>
 
         <junit.jupiter.version>6.1.0</junit.jupiter.version>
@@ -399,13 +400,15 @@
                 <configuration>
                     <jlinkImageName>app</jlinkImageName>
                     <launcher>launcher</launcher>
-                    <mainClass>vigiechiro/fr.univ_amu.iut.App</mainClass>
+                    <mainClass>${javafx.mainClass}</mainClass>
                     <options>
                         <!-- Native access (Java 25 strict) : JavaFX + driver natif SQLite (JNI).
                              Sans la ligne sqlitejdbc, le premier accès base affiche le WARNING
                              « restricted method java.lang.System::load ... ». -->
                         <option>--enable-native-access=javafx.graphics</option>
                         <option>--enable-native-access=org.xerial.sqlitejdbc</option>
+                        <!-- Neutralise le WARNING sun.misc.Unsafe de Guice/Guava (JEP 498). -->
+                        <option>--sun-misc-unsafe-memory-access=allow</option>
                     </options>
                 </configuration>
             </plugin>
