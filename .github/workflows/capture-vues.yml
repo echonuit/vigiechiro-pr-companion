@@ -21,6 +21,7 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 # Évite que deux régénérations de main (ex. push enseignant rapprochés) se marchent dessus.
 concurrency:
@@ -50,14 +51,45 @@ jobs:
           chmod +x .github/assets/capture-screenshots.sh
           .github/assets/capture-screenshots.sh
 
-      - name: Committer les aperçus modifiés
+      - name: Publier les aperçus via une PR auto-mergée
+        # `main` impose le passage par une PR et github-actions[bot] ne peut PAS pousser en direct
+        # (pas acteur de bypass). On modélise donc le workflow PR : branche -> PR -> squash-merge.
+        # Possible UNIQUEMENT parce que la règle n'impose NI review NI check obligatoire (le bot ne
+        # peut ni s'auto-approuver, ni déclencher les checks d'une PR qu'il a ouverte). Le squash
+        # porte [skip ci] (anti-récursion) ; la PR est labellisée `captures` (exclue des métriques
+        # du leaderboard). copilot_code_review (demande non bloquante) ne gêne pas le merge.
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .github/assets/apercu-*.png
           if git diff --cached --quiet; then
             echo "Aucun aperçu modifié : rien à committer."
-          else
-            git commit -m "chore(captures): mise à jour des aperçus des vues [skip ci]"
-            git push origin HEAD:main
+            exit 0
           fi
+          BRANCH="bot/apercus-${GITHUB_RUN_ID}"
+          MSG="chore(captures): mise à jour des aperçus des vues"
+          git switch -c "$BRANCH"
+          git commit -m "$MSG"
+          git push origin "$BRANCH"
+
+          # Label idempotent : sert au leaderboard pour exclure ces PR automatiques des métriques.
+          gh label create captures --color BFD4F2 \
+            --description "PR automatique : aperçus UI (exclue des métriques)" 2>/dev/null || true
+
+          gh pr create --base main --head "$BRANCH" --label captures --title "$MSG" \
+            --body "Mise à jour automatique de la galerie d'aperçus (.github/assets/apercu-*.png). PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
+
+          # Squash-merge (compatible required_linear_history) + [skip ci] (anti-récursion).
+          # Retry : l'état « mergeable » est parfois calculé en asynchrone juste après l'ouverture.
+          for i in 1 2 3 4 5; do
+            if gh pr merge "$BRANCH" --squash --delete-branch --subject "$MSG [skip ci]" --body ""; then
+              echo "PR de captures squash-mergée."
+              exit 0
+            fi
+            echo "Merge pas encore possible (tentative $i/5), nouvelle tentative dans 5 s..."
+            sleep 5
+          done
+          echo "::error::Échec du merge de la PR de captures après 5 tentatives."
+          exit 1
