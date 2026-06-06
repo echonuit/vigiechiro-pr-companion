@@ -113,6 +113,15 @@ latérale de votre équipe). Chaque tâche y est une **carte**, répartie en col
     Le seul geste manuel utile : déplacer une carte de **Backlog** vers **Ready** quand votre équipe
     planifie ce qu'elle attaque ensuite.
 
+### Le tableau de bord de la promo (leaderboard)
+
+Au-delà de votre propre tableau de projet, un **tableau de bord public** agrège l'avancement de
+**toutes les équipes** : tests au vert (la *Definition of Done*), issues réalisées (MUST / SHOULD /
+COULD), revues de code et statistiques par contributeur. C'est votre **leaderboard** : situez votre
+équipe par rapport aux autres et suivez votre progression au fil des jours.
+
+➡️ **[Ouvrir le tableau de bord](https://iutinfoaix-s201.github.io/tableau-de-bord/)**
+
 ## Les passes finales (à mener en fin de projet)
 
 Au-delà des écrans, des **issues de vérification / passe finale** verrouillent la qualité :
