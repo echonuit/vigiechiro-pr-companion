@@ -71,7 +71,7 @@ jobs:
           BRANCH="bot/apercus-${GITHUB_RUN_ID}"
           MSG="chore(captures): mise à jour des aperçus des vues"
           git switch -c "$BRANCH"
-          git commit -m "$MSG"
+          git commit -m "$MSG [skip ci]"   # [skip ci] porté par le rebase (anti-récursion)
           git push origin "$BRANCH"
 
           # Label idempotent : sert au leaderboard pour exclure ces PR automatiques des métriques.
@@ -81,11 +81,14 @@ jobs:
           gh pr create --base main --head "$BRANCH" --label captures --title "$MSG" \
             --body "Mise à jour automatique de la galerie d'aperçus (.github/assets/apercu-*.png). PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
 
-          # Squash-merge (compatible required_linear_history) + [skip ci] (anti-récursion).
+          # Merge LINÉAIRE (compatible required_linear_history) : squash si autorisé, sinon rebase
+          # (certaines équipes désactivent le squash sur leur repo). Les deux restent linéaires et
+          # portent [skip ci] (squash via --subject ; rebase via le message du commit de branche).
           # Retry : l'état « mergeable » est parfois calculé en asynchrone juste après l'ouverture.
           for i in 1 2 3 4 5; do
-            if gh pr merge "$BRANCH" --squash --delete-branch --subject "$MSG [skip ci]" --body ""; then
-              echo "PR de captures squash-mergée."
+            if gh pr merge "$BRANCH" --squash --delete-branch --subject "$MSG [skip ci]" --body "" 2>/dev/null \
+               || gh pr merge "$BRANCH" --rebase --delete-branch 2>/dev/null; then
+              echo "PR de captures mergée (squash ou rebase selon le repo)."
               exit 0
             fi
             echo "Merge pas encore possible (tentative $i/5), nouvelle tentative dans 5 s..."
