@@ -68,3 +68,14 @@ jobs:
             sleep 2
           done
           echo "$crees issue(s) créée(s), $sautes déjà présente(s)."
+
+      - name: Lier les sous-issues aux issues chapeau (idempotent)
+        # Transforme chaque tâche « N/M » en sous-issue native de son epic et réécrit la
+        # todo-liste de l'epic pour citer les vrais #numéros. Idempotent (re-run = no-op).
+        # continue-on-error : le linking est un CONFORT, il ne doit JAMAIS faire échouer le
+        # bootstrap étudiant. Si le GITHUB_TOKEN ne peut pas l'API sous-issues, relancer à la
+        # main : python3 .github/scripts/link-sub-issues.py --apply --repo <owner/repo>.
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python3 .github/scripts/link-sub-issues.py --apply --repo "$GITHUB_REPOSITORY"
