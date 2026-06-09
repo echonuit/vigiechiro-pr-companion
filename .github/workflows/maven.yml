@@ -11,7 +11,11 @@ permissions:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    # Forks étudiants (org IUTInfoAix-S201-2026) : runner self-hosted Linux
+    # (sae_runner_linux). Le canonique (org IUTInfoAix-S201, sans runner) et
+    # tout autre contexte retombent sur ubuntu-latest pour ne pas rester en
+    # file d'attente.
+    runs-on: ${{ github.repository_owner == 'IUTInfoAix-S201-2026' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v6
 
