@@ -31,7 +31,8 @@ concurrency:
 
 jobs:
   maj-statut:
-    runs-on: ubuntu-latest
+    # forks (org -2026) -> runner self-hosted Linux ; canonique/template -> ubuntu
+    runs-on: ${{ github.repository_owner == 'IUTInfoAix-S201-2026' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
     steps:
       - name: Recuperer le script depuis la branche par defaut
         uses: actions/checkout@v4
