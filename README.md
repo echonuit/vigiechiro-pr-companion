@@ -227,6 +227,20 @@ Ce qui est regardé : les **features livrées** (et leurs tests d'acceptation au
 
 **Copilot Chat** (panneau latéral de VS Code) est autorisé et configuré comme un **tuteur** : il explique d'abord le concept, pointe la documentation, et ne propose du code **qu'en dernier recours**. Sur les premières features, sollicitez-le pour vous familiariser ; sur les suivantes, cherchez à aller le plus loin possible **seul(e)** avant de demander de l'aide. C'est cette montée en autonomie qui vous prépare à l'évaluation.
 
+### Documenter votre usage des assistants IA (obligatoire)
+
+L'usage d'assistants IA (Copilot, ChatGPT, Claude...) est **autorisé**, mais doit être **documenté scrupuleusement ci-dessous** : c'est une **condition d'évaluation** (cf. [Consignes générales du brief](https://iutinfoaix-s201.github.io/brief/Consignes%20g%C3%A9n%C3%A9rales/)). Remplissez et tenez ce tableau à jour au fil du projet :
+
+| Outil | Pour quoi (génération de code, explication, débogage, FXML, tests...) | Dans quelle mesure |
+|---|---|---|
+| _ex. GitHub Copilot_ | _complétion ponctuelle dans les controleurs_ | _ponctuel_ |
+|  |  |  |
+|  |  |  |
+
+> Rien à déclarer ? Écrivez-le explicitement (« Aucun assistant IA utilisé »). Dans tous les cas,
+> vous restez responsables de **tout** le code livré : vous devez le comprendre et savoir le défendre
+> en soutenance.
+
 ---
 
 ## 10. Documentation de référence
