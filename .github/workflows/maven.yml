@@ -58,8 +58,12 @@ jobs:
               except (TypeError, ValueError): return 0
 
           # --- tests (surefire) ---
+          # Les 8 features a construire (cf. tableau de bord) ; sites/commun = reference.
+          FEATURES = {"diagnostic", "lot", "bibliotheque", "validation",
+                      "importation", "qualification", "multisite", "passage"}
           total = failed = errors = skipped = 0
           archunit_ok = None
+          par_feature = {}   # tests passes/total par ecran -> avancement phase 2 du tableau de bord
           surefire = glob.glob("**/target/surefire-reports/TEST-*.xml", recursive=True)
           for f in surefire:
               try:
@@ -71,6 +75,12 @@ jobs:
               total += t; failed += fl; errors += er; skipped += sk
               if "architecture" in f.lower() or "ArchitectureTest" in f:
                   archunit_ok = (fl == 0 and er == 0)
+              # feature = 1er segment de package apres fr.univ_amu.iut. dans le nom de la suite
+              m = re.match(r"fr\.univ_amu\.iut\.([a-z0-9_]+)\.", r.get("name") or "")
+              if m and m.group(1) in FEATURES:
+                  pf = par_feature.setdefault(m.group(1), {"total": 0, "passed": 0})
+                  pf["total"] += t
+                  pf["passed"] += t - fl - er - sk
           tests = None
           if surefire:
               tests = {"total": total, "failed": failed, "errors": errors,
@@ -106,6 +116,7 @@ jobs:
               "sha": os.environ.get("SHA"),
               "build_outcome": os.environ.get("BUILD_OUTCOME"),
               "tests": tests,
+              "tests_by_feature": par_feature or None,
               "quality": {"coverage_pct": coverage, "pmd_violations": pmd,
                           "spotless_ok": spot, "archunit_ok": archunit_ok},
           }
