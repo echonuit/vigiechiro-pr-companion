@@ -15,6 +15,13 @@ on:
   push:
     branches: [solution]
 
+# Sérialise les régénérations de main SANS jamais en interrompre une en cours
+# (cancel-in-progress: false) : deux pushes solution rapprochés ne racent pas sur
+# le force-push de main ni sur le déclenchement du sync Classroom.
+concurrency:
+  group: generate-student-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 

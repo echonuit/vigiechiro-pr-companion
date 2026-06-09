@@ -41,6 +41,29 @@ jobs:
           sparse-checkout: .github/scripts
           sparse-checkout-cone-mode: false
 
+      - name: Garde-fou checkout (anti-flakiness runner self-hosted)
+        # Cf. maven.yml : checkout sparse (.github/scripts) ; si le workspace est
+        # vidé, board_statut.py manque -> python échoue. `git ls-files -d` ne compte
+        # pas les skip-worktree, donc seul .github/scripts compte ici. On répare.
+        shell: bash
+        run: |
+          ok() { [ -z "$(git ls-files -d 2>/dev/null)" ]; }
+          if ok; then echo "Workspace OK."; exit 0; fi
+          sleep 3; if ok; then echo "Workspace visible après une courte pause."; exit 0; fi
+          echo "::warning title=Workspace incomplet::des fichiers suivis manquent juste après le checkout — diagnostic + réparation"
+          { echo "PWD=$PWD";
+            echo '--- df -h ---';  df -h  "$PWD";
+            echo '--- df -i ---';  df -i  "$PWD";
+            echo '--- manquants (extrait) ---'; git ls-files -d | head;
+            echo '--- ls -la ---'; ls -la;
+            echo '--- git status ---'; git status --short;
+            echo '--- HEAD ---'; git rev-parse HEAD; } 2>&1 || true
+          echo "Réparation : git reset --hard HEAD"
+          git reset --hard HEAD || true
+          if ok; then echo "Workspace réparé via git reset --hard."; exit 0; fi
+          echo "::error title=Workspace vide::réparation impossible (.git lui-même perdu ?) — voir diagnostic"
+          exit 1
+
       - name: Mettre a jour le statut sur le board de l'equipe
         env:
           GH_TOKEN: ${{ secrets.PROJECTS_AUTOMATION_TOKEN }}

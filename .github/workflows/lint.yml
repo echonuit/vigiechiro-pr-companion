@@ -13,6 +13,12 @@ on:
       - solution
   workflow_dispatch:
 
+# Annule un run superseded sur la même ref (pushes rapprochés sur solution).
+# Workflow canonique/ubuntu : pas de garde-fou checkout (pas de pool self-hosted).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 

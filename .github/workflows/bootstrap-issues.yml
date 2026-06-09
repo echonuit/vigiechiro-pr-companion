@@ -39,6 +39,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Garde-fou checkout (anti-flakiness runner self-hosted)
+        # Cf. maven.yml : un workspace vidé après checkout ferait créer 0 tâche
+        # en silence (nullglob sur .github/classroom/issues/*.md). On répare.
+        shell: bash
+        run: |
+          ok() { [ -z "$(git ls-files -d 2>/dev/null)" ]; }
+          if ok; then echo "Workspace OK."; exit 0; fi
+          sleep 3; if ok; then echo "Workspace visible après une courte pause."; exit 0; fi
+          echo "::warning title=Workspace incomplet::des fichiers suivis manquent juste après le checkout — diagnostic + réparation"
+          { echo "PWD=$PWD";
+            echo '--- df -h ---';  df -h  "$PWD";
+            echo '--- df -i ---';  df -i  "$PWD";
+            echo '--- manquants (extrait) ---'; git ls-files -d | head;
+            echo '--- ls -la ---'; ls -la;
+            echo '--- git status ---'; git status --short;
+            echo '--- HEAD ---'; git rev-parse HEAD; } 2>&1 || true
+          echo "Réparation : git reset --hard HEAD"
+          git reset --hard HEAD || true
+          if ok; then echo "Workspace réparé via git reset --hard."; exit 0; fi
+          echo "::error title=Workspace vide::réparation impossible (.git lui-même perdu ?) — voir diagnostic"
+          exit 1
+
       - name: Créer les tâches manquantes (idempotent par titre)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
