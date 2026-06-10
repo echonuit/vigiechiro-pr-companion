@@ -11,9 +11,15 @@ on:
 # réduire la charge concurrente sur le pool self-hosted. Groupe par workflow+ref :
 # ne touche jamais les autres workflows (un groupe partagé risquerait d'annuler
 # un run en attente d'un autre workflow).
+#
+# EXCEPTION `main` : on n'annule PAS (on sérialise : le run en cours va au bout, le
+# suivant attend). Le tableau de bord attribue les tests verts par commit de merge ;
+# un run de merge annulé n'a pas de compte -> les tests d'un·e étudiant·e seraient
+# crédités au merge suivant (mauvais auteur). Laisser chaque merge se mesurer évite
+# ce biais. (La sérialisation protège aussi le workspace partagé du runner.)
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: read
