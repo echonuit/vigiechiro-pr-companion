@@ -93,10 +93,13 @@ jobs:
             -f "inputs[tp_filter]=${TP_REPO}"
           echo "::notice::Sync Classroom déclenchée pour ${TP_REPO} (filtre tp_filter)"
 
-      # Déclenche aussi la propagation de l'infra vers les repos étudiants
-      # déjà forkés (workflow sync-students.yml côté classroom-sync). Pousse
-      # uniquement l'infra (.github/, devcontainer, README, pom.xml...), JAMAIS
-      # src/ - sanity check côté Python. dry_run=false : push réel.
+      # Déclenche aussi la propagation vers les repos étudiants déjà forkés
+      # (workflow sync-students.yml côté classroom-sync). Pousse l'infra
+      # (.github/, devcontainer, README, pom.xml...) plus les dossiers de
+      # référence sous src/ déclarés par le TP (champ sync_src_paths ; pour la
+      # SAÉ : le socle commun, dont les garde-fous FXML). Le reste de src/ (les
+      # features construites par les étudiants) n'est jamais touché : sanity
+      # check côté Python. dry_run=false : push réel.
       #
       # Risque assumé : tous les étudiants inscrits reçoivent l'update à chaque
       # push sur solution. Penser à grouper les modifs d'infra plutôt que faire
