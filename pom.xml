@@ -41,6 +41,9 @@
         <guice.version>7.0.0</guice.version>
         <sqlite.jdbc.version>3.53.2.0</sqlite.jdbc.version>
 
+        <!-- Icônes FontAwesome5 via Ikonli (FontIcon en FXML), disponible pour toutes les équipes. -->
+        <ikonli.version>12.3.1</ikonli.version>
+
         <!-- Couverture (JaCoCo) + mutation (PIT, profil -Pmutation uniquement). -->
         <jacoco.version>0.8.14</jacoco.version>
         <pitest.version>1.25.3</pitest.version>
@@ -150,6 +153,18 @@
             <artifactId>archunit-junit5</artifactId>
             <version>${archunit.version}</version>
             <scope>test</scope>
+        </dependency>
+
+        <!-- Icônes FontAwesome5 via Ikonli (FontIcon en FXML). ikonli-javafx tire ikonli-core. -->
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-javafx</artifactId>
+            <version>${ikonli.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.kordamp.ikonli</groupId>
+            <artifactId>ikonli-fontawesome5-pack</artifactId>
+            <version>${ikonli.version}</version>
         </dependency>
     </dependencies>
 
