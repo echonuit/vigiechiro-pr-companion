@@ -38,25 +38,34 @@ jobs:
           ref: main
 
       - name: Garde-fou checkout (anti-flakiness runner self-hosted)
-        # Cf. maven.yml : sur le pool self-hosted, le checkout réussit parfois mais
-        # laisse le workspace vide sous charge. On vérifie / diagnostique / répare.
+        # Sur le pool self-hosted, un `_work` réutilisé peut conserver un sparse-checkout ou des
+        # bits `skip-worktree` résiduels : des fichiers suivis (./mvnw, .github/assets/*.sh) sont
+        # alors ABSENTS du disque, mais `git ls-files -d` ne les voit pas (skip != deleted) et
+        # `git reset --hard` ne les restaure pas. On désactive donc le sparse-checkout et on
+        # re-matérialise tout l'arbre à chaque run, puis on vérifie un fichier clé.
         shell: bash
         run: |
-          ok() { [ -z "$(git ls-files -d 2>/dev/null)" ]; }
+          materialiser() {
+            git sparse-checkout disable 2>/dev/null || true
+            git config core.sparseCheckout false 2>/dev/null || true
+            git checkout -f HEAD -- . 2>/dev/null || true
+          }
+          ok() { [ -z "$(git ls-files -d 2>/dev/null)" ] && [ -f .github/assets/capture-screenshots.sh ]; }
+          materialiser
           if ok; then echo "Workspace OK."; exit 0; fi
-          sleep 3; if ok; then echo "Workspace visible après une courte pause."; exit 0; fi
-          echo "::warning title=Workspace incomplet::des fichiers suivis manquent juste après le checkout — diagnostic + réparation"
+          sleep 3; materialiser
+          if ok; then echo "Workspace OK après matérialisation forcée."; exit 0; fi
+          echo "::warning title=Workspace incomplet::fichiers suivis manquants — diagnostic + réparation"
           { echo "PWD=$PWD";
-            echo '--- df -h ---';  df -h  "$PWD";
             echo '--- df -i ---';  df -i  "$PWD";
-            echo '--- manquants (extrait) ---'; git ls-files -d | head;
-            echo '--- ls -la ---'; ls -la;
-            echo '--- git status ---'; git status --short;
+            echo '--- sparse-checkout ---'; git sparse-checkout list 2>&1 | head;
+            echo '--- manquants ---'; git ls-files -d | head;
             echo '--- HEAD ---'; git rev-parse HEAD; } 2>&1 || true
-          echo "Réparation : git reset --hard HEAD"
+          echo "Réparation : reset --hard + matérialisation"
           git reset --hard HEAD || true
-          if ok; then echo "Workspace réparé via git reset --hard."; exit 0; fi
-          echo "::error title=Workspace vide::réparation impossible (.git lui-même perdu ?) — voir diagnostic"
+          materialiser
+          if ok; then echo "Workspace réparé."; exit 0; fi
+          echo "::error title=Workspace vide::réparation impossible (.git perdu ?) — voir diagnostic"
           exit 1
 
       - name: Set up JDK 25
