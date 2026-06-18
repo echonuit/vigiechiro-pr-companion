@@ -95,6 +95,16 @@ class ImportationViewTest {
     }
 
     @Test
+    @DisplayName("La combo des sites affiche un libellé lisible (et non le toString brut du record)")
+    void combo_site_libelle_lisible(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        Site site = comboSites.getItems().get(0);
+
+        assertThat(comboSites.getConverter().toString(site)).isEqualTo("Carré 640380 — Étang de la Tuilière");
+    }
+
+    @Test
     @DisplayName("La zone de progression est masquée tant qu'aucun import n'est lancé")
     void progression_cachee_au_depart(FxRobot robot) {
         VBox zoneProgression = robot.lookup("#zoneProgression").queryAs(VBox.class);
