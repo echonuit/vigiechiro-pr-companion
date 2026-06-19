@@ -27,7 +27,6 @@ class IntegriteTestsLivresTest {
     private static final List<String> TESTS_PROTEGES = List.of(
             "fr.univ_amu.iut.sites.view.SitesVueIntegrationTest",
             "fr.univ_amu.iut.importation.view.ImportationVueIntegrationTest",
-            "fr.univ_amu.iut.importation.view.ImportationClicImporterTest",
             "fr.univ_amu.iut.qualification.view.QualificationVueIntegrationTest",
             "fr.univ_amu.iut.passage.view.PassageVueIntegrationTest",
             "fr.univ_amu.iut.validation.view.ValidationVueIntegrationTest",

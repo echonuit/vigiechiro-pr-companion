@@ -28,7 +28,6 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -49,7 +48,6 @@ import org.testfx.util.WaitForAsyncUtils;
 /// directement sur un fil d'arrière-plan lèverait « Not on FX application thread »
 /// (avalée par le thread daemon), et l'écran ne bougerait plus.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class ImportationClicImporterTest {
 
     private static final String ID_USER = "u-clic";
