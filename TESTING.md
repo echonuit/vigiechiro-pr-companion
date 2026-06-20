@@ -44,7 +44,7 @@ Monocle. Le headless vient de `glass.platform=Headless`, pas de TestFX.
 
 | Commande | Effet |
 |---|---|
-| `./mvnw test` | Tests unitaires + d'intégration (hors conformité). |
+| `./mvnw test` | **Toute** la suite de tests (les détecteurs `@Tag("conformite")` sont **inclus** par défaut). |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants). |
 | `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants**. |
 | `./mvnw test -Dtest=SitesViewModelTest` | Une seule **classe** de test. |
