@@ -139,29 +139,41 @@ public class MainController {
     /// que la base est vide (premier lancement) : l'accueil reste épuré plutôt que d'afficher une
     /// rangée de « 0 ».
     private void peuplerIndicateurs() {
-        var triees = indicateurs.stream()
+        // Instantané unique des compteurs : chaque valeur() déclenche un COUNT(*) et tout se passe
+        // sur le fil JavaFX. On lit donc chaque indicateur UNE seule fois (pour décider de la
+        // visibilité ET pour l'affichage), au lieu de rappeler valeur() à la construction de chaque
+        // pastille.
+        record Compteur(IndicateurAccueil indicateur, long valeur) {}
+        var compteurs = indicateurs.stream()
                 .sorted(Comparator.comparingInt(IndicateurAccueil::ordre))
+                .map(i -> new Compteur(i, i.valeur()))
                 .toList();
-        boolean aDesDonnees =
-                triees.stream().mapToLong(IndicateurAccueil::valeur).sum() > 0;
+        boolean aDesDonnees = compteurs.stream().mapToLong(Compteur::valeur).sum() > 0;
         bandeauIndicateurs.setVisible(aDesDonnees);
         bandeauIndicateurs.setManaged(aDesDonnees);
         bandeauIndicateurs.getChildren().clear();
         if (aDesDonnees) {
-            triees.stream().map(this::construirePastille).forEach(bandeauIndicateurs.getChildren()::add);
+            compteurs.stream()
+                    .map(c -> construirePastille(c.indicateur(), c.valeur()))
+                    .forEach(bandeauIndicateurs.getChildren()::add);
         }
     }
 
     /// Bâtit une pastille de compteur : icône colorée de la feature + valeur + libellé, posée sur le
     /// hero nocturne. Un compteur **à zéro** est atténué (classe `indicateur-vide`) pour que l'œil
     /// se porte sur les rubriques réellement renseignées.
-    private Node construirePastille(IndicateurAccueil indicateur) {
-        long valeur = indicateur.valeur();
+    private Node construirePastille(IndicateurAccueil indicateur, long valeur) {
         boolean vide = valeur == 0;
 
         FontIcon icone = new FontIcon(indicateur.iconeLiteral());
         icone.setIconSize(22);
-        icone.setIconColor(vide ? Color.web("#ffffff", 0.55) : Color.web(indicateur.couleur()));
+        // Sur le hero sombre, l'accent plein de la feature serait ton sur ton (le bleu « Sites »
+        // surtout). On éclaircit la teinte vers le blanc pour qu'elle ressorte tout en gardant son
+        // identité ; un compteur à zéro reste en blanc atténué.
+        icone.setIconColor(
+                vide
+                        ? Color.web("#ffffff", 0.55)
+                        : Color.web(indicateur.couleur()).interpolate(Color.WHITE, 0.45));
 
         Label valeurLabel = new Label(Long.toString(valeur));
         valeurLabel.getStyleClass().add("indicateur-valeur");
