@@ -54,6 +54,10 @@ public class PassageViewModel {
     /// Identifiant du passage affiché, mémorisé pour les actions (ex. suppression).
     private Long idPassage;
 
+    /// Numéro de passage dans l'année (R3), pour le libellé du fil d'Ariane ; 0 tant qu'aucun passage
+    /// n'est chargé.
+    private int numeroPassage;
+
     public PassageViewModel(ServicePassage service) {
         this.service = Objects.requireNonNull(service, "service");
     }
@@ -98,6 +102,7 @@ public class PassageViewModel {
                 + " ("
                 + detail.annee()
                 + ")");
+        numeroPassage = detail.numeroPassage();
         plageHoraire.set(detail.dateEnregistrement() + "  " + detail.heureDebut() + " → " + detail.heureFin());
         enregistreur.set("PR " + detail.idEnregistreur());
         statut.set(detail.statut());
@@ -123,6 +128,7 @@ public class PassageViewModel {
         volumeTransformes.set("");
         dureeAudible.set("");
         nombreSequences.set(0);
+        numeroPassage = 0;
         etapes.clear();
         verificationDisponible.set(false);
         validationVerrouillee.set(true);
@@ -145,6 +151,11 @@ public class PassageViewModel {
         return liste;
     }
     // --end-solution--
+
+    /// Numéro de passage dans l'année (0 si aucun passage chargé), pour le libellé du fil d'Ariane.
+    public int getNumeroPassage() {
+        return numeroPassage;
+    }
 
     /// Titre d'identité du passage (`Carré 640380 / A1 / N° 2 (2026)`).
     public ReadOnlyStringProperty titreContexteProperty() {

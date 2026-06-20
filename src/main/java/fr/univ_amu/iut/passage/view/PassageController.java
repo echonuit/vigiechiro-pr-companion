@@ -194,6 +194,13 @@ public class PassageController {
         viewModel.ouvrirSur(idPassage, contexte);
     }
 
+    /// Libellé identifiant ce passage pour le fil d'Ariane (« Détails du passage N° X »), valide une
+    /// fois [#ouvrirSur] appelée. Utilisé par [NavigationPassage] au moment d'empiler l'écran.
+    public String libelleFil() {
+        int numero = viewModel.getNumeroPassage();
+        return numero > 0 ? "Détails du passage N° " + numero : "Détails du passage";
+    }
+
     // --solution--
     /// « Vérifier l'enregistrement » : ouvre M-Qualification sur ce passage via le contrat socle
     /// [OuvrirVerification] (la feature `qualification` en fournit l'implémentation).
