@@ -115,3 +115,29 @@
     -fx-padding: 8 20 8 20;
     -fx-font-size: 12px;
 }
+
+/* Tableau de bord d'accueil : bandeau de pastilles de compteurs au-dessus des cartes. */
+.bandeau-indicateurs {
+    -fx-padding: 4 0 8 0;
+}
+.indicateur {
+    -fx-background-color: -couleur-texte-clair;
+    -fx-background-radius: 10;
+    -fx-border-color: derive(-couleur-fond, -8%);
+    -fx-border-radius: 10;
+    -fx-border-width: 1;
+    -fx-padding: 12 22 12 22;
+    -fx-spacing: 2;
+    -fx-alignment: center;
+    -fx-min-width: 120;
+    -fx-effect: dropshadow(gaussian, rgba(44, 62, 80, 0.06), 6, 0, 0, 1);
+}
+.indicateur-valeur {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-primaire;
+}
+.indicateur-libelle {
+    -fx-font-size: 12px;
+    -fx-text-fill: derive(-couleur-texte, 25%);
+}

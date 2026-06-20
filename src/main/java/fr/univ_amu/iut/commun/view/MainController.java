@@ -27,6 +27,7 @@ public class MainController {
     private final NavigationViewModel navigation;
     private final Navigateur navigateur;
     private final Set<ActiviteAccueil> activites;
+    private final Set<IndicateurAccueil> indicateurs;
 
     @FXML
     private BorderPane racine;
@@ -44,13 +45,21 @@ public class MainController {
     private Label pied;
 
     @FXML
+    private FlowPane bandeauIndicateurs;
+
+    @FXML
     private FlowPane cartesActivites;
 
     @Inject
-    public MainController(NavigationViewModel navigation, Navigateur navigateur, Set<ActiviteAccueil> activites) {
+    public MainController(
+            NavigationViewModel navigation,
+            Navigateur navigateur,
+            Set<ActiviteAccueil> activites,
+            Set<IndicateurAccueil> indicateurs) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
+        this.indicateurs = indicateurs;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -69,6 +78,14 @@ public class MainController {
         lienAccueil.disableProperty().bind(navigation.navigationVerrouilleeProperty());
 
         peuplerCartes();
+        peuplerIndicateurs();
+        // Tableau de bord : les compteurs se rafraîchissent à chaque retour sur l'accueil (après un
+        // import, une déclaration de site…), pour refléter l'état courant de la base.
+        navigation.vueCouranteProperty().addListener((obs, ancien, nouveau) -> {
+            if ("accueil".equals(nouveau)) {
+                peuplerIndicateurs();
+            }
+        });
 
         // La zone d'accueil déclarée dans le FXML devient la vue centrale initiale, puis le centre
         // du BorderPane suit la propriété du Navigateur : toute navigation passe par afficher(...).
@@ -93,6 +110,34 @@ public class MainController {
                 .sorted(Comparator.comparingInt(ActiviteAccueil::ordre))
                 .map(this::construireCarte)
                 .forEach(cartesActivites.getChildren()::add);
+    }
+
+    /// Bâtit le bandeau de compteurs (tableau de bord) à partir des [IndicateurAccueil] des
+    /// features, triés par `ordre()` et recalculés à la volée. Le bandeau reste **masqué** tant
+    /// que la base est vide (premier lancement) : l'accueil reste épuré plutôt que d'afficher une
+    /// rangée de « 0 ».
+    private void peuplerIndicateurs() {
+        var triees = indicateurs.stream()
+                .sorted(Comparator.comparingInt(IndicateurAccueil::ordre))
+                .toList();
+        boolean aDesDonnees =
+                triees.stream().mapToLong(IndicateurAccueil::valeur).sum() > 0;
+        bandeauIndicateurs.setVisible(aDesDonnees);
+        bandeauIndicateurs.setManaged(aDesDonnees);
+        bandeauIndicateurs.getChildren().clear();
+        if (aDesDonnees) {
+            triees.stream().map(this::construirePastille).forEach(bandeauIndicateurs.getChildren()::add);
+        }
+    }
+
+    private Node construirePastille(IndicateurAccueil indicateur) {
+        Label valeur = new Label(indicateur.icone() + " " + indicateur.valeur());
+        valeur.getStyleClass().add("indicateur-valeur");
+        Label libelle = new Label(indicateur.libelle());
+        libelle.getStyleClass().add("indicateur-libelle");
+        VBox pastille = new VBox(valeur, libelle);
+        pastille.getStyleClass().add("indicateur");
+        return pastille;
     }
 
     private Node construireCarte(ActiviteAccueil activite) {
