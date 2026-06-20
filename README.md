@@ -204,7 +204,7 @@ Le projet embarque une chaîne qualité **professionnelle** (cœur de R2.03). To
 | `./mvnw verify` | Tests + couverture + contrôles (build complet) |
 | `./mvnw -Pquality-gate verify` | Build + **PMD bloquant** (le « portail qualité » de la CI) |
 | `./mvnw pmd:check` | Rapport PMD seul (rapide) |
-| `./mvnw spotless:apply` | Formate le code (Google Java Format) |
+| `./mvnw spotless:apply` | Formate le code (Palantir Java Format) |
 
 Les outils en jeu :
 
