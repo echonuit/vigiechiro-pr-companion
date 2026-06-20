@@ -138,7 +138,8 @@ public final class CapturePassage {
                         idp -> {},
                         idp -> {},
                         idp -> {},
-                        injecteur.getInstance(NavigationPassage.class))
+                        injecteur.getInstance(NavigationPassage.class),
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.OuvrirSite.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();

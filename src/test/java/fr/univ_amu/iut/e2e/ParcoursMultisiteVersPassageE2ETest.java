@@ -26,7 +26,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -98,6 +100,18 @@ class ParcoursMultisiteVersPassageE2ETest {
 
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
         assertThat(robot.lookup("#boutonVerifier").queryAs(Button.class)).isNotNull();
+
+        // 3) Le fil d'Ariane GLOBAL situe le passage sous son site, même atteint via multisite (#140) :
+        // Accueil › Mes sites › Carré 640380 › Détails du passage N° 1 (emplacement, pas l'historique).
+        HBox fil = robot.lookup("#filAriane").queryAs(HBox.class);
+        var libelles = fil.getChildren().stream()
+                .filter(n -> n.getStyleClass().contains("fil-ariane-segment")
+                        || n.getStyleClass().contains("fil-ariane-courant"))
+                .map(n -> ((Labeled) n).getText())
+                .toList();
+        assertThat(libelles)
+                .contains("Carré 640380")
+                .anySatisfy(t -> assertThat(t).startsWith("Détails du passage"));
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {

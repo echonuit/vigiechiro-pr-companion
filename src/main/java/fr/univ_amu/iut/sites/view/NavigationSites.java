@@ -2,9 +2,13 @@ package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.Key;
 import com.google.inject.Singleton;
+import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,7 +33,7 @@ import javafx.stage.Window;
 /// modal distinct. C'est cette classe qui rend la feature `sites` dépendante du socle `commun.view`
 /// (dépendance autorisée : `commun` est le socle partagé, pas une autre feature).
 @Singleton
-public class NavigationSites {
+public class NavigationSites implements OuvrirSite {
 
     private final Injector injector;
     private final Navigateur navigateur;
@@ -44,7 +48,7 @@ public class NavigationSites {
     public void ouvrirAccueil() {
         FXMLLoader loader = charger("MesSites.fxml");
         Parent vue = lire(loader);
-        navigateur.afficher(vue, "sites", "Mes sites de suivi");
+        navigateur.ouvrirRacine(vue, "sites", "Mes sites", loader.getController());
     }
 
     /// Affiche l'écran de détail **M-Site-detail** du site donné (clic sur une carte).
@@ -54,7 +58,25 @@ public class NavigationSites {
         Parent vue = lire(loader);
         SiteDetailController controller = loader.getController();
         controller.afficher(site);
-        navigateur.afficher(vue, "site-detail", "Mes sites › Carré " + site.numeroCarre());
+        navigateur.empiler(vue, "site-detail", "Carré " + site.numeroCarre(), controller);
+    }
+
+    // ----- Contrat socle OuvrirSite (segments « Mes sites » / « Carré N » cliquables d'un autre fil) -----
+
+    /// {@inheritDoc} Ouvre la liste « Mes sites » (= [#ouvrirAccueil]).
+    @Override
+    public void ouvrirListe() {
+        ouvrirAccueil();
+    }
+
+    /// {@inheritDoc} Résout le site par son numéro de carré (utilisateur courant) puis ouvre son détail.
+    @Override
+    public void ouvrirDetail(String numeroCarre) {
+        String idUtilisateur = injector.getInstance(Key.get(String.class, Names.named("idUtilisateurCourant")));
+        injector.getInstance(ServiceSites.class).listerSites(idUtilisateur).stream()
+                .filter(site -> site.numeroCarre().equals(numeroCarre))
+                .findFirst()
+                .ifPresent(this::ouvrirDetail);
     }
 
     /// Ouvre la modale d'**ajout** d'un point d'écoute pour `site`.

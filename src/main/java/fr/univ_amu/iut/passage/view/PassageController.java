@@ -4,13 +4,17 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -33,7 +37,7 @@ import javafx.scene.layout.HBox;
 /// [OuvrirVerification], [OuvrirDiagnostic], [OuvrirLot] et [OuvrirValidation] (sans dépendre des
 /// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
 /// logique métier ici (règle ArchUnit `view_sans_jdbc`).
-public class PassageController {
+public class PassageController implements EmplacementNavigation {
 
     private final PassageViewModel viewModel;
     private final OuvrirVerification ouvrirVerification;
@@ -41,6 +45,7 @@ public class PassageController {
     private final OuvrirValidation ouvrirValidation;
     private final OuvrirLot ouvrirLot;
     private final NavigationPassage navigation;
+    private final OuvrirSite ouvrirSite;
     private Long idPassage;
     private ContexteSite contexte;
 
@@ -115,13 +120,15 @@ public class PassageController {
             OuvrirDiagnostic ouvrirDiagnostic,
             OuvrirValidation ouvrirValidation,
             OuvrirLot ouvrirLot,
-            NavigationPassage navigation) {
+            NavigationPassage navigation,
+            OuvrirSite ouvrirSite) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
         this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
         this.ouvrirValidation = Objects.requireNonNull(ouvrirValidation, "ouvrirValidation");
         this.ouvrirLot = Objects.requireNonNull(ouvrirLot, "ouvrirLot");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
+        this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
     }
 
     // --solution--
@@ -192,6 +199,30 @@ public class PassageController {
         this.idPassage = idPassage;
         this.contexte = contexte;
         viewModel.ouvrirSur(idPassage, contexte);
+    }
+
+    /// Libellé identifiant ce passage pour le fil d'Ariane (« Détails du passage N° X »), valide une
+    /// fois [#ouvrirSur] appelée. Utilisé par [NavigationPassage] au moment d'empiler l'écran.
+    public String libelleFil() {
+        int numero = viewModel.getNumeroPassage();
+        return numero > 0 ? "Détails du passage N° " + numero : "Détails du passage";
+    }
+
+    /// Emplacement hiérarchique pour le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X`
+    /// (le chrome préfixe « Accueil »). Le carré vient du [ContexteSite], donc le passage affiche **son
+    /// site quel que soit le chemin** d'arrivée (depuis M-Sites comme depuis M-Multisite). Les deux
+    /// ancêtres sont cliquables via le contrat socle [OuvrirSite].
+    @Override
+    public List<Lieu> emplacement() {
+        Lieu passage = Lieu.courant(libelleFil());
+        if (contexte == null || contexte.numeroCarre() == null) {
+            return List.of(passage);
+        }
+        String carre = contexte.numeroCarre();
+        return List.of(
+                Lieu.vers("Mes sites", ouvrirSite::ouvrirListe),
+                Lieu.vers("Carré " + carre, () -> ouvrirSite.ouvrirDetail(carre)),
+                passage);
     }
 
     // --solution--

@@ -157,11 +157,6 @@ public class SiteDetailController {
         reconstruirePoints();
     }
 
-    @FXML
-    private void retour() {
-        navigation.ouvrirAccueil();
-    }
-
     /// Contexte d'identité (carré/code/nom) transmis à M-Passage pour éviter une dépendance
     /// `passage → sites` : la vue passage affiche ces libellés sans rejoindre les tables `sites`.
     private ContexteSite contexteSite(LignePassage ligne) {

@@ -41,7 +41,7 @@ public class NavigationMultisite {
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
-            navigateur.afficher(vue, "multisite", "Vue multi-sites");
+            navigateur.ouvrirRacine(vue, "multisite", "Vue multi-sites", loader.getController());
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

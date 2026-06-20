@@ -30,21 +30,52 @@
     -fx-font-weight: bold;
 }
 
-.fil-ariane {
-    -fx-text-fill: derive(-couleur-texte-clair, -12%);
-    -fx-font-size: 13px;
-}
-
-/* Affordance « 🏠 Accueil » de la barre de navigation (claire sur fond primaire). */
-.lien-accueil {
+/* Bouton « ← Retour » (historique de navigation), clair sur le bandeau primaire. */
+.bouton-retour {
+    -fx-background-color: rgba(255, 255, 255, 0.16);
     -fx-text-fill: -couleur-texte-clair;
     -fx-font-size: 13px;
-    -fx-border-color: transparent;
+    -fx-background-radius: 6;
+    -fx-padding: 4 12 4 12;
+    -fx-cursor: hand;
+}
+
+.bouton-retour:hover {
+    -fx-background-color: rgba(255, 255, 255, 0.28);
+}
+
+.bouton-retour:disabled {
+    -fx-opacity: 0.4;
+}
+
+/* Fil d'Ariane : conteneur des segments (emplacement de l'écran courant). */
+.fil-ariane {
     -fx-padding: 0 4 0 4;
 }
 
-.lien-accueil:hover {
+/* Segment cliquable (ancêtre) du fil. */
+.fil-ariane-segment {
+    -fx-text-fill: -couleur-texte-clair;
+    -fx-font-size: 13px;
+    -fx-border-color: transparent;
+    -fx-padding: 0 2 0 2;
+}
+
+.fil-ariane-segment:hover {
     -fx-underline: true;
+}
+
+/* Segment courant (dernier, non cliquable) : légèrement atténué. */
+.fil-ariane-courant {
+    -fx-text-fill: derive(-couleur-texte-clair, -18%);
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+/* Séparateur « › » entre segments. */
+.fil-ariane-separateur {
+    -fx-text-fill: rgba(255, 255, 255, 0.55);
+    -fx-font-size: 13px;
 }
 
 /* Zone centrale d'accueil (placeholder échangé par les features) : hero sombre + cartes claires. */

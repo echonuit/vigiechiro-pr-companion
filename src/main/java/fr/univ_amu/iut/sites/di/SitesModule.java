@@ -11,11 +11,13 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.IndicateurAccueil;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.sites.view.ActiviteMesSites;
+import fr.univ_amu.iut.sites.view.NavigationSites;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurPoints;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurSites;
 import fr.univ_amu.iut.sites.viewmodel.PointEditViewModel;
@@ -47,6 +49,9 @@ public class SitesModule extends AbstractModule {
         Multibinder<IndicateurAccueil> indicateurs = Multibinder.newSetBinder(binder(), IndicateurAccueil.class);
         indicateurs.addBinding().to(IndicateurSites.class);
         indicateurs.addBinding().to(IndicateurPoints.class);
+        // Contrat socle : permet à d'autres écrans (M-Passage) de rendre « Mes sites » / « Carré N »
+        // cliquables dans leur fil d'Ariane sans dépendre du `view` de sites.
+        bind(OuvrirSite.class).to(NavigationSites.class);
     }
 
     @Provides

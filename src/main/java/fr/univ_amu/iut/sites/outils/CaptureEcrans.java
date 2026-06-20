@@ -137,9 +137,13 @@ public final class CaptureEcrans {
     }
 
     /// Ecran de detail d'un site, rendu dans le chrome (fiche + points + tableau des passages).
+    /// On empile d'abord la liste M-Sites puis le detail, pour que le **fil d'Ariane** du chrome
+    /// montre le parcours complet (`Accueil › Mes sites › Carré N`) et le bouton ← Retour (#140).
     private static void capturerDetail(Injector injecteur, Site site, Path fichier) throws IOException {
         Parent chrome = chargerFxml(injecteur, CHROME);
-        injecteur.getInstance(NavigationSites.class).ouvrirDetail(site);
+        NavigationSites navigation = injecteur.getInstance(NavigationSites.class);
+        navigation.ouvrirAccueil();
+        navigation.ouvrirDetail(site);
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
     }
 

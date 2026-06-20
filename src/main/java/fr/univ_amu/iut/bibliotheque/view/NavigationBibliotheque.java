@@ -35,7 +35,7 @@ public class NavigationBibliotheque {
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
-            navigateur.afficher(vue, "bibliotheque", "Bibliothèque de sons");
+            navigateur.ouvrirRacine(vue, "bibliotheque", "Bibliothèque de sons", loader.getController());
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

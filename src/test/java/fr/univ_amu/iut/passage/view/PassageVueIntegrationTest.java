@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -101,6 +102,17 @@ class PassageVueIntegrationTest {
             @Provides
             OuvrirLot ouvrirLot() {
                 return depotOuvert::set;
+            }
+
+            @Provides
+            OuvrirSite ouvrirSite() {
+                return new OuvrirSite() {
+                    @Override
+                    public void ouvrirListe() {}
+
+                    @Override
+                    public void ouvrirDetail(String numeroCarre) {}
+                };
             }
         });
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));

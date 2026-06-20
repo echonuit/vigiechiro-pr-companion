@@ -39,7 +39,7 @@ public class NavigationDiagnostic implements OuvrirDiagnostic {
             Parent vue = loader.load();
             DiagnosticController controleur = loader.getController();
             controleur.ouvrirSur(idPassage);
-            navigateur.afficher(vue, "diagnostic", "Diagnostic matériel");
+            navigateur.empiler(vue, "diagnostic", "Diagnostic matériel", controleur);
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

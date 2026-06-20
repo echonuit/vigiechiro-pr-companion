@@ -18,9 +18,12 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -30,9 +33,10 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// Test d'intégration TestFX du chrome (`MainView`) : l'affordance **« 🏠 Accueil »** est masquée
-/// sur l'accueil, apparaît dès qu'une feature prend la main sur la zone centrale, et ramène à
-/// l'accueil au clic (via le socle [Navigateur#afficherAccueil]). Couvre #22.
+/// Test d'intégration TestFX du chrome (`MainView`) : la barre de navigation (← Retour + fil d'Ariane,
+/// portés par le chrome donc présents sur tous les écrans) reflète l'historique et l'emplacement,
+/// permet de revenir à l'écran précédent réel et de sauter à un ancêtre du fil, et respecte le verrou
+/// (#54). Couvre #22 et #140.
 @ExtendWith(ApplicationExtension.class)
 class MainViewTest {
 
@@ -63,40 +67,73 @@ class MainViewTest {
     }
 
     @Test
-    @DisplayName("Le lien « Accueil » est masqué sur l'accueil et apparaît dans une feature")
-    void lien_accueil_visible_hors_accueil(FxRobot robot) {
-        Hyperlink lien = robot.lookup("#lienAccueil").queryAs(Hyperlink.class);
-        assertThat(lien.isVisible()).isFalse();
+    @DisplayName("Le ← Retour est masqué sur l'accueil et apparaît dès qu'on entre dans une feature")
+    void retour_masque_sur_accueil(FxRobot robot) {
+        Button retour = robot.lookup("#boutonRetour").queryAs(Button.class);
+        assertThat(retour.isVisible()).isFalse();
 
-        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites de suivi"));
+        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites"));
 
-        assertThat(lien.isVisible()).isTrue();
+        assertThat(retour.isVisible()).isTrue();
     }
 
     @Test
-    @DisplayName("Cliquer « Accueil » ramène à l'accueil et masque de nouveau le lien")
-    void clic_accueil_revient_a_l_accueil(FxRobot robot) {
-        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites de suivi"));
-        Hyperlink lien = robot.lookup("#lienAccueil").queryAs(Hyperlink.class);
+    @DisplayName("← Retour revient à l'écran précédent réel, puis à l'accueil (sans détour)")
+    void retour_revient_a_l_ecran_precedent(FxRobot robot) {
+        robot.interact(() -> {
+            navigateur.afficher(new Group(), "sites", "Mes sites");
+            navigateur.afficher(new Group(), "site-detail", "Carré 640380");
+        });
+        Button retour = robot.lookup("#boutonRetour").queryAs(Button.class);
 
-        robot.interact(lien::fire);
+        robot.interact(retour::fire);
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("sites");
 
-        assertThat(lien.isVisible()).isFalse();
+        robot.interact(retour::fire);
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
+        assertThat(retour.isVisible()).isFalse();
         assertThat(robot.lookup("#cartesActivites").tryQuery()).isPresent();
     }
 
     @Test
-    @DisplayName("#54 : le lien « Accueil » est grisé quand la navigation est verrouillée")
-    void lien_accueil_grise_si_navigation_verrouillee(FxRobot robot) {
+    @DisplayName("Le fil d'Ariane reflète le parcours ; cliquer un ancêtre y ramène")
+    void fil_ariane_reflete_le_parcours(FxRobot robot) {
+        robot.interact(() -> {
+            navigateur.afficher(new Group(), "sites", "Mes sites");
+            navigateur.afficher(new Group(), "site-detail", "Carré 640380");
+        });
+
+        // Fil = Accueil › Mes sites › Carré 640380 (segments dans l'ordre, dernier non cliquable).
+        HBox fil = robot.lookup("#filAriane").queryAs(HBox.class);
+        var libelles = fil.getChildren().stream()
+                .filter(n -> n.getStyleClass().contains("fil-ariane-segment")
+                        || n.getStyleClass().contains("fil-ariane-courant"))
+                .map(n -> ((Labeled) n).getText())
+                .toList();
+        assertThat(libelles).containsExactly("Accueil", "Mes sites", "Carré 640380");
+
+        Hyperlink mesSites = fil.getChildren().stream()
+                .filter(n -> n instanceof Hyperlink h && "Mes sites".equals(h.getText()))
+                .map(Hyperlink.class::cast)
+                .findFirst()
+                .orElseThrow();
+        robot.interact(mesSites::fire);
+
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("sites");
+    }
+
+    @Test
+    @DisplayName("#54 : le ← Retour est grisé quand la navigation est verrouillée")
+    void retour_grise_si_navigation_verrouillee(FxRobot robot) {
         robot.interact(() -> navigateur.afficher(new Group(), "import", "Importer une nuit"));
-        Hyperlink lien = robot.lookup("#lienAccueil").queryAs(Hyperlink.class);
-        assertThat(lien.isDisabled()).isFalse();
+        Button retour = robot.lookup("#boutonRetour").queryAs(Button.class);
+        assertThat(retour.isDisabled()).isFalse();
 
         robot.interact(() -> navigation.setNavigationVerrouillee(true));
-        assertThat(lien.isDisabled()).isTrue();
+        assertThat(retour.isDisabled()).isTrue();
 
         robot.interact(() -> navigation.setNavigationVerrouillee(false));
-        assertThat(lien.isDisabled()).isFalse();
+        assertThat(retour.isDisabled()).isFalse();
     }
 
     @Test
@@ -116,7 +153,7 @@ class MainViewTest {
                     .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, "u-1");
         });
         // On quitte l'accueil puis on y revient : le retour déclenche le recalcul des compteurs.
-        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites de suivi"));
+        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites"));
         robot.interact(navigateur::afficherAccueil);
 
         FlowPane bandeau = robot.lookup("#bandeauIndicateurs").queryAs(FlowPane.class);
@@ -146,7 +183,7 @@ class MainViewTest {
             injector.getInstance(ServiceSites.class)
                     .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, "u-1");
         });
-        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites de suivi"));
+        robot.interact(() -> navigateur.afficher(new Group(), "sites", "Mes sites"));
         robot.interact(navigateur::afficherAccueil);
 
         // Sites = 1, mais Points / Passages / Observations restent à 0 : ces pastilles sont atténuées.
