@@ -31,6 +31,7 @@ import javafx.scene.control.Button;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -48,6 +49,7 @@ import org.testfx.framework.junit5.Start;
 /// `DirectoryChooser` natif que TestFX ne peut pas piloter ; son IHM est couverte par
 /// `ImportationViewTest`, sa mécanique par `ServiceImportTest`). Tout le reste est piloté **à l'écran**
 /// (boutons réels) et asserté **en base** (le statut du passage).
+@Tag("conformite")
 @ExtendWith(ApplicationExtension.class)
 class ParcoursDepotE2ETest {
 

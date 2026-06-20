@@ -34,6 +34,7 @@ import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -45,6 +46,7 @@ import org.testfx.framework.junit5.Start;
 /// **déverrouillée que sur un passage déposé** (`validationVerrouillee`) : on prépare donc un passage
 /// importé puis **déposé**, et on vérifie que le bouton « Validation Tadarida » est actif puis qu'il
 /// ouvre l'écran de validation (`passage → validation`, sans dépendance directe).
+@Tag("conformite")
 @ExtendWith(ApplicationExtension.class)
 class ParcoursPassageVersValidationE2ETest {
 

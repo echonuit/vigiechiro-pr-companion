@@ -31,6 +31,7 @@ import javafx.scene.control.Label;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -42,6 +43,7 @@ import org.testfx.framework.junit5.Start;
 /// est **toujours disponible** (indépendant du statut du passage) : on part donc d'un passage
 /// fraîchement importé (Transformé) et on vérifie que le bouton réel ouvre l'écran de diagnostic
 /// (`passage → diagnostic`, sans dépendance directe entre les deux features).
+@Tag("conformite")
 @ExtendWith(ApplicationExtension.class)
 class ParcoursPassageVersDiagnosticE2ETest {
 

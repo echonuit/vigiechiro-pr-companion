@@ -17,6 +17,7 @@ import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -29,6 +30,7 @@ import org.testfx.framework.junit5.Start;
 /// sans erreur de l'écran (table des entrées présente), sur une base vide : il s'agit d'un fumigène,
 /// pas d'un parcours de données (la bibliothèque de sons de référence sera alimentée par les
 /// étudiants).
+@Tag("conformite")
 @ExtendWith(ApplicationExtension.class)
 class ParcoursBibliothequeE2ETest {
 
