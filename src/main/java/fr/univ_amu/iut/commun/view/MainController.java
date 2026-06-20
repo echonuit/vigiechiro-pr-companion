@@ -5,12 +5,16 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.Set;
 import javafx.animation.TranslateTransition;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Parent;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
@@ -46,10 +50,10 @@ public class MainController {
     private Label titreApplication;
 
     @FXML
-    private Hyperlink lienAccueil;
+    private Button boutonRetour;
 
     @FXML
-    private Label filAriane;
+    private HBox filAriane;
 
     @FXML
     private Label pied;
@@ -79,16 +83,11 @@ public class MainController {
     @FXML
     private void initialize() {
         titreApplication.textProperty().bind(navigation.titreApplicationProperty());
-        filAriane.textProperty().bind(navigation.filArianeProperty());
         pied.textProperty().bind(navigation.piedDePageProperty());
 
-        // « 🏠 Accueil » : visible seulement hors de l'accueil (sur l'accueil, on y est déjà).
-        var horsAccueil = navigation.vueCouranteProperty().isNotEqualTo("accueil");
-        lienAccueil.visibleProperty().bind(horsAccueil);
-        lienAccueil.managedProperty().bind(horsAccueil);
-        // Verrou de navigation (#54) : grisé pendant une opération longue (import en cours) qu'on ne
-        // doit pas quitter, pour ne pas perdre le résultat de l'opération en détachant son écran.
-        lienAccueil.disableProperty().bind(navigation.navigationVerrouilleeProperty());
+        // ← Retour (historique) : grisé pendant une opération longue (import en cours, #54) qu'on ne
+        // doit pas quitter. Sa visibilité (présent hors accueil) est gérée par rafraichirNavigation().
+        boutonRetour.disableProperty().bind(navigation.navigationVerrouilleeProperty());
 
         peuplerCartes();
         peuplerIndicateurs();
@@ -109,20 +108,59 @@ public class MainController {
             }
         });
 
-        // La zone d'accueil déclarée dans le FXML devient la vue centrale initiale, puis le centre
-        // du BorderPane suit la propriété du Navigateur : toute navigation passe par afficher(...).
-        // On la mémorise pour que les features puissent y revenir (Navigateur.afficherAccueil()).
+        // La zone d'accueil déclarée dans le FXML devient la base de l'historique (Navigateur) ; le
+        // centre du BorderPane suit ensuite le sommet de l'historique (toute navigation passe par lui).
         Parent accueil = (Parent) racine.getCenter();
         navigateur.memoriserAccueil(accueil);
-        navigateur.afficher(accueil);
         racine.centerProperty().bind(navigateur.vueCentraleProperty());
+
+        // Barre de navigation (← Retour + fil d'Ariane) : reconstruite à chaque changement d'historique.
+        navigateur.historique().addListener((ListChangeListener<EtapeNavigation>) changement -> rafraichirNavigation());
+        rafraichirNavigation();
+
+        // Raccourci « Alt+← » = Retour (pas Backspace, qui entrerait en conflit avec la saisie texte).
+        // Posé dès que la scène est disponible.
+        racine.sceneProperty().addListener((obs, ancienne, scene) -> {
+            if (scene != null) {
+                scene.getAccelerators()
+                        .put(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.ALT_DOWN), navigateur::revenir);
+            }
+        });
     }
 
-    /// Affordance « 🏠 Accueil » du chrome : ramène à la vue d'accueil (cartes des features) depuis
-    /// n'importe quel écran de feature, via le socle [Navigateur#afficherAccueil].
+    /// ← Retour : revient à l'écran précédent réel (historique), via le socle [Navigateur#revenir].
     @FXML
-    private void retourAccueil() {
-        navigateur.afficherAccueil();
+    private void revenir() {
+        navigateur.revenir();
+    }
+
+    /// Reconstruit la barre de navigation : visibilité du ← Retour (présent hors accueil) et segments
+    /// du fil d'Ariane (emplacement de l'écran courant, sinon historique — cf. [Navigateur#filActuel]).
+    private void rafraichirNavigation() {
+        boolean peutRevenir = navigateur.peutRevenir();
+        boutonRetour.setVisible(peutRevenir);
+        boutonRetour.setManaged(peutRevenir);
+
+        filAriane.getChildren().clear();
+        var segments = navigateur.filActuel();
+        for (int i = 0; i < segments.size(); i++) {
+            if (i > 0) {
+                Label separateur = new Label("›");
+                separateur.getStyleClass().add("fil-ariane-separateur");
+                filAriane.getChildren().add(separateur);
+            }
+            Lieu lieu = segments.get(i);
+            if (lieu.estCliquable()) {
+                Hyperlink lien = new Hyperlink(lieu.libelle());
+                lien.getStyleClass().add("fil-ariane-segment");
+                lien.setOnAction(evenement -> lieu.ouvrir().run());
+                filAriane.getChildren().add(lien);
+            } else {
+                Label courant = new Label(lieu.libelle());
+                courant.getStyleClass().add("fil-ariane-courant");
+                filAriane.getChildren().add(courant);
+            }
+        }
     }
 
     /// Bâtit une carte cliquable par activité (triées par `ordre()`). Les cartes sont créées en code
