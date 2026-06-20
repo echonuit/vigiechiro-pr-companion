@@ -45,7 +45,7 @@ public class NavigationPassage implements OuvrirPassage {
             Parent vue = loader.load();
             PassageController controleur = loader.getController();
             controleur.ouvrirSur(idPassage, contexte);
-            navigateur.afficher(vue, "passage", "Détail du passage");
+            navigateur.empiler(vue, "passage", "Détail du passage", controleur);
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

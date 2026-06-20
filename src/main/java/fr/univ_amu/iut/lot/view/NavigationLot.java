@@ -39,7 +39,7 @@ public class NavigationLot implements OuvrirLot {
             Parent vue = loader.load();
             LotController controleur = loader.getController();
             controleur.ouvrirSur(idPassage);
-            navigateur.afficher(vue, "lot", "Préparer le dépôt");
+            navigateur.empiler(vue, "lot", "Préparer le dépôt", controleur);
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

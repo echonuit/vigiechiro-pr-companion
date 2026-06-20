@@ -44,7 +44,7 @@ public class NavigationQualification implements OuvrirVerification {
             Parent vue = loader.load();
             QualificationController controleur = loader.getController();
             controleur.ouvrirSur(idPassage);
-            navigateur.afficher(vue, "qualification", "Vérifier l'enregistrement");
+            navigateur.empiler(vue, "qualification", "Vérifier l'enregistrement", controleur);
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

@@ -44,7 +44,7 @@ public class NavigationSites {
     public void ouvrirAccueil() {
         FXMLLoader loader = charger("MesSites.fxml");
         Parent vue = lire(loader);
-        navigateur.afficher(vue, "sites", "Mes sites de suivi");
+        navigateur.ouvrirRacine(vue, "sites", "Mes sites", loader.getController());
     }
 
     /// Affiche l'écran de détail **M-Site-detail** du site donné (clic sur une carte).
@@ -54,7 +54,7 @@ public class NavigationSites {
         Parent vue = lire(loader);
         SiteDetailController controller = loader.getController();
         controller.afficher(site);
-        navigateur.afficher(vue, "site-detail", "Mes sites › Carré " + site.numeroCarre());
+        navigateur.empiler(vue, "site-detail", "Carré " + site.numeroCarre(), controller);
     }
 
     /// Ouvre la modale d'**ajout** d'un point d'écoute pour `site`.

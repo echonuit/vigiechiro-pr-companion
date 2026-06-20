@@ -35,7 +35,7 @@ public class NavigationImportation {
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
-            navigateur.afficher(vue, "import", "Importer une nuit");
+            navigateur.ouvrirRacine(vue, "import", "Importer une nuit", loader.getController());
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

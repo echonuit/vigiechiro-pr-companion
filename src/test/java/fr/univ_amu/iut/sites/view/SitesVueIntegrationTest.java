@@ -18,7 +18,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
@@ -151,14 +150,14 @@ class SitesVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Le lien « ‹ Mes sites » du détail ramène à l'accueil")
-    void fil_d_ariane_ramene_a_l_accueil(FxRobot robot) {
+    @DisplayName("Le ← Retour du chrome ramène du détail à la liste des sites")
+    void retour_du_detail_ramene_a_la_liste(FxRobot robot) {
         ouvrirDetail(robot, CARTE_ETANG);
-        Hyperlink retour = robot.lookup("‹ Mes sites").queryAs(Hyperlink.class);
+        Button retour = robot.lookup("#boutonRetour").queryAs(Button.class);
 
         robot.interact(retour::fire);
 
-        // #listeCartes n'existe que sur l'accueil : sa présence (avec ses 2 cartes) prouve le retour.
+        // #listeCartes est la liste M-Sites : sa présence (avec ses 2 cartes) prouve le retour à la liste.
         VBox listeCartes = robot.lookup("#listeCartes").queryAs(VBox.class);
         assertThat(listeCartes.getChildren()).hasSize(2);
     }
