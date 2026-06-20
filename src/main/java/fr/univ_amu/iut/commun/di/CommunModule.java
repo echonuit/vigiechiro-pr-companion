@@ -7,6 +7,8 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Path;
 
@@ -27,6 +29,9 @@ public class CommunModule extends AbstractModule {
         // instance. Pas de @Provides : pas de logique de construction (constructeurs @Inject).
         bind(NavigationViewModel.class).in(Singleton.class);
         bind(Navigateur.class).in(Singleton.class);
+        // Ouverture de liens externes (ex. coordonnées GPS -> OpenStreetMap). Singleton :
+        // `App` y branche le HostServices une fois au démarrage (cf. App.start).
+        bind(OuvreurDeLien.class).to(OuvreurDeLienSysteme.class).in(Singleton.class);
     }
 
     @Provides

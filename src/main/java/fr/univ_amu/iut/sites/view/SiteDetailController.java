@@ -2,11 +2,13 @@ package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
+import fr.univ_amu.iut.sites.viewmodel.LienCarte;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
@@ -14,6 +16,7 @@ import java.util.function.Function;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -46,6 +49,7 @@ public class SiteDetailController {
     private final SiteDetailViewModel viewModel;
     private final NavigationSites navigation;
     private final OuvrirPassage ouvrirPassage;
+    private final OuvreurDeLien ouvreurDeLien;
 
     @FXML
     private Label titre;
@@ -106,10 +110,14 @@ public class SiteDetailController {
 
     @Inject
     public SiteDetailController(
-            SiteDetailViewModel viewModel, NavigationSites navigation, OuvrirPassage ouvrirPassage) {
+            SiteDetailViewModel viewModel,
+            NavigationSites navigation,
+            OuvrirPassage ouvrirPassage,
+            OuvreurDeLien ouvreurDeLien) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
     }
 
     /// Charge le site à afficher (appelée par [NavigationSites] juste après le chargement FXML).
@@ -204,13 +212,29 @@ public class SiteDetailController {
         code.getStyleClass().add("carte-point-code");
         Label description = new Label(libelleDescription(point));
         description.getStyleClass().add("carte-point-desc");
-        Label gps = new Label(carte.gpsPresent() ? "✓ GPS" : "⚠ GPS manquant");
-        gps.getStyleClass().add(carte.gpsPresent() ? "gps-ok" : "gps-manquant");
+        Node gps = construireBadgeGps(carte);
         Label passages = new Label(carte.nombrePassages() + " passage(s) rattaché(s)");
         passages.getStyleClass().add("carte-point-desc");
         VBox boite = new VBox(code, description, gps, passages, actionsPoint(carte));
         boite.getStyleClass().add("carte-point");
         return boite;
+    }
+
+    /// Badge GPS de la carte de point : un [Hyperlink] cliquable qui ouvre le point sur
+    /// OpenStreetMap quand les coordonnées sont présentes, sinon un simple libellé « manquant ».
+    private Node construireBadgeGps(CartePoint carte) {
+        PointDEcoute point = carte.point();
+        if (!carte.gpsPresent()) {
+            Label manquant = new Label("⚠ GPS manquant");
+            manquant.getStyleClass().add("gps-manquant");
+            return manquant;
+        }
+        String url = LienCarte.osm(point.latitude(), point.longitude());
+        Hyperlink lien = new Hyperlink("✓ GPS — voir sur OpenStreetMap");
+        lien.getStyleClass().add("gps-ok");
+        lien.setOnAction(evenement -> ouvreurDeLien.ouvrir(url));
+        lien.setTooltip(new Tooltip("Ouvrir " + point.latitude() + ", " + point.longitude() + " sur OpenStreetMap"));
+        return lien;
     }
 
     private HBox actionsPoint(CartePoint carte) {
