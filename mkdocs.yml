@@ -9,6 +9,11 @@ copyright: IUT d'Aix-Marseille - Département Informatique
 docs_dir: docs
 site_dir: site
 
+# Hooks Python (chemins relatifs à ce fichier). Le hook expose les captures
+# d'écran régénérées (.github/assets/apercu-*.png) sous assets/captures/.
+hooks:
+  - scripts/mkdocs_hooks.py
+
 theme:
   name: material
   language: fr
