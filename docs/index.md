@@ -6,13 +6,13 @@ de terrain jusqu'au **dépôt** des données sur la plateforme nationale Vigie-C
 
 Des enregistreurs autonomes posés sur le terrain captent les ultrasons d'une nuit entière.
 VigieChiro vous aide ensuite à importer ces enregistrements, à les préparer, à en vérifier la
-qualité, à relire les espèces identifiées, puis à constituer le lot à déposer.
+qualité, à constituer le lot à déposer, puis à relire les espèces identifiées.
 
 ## Le parcours en bref
 
 ```
-Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Valider  →  Déposer
- (WAV)       (copie)      (audible)       (qualité)    (espèces)    (lot)
+Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Déposer  →  Valider
+ (WAV)       (copie)      (audible)       (qualité)    (lot)        (espèces)
 ```
 
 Chaque étape correspond à un ou plusieurs écrans de l'application. Le guide ci-dessous suit ce
