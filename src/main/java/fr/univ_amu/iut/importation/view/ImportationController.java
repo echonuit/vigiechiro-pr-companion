@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -32,7 +33,7 @@ import javafx.util.converter.NumberStringConverter;
 /// rattachement / action) aux propriétés de l'[ImportationViewModel]. Aucun accès base de données
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`) : « Parcourir » délègue à
 /// [ImportationViewModel#inspecter()] ; « Importer » lance le travail lourd hors du fil JavaFX.
-public class ImportationController {
+public class ImportationController implements GardeQuitter {
 
     private final ImportationViewModel viewModel;
 
@@ -107,6 +108,20 @@ public class ImportationController {
     @Inject
     public ImportationController(ImportationViewModel viewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+    }
+
+    /// Garde de navigation : un dossier source a été choisi pour un import **préparé mais pas lancé**
+    /// (état PRET). Quitter perdrait cette préparation → confirmation. L'import EN COURS, lui, est déjà
+    /// bloqué par le verrou de navigation (#54) ; une fois TERMINE/ECHEC, il n'y a plus rien à perdre.
+    @Override
+    public boolean aSaisieNonEnregistree() {
+        return viewModel.etatProperty().get() == EtatImport.PRET
+                && viewModel.dossierSourceProperty().get() != null;
+    }
+
+    @Override
+    public String messageConfirmationQuitter() {
+        return "Un import préparé n'a pas été lancé. Quitter cet écran et abandonner cette préparation ?";
     }
 
     // --solution--

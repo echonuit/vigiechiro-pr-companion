@@ -65,6 +65,14 @@ public class QualificationViewModel {
         this.service = Objects.requireNonNull(service, "service");
         peutEnregistrer = Bindings.createBooleanBinding(
                 () -> verdictChoisi.get() != null && verdictChoisi.get() != Verdict.A_VERIFIER, verdictChoisi);
+        // --solution--
+        // Ré-armer la garde de saisie : verdict et commentaire restent éditables après un
+        // enregistrement. Toute modification recrée donc un brouillon non persisté (le verdict/
+        // commentaire à l'écran ne correspond plus à l'état enregistré) ; sans ce ré-armement, quitter
+        // l'écran perdrait silencieusement la modification (cf. garde de navigation #140).
+        verdictChoisi.addListener((obs, ancien, nouveau) -> redevenirBrouillonSiModifie());
+        commentaire.addListener((obs, ancien, nouveau) -> redevenirBrouillonSiModifie());
+        // --end-solution--
     }
 
     /// Ouvre la vérification du passage `idPassage` : pré-check (3 feux) et amorçage du bandeau
@@ -106,6 +114,16 @@ public class QualificationViewModel {
         commentaire.set("");
         etatVerdict.set(EtatVerdict.BROUILLON);
         avertissementAJeter.set("");
+    }
+
+    /// Ré-arme l'état « brouillon » dès qu'une modification survient **après** un enregistrement : le
+    /// verdict ou le commentaire affiché ne correspond plus au verdict persisté, donc la garde de
+    /// navigation doit de nouveau protéger contre une sortie sans enregistrer. Ne fait rien tant qu'on
+    /// est déjà en brouillon (saisie initiale).
+    private void redevenirBrouillonSiModifie() {
+        if (etatVerdict.get() == EtatVerdict.ENREGISTRE) {
+            etatVerdict.set(EtatVerdict.BROUILLON);
+        }
     }
     // --end-solution--
 
