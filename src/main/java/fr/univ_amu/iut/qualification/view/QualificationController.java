@@ -5,15 +5,20 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
+import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
-import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.viewmodel.EtatVerdict;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -24,7 +29,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.RadioButton;
@@ -46,12 +50,15 @@ import javafx.scene.layout.VBox;
 /// branche la vue audio fournie ([AudioView]), ouvre la modale de personnalisation et gère les
 /// raccourcis clavier (O/D/J, Entrée, Espace). Aucun accès base de données ni logique métier ici
 /// (règle ArchUnit `view_sans_jdbc`).
-public class QualificationController implements GardeQuitter {
+public class QualificationController implements GardeQuitter, EmplacementNavigation {
 
     private final QualificationViewModel verdictVm;
     private final SelectionEcouteViewModel selectionVm;
     private final OuvrirPassage ouvrirPassage;
-    private Long idPassage;
+    private final OuvrirSite ouvrirSite;
+
+    /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
+    private ContextePassage contexte;
 
     // TODO (M-Qualification) : déclarez les @FXML correspondant aux fx:id de Qualification.fxml
     //   (bandeau, 3 feux, liste de la sélection, AudioView, boutons de verdict, commentaire...),
@@ -60,12 +67,6 @@ public class QualificationController implements GardeQuitter {
     // --solution--
     @FXML
     private BorderPane racine;
-
-    @FXML
-    private Hyperlink lienRetourPassage;
-
-    @FXML
-    private Label lblFilAriane;
 
     @FXML
     private Label lblTitreContexte;
@@ -155,10 +156,14 @@ public class QualificationController implements GardeQuitter {
 
     @Inject
     public QualificationController(
-            QualificationViewModel verdictVm, SelectionEcouteViewModel selectionVm, OuvrirPassage ouvrirPassage) {
+            QualificationViewModel verdictVm,
+            SelectionEcouteViewModel selectionVm,
+            OuvrirPassage ouvrirPassage,
+            OuvrirSite ouvrirSite) {
         this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
         this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
     }
 
     /// Garde de navigation : un verdict a été **choisi mais pas encore enregistré** (brouillon). Quitter
@@ -177,10 +182,6 @@ public class QualificationController implements GardeQuitter {
     // --solution--
     @FXML
     private void initialize() {
-        lblFilAriane.textProperty().bind(selectionVm.filArianeProperty());
-        // Retour au passage désactivé tant qu'aucun contexte n'est chargé (échec/écran vierge) : évite
-        // de passer un ContexteSite null à OuvrirPassage.
-        lienRetourPassage.disableProperty().bind(selectionVm.filArianeProperty().isEmpty());
         // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
         lblTitreContexte.textProperty().bind(selectionVm.titreContexteProperty());
         lblPlageHoraire.textProperty().bind(selectionVm.plageHoraireProperty());
@@ -286,24 +287,24 @@ public class QualificationController implements GardeQuitter {
     }
     // --end-solution--
 
-    /// Ouvre l'écran sur le passage `idPassage` : les deux VM se synchronisent sur le même passage.
-    /// Appelée par [NavigationQualification] après le chargement du FXML.
-    public void ouvrirSur(Long idPassage) {
-        this.idPassage = idPassage;
-        verdictVm.ouvrirSur(idPassage);
-        selectionVm.ouvrirSur(idPassage);
+    /// Ouvre l'écran sur le passage `passage` : les deux VM se synchronisent sur le même passage.
+    /// Appelée par [NavigationQualification] après le chargement du FXML ; mémorise le contexte pour le
+    /// fil d'Ariane.
+    public void ouvrirSur(ContextePassage passage) {
+        this.contexte = passage;
+        verdictVm.ouvrirSur(passage.idPassage());
+        selectionVm.ouvrirSur(passage.idPassage());
+    }
+
+    /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Vérifier
+    /// l'enregistrement` (rendu par le chrome). Le segment passage rouvre M-Passage ; le retour est
+    /// désormais porté par le chrome (plus de fil ni de retour internes à l'écran).
+    @Override
+    public List<Lieu> emplacement() {
+        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Vérifier l'enregistrement");
     }
 
     // --solution--
-    /// « ‹ Retour au passage » du fil d'Ariane : rouvre M-Passage sur ce passage via le contrat socle
-    /// [OuvrirPassage], avec le contexte site résolu par le ViewModel (sans dépendre de `passage`).
-    @FXML
-    private void retourPassage() {
-        ContexteSite contexte = selectionVm.contexteSite();
-        if (contexte != null) {
-            ouvrirPassage.ouvrir(idPassage, contexte);
-        }
-    }
 
     @FXML
     private void choisirOk() {

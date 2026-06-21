@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+
 /// Contrat socle d'**ouverture de la préparation et du dépôt du lot** (M-Lot) d'un passage.
 ///
 /// Même esprit que [OuvrirDiagnostic] / [OuvrirValidation] : le socle inverse la dépendance. La
@@ -9,6 +11,7 @@ package fr.univ_amu.iut.commun.view;
 /// cycle (le graphe de slices reste acyclique).
 public interface OuvrirLot {
 
-    /// Ouvre l'écran de préparation et de dépôt du lot du passage `idPassage`.
-    void ouvrir(Long idPassage);
+    /// Ouvre l'écran de préparation et de dépôt du lot du passage décrit par `passage` (identité +
+    /// contexte site, pour le fil d'Ariane).
+    void ouvrir(ContextePassage passage);
 }

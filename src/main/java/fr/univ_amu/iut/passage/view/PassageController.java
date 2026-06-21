@@ -5,16 +5,19 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -199,25 +202,23 @@ public class PassageController implements EmplacementNavigation {
     /// Libellé identifiant ce passage pour le fil d'Ariane (« Détails du passage N° X »), valide une
     /// fois [#ouvrirSur] appelée. Utilisé par [NavigationPassage] au moment d'empiler l'écran.
     public String libelleFil() {
-        int numero = viewModel.getNumeroPassage();
-        return numero > 0 ? "Détails du passage N° " + numero : "Détails du passage";
+        return EmplacementPassage.libellePassage(viewModel.getNumeroPassage());
     }
 
     /// Emplacement hiérarchique pour le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X`
     /// (le chrome préfixe « Accueil »). Le carré vient du [ContexteSite], donc le passage affiche **son
-    /// site quel que soit le chemin** d'arrivée (depuis M-Sites comme depuis M-Multisite). Les deux
-    /// ancêtres sont cliquables via le contrat socle [OuvrirSite].
+    /// site quel que soit le chemin** d'arrivée (depuis M-Sites comme depuis M-Multisite). Les ancêtres
+    /// site sont cliquables via le contrat socle [OuvrirSite] (fabrique partagée [EmplacementPassage]) ;
+    /// le passage lui-même est le segment courant (non cliquable).
     @Override
     public List<Lieu> emplacement() {
-        Lieu passage = Lieu.courant(libelleFil());
-        if (contexte == null || contexte.numeroCarre() == null) {
-            return List.of(passage);
+        List<Lieu> ancetres = EmplacementPassage.ancetresSite(contexte, ouvrirSite);
+        if (ancetres.isEmpty()) {
+            return List.of(Lieu.courant(libelleFil()));
         }
-        String carre = contexte.numeroCarre();
-        return List.of(
-                Lieu.vers("Mes sites", ouvrirSite::ouvrirListe),
-                Lieu.vers("Carré " + carre, () -> ouvrirSite.ouvrirDetail(carre)),
-                passage);
+        List<Lieu> fil = new ArrayList<>(ancetres);
+        fil.add(Lieu.courant(libelleFil()));
+        return List.copyOf(fil);
     }
 
     // --solution--
@@ -226,7 +227,7 @@ public class PassageController implements EmplacementNavigation {
     @FXML
     private void verifier() {
         // Le bouton n'est actif qu'après ouvrirSur (verificationDisponible) : idPassage est défini.
-        ouvrirVerification.ouvrir(idPassage);
+        ouvrirVerification.ouvrir(contextePassage());
     }
 
     /// « Diagnostic matériel » : ouvre M-Diagnostic sur ce passage via le contrat socle
@@ -234,7 +235,7 @@ public class PassageController implements EmplacementNavigation {
     /// relevé climatique et le journal existent dès l'import de la nuit.
     @FXML
     private void diagnostiquer() {
-        ouvrirDiagnostic.ouvrir(idPassage);
+        ouvrirDiagnostic.ouvrir(contextePassage());
     }
 
     /// « Validation Tadarida » : ouvre M-Vision-Tadarida sur ce passage via le contrat socle
@@ -242,7 +243,7 @@ public class PassageController implements EmplacementNavigation {
     /// le passage déposé (validationVerrouillee) : idPassage est alors défini.
     @FXML
     private void validerTadarida() {
-        ouvrirValidation.ouvrir(idPassage);
+        ouvrirValidation.ouvrir(contextePassage());
     }
 
     /// « Préparer le dépôt » : ouvre M-Lot sur ce passage via le contrat socle [OuvrirLot]
@@ -250,7 +251,14 @@ public class PassageController implements EmplacementNavigation {
     /// ou Prêt à déposer) : idPassage est alors défini.
     @FXML
     private void preparerDepot() {
-        ouvrirLot.ouvrir(idPassage);
+        ouvrirLot.ouvrir(contextePassage());
+    }
+
+    /// Contexte de navigation transmis aux écrans enfants (identité + n° + site), pour qu'ils
+    /// reconstruisent le même fil d'Ariane `Mes sites › Carré N › Détails du passage N° X › <écran>`,
+    /// quelle que soit la route d'arrivée (les boutons ne sont actifs qu'après [#ouvrirSur]).
+    private ContextePassage contextePassage() {
+        return new ContextePassage(idPassage, viewModel.getNumeroPassage(), contexte);
     }
 
     /// « Supprimer » : après confirmation, supprime le passage (et sa nuit, par cascade) puis revient

@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+
 /// Contrat de navigation inter-feature : « ouvrir l'écran de diagnostic matériel (M-Diagnostic)
 /// d'un passage ».
 ///
@@ -10,6 +12,7 @@ package fr.univ_amu.iut.commun.view;
 /// [OuvrirVerification] et [OuvrirPassage].
 public interface OuvrirDiagnostic {
 
-    /// Ouvre l'écran de diagnostic matériel du passage `idPassage`.
-    void ouvrir(Long idPassage);
+    /// Ouvre l'écran de diagnostic matériel du passage décrit par `passage` (identité + contexte site,
+    /// pour le fil d'Ariane).
+    void ouvrir(ContextePassage passage);
 }

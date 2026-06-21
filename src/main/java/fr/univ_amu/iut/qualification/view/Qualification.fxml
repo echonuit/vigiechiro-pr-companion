@@ -37,12 +37,7 @@
 
   <top>
     <VBox spacing="12.0" styleClass="entete">
-      <!-- Fil d'Ariane (#32) : contexte de navigation + retour cliquable vers M-Passage. -->
-      <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Hyperlink fx:id="lienRetourPassage" text="‹ Retour au passage" styleClass="lien-retour"
-                   onAction="#retourPassage"/>
-        <Label fx:id="lblFilAriane" styleClass="fil-ariane" wrapText="true"/>
-      </HBox>
+      <!-- Fil d'Ariane et retour : portés par le chrome (commun), via EmplacementNavigation. -->
       <VBox spacing="2.0">
         <Label text="🎧 Vérifier l'enregistrement par échantillonnage" styleClass="titre-page"/>
         <Label styleClass="sous-titre-page" wrapText="true"

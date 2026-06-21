@@ -1,7 +1,14 @@
 package fr.univ_amu.iut.lot.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -18,9 +25,14 @@ import javafx.scene.layout.VBox;
 /// « Marquer déposé » ne sont actifs que dans l'état workflow adéquat ; la zone d'alertes
 /// n'apparaît qu'en présence d'alertes bloquantes. Aucun accès base de données ni logique métier ici
 /// (règle ArchUnit `view_sans_jdbc`).
-public class LotController {
+public class LotController implements EmplacementNavigation {
 
     private final LotViewModel viewModel;
+    private final OuvrirSite ouvrirSite;
+    private final OuvrirPassage ouvrirPassage;
+
+    /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
+    private ContextePassage contexte;
 
     // TODO (M-Lot) : déclarez les champs @FXML correspondant aux fx:id de Lot.fxml (Label, Button,
     //   ListView, VBox...), liez-les au LotViewModel dans « @FXML private void initialize() », et
@@ -53,8 +65,10 @@ public class LotController {
     // --end-solution--
 
     @Inject
-    public LotController(LotViewModel viewModel) {
+    public LotController(LotViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     // --solution--
@@ -81,9 +95,18 @@ public class LotController {
 
     // --end-solution--
 
-    /// Ouvre l'écran sur le passage `idPassage`. Appelée par [NavigationLot] après le chargement FXML.
-    public void ouvrirSur(Long idPassage) {
-        viewModel.ouvrirSur(idPassage);
+    /// Ouvre l'écran sur le passage `passage`. Appelée par [NavigationLot] après le chargement FXML ;
+    /// mémorise le contexte pour le fil d'Ariane.
+    public void ouvrirSur(ContextePassage passage) {
+        this.contexte = passage;
+        viewModel.ouvrirSur(passage.idPassage());
+    }
+
+    /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Préparer le
+    /// dépôt` (rendu par le chrome). Le segment passage rouvre M-Passage.
+    @Override
+    public List<Lieu> emplacement() {
+        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Préparer le dépôt");
     }
 
     // --solution--

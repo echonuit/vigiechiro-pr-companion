@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+
 /// Contrat de navigation inter-feature : « ouvrir l'écran de vérification (M-Qualification) pour un
 /// passage donné ».
 ///
@@ -12,6 +14,7 @@ package fr.univ_amu.iut.commun.view;
 /// Même esprit que [ActiviteAccueil] : inversion de dépendance par le socle.
 public interface OuvrirVerification {
 
-    /// Ouvre l'écran de vérification par échantillonnage du passage `idPassage`.
-    void ouvrir(Long idPassage);
+    /// Ouvre l'écran de vérification par échantillonnage du passage décrit par `passage` (identité +
+    /// contexte site, pour le fil d'Ariane).
+    void ouvrir(ContextePassage passage);
 }

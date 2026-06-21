@@ -2,6 +2,12 @@ package fr.univ_amu.iut.validation.view;
 
 import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
+import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -9,6 +15,7 @@ import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.viewmodel.FormatObservation;
 import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
 import java.io.File;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
@@ -28,9 +35,14 @@ import javafx.util.StringConverter;
 /// [FormatObservation#libelleStatut] (même source que le détail). La revue (valider / corriger)
 /// délègue au VM ; les boutons s'activent selon la sélection (et le taxon choisi pour corriger).
 /// Aucun accès base de données ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
-public class ValidationController {
+public class ValidationController implements EmplacementNavigation {
 
     private final ValidationViewModel viewModel;
+    private final OuvrirSite ouvrirSite;
+    private final OuvrirPassage ouvrirPassage;
+
+    /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
+    private ContextePassage contexte;
 
     // TODO (M-Vision-Tadarida) : déclarez les @FXML correspondant aux fx:id de Validation.fxml
     //   (table des observations, filtre, détail, AudioView, boutons valider/corriger/importer/
@@ -85,8 +97,10 @@ public class ValidationController {
     // --end-solution--
 
     @Inject
-    public ValidationController(ValidationViewModel viewModel) {
+    public ValidationController(ValidationViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     // --solution--
@@ -185,10 +199,18 @@ public class ValidationController {
     }
     // --end-solution--
 
-    /// Ouvre la validation du passage `idPassage`. Appelée par [NavigationValidation] après le
-    /// chargement du FXML.
-    public void ouvrirSur(Long idPassage) {
-        viewModel.ouvrirSur(idPassage);
+    /// Ouvre la validation du passage `passage`. Appelée par [NavigationValidation] après le chargement
+    /// du FXML ; mémorise le contexte pour le fil d'Ariane.
+    public void ouvrirSur(ContextePassage passage) {
+        this.contexte = passage;
+        viewModel.ouvrirSur(passage.idPassage());
+    }
+
+    /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Validation
+    /// Tadarida` (rendu par le chrome). Le segment passage rouvre M-Passage.
+    @Override
+    public List<Lieu> emplacement() {
+        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Validation Tadarida");
     }
 
     // --solution--

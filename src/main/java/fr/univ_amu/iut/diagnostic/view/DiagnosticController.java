@@ -1,6 +1,12 @@
 package fr.univ_amu.iut.diagnostic.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
 import java.time.LocalDateTime;
@@ -21,7 +27,7 @@ import javafx.scene.control.ListView;
 /// (reconstruit depuis la série du VM), listes d'anomalies et d'évènements (R19), signalement
 /// d'absence de relevé (R20) et disponibilité GPS. Aucun accès base de données ni logique métier
 /// ici (règle ArchUnit `view_sans_jdbc`).
-public class DiagnosticController {
+public class DiagnosticController implements EmplacementNavigation {
 
     // TODO (M-Diagnostic) : déclarez les champs @FXML correspondant aux fx:id de Diagnostic.fxml
     //   (Label, LineChart, ListView...), puis liez-les au DiagnosticViewModel dans une méthode
@@ -32,6 +38,11 @@ public class DiagnosticController {
     // --end-solution--
 
     private final DiagnosticViewModel viewModel;
+    private final OuvrirSite ouvrirSite;
+    private final OuvrirPassage ouvrirPassage;
+
+    /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
+    private ContextePassage contexte;
 
     // --solution--
     @FXML
@@ -61,8 +72,10 @@ public class DiagnosticController {
     // --end-solution--
 
     @Inject
-    public DiagnosticController(DiagnosticViewModel viewModel) {
+    public DiagnosticController(DiagnosticViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     // --solution--
@@ -98,10 +111,18 @@ public class DiagnosticController {
 
     // --end-solution--
 
-    /// Ouvre le diagnostic du passage `idPassage`. Appelée par [NavigationDiagnostic] après le
-    /// chargement du FXML.
-    public void ouvrirSur(Long idPassage) {
-        viewModel.ouvrirSur(idPassage);
+    /// Ouvre le diagnostic du passage `passage`. Appelée par [NavigationDiagnostic] après le chargement
+    /// du FXML ; mémorise le contexte pour le fil d'Ariane.
+    public void ouvrirSur(ContextePassage passage) {
+        this.contexte = passage;
+        viewModel.ouvrirSur(passage.idPassage());
+    }
+
+    /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Diagnostic
+    /// matériel` (rendu par le chrome). Le segment passage rouvre M-Passage.
+    @Override
+    public List<Lieu> emplacement() {
+        return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Diagnostic matériel");
     }
 
     // --solution--
