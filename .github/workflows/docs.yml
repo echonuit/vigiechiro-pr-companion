@@ -6,6 +6,8 @@
 #   ENABLE_PAGES != 'true'. À activer quand le dépôt est public et Pages configuré
 #   (Settings -> Pages -> Source: GitHub Actions, puis variable ENABLE_PAGES=true).
 #   Tant que c'est dormant, aucune étape ne rougit la CI.
+# - republication : un déclencheur workflow_run reconstruit et publie le site après
+#   chaque régénération des captures, pour que les images en ligne suivent le code.
 #
 # Note migration : le push se déclenche sur `solution` (branche de travail actuelle)
 # et `main` ; à la consolidation des branches, `main` deviendra la seule branche.
@@ -14,15 +16,33 @@ name: docs
 on:
   push:
     branches: [solution, main]
+    # Tout ce qui influe sur le site : pages, config, hook d'exposition des
+    # captures, captures elles-mêmes, manifeste et garde-fou.
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "scripts/mkdocs_hooks.py"
+      - ".github/assets/apercu-*.png"
+      - ".github/assets/captures.manifest"
+      - ".github/assets/check-doc-images.sh"
       - ".github/workflows/docs.yml"
   pull_request:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "scripts/mkdocs_hooks.py"
+      - ".github/assets/apercu-*.png"
+      - ".github/assets/captures.manifest"
+      - ".github/assets/check-doc-images.sh"
       - ".github/workflows/docs.yml"
+  # Republie la doc APRÈS régénération des captures par « Aperçus des vues » :
+  # ce workflow commit les PNG en `[skip ci]` (anti-récursion), ce qui bloquerait
+  # un déclencheur push mais PAS workflow_run (immunisé au [skip ci]). Sans cela,
+  # une capture régénérée serait mergée sans reconstruire le site -> images
+  # publiées périmées. (Le nom doit suivre `name:` de capture-vues.yml.)
+  workflow_run:
+    workflows: ["Aperçus des vues (main)"]
+    types: [completed]
   workflow_dispatch: {}
 
 # Permissions minimales par défaut (le job build ne fait que lire le code) ;
@@ -36,6 +56,9 @@ concurrency:
 
 jobs:
   build:
+    # Déclenché par « Aperçus des vues » : ne reconstruire que si la régénération
+    # des captures a réussi (sinon rien de neuf à publier).
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
