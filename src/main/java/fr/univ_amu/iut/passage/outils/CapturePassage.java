@@ -139,13 +139,26 @@ public final class CapturePassage {
                         idp -> {},
                         idp -> {},
                         injecteur.getInstance(NavigationPassage.class),
-                        injecteur.getInstance(fr.univ_amu.iut.commun.view.OuvrirSite.class))
+                        ouvrirSiteNeutre())
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
         controleur.ouvrirSur(idPassage, new ContexteSite(NUMERO_CARRE, CODE_POINT, NOM_SITE));
-        ApercuFx.enregistrerPng(new Scene(vue, 1100, 540), fichier);
+        ApercuFx.enregistrerPng(new Scene(vue, 1100, 620), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Contrat [fr.univ_amu.iut.commun.view.OuvrirSite] neutre (no-op) pour la capture : la navigation
+    /// vers le site (segment « Carré N » du fil d'Ariane) est portée par le chrome, hors de cet aperçu
+    /// hors-écran. Évite aussi de faire dépendre l'outil de la feature `sites` (cycle ArchUnit).
+    private static fr.univ_amu.iut.commun.view.OuvrirSite ouvrirSiteNeutre() {
+        return new fr.univ_amu.iut.commun.view.OuvrirSite() {
+            @Override
+            public void ouvrirListe() {}
+
+            @Override
+            public void ouvrirDetail(String numeroCarre) {}
+        };
     }
 
     /// Charge `RattachementModale.fxml` (controller injecté par Guice), la démarre sur le passage et
