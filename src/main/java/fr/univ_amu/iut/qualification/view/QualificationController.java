@@ -5,6 +5,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
@@ -45,7 +46,7 @@ import javafx.scene.layout.VBox;
 /// branche la vue audio fournie ([AudioView]), ouvre la modale de personnalisation et gère les
 /// raccourcis clavier (O/D/J, Entrée, Espace). Aucun accès base de données ni logique métier ici
 /// (règle ArchUnit `view_sans_jdbc`).
-public class QualificationController {
+public class QualificationController implements GardeQuitter {
 
     private final QualificationViewModel verdictVm;
     private final SelectionEcouteViewModel selectionVm;
@@ -158,6 +159,19 @@ public class QualificationController {
         this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
         this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+    }
+
+    /// Garde de navigation : un verdict a été **choisi mais pas encore enregistré** (brouillon). Quitter
+    /// l'écran perdrait ce verdict ; le socle demande confirmation avant de naviguer ailleurs.
+    @Override
+    public boolean aSaisieNonEnregistree() {
+        return verdictVm.etatVerdictProperty().get() == EtatVerdict.BROUILLON
+                && verdictVm.verdictChoisiProperty().get() != null;
+    }
+
+    @Override
+    public String messageConfirmationQuitter() {
+        return "Un verdict choisi n'a pas été enregistré. Quitter cet écran sans l'enregistrer ?";
     }
 
     // --solution--
