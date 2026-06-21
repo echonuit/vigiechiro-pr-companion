@@ -171,8 +171,9 @@
   -fx-cursor: default;
 }
 
-/* Action mise en avant (étape suivante recommandée) : liseré bleu plus épais. */
-.carte-action-primaire {
+/* Action mise en avant (prochaine étape recommandée) : liseré bleu plus épais. Pseudo-classe
+   pilotée par le controller selon le statut → la mise en avant se déplace au fil du workflow. */
+.carte-action:recommandee {
   -fx-border-color: #4a90d9;
   -fx-border-width: 2;
 }
@@ -186,7 +187,7 @@
   -fx-icon-color: #34495e;
 }
 
-.carte-action-primaire .carte-action-icone {
+.carte-action:recommandee .carte-action-icone {
   -fx-icon-color: #4a90d9;
 }
 

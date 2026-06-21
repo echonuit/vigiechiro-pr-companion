@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.List;
@@ -19,6 +20,7 @@ import java.util.Locale;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -41,6 +43,9 @@ import javafx.scene.layout.HBox;
 /// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
 /// logique métier ici (règle ArchUnit `view_sans_jdbc`).
 public class PassageController implements EmplacementNavigation {
+
+    /// Pseudo-classe CSS portant le liseré « prochaine action recommandée » sur la carte concernée.
+    private static final PseudoClass RECOMMANDEE = PseudoClass.getPseudoClass("recommandee");
 
     private final PassageViewModel viewModel;
     private final OuvrirVerification ouvrirVerification;
@@ -166,6 +171,20 @@ public class PassageController implements EmplacementNavigation {
                                 ? ""
                                 : "🔒 La vérification sera possible une fois la nuit transformée.",
                         viewModel.verificationDisponibleProperty()));
+
+        // Mise en avant de la « prochaine action » : le liseré recommandé se déplace selon le statut
+        // (Vérifier → Préparer le dépôt → Validation Tadarida), au lieu de rester figé sur Vérifier.
+        viewModel.actionRecommandeeProperty().addListener((obs, ancienne, nouvelle) -> majActionRecommandee(nouvelle));
+        majActionRecommandee(viewModel.actionRecommandeeProperty().get());
+    }
+
+    /// Applique le liseré « recommandée » à la seule carte correspondant à la prochaine étape du
+    /// workflow (les autres le perdent). Diagnostic n'est jamais « recommandé » : c'est une action
+    /// transverse, disponible mais hors progression linéaire.
+    private void majActionRecommandee(ActionRecommandee action) {
+        boutonVerifier.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.VERIFIER);
+        boutonDepot.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.DEPOSER);
+        boutonValidation.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.VALIDER);
     }
     // --end-solution--
 

@@ -49,6 +49,8 @@ public class PassageViewModel {
     private final ReadOnlyBooleanWrapper validationVerrouillee =
             new ReadOnlyBooleanWrapper(this, "validationVerrouillee", true);
     private final ReadOnlyBooleanWrapper depotDisponible = new ReadOnlyBooleanWrapper(this, "depotDisponible", false);
+    private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
+            new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
     /// Identifiant du passage affiché, mémorisé pour les actions (ex. suppression).
@@ -116,6 +118,18 @@ public class PassageViewModel {
         validationVerrouillee.set(detail.statut() != StatutWorkflow.DEPOSE);
         depotDisponible.set(
                 detail.statut() == StatutWorkflow.VERIFIE || detail.statut() == StatutWorkflow.PRET_A_DEPOSER);
+        actionRecommandee.set(prochaineAction(detail.statut()));
+    }
+
+    /// Déduit la prochaine action recommandée du statut (progression linéaire du workflow) : la carte
+    /// correspondante est mise en avant dans M-Passage.
+    private static ActionRecommandee prochaineAction(StatutWorkflow statut) {
+        return switch (statut) {
+            case IMPORTE -> ActionRecommandee.AUCUNE;
+            case TRANSFORME -> ActionRecommandee.VERIFIER;
+            case VERIFIE, PRET_A_DEPOSER -> ActionRecommandee.DEPOSER;
+            case DEPOSE -> ActionRecommandee.VALIDER;
+        };
     }
 
     private void reinitialiser() {
@@ -133,6 +147,7 @@ public class PassageViewModel {
         verificationDisponible.set(false);
         validationVerrouillee.set(true);
         depotDisponible.set(false);
+        actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
 
     private static List<EtapeWorkflow> construireEtapes(StatutWorkflow courant) {
@@ -220,6 +235,12 @@ public class PassageViewModel {
     /// `true` quand la préparation/dépôt est pertinente (passage Vérifié ou Prêt à déposer).
     public ReadOnlyBooleanProperty depotDisponibleProperty() {
         return depotDisponible.getReadOnlyProperty();
+    }
+
+    /// Prochaine action recommandée du workflow (carte mise en avant), dérivée du statut. Se déplace
+    /// au fil de l'avancement : Vérifier → Préparer le dépôt → Validation Tadarida.
+    public ReadOnlyObjectProperty<ActionRecommandee> actionRecommandeeProperty() {
+        return actionRecommandee.getReadOnlyProperty();
     }
 
     /// Message d'erreur (passage introuvable), vide en fonctionnement nominal.

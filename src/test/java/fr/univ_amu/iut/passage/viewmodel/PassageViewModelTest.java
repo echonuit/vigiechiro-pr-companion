@@ -135,6 +135,31 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName(
+            "L'action recommandée suit le statut (Importé→aucune, Transformé→vérifier, Vérifié/Prêt→déposer, Déposé→valider)")
+    void action_recommandee_suit_le_statut() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.IMPORTE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.actionRecommandeeProperty().get()).isEqualTo(ActionRecommandee.AUCUNE);
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.TRANSFORME));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.actionRecommandeeProperty().get()).isEqualTo(ActionRecommandee.VERIFIER);
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.actionRecommandeeProperty().get()).isEqualTo(ActionRecommandee.DEPOSER);
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.PRET_A_DEPOSER));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.actionRecommandeeProperty().get()).isEqualTo(ActionRecommandee.DEPOSER);
+
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.actionRecommandeeProperty().get()).isEqualTo(ActionRecommandee.VALIDER);
+    }
+
+    @Test
     @DisplayName("La validation Tadarida est verrouillée tant que le passage n'est pas déposé")
     void validation_verrouillee_avant_depot() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));

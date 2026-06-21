@@ -94,7 +94,7 @@
       <!-- Actions : avancer dans le workflow (le retour et le fil d'Ariane sont portés par le chrome) -->
       <Label text="Actions" styleClass="section-sous"/>
       <HBox spacing="16.0" fillHeight="true" styleClass="cartes-actions">
-        <Button fx:id="boutonVerifier" styleClass="carte-action, carte-action-primaire"
+        <Button fx:id="boutonVerifier" styleClass="carte-action"
                 onAction="#verifier" contentDisplay="GRAPHIC_ONLY"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>

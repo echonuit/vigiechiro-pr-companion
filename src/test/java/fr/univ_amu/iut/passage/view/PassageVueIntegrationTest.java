@@ -23,6 +23,7 @@ import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.concurrent.atomic.AtomicReference;
+import javafx.css.PseudoClass;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -179,6 +180,9 @@ class PassageVueIntegrationTest {
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isTrue();
         assertThat(bouton(vue, "#boutonDiagnostic").isDisabled()).isFalse();
         assertThat(((Label) vue.lookup("#lblIndiceAction")).getText()).contains("transformée");
+        // Nuit pas encore transformée → aucune carte mise en avant.
+        assertThat(estRecommandee(bouton(vue, "#boutonVerifier"))).isFalse();
+        assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();
     }
 
     @Test
@@ -189,9 +193,26 @@ class PassageVueIntegrationTest {
         assertThat(bouton(vue, "#boutonDepot").isDisabled()).isTrue();
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isFalse();
+        // Déposé → la mise en avant est passée à la Validation Tadarida.
+        assertThat(estRecommandee(bouton(vue, "#boutonValidation"))).isTrue();
+        assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();
 
         robot.interact(((Button) vue.lookup("#boutonValidation"))::fire);
         assertThat(validationOuverte.get()).isEqualTo(ID_PASSAGE);
+    }
+
+    @Test
+    @DisplayName("Carte recommandée : la mise en avant suit le statut (Transformé→Vérifier, Vérifié→Dépôt)")
+    void carte_recommandee_suit_le_statut(FxRobot robot) {
+        // Fixture affichée = VÉRIFIÉ → la prochaine étape recommandée est « Préparer le dépôt ».
+        assertThat(estRecommandee(robot.lookup("#boutonDepot").queryButton())).isTrue();
+        assertThat(estRecommandee(robot.lookup("#boutonVerifier").queryButton()))
+                .isFalse();
+
+        // TRANSFORMÉ → la mise en avant est sur « Vérifier l'enregistrement ».
+        Parent transforme = chargerSurFx(robot, StatutWorkflow.TRANSFORME, 2);
+        assertThat(estRecommandee(bouton(transforme, "#boutonVerifier"))).isTrue();
+        assertThat(estRecommandee(bouton(transforme, "#boutonDepot"))).isFalse();
     }
 
     // ----- Handlers : chaque carte active ouvre le bon écran via le contrat socle -----
@@ -219,6 +240,10 @@ class PassageVueIntegrationTest {
 
     private static Button bouton(Parent vue, String selecteur) {
         return (Button) vue.lookup(selecteur);
+    }
+
+    private static boolean estRecommandee(Button carte) {
+        return carte.getPseudoClassStates().contains(PseudoClass.getPseudoClass("recommandee"));
     }
 
     /// Charge `Passage.fxml` via Guice sur un passage du `statut` donné et l'ouvre sur [#ID_PASSAGE].
