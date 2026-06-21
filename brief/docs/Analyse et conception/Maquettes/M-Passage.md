@@ -114,12 +114,12 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 
   <!-- Actions « avancer » (cartes). Vérifier = mise en avant ; Validation = verrouillée. -->
   <text x="40" y="476" class="section">Actions</text>
-  <rect x="40" y="490" width="265" height="152" rx="6" class="ac-primary"/><text x="172" y="536" class="ac-icon" text-anchor="middle">🎧</text><text x="172" y="568" class="ac-title" text-anchor="middle">Vérifier l'enregistrement</text><text x="172" y="588" class="ac-sub" text-anchor="middle">Sound check par échantillonnage</text><rect x="92" y="608" width="160" height="16" rx="8" fill="#4a90d9"/><text x="172" y="620" class="snum" text-anchor="middle" font-size="10">▶ ACTION REQUISE</text>
+  <rect x="40" y="490" width="265" height="152" rx="6" class="ac"/><text x="172" y="536" class="ac-icon" text-anchor="middle">🎧</text><text x="172" y="568" class="ac-title" text-anchor="middle">Vérifier l'enregistrement</text><text x="172" y="588" class="ac-sub" text-anchor="middle">Sound check par échantillonnage</text>
   <rect x="325" y="490" width="265" height="152" rx="6" class="ac"/><text x="457" y="536" class="ac-icon" text-anchor="middle">🛠</text><text x="457" y="568" class="ac-title" text-anchor="middle">Diagnostic matériel</text><text x="457" y="588" class="ac-sub" text-anchor="middle">T°/hygrométrie, anomalies, journal</text>
-  <rect x="610" y="490" width="265" height="152" rx="6" class="ac"/><text x="742" y="536" class="ac-icon" text-anchor="middle">📦</text><text x="742" y="568" class="ac-title" text-anchor="middle">Préparer le dépôt</text><text x="742" y="588" class="ac-sub" text-anchor="middle">Constituer le lot Tadarida</text>
+  <rect x="610" y="490" width="265" height="152" rx="6" class="ac-primary"/><text x="742" y="536" class="ac-icon" text-anchor="middle">📦</text><text x="742" y="568" class="ac-title" text-anchor="middle">Préparer le dépôt</text><text x="742" y="588" class="ac-sub" text-anchor="middle">Constituer le lot Tadarida</text><rect x="662" y="608" width="160" height="16" rx="8" fill="#4a90d9"/><text x="742" y="620" class="snum" text-anchor="middle" font-size="10">▶ ACTION REQUISE</text>
   <rect x="895" y="490" width="265" height="152" rx="6" class="ac-locked"/><text x="1027" y="536" class="ac-icon" text-anchor="middle">🔒</text><text x="1027" y="568" class="ac-title-l" text-anchor="middle">Validation Tadarida</text><text x="1027" y="588" class="ac-sub" text-anchor="middle">Disponible après dépôt</text>
 
-  <text x="40" y="668" class="ac-sub">ℹ La vérification sera possible une fois la nuit transformée. (indice contextuel selon le statut)</text>
+  <text x="40" y="668" class="ac-sub">ℹ La carte mise en avant indique la prochaine étape recommandée (ici : préparer le dépôt). L'indice s'adapte au statut.</text>
 
   <rect x="10" y="730" width="1180" height="30" class="footer"/>
   <text x="40" y="749" class="footer-txt">Hub d'un passage · retour &amp; fil d'Ariane portés par le chrome (plus d'onglets, plus de fil interne)</text>
@@ -134,7 +134,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 - **Bandeau d'identité** : 4 cellules condensées (date/plage horaire, enregistreur en monospace, statut workflow, verdict de vérification).
 - **Stepper de statut workflow** : 5 étapes `Importé › Transformé › Vérifié › Prêt à déposer › Déposé`. Vert = franchi, bleu = étape courante, gris = à venir.
 - **Résumé de la nuit** : 4 statistiques clés (volume bruts, volume transformé, durée audible, nombre de séquences).
-- **Actions** : 4 **cartes** « avancer ». **Vérifier** est mise en avant (liseré bleu) tant que c'est l'étape attendue ; **Diagnostic matériel** et **Préparer le dépôt** sont disponibles selon le statut ; **Validation Tadarida** est **verrouillée** (carte grisée, non cliquable) tant que le passage n'est pas `Déposé`. Un **indice contextuel** sous les cartes explique l'action attendue / les conditions de déverrouillage.
+- **Actions** : 4 **cartes** « avancer ». Une seule porte le **liseré « recommandée »** (prochaine étape du workflow), qui **se déplace au fil de l'avancement** : Vérifier (à `Transformé`) → Préparer le dépôt (à `Vérifié` / `Prêt à déposer`, état montré ici) → Validation Tadarida (à `Déposé`). `Diagnostic matériel` est une action transverse, toujours disponible mais jamais « recommandée ». `Validation Tadarida` est **verrouillée** (carte grisée, non cliquable) tant que le passage n'est pas `Déposé`. Un **indice contextuel** sous les cartes explique l'action attendue / les conditions de déverrouillage.
 
 ### Interactions clés
 
@@ -157,5 +157,6 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 - **Navigation portée par le chrome** : M-Passage implémente le contrat `EmplacementNavigation` pour déclarer son chemin (`Mes sites › Carré N › Détails du passage N° X`) ; le chrome en dérive le fil d'Ariane et conserve l'historique pour le bouton Retour. Aucun fil ni retour interne à l'écran.
 - **Stepper de statut** : 5 étapes, statut courant calculé depuis l'attribut workflow du passage ([E0.S3](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s3)).
 - **États des cartes** : `Vérifier` activée dès `Transformé` ; `Préparer le dépôt` activée à `Vérifié`/`Prêt à déposer` ; `Validation Tadarida` verrouillée tant que ≠ `Déposé`. Les états sont liés aux propriétés du ViewModel (`verificationDisponible`, `depotDisponible`, `validationVerrouillee`).
+- **Mise en avant dynamique** : la carte de la prochaine étape porte une pseudo-classe CSS `recommandee` (liseré bleu), pilotée par `actionRecommandee` (dérivée du statut). La mise en avant se déplace donc avec l'avancement, au lieu de rester figée sur la première action.
 - **Icônes** : `FontIcon` (Ikonli FontAwesome5) pour un rendu net, y compris en capture headless.
 - **Action « Modifier rattachement »** : implémente [E2.S8](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s8) — re-renomme tous les fichiers du passage. Confirmation forte obligatoire.
