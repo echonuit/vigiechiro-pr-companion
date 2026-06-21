@@ -20,8 +20,8 @@
 C'est une **vraie commande** d'un client réel (Samuel Busson, CEREMA). Le parcours métier complet :
 
 ```
-Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Valider (Tadarida)  →  Déposer
- (WAV)      (copie R9)   (ultrason→audible)  (qualité)    (espèces)          (ZIP plateforme)
+Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Déposer  →  Valider (Tadarida)
+ (WAV)      (copie R9)   (ultrason→audible)  (qualité)    (ZIP plateforme)   (espèces)
 ```
 
 La SAÉ 2.01 est **couplée à deux modules** : **R2.02** (Développement d'applications avec IHM : JavaFX, MVVM, événements) et **R2.03** (Qualité de développement : tests, refactoring, outils). Ce dépôt est le **code de départ** : un socle applicatif complet et testé, sur lequel **vous construisez les interfaces**.
