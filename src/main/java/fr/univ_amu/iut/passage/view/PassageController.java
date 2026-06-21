@@ -28,8 +28,11 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 
-/// Controller de l'écran pivot **M-Passage** (`Passage.fxml`) : fil d'Ariane (affichage), bandeau
-/// d'identité, stepper de statut et onglet « Vue d'ensemble » (stats + actions rapides).
+/// Controller de l'écran pivot **M-Passage** (`Passage.fxml`), en « hub à plat » : bandeau d'identité,
+/// stepper de statut, résumé de la nuit (stats) et cartes d'actions « avancer ». Le retour et le fil
+/// d'Ariane sont portés par le chrome (`commun`) ; cet écran ne porte donc plus de fil interne ni
+/// d'onglets-lanceurs. Il fournit toutefois son [#emplacement()] (contrat [EmplacementNavigation]) que
+/// le chrome rend dans le fil.
 ///
 /// Pur câblage (patron CM4) : lie les contrôles aux propriétés du [PassageViewModel]. Les boutons
 /// « Vérifier », « Diagnostic », « Préparer le dépôt » et « Validation Tadarida » ouvrent
@@ -56,9 +59,6 @@ public class PassageController implements EmplacementNavigation {
     // --solution--
     @FXML
     private BorderPane racine;
-
-    @FXML
-    private Label lblFilAriane;
 
     @FXML
     private Label lblTitre;
@@ -100,16 +100,10 @@ public class PassageController implements EmplacementNavigation {
     private Button boutonValidation;
 
     @FXML
-    private Button boutonOuvrirValidation;
-
-    @FXML
     private Button boutonDepot;
 
     @FXML
     private Label lblIndiceAction;
-
-    @FXML
-    private Label lblValidation;
 
     // --end-solution--
 
@@ -135,14 +129,6 @@ public class PassageController implements EmplacementNavigation {
     @FXML
     private void initialize() {
         lblTitre.textProperty().bind(viewModel.titreContexteProperty());
-        lblFilAriane
-                .textProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> {
-                            String titre = viewModel.titreContexteProperty().get();
-                            return titre.isEmpty() ? "" : "‹ Mes sites › " + titre;
-                        },
-                        viewModel.titreContexteProperty()));
         lblPlageHoraire.textProperty().bind(viewModel.plageHoraireProperty());
         lblEnregistreur.textProperty().bind(viewModel.enregistreurProperty());
         lblStatut
@@ -162,7 +148,7 @@ public class PassageController implements EmplacementNavigation {
         lblMessage.visibleProperty().bind(messagePresent);
         lblMessage.managedProperty().bind(messagePresent);
 
-        // Onglet « Vue d'ensemble » : statistiques + actions rapides.
+        // Résumé de la nuit (stats) + cartes d'actions.
         lblVolBruts.textProperty().bind(viewModel.volumeBrutsProperty());
         lblVolTransformes.textProperty().bind(viewModel.volumeTransformesProperty());
         lblDureeAudible.textProperty().bind(viewModel.dureeAudibleProperty());
@@ -172,7 +158,6 @@ public class PassageController implements EmplacementNavigation {
                 .disableProperty()
                 .bind(viewModel.verificationDisponibleProperty().not());
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
-        boutonOuvrirValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
         lblIndiceAction
                 .textProperty()
@@ -181,15 +166,6 @@ public class PassageController implements EmplacementNavigation {
                                 ? ""
                                 : "🔒 La vérification sera possible une fois la nuit transformée.",
                         viewModel.verificationDisponibleProperty()));
-
-        lblValidation
-                .textProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> viewModel.validationVerrouilleeProperty().get()
-                                ? "🔒 La validation Tadarida sera disponible une fois le passage déposé."
-                                : "✅ Passage déposé : la validation des identifications Tadarida"
-                                        + " (M-Vision-Tadarida) s'ouvrira depuis cet onglet.",
-                        viewModel.validationVerrouilleeProperty()));
     }
     // --end-solution--
 

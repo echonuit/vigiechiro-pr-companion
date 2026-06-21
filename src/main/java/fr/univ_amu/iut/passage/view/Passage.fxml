@@ -2,19 +2,18 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.Tab?>
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
-<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
-  M-Passage - écran pivot d'un passage (détail) : fil d'Ariane (affichage), bandeau d'identité,
-  stepper de statut workflow et onglets (Vue d'ensemble, Diagnostic, Validation Tadarida). Le bouton
-  « Vérifier » ouvre M-Qualification et « Diagnostic » ouvre M-Diagnostic (contrats socle). La
-  validation Tadarida arrive dans la tranche suivante. Pur câblage : tout est lié au
-  PassageViewModel par PassageController.
+  M-Passage - écran pivot d'un passage (détail), en « hub à plat » : bandeau d'identité, stepper de
+  statut workflow, résumé de la nuit (stats) et un jeu de cartes d'actions « avancer » (Vérifier,
+  Diagnostic, Préparer le dépôt, Validation Tadarida). Le retour et le fil d'Ariane sont portés par le
+  chrome (commun) : pas de fil interne ni d'onglets-lanceurs ici. Les cartes ouvrent M-Qualification,
+  M-Diagnostic, M-Lot et M-Vision-Tadarida via les contrats socle (Ouvrir*). Pur câblage : tout est
+  lié au PassageViewModel par PassageController.
 
   TODO (M-Passage) : écran pivot à construire. Le placeholder ci-dessous n'affiche qu'un titre ;
   remplacez-le par la vraie mise en page (bandeau d'identité, stepper de statut, stats, actions vers
@@ -30,7 +29,6 @@
 
   <top>
     <VBox spacing="12.0" styleClass="entete">
-      <Label fx:id="lblFilAriane" styleClass="fil-ariane"/>
       <HBox alignment="CENTER_LEFT" spacing="12.0">
         <Label fx:id="lblTitre" styleClass="titre-page" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
         <Button fx:id="boutonRattachement" text="✏ Modifier rattachement"
@@ -70,64 +68,79 @@
   </top>
 
   <center>
-    <TabPane styleClass="onglets" tabClosingPolicy="UNAVAILABLE">
-      <tabs>
-        <Tab text="Vue d'ensemble">
-          <VBox spacing="16.0" styleClass="onglet-contenu">
+    <VBox spacing="16.0" styleClass="hub-contenu">
 
-            <!-- Statistiques de la nuit -->
-            <HBox spacing="14.0" styleClass="stats">
-              <VBox spacing="2.0" styleClass="stat-carte">
-                <Label text="VOLUME BRUTS" styleClass="stat-label"/>
-                <Label fx:id="lblVolBruts" styleClass="stat-valeur"/>
-              </VBox>
-              <VBox spacing="2.0" styleClass="stat-carte">
-                <Label text="VOLUME TRANSFORMÉ" styleClass="stat-label"/>
-                <Label fx:id="lblVolTransformes" styleClass="stat-valeur"/>
-              </VBox>
-              <VBox spacing="2.0" styleClass="stat-carte">
-                <Label text="DURÉE AUDIBLE" styleClass="stat-label"/>
-                <Label fx:id="lblDureeAudible" styleClass="stat-valeur"/>
-              </VBox>
-              <VBox spacing="2.0" styleClass="stat-carte">
-                <Label text="SÉQUENCES" styleClass="stat-label"/>
-                <Label fx:id="lblNbSequences" styleClass="stat-valeur"/>
-              </VBox>
-            </HBox>
+      <!-- Résumé de la nuit -->
+      <Label text="Résumé de la nuit" styleClass="section-sous"/>
+      <HBox spacing="14.0" styleClass="stats">
+        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="VOLUME BRUTS" styleClass="stat-label"/>
+          <Label fx:id="lblVolBruts" styleClass="stat-valeur"/>
+        </VBox>
+        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="VOLUME TRANSFORMÉ" styleClass="stat-label"/>
+          <Label fx:id="lblVolTransformes" styleClass="stat-valeur"/>
+        </VBox>
+        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="DURÉE AUDIBLE" styleClass="stat-label"/>
+          <Label fx:id="lblDureeAudible" styleClass="stat-valeur"/>
+        </VBox>
+        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="SÉQUENCES" styleClass="stat-label"/>
+          <Label fx:id="lblNbSequences" styleClass="stat-valeur"/>
+        </VBox>
+      </HBox>
 
-            <!-- Actions rapides -->
-            <Label text="Actions rapides" styleClass="section-sous"/>
-            <HBox spacing="14.0">
-              <Button fx:id="boutonVerifier" text="🎧 Vérifier l'enregistrement"
-                      styleClass="action-primaire" onAction="#verifier"/>
-              <Button fx:id="boutonDiagnostic" text="🔧 Diagnostic matériel"
-                      styleClass="action-secondaire" onAction="#diagnostiquer"/>
-              <Button fx:id="boutonDepot" text="📦 Préparer le dépôt"
-                      styleClass="action-secondaire" onAction="#preparerDepot"/>
-              <Button fx:id="boutonValidation" text="✅ Validation Tadarida 🔒"
-                      styleClass="action-secondaire" onAction="#validerTadarida"/>
-              <Region HBox.hgrow="ALWAYS"/>
-            </HBox>
-            <Label fx:id="lblIndiceAction" styleClass="section-sous" wrapText="true"/>
-          </VBox>
-        </Tab>
-        <Tab text="Diagnostic matériel">
-          <VBox alignment="CENTER" spacing="14.0" styleClass="onglet-contenu">
-            <Label text="Le diagnostic matériel (T°/hygrométrie, anomalies, journal) s'affiche en plein écran."
-                   styleClass="section-sous" wrapText="true"/>
-            <Button fx:id="boutonOuvrirDiagnostic" text="🔧 Ouvrir le diagnostic matériel"
-                    styleClass="action-primaire" onAction="#diagnostiquer"/>
-          </VBox>
-        </Tab>
-        <Tab text="Validation Tadarida">
-          <VBox alignment="CENTER" spacing="14.0" styleClass="onglet-contenu">
-            <Label fx:id="lblValidation" styleClass="section-sous" wrapText="true"/>
-            <Button fx:id="boutonOuvrirValidation" text="✅ Ouvrir la validation Tadarida"
-                    styleClass="action-primaire" onAction="#validerTadarida"/>
-          </VBox>
-        </Tab>
-      </tabs>
-    </TabPane>
+      <!-- Actions : avancer dans le workflow (le retour et le fil d'Ariane sont portés par le chrome) -->
+      <Label text="Actions" styleClass="section-sous"/>
+      <HBox spacing="16.0" fillHeight="true" styleClass="cartes-actions">
+        <Button fx:id="boutonVerifier" styleClass="carte-action, carte-action-primaire"
+                onAction="#verifier" contentDisplay="GRAPHIC_ONLY"
+                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+          <graphic>
+            <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
+              <FontIcon iconLiteral="fas-headphones" styleClass="carte-action-icone"/>
+              <Label text="Vérifier l'enregistrement" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="Sound check par échantillonnage" styleClass="carte-action-sous" wrapText="true"/>
+            </VBox>
+          </graphic>
+        </Button>
+        <Button fx:id="boutonDiagnostic" styleClass="carte-action"
+                onAction="#diagnostiquer" contentDisplay="GRAPHIC_ONLY"
+                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+          <graphic>
+            <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
+              <FontIcon iconLiteral="fas-tools" styleClass="carte-action-icone"/>
+              <Label text="Diagnostic matériel" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="T°/hygrométrie, anomalies, journal" styleClass="carte-action-sous" wrapText="true"/>
+            </VBox>
+          </graphic>
+        </Button>
+        <Button fx:id="boutonDepot" styleClass="carte-action"
+                onAction="#preparerDepot" contentDisplay="GRAPHIC_ONLY"
+                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+          <graphic>
+            <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
+              <FontIcon iconLiteral="fas-box-open" styleClass="carte-action-icone"/>
+              <Label text="Préparer le dépôt" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="Constituer le lot Tadarida" styleClass="carte-action-sous" wrapText="true"/>
+            </VBox>
+          </graphic>
+        </Button>
+        <Button fx:id="boutonValidation" styleClass="carte-action"
+                onAction="#validerTadarida" contentDisplay="GRAPHIC_ONLY"
+                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+          <graphic>
+            <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
+              <FontIcon iconLiteral="fas-check-circle" styleClass="carte-action-icone"/>
+              <Label text="Validation Tadarida" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="Valider les identifications" styleClass="carte-action-sous" wrapText="true"/>
+            </VBox>
+          </graphic>
+        </Button>
+      </HBox>
+      <Label fx:id="lblIndiceAction" styleClass="section-sous" wrapText="true"/>
+    </VBox>
   </center>
 </BorderPane>
 <!-- @@end-solution@@ -->

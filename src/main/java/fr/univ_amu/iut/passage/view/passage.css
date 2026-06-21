@@ -11,11 +11,6 @@
   -fx-padding: 18;
 }
 
-.fil-ariane {
-  -fx-font-size: 12px;
-  -fx-text-fill: #4a90d9;
-}
-
 .titre-page {
   -fx-font-size: 22px;
   -fx-font-weight: bold;
@@ -80,9 +75,9 @@
   -fx-text-fill: #a93226;
 }
 
-/* ---- Onglet « Vue d'ensemble » : stats + actions ---- */
-.onglet-contenu {
-  -fx-padding: 16;
+/* ---- Hub à plat : résumé (stats) + cartes d'actions ---- */
+.hub-contenu {
+  -fx-padding: 0 18 18 18;
 }
 
 .stat-carte {
@@ -152,4 +147,58 @@
   -fx-border-radius: 4;
   -fx-background-radius: 4;
   -fx-padding: 10;
+}
+
+/* ---- Cartes d'actions « avancer » (hub à plat) ---- */
+.carte-action {
+  -fx-background-color: white;
+  -fx-border-color: #d0d7de;
+  -fx-border-width: 1;
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
+  -fx-padding: 16 12 16 12;
+  -fx-pref-height: 132;
+  -fx-cursor: hand;
+}
+
+.carte-action:hover {
+  -fx-border-color: #4a90d9;
+  -fx-background-color: #f6f9fd;
+}
+
+.carte-action:disabled {
+  -fx-opacity: 0.5;
+  -fx-cursor: default;
+}
+
+/* Action mise en avant (étape suivante recommandée) : liseré bleu plus épais. */
+.carte-action-primaire {
+  -fx-border-color: #4a90d9;
+  -fx-border-width: 2;
+}
+
+.carte-action-contenu {
+  -fx-max-width: Infinity;
+}
+
+.carte-action-icone {
+  -fx-icon-size: 30;
+  -fx-icon-color: #34495e;
+}
+
+.carte-action-primaire .carte-action-icone {
+  -fx-icon-color: #4a90d9;
+}
+
+.carte-action-titre {
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+  -fx-text-fill: #2c3e50;
+  -fx-text-alignment: center;
+}
+
+.carte-action-sous {
+  -fx-font-size: 11px;
+  -fx-text-fill: #6a737d;
+  -fx-text-alignment: center;
 }
