@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.Set;
+import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -112,18 +113,27 @@ public class MainController {
         // centre du BorderPane suit ensuite le sommet de l'historique (toute navigation passe par lui).
         Parent accueil = (Parent) racine.getCenter();
         navigateur.memoriserAccueil(accueil);
-        racine.centerProperty().bind(navigateur.vueCentraleProperty());
+        // Sommet initial sans animation ; chaque changement d'écran ensuite arrive en fondu (confort).
+        racine.setCenter(navigateur.getVueCentrale());
+        navigateur.vueCentraleProperty().addListener((obs, ancienne, nouvelle) -> afficherAvecFondu(nouvelle));
 
         // Barre de navigation (← Retour + fil d'Ariane) : reconstruite à chaque changement d'historique.
         navigateur.historique().addListener((ListChangeListener<EtapeNavigation>) changement -> rafraichirNavigation());
         rafraichirNavigation();
 
-        // Raccourci « Alt+← » = Retour (pas Backspace, qui entrerait en conflit avec la saisie texte).
-        // Posé dès que la scène est disponible.
+        // Raccourcis clavier de navigation, posés dès que la scène est disponible :
+        //  - Alt+← : ← Retour (écran précédent réel) ;
+        //  - Alt+Début : retour direct à l'accueil (saut en tête du fil).
+        // Pas de Backspace (conflit avec la saisie texte) ni d'Échap (réservé aux modales). Les deux
+        // raccourcis passent par le Navigateur, qui respecte la garde de saisie et le verrou (#54).
         racine.sceneProperty().addListener((obs, ancienne, scene) -> {
             if (scene != null) {
                 scene.getAccelerators()
                         .put(new KeyCodeCombination(KeyCode.LEFT, KeyCombination.ALT_DOWN), navigateur::revenir);
+                scene.getAccelerators()
+                        .put(
+                                new KeyCodeCombination(KeyCode.HOME, KeyCombination.ALT_DOWN),
+                                navigateur::afficherAccueil);
             }
         });
     }
@@ -132,6 +142,20 @@ public class MainController {
     @FXML
     private void revenir() {
         navigateur.revenir();
+    }
+
+    /// Affiche la nouvelle vue centrale avec un léger fondu d'entrée (confort de transition entre
+    /// écrans). Le changement d'écran reste instantané côté graphe de scène ; seule l'opacité est
+    /// animée, sans incidence sur l'interaction (un nœud en cours de fondu reste cliquable et trouvable).
+    private void afficherAvecFondu(Parent vue) {
+        racine.setCenter(vue);
+        if (vue == null) {
+            return;
+        }
+        FadeTransition fondu = new FadeTransition(Duration.millis(160), vue);
+        fondu.setFromValue(0.0);
+        fondu.setToValue(1.0);
+        fondu.playFromStart();
     }
 
     /// Reconstruit la barre de navigation : visibilité du ← Retour (présent hors accueil) et segments

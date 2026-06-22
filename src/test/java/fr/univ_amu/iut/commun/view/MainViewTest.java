@@ -22,6 +22,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -120,6 +123,28 @@ class MainViewTest {
         robot.interact(mesSites::fire);
 
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("sites");
+    }
+
+    @Test
+    @DisplayName("Raccourcis clavier : Alt+← (retour) et Alt+Début (accueil) sont actifs sur le chrome")
+    void raccourcis_clavier_navigation(FxRobot robot) {
+        var altGauche = new KeyCodeCombination(KeyCode.LEFT, KeyCombination.ALT_DOWN);
+        var altDebut = new KeyCodeCombination(KeyCode.HOME, KeyCombination.ALT_DOWN);
+        Scene scene = robot.lookup("#boutonRetour").queryAs(Button.class).getScene();
+
+        // Les deux raccourcis de navigation sont enregistrés sur la scène du chrome.
+        assertThat(scene.getAccelerators()).containsKeys(altGauche, altDebut);
+
+        // Alt+Début ramène directement à l'accueil depuis un écran profond (saut en tête du fil).
+        robot.interact(() -> {
+            navigateur.afficher(new Group(), "sites", "Mes sites");
+            navigateur.afficher(new Group(), "site-detail", "Carré 640380");
+        });
+        robot.interact(() -> scene.getAccelerators().get(altDebut).run());
+
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
+        assertThat(robot.lookup("#boutonRetour").queryAs(Button.class).isVisible())
+                .isFalse();
     }
 
     @Test
