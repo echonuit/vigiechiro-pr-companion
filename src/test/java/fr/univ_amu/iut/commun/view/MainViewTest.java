@@ -135,13 +135,18 @@ class MainViewTest {
         // Les deux raccourcis de navigation sont enregistrés sur la scène du chrome.
         assertThat(scene.getAccelerators()).containsKeys(altGauche, altDebut);
 
-        // Alt+Début ramène directement à l'accueil depuis un écran profond (saut en tête du fil).
+        // Navigation profonde : Accueil › Mes sites › Carré 640380.
         robot.interact(() -> {
             navigateur.afficher(new Group(), "sites", "Mes sites");
             navigateur.afficher(new Group(), "site-detail", "Carré 640380");
         });
-        robot.interact(() -> scene.getAccelerators().get(altDebut).run());
 
+        // Alt+← est bien câblé au RETOUR (écran précédent réel = sites), pas au saut à l'accueil.
+        robot.interact(() -> scene.getAccelerators().get(altGauche).run());
+        assertThat(navigation.vueCouranteProperty().get()).isEqualTo("sites");
+
+        // Alt+Début saute directement à l'accueil depuis n'importe quel écran.
+        robot.interact(() -> scene.getAccelerators().get(altDebut).run());
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
         assertThat(robot.lookup("#boutonRetour").queryAs(Button.class).isVisible())
                 .isFalse();
