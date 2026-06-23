@@ -22,6 +22,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -103,6 +104,37 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#labelApercu").queryAs(Label.class)).isNotNull();
         assertThat(robot.lookup("#boutonImporter").queryAs(Button.class)).isNotNull();
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
+        // Pré-contrôle R5 (#108) : la zone d'avertissement de doublon et son bouton « n° libre » existent.
+        assertThat(robot.lookup("#zonePassageExistant").queryAs(HBox.class)).isNotNull();
+        assertThat(robot.lookup("#labelPassageExistant").queryAs(Label.class)).isNotNull();
+        assertThat(robot.lookup("#boutonNumeroLibre").queryAs(Button.class)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("#108 : sans passage existant, la zone d'avertissement de doublon reste masquée")
+    void zone_passage_existant_masquee_sans_doublon(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<PointDEcoute> comboPoints = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+        HBox zone = robot.lookup("#zonePassageExistant").queryAs(HBox.class);
+
+        assertThat(zone.isVisible())
+                .as("aucun rattachement : pas d'avertissement")
+                .isFalse();
+
+        // Rattacher à un site/point réels : le pré-contrôle R5 interroge la base (vide) et ne trouve
+        // aucun doublon → la zone reste masquée (et non gérée, pour ne pas occuper d'espace).
+        robot.interact(() -> {
+            comboSites.setValue(comboSites.getItems().get(0));
+            comboPoints.setValue(comboPoints.getItems().get(0));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(zone.isVisible())
+                .as("n° de passage libre pour ce point : aucun avertissement")
+                .isFalse();
+        assertThat(zone.isManaged()).isFalse();
     }
 
     @Test

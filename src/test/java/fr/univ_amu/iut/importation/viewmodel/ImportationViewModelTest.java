@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -235,6 +236,62 @@ class ImportationViewModelTest {
         assertThat(viewModel.estInspecte()).isFalse();
         assertThat(viewModel.peutImporter().get()).isFalse();
         assertThat(viewModel.nombreOriginauxProperty().get()).isZero();
+    }
+
+    @Test
+    @DisplayName("#108 : un n° de passage déjà pris pour ce point/année avertit et bloque l'import (R5)")
+    void numero_passage_deja_pris_avertit_et_bloque() {
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        // Par défaut un n° est libre ; seul le n° 2 est déjà pris pour ce point en 2026.
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 2)).thenReturn(true);
+        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(3);
+
+        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+        viewModel.siteSelectionneProperty().set(site);
+        viewModel.pointSelectionneProperty().set(point);
+        viewModel.numeroPassageProperty().set(2);
+
+        assertThat(viewModel.avertissementNumeroPassageProperty().get())
+                .as("doublon détecté : avertissement non vide proposant le n° libre")
+                .contains("existe déjà")
+                .contains("3");
+        assertThat(viewModel.peutImporter().get())
+                .as("import bloqué tant que le n° est en doublon (R5)")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#108 : utiliserProchainNumeroLibre adopte le n° libre, efface l'avertissement et débloque")
+    void utiliser_prochain_numero_libre_corrige_et_debloque() {
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        // Tout n° est libre sauf le n° 2 (déjà pris) ; le prochain libre proposé est le 3.
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 2)).thenReturn(true);
+        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(3);
+        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspecter();
+        viewModel.siteSelectionneProperty().set(site);
+        viewModel.pointSelectionneProperty().set(point);
+        viewModel.numeroPassageProperty().set(2);
+        assertThat(viewModel.peutImporter().get()).isFalse();
+
+        viewModel.utiliserProchainNumeroLibre();
+
+        assertThat(viewModel.numeroPassageProperty().get()).isEqualTo(3);
+        assertThat(viewModel.avertissementNumeroPassageProperty().get())
+                .as("n° libre adopté : plus aucun avertissement")
+                .isEmpty();
+        assertThat(viewModel.peutImporter().get()).isTrue();
     }
 
     // --- Étape 4 : exécution ---

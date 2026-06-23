@@ -22,6 +22,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.util.StringConverter;
@@ -81,6 +82,15 @@ public class ImportationController implements GardeQuitter {
 
     @FXML
     private Label labelApercu;
+
+    @FXML
+    private HBox zonePassageExistant;
+
+    @FXML
+    private Label labelPassageExistant;
+
+    @FXML
+    private Button boutonNumeroLibre;
 
     @FXML
     private Button boutonParcourir;
@@ -202,6 +212,14 @@ public class ImportationController implements GardeQuitter {
         comboPoints.disableProperty().bind(enCours);
         champAnnee.disableProperty().bind(enCours);
         champPassage.disableProperty().bind(enCours);
+        // Pré-contrôle R5 (#108) : la zone n'apparaît qu'en cas de doublon de n° de passage (avertissement
+        // non vide) ; elle porte l'avertissement + un bouton pour adopter le prochain n° libre (gelé
+        // pendant l'import). Même patron que les avertissements « mélange »/« incohérence » ci-dessus.
+        labelPassageExistant.textProperty().bind(viewModel.avertissementNumeroPassageProperty());
+        var aUnDoublon = viewModel.avertissementNumeroPassageProperty().isNotEmpty();
+        zonePassageExistant.visibleProperty().bind(aUnDoublon);
+        zonePassageExistant.managedProperty().bind(aUnDoublon);
+        boutonNumeroLibre.disableProperty().bind(enCours);
         labelMessage.textProperty().bind(viewModel.messageErreurProperty());
         labelStatut
                 .textProperty()
@@ -242,6 +260,12 @@ public class ImportationController implements GardeQuitter {
                 Platform.runLater(() -> viewModel.marquerEchec(echec.getMessage()));
             }
         });
+    }
+
+    /// « Utiliser ce n° » : adopte le prochain n° de passage libre proposé par le pré-contrôle R5 (#108).
+    @FXML
+    private void utiliserNumeroLibre() {
+        viewModel.utiliserProchainNumeroLibre();
     }
 
     private String libelleSite(Site site) {

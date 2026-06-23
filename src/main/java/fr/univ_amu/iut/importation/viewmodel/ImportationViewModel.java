@@ -86,6 +86,11 @@ public class ImportationViewModel {
     private final ReadOnlyDoubleWrapper progression = new ReadOnlyDoubleWrapper(this, "progression", 0.0);
     private final ReadOnlyStringWrapper messageProgression = new ReadOnlyStringWrapper(this, "messageProgression", "");
 
+    /// Pré-contrôle R5 proactif (#108) extrait dans un collaborateur dédié ([ControleNumeroPassage]) :
+    /// signale qu'un n° de passage est déjà pris (bloque [#peutImporter()]) et propose le prochain libre.
+    /// Recalculé à chaque changement de point / année / n° de passage du rattachement.
+    private final ControleNumeroPassage controleNumeroPassage;
+
     public ImportationViewModel(
             ServiceImport serviceImport,
             ServiceSites serviceSites,
@@ -98,6 +103,8 @@ public class ImportationViewModel {
         // Sous-VM rattachement (#183) : il valide serviceSites / horloge / idUtilisateur et préremplit
         // l'année courante.
         this.rattachement = new RattachementImportViewModel(serviceSites, horloge, idUtilisateur);
+        // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
+        this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement);
 
         // --solution--
         // Changer de dossier source invalide l'inspection précédente : un nouveau dossier doit être
@@ -116,13 +123,15 @@ public class ImportationViewModel {
         messageExecution.addListener((obs, ancien, nouveau) -> rafraichirMessage());
         // --end-solution--
 
-        // peutImporter = inspection réussie ET rattachement complet (composition par l'orchestrateur).
+        // peutImporter = inspection réussie ET rattachement complet ET n° de passage libre (#108) :
+        // composition par l'orchestrateur.
         peutImporter = Bindings.createBooleanBinding(
-                () -> inspection.estInspecte() && rattachement.estComplet(),
+                () -> inspection.estInspecte() && rattachement.estComplet() && !controleNumeroPassage.estDejaUtilise(),
                 inspection.inspecteProperty(),
                 rattachement.siteSelectionneProperty(),
                 rattachement.pointSelectionneProperty(),
-                rattachement.numeroPassageProperty());
+                rattachement.numeroPassageProperty(),
+                controleNumeroPassage.dejaUtiliseProperty());
     }
 
     /// Dossier source à inspecter puis importer (délégué au sous-VM inspection).
@@ -214,6 +223,13 @@ public class ImportationViewModel {
         return rattachement.apercuPrefixeProperty();
     }
 
+    /// Avertissement de doublon R5 (#108), **vide** si le n° est libre ; sinon explique le doublon et
+    /// propose le prochain n° libre (délégué à [ControleNumeroPassage]). Sa non-vacuité signale à la fois
+    /// l'avertissement à afficher et l'import bloqué (cf. `peutImporter`).
+    public ReadOnlyStringProperty avertissementNumeroPassageProperty() {
+        return controleNumeroPassage.avertissementProperty();
+    }
+
     /// Conjonction d'activation du bouton « Importer cette nuit » : dossier inspecté + rattachement
     /// complet (site + point + n° de passage valides).
     public BooleanBinding peutImporter() {
@@ -267,6 +283,12 @@ public class ImportationViewModel {
             rattachement.definirExempleNom(null);
         }
         // --end-solution--
+    }
+
+    /// Renseigne le n° de passage avec le **prochain n° libre** proposé par le pré-contrôle R5 (#108) :
+    /// corrige un doublon en un clic (délégué à [ControleNumeroPassage]).
+    public void utiliserProchainNumeroLibre() {
+        controleNumeroPassage.utiliserProchainNumeroLibre();
     }
 
     /// Lance l'import de la nuit **de façon synchrone** (copie protégée R9 + renommage R6/R7 +
