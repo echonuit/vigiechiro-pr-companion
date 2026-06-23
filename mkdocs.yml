@@ -51,6 +51,8 @@ nav:
       - ecrans/index.md
       - Sites: ecrans/sites.md
       - Passage: ecrans/passage.md
+      - Importation: ecrans/importation.md
+      - Qualification: ecrans/qualification.md
   - Raccourcis clavier: raccourcis-clavier.md
 
 markdown_extensions:

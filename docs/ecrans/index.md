@@ -9,8 +9,8 @@ référence explique *en détail* ce que chaque écran propose.
 | Accueil | Point d'entrée vers les activités |
 | [Sites](sites.md) | Gérer les sites de suivi et leurs points d'écoute |
 | [Passage](passage.md) | Pivot d'une nuit : statut, navigation, suppression |
-| Importation | Importer une nuit depuis la carte SD |
-| Qualification | Écouter les séquences et poser un verdict de qualité |
+| [Importation](importation.md) | Importer une nuit depuis la carte SD |
+| [Qualification](qualification.md) | Écouter les séquences et poser un verdict de qualité |
 | Lot | Préparer et déposer un lot vérifié |
 | Validation | Relire les observations Tadarida (espèces) |
 | Multisite | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
