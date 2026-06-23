@@ -2,3 +2,4 @@
 # Utilisé par .github/workflows/docs.yml et pour un build local :
 #   pip install -r docs/requirements.txt && mkdocs serve
 mkdocs-material==9.5.49
+pymdown-extensions==10.14

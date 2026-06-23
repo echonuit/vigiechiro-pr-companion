@@ -57,7 +57,13 @@ markdown_extensions:
   - toc:
       permalink: true
   - pymdownx.highlight
-  - pymdownx.superfences
+  # Mermaid natif Material (mêmes réglages que le brief) : les blocs ```mermaid
+  # sont rendus côté navigateur.
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
 # Le dossier docs/benchmarks (note technique de perf) et le fichier des
 # dépendances ne font pas partie du site utilisateur.
