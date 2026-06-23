@@ -48,6 +48,7 @@ nav:
   - Prise en main: prise-en-main.md
   - Parcours métier: parcours/index.md
   - Référence par écran: ecrans/index.md
+  - Raccourcis clavier: raccourcis-clavier.md
 
 markdown_extensions:
   - admonition
