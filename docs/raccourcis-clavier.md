@@ -31,7 +31,7 @@ enregistre, on passe au suivant.
 | <kbd>D</kbd> | Verdict : Douteux |
 | <kbd>J</kbd> | Verdict : À jeter |
 | <kbd>Entrée</kbd> | Enregistrer le verdict |
-| <kbd>↑</kbd> / <kbd>↓</kbd> | Passer d'une séquence à l'autre dans la liste |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Passer d'une séquence à l'autre, lorsque la **liste des séquences** a le focus |
 
 !!! note "Pendant la saisie d'un commentaire"
     Les touches de verdict (<kbd>O</kbd>, <kbd>D</kbd>, <kbd>J</kbd>) sont suspendues tant que le
