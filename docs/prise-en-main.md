@@ -62,3 +62,4 @@ arrière.
 
 - [Parcours métier](parcours/index.md) : le déroulé complet d'une nuit, de la carte SD au dépôt.
 - [Référence par écran](ecrans/index.md) : le détail de chaque écran et de ses états.
+- [Raccourcis clavier](raccourcis-clavier.md) : piloter l'application sans la souris.
