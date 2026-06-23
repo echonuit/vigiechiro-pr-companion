@@ -5,11 +5,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -22,6 +28,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -59,6 +66,8 @@ class ImportationVueIntegrationTest {
 
     private static final String ID_USER = "u-integ";
     private Injector injector;
+    private Long idPoint;
+    private int anneeCourante;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -80,7 +89,32 @@ class ImportationVueIntegrationTest {
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         ServiceSites service = injector.getInstance(ServiceSites.class);
         Site etang = service.creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
-        service.ajouterPoint(etang.id(), "A1", 43.5, 5.4, "Chêne");
+        PointDEcoute pointA1 = service.ajouterPoint(etang.id(), "A1", 43.5, 5.4, "Chêne");
+        idPoint = pointA1.id();
+        anneeCourante = injector.getInstance(Horloge.class).aujourdhui().getYear();
+    }
+
+    /// Insère un passage existant `(point, année, n°)` (avec son enregistreur, FK obligatoire) pour
+    /// exercer le pré-contrôle R5 (#108) côté vue. Appelé depuis un test, après l'ouverture de l'écran.
+    private void semerPassageExistant(int numero) {
+        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
+        new EnregistreurDao(source).insert(new Enregistreur("9999999", "V1.01", null));
+        new PassageDao(source)
+                .insert(new Passage(
+                        null,
+                        numero,
+                        anneeCourante,
+                        "2026-04-22",
+                        "20:25:00",
+                        "07:47:00",
+                        null,
+                        StatutWorkflow.TRANSFORME,
+                        null,
+                        null,
+                        null,
+                        null,
+                        idPoint,
+                        "9999999"));
     }
 
     @AfterEach
@@ -103,6 +137,76 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#labelApercu").queryAs(Label.class)).isNotNull();
         assertThat(robot.lookup("#boutonImporter").queryAs(Button.class)).isNotNull();
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
+        // Pré-contrôle R5 (#108) : la zone d'avertissement de doublon et son bouton « n° libre » existent.
+        assertThat(robot.lookup("#zonePassageExistant").queryAs(HBox.class)).isNotNull();
+        assertThat(robot.lookup("#labelPassageExistant").queryAs(Label.class)).isNotNull();
+        assertThat(robot.lookup("#boutonNumeroLibre").queryAs(Button.class)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("#108 : sans passage existant, la zone d'avertissement de doublon reste masquée")
+    void zone_passage_existant_masquee_sans_doublon(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<PointDEcoute> comboPoints = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+        HBox zone = robot.lookup("#zonePassageExistant").queryAs(HBox.class);
+
+        assertThat(zone.isVisible())
+                .as("aucun rattachement : pas d'avertissement")
+                .isFalse();
+
+        // Rattacher à un site/point réels : le pré-contrôle R5 interroge la base (vide) et ne trouve
+        // aucun doublon → la zone reste masquée (et non gérée, pour ne pas occuper d'espace).
+        robot.interact(() -> {
+            comboSites.setValue(comboSites.getItems().get(0));
+            comboPoints.setValue(comboPoints.getItems().get(0));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(zone.isVisible())
+                .as("n° de passage libre pour ce point : aucun avertissement")
+                .isFalse();
+        assertThat(zone.isManaged()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#108 : un n° déjà pris affiche l'avertissement ; « Utiliser ce n° » corrige et le masque")
+    void doublon_affiche_avertissement_puis_bouton_corrige(FxRobot robot) {
+        // Un passage n° 1 existe déjà pour le point A1 (année courante) : le rattacher au n° 1 par défaut
+        // doit déclencher l'avertissement de doublon (pré-contrôle R5 #108).
+        semerPassageExistant(1);
+
+        @SuppressWarnings("unchecked")
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<PointDEcoute> comboPoints = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+        HBox zone = robot.lookup("#zonePassageExistant").queryAs(HBox.class);
+        Label labelPassageExistant = robot.lookup("#labelPassageExistant").queryAs(Label.class);
+        TextField champPassage = robot.lookup("#champPassage").queryAs(TextField.class);
+
+        robot.interact(() -> {
+            comboSites.setValue(comboSites.getItems().get(0));
+            comboPoints.setValue(comboPoints.getItems().get(0));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(zone.isVisible())
+                .as("n° 1 déjà pris : la zone d'avertissement s'affiche")
+                .isTrue();
+        assertThat(zone.isManaged()).isTrue();
+        assertThat(labelPassageExistant.getText()).containsIgnoringCase("existe déjà");
+
+        // « Utiliser ce n° » adopte le prochain libre (2, le 1 étant pris) et masque l'avertissement.
+        robot.clickOn("#boutonNumeroLibre");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(champPassage.getText())
+                .as("le n° de passage est corrigé vers le prochain libre")
+                .isEqualTo("2");
+        assertThat(zone.isVisible())
+                .as("n° libre adopté : l'avertissement disparaît")
+                .isFalse();
     }
 
     @Test

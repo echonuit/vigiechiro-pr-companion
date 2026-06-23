@@ -156,6 +156,23 @@ public class ServiceImport {
         }
     }
 
+    /// Pré-contrôle d'unicité R5 **exposé à l'IHM** (#108) : `true` si un passage existe déjà pour ce
+    /// quadruplet `(point, année, n° de passage)`. Permet à l'assistant d'avertir **dès le rattachement**,
+    /// avant de lancer un import lourd voué à échouer (R5). Tolère un rattachement encore incomplet
+    /// (`idPoint` nul ou `numeroPassage < 1`) en répondant `false` (rien à signaler).
+    public boolean numeroPassageDejaUtilise(Long idPoint, int annee, int numeroPassage) {
+        if (idPoint == null || numeroPassage < 1) {
+            return false;
+        }
+        return agregatDao.passageExistePour(idPoint, annee, numeroPassage);
+    }
+
+    /// Prochain n° de passage **libre** pour ce point et cette année (#108) : sert à proposer une
+    /// correction en un clic quand le n° saisi est déjà pris.
+    public int prochainNumeroPassageLibre(Long idPoint, int annee) {
+        return agregatDao.prochainNumeroPassageLibre(idPoint, annee);
+    }
+
     /// Corps de l'import (inspection, copie protégée R9, renommage R6/R7, transformation R10/R11,
     /// persistance atomique O7), exécuté **sous le verrou anti-concurrent** posé par [#importer].
     private ResultatImport executerImportProtege(

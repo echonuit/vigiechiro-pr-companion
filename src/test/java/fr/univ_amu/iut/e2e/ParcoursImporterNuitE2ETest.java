@@ -48,7 +48,9 @@ import org.junit.jupiter.api.Test;
 ///
 /// On vérifie le **résultat métier** à chaque jalon, jusqu'à relire le passage **en base** (la base
 /// est la source de vérité). Un second cas couvre le garde-fou **R5** : réimporter le même quadruplet
-/// `(point, année, n° de passage)` est refusé (l'assistant passe en `ECHEC`, la base reste intacte).
+/// `(point, année, n° de passage)` est **bloqué en amont** par le pré-contrôle R5 (#108) — dès le
+/// rattachement, le bouton « Importer » se désactive et aucun import n'est lancé, donc la base reste
+/// intacte.
 @Tag("conformite")
 class ParcoursImporterNuitE2ETest {
 
@@ -143,22 +145,40 @@ class ParcoursImporterNuitE2ETest {
     }
 
     @Test
-    @DisplayName("P2 : réimporter le même quadruplet (point, année, n° de passage) est refusé (R5)")
+    @DisplayName("P2 : réimporter le même quadruplet est bloqué en amont (pré-contrôle R5, #108)")
     void reimport_du_meme_quadruplet_est_refuse_R5() {
         // 1) Premier import : réussi (le quadruplet n'existe pas encore).
         ImportationViewModel premier = importerNuit(injector.getInstance(ImportationViewModel.class));
         assertThat(premier.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
         Long idPassage = premier.resultatProperty().get().passage().id();
 
-        // 2) Second import du MÊME quadruplet via un ViewModel frais (la SD est intacte, R9) : refusé.
-        ImportationViewModel second = importerNuit(injector.getInstance(ImportationViewModel.class));
-        assertThat(second.etatProperty().get()).isEqualTo(EtatImport.ECHEC);
-        assertThat(second.resultatProperty().get()).isNull();
-        assertThat(second.messageErreurProperty().get()).containsIgnoringCase("existe déjà");
+        // 2) Second assistant, MÊME quadruplet : le pré-contrôle R5 (#108) détecte le doublon dès le
+        // rattachement et désactive l'import AVANT toute copie/transformation (l'utilisateur est prévenu).
+        ImportationViewModel second = injector.getInstance(ImportationViewModel.class);
+        second.dossierSourceProperty().set(dossierSource);
+        second.inspecter();
+        second.chargerSites();
+        second.siteSelectionneProperty().set(site);
+        second.pointSelectionneProperty().set(point);
+        second.anneeProperty().set(ANNEE);
+        second.numeroPassageProperty().set(1);
 
-        // 3) La base reste intacte : le passage d'origine n'a pas été altéré par la tentative refusée.
+        assertThat(second.avertissementNumeroPassageProperty().get())
+                .as("doublon détecté dès le rattachement")
+                .containsIgnoringCase("existe déjà");
+        assertThat(second.peutImporter().get())
+                .as("le n° de passage déjà pris désactive l'import (R5 anticipé)")
+                .isFalse();
+
+        // Forcer l'appel n'a aucun effet : rien ne s'exécute, l'état reste PRET et aucun passage n'est créé.
+        second.importer();
+        assertThat(second.etatProperty().get()).isEqualTo(EtatImport.PRET);
+        assertThat(second.resultatProperty().get()).isNull();
+
+        // 3) La base reste intacte : un seul passage pour ce quadruplet, inchangé.
         var passagePersiste = new PassageDao(source).findById(idPassage).orElseThrow();
         assertThat(passagePersiste.statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+        assertThat(new PassageDao(source).findByPoint(point.id())).hasSize(1);
     }
 
     /// Rejoue les étapes 2 à 4 du parcours (inspecter → rattacher au site/point seedés → importer) sur
