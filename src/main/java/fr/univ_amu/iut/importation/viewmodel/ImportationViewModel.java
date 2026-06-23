@@ -252,12 +252,12 @@ public class ImportationViewModel {
         String erreur = inspection.inspecter();
         if (erreur != null) {
             reinitialiserExecution();
-            rattachement.definirRapport(null);
+            rattachement.definirExempleNom(null);
             messageErreur.set(erreur);
             return;
         }
         messageErreur.set("");
-        rattachement.definirRapport(inspection.rapport());
+        rattachement.definirExempleNom(inspection.exempleNomOriginal());
         // --end-solution--
     }
 
@@ -387,7 +387,7 @@ public class ImportationViewModel {
     private void reinitialiserPourNouveauDossier() {
         inspection.reinitialiser();
         reinitialiserExecution();
-        rattachement.definirRapport(null);
+        rattachement.definirExempleNom(null);
         messageErreur.set("");
     }
 

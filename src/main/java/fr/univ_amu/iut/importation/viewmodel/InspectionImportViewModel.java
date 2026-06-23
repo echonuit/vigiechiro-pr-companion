@@ -111,9 +111,19 @@ public class InspectionImportViewModel {
         return inspecte.get();
     }
 
-    /// Rapport de la dernière inspection réussie (exemple de nom pour l'aperçu) ; `null` sinon.
+    /// Rapport de la dernière inspection réussie ; `null` sinon.
     public RapportInspection rapport() {
         return rapport;
+    }
+
+    /// Exemple de nom d'origine pour l'aperçu du préfixe : le premier enregistrement réellement
+    /// inspecté si disponible, sinon `null` (l'aperçu utilisera un gabarit générique). C'est cette
+    /// **valeur dérivée** (un simple `String`) que l'orchestrateur transmet au rattachement, plutôt que
+    /// le rapport, pour ne pas coupler les deux sous-VM.
+    public String exempleNomOriginal() {
+        return rapport != null && !rapport.originaux().isEmpty()
+                ? rapport.originaux().get(0).getFileName().toString()
+                : null;
     }
 
     /// Dossier source à inspecter puis importer (lié au champ + bouton « Parcourir » de la vue).
