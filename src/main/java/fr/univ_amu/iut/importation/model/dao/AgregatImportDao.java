@@ -62,6 +62,23 @@ public class AgregatImportDao {
         }
     }
 
+    /// Plus petit n° de passage **libre** (≥ 1) pour ce point et cette année : `MAX(passage_number) + 1`
+    /// (donc `1` quand aucun passage n'existe encore). Sert à **proposer** un n° non utilisé lorsque
+    /// l'utilisateur tombe sur un doublon R5 au rattachement (#108).
+    public int prochainNumeroPassageLibre(Long idPoint, int annee) {
+        String sql = "SELECT COALESCE(MAX(passage_number), 0) FROM passage WHERE point_id = ? AND year = ?";
+        try (Connection cx = source.getConnection();
+                PreparedStatement ps = cx.prepareStatement(sql)) {
+            ps.setObject(1, idPoint);
+            ps.setInt(2, annee);
+            try (ResultSet rs = ps.executeQuery()) {
+                return (rs.next() ? rs.getInt(1) : 0) + 1;
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Échec du calcul du prochain n° de passage libre : " + sql, e);
+        }
+    }
+
     // ---------------------------------------------------------------------------
     // Écritures « connection-aware » (à appeler dans UniteDeTravail.executer)
     // ---------------------------------------------------------------------------

@@ -286,6 +286,24 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("#108 : le pré-contrôle R5 détecte le quadruplet pris et propose le prochain n° libre")
+    void precontrole_numero_passage_deja_pris() {
+        // Aucun passage encore : rien n'est pris, le premier n° libre est 1.
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+        assertThat(service.prochainNumeroPassageLibre(idPoint, 2026)).isEqualTo(1);
+
+        service.importer(sd, idPoint, prefixe); // crée le passage n° 2 / 2026 pour ce point
+
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isTrue();
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 1)).isFalse(); // autre n°
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2025, 2)).isFalse(); // autre année
+        assertThat(service.prochainNumeroPassageLibre(idPoint, 2026)).isEqualTo(3); // max(2) + 1
+        // Rattachement incomplet : aucun signalement (pas d'exception SQL brute).
+        assertThat(service.numeroPassageDejaUtilise(null, 2026, 2)).isFalse();
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 0)).isFalse();
+    }
+
+    @Test
     @DisplayName("O7 : un échec de persistance annule TOUT (rollback) : aucun enregistreur committé")
     void rollback_si_echec_de_persistance() {
         // point_id inexistant : la persistance échoue sur la contrainte FK du passage, APRÈS l'upsert
