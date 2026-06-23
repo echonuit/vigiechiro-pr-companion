@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model.dao;
 
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -15,7 +16,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /// Écrivain transactionnel de l'**agrégat d'import** : enregistreur, micro, passage, session,
@@ -88,6 +91,28 @@ public class AgregatImportDao {
             numero++;
         }
         return numero;
+    }
+
+    /// Passages **déjà en base** pour la même nuit (même enregistreur + même date d'enregistrement),
+    /// quel que soit le point ou le n° de passage : sert à détecter à l'inspection qu'une nuit a déjà
+    /// été importée (#147), même rattachée ailleurs que le quadruplet R5 visé. Liste vide si aucune.
+    public List<PassageExistant> passagesDeLaNuit(String idEnregistreur, String dateNuit) {
+        String sql = "SELECT passage_number, year FROM passage"
+                + " WHERE recorder_id = ? AND recording_date = ? ORDER BY year, passage_number";
+        List<PassageExistant> resultats = new ArrayList<>();
+        try (Connection cx = source.getConnection();
+                PreparedStatement ps = cx.prepareStatement(sql)) {
+            ps.setString(1, idEnregistreur);
+            ps.setString(2, dateNuit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    resultats.add(new PassageExistant(rs.getInt("passage_number"), rs.getInt("year")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Échec de la détection de nuit déjà importée : " + sql, e);
+        }
+        return resultats;
     }
 
     // ---------------------------------------------------------------------------

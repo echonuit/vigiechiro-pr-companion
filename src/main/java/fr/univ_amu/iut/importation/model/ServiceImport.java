@@ -173,6 +173,18 @@ public class ServiceImport {
         return agregatDao.prochainNumeroPassageLibre(idPoint, annee);
     }
 
+    /// Détection de **nuit déjà importée** (#147) **exposée à l'IHM** : passages déjà en base pour le
+    /// même enregistreur (`numeroSerie`) à la même date (`dateNuit`, au format ISO `AAAA-MM-JJ`), quel
+    /// que soit leur rattachement. Permet d'avertir à l'inspection qu'on s'apprête à réimporter une nuit
+    /// déjà présente (l'import en créerait un nouveau passage). Liste vide si `numeroSerie`/`dateNuit` est
+    /// nul ou si aucune nuit ne correspond.
+    public List<PassageExistant> nuitDejaImportee(String numeroSerie, String dateNuit) {
+        if (numeroSerie == null || dateNuit == null) {
+            return List.of();
+        }
+        return agregatDao.passagesDeLaNuit(numeroSerie, dateNuit);
+    }
+
     /// Corps de l'import (inspection, copie protégée R9, renommage R6/R7, transformation R10/R11,
     /// persistance atomique O7), exécuté **sous le verrou anti-concurrent** posé par [#importer].
     private ResultatImport executerImportProtege(

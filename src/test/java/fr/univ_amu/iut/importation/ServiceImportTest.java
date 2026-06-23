@@ -305,6 +305,28 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("#147 : nuitDejaImportee détecte une nuit déjà en base (même enregistreur + même date)")
+    void detection_nuit_deja_importee() {
+        // Avant tout import : rien en base.
+        assertThat(service.nuitDejaImportee(SERIE, "2026-04-22")).isEmpty();
+
+        service.importer(sd, idPoint, prefixe); // crée un passage n° 2 / 2026, nuit du 2026-04-22
+
+        assertThat(service.nuitDejaImportee(SERIE, "2026-04-22"))
+                .as("la nuit importée est détectée")
+                .singleElement()
+                .satisfies(p -> {
+                    assertThat(p.numeroPassage()).isEqualTo(2);
+                    assertThat(p.annee()).isEqualTo(2026);
+                });
+        // Autre enregistreur, autre date ou identité nulle : aucune détection (pas d'exception SQL brute).
+        assertThat(service.nuitDejaImportee("0000000", "2026-04-22")).isEmpty();
+        assertThat(service.nuitDejaImportee(SERIE, "2026-04-23")).isEmpty();
+        assertThat(service.nuitDejaImportee(null, "2026-04-22")).isEmpty();
+        assertThat(service.nuitDejaImportee(SERIE, null)).isEmpty();
+    }
+
+    @Test
     @DisplayName("O7 : un échec de persistance annule TOUT (rollback) : aucun enregistreur committé")
     void rollback_si_echec_de_persistance() {
         // point_id inexistant : la persistance échoue sur la contrainte FK du passage, APRÈS l'upsert
