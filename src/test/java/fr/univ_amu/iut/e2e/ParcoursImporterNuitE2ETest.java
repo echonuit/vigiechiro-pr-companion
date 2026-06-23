@@ -100,26 +100,26 @@ class ParcoursImporterNuitE2ETest {
         ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
 
         // Jalon 1 — Inspection (lecture seule) : le dossier source est photographié sans rien y écrire.
-        vm.dossierSourceProperty().set(dossierSource);
+        vm.inspection().dossierSourceProperty().set(dossierSource);
         vm.inspecter();
-        assertThat(vm.estInspecte()).isTrue();
-        assertThat(vm.aUnJournalProperty().get()).isTrue();
-        assertThat(vm.aUnReleveClimatiqueProperty().get()).isTrue();
-        assertThat(vm.nombreOriginauxProperty().get()).isEqualTo(1);
-        assertThat(vm.etatNommageProperty().get()).isEqualTo(EtatNommage.BRUT);
-        assertThat(vm.resumeJournalProperty().get()).contains(SERIE);
+        assertThat(vm.inspection().estInspecte()).isTrue();
+        assertThat(vm.inspection().aUnJournalProperty().get()).isTrue();
+        assertThat(vm.inspection().aUnReleveClimatiqueProperty().get()).isTrue();
+        assertThat(vm.inspection().nombreOriginauxProperty().get()).isEqualTo(1);
+        assertThat(vm.inspection().etatNommageProperty().get()).isEqualTo(EtatNommage.BRUT);
+        assertThat(vm.inspection().resumeJournalProperty().get()).contains(SERIE);
         // Tant que le rattachement n'est pas complet, l'import reste impossible.
         assertThat(vm.peutImporter().get()).isFalse();
 
         // Jalon 2 — Rattachement : le site de l'utilisateur est proposé, on choisit site + point + année
         // + n° de passage, puis le bouton « Importer » s'active.
         vm.chargerSites();
-        assertThat(vm.sites()).extracting(Site::id).containsExactly(site.id());
-        vm.siteSelectionneProperty().set(site);
-        assertThat(vm.points()).extracting(PointDEcoute::id).containsExactly(point.id());
-        vm.pointSelectionneProperty().set(point);
-        vm.anneeProperty().set(ANNEE);
-        vm.numeroPassageProperty().set(1);
+        assertThat(vm.rattachement().sites()).extracting(Site::id).containsExactly(site.id());
+        vm.rattachement().siteSelectionneProperty().set(site);
+        assertThat(vm.rattachement().points()).extracting(PointDEcoute::id).containsExactly(point.id());
+        vm.rattachement().pointSelectionneProperty().set(point);
+        vm.rattachement().anneeProperty().set(ANNEE);
+        vm.rattachement().numeroPassageProperty().set(1);
         assertThat(vm.peutImporter().get()).isTrue();
 
         // Jalon 3 — Import : copie protégée + renommage + transformation + persistance atomique.
@@ -155,13 +155,13 @@ class ParcoursImporterNuitE2ETest {
         // 2) Second assistant, MÊME quadruplet : le pré-contrôle R5 (#108) détecte le doublon dès le
         // rattachement et désactive l'import AVANT toute copie/transformation (l'utilisateur est prévenu).
         ImportationViewModel second = injector.getInstance(ImportationViewModel.class);
-        second.dossierSourceProperty().set(dossierSource);
+        second.inspection().dossierSourceProperty().set(dossierSource);
         second.inspecter();
         second.chargerSites();
-        second.siteSelectionneProperty().set(site);
-        second.pointSelectionneProperty().set(point);
-        second.anneeProperty().set(ANNEE);
-        second.numeroPassageProperty().set(1);
+        second.rattachement().siteSelectionneProperty().set(site);
+        second.rattachement().pointSelectionneProperty().set(point);
+        second.rattachement().anneeProperty().set(ANNEE);
+        second.rattachement().numeroPassageProperty().set(1);
 
         assertThat(second.avertissementNumeroPassageProperty().get())
                 .as("doublon détecté dès le rattachement")
@@ -184,13 +184,13 @@ class ParcoursImporterNuitE2ETest {
     /// Rejoue les étapes 2 à 4 du parcours (inspecter → rattacher au site/point seedés → importer) sur
     /// le `vm` fourni, avec le quadruplet de référence `(CARRE/CODE_POINT, ANNEE, n° 1)`.
     private ImportationViewModel importerNuit(ImportationViewModel vm) {
-        vm.dossierSourceProperty().set(dossierSource);
+        vm.inspection().dossierSourceProperty().set(dossierSource);
         vm.inspecter();
         vm.chargerSites();
-        vm.siteSelectionneProperty().set(site);
-        vm.pointSelectionneProperty().set(point);
-        vm.anneeProperty().set(ANNEE);
-        vm.numeroPassageProperty().set(1);
+        vm.rattachement().siteSelectionneProperty().set(site);
+        vm.rattachement().pointSelectionneProperty().set(point);
+        vm.rattachement().anneeProperty().set(ANNEE);
+        vm.rattachement().numeroPassageProperty().set(1);
         vm.importer();
         return vm;
     }

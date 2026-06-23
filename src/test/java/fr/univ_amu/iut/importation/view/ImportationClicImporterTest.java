@@ -118,11 +118,14 @@ class ImportationClicImporterTest {
         // Place le ViewModel dans un état où l'import est possible (dossier inspecté
         // + site + point rattachés), depuis le fil JavaFX.
         robot.interact(() -> {
-            viewModel.dossierSourceProperty().set(sd);
+            viewModel.inspection().dossierSourceProperty().set(sd);
             viewModel.inspecter();
-            Site site = viewModel.sites().get(0);
-            viewModel.siteSelectionneProperty().set(site);
-            viewModel.pointSelectionneProperty().set(viewModel.points().get(0));
+            Site site = viewModel.rattachement().sites().get(0);
+            viewModel.rattachement().siteSelectionneProperty().set(site);
+            viewModel
+                    .rattachement()
+                    .pointSelectionneProperty()
+                    .set(viewModel.rattachement().points().get(0));
         });
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -158,10 +161,16 @@ class ImportationClicImporterTest {
     @DisplayName("Un import refusé (doublon R5) affiche le message d'erreur au lieu de disparaître")
     void import_refuse_affiche_l_erreur(FxRobot robot) {
         robot.interact(() -> {
-            viewModel.dossierSourceProperty().set(sd);
+            viewModel.inspection().dossierSourceProperty().set(sd);
             viewModel.inspecter();
-            viewModel.siteSelectionneProperty().set(viewModel.sites().get(0));
-            viewModel.pointSelectionneProperty().set(viewModel.points().get(0));
+            viewModel
+                    .rattachement()
+                    .siteSelectionneProperty()
+                    .set(viewModel.rattachement().sites().get(0));
+            viewModel
+                    .rattachement()
+                    .pointSelectionneProperty()
+                    .set(viewModel.rattachement().points().get(0));
         });
         WaitForAsyncUtils.waitForFxEvents();
         Button importer = robot.lookup("#boutonImporter").queryButton();

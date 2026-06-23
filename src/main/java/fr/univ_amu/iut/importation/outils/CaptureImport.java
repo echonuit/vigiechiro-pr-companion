@@ -103,13 +103,17 @@ public final class CaptureImport {
                 type == ImportationController.class ? new ImportationController(vm) : injecteur.getInstance(type));
         Parent vue = loader.load();
 
-        vm.dossierSourceProperty().set(dossierSd);
+        vm.inspection().dossierSourceProperty().set(dossierSd);
         vm.inspecter();
-        if (!vm.sites().isEmpty()) {
-            vm.siteSelectionneProperty().set(vm.sites().get(0));
+        if (!vm.rattachement().sites().isEmpty()) {
+            vm.rattachement()
+                    .siteSelectionneProperty()
+                    .set(vm.rattachement().sites().get(0));
         }
-        if (!vm.points().isEmpty()) {
-            vm.pointSelectionneProperty().set(vm.points().get(0));
+        if (!vm.rattachement().points().isEmpty()) {
+            vm.rattachement()
+                    .pointSelectionneProperty()
+                    .set(vm.rattachement().points().get(0));
         }
 
         Scene scene = new Scene(vue, 1100, 860);
@@ -123,13 +127,13 @@ public final class CaptureImport {
 
         // État « mélange » (#33) : dossier mêlant deux enregistreurs → avertissement à l'inspection
         // (non bloquant). Changer le dossier source réinitialise l'état, on ré-inspecte.
-        vm.dossierSourceProperty().set(creerDossierMelange());
+        vm.inspection().dossierSourceProperty().set(creerDossierMelange());
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-melange.png"));
 
         // État « incohérence » (#33) : le journal (série 1925492, nuit du 22/04) contredit les WAV
         // (série 1648011, nuit du 30/04) → bandeau rouge non bloquant (série ET date).
-        vm.dossierSourceProperty().set(creerDossierIncoherence());
+        vm.inspection().dossierSourceProperty().set(creerDossierIncoherence());
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-incoherence.png"));
     }

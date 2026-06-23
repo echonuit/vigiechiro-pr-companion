@@ -7,6 +7,8 @@ import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.importation.viewmodel.InspectionImportViewModel;
+import fr.univ_amu.iut.importation.viewmodel.RattachementImportViewModel;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.File;
@@ -84,6 +86,9 @@ public class ImportationController implements GardeQuitter {
     private Label labelApercu;
 
     @FXML
+    private Label labelPrefixeDiscordant;
+
+    @FXML
     private HBox zonePassageExistant;
 
     @FXML
@@ -126,7 +131,7 @@ public class ImportationController implements GardeQuitter {
     @Override
     public boolean aSaisieNonEnregistree() {
         return viewModel.etatProperty().get() == EtatImport.PRET
-                && viewModel.dossierSourceProperty().get() != null;
+                && viewModel.inspection().dossierSourceProperty().get() != null;
     }
 
     @Override
@@ -137,70 +142,93 @@ public class ImportationController implements GardeQuitter {
     // --solution--
     @FXML
     private void initialize() {
+        // La vue se lie directement aux sous-VM exposés par l'orchestrateur (inspection / rattachement),
+        // plutôt qu'à des getters de délégation : la façade reste mince (cf. refonte #111).
+        lierDossierEtInspection(viewModel.inspection());
+        lierRattachement(viewModel.rattachement());
+        lierAction();
+        viewModel.chargerSites();
+    }
+
+    /// Sections 1-2 : chemin du dossier source + section d'inspection (journal, relevé, compte, nommage,
+    /// avertissements #33), liées au sous-VM d'inspection.
+    private void lierDossierEtInspection(InspectionImportViewModel inspection) {
         // 1. Dossier source (affichage en lecture seule du chemin choisi).
         champDossier
                 .textProperty()
                 .bind(Bindings.createStringBinding(
                         () -> {
-                            Path dossier = viewModel.dossierSourceProperty().get();
+                            Path dossier = inspection.dossierSourceProperty().get();
                             return dossier == null ? "" : dossier.toString();
                         },
-                        viewModel.dossierSourceProperty()));
+                        inspection.dossierSourceProperty()));
 
         // 2. Inspection : section visible une fois le dossier inspecté.
-        sectionInspection.visibleProperty().bind(viewModel.inspecteProperty());
-        sectionInspection.managedProperty().bind(viewModel.inspecteProperty());
+        sectionInspection.visibleProperty().bind(inspection.inspecteProperty());
+        sectionInspection.managedProperty().bind(inspection.inspecteProperty());
         labelJournal
                 .textProperty()
                 .bind(Bindings.createStringBinding(
-                        () -> viewModel.aUnJournalProperty().get()
+                        () -> inspection.aUnJournalProperty().get()
                                 ? "✓ Journal du capteur : "
-                                        + viewModel.resumeJournalProperty().get()
+                                        + inspection.resumeJournalProperty().get()
                                 : "⚠ Aucun journal LogPR détecté",
-                        viewModel.aUnJournalProperty(),
-                        viewModel.resumeJournalProperty()));
+                        inspection.aUnJournalProperty(),
+                        inspection.resumeJournalProperty()));
         labelReleve
                 .textProperty()
                 .bind(Bindings.createStringBinding(
-                        () -> viewModel.aUnReleveClimatiqueProperty().get()
+                        () -> inspection.aUnReleveClimatiqueProperty().get()
                                 ? "✓ Relevé climatique détecté"
                                 : "⚠ Relevé climatique absent (R20)",
-                        viewModel.aUnReleveClimatiqueProperty()));
+                        inspection.aUnReleveClimatiqueProperty()));
         labelOriginaux
                 .textProperty()
-                .bind(viewModel.nombreOriginauxProperty().asString("✓ %d enregistrement(s) WAV détecté(s)"));
+                .bind(inspection.nombreOriginauxProperty().asString("✓ %d enregistrement(s) WAV détecté(s)"));
         labelNommage
                 .textProperty()
                 .bind(Bindings.createStringBinding(
                         () -> "État du nommage : "
-                                + libelleNommage(viewModel.etatNommageProperty().get()),
-                        viewModel.etatNommageProperty()));
+                                + libelleNommage(
+                                        inspection.etatNommageProperty().get()),
+                        inspection.etatNommageProperty()));
         // Avertissement « mélange » (#33) : visible seulement s'il y a un message.
-        labelMelange.textProperty().bind(viewModel.avertissementMelangeProperty());
-        var aUnMelange = viewModel.avertissementMelangeProperty().isNotEmpty();
+        labelMelange.textProperty().bind(inspection.avertissementMelangeProperty());
+        var aUnMelange = inspection.avertissementMelangeProperty().isNotEmpty();
         labelMelange.visibleProperty().bind(aUnMelange);
         labelMelange.managedProperty().bind(aUnMelange);
 
-        labelIncoherence.textProperty().bind(viewModel.avertissementIncoherenceProperty());
-        var aUneIncoherence = viewModel.avertissementIncoherenceProperty().isNotEmpty();
+        labelIncoherence.textProperty().bind(inspection.avertissementIncoherenceProperty());
+        var aUneIncoherence = inspection.avertissementIncoherenceProperty().isNotEmpty();
         labelIncoherence.visibleProperty().bind(aUneIncoherence);
         labelIncoherence.managedProperty().bind(aUneIncoherence);
+    }
 
-        // 3. Rattachement : combos site/point + année/passage + aperçu du préfixe.
-        comboSites.setItems(viewModel.sites());
+    /// Section 3 : combos site/point, champs année/n° de passage, aperçu du préfixe et avertissement de
+    /// discordance (#111), liés au sous-VM de rattachement.
+    private void lierRattachement(RattachementImportViewModel rattachement) {
+        comboSites.setItems(rattachement.sites());
         comboSites.setConverter(convertisseur(this::libelleSite));
-        comboSites.valueProperty().bindBidirectional(viewModel.siteSelectionneProperty());
-        comboPoints.setItems(viewModel.points());
+        comboSites.valueProperty().bindBidirectional(rattachement.siteSelectionneProperty());
+        comboPoints.setItems(rattachement.points());
         comboPoints.setConverter(convertisseur(PointDEcoute::code));
-        comboPoints.valueProperty().bindBidirectional(viewModel.pointSelectionneProperty());
+        comboPoints.valueProperty().bindBidirectional(rattachement.pointSelectionneProperty());
         Bindings.bindBidirectional(
-                champAnnee.textProperty(), viewModel.anneeProperty(), new NumberStringConverter("0"));
+                champAnnee.textProperty(), rattachement.anneeProperty(), new NumberStringConverter("0"));
         Bindings.bindBidirectional(
-                champPassage.textProperty(), viewModel.numeroPassageProperty(), new NumberStringConverter("0"));
-        labelApercu.textProperty().bind(viewModel.apercuPrefixeProperty());
+                champPassage.textProperty(), rattachement.numeroPassageProperty(), new NumberStringConverter("0"));
+        labelApercu.textProperty().bind(rattachement.apercuPrefixeProperty());
+        // Discordance de préfixe (#111) : déjà-préfixés ne correspondant pas au rattachement (non bloquant).
+        labelPrefixeDiscordant.textProperty().bind(rattachement.avertissementPrefixeProperty());
+        var aDiscordance = rattachement.avertissementPrefixeProperty().isNotEmpty();
+        labelPrefixeDiscordant.visibleProperty().bind(aDiscordance);
+        labelPrefixeDiscordant.managedProperty().bind(aDiscordance);
+    }
 
-        // 4. Action : pendant l'import (EN_COURS), la barre de progression s'affiche (avancement réel
-        // fichier X/N, #33) et le formulaire est gelé pour éviter toute modification en cours.
+    /// Section 4 : pendant l'import (EN_COURS), la barre de progression s'affiche (avancement réel
+    /// fichier X/N, #33) et le formulaire est gelé ; câble aussi l'avertissement de doublon (#108) et les
+    /// messages d'erreur/statut. Tout est porté par l'orchestrateur (exécution + collaborateur n° passage).
+    private void lierAction() {
         var enCours = viewModel.etatProperty().isEqualTo(EtatImport.EN_COURS);
         zoneProgression.visibleProperty().bind(enCours);
         zoneProgression.managedProperty().bind(enCours);
@@ -225,8 +253,6 @@ public class ImportationController implements GardeQuitter {
                 .textProperty()
                 .bind(Bindings.createStringBinding(
                         this::libelleStatut, viewModel.etatProperty(), viewModel.resultatProperty()));
-
-        viewModel.chargerSites();
     }
 
     /// « Parcourir » : ouvre le sélecteur de dossier natif puis lance l'inspection (lecture seule).
@@ -236,7 +262,7 @@ public class ImportationController implements GardeQuitter {
         selecteur.setTitle("Dossier de la nuit (carte SD ou copie sur disque)");
         File dossier = selecteur.showDialog(champDossier.getScene().getWindow());
         if (dossier != null) {
-            viewModel.dossierSourceProperty().set(dossier.toPath());
+            viewModel.inspection().dossierSourceProperty().set(dossier.toPath());
             viewModel.inspecter();
         }
     }

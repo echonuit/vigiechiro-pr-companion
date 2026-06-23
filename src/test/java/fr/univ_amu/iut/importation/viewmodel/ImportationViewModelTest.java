@@ -85,16 +85,16 @@ class ImportationViewModelTest {
     @DisplayName("Inspecter un dossier brut expose journal, relevé, compte et état de nommage")
     void inspecter_dossier_brut() {
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
 
-        assertThat(viewModel.estInspecte()).isTrue();
-        assertThat(viewModel.aUnJournalProperty().get()).isTrue();
-        assertThat(viewModel.resumeJournalProperty().get()).contains("1925492");
-        assertThat(viewModel.aUnReleveClimatiqueProperty().get()).isTrue();
-        assertThat(viewModel.nombreOriginauxProperty().get()).isEqualTo(2);
-        assertThat(viewModel.etatNommageProperty().get()).isEqualTo(EtatNommage.BRUT);
+        assertThat(viewModel.inspection().estInspecte()).isTrue();
+        assertThat(viewModel.inspection().aUnJournalProperty().get()).isTrue();
+        assertThat(viewModel.inspection().resumeJournalProperty().get()).contains("1925492");
+        assertThat(viewModel.inspection().aUnReleveClimatiqueProperty().get()).isTrue();
+        assertThat(viewModel.inspection().nombreOriginauxProperty().get()).isEqualTo(2);
+        assertThat(viewModel.inspection().etatNommageProperty().get()).isEqualTo(EtatNommage.BRUT);
         assertThat(viewModel.messageErreurProperty().get()).isEmpty();
     }
 
@@ -103,24 +103,24 @@ class ImportationViewModelTest {
     void inspecter_sans_releve_climatique() throws IOException {
         Files.delete(sd.resolve("PaRecPR1925492_THLog.csv"));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
 
-        assertThat(viewModel.estInspecte()).isTrue();
-        assertThat(viewModel.aUnReleveClimatiqueProperty().get()).isFalse();
-        assertThat(viewModel.nombreOriginauxProperty().get()).isEqualTo(2);
+        assertThat(viewModel.inspection().estInspecte()).isTrue();
+        assertThat(viewModel.inspection().aUnReleveClimatiqueProperty().get()).isFalse();
+        assertThat(viewModel.inspection().nombreOriginauxProperty().get()).isEqualTo(2);
     }
 
     @Test
     @DisplayName("Un chemin invalide renseigne le message d'erreur et laisse inspecte à false")
     void inspecter_chemin_invalide() {
         when(serviceImport.inspecter(any())).thenThrow(new IllegalArgumentException("Le chemin n'est pas un dossier."));
-        viewModel.dossierSourceProperty().set(racine.resolve("inexistant"));
+        viewModel.inspection().dossierSourceProperty().set(racine.resolve("inexistant"));
 
         viewModel.inspecter();
 
-        assertThat(viewModel.estInspecte()).isFalse();
+        assertThat(viewModel.inspection().estInspecte()).isFalse();
         assertThat(viewModel.messageErreurProperty().get()).contains("dossier");
     }
 
@@ -129,7 +129,7 @@ class ImportationViewModelTest {
     void inspecter_sans_dossier_choisi() {
         viewModel.inspecter();
 
-        assertThat(viewModel.estInspecte()).isFalse();
+        assertThat(viewModel.inspection().estInspecte()).isFalse();
         assertThat(viewModel.messageErreurProperty().get()).contains("dossier source");
         verifyNoInteractions(serviceImport);
     }
@@ -138,21 +138,21 @@ class ImportationViewModelTest {
     @DisplayName("Un échec après une inspection réussie réinitialise l'état (pas de rapport obsolète)")
     void echec_apres_succes_reinitialise_l_etat() {
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();
-        assertThat(viewModel.nombreOriginauxProperty().get()).isEqualTo(2);
+        assertThat(viewModel.inspection().nombreOriginauxProperty().get()).isEqualTo(2);
 
         Path invalide = racine.resolve("inexistant");
         when(serviceImport.inspecter(invalide)).thenThrow(new IllegalArgumentException("Chemin invalide."));
-        viewModel.dossierSourceProperty().set(invalide);
+        viewModel.inspection().dossierSourceProperty().set(invalide);
         viewModel.inspecter();
 
-        assertThat(viewModel.estInspecte()).isFalse();
-        assertThat(viewModel.aUnJournalProperty().get()).isFalse();
-        assertThat(viewModel.aUnReleveClimatiqueProperty().get()).isFalse();
-        assertThat(viewModel.nombreOriginauxProperty().get()).isZero();
-        assertThat(viewModel.etatNommageProperty().get()).isNull();
-        assertThat(viewModel.resumeJournalProperty().get()).isEmpty();
+        assertThat(viewModel.inspection().estInspecte()).isFalse();
+        assertThat(viewModel.inspection().aUnJournalProperty().get()).isFalse();
+        assertThat(viewModel.inspection().aUnReleveClimatiqueProperty().get()).isFalse();
+        assertThat(viewModel.inspection().nombreOriginauxProperty().get()).isZero();
+        assertThat(viewModel.inspection().etatNommageProperty().get()).isNull();
+        assertThat(viewModel.inspection().resumeJournalProperty().get()).isEmpty();
         assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
     }
 
@@ -167,7 +167,7 @@ class ImportationViewModelTest {
 
         viewModel.chargerSites();
 
-        assertThat(viewModel.sites()).containsExactly(a, b);
+        assertThat(viewModel.rattachement().sites()).containsExactly(a, b);
     }
 
     @Test
@@ -177,10 +177,10 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
 
-        viewModel.siteSelectionneProperty().set(site);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
 
-        assertThat(viewModel.points()).containsExactly(point);
-        assertThat(viewModel.pointSelectionneProperty().get()).isNull();
+        assertThat(viewModel.rattachement().points()).containsExactly(point);
+        assertThat(viewModel.rattachement().pointSelectionneProperty().get()).isNull();
     }
 
     @Test
@@ -190,11 +190,11 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
 
-        viewModel.siteSelectionneProperty().set(site);
-        viewModel.pointSelectionneProperty().set(point);
-        viewModel.numeroPassageProperty().set(2);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(2);
 
-        assertThat(viewModel.apercuPrefixeProperty().get()).startsWith("Car640380-2026-Pass2-A1-");
+        assertThat(viewModel.rattachement().apercuPrefixeProperty().get()).startsWith("Car640380-2026-Pass2-A1-");
     }
 
     @Test
@@ -207,14 +207,14 @@ class ImportationViewModelTest {
 
         assertThat(viewModel.peutImporter().get()).isFalse();
 
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();
         assertThat(viewModel.peutImporter().get())
                 .as("inspecté mais sans site/point")
                 .isFalse();
 
-        viewModel.siteSelectionneProperty().set(site);
-        viewModel.pointSelectionneProperty().set(point);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
         assertThat(viewModel.peutImporter().get()).isTrue();
     }
 
@@ -225,17 +225,17 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();
-        viewModel.siteSelectionneProperty().set(site);
-        viewModel.pointSelectionneProperty().set(point);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
         assertThat(viewModel.peutImporter().get()).isTrue();
 
-        viewModel.dossierSourceProperty().set(racine.resolve("autre"));
+        viewModel.inspection().dossierSourceProperty().set(racine.resolve("autre"));
 
-        assertThat(viewModel.estInspecte()).isFalse();
+        assertThat(viewModel.inspection().estInspecte()).isFalse();
         assertThat(viewModel.peutImporter().get()).isFalse();
-        assertThat(viewModel.nombreOriginauxProperty().get()).isZero();
+        assertThat(viewModel.inspection().nombreOriginauxProperty().get()).isZero();
     }
 
     @Test
@@ -251,11 +251,11 @@ class ImportationViewModelTest {
         when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 2)).thenReturn(true);
         when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(3);
 
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();
-        viewModel.siteSelectionneProperty().set(site);
-        viewModel.pointSelectionneProperty().set(point);
-        viewModel.numeroPassageProperty().set(2);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(2);
 
         assertThat(viewModel.avertissementNumeroPassageProperty().get())
                 .as("doublon détecté : avertissement non vide proposant le n° libre")
@@ -285,16 +285,16 @@ class ImportationViewModelTest {
                 .thenReturn(false);
         when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 2)).thenReturn(true);
         when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(3);
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();
-        viewModel.siteSelectionneProperty().set(site);
-        viewModel.pointSelectionneProperty().set(point);
-        viewModel.numeroPassageProperty().set(2);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.rattachement().numeroPassageProperty().set(2);
         assertThat(viewModel.peutImporter().get()).isFalse();
 
         viewModel.utiliserProchainNumeroLibre();
 
-        assertThat(viewModel.numeroPassageProperty().get()).isEqualTo(3);
+        assertThat(viewModel.rattachement().numeroPassageProperty().get()).isEqualTo(3);
         assertThat(viewModel.avertissementNumeroPassageProperty().get())
                 .as("n° libre adopté : plus aucun avertissement")
                 .isEmpty();
@@ -385,11 +385,11 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR111_20260422_200000.wav"), Path.of("PaRecPR222_20260422_200000.wav")),
                         EtatNommage.BRUT));
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
 
-        assertThat(viewModel.avertissementMelangeProperty().get()).contains("plusieurs enregistreurs");
+        assertThat(viewModel.inspection().avertissementMelangeProperty().get()).contains("plusieurs enregistreurs");
     }
 
     @Test
@@ -416,12 +416,14 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR1648011_20260422_203000.wav")), // série ≠ journal
                         EtatNommage.BRUT));
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
 
-        assertThat(viewModel.avertissementIncoherenceProperty().get()).contains("la série déclarée (1925492)");
-        assertThat(viewModel.avertissementMelangeProperty().get()).isEmpty(); // un seul enregistreur côté WAV
+        assertThat(viewModel.inspection().avertissementIncoherenceProperty().get())
+                .contains("la série déclarée (1925492)");
+        assertThat(viewModel.inspection().avertissementMelangeProperty().get())
+                .isEmpty(); // un seul enregistreur côté WAV
     }
 
     @Test
@@ -456,10 +458,10 @@ class ImportationViewModelTest {
     }
 
     private void prepareRattachement(Site site, PointDEcoute point) {
-        viewModel.dossierSourceProperty().set(sd);
+        viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();
-        viewModel.siteSelectionneProperty().set(site);
-        viewModel.pointSelectionneProperty().set(point);
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
     }
 
     private static Site site(Long id, String carre) {

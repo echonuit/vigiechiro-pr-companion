@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.model;
 
 import java.util.Locale;
+import java.util.regex.Pattern;
 
 /// Construit le préfixe de nommage des fichiers et dossiers d'une session (R6/R7/R8).
 ///
@@ -21,6 +22,19 @@ public record Prefixe(String carre, int annee, int numeroPassage, String codePoi
 
     /// Tiret du 6 imposé par R6 (U+002D HYPHEN-MINUS).
     public static final char TIRET = '-';
+
+    /// Grammaire d'un nom **déjà préfixé** R6 : `Car<carré>-<année>-Pass<n°>-<point>-<suffixe>` (tirets
+    /// U+002D). On reconnaît la **grammaire complète**, pas le simple marqueur `Car` : un fichier comme
+    /// `Carto_20260422.wav` ou `Car_old.wav` n'est donc **pas** considéré comme préfixé.
+    private static final Pattern MOTIF_PREFIXE_R6 = Pattern.compile("Car\\d+-\\d{4}-Pass\\d+-[^-]+-.+");
+
+    /// `true` si `nomFichier` porte déjà un préfixe R6 valide (cf. [#MOTIF_PREFIXE_R6]). **Source unique
+    /// de vérité** partagée par l'inspection (état de nommage), le renommage (idempotence : ne jamais
+    /// re-préfixer, donc pas de double préfixe `Car…-Car…`, #111) et l'aperçu (nom conservé si déjà
+    /// préfixé).
+    public static boolean estNomPrefixe(String nomFichier) {
+        return MOTIF_PREFIXE_R6.matcher(nomFichier).matches();
+    }
 
     /// Nom du dossier de session (R22), sans tiret final : `Car040962-2026-Pass1-A1`.
     public String nomDossierSession() {

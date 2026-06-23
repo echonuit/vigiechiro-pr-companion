@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Prefixe;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -67,8 +68,8 @@ public class InspecteurDossier {
         if (originaux.isEmpty()) {
             return EtatNommage.VIDE;
         }
-        boolean tousPrefixes =
-                originaux.stream().allMatch(p -> p.getFileName().toString().startsWith("Car"));
+        boolean tousPrefixes = originaux.stream()
+                .allMatch(p -> Prefixe.estNomPrefixe(p.getFileName().toString()));
         return tousPrefixes ? EtatNommage.PREFIXE : EtatNommage.BRUT;
     }
 

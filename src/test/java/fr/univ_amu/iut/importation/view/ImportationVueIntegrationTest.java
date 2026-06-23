@@ -135,6 +135,7 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#champAnnee").queryAs(TextField.class)).isNotNull();
         assertThat(robot.lookup("#champPassage").queryAs(TextField.class)).isNotNull();
         assertThat(robot.lookup("#labelApercu").queryAs(Label.class)).isNotNull();
+        assertThat(robot.lookup("#labelPrefixeDiscordant").queryAs(Label.class)).isNotNull(); // #111
         assertThat(robot.lookup("#boutonImporter").queryAs(Button.class)).isNotNull();
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
         // Pré-contrôle R5 (#108) : la zone d'avertissement de doublon et son bouton « n° libre » existent.

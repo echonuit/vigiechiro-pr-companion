@@ -3,29 +3,22 @@ package fr.univ_amu.iut.importation.viewmodel;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
-import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
-import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
-import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.ObservableList;
 
 /// ViewModel de l'assistant **M-Import** (« Importer une nuit »), en **orchestrateur** (#183).
 ///
@@ -134,43 +127,18 @@ public class ImportationViewModel {
                 controleNumeroPassage.dejaUtiliseProperty());
     }
 
-    /// Dossier source à inspecter puis importer (délégué au sous-VM inspection).
-    public ObjectProperty<Path> dossierSourceProperty() {
-        return inspection.dossierSourceProperty();
+    /// Sous-VM d'**inspection** (étapes 1-2) : la vue **s'y lie directement** (dossier source, état
+    /// d'inspection, journal/relevé, compte, nommage, avertissements #33). L'orchestrateur ne re-expose
+    /// plus ces propriétés une à une (façade allégée — la vue dépend des sous-VM, pas d'un orchestrateur
+    /// God Class).
+    public InspectionImportViewModel inspection() {
+        return inspection;
     }
 
-    /// `true` dès qu'une inspection a réussi (délégué au sous-VM inspection).
-    public ReadOnlyBooleanProperty inspecteProperty() {
-        return inspection.inspecteProperty();
-    }
-
-    public boolean estInspecte() {
-        return inspection.estInspecte();
-    }
-
-    /// `true` si un journal du capteur (LogPR) a été détecté dans le dossier (délégué à l'inspection).
-    public ReadOnlyBooleanProperty aUnJournalProperty() {
-        return inspection.aUnJournalProperty();
-    }
-
-    /// `true` si un relevé climatique (THLog) est présent (R20) — délégué à l'inspection.
-    public ReadOnlyBooleanProperty aUnReleveClimatiqueProperty() {
-        return inspection.aUnReleveClimatiqueProperty();
-    }
-
-    /// Nombre d'enregistrements originaux (WAV) détectés (délégué à l'inspection).
-    public ReadOnlyIntegerProperty nombreOriginauxProperty() {
-        return inspection.nombreOriginauxProperty();
-    }
-
-    /// État du nommage des fichiers (`BRUT`, `PREFIXE`, `VIDE`) — délégué à l'inspection.
-    public ReadOnlyObjectProperty<EtatNommage> etatNommageProperty() {
-        return inspection.etatNommageProperty();
-    }
-
-    /// Résumé lisible du journal détecté (délégué à l'inspection).
-    public ReadOnlyStringProperty resumeJournalProperty() {
-        return inspection.resumeJournalProperty();
+    /// Sous-VM de **rattachement** (étape 3) : la vue **s'y lie directement** (site / point / année / n°,
+    /// aperçu du préfixe, avertissement de discordance de préfixe #111).
+    public RattachementImportViewModel rattachement() {
+        return rattachement;
     }
 
     /// Message d'erreur **unifié** (inspection ou exécution), vide en fonctionnement nominal.
@@ -178,54 +146,10 @@ public class ImportationViewModel {
         return messageErreur.getReadOnlyProperty();
     }
 
-    /// Avertissement « mélange » (#33) — délégué à l'inspection.
-    public ReadOnlyStringProperty avertissementMelangeProperty() {
-        return inspection.avertissementMelangeProperty();
-    }
-
-    /// Avertissement « incohérence » (#33) — délégué à l'inspection.
-    public ReadOnlyStringProperty avertissementIncoherenceProperty() {
-        return inspection.avertissementIncoherenceProperty();
-    }
-
-    /// Liste observable des sites de l'utilisateur (combobox Site). Déléguée au sous-VM rattachement.
-    public ObservableList<Site> sites() {
-        return rattachement.sites();
-    }
-
-    /// Site auquel rattacher la nuit (délégué au sous-VM rattachement).
-    public ObjectProperty<Site> siteSelectionneProperty() {
-        return rattachement.siteSelectionneProperty();
-    }
-
-    /// Points du site sélectionné (délégué au sous-VM rattachement).
-    public ObservableList<PointDEcoute> points() {
-        return rattachement.points();
-    }
-
-    /// Point d'écoute auquel rattacher la nuit (délégué au sous-VM rattachement).
-    public ObjectProperty<PointDEcoute> pointSelectionneProperty() {
-        return rattachement.pointSelectionneProperty();
-    }
-
-    /// Année du passage (déléguée au sous-VM rattachement).
-    public IntegerProperty anneeProperty() {
-        return rattachement.anneeProperty();
-    }
-
-    /// Numéro de passage dans l'année (délégué au sous-VM rattachement).
-    public IntegerProperty numeroPassageProperty() {
-        return rattachement.numeroPassageProperty();
-    }
-
-    /// Aperçu du nom préfixé appliqué aux fichiers (R6), délégué au sous-VM rattachement.
-    public ReadOnlyStringProperty apercuPrefixeProperty() {
-        return rattachement.apercuPrefixeProperty();
-    }
-
     /// Avertissement de doublon R5 (#108), **vide** si le n° est libre ; sinon explique le doublon et
-    /// propose le prochain n° libre (délégué à [ControleNumeroPassage]). Sa non-vacuité signale à la fois
-    /// l'avertissement à afficher et l'import bloqué (cf. `peutImporter`).
+    /// propose le prochain n° libre (délégué à [ControleNumeroPassage], collaborateur **possédé par**
+    /// l'orchestrateur — il dépend de `ServiceImport`). Sa non-vacuité signale à la fois l'avertissement à
+    /// afficher et l'import bloqué (cf. `peutImporter`).
     public ReadOnlyStringProperty avertissementNumeroPassageProperty() {
         return controleNumeroPassage.avertissementProperty();
     }
@@ -272,15 +196,15 @@ public class ImportationViewModel {
     /// l'inspection), remet l'exécution et l'aperçu à zéro.
     public void inspecter() {
         // TODO (M-Import) : inspectez le dossier source (inspection.inspecter) ; en cas de succès
-        //   (inspection.estInspecte), transmettez l'exemple de nom au rattachement (definirExempleNom) ;
+        //   (inspection.estInspecte), transmettez les noms d'originaux au rattachement (definirOriginaux) ;
         //   sinon, remettez l'exécution et l'aperçu à zéro (l'inspection a déjà publié son message).
         // --solution--
         inspection.inspecter();
         if (inspection.estInspecte()) {
-            rattachement.definirExempleNom(inspection.exempleNomOriginal());
+            rattachement.definirOriginaux(inspection.nomsOriginaux());
         } else {
             reinitialiserExecution();
-            rattachement.definirExempleNom(null);
+            rattachement.definirOriginaux(List.of());
         }
         // --end-solution--
     }
@@ -429,7 +353,7 @@ public class ImportationViewModel {
     private void reinitialiserPourNouveauDossier() {
         inspection.reinitialiser();
         reinitialiserExecution();
-        rattachement.definirExempleNom(null);
+        rattachement.definirOriginaux(List.of());
     }
 
     /// Remet l'état d'**exécution** à zéro (PRET, sans résultat, progression ni message d'exécution).

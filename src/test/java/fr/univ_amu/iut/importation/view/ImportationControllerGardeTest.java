@@ -44,7 +44,7 @@ class ImportationControllerGardeTest {
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
-        viewModel.dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
+        viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
 
         assertThat(controller.aSaisieNonEnregistree()).isTrue();
     }
@@ -57,7 +57,7 @@ class ImportationControllerGardeTest {
                 new ImportationViewModel(serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel());
         ImportationController controller = new ImportationController(viewModel);
 
-        viewModel.dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
+        viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         assertThat(controller.aSaisieNonEnregistree()).isTrue(); // import préparé (PRET)
 
         viewModel.marquerEchec("Disque plein pendant la copie");
@@ -65,7 +65,7 @@ class ImportationControllerGardeTest {
 
         // L'utilisateur corrige le n° de passage pour réessayer : la préparation est ré-armée (PRET),
         // un import préparé non lancé existe de nouveau → la garde doit protéger la sortie.
-        viewModel.numeroPassageProperty().set(2);
+        viewModel.rattachement().numeroPassageProperty().set(2);
         assertThat(controller.aSaisieNonEnregistree()).isTrue();
     }
 
@@ -77,12 +77,12 @@ class ImportationControllerGardeTest {
                 new ImportationViewModel(serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel());
         ImportationController controller = new ImportationController(viewModel);
 
-        viewModel.dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
+        viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 60, 191, List.of()));
         assertThat(controller.aSaisieNonEnregistree()).isFalse(); // TERMINE : import abouti
 
         // Ré-éditer le rattachement après un succès prépare un nouvel import (PRET) : à protéger aussi.
-        viewModel.numeroPassageProperty().set(3);
+        viewModel.rattachement().numeroPassageProperty().set(3);
         assertThat(controller.aSaisieNonEnregistree()).isTrue();
     }
 }

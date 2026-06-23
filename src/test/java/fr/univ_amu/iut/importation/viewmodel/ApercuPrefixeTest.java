@@ -36,4 +36,18 @@ class ApercuPrefixeTest {
 
         assertThat(apercu).isNotBlank().contains("640380");
     }
+
+    @Test
+    @DisplayName("#111 : un exemple déjà préfixé (R6) est rendu tel quel, jamais re-préfixé (pas de Car…-Car…)")
+    void apercu_deja_prefixe_conserve_le_nom() {
+        String dejaPrefixe = "Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav";
+
+        // Concordant comme discordant : l'aperçu conserve le nom (la discordance est signalée ailleurs).
+        assertThat(ApercuPrefixe.calculer(SITE, POINT, 2026, 1, dejaPrefixe))
+                .as("nom conservé, jamais re-préfixé")
+                .isEqualTo(dejaPrefixe);
+        assertThat(ApercuPrefixe.calculer(SITE, POINT, 2026, 1, "Car999999-2025-Pass3-B2-PaRec_x.wav"))
+                .isEqualTo("Car999999-2025-Pass3-B2-PaRec_x.wav")
+                .doesNotContain("Car640380-2026-Pass1-A1-Car");
+    }
 }

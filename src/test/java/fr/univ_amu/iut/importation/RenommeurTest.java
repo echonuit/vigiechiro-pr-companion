@@ -65,6 +65,25 @@ class RenommeurTest {
     }
 
     @Test
+    @DisplayName("#111 : un fichier déjà préfixé (autre rattachement) est conservé, jamais re-préfixé")
+    void deja_prefixe_discordant_non_re_prefixe() throws IOException {
+        // Un WAV portant un préfixe R6 d'un AUTRE rattachement (carré/année/passage/point différents).
+        String dejaPrefixe = "Car111111-2025-Pass1-A1-PaRecPR1925492_20260422_203922.wav";
+        creerFichier(dejaPrefixe);
+
+        List<Path> resultats = renommeur.renommer(bruts, prefixe);
+
+        // Le nom discordant est conservé tel quel (pas de double préfixe Car640380-...-Car111111-...).
+        assertThat(Files.exists(bruts.resolve(dejaPrefixe)))
+                .as("le fichier déjà préfixé reste inchangé")
+                .isTrue();
+        assertThat(resultats)
+                .extracting(p -> p.getFileName().toString())
+                .contains(dejaPrefixe)
+                .allSatisfy(nom -> assertThat(nom).doesNotContain("Car640380-2026-Pass2-Z1-Car"));
+    }
+
+    @Test
     @DisplayName("Idempotent : relancer le renommage ne re-préfixe pas les fichiers déjà nommés")
     void idempotent() throws IOException {
         renommeur.renommer(bruts, prefixe);

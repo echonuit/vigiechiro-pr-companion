@@ -4,6 +4,7 @@ import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -22,9 +23,10 @@ import javafx.beans.property.SimpleObjectProperty;
 /// Extrait de [ImportationViewModel] (#183) : cet objet ne porte **que** l'état d'inspection (dossier,
 /// rapport, présence journal/relevé, compte, nommage, avertissements #33) et **son propre message
 /// d'erreur** d'inspection ([#messageErreurProperty()]) ; l'orchestrateur le compose avec l'erreur
-/// d'exécution dans son message unifié. Il ne connaît ni le rattachement ni l'exécution. Pour l'aperçu
-/// du rattachement, il n'expose pas son rapport mais une **valeur dérivée** : l'exemple de nom
-/// d'origine ([#exempleNomOriginal()]), ce qui évite de coupler le rattachement à l'inspection.
+/// d'exécution dans son message unifié. Il ne connaît ni le rattachement ni l'exécution. Pour le
+/// rattachement (aperçu + discordance de préfixe #111), il n'expose pas son rapport mais une **valeur
+/// dérivée** : les noms d'origine ([#nomsOriginaux()]), ce qui évite de coupler le rattachement à
+/// l'inspection.
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seul `javafx.beans` est
 /// importé, jamais `javafx.scene`.
@@ -124,14 +126,16 @@ public class InspectionImportViewModel {
         return rapport;
     }
 
-    /// Exemple de nom d'origine pour l'aperçu du préfixe : le premier enregistrement réellement
-    /// inspecté si disponible, sinon `null` (l'aperçu utilisera un gabarit générique). C'est cette
-    /// **valeur dérivée** (un simple `String`) que l'orchestrateur transmet au rattachement, plutôt que
-    /// le rapport, pour ne pas coupler les deux sous-VM.
-    public String exempleNomOriginal() {
-        return rapport != null && !rapport.originaux().isEmpty()
-                ? rapport.originaux().get(0).getFileName().toString()
-                : null;
+    /// Noms de **tous** les enregistrements originaux inspectés (liste vide avant toute inspection). C'est
+    /// cette **valeur dérivée** (de simples `String`) que l'orchestrateur transmet au rattachement, plutôt
+    /// que le rapport, pour ne pas coupler les deux sous-VM. Le rattachement s'en sert pour l'aperçu (le
+    /// premier nom) **et** pour détecter une discordance de préfixe (#111) sur l'ensemble du dossier.
+    public List<String> nomsOriginaux() {
+        return rapport == null
+                ? List.of()
+                : rapport.originaux().stream()
+                        .map(p -> p.getFileName().toString())
+                        .toList();
     }
 
     /// Dossier source à inspecter puis importer (lié au champ + bouton « Parcourir » de la vue).

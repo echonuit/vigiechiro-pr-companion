@@ -41,10 +41,16 @@ public class RattachementImportViewModel {
     private final IntegerProperty numeroPassage = new SimpleIntegerProperty(this, "numeroPassage", 1);
     private final ReadOnlyStringWrapper apercuPrefixe = new ReadOnlyStringWrapper(this, "apercuPrefixe", "");
 
-    /// Exemple de nom d'origine **fourni par l'orchestrateur** (dérivé de l'inspection) : sert de
-    /// gabarit pour l'aperçu du préfixe. `null` tant qu'aucune inspection n'a réussi (un gabarit
-    /// générique est alors utilisé). Le rattachement ne dépend ainsi pas du sous-VM d'inspection.
-    private String exempleNomOriginal;
+    /// Avertissement **non bloquant** (#33, #111) : non vide quand le dossier contient des originaux déjà
+    /// préfixés dont le préfixe **ne concorde pas** avec le rattachement choisi (leurs noms seront
+    /// conservés). Recalculé à chaque changement de rattachement ou de dossier inspecté.
+    private final ReadOnlyStringWrapper avertissementPrefixe =
+            new ReadOnlyStringWrapper(this, "avertissementPrefixe", "");
+
+    /// Noms de **tous** les originaux inspectés, **fournis par l'orchestrateur** (dérivés de l'inspection).
+    /// Servent à l'aperçu (le premier nom comme gabarit) **et** à la détection de discordance de préfixe
+    /// (#111) sur l'ensemble du dossier. Liste vide tant qu'aucune inspection n'a réussi.
+    private List<String> nomsOriginaux = List.of();
 
     public RattachementImportViewModel(ServiceSites serviceSites, Horloge horloge, String idUtilisateur) {
         this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
@@ -58,11 +64,11 @@ public class RattachementImportViewModel {
         siteSelectionne.addListener((obs, ancien, nouveau) -> {
             points.setAll(nouveau == null ? List.of() : serviceSites.listerPoints(nouveau.id()));
             pointSelectionne.set(null);
-            majApercu();
+            rafraichir();
         });
-        pointSelectionne.addListener((obs, ancien, nouveau) -> majApercu());
-        annee.addListener((obs, ancien, nouveau) -> majApercu());
-        numeroPassage.addListener((obs, ancien, nouveau) -> majApercu());
+        pointSelectionne.addListener((obs, ancien, nouveau) -> rafraichir());
+        annee.addListener((obs, ancien, nouveau) -> rafraichir());
+        numeroPassage.addListener((obs, ancien, nouveau) -> rafraichir());
     }
 
     /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un site).
@@ -92,11 +98,11 @@ public class RattachementImportViewModel {
                 pointSelectionne.get().code());
     }
 
-    /// Fournit (orchestrateur) l'exemple de nom d'origine pour l'aperçu — dérivé de l'inspection — ou
-    /// `null` pour le réinitialiser ; recalcule l'aperçu en conséquence.
-    public void definirExempleNom(String exempleNomOriginal) {
-        this.exempleNomOriginal = exempleNomOriginal;
-        majApercu();
+    /// Fournit (orchestrateur) les noms de **tous** les originaux inspectés — dérivés de l'inspection —
+    /// ou une liste vide pour réinitialiser ; recalcule l'aperçu et l'avertissement de discordance.
+    public void definirOriginaux(List<String> noms) {
+        this.nomsOriginaux = List.copyOf(noms);
+        rafraichir();
     }
 
     /// Liste observable des sites de l'utilisateur (combobox Site), alimentée par [#chargerSites()].
@@ -135,8 +141,43 @@ public class RattachementImportViewModel {
         return apercuPrefixe.getReadOnlyProperty();
     }
 
+    /// Avertissement **non bloquant** de discordance de préfixe (#111) : non vide quand des originaux déjà
+    /// préfixés ne correspondent pas au rattachement choisi (leurs noms seront conservés). La vue s'y lie
+    /// directement (label dédié), comme aux avertissements « mélange »/« incohérence » de l'inspection.
+    public ReadOnlyStringProperty avertissementPrefixeProperty() {
+        return avertissementPrefixe.getReadOnlyProperty();
+    }
+
+    /// Recalcule les valeurs dérivées du rattachement (aperçu + avertissement de préfixe) après tout
+    /// changement de site / point / année / n° ou de dossier inspecté.
+    private void rafraichir() {
+        majApercu();
+        majAvertissementPrefixe();
+    }
+
     private void majApercu() {
+        String exemple = nomsOriginaux.isEmpty() ? null : nomsOriginaux.get(0);
         apercuPrefixe.set(ApercuPrefixe.calculer(
-                siteSelectionne.get(), pointSelectionne.get(), annee.get(), numeroPassage.get(), exempleNomOriginal));
+                siteSelectionne.get(), pointSelectionne.get(), annee.get(), numeroPassage.get(), exemple));
+    }
+
+    /// Discordance de préfixe (#111) : si le rattachement est désigné (site + point) et que des originaux
+    /// portent déjà un préfixe R6 **différent** de celui attendu, on avertit (sur **tout** le dossier, pas
+    /// seulement le premier fichier). Les noms existants ne sont pas corrigés (R7).
+    private void majAvertissementPrefixe() {
+        Site site = siteSelectionne.get();
+        PointDEcoute point = pointSelectionne.get();
+        if (site == null || point == null || nomsOriginaux.isEmpty()) {
+            avertissementPrefixe.set("");
+            return;
+        }
+        String attendu = prefixeCourant().prefixeFichier();
+        boolean discordant =
+                nomsOriginaux.stream().filter(Prefixe::estNomPrefixe).anyMatch(nom -> !nom.startsWith(attendu));
+        avertissementPrefixe.set(
+                discordant
+                        ? "⚠ Certains fichiers sont déjà préfixés mais ne correspondent pas au rattachement"
+                                + " choisi (préfixe attendu : " + attendu + "). Leurs noms seront conservés."
+                        : "");
     }
 }

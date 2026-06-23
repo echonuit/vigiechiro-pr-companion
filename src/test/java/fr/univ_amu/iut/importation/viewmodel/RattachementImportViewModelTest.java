@@ -91,4 +91,51 @@ class RattachementImportViewModelTest {
 
         assertThat(vm.estComplet()).isFalse();
     }
+
+    @Test
+    @DisplayName("#111 : des originaux bruts ou concordants ne déclenchent aucun avertissement de préfixe")
+    void prefixe_concordant_pas_d_avertissement() {
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.siteSelectionneProperty().set(ETANG);
+        vm.pointSelectionneProperty().set(A1); // préfixe attendu : Car640380-2026-Pass1-A1-
+
+        // Fichiers bruts : rien à signaler.
+        vm.definirOriginaux(List.of("PaRecPR1925492_20260422_203922.wav"));
+        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+
+        // Déjà préfixés mais concordants avec le rattachement : rien à signaler non plus.
+        vm.definirOriginaux(List.of("Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav"));
+        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#111 : un préfixe discordant sur N'IMPORTE QUEL original (pas que le 1er) avertit")
+    void prefixe_discordant_avertit_sur_tout_le_dossier() {
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.siteSelectionneProperty().set(ETANG);
+        vm.pointSelectionneProperty().set(A1);
+
+        // 1er fichier concordant, 2e discordant : l'avertissement doit quand même apparaître (finding 1).
+        vm.definirOriginaux(List.of(
+                "Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav",
+                "Car999999-2025-Pass3-B2-PaRecPR1648011_20260430_210000.wav"));
+
+        assertThat(vm.avertissementPrefixeProperty().get())
+                .as("discordance détectée sur l'ensemble du dossier")
+                .contains("ne correspondent pas")
+                .contains("Car640380-2026-Pass1-A1-"); // préfixe attendu rappelé
+
+        // Corriger le n° de passage vers celui des fichiers ne suffit pas (carré/point/année diffèrent).
+        // En revanche, vider le dossier efface l'avertissement.
+        vm.definirOriginaux(List.of());
+        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#111 : sans site/point choisi, aucun avertissement de préfixe (rattachement incomplet)")
+    void prefixe_pas_d_avertissement_sans_rattachement() {
+        vm.definirOriginaux(List.of("Car999999-2025-Pass3-B2-PaRec_x.wav"));
+
+        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+    }
 }

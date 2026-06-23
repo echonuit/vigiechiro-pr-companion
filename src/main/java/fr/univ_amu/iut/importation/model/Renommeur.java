@@ -23,12 +23,15 @@ import java.util.stream.Stream;
 /// Le renommage opère **dans le workspace** (sur la copie), jamais sur la carte SD (R9 : la source
 /// reste intacte ; c'est [CopieProtegee] qui a déjà déposé les fichiers ici).
 ///
-/// L'opération est **idempotente** : un fichier qui porte déjà le préfixe attendu est laissé en
-/// place. On peut donc relancer le renommage sans risque (réimport).
+/// L'opération est **idempotente** : un fichier qui porte **déjà un préfixe R6** (`Car…`) est laissé en
+/// place, qu'il concorde ou non avec le rattachement courant. On évite ainsi le **double préfixe**
+/// `Car…-Car…` (#111) sur un dossier déjà renommé, et on peut relancer le renommage sans risque
+/// (réimport). Une éventuelle discordance du préfixe présent est signalée en amont par l'aperçu, pas
+/// corrigée ici (les noms existants sont conservés, R7).
 public class Renommeur {
 
     /// Renomme tous les WAV de `dossierBruts` en leur appliquant le préfixe R6 (R7 conserve le
-    /// suffixe d'origine). Les fichiers déjà préfixés sont inchangés.
+    /// suffixe d'origine). Les fichiers déjà préfixés (`Car…`) sont inchangés.
     ///
     /// @param dossierBruts dossier `bruts/` contenant les originaux à renommer
     /// @param prefixe préfixe de la session (R6)
@@ -36,7 +39,6 @@ public class Renommeur {
     public List<Path> renommer(Path dossierBruts, Prefixe prefixe) {
         Objects.requireNonNull(dossierBruts, "dossierBruts");
         Objects.requireNonNull(prefixe, "prefixe");
-        String prefixeFichier = prefixe.prefixeFichier();
         List<Path> resultats = new ArrayList<>();
         try (Stream<Path> flux = Files.list(dossierBruts)) {
             List<Path> originaux = flux.filter(Files::isRegularFile)
@@ -44,7 +46,7 @@ public class Renommeur {
                     .sorted(Comparator.comparing(p -> p.getFileName().toString()))
                     .toList();
             for (Path original : originaux) {
-                resultats.add(renommerUn(original, prefixe, prefixeFichier));
+                resultats.add(renommerUn(original, prefixe));
             }
         } catch (IOException e) {
             throw new UncheckedIOException("Renommage impossible dans " + dossierBruts, e);
@@ -53,10 +55,10 @@ public class Renommeur {
         return resultats;
     }
 
-    private Path renommerUn(Path original, Prefixe prefixe, String prefixeFichier) throws IOException {
+    private Path renommerUn(Path original, Prefixe prefixe) throws IOException {
         String nom = original.getFileName().toString();
-        if (nom.startsWith(prefixeFichier)) {
-            return original; // déjà préfixé : idempotent
+        if (Prefixe.estNomPrefixe(nom)) {
+            return original; // déjà préfixé (R6) : conservé tel quel, jamais de double préfixe (#111)
         }
         Path cible = original.resolveSibling(prefixe.nommerOriginal(nom));
         return Files.move(original, cible, StandardCopyOption.ATOMIC_MOVE);
