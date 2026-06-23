@@ -17,6 +17,9 @@ référence explique *en détail* ce que chaque écran propose.
 | Diagnostic | Diagnostic d'une nuit (climat, anomalies) |
 | Bibliothèque | Bibliothèque de sons de référence |
 
+L'écran **Qualification** propose en plus des [raccourcis clavier](../raccourcis-clavier.md) dédiés
+(verdict, écoute, navigation) pour traiter les séquences rapidement.
+
 !!! note "En cours de rédaction"
     Chaque écran disposera de sa fiche détaillée, illustrée par les captures de ses différents
     états (par exemple, pour l'importation : cas standard, import en cours, mélange d'enregistreurs,
