@@ -7,8 +7,8 @@ référence explique *en détail* ce que chaque écran propose.
 | Écran | Rôle |
 |---|---|
 | Accueil | Point d'entrée vers les activités |
-| Sites | Gérer les sites de suivi et leurs points d'écoute |
-| Passage | Pivot d'une nuit : statut, navigation, suppression |
+| [Sites](sites.md) | Gérer les sites de suivi et leurs points d'écoute |
+| [Passage](passage.md) | Pivot d'une nuit : statut, navigation, suppression |
 | Importation | Importer une nuit depuis la carte SD |
 | Qualification | Écouter les séquences et poser un verdict de qualité |
 | Lot | Préparer et déposer un lot vérifié |
@@ -20,7 +20,6 @@ référence explique *en détail* ce que chaque écran propose.
 L'écran **Qualification** propose en plus des [raccourcis clavier](../raccourcis-clavier.md) dédiés
 (verdict, écoute, navigation) pour traiter les séquences rapidement.
 
-!!! note "En cours de rédaction"
-    Chaque écran disposera de sa fiche détaillée, illustrée par les captures de ses différents
-    états (par exemple, pour l'importation : cas standard, import en cours, mélange d'enregistreurs,
-    incohérence).
+Les fiches détaillées sont publiées **progressivement** : les écrans dont le nom est un lien
+ci-dessus disposent déjà de leur fiche, les autres suivent. Chaque fiche illustre les différents
+états de l'écran.
