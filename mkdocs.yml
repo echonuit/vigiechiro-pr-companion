@@ -49,6 +49,7 @@ nav:
   - Parcours métier: parcours/index.md
   - Référence par écran:
       - ecrans/index.md
+      - Accueil: ecrans/accueil.md
       - Sites: ecrans/sites.md
       - Passage: ecrans/passage.md
       - Importation: ecrans/importation.md

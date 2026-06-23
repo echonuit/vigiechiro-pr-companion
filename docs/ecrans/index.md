@@ -6,7 +6,7 @@ référence explique *en détail* ce que chaque écran propose.
 
 | Écran | Rôle |
 |---|---|
-| [Accueil](../prise-en-main.md) | Point d'entrée vers les activités (décrit dans la prise en main) |
+| [Accueil](accueil.md) | Point d'entrée vers les activités |
 | [Sites](sites.md) | Gérer les sites de suivi et leurs points d'écoute |
 | [Passage](passage.md) | Pivot d'une nuit : statut, navigation, suppression |
 | [Importation](importation.md) | Importer une nuit depuis la carte SD |
