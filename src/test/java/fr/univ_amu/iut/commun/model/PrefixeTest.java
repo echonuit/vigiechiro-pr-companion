@@ -30,4 +30,13 @@ class PrefixeTest {
                 .as("nom brut de l'enregistreur")
                 .isFalse();
     }
+
+    @Test
+    @DisplayName("#111 : un simple « Car… » sans grammaire R6 valide n'est PAS considéré comme préfixé")
+    void est_nom_prefixe_exige_la_grammaire_R6_complete() {
+        // Commencer par « Car » ne suffit pas : il faut Car<carré>-<année>-Pass<n>-<point>-<suffixe>.
+        assertThat(Prefixe.estNomPrefixe("Carto_20260422.wav")).isFalse();
+        assertThat(Prefixe.estNomPrefixe("Car_old.wav")).isFalse();
+        assertThat(Prefixe.estNomPrefixe("Car640380-2026-A1.wav")).isFalse(); // pas de segment Pass<n>
+    }
 }
