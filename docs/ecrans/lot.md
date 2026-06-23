@@ -10,8 +10,9 @@ plateforme Vigie-Chiro. Le dépôt se fait en trois temps.
 Le **récapitulatif** indique le nombre de séquences, le volume et le **dossier à téléverser**
 manuellement sur Vigie-Chiro. Les trois étapes sont :
 
-1. **Préparer le lot** : l'application contrôle la cohérence du passage et ouvre le dossier prêt à
-   déposer dans votre explorateur de fichiers.
+1. **Préparer le lot** : l'application contrôle la cohérence du passage et le prépare pour le dépôt
+   (statut « Prêt à déposer »). Le chemin du **dossier à téléverser** est indiqué dans le
+   récapitulatif.
 2. **Téléverser** ce dossier **manuellement** sur Vigie-Chiro, depuis votre navigateur.
 3. **Marquer déposé** une fois le téléversement terminé.
 

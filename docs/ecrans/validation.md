@@ -25,5 +25,5 @@ Pour l'observation sélectionnée, le **détail** affiche la proposition (espèc
 - **Valider** : retenir la proposition de Tadarida ;
 - **Corriger** : retenir un autre taxon, que vous choisissez dans la liste.
 
-Un **mode inventaire** permet de propager une validation aux autres détections de la même espèce, et
-l'**export** conserve la trace du mode de validation utilisé.
+Un **mode inventaire** permet de propager une validation aux autres détections de la même espèce.
+L'**export** du fichier peut, en option (une case à cocher), inclure la trace du mode de validation.
