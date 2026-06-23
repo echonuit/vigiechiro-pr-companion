@@ -300,7 +300,10 @@ public class ImportationViewModel {
         //   marquerEnCours, exécutez (executerImport) puis marquerTermine / marquerEchec.
         // --solution--
         if (!peutImporter.get()) {
-            messageExecution.set("Complétez le rattachement (dossier inspecté, site, point) avant d'importer.");
+            // Message ciblé : si l'import est bloqué par un n° déjà pris (#108), on l'explique au lieu du
+            // générique « Complétez le rattachement » (qui serait trompeur, le rattachement étant complet).
+            messageExecution.set(controleNumeroPassage.messageBlocage(
+                    "Complétez le rattachement (dossier inspecté, site, point) avant d'importer."));
             return;
         }
         DemandeImport demande = preparerImport();

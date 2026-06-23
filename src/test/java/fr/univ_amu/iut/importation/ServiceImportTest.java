@@ -297,7 +297,8 @@ class ServiceImportTest {
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isTrue();
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 1)).isFalse(); // autre n°
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2025, 2)).isFalse(); // autre année
-        assertThat(service.prochainNumeroPassageLibre(idPoint, 2026)).isEqualTo(3); // max(2) + 1
+        // Premier trou libre : le passage n° 2 existe, le n° 1 reste donc disponible (comble le trou).
+        assertThat(service.prochainNumeroPassageLibre(idPoint, 2026)).isEqualTo(1);
         // Rattachement incomplet : aucun signalement (pas d'exception SQL brute).
         assertThat(service.numeroPassageDejaUtilise(null, 2026, 2)).isFalse();
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 0)).isFalse();

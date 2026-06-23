@@ -15,6 +15,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.HashSet;
+import java.util.Set;
 
 /// Écrivain transactionnel de l'**agrégat d'import** : enregistreur, micro, passage, session,
 /// journal, relevé climatique, originaux et séquences, écrits **tout ou rien** (O7).
@@ -62,21 +64,30 @@ public class AgregatImportDao {
         }
     }
 
-    /// Plus petit n° de passage **libre** (≥ 1) pour ce point et cette année : `MAX(passage_number) + 1`
-    /// (donc `1` quand aucun passage n'existe encore). Sert à **proposer** un n° non utilisé lorsque
-    /// l'utilisateur tombe sur un doublon R5 au rattachement (#108).
+    /// Plus petit n° de passage **libre** (≥ 1) pour ce point et cette année : le **premier entier non
+    /// utilisé**, en comblant les trous (p. ex. avec les passages 1 et 3, propose 2 ; sans trou, équivaut
+    /// à `MAX + 1`). Sert à **proposer** un n° non utilisé lorsque l'utilisateur tombe sur un doublon R5
+    /// au rattachement (#108).
     public int prochainNumeroPassageLibre(Long idPoint, int annee) {
-        String sql = "SELECT COALESCE(MAX(passage_number), 0) FROM passage WHERE point_id = ? AND year = ?";
+        String sql = "SELECT passage_number FROM passage WHERE point_id = ? AND year = ?";
+        Set<Integer> utilises = new HashSet<>();
         try (Connection cx = source.getConnection();
                 PreparedStatement ps = cx.prepareStatement(sql)) {
             ps.setObject(1, idPoint);
             ps.setInt(2, annee);
             try (ResultSet rs = ps.executeQuery()) {
-                return (rs.next() ? rs.getInt(1) : 0) + 1;
+                while (rs.next()) {
+                    utilises.add(rs.getInt(1));
+                }
             }
         } catch (SQLException e) {
             throw new DataAccessException("Échec du calcul du prochain n° de passage libre : " + sql, e);
         }
+        int numero = 1;
+        while (utilises.contains(numero)) {
+            numero++;
+        }
+        return numero;
     }
 
     // ---------------------------------------------------------------------------

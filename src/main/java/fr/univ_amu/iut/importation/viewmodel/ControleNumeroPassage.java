@@ -79,6 +79,13 @@ final class ControleNumeroPassage {
         return dejaUtilise.get();
     }
 
+    /// Message à présenter quand l'import est bloqué (`peutImporter` faux) : l'avertissement de doublon
+    /// s'il y en a un (cause précise), sinon le message générique fourni (rattachement incomplet). Évite
+    /// le message trompeur « Complétez le rattachement » alors que la vraie cause est un n° déjà pris.
+    String messageBlocage(String messageRattachementIncomplet) {
+        return dejaUtilise.get() ? avertissement.get() : messageRattachementIncomplet;
+    }
+
     ReadOnlyBooleanProperty dejaUtiliseProperty() {
         return dejaUtilise.getReadOnlyProperty();
     }

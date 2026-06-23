@@ -264,6 +264,13 @@ class ImportationViewModelTest {
         assertThat(viewModel.peutImporter().get())
                 .as("import bloqué tant que le n° est en doublon (R5)")
                 .isFalse();
+
+        // Forcer l'import expose le message ciblé du doublon (et non le générique « Complétez… »).
+        viewModel.importer();
+        assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.PRET);
+        assertThat(viewModel.messageErreurProperty().get())
+                .contains("existe déjà")
+                .doesNotContain("Complétez");
     }
 
     @Test
