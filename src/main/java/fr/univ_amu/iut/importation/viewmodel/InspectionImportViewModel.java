@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.importation.model.EtatNommage;
+import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import java.nio.file.Path;
@@ -50,6 +51,12 @@ public class InspectionImportViewModel {
     private final ReadOnlyStringWrapper avertissementIncoherence =
             new ReadOnlyStringWrapper(this, "avertissementIncoherence", "");
 
+    /// Avertissement **« nuit déjà importée »** (#147) : non vide quand un passage existe déjà en base
+    /// pour le même enregistreur et la même date que la nuit inspectée (détection de doublon, non
+    /// bloquante). Recalculé à chaque inspection.
+    private final ReadOnlyStringWrapper avertissementNuitExistante =
+            new ReadOnlyStringWrapper(this, "avertissementNuitExistante", "");
+
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après une
     /// inspection réussie. L'orchestrateur le compose avec l'erreur d'exécution dans son message unifié.
     private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
@@ -86,6 +93,7 @@ public class InspectionImportViewModel {
                     .orElse(""));
             avertissementMelange.set(AvertissementMelange.rediger(inspection.melange()));
             avertissementIncoherence.set(AvertissementIncoherence.rediger(inspection.coherence()));
+            avertissementNuitExistante.set(detecterNuitExistante(inspection));
             inspecte.set(true);
             messageErreur.set("");
         } catch (RuntimeException echec) {
@@ -108,7 +116,23 @@ public class InspectionImportViewModel {
         resumeJournal.set("");
         avertissementMelange.set("");
         avertissementIncoherence.set("");
+        avertissementNuitExistante.set("");
         messageErreur.set("");
+    }
+
+    /// Détecte (lecture base via le service) si la nuit inspectée a déjà été importée (#147) : même
+    /// enregistreur + même date de journal. Sans journal ou sans date, rien à signaler. Délègue la mise
+    /// en phrase à [AvertissementNuitExistante].
+    private String detecterNuitExistante(RapportInspection rapport) {
+        return rapport.journalOptionnel()
+                .filter(journal -> journal.dateDebut() != null)
+                .map(journal -> {
+                    String date = journal.dateDebut().toString();
+                    List<PassageExistant> existants = serviceImport.nuitDejaImportee(journal.numeroSerie(), date);
+                    return AvertissementNuitExistante.rediger(
+                            journal.numeroSerie(), date, existants == null ? List.of() : existants);
+                })
+                .orElse("");
     }
 
     /// Dossier source courant (pour assembler la demande d'import).
@@ -181,6 +205,12 @@ public class InspectionImportViewModel {
     /// Avertissement « incohérence » (#33), vide si l'identité déclarée concorde avec les enregistrements.
     public ReadOnlyStringProperty avertissementIncoherenceProperty() {
         return avertissementIncoherence.getReadOnlyProperty();
+    }
+
+    /// Avertissement « nuit déjà importée » (#147), vide si aucun passage n'existe en base pour cet
+    /// enregistreur à cette date (détection de doublon, non bloquante).
+    public ReadOnlyStringProperty avertissementNuitExistanteProperty() {
+        return avertissementNuitExistante.getReadOnlyProperty();
     }
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après un

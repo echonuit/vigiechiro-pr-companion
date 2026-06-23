@@ -71,6 +71,9 @@ public class ImportationController implements GardeQuitter {
     private Label labelIncoherence;
 
     @FXML
+    private Label labelNuitExistante;
+
+    @FXML
     private ComboBox<Site> comboSites;
 
     @FXML
@@ -202,6 +205,12 @@ public class ImportationController implements GardeQuitter {
         var aUneIncoherence = inspection.avertissementIncoherenceProperty().isNotEmpty();
         labelIncoherence.visibleProperty().bind(aUneIncoherence);
         labelIncoherence.managedProperty().bind(aUneIncoherence);
+
+        // Détection « nuit déjà importée » (#147) : même patron, visible seulement s'il y a un message.
+        labelNuitExistante.textProperty().bind(inspection.avertissementNuitExistanteProperty());
+        var nuitExistante = inspection.avertissementNuitExistanteProperty().isNotEmpty();
+        labelNuitExistante.visibleProperty().bind(nuitExistante);
+        labelNuitExistante.managedProperty().bind(nuitExistante);
     }
 
     /// Section 3 : combos site/point, champs année/n° de passage, aperçu du préfixe et avertissement de
