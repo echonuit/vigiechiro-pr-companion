@@ -49,3 +49,5 @@ description, et coordonnées GPS (facultatives). En création, le formulaire est
 modification, il est pré-rempli avec les valeurs existantes.
 
 ![La fenêtre de création d'un point d'écoute : formulaire vierge.](../assets/captures/apercu-sites-modale-point-creation.png)
+
+![La même fenêtre en modification : les champs sont pré-remplis avec les valeurs du point existant.](../assets/captures/apercu-sites-modale-point.png)
