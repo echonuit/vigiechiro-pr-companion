@@ -29,7 +29,12 @@ flowchart LR
 ## L'écran Passage, votre pivot
 
 Pour une nuit donnée, l'écran **Passage** est le point de pilotage : il affiche le **statut** de la
-nuit et propose des cartes « avancer » vers l'étape suivante. Le statut progresse ainsi :
+nuit, un résumé, et des cartes « avancer » vers l'étape suivante (une seule est mise en avant : la
+prochaine action recommandée).
+
+![Le pivot Passage au statut « Vérifié » : la carte « Préparer le dépôt » est recommandée, et « Validation Tadarida » reste grisée tant que la nuit n'est pas déposée.](../assets/captures/apercu-passage.png)
+
+Le statut progresse ainsi :
 
 ```mermaid
 flowchart LR
@@ -40,6 +45,10 @@ flowchart LR
     class A,B,C,D,E st
     class F val
 ```
+
+Une fois la nuit **déposée**, la carte « Validation Tadarida » se déverrouille :
+
+![Le même pivot au statut « Déposé » : la carte « Validation Tadarida » est désormais accessible.](../assets/captures/apercu-passage-depose.png)
 
 !!! warning "Le dépôt précède la validation"
     La **validation des espèces** (Tadarida) n'est accessible qu'une fois le **lot déposé** :
@@ -87,6 +96,8 @@ Sur l'écran **Lot**, le dépôt se fait en trois temps :
    ouvre le dossier prêt à déposer dans votre explorateur de fichiers.
 2. **Téléverser** ce dossier **manuellement** sur la plateforme Vigie-Chiro, depuis votre navigateur.
 3. **Marquer déposé** une fois le téléversement terminé : le passage passe au statut « Déposé ».
+
+![À l'étape « Prêt à déposer », le bouton « Marquer déposé » devient actif.](../assets/captures/apercu-lot-deposer.png)
 
 ## Valider les espèces
 
