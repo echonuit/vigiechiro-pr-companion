@@ -49,12 +49,16 @@ nav:
   - Parcours métier: parcours/index.md
   - Référence par écran:
       - ecrans/index.md
+      - Accueil: ecrans/accueil.md
       - Sites: ecrans/sites.md
       - Passage: ecrans/passage.md
       - Importation: ecrans/importation.md
       - Qualification: ecrans/qualification.md
       - Lot: ecrans/lot.md
       - Validation: ecrans/validation.md
+      - Multisite: ecrans/multisite.md
+      - Diagnostic: ecrans/diagnostic.md
+      - Bibliothèque: ecrans/bibliotheque.md
   - Raccourcis clavier: raccourcis-clavier.md
 
 markdown_extensions:
