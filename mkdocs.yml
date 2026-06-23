@@ -55,6 +55,9 @@ nav:
       - Qualification: ecrans/qualification.md
       - Lot: ecrans/lot.md
       - Validation: ecrans/validation.md
+      - Multisite: ecrans/multisite.md
+      - Diagnostic: ecrans/diagnostic.md
+      - Bibliothèque: ecrans/bibliotheque.md
   - Raccourcis clavier: raccourcis-clavier.md
 
 markdown_extensions:
