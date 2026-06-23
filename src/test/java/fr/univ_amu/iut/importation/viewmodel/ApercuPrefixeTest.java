@@ -36,4 +36,31 @@ class ApercuPrefixeTest {
 
         assertThat(apercu).isNotBlank().contains("640380");
     }
+
+    @Test
+    @DisplayName("#111 : un exemple déjà préfixé concordant est conservé (pas de double préfixe), signalé")
+    void apercu_deja_prefixe_concordant() {
+        String dejaPrefixe = "Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav";
+
+        String apercu = ApercuPrefixe.calculer(SITE, POINT, 2026, 1, dejaPrefixe);
+
+        assertThat(apercu)
+                .as("nom conservé tel quel, jamais re-préfixé")
+                .startsWith(dejaPrefixe)
+                .doesNotContain("Car640380-2026-Pass1-A1-Car")
+                .contains("déjà préfixé");
+    }
+
+    @Test
+    @DisplayName("#111 : un exemple déjà préfixé discordant est conservé mais signalé comme non concordant")
+    void apercu_deja_prefixe_discordant() {
+        String autrePrefixe = "Car999999-2025-Pass3-B2-PaRecPR1925492_20260422_203922.wav";
+
+        String apercu = ApercuPrefixe.calculer(SITE, POINT, 2026, 1, autrePrefixe);
+
+        assertThat(apercu)
+                .startsWith(autrePrefixe)
+                .doesNotContain("Car640380-2026-Pass1-A1-Car") // pas de double préfixe
+                .contains("ne correspond pas");
+    }
 }

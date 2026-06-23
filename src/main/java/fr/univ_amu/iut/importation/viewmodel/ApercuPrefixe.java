@@ -19,6 +19,10 @@ final class ApercuPrefixe {
     /// Aperçu du préfixe appliqué à un `exempleNomOriginal` (un gabarit générique est utilisé s'il est
     /// nul ou vide, c.-à-d. avant toute inspection) ; chaîne vide tant que le site ou le point n'est pas
     /// choisi (rattachement incomplet).
+    ///
+    /// Cas **fichiers déjà préfixés** (#111) : le nom est **conservé** (R7, jamais de double préfixe) et
+    /// l'aperçu signale si le préfixe présent **concorde** ou non avec le rattachement choisi
+    /// (avertissement non bloquant #33 — les noms existants ne sont pas corrigés).
     static String calculer(Site site, PointDEcoute point, int annee, int numeroPassage, String exempleNomOriginal) {
         if (site == null || point == null) {
             return "";
@@ -26,6 +30,11 @@ final class ApercuPrefixe {
         Prefixe prefixe = new Prefixe(site.numeroCarre(), annee, numeroPassage, point.code());
         String exemple =
                 exempleNomOriginal == null || exempleNomOriginal.isBlank() ? EXEMPLE_PAR_DEFAUT : exempleNomOriginal;
+        if (Prefixe.estNomPrefixe(exemple)) {
+            return exemple.startsWith(prefixe.prefixeFichier())
+                    ? exemple + "  (déjà préfixé)"
+                    : exemple + "  ⚠ déjà préfixé, ne correspond pas au rattachement choisi (nom conservé)";
+        }
         return prefixe.nommerOriginal(exemple);
     }
 }
