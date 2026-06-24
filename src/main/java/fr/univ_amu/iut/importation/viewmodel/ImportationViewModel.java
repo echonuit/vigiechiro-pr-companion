@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.viewmodel;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -83,6 +84,11 @@ public class ImportationViewModel {
     /// signale qu'un n° de passage est déjà pris (bloque [#peutImporter()]) et propose le prochain libre.
     /// Recalculé à chaque changement de point / année / n° de passage du rattachement.
     private final ControleNumeroPassage controleNumeroPassage;
+
+    /// Dossier temporaire d'extraction d'un `.zip` choisi comme source (#139), à supprimer après import
+    /// (succès ou échec) ou au changement de source ; `null` quand la source est un dossier déjà
+    /// décompressé.
+    private Path dossierTemporaireZip;
 
     public ImportationViewModel(
             ServiceImport serviceImport,
@@ -266,6 +272,33 @@ public class ImportationViewModel {
         // --end-solution--
     }
 
+    /// Résout la **source d'import** choisie (#139) : si `chemin` est un `.zip`, le décompresse vers un
+    /// dossier temporaire (nettoyé après import) et renvoie ce dossier ; sinon renvoie le dossier tel
+    /// quel. **Ne touche aucune `Property`** (IO seul) : à appeler **hors du fil JavaFX** (la vue lance
+    /// l'extraction en arrière-plan pour ne pas figer l'IHM), puis à inspecter sur le fil JavaFX.
+    ///
+    /// @throws RuntimeException si l'archive est illisible ou invalide (zip-slip) ; la vue le signale via
+    /// [#signalerSourceIllisible].
+    public Path extraireSiZip(Path chemin) {
+        nettoyerTemporaireZip(); // une nouvelle source remplace l'éventuel zip précédent
+        if (ExtracteurZip.estZip(chemin)) {
+            // Extraction sous le workspace (disque), pas dans le tmpfs RAM /tmp : une nuit de ~10 Go y
+            // saturerait la RAM (ENOSPC). Cf. ExtracteurZip.
+            dossierTemporaireZip = ExtracteurZip.extraireVersDossierTemporaire(chemin, serviceImport.racineWorkspace());
+            return dossierTemporaireZip;
+        }
+        return chemin;
+    }
+
+    /// Signale (fil JavaFX) qu'une source choisie est illisible (zip invalide…) : remet l'inspection et
+    /// l'exécution à zéro et publie `message` dans le message unifié (#139).
+    public void signalerSourceIllisible(String message) {
+        inspection.reinitialiser();
+        reinitialiserExecution();
+        nettoyerTemporaireZip();
+        messageExecution.set(message);
+    }
+
     /// Capture (sur le fil JavaFX) les entrées du rattachement courant dans un instantané immuable,
     /// pour les passer à [#executerImport(DemandeImport)] sans relire de `Property` hors-thread.
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
@@ -322,6 +355,7 @@ public class ImportationViewModel {
         messageExecution.set("");
         etat.set(EtatImport.TERMINE);
         navigation.setNavigationVerrouillee(false); // l'import est fini : on peut de nouveau naviguer (#54)
+        nettoyerTemporaireZip(); // les fichiers ont été copiés (R9) : le temporaire du zip n'est plus utile (#139)
         // --end-solution--
     }
 
@@ -334,6 +368,7 @@ public class ImportationViewModel {
         messageExecution.set(message);
         etat.set(EtatImport.ECHEC);
         navigation.setNavigationVerrouillee(false); // l'import s'est arrêté : on déverrouille (#54)
+        nettoyerTemporaireZip(); // échec : on nettoie aussi le temporaire du zip (#139)
         // --end-solution--
     }
 
@@ -354,6 +389,15 @@ public class ImportationViewModel {
         inspection.reinitialiser();
         reinitialiserExecution();
         rattachement.definirOriginaux(List.of());
+    }
+
+    /// Supprime le dossier temporaire d'extraction d'un `.zip` (#139) s'il existe, et oublie la référence.
+    /// Appelé après l'import (succès/échec) et au changement de source.
+    private void nettoyerTemporaireZip() {
+        if (dossierTemporaireZip != null) {
+            ExtracteurZip.supprimerRecursivement(dossierTemporaireZip);
+            dossierTemporaireZip = null;
+        }
     }
 
     /// Remet l'état d'**exécution** à zéro (PRET, sans résultat, progression ni message d'exécution).
