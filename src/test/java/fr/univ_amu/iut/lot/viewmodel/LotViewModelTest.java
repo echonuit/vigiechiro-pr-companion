@@ -7,8 +7,10 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.Alerte;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -133,5 +135,38 @@ class LotViewModelTest {
         assertThat(viewModel.preparer()).isFalse();
         assertThat(viewModel.messageProperty().get()).contains("impossible");
         assertThat(viewModel.statutProperty().get()).isEqualTo("Vérifié"); // état non vidé
+    }
+
+    @Test
+    @DisplayName("#110 : sur un lot prêt, genererArchives publie les archives produites et un message")
+    void generer_archives_publie_la_liste() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.genererArchivesDepot(ID_PASSAGE))
+                .thenReturn(List.of(
+                        new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.peutGenererArchivesProperty().get()).isTrue();
+
+        assertThat(viewModel.genererArchives()).isTrue();
+
+        assertThat(viewModel.archives()).hasSize(1);
+        assertThat(viewModel.archives().get(0))
+                .contains("Car040962-2026-Pass1-A1-1.zip")
+                .contains("2 fichiers");
+        assertThat(viewModel.messageProperty().get()).contains("1 archive");
+    }
+
+    @Test
+    @DisplayName("#110 : genererArchives restitue l'erreur métier dans le message, liste vide")
+    void generer_archives_en_erreur() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.genererArchivesDepot(ID_PASSAGE))
+                .thenThrow(new RegleMetierException("Aucune séquence à déposer."));
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.genererArchives()).isFalse();
+
+        assertThat(viewModel.archives()).isEmpty();
+        assertThat(viewModel.messageProperty().get()).contains("Aucune séquence");
     }
 }

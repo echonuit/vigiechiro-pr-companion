@@ -3,8 +3,10 @@ package fr.univ_amu.iut.lot.viewmodel;
 import fr.univ_amu.iut.commun.model.Alerte;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -32,6 +34,9 @@ public class LotViewModel {
     private final ReadOnlyBooleanWrapper peutPreparer = new ReadOnlyBooleanWrapper(this, "peutPreparer", false);
     private final ReadOnlyBooleanWrapper peutDeposer = new ReadOnlyBooleanWrapper(this, "peutDeposer", false);
     private final ReadOnlyBooleanWrapper depose = new ReadOnlyBooleanWrapper(this, "depose", false);
+    private final ReadOnlyBooleanWrapper peutGenererArchives =
+            new ReadOnlyBooleanWrapper(this, "peutGenererArchives", false);
+    private final ObservableList<String> archives = FXCollections.observableArrayList();
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
     public LotViewModel(ServiceLot service) {
@@ -66,6 +71,34 @@ public class LotViewModel {
         return appliquerAction(() -> service.marquerDepose(idPassage));
     }
 
+    /// Génère les **archives ZIP de dépôt** (#110) : séquences scindées en `<préfixe>-N.zip` ≤ 700 Mo
+    /// dans le sous-dossier `depot/` de la session. Publie la liste produite dans [#archives()]. Sans
+    /// passage ouvert, l'appel est ignoré ; une erreur métier est restituée dans [#messageProperty()].
+    ///
+    /// @return `true` si au moins une archive a été générée
+    public boolean genererArchives() {
+        if (idPassage == null) {
+            return false;
+        }
+        try {
+            List<ArchiveDepot> produites = service.genererArchivesDepot(idPassage);
+            archives.setAll(produites.stream().map(LotViewModel::archiveLisible).toList());
+            message.set(produites.size() + " archive(s) de dépôt générée(s) dans le sous-dossier « depot/ ».");
+            return true;
+        } catch (RuntimeException echec) {
+            message.set(echec.getMessage());
+            return false;
+        }
+    }
+
+    private static String archiveLisible(ArchiveDepot archive) {
+        return archive.chemin().getFileName()
+                + " · "
+                + archive.nombreFichiers()
+                + " fichiers · "
+                + Formats.octetsLisibles(archive.tailleOctets());
+    }
+
     private boolean appliquerAction(Runnable action) {
         if (idPassage == null) {
             return false;
@@ -89,6 +122,10 @@ public class LotViewModel {
         peutPreparer.set(etat.statut() == StatutWorkflow.VERIFIE && !bloque);
         peutDeposer.set(etat.statut() == StatutWorkflow.PRET_A_DEPOSER);
         depose.set(etat.statut() == StatutWorkflow.DEPOSE);
+        // Les archives de dépôt (#110) se génèrent dès que le lot est prêt (séquences figées) : Prêt à
+        // déposer ou déjà déposé.
+        peutGenererArchives.set(
+                etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE);
         message.set(messageEtat(etat));
     }
 
@@ -117,6 +154,8 @@ public class LotViewModel {
         peutPreparer.set(false);
         peutDeposer.set(false);
         depose.set(false);
+        peutGenererArchives.set(false);
+        archives.clear();
         message.set("");
     }
 
@@ -153,6 +192,16 @@ public class LotViewModel {
     /// `true` si le passage est déjà déposé.
     public ReadOnlyBooleanProperty deposeProperty() {
         return depose.getReadOnlyProperty();
+    }
+
+    /// `true` si les archives de dépôt peuvent être générées (lot préparé : Prêt à déposer ou Déposé).
+    public ReadOnlyBooleanProperty peutGenererArchivesProperty() {
+        return peutGenererArchives.getReadOnlyProperty();
+    }
+
+    /// Récapitulatifs lisibles des archives ZIP de dépôt produites (#110), vide tant qu'aucune génération.
+    public ObservableList<String> archives() {
+        return archives;
     }
 
     /// Message d'état ou d'erreur (déposé, alertes, échec d'action), vide en fonctionnement nominal.
