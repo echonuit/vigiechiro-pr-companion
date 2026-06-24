@@ -110,7 +110,6 @@ public class ImportationViewModel {
         // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
         this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement);
 
-        // --solution--
         // Changer de dossier source invalide l'inspection précédente : un nouveau dossier doit être
         // ré-inspecté (sinon le bouton Importer resterait actif et l'aperçu garderait l'ancien exemple).
         inspection.dossierSourceProperty().addListener((obs, ancien, nouveau) -> reinitialiserPourNouveauDossier());
@@ -125,7 +124,6 @@ public class ImportationViewModel {
         // Message unifié : recomposé dès que l'inspection ou l'exécution change le sien.
         inspection.messageErreurProperty().addListener((obs, ancien, nouveau) -> rafraichirMessage());
         messageExecution.addListener((obs, ancien, nouveau) -> rafraichirMessage());
-        // --end-solution--
 
         // peutImporter = inspection réussie ET rattachement complet ET n° de passage libre (#108) :
         // composition par l'orchestrateur.
@@ -197,9 +195,7 @@ public class ImportationViewModel {
     /// site).
     public void chargerSites() {
         // TODO (M-Import) : rechargez les sites de l'utilisateur courant (serviceSites.listerSites).
-        // --solution--
         rattachement.chargerSites();
-        // --end-solution--
     }
 
     /// Inspecte le dossier source courant **en lecture seule** (R9) via le sous-VM inspection. En cas
@@ -209,7 +205,6 @@ public class ImportationViewModel {
         // TODO (M-Import) : inspectez le dossier source (inspection.inspecter) ; en cas de succès
         //   (inspection.estInspecte), transmettez les noms d'originaux au rattachement (definirOriginaux) ;
         //   sinon, remettez l'exécution et l'aperçu à zéro (l'inspection a déjà publié son message).
-        // --solution--
         inspection.inspecter();
         if (inspection.estInspecte()) {
             rattachement.definirOriginaux(inspection.nomsOriginaux());
@@ -217,7 +212,6 @@ public class ImportationViewModel {
             reinitialiserExecution();
             rattachement.definirOriginaux(List.of());
         }
-        // --end-solution--
     }
 
     /// Renseigne le n° de passage avec le **prochain n° libre** proposé par le pré-contrôle R5 (#108) :
@@ -233,7 +227,6 @@ public class ImportationViewModel {
     public void importer() {
         // TODO (M-Import) : import synchrone : vérifiez peutImporter, préparez (preparerImport),
         //   marquerEnCours, exécutez (executerImport) puis marquerTermine / marquerEchec.
-        // --solution--
         if (!peutImporter.get()) {
             // Message ciblé : si l'import est bloqué par un n° déjà pris (#108), on l'explique au lieu du
             // générique « Complétez le rattachement » (qui serait trompeur, le rattachement étant complet).
@@ -248,14 +241,12 @@ public class ImportationViewModel {
         } catch (RuntimeException echec) {
             marquerEchec(echec.getMessage());
         }
-        // --end-solution--
     }
 
     /// Passe l'état à `EN_COURS` et efface le message. À appeler sur le fil JavaFX, avant de
     /// lancer l'exécution en arrière-plan.
     public void marquerEnCours() {
         // TODO (M-Import) : passez l'état à EN_COURS (progression 0, verrou de navigation #54).
-        // --solution--
         messageExecution.set("");
         progression.set(0.0);
         messageProgression.set("Préparation…");
@@ -264,7 +255,6 @@ public class ImportationViewModel {
         // Verrou de navigation (#54) : on ne doit pas quitter l'assistant tant que l'import tourne,
         // sinon son résultat (marquerTermine/marquerEchec) serait perdu en détachant la vue.
         navigation.setNavigationVerrouillee(true);
-        // --end-solution--
     }
 
     /// Passe l'état à `EXTRACTION` (#139/#146) : la barre de progression apparaît immédiatement pendant la
@@ -288,10 +278,8 @@ public class ImportationViewModel {
     /// service s'exécute hors-thread.
     public void appliquerProgression(Progression p) {
         // TODO (M-Import) : mettez à jour la fraction et le libellé de progression (#33).
-        // --solution--
         progression.set(p.fraction());
         messageProgression.set(avecTempsRestant(p.libelle(), p.fraction()));
-        // --end-solution--
     }
 
     /// Complète le libellé de progression par une **estimation du temps restant** (#146, déléguée à
@@ -357,13 +345,8 @@ public class ImportationViewModel {
     public DemandeImport preparerImport() {
         // TODO (M-Import) : capturez le rattachement courant (dossier, point, préfixe) dans un
         //   DemandeImport immuable (à passer à executerImport hors-thread).
-        // --solution--
         return new DemandeImport(
                 inspection.dossier(), rattachement.idPointSelectionne(), rattachement.prefixeCourant());
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Import)");
-        --end-student-- */
     }
 
     /// Exécute le travail lourd de l'import (copie + renommage + transformation) via
@@ -374,12 +357,7 @@ public class ImportationViewModel {
     /// @throws RuntimeException si l'import échoue (refus métier R5, journal manquant…)
     public ResultatImport executerImport(DemandeImport demande) {
         // TODO (M-Import) : déléguez à la variante avec suivi de progression (no-op).
-        // --solution--
         return executerImport(demande, progres -> {});
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Import)");
-        --end-student-- */
     }
 
     /// Variante avec **suivi de progression** (#33) : `progres` est notifié sur le fil d'exécution de
@@ -387,12 +365,7 @@ public class ImportationViewModel {
     /// `Property`** ici : sûr sur un fil d'arrière-plan.
     public ResultatImport executerImport(DemandeImport demande, Consumer<Progression> progres) {
         // TODO (M-Import) : exécutez l'import (serviceImport.importer) en relayant la progression.
-        // --solution--
         return executerImport(demande, progres, JetonAnnulation.neutre());
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Import)");
-        --end-student-- */
     }
 
     /// Variante **annulable** (#146) : `jeton` permet d'interrompre l'import en cours. Une annulation
@@ -409,26 +382,22 @@ public class ImportationViewModel {
     /// (depuis `Platform.runLater`).
     public void marquerTermine(ResultatImport resultatImport) {
         // TODO (M-Import) : exposez le résultat, passez l'état à TERMINE, déverrouillez la navigation (#54).
-        // --solution--
         resultat.set(resultatImport);
         messageExecution.set("");
         etat.set(EtatImport.TERMINE);
         navigation.setNavigationVerrouillee(false); // l'import est fini : on peut de nouveau naviguer (#54)
         nettoyerTemporaireZip(); // les fichiers ont été copiés (R9) : le temporaire du zip n'est plus utile (#139)
-        // --end-solution--
     }
 
     /// Applique un échec d'import : efface le résultat, renseigne le message, état `ECHEC`. À
     /// appeler sur le fil JavaFX (depuis `Platform.runLater`).
     public void marquerEchec(String message) {
         // TODO (M-Import) : effacez le résultat, publiez le message, passez l'état à ECHEC, déverrouillez (#54).
-        // --solution--
         resultat.set(null);
         messageExecution.set(message);
         etat.set(EtatImport.ECHEC);
         navigation.setNavigationVerrouillee(false); // l'import s'est arrêté : on déverrouille (#54)
         nettoyerTemporaireZip(); // échec : on nettoie aussi le temporaire du zip (#139)
-        // --end-solution--
     }
 
     /// Applique une **annulation** (#146) demandée par l'utilisateur (décompression ou import) : état
@@ -445,7 +414,6 @@ public class ImportationViewModel {
         nettoyerTemporaireZip();
     }
 
-    // --solution--
     /// Recompose le message d'erreur **unifié** présenté à la vue : l'erreur d'inspection prime (elle
     /// précède l'import) ; à défaut, l'erreur d'exécution. Inspection et exécution étant temporellement
     /// exclusives, au plus l'une est non vide.
@@ -500,5 +468,4 @@ public class ImportationViewModel {
             etat.set(EtatImport.PRET);
         }
     }
-    // --end-solution--
 }

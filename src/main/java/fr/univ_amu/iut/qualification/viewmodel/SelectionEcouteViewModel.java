@@ -67,9 +67,7 @@ public class SelectionEcouteViewModel {
 
     public SelectionEcouteViewModel(ServiceQualification service) {
         this.service = Objects.requireNonNull(service, "service");
-        // --solution--
         sequenceCourante.addListener((obs, ancien, nouveau) -> majCheminCourant(nouveau));
-        // --end-solution--
     }
 
     /// Ouvre la sélection d'écoute du passage `idPassage` : bandeau de contexte et liste de la
@@ -81,7 +79,6 @@ public class SelectionEcouteViewModel {
         // TODO (M-Qualification) : chargez le contexte (bandeau) et la sélection d'écoute (créée à la
         //   volée si absente, R12), peuplez lignes et la progression ; en cas d'erreur, réinitialisez
         //   et publiez le message.
-        // --solution--
         reinitialiser();
         try {
             appliquerContexte(service.chargerContexte(idPassage));
@@ -94,10 +91,8 @@ public class SelectionEcouteViewModel {
             reinitialiser();
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
-    // --solution--
     /// Remet la sélection à vide avant chaque (ré)ouverture et après un échec : ni la liste, ni le
     /// bandeau, ni le chemin du fichier courant d'un passage précédent ne doivent subsister (le VM
     /// est non-singleton, mais rien n'empêche une réouverture sur un autre passage).
@@ -112,14 +107,11 @@ public class SelectionEcouteViewModel {
         lignes.clear();
         recalculerProgression();
     }
-    // --end-solution--
 
     /// Sélectionne une ligne de la liste (met à jour le chemin du fichier courant pour l'écoute).
     public void selectionner(SequenceEnSelection ligne) {
         // TODO (M-Qualification) : mémorisez la séquence courante (sequenceCourante).
-        // --solution--
         sequenceCourante.set(ligne);
-        // --end-solution--
     }
 
     /// Marque la séquence courante comme écoutée (flag `listened`). Appelée au début de la lecture
@@ -127,7 +119,6 @@ public class SelectionEcouteViewModel {
     public void marquerCouranteEcoutee() {
         // TODO (M-Qualification) : marquez la séquence courante écoutée (service.marquerSequenceEcoutee),
         //   mettez à jour la ligne et recalculez la progression (R10).
-        // --solution--
         SequenceEnSelection courante = sequenceCourante.get();
         if (courante == null || idSelection == null || courante.ecoutee()) {
             return;
@@ -140,7 +131,6 @@ public class SelectionEcouteViewModel {
             sequenceCourante.set(ecoutee);
         }
         recalculerProgression();
-        // --end-solution--
     }
 
     /// Régénère la sélection avec la méthode et la taille choisies (R12). Recharge la liste et remet
@@ -148,7 +138,6 @@ public class SelectionEcouteViewModel {
     public void regenerer() {
         // TODO (M-Qualification) : régénérez la sélection (service.creerSelection) avec methode+taille,
         //   rechargez la liste, remettez la progression à zéro.
-        // --solution--
         try {
             SelectionDEcoute selection = service.creerSelection(idPassage, methode.get(), taille.get());
             this.idSelection = selection.id();
@@ -159,10 +148,8 @@ public class SelectionEcouteViewModel {
         } catch (RuntimeException echec) {
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
-    // --solution--
     private void appliquerContexte(ContexteVerification contexte) {
         String quadruplet = quadrupletLisible(contexte);
         titreContexte.set(quadruplet + " (" + contexte.annee() + ")");
@@ -194,7 +181,6 @@ public class SelectionEcouteViewModel {
                         ? "Aucune séquence"
                         : ecoutees + " / " + total + " écoutées (" + Math.round(progression.get() * 100) + " %)");
     }
-    // --end-solution--
 
     /// Titre de contexte du bandeau (ex. `Carré 640380 / A1 / N° 2 (2026)`).
     public ReadOnlyStringProperty titreContexteProperty() {

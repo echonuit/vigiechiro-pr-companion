@@ -27,7 +27,6 @@
   remplacez-le par la vraie mise en page (sélection d'écoute, audio, verdict O/D/J) reliée au
   QualificationController par des fx:id et des onAction. Vue de référence : sites/view/SiteDetail.fxml.
 -->
-<!-- @@solution@@ -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:id="racine"
@@ -162,17 +161,4 @@
     </SplitPane>
   </center>
 </BorderPane>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="fr.univ_amu.iut.qualification.view.QualificationController">
-  <center>
-    <VBox spacing="14.0">
-      <Label text="🎧 Vérifier l'enregistrement"/>
-      <Label text="TODO (M-Qualification) : écran à construire (sélection d'écoute, audio, verdict O/D/J). Voir sites/view/SiteDetail.fxml."/>
-    </VBox>
-  </center>
-</BorderPane>
-@@end-student@@ -->
 

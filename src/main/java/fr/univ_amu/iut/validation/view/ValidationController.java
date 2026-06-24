@@ -48,7 +48,6 @@ public class ValidationController implements EmplacementNavigation {
     //   (table des observations, filtre, détail, AudioView, boutons valider/corriger/importer/
     //   exporter, mode, taxon...), câblez-les au ValidationViewModel dans « @FXML private void
     //   initialize() » et ajoutez les handlers @FXML. Patron de référence : feature sites.
-    // --solution--
     @FXML
     private Label lblProgression;
 
@@ -94,8 +93,6 @@ public class ValidationController implements EmplacementNavigation {
     @FXML
     private Label lblMessage;
 
-    // --end-solution--
-
     @Inject
     public ValidationController(ValidationViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -103,7 +100,6 @@ public class ValidationController implements EmplacementNavigation {
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         colEspece.setCellValueFactory(cellule ->
@@ -197,7 +193,6 @@ public class ValidationController implements EmplacementNavigation {
         lblMessage.visibleProperty().bind(messagePresent);
         lblMessage.managedProperty().bind(messagePresent);
     }
-    // --end-solution--
 
     /// Ouvre la validation du passage `passage`. Appelée par [NavigationValidation] après le chargement
     /// du FXML ; mémorise le contexte pour le fil d'Ariane.
@@ -213,7 +208,6 @@ public class ValidationController implements EmplacementNavigation {
         return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Validation Tadarida");
     }
 
-    // --solution--
     /// « Importer un CSV Tadarida » : ouvre le sélecteur de fichier natif (ouverture) puis délègue
     /// l'import au VM. Le dialog vit dans la vue (non testé en TestFX) ; l'import est testé côté VM.
     @FXML
@@ -262,5 +256,4 @@ public class ValidationController implements EmplacementNavigation {
             case INVENTAIRE -> "Inventaire (propage l'espèce)";
         };
     }
-    // --end-solution--
 }

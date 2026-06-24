@@ -20,7 +20,6 @@
   remplacez-le par la vraie mise en page (table des sons, détail, écoute AudioView, export) reliée au
   BibliothequeController par des fx:id. Vue de référence : sites/view/MesSites.fxml.
 -->
-<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.bibliotheque.view.BibliothequeController"
@@ -64,13 +63,3 @@
 
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
 </VBox>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.bibliotheque.view.BibliothequeController"
-      spacing="14.0">
-  <Label text="🔊 Bibliothèque de sons"/>
-  <Label text="TODO (M-Bibliotheque) : écran à construire (table des sons, écoute AudioView, export). Voir sites/view/MesSites.fxml."/>
-</VBox>
-@@end-student@@ -->

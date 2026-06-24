@@ -21,7 +21,6 @@
   remplacez-le par la vraie mise en page (table des observations, audio, valider/corriger, import/
   export) reliée au ValidationController par des fx:id et des onAction. Réf : sites/view/SiteDetail.fxml.
 -->
-<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.validation.view.ValidationController"
@@ -86,14 +85,4 @@
 
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
 </VBox>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.validation.view.ValidationController"
-      spacing="14.0">
-  <Label text="✅ Validation Tadarida"/>
-  <Label text="TODO (M-Vision-Tadarida) : écran à construire (observations, audio, valider/corriger, import/export). Voir sites/view/SiteDetail.fxml."/>
-</VBox>
-@@end-student@@ -->
 

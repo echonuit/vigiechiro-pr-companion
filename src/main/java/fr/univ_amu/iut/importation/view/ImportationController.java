@@ -54,7 +54,6 @@ public class ImportationController implements GardeQuitter {
     //   câblez-les à l'ImportationViewModel dans « @FXML private void initialize() » (chargement initial
     //   via viewModel.chargerSites()) et ajoutez les handlers @FXML (parcourir, importer hors-thread).
     //   Patron de référence : feature sites.
-    // --solution--
     @FXML
     private VBox racineImport;
 
@@ -139,8 +138,6 @@ public class ImportationController implements GardeQuitter {
     @FXML
     private Button boutonAnnuler;
 
-    // --end-solution--
-
     /// Jeton d'annulation (#146) de l'opération longue **en cours** (décompression ou import), créé au
     /// lancement et déclenché par le bouton « Annuler ». `null` hors traitement. Accédé uniquement sur le
     /// fil JavaFX (lancement + clic « Annuler ») ; le travail hors-thread reçoit le jeton en paramètre.
@@ -165,7 +162,6 @@ public class ImportationController implements GardeQuitter {
         return "Un import préparé n'a pas été lancé. Quitter cet écran et abandonner cette préparation ?";
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         // La vue se lie directement aux sous-VM exposés par l'orchestrateur (inspection / rattachement),
@@ -475,5 +471,4 @@ public class ImportationController implements GardeQuitter {
             }
         };
     }
-    // --end-solution--
 }

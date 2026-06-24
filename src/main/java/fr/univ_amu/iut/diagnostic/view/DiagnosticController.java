@@ -33,9 +33,7 @@ public class DiagnosticController implements EmplacementNavigation {
     //   (Label, LineChart, ListView...), puis liez-les au DiagnosticViewModel dans une méthode
     //   « @FXML private void initialize() ». Patron de référence : un controleur de la feature sites.
     //   Le graphe T°/hygrométrie se reconstruit depuis viewModel.mesures().
-    // --solution--
     private static final DateTimeFormatter MOMENT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
-    // --end-solution--
 
     private final DiagnosticViewModel viewModel;
     private final OuvrirSite ouvrirSite;
@@ -44,7 +42,6 @@ public class DiagnosticController implements EmplacementNavigation {
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
-    // --solution--
     @FXML
     private Label lblEnregistreur;
 
@@ -72,8 +69,6 @@ public class DiagnosticController implements EmplacementNavigation {
     @FXML
     private Label lblMessage;
 
-    // --end-solution--
-
     @Inject
     public DiagnosticController(DiagnosticViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -81,7 +76,6 @@ public class DiagnosticController implements EmplacementNavigation {
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         lblEnregistreur.textProperty().bind(viewModel.enregistreurProperty());
@@ -115,8 +109,6 @@ public class DiagnosticController implements EmplacementNavigation {
         lblMessage.managedProperty().bind(messagePresent);
     }
 
-    // --end-solution--
-
     /// Ouvre le diagnostic du passage `passage`. Appelée par [NavigationDiagnostic] après le chargement
     /// du FXML ; mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
@@ -131,7 +123,6 @@ public class DiagnosticController implements EmplacementNavigation {
         return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Diagnostic matériel");
     }
 
-    // --solution--
     private void majGraphe() {
         XYChart.Series<String, Number> temperature = new XYChart.Series<>();
         temperature.setName("T° (°C)");
@@ -144,5 +135,4 @@ public class DiagnosticController implements EmplacementNavigation {
         }
         grapheClimat.getData().setAll(List.of(temperature, humidite));
     }
-    // --end-solution--
 }

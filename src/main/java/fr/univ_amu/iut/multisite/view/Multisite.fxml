@@ -20,7 +20,6 @@
   par la vraie mise en page (barre de filtres, tableau agrégé, tri, export) reliée au MultisiteController
   par des fx:id et des onAction. Vue de référence : sites/view/SiteDetail.fxml.
 -->
-<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.multisite.view.MultisiteController"
@@ -65,13 +64,3 @@
          styleClass="section-sous"/>
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
 </VBox>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.multisite.view.MultisiteController"
-      spacing="12.0">
-  <Label text="🗂 Vue multi-sites"/>
-  <Label text="TODO (M-Multisite) : écran à construire (filtres, tableau agrégé, tri, export). Voir sites/view/SiteDetail.fxml."/>
-</VBox>
-@@end-student@@ -->

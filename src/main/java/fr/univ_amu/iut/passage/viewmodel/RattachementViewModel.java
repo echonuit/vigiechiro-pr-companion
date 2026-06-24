@@ -37,10 +37,8 @@ public class RattachementViewModel {
 
     public RattachementViewModel(ServicePassage service) {
         this.service = Objects.requireNonNull(service, "service");
-        // --solution--
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
-        // --end-solution--
     }
 
     /// Initialise la modale sur le passage `idPassage` (carré et code point fournis par la
@@ -51,7 +49,6 @@ public class RattachementViewModel {
         this.codePoint = Objects.requireNonNull(codePoint, "codePoint");
         // TODO (M-Passage, modale rattachement) : lisez le détail du passage (service.detailPassage),
         //   mémorisez les valeurs actuelles, pré-remplissez année + numéro et recalculez le récap.
-        // --solution--
         DetailPassage detail = service.detailPassage(idPassage);
         anneeActuelle = detail.annee();
         numeroActuel = detail.numeroPassage();
@@ -60,7 +57,6 @@ public class RattachementViewModel {
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
         majRecap();
-        // --end-solution--
     }
 
     /// Applique le nouveau rattachement (année + n° saisis), après validation des bornes.
@@ -71,7 +67,6 @@ public class RattachementViewModel {
     public boolean valider() {
         // TODO (M-Passage, modale rattachement) : validez les bornes (n° >= 1, année 4 chiffres) puis
         //   appliquez le nouveau rattachement (service.modifierRattachement) ; renvoyez true si OK.
-        // --solution--
         if (numeroPassage.get() < 1) {
             messageErreur.set("Le numéro de passage doit être supérieur ou égal à 1.");
             return false;
@@ -90,13 +85,8 @@ public class RattachementViewModel {
             messageErreur.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Passage, modale rattachement)");
-        --end-student-- */
     }
 
-    // --solution--
     private void majRecap() {
         if (carre == null) {
             recap.set("");
@@ -116,7 +106,6 @@ public class RattachementViewModel {
                     + " séquence(s) de la nuit seront renommées. Action irréversible.");
         }
     }
-    // --end-solution--
 
     public IntegerProperty anneeProperty() {
         return annee;

@@ -37,7 +37,6 @@ public class LotController implements EmplacementNavigation {
     // TODO (M-Lot) : déclarez les champs @FXML correspondant aux fx:id de Lot.fxml (Label, Button,
     //   ListView, VBox...), liez-les au LotViewModel dans « @FXML private void initialize() », et
     //   ajoutez les handlers @FXML des boutons (onAction="#preparer"/"#deposer"). Référence : feature sites.
-    // --solution--
     @FXML
     private Label lblStatut;
 
@@ -62,8 +61,6 @@ public class LotController implements EmplacementNavigation {
     @FXML
     private Label lblMessage;
 
-    // --end-solution--
-
     @Inject
     public LotController(LotViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -71,7 +68,6 @@ public class LotController implements EmplacementNavigation {
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         lblStatut.textProperty().bind(viewModel.statutProperty());
@@ -93,8 +89,6 @@ public class LotController implements EmplacementNavigation {
         lblMessage.managedProperty().bind(messagePresent);
     }
 
-    // --end-solution--
-
     /// Ouvre l'écran sur le passage `passage`. Appelée par [NavigationLot] après le chargement FXML ;
     /// mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
@@ -109,7 +103,6 @@ public class LotController implements EmplacementNavigation {
         return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Préparer le dépôt");
     }
 
-    // --solution--
     @FXML
     private void preparer() {
         viewModel.preparer();
@@ -119,5 +112,4 @@ public class LotController implements EmplacementNavigation {
     private void deposer() {
         viewModel.deposer();
     }
-    // --end-solution--
 }

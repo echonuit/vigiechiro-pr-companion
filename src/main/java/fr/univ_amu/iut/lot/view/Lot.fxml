@@ -17,7 +17,6 @@
   la vraie mise en page (récap, alertes, boutons Préparer/Déposer) reliée au LotController par des
   fx:id et des onAction. Vue de référence : sites/view/SiteDetail.fxml.
 -->
-<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.lot.view.LotController"
@@ -55,13 +54,3 @@
 
   <Label fx:id="lblMessage" styleClass="message-lot" wrapText="true"/>
 </VBox>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.lot.view.LotController"
-      spacing="14.0">
-  <Label text="📦 Préparer le dépôt"/>
-  <Label text="TODO (M-Lot) : écran à construire (récap, alertes R14, boutons Préparer/Déposer). Voir sites/view/SiteDetail.fxml."/>
-</VBox>
-@@end-student@@ -->

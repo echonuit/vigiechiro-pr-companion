@@ -80,7 +80,6 @@ public class PassageViewModel {
         // TODO (M-Passage) : chargez le détail du passage (service.detailPassage) et alimentez les
         //   propriétés (identité, statut, verdict, volumes, stepper, disponibilités) ; en cas d'erreur,
         //   réinitialisez et publiez le message.
-        // --solution--
         reinitialiser();
         try {
             appliquer(service.detailPassage(idPassage), contexte);
@@ -89,7 +88,6 @@ public class PassageViewModel {
             reinitialiser();
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
     /// Supprime le passage courant (action « Supprimer » de M-Passage). Délègue à
@@ -97,9 +95,7 @@ public class PassageViewModel {
     /// passage déposé remonte à la vue, qui l'affiche (même patron que la suppression d'un site).
     public void supprimer() {
         // TODO (M-Passage) : supprimez le passage courant (service.supprimer).
-        // --solution--
         service.supprimer(idPassage);
-        // --end-solution--
     }
 
     /// Enregistre la **température en début de nuit** saisie (#106) : donnée **optionnelle** ; une saisie
@@ -117,7 +113,6 @@ public class PassageViewModel {
         }
     }
 
-    // --solution--
     private void appliquer(DetailPassage detail, ContexteSite contexte) {
         titreContexte.set("Carré "
                 + contexte.numeroCarre()
@@ -194,7 +189,6 @@ public class PassageViewModel {
         }
         return liste;
     }
-    // --end-solution--
 
     /// Numéro de passage dans l'année (0 si aucun passage chargé), pour le libellé du fil d'Ariane.
     public int getNumeroPassage() {

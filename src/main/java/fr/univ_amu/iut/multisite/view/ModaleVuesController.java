@@ -23,7 +23,6 @@ public class ModaleVuesController {
     // TODO (M-Multisite, modale « Vues enregistrées ») : déclarez les @FXML (liste des vues, champ
     //   nom, boutons), câblez-les dans « @FXML private void initialize() », reliez la modale au
     //   MultisiteViewModel partagé dans demarrer(...) et ajoutez les handlers @FXML.
-    // --solution--
     @FXML
     private VBox racine;
 
@@ -45,11 +44,8 @@ public class ModaleVuesController {
     @FXML
     private Label lblMessage;
 
-    // --end-solution--
-
     private MultisiteViewModel viewModel;
 
-    // --solution--
     @FXML
     private void initialize() {
         listeVues.setCellFactory(liste -> new ListCell<>() {
@@ -72,7 +68,6 @@ public class ModaleVuesController {
             }
         });
     }
-    // --end-solution--
 
     /// Branche la modale sur le ViewModel de l'écran M-Multisite (état de filtres partagé) et charge
     /// la liste des vues. Appelée par [NavigationMultisite] après le chargement du FXML.
@@ -80,17 +75,14 @@ public class ModaleVuesController {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         // TODO (M-Multisite, modale) : reliez la liste des vues + le message au viewModel partagé et
         //   chargez les vues (viewModel.chargerVues()).
-        // --solution--
         listeVues.setItems(viewModel.vues());
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
         lblMessage.visibleProperty().bind(messagePresent);
         lblMessage.managedProperty().bind(messagePresent);
         viewModel.chargerVues();
-        // --end-solution--
     }
 
-    // --solution--
     @FXML
     private void enregistrer() {
         if (viewModel.enregistrerVue(champNom.getText())) {
@@ -119,5 +111,4 @@ public class ModaleVuesController {
     private void fermer() {
         ((Stage) racine.getScene().getWindow()).close();
     }
-    // --end-solution--
 }

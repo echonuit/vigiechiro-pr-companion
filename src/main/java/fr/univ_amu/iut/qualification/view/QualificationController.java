@@ -64,7 +64,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     //   (bandeau, 3 feux, liste de la sélection, AudioView, boutons de verdict, commentaire...),
     //   câblez-les aux deux ViewModels dans « @FXML private void initialize() » et ajoutez les
     //   handlers @FXML (verdict, enregistrer, régénérer, retour passage). Référence : feature sites.
-    // --solution--
     @FXML
     private BorderPane racine;
 
@@ -152,8 +151,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private Button boutonEnregistrer;
 
-    // --end-solution--
-
     @Inject
     public QualificationController(
             QualificationViewModel verdictVm,
@@ -179,7 +176,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         return "Un verdict choisi n'a pas été enregistré. Quitter cet écran sans l'enregistrer ?";
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
@@ -285,7 +281,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // scène partagée du chrome. Les événements remontent depuis le nœud focalisé jusqu'à la racine.
         racine.addEventHandler(KeyEvent.KEY_PRESSED, this::gererRaccourci);
     }
-    // --end-solution--
 
     /// Ouvre l'écran sur le passage `passage` : les deux VM se synchronisent sur le même passage.
     /// Appelée par [NavigationQualification] après le chargement du FXML ; mémorise le contexte pour le
@@ -303,8 +298,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     public List<Lieu> emplacement() {
         return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Vérifier l'enregistrement");
     }
-
-    // --solution--
 
     @FXML
     private void choisirOk() {
@@ -455,5 +448,4 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private static String formatDuree(double secondes) {
         return String.format(Locale.FRANCE, "%.1f s", secondes);
     }
-    // --end-solution--
 }

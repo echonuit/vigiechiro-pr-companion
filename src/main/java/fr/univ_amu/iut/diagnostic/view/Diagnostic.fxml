@@ -17,7 +17,6 @@
   un titre ; remplacez-le par la vraie mise en page (graphe, listes, labels) reliée au
   DiagnosticController par des fx:id. Vue de référence : sites/view/SiteDetail.fxml.
 -->
-<!-- @@solution@@ -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.diagnostic.view.DiagnosticController"
@@ -59,13 +58,3 @@
   <Label fx:id="lblGps" styleClass="section-sous"/>
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
 </VBox>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.diagnostic.view.DiagnosticController"
-      spacing="14.0">
-  <Label text="🔧 Diagnostic matériel"/>
-  <Label text="TODO (M-Diagnostic) : écran à construire (graphe climat, anomalies, évènements). Voir sites/view/SiteDetail.fxml."/>
-</VBox>
-@@end-student@@ -->

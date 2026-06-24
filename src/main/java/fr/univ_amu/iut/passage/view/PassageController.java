@@ -65,7 +65,6 @@ public class PassageController implements EmplacementNavigation {
     //   stepper de statut, stats, boutons Vérifier/Diagnostic/Validation/Préparer le dépôt...), câblez-
     //   les au PassageViewModel dans « @FXML private void initialize() » et ajoutez les handlers @FXML
     //   (qui ouvrent les autres écrans via les contrats socle Ouvrir*). Patron de référence : feature sites.
-    // --solution--
     @FXML
     private BorderPane racine;
 
@@ -123,8 +122,6 @@ public class PassageController implements EmplacementNavigation {
     @FXML
     private Button boutonTemperature;
 
-    // --end-solution--
-
     @Inject
     public PassageController(
             PassageViewModel viewModel,
@@ -143,7 +140,6 @@ public class PassageController implements EmplacementNavigation {
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         lblTitre.textProperty().bind(viewModel.titreContexteProperty());
@@ -203,7 +199,6 @@ public class PassageController implements EmplacementNavigation {
         boutonDepot.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.DEPOSER);
         boutonValidation.pseudoClassStateChanged(RECOMMANDEE, action == ActionRecommandee.VALIDER);
     }
-    // --end-solution--
 
     /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
     /// Appelée par [NavigationPassage] après le chargement du FXML.
@@ -235,7 +230,6 @@ public class PassageController implements EmplacementNavigation {
         return List.copyOf(fil);
     }
 
-    // --solution--
     /// « Vérifier l'enregistrement » : ouvre M-Qualification sur ce passage via le contrat socle
     /// [OuvrirVerification] (la feature `qualification` en fournit l'implémentation).
     @FXML
@@ -338,5 +332,4 @@ public class PassageController implements EmplacementNavigation {
         alerte.setHeaderText("Suppression impossible");
         alerte.showAndWait();
     }
-    // --end-solution--
 }

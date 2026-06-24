@@ -20,7 +20,6 @@
   remplacez-le par la vraie mise en page (bandeau d'identité, stepper de statut, stats, actions vers
   les autres écrans) reliée au PassageController par des fx:id et des onAction. Réf : sites/view/SiteDetail.fxml.
 -->
-<!-- @@solution@@ -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
             fx:id="racine"
@@ -154,17 +153,4 @@
     </VBox>
   </center>
 </BorderPane>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:controller="fr.univ_amu.iut.passage.view.PassageController">
-  <center>
-    <VBox spacing="14.0">
-      <Label text="🗂 Passage"/>
-      <Label text="TODO (M-Passage) : écran pivot à construire (identité, stepper, stats, actions). Voir sites/view/SiteDetail.fxml."/>
-    </VBox>
-  </center>
-</BorderPane>
-@@end-student@@ -->
 

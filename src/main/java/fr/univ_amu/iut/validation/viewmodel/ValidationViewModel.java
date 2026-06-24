@@ -75,11 +75,9 @@ public class ValidationViewModel {
 
     public ValidationViewModel(ServiceValidation service) {
         this.service = Objects.requireNonNull(service, "service");
-        // --solution--
         selection.addListener((obs, ancien, nouveau) -> majSelection(nouveau));
         filtreStatut.addListener((obs, ancien, nouveau) ->
                 observationsFiltrees.setPredicate(nouveau == null ? null : os -> os.statut() == nouveau));
-        // --end-solution--
     }
 
     /// Ouvre la validation du passage `idPassage`. Une erreur (passage/résultats illisibles) est
@@ -89,7 +87,6 @@ public class ValidationViewModel {
         this.idPassage = idPassage;
         // TODO (M-Vision-Tadarida) : chargez les taxons disponibles et la vue de validation
         //   (service.chargerValidation) ; en cas d'erreur, réinitialisez et publiez le message.
-        // --solution--
         reinitialiser();
         try {
             taxons.setAll(service.taxonsDisponibles());
@@ -98,7 +95,6 @@ public class ValidationViewModel {
             reinitialiser();
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
     /// Valide l'observation sélectionnée selon le [#modeRevueProperty()] (R15, R18), puis recharge.
@@ -110,17 +106,12 @@ public class ValidationViewModel {
     public boolean valider() {
         // TODO (M-Vision-Tadarida) : validez l'observation sélectionnée selon le mode de revue
         //   (service.validerSelonMode) puis rechargez ; ignorez sans sélection.
-        // --solution--
         ObservationStatut courant = selection.get();
         if (courant == null || courant.observation().id() == null) {
             return false;
         }
         return appliquerAction(
                 () -> service.validerSelonMode(courant.observation().id(), modeRevue.get()));
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Vision-Tadarida)");
-        --end-student-- */
     }
 
     /// Corrige l'observation sélectionnée (R16 : retient le `taxon` de l'observateur, distinct de
@@ -135,7 +126,6 @@ public class ValidationViewModel {
     public boolean corriger(Taxon taxon) {
         // TODO (M-Vision-Tadarida) : corrigez l'observation sélectionnée vers le taxon observateur
         //   (service.corriger) ; refusez un taxon == proposition Tadarida (utiliser « Valider »).
-        // --solution--
         ObservationStatut courant = selection.get();
         if (courant == null || courant.observation().id() == null || taxon == null) {
             return false;
@@ -146,10 +136,6 @@ public class ValidationViewModel {
             return false;
         }
         return appliquerAction(() -> service.corriger(courant.observation().id(), taxon.code(), null));
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Vision-Tadarida)");
-        --end-student-- */
     }
 
     /// Importe un CSV Tadarida (`*-observations.csv` ou `_Vu.csv`, R23) pour le passage courant, puis
@@ -165,7 +151,6 @@ public class ValidationViewModel {
     public boolean importer(Path cheminCsv) {
         // TODO (M-Vision-Tadarida) : importez le CSV Tadarida pour le passage courant
         //   (service.importer) puis rechargez ; refusez un second import (un seul jeu par passage).
-        // --solution--
         if (idPassage == null || cheminCsv == null) {
             return false;
         }
@@ -174,13 +159,8 @@ public class ValidationViewModel {
             return false;
         }
         return appliquerAction(() -> service.importer(idPassage, cheminCsv));
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Vision-Tadarida)");
-        --end-student-- */
     }
 
-    // --solution--
     private boolean appliquerAction(Runnable action) {
         try {
             action.run();
@@ -207,7 +187,6 @@ public class ValidationViewModel {
                             : "");
         }
     }
-    // --end-solution--
 
     /// Exporte le CSV `_Vu` réinjectable du jeu de résultats courant vers `destination` (R17). La
     /// colonne `validation_mode` (R24) est incluse selon [#inclureModeProperty()]. Sans résultats
@@ -218,7 +197,6 @@ public class ValidationViewModel {
     public boolean exporter(Path destination) {
         // TODO (M-Vision-Tadarida) : exportez le CSV _Vu réinjectable (service.exporter) selon
         //   inclureMode, publiez le chemin écrit ou l'erreur dans message, renvoyez true si écrit.
-        // --solution--
         if (idResultats == null || destination == null) {
             return false;
         }
@@ -230,13 +208,8 @@ public class ValidationViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Vision-Tadarida)");
-        --end-student-- */
     }
 
-    // --solution--
     private void majCompteurs() {
         ComptageRevue comptage = ComptageRevue.de(observations);
         nombreTotal.set(comptage.total());
@@ -268,7 +241,6 @@ public class ValidationViewModel {
         progression.set("");
         message.set("");
     }
-    // --end-solution--
 
     /// Observations du passage (avec statut de revue), dans l'ordre d'import. **Source non filtrée** :
     /// les compteurs de progression la reflètent intégralement.

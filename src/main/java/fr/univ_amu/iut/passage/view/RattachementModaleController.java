@@ -25,7 +25,6 @@ public class RattachementModaleController {
     // TODO (M-Passage, modale rattachement) : déclarez les @FXML (spinners année / n° de passage,
     //   récap, message) correspondant aux fx:id de RattachementModale.fxml et câblez-les au
     //   RattachementViewModel dans « @FXML private void initialize() » ; ajoutez les handlers @FXML.
-    // --solution--
     private ObjectProperty<Integer> anneeObjet;
     private ObjectProperty<Integer> numeroObjet;
 
@@ -44,14 +43,11 @@ public class RattachementModaleController {
     @FXML
     private Label messageErreur;
 
-    // --end-solution--
-
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
     }
 
-    // --solution--
     @FXML
     private void initialize() {
         // Bornes volontairement ouvertes (tout l'entier) : un IntegerSpinnerValueFactory **écrête** la
@@ -78,7 +74,6 @@ public class RattachementModaleController {
         messageErreur.visibleProperty().bind(erreurPresente);
         messageErreur.managedProperty().bind(erreurPresente);
     }
-    // --end-solution--
 
     /// Prépare la modale sur le passage `idPassage` (carré/point fournis par M-Passage) et mémorise
     /// l'action de succès (rafraîchir l'écran appelant).
@@ -87,7 +82,6 @@ public class RattachementModaleController {
         viewModel.ouvrirSur(idPassage, carre, codePoint);
     }
 
-    // --solution--
     @FXML
     private void valider() {
         if (viewModel.valider()) {
@@ -104,5 +98,4 @@ public class RattachementModaleController {
     private void fermer() {
         ((Stage) racine.getScene().getWindow()).close();
     }
-    // --end-solution--
 }
