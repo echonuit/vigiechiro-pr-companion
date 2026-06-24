@@ -21,14 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /// Service métier de la feature `importation` : orchestre le parcours d'import P2 d'une nuit
@@ -84,7 +77,7 @@ public class ServiceImport {
     private final InspecteurDossier inspecteur;
     private final CopieProtegee copie;
     private final Renommeur renommeur;
-    private final TransformationAudio transformation;
+    private final DecoupageParallele decoupage;
     private final AgregatImportDao agregatDao;
     private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
@@ -107,7 +100,7 @@ public class ServiceImport {
         this.inspecteur = Objects.requireNonNull(inspecteur, "inspecteur");
         this.copie = Objects.requireNonNull(copie, "copie");
         this.renommeur = Objects.requireNonNull(renommeur, "renommeur");
-        this.transformation = Objects.requireNonNull(transformation, "transformation");
+        this.decoupage = new DecoupageParallele(transformation, PARALLELISME_DECOUPAGE);
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
@@ -253,8 +246,9 @@ public class ServiceImport {
                 copie.copierVers(original, dossierBruts);
                 indiceCopie++;
                 faites++;
-                progres.accept(
-                        new Progression("Copie " + indiceCopie + "/" + nbOriginaux, (double) faites / totalEtapes));
+                progres.accept(new Progression(
+                        "Copie " + indiceCopie + "/" + nbOriginaux + " · " + original.getFileName(),
+                        (double) faites / totalEtapes));
             }
             cheminJournalCopie = sansJournal
                     ? JournalDeRepli.ecrireTraceSynthetique(dossierSession)
@@ -265,8 +259,11 @@ public class ServiceImport {
 
             // 2) Renommage R6/R7 sur la copie, puis 3) transformation R10/R11 (découpée en parallèle, #12).
             originauxRenommes = renommeur.renommer(dossierBruts, prefixe);
-            transformations = decouperEnParallele(
+            transformations = decoupage.decouper(
                     originauxRenommes, dossierTransformes, prefixe, nbOriginaux, totalEtapes, progres, jeton);
+            // Re-vérification après la phase de transformation : une annulation pendant la DERNIÈRE
+            // transformation (postérieure à son propre point de contrôle) doit aussi stopper l'import.
+            jeton.leverSiAnnule();
         } catch (AnnulationImportException annulation) {
             supprimerSessionPartielle(dossierSession);
             throw annulation;
@@ -289,6 +286,10 @@ public class ServiceImport {
                 null, cheminJournalCopie.toString(), journal.evenementsJson(), journal.anomaliesJson(), null);
         ReleveClimatique releveEntite =
                 cheminReleveCopie == null ? null : new ReleveClimatique(null, cheminReleveCopie.toString(), null, null);
+
+        // Dernière fenêtre d'annulation : juste avant le point de non-retour (la persistance). Au-delà,
+        // le passage est créé. Cette vérification nettoie elle-même la session (hors du bloc try/catch).
+        verifierAnnulation(jeton, dossierSession);
 
         // 5) Persistance atomique de l'agrégat (O7 : tout ou rien).
         long[] ids = new long[2]; // [idPassage, idSession]
@@ -350,89 +351,13 @@ public class ServiceImport {
         ExtracteurZip.supprimerRecursivement(dossierSession);
     }
 
-    /// Découpe (#12) tous les `originaux` **en parallèle** sur des threads virtuels (un par fichier,
-    /// Java 25), la concurrence étant **bornée** à [#PARALLELISME_DECOUPAGE] par un [Semaphore] :
-    /// `transformer` charge tout le PCM en mémoire et écrit sur disque, donc sans plafond une grosse
-    /// nuit (~1572 fichiers) tiendrait trop de WAV en vol → saturation mémoire. Pic mémoire borné ≈
-    /// nbCœurs PCM, sans brider le débit CPU.
-    ///
-    /// L'**ordre d'origine est préservé** (Future récupérés dans l'ordre de soumission) → résultat
-    /// déterministe (persistance et tests inchangés). La progression (#33) est émise **sous verrou +
-    /// compteur** pour rester appelée un à un (sûre pour tout consommateur), libellés « k/N » monotones.
-    private List<TransformationOriginal> decouperEnParallele(
-            List<Path> originaux,
-            Path dossierTransformes,
-            Prefixe prefixe,
-            int nbOriginaux,
-            int totalEtapes,
-            Consumer<Progression> progres,
-            JetonAnnulation jeton) {
-        AtomicInteger transfosFaites = new AtomicInteger(0);
-        AtomicReference<RuntimeException> echecDecoupage = new AtomicReference<>();
-        Object verrouProgression = new Object();
-        Semaphore creneaux = new Semaphore(PARALLELISME_DECOUPAGE);
-        try (ExecutorService executeur = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<Future<TransformationOriginal>> decoupagesEnCours = originaux.stream()
-                    .map(original -> executeur.submit(() -> {
-                        creneaux.acquire();
-                        try {
-                            // Fail-fast (#12) : si un découpage a déjà échoué (n'importe lequel, quel que
-                            // soit l'ordre), on n'en lance pas un nouveau et on propage l'échec d'origine
-                            // → plus aucun fichier décodé inutilement une fois l'erreur connue.
-                            RuntimeException dejaEchoue = echecDecoupage.get();
-                            if (dejaEchoue != null) {
-                                throw dejaEchoue;
-                            }
-                            // Annulation (#146) : on réutilise le fail-fast — lever ici stoppe les
-                            // découpages restants exactement comme une erreur, sans en lancer de nouveaux.
-                            jeton.leverSiAnnule();
-                            TransformationOriginal resultat =
-                                    transformation.transformer(original, dossierTransformes, prefixe);
-                            synchronized (verrouProgression) {
-                                int faits = transfosFaites.incrementAndGet();
-                                progres.accept(new Progression(
-                                        "Transformation " + faits + "/" + nbOriginaux,
-                                        (double) (nbOriginaux + faits) / totalEtapes));
-                            }
-                            return resultat;
-                        } catch (RuntimeException echec) {
-                            echecDecoupage.compareAndSet(null, echec);
-                            throw echec;
-                        } finally {
-                            creneaux.release();
-                        }
-                    }))
-                    .toList();
-            try {
-                return decoupagesEnCours.stream()
-                        .map(ServiceImport::resultatDecoupage)
-                        .toList();
-            } catch (RuntimeException echec) {
-                // Fail-fast (#12) : à la première erreur, on annule les découpages restants (ceux en
-                // attente sur le sémaphore s'arrêtent net) au lieu d'attendre toute la nuit avant de
-                // remonter l'échec — comme le faisait l'import séquentiel. Sans cela, la fermeture du
-                // pool patienterait jusqu'à la fin de tous les originaux déjà soumis.
-                decoupagesEnCours.forEach(decoupage -> decoupage.cancel(true));
-                throw echec;
-            }
-        }
-    }
-
-    /// Récupère le résultat d'un découpage lancé sur un thread virtuel (#12), en **dévoilant** la
-    /// cause d'un éventuel échec : une [RuntimeException] (ex. [UncheckedIOException] d'écriture) est
-    /// relancée telle quelle, pour conserver le comportement de l'import séquentiel ; une interruption
-    /// restaure le drapeau du thread avant de remonter l'erreur.
-    private static TransformationOriginal resultatDecoupage(Future<TransformationOriginal> decoupage) {
-        try {
-            return decoupage.get();
-        } catch (InterruptedException interruption) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Découpage audio interrompu.", interruption);
-        } catch (ExecutionException echec) {
-            if (echec.getCause() instanceof RuntimeException relancable) {
-                throw relancable;
-            }
-            throw new IllegalStateException("Échec du découpage audio.", echec.getCause());
+    /// Vérifie l'annulation **hors du bloc try/catch de nettoyage** (#146) : si annulé, supprime la
+    /// session partielle puis lève [AnnulationImportException]. Utilisé juste avant la persistance, où le
+    /// `catch` couvrant la copie/transformation ne s'applique plus.
+    private static void verifierAnnulation(JetonAnnulation jeton, Path dossierSession) {
+        if (jeton.estAnnule()) {
+            supprimerSessionPartielle(dossierSession);
+            throw new AnnulationImportException();
         }
     }
 

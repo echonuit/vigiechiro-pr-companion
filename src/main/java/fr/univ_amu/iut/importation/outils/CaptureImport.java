@@ -109,7 +109,8 @@ public final class CaptureImport {
         // (le formulaire est gelé). Le court délai laisse l'ETA s'établir (sinon « ~0 s » à t≈0).
         vm.marquerExtractionEnCours();
         dormir(2500);
-        vm.appliquerProgression(new Progression("Décompression : 740 / 3692 fichiers…", 0.20));
+        vm.appliquerProgression(
+                new Progression("Décompression : 740 / 3692 · PaRecPR1925492_20260423_034512.wav", 0.20));
         rendre(scene, sortie.resolve("apercu-import-decompression.png"));
 
         // Poser la source ramène l'état à PRET (réinitialisation pour nouveau dossier) ; on inspecte et on
@@ -133,7 +134,7 @@ public final class CaptureImport {
         // bouton « Annuler », formulaire gelé. Phase de copie en début d'import (l'ETA y est parlant).
         vm.marquerEnCours();
         dormir(2500);
-        vm.appliquerProgression(new Progression("Copie 48/191", 0.126));
+        vm.appliquerProgression(new Progression("Copie 48/191 · PaRecPR1925492_20260422_205518.wav", 0.126));
         rendre(scene, sortie.resolve("apercu-import-en-cours.png"));
 
         // État « mélange » (#33) : dossier mêlant deux enregistreurs → avertissement à l'inspection

@@ -79,9 +79,12 @@ public final class ExtracteurZip {
                 extraireUneEntree(zis, racine, entree);
                 zis.closeEntry();
                 if (estFichier) {
-                    surProgression.accept(progression(++faits, total));
+                    surProgression.accept(progression(++faits, total, nomFichier(entree)));
                 }
             }
+            // Re-vérification finale : une annulation pendant la dernière entrée ne doit pas laisser
+            // l'extraction « aboutir » et la source être inspectée (le catch ci-dessous nettoie).
+            jeton.leverSiAnnule();
         } catch (IOException e) {
             supprimerRecursivement(racine);
             // On expose la cause (ex. « Aucun espace disponible sur le périphérique ») : sans elle,
@@ -113,11 +116,19 @@ public final class ExtracteurZip {
         }
     }
 
-    private static Progression progression(int faits, int total) {
-        if (total <= 0) {
-            return new Progression("Décompression : " + faits + " fichier(s)…", 1.0);
-        }
-        return new Progression("Décompression : " + faits + " / " + total + " fichiers…", (double) faits / total);
+    private static Progression progression(int faits, int total, String nomFichier) {
+        String compteur =
+                total <= 0 ? "Décompression : " + faits + " fichier(s)" : "Décompression : " + faits + " / " + total;
+        double fraction = total <= 0 ? 1.0 : (double) faits / total;
+        return new Progression(compteur + " · " + nomFichier, fraction);
+    }
+
+    /// Nom de fichier (dernier segment) d'une entrée zip, pour afficher le **fichier courant** (#146)
+    /// sans le chemin interne complet de l'archive.
+    private static String nomFichier(ZipEntry entree) {
+        String nom = entree.getName();
+        int slash = nom.lastIndexOf('/');
+        return slash < 0 ? nom : nom.substring(slash + 1);
     }
 
     private static void extraireUneEntree(ZipInputStream zis, Path racine, ZipEntry entree) throws IOException {

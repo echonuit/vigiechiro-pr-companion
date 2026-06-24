@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -106,6 +107,33 @@ class ExtracteurZipTest {
                 .isInstanceOf(AnnulationImportException.class);
 
         // Le temporaire partiel a été supprimé : aucun « import-zip-* » ne subsiste sous la base.
+        try (Stream<Path> entrees = Files.list(base)) {
+            assertThat(entrees.filter(Files::isDirectory)
+                            .filter(p -> p.getFileName().toString().startsWith("import-zip-")))
+                    .isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("Annulation à la dernière entrée : l'extraction n'aboutit pas (re-vérification finale, #146)")
+    void extraction_annulee_a_la_derniere_entree() throws IOException {
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            ecrire(zos, "a.txt", "1");
+            ecrire(zos, "b.txt", "2");
+        }
+        JetonAnnulation jeton = new JetonAnnulation();
+        // On n'annule qu'au dernier point (après la 2e entrée) : aucune vérification « avant entrée » ne
+        // le voit → seule la re-vérification finale doit empêcher l'extraction d'« aboutir ».
+        Consumer<Progression> annulerAuDernier = p -> {
+            if (p.libelle().contains("2 / 2")) {
+                jeton.annuler();
+            }
+        };
+
+        assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(zip, base, annulerAuDernier, jeton))
+                .isInstanceOf(AnnulationImportException.class);
+
         try (Stream<Path> entrees = Files.list(base)) {
             assertThat(entrees.filter(Files::isDirectory)
                             .filter(p -> p.getFileName().toString().startsWith("import-zip-")))

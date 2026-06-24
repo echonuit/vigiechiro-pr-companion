@@ -158,10 +158,13 @@ class ServiceImportTest {
         List<Progression> points = new ArrayList<>();
         service.importer(sd, idPoint, prefixe, points::add);
 
-        // 2 originaux → 2 copies puis 2 transformations = 4 points de progression.
+        // 2 originaux → 2 copies puis 2 transformations = 4 points de progression. Le compteur (libellé
+        // sans le suffixe « · <fichier courant> » #146) suit la séquence attendue.
         assertThat(points)
-                .extracting(Progression::libelle)
+                .extracting(p -> p.libelle().replaceAll(" · .*$", ""))
                 .containsExactly("Copie 1/2", "Copie 2/2", "Transformation 1/2", "Transformation 2/2");
+        // Le fichier courant (#146) est exposé : chaque libellé nomme un .wav.
+        assertThat(points).allSatisfy(p -> assertThat(p.libelle()).containsPattern(" · .+\\.wav$"));
         assertThat(points).extracting(Progression::fraction).containsExactly(0.25, 0.5, 0.75, 1.0);
         assertThat(points).extracting(Progression::fraction).isSorted();
     }
@@ -194,6 +197,26 @@ class ServiceImportTest {
 
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
         // La session partielle (un fichier déjà copié) a été supprimée.
+        assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession())).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#146 : une annulation pendant la DERNIÈRE transformation empêche encore la persistance")
+    void import_annule_apres_derniere_transformation_ne_persiste_pas() {
+        JetonAnnulation jeton = new JetonAnnulation();
+        // On n'annule qu'au tout dernier point (après la 2e transformation) : aucun point de contrôle
+        // par fichier ne le voit → seule la re-vérification post-transformation / pré-persistance l'attrape.
+        Consumer<Progression> annulerAuDernier = p -> {
+            if (p.libelle().startsWith("Transformation 2/2")) {
+                jeton.annuler();
+            }
+        };
+
+        assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe, annulerAuDernier, jeton))
+                .isInstanceOf(AnnulationImportException.class);
+
+        // Le point de non-retour (persistance) n'a pas été franchi : aucun passage, session nettoyée.
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
         assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession())).doesNotExist();
     }
 
@@ -239,11 +262,12 @@ class ServiceImportTest {
 
         // Aucun résultat perdu par la parallélisation : les 6 originaux sont persistés.
         assertThat(originalDao.findBySession(resultat.session().id())).hasSize(nb);
-        // L'émission de progression est sérialisée + comptée sous verrou → libellés monotones 1..N,
-        // même si l'ordre d'achèvement des threads virtuels est quelconque.
+        // L'émission de progression est sérialisée + comptée sous verrou → compteurs monotones 1..N
+        // (libellé sans le suffixe « · <fichier courant> » #146), même si l'ordre d'achèvement des
+        // threads virtuels est quelconque.
         assertThat(points)
                 .filteredOn(p -> p.libelle().startsWith("Transformation"))
-                .extracting(Progression::libelle)
+                .extracting(p -> p.libelle().replaceAll(" · .*$", ""))
                 .containsExactly(
                         "Transformation 1/6",
                         "Transformation 2/6",
