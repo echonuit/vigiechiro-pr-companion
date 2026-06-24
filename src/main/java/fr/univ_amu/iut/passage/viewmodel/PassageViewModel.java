@@ -110,7 +110,7 @@ public class PassageViewModel {
             Double celsius = MeteoPassage.lireSaisie(temperatureSaisie.get());
             service.definirTemperatureDebutNuit(idPassage, celsius);
             temperature.set(Formats.temperatureLisible(celsius));
-            temperatureSaisie.set(celsius == null ? "" : MeteoPassage.serialiser(celsius));
+            temperatureSaisie.set(celsius == null ? "" : celsius.toString());
             message.set("");
         } catch (NumberFormatException invalide) {
             message.set("Température invalide : saisissez un nombre (°C) ou laissez vide.");
@@ -144,10 +144,8 @@ public class PassageViewModel {
                 detail.statut() == StatutWorkflow.VERIFIE || detail.statut() == StatutWorkflow.PRET_A_DEPOSER);
         actionRecommandee.set(prochaineAction(detail.statut()));
         temperature.set(Formats.temperatureLisible(detail.temperatureDebutNuit()));
-        temperatureSaisie.set(
-                MeteoPassage.serialiser(detail.temperatureDebutNuit()) == null
-                        ? ""
-                        : MeteoPassage.serialiser(detail.temperatureDebutNuit()));
+        Double temp = detail.temperatureDebutNuit();
+        temperatureSaisie.set(temp == null ? "" : temp.toString());
     }
 
     /// Déduit la prochaine action recommandée du statut (progression linéaire du workflow) : la carte

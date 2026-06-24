@@ -143,7 +143,7 @@ public class ServicePassage {
                 passage.statutWorkflow(),
                 passage.verdictVerification(),
                 passage.commentaire(),
-                MeteoPassage.serialiser(temperatureDebutNuit),
+                MeteoPassage.definir(passage.donneesMeteo(), temperatureDebutNuit),
                 passage.deposeLe(),
                 passage.idPoint(),
                 passage.idEnregistreur());
