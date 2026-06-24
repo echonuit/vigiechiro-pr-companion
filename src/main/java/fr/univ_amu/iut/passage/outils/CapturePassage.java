@@ -195,7 +195,7 @@ public final class CapturePassage {
                 statut,
                 Verdict.OK,
                 null,
-                null,
+                "{\"tempDebut\":8.5}", // météo de début de nuit (#106) : montre la valeur sur l'aperçu
                 null,
                 idPoint,
                 ENREGISTREUR));

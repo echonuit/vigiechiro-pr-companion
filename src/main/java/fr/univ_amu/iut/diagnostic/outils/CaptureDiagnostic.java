@@ -188,7 +188,7 @@ public final class CaptureDiagnostic {
                 StatutWorkflow.DEPOSE,
                 Verdict.OK,
                 null,
-                null,
+                "{\"tempDebut\":8.5}", // météo de début de nuit (#106) : montre la valeur sur l'aperçu
                 null,
                 idPoint,
                 SERIE));
