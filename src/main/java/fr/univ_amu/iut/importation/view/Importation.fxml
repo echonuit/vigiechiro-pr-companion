@@ -61,6 +61,9 @@
     <!-- Avertissement « incohérence » (#33) : journal/relevé en désaccord avec les WAV (série/date). -->
     <Label fx:id="labelIncoherence" styleClass="insp-incoherence" wrapText="true"
            visible="false" managed="false"/>
+    <!-- Avertissement « nuit déjà importée » (#147) : un passage existe déjà pour cet enregistreur/date. -->
+    <Label fx:id="labelNuitExistante" styleClass="insp-incoherence" wrapText="true"
+           visible="false" managed="false"/>
   </VBox>
 
   <!-- 3. Rattachement -->

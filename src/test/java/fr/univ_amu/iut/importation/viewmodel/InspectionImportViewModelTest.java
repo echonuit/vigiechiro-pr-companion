@@ -5,11 +5,13 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -83,6 +85,35 @@ class InspectionImportViewModelTest {
         assertThat(vm.messageErreurProperty().get()).isEqualTo("Chemin illisible");
         assertThat(vm.estInspecte()).isFalse();
         assertThat(vm.rapport()).isNull();
+    }
+
+    @Test
+    @DisplayName("#147 : inspecter une nuit déjà en base lève l'avertissement « nuit déjà importée »")
+    void inspecter_nuit_deja_importee() {
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        when(serviceImport.nuitDejaImportee("1925492", "2026-04-22"))
+                .thenReturn(List.of(new PassageExistant(2, 2026, "640380", "Z1")));
+        vm.dossierSourceProperty().set(sd);
+
+        vm.inspecter();
+
+        assertThat(vm.avertissementNuitExistanteProperty().get())
+                .contains("déjà été importée")
+                .contains("n° 2")
+                .contains("carré 640380")
+                .contains("point Z1");
+    }
+
+    @Test
+    @DisplayName("#147 : une nuit absente de la base ne lève aucun avertissement « nuit déjà importée »")
+    void inspecter_nuit_inedite() {
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        when(serviceImport.nuitDejaImportee("1925492", "2026-04-22")).thenReturn(List.of());
+        vm.dossierSourceProperty().set(sd);
+
+        vm.inspecter();
+
+        assertThat(vm.avertissementNuitExistanteProperty().get()).isEmpty();
     }
 
     @Test

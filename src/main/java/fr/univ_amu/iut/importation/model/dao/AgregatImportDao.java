@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model.dao;
 
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -15,7 +16,9 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /// Écrivain transactionnel de l'**agrégat d'import** : enregistreur, micro, passage, session,
@@ -88,6 +91,36 @@ public class AgregatImportDao {
             numero++;
         }
         return numero;
+    }
+
+    /// Passages **déjà en base** pour la même nuit (même enregistreur + même date d'enregistrement),
+    /// quel que soit le point ou le n° de passage : sert à détecter à l'inspection qu'une nuit a déjà
+    /// été importée (#147), même rattachée ailleurs que le quadruplet R5 visé. Liste vide si aucune.
+    public List<PassageExistant> passagesDeLaNuit(String idEnregistreur, String dateNuit) {
+        String sql = "SELECT p.passage_number, p.year, ms.square_number AS carre, lp.code AS point_code"
+                + " FROM passage p"
+                + " JOIN listening_point lp ON lp.id = p.point_id"
+                + " JOIN monitoring_site ms ON ms.id = lp.site_id"
+                + " WHERE p.recorder_id = ? AND p.recording_date = ?"
+                + " ORDER BY p.year, p.passage_number";
+        List<PassageExistant> resultats = new ArrayList<>();
+        try (Connection cx = source.getConnection();
+                PreparedStatement ps = cx.prepareStatement(sql)) {
+            ps.setString(1, idEnregistreur);
+            ps.setString(2, dateNuit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    resultats.add(new PassageExistant(
+                            rs.getInt("passage_number"),
+                            rs.getInt("year"),
+                            rs.getString("carre"),
+                            rs.getString("point_code")));
+                }
+            }
+        } catch (SQLException e) {
+            throw new DataAccessException("Échec de la détection de nuit déjà importée : " + sql, e);
+        }
+        return resultats;
     }
 
     // ---------------------------------------------------------------------------
