@@ -489,6 +489,21 @@ class ImportationViewModelTest {
         assertThat(extrait).doesNotExist();
     }
 
+    @Test
+    @DisplayName("#146 : marquerExtractionEnCours passe en EXTRACTION et réamorce la progression")
+    void marquer_extraction_en_cours() {
+        viewModel.marquerExtractionEnCours();
+
+        assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.EXTRACTION);
+        assertThat(viewModel.progressionProperty().get()).isZero();
+        assertThat(viewModel.messageProgressionProperty().get()).containsIgnoringCase("décompression");
+
+        // L'avancement publié pendant la décompression alimente la même barre que l'import (#33).
+        viewModel.appliquerProgression(new Progression("Décompression : 2 / 4 fichiers…", 0.5));
+        assertThat(viewModel.progressionProperty().get()).isEqualTo(0.5);
+        assertThat(viewModel.messageProgressionProperty().get()).contains("2 / 4");
+    }
+
     private void prepareRattachement(Site site, PointDEcoute point) {
         viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();

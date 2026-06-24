@@ -6,6 +6,9 @@ package fr.univ_amu.iut.importation.viewmodel;
 public enum EtatImport {
     /// Avant tout import : l'assistant (dossier / inspection / rattachement) est affiché.
     PRET,
+    /// Décompression d'une archive `.zip` choisie comme source (#139), avant l'inspection : la barre de
+    /// progression affiche l'avancement « fichier X/N » de l'extraction et le formulaire est gelé.
+    EXTRACTION,
     /// Import en cours (copie protégée + renommage + transformation).
     EN_COURS,
     /// Import terminé avec succès : le résultat est disponible.

@@ -261,6 +261,17 @@ public class ImportationViewModel {
         // --end-solution--
     }
 
+    /// Passe l'état à `EXTRACTION` (#139/#146) : la barre de progression apparaît immédiatement pendant la
+    /// décompression d'un `.zip` choisi comme source, avant l'inspection. À appeler **sur le fil JavaFX**
+    /// juste avant de lancer l'extraction en arrière-plan. L'état revient à `PRET` tout seul quand la
+    /// source extraite est posée (réinitialisation pour nouveau dossier) ou via [#signalerSourceIllisible].
+    public void marquerExtractionEnCours() {
+        messageExecution.set("");
+        progression.set(0.0);
+        messageProgression.set("Préparation de la décompression…");
+        etat.set(EtatImport.EXTRACTION);
+    }
+
     /// Applique un point de progression de l'import en cours (#33) : met à jour la fraction et le
     /// libellé d'étape. À appeler sur le fil JavaFX (depuis `Platform.runLater`), car le callback du
     /// service s'exécute hors-thread.
@@ -280,11 +291,20 @@ public class ImportationViewModel {
     /// @throws RuntimeException si l'archive est illisible ou invalide (zip-slip) ; la vue le signale via
     /// [#signalerSourceIllisible].
     public Path extraireSiZip(Path chemin) {
+        return extraireSiZip(chemin, p -> {});
+    }
+
+    /// Variante de [#extraireSiZip(Path)] qui **notifie l'avancement** de la décompression (#146) via
+    /// `surProgression` (un `Progression` « X / N fichiers » par fichier extrait). Le callback est invoqué
+    /// hors du fil JavaFX : l'appelant (la vue) le marshale par `Platform.runLater` vers
+    /// [#appliquerProgression].
+    public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression) {
         nettoyerTemporaireZip(); // une nouvelle source remplace l'éventuel zip précédent
         if (ExtracteurZip.estZip(chemin)) {
             // Extraction sous le workspace (disque), pas dans le tmpfs RAM /tmp : une nuit de ~10 Go y
             // saturerait la RAM (ENOSPC). Cf. ExtracteurZip.
-            dossierTemporaireZip = ExtracteurZip.extraireVersDossierTemporaire(chemin, serviceImport.racineWorkspace());
+            dossierTemporaireZip = ExtracteurZip.extraireVersDossierTemporaire(
+                    chemin, serviceImport.racineWorkspace(), surProgression);
             return dossierTemporaireZip;
         }
         return chemin;

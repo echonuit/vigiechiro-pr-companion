@@ -253,18 +253,23 @@ public class ImportationController implements GardeQuitter {
     /// fichier X/N, #33) et le formulaire est gelé ; câble aussi l'avertissement de doublon (#108) et les
     /// messages d'erreur/statut. Tout est porté par l'orchestrateur (exécution + collaborateur n° passage).
     private void lierAction() {
-        var enCours = viewModel.etatProperty().isEqualTo(EtatImport.EN_COURS);
-        zoneProgression.visibleProperty().bind(enCours);
-        zoneProgression.managedProperty().bind(enCours);
+        // Traitement en cours = import (EN_COURS) OU décompression d'un .zip (EXTRACTION, #139) : dans les
+        // deux cas la barre de progression s'affiche et le formulaire est gelé.
+        var traitement = viewModel
+                .etatProperty()
+                .isEqualTo(EtatImport.EN_COURS)
+                .or(viewModel.etatProperty().isEqualTo(EtatImport.EXTRACTION));
+        zoneProgression.visibleProperty().bind(traitement);
+        zoneProgression.managedProperty().bind(traitement);
         barreProgression.progressProperty().bind(viewModel.progressionProperty());
         labelProgression.textProperty().bind(viewModel.messageProgressionProperty());
-        boutonImporter.disableProperty().bind(viewModel.peutImporter().not().or(enCours));
-        boutonParcourir.disableProperty().bind(enCours);
-        boutonZip.disableProperty().bind(enCours);
-        comboSites.disableProperty().bind(enCours);
-        comboPoints.disableProperty().bind(enCours);
-        champAnnee.disableProperty().bind(enCours);
-        champPassage.disableProperty().bind(enCours);
+        boutonImporter.disableProperty().bind(viewModel.peutImporter().not().or(traitement));
+        boutonParcourir.disableProperty().bind(traitement);
+        boutonZip.disableProperty().bind(traitement);
+        comboSites.disableProperty().bind(traitement);
+        comboPoints.disableProperty().bind(traitement);
+        champAnnee.disableProperty().bind(traitement);
+        champPassage.disableProperty().bind(traitement);
         // Pré-contrôle R5 (#108) : la zone n'apparaît qu'en cas de doublon de n° de passage (avertissement
         // non vide) ; elle porte l'avertissement + un bouton pour adopter le prochain n° libre (gelé
         // pendant l'import). Même patron que les avertissements « mélange »/« incohérence » ci-dessus.
@@ -272,7 +277,7 @@ public class ImportationController implements GardeQuitter {
         var aUnDoublon = viewModel.avertissementNumeroPassageProperty().isNotEmpty();
         zonePassageExistant.visibleProperty().bind(aUnDoublon);
         zonePassageExistant.managedProperty().bind(aUnDoublon);
-        boutonNumeroLibre.disableProperty().bind(enCours);
+        boutonNumeroLibre.disableProperty().bind(traitement);
         labelMessage.textProperty().bind(viewModel.messageErreurProperty());
         labelStatut
                 .textProperty()
@@ -307,10 +312,17 @@ public class ImportationController implements GardeQuitter {
     /// Charge une source d'import (dossier **ou** `.zip`, #139) : la décompression éventuelle du zip se
     /// fait sur un **virtual thread** (Java 25) pour ne pas figer l'IHM sur une grosse archive ; le
     /// résultat est ensuite inspecté sur le fil JavaFX. Une archive illisible est signalée à la vue.
+    ///
+    /// Pour un `.zip`, l'état passe à `EXTRACTION` **avant** de démarrer (la barre de progression apparaît
+    /// aussitôt), puis chaque fichier décompressé fait avancer la barre « X / N » (#146).
     private void chargerSource(Path chemin) {
+        if (ExtracteurZip.estZip(chemin)) {
+            viewModel.marquerExtractionEnCours(); // fil JavaFX : progression visible dès le clic/dépôt
+        }
         Thread.ofVirtual().name("source-import-vigiechiro").start(() -> {
             try {
-                Path dossier = viewModel.extraireSiZip(chemin); // décompression zip hors-thread
+                Path dossier = viewModel.extraireSiZip(
+                        chemin, p -> Platform.runLater(() -> viewModel.appliquerProgression(p)));
                 Platform.runLater(() -> {
                     viewModel.inspection().dossierSourceProperty().set(dossier);
                     viewModel.inspecter();
@@ -350,9 +362,11 @@ public class ImportationController implements GardeQuitter {
     }
 
     /// Vrai si le glisser porte un **dossier** ou un **.zip** (seules sources d'import acceptables) et
-    /// qu'aucun import n'est en cours (le formulaire est alors gelé).
+    /// qu'aucun traitement n'est en cours (import EN_COURS ou décompression EXTRACTION : le formulaire est
+    /// alors gelé).
     private boolean sourceGlisseeAcceptable(Dragboard dragboard) {
-        if (viewModel.etatProperty().get() == EtatImport.EN_COURS || !dragboard.hasFiles()) {
+        EtatImport etat = viewModel.etatProperty().get();
+        if (etat == EtatImport.EN_COURS || etat == EtatImport.EXTRACTION || !dragboard.hasFiles()) {
             return false;
         }
         File premier = dragboard.getFiles().get(0);
