@@ -32,7 +32,6 @@ import java.util.List;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -59,7 +58,6 @@ import org.testfx.framework.junit5.Start;
 /// sur les objets métier renvoyés. La nuit est importée par le vrai [ServiceImport] (l'écran M-Import
 /// passe par un `DirectoryChooser` natif non pilotable par TestFX, comme dans `ParcoursDepotE2ETest`).
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class ParcoursVerifierEchantillonnageE2ETest {
 
     private static final String ID_USER = "u-e2e-p3";

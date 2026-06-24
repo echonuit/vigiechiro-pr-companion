@@ -40,7 +40,6 @@ import java.util.TreeMap;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /// **Test E2E du parcours P9 « Regrouper les nuits successives par point »**, piloté **sans IHM** :
@@ -78,7 +77,6 @@ import org.junit.jupiter.api.Test;
 /// 4. **Valider une espèce sur toute la période** (R18, mode inventaire) : une espèce présente sur
 ///    les 4 nuits est validée **une fois par nuit du regroupement** ; son verdict couvre alors la
 ///    totalité de ses détections sur la période, les autres espèces restant non touchées.
-@Tag("conformite")
 class ParcoursRegrouperNuitsParPointE2ETest {
 
     private static final String ID_USER = "u-e2e-p9";

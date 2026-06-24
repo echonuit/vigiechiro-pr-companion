@@ -33,7 +33,6 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /// **Test E2E du parcours fil rouge P0 — « Première nuit de Marie »** : la chaîne complète de
@@ -57,7 +56,6 @@ import org.junit.jupiter.api.Test;
 /// `vigiechiro.workspace`, schéma migré par [MigrationSchema], services assemblés par les **mêmes
 /// constructeurs** que la production), mais sans `ApplicationExtension` puisqu'aucune fenêtre n'est
 /// montée — exactement comme `RacineInjecteurTest` qui résout déjà les services hors toolkit JavaFX.
-@Tag("conformite")
 class ParcoursPremiereNuitE2ETest {
 
     private static final String ID_USER = "u-e2e-p0";

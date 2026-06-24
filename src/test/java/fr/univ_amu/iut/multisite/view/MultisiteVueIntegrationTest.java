@@ -31,7 +31,6 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -51,7 +50,6 @@ import org.testfx.framework.junit5.Start;
 /// (E5.S3). Complète [MultisiteViewTest] sans le dupliquer (statut, export, réinitialiser et
 /// double-clic y sont déjà couverts). Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class MultisiteVueIntegrationTest {
 
     private ServiceMultisite service;

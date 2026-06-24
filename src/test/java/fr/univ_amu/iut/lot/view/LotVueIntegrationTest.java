@@ -29,7 +29,6 @@ import javafx.scene.control.ListView;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -53,7 +52,6 @@ import org.testfx.framework.junit5.Start;
 /// état que la fixture de départ, on **re-stube** `consulterLot` puis on rouvre l'écran sur le fil
 /// JavaFX via [#reouvrirAvec]. Aucune base de données.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class LotVueIntegrationTest {
 
     private static final long ID_PASSAGE = 42L;

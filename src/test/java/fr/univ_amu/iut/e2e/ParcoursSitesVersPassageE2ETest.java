@@ -29,7 +29,6 @@ import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -49,7 +48,6 @@ import org.testfx.framework.junit5.Start;
 ///
 /// L'utilisateur seedé est l'unique en base, donc `idUtilisateurCourant` (singleton, premier
 /// utilisateur) le désigne : le site qu'on lui rattache apparaît bien sur M-Sites.
-@Tag("conformite")
 @ExtendWith(ApplicationExtension.class)
 class ParcoursSitesVersPassageE2ETest {
 
