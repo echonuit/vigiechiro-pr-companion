@@ -10,7 +10,12 @@
         "changelogTitle": "# Journal des modifications\n\nLe format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version."
       }
     ],
-    "@semantic-release/github",
+    [
+      "@semantic-release/github",
+      {
+        "draftRelease": true
+      }
+    ],
     [
       "@semantic-release/git",
       {

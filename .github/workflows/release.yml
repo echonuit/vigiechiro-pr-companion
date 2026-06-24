@@ -1,0 +1,137 @@
+# Release : version + CHANGELOG (semantic-release) puis installeurs natifs par OS (jpackage).
+#
+# - release : sur push sur `main`, semantic-release analyse les Conventional Commits, calcule la
+#   version, crée le tag vX.Y.Z + la Release GitHub + met à jour CHANGELOG.md (cf. .releaserc.json).
+#   DORMANT tant que la variable de dépôt ENABLE_RELEASE != 'true' : à activer quand le dépôt est
+#   public et que `main` est la branche consolidée (après la migration #169). Tant que c'est dormant,
+#   rien ne tourne (et donc aucune release accidentelle sur le `main` étudiant régénéré).
+# - installers : matrice ubuntu/macos/windows qui construit l'installeur natif (profil -Pinstaller)
+#   pour le tag fraîchement créé et le téléverse sur la Release. C'est ici que le packaging se
+#   valide réellement par OS (le fat-jar embarque les natifs JavaFX de l'OS de build).
+#
+# Anti-récursion : @semantic-release/git committe CHANGELOG.md avec `[skip ci]`, donc le push qui en
+# résulte ne redéclenche pas ce workflow.
+name: release
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    # Dormant tant que ENABLE_RELEASE n'est pas 'true' (cf. en-tête).
+    if: vars.ENABLE_RELEASE == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.value }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0 # semantic-release a besoin de tout l'historique + des tags
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "lts/*"
+      - name: semantic-release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Versions **figées** (majeure) de la chaîne : un bump majeur de semantic-release ou d'un
+        # plugin ne doit pas changer le comportement de publication sans modification du dépôt.
+        # @semantic-release/github est embarqué par le cœur ; changelog + git sont des plugins externes.
+        run: >-
+          npx --yes
+          -p semantic-release@24
+          -p @semantic-release/changelog@6
+          -p @semantic-release/git@10
+          semantic-release
+      - name: Récupérer le tag fraîchement créé
+        id: tag
+        run: |
+          git fetch --tags --force
+          NEW_TAG=$(git describe --tags --exact-match HEAD 2>/dev/null || echo "")
+          echo "value=${NEW_TAG}" >> "$GITHUB_OUTPUT"
+          echo "Nouveau tag : ${NEW_TAG:-(aucun)}"
+
+  installers:
+    needs: release
+    # Seulement si semantic-release a réellement publié une version (tag non vide).
+    if: needs.release.outputs.tag != ''
+    strategy:
+      fail-fast: false
+      matrix:
+        # macOS est couvert sur les **deux** architectures : `macos-latest` est arm64 (Apple Silicon),
+        # `macos-13` est le runner Intel (x64). Les artefacts sont nommés par architecture (cf. étape de
+        # renommage) pour ne pas s'écraser mutuellement à l'upload.
+        include:
+          - os: ubuntu-latest
+            type: deb
+            arch: x64
+          - os: macos-latest
+            type: dmg
+            arch: arm64
+          - os: macos-13
+            type: dmg
+            arch: x64
+          - os: windows-latest
+            type: msi
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.tag }} # le commit taggué (code + CHANGELOG à jour)
+      - uses: actions/setup-java@v5
+        with:
+          java-version: "25"
+          distribution: "temurin"
+      - name: Construire l'installeur natif (${{ matrix.type }})
+        shell: bash
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          VERSION="${TAG#v}"
+          ./mvnw -B -Pinstaller \
+            -Djpackage.type=${{ matrix.type }} \
+            -Djpackage.appVersion="$VERSION" \
+            -DskipTests -Dpmd.skip=true -Djacoco.skip=true \
+            clean verify
+      - name: Nommer les installeurs par architecture (évite la collision macOS arm64/Intel)
+        shell: bash
+        run: |
+          cd target/dist
+          for f in *; do
+            [ -f "$f" ] || continue
+            ext="${f##*.}"
+            base="${f%.*}"
+            mv -- "$f" "${base}-${{ matrix.arch }}.${ext}"
+          done
+          ls -l
+      - name: Téléverser l'installeur sur la Release (brouillon), avant publication
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${{ needs.release.outputs.tag }}" target/dist/* --clobber
+
+  # Publication atomique : la Release est créée en **brouillon** par semantic-release (cf.
+  # .releaserc.json, draftRelease), les installeurs y attachent leurs assets, et CE job ne retire le
+  # brouillon (= rend la Release publique) qu'une fois TOUS les installeurs téléversés avec succès.
+  # `needs: installers` exige le succès de toute la matrice : si un OS échoue, ce job est sauté et la
+  # Release reste un brouillon (pas de release publique aux assets manquants).
+  publish:
+    needs: [release, installers]
+    if: needs.release.outputs.tag != ''
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publier la Release (retirer le brouillon)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: gh release edit "${{ needs.release.outputs.tag }}" --draft=false

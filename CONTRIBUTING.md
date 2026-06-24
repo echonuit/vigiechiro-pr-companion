@@ -249,7 +249,32 @@ bats scripts/test/student-transforms.bats
 
 ---
 
-## 11. Dépendances
+## 11. Publier une version
+
+Les **releases sont automatiques**, pilotées par les Conventional Commits (cf. §8). Sur la branche
+`main`, à chaque ensemble de commits mergé :
+
+- `feat:` déclenche une version **mineure**, `fix:` un **patch**, un `BREAKING CHANGE` une **majeure** ;
+- **semantic-release** ([.releaserc.json](.releaserc.json)) calcule la version, crée le tag `vX.Y.Z`,
+  la Release GitHub et met à jour le [CHANGELOG.md](CHANGELOG.md) ;
+- le workflow [`release.yml`](.github/workflows/release.yml) construit alors les **installeurs natifs**
+  (Linux `.deb`, macOS `.dmg` arm64 et Intel, Windows `.msi`) via le profil `-Pinstaller`, et les
+  attache à la Release (rendue publique seulement une fois **tous** les installeurs téléversés).
+
+Vous n'avez donc **rien à taguer ni à versionner à la main** : merger des commits conventionnels suffit.
+
+> **Activation.** Le workflow est **dormant** tant que la variable de dépôt `ENABLE_RELEASE` n'est pas
+> à `true` : à activer quand le dépôt est public et la branche `main` consolidée. Première version : `v1.0.0`.
+
+Construire un installeur **en local** (pour tester le packaging) :
+
+```bash
+./mvnw -Pinstaller -Djpackage.type=deb -DskipTests verify   # produit target/dist/
+```
+
+---
+
+## 12. Dépendances
 
 Les mises à jour sont gérées par **Dependabot** ([.github/dependabot.yml](.github/dependabot.yml)),
 mensuellement, pour `maven` et `github-actions`. **JavaFX (`org.openjfx:*`) est volontairement
@@ -258,7 +283,7 @@ communautaire) et se décident à la main.
 
 ---
 
-## 12. En cas de doute
+## 13. En cas de doute
 
 - Un comportement du dépôt vous surprend ? Consultez d'abord les commentaires des fichiers cités
   ci-dessus : ils documentent les décisions (souvent le « pourquoi »).

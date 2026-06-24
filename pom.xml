@@ -222,10 +222,18 @@
                         </goals>
                         <configuration>
                             <transformers>
+                                <!-- Main-Class = Launcher (et non App, qui étend Application) : le
+                                     fat-jar est ainsi lançable directement (java -jar) sans l'erreur
+                                     « JavaFX runtime components are missing ». -->
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>fr.univ_amu.iut.App</mainClass>
+                                    <mainClass>fr.univ_amu.iut.Launcher</mainClass>
                                 </transformer>
+                                <!-- Fusionne les META-INF/services de toutes les dépendances (sinon
+                                     les fournisseurs Ikonli FontAwesome sont perdus -> icônes fas-*
+                                     manquantes et FXML cassés au chargement). -->
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                         </configuration>
                     </execution>
@@ -431,6 +439,101 @@
     </build>
 
     <profiles>
+        <!-- Profil installer : construit un installeur natif (jpackage) à partir du fat-jar shade.
+             jlink modulaire est IMPOSSIBLE ici : Guice 7 et sa grappe transitive (Guava, aopalliance,
+             jsr305...) sont des modules AUTOMATIQUES, refusés par jlink (sqlite-jdbc, lui, est un vrai
+             module). On empaquette donc le fat-jar (qui embarque déjà JavaFX + ses natifs + toutes les
+             dépendances) en mode classpath, avec une classe Launcher (non-Application) et un runtime
+             composé UNIQUEMENT de modules JDK nommés (via l'option add-modules) : les modules
+             automatiques restent sur le classpath, hors résolution jlink.
+             Bindé sur la phase verify (APRÈS shade : sur package, jpackage empaquetterait le jar mince).
+             Usage : ./mvnw -Pinstaller -Djpackage.type=deb -DskipTests verify
+             Type par OS : deb/rpm (Linux), dmg/pkg (macOS), msi/exe (Windows). Sortie : target/dist/. -->
+        <profile>
+            <id>installer</id>
+            <properties>
+                <jpackage.type>deb</jpackage.type>
+                <jpackage.appVersion>1.0.0</jpackage.appVersion>
+            </properties>
+            <build>
+                <plugins>
+                    <!-- 1. Isole le fat-jar dans un dossier d'entrée propre (jpackage embarque tout
+                         le contenu du dossier d'entrée ; on ne veut QUE le fat-jar, pas les classes). -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
+                        <executions>
+                            <execution>
+                                <id>jpackage-input</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/jpackage-input</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>${project.build.finalName}.jar</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <!-- 2. Appelle l'outil jpackage du JDK (${java.home}/bin/jpackage). -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage</executable>
+                                    <arguments>
+                                        <argument>--type</argument>
+                                        <argument>${jpackage.type}</argument>
+                                        <argument>--name</argument>
+                                        <argument>VigieChiro</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>${jpackage.appVersion}</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>IUT d'Aix-Marseille</argument>
+                                        <argument>--input</argument>
+                                        <argument>${project.build.directory}/jpackage-input</argument>
+                                        <argument>--main-jar</argument>
+                                        <argument>${project.build.finalName}.jar</argument>
+                                        <argument>--main-class</argument>
+                                        <argument>fr.univ_amu.iut.Launcher</argument>
+                                        <!-- Accès natif (JavaFX + JNI SQLite) et Unsafe (Guice/Guava)
+                                             autorisés, comme pour javafx:run : sinon avertissements,
+                                             puis blocage dans un futur JDK. -->
+                                        <argument>--java-options</argument>
+                                        <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                        <argument>--java-options</argument>
+                                        <argument>--sun-misc-unsafe-memory-access=allow</argument>
+                                        <!-- Runtime : modules JDK nommés uniquement (JavaFX vient du
+                                             fat-jar, sur le classpath). -->
+                                        <argument>--add-modules</argument>
+                                        <argument>java.base,java.desktop,java.logging,java.sql,java.naming,java.scripting,jdk.crypto.ec,jdk.localedata,jdk.unsupported</argument>
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}/dist</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <!-- Profil mutation : PIT (org.pitest). NON exécuté par défaut.
              Lancer explicitement via ./mvnw -Pmutation test (lent). -->
         <profile>

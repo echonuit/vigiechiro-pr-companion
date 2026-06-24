@@ -28,6 +28,8 @@ La SAÉ 2.01 est **couplée à deux modules** : **R2.02** (Développement d'appl
 
 > **Ce que vous allez apprendre :** concevoir des IHM JavaFX en architecture **MVVM** (propriétés observables, *data binding*, FXML), par-dessus une couche métier fournie, en pratiquant le **workflow professionnel** (issue → branche → Pull Request → revue → merge) et l'**outillage qualité** (tests, PMD, ArchUnit, CI).
 
+> **Télécharger et lancer.** Pour *utiliser* l'application, des **installeurs** prêts à l'emploi (Windows `.msi`, macOS `.dmg`, Linux `.deb`) sont publiés sur la page [Releases](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases) (aucune installation de Java requise) ; détails dans la [documentation utilisateur](docs/prise-en-main.md). Pour *développer*, lancez depuis les sources : `./mvnw javafx:run` (JDK 25).
+
 ---
 
 ## 2. Comprendre le contenu du dépôt
