@@ -23,6 +23,8 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param volumeSequencesOctets volume des séquences transformées (0 si inconnu)
 /// @param nombreSequences nombre de séquences d'écoute de la session
 /// @param dureeAudibleSecondes durée audible cumulée des séquences (secondes)
+/// @param temperatureDebutNuit température en début de nuit (°C), **optionnelle** (`null` si non
+/// renseignée, #106)
 public record DetailPassage(
         int numeroPassage,
         int annee,
@@ -36,4 +38,5 @@ public record DetailPassage(
         long volumeOriginauxOctets,
         long volumeSequencesOctets,
         int nombreSequences,
-        double dureeAudibleSecondes) {}
+        double dureeAudibleSecondes,
+        Double temperatureDebutNuit) {}

@@ -50,7 +50,8 @@ class RattachementModaleViewTest {
                         0L,
                         0L,
                         30,
-                        0.0));
+                        0.0,
+                        null));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             RattachementViewModel viewModel() {

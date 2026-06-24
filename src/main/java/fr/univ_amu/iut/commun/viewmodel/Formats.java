@@ -34,4 +34,13 @@ public final class Formats {
         }
         return String.format(Locale.FRANCE, "%d Ko", valeur / 1024);
     }
+
+    /// Température lisible : `8,5 °C` (1 décimale, virgule décimale FR), ou `—` si non renseignée
+    /// (`null`, #106).
+    ///
+    /// @param celsius température en °C, ou `null`
+    /// @return libellé d'affichage
+    public static String temperatureLisible(Double celsius) {
+        return celsius == null ? "—" : String.format(Locale.FRANCE, "%.1f °C", celsius);
+    }
 }

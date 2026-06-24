@@ -314,6 +314,7 @@ class PassageVueIntegrationTest {
                 4096L,
                 1024L,
                 30,
-                150.0);
+                150.0,
+                null);
     }
 }

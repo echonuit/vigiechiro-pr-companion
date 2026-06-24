@@ -53,7 +53,8 @@ class PassageControllerEmplacementTest {
                         4096L,
                         1024L,
                         30,
-                        150.0));
+                        150.0,
+                        null));
         PassageViewModel vm = new PassageViewModel(service);
         List<String> ouvertures = new ArrayList<>();
         OuvrirSite ouvrirSite = new OuvrirSite() {

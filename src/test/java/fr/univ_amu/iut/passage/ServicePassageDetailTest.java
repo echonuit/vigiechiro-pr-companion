@@ -146,6 +146,22 @@ class ServicePassageDetailTest {
     }
 
     @Test
+    @DisplayName("#106 : température de début de nuit optionnelle (null par défaut), définie puis effacée")
+    void temperature_optionnelle() {
+        Passage passage = insererPassage(3, StatutWorkflow.TRANSFORME);
+
+        assertThat(service.detailPassage(passage.id()).temperatureDebutNuit())
+                .as("température non renseignée par défaut")
+                .isNull();
+
+        service.definirTemperatureDebutNuit(passage.id(), 8.5);
+        assertThat(service.detailPassage(passage.id()).temperatureDebutNuit()).isEqualTo(8.5);
+
+        service.definirTemperatureDebutNuit(passage.id(), null); // saisie vide → effacement
+        assertThat(service.detailPassage(passage.id()).temperatureDebutNuit()).isNull();
+    }
+
+    @Test
     @DisplayName("detailPassage sur un passage introuvable lève une RegleMetierException")
     void detail_passage_introuvable() {
         assertThatThrownBy(() -> service.detailPassage(999L))

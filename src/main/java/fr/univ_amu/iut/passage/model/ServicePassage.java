@@ -117,7 +117,38 @@ public class ServicePassage {
                 session.map(SessionDEnregistrement::volumeOriginauxOctets).orElse(0L),
                 session.map(SessionDEnregistrement::volumeSequencesOctets).orElse(0L),
                 sequences.size(),
-                dureeAudible);
+                dureeAudible,
+                MeteoPassage.temperatureDebutNuit(passage.donneesMeteo()));
+    }
+
+    /// Renseigne (ou efface, avec `null`) la **température en début de nuit** (°C) d'un passage (#106) :
+    /// donnée **optionnelle**, jamais bloquante. Stockée dans `passage.weather_data` via [MeteoPassage].
+    ///
+    /// @param idPassage passage cible
+    /// @param temperatureDebutNuit température en °C, ou `null` pour effacer
+    /// @return le passage mis à jour
+    public Passage definirTemperatureDebutNuit(Long idPassage, Double temperatureDebutNuit) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        Passage passage = passageDao
+                .findById(idPassage)
+                .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
+        Passage modifie = new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                passage.verdictVerification(),
+                passage.commentaire(),
+                MeteoPassage.serialiser(temperatureDebutNuit),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur());
+        passageDao.update(modifie);
+        return modifie;
     }
 
     /// Crée un passage à l'état initial [StatutWorkflow#IMPORTE], sans verdict.

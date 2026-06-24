@@ -54,7 +54,8 @@ class RattachementViewModelTest {
                 0L,
                 0L,
                 nombreSequences,
-                0.0);
+                0.0,
+                null);
     }
 
     @Test
