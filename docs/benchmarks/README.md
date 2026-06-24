@@ -1,10 +1,9 @@
 # Banc de mesure des performances (#29)
 
-> Outillage **fourni** (conservé dans la version étudiante). Sert à vérifier les objectifs d'efficience
+> Outillage de mesure des performances. Sert à vérifier les objectifs d'efficience
 > **O3** (tenue dans la durée, nuits volumineuses) et **O5** (capacité : ~4031 observations,
-> ~1000 passages). Les cibles chiffrées du brief sont des **ordres de grandeur**, à affiner par un
-> premier benchmark **sur les machines IUT en début de Sprint 1** : ce banc est ce benchmark,
-> réutilisable ensuite en non-régression.
+> ~1000 passages). Les cibles chiffrées sont des **ordres de grandeur**, à affiner par un premier
+> benchmark sur la machine cible : ce banc est ce benchmark, réutilisable ensuite en non-régression.
 
 ## Outils
 
@@ -96,7 +95,7 @@ ajouter `-Dperf.import.secondes=2.0` pour retrouver exactement ces chiffres._
   avant la transaction unique O7), puis est récupérée par le GC entre deux nuits → stable d'un import à
   l'autre.
 
-**Ordre de grandeur à annoncer aux étudiants** : une **vraie nuit** (~1572 fichiers) s'importe en
+**Ordre de grandeur de référence** : une **vraie nuit** (~1572 fichiers) s'importe en
 **~6-8 s** (~200 fichiers/s), produit ~3600 séquences, avec une empreinte ~600-700 Mo. _(Chiffres
 machine de référence ; un poste plus modeste sera plus lent — refaire la mesure le cas échéant.)_
 
@@ -152,5 +151,4 @@ Pour la **stabilité dans la durée** (O3), mesurer **dans un seul processus** :
 - **O5 (#26)** : cibles tenues largement (sélection ~25 ms < 100 ms ; tri/filtre ~18 ms < 200 ms),
   index `#28` en place et verrouillé par un test CI.
 - **O3 (#27)** : import linéaire et borné en mémoire ; nuit réelle ~6-8 s, crête ~600-700 Mo.
-- Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`
-  (fournis, conservés côté étudiant).
+- Outillage réutilisable en **non-régression** : `GenerateurJeuDeDonnees`, `BancMesure`, `BancImport`.

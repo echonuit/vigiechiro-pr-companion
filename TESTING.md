@@ -1,8 +1,8 @@
 # Tester VigieChiro PR Companion
 
-Ce document décrit la **suite de tests** du dépôt canonique : comment l'exécuter, ce qu'elle
-contient, et ce qui bloque (ou non) l'intégration continue. Il complète [CONTRIBUTING.md](CONTRIBUTING.md)
-(workflow général) et le [README §7](README.md) (vue d'ensemble côté étudiant).
+Ce document décrit la **suite de tests** : comment l'exécuter, ce qu'elle contient, et ce qui bloque
+(ou non) l'intégration continue. Il complète [CONTRIBUTING.md](CONTRIBUTING.md) (workflow général) et
+le [README §4](README.md#4-développement-et-qualité) (vue d'ensemble).
 
 ---
 
@@ -47,10 +47,10 @@ Monocle. Le headless vient de `glass.platform=Headless`, pas de TestFX.
 | `./mvnw test` | **Toute** la suite de tests (les détecteurs `@Tag("conformite")` sont **inclus** par défaut). |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants). |
 | `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants**. |
+| `./mvnw verify -DexcludedGroups=conformite` | Tout **sauf** la conformité (le run **bloquant** de la CI). |
+| `./mvnw test -Dgroups=conformite` | **Seulement** les détecteurs de conformité. |
 | `./mvnw test -Dtest=SitesViewModelTest` | Une seule **classe** de test. |
 | `./mvnw test -Dtest=SitesViewModelTest#chargeLesSites` | Une seule **méthode**. |
-| `./mvnw test -Dgroups=conformite` | **Seulement** les détecteurs de conformité. |
-| `./mvnw verify -DexcludedGroups=conformite` | Tout **sauf** la conformité (ce que lance la CI bloquante). |
 | `./mvnw -Pmutation test` | Tests de **mutation** PIT (lent, à la demande). |
 | `./mvnw pmd:check` | Rapport PMD seul (rapide). |
 | `./mvnw spotless:check` | Vérifie le formatage (sans modifier). |
@@ -61,13 +61,14 @@ Monocle. Le headless vient de `glass.platform=Headless`, pas de TestFX.
 
 Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquets de production.
 
-### Tests « métier » et MVVM (équipe)
+### Tests métier et MVVM
 
 | Catégorie | Emplacement | Ce qu'ils vérifient |
 |---|---|---|
 | Unitaires métier | `<feature>/model/`, `<feature>/dao/`, `commun/persistence/`, `commun/model/` | Entités, services, DAO (SQLite), migrations. Aucune dépendance JavaFX. |
 | ViewModel | `<feature>/viewmodel/` | État observable et logique de présentation, sans composant graphique. |
 | Intégration de vue (TestFX) | `<feature>/view/*VueIntegrationTest` | La vue FXML se lie au ViewModel et réagit (headless). |
+| Parcours de bout en bout | `<feature>/e2e/Parcours*E2ETest` | Le scénario complet IHM → ViewModel → service → base. |
 
 ### Tests d'architecture (ArchUnit)
 
@@ -86,30 +87,18 @@ fait respecter les frontières MVVM. **Six règles** :
 
 Casser une de ces règles fait **échouer le build** : c'est le garde-fou de l'architecture.
 
-### Garde d'intégrité (bloquante)
-
-[`architecture/IntegriteTestsLivresTest`](src/test/java/fr/univ_amu/iut/architecture/IntegriteTestsLivresTest.java)
-détecte la **suppression ou la neutralisation** d'un test livré (par exemple un `@Disabled` ajouté
-sur un test d'acceptation côté étudiant). Elle est **volontairement non taguée** `@Tag("conformite")`
-afin de **rester dans le run bloquant** : on ne peut pas « rendre vert » en désactivant un test.
-
 ### Détecteurs de conformité (non bloquants)
 
-Les classes taguées `@Tag("conformite")` sont des **détecteurs de trous d'IHM** côté référence :
-recherche de `fx:id`, parcours de bout en bout (`e2e/Parcours*E2ETest`), vues
-(`*VueIntegrationTest`). En CI, ils sont **ré-exécutés sans jamais rougir le build**
-(`continue-on-error`) pour produire leurs rapports : le résumé CI les remonte en
-`conformite_by_feature`, qui alimente le **tableau de bord**. Ils restent **compilés** dans le run
-principal (un changement d'API qui casse leur compilation fait donc échouer la CI).
+Certaines vues (`*VueIntegrationTest`) et parcours (`e2e/Parcours*E2ETest`) portent
+`@Tag("conformite")`. En CI, ils sont **ré-exécutés sans jamais rougir le build**
+(`-Dmaven.test.failure.ignore=true`) pour produire leurs rapports. Ils restent **compilés** dans le
+run principal : un changement d'API qui casse leur compilation fait donc échouer la CI.
 
-### Tests des transformations (Bats)
+### Garde d'intégrité
 
-[`scripts/test/student-transforms.bats`](scripts/test/student-transforms.bats) teste le moteur de
-génération de la version étudiante (marqueurs, `@Disabled`). Exécuté en CI par `lint.yml` :
-
-```bash
-bats scripts/test/student-transforms.bats
-```
+[`architecture/IntegriteTestsLivresTest`](src/test/java/fr/univ_amu/iut/architecture/IntegriteTestsLivresTest.java)
+détecte la suppression ou la neutralisation d'un test. Elle reste **dans le run bloquant** : on ne
+peut pas « rendre vert » en désactivant un test.
 
 ---
 
@@ -120,13 +109,13 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 
 | Étape | Commande | Bloquant ? |
 |---|---|---|
-| Tests équipe + garde d'intégrité | `./mvnw verify -DexcludedGroups=conformite` | **Oui** |
+| Tests (hors conformité) + garde d'intégrité | `./mvnw verify -DexcludedGroups=conformite` | **Oui** |
 | Détecteurs de conformité | `./mvnw test -Dgroups=conformite -Dmaven.test.failure.ignore=true` | Non (mesure) |
 | Formatage Spotless | `./mvnw spotless:check` | Non (mesure) |
-| Portail qualité (`lint.yml`, `solution` + PR) | `./mvnw -Pquality-gate verify` | **Oui** |
+| Portail qualité (`lint.yml`) | `./mvnw -Pquality-gate verify` | **Oui** |
 
-Le portail `lint.yml` ajoute aussi la cohérence documentaire, la complétude des captures et les
-tests Bats. Une PR vers `solution` doit donc passer **les deux** workflows.
+Le portail `lint.yml` ajoute aussi la cohérence documentaire, la complétude des captures et les tests
+Bats. Une PR doit donc passer **les deux** workflows.
 
 ---
 
@@ -143,8 +132,6 @@ tests Bats. Une PR vers `solution` doit donc passer **les deux** workflows.
 
 ## 6. Écrire un nouveau test (rappels)
 
-- **TDD côté mainteneur** : le test d'acceptation d'une feature reste **actif** (sans `@Disabled`)
-  sur `solution`. C'est `generate-student.sh` qui le neutralise pour la version étudiante.
 - **TestFX** : interroger les nœuds par `fx:id` (`lookup("#monId")`), piloter via le robot Glass,
   asserter avec AssertJ. Tester les actions par `bouton.fire()` plutôt que par un clic robot quand
   c'est possible (plus stable en headless).

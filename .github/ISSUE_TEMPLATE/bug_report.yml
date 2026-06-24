@@ -1,60 +1,68 @@
-name: 🐛 Problème technique
-description: Vous rencontrez une erreur ou un comportement inattendu avec le TP
+name: 🐛 Signaler un bogue
+description: Une erreur ou un comportement inattendu de l'application
 labels:
   - bug
 body:
   - type: markdown
     attributes:
       value: |
-        Merci de prendre le temps de signaler ce problème ! Plus votre description est précise, plus on peut vous aider vite.
+        Merci de prendre le temps de signaler ce problème ! Plus votre description est précise, plus on peut le corriger vite.
 
   - type: dropdown
     id: os
     attributes:
       label: Système d'exploitation
       options:
-        - Linux (IUT ou perso)
+        - Linux
         - macOS
         - Windows
-        - GitHub Codespace
     validations:
       required: true
 
   - type: dropdown
-    id: env
+    id: provenance
     attributes:
-      label: Environnement de développement
+      label: Comment lancez-vous l'application ?
       options:
-        - VS Code
-        - IntelliJ IDEA
-        - Terminal / ligne de commande seulement
-        - Eclipse
-        - Autre
+        - Installeur (.msi / .dmg / .deb)
+        - Depuis les sources (./mvnw javafx:run)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Numéro de version (page Releases) ou identifiant de commit si vous êtes sur les sources
+      placeholder: v1.0.0
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Étapes pour reproduire
+      description: Que faisiez-vous au moment du problème ?
+      placeholder: |
+        1. Ouvrir l'écran Importation
+        2. Sélectionner une carte SD
+        3. ...
     validations:
       required: true
 
   - type: textarea
-    id: command
+    id: expected
     attributes:
-      label: Commande exécutée
-      description: La commande qui a déclenché l'erreur (ou ce que vous cliquiez dans l'IDE)
-      placeholder: ./mvnw test
+      label: Comportement attendu vs observé
+      description: Ce que vous attendiez, et ce qui s'est réellement passé
     validations:
       required: true
 
   - type: textarea
     id: error
     attributes:
-      label: Message d'erreur complet
+      label: Message d'erreur (le cas échéant)
       description: Copiez-collez le message d'erreur EXACT (pas de capture d'écran)
       render: shell
-    validations:
-      required: true
-
-  - type: textarea
-    id: tried
-    attributes:
-      label: Ce que vous avez déjà essayé
-      description: Expliquez brièvement vos tentatives pour résoudre le problème
     validations:
       required: false
