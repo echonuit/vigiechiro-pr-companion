@@ -34,6 +34,8 @@
          text="⚠ Relevé climatique absent : la température et l'hygrométrie ne sont pas disponibles pour cette nuit (R20)."/>
 
   <Label fx:id="lblResumeClimat" styleClass="section-sous"/>
+  <!-- Température en début de nuit (#106) : donnée optionnelle saisie dans M-Passage. -->
+  <Label fx:id="lblTemperature" styleClass="section-sous"/>
   <LineChart fx:id="grapheClimat" VBox.vgrow="ALWAYS" legendVisible="true" animated="false">
     <xAxis>
       <CategoryAxis label="Heure"/>

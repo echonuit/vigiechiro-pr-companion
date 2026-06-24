@@ -106,6 +106,22 @@ class ParcoursPassageVersDiagnosticE2ETest {
         assertThat(robot.lookup("#lblEnregistreur").queryAs(Label.class)).isNotNull();
     }
 
+    @Test
+    @DisplayName("#106 : la température saisie en M-Passage est persistée et réaffichée en M-Diagnostic")
+    void temperature_saisie_en_passage_visible_en_diagnostic(FxRobot robot) {
+        // 1) Entrer sur M-Passage et saisir la température de début de nuit, puis enregistrer.
+        robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
+        robot.clickOn("#champTemperature").write("8,5");
+        robot.clickOn("#boutonTemperature"); // persiste dans passage.weather_data
+
+        // 2) Ouvrir M-Diagnostic : la température persistée est relue de la base et affichée.
+        robot.interact(robot.lookup("#boutonDiagnostic").queryAs(Button.class)::fire);
+
+        assertThat(robot.lookup("#lblTemperature").queryAs(Label.class).getText())
+                .as("température persistée puis relue cross-écran (M-Passage → base → M-Diagnostic)")
+                .contains("8,5 °C");
+    }
+
     private static Path creerNuitSynthetique(Path sd) throws Exception {
         Files.createDirectories(sd);
         Files.writeString(sd.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);

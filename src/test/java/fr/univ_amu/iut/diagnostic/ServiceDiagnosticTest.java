@@ -122,6 +122,43 @@ class ServiceDiagnosticTest {
     }
 
     @Test
+    @DisplayName("#106 : la température de weather_data est exposée dans le Diagnostic (trajet réel)")
+    void temperature_depuis_weather_data() {
+        creerSession();
+        // Renseigne la météo du passage seedé via la colonne weather_data ({"tempDebut":8.5}).
+        Passage p = passageDao.findById(idPassage).orElseThrow();
+        passageDao.update(new Passage(
+                p.id(),
+                p.numeroPassage(),
+                p.annee(),
+                p.dateEnregistrement(),
+                p.heureDebut(),
+                p.heureFin(),
+                p.parametresAcquisition(),
+                p.statutWorkflow(),
+                p.verdictVerification(),
+                p.commentaire(),
+                "{\"tempDebut\":8.5}",
+                p.deposeLe(),
+                p.idPoint(),
+                p.idEnregistreur()));
+
+        Diagnostic diagnostic = service.diagnostiquer(idPassage);
+
+        assertThat(diagnostic.temperatureDebutNuit())
+                .as("trajet Passage.weather_data → MeteoPassage → Diagnostic")
+                .isEqualTo(8.5);
+    }
+
+    @Test
+    @DisplayName("#106 : météo absente → température null dans le Diagnostic (jamais bloquant)")
+    void temperature_absente() {
+        creerSession(); // le passage seedé a weather_data = null
+
+        assertThat(service.diagnostiquer(idPassage).temperatureDebutNuit()).isNull();
+    }
+
+    @Test
     @DisplayName("R19 : un journal avec anomalies seedées → anomalies listées et classées")
     void anomalies_listees() {
         Long idSession = creerSession();
