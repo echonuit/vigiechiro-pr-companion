@@ -53,6 +53,33 @@ class TransformationAudioTest {
     }
 
     @Test
+    @DisplayName("#231 : reprise — une séquence complète n'est pas réécrite, une tronquée l'est")
+    void reprise_ne_reecrit_pas_les_sequences_completes() throws IOException {
+        Path transformes = dossier.resolve("transformes");
+        List<SequenceProduite> premier =
+                transformation.transformer(originalWav, transformes, prefixe).sequences();
+
+        // Horodatage passé connu sur chaque séquence ; on tronque délibérément la 2e (taille ≠ attendue).
+        var instantPasse = java.nio.file.attribute.FileTime.fromMillis(1_000_000_000_000L);
+        for (SequenceProduite s : premier) {
+            Files.setLastModifiedTime(s.chemin(), instantPasse);
+        }
+        Path tronquee = premier.get(1).chemin();
+        long tailleComplete = Files.size(tronquee);
+        Files.write(tronquee, new byte[10]); // taille différente → doit être réécrite
+        Files.setLastModifiedTime(tronquee, instantPasse);
+
+        transformation.transformer(originalWav, transformes, prefixe);
+
+        // Les séquences complètes n'ont pas bougé (mtime inchangé = non réécrites, R11 déterministe)…
+        assertThat(Files.getLastModifiedTime(premier.get(0).chemin())).isEqualTo(instantPasse);
+        assertThat(Files.getLastModifiedTime(premier.get(2).chemin())).isEqualTo(instantPasse);
+        // …tandis que la séquence tronquée a été refaite (mtime récent + taille pleine restaurée).
+        assertThat(Files.getLastModifiedTime(tronquee)).isNotEqualTo(instantPasse);
+        assertThat(Files.size(tronquee)).isEqualTo(tailleComplete);
+    }
+
+    @Test
     @DisplayName("R10 : le nombre de séquences vaut ceil(2 × durée source)")
     void nombre_de_sequences() {
         TransformationOriginal resultat =
