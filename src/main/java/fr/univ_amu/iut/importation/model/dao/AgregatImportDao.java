@@ -97,8 +97,12 @@ public class AgregatImportDao {
     /// quel que soit le point ou le n° de passage : sert à détecter à l'inspection qu'une nuit a déjà
     /// été importée (#147), même rattachée ailleurs que le quadruplet R5 visé. Liste vide si aucune.
     public List<PassageExistant> passagesDeLaNuit(String idEnregistreur, String dateNuit) {
-        String sql = "SELECT passage_number, year FROM passage"
-                + " WHERE recorder_id = ? AND recording_date = ? ORDER BY year, passage_number";
+        String sql = "SELECT p.passage_number, p.year, ms.square_number AS carre, lp.code AS point_code"
+                + " FROM passage p"
+                + " JOIN listening_point lp ON lp.id = p.point_id"
+                + " JOIN monitoring_site ms ON ms.id = lp.site_id"
+                + " WHERE p.recorder_id = ? AND p.recording_date = ?"
+                + " ORDER BY p.year, p.passage_number";
         List<PassageExistant> resultats = new ArrayList<>();
         try (Connection cx = source.getConnection();
                 PreparedStatement ps = cx.prepareStatement(sql)) {
@@ -106,7 +110,11 @@ public class AgregatImportDao {
             ps.setString(2, dateNuit);
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    resultats.add(new PassageExistant(rs.getInt("passage_number"), rs.getInt("year")));
+                    resultats.add(new PassageExistant(
+                            rs.getInt("passage_number"),
+                            rs.getInt("year"),
+                            rs.getString("carre"),
+                            rs.getString("point_code")));
                 }
             }
         } catch (SQLException e) {

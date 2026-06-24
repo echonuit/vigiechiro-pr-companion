@@ -91,14 +91,17 @@ class InspectionImportViewModelTest {
     @DisplayName("#147 : inspecter une nuit déjà en base lève l'avertissement « nuit déjà importée »")
     void inspecter_nuit_deja_importee() {
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        when(serviceImport.nuitDejaImportee("1925492", "2026-04-22")).thenReturn(List.of(new PassageExistant(2, 2026)));
+        when(serviceImport.nuitDejaImportee("1925492", "2026-04-22"))
+                .thenReturn(List.of(new PassageExistant(2, 2026, "640380", "Z1")));
         vm.dossierSourceProperty().set(sd);
 
         vm.inspecter();
 
         assertThat(vm.avertissementNuitExistanteProperty().get())
                 .contains("déjà été importée")
-                .contains("n° 2");
+                .contains("n° 2")
+                .contains("carré 640380")
+                .contains("point Z1");
     }
 
     @Test

@@ -21,10 +21,11 @@ final class AvertissementNuitExistante {
             return "";
         }
         String details = existants.stream()
-                .map(passage -> "n° " + passage.numeroPassage() + " (" + passage.annee() + ")")
-                .collect(Collectors.joining(", "));
+                .map(passage -> "n° " + passage.numeroPassage() + " (" + passage.annee() + ") au carré "
+                        + passage.carre() + ", point " + passage.codePoint())
+                .collect(Collectors.joining(" ; "));
         String motPassage = existants.size() == 1 ? " : passage " : " : passages ";
         return "⚠ Cette nuit (PR " + numeroSerie + ", " + dateNuit + ") a déjà été importée" + motPassage + details
-                + ". L'importer créera un nouveau passage (vérifiez le rattachement).";
+                + ". L'importer créera un nouveau passage.";
     }
 }

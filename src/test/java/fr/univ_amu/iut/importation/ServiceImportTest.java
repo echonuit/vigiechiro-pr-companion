@@ -318,6 +318,8 @@ class ServiceImportTest {
                 .satisfies(p -> {
                     assertThat(p.numeroPassage()).isEqualTo(2);
                     assertThat(p.annee()).isEqualTo(2026);
+                    assertThat(p.carre()).isEqualTo("640380"); // rattachement remonté (carré + point)
+                    assertThat(p.codePoint()).isEqualTo("Z1");
                 });
         // Autre enregistreur, autre date ou identité nulle : aucune détection (pas d'exception SQL brute).
         assertThat(service.nuitDejaImportee("0000000", "2026-04-22")).isEmpty();
