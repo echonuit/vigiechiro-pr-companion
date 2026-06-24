@@ -33,9 +33,6 @@ import javafx.collections.ObservableList;
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls
 /// `javafx.beans`/`javafx.collections`. Non-singleton (un VM frais par chargement de vue).
-///
-/// TODO (M-Multisite) : implémentez les corps des méthodes publiques ci-dessous (les signatures et
-/// les propriétés observables sont fournies). Patron de référence : SitesViewModel (feature sites).
 public class MultisiteViewModel {
 
     private final ServiceMultisite service;
@@ -60,7 +57,6 @@ public class MultisiteViewModel {
     public MultisiteViewModel(ServiceMultisite service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-        // --solution--
         // Tout changement interactif de filtre ou de tri ré-interroge le service et rafraîchit le
         // tableau (sauf pendant une application groupée : un seul rafraîchissement la conclut).
         filtreNumeroCarre.addListener((obs, ancien, nouveau) -> rafraichirSiInteractif());
@@ -68,23 +64,17 @@ public class MultisiteViewModel {
         filtreVerdict.addListener((obs, ancien, nouveau) -> rafraichirSiInteractif());
         filtreAnnee.addListener((obs, ancien, nouveau) -> rafraichirSiInteractif());
         tri.addListener((obs, ancien, nouveau) -> rafraichirSiInteractif());
-        // --end-solution--
     }
 
     /// (Re)charge le tableau selon les filtres et le tri courants. À appeler à l'ouverture de
     /// l'écran ; ensuite déclenché automatiquement par tout changement de filtre ou de tri.
     public void rafraichir() {
-        // TODO (M-Multisite) : interrogez service.listerPassages(...) avec les filtres et le tri
-        //   courants, peuplez lignes, mettez à jour nonVide et resume, videz message.
-        // --solution--
         lignes.setAll(service.listerPassages(idUtilisateur, filtresCourants(), tri.get()));
         nonVide.set(!lignes.isEmpty());
         resume.set(lignes.size() + " passage(s) affiché(s).");
         message.set("");
-        // --end-solution--
     }
 
-    // --solution--
     private void rafraichirSiInteractif() {
         if (!chargementGroupe) {
             rafraichir();
@@ -110,14 +100,10 @@ public class MultisiteViewModel {
         }
         rafraichir();
     }
-    // --end-solution--
 
     /// Réinitialise tous les filtres (le tri est conservé), puis recharge le tableau une fois.
     public void reinitialiserFiltres() {
-        // TODO (M-Multisite) : remettez les quatre filtres à zéro puis rechargez une seule fois.
-        // --solution--
         appliquerFiltres(FiltresMultisite.aucun());
-        // --end-solution--
     }
 
     /// Exporte le tableau courant (lignes déjà filtrées et triées) en CSV vers `destination`
@@ -127,9 +113,6 @@ public class MultisiteViewModel {
     /// @param destination fichier cible choisi par l'observateur
     /// @return `true` si le fichier a été écrit
     public boolean exporter(Path destination) {
-        // TODO (M-Multisite) : exportez les lignes via service.exporterCsvVers(...), publiez le bilan
-        //   ou l'erreur dans message, renvoyez true si le fichier a été écrit.
-        // --solution--
         if (destination == null) {
             return false;
         }
@@ -141,29 +124,19 @@ public class MultisiteViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Multisite)");
-        --end-student-- */
     }
 
     // --- Vues sauvegardées (story E5.S3) ---
 
     /// Recharge la liste des vues sauvegardées (à appeler à l'ouverture de la modale de gestion).
     public void chargerVues() {
-        // TODO (M-Multisite) : rechargez la liste des vues sauvegardées (service.listerVues()).
-        // --solution--
         vues.setAll(service.listerVues());
-        // --end-solution--
     }
 
     /// Enregistre la combinaison de filtres courante sous `nom`. Un nom vide est refusé.
     ///
     /// @return `true` si la vue a été enregistrée
     public boolean enregistrerVue(String nom) {
-        // TODO (M-Multisite) : refusez un nom vide, sinon enregistrez la combinaison de filtres
-        //   courante (service.enregistrerVue), rechargez les vues et renvoyez true.
-        // --solution--
         if (nom == null || nom.isBlank()) {
             message.set("Donnez un nom à la vue avant de l'enregistrer.");
             return false;
@@ -177,18 +150,12 @@ public class MultisiteViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Multisite)");
-        --end-student-- */
     }
 
     /// Applique les filtres d'une vue sauvegardée (rejoue la combinaison) puis recharge le tableau.
     ///
     /// @return `true` si la vue a été appliquée
     public boolean appliquerVue(SavedView vue) {
-        // TODO (M-Multisite) : rejouez les filtres de la vue (service.chargerVue) puis rechargez.
-        // --solution--
         if (vue == null) {
             return false;
         }
@@ -199,18 +166,12 @@ public class MultisiteViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Multisite)");
-        --end-student-- */
     }
 
     /// Met à jour une vue existante : son nom et la combinaison de filtres courante.
     ///
     /// @return `true` si la vue a été mise à jour
     public boolean mettreAJourVue(SavedView vue, String nom) {
-        // TODO (M-Multisite) : mettez à jour le nom + les filtres de la vue (service.mettreAJourVue).
-        // --solution--
         if (vue == null || nom == null || nom.isBlank()) {
             return false;
         }
@@ -223,18 +184,12 @@ public class MultisiteViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Multisite)");
-        --end-student-- */
     }
 
     /// Supprime une vue sauvegardée.
     ///
     /// @return `true` si la vue a été supprimée
     public boolean supprimerVue(SavedView vue) {
-        // TODO (M-Multisite) : supprimez la vue (service.supprimerVue) puis rechargez la liste.
-        // --solution--
         if (vue == null) {
             return false;
         }
@@ -247,17 +202,11 @@ public class MultisiteViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Multisite)");
-        --end-student-- */
     }
 
-    // --solution--
     private static String texteOuNull(String valeur) {
         return valeur == null || valeur.isBlank() ? null : valeur.trim();
     }
-    // --end-solution--
 
     public ObservableList<LignePassage> lignes() {
         return lignes;

@@ -36,7 +36,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Générateur de **jeux de données de benchmark** (#29) : peuple une base SQLite avec un grand
 /// nombre de **passages** (cible O5 « tri/filtre ~1000 passages ») et d'**observations** (cible O5

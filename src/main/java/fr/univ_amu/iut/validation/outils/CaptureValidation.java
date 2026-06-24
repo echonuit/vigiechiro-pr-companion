@@ -55,7 +55,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.TableView;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture l'écran M-Vision-Tadarida en PNG pour le comparer à la maquette du brief, en **deux
 /// états** afin d'en montrer les particularités :

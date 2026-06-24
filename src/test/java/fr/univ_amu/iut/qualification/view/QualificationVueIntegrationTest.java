@@ -47,7 +47,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 /// Test d'intégration TestFX **complémentaire** de l'écran M-Qualification, ciblant les câblages
-/// Vue↔ViewModel que les tests de vue « lecture de propriétés » laissent passer : un écran-coquille
+/// Vue↔ViewModel que les tests de vue « lecture de propriétés » laissent passer : un écran non câblé
 /// (feux non liés, colonnes sans `cellValueFactory`, bouton « Régénérer » mort) passerait pourtant
 /// les tests qui se contentent de lire le ViewModel. Ici, chaque vérification fait un **vrai lookup
 /// de contrôle par `fx:id`** (`robot.lookup`) ou inspecte un contrôle réellement rendu, puis vérifie

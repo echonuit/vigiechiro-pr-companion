@@ -35,10 +35,9 @@ import org.testfx.util.WaitForAsyncUtils;
 /// `controllerFactory` Guice, sur une base SQLite jetable migrée. Si le chargement échoue, le test
 /// nomme le fichier et la cause racine, et propose une checklist d'erreurs FXML courantes.
 ///
-/// Intérêt pédagogique : la capture tourne sur `main`, APRÈS le merge. Ce test, lui, vit dans le
-/// paquet de référence `commun` (donc **actif dans la version étudiante**, jamais `@Disabled`) et
-/// tourne dans la CI Maven sur CHAQUE pull request. L'étudiant voit donc un FXML cassé sur sa PR,
-/// avec un message clair, AVANT que la galerie d'aperçus ne casse.
+/// Intérêt : la capture des aperçus tourne sur `main`, APRÈS le merge. Ce test, lui, tourne dans la
+/// CI Maven sur CHAQUE pull request : un FXML cassé est signalé tôt, avec un message clair, AVANT
+/// que la galerie d'aperçus ne casse.
 ///
 /// On ne seede aucune donnée d'écran : comme dans les `CaptureXxx`, le `load()` précède toute
 /// alimentation (la navigation / les `demarrerXxx` poussent les données ensuite). On insère

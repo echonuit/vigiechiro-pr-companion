@@ -147,7 +147,7 @@ class ParcoursImporterNuitE2ETest {
     @Test
     @DisplayName("P2 : importer une nuit livrée sous forme de .zip → un passage Transformé, temporaire nettoyé (#139)")
     void parcours_complet_depuis_un_zip() throws Exception {
-        // La nuit n'est pas un dossier mais une archive .zip (cas d'usage #139 : l'étudiant récupère
+        // La nuit n'est pas un dossier mais une archive .zip (cas d'usage #139 : l'utilisateur récupère
         // une nuit zippée). On la place hors du workspace pour bien distinguer source et extraction.
         Path zip = Files.createTempDirectory("vc-e2e-zip").resolve("nuit.zip");
         compresser(dossierSource, zip);

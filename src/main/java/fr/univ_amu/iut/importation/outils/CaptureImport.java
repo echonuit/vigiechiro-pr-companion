@@ -32,7 +32,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture l'assistant M-Import en PNG, pour le comparer a la maquette du brief. Pour montrer le
 /// « cas standard » (sections inspection + rattachement remplies, et non l'ecran vide), on pilote

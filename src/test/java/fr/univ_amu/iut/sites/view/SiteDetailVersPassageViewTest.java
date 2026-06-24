@@ -41,11 +41,7 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class SiteDetailVersPassageViewTest {
 
-    // Ce test d'intégration sites -> passage pilote l'écran M-Passage (il cherche #stepper) : il ne
-    // peut pas passer tant que vous n'avez pas construit l'IHM de la feature passage. Il est donc
-    // commenté côté étudiant ; retirez les délimiteurs /* */ (générés depuis les marqueurs ci-dessous)
-    // pour le réactiver une fois Passage.fxml bâti.
-    // --masquer-etudiant--
+    // Test d'intégration sites -> passage : pilote l'écran M-Passage (il cherche #stepper).
     private static final String ID_USER = "u-1";
     private static final String DATE = "2026-06-22";
 
@@ -101,5 +97,4 @@ class SiteDetailVersPassageViewTest {
         HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);
         assertThat(stepper.getChildren()).isNotEmpty();
     }
-    // --fin-masquer-etudiant--
 }

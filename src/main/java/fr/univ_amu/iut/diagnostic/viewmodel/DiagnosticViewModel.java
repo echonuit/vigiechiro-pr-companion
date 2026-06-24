@@ -42,12 +42,6 @@ public class DiagnosticViewModel {
     /// Ouvre le diagnostic du passage `idPassage`. Une erreur (passage/session introuvable) est
     /// restituée dans [#messageProperty()] sans lever, l'écran restant vide.
     public void ouvrirSur(Long idPassage) {
-        // TODO (M-Diagnostic) : peuplez les propriétés à partir de service.diagnostiquer(idPassage).
-        //   - succès : alimentez enregistreur, releveClimatiqueAbsent, gpsDisponible, mesures,
-        //     anomalies, evenements et resumeClimat, puis videz message ;
-        //   - échec (RuntimeException) : réinitialisez tout et publiez le message d'erreur, sans lever.
-        // Patron de référence : le ViewModel de la feature sites (SiteDetailViewModel).
-        // --solution--
         reinitialiser();
         try {
             appliquer(service.diagnostiquer(idPassage));
@@ -56,10 +50,8 @@ public class DiagnosticViewModel {
             reinitialiser();
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
-    // --solution--
     private void appliquer(Diagnostic diagnostic) {
         enregistreur.set("PR " + diagnostic.numeroSerieEnregistreur());
         releveClimatiqueAbsent.set(diagnostic.releveClimatiqueAbsent());
@@ -84,7 +76,6 @@ public class DiagnosticViewModel {
         evenements.clear();
         temperature.set("—");
     }
-    // --end-solution--
 
     /// Enregistreur de la nuit (`PR <n° de série>`).
     public ReadOnlyStringProperty enregistreurProperty() {

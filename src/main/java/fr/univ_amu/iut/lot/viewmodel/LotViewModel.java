@@ -42,10 +42,6 @@ public class LotViewModel {
     /// dans [#messageProperty()] sans lever, l'écran restant vide.
     public void ouvrirSur(Long idPassage) {
         this.idPassage = idPassage;
-        // TODO (M-Lot) : chargez l'état via service.consulterLot(idPassage) et alimentez les propriétés
-        // (statut, recap, cheminDossier, alertes, peutPreparer/peutDeposer/depose) ; en cas d'erreur,
-        // réinitialisez et publiez message. Patron de référence : SiteDetailViewModel (feature sites).
-        // --solution--
         reinitialiser();
         try {
             appliquer(service.consulterLot(idPassage));
@@ -53,7 +49,6 @@ public class LotViewModel {
             reinitialiser();
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
     /// Prépare le lot (R14 + cohérence) : Vérifié → Prêt à déposer, puis recharge. Sans passage
@@ -61,29 +56,16 @@ public class LotViewModel {
     ///
     /// @return `true` si la préparation a réussi
     public boolean preparer() {
-        // TODO (M-Lot) : préparez le lot (service.preparerLot), rechargez l'état, renvoyez true si OK.
-        // --solution--
         return appliquerAction(() -> service.preparerLot(idPassage));
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Lot)");
-        --end-student-- */
     }
 
     /// Marque le passage déposé après téléversement manuel : Prêt à déposer → Déposé, puis recharge.
     ///
     /// @return `true` si le dépôt a été enregistré
     public boolean deposer() {
-        // TODO (M-Lot) : marquez le passage déposé (service.marquerDepose), rechargez, renvoyez true.
-        // --solution--
         return appliquerAction(() -> service.marquerDepose(idPassage));
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Lot)");
-        --end-student-- */
     }
 
-    // --solution--
     private boolean appliquerAction(Runnable action) {
         if (idPassage == null) {
             return false;
@@ -137,7 +119,6 @@ public class LotViewModel {
         depose.set(false);
         message.set("");
     }
-    // --end-solution--
 
     /// Libellé du statut workflow courant du passage.
     public ReadOnlyStringProperty statutProperty() {

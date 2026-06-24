@@ -27,8 +27,7 @@ import org.testfx.framework.junit5.Start;
 /// clic réel sur la carte **« Bibliothèque de sons »** ouvre l'écran **M-Bibliotheque**
 /// (`accueil → bibliotheque`). Vérifie le câblage carte d'accueil → navigation et le chargement
 /// sans erreur de l'écran (table des entrées présente), sur une base vide : il s'agit d'un fumigène,
-/// pas d'un parcours de données (la bibliothèque de sons de référence sera alimentée par les
-/// étudiants).
+/// pas d'un parcours de données (la bibliothèque de sons de référence est alimentée séparément).
 @ExtendWith(ApplicationExtension.class)
 class ParcoursBibliothequeE2ETest {
 

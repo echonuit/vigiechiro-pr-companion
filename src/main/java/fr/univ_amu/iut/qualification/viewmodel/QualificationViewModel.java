@@ -28,10 +28,6 @@ import javafx.beans.property.StringProperty;
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls `javafx.beans`
 /// sont importés, jamais `javafx.scene`. Construit non-singleton (un VM frais par FXML).
-///
-/// TODO (M-Qualification) : implémentez les corps des méthodes publiques (ouvrirSur, choisirVerdict,
-/// enregistrer) ; les propriétés observables et le binding peutEnregistrer sont fournis. Patron de
-/// référence : SiteDetailViewModel (feature sites).
 public class QualificationViewModel {
 
     private final ServiceQualification service;
@@ -65,14 +61,12 @@ public class QualificationViewModel {
         this.service = Objects.requireNonNull(service, "service");
         peutEnregistrer = Bindings.createBooleanBinding(
                 () -> verdictChoisi.get() != null && verdictChoisi.get() != Verdict.A_VERIFIER, verdictChoisi);
-        // --solution--
         // Ré-armer la garde de saisie : verdict et commentaire restent éditables après un
         // enregistrement. Toute modification recrée donc un brouillon non persisté (le verdict/
         // commentaire à l'écran ne correspond plus à l'état enregistré) ; sans ce ré-armement, quitter
         // l'écran perdrait silencieusement la modification (cf. garde de navigation #140).
         verdictChoisi.addListener((obs, ancien, nouveau) -> redevenirBrouillonSiModifie());
         commentaire.addListener((obs, ancien, nouveau) -> redevenirBrouillonSiModifie());
-        // --end-solution--
     }
 
     /// Ouvre la vérification du passage `idPassage` : pré-check (3 feux) et amorçage du bandeau
@@ -81,10 +75,6 @@ public class QualificationViewModel {
     /// sans lever.
     public void ouvrirSur(Long idPassage) {
         this.idPassage = idPassage;
-        // TODO (M-Qualification) : exécutez le pré-check (service.precheck) et amorcez le bandeau
-        //   (service.chargerContexte -> statut + verdict actuel) ; en cas d'erreur, réinitialisez et
-        //   publiez le message.
-        // --solution--
         reinitialiser();
         try {
             appliquerPrecheck(service.precheck(idPassage));
@@ -96,10 +86,8 @@ public class QualificationViewModel {
             reinitialiser();
             message.set(echec.getMessage());
         }
-        // --end-solution--
     }
 
-    // --solution--
     /// Remet l'écran à un état vierge avant chaque (ré)ouverture et après un échec : feux, bandeau et
     /// saisie de verdict d'un passage précédent ne doivent jamais subsister à l'écran (le VM est
     /// non-singleton, mais rien n'empêche une réouverture sur un autre passage).
@@ -125,23 +113,15 @@ public class QualificationViewModel {
             etatVerdict.set(EtatVerdict.BROUILLON);
         }
     }
-    // --end-solution--
 
     /// Choix (différé) du verdict global de la nuit (boutons OK / douteux / à jeter).
     public void choisirVerdict(Verdict verdict) {
-        // TODO (M-Qualification) : mémorisez le verdict choisi (verdictChoisi).
-        // --solution--
         verdictChoisi.set(verdict);
-        // --end-solution--
     }
 
     /// Enregistre le verdict choisi : transite le passage vers `VERIFIE`. Refuse si aucun verdict
     /// décisif n'est choisi. Signale (R14) si « à jeter » exclura le passage du dépôt.
     public void enregistrer() {
-        // TODO (M-Qualification) : refusez sans verdict décisif ; sinon persistez le verdict
-        //   (service.enregistrerVerdict), passez le statut à VERIFIE, gérez l'avertissement « à jeter »
-        //   (R14) et l'état ENREGISTRE.
-        // --solution--
         if (!peutEnregistrer.get()) {
             message.set("Choisissez un verdict (OK, douteux ou à jeter) avant d'enregistrer.");
             return;
@@ -159,10 +139,8 @@ public class QualificationViewModel {
         } catch (RuntimeException refus) {
             message.set(refus.getMessage());
         }
-        // --end-solution--
     }
 
-    // --solution--
     private void appliquerPrecheck(PreCheckNuit.Diagnostic diagnostic) {
         feuCouverture.set(diagnostic.couvertureHoraire());
         feuNombre.set(diagnostic.nombreFichiers());
@@ -174,7 +152,6 @@ public class QualificationViewModel {
         String texte = commentaire.get();
         return texte == null || texte.isBlank() ? null : texte;
     }
-    // --end-solution--
 
     /// Feu du pré-check sur la couverture horaire de la nuit (R3).
     public ReadOnlyObjectProperty<PreCheckNuit.Feu> feuCouvertureProperty() {

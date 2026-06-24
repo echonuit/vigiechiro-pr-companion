@@ -46,7 +46,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture l'écran M-Lot en PNG pour le comparer à la maquette du brief, en **trois états** afin
 /// d'en montrer les particularités :

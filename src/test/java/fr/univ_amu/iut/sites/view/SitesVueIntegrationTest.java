@@ -40,7 +40,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// Les tests de vue de base (`MesSitesViewTest`, `ModalePointViewTest`) confirment le rendu et
 /// quelques parcours, mais ils n'interrogent pas systématiquement les contrôles par leur `fx:id` :
-/// un écran réduit à une coquille (FXML placeholder, controller sans `@FXML`) peut alors passer
+/// un écran non câblé (FXML sans `fx:id`, controller sans `@FXML`) peut alors passer
 /// inaperçu. Ce test ferme ce trou : pour chacun des trois écrans (accueil M-Sites, détail
 /// M-Site-detail, modale d'ajout de point), il récupère les contrôles par `#fx:id`, vérifie que
 /// leur état reflète le ViewModel, **et** qu'une interaction (déclenchement de carte, lien de

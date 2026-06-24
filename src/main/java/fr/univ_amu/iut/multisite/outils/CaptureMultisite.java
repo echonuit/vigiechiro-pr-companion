@@ -40,7 +40,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture l'écran M-Multisite en PNG pour le comparer à la maquette du brief, en **deux vues** afin
 /// d'en montrer les particularités :

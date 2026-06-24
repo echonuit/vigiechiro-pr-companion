@@ -1,12 +1,8 @@
-/// Module JavaFX pour le SAÉ 2.01 - VigieChiro PR Companion.
+/// Module JavaFX de VigieChiro PR Companion.
 ///
-/// Ce module exporte les paquetages des features. Ajoutez les exports des paquetages `view` des
-/// features que vous construisez au fur et à mesure.
-///
-/// `open module` (et pas `module` + `opens fr.univ_amu.iut to javafx.fxml`) : choix volontaire
-/// par cohérence avec l'ancien R202/template-tp-javafx (qui ouvrait tout pour simplifier la vie
-/// de l'étudiant·e qui n'a pas à comprendre les nuances JPMS la première fois). Plus permissif
-/// mais pédagogiquement plus simple.
+/// `open module` (et non `module` + `opens fr.univ_amu.iut to javafx.fxml`) : choix volontaire
+/// d'ouvrir tout le module à la réflexion. Plus permissif, mais plus simple : FXML et Guice
+/// instancient par réflexion sans avoir à déclarer des `opens ... to` ciblés.
 open module vigiechiro {
     // JavaFX dependencies (alignées sur les 4 deps + javafx-media du pom).
     requires transitive javafx.base;
@@ -16,8 +12,7 @@ open module vigiechiro {
     requires transitive javafx.media;
 
     // javafx.swing (SwingFXUtils) + java.desktop (ImageIO / BufferedImage) : capture d'écran
-    // hors-écran de l'outil enseignant `commun.outils.ApercuFx`. À retirer en passe A2 si l'outil
-    // de capture est supprimé de la version étudiante.
+    // hors-écran de l'outil `commun.outils.ApercuFx`.
     requires javafx.swing;
     requires java.desktop;
 
@@ -38,11 +33,7 @@ open module vigiechiro {
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.fontawesome5;
 
-    // Export base package
+    // Paquet de base exporté. `open module` ouvre déjà tous les paquets à la réflexion (FXML, Guice),
+    // donc les paquets `view` des features n'ont pas besoin d'export explicite.
     exports fr.univ_amu.iut;
-
-// ========== FEATURES - Ajouter les exports ici au fil de l'eau ==========
-// exports fr.univ_amu.iut.sites.view;
-// exports fr.univ_amu.iut.passage.view;
-// ...
 }

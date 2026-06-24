@@ -26,7 +26,7 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.function.IntSupplier;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Banc **micro-benchmark de la couche données** (#29) : peuple une base de mesure
 /// ([GenerateurJeuDeDonnees]) puis chronomètre les deux opérations cibles de l'objectif O5 et

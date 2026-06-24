@@ -22,19 +22,17 @@ import org.junit.jupiter.params.provider.MethodSource;
 /// `fx:controller` :
 ///
 ///  - chaque champ `@FXML` du controller doit avoir un `fx:id` du même nom dans le FXML : sinon le
-///    champ reste `null` et l'écran plante par `NullPointerException` au chargement (l'erreur
-///    favorite des étudiants quand l'`fx:id` est mal orthographié) ;
+///    champ reste `null` et l'écran plante par `NullPointerException` au chargement (typiquement
+///    quand l'`fx:id` est mal orthographié) ;
 ///  - chaque `onAction="#methode"` du FXML doit viser une méthode existante du controller.
 ///
 /// Ce test complète [ChargementFxmlTest] : il ne charge pas le FXML mais donne un message **plus
-/// précis** (le nom exact du champ/de la méthode fautif), en s'appuyant sur les `fx:id` nommés dans
-/// les issues de chaque feature. Comme il vit dans le paquet de référence `commun`, il reste
-/// **actif dans la version étudiante**. Sur une coquille de départ (0 champ `@FXML`, 0 `onAction`),
-/// les ensembles sont vides → le test passe, puis se renforce au fur et à mesure de la construction.
+/// précis** (le nom exact du champ/de la méthode fautif). Si une vue n'a aucun champ `@FXML` ni
+/// `onAction`, les ensembles sont vides et le test passe ; il se renforce à mesure que la vue se
+/// complète.
 ///
-/// Les commentaires XML sont retirés avant analyse : sur la branche `solution`, le FXML embarque la
-/// coquille étudiante en commentaire (bloc `@@student@@`), qu'il ne faut pas confondre avec la vraie
-/// déclaration.
+/// Les commentaires XML sont retirés avant analyse : une déclaration mise en commentaire ne doit
+/// pas être confondue avec la vraie.
 class CoherenceFxmlControllerTest {
 
     private static final Path SOURCE = Path.of("src", "main", "java");

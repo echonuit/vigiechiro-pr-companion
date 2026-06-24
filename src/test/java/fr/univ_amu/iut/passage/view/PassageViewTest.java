@@ -35,7 +35,7 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// Test d'intégration TestFX de la coquille de l'écran **M-Passage** : chargement du FXML via Guice
+/// Test d'intégration TestFX de l'écran **M-Passage** : chargement du FXML via Guice
 /// (avec un [ServicePassage] mocké), ouverture sur un passage + contexte site, et vérification du
 /// câblage (titre/bandeau d'identité, stepper de statut). Pas de base de données.
 @ExtendWith(ApplicationExtension.class)

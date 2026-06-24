@@ -45,18 +45,12 @@ public class BibliothequeViewModel {
 
     public BibliothequeViewModel(ServiceBibliotheque service) {
         this.service = Objects.requireNonNull(service, "service");
-        // --solution--
         selection.addListener((obs, ancien, nouveau) -> majSelection(nouveau));
-        // --end-solution--
     }
 
     /// Charge (ou recharge) la bibliothèque : sélectionne les observations de référence, peuple la
     /// table et met à jour le résumé. À appeler à l'ouverture de l'écran.
     public void charger() {
-        // TODO (M-Bibliotheque) : chargez la bibliothèque via service.exporterBibliotheque(), peuplez
-        // entrees, mettez à jour biblioNonVide et resume, et réinitialisez la sélection. Patron de
-        // référence : SitesViewModel.rafraichir() (feature sites).
-        // --solution--
         // Reset de la sélection avant de remplacer la liste : sur un rechargement, l'ancienne entrée
         // (et donc le chemin audio) pourrait avoir disparu de la bibliothèque rafraîchie. Le listener
         // de sélection remet alors cheminAudioCourant à null : on repart d'un état neutre cohérent.
@@ -69,7 +63,6 @@ public class BibliothequeViewModel {
                         ? "Aucun son de référence : marquez des observations « référence » pendant la validation."
                         : entrees.size() + " son(s) de référence.");
         message.set("");
-        // --end-solution--
     }
 
     /// Exporte la bibliothèque vers `dossier` (P10) : écrit le CSV récapitulatif et copie les
@@ -79,9 +72,6 @@ public class BibliothequeViewModel {
     /// @param dossier répertoire de destination choisi par l'observateur
     /// @return `true` si l'export a réussi
     public boolean exporter(Path dossier) {
-        // TODO (M-Bibliotheque) : matérialisez la bibliothèque vers dossier (export.exporterVers),
-        // publiez le bilan ou l'erreur dans message, et renvoyez true si l'export a réussi.
-        // --solution--
         if (export == null || dossier == null) {
             return false;
         }
@@ -94,18 +84,12 @@ public class BibliothequeViewModel {
             message.set(echec.getMessage());
             return false;
         }
-        // --end-solution--
-        /* --student--
-        throw new UnsupportedOperationException("À implémenter (M-Bibliotheque)");
-        --end-student-- */
     }
 
-    // --solution--
     private void majSelection(EntreeBiblio courante) {
         cheminAudioCourant.set(
                 courante == null || courante.cheminFichier() == null ? null : Path.of(courante.cheminFichier()));
     }
-    // --end-solution--
 
     public ObservableList<EntreeBiblio> entrees() {
         return entrees;

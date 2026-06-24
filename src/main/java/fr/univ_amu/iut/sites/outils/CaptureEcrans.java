@@ -37,7 +37,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
-/// OUTIL FOURNI : conservé dans la version étudiante (capture/mesure, utilisable tel quel).
+/// Outil de capture/mesure, utilisable tel quel.
 ///
 /// Capture les ecrans de la feature « sites » (M-Sites, M-Site-detail, modale point) en PNG, pour
 /// les comparer visuellement aux maquettes du brief. Demarche :

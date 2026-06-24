@@ -13,12 +13,7 @@
   Partage le MultisiteViewModel de l'écran (état de filtres commun) : enregistrer la combinaison
   courante, appliquer une vue (rejoue ses filtres et ferme), la renommer/mettre à jour ou la
   supprimer. Pur câblage : tout est lié au ViewModel par le ModaleVuesController.
-
-  TODO (M-Multisite, modale) : à construire avec M-Multisite. Le placeholder ci-dessous n'affiche
-  qu'un titre ; remplacez-le par la vraie modale (liste des vues, boutons, champ nom) reliée au
-  ModaleVuesController par des fx:id et des onAction.
 -->
-<!-- @@solution@@ -->
 <VBox fx:id="racine"
       xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -55,13 +50,3 @@
     <Button text="Fermer" onAction="#fermer"/>
   </HBox>
 </VBox>
-<!-- @@end-solution@@ -->
-<!-- @@student@@
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.multisite.view.ModaleVuesController"
-      spacing="10.0">
-  <Label text="⭐ Vues sauvegardées"/>
-  <Label text="TODO (M-Multisite, modale) : à construire (liste des vues, enregistrer/appliquer/supprimer)."/>
-</VBox>
-@@end-student@@ -->
