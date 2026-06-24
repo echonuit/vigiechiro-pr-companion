@@ -17,8 +17,10 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
+import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -162,6 +164,37 @@ class ServiceImportTest {
                 .containsExactly("Copie 1/2", "Copie 2/2", "Transformation 1/2", "Transformation 2/2");
         assertThat(points).extracting(Progression::fraction).containsExactly(0.25, 0.5, 0.75, 1.0);
         assertThat(points).extracting(Progression::fraction).isSorted();
+    }
+
+    @Test
+    @DisplayName("#146 : un import annulé d'emblée ne persiste aucun passage ni session, et relâche le verrou")
+    void import_annule_avant_copie() {
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler();
+
+        assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe, p -> {}, jeton))
+                .isInstanceOf(AnnulationImportException.class);
+
+        // Aucun demi-état : pas de passage pour le quadruplet, pas de dossier de session sur disque.
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+        assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession())).doesNotExist();
+        // Le verrou anti-concurrent (#54) a été relâché : un import normal repasse ensuite.
+        assertThat(service.importer(sd, idPoint, prefixe).passage().id()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("#146 : une annulation en cours de copie nettoie la session partielle (aucun demi-état)")
+    void import_annule_en_cours_nettoie_la_session() {
+        JetonAnnulation jeton = new JetonAnnulation();
+        // On annule dès le premier point de progression (après la 1re copie) : la 2e copie ne part pas.
+        Consumer<Progression> annulerApresPremier = p -> jeton.annuler();
+
+        assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe, annulerApresPremier, jeton))
+                .isInstanceOf(AnnulationImportException.class);
+
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+        // La session partielle (un fichier déjà copié) a été supprimée.
+        assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession())).doesNotExist();
     }
 
     @Test
