@@ -110,6 +110,7 @@ class DiagnosticVueIntegrationTest {
         assertThat(robot.lookup("#listeEvenements").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblGps").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblMessage").tryQuery()).isPresent();
+        assertThat(robot.lookup("#lblTemperature").tryQuery()).isPresent(); // #106
     }
 
     @Test
@@ -117,12 +118,16 @@ class DiagnosticVueIntegrationTest {
     void etat_initial_reflete_le_viewmodel(FxRobot robot) {
         Label enregistreur = robot.lookup("#lblEnregistreur").queryAs(Label.class);
         Label resume = robot.lookup("#lblResumeClimat").queryAs(Label.class);
+        Label temperature = robot.lookup("#lblTemperature").queryAs(Label.class);
         LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
 
         assertThat(enregistreur.getText()).isEqualTo("PR 1925492");
         assertThat(resume.getText()).isEqualTo("2 mesures T°/hygrométrie");
+        assertThat(temperature.getText())
+                .as("#106 : température affichée en M-Diagnostic")
+                .contains("8,5 °C");
         // Le graphe se reconstruit depuis viewModel.mesures() : deux séries (T° + humidité), 2 points.
         assertThat(graphe.getData()).hasSize(2);
         assertThat(graphe.getData().get(0).getData()).hasSize(2);
