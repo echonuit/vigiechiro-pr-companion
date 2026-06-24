@@ -1,0 +1,22 @@
+/* =========================================================================
+   Override des couleurs de texte sur les diagrammes Mermaid (aligné sur le
+   brief SAE 2.01).
+
+   Mermaid injecte ses propres règles avec un ID dynamique #__mermaid_N qui
+   bat la spécificité de tout sélecteur basé uniquement sur des classes. On
+   réplique le pattern d'ID via un sélecteur d'attribut + !important pour
+   forcer le texte en blanc sur tous les nœuds dont le fond est foncé.
+   ========================================================================= */
+
+[id^="__mermaid_"] .nodeLabel,
+[id^="__mermaid_"] .nodeLabel p,
+[id^="__mermaid_"] .nodeLabel span,
+[id^="__mermaid_"] foreignObject p,
+[id^="__mermaid_"] foreignObject span,
+[id^="__mermaid_"] foreignObject div,
+[id^="__mermaid_"] text,
+[id^="__mermaid_"] text tspan {
+  color: #fff !important;
+  fill: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+}

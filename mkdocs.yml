@@ -5,6 +5,7 @@ site_description: >-
 site_url: https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/
 repo_url: https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion
 repo_name: IUTInfoAix-S201/vigiechiro-pr-companion
+edit_uri: edit/main/docs/
 copyright: IUT d'Aix-Marseille - Département Informatique
 docs_dir: docs
 site_dir: site
@@ -20,26 +21,30 @@ theme:
   palette:
     - media: "(prefers-color-scheme: light)"
       scheme: default
-      primary: teal
-      accent: teal
-      toggle:
-        icon: material/weather-night
-        name: Passer au thème sombre
-    - media: "(prefers-color-scheme: dark)"
-      scheme: slate
-      primary: teal
-      accent: teal
+      primary: indigo
+      accent: deep orange
       toggle:
         icon: material/weather-sunny
-        name: Passer au thème clair
+        name: Mode sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Mode clair
   features:
+    - navigation.instant
     - navigation.tracking
+    - navigation.indexes
     - navigation.top
     - navigation.footer
+    - toc.follow
     - search.suggest
     - search.highlight
+    - content.action.edit
+    - content.action.view
     - content.code.copy
-    - toc.follow
   icon:
     repo: fontawesome/brands/github
 
@@ -63,20 +68,40 @@ nav:
   - Glossaire: glossaire.md
   - FAQ et dépannage: faq.md
 
+# Extensions alignées sur le brief SAE 2.01 (même rendu).
 markdown_extensions:
   - admonition
   - attr_list
   - md_in_html
+  - tables
+  - footnotes
   - toc:
       permalink: true
-  - pymdownx.highlight
-  # Mermaid natif Material (mêmes réglages que le brief) : les blocs ```mermaid
-  # sont rendus côté navigateur.
+  - pymdownx.details
+  # Mermaid natif Material : les blocs ```mermaid sont rendus côté navigateur.
   - pymdownx.superfences:
       custom_fences:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search:
+      lang: fr
+
+extra_css:
+  - stylesheets/extra.css
 
 # Le dossier docs/benchmarks (note technique de perf) et le fichier des
 # dépendances ne font pas partie du site utilisateur.

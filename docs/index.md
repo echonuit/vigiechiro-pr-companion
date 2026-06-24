@@ -1,5 +1,11 @@
 # VigieChiro
 
+<div markdown="0" style="margin: 1rem 0 2rem 0;">
+  <img src="assets/illustrations/hero-bandeau.webp"
+       alt="Nuit de capture acoustique : un enregistreur autonome sur son piquet, des chauves-souris en vol émettant leurs ultrasons sous la pleine lune en lisière de forêt."
+       style="width: 100%; height: auto; display: block; border-radius: 4px;">
+</div>
+
 **VigieChiro** est une application de bureau qui accompagne l'observateur dans le traitement
 d'une **nuit de capture acoustique de chauves-souris**, depuis la **carte SD** de l'enregistreur
 de terrain jusqu'au **dépôt** des données sur la plateforme nationale Vigie-Chiro.
