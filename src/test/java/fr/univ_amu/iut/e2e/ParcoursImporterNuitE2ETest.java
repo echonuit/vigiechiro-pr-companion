@@ -193,6 +193,38 @@ class ParcoursImporterNuitE2ETest {
     }
 
     @Test
+    @DisplayName("P2 : importer un .zip « compresser ce dossier » (dossier racine unique) → passage Transformé (#139)")
+    void parcours_depuis_un_zip_avec_dossier_racine() throws Exception {
+        // Cas courant : l'utilisateur a fait « clic droit → Compresser » sur le dossier de la nuit, donc
+        // tout le contenu est sous un dossier racine « MaNuit/ » dans l'archive.
+        Path zip = Files.createTempDirectory("vc-e2e-zip-wrap").resolve("MaNuit.zip");
+        compresserSousDossier(dossierSource, "MaNuit", zip);
+
+        ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
+
+        // racineEffective déplie le dossier racine unique : l'inspection retrouve journal et WAV.
+        Path extrait = vm.extraireSiZip(zip);
+        assertThat(extrait.resolve("LogPR" + SERIE + ".txt")).exists();
+
+        vm.inspection().dossierSourceProperty().set(extrait);
+        vm.inspecter();
+        assertThat(vm.inspection().nombreOriginauxProperty().get()).isEqualTo(1);
+
+        vm.chargerSites();
+        vm.rattachement().siteSelectionneProperty().set(site);
+        vm.rattachement().pointSelectionneProperty().set(point);
+        vm.rattachement().anneeProperty().set(ANNEE);
+        vm.rattachement().numeroPassageProperty().set(1);
+        vm.importer();
+
+        assertThat(vm.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
+        var passage = new PassageDao(source)
+                .findById(vm.resultatProperty().get().passage().id())
+                .orElseThrow();
+        assertThat(passage.statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+    }
+
+    @Test
     @DisplayName("P2 : réimporter le même quadruplet est bloqué en amont (pré-contrôle R5, #108)")
     void reimport_du_meme_quadruplet_est_refuse_R5() {
         // 1) Premier import : réussi (le quadruplet n'existe pas encore).
@@ -261,6 +293,20 @@ class ParcoursImporterNuitE2ETest {
                 var fichiers = Files.walk(racine)) {
             for (Path fichier : (Iterable<Path>) fichiers.filter(Files::isRegularFile)::iterator) {
                 sortie.putNextEntry(new ZipEntry(racine.relativize(fichier).toString()));
+                Files.copy(fichier, sortie);
+                sortie.closeEntry();
+            }
+        }
+    }
+
+    /// Comme [#compresser], mais imbrique tout le contenu sous un **dossier racine** `prefixeDossier/`,
+    /// reproduisant une archive « clic droit → Compresser le dossier ».
+    private static void compresserSousDossier(Path racineDir, String prefixeDossier, Path zip) throws Exception {
+        Files.createDirectories(zip.getParent());
+        try (ZipOutputStream sortie = new ZipOutputStream(Files.newOutputStream(zip));
+                var fichiers = Files.walk(racineDir)) {
+            for (Path fichier : (Iterable<Path>) fichiers.filter(Files::isRegularFile)::iterator) {
+                sortie.putNextEntry(new ZipEntry(prefixeDossier + "/" + racineDir.relativize(fichier)));
                 Files.copy(fichier, sortie);
                 sortie.closeEntry();
             }

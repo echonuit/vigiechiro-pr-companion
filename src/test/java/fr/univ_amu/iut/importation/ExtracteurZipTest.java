@@ -102,6 +102,62 @@ class ExtracteurZipTest {
     }
 
     @Test
+    @DisplayName("racineEffective : un unique dossier racine est déplié (zip « compresser ce dossier »)")
+    void racine_effective_deplie_un_dossier_racine_unique() throws IOException {
+        // Archive typique d'un clic droit « Compresser » sur un dossier : tout est sous « MaNuit/ ».
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            ecrire(zos, "MaNuit/LogPR1925492.txt", "journal");
+            ecrire(zos, "MaNuit/bruts/PaRecPR1925492_20260422_203922.wav", "wav");
+        }
+        Path extrait = ExtracteurZip.extraireVersDossierTemporaire(zip, base);
+
+        try {
+            Path source = ExtracteurZip.racineEffective(extrait);
+            // On pointe le dossier interne, où journal et WAV sont à leur place attendue par l'inspection.
+            assertThat(source.getFileName()).hasToString("MaNuit");
+            assertThat(source.resolve("LogPR1925492.txt")).exists();
+            assertThat(source.resolve("bruts/PaRecPR1925492_20260422_203922.wav"))
+                    .exists();
+        } finally {
+            ExtracteurZip.supprimerRecursivement(extrait);
+        }
+    }
+
+    @Test
+    @DisplayName("racineEffective : une archive déjà « à plat » est renvoyée inchangée")
+    void racine_effective_archive_a_plat_inchangee() throws IOException {
+        Path zip = racine.resolve("plat.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            ecrire(zos, "LogPR1925492.txt", "journal");
+            ecrire(zos, "PaRecPR1925492_20260422_203922.wav", "wav");
+        }
+        Path extrait = ExtracteurZip.extraireVersDossierTemporaire(zip, base);
+
+        try {
+            assertThat(ExtracteurZip.racineEffective(extrait)).isEqualTo(extrait);
+        } finally {
+            ExtracteurZip.supprimerRecursivement(extrait);
+        }
+    }
+
+    @Test
+    @DisplayName("nettoyerTemporairesResiduels supprime les import-zip-* abandonnés, épargne les sessions")
+    void nettoyage_des_temporaires_residuels() throws IOException {
+        // Un temporaire d'extraction laissé par un écran d'import abandonné, et une vraie session d'import.
+        Files.createDirectories(base.resolve("import-zip-ancien/bruts"));
+        Files.writeString(base.resolve("import-zip-ancien/bruts/x.wav"), "wav");
+        Path session = Files.createDirectories(base.resolve("Car640380-2026-Pass1-A1"));
+
+        ExtracteurZip.nettoyerTemporairesResiduels(base);
+
+        assertThat(base.resolve("import-zip-ancien")).doesNotExist();
+        assertThat(session).as("les sessions d'import ne sont pas balayées").exists();
+        // Tolérant : une base inexistante ne lève pas.
+        ExtracteurZip.nettoyerTemporairesResiduels(base.resolve("absent"));
+    }
+
+    @Test
     @DisplayName("supprimerRecursivement nettoie le dossier (et tolère un dossier absent)")
     void nettoyage_recursif() throws IOException {
         Path dossier = Files.createDirectories(racine.resolve("a/b/c"));

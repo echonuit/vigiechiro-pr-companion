@@ -8,6 +8,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
@@ -143,6 +144,48 @@ public final class ExtracteurZip {
             Files.deleteIfExists(chemin);
         } catch (IOException ignore) {
             // Best-effort.
+        }
+    }
+
+    /// Renvoie le **dossier à inspecter** dans `extrait`. Une archive créée par « compresser ce dossier »
+    /// contient un **unique dossier racine** (`MaNuit/LogPR…`, `MaNuit/bruts/…`) : l'inspection, qui
+    /// cherche le journal et les WAV à la racine du dossier source (et dans `bruts/`), ne verrait alors
+    /// rien. On déplie donc en cascade tout dossier racine unique pour pointer sur le vrai contenu de la
+    /// nuit ; une archive déjà « à plat » est renvoyée inchangée. **Ne supprime rien** : le temporaire à
+    /// nettoyer reste la racine renvoyée par [#extraireVersDossierTemporaire].
+    public static Path racineEffective(Path extrait) {
+        Path courant = extrait;
+        try {
+            while (true) {
+                List<Path> enfants;
+                try (Stream<Path> contenu = Files.list(courant)) {
+                    enfants = contenu.toList();
+                }
+                if (enfants.size() == 1 && Files.isDirectory(enfants.get(0))) {
+                    courant = enfants.get(0);
+                } else {
+                    return courant;
+                }
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Lecture du dossier extrait impossible : " + extrait, e);
+        }
+    }
+
+    /// Supprime les dossiers d'extraction `import-zip-*` **résiduels** sous `dossierBase` : filet
+    /// anti-fuite pour les temporaires laissés par un écran d'import abandonné (le ViewModel d'import,
+    /// non-singleton, ne garde pas la référence à nettoyer). Appelé avant une nouvelle extraction.
+    /// Best-effort.
+    public static void nettoyerTemporairesResiduels(Path dossierBase) {
+        if (dossierBase == null || !Files.isDirectory(dossierBase)) {
+            return;
+        }
+        try (Stream<Path> entrees = Files.list(dossierBase)) {
+            entrees.filter(Files::isDirectory)
+                    .filter(p -> p.getFileName().toString().startsWith("import-zip-"))
+                    .forEach(ExtracteurZip::supprimerRecursivement);
+        } catch (IOException ignore) {
+            // Best-effort : un balayage incomplet n'est pas une erreur métier.
         }
     }
 }

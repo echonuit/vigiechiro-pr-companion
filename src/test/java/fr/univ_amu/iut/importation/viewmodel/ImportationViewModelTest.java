@@ -504,6 +504,21 @@ class ImportationViewModelTest {
         assertThat(viewModel.messageProgressionProperty().get()).contains("2 / 4");
     }
 
+    @Test
+    @DisplayName(
+            "#139 : l'extraction verrouille la navigation, l'erreur la déverrouille (pas de sortie pendant la décompression)")
+    void extraction_verrouille_puis_deverrouille_la_navigation() {
+        assertThat(navigation.isNavigationVerrouillee()).isFalse();
+
+        // Pendant la décompression, on ne doit pas pouvoir quitter l'écran (le fil d'arrière-plan continue).
+        viewModel.marquerExtractionEnCours();
+        assertThat(navigation.isNavigationVerrouillee()).isTrue();
+
+        // Une archive illisible (échec) lève le verrou : on peut de nouveau naviguer.
+        viewModel.signalerSourceIllisible("Décompression du zip impossible");
+        assertThat(navigation.isNavigationVerrouillee()).isFalse();
+    }
+
     private void prepareRattachement(Site site, PointDEcoute point) {
         viewModel.inspection().dossierSourceProperty().set(sd);
         viewModel.inspecter();

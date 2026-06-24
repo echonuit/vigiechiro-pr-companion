@@ -270,6 +270,10 @@ public class ImportationViewModel {
         progression.set(0.0);
         messageProgression.set("Préparation de la décompression…");
         etat.set(EtatImport.EXTRACTION);
+        // Verrou de navigation (#54) : on ne doit pas quitter l'assistant pendant la décompression, sinon
+        // le fil d'arrière-plan continuerait d'écrire un gros temporaire et posterait des mutations
+        // Platform.runLater sur une vue détachée. Déverrouillé par reinitialiserExecution (fin ou erreur).
+        navigation.setNavigationVerrouillee(true);
     }
 
     /// Applique un point de progression de l'import en cours (#33) : met à jour la fraction et le
@@ -301,11 +305,16 @@ public class ImportationViewModel {
     public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression) {
         nettoyerTemporaireZip(); // une nouvelle source remplace l'éventuel zip précédent
         if (ExtracteurZip.estZip(chemin)) {
+            Path base = serviceImport.racineWorkspace();
+            // Filet anti-fuite : balaye les temporaires d'extraction abandonnés par un précédent écran
+            // d'import (le VM est non-singleton, il ne garde pas leur référence) avant d'en créer un neuf.
+            ExtracteurZip.nettoyerTemporairesResiduels(base);
             // Extraction sous le workspace (disque), pas dans le tmpfs RAM /tmp : une nuit de ~10 Go y
             // saturerait la RAM (ENOSPC). Cf. ExtracteurZip.
-            dossierTemporaireZip = ExtracteurZip.extraireVersDossierTemporaire(
-                    chemin, serviceImport.racineWorkspace(), surProgression);
-            return dossierTemporaireZip;
+            dossierTemporaireZip = ExtracteurZip.extraireVersDossierTemporaire(chemin, base, surProgression);
+            // Déplie un éventuel dossier racine unique (zip « compresser ce dossier ») pour que
+            // l'inspection retrouve journal et WAV ; le temporaire à nettoyer reste dossierTemporaireZip.
+            return ExtracteurZip.racineEffective(dossierTemporaireZip);
         }
         return chemin;
     }
@@ -428,6 +437,10 @@ public class ImportationViewModel {
         progression.set(0.0);
         messageProgression.set("");
         messageExecution.set("");
+        // Fin de toute opération longue : on lève le verrou de navigation posé par marquerExtractionEnCours
+        // (#54). Appelé sur le chemin de succès (nouvelle source extraite posée) comme d'erreur
+        // (signalerSourceIllisible). N'est jamais invoqué pendant un import EN_COURS (formulaire gelé).
+        navigation.setNavigationVerrouillee(false);
     }
 
     /// Ré-arme la préparation (`PRET`) dès qu'un champ du rattachement change après un import
