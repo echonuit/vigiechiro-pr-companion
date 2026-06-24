@@ -1,0 +1,33 @@
+name: 💡 Proposer une amélioration
+description: Suggérer une nouvelle fonctionnalité ou une évolution
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Merci pour votre suggestion ! Décrivez le besoin avant la solution : ça aide à trouver la meilleure approche.
+
+  - type: textarea
+    id: probleme
+    attributes:
+      label: Quel problème cette amélioration résout-elle ?
+      description: Le besoin métier ou la gêne rencontrée (le « pourquoi »)
+      placeholder: "Lors du dépôt d'un lot, je dois ressaisir manuellement..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Solution envisagée
+      description: "Ce que vous imaginez (écran, comportement). Restez ouvert, ce n'est qu'une piste."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives ou contournements actuels
+    validations:
+      required: false

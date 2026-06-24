@@ -1,10 +1,10 @@
 # Politique de sécurité
 
-VigieChiro PR Companion est un dépôt **pédagogique** (SAÉ 2.01, BUT Informatique). Cette politique
-est proportionnée à ce contexte : elle couvre le **signalement**, la **gestion des secrets**, la
-**sensibilité des données** manipulées, et l'**hygiène de la chaîne logicielle**.
+VigieChiro PR Companion est une application **locale** de traitement de données naturalistes. Cette
+politique couvre le **signalement**, la **gestion des secrets**, la **sensibilité des données**
+manipulées, et l'**hygiène de la chaîne logicielle**.
 
-Voir aussi [CONTRIBUTING.md](CONTRIBUTING.md) (fonctionnement du dépôt) et [TESTING.md](TESTING.md)
+Voir aussi [CONTRIBUTING.md](CONTRIBUTING.md) (contribution) et [TESTING.md](TESTING.md)
 (suite de tests).
 
 ---
@@ -17,8 +17,7 @@ pas en issue publique** :
 - écrivez en privé à **[sebastien.nedjar@univ-amu.fr](mailto:sebastien.nedjar@univ-amu.fr)** ;
 - décrivez le problème, son impact et, si possible, les étapes pour le reproduire.
 
-Le périmètre supporté est la branche **`solution`** (référence) et la version qui en dérive
-(`main`). Les forks étudiants ne sont pas maintenus individuellement.
+Le périmètre supporté est la branche **`main`** (dernière version).
 
 ---
 
@@ -28,9 +27,7 @@ Le périmètre supporté est la branche **`solution`** (référence) et la versi
   N'en committez jamais (y compris dans un fichier de test, une capture d'écran ou une base SQLite).
 - Les workflows GitHub Actions s'exécutent au **moindre privilège** : `maven.yml` déclare
   `permissions: contents: read`. N'élargissez les permissions que lorsqu'un workflow en a réellement
-  besoin (par exemple `contents: write` pour `generate-student.yml`, qui doit pousser `main`).
-- Les jetons de synchronisation Classroom (`CLASSROOM_SYNC_DISPATCH_TOKEN`) sont des **secrets
-  GitHub** (Fine-Grained PAT), jamais en clair dans les workflows.
+  besoin (par exemple `contents: write` pour `capture-vues.yml`, qui doit pousser les aperçus).
 
 ---
 
@@ -70,9 +67,6 @@ de points d'écoute d'**espèces protégées** ne doit pas être diffusée publi
   Platform*), mises à jour décidées à la main.
 - **Accès natifs cadrés** : sous Java 25 (accès natif strict), seuls les modules qui en ont besoin
   sont autorisés (`--enable-native-access=javafx.graphics`, `--enable-native-access=org.xerial.sqlitejdbc`).
-- **CI sur runner self-hosted** : les forks étudiants (`IUTInfoAix-S201-2026`) tournent sur un runner
-  **self-hosted** Linux. N'y exposez jamais de secret sensible ; traitez le code des PR de forks
-  comme **non fiable** (il s'exécute sur l'infrastructure).
 
 ---
 
