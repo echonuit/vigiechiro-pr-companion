@@ -60,6 +60,7 @@ nav:
       - Diagnostic: ecrans/diagnostic.md
       - Bibliothèque: ecrans/bibliotheque.md
   - Raccourcis clavier: raccourcis-clavier.md
+  - Glossaire: glossaire.md
 
 markdown_extensions:
   - admonition
