@@ -222,10 +222,18 @@
                         </goals>
                         <configuration>
                             <transformers>
+                                <!-- Main-Class = Launcher (et non App, qui étend Application) : le
+                                     fat-jar est ainsi lançable directement (java -jar) sans l'erreur
+                                     « JavaFX runtime components are missing ». -->
                                 <transformer
                                     implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>fr.univ_amu.iut.App</mainClass>
+                                    <mainClass>fr.univ_amu.iut.Launcher</mainClass>
                                 </transformer>
+                                <!-- Fusionne les META-INF/services de toutes les dépendances (sinon
+                                     les fournisseurs Ikonli FontAwesome sont perdus -> icônes fas-*
+                                     manquantes et FXML cassés au chargement). -->
+                                <transformer
+                                    implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
                             </transformers>
                         </configuration>
                     </execution>
@@ -432,12 +440,14 @@
 
     <profiles>
         <!-- Profil installer : construit un installeur natif (jpackage) à partir du fat-jar shade.
-             jlink modulaire est IMPOSSIBLE ici (Guice et sqlite-jdbc sont des modules automatiques,
-             refusés par jlink). On empaquette donc le fat-jar (qui embarque déjà JavaFX + ses natifs
-             + toutes les dépendances) en mode classpath, avec une classe Launcher (non-Application)
-             et un runtime composé UNIQUEMENT de modules JDK nommés (via l'option add-modules) : les
-             modules automatiques restent sur le classpath, hors résolution jlink.
-             Usage : ./mvnw -Pinstaller -Djpackage.type=deb package
+             jlink modulaire est IMPOSSIBLE ici : Guice 7 et sa grappe transitive (Guava, aopalliance,
+             jsr305...) sont des modules AUTOMATIQUES, refusés par jlink (sqlite-jdbc, lui, est un vrai
+             module). On empaquette donc le fat-jar (qui embarque déjà JavaFX + ses natifs + toutes les
+             dépendances) en mode classpath, avec une classe Launcher (non-Application) et un runtime
+             composé UNIQUEMENT de modules JDK nommés (via l'option add-modules) : les modules
+             automatiques restent sur le classpath, hors résolution jlink.
+             Bindé sur la phase verify (APRÈS shade : sur package, jpackage empaquetterait le jar mince).
+             Usage : ./mvnw -Pinstaller -Djpackage.type=deb -DskipTests verify
              Type par OS : deb/rpm (Linux), dmg/pkg (macOS), msi/exe (Windows). Sortie : target/dist/. -->
         <profile>
             <id>installer</id>
@@ -452,10 +462,11 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
                                 <id>jpackage-input</id>
-                                <phase>package</phase>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>copy-resources</goal>
                                 </goals>
@@ -480,7 +491,7 @@
                         <executions>
                             <execution>
                                 <id>jpackage</id>
-                                <phase>package</phase>
+                                <phase>verify</phase>
                                 <goals>
                                     <goal>exec</goal>
                                 </goals>
@@ -501,6 +512,13 @@
                                         <argument>${project.build.finalName}.jar</argument>
                                         <argument>--main-class</argument>
                                         <argument>fr.univ_amu.iut.Launcher</argument>
+                                        <!-- Accès natif (JavaFX + JNI SQLite) et Unsafe (Guice/Guava)
+                                             autorisés, comme pour javafx:run : sinon avertissements,
+                                             puis blocage dans un futur JDK. -->
+                                        <argument>--java-options</argument>
+                                        <argument>--enable-native-access=ALL-UNNAMED</argument>
+                                        <argument>--java-options</argument>
+                                        <argument>--sun-misc-unsafe-memory-access=allow</argument>
                                         <!-- Runtime : modules JDK nommés uniquement (JavaFX vient du
                                              fat-jar, sur le classpath). -->
                                         <argument>--add-modules</argument>
