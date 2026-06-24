@@ -128,8 +128,9 @@ public class ServiceImport {
     /// @param prefixe préfixe R6 (carré + année + n° de passage + code de point), construit par
     /// l'appelant qui connaît le site et le point
     /// @return un compte rendu de l'import (agrégat persisté + anomalies du journal)
-    /// @throws RegleMetierException si un passage existe déjà pour ce quadruplet (R5), si le journal
-    /// LogPR est absent (enregistreur non identifiable), ou si aucun original n'est présent
+    /// @throws RegleMetierException si un passage existe déjà pour ce quadruplet (R5) ou si aucun
+    /// enregistrement original n'est présent. **Un journal LogPR absent ne bloque plus** (#107) : l'import
+    /// se poursuit en mode dégradé (identité déduite des noms de fichiers, trace de journal synthétique).
     public ResultatImport importer(Path dossierSource, Long idPoint, Prefixe prefixe) {
         return importer(dossierSource, idPoint, prefixe, progression -> {});
     }
@@ -199,14 +200,17 @@ public class ServiceImport {
         }
 
         RapportInspection rapport = inspecteur.inspecter(dossierSource);
-        JournalParse journal = rapport.journalOptionnel()
-                .orElseThrow(() -> new RegleMetierException("Journal LogPR introuvable dans "
-                        + dossierSource
-                        + " : l'enregistreur ne peut pas être identifié."));
         if (rapport.originaux().isEmpty()) {
             throw new RegleMetierException(
                     "Aucun enregistrement original (.wav) à importer dans " + dossierSource + ".");
         }
+        // Mode dégradé (#107) : un journal LogPR absent ne bloque plus l'import. À défaut, on reconstitue
+        // une identité de repli depuis les noms des WAV (`PaRecPR<série>_<date>_…`) et on dépose une
+        // **trace synthétique** de journal portant une anomalie explicite, pour ne pas coincer l'aval
+        // (la préparation du lot exige une trace de journal). L'avertissement « aucun journal » est par
+        // ailleurs porté par l'inspection (non bloquant).
+        boolean sansJournal = rapport.journalOptionnel().isEmpty();
+        JournalParse journal = rapport.journalOptionnel().orElseGet(() -> JournalDeRepli.depuis(rapport.originaux()));
 
         String nomSession = prefixe.nomDossierSession();
         Path dossierSession = workspace.dossierSession(nomSession);
@@ -226,7 +230,9 @@ public class ServiceImport {
             faites++;
             progres.accept(new Progression("Copie " + indiceCopie + "/" + nbOriginaux, (double) faites / totalEtapes));
         }
-        Path cheminJournalCopie = copie.copierVers(rapport.cheminJournal(), dossierSession);
+        Path cheminJournalCopie = sansJournal
+                ? JournalDeRepli.ecrireTraceSynthetique(dossierSession)
+                : copie.copierVers(rapport.cheminJournal(), dossierSession);
         Path cheminReleveCopie = rapport.aUnReleveClimatique()
                 ? copie.copierVers(rapport.cheminReleveClimatique(), dossierSession)
                 : null;
@@ -247,6 +253,8 @@ public class ServiceImport {
                 .sum();
         SessionDEnregistrement session =
                 new SessionDEnregistrement(null, dossierSession.toString(), volumeOriginaux, volumeSequences, null);
+        // Entité journal **uniforme** : en mode dégradé, le journal de repli porte déjà des évènements
+        // vides et l'anomalie « import dégradé », donc on construit la trace de la même façon (#107).
         JournalDuCapteur journalEntite = new JournalDuCapteur(
                 null, cheminJournalCopie.toString(), journal.evenementsJson(), journal.anomaliesJson(), null);
         ReleveClimatique releveEntite =

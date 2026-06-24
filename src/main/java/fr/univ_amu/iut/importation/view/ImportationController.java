@@ -175,7 +175,8 @@ public class ImportationController implements GardeQuitter {
                         () -> inspection.aUnJournalProperty().get()
                                 ? "✓ Journal du capteur : "
                                         + inspection.resumeJournalProperty().get()
-                                : "⚠ Aucun journal LogPR détecté",
+                                : "⚠ Aucun journal LogPR — import en mode dégradé (enregistreur déduit des"
+                                        + " fichiers, paramètres limités)",
                         inspection.aUnJournalProperty(),
                         inspection.resumeJournalProperty()));
         labelReleve

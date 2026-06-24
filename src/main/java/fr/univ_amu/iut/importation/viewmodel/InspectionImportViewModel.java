@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.importation.model.AnalyseMelange;
 import fr.univ_amu.iut.importation.model.EtatNommage;
+import fr.univ_amu.iut.importation.model.JournalParse;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -121,18 +123,28 @@ public class InspectionImportViewModel {
     }
 
     /// Détecte (lecture base via le service) si la nuit inspectée a déjà été importée (#147) : même
-    /// enregistreur + même date de journal. Sans journal ou sans date, rien à signaler. Délègue la mise
-    /// en phrase à [AvertissementNuitExistante].
+    /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon — mode dégradé
+    /// (#107) — elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
+    /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. Mise en phrase
+    /// déléguée à [AvertissementNuitExistante].
     private String detecterNuitExistante(RapportInspection rapport) {
-        return rapport.journalOptionnel()
-                .filter(journal -> journal.dateDebut() != null)
-                .map(journal -> {
-                    String date = journal.dateDebut().toString();
-                    List<PassageExistant> existants = serviceImport.nuitDejaImportee(journal.numeroSerie(), date);
-                    return AvertissementNuitExistante.rediger(
-                            journal.numeroSerie(), date, existants == null ? List.of() : existants);
-                })
-                .orElse("");
+        String serie;
+        String date;
+        JournalParse journal =
+                rapport.journalOptionnel().filter(j -> j.dateDebut() != null).orElse(null);
+        if (journal != null) {
+            serie = journal.numeroSerie();
+            date = journal.dateDebut().toString();
+        } else {
+            AnalyseMelange analyse = AnalyseMelange.depuis(rapport.originaux());
+            if (analyse.series().isEmpty() || analyse.nuits().isEmpty()) {
+                return "";
+            }
+            serie = analyse.series().first();
+            date = analyse.nuits().first().toString();
+        }
+        List<PassageExistant> existants = serviceImport.nuitDejaImportee(serie, date);
+        return AvertissementNuitExistante.rediger(serie, date, existants == null ? List.of() : existants);
     }
 
     /// Dossier source courant (pour assembler la demande d'import).

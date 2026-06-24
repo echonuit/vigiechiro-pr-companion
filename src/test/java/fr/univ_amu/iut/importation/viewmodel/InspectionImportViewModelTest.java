@@ -105,6 +105,24 @@ class InspectionImportViewModelTest {
     }
 
     @Test
+    @DisplayName("#147/#107 : sans journal, la détection de doublon utilise l'identité déduite des WAV")
+    void inspecter_nuit_deja_importee_sans_journal() throws IOException {
+        Files.delete(sd.resolve("LogPR1925492.txt")); // mode dégradé : pas de journal
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        when(serviceImport.nuitDejaImportee("1925492", "2026-04-22"))
+                .thenReturn(List.of(new PassageExistant(2, 2026, "640380", "Z1")));
+        vm.dossierSourceProperty().set(sd);
+
+        vm.inspecter();
+
+        assertThat(vm.aUnJournalProperty().get()).isFalse();
+        assertThat(vm.avertissementNuitExistanteProperty().get())
+                .as("le doublon est détecté même sans journal (identité reconstituée des noms de WAV)")
+                .contains("déjà été importée")
+                .contains("n° 2");
+    }
+
+    @Test
     @DisplayName("#147 : une nuit absente de la base ne lève aucun avertissement « nuit déjà importée »")
     void inspecter_nuit_inedite() {
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));

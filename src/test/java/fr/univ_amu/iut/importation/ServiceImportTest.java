@@ -342,11 +342,47 @@ class ServiceImportTest {
     }
 
     @Test
-    @DisplayName("Un dossier sans journal LogPR est refusé (enregistreur non identifiable)")
-    void sans_journal_refuse() throws IOException {
-        Files.delete(sd.resolve("LogPR1925492.txt"));
+    @DisplayName("#107 : un dossier sans journal LogPR s'importe en mode dégradé (série déduite des WAV)")
+    void sans_journal_import_degrade() throws IOException {
+        Files.delete(sd.resolve("LogPR" + SERIE + ".txt"));
 
-        assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe)).isInstanceOf(RegleMetierException.class);
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+        // L'import aboutit malgré l'absence de journal : l'enregistreur est déduit du nom des WAV
+        // (PaRecPR<série>_…), le passage est créé au statut Transformé.
+        assertThat(resultat.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+        assertThat(resultat.passage().idEnregistreur()).isEqualTo(SERIE);
+        assertThat(resultat.numeroSerieEnregistreur()).isEqualTo(SERIE);
+        assertThat(resultat.passage().dateEnregistrement()).isEqualTo("2026-04-22"); // date issue du nom de WAV
+        // Une **trace synthétique** de journal est écrite (sinon la préparation du lot resterait bloquée) :
+        // elle porte le marqueur d'anomalie « dégradé », pour assumer et tracer le mode dégradé.
+        assertThat(journalDao.trouverParSession(resultat.session().id()))
+                .as("une trace de journal synthétique est déposée en mode dégradé")
+                .isPresent()
+                .get()
+                .satisfies(j -> {
+                    assertThat(j.cheminFichier()).endsWith("JOURNAL-ABSENT.txt");
+                    assertThat(j.anomaliesDetectees()).contains("dégradé");
+                });
+        // L'enregistreur déduit est bien committé (clé naturelle = série du nom de fichier).
+        assertThat(enregistreurDao.findById(SERIE)).isPresent();
+    }
+
+    @Test
+    @DisplayName("#107 : dossier mélangé SANS journal → import déterministe sous la PREMIÈRE série triée")
+    void sans_journal_dossier_melange_premiere_identite() throws IOException {
+        Path melange = racine.resolve("sd-melange-sans-journal");
+        Files.createDirectories(melange);
+        ecrireWav(melange.resolve("PaRecPR1925492_20260422_203922.wav"));
+        ecrireWav(melange.resolve("PaRecPR1648011_20260422_210000.wav")); // autre série, même nuit
+        // Aucun LogPR : mode dégradé ; deux séries → mélange (signalé non bloquant à l'inspection).
+
+        ResultatImport resultat = service.importer(melange, idPoint, prefixe);
+
+        // Choix **déterministe et documenté** (JournalDeRepli) : la PREMIÈRE série triée
+        // (« 1648011 » < « 1925492 ») fait foi en l'absence de journal autoritatif.
+        assertThat(resultat.passage().idEnregistreur()).isEqualTo("1648011");
+        assertThat(resultat.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
     }
 
     // --- Helpers (autonomes) ----------------------------------------------------
