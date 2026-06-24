@@ -83,20 +83,18 @@ public class TransformationAudio {
                 int longueur = Math.min(octetsParSequence, pcm.length - offset);
                 String nomSequence = prefixe.nommerSequence(nomOriginal, index);
                 Path cheminSequence = dossierSortie.resolve(nomSequence);
-                // Reprise (#231) : une séquence déjà écrite **et de taille exacte** (en-tête + données)
-                // par un import interrompu n'est pas réécrite (R11 : bytes identiques). Une taille
-                // différente = écriture tronquée par un crash → on réécrit.
-                long tailleAttendue = (long) FichierWav.TAILLE_ENTETE + longueur;
-                if (!Files.isRegularFile(cheminSequence) || Files.size(cheminSequence) != tailleAttendue) {
-                    FichierWav.ecrire(
-                            cheminSequence,
-                            source.nombreCanaux(),
-                            frequenceSortie,
-                            source.bitsParEchantillon(),
-                            pcm,
-                            offset,
-                            longueur);
-                }
+                // Reprise (#231) : on réécrit **toujours** la séquence (R11 : bytes déterministes). C'est le
+                // choix le plus sûr — une séquence périmée ou corrompue par un crash (même de taille
+                // identique) est ainsi régénérée, jamais persistée telle quelle. Le gain d'un import
+                // interrompu vient de la phase de copie (bruts vérifiés par empreinte), pas de la sortie.
+                FichierWav.ecrire(
+                        cheminSequence,
+                        source.nombreCanaux(),
+                        frequenceSortie,
+                        source.bitsParEchantillon(),
+                        pcm,
+                        offset,
+                        longueur);
 
                 long tramesSequence = (long) longueur / octetsParTrame;
                 double dureeSortie = tramesSequence / (double) frequenceSortie;

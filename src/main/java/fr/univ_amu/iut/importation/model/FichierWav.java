@@ -29,11 +29,7 @@ import java.util.Arrays;
 /// @param donneesPcm octets PCM bruts (le chunk `data`, sans en-tête)
 record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int bitsParEchantillon, byte[] donneesPcm) {
 
-    /// Taille de l'en-tête WAV canonique (RIFF/fmt/data) écrit par [#ecrire] : 44 octets. Visible dans
-    /// le paquet pour calculer la **taille attendue** d'une séquence et détecter une écriture déjà
-    /// complète (reprise #231) vs tronquée par un crash.
-    static final int TAILLE_ENTETE = 44;
-
+    private static final int TAILLE_ENTETE = 44;
     private static final short FORMAT_PCM = 1;
 
     /// Octets par trame (échantillon multi-canal) : `canaux * bits/8`.

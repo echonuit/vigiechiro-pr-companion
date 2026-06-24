@@ -335,13 +335,14 @@ public class ServiceImport {
                 journal.anomalies());
     }
 
-    /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)
-    /// laissée par un import **annulé** (#146), pour ne pas accumuler des fichiers à moitié copiés.
-    /// Best-effort (cf. [ExtracteurZip#supprimerRecursivement]).
     /// Copie protégée (R9) des originaux vers `dossierBruts`, en émettant la progression « Copie X/N ·
-    /// fichier ». **Reprise (#231)** : un original dont la version renommée est déjà présente a été copié
-    /// par un import interrompu → sa copie est sautée (ce qui évite aussi le conflit de renommage qu'une
-    /// re-copie déclencherait). Vérifie l'annulation entre deux fichiers.
+    /// fichier ». Vérifie l'annulation (#146) entre deux fichiers.
+    ///
+    /// **Reprise sécurisée (#231)** : un original n'est sauté que si une version renommée existe **et**
+    /// que son empreinte SHA-256 est **identique à celle de la source SD** — contenu vérifié, pas
+    /// seulement le nom ni la taille. Un fichier absent, périmé ou corrompu (même nom, session orpheline
+    /// incohérente) est re-copié : on ne persiste jamais un agrégat sur des fichiers douteux. Sauter une
+    /// copie **fidèle** évite au passage le conflit de renommage qu'une re-copie déclencherait.
     private void copierOriginaux(
             List<Path> originaux,
             Path dossierBruts,
@@ -353,19 +354,26 @@ public class ServiceImport {
         int indiceCopie = 0;
         for (Path original : originaux) {
             jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux fichiers
-            String nomFinal = Renommeur.nomApresRenommage(original.getFileName().toString(), prefixe);
-            boolean dejaCopie = Files.exists(dossierBruts.resolve(nomFinal));
-            if (!dejaCopie) {
-                copie.copierVers(original, dossierBruts);
+            // Copie **directement au nom final** (R6) : pas d'état intermédiaire au nom d'origine, donc
+            // aucun doublon ni conflit lors du renommage si une version renommée traînait déjà (reprise).
+            Path cible = dossierBruts.resolve(
+                    Renommeur.nomApresRenommage(original.getFileName().toString(), prefixe));
+            boolean dejaFidele =
+                    Files.isRegularFile(cible) && Empreintes.sha256Hex(cible).equals(Empreintes.sha256Hex(original));
+            if (!dejaFidele) {
+                copie.copier(original, cible); // écrase une cible corrompue (REPLACE_EXISTING + vérif R9)
             }
             indiceCopie++;
             progres.accept(new Progression(
                     "Copie " + indiceCopie + "/" + nbOriginaux + " · " + original.getFileName()
-                            + (dejaCopie ? " (déjà copié)" : ""),
+                            + (dejaFidele ? " (déjà présent)" : ""),
                     (double) indiceCopie / totalEtapes));
         }
     }
 
+    /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)
+    /// laissée par un import **annulé** (#146), pour ne pas accumuler des fichiers à moitié copiés.
+    /// Best-effort (cf. [ExtracteurZip#supprimerRecursivement]).
     private static void supprimerSessionPartielle(Path dossierSession) {
         ExtracteurZip.supprimerRecursivement(dossierSession);
     }

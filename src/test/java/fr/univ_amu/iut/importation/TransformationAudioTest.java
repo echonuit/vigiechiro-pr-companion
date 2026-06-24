@@ -53,30 +53,25 @@ class TransformationAudioTest {
     }
 
     @Test
-    @DisplayName("#231 : reprise — une séquence complète n'est pas réécrite, une tronquée l'est")
-    void reprise_ne_reecrit_pas_les_sequences_completes() throws IOException {
+    @DisplayName("#231 : reprise — une séquence corrompue (même taille) est régénérée à l'identique")
+    void reprise_regenere_les_sequences_corrompues() throws IOException {
         Path transformes = dossier.resolve("transformes");
-        List<SequenceProduite> premier =
-                transformation.transformer(originalWav, transformes, prefixe).sequences();
+        Path sequence = transformation
+                .transformer(originalWav, transformes, prefixe)
+                .sequences()
+                .get(0)
+                .chemin();
+        byte[] correct = Files.readAllBytes(sequence);
 
-        // Horodatage passé connu sur chaque séquence ; on tronque délibérément la 2e (taille ≠ attendue).
-        var instantPasse = java.nio.file.attribute.FileTime.fromMillis(1_000_000_000_000L);
-        for (SequenceProduite s : premier) {
-            Files.setLastModifiedTime(s.chemin(), instantPasse);
-        }
-        Path tronquee = premier.get(1).chemin();
-        long tailleComplete = Files.size(tronquee);
-        Files.write(tronquee, new byte[10]); // taille différente → doit être réécrite
-        Files.setLastModifiedTime(tronquee, instantPasse);
+        // Corruption silencieuse : on remplace le contenu par des octets bidons DE MÊME TAILLE — un saut
+        // fondé sur la seule taille ne la détecterait pas, mais la régénération systématique (R11) si.
+        Files.write(sequence, new byte[correct.length]);
+        assertThat(Files.readAllBytes(sequence)).isNotEqualTo(correct);
 
         transformation.transformer(originalWav, transformes, prefixe);
 
-        // Les séquences complètes n'ont pas bougé (mtime inchangé = non réécrites, R11 déterministe)…
-        assertThat(Files.getLastModifiedTime(premier.get(0).chemin())).isEqualTo(instantPasse);
-        assertThat(Files.getLastModifiedTime(premier.get(2).chemin())).isEqualTo(instantPasse);
-        // …tandis que la séquence tronquée a été refaite (mtime récent + taille pleine restaurée).
-        assertThat(Files.getLastModifiedTime(tronquee)).isNotEqualTo(instantPasse);
-        assertThat(Files.size(tronquee)).isEqualTo(tailleComplete);
+        // La séquence a été régénérée au bit près, jamais laissée corrompue.
+        assertThat(Files.readAllBytes(sequence)).isEqualTo(correct);
     }
 
     @Test
