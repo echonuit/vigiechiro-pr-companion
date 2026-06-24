@@ -2,9 +2,10 @@
  * importation.css - feuille de style de l'assistant M-Import (« Importer une nuit »).
  *
  * Assistant en page unique, 4 sections (dossier source / inspection / rattachement / action).
- * Reprend la palette sémantique des maquettes : primaire bleu #4a90d9, succès vert #1e8449,
- * warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Couleurs en dur pour que
- * la vue reste stylée même chargée isolément dans les tests TestFX (hors chrome principal).
+ * Palette sémantique : primaire via le token -couleur-primaire (indigo, palette.css), succès vert
+ * #1e8449, warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Les couleurs de
+ * statut restent en dur pour que la vue reste stylée même chargée isolément (tests TestFX,
+ * captures, modales) ; palette.css est jointe au FXML pour fournir les tokens dans ces contextes.
  */
 
 .ecran-import {
@@ -171,5 +172,5 @@
     -fx-border-width: 2;
     -fx-border-style: segments(8, 6);
     -fx-border-radius: 8;
-    -fx-background-color: rgba(74, 144, 217, 0.06);
+    -fx-background-color: rgba(63, 81, 181, 0.06);
 }

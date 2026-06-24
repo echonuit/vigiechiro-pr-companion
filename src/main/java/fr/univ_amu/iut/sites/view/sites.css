@@ -1,10 +1,10 @@
 /*
  * sites.css - feuille de style de la feature « sites » (M-Sites + M-Site-detail + modale point).
  *
- * Reprend la palette sémantique des maquettes : primaire bleu #4a90d9, succès vert #1e8449,
- * warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Les couleurs sont écrites
- * en dur (et non via les couleurs looked-up de base.css) pour que les vues restent stylées même
- * chargées isolément dans les tests TestFX, hors du chrome principal.
+ * Palette sémantique : primaire via le token -couleur-primaire (indigo, palette.css), succès vert
+ * #1e8449, warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Les couleurs de
+ * statut restent en dur ; palette.css est jointe au FXML pour fournir les tokens même quand une
+ * vue est chargée isolément (tests TestFX, captures, modales), hors du chrome principal.
  *
  * Les badges (fraîcheur, statut workflow, verdict, GPS) tirent leur couleur d'une classe CSS
  * appliquée par la vue : la couleur est DÉRIVÉE de la donnée, jamais stockée.

@@ -8,16 +8,19 @@
  *
  * Re-skin : il suffit de changer les valeurs ci-dessous (un seul endroit).
  *
- * Convention : primaire (identité / barre de navigation), accent (validation / actions
- * positives), nuit (hero de l'accueil « une nuit de capture »).
+ * Convention : primaire = indigo (identité / barre de navigation, aligné sur le brief SAE 2.01),
+ * accent = vert (validation / actions positives, couleur sémantique de succès conservée),
+ * nuit = indigo foncé (hero de l'accueil « une nuit de capture »).
  */
 .root {
-    -couleur-primaire: #4a90d9;
-    -couleur-primaire-sombre: #2563a3;
-    -couleur-primaire-fond: #cce4f7;
-    -couleur-primaire-voile: #f6f9fd;
+    /* Indigo Material, aligné sur le thème du brief (primary: indigo). */
+    -couleur-primaire: #3f51b5;
+    -couleur-primaire-sombre: #303f9f;
+    -couleur-primaire-fond: #c5cae9;
+    -couleur-primaire-voile: #eef0fa;
+    /* Vert succès : couleur sémantique (validation / actions positives), inchangée. */
     -couleur-accent: #1e8449;
-    -couleur-nuit: #1a2a45;
+    -couleur-nuit: #1a237e;
     -couleur-fond: #f5f6f8;
     -couleur-texte: #2c3e50;
     -couleur-texte-clair: #ffffff;

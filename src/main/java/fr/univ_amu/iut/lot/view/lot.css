@@ -40,7 +40,7 @@
 .chemin {
   -fx-font-family: monospace;
   -fx-font-size: 12px;
-  -fx-text-fill: #1a5276;
+  -fx-text-fill: -couleur-primaire-sombre;
 }
 
 .message-lot {
