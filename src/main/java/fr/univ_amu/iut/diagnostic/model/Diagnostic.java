@@ -22,6 +22,8 @@ import java.time.LocalDateTime;
 /// @param gpsLatitude latitude du point d'écoute, ou `null`
 /// @param gpsLongitude longitude du point d'écoute, ou `null`
 /// @param genereLe horodatage de calcul du diagnostic (issu de l'horloge injectée)
+/// @param temperatureDebutNuit température en début de nuit (°C), **optionnelle** (`null` si non
+/// renseignée, #106)
 public record Diagnostic(
         Long idPassage,
         Long idSession,
@@ -30,7 +32,8 @@ public record Diagnostic(
         SerieClimatique climat,
         Double gpsLatitude,
         Double gpsLongitude,
-        LocalDateTime genereLe) {
+        LocalDateTime genereLe,
+        Double temperatureDebutNuit) {
 
     /// `true` si aucun relevé climatique n'est rattaché à la session (R20, à signaler).
     public boolean releveClimatiqueAbsent() {

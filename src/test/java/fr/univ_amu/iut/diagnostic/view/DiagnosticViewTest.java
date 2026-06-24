@@ -56,7 +56,8 @@ class DiagnosticViewTest {
                                 new MesureClimatique(LocalDate.of(2026, 6, 23), LocalTime.of(2, 0), 14.0, 88))),
                         43.5,
                         5.4,
-                        LocalDateTime.of(2026, 6, 23, 8, 0)));
+                        LocalDateTime.of(2026, 6, 23, 8, 0),
+                        8.5));
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
                     @Provides

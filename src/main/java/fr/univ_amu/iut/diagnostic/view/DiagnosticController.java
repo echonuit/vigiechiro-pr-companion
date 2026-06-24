@@ -55,6 +55,9 @@ public class DiagnosticController implements EmplacementNavigation {
     private Label lblResumeClimat;
 
     @FXML
+    private Label lblTemperature;
+
+    @FXML
     private LineChart<String, Number> grapheClimat;
 
     @FXML
@@ -83,6 +86,9 @@ public class DiagnosticController implements EmplacementNavigation {
     private void initialize() {
         lblEnregistreur.textProperty().bind(viewModel.enregistreurProperty());
         lblResumeClimat.textProperty().bind(viewModel.resumeClimatProperty());
+        lblTemperature
+                .textProperty()
+                .bind(Bindings.concat("🌡 Température en début de nuit : ", viewModel.temperatureProperty()));
         lblReleveAbsent.visibleProperty().bind(viewModel.releveClimatiqueAbsentProperty());
         lblReleveAbsent.managedProperty().bind(viewModel.releveClimatiqueAbsentProperty());
 

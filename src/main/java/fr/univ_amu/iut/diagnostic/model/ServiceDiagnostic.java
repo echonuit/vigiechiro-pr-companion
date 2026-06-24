@@ -2,6 +2,7 @@ package fr.univ_amu.iut.diagnostic.model;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.passage.model.MeteoPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -101,7 +102,8 @@ public class ServiceDiagnostic {
                 climat,
                 latitude,
                 longitude,
-                horloge.maintenant());
+                horloge.maintenant(),
+                MeteoPassage.temperatureDebutNuit(passage.donneesMeteo()));
     }
 
     private static Path chemin(String valeur) {

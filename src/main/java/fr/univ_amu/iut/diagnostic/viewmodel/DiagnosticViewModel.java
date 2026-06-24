@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.diagnostic.viewmodel;
 
+import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.diagnostic.model.Diagnostic;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.model.ServiceDiagnostic;
@@ -30,6 +31,9 @@ public class DiagnosticViewModel {
     private final ObservableList<String> anomalies = FXCollections.observableArrayList();
     private final ObservableList<String> evenements = FXCollections.observableArrayList();
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
+
+    /// Température en début de nuit (#106) : libellé d'affichage (`8,5 °C` / `—`).
+    private final ReadOnlyStringWrapper temperature = new ReadOnlyStringWrapper(this, "temperature", "—");
 
     public DiagnosticViewModel(ServiceDiagnostic service) {
         this.service = Objects.requireNonNull(service, "service");
@@ -67,6 +71,7 @@ public class DiagnosticViewModel {
                 diagnostic.climat().present()
                         ? diagnostic.climat().nombreMesures() + " mesures T°/hygrométrie"
                         : "Relevé climatique absent (R20)");
+        temperature.set(Formats.temperatureLisible(diagnostic.temperatureDebutNuit()));
     }
 
     private void reinitialiser() {
@@ -77,6 +82,7 @@ public class DiagnosticViewModel {
         mesures.clear();
         anomalies.clear();
         evenements.clear();
+        temperature.set("—");
     }
     // --end-solution--
 
@@ -88,6 +94,11 @@ public class DiagnosticViewModel {
     /// Résumé de la série climatique (`N mesures T°/hygrométrie`, ou absence R20).
     public ReadOnlyStringProperty resumeClimatProperty() {
         return resumeClimat.getReadOnlyProperty();
+    }
+
+    /// Température en début de nuit, libellé d'affichage (`8,5 °C` / `—`, #106).
+    public ReadOnlyStringProperty temperatureProperty() {
+        return temperature.getReadOnlyProperty();
     }
 
     /// `true` si aucun relevé climatique n'est rattaché (R20, à signaler).

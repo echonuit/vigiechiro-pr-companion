@@ -46,7 +46,8 @@ class DiagnosticViewModelTest {
                 climat,
                 lat,
                 lon,
-                LocalDateTime.of(2026, 6, 23, 8, 0));
+                LocalDateTime.of(2026, 6, 23, 8, 0),
+                8.5);
     }
 
     private static SerieClimatique serie() {
@@ -69,6 +70,9 @@ class DiagnosticViewModelTest {
         assertThat(viewModel.releveClimatiqueAbsentProperty().get()).isFalse();
         assertThat(viewModel.gpsDisponibleProperty().get()).isTrue();
         assertThat(viewModel.resumeClimatProperty().get()).contains("2 mesures");
+        assertThat(viewModel.temperatureProperty().get())
+                .as("#106 : température de début de nuit affichée au diagnostic")
+                .isEqualTo("8,5 °C");
         assertThat(viewModel.messageProperty().get()).isEmpty();
     }
 
