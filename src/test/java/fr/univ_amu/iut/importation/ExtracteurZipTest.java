@@ -4,7 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
+import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.Progression;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -12,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.DisplayName;
@@ -85,6 +88,28 @@ class ExtracteurZipTest {
             assertThat(points.get(2).libelle()).contains("3 / 3");
         } finally {
             ExtracteurZip.supprimerRecursivement(extrait);
+        }
+    }
+
+    @Test
+    @DisplayName("Annulation : la décompression s'arrête et ne laisse aucun temporaire partiel (#146)")
+    void extraction_annulee_nettoie_le_temporaire() throws IOException {
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            ecrire(zos, "a.txt", "1");
+            ecrire(zos, "b.txt", "2");
+        }
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler(); // annulation immédiate : la 1re entrée déclenche l'arrêt
+
+        assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(zip, base, p -> {}, jeton))
+                .isInstanceOf(AnnulationImportException.class);
+
+        // Le temporaire partiel a été supprimé : aucun « import-zip-* » ne subsiste sous la base.
+        try (Stream<Path> entrees = Files.list(base)) {
+            assertThat(entrees.filter(Files::isDirectory)
+                            .filter(p -> p.getFileName().toString().startsWith("import-zip-")))
+                    .isEmpty();
         }
     }
 

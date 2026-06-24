@@ -41,29 +41,40 @@ public final class ExtracteurZip {
 
     /// Variante sans suivi de progression (extraction silencieuse), pour les appels qui n'affichent rien.
     public static Path extraireVersDossierTemporaire(Path archiveZip, Path dossierBase) {
-        return extraireVersDossierTemporaire(archiveZip, dossierBase, p -> {});
+        return extraireVersDossierTemporaire(archiveZip, dossierBase, p -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante avec progression mais **sans annulation** (jeton neutre).
+    public static Path extraireVersDossierTemporaire(
+            Path archiveZip, Path dossierBase, Consumer<Progression> surProgression) {
+        return extraireVersDossierTemporaire(archiveZip, dossierBase, surProgression, JetonAnnulation.neutre());
     }
 
     /// Extrait `archiveZip` vers un **dossier temporaire neuf créé sous `dossierBase`** (le workspace,
-    /// sur disque) et renvoie ce dossier (à inspecter puis importer comme une carte SD). En cas d'échec,
-    /// le dossier partiellement extrait est nettoyé.
+    /// sur disque) et renvoie ce dossier (à inspecter puis importer comme une carte SD). En cas d'échec
+    /// **ou d'annulation**, le dossier partiellement extrait est nettoyé.
     ///
     /// **Progression déterminée** (#146) : le nombre total de fichiers est lu d'abord dans l'index du zip
     /// (`ZipFile`, instantané : seul le répertoire central en fin d'archive est lu, pas les 10 Go), puis
     /// `surProgression` est notifié après chaque fichier extrait (« Décompression : X / N fichiers… »).
     /// Le callback peut être invoqué **hors du fil JavaFX** : l'appelant le marshale lui-même.
     ///
+    /// **Annulation** (#146) : `jeton` est vérifié avant chaque entrée ; une annulation lève
+    /// [AnnulationImportException] et le temporaire partiel est supprimé (cf. `catch RuntimeException`).
+    ///
     /// @param dossierBase volume d'accueil de l'extraction (workspace disque), créé s'il manque
     /// @param surProgression notifié à chaque fichier extrait (avancement déterminé)
+    /// @param jeton jeton d'annulation coopérative (utiliser [JetonAnnulation#neutre()] pour ne pas annuler)
     /// @throws RegleMetierException si une entrée tente de s'évader du dossier (zip-slip)
     public static Path extraireVersDossierTemporaire(
-            Path archiveZip, Path dossierBase, Consumer<Progression> surProgression) {
+            Path archiveZip, Path dossierBase, Consumer<Progression> surProgression, JetonAnnulation jeton) {
         Path racine = creerDossierExtraction(dossierBase);
         try (ZipInputStream zis = new ZipInputStream(new BufferedInputStream(Files.newInputStream(archiveZip)))) {
             int total = compterFichiers(archiveZip);
             int faits = 0;
             ZipEntry entree;
             while ((entree = zis.getNextEntry()) != null) {
+                jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux entrées
                 boolean estFichier = !entree.isDirectory();
                 extraireUneEntree(zis, racine, entree);
                 zis.closeEntry();
