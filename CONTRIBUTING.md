@@ -113,8 +113,8 @@ Deux workflows se déclenchent à chaque push :
 
 | Workflow | Rôle | Bloquant ? |
 |---|---|---|
-| [`maven.yml`](.github/workflows/maven.yml) | Build + tests headless (`verify -DexcludedGroups=conformite`), puis une passe de conformité **non bloquante** et `spotless:check` (mesure). | **Oui** (tests hors conformité) |
-| [`lint.yml`](.github/workflows/lint.yml) | Cohérence doc, complétude des captures, tests Bats, puis **`-Pquality-gate verify`** (PMD + seuils JaCoCo bloquants). | **Oui** |
+| [`maven.yml`](.github/workflows/maven.yml) | Build + tests headless (`./mvnw verify`). | **Oui** |
+| [`lint.yml`](.github/workflows/lint.yml) | **`spotless:check`** (formatage) + complétude des captures + **`-Pquality-gate verify`** (PMD + seuils JaCoCo bloquants). | **Oui** |
 
 Reproduire le portail qualité **en local** :
 

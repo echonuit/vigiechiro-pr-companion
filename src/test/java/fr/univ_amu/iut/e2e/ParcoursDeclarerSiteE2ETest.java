@@ -23,7 +23,6 @@ import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /// **Test E2E de parcours (P1 - Déclarer un site de suivi)**, version **sans IHM** : on rejoue le
@@ -46,7 +45,6 @@ import org.junit.jupiter.api.Test;
 /// Deux tests complémentaires couvrent les **règles métier visibles** du parcours : les refus de
 /// saisie (R1 n° de carré, R2 code de point, R5 unicité du carré) et les **rappels de protocole**
 /// (R3 : actifs sur `PointFixeStandard`, muets sur `PointFixeRecherche`).
-@Tag("conformite")
 class ParcoursDeclarerSiteE2ETest {
 
     private static final String ID_USER = "u-e2e-p1";

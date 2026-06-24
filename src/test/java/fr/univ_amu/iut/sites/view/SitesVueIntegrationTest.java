@@ -29,7 +29,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -51,7 +50,6 @@ import org.testfx.framework.junit5.Start;
 /// plutôt qu'avec le robot souris/clavier de l'OS, pour rester déterministe sous xvfb comme sous
 /// Wayland (même raison que `MesSitesViewTest`).
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class SitesVueIntegrationTest {
 
     private static final String ID_USER = "u-test";

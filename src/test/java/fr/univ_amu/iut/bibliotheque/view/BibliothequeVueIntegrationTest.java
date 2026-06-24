@@ -23,7 +23,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
@@ -41,7 +40,6 @@ import org.testfx.framework.junit5.Start;
 /// non câblées ou un export muet **échouent** (ces manques restent invisibles tant qu'on ne lit que
 /// le VM). Chargement du FXML via Guice avec un [ServiceBibliotheque] mocké, sans base de données.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class BibliothequeVueIntegrationTest {
 
     private ServiceBibliotheque service;

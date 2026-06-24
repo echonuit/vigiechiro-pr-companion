@@ -53,7 +53,7 @@
              casser ./mvnw test (Surefire le réinjecte via @{jacocoArgLine}). -->
         <jacocoArgLine></jacocoArgLine>
 
-        <!-- Seuil de couverture bloquant : false par défaut, true sous -Pquality-gate (CI solution). -->
+        <!-- Seuil de couverture bloquant : false par défaut, true sous -Pquality-gate. -->
         <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
     </properties>
 
@@ -109,7 +109,7 @@
             <artifactId>javafx-media</artifactId>
             <version>${javafx.version}</version>
         </dependency>
-        <!-- javafx-swing : SwingFXUtils pour la capture d'écran hors-écran (outil enseignant,
+        <!-- javafx-swing : SwingFXUtils pour la capture d'écran hors-écran (outil de capture,
              cf. commun.outils.ApercuFx). Version alignée sur le reste de JavaFX. -->
         <dependency>
             <groupId>org.openjfx</groupId>
@@ -276,8 +276,8 @@
                 </configuration>
             </plugin>
 
-            <!-- Spotless : formatage Palantir Java Format. Opt-in via
-                 ./mvnw spotless:apply, déclenché par .githooks/pre-commit. -->
+            <!-- Spotless : formatage Palantir Java Format. Pas de binding Maven : appliqué via
+                 ./mvnw spotless:apply (hook pre-commit) et vérifié en CI par spotless:check (lint.yml). -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -385,8 +385,8 @@
                             <goal>check</goal>
                         </goals>
                         <configuration>
-                            <!-- Bloquant uniquement sous -Pquality-gate (CI solution), comme PMD :
-                                 un ./mvnw verify nu (côté étudiant) reporte sans casser le build. -->
+                            <!-- Bloquant uniquement sous -Pquality-gate, comme PMD :
+                                 un ./mvnw verify nu reporte sans casser le build. -->
                             <haltOnFailure>${jacoco.haltOnFailure}</haltOnFailure>
                             <!-- Les outils (capture d'écran, bancs de mesure) sont validés par
                                  exécution, pas par des tests unitaires : exclus du calcul de
@@ -569,11 +569,11 @@
             </build>
         </profile>
 
-        <!-- Profil enseignant : PMD bloque sur violation. -->
+        <!-- Profil portail qualité : PMD bloque sur violation. -->
         <profile>
             <id>quality-gate</id>
             <properties>
-                <!-- Rend le seuil de couverture JaCoCo bloquant (CI solution uniquement). -->
+                <!-- Rend le seuil de couverture JaCoCo bloquant. -->
                 <jacoco.haltOnFailure>true</jacoco.haltOnFailure>
             </properties>
             <build>

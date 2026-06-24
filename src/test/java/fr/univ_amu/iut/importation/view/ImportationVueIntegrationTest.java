@@ -33,7 +33,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -61,7 +60,6 @@ import org.testfx.util.WaitForAsyncUtils;
 /// testable headless) : les interactions passent par les contrôles de rattachement, qui suffisent à
 /// exercer les liaisons bidirectionnelles et les écouteurs du ViewModel.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class ImportationVueIntegrationTest {
 
     private static final String ID_USER = "u-integ";

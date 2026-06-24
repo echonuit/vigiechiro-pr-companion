@@ -40,7 +40,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -65,7 +64,6 @@ import org.testfx.framework.junit5.Start;
 /// Le diagnostic de pré-check seedé porte ici un feu **rouge** (couverture) pour exercer le chemin
 /// « anomalie signalée », et `creerSelection` est stubbé pour que la régénération R12 aboutisse.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class QualificationVueIntegrationTest {
 
     private static final long ID_PASSAGE = 42L;

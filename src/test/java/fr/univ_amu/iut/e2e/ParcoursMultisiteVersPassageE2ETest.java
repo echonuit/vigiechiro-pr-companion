@@ -33,7 +33,6 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -44,7 +43,6 @@ import org.testfx.framework.junit5.Start;
 /// **M-Passage**, sur le vrai chrome. On ouvre l'écran multi-sites (navigation réelle), on vérifie
 /// que le passage importé y figure, puis un **double-clic** sur sa ligne ouvre M-Passage via le
 /// contrat socle `OuvrirPassage` (`multisite → passage`).
-@Tag("conformite")
 @ExtendWith(ApplicationExtension.class)
 class ParcoursMultisiteVersPassageE2ETest {
 

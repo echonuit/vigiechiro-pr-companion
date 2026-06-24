@@ -38,9 +38,6 @@ import org.testfx.framework.junit5.Start;
 ///  - le **← Retour** remonte d'un cran à l'écran précédent réel (détail → liste → accueil), sans
 ///    jamais forcer un détour par l'accueil,
 ///  - cliquer un **segment** du fil remonte directement à cet ancêtre (état préservé).
-///
-/// Non tagué `@Tag("conformite")` : la navigation est du **socle** (`commun`), pas une feature à
-/// construire par les équipes ; c'est un test de non-régression bloquant.
 @ExtendWith(ApplicationExtension.class)
 class ParcoursNavigationE2ETest {
 

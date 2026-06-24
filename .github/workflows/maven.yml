@@ -1,258 +1,39 @@
-# Build et tests Maven sur chaque push (le statut du run de push s'affiche aussi
-# sur la PR liée, donc pas besoin du trigger pull_request : on évite ainsi la
-# paire de jobs simultanés push+PR qui sature le pool self-hosted).
+# Build et tests Maven : sur chaque PR et sur les pushes vers la branche par défaut.
+# `solution` est conservée pendant la transition (avant la consolidation en `main`).
 name: Java CI with Maven
 
 on:
   push:
-  workflow_dispatch: {}   # permet de rejouer la CI a la demande (rafraichit le tableau de bord)
+    branches: [solution, main]
+  pull_request:
+  workflow_dispatch: {}
 
-# Annule un run encore en cours sur la MÊME ref (ex: deux pushes rapprochés) pour
-# réduire la charge concurrente sur le pool self-hosted. Groupe par workflow+ref :
-# ne touche jamais les autres workflows (un groupe partagé risquerait d'annuler
-# un run en attente d'un autre workflow).
-#
-# EXCEPTION `main` : on n'annule PAS (on sérialise : le run en cours va au bout, le
-# suivant attend). Le tableau de bord attribue les tests verts par commit de merge ;
-# un run de merge annulé n'a pas de compte -> les tests d'un·e étudiant·e seraient
-# crédités au merge suivant (mauvais auteur). Laisser chaque merge se mesurer évite
-# ce biais. (La sérialisation protège aussi le workspace partagé du runner.)
+# Annule un run encore en cours sur la même ref (pushes/PR rapprochés).
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
   build:
-    # Forks étudiants (org IUTInfoAix-S201-2026) : runner self-hosted Linux
-    # (sae_runner_linux). Le canonique (org IUTInfoAix-S201, sans runner) et
-    # tout autre contexte retombent sur ubuntu-latest pour ne pas rester en
-    # file d'attente.
-    runs-on: ${{ github.repository_owner == 'IUTInfoAix-S201-2026' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
-      - name: Garde-fou checkout (anti-flakiness runner self-hosted)
-        # Sur le pool self-hosted, actions/checkout réussit parfois mais laisse
-        # le workspace VIDE quelques centaines de ms plus tard, sous forte charge
-        # concurrente (observé sur les 2 machines self-hosted ; cause hôte encore
-        # à confirmer, piste disque/inodes). Symptôme aval : `./mvnw` introuvable
-        # -> exit 127. Ici on vérifie, on DIAGNOSTIQUE (df/ls/git) pour figer la
-        # cause au prochain incident, et on RÉPARE le working tree depuis .git
-        # plutôt que de planter. À retirer une fois la cause hôte corrigée.
-        shell: bash
-        run: |
-          # CAUSE RACINE : un `_work` réutilisé conserve un sparse-checkout / des bits
-          # skip-worktree résiduels -> ./mvnw (et d'autres fichiers suivis) ABSENT du disque,
-          # NON compté par `git ls-files -d` (skip != deleted) et NON restauré par `reset --hard`.
-          # On désactive donc le sparse-checkout et on re-matérialise tout l'arbre à chaque run.
-          materialiser() {
-            git sparse-checkout disable 2>/dev/null || true
-            git config core.sparseCheckout false 2>/dev/null || true
-            git checkout -f HEAD -- . 2>/dev/null || true
-          }
-          ok() { [ -z "$(git ls-files -d 2>/dev/null)" ] && [ -f mvnw ]; }
-          materialiser
-          if ok; then echo "Workspace OK."; exit 0; fi
-          sleep 3; materialiser
-          if ok; then echo "Workspace OK après matérialisation forcée."; exit 0; fi
-          echo "::warning title=Workspace incomplet::fichiers suivis manquants — diagnostic + réparation"
-          { echo "PWD=$PWD";
-            echo '--- df -i ---';  df -i  "$PWD";
-            echo '--- sparse-checkout ---'; git sparse-checkout list 2>&1 | head;
-            echo '--- manquants ---'; git ls-files -d | head;
-            echo '--- HEAD ---'; git rev-parse HEAD; } 2>&1 || true
-          echo "Réparation : reset --hard + matérialisation"
-          git reset --hard HEAD || true
-          materialiser
-          if ok; then echo "Workspace réparé."; exit 0; fi
-          echo "::error title=Workspace vide::réparation impossible (.git perdu ?) — voir diagnostic"
-          exit 1
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
-          # JDK Temurin standard (sans JavaFX) : JavaFX 26 vient des dépendances
-          # Maven org.openjfx. La Headless Platform (glass.platform=Headless)
-          # est 100 % logicielle, donc pas besoin du runtime natif jdk+fx.
-          # Pas de `cache: maven` : sur self-hosted le ~/.m2 persiste déjà entre
-          # jobs (cache Actions redondant), son save/restore concurrent racait sur
-          # le ~/.m2 partagé, et son hash **/pom.xml échouait bruyamment quand le
-          # workspace était vide. (.m2 laissé partagé : l'isoler par runner
-          # multiplierait la place disque, piste privilégiée de la flakiness.)
+          # JDK Temurin standard (sans JavaFX) : JavaFX 26 vient des dépendances Maven
+          # org.openjfx. La Headless Platform (glass.platform=Headless) est 100 % logicielle,
+          # donc pas besoin du runtime natif jdk+fx.
+          check-latest: false
+          cache: maven
 
-      - name: Run tests
-        id: build
-        # Tests UI en headless via la Headless Platform JavaFX 26
-        # (glass.platform=Headless, cf. pom.xml) : aucun display X11 requis,
-        # plus besoin de xvfb. Reste BLOQUANT : la CI passe au rouge si un test de
-        # l'equipe echoue (Definition of Done du sujet) ou si la garde d'integrite
-        # (IntegriteTestsLivresTest, volontairement NON taguee) detecte la
-        # suppression/neutralisation d'un test livre. Les DETECTEURS tagues
-        # @Tag("conformite") sont exclus de ce run -- de leur EXECUTION seulement :
-        # ils restent COMPILES ici (testCompile), donc un changement d'API qui casse
-        # leur compilation fera quand meme echouer ce run (limite assumee ; une vraie
-        # isolation demanderait un source set / module separe).
-        run: ./mvnw -B verify -DexcludedGroups=conformite --file pom.xml
-
-      - name: Tests de conformité (non bloquants — alimentent le tableau de bord)
-        # Detecteurs de trous IHM (lookup fx:id + E2E parcours), tagues
-        # @Tag("conformite"). Re-executes ici SANS JAMAIS rougir la CI
-        # (failure.ignore + continue-on-error) pour produire leurs rapports
-        # surefire ; le ci-summary les remonte en conformite_by_feature.
-        # (La garde d'integrite, elle, est BLOQUANTE : cf. le run ci-dessus.)
-        if: always()
-        continue-on-error: true
-        run: ./mvnw -B test -Dgroups=conformite -Dmaven.test.failure.ignore=true --file pom.xml
-
-      - name: Vérifier le formatage (Spotless, non bloquant)
-        # Renseigne le tableau de bord sans jamais faire échouer la CI.
-        if: always()
-        id: spotless
-        continue-on-error: true
-        run: ./mvnw -B spotless:check --file pom.xml
-
-      - name: Résumé CI pour le tableau de bord
-        # Agrège surefire + JaCoCo + PMD + portes qualité en un ci-summary.json.
-        # Toujours exécuté (même build rouge) pour ne jamais perdre le comptage.
-        if: always()
-        env:
-          BUILD_OUTCOME: ${{ steps.build.outcome }}
-          SPOTLESS_OUTCOME: ${{ steps.spotless.outcome }}
-          SHA: ${{ github.sha }}
-        run: |
-          python3 - <<'PY'
-          import glob, json, os, re, xml.etree.ElementTree as ET
-          from datetime import datetime, timezone
-
-          def fnum(s):
-              try: return int(s)
-              except (TypeError, ValueError): return 0
-
-          # --- tests (surefire) ---
-          # Les 8 features a construire (cf. tableau de bord) ; sites/commun = reference.
-          FEATURES = {"diagnostic", "lot", "bibliotheque", "validation",
-                      "importation", "qualification", "multisite", "passage"}
-          total = failed = errors = skipped = 0
-          archunit_ok = None
-          par_feature = {}   # tests de l'equipe par feature (hors conformite) -> phase 2 du tableau de bord
-          conformite = {}    # tests de REFERENCE @Tag("conformite") par feature / "parcours"
-
-          # Ensemble des classes REELLEMENT taguees @Tag("conformite") : on scanne les sources de
-          # test (source de verite unique, alignee sur -Dgroups/-DexcludedGroups=conformite) plutot
-          # que de deviner par suffixe de nom. Un *E2ETest NON tague reste un test d'EQUIPE bloquant
-          # (il doit donc compter dans le total de l'equipe, pas en conformite).
-          conformite_classes = set()
-          for src in glob.glob("src/test/**/*.java", recursive=True):
-              try:
-                  txt = open(src, encoding="utf-8", errors="ignore").read()
-              except OSError:
-                  continue
-              # Annotation en debut de ligne (apres indentation) : evite les faux positifs des
-              # mentions de @Tag("conformite") dans un commentaire/Javadoc.
-              if not re.search(r'^\s*@Tag\("conformite"\)', txt, re.M):
-                  continue
-              pkg = re.search(r"^\s*package\s+([\w.]+)\s*;", txt, re.M)
-              cls = os.path.splitext(os.path.basename(src))[0]
-              conformite_classes.add(f"{pkg.group(1)}.{cls}" if pkg else cls)
-
-          surefire = glob.glob("**/target/surefire-reports/TEST-*.xml", recursive=True)
-          for f in surefire:
-              try:
-                  r = ET.parse(f).getroot()
-              except ET.ParseError:
-                  continue
-              nom = r.get("name") or ""
-              t = fnum(r.get("tests")); fl = fnum(r.get("failures"))
-              er = fnum(r.get("errors")); sk = fnum(r.get("skipped"))
-              passes = t - fl - er - sk
-              # Tests de reference (conformite) : signal SEPARE, jamais melange ni compte dans le
-              # total/par_feature de l'equipe. Appartenance decidee par le TAG reel (cf. scan ci-dessus).
-              if nom in conformite_classes:
-                  if nom.endswith("E2ETest"):
-                      cle = "parcours"
-                  else:
-                      mc = re.match(r"fr\.univ_amu\.iut\.([a-z0-9_]+)\.", nom)
-                      cle = mc.group(1) if mc else "?"
-                  cf = conformite.setdefault(cle, {"total": 0, "passed": 0})
-                  cf["total"] += t; cf["passed"] += passes
-                  continue
-              total += t; failed += fl; errors += er; skipped += sk
-              if "architecture" in f.lower() or "ArchitectureTest" in f:
-                  archunit_ok = (fl == 0 and er == 0)
-              # feature = 1er segment de package apres fr.univ_amu.iut. dans le nom de la suite
-              m = re.match(r"fr\.univ_amu\.iut\.([a-z0-9_]+)\.", nom)
-              if m and m.group(1) in FEATURES:
-                  pf = par_feature.setdefault(m.group(1), {"total": 0, "passed": 0})
-                  pf["total"] += t
-                  pf["passed"] += passes
-          tests = None
-          if surefire:
-              tests = {"total": total, "failed": failed, "errors": errors,
-                       "skipped": skipped, "passed": total - failed - errors - skipped}
-
-          # --- couverture (JaCoCo csv) ---
-          coverage = None
-          csv = glob.glob("**/target/site/jacoco/jacoco.csv", recursive=True)
-          if csv:
-              miss = cov = 0
-              with open(csv[0]) as fh:
-                  next(fh, None)
-                  for line in fh:
-                      c = line.rstrip("\n").split(",")
-                      if len(c) > 8:
-                          miss += fnum(c[7]); cov += fnum(c[8])
-              if miss + cov:
-                  coverage = round(100 * cov / (miss + cov), 1)
-
-          # --- PMD ---
-          pmd = None
-          for p in ("**/target/pmd.xml", "**/target/reports/pmd.xml"):
-              hits = glob.glob(p, recursive=True)
-              if hits:
-                  txt = open(hits[0], encoding="utf-8", errors="ignore").read()
-                  pmd = len(re.findall(r"<violation\b", txt))
-                  break
-
-          spot = {"success": True, "failure": False}.get(os.environ.get("SPOTLESS_OUTCOME"))
-
-          summary = {
-              "generated_at": datetime.now(timezone.utc).isoformat(),
-              "sha": os.environ.get("SHA"),
-              "build_outcome": os.environ.get("BUILD_OUTCOME"),
-              "tests": tests,
-              "tests_by_feature": par_feature or None,
-              "conformite_by_feature": conformite or None,
-              "quality": {"coverage_pct": coverage, "pmd_violations": pmd,
-                          "spotless_ok": spot, "archunit_ok": archunit_ok},
-          }
-          with open("ci-summary.json", "w") as fh:
-              json.dump(summary, fh, indent=2)
-
-          # recap lisible dans l'onglet Actions
-          gs = os.environ.get("GITHUB_STEP_SUMMARY")
-          if gs:
-              with open(gs, "a") as fh:
-                  fh.write("### Résumé CI (tableau de bord)\n\n")
-                  if tests:
-                      fh.write(f"- Tests : **{tests['passed']}/{tests['total']}** "
-                               f"verts ({tests['skipped']} ignorés, "
-                               f"{tests['failed'] + tests['errors']} en échec)\n")
-                  fh.write(f"- Couverture : **{coverage if coverage is not None else 'n/d'} %**\n")
-                  fh.write(f"- PMD : **{pmd if pmd is not None else 'n/d'}** violations\n")
-                  fh.write(f"- Spotless : **{spot}** | ArchUnit : **{archunit_ok}**\n")
-          print(json.dumps(summary, indent=2))
-          PY
-
-      - name: Publier le résumé CI
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: ci-summary
-          path: ci-summary.json
-          if-no-files-found: warn
-          retention-days: 7
+      - name: Build + tests (headless)
+        # Tests UI en headless via la Headless Platform JavaFX 26 (glass.platform=Headless,
+        # cf. pom.xml) : aucun display X11 requis, plus besoin de xvfb.
+        run: ./mvnw -B verify --file pom.xml

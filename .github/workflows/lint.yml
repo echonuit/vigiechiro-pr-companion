@@ -1,20 +1,14 @@
-# Quality gate strict : cohérence documentaire + PMD failOnViolation.
-# Ne tourne QUE sur la branche `solution` (branche enseignant). Sur la
-# branche `main` (version étudiante auto-générée), ce workflow est
-# absent : `generate-student.sh` supprime le fichier au stripping.
-name: Quality gate (solution)
+# Portail qualité : formatage + complétude des captures + PMD/JaCoCo bloquants.
+# `solution` est conservée pendant la transition (avant la consolidation en `main`).
+name: Quality gate
 
 on:
   push:
-    branches:
-      - solution
+    branches: [solution, main]
   pull_request:
-    branches:
-      - solution
   workflow_dispatch:
 
-# Annule un run superseded sur la même ref (pushes rapprochés sur solution).
-# Workflow canonique/ubuntu : pas de garde-fou checkout (pas de pool self-hosted).
+# Annule un run superseded sur la même ref (pushes/PR rapprochés).
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -24,45 +18,33 @@ permissions:
 
 jobs:
   lint:
-    if: github.repository != 'IUTInfoAix-R203/template-tp-java'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0  # nécessaire pour que le hook / le lint voient
-                          # la branche 'solution' et distinguent mode
-                          # teacher vs student.
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
-          # JDK Temurin standard (sans JavaFX) : JavaFX 26 vient des dépendances
-          # Maven org.openjfx. La Headless Platform (glass.platform=Headless)
-          # est 100 % logicielle, donc pas besoin du runtime natif jdk+fx.
+          # JDK Temurin standard (sans JavaFX) : JavaFX 26 vient des dépendances Maven
+          # org.openjfx. La Headless Platform (glass.platform=Headless) est 100 % logicielle.
+          check-latest: false
           cache: maven
 
-      - name: Doc coherence linter
-        run: |
-          chmod +x scripts/lint-doc-coherence.sh
-          ./scripts/lint-doc-coherence.sh
+      - name: Formatage Spotless (bloquant)
+        # Spotless est opt-in (pas de binding Maven) : on l'exécute explicitement ici pour
+        # qu'un code non formaté fasse échouer la CI, même sans le hook pre-commit local.
+        run: ./mvnw -B spotless:check --file pom.xml
 
-      - name: Captures completeness (#86)
-        # Chaque vue FXML doit avoir au moins une capture de reference declaree au manifeste.
+      - name: Complétude des captures de référence
+        # Chaque vue FXML doit avoir au moins une capture de référence déclarée au manifeste
+        # (les captures illustrent la documentation).
         run: |
           chmod +x .github/assets/check-captures.sh
           ./.github/assets/check-captures.sh
 
-      - name: Transform unit tests (bats)
-        # Vérifie les transformations de generate-student.sh (marqueurs solution/
-        # student/fxml/masquer + @Disabled par paquet). Outil enseignant : le
-        # dossier scripts/ est stripé de la version étudiante.
-        run: |
-          sudo apt-get update && sudo apt-get install -y bats
-          bats scripts/test/student-transforms.bats
-
-      - name: PMD quality-gate (fail on violation)
+      - name: Portail qualité (PMD + couverture, bloquant)
         # AppTest (TestFX) tourne en headless via la Headless Platform JavaFX 26
-        # (glass.platform=Headless) : aucun display X11 requis, plus besoin de xvfb.
+        # (glass.platform=Headless) : aucun display X11 requis.
         run: ./mvnw -B -Pquality-gate verify

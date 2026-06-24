@@ -44,11 +44,9 @@ Monocle. Le headless vient de `glass.platform=Headless`, pas de TestFX.
 
 | Commande | Effet |
 |---|---|
-| `./mvnw test` | **Toute** la suite de tests (les détecteurs `@Tag("conformite")` sont **inclus** par défaut). |
+| `./mvnw test` | **Toute** la suite de tests. |
 | `./mvnw verify` | Build complet : tests + couverture + contrôles (PMD/JaCoCo **non** bloquants). |
 | `./mvnw -Pquality-gate verify` | **Portail qualité** : PMD `failOnViolation` + seuils JaCoCo **bloquants**. |
-| `./mvnw verify -DexcludedGroups=conformite` | Tout **sauf** la conformité (le run **bloquant** de la CI). |
-| `./mvnw test -Dgroups=conformite` | **Seulement** les détecteurs de conformité. |
 | `./mvnw test -Dtest=SitesViewModelTest` | Une seule **classe** de test. |
 | `./mvnw test -Dtest=SitesViewModelTest#chargeLesSites` | Une seule **méthode**. |
 | `./mvnw -Pmutation test` | Tests de **mutation** PIT (lent, à la demande). |
@@ -87,19 +85,6 @@ fait respecter les frontières MVVM. **Six règles** :
 
 Casser une de ces règles fait **échouer le build** : c'est le garde-fou de l'architecture.
 
-### Détecteurs de conformité (non bloquants)
-
-Certaines vues (`*VueIntegrationTest`) et parcours (`e2e/Parcours*E2ETest`) portent
-`@Tag("conformite")`. En CI, ils sont **ré-exécutés sans jamais rougir le build**
-(`-Dmaven.test.failure.ignore=true`) pour produire leurs rapports. Ils restent **compilés** dans le
-run principal : un changement d'API qui casse leur compilation fait donc échouer la CI.
-
-### Garde d'intégrité
-
-[`architecture/IntegriteTestsLivresTest`](src/test/java/fr/univ_amu/iut/architecture/IntegriteTestsLivresTest.java)
-détecte la suppression ou la neutralisation d'un test. Elle reste **dans le run bloquant** : on ne
-peut pas « rendre vert » en désactivant un test.
-
 ---
 
 ## 4. Ce qui bloque la CI
@@ -107,15 +92,14 @@ peut pas « rendre vert » en désactivant un test.
 La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/maven.yml) et
 [`lint.yml`](.github/workflows/lint.yml).
 
-| Étape | Commande | Bloquant ? |
+| Workflow | Commande | Bloquant ? |
 |---|---|---|
-| Tests (hors conformité) + garde d'intégrité | `./mvnw verify -DexcludedGroups=conformite` | **Oui** |
-| Détecteurs de conformité | `./mvnw test -Dgroups=conformite -Dmaven.test.failure.ignore=true` | Non (mesure) |
-| Formatage Spotless | `./mvnw spotless:check` | Non (mesure) |
-| Portail qualité (`lint.yml`) | `./mvnw -Pquality-gate verify` | **Oui** |
+| Build + tests (`maven.yml`) | `./mvnw -B verify` | **Oui** |
+| Formatage (`lint.yml`) | `./mvnw -B spotless:check` | **Oui** |
+| Portail qualité (`lint.yml`) | `./mvnw -B -Pquality-gate verify` | **Oui** |
 
-Le portail `lint.yml` ajoute aussi la cohérence documentaire, la complétude des captures et les tests
-Bats. Une PR doit donc passer **les deux** workflows.
+`lint.yml` vérifie aussi la **complétude des captures de référence**
+([`check-captures.sh`](.github/assets/check-captures.sh)). Une PR doit passer **les deux** workflows.
 
 ---
 

@@ -34,7 +34,6 @@ import javafx.scene.control.TabPane;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
@@ -56,7 +55,6 @@ import org.testfx.framework.junit5.Start;
 /// Chargement du FXML via Guice avec un [ServicePassage] mocké, ouverture sur un passage + contexte
 /// site. Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
-@Tag("conformite")
 class PassageVueIntegrationTest {
 
     private static final long ID_PASSAGE = 42L;

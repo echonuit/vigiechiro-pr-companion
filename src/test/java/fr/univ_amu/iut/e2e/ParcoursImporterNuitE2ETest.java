@@ -28,7 +28,6 @@ import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 /// **Test E2E du parcours P2 « Importer une nuit d'enregistrement »**, piloté **sans IHM** : on
@@ -53,7 +52,6 @@ import org.junit.jupiter.api.Test;
 /// `(point, année, n° de passage)` est **bloqué en amont** par le pré-contrôle R5 (#108) — dès le
 /// rattachement, le bouton « Importer » se désactive et aucun import n'est lancé, donc la base reste
 /// intacte.
-@Tag("conformite")
 class ParcoursImporterNuitE2ETest {
 
     private static final String ID_USER = "u-e2e-import";
