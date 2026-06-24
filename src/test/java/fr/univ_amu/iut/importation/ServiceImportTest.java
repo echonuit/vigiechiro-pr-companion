@@ -47,6 +47,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
@@ -218,6 +219,91 @@ class ServiceImportTest {
         // Le point de non-retour (persistance) n'a pas été franchi : aucun passage, session nettoyée.
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
         assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession())).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#231 : reprise — des originaux déjà copiés+renommés ne sont pas re-copiés (ni conflit de renommage)")
+    void reprise_saute_la_copie_des_originaux_deja_presents() throws IOException {
+        // Simule un import interrompu APRÈS copie + renommage : bruts/ contient déjà les deux originaux
+        // sous leur nom préfixé (R6). Sans passage en base (R5 ne bloque donc pas) → c'est une reprise.
+        Path bruts = racine.resolve("ws").resolve(prefixe.nomDossierSession()).resolve("bruts");
+        Files.createDirectories(bruts);
+        for (String src : List.of("PaRecPR1925492_20260422_203922.wav", "PaRecPR1925492_20260422_204326.wav")) {
+            ecrireWav(bruts.resolve(Renommeur.nomApresRenommage(src, prefixe)));
+        }
+
+        // CopieProtegee instrumentée : compte les copies de .wav effectivement réalisées.
+        AtomicInteger copiesWav = new AtomicInteger();
+        CopieProtegee copieComptee = new CopieProtegee() {
+            @Override
+            public Path copier(Path s, Path d) {
+                if (s.getFileName().toString().toLowerCase().endsWith(".wav")) {
+                    copiesWav.incrementAndGet();
+                }
+                return super.copier(s, d);
+            }
+        };
+        ServiceImport reprise = new ServiceImport(
+                new InspecteurDossier(new AnalyseurLogPR()),
+                copieComptee,
+                new Renommeur(),
+                new TransformationAudio(),
+                new AgregatImportDao(source),
+                new UniteDeTravail(source),
+                new Workspace(racine.resolve("ws")),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+
+        ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
+
+        // Aucune re-copie (les deux originaux étaient déjà matérialisés), et l'agrégat est complet.
+        assertThat(copiesWav.get())
+                .as("les originaux déjà présents ne sont pas re-copiés")
+                .isZero();
+        assertThat(resultat.nombreOriginaux()).isEqualTo(2);
+        assertThat(resultat.nombreSequences()).isEqualTo(6);
+        assertThat(resultat.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+    }
+
+    @Test
+    @DisplayName("#231 : reprise sécurisée — un original présent au mauvais contenu (empreinte ≠ source) est re-copié")
+    void reprise_recopie_un_original_au_contenu_different() throws IOException {
+        Path bruts = racine.resolve("ws").resolve(prefixe.nomDossierSession()).resolve("bruts");
+        Files.createDirectories(bruts);
+        // Original A : déjà présent et FIDÈLE (copie d'un import antérieur) -> doit être sauté.
+        ecrireWav(bruts.resolve(Renommeur.nomApresRenommage("PaRecPR1925492_20260422_203922.wav", prefixe)));
+        // Original B : présent au BON nom mais au MAUVAIS contenu (corruption silencieuse) -> re-copié.
+        Files.write(
+                bruts.resolve(Renommeur.nomApresRenommage("PaRecPR1925492_20260422_204326.wav", prefixe)),
+                new byte[] {1, 2, 3});
+
+        AtomicInteger copiesWav = new AtomicInteger();
+        CopieProtegee copieComptee = new CopieProtegee() {
+            @Override
+            public Path copier(Path s, Path d) {
+                if (s.getFileName().toString().toLowerCase().endsWith(".wav")) {
+                    copiesWav.incrementAndGet();
+                }
+                return super.copier(s, d);
+            }
+        };
+        ServiceImport reprise = new ServiceImport(
+                new InspecteurDossier(new AnalyseurLogPR()),
+                copieComptee,
+                new Renommeur(),
+                new TransformationAudio(),
+                new AgregatImportDao(source),
+                new UniteDeTravail(source),
+                new Workspace(racine.resolve("ws")),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+
+        ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
+
+        // Seul l'original corrompu a été re-copié (le fidèle est sauté) ; l'agrégat final est correct.
+        assertThat(copiesWav.get())
+                .as("le fidèle est sauté, le corrompu est re-copié")
+                .isEqualTo(1);
+        assertThat(resultat.nombreOriginaux()).isEqualTo(2);
+        assertThat(resultat.nombreSequences()).isEqualTo(6);
     }
 
     @Test

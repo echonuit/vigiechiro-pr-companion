@@ -83,6 +83,10 @@ public class TransformationAudio {
                 int longueur = Math.min(octetsParSequence, pcm.length - offset);
                 String nomSequence = prefixe.nommerSequence(nomOriginal, index);
                 Path cheminSequence = dossierSortie.resolve(nomSequence);
+                // Reprise (#231) : on réécrit **toujours** la séquence (R11 : bytes déterministes). C'est le
+                // choix le plus sûr — une séquence périmée ou corrompue par un crash (même de taille
+                // identique) est ainsi régénérée, jamais persistée telle quelle. Le gain d'un import
+                // interrompu vient de la phase de copie (bruts vérifiés par empreinte), pas de la sortie.
                 FichierWav.ecrire(
                         cheminSequence,
                         source.nombreCanaux(),

@@ -229,7 +229,6 @@ public class ServiceImport {
         // Progression déterminée (#33) : N copies puis N transformations → 2N étapes au total.
         int nbOriginaux = rapport.originaux().size();
         int totalEtapes = nbOriginaux * 2;
-        int faites = 0;
 
         // Annulation (#146) : la copie et la transformation se font dans un dossier de session neuf ;
         // une annulation lève AnnulationImportException et on supprime la session partielle. Comme la
@@ -239,17 +238,9 @@ public class ServiceImport {
         Path cheminJournalCopie;
         Path cheminReleveCopie;
         try {
-            // 1) Copie protégée SD -> workspace (R9). Originaux dans bruts/, journal + relevé à la racine.
-            int indiceCopie = 0;
-            for (Path original : rapport.originaux()) {
-                jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux fichiers
-                copie.copierVers(original, dossierBruts);
-                indiceCopie++;
-                faites++;
-                progres.accept(new Progression(
-                        "Copie " + indiceCopie + "/" + nbOriginaux + " · " + original.getFileName(),
-                        (double) faites / totalEtapes));
-            }
+            // 1) Copie protégée SD -> workspace (R9) : originaux dans bruts/ (reprise #231 : copie sautée
+            //    si déjà présent), journal + relevé à la racine de la session.
+            copierOriginaux(rapport.originaux(), dossierBruts, prefixe, totalEtapes, progres, jeton);
             cheminJournalCopie = sansJournal
                     ? JournalDeRepli.ecrireTraceSynthetique(dossierSession)
                     : copie.copierVers(rapport.cheminJournal(), dossierSession);
@@ -342,6 +333,42 @@ public class ServiceImport {
                 transformations.size(),
                 nombreSequences,
                 journal.anomalies());
+    }
+
+    /// Copie protégée (R9) des originaux vers `dossierBruts`, en émettant la progression « Copie X/N ·
+    /// fichier ». Vérifie l'annulation (#146) entre deux fichiers.
+    ///
+    /// **Reprise sécurisée (#231)** : un original n'est sauté que si une version renommée existe **et**
+    /// que son empreinte SHA-256 est **identique à celle de la source SD** — contenu vérifié, pas
+    /// seulement le nom ni la taille. Un fichier absent, périmé ou corrompu (même nom, session orpheline
+    /// incohérente) est re-copié : on ne persiste jamais un agrégat sur des fichiers douteux. Sauter une
+    /// copie **fidèle** évite au passage le conflit de renommage qu'une re-copie déclencherait.
+    private void copierOriginaux(
+            List<Path> originaux,
+            Path dossierBruts,
+            Prefixe prefixe,
+            int totalEtapes,
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
+        int nbOriginaux = originaux.size();
+        int indiceCopie = 0;
+        for (Path original : originaux) {
+            jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux fichiers
+            // Copie **directement au nom final** (R6) : pas d'état intermédiaire au nom d'origine, donc
+            // aucun doublon ni conflit lors du renommage si une version renommée traînait déjà (reprise).
+            Path cible = dossierBruts.resolve(
+                    Renommeur.nomApresRenommage(original.getFileName().toString(), prefixe));
+            boolean dejaFidele =
+                    Files.isRegularFile(cible) && Empreintes.sha256Hex(cible).equals(Empreintes.sha256Hex(original));
+            if (!dejaFidele) {
+                copie.copier(original, cible); // écrase une cible corrompue (REPLACE_EXISTING + vérif R9)
+            }
+            indiceCopie++;
+            progres.accept(new Progression(
+                    "Copie " + indiceCopie + "/" + nbOriginaux + " · " + original.getFileName()
+                            + (dejaFidele ? " (déjà présent)" : ""),
+                    (double) indiceCopie / totalEtapes));
+        }
     }
 
     /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)

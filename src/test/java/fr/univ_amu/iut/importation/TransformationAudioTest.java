@@ -53,6 +53,28 @@ class TransformationAudioTest {
     }
 
     @Test
+    @DisplayName("#231 : reprise — une séquence corrompue (même taille) est régénérée à l'identique")
+    void reprise_regenere_les_sequences_corrompues() throws IOException {
+        Path transformes = dossier.resolve("transformes");
+        Path sequence = transformation
+                .transformer(originalWav, transformes, prefixe)
+                .sequences()
+                .get(0)
+                .chemin();
+        byte[] correct = Files.readAllBytes(sequence);
+
+        // Corruption silencieuse : on remplace le contenu par des octets bidons DE MÊME TAILLE — un saut
+        // fondé sur la seule taille ne la détecterait pas, mais la régénération systématique (R11) si.
+        Files.write(sequence, new byte[correct.length]);
+        assertThat(Files.readAllBytes(sequence)).isNotEqualTo(correct);
+
+        transformation.transformer(originalWav, transformes, prefixe);
+
+        // La séquence a été régénérée au bit près, jamais laissée corrompue.
+        assertThat(Files.readAllBytes(sequence)).isEqualTo(correct);
+    }
+
+    @Test
     @DisplayName("R10 : le nombre de séquences vaut ceil(2 × durée source)")
     void nombre_de_sequences() {
         TransformationOriginal resultat =

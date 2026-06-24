@@ -55,6 +55,16 @@ public class Renommeur {
         return resultats;
     }
 
+    /// Nom **final** qu'un fichier source portera après renommage R6, sans rien déplacer : un nom déjà
+    /// préfixé (`Car…`) est conservé (idempotence, #111), sinon le préfixe est appliqué. Permet à
+    /// l'appelant de savoir si un original a **déjà été copié + renommé** par un import interrompu, et de
+    /// sauter sa copie (reprise #231).
+    public static String nomApresRenommage(String nomSource, Prefixe prefixe) {
+        Objects.requireNonNull(nomSource, "nomSource");
+        Objects.requireNonNull(prefixe, "prefixe");
+        return Prefixe.estNomPrefixe(nomSource) ? nomSource : prefixe.nommerOriginal(nomSource);
+    }
+
     private Path renommerUn(Path original, Prefixe prefixe) throws IOException {
         String nom = original.getFileName().toString();
         if (Prefixe.estNomPrefixe(nom)) {
