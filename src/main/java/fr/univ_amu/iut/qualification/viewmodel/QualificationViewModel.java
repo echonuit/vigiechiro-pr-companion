@@ -28,10 +28,6 @@ import javafx.beans.property.StringProperty;
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls `javafx.beans`
 /// sont importés, jamais `javafx.scene`. Construit non-singleton (un VM frais par FXML).
-///
-/// TODO (M-Qualification) : implémentez les corps des méthodes publiques (ouvrirSur, choisirVerdict,
-/// enregistrer) ; les propriétés observables et le binding peutEnregistrer sont fournis. Patron de
-/// référence : SiteDetailViewModel (feature sites).
 public class QualificationViewModel {
 
     private final ServiceQualification service;
@@ -79,9 +75,6 @@ public class QualificationViewModel {
     /// sans lever.
     public void ouvrirSur(Long idPassage) {
         this.idPassage = idPassage;
-        // TODO (M-Qualification) : exécutez le pré-check (service.precheck) et amorcez le bandeau
-        //   (service.chargerContexte -> statut + verdict actuel) ; en cas d'erreur, réinitialisez et
-        //   publiez le message.
         reinitialiser();
         try {
             appliquerPrecheck(service.precheck(idPassage));
@@ -123,16 +116,12 @@ public class QualificationViewModel {
 
     /// Choix (différé) du verdict global de la nuit (boutons OK / douteux / à jeter).
     public void choisirVerdict(Verdict verdict) {
-        // TODO (M-Qualification) : mémorisez le verdict choisi (verdictChoisi).
         verdictChoisi.set(verdict);
     }
 
     /// Enregistre le verdict choisi : transite le passage vers `VERIFIE`. Refuse si aucun verdict
     /// décisif n'est choisi. Signale (R14) si « à jeter » exclura le passage du dépôt.
     public void enregistrer() {
-        // TODO (M-Qualification) : refusez sans verdict décisif ; sinon persistez le verdict
-        //   (service.enregistrerVerdict), passez le statut à VERIFIE, gérez l'avertissement « à jeter »
-        //   (R14) et l'état ENREGISTRE.
         if (!peutEnregistrer.get()) {
             message.set("Choisissez un verdict (OK, douteux ou à jeter) avant d'enregistrer.");
             return;

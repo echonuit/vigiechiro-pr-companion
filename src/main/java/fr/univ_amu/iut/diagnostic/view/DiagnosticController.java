@@ -29,9 +29,6 @@ import javafx.scene.control.ListView;
 /// ici (règle ArchUnit `view_sans_jdbc`).
 public class DiagnosticController implements EmplacementNavigation {
 
-    // TODO (M-Diagnostic) : déclarez les champs @FXML correspondant aux fx:id de Diagnostic.fxml
-    //   (Label, LineChart, ListView...), puis liez-les au DiagnosticViewModel dans une méthode
-    //   « @FXML private void initialize() ». Patron de référence : un controleur de la feature sites.
     //   Le graphe T°/hygrométrie se reconstruit depuis viewModel.mesures().
     private static final DateTimeFormatter MOMENT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
 

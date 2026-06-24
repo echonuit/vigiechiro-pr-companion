@@ -60,10 +60,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
-    // TODO (M-Qualification) : déclarez les @FXML correspondant aux fx:id de Qualification.fxml
-    //   (bandeau, 3 feux, liste de la sélection, AudioView, boutons de verdict, commentaire...),
-    //   câblez-les aux deux ViewModels dans « @FXML private void initialize() » et ajoutez les
-    //   handlers @FXML (verdict, enregistrer, régénérer, retour passage). Référence : feature sites.
     @FXML
     private BorderPane racine;
 

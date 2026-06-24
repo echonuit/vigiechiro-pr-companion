@@ -49,11 +49,6 @@ public class ImportationController implements GardeQuitter {
 
     private final ImportationViewModel viewModel;
 
-    // TODO (M-Import) : déclarez les @FXML correspondant aux fx:id de Importation.fxml (champ dossier,
-    //   section inspection, combos site/point, champs année/passage, aperçu, boutons, progression...),
-    //   câblez-les à l'ImportationViewModel dans « @FXML private void initialize() » (chargement initial
-    //   via viewModel.chargerSites()) et ajoutez les handlers @FXML (parcourir, importer hors-thread).
-    //   Patron de référence : feature sites.
     @FXML
     private VBox racineImport;
 

@@ -12,10 +12,6 @@
   M-Diagnostic - état matériel d'une nuit (parcours P6). Atteint depuis l'onglet « Diagnostic » de
   M-Passage via le contrat socle OuvrirDiagnostic. Pur câblage : tout est lié au DiagnosticViewModel
   par DiagnosticController (graphe T°/hygrométrie, anomalies et évènements du journal).
-
-  TODO (M-Diagnostic) : cette vue est à construire. Le placeholder ci-dessous se contente d'afficher
-  un titre ; remplacez-le par la vraie mise en page (graphe, listes, labels) reliée au
-  DiagnosticController par des fx:id. Vue de référence : sites/view/SiteDetail.fxml.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"

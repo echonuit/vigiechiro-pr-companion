@@ -34,10 +34,6 @@ import javafx.collections.ObservableList;
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls `javafx.beans` et
 /// `javafx.collections` sont importés, jamais `javafx.scene`. Non-singleton (un VM frais par FXML).
-///
-/// TODO (M-Qualification) : implémentez les corps des méthodes publiques (ouvrirSur, selectionner,
-/// marquerCouranteEcoutee, regenerer) ; les propriétés observables sont fournies. Patron de
-/// référence : SiteDetailViewModel (feature sites).
 public class SelectionEcouteViewModel {
 
     private final ServiceQualification service;
@@ -76,9 +72,6 @@ public class SelectionEcouteViewModel {
     /// [#messageProperty()] sans lever.
     public void ouvrirSur(Long idPassage) {
         this.idPassage = idPassage;
-        // TODO (M-Qualification) : chargez le contexte (bandeau) et la sélection d'écoute (créée à la
-        //   volée si absente, R12), peuplez lignes et la progression ; en cas d'erreur, réinitialisez
-        //   et publiez le message.
         reinitialiser();
         try {
             appliquerContexte(service.chargerContexte(idPassage));
@@ -110,15 +103,12 @@ public class SelectionEcouteViewModel {
 
     /// Sélectionne une ligne de la liste (met à jour le chemin du fichier courant pour l'écoute).
     public void selectionner(SequenceEnSelection ligne) {
-        // TODO (M-Qualification) : mémorisez la séquence courante (sequenceCourante).
         sequenceCourante.set(ligne);
     }
 
     /// Marque la séquence courante comme écoutée (flag `listened`). Appelée au début de la lecture
     /// (R10). Sans effet si aucune séquence n'est sélectionnée ou si elle est déjà écoutée.
     public void marquerCouranteEcoutee() {
-        // TODO (M-Qualification) : marquez la séquence courante écoutée (service.marquerSequenceEcoutee),
-        //   mettez à jour la ligne et recalculez la progression (R10).
         SequenceEnSelection courante = sequenceCourante.get();
         if (courante == null || idSelection == null || courante.ecoutee()) {
             return;
@@ -136,8 +126,6 @@ public class SelectionEcouteViewModel {
     /// Régénère la sélection avec la méthode et la taille choisies (R12). Recharge la liste et remet
     /// la progression à zéro. Erreur restituée dans le message.
     public void regenerer() {
-        // TODO (M-Qualification) : régénérez la sélection (service.creerSelection) avec methode+taille,
-        //   rechargez la liste, remettez la progression à zéro.
         try {
             SelectionDEcoute selection = service.creerSelection(idPassage, methode.get(), taille.get());
             this.idSelection = selection.id();

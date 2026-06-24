@@ -15,10 +15,6 @@
   Pur câblage : le tableau des passages, les filtres (carré, statut, verdict, année), le tri, le
   double-clic d'ouverture d'un passage (contrat socle OuvrirPassage) et l'export CSV sont liés au
   MultisiteViewModel par le controller.
-
-  TODO (M-Multisite) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ; remplacez-le
-  par la vraie mise en page (barre de filtres, tableau agrégé, tri, export) reliée au MultisiteController
-  par des fx:id et des onAction. Vue de référence : sites/view/SiteDetail.fxml.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"

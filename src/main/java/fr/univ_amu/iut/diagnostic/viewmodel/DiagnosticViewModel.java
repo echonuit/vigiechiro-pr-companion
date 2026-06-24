@@ -42,11 +42,6 @@ public class DiagnosticViewModel {
     /// Ouvre le diagnostic du passage `idPassage`. Une erreur (passage/session introuvable) est
     /// restituée dans [#messageProperty()] sans lever, l'écran restant vide.
     public void ouvrirSur(Long idPassage) {
-        // TODO (M-Diagnostic) : peuplez les propriétés à partir de service.diagnostiquer(idPassage).
-        //   - succès : alimentez enregistreur, releveClimatiqueAbsent, gpsDisponible, mesures,
-        //     anomalies, evenements et resumeClimat, puis videz message ;
-        //   - échec (RuntimeException) : réinitialisez tout et publiez le message d'erreur, sans lever.
-        // Patron de référence : le ViewModel de la feature sites (SiteDetailViewModel).
         reinitialiser();
         try {
             appliquer(service.diagnostiquer(idPassage));

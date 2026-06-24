@@ -36,10 +36,6 @@ public class MultisiteController {
     private final OuvrirPassage ouvrirPassage;
     private final NavigationMultisite navigation;
 
-    // TODO (M-Multisite) : déclarez les @FXML (tableau agrégé, filtres carré/statut/verdict/année,
-    //   tri, export, « Vues enregistrées »...) correspondant aux fx:id de Multisite.fxml, câblez-les
-    //   au MultisiteViewModel dans « @FXML private void initialize() » (double-clic ligne -> ouvrirPassage,
-    //   chargement via viewModel.rafraichir()), et ajoutez les handlers @FXML. Référence : feature sites.
     @FXML
     private Label lblResume;
 

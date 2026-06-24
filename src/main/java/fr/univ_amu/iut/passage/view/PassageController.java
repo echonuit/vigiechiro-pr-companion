@@ -61,10 +61,6 @@ public class PassageController implements EmplacementNavigation {
     private Long idPassage;
     private ContexteSite contexte;
 
-    // TODO (M-Passage) : déclarez les @FXML correspondant aux fx:id de Passage.fxml (bandeau d'identité,
-    //   stepper de statut, stats, boutons Vérifier/Diagnostic/Validation/Préparer le dépôt...), câblez-
-    //   les au PassageViewModel dans « @FXML private void initialize() » et ajoutez les handlers @FXML
-    //   (qui ouvrent les autres écrans via les contrats socle Ouvrir*). Patron de référence : feature sites.
     @FXML
     private BorderPane racine;
 

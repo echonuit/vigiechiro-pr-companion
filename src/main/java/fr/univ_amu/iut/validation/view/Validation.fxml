@@ -16,10 +16,6 @@
   Atteint depuis l'onglet « Validation Tadarida » de M-Passage via le contrat socle OuvrirValidation.
   Pur câblage : la liste des observations, la sélection, le détail, les compteurs et la revue
   (valider / corriger via le sélecteur de taxon) sont liés au ValidationViewModel par le controller.
-
-  TODO (M-Vision-Tadarida) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ;
-  remplacez-le par la vraie mise en page (table des observations, audio, valider/corriger, import/
-  export) reliée au ValidationController par des fx:id et des onAction. Réf : sites/view/SiteDetail.fxml.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"

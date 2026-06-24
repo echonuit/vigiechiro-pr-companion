@@ -44,10 +44,6 @@ public class ValidationController implements EmplacementNavigation {
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
-    // TODO (M-Vision-Tadarida) : déclarez les @FXML correspondant aux fx:id de Validation.fxml
-    //   (table des observations, filtre, détail, AudioView, boutons valider/corriger/importer/
-    //   exporter, mode, taxon...), câblez-les au ValidationViewModel dans « @FXML private void
-    //   initialize() » et ajoutez les handlers @FXML. Patron de référence : feature sites.
     @FXML
     private Label lblProgression;
 

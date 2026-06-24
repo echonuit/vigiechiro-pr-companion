@@ -15,10 +15,6 @@
   chrome (commun) : pas de fil interne ni d'onglets-lanceurs ici. Les cartes ouvrent M-Qualification,
   M-Diagnostic, M-Lot et M-Vision-Tadarida via les contrats socle (Ouvrir*). Pur câblage : tout est
   lié au PassageViewModel par PassageController.
-
-  TODO (M-Passage) : écran pivot à construire. Le placeholder ci-dessous n'affiche qu'un titre ;
-  remplacez-le par la vraie mise en page (bandeau d'identité, stepper de statut, stats, actions vers
-  les autres écrans) reliée au PassageController par des fx:id et des onAction. Réf : sites/view/SiteDetail.fxml.
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"

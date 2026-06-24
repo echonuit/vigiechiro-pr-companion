@@ -22,9 +22,6 @@ public class RattachementModaleController {
     private final RattachementViewModel viewModel;
     private Runnable apresSucces = () -> {};
 
-    // TODO (M-Passage, modale rattachement) : déclarez les @FXML (spinners année / n° de passage,
-    //   récap, message) correspondant aux fx:id de RattachementModale.fxml et câblez-les au
-    //   RattachementViewModel dans « @FXML private void initialize() » ; ajoutez les handlers @FXML.
     private ObjectProperty<Integer> anneeObjet;
     private ObjectProperty<Integer> numeroObjet;
 

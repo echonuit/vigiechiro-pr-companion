@@ -14,10 +14,6 @@
   contrôles sont liés aux propriétés de ImportationViewModel par ImportationController. La
   progression en arrière-plan et les cas limites (mélange, incohérence) viendront dans une tranche
   ultérieure.
-
-  TODO (M-Import) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ; remplacez-le
-  par la vraie mise en page (4 sections : dossier, inspection, rattachement, action/progression)
-  reliée à l'ImportationController par des fx:id et des onAction. Réf : sites/view/SiteDetail.fxml.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"

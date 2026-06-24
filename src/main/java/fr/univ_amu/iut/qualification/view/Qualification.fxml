@@ -22,10 +22,6 @@
   QualificationViewModel (verdict) par QualificationController. La vue audio (sonogramme +
   spectrogramme), la modale de personnalisation et les raccourcis clavier arrivent dans les
   tranches suivantes : ici, un emplacement réservé tient lieu de zone audio.
-
-  TODO (M-Qualification) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ;
-  remplacez-le par la vraie mise en page (sélection d'écoute, audio, verdict O/D/J) reliée au
-  QualificationController par des fx:id et des onAction. Vue de référence : sites/view/SiteDetail.fxml.
 -->
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"

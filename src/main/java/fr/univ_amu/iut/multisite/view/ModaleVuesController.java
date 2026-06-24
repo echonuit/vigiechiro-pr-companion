@@ -20,9 +20,6 @@ import javafx.stage.Stage;
 /// suppression délèguent au ViewModel. Aucun accès base de données ni logique métier.
 public class ModaleVuesController {
 
-    // TODO (M-Multisite, modale « Vues enregistrées ») : déclarez les @FXML (liste des vues, champ
-    //   nom, boutons), câblez-les dans « @FXML private void initialize() », reliez la modale au
-    //   MultisiteViewModel partagé dans demarrer(...) et ajoutez les handlers @FXML.
     @FXML
     private VBox racine;
 
@@ -73,8 +70,6 @@ public class ModaleVuesController {
     /// la liste des vues. Appelée par [NavigationMultisite] après le chargement du FXML.
     public void demarrer(MultisiteViewModel viewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
-        // TODO (M-Multisite, modale) : reliez la liste des vues + le message au viewModel partagé et
-        //   chargez les vues (viewModel.chargerVues()).
         listeVues.setItems(viewModel.vues());
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();

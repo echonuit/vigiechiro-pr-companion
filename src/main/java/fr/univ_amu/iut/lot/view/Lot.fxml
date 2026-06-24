@@ -12,10 +12,6 @@
   Atteint depuis M-Passage via le contrat socle OuvrirLot. Pur câblage : statut, récapitulatif,
   dossier à téléverser, alertes de cohérence (R14) et actions préparer/déposer sont liés au
   LotViewModel par le controller. Le dépôt lui-même est manuel (aucun accès réseau).
-
-  TODO (M-Lot) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ; remplacez-le par
-  la vraie mise en page (récap, alertes, boutons Préparer/Déposer) reliée au LotController par des
-  fx:id et des onAction. Vue de référence : sites/view/SiteDetail.fxml.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"

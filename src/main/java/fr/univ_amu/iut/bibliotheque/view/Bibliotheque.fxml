@@ -15,10 +15,6 @@
   Pur câblage : la table des sons de référence, la sélection, l'écoute (AudioView réutilisé de
   M-Vision-Tadarida) et l'export (CSV récapitulatif + copie des fichiers son) sont liés au
   BibliothequeViewModel par le controller.
-
-  TODO (M-Bibliotheque) : vue à construire. Le placeholder ci-dessous n'affiche qu'un titre ;
-  remplacez-le par la vraie mise en page (table des sons, détail, écoute AudioView, export) reliée au
-  BibliothequeController par des fx:id. Vue de référence : sites/view/MesSites.fxml.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"

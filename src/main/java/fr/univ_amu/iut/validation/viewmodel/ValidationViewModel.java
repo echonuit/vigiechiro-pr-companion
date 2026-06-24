@@ -34,10 +34,6 @@ import javafx.collections.transformation.FilteredList;
 ///
 /// La revue est portée par [#valider()] (R15) et [#corriger(Taxon)] (R16) : chaque action
 /// délègue au service, puis recharge la vue. L'export `_Vu` et l'import CSV restent à part.
-///
-/// TODO (M-Vision-Tadarida) : implémentez les corps des méthodes publiques (ouvrirSur, valider,
-/// corriger, importer, exporter) ; les propriétés observables et la liste filtrée sont fournies.
-/// Patron de référence : SiteDetailViewModel (feature sites).
 public class ValidationViewModel {
 
     private final ServiceValidation service;
@@ -85,8 +81,6 @@ public class ValidationViewModel {
     /// importé n'est pas une erreur : la liste est vide et un message d'état neutre l'explique.
     public void ouvrirSur(Long idPassage) {
         this.idPassage = idPassage;
-        // TODO (M-Vision-Tadarida) : chargez les taxons disponibles et la vue de validation
-        //   (service.chargerValidation) ; en cas d'erreur, réinitialisez et publiez le message.
         reinitialiser();
         try {
             taxons.setAll(service.taxonsDisponibles());
@@ -104,8 +98,6 @@ public class ValidationViewModel {
     ///
     /// @return `true` si la validation a été appliquée
     public boolean valider() {
-        // TODO (M-Vision-Tadarida) : validez l'observation sélectionnée selon le mode de revue
-        //   (service.validerSelonMode) puis rechargez ; ignorez sans sélection.
         ObservationStatut courant = selection.get();
         if (courant == null || courant.observation().id() == null) {
             return false;
@@ -124,8 +116,6 @@ public class ValidationViewModel {
     /// @param taxon taxon retenu par l'observateur
     /// @return `true` si la correction a été appliquée
     public boolean corriger(Taxon taxon) {
-        // TODO (M-Vision-Tadarida) : corrigez l'observation sélectionnée vers le taxon observateur
-        //   (service.corriger) ; refusez un taxon == proposition Tadarida (utiliser « Valider »).
         ObservationStatut courant = selection.get();
         if (courant == null || courant.observation().id() == null || taxon == null) {
             return false;
@@ -149,8 +139,6 @@ public class ValidationViewModel {
     /// @param cheminCsv fichier CSV choisi par l'observateur
     /// @return `true` si l'import a réussi
     public boolean importer(Path cheminCsv) {
-        // TODO (M-Vision-Tadarida) : importez le CSV Tadarida pour le passage courant
-        //   (service.importer) puis rechargez ; refusez un second import (un seul jeu par passage).
         if (idPassage == null || cheminCsv == null) {
             return false;
         }
@@ -195,8 +183,6 @@ public class ValidationViewModel {
     /// @param destination fichier cible choisi par l'observateur
     /// @return `true` si le fichier a été écrit
     public boolean exporter(Path destination) {
-        // TODO (M-Vision-Tadarida) : exportez le CSV _Vu réinjectable (service.exporter) selon
-        //   inclureMode, publiez le chemin écrit ou l'erreur dans message, renvoyez true si écrit.
         if (idResultats == null || destination == null) {
             return false;
         }

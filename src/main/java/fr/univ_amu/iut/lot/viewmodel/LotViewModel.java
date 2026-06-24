@@ -42,9 +42,6 @@ public class LotViewModel {
     /// dans [#messageProperty()] sans lever, l'écran restant vide.
     public void ouvrirSur(Long idPassage) {
         this.idPassage = idPassage;
-        // TODO (M-Lot) : chargez l'état via service.consulterLot(idPassage) et alimentez les propriétés
-        // (statut, recap, cheminDossier, alertes, peutPreparer/peutDeposer/depose) ; en cas d'erreur,
-        // réinitialisez et publiez message. Patron de référence : SiteDetailViewModel (feature sites).
         reinitialiser();
         try {
             appliquer(service.consulterLot(idPassage));
@@ -59,7 +56,6 @@ public class LotViewModel {
     ///
     /// @return `true` si la préparation a réussi
     public boolean preparer() {
-        // TODO (M-Lot) : préparez le lot (service.preparerLot), rechargez l'état, renvoyez true si OK.
         return appliquerAction(() -> service.preparerLot(idPassage));
     }
 
@@ -67,7 +63,6 @@ public class LotViewModel {
     ///
     /// @return `true` si le dépôt a été enregistré
     public boolean deposer() {
-        // TODO (M-Lot) : marquez le passage déposé (service.marquerDepose), rechargez, renvoyez true.
         return appliquerAction(() -> service.marquerDepose(idPassage));
     }
 

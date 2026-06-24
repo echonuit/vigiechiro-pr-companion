@@ -33,9 +33,6 @@ import javafx.collections.ObservableList;
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls
 /// `javafx.beans`/`javafx.collections`. Non-singleton (un VM frais par chargement de vue).
-///
-/// TODO (M-Multisite) : implémentez les corps des méthodes publiques ci-dessous (les signatures et
-/// les propriétés observables sont fournies). Patron de référence : SitesViewModel (feature sites).
 public class MultisiteViewModel {
 
     private final ServiceMultisite service;
@@ -72,8 +69,6 @@ public class MultisiteViewModel {
     /// (Re)charge le tableau selon les filtres et le tri courants. À appeler à l'ouverture de
     /// l'écran ; ensuite déclenché automatiquement par tout changement de filtre ou de tri.
     public void rafraichir() {
-        // TODO (M-Multisite) : interrogez service.listerPassages(...) avec les filtres et le tri
-        //   courants, peuplez lignes, mettez à jour nonVide et resume, videz message.
         lignes.setAll(service.listerPassages(idUtilisateur, filtresCourants(), tri.get()));
         nonVide.set(!lignes.isEmpty());
         resume.set(lignes.size() + " passage(s) affiché(s).");
@@ -108,7 +103,6 @@ public class MultisiteViewModel {
 
     /// Réinitialise tous les filtres (le tri est conservé), puis recharge le tableau une fois.
     public void reinitialiserFiltres() {
-        // TODO (M-Multisite) : remettez les quatre filtres à zéro puis rechargez une seule fois.
         appliquerFiltres(FiltresMultisite.aucun());
     }
 
@@ -119,8 +113,6 @@ public class MultisiteViewModel {
     /// @param destination fichier cible choisi par l'observateur
     /// @return `true` si le fichier a été écrit
     public boolean exporter(Path destination) {
-        // TODO (M-Multisite) : exportez les lignes via service.exporterCsvVers(...), publiez le bilan
-        //   ou l'erreur dans message, renvoyez true si le fichier a été écrit.
         if (destination == null) {
             return false;
         }
@@ -138,7 +130,6 @@ public class MultisiteViewModel {
 
     /// Recharge la liste des vues sauvegardées (à appeler à l'ouverture de la modale de gestion).
     public void chargerVues() {
-        // TODO (M-Multisite) : rechargez la liste des vues sauvegardées (service.listerVues()).
         vues.setAll(service.listerVues());
     }
 
@@ -146,8 +137,6 @@ public class MultisiteViewModel {
     ///
     /// @return `true` si la vue a été enregistrée
     public boolean enregistrerVue(String nom) {
-        // TODO (M-Multisite) : refusez un nom vide, sinon enregistrez la combinaison de filtres
-        //   courante (service.enregistrerVue), rechargez les vues et renvoyez true.
         if (nom == null || nom.isBlank()) {
             message.set("Donnez un nom à la vue avant de l'enregistrer.");
             return false;
@@ -167,7 +156,6 @@ public class MultisiteViewModel {
     ///
     /// @return `true` si la vue a été appliquée
     public boolean appliquerVue(SavedView vue) {
-        // TODO (M-Multisite) : rejouez les filtres de la vue (service.chargerVue) puis rechargez.
         if (vue == null) {
             return false;
         }
@@ -184,7 +172,6 @@ public class MultisiteViewModel {
     ///
     /// @return `true` si la vue a été mise à jour
     public boolean mettreAJourVue(SavedView vue, String nom) {
-        // TODO (M-Multisite) : mettez à jour le nom + les filtres de la vue (service.mettreAJourVue).
         if (vue == null || nom == null || nom.isBlank()) {
             return false;
         }
@@ -203,7 +190,6 @@ public class MultisiteViewModel {
     ///
     /// @return `true` si la vue a été supprimée
     public boolean supprimerVue(SavedView vue) {
-        // TODO (M-Multisite) : supprimez la vue (service.supprimerVue) puis rechargez la liste.
         if (vue == null) {
             return false;
         }

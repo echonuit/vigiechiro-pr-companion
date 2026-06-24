@@ -30,9 +30,6 @@ import javafx.collections.ObservableList;
 /// éviter une dépendance `passage → sites`). Le calcul passe par la projection
 /// [ServicePassage#detailPassage(Long)]. VM agnostique de l'IHM (règle ArchUnit
 /// `viewmodel_sans_javafx_ui`) : seuls `javafx.beans`/`javafx.collections`. Non-singleton.
-///
-/// TODO (M-Passage) : implémentez les corps des méthodes publiques (ouvrirSur, supprimer) ; les
-/// propriétés observables sont fournies. Patron de référence : SiteDetailViewModel (feature sites).
 public class PassageViewModel {
 
     private final ServicePassage service;
@@ -77,9 +74,6 @@ public class PassageViewModel {
     /// Une erreur (passage introuvable) est restituée dans [#messageProperty()] sans lever.
     public void ouvrirSur(Long idPassage, ContexteSite contexte) {
         this.idPassage = idPassage;
-        // TODO (M-Passage) : chargez le détail du passage (service.detailPassage) et alimentez les
-        //   propriétés (identité, statut, verdict, volumes, stepper, disponibilités) ; en cas d'erreur,
-        //   réinitialisez et publiez le message.
         reinitialiser();
         try {
             appliquer(service.detailPassage(idPassage), contexte);
@@ -94,7 +88,6 @@ public class PassageViewModel {
     /// [ServicePassage#supprimer] ; la [fr.univ_amu.iut.commun.model.RegleMetierException] d'un
     /// passage déposé remonte à la vue, qui l'affiche (même patron que la suppression d'un site).
     public void supprimer() {
-        // TODO (M-Passage) : supprimez le passage courant (service.supprimer).
         service.supprimer(idPassage);
     }
 

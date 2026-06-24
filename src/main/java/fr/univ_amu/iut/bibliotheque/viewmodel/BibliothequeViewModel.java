@@ -51,9 +51,6 @@ public class BibliothequeViewModel {
     /// Charge (ou recharge) la bibliothèque : sélectionne les observations de référence, peuple la
     /// table et met à jour le résumé. À appeler à l'ouverture de l'écran.
     public void charger() {
-        // TODO (M-Bibliotheque) : chargez la bibliothèque via service.exporterBibliotheque(), peuplez
-        // entrees, mettez à jour biblioNonVide et resume, et réinitialisez la sélection. Patron de
-        // référence : SitesViewModel.rafraichir() (feature sites).
         // Reset de la sélection avant de remplacer la liste : sur un rechargement, l'ancienne entrée
         // (et donc le chemin audio) pourrait avoir disparu de la bibliothèque rafraîchie. Le listener
         // de sélection remet alors cheminAudioCourant à null : on repart d'un état neutre cohérent.
@@ -75,8 +72,6 @@ public class BibliothequeViewModel {
     /// @param dossier répertoire de destination choisi par l'observateur
     /// @return `true` si l'export a réussi
     public boolean exporter(Path dossier) {
-        // TODO (M-Bibliotheque) : matérialisez la bibliothèque vers dossier (export.exporterVers),
-        // publiez le bilan ou l'erreur dans message, et renvoyez true si l'export a réussi.
         if (export == null || dossier == null) {
             return false;
         }

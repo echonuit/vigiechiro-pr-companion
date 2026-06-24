@@ -34,9 +34,6 @@ public class LotController implements EmplacementNavigation {
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
-    // TODO (M-Lot) : déclarez les champs @FXML correspondant aux fx:id de Lot.fxml (Label, Button,
-    //   ListView, VBox...), liez-les au LotViewModel dans « @FXML private void initialize() », et
-    //   ajoutez les handlers @FXML des boutons (onAction="#preparer"/"#deposer"). Référence : feature sites.
     @FXML
     private Label lblStatut;
 
