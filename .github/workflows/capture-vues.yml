@@ -1,17 +1,12 @@
 # Met à jour les aperçus PNG des vues (.github/assets/apercu-*.png) à chaque push sur `main`.
 #
-# - Sur le repo enseignant, `main` est la version étudiante auto-générée : les aperçus reflètent
-#   alors les écrans de DÉPART (placeholders « à construire » pour les 8 features à coder, écrans
-#   complets pour `sites` + l'accueil, qui restent la référence).
-# - Sur un repo étudiant, ils se mettent à jour au fur et à mesure que l'étudiant construit son IHM
-#   (à chaque PR mergée dans `main`) : la galerie suit son avancement.
+# Les aperçus servent d'illustrations à la documentation (docs/ecrans/*) : ce workflow les
+# régénère automatiquement à partir du code, pour qu'ils ne se désynchronisent jamais des écrans
+# réels de l'application.
 #
 # Rendu hors-écran via la Headless Platform JavaFX 26 (glass.platform=Headless, rendu logiciel sw) :
 # aucun display X11 requis. Le commit de mise à jour porte `[skip ci]` pour ne pas se redéclencher
 # (et ne déclenche aucune autre CI : un commit d'aperçus n'a pas de code à valider).
-#
-# Ce workflow est CONSERVÉ dans la version étudiante (contrairement à generate-student.yml / lint.yml,
-# retirés au stripping) : c'est lui qui régénère la galerie des étudiants.
 name: Aperçus des vues (main)
 
 on:
@@ -23,61 +18,28 @@ permissions:
   contents: write
   pull-requests: write
 
-# Évite que deux régénérations de main (ex. push enseignant rapprochés) se marchent dessus.
+# Évite que deux régénérations de main (pushes rapprochés) se marchent dessus.
 concurrency:
   group: captures-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   capturer:
-    # forks (org -2026) -> runner self-hosted Linux ; canonique/template -> ubuntu
-    runs-on: ${{ github.repository_owner == 'IUTInfoAix-S201-2026' && fromJSON('["self-hosted", "Linux", "X64"]') || 'ubuntu-latest' }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
         with:
           ref: main
-
-      - name: Garde-fou checkout (anti-flakiness runner self-hosted)
-        # Sur le pool self-hosted, un `_work` réutilisé peut conserver un sparse-checkout ou des
-        # bits `skip-worktree` résiduels : des fichiers suivis (./mvnw, .github/assets/*.sh) sont
-        # alors ABSENTS du disque, mais `git ls-files -d` ne les voit pas (skip != deleted) et
-        # `git reset --hard` ne les restaure pas. On désactive donc le sparse-checkout et on
-        # re-matérialise tout l'arbre à chaque run, puis on vérifie un fichier clé.
-        shell: bash
-        run: |
-          materialiser() {
-            git sparse-checkout disable 2>/dev/null || true
-            git config core.sparseCheckout false 2>/dev/null || true
-            git checkout -f HEAD -- . 2>/dev/null || true
-          }
-          ok() { [ -z "$(git ls-files -d 2>/dev/null)" ] && [ -f .github/assets/capture-screenshots.sh ]; }
-          materialiser
-          if ok; then echo "Workspace OK."; exit 0; fi
-          sleep 3; materialiser
-          if ok; then echo "Workspace OK après matérialisation forcée."; exit 0; fi
-          echo "::warning title=Workspace incomplet::fichiers suivis manquants — diagnostic + réparation"
-          { echo "PWD=$PWD";
-            echo '--- df -i ---';  df -i  "$PWD";
-            echo '--- sparse-checkout ---'; git sparse-checkout list 2>&1 | head;
-            echo '--- manquants ---'; git ls-files -d | head;
-            echo '--- HEAD ---'; git rev-parse HEAD; } 2>&1 || true
-          echo "Réparation : reset --hard + matérialisation"
-          git reset --hard HEAD || true
-          materialiser
-          if ok; then echo "Workspace réparé."; exit 0; fi
-          echo "::error title=Workspace vide::réparation impossible (.git perdu ?) — voir diagnostic"
-          exit 1
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           java-version: '25'
           distribution: 'temurin'
-          # JDK Temurin standard : JavaFX 26 vient des dépendances Maven org.openjfx, la Headless
-          # Platform est 100 % logicielle (pas de runtime natif jdk+fx requis).
-          # Pas de `cache: maven` (cf. maven.yml) : redondant sur self-hosted, et
-          # son save/restore racait sur le ~/.m2 partagé entre runners.
+          # JavaFX 26 vient des dépendances Maven org.openjfx ; la Headless Platform est 100 %
+          # logicielle (aucun runtime natif jdk+fx requis).
           check-latest: false
+          cache: maven
 
       - name: Générer les aperçus PNG (hors-écran)
         run: |
@@ -85,12 +47,9 @@ jobs:
           .github/assets/capture-screenshots.sh
 
       - name: Publier les aperçus via une PR auto-mergée
-        # `main` impose le passage par une PR et github-actions[bot] ne peut PAS pousser en direct
-        # (pas acteur de bypass). On modélise donc le workflow PR : branche -> PR -> squash-merge.
-        # Possible UNIQUEMENT parce que la règle n'impose NI review NI check obligatoire (le bot ne
-        # peut ni s'auto-approuver, ni déclencher les checks d'une PR qu'il a ouverte). Le squash
-        # porte [skip ci] (anti-récursion) ; la PR est labellisée `captures` (exclue des métriques
-        # du leaderboard). copilot_code_review (demande non bloquante) ne gêne pas le merge.
+        # `main` impose le passage par une PR et github-actions[bot] ne peut PAS pousser en direct.
+        # On modélise donc le workflow PR : branche -> PR -> squash-merge. Le squash porte
+        # [skip ci] (anti-récursion : un commit d'aperçus n'a pas de code à valider).
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -104,24 +63,18 @@ jobs:
           BRANCH="bot/apercus-${GITHUB_RUN_ID}"
           MSG="chore(captures): mise à jour des aperçus des vues"
           git switch -c "$BRANCH"
-          git commit -m "$MSG [skip ci]"   # [skip ci] porté par le rebase (anti-récursion)
+          git commit -m "$MSG [skip ci]"
           git push origin "$BRANCH"
 
-          # Label idempotent : sert au leaderboard pour exclure ces PR automatiques des métriques.
-          gh label create captures --color BFD4F2 \
-            --description "PR automatique : aperçus UI (exclue des métriques)" 2>/dev/null || true
-
-          gh pr create --base main --head "$BRANCH" --label captures --title "$MSG" \
+          gh pr create --base main --head "$BRANCH" --title "$MSG" \
             --body "Mise à jour automatique de la galerie d'aperçus (.github/assets/apercu-*.png). PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
 
-          # Merge LINÉAIRE (compatible required_linear_history) : squash si autorisé, sinon rebase
-          # (certaines équipes désactivent le squash sur leur repo). Les deux restent linéaires et
-          # portent [skip ci] (squash via --subject ; rebase via le message du commit de branche).
+          # Merge LINÉAIRE (compatible required_linear_history) : squash si autorisé, sinon rebase.
           # Retry : l'état « mergeable » est parfois calculé en asynchrone juste après l'ouverture.
           for i in 1 2 3 4 5; do
             if gh pr merge "$BRANCH" --squash --delete-branch --subject "$MSG [skip ci]" --body "" 2>/dev/null \
                || gh pr merge "$BRANCH" --rebase --delete-branch 2>/dev/null; then
-              echo "PR de captures mergée (squash ou rebase selon le repo)."
+              echo "PR de captures mergée (squash ou rebase selon la configuration)."
               exit 0
             fi
             echo "Merge pas encore possible (tentative $i/5), nouvelle tentative dans 5 s..."
