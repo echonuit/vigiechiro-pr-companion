@@ -404,6 +404,20 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("#155 : une erreur d'écriture du workspace est FATALE (pas un rejet) et nettoie la session")
+    void erreur_ecriture_workspace_est_fatale() throws IOException {
+        // Piège : « transformes » est un FICHIER → la création du dossier de sortie échoue (erreur d'E/S
+        // workspace). Cela ne doit PAS être classé « fichier rejeté » mais remonter et nettoyer la session.
+        Path session = Files.createDirectories(racine.resolve("ws").resolve(prefixe.nomDossierSession()));
+        Files.writeString(session.resolve("transformes"), "collision");
+
+        assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe))
+                .isInstanceOf(java.io.UncheckedIOException.class);
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+        assertThat(session).doesNotExist();
+    }
+
+    @Test
     @DisplayName("Upsert enregistreur + micro depuis le journal, journal et relevé persistés")
     void upsert_materiel_et_annexes() {
         ResultatImport resultat = service.importer(sd, idPoint, prefixe);

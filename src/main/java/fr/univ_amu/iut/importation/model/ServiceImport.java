@@ -246,9 +246,11 @@ public class ServiceImport {
             // Re-vérification après la phase de transformation : une annulation pendant la DERNIÈRE
             // transformation (postérieure à son propre point de contrôle) doit aussi stopper l'import.
             jeton.leverSiAnnule();
-        } catch (AnnulationImportException annulation) {
+        } catch (RuntimeException echec) {
+            // Annulation (#146) OU erreur fatale (p. ex. écriture workspace impossible, #155) : on nettoie
+            // la session partielle et on remonte — pas de demi-état sur disque ni de passage persisté.
             supprimerSessionPartielle(dossierSession);
-            throw annulation;
+            throw echec;
         }
 
         // Bilan d'import résilient (#155) : tri transformés / rejetés + rapport, délégué à la fabrique.

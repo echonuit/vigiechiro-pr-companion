@@ -58,35 +58,38 @@ public class TransformationAudio {
         Objects.requireNonNull(originalWav, "originalWav");
         Objects.requireNonNull(dossierSortie, "dossierSortie");
         Objects.requireNonNull(prefixe, "prefixe");
+
+        // Lecture + format de la SOURCE : un échec ici est **récupérable** (#155) → l'original est rejeté.
+        FichierWav source = lireSource(originalWav);
+        int frequenceSource = source.frequenceEchantillonnageHz();
+        if (frequenceSource % FACTEUR_EXPANSION != 0) {
+            throw new OriginalIllisibleException("Fréquence source "
+                    + frequenceSource
+                    + " Hz non divisible par "
+                    + FACTEUR_EXPANSION
+                    + " (R10) : "
+                    + originalWav.getFileName());
+        }
+        int frequenceSortie = frequenceSource / FACTEUR_EXPANSION;
+        int octetsParTrame = source.octetsParTrame();
+        int octetsParSequence = DUREE_SEQUENCE_SECONDES * frequenceSortie * octetsParTrame;
+        byte[] pcm = source.donneesPcm();
+        String nomOriginal = originalWav.getFileName().toString();
+        String sha256 = empreinteSource(originalWav);
+
+        // Écriture des séquences dans le WORKSPACE : un échec ici (disque plein, permission…) est
+        // **fatal** — il ne doit pas être masqué en « fichier rejeté » ; il remonte et la session est
+        // nettoyée par l'appelant.
         try {
-            FichierWav source = FichierWav.lire(originalWav);
-            int frequenceSource = source.frequenceEchantillonnageHz();
-            if (frequenceSource % FACTEUR_EXPANSION != 0) {
-                throw new IllegalArgumentException("Fréquence source "
-                        + frequenceSource
-                        + " Hz non divisible par "
-                        + FACTEUR_EXPANSION
-                        + " : l'expansion temporelle exige un multiple de 10 (R10).");
-            }
-            int frequenceSortie = frequenceSource / FACTEUR_EXPANSION;
-            int octetsParTrame = source.octetsParTrame();
-            int tramesParSequence = DUREE_SEQUENCE_SECONDES * frequenceSortie;
-            int octetsParSequence = tramesParSequence * octetsParTrame;
-
-            byte[] pcm = source.donneesPcm();
-            String nomOriginal = originalWav.getFileName().toString();
             Files.createDirectories(dossierSortie);
-
             List<SequenceProduite> sequences = new ArrayList<>();
             int index = 0;
             for (int offset = 0; offset < pcm.length; offset += octetsParSequence) {
                 int longueur = Math.min(octetsParSequence, pcm.length - offset);
                 String nomSequence = prefixe.nommerSequence(nomOriginal, index);
                 Path cheminSequence = dossierSortie.resolve(nomSequence);
-                // Reprise (#231) : on réécrit **toujours** la séquence (R11 : bytes déterministes). C'est le
-                // choix le plus sûr — une séquence périmée ou corrompue par un crash (même de taille
-                // identique) est ainsi régénérée, jamais persistée telle quelle. Le gain d'un import
-                // interrompu vient de la phase de copie (bruts vérifiés par empreinte), pas de la sortie.
+                // Reprise (#231) : on réécrit **toujours** la séquence (R11 : bytes déterministes), pour ne
+                // jamais persister une séquence périmée/corrompue par un crash, même de taille identique.
                 FichierWav.ecrire(
                         cheminSequence,
                         source.nombreCanaux(),
@@ -109,17 +112,36 @@ public class TransformationAudio {
                         Files.size(cheminSequence)));
                 index++;
             }
-
             return new TransformationOriginal(
                     nomOriginal,
                     originalWav,
                     frequenceSource,
                     frequenceSortie,
                     source.dureeSecondes(),
-                    Empreintes.sha256Hex(originalWav),
+                    sha256,
                     sequences);
         } catch (IOException e) {
-            throw new UncheckedIOException("Échec de la transformation de " + originalWav, e);
+            throw new UncheckedIOException(
+                    "Échec d'écriture des séquences de " + originalWav.getFileName() + " dans le workspace", e);
+        }
+    }
+
+    /// Lit le WAV source ; une erreur de lecture/format est **récupérable** ([OriginalIllisibleException]).
+    private static FichierWav lireSource(Path originalWav) {
+        try {
+            return FichierWav.lire(originalWav);
+        } catch (IOException e) {
+            throw new OriginalIllisibleException(
+                    "Original illisible (" + e.getMessage() + ") : " + originalWav.getFileName(), e);
+        }
+    }
+
+    /// Empreinte SHA-256 de la **source** ; une lecture impossible est récupérable (rejet du fichier).
+    private static String empreinteSource(Path originalWav) {
+        try {
+            return Empreintes.sha256Hex(originalWav);
+        } catch (IllegalStateException e) {
+            throw new OriginalIllisibleException("Empreinte de l'original illisible : " + originalWav.getFileName(), e);
         }
     }
 

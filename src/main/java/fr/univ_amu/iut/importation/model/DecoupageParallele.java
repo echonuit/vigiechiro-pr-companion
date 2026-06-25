@@ -92,11 +92,11 @@ final class DecoupageParallele {
             try {
                 TransformationOriginal t = transformation.transformer(original, dossierTransformes, prefixe);
                 resultat = new ResultatDecoupage(original, t, null);
-            } catch (AnnulationImportException annulation) {
-                throw annulation;
-            } catch (RuntimeException echec) {
-                // Résilience (#155) : on consigne le rejet et on continue avec les autres originaux.
-                resultat = new ResultatDecoupage(original, null, raison(echec));
+            } catch (OriginalIllisibleException illisible) {
+                // Résilience (#155) : SEULE une erreur de lecture/format SOURCE est consignée en rejet et
+                // l'import continue. Une erreur d'écriture workspace (UncheckedIOException) reste fatale et
+                // se propage (elle ne doit pas être masquée en « fichier rejeté »).
+                resultat = new ResultatDecoupage(original, null, raison(illisible));
             }
             synchronized (verrouProgression) {
                 int faits = traites.incrementAndGet();
