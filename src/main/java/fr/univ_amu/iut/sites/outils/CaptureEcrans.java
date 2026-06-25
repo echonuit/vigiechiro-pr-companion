@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -176,7 +177,12 @@ public final class CaptureEcrans {
     private static Injector creerInjecteur() {
         return Guice.createInjector(
                 Modules.override(new CommunModule(), new PersistenceModule(), new SitesModule(), new PassageModule())
-                        .with(liaison -> liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE))));
+                        .with(liaison -> {
+                            liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
+                            // L'outil de capture REND la fiche site (sans cliquer « Importer ») : un
+                            // OuvrirImportation no-op suffit, sans installer toute la feature importation.
+                            liaison.bind(OuvrirImportation.class).toInstance(idSite -> {});
+                        }));
     }
 
     /// Insere les donnees d'exemple et renvoie le site + point captures en detail et en modale.

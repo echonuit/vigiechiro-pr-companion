@@ -13,13 +13,11 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -104,7 +102,7 @@ public class MesSitesController {
                         separateur(),
                         colonneStatsPassages(carte),
                         separateur(),
-                        colonneActions(carte));
+                        colonneActions());
         boite.setOnMouseClicked(evenement -> navigation.ouvrirDetail(carte.site()));
         // Accessibilité clavier : la carte (HBox, pas un Control) doit être atteignable au Tab et
         // activable à Entrée/Espace, comme un bouton (opérabilité ISO 25010).
@@ -150,16 +148,13 @@ public class MesSitesController {
         return colonne(nombre, libelle, complement);
     }
 
-    private VBox colonneActions(CarteSite carte) {
-        Button importer = new Button("📥 Importer une nuit");
-        importer.getStyleClass().add("bouton-primaire");
-        importer.setDisable(true);
-        importer.setTooltip(new Tooltip("Disponible avec la feature « Importer une nuit »."));
+    private VBox colonneActions() {
+        // Invite visuelle (chevron) : la carte entière est cliquable/focusable et ouvre la fiche du
+        // site, où se trouve l'action « Importer une nuit » (pré-rattachée au site). Pas de handler
+        // propre sur le chevron (la propagation au parent déclencherait une double navigation).
         Label chevron = new Label("›");
         chevron.getStyleClass().add("carte-chevron");
-        // Pas de handler propre sur le chevron : la carte entière est déjà cliquable et focusable.
-        // Un handler ici déclencherait une double navigation par propagation de l'événement au parent.
-        return colonne(importer, chevron);
+        return colonne(chevron);
     }
 
     private Optional<SaisieSite> demanderCreationSite() {
