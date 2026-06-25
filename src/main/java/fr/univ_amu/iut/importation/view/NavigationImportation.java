@@ -30,20 +30,22 @@ public class NavigationImportation implements OuvrirImportation {
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
     }
 
-    /// Affiche l'assistant « Importer une nuit » dans la zone centrale du chrome (ouverture globale,
-    /// déclenchée par la carte d'accueil).
+    /// Affiche l'assistant « Importer une nuit » dans la zone centrale du chrome (ouverture **globale**,
+    /// déclenchée par la carte d'accueil) : réinitialise le fil à `[Accueil, Import]`.
     public void ouvrir() {
-        afficher(null);
+        afficher(null, true);
     }
 
-    /// Ouvre l'assistant avec le site `idSite` pré-sélectionné dans le rattachement (raccourci depuis
-    /// la fiche d'un site).
+    /// Ouvre l'assistant avec le site `idSite` pré-sélectionné dans le rattachement (raccourci
+    /// **contextuel** depuis la fiche d'un site) : **empile** sur le fil courant (Accueil › Mes sites ›
+    /// Carré N › Import), si bien que le bouton Retour ramène à la fiche appelante. Même patron que
+    /// [fr.univ_amu.iut.passage.view.NavigationPassage].
     @Override
     public void ouvrirPourSite(Long idSite) {
-        afficher(idSite);
+        afficher(idSite, false);
     }
 
-    private void afficher(Long idSitePreselectionne) {
+    private void afficher(Long idSitePreselectionne, boolean racine) {
         FXMLLoader loader = new FXMLLoader(NavigationImportation.class.getResource("Importation.fxml"));
         loader.setControllerFactory(injector::getInstance);
         try {
@@ -52,7 +54,11 @@ public class NavigationImportation implements OuvrirImportation {
             if (idSitePreselectionne != null) {
                 controleur.preselectionnerSite(idSitePreselectionne);
             }
-            navigateur.ouvrirRacine(vue, "import", "Importer une nuit", controleur);
+            if (racine) {
+                navigateur.ouvrirRacine(vue, "import", "Importer une nuit", controleur);
+            } else {
+                navigateur.empiler(vue, "import", "Importer une nuit", controleur);
+            }
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }
