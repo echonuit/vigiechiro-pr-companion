@@ -16,15 +16,36 @@ import java.util.List;
 /// @param nombreOriginaux nombre d'enregistrements originaux importés
 /// @param nombreSequences nombre total de séquences d'écoute produites (R10)
 /// @param anomalies anomalies relevées dans le journal du capteur (R19), éventuellement vide
+/// @param rapport rapport d'import résilient — importés / ignorés / rejetés (#155)
 public record ResultatImport(
         Passage passage,
         SessionDEnregistrement session,
         String numeroSerieEnregistreur,
         int nombreOriginaux,
         int nombreSequences,
-        List<String> anomalies) {
+        List<String> anomalies,
+        RapportImport rapport) {
 
     public ResultatImport {
         anomalies = List.copyOf(anomalies);
+        rapport = rapport == null ? new RapportImport(List.of()) : rapport;
+    }
+
+    /// Variante sans rapport (rapport vide) : pour les appelants/tests qui n'en construisent pas.
+    public ResultatImport(
+            Passage passage,
+            SessionDEnregistrement session,
+            String numeroSerieEnregistreur,
+            int nombreOriginaux,
+            int nombreSequences,
+            List<String> anomalies) {
+        this(
+                passage,
+                session,
+                numeroSerieEnregistreur,
+                nombreOriginaux,
+                nombreSequences,
+                anomalies,
+                new RapportImport(List.of()));
     }
 }
