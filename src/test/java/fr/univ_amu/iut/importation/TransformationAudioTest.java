@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.Empreintes;
+import fr.univ_amu.iut.importation.model.OriginalIllisibleException;
 import fr.univ_amu.iut.importation.model.SequenceProduite;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.TransformationOriginal;
@@ -165,13 +166,16 @@ class TransformationAudioTest {
     }
 
     @Test
-    @DisplayName("R10 : une fréquence source non multiple de 10 est refusée")
+    @DisplayName("R10 : une fréquence source non multiple de 10 est un défaut de format SOURCE récupérable")
     void frequence_non_multiple_de_dix_refusee() throws IOException {
         Path mauvais = dossier.resolve("mauvais.wav");
         ecrireWav(mauvais, CANAUX, 384003, BITS, pcmDeterministe(100));
 
+        // Défaut de format de la SOURCE (#155) : récupérable → l'original est rejeté (et consigné au
+        // rapport par l'appelant), pas une erreur fatale d'écriture du workspace.
         assertThatThrownBy(() -> transformation.transformer(mauvais, dossier.resolve("ko"), prefixe))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(OriginalIllisibleException.class)
+                .hasMessageContaining("384003");
     }
 
     // --- Helpers (autonomes, pas de helper partagé entre fichiers de test) --------------------

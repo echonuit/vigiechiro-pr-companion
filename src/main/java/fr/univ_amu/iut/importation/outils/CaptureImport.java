@@ -14,7 +14,11 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.di.ImportationModule;
+import fr.univ_amu.iut.importation.model.LigneRapport;
 import fr.univ_amu.iut.importation.model.Progression;
+import fr.univ_amu.iut.importation.model.RapportImport;
+import fr.univ_amu.iut.importation.model.ResultatImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
@@ -25,6 +29,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -148,6 +153,27 @@ public final class CaptureImport {
         vm.inspection().dossierSourceProperty().set(creerDossierIncoherence());
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-incoherence.png"));
+
+        // État « import terminé AVEC rapport » (#155) : import résilient — la liste des fichiers rejetés
+        // (illisible, format invalide) et leur raison s'affiche sous le message de succès.
+        vm.inspection().dossierSourceProperty().set(dossierSd);
+        vm.inspecter();
+        RapportImport rapport = new RapportImport(List.of(
+                new LigneRapport(
+                        "Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav",
+                        StatutImportFichier.IMPORTE,
+                        "3 séquence(s)"),
+                new LigneRapport(
+                        "PaRecPR1648011_20260422_210000.wav",
+                        StatutImportFichier.REJETE,
+                        "Original illisible (en-tête WAV invalide)"),
+                new LigneRapport(
+                        "PaRecPR1925492_20260422_211500.wav",
+                        StatutImportFichier.REJETE,
+                        "Fréquence source 44100 Hz non divisible par 10 (R10)"),
+                new LigneRapport("notes-terrain.txt", StatutImportFichier.IGNORE, "fichier non pertinent")));
+        vm.marquerTermine(new ResultatImport(null, null, "1925492", 1, 3, List.of(), rapport));
+        rendre(scene, sortie.resolve("apercu-import-rejets.png"));
     }
 
     /// Rend `scene` hors-écran en PNG et journalise (helper : évite la répétition du libellé de log,

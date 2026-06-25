@@ -8,6 +8,7 @@ import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.InspectionImportViewModel;
@@ -25,6 +26,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
@@ -132,6 +134,12 @@ public class ImportationController implements GardeQuitter {
 
     @FXML
     private Button boutonAnnuler;
+
+    @FXML
+    private VBox zoneRejets;
+
+    @FXML
+    private ListView<String> listeRejets;
 
     /// Jeton d'annulation (#146) de l'opération longue **en cours** (décompression ou import), créé au
     /// lancement et déclenché par le bouton « Annuler ». `null` hors traitement. Accédé uniquement sur le
@@ -290,6 +298,12 @@ public class ImportationController implements GardeQuitter {
                 .textProperty()
                 .bind(Bindings.createStringBinding(
                         this::libelleStatut, viewModel.etatProperty(), viewModel.resultatProperty()));
+
+        // Rapport d'import (#155) : la liste des fichiers rejetés n'apparaît que s'il y en a.
+        listeRejets.setItems(viewModel.rejetsImport());
+        var aDesRejets = Bindings.isNotEmpty(viewModel.rejetsImport());
+        zoneRejets.visibleProperty().bind(aDesRejets);
+        zoneRejets.managedProperty().bind(aDesRejets);
     }
 
     /// « Parcourir » : ouvre le sélecteur de **dossier** natif puis charge la source.
@@ -452,11 +466,14 @@ public class ImportationController implements GardeQuitter {
         if (resultat == null) {
             return "";
         }
-        return "✓ Import terminé : "
+        String base = "✓ Import terminé : "
                 + resultat.nombreSequences()
                 + " séquence(s) produite(s) à partir de "
                 + resultat.nombreOriginaux()
                 + " original(aux).";
+        // Rapport d'import (#155) : on signale les fichiers rejetés, le cas échéant.
+        long rejetes = resultat.rapport().compte(StatutImportFichier.REJETE);
+        return rejetes == 0 ? base : base + " ⚠ " + rejetes + " fichier(s) rejeté(s) — détail ci-dessous.";
     }
 
     private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {

@@ -8,6 +8,7 @@ import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.List;
@@ -21,6 +22,8 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 
 /// ViewModel de l'assistant **M-Import** (« Importer une nuit »), en **orchestrateur** (#183).
 ///
@@ -90,6 +93,9 @@ public class ImportationViewModel {
     /// Horodatage (nanos) du début de l'opération longue en cours (import ou décompression), pour estimer
     /// le **temps restant** (#146). Posé par marquerEnCours / marquerExtractionEnCours.
     private long debutOperationNanos;
+
+    /// Fichiers **rejetés** par le dernier import (#155), « nom — raison », pour les afficher dans M-Import.
+    private final ObservableList<String> rejetsImport = FXCollections.observableArrayList();
 
     public ImportationViewModel(
             ServiceImport serviceImport,
@@ -372,9 +378,19 @@ public class ImportationViewModel {
     public void marquerTermine(ResultatImport resultatImport) {
         resultat.set(resultatImport);
         messageExecution.set("");
+        // Rapport (#155) : on expose la liste des fichiers rejetés (« nom — raison ») pour M-Import.
+        rejetsImport.setAll(resultatImport.rapport().lignes().stream()
+                .filter(l -> l.statut() == StatutImportFichier.REJETE)
+                .map(l -> l.nomFichier() + " — " + l.detail())
+                .toList());
         etat.set(EtatImport.TERMINE);
         navigation.setNavigationVerrouillee(false); // l'import est fini : on peut de nouveau naviguer (#54)
         nettoyerTemporaireZip(); // les fichiers ont été copiés (R9) : le temporaire du zip n'est plus utile (#139)
+    }
+
+    /// Fichiers rejetés (« nom — raison ») par le dernier import (#155), pour affichage dans M-Import.
+    public ObservableList<String> rejetsImport() {
+        return rejetsImport;
     }
 
     /// Applique un échec d'import : efface le résultat, renseigne le message, état `ECHEC`. À
@@ -433,6 +449,7 @@ public class ImportationViewModel {
     private void reinitialiserExecution() {
         etat.set(EtatImport.PRET);
         resultat.set(null);
+        rejetsImport.clear(); // #155
         progression.set(0.0);
         messageProgression.set("");
         messageExecution.set("");

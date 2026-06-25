@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.ResultatImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -142,6 +143,40 @@ class ParcoursImporterNuitE2ETest {
         assertThat(passagePersiste.idPoint()).isEqualTo(point.id());
         assertThat(passagePersiste.annee()).isEqualTo(ANNEE);
         assertThat(passagePersiste.numeroPassage()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName(
+            "P2 #155 : import résilient — un WAV illisible est rejeté+consigné, l'import réussit et le rapport le liste")
+    void parcours_import_resilient_avec_rapport() throws Exception {
+        // Nuit avec un WAV valide ET un WAV illisible (contenu non-WAV portant l'extension .wav).
+        Path nuit = Files.createTempDirectory("vc-e2e-resilient");
+        Files.writeString(nuit.resolve("LogPR" + SERIE + ".txt"), LOG, StandardCharsets.UTF_8);
+        Files.writeString(nuit.resolve("PaRecPR" + SERIE + "_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
+        ecrireWav(nuit.resolve("PaRecPR" + SERIE + "_20260422_203922.wav")); // valide
+        Files.writeString(nuit.resolve("PaRecPR" + SERIE + "_20260422_204500.wav"), "pas un WAV"); // illisible
+
+        ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
+        vm.inspection().dossierSourceProperty().set(nuit);
+        vm.inspecter();
+        vm.chargerSites();
+        vm.rattachement().siteSelectionneProperty().set(site);
+        vm.rattachement().pointSelectionneProperty().set(point);
+        vm.rattachement().anneeProperty().set(ANNEE);
+        vm.rattachement().numeroPassageProperty().set(1);
+
+        vm.importer();
+
+        // L'import réussit avec le WAV valide ; le passage est persisté.
+        assertThat(vm.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
+        ResultatImport resultat = vm.resultatProperty().get();
+        assertThat(resultat.nombreOriginaux()).isEqualTo(1);
+        assertThat(new PassageDao(source).findById(resultat.passage().id())).isPresent();
+
+        // Le rapport liste 1 importé et 1 rejeté (l'illisible), et le VM expose le rejet pour M-Import.
+        assertThat(resultat.rapport().compte(StatutImportFichier.IMPORTE)).isEqualTo(1);
+        assertThat(resultat.rapport().compte(StatutImportFichier.REJETE)).isEqualTo(1);
+        assertThat(vm.rejetsImport()).singleElement().asString().contains("204500");
     }
 
     @Test

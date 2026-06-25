@@ -22,9 +22,11 @@ import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.Progression;
+import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -365,16 +367,54 @@ class ServiceImportTest {
     }
 
     @Test
-    @DisplayName("#12 : un original illisible fait échouer l'import (l'échec remonte malgré la parallélisation)")
-    void original_illisible_fait_echouer_l_import() throws IOException {
+    @DisplayName("#155 : un original illisible est rejeté et consigné, l'import réussit avec les autres")
+    void original_illisible_est_rejete_et_consigne() throws IOException {
         Path corrompu = racine.resolve("sd-corrompu");
         Files.createDirectories(corrompu);
         Files.writeString(corrompu.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         ecrireWav(corrompu.resolve("PaRecPR1925492_20260422_203922.wav")); // WAV valide
         Files.writeString(corrompu.resolve("PaRecPR1925492_20260422_204326.wav"), "pas un WAV"); // illisible
 
-        // L'échec d'un découpage doit remonter (fail-fast) au lieu d'être avalé par la parallélisation.
-        assertThatThrownBy(() -> service.importer(corrompu, idPoint, prefixe)).isInstanceOf(RuntimeException.class);
+        ResultatImport resultat = service.importer(corrompu, idPoint, prefixe);
+
+        // L'import résilient réussit avec le WAV valide ; l'illisible est rejeté + consigné, pas bloquant.
+        assertThat(resultat.nombreOriginaux()).isEqualTo(1);
+        assertThat(originalDao.findBySession(resultat.session().id())).hasSize(1);
+        RapportImport rapport = resultat.rapport();
+        assertThat(rapport.compte(StatutImportFichier.IMPORTE)).isEqualTo(1);
+        assertThat(rapport.compte(StatutImportFichier.REJETE)).isEqualTo(1);
+        assertThat(rapport.lignes())
+                .filteredOn(l -> l.statut() == StatutImportFichier.REJETE)
+                .singleElement()
+                .satisfies(l -> assertThat(l.nomFichier()).contains("204326"));
+    }
+
+    @Test
+    @DisplayName("#155 : aucun original importable (tous illisibles) → import refusé, session nettoyée")
+    void tous_originaux_illisibles_refuse_l_import() throws IOException {
+        Path corrompu = racine.resolve("sd-tout-corrompu");
+        Files.createDirectories(corrompu);
+        Files.writeString(corrompu.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        Files.writeString(corrompu.resolve("PaRecPR1925492_20260422_203922.wav"), "pas un WAV");
+
+        assertThatThrownBy(() -> service.importer(corrompu, idPoint, prefixe))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Aucun enregistrement original");
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+    }
+
+    @Test
+    @DisplayName("#155 : une erreur d'écriture du workspace est FATALE (pas un rejet) et nettoie la session")
+    void erreur_ecriture_workspace_est_fatale() throws IOException {
+        // Piège : « transformes » est un FICHIER → la création du dossier de sortie échoue (erreur d'E/S
+        // workspace). Cela ne doit PAS être classé « fichier rejeté » mais remonter et nettoyer la session.
+        Path session = Files.createDirectories(racine.resolve("ws").resolve(prefixe.nomDossierSession()));
+        Files.writeString(session.resolve("transformes"), "collision");
+
+        assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe))
+                .isInstanceOf(java.io.UncheckedIOException.class);
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+        assertThat(session).doesNotExist();
     }
 
     @Test

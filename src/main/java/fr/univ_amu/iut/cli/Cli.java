@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
@@ -24,7 +25,9 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
+import java.io.IOException;
 import java.io.PrintStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -197,6 +200,17 @@ public final class Cli {
         sortie.println("  Enregistreur: " + resultat.numeroSerieEnregistreur());
         sortie.println("  Originaux   : " + resultat.nombreOriginaux());
         sortie.println("  Séquences   : " + resultat.nombreSequences());
+
+        // Rapport d'import (#155) : résumé à l'écran + archivage CSV dans le dossier de session.
+        RapportImport rapport = resultat.rapport();
+        sortie.println("  Rapport     : " + rapport.resume());
+        Path rapportCsv = Path.of(resultat.session().cheminRacine()).resolve("rapport-import.csv");
+        try {
+            Files.writeString(rapportCsv, rapport.versCsv());
+            sortie.println("  Rapport CSV : " + rapportCsv.toAbsolutePath());
+        } catch (IOException e) {
+            sortie.println("  (rapport CSV non écrit : " + e.getMessage() + ")");
+        }
         return CODE_SUCCES;
     }
 

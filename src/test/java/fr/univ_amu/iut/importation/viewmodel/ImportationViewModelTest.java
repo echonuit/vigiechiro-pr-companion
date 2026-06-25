@@ -16,10 +16,13 @@ import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.JournalParse;
+import fr.univ_amu.iut.importation.model.LigneRapport;
 import fr.univ_amu.iut.importation.model.Progression;
+import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -321,6 +324,20 @@ class ImportationViewModelTest {
         assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.TERMINE);
         assertThat(viewModel.resultatProperty().get().nombreSequences()).isEqualTo(6);
         assertThat(viewModel.messageErreurProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#155 : marquerTermine expose les fichiers rejetés (« nom — raison ») du rapport")
+    void marquer_termine_expose_les_rejets() {
+        RapportImport rapport = new RapportImport(List.of(
+                new LigneRapport("ok.wav", StatutImportFichier.IMPORTE, "3 séquence(s)"),
+                new LigneRapport("casse.wav", StatutImportFichier.REJETE, "Original illisible"),
+                new LigneRapport("notes.txt", StatutImportFichier.IGNORE, "fichier non pertinent")));
+
+        viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 1, 3, List.of(), rapport));
+
+        // Seuls les rejets sont listés, formatés « nom — raison ».
+        assertThat(viewModel.rejetsImport()).containsExactly("casse.wav — Original illisible");
     }
 
     @Test

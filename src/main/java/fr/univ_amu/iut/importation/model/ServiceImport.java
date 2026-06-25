@@ -3,7 +3,6 @@ package fr.univ_amu.iut.importation.model;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
@@ -60,15 +59,6 @@ import java.util.function.Consumer;
 /// mêmes fichiers sans dommage ; la base reste la source de vérité.
 public class ServiceImport {
 
-    /// Heure de repli si le journal ne renseigne pas la fenêtre d'acquisition (`NOT NULL`).
-    private static final String HEURE_INCONNUE = "00:00:00";
-
-    /// Référence de micro inscrite quand le journal ne nomme aucun modèle (colonne `model_ref`
-    /// obligatoire). Le journal LogPR fournit la bande passante et la sensibilité, mais pas la
-    /// référence commerciale du micro : on inscrit donc un libellé explicite (cf. point
-    /// d'intégration).
-    private static final String MODELE_MICRO_NON_JOURNALISE = "Micro PR (modèle non journalisé)";
-
     /// Plafond de découpages audio **simultanés** (#12) : les threads virtuels sont bornés au nombre de
     /// cœurs disponibles, car chaque `transformer` charge un WAV complet en mémoire. Limite le pic
     /// mémoire (≈ ce nombre de PCM en vol) sans brider le débit CPU. Lu une fois au chargement.
@@ -81,7 +71,7 @@ public class ServiceImport {
     private final AgregatImportDao agregatDao;
     private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
-    private final Horloge horloge;
+    private final FabriqueEntitesImport fabriqueEntites;
 
     /// Verrou anti-import-concurrent (#54) : le service étant un **singleton** partagé, il refuse un
     /// second import tant qu'un autre tourne. Filet « pire cas » indépendant de l'IHM (deux
@@ -104,7 +94,7 @@ public class ServiceImport {
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
-        this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.fabriqueEntites = new FabriqueEntitesImport(horloge);
     }
 
     /// Inspecte (lecture seule) le dossier SD sans rien importer : utile pour prévisualiser le
@@ -234,7 +224,7 @@ public class ServiceImport {
         // une annulation lève AnnulationImportException et on supprime la session partielle. Comme la
         // persistance est atomique en fin de course (O7), aucun passage n'est créé → pas de demi-état.
         List<Path> originauxRenommes;
-        List<TransformationOriginal> transformations;
+        List<ResultatDecoupage> resultatsDecoupage;
         Path cheminJournalCopie;
         Path cheminReleveCopie;
         try {
@@ -248,22 +238,39 @@ public class ServiceImport {
                     ? copie.copierVers(rapport.cheminReleveClimatique(), dossierSession)
                     : null;
 
-            // 2) Renommage R6/R7 sur la copie, puis 3) transformation R10/R11 (découpée en parallèle, #12).
+            // 2) Renommage R6/R7 sur la copie, puis 3) transformation R10/R11 (découpée en parallèle, #12,
+            //    résiliente #155 : un original invalide est rejeté et consigné, pas bloquant).
             originauxRenommes = renommeur.renommer(dossierBruts, prefixe);
-            transformations = decoupage.decouper(
+            resultatsDecoupage = decoupage.decouper(
                     originauxRenommes, dossierTransformes, prefixe, nbOriginaux, totalEtapes, progres, jeton);
             // Re-vérification après la phase de transformation : une annulation pendant la DERNIÈRE
             // transformation (postérieure à son propre point de contrôle) doit aussi stopper l'import.
             jeton.leverSiAnnule();
-        } catch (AnnulationImportException annulation) {
+        } catch (RuntimeException echec) {
+            // Annulation (#146) OU erreur fatale (p. ex. écriture workspace impossible, #155) : on nettoie
+            // la session partielle et on remonte — pas de demi-état sur disque ni de passage persisté.
             supprimerSessionPartielle(dossierSession);
-            throw annulation;
+            throw echec;
         }
+
+        // Bilan d'import résilient (#155) : tri transformés / rejetés + rapport, délégué à la fabrique.
+        RapportImportFabrique.BilanImport bilan =
+                RapportImportFabrique.bilan(dossierSource, rapport, resultatsDecoupage);
+        List<TransformationOriginal> transformations = bilan.transformations();
+        if (transformations.isEmpty()) {
+            supprimerSessionPartielle(dossierSession);
+            throw new RegleMetierException("Aucun enregistrement original n'a pu être importé : "
+                    + bilan.rejets().size()
+                    + " fichier(s) rejeté(s) (ex. « "
+                    + (bilan.rejets().isEmpty() ? "" : bilan.rejets().get(0).erreur())
+                    + " »).");
+        }
+        RapportImport rapportImport = bilan.rapport();
 
         // 4) Construction des entités de l'agrégat.
         Enregistreur enregistreur = new Enregistreur(journal.numeroSerie(), journal.versionModele(), null);
-        Micro micro = construireMicro(journal);
-        Passage passage = construirePassage(journal, idPoint, prefixe);
+        Micro micro = fabriqueEntites.micro(journal);
+        Passage passage = fabriqueEntites.passage(journal, idPoint, prefixe);
         long volumeOriginaux = volumeTotal(originauxRenommes);
         long volumeSequences = transformations.stream()
                 .flatMap(t -> t.sequences().stream())
@@ -332,7 +339,8 @@ public class ServiceImport {
                 journal.numeroSerie(),
                 transformations.size(),
                 nombreSequences,
-                journal.anomalies());
+                journal.anomalies(),
+                rapportImport);
     }
 
     /// Copie protégée (R9) des originaux vers `dossierBruts`, en émettant la progression « Copie X/N ·
@@ -386,46 +394,6 @@ public class ServiceImport {
             supprimerSessionPartielle(dossierSession);
             throw new AnnulationImportException();
         }
-    }
-
-    private Passage construirePassage(JournalParse journal, Long idPoint, Prefixe prefixe) {
-        String date = journal.dateDebut() != null
-                ? journal.dateDebut().toString()
-                : horloge.aujourdhui().toString();
-        String heureDebut = journal.heureDebut() != null ? journal.heureDebut() : HEURE_INCONNUE;
-        String heureFin = journal.heureFin() != null ? journal.heureFin() : HEURE_INCONNUE;
-        return new Passage(
-                null,
-                prefixe.numeroPassage(),
-                prefixe.annee(),
-                date,
-                heureDebut,
-                heureFin,
-                journal.parametresAcquisitionJson(),
-                StatutWorkflow.TRANSFORME,
-                null,
-                null,
-                null,
-                null,
-                idPoint,
-                journal.numeroSerie());
-    }
-
-    /// Micro déduit du journal : créé seulement si le journal porte des paramètres micro (R20).
-    private Micro construireMicro(JournalParse journal) {
-        if (journal.bandePassante() == null && journal.sensibilite() == null) {
-            return null;
-        }
-        return new Micro(
-                null,
-                MODELE_MICRO_NON_JOURNALISE,
-                journal.bandePassante(),
-                journal.sensibilite(),
-                null,
-                null,
-                true,
-                "Micro déduit du journal LogPR (modèle non journalisé).",
-                journal.numeroSerie());
     }
 
     private static Passage avecId(Passage p, long id) {
