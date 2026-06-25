@@ -10,20 +10,21 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 /// Découpe (#12) en **parallèle** la transformation R10/R11 des originaux d'une nuit, extraite de
-/// [ServiceImport] (qui gardait sinon trop de responsabilités, PMD GodClass). Un thread virtuel par
-/// fichier (Java 25), la concurrence étant **bornée** par un [Semaphore] : `transformer` charge tout le
-/// PCM en mémoire puis écrit sur disque, donc sans plafond une grosse nuit (~1572 fichiers) tiendrait
-/// trop de WAV en vol → saturation mémoire. Pic mémoire borné ≈ nbCœurs PCM, sans brider le débit CPU.
+/// [ServiceImport]. Un thread virtuel par fichier (Java 25), la concurrence étant **bornée** par un
+/// [Semaphore] : `transformer` charge tout le PCM en mémoire puis écrit sur disque, donc sans plafond
+/// une grosse nuit (~1572 fichiers) tiendrait trop de WAV en vol → saturation mémoire. Pic mémoire
+/// borné ≈ nbCœurs PCM, sans brider le débit CPU.
+///
+/// **Résilience (#155)** : un original illisible ou de format invalide n'**abat plus** l'import — il est
+/// capturé en [ResultatDecoupage] rejeté (avec sa raison) et le découpage se poursuit sur les autres.
+/// Seule une **annulation** ([AnnulationImportException], #146) interrompt l'ensemble.
 ///
 /// L'**ordre d'origine est préservé** (Future récupérés dans l'ordre de soumission) → résultat
 /// déterministe. La progression (#33) est émise **sous verrou + compteur** pour rester appelée un à un,
-/// libellés « k/N · fichier » monotones (#146). Le **fail-fast** (#12) arrête les découpages restants à
-/// la première erreur, mécanisme **réutilisé pour l'annulation** (#146) : lever le jeton agit comme une
-/// erreur.
+/// libellés « k/N · fichier » monotones (#146), un point par fichier traité (réussi **ou** rejeté).
 final class DecoupageParallele {
 
     private final TransformationAudio transformation;
@@ -34,7 +35,7 @@ final class DecoupageParallele {
         this.parallelisme = parallelisme;
     }
 
-    List<TransformationOriginal> decouper(
+    List<ResultatDecoupage> decouper(
             List<Path> originaux,
             Path dossierTransformes,
             Prefixe prefixe,
@@ -42,61 +43,82 @@ final class DecoupageParallele {
             int totalEtapes,
             Consumer<Progression> progres,
             JetonAnnulation jeton) {
-        AtomicInteger transfosFaites = new AtomicInteger(0);
-        AtomicReference<RuntimeException> echecDecoupage = new AtomicReference<>();
+        AtomicInteger traites = new AtomicInteger(0);
         Object verrouProgression = new Object();
         Semaphore creneaux = new Semaphore(parallelisme);
         try (ExecutorService executeur = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<Future<TransformationOriginal>> decoupagesEnCours = originaux.stream()
-                    .map(original -> executeur.submit(() -> {
-                        creneaux.acquire();
-                        try {
-                            // Fail-fast (#12) : si un découpage a déjà échoué (n'importe lequel, quel que
-                            // soit l'ordre), on n'en lance pas un nouveau et on propage l'échec d'origine
-                            // → plus aucun fichier décodé inutilement une fois l'erreur connue.
-                            RuntimeException dejaEchoue = echecDecoupage.get();
-                            if (dejaEchoue != null) {
-                                throw dejaEchoue;
-                            }
-                            // Annulation (#146) : on réutilise le fail-fast — lever ici stoppe les
-                            // découpages restants exactement comme une erreur, sans en lancer de nouveaux.
-                            jeton.leverSiAnnule();
-                            TransformationOriginal resultat =
-                                    transformation.transformer(original, dossierTransformes, prefixe);
-                            synchronized (verrouProgression) {
-                                int faits = transfosFaites.incrementAndGet();
-                                progres.accept(new Progression(
-                                        "Transformation " + faits + "/" + nbOriginaux + " · " + original.getFileName(),
-                                        (double) (nbOriginaux + faits) / totalEtapes));
-                            }
-                            return resultat;
-                        } catch (RuntimeException echec) {
-                            echecDecoupage.compareAndSet(null, echec);
-                            throw echec;
-                        } finally {
-                            creneaux.release();
-                        }
-                    }))
+            List<Future<ResultatDecoupage>> decoupagesEnCours = originaux.stream()
+                    .map(original -> executeur.submit(() -> decouperUn(
+                            original,
+                            dossierTransformes,
+                            prefixe,
+                            nbOriginaux,
+                            totalEtapes,
+                            progres,
+                            jeton,
+                            traites,
+                            verrouProgression,
+                            creneaux)))
                     .toList();
             try {
                 return decoupagesEnCours.stream()
-                        .map(DecoupageParallele::resultatDecoupage)
+                        .map(DecoupageParallele::resultat)
                         .toList();
-            } catch (RuntimeException echec) {
-                // Fail-fast (#12) : à la première erreur, on annule les découpages restants (ceux en
-                // attente sur le sémaphore s'arrêtent net) au lieu d'attendre toute la nuit avant de
-                // remonter l'échec. Sans cela, la fermeture du pool patienterait jusqu'à la fin de tous
-                // les originaux déjà soumis.
+            } catch (AnnulationImportException annulation) {
+                // Annulation (#146) : on arrête les découpages restants au lieu d'attendre la fin de tous
+                // les originaux déjà soumis, puis on propage pour que l'appelant nettoie la session.
                 decoupagesEnCours.forEach(decoupage -> decoupage.cancel(true));
-                throw echec;
+                throw annulation;
             }
         }
     }
 
-    /// Récupère le résultat d'un découpage lancé sur un thread virtuel (#12), en **dévoilant** la cause
-    /// d'un éventuel échec : une [RuntimeException] (ex. [java.io.UncheckedIOException] d'écriture) est
-    /// relancée telle quelle ; une interruption restaure le drapeau du thread avant de remonter l'erreur.
-    private static TransformationOriginal resultatDecoupage(Future<TransformationOriginal> decoupage) {
+    private ResultatDecoupage decouperUn(
+            Path original,
+            Path dossierTransformes,
+            Prefixe prefixe,
+            int nbOriginaux,
+            int totalEtapes,
+            Consumer<Progression> progres,
+            JetonAnnulation jeton,
+            AtomicInteger traites,
+            Object verrouProgression,
+            Semaphore creneaux)
+            throws InterruptedException {
+        creneaux.acquire();
+        try {
+            jeton.leverSiAnnule(); // l'annulation (#146) interrompt ; un rejet de fichier, lui, est capturé
+            ResultatDecoupage resultat;
+            try {
+                TransformationOriginal t = transformation.transformer(original, dossierTransformes, prefixe);
+                resultat = new ResultatDecoupage(original, t, null);
+            } catch (AnnulationImportException annulation) {
+                throw annulation;
+            } catch (RuntimeException echec) {
+                // Résilience (#155) : on consigne le rejet et on continue avec les autres originaux.
+                resultat = new ResultatDecoupage(original, null, raison(echec));
+            }
+            synchronized (verrouProgression) {
+                int faits = traites.incrementAndGet();
+                progres.accept(new Progression(
+                        "Transformation " + faits + "/" + nbOriginaux + " · " + original.getFileName(),
+                        (double) (nbOriginaux + faits) / totalEtapes));
+            }
+            return resultat;
+        } finally {
+            creneaux.release();
+        }
+    }
+
+    private static String raison(RuntimeException echec) {
+        String message = echec.getMessage();
+        return message == null || message.isBlank() ? echec.getClass().getSimpleName() : message;
+    }
+
+    /// Récupère le résultat d'un découpage lancé sur un thread virtuel (#12). Une erreur par fichier est
+    /// déjà capturée dans le [ResultatDecoupage] ; ici on ne propage que l'**annulation** (et on restaure
+    /// le drapeau d'interruption le cas échéant).
+    private static ResultatDecoupage resultat(Future<ResultatDecoupage> decoupage) {
         try {
             return decoupage.get();
         } catch (InterruptedException interruption) {
