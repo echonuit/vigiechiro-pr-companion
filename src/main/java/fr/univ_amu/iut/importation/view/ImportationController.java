@@ -8,6 +8,7 @@ import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.ResultatImport;
+import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.InspectionImportViewModel;
@@ -452,11 +453,14 @@ public class ImportationController implements GardeQuitter {
         if (resultat == null) {
             return "";
         }
-        return "✓ Import terminé : "
+        String base = "✓ Import terminé : "
                 + resultat.nombreSequences()
                 + " séquence(s) produite(s) à partir de "
                 + resultat.nombreOriginaux()
                 + " original(aux).";
+        // Rapport d'import (#155) : on signale les fichiers rejetés, le cas échéant.
+        long rejetes = resultat.rapport().compte(StatutImportFichier.REJETE);
+        return rejetes == 0 ? base : base + " ⚠ " + rejetes + " fichier(s) rejeté(s) — voir le rapport d'import.";
     }
 
     private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {
