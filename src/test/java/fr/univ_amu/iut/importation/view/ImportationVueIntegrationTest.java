@@ -27,6 +27,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -140,6 +141,8 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#boutonImporter").queryAs(Button.class)).isNotNull();
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
         assertThat(robot.lookup("#boutonAnnuler").queryAs(Button.class)).isNotNull(); // #146 (annulation)
+        assertThat(robot.lookup("#zoneRejets").queryAs(VBox.class)).isNotNull(); // #155 (rapport d'import)
+        assertThat(robot.lookup("#listeRejets").queryAs(ListView.class)).isNotNull(); // #155
         // Pré-contrôle R5 (#108) : la zone d'avertissement de doublon et son bouton « n° libre » existent.
         assertThat(robot.lookup("#zonePassageExistant").queryAs(HBox.class)).isNotNull();
         assertThat(robot.lookup("#labelPassageExistant").queryAs(Label.class)).isNotNull();
