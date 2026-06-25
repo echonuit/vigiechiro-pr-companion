@@ -15,6 +15,8 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.Lot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
@@ -37,8 +39,11 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -89,8 +94,14 @@ class ServiceLotTest {
 
         VerificationCoherence verification = new VerificationCoherence(
                 siteDao, pointDao, sessionDao, originalDao, sequenceDao, journalDao, releveDao);
-        service =
-                new ServiceLot(passageDao, sessionDao, sequenceDao, verification, new MoteurWorkflowPassage(), horloge);
+        service = new ServiceLot(
+                passageDao,
+                sessionDao,
+                sequenceDao,
+                verification,
+                new MoteurWorkflowPassage(),
+                horloge,
+                new CompacteurDepot());
     }
 
     private Passage creerPassage(Verdict verdict) {
@@ -166,6 +177,44 @@ class ServiceLotTest {
                 .allMatch(nom -> nom.startsWith(PREFIXE.prefixeFichier()));
         assertThat(passageDao.findById(passage.id()).orElseThrow().statutWorkflow())
                 .isEqualTo(StatutWorkflow.PRET_A_DEPOSER);
+    }
+
+    @Test
+    @DisplayName("#110 : sur un lot préparé, genererArchivesDepot produit « <préfixe>-1.zip » avec les séquences")
+    void generer_archives_depot() throws IOException {
+        Passage passage = creerPassage(Verdict.OK);
+        creerSessionCoherente(passage.id());
+        service.preparerLot(passage.id()); // → Prêt à déposer (préalable exigé par #110)
+        // Le DAO ne stocke que les lignes : on crée les vrais fichiers des 2 séquences dans transformes/.
+        Path transformes = Files.createDirectories(
+                dossier.resolve(PREFIXE.nomDossierSession()).resolve("transformes"));
+        for (int i = 0; i < 2; i++) {
+            Files.write(transformes.resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, i)), new byte[1024]);
+        }
+
+        List<ArchiveDepot> archives = service.genererArchivesDepot(passage.id());
+
+        // Petit lot → une seule archive, nommée d'après le dossier de session (préfixe R6) + « -1 ».
+        assertThat(archives).singleElement().satisfies(a -> {
+            assertThat(a.chemin().getFileName()).hasToString(PREFIXE.nomDossierSession() + "-1.zip");
+            assertThat(a.numero()).isEqualTo(1);
+            assertThat(a.nombreFichiers()).isEqualTo(2);
+        });
+        // Écrite dans le sous-dossier depot/ de la session.
+        assertThat(archives.get(0).chemin())
+                .exists()
+                .hasParent(dossier.resolve(PREFIXE.nomDossierSession()).resolve("depot"));
+    }
+
+    @Test
+    @DisplayName("#110 : genererArchivesDepot refuse un passage non préparé (statut Vérifié)")
+    void generer_archives_avant_preparation_refuse() {
+        Passage passage = creerPassage(Verdict.OK); // statut Vérifié : lot pas encore préparé
+        creerSessionCoherente(passage.id());
+
+        assertThatThrownBy(() -> service.genererArchivesDepot(passage.id()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Prêt à déposer");
     }
 
     @Test

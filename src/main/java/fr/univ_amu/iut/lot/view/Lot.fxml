@@ -48,5 +48,17 @@
             styleClass="action-secondaire" onAction="#deposer"/>
   </HBox>
 
+  <Separator/>
+  <VBox spacing="4.0" styleClass="panneau-lot">
+    <Label fx:id="lblTitreArchives" styleClass="section-titre"/>
+    <Label text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser. Écrites dans le sous-dossier « depot/ » de la session."
+           styleClass="section-sous" wrapText="true"/>
+    <HBox spacing="8.0" alignment="CENTER_LEFT">
+      <Button fx:id="btnGenererArchives" text="🗜 Générer les archives de dépôt"
+              styleClass="action-secondaire" onAction="#genererArchives"/>
+    </HBox>
+    <ListView fx:id="listeArchives" prefHeight="100.0"/>
+  </VBox>
+
   <Label fx:id="lblMessage" styleClass="message-lot" wrapText="true"/>
 </VBox>

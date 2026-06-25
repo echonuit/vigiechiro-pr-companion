@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.Lot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -201,12 +202,26 @@ public final class Cli {
 
     private int exporterLot(ArgumentsCli arguments, PrintStream sortie) {
         long idPassage = arguments.exigerLong(ARG_PASSAGE);
-        Lot lot = injecteur.getInstance(ServiceLot.class).preparerLot(idPassage);
+        ServiceLot serviceLot = injecteur.getInstance(ServiceLot.class);
+        Lot lot = serviceLot.preparerLot(idPassage);
         sortie.println("Lot prêt à déposer pour le passage #" + lot.idPassage() + ".");
         sortie.println("  Séquences : " + lot.nombreSequences());
         sortie.println("  Volume    : "
                 + (lot.volumeSequencesOctets() == null ? "-" : lot.volumeSequencesOctets() + " octets"));
         sortie.println("  Dossier   : " + lot.cheminDossier());
+
+        // Génère les archives ZIP de dépôt Tadarida (≤ 700 Mo, <préfixe>-N.zip) prêtes à téléverser (#110).
+        List<ArchiveDepot> archives = serviceLot.genererArchivesDepot(idPassage);
+        sortie.println("  Archives de dépôt (" + archives.size() + ") :");
+        for (ArchiveDepot archive : archives) {
+            sortie.println("    - "
+                    + archive.chemin().getFileName()
+                    + " ("
+                    + archive.nombreFichiers()
+                    + " fichiers, "
+                    + archive.tailleOctets()
+                    + " octets)");
+        }
         return CODE_SUCCES;
     }
 

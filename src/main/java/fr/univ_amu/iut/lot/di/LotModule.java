@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
+import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.lot.view.NavigationLot;
@@ -54,6 +55,19 @@ public class LotModule extends AbstractModule {
                 siteDao, pointDao, sessionDao, originalDao, sequenceDao, journalDao, releveDao);
     }
 
+    /// Compacteur d'archives de dépôt (#110). **Réglage applicatif** : le plafond (en Mo, base 1000) est
+    /// surchargeable via la propriété système `vigiechiro.depot.taille-max-mo` (même mécanisme que
+    /// `vigiechiro.workspace`) ; à défaut, 700 Mo (contrainte Tadarida).
+    @Provides
+    @Singleton
+    CompacteurDepot fournirCompacteurDepot() {
+        String surcharge = System.getProperty("vigiechiro.depot.taille-max-mo");
+        if (surcharge == null || surcharge.isBlank()) {
+            return new CompacteurDepot();
+        }
+        return new CompacteurDepot(Long.parseLong(surcharge.trim()) * 1000 * 1000);
+    }
+
     @Provides
     @Singleton
     ServiceLot fournirServiceLot(
@@ -62,8 +76,9 @@ public class LotModule extends AbstractModule {
             SequenceDao sequenceDao,
             VerificationCoherence verification,
             MoteurWorkflowPassage moteurWorkflow,
-            Horloge horloge) {
-        return new ServiceLot(passageDao, sessionDao, sequenceDao, verification, moteurWorkflow, horloge);
+            Horloge horloge,
+            CompacteurDepot compacteur) {
+        return new ServiceLot(passageDao, sessionDao, sequenceDao, verification, moteurWorkflow, horloge, compacteur);
     }
 
     /// ViewModel de M-Lot. **Non-singleton** (un VM frais par chargement FXML).

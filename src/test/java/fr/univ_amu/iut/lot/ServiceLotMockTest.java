@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
@@ -70,7 +71,8 @@ class ServiceLotMockTest {
                 sequenceDao,
                 verification,
                 new MoteurWorkflowPassage(),
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                new CompacteurDepot());
         when(passageDao.findById(1L)).thenReturn(Optional.of(passageAJeter(1L)));
 
         assertThatThrownBy(() -> service.preparerLot(1L))

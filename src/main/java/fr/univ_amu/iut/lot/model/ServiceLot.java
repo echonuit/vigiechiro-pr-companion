@@ -12,6 +12,7 @@ import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -47,19 +48,31 @@ public class ServiceLot {
     private final MoteurWorkflowPassage moteurWorkflow;
     private final Horloge horloge;
 
+    /// Compacteur des archives de dépôt (#110). **Reçu par constructeur** pour que son plafond soit un
+    /// réglage applicatif (alimenté par [fr.univ_amu.iut.lot.di.LotModule] depuis une propriété système),
+    /// pas une valeur codée en dur dans le chemin métier.
+    private final CompacteurDepot compacteur;
+
     public ServiceLot(
             PassageDao passageDao,
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             VerificationCoherence verification,
             MoteurWorkflowPassage moteurWorkflow,
-            Horloge horloge) {
+            Horloge horloge,
+            CompacteurDepot compacteur) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.verification = Objects.requireNonNull(verification, "verification");
         this.moteurWorkflow = Objects.requireNonNull(moteurWorkflow, "moteurWorkflow");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.compacteur = Objects.requireNonNull(compacteur, "compacteur");
+    }
+
+    /// Plafond de taille (octets) appliqué à chaque archive de dépôt (#110), pour l'affichage du réglage.
+    public long plafondArchiveOctets() {
+        return compacteur.tailleMaxOctets();
     }
 
     /// Consulte l'état de dépôt d'un passage **sans le transitionner** (lecture pour l'IHM M-Lot) :
@@ -134,6 +147,45 @@ public class ServiceLot {
                 passage, StatutWorkflow.DEPOSE, horloge.maintenant().toString());
         passageDao.update(depose);
         return depose;
+    }
+
+    /// Génère les **archives ZIP de dépôt** (#110) du passage : les séquences d'écoute (R8) sont
+    /// scindées en archives `<préfixe>-N.zip` ≤ 700 Mo ([CompacteurDepot]), écrites dans un sous-dossier
+    /// `depot/` de la session. Le préfixe est le nom du dossier de session (R22 : dossier = préfixe R6).
+    /// Ne change pas le statut (la transition Prêt à déposer → Déposé reste portée par
+    /// [#marquerDepose(Long)], une fois le téléversement manuel effectué).
+    ///
+    /// @return les archives produites, par numéro croissant
+    /// @throws RegleMetierException si le passage/session est introuvable ou si aucune séquence n'est à déposer
+    public List<ArchiveDepot> genererArchivesDepot(Long idPassage) {
+        Objects.requireNonNull(idPassage, "idPassage");
+        Passage passage = chargerPassage(idPassage);
+        // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
+        // On n'archive donc que des passages Prêt à déposer ou déjà Déposé : l'API ne court-circuite pas
+        // ces contrôles, même si l'IHM masque déjà le bouton avant cet état.
+        if (passage.statutWorkflow() != StatutWorkflow.PRET_A_DEPOSER
+                && passage.statutWorkflow() != StatutWorkflow.DEPOSE) {
+            throw new RegleMetierException("Les archives de dépôt ne peuvent être générées qu'une fois le lot"
+                    + " préparé (statut « Prêt à déposer ») : préparez d'abord le lot.");
+        }
+        SessionDEnregistrement session = sessionDao
+                .trouverParPassage(idPassage)
+                .orElseThrow(() -> new RegleMetierException(
+                        "Session d'enregistrement introuvable pour le passage " + idPassage + "."));
+        List<SequenceDEcoute> sequences = sequenceDao.findBySession(session.id());
+        if (sequences.isEmpty()) {
+            throw new RegleMetierException(
+                    "Aucune séquence à déposer pour le passage " + idPassage + " : préparez d'abord le lot.");
+        }
+        Path racineSession = Path.of(session.cheminRacine());
+        String prefixe = racineSession.getFileName().toString(); // R22 : nom du dossier = préfixe R6
+        // Le chemin d'une séquence est absolu en production ; on tolère un chemin relatif (résolu contre
+        // la racine de session) pour rester robuste aux données héritées.
+        List<Path> fichiers = sequences.stream()
+                .map(s -> Path.of(s.cheminFichier()))
+                .map(p -> p.isAbsolute() ? p : racineSession.resolve(p))
+                .toList();
+        return compacteur.compacter(fichiers, prefixe, racineSession.resolve("depot"));
     }
 
     private Passage chargerPassage(Long idPassage) {
