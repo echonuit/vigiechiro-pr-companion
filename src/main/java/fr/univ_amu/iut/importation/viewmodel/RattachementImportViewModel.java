@@ -76,6 +76,17 @@ public class RattachementImportViewModel {
         sites.setAll(serviceSites.listerSites(idUtilisateur));
     }
 
+    /// Pré-sélectionne, dans la combobox site, le site d'identifiant `idSite` s'il figure dans la liste
+    /// chargée (raccourci « Importer une nuit » depuis la fiche d'un site). Sans effet si `idSite` est
+    /// nul ou ne correspond à aucun site de l'utilisateur. Le changement de site recharge ses points
+    /// (listener du constructeur), comme une sélection manuelle.
+    public void preselectionnerSite(Long idSite) {
+        if (idSite == null) {
+            return;
+        }
+        sites.stream().filter(site -> idSite.equals(site.id())).findFirst().ifPresent(siteSelectionne::set);
+    }
+
     /// `true` si le rattachement est complet : site + point + n° de passage valides. Condition
     /// nécessaire de [ImportationViewModel#peutImporter()].
     public boolean estComplet() {

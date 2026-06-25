@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
+import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.importation.view.ActiviteImporterNuit;
+import fr.univ_amu.iut.importation.view.NavigationImportation;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 
@@ -47,6 +49,9 @@ public class ImportationModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(ActiviteImporterNuit.class);
+        // Permet à la fiche d'un site (feature `sites`) d'ouvrir l'import pré-rattaché, sans dépendre
+        // du `view` de cette feature : `NavigationImportation` (singleton) fournit le contrat du socle.
+        bind(OuvrirImportation.class).to(NavigationImportation.class);
     }
 
     @Provides

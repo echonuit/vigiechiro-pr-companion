@@ -193,6 +193,11 @@ public class ImportationViewModel {
         rattachement.chargerSites();
     }
 
+    /// Pré-sélectionne le site `idSite` dans le rattachement (raccourci depuis la fiche d'un site).
+    public void preselectionnerSite(Long idSite) {
+        rattachement.preselectionnerSite(idSite);
+    }
+
     /// Inspecte le dossier source courant **en lecture seule** (R9) via le sous-VM inspection. En cas
     /// de succès, transmet au rattachement l'exemple de nom (aperçu) ; en cas d'erreur (publiée par
     /// l'inspection), remet l'exécution et l'aperçu à zéro.

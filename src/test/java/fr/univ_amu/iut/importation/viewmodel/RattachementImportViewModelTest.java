@@ -68,6 +68,32 @@ class RattachementImportViewModelTest {
     }
 
     @Test
+    @DisplayName("preselectionnerSite sélectionne le site d'id correspondant et recharge ses points")
+    void preselection_site_correspondant() {
+        when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(ETANG));
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.chargerSites();
+
+        vm.preselectionnerSite(1L);
+
+        assertThat(vm.siteSelectionneProperty().get()).isEqualTo(ETANG);
+        assertThat(vm.points()).containsExactly(A1);
+    }
+
+    @Test
+    @DisplayName("preselectionnerSite ignore un id inconnu ou nul (aucune sélection)")
+    void preselection_site_inconnu_ou_nul() {
+        when(serviceSites.listerSites(ID_USER)).thenReturn(List.of(ETANG));
+        vm.chargerSites();
+
+        vm.preselectionnerSite(999L);
+        assertThat(vm.siteSelectionneProperty().get()).isNull();
+
+        vm.preselectionnerSite(null);
+        assertThat(vm.siteSelectionneProperty().get()).isNull();
+    }
+
+    @Test
     @DisplayName("Rattachement complet : estComplet vrai, idPoint + préfixe + aperçu disponibles")
     void rattachement_complet() {
         when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));

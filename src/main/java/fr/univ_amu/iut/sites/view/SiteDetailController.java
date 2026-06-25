@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -49,6 +50,7 @@ public class SiteDetailController {
     private final SiteDetailViewModel viewModel;
     private final NavigationSites navigation;
     private final OuvrirPassage ouvrirPassage;
+    private final OuvrirImportation ouvrirImportation;
     private final OuvreurDeLien ouvreurDeLien;
 
     @FXML
@@ -113,10 +115,12 @@ public class SiteDetailController {
             SiteDetailViewModel viewModel,
             NavigationSites navigation,
             OuvrirPassage ouvrirPassage,
+            OuvrirImportation ouvrirImportation,
             OuvreurDeLien ouvreurDeLien) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.ouvrirImportation = Objects.requireNonNull(ouvrirImportation, "ouvrirImportation");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
     }
 
@@ -167,6 +171,12 @@ public class SiteDetailController {
     @FXML
     private void ajouterPoint() {
         navigation.ouvrirModaleCreationPoint(fenetre(), viewModel.siteCourant(), viewModel::rafraichir);
+    }
+
+    /// Ouvre l'assistant « Importer une nuit » avec ce site déjà pré-rattaché (raccourci contextuel).
+    @FXML
+    private void importerNuit() {
+        ouvrirImportation.ouvrirPourSite(viewModel.siteCourant().id());
     }
 
     @FXML

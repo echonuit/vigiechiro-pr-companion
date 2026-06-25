@@ -143,6 +143,12 @@ public class ImportationController implements GardeQuitter {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
     }
 
+    /// Pré-sélectionne le site `idSite` dans le rattachement (raccourci « Importer une nuit » depuis
+    /// la fiche d'un site). À appeler juste après le chargement FXML, une fois les sites listés.
+    public void preselectionnerSite(Long idSite) {
+        viewModel.preselectionnerSite(idSite);
+    }
+
     /// Garde de navigation : un dossier source a été choisi pour un import **préparé mais pas lancé**
     /// (état PRET). Quitter perdrait cette préparation → confirmation. L'import EN COURS, lui, est déjà
     /// bloqué par le verrou de navigation (#54) ; une fois TERMINE/ECHEC, il n'y a plus rien à perdre.
