@@ -32,6 +32,10 @@ record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int bitsParE
     private static final int TAILLE_ENTETE = 44;
     private static final short FORMAT_PCM = 1;
 
+    /// Placeholder « taille de données inconnue » (0xFFFFFFFF) écrit par certains enregistreurs en flux :
+    /// signifie « jusqu'à la fin du fichier », à ne pas confondre avec une troncature (#156).
+    private static final long TAILLE_DATA_INCONNUE = 0xFFFFFFFFL;
+
     /// Octets par trame (échantillon multi-canal) : `canaux * bits/8`.
     int octetsParTrame() {
         return nombreCanaux * (bitsParEchantillon / 8);
@@ -72,7 +76,20 @@ record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int bitsParE
                 bits = lireUint16(o, corps + 14);
             } else if ("data".equals(id)) {
                 dataDebut = corps;
-                dataLongueur = (int) Math.min(taille, (long) o.length - corps);
+                long disponible = (long) o.length - corps;
+                // Intégrité (#156) : un en-tête qui annonce plus d'octets de données que le fichier n'en
+                // contient = fichier **tronqué/corrompu**. On le refuse au lieu de le lire silencieusement
+                // plus court (ce qui « passerait inaperçu » et fausserait l'analyse). Le placeholder « taille
+                // inconnue » (0xFFFFFFFF), qui signifie « jusqu'à la fin », n'est pas une troncature.
+                if (taille != TAILLE_DATA_INCONNUE && taille > disponible) {
+                    throw new IOException("Fichier WAV tronqué (données annoncées "
+                            + taille
+                            + " octets, "
+                            + disponible
+                            + " présents) : "
+                            + fichier);
+                }
+                dataLongueur = (int) Math.min(taille, disponible);
             }
             // Avance au chunk suivant (taille + padding éventuel pour rester aligné sur un mot).
             pos = corps + (int) taille + (taille % 2 == 1 ? 1 : 0);
