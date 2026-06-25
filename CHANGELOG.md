@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.2.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.1.0...v1.2.0) (2026-06-25)
+
+
+### Features
+
+* **style:** re-skin de l'application en indigo (étape 2/2, aligné sur le brief) ([#242](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/242)) ([d6852ed](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/d6852ed32bdbe37ea0152d3e0b2ad98cfda68a28)), closes [#4a90d9](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/4a90d9) [#3f51b5](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/3f51b5) [#303f9f](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/303f9f) [#c5cae9](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/c5cae9) [#eef0fa](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/eef0fa) [#1a2a45](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1a2a45) [#1a237e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1a237e) [#b9770e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/b9770e)
+
 # [1.1.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.0.1...v1.1.0) (2026-06-25)
 
 
