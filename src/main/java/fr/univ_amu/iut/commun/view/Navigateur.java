@@ -18,7 +18,9 @@ import javafx.scene.Parent;
 /// Singleton Guice partagé par tout l'applicatif. Il tient un **historique de navigation** (pile des
 /// écrans visités, base = Accueil) dont le sommet alimente [#vueCentraleProperty()] (liée par le
 /// [MainController] au centre du `BorderPane`). Les écrans restent **vivants** dans la pile : revenir
-/// ré-affiche l'instance précédente (état préservé), sans rechargement.
+/// ré-affiche l'instance précédente (état préservé), sans rechargement — sauf si l'écran déclare le
+/// contrat [RafraichirAuRetour], auquel cas il est rechargé au retour (p. ex. M-Passage, dont une
+/// sous-activité comme M-Qualification a pu modifier l'état pendant qu'il était masqué).
 ///
 /// Deux notions distinctes (décision « fil d'Ariane hybride ») :
 ///  - le **← Retour** suit l'**historique** ([#revenir()]) ;
@@ -135,6 +137,7 @@ public class Navigateur {
         }
         historique.remove(historique.size() - 1);
         synchroniser();
+        rafraichirSommetAuRetour();
     }
 
     /// Dépile jusqu'à l'étape `index` de l'historique (clic d'un segment de fil en mode repli).
@@ -146,6 +149,7 @@ public class Navigateur {
             historique.remove(historique.size() - 1);
         }
         synchroniser();
+        rafraichirSommetAuRetour();
     }
 
     /// Réaffiche l'accueil global (dépile tout). Neutralisé tant que la navigation est verrouillée (#54).
@@ -215,5 +219,19 @@ public class Navigateur {
         vueCentrale.set(sommet.vue());
         navigation.setVueCourante(sommet.id());
         navigation.setFilAriane(filActuel().stream().map(Lieu::libelle).collect(Collectors.joining(" › ")));
+    }
+
+    /// Recharge le sommet courant s'il déclare [RafraichirAuRetour]. Appelé uniquement par les
+    /// **retours** ([#revenir], [#revenirAIndex]) : un écran qu'on ré-affiche peut montrer des données
+    /// modifiées par une sous-activité pendant qu'il était masqué. Les ouvertures « avant » (empiler,
+    /// ouvrirRacine) chargent déjà un écran neuf, donc n'ont pas besoin de ce rappel.
+    private void rafraichirSommetAuRetour() {
+        if (historique.isEmpty()) {
+            return;
+        }
+        RafraichirAuRetour hook = historique.get(historique.size() - 1).rafraichirAuRetour();
+        if (hook != null) {
+            hook.rafraichirAuRetour();
+        }
     }
 }

@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
@@ -46,7 +47,7 @@ import javafx.scene.layout.HBox;
 /// [OuvrirVerification], [OuvrirDiagnostic], [OuvrirLot] et [OuvrirValidation] (sans dépendre des
 /// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
 /// logique métier ici (règle ArchUnit `view_sans_jdbc`).
-public class PassageController implements EmplacementNavigation {
+public class PassageController implements EmplacementNavigation, RafraichirAuRetour {
 
     /// Pseudo-classe CSS portant le liseré « prochaine action recommandée » sur la carte concernée.
     private static final PseudoClass RECOMMANDEE = PseudoClass.getPseudoClass("recommandee");
@@ -202,6 +203,17 @@ public class PassageController implements EmplacementNavigation {
         this.idPassage = idPassage;
         this.contexte = contexte;
         viewModel.ouvrirSur(idPassage, contexte);
+    }
+
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur ce passage
+    /// (← Retour ou fil d'Ariane) : une sous-activité (M-Qualification, M-Vision-Tadarida, M-Lot…) a pu
+    /// faire avancer le statut du workflow pendant qu'il était masqué. On rejoue [#ouvrirSur] avec le
+    /// contexte courant pour réafficher l'état réel (statut, verdict…), au lieu d'un état périmé.
+    @Override
+    public void rafraichirAuRetour() {
+        if (idPassage != null) {
+            viewModel.ouvrirSur(idPassage, contexte);
+        }
     }
 
     /// Libellé identifiant ce passage pour le fil d'Ariane (« Détails du passage N° X »), valide une

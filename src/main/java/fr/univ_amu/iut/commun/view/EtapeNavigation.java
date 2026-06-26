@@ -31,4 +31,9 @@ public record EtapeNavigation(String id, String libelle, Parent vue, Object cont
     public EmplacementNavigation emplacement() {
         return controleur instanceof EmplacementNavigation e ? e : null;
     }
+
+    /// Le hook de rafraîchissement au retour déclaré par l'écran, ou `null` s'il n'en déclare pas.
+    public RafraichirAuRetour rafraichirAuRetour() {
+        return controleur instanceof RafraichirAuRetour r ? r : null;
+    }
 }
