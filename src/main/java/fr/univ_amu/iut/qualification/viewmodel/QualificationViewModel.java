@@ -132,7 +132,7 @@ public class QualificationViewModel {
             statut.set(StatutWorkflow.VERIFIE);
             avertissementAJeter.set(
                     service.estAJeter(idPassage)
-                            ? "⚠ Passage marqué « à jeter » : il sera exclu du prochain lot de dépôt (R14)."
+                            ? "⚠ Passage marqué « à jeter » : il sera exclu du prochain lot de dépôt."
                             : "");
             message.set("");
             etatVerdict.set(EtatVerdict.ENREGISTRE);

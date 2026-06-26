@@ -92,6 +92,8 @@ class AnalyseurLogPRTest {
                 .anyMatch(a -> a.contains("Sonde"))
                 .anyMatch(a -> a.contains("Batterie faible"))
                 .anyMatch(a -> a.contains("Réveil non programmé"));
+        // #258 : les anomalies sont affichées dans la liste du diagnostic → pas de code de règle visible.
+        assertThat(journal.anomalies()).allSatisfy(a -> assertThat(a).doesNotContain("R20", "R19"));
     }
 
     @Test

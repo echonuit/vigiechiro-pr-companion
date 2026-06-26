@@ -121,7 +121,10 @@ class QualificationViewModelTest {
         viewModel.enregistrer();
 
         assertThat(viewModel.etatVerdictProperty().get()).isEqualTo(EtatVerdict.ENREGISTRE);
-        assertThat(viewModel.avertissementAJeterProperty().get()).contains("à jeter");
+        // #258 : message affiché (lié à lblAvertissement) → pas de code de règle visible.
+        assertThat(viewModel.avertissementAJeterProperty().get())
+                .contains("à jeter")
+                .doesNotContain("R14");
     }
 
     @Test

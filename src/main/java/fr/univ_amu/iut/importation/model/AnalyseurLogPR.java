@@ -123,7 +123,7 @@ public final class AnalyseurLogPR {
                     "Journal LogPR inexploitable : aucun numéro de série d'enregistreur trouvé.");
         }
         if (sondePresente != null && !sondePresente) {
-            anomalies.add("Sonde température/hygrométrie absente ou défaillante (R20).");
+            anomalies.add("Sonde température/hygrométrie absente ou défaillante.");
         }
 
         return new JournalParse(
