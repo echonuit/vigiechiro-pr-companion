@@ -95,6 +95,14 @@ Assistant d'import d'une nuit de Passive Recorder (`importation/view/Importation
 <td><a href="apercu-import-melange.png"><img src="apercu-import-melange.png" width="440" alt="M-Import mélange"></a></td>
 <td><a href="apercu-import-incoherence.png"><img src="apercu-import-incoherence.png" width="440" alt="M-Import incohérence"></a></td>
 </tr>
+<tr>
+<th>Source « .zip » : décompression avec progression</th>
+<th>Rapport d'import : fichiers rejetés listés (import résilient)</th>
+</tr>
+<tr>
+<td><a href="apercu-import-decompression.png"><img src="apercu-import-decompression.png" width="440" alt="M-Import décompression .zip"></a></td>
+<td><a href="apercu-import-rejets.png"><img src="apercu-import-rejets.png" width="440" alt="M-Import rapport de rejets"></a></td>
+</tr>
 </table>
 
 ---
@@ -177,15 +185,28 @@ Import et revue des résultats Tadarida (`validation/view/Validation.fxml`).
 
 Préparation et dépôt du lot vers la plateforme (`lot/view/Lot.fxml`).
 
+Workflow du dépôt étape par étape : ① préparer · ② générer les archives · ③ téléverser · ④ marquer
+déposé (+ cas bloquant).
+
 <table>
 <tr>
-<th>Vérifié cohérent : récap + dossier, préparer actif</th>
-<th>Prêt à déposer : marquer déposé actif</th>
-<th>Vérifié incohérent : alertes de cohérence R14</th>
+<th>① Vérifié : « Vérifier et préparer le lot »</th>
+<th>② Prêt à déposer : « Générer les archives » actif</th>
+<th>② Génération en cours : indicateur, actions gelées</th>
 </tr>
 <tr>
 <td><a href="apercu-lot-preparer.png"><img src="apercu-lot-preparer.png" width="300" alt="M-Lot préparer"></a></td>
 <td><a href="apercu-lot-deposer.png"><img src="apercu-lot-deposer.png" width="300" alt="M-Lot déposer"></a></td>
+<td><a href="apercu-lot-generation.png"><img src="apercu-lot-generation.png" width="300" alt="M-Lot génération en cours"></a></td>
+</tr>
+<tr>
+<th>③ Archives générées : liste ZIP, « Ouvrir le dossier »</th>
+<th>④ Déposé : toutes les étapes franchies</th>
+<th>Vérifié incohérent : alertes de cohérence R14</th>
+</tr>
+<tr>
+<td><a href="apercu-lot-archives.png"><img src="apercu-lot-archives.png" width="300" alt="M-Lot archives générées"></a></td>
+<td><a href="apercu-lot-depose.png"><img src="apercu-lot-depose.png" width="300" alt="M-Lot déposé"></a></td>
 <td><a href="apercu-lot-alertes.png"><img src="apercu-lot-alertes.png" width="300" alt="M-Lot alertes"></a></td>
 </tr>
 </table>

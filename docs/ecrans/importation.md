@@ -18,6 +18,14 @@ Le bouton **Importer cette nuit** lance la copie (sans toucher aux originaux), l
 préfixe `CarXXXXXX-AAAA-PassN-YY-`, puis la transformation des enregistrements en séquences de 5 s
 ralenties dix fois.
 
+## Source compressée (.zip)
+
+Vous pouvez aussi désigner une **archive `.zip`** (ou la glisser-déposer) plutôt qu'un dossier :
+l'application la **décompresse** d'abord, avec une barre de progression et un bouton « Annuler »,
+avant de poursuivre l'inspection comme pour un dossier ordinaire.
+
+![Décompression d'une archive .zip choisie comme source : progression et annulation.](../assets/captures/apercu-import-decompression.png)
+
 ## L'inspection vous alerte
 
 L'inspection signale les anomalies **avant** l'import, pour éviter d'importer une mauvaise nuit.
@@ -42,3 +50,12 @@ Une fois lancé, l'import affiche une **barre de progression** (copie puis trans
 le formulaire** le temps de l'opération.
 
 ![Import en cours : barre de progression, formulaire gelé.](../assets/captures/apercu-import-en-cours.png)
+
+## Rapport d'import
+
+L'import est **résilient** : un fichier illisible ou de format invalide n'interrompt pas toute la nuit.
+Les enregistrements exploitables sont importés, et un **rapport** récapitule à la fin ce qui a été
+importé, **ignoré** (fichier non pertinent) ou **rejeté** (avec la raison). Les fichiers rejetés sont
+listés directement sous le message de fin d'import.
+
+![Import terminé avec rapport : la liste des fichiers rejetés et leur raison s'affiche sous le message de succès.](../assets/captures/apercu-import-rejets.png)

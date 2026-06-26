@@ -1,9 +1,14 @@
 package fr.univ_amu.iut.lot.outils;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -13,11 +18,16 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.lot.di.LotModule;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.view.LotController;
+import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
@@ -39,8 +49,11 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -48,13 +61,17 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture l'écran M-Lot en PNG pour le comparer à la maquette du brief, en **trois états** afin
-/// d'en montrer les particularités :
+/// Capture l'écran M-Lot en PNG pour le comparer à la maquette du brief, en illustrant **le workflow
+/// du dépôt étape par étape** (#251) :
 ///
-/// - `apercu-lot-preparer.png` : passage **Vérifié** cohérent — récap (séquences · volume) + dossier
-///   à téléverser, bouton « Préparer le lot » actif ;
-/// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation) — bouton « Marquer
-///   déposé » actif ;
+/// - `apercu-lot-preparer.png` : passage **Vérifié** cohérent — étape ① « Vérifier et préparer le lot »
+///   active ;
+/// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation) — étape ② « Générer les
+///   archives » active ;
+/// - `apercu-lot-generation.png` : **génération en cours** — indicateur d'activité, bouton désactivé ;
+/// - `apercu-lot-archives.png` : **archives générées** — liste des ZIP, « Ouvrir le dossier » actif,
+///   étape ③ « Téléverser » courante ;
+/// - `apercu-lot-depose.png` : passage **Déposé** — état final, toutes les étapes franchies ;
 /// - `apercu-lot-alertes.png` : passage **Vérifié incohérent** (séquences/journal manquants) — la
 ///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé.
 ///
@@ -109,8 +126,19 @@ public final class CaptureLot {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
+        // Horloge figée : la date de dépôt (marquerDepose) est ainsi **déterministe** dans l'aperçu
+        // « déposé » (sinon l'horodatage système changerait le PNG à chaque régénération).
         Injector injecteur = Guice.createInjector(
-                new CommunModule(), new PersistenceModule(), new SitesModule(), new PassageModule(), new LotModule());
+                Modules.override(new CommunModule()).with(new AbstractModule() {
+                    @Provides
+                    Horloge horlogeFigee() {
+                        return new HorlogeFigee(LocalDateTime.of(2026, 6, 21, 8, 0));
+                    }
+                }),
+                new PersistenceModule(),
+                new SitesModule(),
+                new PassageModule(),
+                new LotModule());
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         ServiceLot service = injecteur.getInstance(ServiceLot.class);
@@ -119,27 +147,66 @@ public final class CaptureLot {
         long idCoherent = seederPassageCoherent(source, idPoint);
         long idIncoherent = seederPassageIncoherent(source, idPoint);
 
-        // 1) Vérifié cohérent : « Préparer le lot » actif.
+        // Workflow du dépôt illustré étape par étape (#251) :
+        // ① Vérifié cohérent : « Vérifier et préparer le lot » actif.
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-preparer.png"));
-        // 2) Après préparation : Prêt à déposer, « Marquer déposé » actif.
+        // Après préparation : Prêt à déposer (étape ② à faire), « Générer les archives » actif.
         service.preparerLot(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-deposer.png"));
-        // 3) Vérifié incohérent : zone d'alertes (R14), « Préparer » désactivé.
+        // ② Génération des archives en cours : indicateur d'activité, bouton désactivé.
+        rendrePilote(
+                injecteur,
+                idCoherent,
+                sortie.resolve("apercu-lot-generation.png"),
+                LotViewModel::marquerGenerationEnCours);
+        // ③ Archives générées : liste des ZIP, « Ouvrir le dossier » actif, étape « Téléverser » courante.
+        rendrePilote(
+                injecteur,
+                idCoherent,
+                sortie.resolve("apercu-lot-archives.png"),
+                vm -> vm.appliquerGeneration(archivesDemo(vm)));
+        // ④ Déposé : état final, toutes les étapes franchies.
+        service.marquerDepose(idCoherent);
+        rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-depose.png"));
+        // Cas bloquant : Vérifié incohérent → zone d'alertes (R14), « Préparer » désactivé.
         rendre(injecteur, idIncoherent, sortie.resolve("apercu-lot-alertes.png"));
     }
 
     /// Charge `Lot.fxml`, l'ouvre sur le passage puis rend la scène hors-écran en PNG.
     private static void rendre(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        rendrePilote(injecteur, idPassage, fichier, vm -> {});
+    }
+
+    /// Variante de [#rendre] qui **pilote le ViewModel** après ouverture (états non reflétés par
+    /// `consulterLot` : génération en cours, archives produites), via une `controllerFactory` à VM connu.
+    private static void rendrePilote(Injector injecteur, long idPassage, Path fichier, Consumer<LotViewModel> pilote)
+            throws IOException {
+        LotViewModel vm = injecteur.getInstance(LotViewModel.class);
         FXMLLoader loader = new FXMLLoader(LotController.class.getResource("Lot.fxml"));
-        loader.setControllerFactory(injecteur::getInstance);
+        loader.setControllerFactory(type -> type == LotController.class
+                ? new LotController(
+                        vm,
+                        injecteur.getInstance(OuvrirSite.class),
+                        injecteur.getInstance(OuvrirPassage.class),
+                        injecteur.getInstance(OuvreurDeLien.class))
+                : injecteur.getInstance(type));
         Parent vue = loader.load();
         LotController controleur = loader.getController();
         // Capture hors-chrome : le fil d'Ariane n'est pas rendu ; le contexte n'a donc pas à être réel.
         controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, CODE_POINT, null)));
+        pilote.accept(vm);
         // Hauteur généreuse : le flux ordonné à 4 étapes (#251) est haut ; à l'écran il défile dans le
         // chrome, mais la capture hors-chrome doit tout rendre sans écraser la zone d'alertes (R14).
         ApercuFx.enregistrerPng(new Scene(vue, 980, 880), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Archives ZIP de **démonstration** (#251) pour l'aperçu « archives générées » : on ne zippe pas
+    /// réellement (les WAV de la base de démo n'existent pas sur disque), on alimente directement la vue
+    /// avec une archive plausible dans le sous-dossier `depot/` de la session.
+    private static List<ArchiveDepot> archivesDemo(LotViewModel vm) {
+        Path archive = Path.of(vm.cheminDepotProperty().get(), PREFIXE.prefixeFichier() + "1.zip");
+        return List.of(new ArchiveDepot(archive, 1, VOLUME_SEQUENCES_OCTETS, 6));
     }
 
     private static long seederSiteEtPoint(SourceDeDonnees source) {

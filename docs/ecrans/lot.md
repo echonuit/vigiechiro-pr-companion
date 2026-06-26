@@ -1,27 +1,47 @@
 # Lot
 
 L'écran **Lot** (« Préparer le dépôt ») prépare et trace le **dépôt** d'une nuit vérifiée sur la
-plateforme Vigie-Chiro. Le dépôt se fait en trois temps.
+plateforme Vigie-Chiro. Le dépôt suit un **flux ordonné en quatre étapes**, rappelé en haut de l'écran
+par un fil d'étapes (l'étape courante est mise en avant) :
 
-## Préparer, téléverser, marquer déposé
+**① Préparer · ② Générer les archives · ③ Téléverser · ④ Marquer déposé.**
 
-![L'écran Lot : récapitulatif du lot et étapes du dépôt.](../assets/captures/apercu-lot-preparer.png)
+## ① Vérifier et préparer le lot
 
-Le **récapitulatif** indique le nombre de séquences, le volume et le **dossier à téléverser**
-manuellement sur Vigie-Chiro. Les trois étapes sont :
+![L'écran Lot : récapitulatif du lot et première étape « Vérifier et préparer le lot ».](../assets/captures/apercu-lot-preparer.png)
 
-1. **Préparer le lot** : l'application contrôle la cohérence du passage et le prépare pour le dépôt
-   (statut « Prêt à déposer »). Le chemin du **dossier à téléverser** est indiqué dans le
-   récapitulatif.
-2. **Téléverser** ce dossier **manuellement** sur Vigie-Chiro, depuis votre navigateur.
-3. **Marquer déposé** une fois le téléversement terminé.
+Le **récapitulatif** indique le nombre de séquences et le volume. « Vérifier et préparer le lot »
+contrôle d'abord que la nuit est **complète et conforme** (transformation effectuée, fichiers bien
+nommés, journal du capteur présent, relevé climatique), puis **verrouille** la liste des séquences qui
+partiront. Vos fichiers d'origine ne sont pas modifiés. Le passage passe alors au statut « Prêt à
+déposer ».
 
-## Une fois le lot prêt
+## ② Générer les archives de dépôt
 
-Quand le lot a été préparé, le bouton **Marquer déposé** devient actif : un clic fait passer le
-passage au statut « Déposé » (ce qui déverrouille ensuite la validation Tadarida).
+![L'état « Prêt à déposer » : l'étape « Générer les archives » devient active.](../assets/captures/apercu-lot-deposer.png)
 
-![L'état « Prêt à déposer » : le bouton « Marquer déposé » est actif.](../assets/captures/apercu-lot-deposer.png)
+Ce que l'on téléverse sur Vigie-Chiro, ce sont des **archives ZIP** (≤ 700 Mo), découpées depuis les
+séquences et écrites dans le sous-dossier `depot/` de la session. La génération peut être **longue**
+sur une grosse nuit : elle s'exécute en arrière-plan, avec un indicateur d'activité, et les actions
+sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une archive incomplète).
+
+![Génération des archives en cours : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
+
+## ③ Téléverser ces archives sur Vigie-Chiro
+
+![Archives générées : la liste des ZIP s'affiche et « Ouvrir le dossier » s'active.](../assets/captures/apercu-lot-archives.png)
+
+Une fois les archives produites, la liste des `.zip` s'affiche et le bouton **« Ouvrir le dossier »**
+s'active : il ouvre directement le sous-dossier `depot/` dans le gestionnaire de fichiers, pour vous
+amener au bon endroit. Le **téléversement est manuel** (hors application) : vous déposez ces archives
+sur Vigie-Chiro depuis votre navigateur.
+
+## ④ Marquer le passage déposé
+
+![L'état « Déposé » : toutes les étapes sont franchies.](../assets/captures/apercu-lot-depose.png)
+
+Une fois le téléversement terminé, « Marquer déposé » fait passer le passage au statut « Déposé » (ce
+qui déverrouille ensuite la validation Tadarida) et trace la date du dépôt.
 
 ## Alertes de cohérence
 
