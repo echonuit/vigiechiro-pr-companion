@@ -236,6 +236,14 @@ Vérifier : `java -version` doit afficher `openjdk version "25.0.x"`.
 
 </details>
 
+## 🙌 Remerciements
+
+Ce projet a été construit par les **21 équipes** d'étudiantes et étudiants de la promo 2026 du
+**BUT Informatique** (IUT d'Aix-Marseille), dans le cadre de la **SAÉ 2.01**. Leurs dépôts de
+travail vivent dans l'organisation [IUTInfoAix-S201-2026](https://github.com/IUTInfoAix-S201-2026).
+
+👉 La liste complète des contributrices et contributeurs est dans **[REMERCIEMENTS.md](REMERCIEMENTS.md)**.
+
 ---
 
 <p align="center"><sub>
