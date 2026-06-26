@@ -70,3 +70,7 @@ La **vue audio** (sonogramme et spectrogramme) est présente dans les écrans de
 [Qualification](ecrans/qualification.md), de [Validation](ecrans/validation.md) et de la
 [Bibliothèque](ecrans/bibliotheque.md). La barre <kbd>Espace</kbd> lance ou met en pause la lecture
 (voir les [Raccourcis clavier](raccourcis-clavier.md)).
+
+Le **niveau sonore est normalisé** automatiquement : les cris de faible et de forte amplitude sont
+ramenés à un volume comparable, pour les écouter et les comparer sans réajuster le volume à chaque
+séquence.
