@@ -10,6 +10,8 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.AttenteAudio;
+import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -33,10 +35,7 @@ import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.view.ValidationController;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.UncheckedIOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,7 +46,6 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
@@ -173,61 +171,20 @@ public final class CaptureValidation {
             ligneSelectionnee = true;
         }
 
-        // On n'attend l'audio QUE si une ligne a effectivement été sélectionnée (un WAV va donc se
-        // charger). Sans ligne (p. ex. feature Validation pas encore implémentée -> table vide),
-        // entrer dans la boucle d'évènements imbriquée pour rien la ferait tourner jusqu'au secours
-        // de 8 s, ce qui déstabilise la Headless Platform JavaFX 26 (ré-entrée du toolkit via
-        // NestedRunnableProcessor) et fait crasher le `new Stage()` suivant. On capture alors
-        // directement l'écran (vide), sans attente ni boucle imbriquée.
+        // L'AudioView charge le WAV de façon asynchrone : on attend ce chargement (spectrogramme
+        // peint) via une boucle d'évènements imbriquée ([AttenteAudio]), le Stage étant montré AVANT
+        // la boucle puis la scène capturée sans recréer de Stage ([ApercuFx#capturerApresPreparation]).
+        // Cela contourne le refus d'un `new Stage()` post-boucle de la Headless Platform JavaFX 26.
+        // Sans ligne sélectionnée (table vide), aucun audio à attendre : capture directe.
         if (ligneSelectionnee && vue.lookup("#audioView") instanceof AudioView audio) {
             audio.setMinHeight(340);
             audio.setPrefHeight(340);
-            attendreChargementAudio(audio);
+            ApercuFx.capturerApresPreparation(scene, () -> AttenteAudio.attendreChargement(audio), fichier);
+        } else {
+            ApercuFx.enregistrerPng(scene, fichier);
         }
-        ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
         fini.countDown();
-    }
-
-    /// Attend que l'`AudioView` ait fini de charger le WAV (durée &gt; 0 → samples lus, spectrogramme
-    /// calculé) et l'ait peint, **sans bloquer le thread JavaFX** : [Platform#enterNestedEventLoop]
-    /// pompe les évènements FX, de sorte que le chargement asynchrone (thread de fond +
-    /// `Platform.runLater`) s'exécute pendant l'attente. Un secours de 8 s sort de la boucle si
-    /// l'audio ne se charge jamais (WAV illisible), pour ne pas bloquer.
-    private static void attendreChargementAudio(AudioView audio) {
-        if (audio.getDuration() > 0) {
-            return;
-        }
-        Object cle = new Object();
-        AtomicBoolean sorti = new AtomicBoolean(false);
-        Runnable sortir = () -> {
-            if (sorti.compareAndSet(false, true)) {
-                Platform.exitNestedEventLoop(cle, null);
-            }
-        };
-        audio.durationProperty().addListener((obs, ancien, nouveau) -> {
-            if (nouveau.doubleValue() > 0) {
-                sortirApres(sortir, 700); // laisse quelques pulses pour peindre le spectrogramme
-            }
-        });
-        sortirApres(sortir, 8000); // secours anti-blocage
-        Platform.enterNestedEventLoop(cle);
-    }
-
-    /// Planifie `sortir` sur le thread JavaFX après `delaiMs` (depuis un thread démon). Exécuté
-    /// pendant la boucle d'évènements imbriquée, il en provoque la sortie.
-    private static void sortirApres(Runnable sortir, long delaiMs) {
-        Thread minuterie = new Thread(() -> {
-            try {
-                Thread.sleep(delaiMs);
-            } catch (InterruptedException interrompu) {
-                Thread.currentThread().interrupt();
-                return;
-            }
-            Platform.runLater(sortir);
-        });
-        minuterie.setDaemon(true);
-        minuterie.start();
     }
 
     /// Charge `Validation.fxml`, l'ouvre sur le passage, sélectionne éventuellement une ligne (index
@@ -292,7 +249,7 @@ public final class CaptureValidation {
                     null,
                     session.id()));
             Path cheminTransforme = workspace.resolve("transformes").resolve(base + "_000.wav");
-            genererWavDemo(cheminTransforme); // vrai signal → spectrogramme + sonogramme dans AudioView
+            SonDemo.ecrireCrisDemo(cheminTransforme); // vrai signal → spectrogramme + sonogramme
             sequenceDao.insert(new SequenceDEcoute(
                     null,
                     base + "_000.wav",
@@ -337,56 +294,6 @@ public final class CaptureValidation {
 
     private static String ligne(String... champs) {
         return "\"" + String.join("\";\"", champs) + "\"\n";
-    }
-
-    /// Écrit un petit WAV de démonstration (PCM 16 bits mono, 44,1 kHz, ~3 s) à `cible` : une suite
-    /// de **cris FM descendants** (≈14 kHz → 7 kHz, enveloppe de Hann) imitant une Pipistrelle après
-    /// expansion temporelle. Donne un sonogramme pulsé et un spectrogramme à strates obliques bien
-    /// lisibles dans l'`AudioView` (signal de synthèse, aucun fichier audio réel embarqué).
-    private static void genererWavDemo(Path cible) throws IOException {
-        final int frequenceEchantillonnage = 44_100;
-        final int nbEchantillons = (int) (3.0 * frequenceEchantillonnage);
-        final int nbCris = 8;
-        final int dureeCri = (int) (0.06 * frequenceEchantillonnage);
-        short[] echantillons = new short[nbEchantillons];
-        for (int c = 0; c < nbCris; c++) {
-            int debut = (int) ((0.12 + c * 0.34) * frequenceEchantillonnage);
-            double dureeS = dureeCri / (double) frequenceEchantillonnage;
-            for (int i = 0; i < dureeCri && debut + i < nbEchantillons; i++) {
-                double tSec = i / (double) frequenceEchantillonnage;
-                // FM linéaire descendante : phase = 2π (f0·t + (f1-f0)/(2T)·t²).
-                double phase = 2 * Math.PI * (14_000 * tSec + (7_000 - 14_000) / (2 * dureeS) * tSec * tSec);
-                double enveloppe = 0.5 - 0.5 * Math.cos(2 * Math.PI * i / dureeCri); // Hann
-                echantillons[debut + i] = (short) (enveloppe * Math.sin(phase) * 28_000);
-            }
-        }
-        Files.createDirectories(cible.getParent());
-        try (OutputStream sortie = Files.newOutputStream(cible)) {
-            ecrireWav(sortie, echantillons, frequenceEchantillonnage);
-        }
-    }
-
-    /// Sérialise `echantillons` (PCM 16 bits mono) dans un conteneur WAV/RIFF minimal (little-endian).
-    private static void ecrireWav(OutputStream sortie, short[] echantillons, int frequence) throws IOException {
-        int tailleData = echantillons.length * 2;
-        ByteBuffer buffer = ByteBuffer.allocate(44 + tailleData).order(ByteOrder.LITTLE_ENDIAN);
-        buffer.put("RIFF".getBytes(StandardCharsets.US_ASCII));
-        buffer.putInt(36 + tailleData);
-        buffer.put("WAVE".getBytes(StandardCharsets.US_ASCII));
-        buffer.put("fmt ".getBytes(StandardCharsets.US_ASCII));
-        buffer.putInt(16); // taille du sous-bloc fmt
-        buffer.putShort((short) 1); // PCM
-        buffer.putShort((short) 1); // mono
-        buffer.putInt(frequence);
-        buffer.putInt(frequence * 2); // débit octets/s
-        buffer.putShort((short) 2); // alignement de bloc
-        buffer.putShort((short) 16); // bits par échantillon
-        buffer.put("data".getBytes(StandardCharsets.US_ASCII));
-        buffer.putInt(tailleData);
-        for (short echantillon : echantillons) {
-            buffer.putShort(echantillon);
-        }
-        sortie.write(buffer.array());
     }
 
     /// Insère en SQL brut un site (`monitoring_site`) et son point d'écoute (`listening_point`),
