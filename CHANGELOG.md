@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.13.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.13.0...v1.13.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **import:** rafraîchir la détection de nuit déjà importée au clic ([#214](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/214)) ([#283](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/283)) ([13aeec6](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/13aeec6ce9ec538eeefa45b0086351d48aec640a)), closes [214/#147](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/147) [#280](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/280) [#280](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/280)
+
 # [1.13.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.12.0...v1.13.0) (2026-06-26)
 
 
