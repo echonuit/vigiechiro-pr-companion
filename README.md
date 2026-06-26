@@ -20,7 +20,7 @@ d'une nuit entière. VigieChiro PR Companion accompagne l'observateur de la **ca
 > **Télécharger et lancer.** Des **installeurs** prêts à l'emploi (Windows `.msi`, macOS `.dmg`
 > Apple Silicon, Linux `.deb`, sans Java à installer) sont publiés sur la page
 > [Releases](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases). Guide
-> d'utilisation : [documentation utilisateur](docs/prise-en-main.md).
+> d'utilisation : [documentation utilisateur](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/prise-en-main/).
 
 ---
 
@@ -70,7 +70,7 @@ Téléchargez l'installeur de votre système sur la page
 | macOS (Apple Silicon) | `.dmg` | Non (embarqué) |
 | Linux (Debian/Ubuntu) | `.deb` | Non (embarqué) |
 
-La prise en main pas à pas est dans la [documentation utilisateur](docs/prise-en-main.md).
+La prise en main pas à pas est dans la [documentation utilisateur](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/prise-en-main/).
 
 ### Lancer depuis les sources
 
@@ -149,21 +149,23 @@ La persistance utilise **SQLite** (fichier `vigiechiro.db`) via des **DAO** écr
 ### Les 9 fonctionnalités (+ outillage)
 
 Chaque fonctionnalité est un **paquet** autonome. Cette table fait le **pont entre les deux ressources
-complémentaires** : le **nom du paquet** renvoie à la **documentation de l'écran** (comment l'application
-se comporte), et son **parcours** au **[brief](https://iutinfoaix-s201.github.io/brief/)** (l'énoncé
-d'origine : le besoin et les scénarios utilisateur).
+complémentaires** : le **nom du paquet** renvoie à la
+**[documentation de l'écran](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/)**
+(comment l'application se comporte), et son **parcours** au
+**[brief](https://iutinfoaix-s201.github.io/brief/)** (l'énoncé d'origine : le besoin et les scénarios
+utilisateur).
 
 | Fonctionnalité | Parcours (brief) | Rôle |
 |---|---|---|
-| [`sites`](docs/ecrans/sites.md) | [P1](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P1%20-%20D%C3%A9clarer%20un%20site%20de%20suivi/) | Gérer les sites de suivi et leurs points d'écoute |
-| [`passage`](docs/ecrans/passage.md) | [P2](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement/) | Écran pivot d'une nuit (fiche, statut, navigation, suppression) |
-| [`importation`](docs/ecrans/importation.md) | [P2](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement/) | Importer une nuit depuis la carte SD (copie, renommage, transformation) |
-| [`qualification`](docs/ecrans/qualification.md) | [P3](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P3%20-%20V%C3%A9rifier%20l%27enregistrement%20par%20%C3%A9chantillonnage/) | Écouter les séquences et poser un verdict de qualité |
-| [`lot`](docs/ecrans/lot.md) | [P4](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Pr%C3%A9parer%20un%20lot%20pr%C3%AAt%20%C3%A0%20d%C3%A9poser/) | Préparer et déposer un lot vérifié |
-| [`validation`](docs/ecrans/validation.md) | [P7](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida/) | Revue des observations Tadarida (espèces), import/export CSV `_Vu` |
-| [`multisite`](docs/ecrans/multisite.md) | [P5](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages/) | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
-| [`diagnostic`](docs/ecrans/diagnostic.md) | [P6](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20mat%C3%A9riel/) | Diagnostic d'une nuit (courbe climat, anomalies) |
-| [`bibliotheque`](docs/ecrans/bibliotheque.md) | [P10](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence/) | Bibliothèque de sons de référence + export |
+| [`sites`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/sites/) | [P1](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P1%20-%20D%C3%A9clarer%20un%20site%20de%20suivi/) | Gérer les sites de suivi et leurs points d'écoute |
+| [`passage`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/passage/) | [P2](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement/) | Écran pivot d'une nuit (fiche, statut, navigation, suppression) |
+| [`importation`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/importation/) | [P2](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement/) | Importer une nuit depuis la carte SD (copie, renommage, transformation) |
+| [`qualification`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/qualification/) | [P3](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P3%20-%20V%C3%A9rifier%20l%27enregistrement%20par%20%C3%A9chantillonnage/) | Écouter les séquences et poser un verdict de qualité |
+| [`lot`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/lot/) | [P4](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Pr%C3%A9parer%20un%20lot%20pr%C3%AAt%20%C3%A0%20d%C3%A9poser/) | Préparer et déposer un lot vérifié |
+| [`validation`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/validation/) | [P7](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida/) | Revue des observations Tadarida (espèces), import/export CSV `_Vu` |
+| [`multisite`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/multisite/) | [P5](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages/) | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
+| [`diagnostic`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/diagnostic/) | [P6](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20mat%C3%A9riel/) | Diagnostic d'une nuit (courbe climat, anomalies) |
+| [`bibliotheque`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/bibliotheque/) | [P10](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence/) | Bibliothèque de sons de référence + export |
 
 S'ajoutent la fonctionnalité transverse **`cli`** (import/export en ligne de commande) et le paquet
 **`perf/`** (outils de **mesure de performance**, cf. [`docs/benchmarks/`](docs/benchmarks/README.md)).
@@ -206,7 +208,7 @@ Le détail (exécution headless, taxonomie des tests, ce qui bloque la CI) est d
 
 ## 5. Documentation de référence
 
-- **Documentation utilisateur** : [site MkDocs](docs/) (prise en main, écrans, parcours, raccourcis,
+- **Documentation utilisateur** : [site de documentation](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/) (prise en main, écrans, parcours, raccourcis,
   glossaire, FAQ).
 - **Galerie des écrans** : [.github/assets/README.md](.github/assets/README.md) (chaque vue, états pertinents côte à côte).
 - [Java 25 API](https://docs.oracle.com/en/java/javase/25/docs/api/) · [JavaFX 26 API](https://openjfx.io/javadoc/26/) · [Tutoriel FXML](https://openjfx.io/openjfx-docs/)
