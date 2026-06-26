@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.13.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.13.1...v1.13.2) (2026-06-26)
+
+
+### Bug Fixes
+
+* **test:** débloquer le hang headless introduit par [#283](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/283) (modale native) ([#284](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/284)) ([91a96b6](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/91a96b661b6d9dff8a786dd123ecb15d9fb567f3)), closes [#147](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/147)
+
 ## [1.13.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.13.0...v1.13.1) (2026-06-26)
 
 
