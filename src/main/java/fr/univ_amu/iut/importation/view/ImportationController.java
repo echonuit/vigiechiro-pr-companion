@@ -158,16 +158,16 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     /// **injectable** pour les tests (la double confirmation se vérifie alors sans dialogue natif),
     /// comme le `ConfirmateurQuitter` du Navigateur. Reçoit le message, renvoie `true` si l'utilisateur
     /// confirme.
-    private Predicate<String> confirmateur = this::confirmerParDialogue;
+    private final ConfirmationsImport confirmations = new ConfirmationsImport(this::confirmerParDialogue);
 
     @Inject
     public ImportationController(ImportationViewModel viewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
     }
 
-    /// Remplace le confirmateur d'écrasement (#214), pour les tests (évite la boîte de dialogue native).
+    /// Remplace le confirmateur (#214), pour les tests (évite la boîte de dialogue native).
     void setConfirmateur(Predicate<String> confirmateur) {
-        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+        confirmations.definirConfirmateur(confirmateur);
     }
 
     /// Pré-sélectionne le site `idSite` dans le rattachement (raccourci « Importer une nuit » depuis
@@ -443,6 +443,14 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         if (!viewModel.peutImporter().get()) {
             return;
         }
+        // #214/#147 : si cette nuit a déjà été importée (avertissement non vide, possiblement à un autre
+        // point/n°), on demande une confirmation explicite avant de créer un nouveau passage (« importer
+        // quand même »), plutôt que de procéder en silence. L'écrasement d'un passage au quadruplet choisi
+        // reste une action distincte (bouton « Écraser et réimporter », #279).
+        if (!confirmations.confirmerImportNuitDejaImportee(
+                viewModel.inspection().avertissementNuitExistanteProperty().get())) {
+            return;
+        }
         lancerImportHorsThread(viewModel::executerImport);
     }
 
@@ -457,14 +465,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
                 || !viewModel.inspection().estInspecte()) {
             return;
         }
-        if (!confirmateur.test(
-                "Le n° de passage choisi est déjà utilisé. Écraser le passage existant et le remplacer par cette"
-                        + " nuit ?")) {
-            return;
-        }
-        int sequences = viewModel.controleNumero().compterSequencesAEcraser();
-        if (!confirmateur.test("⚠ Suppression DÉFINITIVE du passage existant et de ses " + sequences
-                + " séquence(s). Action irréversible. Confirmer l'écrasement ?")) {
+        if (!confirmations.confirmerEcrasement(viewModel.controleNumero().compterSequencesAEcraser())) {
             return;
         }
         lancerImportHorsThread(viewModel.controleNumero()::ecraserEtImporter);

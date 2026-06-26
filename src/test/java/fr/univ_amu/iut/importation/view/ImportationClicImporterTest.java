@@ -242,6 +242,62 @@ class ImportationClicImporterTest {
                 .hasSize(1);
     }
 
+    @Test
+    @DisplayName("#214/#147 : importer une nuit déjà importée demande confirmation avant un nouveau passage")
+    void nuit_deja_importee_demande_confirmation(FxRobot robot) {
+        importerUneFois(robot); // la nuit est importée une 1re fois (n° 1)
+        ServiceImport service = injector.getInstance(ServiceImport.class);
+
+        // Re-inspection : la nuit est désormais en base → l'avertissement #147 se renseigne. On vise un n°
+        // LIBRE (n° 2) pour que l'import soit possible (R5 ok) mais signalé comme nuit déjà importée.
+        preparerSecondPassageSurNumeroLibre(robot);
+        assertThat(viewModel.inspection().avertissementNuitExistanteProperty().get())
+                .as("la nuit déjà importée est signalée")
+                .isNotEmpty();
+
+        // L'utilisateur refuse « importer quand même » : aucun nouveau passage n'est créé.
+        List<String> confirmations = new ArrayList<>();
+        controleur.setConfirmateur(message -> {
+            confirmations.add(message);
+            return false;
+        });
+        robot.interact(robot.lookup("#boutonImporter").queryButton()::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(confirmations)
+                .as("une confirmation explicite est demandée pour une nuit déjà importée")
+                .singleElement(org.assertj.core.api.InstanceOfAssertFactories.STRING)
+                .contains("déjà été importée");
+        assertThat(service.nuitDejaImportee("1925492", "2026-04-22"))
+                .as("refus → aucun nouveau passage créé")
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#214/#147 : confirmer « importer quand même » crée un nouveau passage pour la nuit")
+    void nuit_deja_importee_importer_quand_meme(FxRobot robot) {
+        importerUneFois(robot);
+        preparerSecondPassageSurNumeroLibre(robot);
+
+        controleur.setConfirmateur(message -> true); // l'utilisateur assume le doublon
+        robot.interact(robot.lookup("#boutonImporter").queryButton()::fire);
+        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+
+        assertThat(injector.getInstance(ServiceImport.class).nuitDejaImportee("1925492", "2026-04-22"))
+                .as("importer quand même → un second passage pour la même nuit")
+                .hasSize(2);
+    }
+
+    /// Re-inspecte la même nuit (désormais en base) pour renseigner l'avertissement #147, et vise un n° de
+    /// passage **libre** (n° 2) : l'import redevient possible mais signalé comme nuit déjà importée.
+    private void preparerSecondPassageSurNumeroLibre(FxRobot robot) {
+        robot.interact(() -> {
+            viewModel.inspecter();
+            viewModel.rattachement().numeroPassageProperty().set(2);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
     /// Inspecte la carte SD, rattache au seul site/point, fixe le n° 1, puis importe jusqu'à TERMINE.
     private void importerUneFois(FxRobot robot) {
         robot.interact(() -> {
