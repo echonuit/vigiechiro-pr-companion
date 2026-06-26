@@ -201,13 +201,13 @@ public class ServiceImport {
 
     /// Nombre de séquences du passage existant à ce quadruplet `(point, année, n° de passage)`, pour
     /// rendre tangible ce qu'un **écrasement** supprimerait (#214). Zéro si aucun passage à ce quadruplet
-    /// (l'appelant — `ControleNumeroPassage` — ne sollicite ce compte que pour un quadruplet déjà avéré).
+    /// (l'appelant, `ControleNumeroPassage`, ne sollicite ce compte que pour un quadruplet déjà avéré).
     public int compterSequencesDuPassageExistant(Long idPoint, int annee, int numeroPassage) {
         return agregatDao.compterSequencesDuPassage(idPoint, annee, numeroPassage);
     }
 
     /// **Écrase** le passage existant à ce quadruplet (suppression **destructive** en cascade : session,
-    /// originaux, séquences, journal, relevé) **puis** importe la nuit — sous le même verrou
+    /// originaux, séquences, journal, relevé) **puis** importe la nuit, sous le même verrou
     /// anti-concurrent (#54) que [#importer]. À n'appeler qu'après **double confirmation** côté IHM (#214).
     ///
     /// @return le compte rendu de l'import qui suit l'écrasement

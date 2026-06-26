@@ -144,7 +144,7 @@ public class AgregatImportDao {
         }
     }
 
-    /// **Supprime** le passage existant à ce quadruplet `(point, année, n° de passage)` — opération
+    /// **Supprime** le passage existant à ce quadruplet `(point, année, n° de passage)` : opération
     /// **destructive** de l'écrasement (#214). Grâce à `ON DELETE CASCADE` (PRAGMA `foreign_keys = ON`),
     /// la suppression efface en cascade la session, les originaux, les séquences, le journal et le relevé.
     ///
