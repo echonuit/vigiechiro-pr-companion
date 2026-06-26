@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.9.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.9.0...v1.9.1) (2026-06-26)
+
+
+### Bug Fixes
+
+* **navigation:** rafraîchir M-Multisite et M-Site-detail au retour ([#262](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/262)) ([fba1e2b](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/fba1e2b954cc30801dc4c7f3f4166d045b767d14)), closes [#260](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/260)
+
 # [1.9.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.8.1...v1.9.0) (2026-06-26)
 
 
