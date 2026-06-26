@@ -13,6 +13,7 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -68,6 +69,11 @@ public class MainController {
     @FXML
     private FlowPane cartesActivites;
 
+    /// Hôte de défilement permanent de la zone centrale : une barre verticale apparaît quand la vue
+    /// courante dépasse la hauteur disponible (écrans de résolution normale), sans jamais masquer la
+    /// barre de navigation ni le pied (qui restent dans le chrome, hors de cette zone).
+    private final ScrollPane defilementCentral = new ScrollPane();
+
     @Inject
     public MainController(
             NavigationViewModel navigation,
@@ -113,8 +119,20 @@ public class MainController {
         // centre du BorderPane suit ensuite le sommet de l'historique (toute navigation passe par lui).
         Parent accueil = (Parent) racine.getCenter();
         navigateur.memoriserAccueil(accueil);
+        // Le centre du BorderPane est un ScrollPane permanent : on échange son CONTENU à chaque
+        // navigation (jamais le centre lui-même). Une barre verticale apparaît dès que la vue dépasse
+        // la hauteur disponible. fitToWidth/fitToHeight conservent le comportement actuel : la vue
+        // occupe toute la largeur et remplit la hauteur tant qu'il y a la place (tables `vgrow`). La
+        // barre horizontale n'est jamais affichée (les vues s'adaptent à la largeur). Fond transparent
+        // (base.css) pour ne pas introduire de cadre gris autour des écrans.
+        defilementCentral.setFitToWidth(true);
+        defilementCentral.setFitToHeight(true);
+        defilementCentral.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        defilementCentral.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        defilementCentral.getStyleClass().add("defilement-central");
         // Sommet initial sans animation ; chaque changement d'écran ensuite arrive en fondu (confort).
-        racine.setCenter(navigateur.getVueCentrale());
+        defilementCentral.setContent(navigateur.getVueCentrale());
+        racine.setCenter(defilementCentral);
         navigateur.vueCentraleProperty().addListener((obs, ancienne, nouvelle) -> afficherAvecFondu(nouvelle));
 
         // Barre de navigation (← Retour + fil d'Ariane) : reconstruite à chaque changement d'historique.
@@ -148,10 +166,11 @@ public class MainController {
     /// écrans). Le changement d'écran reste instantané côté graphe de scène ; seule l'opacité est
     /// animée, sans incidence sur l'interaction (un nœud en cours de fondu reste cliquable et trouvable).
     private void afficherAvecFondu(Parent vue) {
-        racine.setCenter(vue);
+        defilementCentral.setContent(vue);
         if (vue == null) {
             return;
         }
+        defilementCentral.setVvalue(0.0); // nouvelle vue : repartir du haut, pas de la position héritée
         FadeTransition fondu = new FadeTransition(Duration.millis(160), vue);
         fondu.setFromValue(0.0);
         fondu.setToValue(1.0);

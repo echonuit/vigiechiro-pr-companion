@@ -213,3 +213,16 @@
     -fx-padding: 8 20 8 20;
     -fx-font-size: 12px;
 }
+
+/* Zone centrale défilante : fait apparaître une barre verticale quand l'écran courant dépasse la
+   hauteur disponible (résolutions normales). Transparente et sans cadre, pour que le fond propre de
+   chaque vue reste visible (aucun liseré gris ni halo de focus autour des écrans). */
+.defilement-central,
+.defilement-central > .viewport {
+    -fx-background-color: transparent;
+}
+
+.defilement-central {
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
