@@ -536,6 +536,30 @@ class ServiceImportTest {
         assertThat(sequenceDao.findBySession(idSessionInitiale)).isEmpty();
         // Le nouveau passage a régénéré le même nombre de séquences.
         assertThat(service.compterSequencesDuPassageExistant(idPoint, 2026, 2)).isEqualTo(sequencesInitiales);
+        // L'écrasement est un REMPLACEMENT, pas un doublon : le rapport ne le signale pas comme doublon.
+        assertThat(reimport.rapport().aDoublonDeNuit())
+                .as("un écrasement remplace, il n'est pas un doublon de nuit")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#214/#147 : le rapport signale un doublon quand la nuit est déjà importée")
+    void rapport_signale_doublon_de_nuit() {
+        ResultatImport premier = service.importer(sd, idPoint, prefixe); // n° 2
+        assertThat(premier.rapport().aDoublonDeNuit())
+                .as("1er import d'une nuit neuve : aucun doublon")
+                .isFalse();
+
+        // Réimport de la MÊME nuit (même série + date, issues du journal/WAV) à un n° LIBRE : nouveau
+        // passage, mais doublon de la nuit déjà en base.
+        ResultatImport second = service.importer(sd, idPoint, new Prefixe("640380", 2026, 3, "Z1"));
+
+        assertThat(second.rapport().aDoublonDeNuit())
+                .as("réimport d'une nuit déjà en base : doublon signalé")
+                .isTrue();
+        assertThat(second.rapport().doublonsDeNuit())
+                .as("le doublon référence le passage initial (n° 2)")
+                .anySatisfy(p -> assertThat(p.numeroPassage()).isEqualTo(2));
     }
 
     @Test

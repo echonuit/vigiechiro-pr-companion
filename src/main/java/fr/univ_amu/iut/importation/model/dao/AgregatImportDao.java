@@ -123,6 +123,17 @@ public class AgregatImportDao {
         return resultats;
     }
 
+    /// Doublons de nuit à **reporter** (#214/#147) : passages déjà en base pour cette nuit (même série +
+    /// date), **sauf** en mode écrasement (`ecraser` vrai), où l'opération est un remplacement et non un
+    /// doublon. Centralise ici la décision (le DAO possède déjà les lectures de nuit) pour garder
+    /// `ServiceImport` cohésif. Liste vide si `ecraser`, ou si série/date est nulle.
+    public List<PassageExistant> doublonsDeNuitPourRapport(boolean ecraser, String numeroSerie, String dateNuit) {
+        if (ecraser || numeroSerie == null || dateNuit == null) {
+            return List.of();
+        }
+        return passagesDeLaNuit(numeroSerie, dateNuit);
+    }
+
     /// Nombre de séquences d'écoute du passage existant à ce quadruplet `(point, année, n° de passage)` :
     /// affiché dans la confirmation d'écrasement (#214) pour rendre tangible ce qui sera supprimé. Zéro si
     /// le passage n'existe pas.

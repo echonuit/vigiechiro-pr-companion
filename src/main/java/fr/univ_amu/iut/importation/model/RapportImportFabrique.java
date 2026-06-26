@@ -20,7 +20,11 @@ final class RapportImportFabrique {
     record BilanImport(
             List<TransformationOriginal> transformations, List<ResultatDecoupage> rejets, RapportImport rapport) {}
 
-    static BilanImport bilan(Path dossierSource, RapportInspection inspection, List<ResultatDecoupage> resultats) {
+    static BilanImport bilan(
+            Path dossierSource,
+            RapportInspection inspection,
+            List<ResultatDecoupage> resultats,
+            List<PassageExistant> doublonsNuit) {
         List<TransformationOriginal> transformations = resultats.stream()
                 .filter(ResultatDecoupage::reussi)
                 .map(ResultatDecoupage::transformation)
@@ -37,7 +41,7 @@ final class RapportImportFabrique {
             lignes.add(new LigneRapport(rejet.nomFichier(), StatutImportFichier.REJETE, rejet.erreur()));
         }
         lignes.addAll(lignesIgnorees(dossierSource, inspection));
-        return new BilanImport(transformations, rejets, new RapportImport(lignes));
+        return new BilanImport(transformations, rejets, new RapportImport(lignes, doublonsNuit));
     }
 
     /// Fichiers réguliers à la racine de la source qui ne sont ni un WAV, ni le journal, ni le relevé :

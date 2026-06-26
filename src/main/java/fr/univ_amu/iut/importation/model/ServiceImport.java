@@ -301,9 +301,16 @@ public class ServiceImport {
             throw echec;
         }
 
+        // Dimension doublon (#214/#147) : passages déjà en base pour cette nuit (même série + date) AVANT
+        // cet import (vide en écrasement : c'est un remplacement, pas un doublon). Décision déléguée au DAO,
+        // qui possède déjà les lectures de nuit, pour garder l'orchestrateur cohésif. Date null-safe via
+        // String.valueOf (→ "null", sans correspondance).
+        List<PassageExistant> doublonsNuit = agregatDao.doublonsDeNuitPourRapport(
+                ecraser, journal.numeroSerie(), String.valueOf(journal.dateDebut()));
+
         // Bilan d'import résilient (#155) : tri transformés / rejetés + rapport, délégué à la fabrique.
         RapportImportFabrique.BilanImport bilan =
-                RapportImportFabrique.bilan(dossierSource, rapport, resultatsDecoupage);
+                RapportImportFabrique.bilan(dossierSource, rapport, resultatsDecoupage, doublonsNuit);
         List<TransformationOriginal> transformations = bilan.transformations();
         if (transformations.isEmpty()) {
             supprimerSessionPartielle(dossierSession);
