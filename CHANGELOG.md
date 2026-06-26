@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.9.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.8.1...v1.9.0) (2026-06-26)
+
+
+### Features
+
+* **dépôt:** M-Lot — génération hors-thread + dossier depot/ ouvrable ([#251](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/251)) ([#259](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/259)) ([c4784a8](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/c4784a8de0aff6bbcf5f748d37d279c17af524b9))
+
 ## [1.8.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.8.0...v1.8.1) (2026-06-26)
 
 
