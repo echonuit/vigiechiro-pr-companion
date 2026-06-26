@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 132" role="img"
+     aria-label="Parcours d'une nuit : Carte SD, puis Importer, Vérifier, Déposer ; dépôt sur Vigie-Chiro qui renvoie les résultats Tadarida ; puis Valider.">
+  <defs>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+      <path d="M0,0 L6.5,3 L0,6 Z" fill="#7f8c8d"/>
+    </marker>
+    <style>
+      .lbl { font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-weight:600; font-size:14px; fill:#ffffff; }
+      .edge { stroke:#7f8c8d; stroke-width:2.2; fill:none; marker-end:url(#ah); }
+      .edged { stroke:#7f8c8d; stroke-width:2.2; fill:none; stroke-dasharray:2 4; marker-end:url(#ah); }
+      .note { font-family:'Segoe UI',Helvetica,Arial,sans-serif; font-size:10.5px; fill:#7f8c8d; }
+    </style>
+  </defs>
+
+  <!-- connecteurs (sous les pastilles) -->
+  <line class="edge"  x1="104" y1="73" x2="146" y2="73"/>
+  <line class="edge"  x1="256" y1="73" x2="298" y2="73"/>
+  <line class="edge"  x1="404" y1="73" x2="446" y2="73"/>
+  <line class="edged" x1="552" y1="73" x2="608" y2="73"/>
+  <line class="edged" x1="734" y1="73" x2="790" y2="73"/>
+
+  <text class="note" x="580" y="62" text-anchor="middle">dépôt</text>
+  <text class="note" x="763" y="62" text-anchor="middle">Tadarida</text>
+
+  <!-- pastilles -->
+  <rect x="10"  y="50" width="92"  height="46" rx="11" fill="#b9770e"/>
+  <text class="lbl" x="56"  y="78" text-anchor="middle">Carte SD</text>
+
+  <rect x="150" y="50" width="106" height="46" rx="11" fill="#1e8449"/>
+  <text class="lbl" x="203" y="78" text-anchor="middle">Importer</text>
+
+  <rect x="302" y="50" width="102" height="46" rx="11" fill="#1e8449"/>
+  <text class="lbl" x="353" y="78" text-anchor="middle">Vérifier</text>
+
+  <rect x="450" y="50" width="102" height="46" rx="11" fill="#1e8449"/>
+  <text class="lbl" x="501" y="78" text-anchor="middle">Déposer</text>
+
+  <rect x="608" y="50" width="126" height="46" rx="11" fill="#34495e"/>
+  <text class="lbl" x="671" y="78" text-anchor="middle">Vigie-Chiro</text>
+
+  <rect x="790" y="50" width="100" height="46" rx="11" fill="#1e8449"/>
+  <text class="lbl" x="840" y="78" text-anchor="middle">Valider</text>
+</svg>
