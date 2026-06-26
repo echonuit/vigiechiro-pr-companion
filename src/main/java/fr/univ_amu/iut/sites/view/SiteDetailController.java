@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
@@ -45,7 +46,11 @@ import javafx.stage.Window;
 ///
 /// L'écran délègue toute navigation à [NavigationSites] : retour à l'accueil (fil d'Ariane),
 /// ouverture des modales de point, retour à l'accueil après suppression du site.
-public class SiteDetailController {
+///
+/// Implémente [RafraichirAuRetour] : quand on revient sur la fiche après avoir ouvert un passage et
+/// l'avoir fait avancer (vérification, dépôt, validation), le tableau des passages est rechargé pour
+/// refléter le nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant).
+public class SiteDetailController implements RafraichirAuRetour {
 
     private final SiteDetailViewModel viewModel;
     private final NavigationSites navigation;
@@ -127,6 +132,17 @@ public class SiteDetailController {
     /// Charge le site à afficher (appelée par [NavigationSites] juste après le chargement FXML).
     public void afficher(Site site) {
         viewModel.chargerSite(site);
+    }
+
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur la fiche
+    /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
+    /// était dessus. On recharge points et passages du site courant pour réafficher les statuts/
+    /// verdicts réels plutôt qu'un état périmé.
+    @Override
+    public void rafraichirAuRetour() {
+        if (viewModel.siteCourant() != null) {
+            viewModel.rafraichir();
+        }
     }
 
     @FXML

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
@@ -30,7 +31,11 @@ import javafx.util.StringConverter;
 /// ouvre l'écran M-Passage via le contrat socle [OuvrirPassage] (inversion de dépendance : la
 /// feature ne dépend pas de `passage.view`). Le chargement initial est déclenché ici (écran sans
 /// paramètre). Aucun accès base de données ni logique métier (règle ArchUnit `view_sans_jdbc`).
-public class MultisiteController {
+///
+/// Implémente [RafraichirAuRetour] : quand on revient sur l'agrégat après avoir ouvert un passage et
+/// l'avoir fait avancer (vérification, dépôt, validation), le tableau est rechargé pour refléter le
+/// nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant dans la pile).
+public class MultisiteController implements RafraichirAuRetour {
 
     private final MultisiteViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
@@ -125,6 +130,15 @@ public class MultisiteController {
         lblMessage.visibleProperty().bind(messagePresent);
         lblMessage.managedProperty().bind(messagePresent);
 
+        viewModel.rafraichir();
+    }
+
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur l'agrégat
+    /// (← Retour ou fil d'Ariane) : un passage ouvert depuis le tableau a pu avancer pendant qu'on
+    /// était dessus. On rejoue le chargement (filtres et tri courants préservés) pour réafficher les
+    /// statuts/verdicts réels plutôt qu'un état périmé.
+    @Override
+    public void rafraichirAuRetour() {
         viewModel.rafraichir();
     }
 
