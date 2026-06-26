@@ -52,20 +52,10 @@ unique, sans serveur ni compte à créer.
 Le traitement d'une nuit suit toujours le même fil, de la carte SD au dépôt, puis à la validation des
 espèces quelques jours plus tard.
 
-```mermaid
-flowchart LR
-    SD[("💾 Carte SD")] --> IMP["📥 Importer<br/>la nuit"]
-    IMP --> VER["🎧 Vérifier<br/>la qualité"]
-    VER --> DEP["📦 Déposer<br/>le lot"]
-    DEP -. "téléversement<br/>navigateur" .-> VC(["🌐 Vigie-Chiro"])
-    VC -. "24-48 h après :<br/>résultats Tadarida" .-> VAL["✅ Valider<br/>les espèces"]
-    classDef etape fill:#1e8449,stroke:#0e5128,color:#fff;
-    classDef ext fill:#34495e,stroke:#17202a,color:#fff;
-    classDef art fill:#7d6608,stroke:#4d3f00,color:#fff;
-    class IMP,VER,DEP,VAL etape
-    class VC ext
-    class SD art
-```
+<p align="center">
+  <img src=".github/assets/parcours.svg" width="840"
+       alt="Parcours d'une nuit : Carte SD, puis Importer, Vérifier, Déposer ; dépôt sur Vigie-Chiro qui renvoie les résultats Tadarida 24-48 h après ; puis Valider.">
+</p>
 
 | Étape | Ce que vous faites | Écran |
 |---|---|---|
