@@ -18,10 +18,10 @@ qualité, à constituer le lot à déposer, puis à relire les espèces identifi
 
 ## Le parcours en bref
 
-```
-Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Déposer  →  Valider
- (WAV)       (copie)      (audible)       (qualité)    (lot)        (espèces)
-```
+<div style="text-align:center; margin:1.2rem 0">
+  <img src="assets/illustrations/parcours.svg" style="max-width:100%; width:780px"
+       alt="Parcours d'une nuit : Carte SD, puis Importer, Vérifier, Déposer ; dépôt sur Vigie-Chiro qui renvoie les résultats Tadarida 24-48 h après ; puis Valider.">
+</div>
 
 Chaque étape correspond à un ou plusieurs écrans de l'application. Le guide ci-dessous suit ce
 fil, de la première importation au dépôt final.
