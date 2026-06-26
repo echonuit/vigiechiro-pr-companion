@@ -2,6 +2,7 @@ package fr.univ_amu.iut.qualification.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -11,6 +12,8 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.AttenteAudio;
+import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -146,14 +149,23 @@ public final class CaptureQualification {
         }
         verdictVm.choisirVerdict(Verdict.OK);
 
+        // DERNIÈRE capture : on attend le chargement audio de la séquence courante (sélectionnée
+        // ci-dessus) pour montrer un spectrogramme réel. Le Stage est montré AVANT la boucle
+        // d'évènements imbriquée de l'attente, puis on `snapshot` sans recréer de Stage (cf.
+        // ApercuFx#capturerApresPreparation et AttenteAudio).
         Path fichier = sortie.resolve("apercu-qualification.png");
-        ApercuFx.enregistrerPng(scene, fichier);
+        if (vue.lookup("#audioView") instanceof AudioView audio) {
+            ApercuFx.capturerApresPreparation(scene, () -> AttenteAudio.attendreChargement(audio), fichier);
+        } else {
+            ApercuFx.enregistrerPng(scene, fichier);
+        }
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
     /// Seede une nuit complète (chemins sous le `workspace` temporaire) et renvoie l'identifiant du
-    /// passage à vérifier.
-    private static long seeder(SourceDeDonnees source, Path workspace) {
+    /// passage à vérifier. Écrit pour chaque séquence un **vrai WAV** de démonstration (cris FM, cf.
+    /// [SonDemo]) afin que l'`AudioView` affiche un spectrogramme réel sur la séquence écoutée.
+    private static long seeder(SourceDeDonnees source, Path workspace) throws IOException {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
@@ -206,16 +218,10 @@ public final class CaptureQualification {
                     null,
                     session.id()));
             String nomSequence = PREFIXE.nommerSequence(nomOriginal, 0);
+            Path cheminTransforme = workspace.resolve("transformes").resolve(nomSequence);
+            SonDemo.ecrireCrisDemo(cheminTransforme); // vrai signal → spectrogramme réel dans AudioView
             sequenceDao.insert(new SequenceDEcoute(
-                    null,
-                    nomSequence,
-                    original.id(),
-                    0,
-                    0.0,
-                    5.0,
-                    workspace.resolve("transformes").resolve(nomSequence).toString(),
-                    false,
-                    session.id()));
+                    null, nomSequence, original.id(), 0, 0.0, 5.0, cheminTransforme.toString(), false, session.id()));
         }
         return passage.id();
     }
