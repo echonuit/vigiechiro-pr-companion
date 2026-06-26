@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.EtatNommage;
@@ -44,7 +45,7 @@ import javafx.util.converter.NumberStringConverter;
 /// rattachement / action) aux propriétés de l'[ImportationViewModel]. Aucun accès base de données
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`) : « Parcourir » délègue à
 /// [ImportationViewModel#inspecter()] ; « Importer » lance le travail lourd hors du fil JavaFX.
-public class ImportationController implements GardeQuitter {
+public class ImportationController implements GardeQuitter, AuDepartEcran {
 
     /// Classe CSS du retour visuel de glisser-déposer (#139), posée sur la racine pendant le survol.
     private static final String CLASSE_ZONE_DEPOT_ACTIVE = "zone-depot-active";
@@ -169,6 +170,13 @@ public class ImportationController implements GardeQuitter {
     @Override
     public String messageConfirmationQuitter() {
         return "Un import préparé n'a pas été lancé. Quitter cet écran et abandonner cette préparation ?";
+    }
+
+    /// Départ de l'écran (#230) : si un `.zip` avait été décompressé puis abandonné (préparation jamais
+    /// lancée), son dossier temporaire — potentiellement plusieurs Go — est supprimé maintenant.
+    @Override
+    public void auDepartEcran() {
+        viewModel.nettoyerAuDepart();
     }
 
     @FXML

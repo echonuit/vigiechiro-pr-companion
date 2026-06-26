@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
@@ -505,6 +506,27 @@ class ImportationViewModelTest {
         // Après import (marquerTermine), le dossier temporaire du zip est supprimé.
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 1, 5, List.of()));
         assertThat(extrait).doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#230 : nettoyerAuDepart supprime le temporaire d'un .zip abandonné (jamais importé)")
+    void nettoyer_au_depart_supprime_le_temporaire_zip() throws IOException {
+        Path workspace = Files.createDirectories(racine.resolve("workspace"));
+        when(serviceImport.racineWorkspace()).thenReturn(workspace);
+        Path zip = racine.resolve("nuit.zip");
+        try (ZipOutputStream zos = new ZipOutputStream(Files.newOutputStream(zip))) {
+            zos.putNextEntry(new ZipEntry("LogPR1925492.txt"));
+            zos.write("journal".getBytes(StandardCharsets.UTF_8));
+            zos.closeEntry();
+        }
+        Path extrait = viewModel.extraireSiZip(zip);
+        assertThat(extrait).isDirectory();
+
+        // L'utilisateur abandonne et quitte l'écran sans lancer l'import (#230) : le temporaire part.
+        viewModel.nettoyerAuDepart();
+        assertThat(extrait).doesNotExist();
+        // Idempotent : un second appel (sans temporaire) ne lève pas.
+        assertThatCode(viewModel::nettoyerAuDepart).doesNotThrowAnyException();
     }
 
     @Test

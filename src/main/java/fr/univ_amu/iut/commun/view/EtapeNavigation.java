@@ -36,4 +36,9 @@ public record EtapeNavigation(String id, String libelle, Parent vue, Object cont
     public RafraichirAuRetour rafraichirAuRetour() {
         return controleur instanceof RafraichirAuRetour r ? r : null;
     }
+
+    /// Le hook de **départ d'écran** (#230) déclaré par l'écran, ou `null` s'il n'en déclare pas.
+    public AuDepartEcran auDepartEcran() {
+        return controleur instanceof AuDepartEcran d ? d : null;
+    }
 }

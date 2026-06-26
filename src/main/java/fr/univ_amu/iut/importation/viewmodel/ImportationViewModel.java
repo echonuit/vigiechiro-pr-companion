@@ -444,6 +444,14 @@ public class ImportationViewModel {
         }
     }
 
+    /// Nettoyage **au départ de l'écran** (#230) : supprime le temporaire d'extraction d'un `.zip`
+    /// abandonné (préparé mais jamais importé) quand l'utilisateur quitte M-Import. Sans ce hook, un
+    /// temporaire de plusieurs Go fuiterait jusqu'au prochain import `.zip` (le VM est non-singleton, il
+    /// ne survit pas à la fermeture de l'écran). Idempotent : sans temporaire, ne fait rien.
+    public void nettoyerAuDepart() {
+        nettoyerTemporaireZip();
+    }
+
     /// Remet l'état d'**exécution** à zéro (PRET, sans résultat, progression ni message d'exécution).
     /// Partagé par le changement de dossier et l'échec d'inspection.
     private void reinitialiserExecution() {

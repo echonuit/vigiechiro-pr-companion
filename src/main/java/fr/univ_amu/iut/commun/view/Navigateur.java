@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Parent;
 
@@ -47,6 +48,24 @@ public class Navigateur {
     @Inject
     public Navigateur(NavigationViewModel navigation) {
         this.navigation = navigation;
+        // Hook de **départ d'écran** (#230) : quand une étape est retirée de l'historique (retour, retour
+        // accueil, nouvelle racine, clic d'un ancêtre), on prévient son controller s'il déclare
+        // [AuDepartEcran], pour qu'il libère ses ressources (ex. l'import supprime son temporaire .zip).
+        // Un seul listener couvre toutes les opérations qui dépilent. Le nettoyage ne doit jamais lever.
+        historique.addListener((ListChangeListener<EtapeNavigation>) changement -> {
+            while (changement.next()) {
+                if (!changement.wasRemoved()) {
+                    continue;
+                }
+                for (EtapeNavigation retiree : changement.getRemoved()) {
+                    // Un `setAll` re-place l'accueil (retiré puis ré-ajouté) : on ne notifie pas un écran
+                    // encore présent dans l'historique (il n'est pas réellement quitté).
+                    if (retiree.auDepartEcran() != null && !historique.contains(retiree)) {
+                        retiree.auDepartEcran().auDepartEcran();
+                    }
+                }
+            }
+        });
     }
 
     /// Propriété observable de la vue centrale courante (sommet de l'historique). Le [MainController] y

@@ -195,4 +195,54 @@ class NavigateurTest {
         navigateur.revenir();
         assertThat(navigateur.peutRevenir()).isFalse();
     }
+
+    /// Faux controller d'écran qui compte les appels au hook de départ (#230).
+    private static final class EcranAvecDepart implements AuDepartEcran {
+        private int departs;
+
+        @Override
+        public void auDepartEcran() {
+            departs++;
+        }
+    }
+
+    @Test
+    @DisplayName("#230 : revenir notifie le hook de départ de l'écran quitté")
+    void revenir_notifie_le_depart() {
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null);
+        EcranAvecDepart importEcran = new EcranAvecDepart();
+        navigateur.empiler(new Group(), "import", "Importer une nuit", importEcran);
+
+        navigateur.revenir(); // on quitte l'import (dépilé)
+
+        assertThat(importEcran.departs).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#230 : empiler par-dessus ne notifie pas (l'écran reste vivant dans l'historique)")
+    void empiler_par_dessus_ne_notifie_pas() {
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        EcranAvecDepart importEcran = new EcranAvecDepart();
+        navigateur.ouvrirRacine(new Group(), "import", "Importer une nuit", importEcran);
+
+        navigateur.empiler(new Group(), "passage", "Passage", null); // drill-down : import conservé
+
+        assertThat(importEcran.departs).isZero();
+    }
+
+    @Test
+    @DisplayName("#230 : afficherAccueil et ouvrirRacine notifient le départ des écrans retirés")
+    void accueil_et_racine_notifient_le_depart() {
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        EcranAvecDepart importEcran = new EcranAvecDepart();
+        navigateur.ouvrirRacine(new Group(), "import", "Importer une nuit", importEcran);
+        navigateur.afficherAccueil(); // retour accueil → import retiré
+        assertThat(importEcran.departs).isEqualTo(1);
+
+        EcranAvecDepart autre = new EcranAvecDepart();
+        navigateur.ouvrirRacine(new Group(), "import2", "Importer", autre);
+        navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null); // nouvelle racine → autre retiré
+        assertThat(autre.departs).isEqualTo(1);
+    }
 }
