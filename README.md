@@ -4,65 +4,108 @@
        width="100%">
 </p>
 
-# <img src=".github/assets/logo.png" alt="logo VigieChiro PR Companion" class="logo" width="120"/> VigieChiro PR Companion
-
-**Application JavaFX d'aide au traitement des nuits de capture acoustique de chauves-souris.**
-
-Des enregistreurs autonomes (*Passive Recorder*, « PR ») posés sur le terrain captent les ultrasons
-d'une nuit entière. VigieChiro PR Companion accompagne l'observateur de la **carte SD** jusqu'au
-**dépôt** des données sur la plateforme nationale **Vigie-Chiro**.
+<h1 align="center">
+  <img src=".github/assets/logo.png" alt="" width="84" valign="middle"/>
+  VigieChiro PR Companion
+</h1>
 
 <p align="center">
-  <img src=".github/assets/apercu-accueil.png" width="760"
+  <b>De la carte SD au dépôt national : l'atelier de l'observateur pour traiter une nuit de capture
+  acoustique de chauves-souris.</b>
+</p>
+
+<p align="center">
+  <a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/"><img alt="Documentation en ligne" src="https://img.shields.io/badge/%F0%9F%93%96_documentation-en_ligne-1e8449"></a>
+  <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases"><img alt="Dernière version" src="https://img.shields.io/github/v/release/IUTInfoAix-S201/vigiechiro-pr-companion?label=release&color=3f51b5"></a>
+  <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/maven.yml"><img alt="Intégration continue" src="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/maven.yml/badge.svg"></a>
+  <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/lint.yml"><img alt="Portail qualité" src="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/lint.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-blue"></a>
+  <a href="https://doi.org/10.5281/zenodo.20492247"><img alt="Jeu de données exemple sur Zenodo" src="https://img.shields.io/badge/donn%C3%A9es_exemple-DOI%20Zenodo-1682d4"></a>
+</p>
+
+<p align="center">
+  <a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/"><b>📖 Lire la documentation</b></a>
+  &nbsp;·&nbsp;
+  <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases"><b>⬇️ Télécharger l'application</b></a>
+  &nbsp;·&nbsp;
+  <a href="#-lécosystème-vigie-chiro"><b>🌐 L'écosystème</b></a>
+</p>
+
+---
+
+Des enregistreurs autonomes (*Passive Recorder*) posés en forêt captent les ultrasons des
+chauves-souris pendant une nuit entière. **VigieChiro PR Companion** accompagne l'observateur depuis
+la **carte SD** de l'enregistreur jusqu'au **dépôt** des données sur la plateforme nationale
+**Vigie-Chiro**, puis la **validation** des espèces identifiées : le tout dans un outil **local**
+unique, sans serveur ni compte à créer.
+
+> Né d'une **commande réelle** (Samuel Busson, CEREMA), construit dans le cadre de la SAÉ 2.01 du BUT
+> Informatique de l'IUT d'Aix-Marseille.
+
+<p align="center">
+  <img src=".github/assets/apercu-accueil.png" width="720"
        alt="Écran d'accueil de VigieChiro PR Companion : tableau de bord et cartes d'activités.">
 </p>
 
-> **Télécharger et lancer.** Des **installeurs** prêts à l'emploi (Windows `.msi`, macOS `.dmg`
-> Apple Silicon, Linux `.deb`, sans Java à installer) sont publiés sur la page
-> [Releases](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases). Guide
-> d'utilisation : [documentation utilisateur](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/prise-en-main/).
+## 🦇 Le parcours d'une nuit
 
----
+Le traitement d'une nuit suit toujours le même fil, de la carte SD au dépôt, puis à la validation des
+espèces quelques jours plus tard.
 
-## 1. Le projet
-
-Le parcours métier complet, de la carte mémoire à la validation des espèces :
-
+```mermaid
+flowchart LR
+    SD[("💾 Carte SD")] --> IMP["📥 Importer<br/>la nuit"]
+    IMP --> VER["🎧 Vérifier<br/>la qualité"]
+    VER --> DEP["📦 Déposer<br/>le lot"]
+    DEP -. "téléversement<br/>navigateur" .-> VC(["🌐 Vigie-Chiro"])
+    VC -. "24-48 h après :<br/>résultats Tadarida" .-> VAL["✅ Valider<br/>les espèces"]
+    classDef etape fill:#1e8449,stroke:#0e5128,color:#fff;
+    classDef ext fill:#34495e,stroke:#17202a,color:#fff;
+    classDef art fill:#7d6608,stroke:#4d3f00,color:#fff;
+    class IMP,VER,DEP,VAL etape
+    class VC ext
+    class SD art
 ```
-Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Déposer  →  Valider (Tadarida)
- (WAV)      (copie R9)   (ultrason→audible)  (qualité)    (ZIP plateforme)   (espèces)
-```
+
+| Étape | Ce que vous faites | Écran |
+|---|---|---|
+| **Importer** | Copier la carte SD, renommer et transformer les enregistrements (ultrason vers audible) | [Importation](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/importation/) |
+| **Vérifier** | Contrôler la qualité (pré-check + écoute) et poser un verdict | [Qualification](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/qualification/) |
+| **Déposer** | Préparer le lot, le téléverser sur Vigie-Chiro, le marquer déposé | [Lot](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/lot/) |
+| **Valider** | Relire et corriger les espèces identifiées par Tadarida | [Validation](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/validation/) |
+
+## 📖 Découvrir les écrans
+
+L'application compte une dizaine d'écrans, documentés un par un. **Cliquez sur une vignette pour
+ouvrir sa page de documentation** (rôle, captures commentées, astuces).
 
 <table>
   <tr>
-    <td align="center" width="25%"><a href=".github/assets/apercu-import-assistant.png"><img src=".github/assets/apercu-import-assistant.png" alt="Assistant d'importation d'une nuit"></a></td>
-    <td align="center" width="25%"><a href=".github/assets/apercu-qualification.png"><img src=".github/assets/apercu-qualification.png" alt="Vérification par écoute (sonogramme + spectrogramme)"></a></td>
-    <td align="center" width="25%"><a href=".github/assets/apercu-lot-preparer.png"><img src=".github/assets/apercu-lot-preparer.png" alt="Préparation du lot à déposer"></a></td>
-    <td align="center" width="25%"><a href=".github/assets/apercu-validation-revue.png"><img src=".github/assets/apercu-validation-revue.png" alt="Validation des espèces Tadarida"></a></td>
+    <td align="center" width="33%"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/sites/"><img src=".github/assets/apercu-sites-mes-sites.png" alt="Mes sites"></a><br><b>Sites</b><br><sub>Carrés de suivi et points d'écoute</sub></td>
+    <td align="center" width="33%"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/importation/"><img src=".github/assets/apercu-import-assistant.png" alt="Importer une nuit"></a><br><b>Importation</b><br><sub>Carte SD, renommage, transformation</sub></td>
+    <td align="center" width="33%"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/passage/"><img src=".github/assets/apercu-passage.png" alt="Passage"></a><br><b>Passage</b><br><sub>Le pivot d'une nuit (statut, actions)</sub></td>
   </tr>
   <tr>
-    <td align="center"><sub><b>Importer</b> la carte SD</sub></td>
-    <td align="center"><sub><b>Vérifier</b> par écoute</sub></td>
-    <td align="center"><sub><b>Déposer</b> un lot</sub></td>
-    <td align="center"><sub><b>Valider</b> (Tadarida)</sub></td>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/qualification/"><img src=".github/assets/apercu-qualification.png" alt="Qualification"></a><br><b>Qualification</b><br><sub>Écoute (sono + spectrogramme) et verdict</sub></td>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/lot/"><img src=".github/assets/apercu-lot-preparer.png" alt="Lot"></a><br><b>Lot</b><br><sub>Préparer et déposer un lot vérifié</sub></td>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/validation/"><img src=".github/assets/apercu-validation-revue.png" alt="Validation"></a><br><b>Validation</b><br><sub>Revue des espèces Tadarida</sub></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/multisite/"><img src=".github/assets/apercu-multisite.png" alt="Multisite"></a><br><b>Multisite</b><br><sub>Vue agrégée (tri, filtres, vues)</sub></td>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/diagnostic/"><img src=".github/assets/apercu-diagnostic.png" alt="Diagnostic"></a><br><b>Diagnostic</b><br><sub>Climat, anomalies du capteur</sub></td>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/bibliotheque/"><img src=".github/assets/apercu-bibliotheque-sons.png" alt="Bibliothèque"></a><br><b>Bibliothèque</b><br><sub>Sons de référence + export</sub></td>
   </tr>
 </table>
 
-<sub>👉 Galerie complète des écrans (tous états) : <a href=".github/assets/README.md">.github/assets/README.md</a></sub>
+<p align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/"><b>→ Ouvrir la documentation complète</b></a> &nbsp;|&nbsp; <a href=".github/assets/README.md">galerie de tous les états</a></p>
 
-L'application est née d'une **commande réelle** (Samuel Busson, CEREMA), dans le cadre de la
-SAÉ 2.01 du BUT Informatique de l'IUT d'Aix-Marseille. C'est une application **locale** (base SQLite
-fichier) : elle ne s'expose sur aucun port et ne stocke aucun identifiant.
-
----
-
-## 2. Installation et lancement
+## ⬇️ Installer et lancer
 
 ### Installer l'application
 
 Téléchargez l'installeur de votre système sur la page
-[Releases](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases), avec son propre
-*runtime* embarqué (aucun Java à installer) :
+[Releases](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases) : il embarque son
+propre *runtime* (**aucun Java à installer**).
 
 | Système | Fichier | Java requis ? |
 |---|---|---|
@@ -70,37 +113,51 @@ Téléchargez l'installeur de votre système sur la page
 | macOS (Apple Silicon) | `.dmg` | Non (embarqué) |
 | Linux (Debian/Ubuntu) | `.deb` | Non (embarqué) |
 
-La prise en main pas à pas est dans la [documentation utilisateur](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/prise-en-main/).
+La prise en main pas à pas est dans la
+[documentation utilisateur](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/prise-en-main/).
 
 ### Lancer depuis les sources
 
-Pour développer ou exécuter la dernière version du code. Prérequis : un **JDK 25 standard**
-(Temurin / `25.0.2-open`). Tout le reste passe par le **Maven Wrapper** `./mvnw` (aucune installation
-de Maven). JavaFX 26 vient des dépendances Maven.
+Prérequis : un **JDK 25 standard** (Temurin / `25.0.2-open`). Tout le reste passe par le **Maven
+Wrapper** `./mvnw` (aucune installation de Maven) ; JavaFX 26 vient des dépendances Maven.
 
 ```bash
 git clone https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion.git
 cd vigiechiro-pr-companion
-./mvnw verify      # compile + lance la suite de tests + contrôles qualité
-./mvnw javafx:run  # lance l'application (la fenêtre VigieChiro)
+./mvnw verify      # compile + tests + controles qualite (doit afficher BUILD SUCCESS)
+./mvnw javafx:run  # lance l'application
 ```
 
-`./mvnw verify` doit afficher `BUILD SUCCESS`.
+## 🌐 L'écosystème Vigie-Chiro
 
----
+VigieChiro PR Companion est le **chaînon logiciel** entre un capteur de terrain et une base
+scientifique nationale. Il s'appuie sur, et complète, plusieurs projets ouverts :
 
-## 3. Architecture : *package-by-feature* + MVVM
+| Projet | Rôle dans la chaîne | Lien |
+|---|---|---|
+| **Vigie-Chiro** | Programme national de suivi des chauves-souris (Vigie-Nature, MNHN) et plateforme de dépôt + analyse automatique **Tadarida** | [Programme](https://www.vigienature.fr/fr/chauves-souris) · [Plateforme](https://vigiechiro.herokuapp.com) |
+| **Passive Recorder (Teensy)** | L'**enregistreur open-hardware** posé sur le terrain : firmware open-source qui capte les ultrasons toute la nuit | [framagit · PassiveRecorder](https://framagit.org/PiBatRecorderProjects/TeensyRecorders/-/tree/master/PassiveRecorder) |
+| **audio-view** | Le **composant JavaFX** (sonogramme + spectrogramme) utilisé pour l'écoute, publié sur Maven Central | [github.com/IUTInfoAix-S201/audio-view](https://github.com/IUTInfoAix-S201/audio-view) |
+| **Jeu de données exemple** | Une **nuit complète** de capture (échantillon audio + observations), pour tester sans matériel | [Dépôt](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit) · [DOI Zenodo](https://doi.org/10.5281/zenodo.20492247) |
+| **Le brief** | L'**énoncé pédagogique** d'origine : contexte, besoin, parcours utilisateurs, *story mapping* | [iutinfoaix-s201.github.io/brief](https://iutinfoaix-s201.github.io/brief/) |
 
-Le code est organisé **par fonctionnalité** (et non par couche technique) : chaque écran/parcours
-métier vit dans **son propre paquet**, qui contient lui-même les couches **MVVM**. Cette organisation
-est vérifiée automatiquement par des tests d'architecture (ArchUnit).
+## 🛠️ Sous le capot (pour les développeuses et développeurs)
+
+Application **JavaFX 26 / Java 25**, **locale** (base **SQLite** fichier, sans serveur), injectée par
+**Guice 7**. L'architecture est en **paquet-par-fonctionnalité** : chaque écran/parcours vit dans son
+propre paquet, qui contient ses **4 couches MVVM** (`model` / `viewmodel` / `view` / `di`). La
+frontière MVVM et l'absence de cycles sont **vérifiées automatiquement** (ArchUnit) : les tests
+échouent si un `viewmodel` touche `javafx.scene`, ou si un `model` parle JavaFX.
+
+<details>
+<summary><b>Détail de l'architecture et des fonctionnalités</b></summary>
 
 ```
 src/main/java/fr/univ_amu/iut/
 ├── App.java                     ← point d'entrée JavaFX (amorçage Guice + chrome)
 ├── module-info.java             ← module JPMS « vigiechiro » (open module)
 │
-├── commun/                      ← LE SOCLE partagé par toutes les features
+├── commun/                      ← LE SOCLE partagé par toutes les fonctionnalités
 │   ├── persistence/             ·   infrastructure DAO (SQLite, transactions, migrations)
 │   ├── model/                   ·   domaine transverse (Horloge, Prefixe, Verdict, Statut...)
 │   ├── viewmodel/               ·   état observable du chrome (NavigationViewModel...)
@@ -109,51 +166,27 @@ src/main/java/fr/univ_amu/iut/
 │   └── outils/                  ·   outils de capture d'écran
 │
 ├── sites/        passage/       importation/   qualification/   lot/
-├── validation/   multisite/     diagnostic/    bibliotheque/                ← les 9 features
+├── validation/   multisite/     diagnostic/    bibliotheque/                ← les 9 fonctionnalités
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
-└── perf/outils/                 ← bancs de mesure (benchmark)
+└── perf/outils/                 ← bancs de mesure de performance
 ```
 
-Chaque **feature** (ex. `sites/`) suit le même découpage en **4 couches MVVM** :
+Chaque **couche** a une règle stricte :
 
 | Sous-paquet | Rôle | Règle clé |
 |---|---|---|
-| `model/` | **Modèle métier** : entités (records), services, et `model/dao/` (accès SQLite) | Aucune dépendance JavaFX (réutilisable, testable seul) |
-| `viewmodel/` | **ViewModel** : état observable + logique de présentation, exposé en propriétés | Importe **`javafx.beans`** uniquement, **jamais** `javafx.scene/fxml/stage` |
-| `view/` | **Vue** : `Controller` + `*.fxml` + `*.css` (l'interface visible) | Se **lie** (binding) aux propriétés du ViewModel ; ne parle jamais à la base |
-| `di/` | **Injection** : le module Guice qui assemble la feature | Publie ses services/VM au conteneur |
+| `model/` | **Modèle métier** : entités (records), services, `model/dao/` (accès SQLite) | Aucune dépendance JavaFX (réutilisable, testable seul) |
+| `viewmodel/` | **ViewModel** : état observable + logique de présentation | Importe **`javafx.beans`** uniquement, jamais `javafx.scene/fxml/stage` |
+| `view/` | **Vue** : `Controller` + `*.fxml` + `*.css` | Se **lie** aux propriétés du ViewModel ; ne parle jamais à la base |
+| `di/` | **Injection** : le module Guice qui assemble la fonctionnalité | Publie ses services/VM au conteneur |
 
-> **Le sens MVVM :** le `model` ne connaît pas l'IHM ; le `viewmodel` porte l'état sous forme de
-> **propriétés observables** (`IntegerProperty`, `ObservableList`...) sans toucher aux composants
-> graphiques ; la `view` **observe** le viewmodel via le *data binding* JavaFX.
+Le cœur du modèle est l'**agrégat « nuit de capture »** (fonctionnalité `passage`), qui avance dans un
+workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOSE`. La persistance est en
+**SQLite** via des **DAO** en `PreparedStatement` (pas d'ORM) avec des **migrations** versionnées.
 
-### Le domaine métier
-
-Le cœur du modèle est l'**agrégat « nuit de capture »**, possédé par la feature `passage`. Un
-**passage** (une nuit, sur un point d'écoute, une année) regroupe : la session d'enregistrement, les
-fichiers originaux, les séquences découpées, le journal du capteur, le relevé climatique, les
-observations Tadarida.
-
-Une nuit avance dans un **workflow à états** :
-
-```
-IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOSE
-```
-
-La persistance utilise **SQLite** (fichier `vigiechiro.db`) via des **DAO** écrits en
-`PreparedStatement` (pas d'ORM), avec des **migrations** versionnées
-(`src/main/resources/db/migration/V0x__*.sql`, 19 tables). L'injection de dépendances est faite avec
-**Guice 7** (les `Controller` FXML sont eux aussi injectés via une `controllerFactory`).
-
-### Les 9 fonctionnalités (+ outillage)
-
-Chaque fonctionnalité est un **paquet** autonome. Cette table fait le **pont entre les deux ressources
-complémentaires** : le **nom du paquet** renvoie à la
-**[documentation de l'écran](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/)**
-(comment l'application se comporte), et son **parcours** au
-**[brief](https://iutinfoaix-s201.github.io/brief/)** (l'énoncé d'origine : le besoin et les scénarios
-utilisateur).
+Chaque fonctionnalité est un **paquet** autonome ; son nom renvoie à la **documentation de l'écran**,
+son **parcours** au **[brief](https://iutinfoaix-s201.github.io/brief/)** (l'énoncé d'origine).
 
 | Fonctionnalité | Parcours (brief) | Rôle |
 |---|---|---|
@@ -168,82 +201,46 @@ utilisateur).
 | [`bibliotheque`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/bibliotheque/) | [P10](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence/) | Bibliothèque de sons de référence + export |
 
 S'ajoutent la fonctionnalité transverse **`cli`** (import/export en ligne de commande) et le paquet
-**`perf/`** (outils de **mesure de performance**, cf. [`docs/benchmarks/`](docs/benchmarks/README.md)).
+**`perf/`** (mesures de performance, cf. [`docs/benchmarks/`](docs/benchmarks/README.md)).
 
-### Le composant `audio-view`
+</details>
 
-L'écoute (sonogramme + spectrogramme d'un WAV) est fournie par un **composant externe**,
-[`audio-view`](https://github.com/IUTInfoAix-S201/audio-view), publié sur Maven Central et consommé
-comme dépendance.
+## 🤝 Contribuer, tester, sécurité
 
----
-
-## 4. Développement et qualité
-
-Le projet embarque une chaîne qualité **professionnelle**. Tout passe par le **Maven Wrapper**
-`./mvnw` (aucune installation) :
+Le projet embarque une chaîne qualité **professionnelle**, exécutée à chaque push par la CI : tests
+**JUnit 5 / AssertJ / Mockito / TestFX** (IHM *headless*) + **ApprovalTests**, linter **PMD**, format
+**Spotless** (hook pre-commit), garde-fou d'**architecture ArchUnit**, couverture **JaCoCo**.
 
 | Commande | Effet |
 |---|---|
-| `./mvnw javafx:run` | Lance l'application (fenêtre JavaFX) |
-| `./mvnw test` | Lance les tests unitaires et d'intégration |
-| `./mvnw verify` | Tests + couverture + contrôles (build complet) |
-| `./mvnw -Pquality-gate verify` | Build + **PMD bloquant** + seuils de couverture (le « portail qualité ») |
+| `./mvnw javafx:run` | Lance l'application |
+| `./mvnw test` | Tests unitaires et d'intégration |
+| `./mvnw verify` | Build complet (tests + couverture + contrôles) |
+| `./mvnw -Pquality-gate verify` | Build + **PMD bloquant** + seuils de couverture |
 | `./mvnw spotless:apply` | Formate le code (Palantir Java Format) |
 
-Les outils en jeu :
+- 🤝 **[CONTRIBUTING.md](CONTRIBUTING.md)** : comment proposer une contribution (fork puis branche puis PR).
+- 🧪 **[TESTING.md](TESTING.md)** : exécution *headless*, taxonomie des tests, ce qui bloque la CI.
+- 🔒 **[SECURITY.md](SECURITY.md)** : signalement de vulnérabilités et données sensibles.
 
-- **Tests** : JUnit 5, AssertJ, Mockito, **TestFX** (tests d'IHM headless, sans serveur d'affichage),
-  **ApprovalTests** (CSV Tadarida).
-- **PMD** : linter de *code smells* ; **Spotless** formate automatiquement (hook pre-commit invisible).
-- **ArchUnit** : vérifie l'**architecture** (model sans JavaFX, viewmodel sans `javafx.scene`, slices
-  sans cycle) : ces tests **échouent** si la frontière MVVM est cassée.
-- **JaCoCo** : mesure la **couverture** des tests.
-- **CI GitHub Actions** : à chaque push, le build, les tests et le portail qualité s'exécutent.
+## 🆘 Besoin d'aide ?
 
-Le détail (exécution headless, taxonomie des tests, ce qui bloque la CI) est dans
-[TESTING.md](TESTING.md) ; le guide du contributeur dans [CONTRIBUTING.md](CONTRIBUTING.md).
+La **[FAQ](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/faq/)** répond aux questions les
+plus courantes (où sont mes données, comment écouter une séquence...). Quelques pièges côté
+développement :
 
----
-
-## 5. Documentation de référence
-
-- **Documentation utilisateur** : [site de documentation](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/) (prise en main, écrans, parcours, raccourcis,
-  glossaire, FAQ).
-- **Galerie des écrans** : [.github/assets/README.md](.github/assets/README.md) (chaque vue, états pertinents côte à côte).
-- [Java 25 API](https://docs.oracle.com/en/java/javase/25/docs/api/) · [JavaFX 26 API](https://openjfx.io/javadoc/26/) · [Tutoriel FXML](https://openjfx.io/openjfx-docs/)
-- [JUnit 5](https://junit.org/junit5/docs/current/user-guide/) · [AssertJ](https://assertj.github.io/doc/) · [TestFX](https://github.com/TestFX/TestFX) · [Mockito](https://site.mockito.org)
-- [Guice (DI)](https://github.com/google/guice/wiki) · [Refactoring (Martin Fowler)](https://refactoring.com)
-
----
-
-## Dépannage
-
-**Le premier `./mvnw` prend plusieurs minutes** : normal, le wrapper télécharge Maven puis les
-dépendances. Ensuite tout est en cache.
-
-**`./mvnw: Permission denied`** : `chmod +x mvnw`.
-
-**Sous Windows** : utilisez `.\mvnw.cmd ...` à la place de `./mvnw ...`.
-
-**`Cannot resolve symbol` / imports en rouge dans l'IDE** : le projet n'est pas encore indexé. Lancez
-`./mvnw compile`, l'IDE se resynchronise.
-
-**Headless qui échoue (`NPE PlatformFactory`)** : vous utilisez un JDK packagé avec JavaFX (type
-`fx-zulu`). Utilisez un **JDK 25 standard** (cf. [TESTING.md](TESTING.md)).
+- **Le premier `./mvnw` prend plusieurs minutes** : normal, le wrapper télécharge Maven puis les
+  dépendances ; ensuite tout est en cache.
+- **`./mvnw: Permission denied`** : `chmod +x mvnw` (sous Windows, utilisez `.\mvnw.cmd`).
+- **Headless qui échoue (`NPE PlatformFactory`)** : vous utilisez un JDK packagé avec JavaFX (type
+  `fx-zulu`) ; prenez un **JDK 25 standard** (cf. [TESTING.md](TESTING.md)).
 
 <details>
 <summary>📦 Installer un JDK 25 localement</summary>
 
-**Linux / macOS** (via [SDKMAN](https://sdkman.io)) :
-```bash
-sdk install java 25-tem
-```
+**Linux / macOS** (via [SDKMAN](https://sdkman.io)) : `sdk install java 25-tem`
 
-**Windows** (via [Scoop](https://scoop.sh)) :
-```powershell
-scoop bucket add java && scoop install java/temurin25-jdk
-```
+**Windows** (via [Scoop](https://scoop.sh)) : `scoop bucket add java && scoop install java/temurin25-jdk`
 
 Vérifier : `java -version` doit afficher `openjdk version "25.0.x"`.
 
@@ -251,5 +248,6 @@ Vérifier : `java -version` doit afficher `openjdk version "25.0.x"`.
 
 ---
 
-Contribuer : [CONTRIBUTING.md](CONTRIBUTING.md) · Tester : [TESTING.md](TESTING.md) ·
-Sécurité et données sensibles : [SECURITY.md](SECURITY.md).
+<p align="center"><sub>
+  SAÉ 2.01 · BUT Informatique · IUT d'Aix-Marseille, sous licence <a href="LICENSE">MIT</a>.
+</sub></p>
