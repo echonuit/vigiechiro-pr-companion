@@ -1,3 +1,9 @@
+<p align="center">
+  <img src="docs/assets/illustrations/hero-bandeau.webp"
+       alt="Nuit de capture acoustique : un enregistreur autonome sur son piquet, des chauves-souris en vol émettant leurs ultrasons sous la pleine lune en lisière de forêt."
+       width="100%">
+</p>
+
 # <img src=".github/assets/logo.png" alt="logo VigieChiro PR Companion" class="logo" width="120"/> VigieChiro PR Companion
 
 **Application JavaFX d'aide au traitement des nuits de capture acoustique de chauves-souris.**
@@ -5,6 +11,11 @@
 Des enregistreurs autonomes (*Passive Recorder*, « PR ») posés sur le terrain captent les ultrasons
 d'une nuit entière. VigieChiro PR Companion accompagne l'observateur de la **carte SD** jusqu'au
 **dépôt** des données sur la plateforme nationale **Vigie-Chiro**.
+
+<p align="center">
+  <img src=".github/assets/apercu-accueil.png" width="760"
+       alt="Écran d'accueil de VigieChiro PR Companion : tableau de bord et cartes d'activités.">
+</p>
 
 > **Télécharger et lancer.** Des **installeurs** prêts à l'emploi (Windows `.msi`, macOS `.dmg`
 > Apple Silicon, Linux `.deb`, sans Java à installer) sont publiés sur la page
@@ -21,6 +32,23 @@ Le parcours métier complet, de la carte mémoire à la validation des espèces 
 Carte SD  →  Importer  →  Transformer  →  Vérifier  →  Déposer  →  Valider (Tadarida)
  (WAV)      (copie R9)   (ultrason→audible)  (qualité)    (ZIP plateforme)   (espèces)
 ```
+
+<table>
+  <tr>
+    <td align="center" width="25%"><a href=".github/assets/apercu-import-assistant.png"><img src=".github/assets/apercu-import-assistant.png" alt="Assistant d'importation d'une nuit"></a></td>
+    <td align="center" width="25%"><a href=".github/assets/apercu-qualification.png"><img src=".github/assets/apercu-qualification.png" alt="Vérification par écoute (sonogramme + spectrogramme)"></a></td>
+    <td align="center" width="25%"><a href=".github/assets/apercu-lot-preparer.png"><img src=".github/assets/apercu-lot-preparer.png" alt="Préparation du lot à déposer"></a></td>
+    <td align="center" width="25%"><a href=".github/assets/apercu-validation-revue.png"><img src=".github/assets/apercu-validation-revue.png" alt="Validation des espèces Tadarida"></a></td>
+  </tr>
+  <tr>
+    <td align="center"><sub><b>Importer</b> la carte SD</sub></td>
+    <td align="center"><sub><b>Vérifier</b> par écoute</sub></td>
+    <td align="center"><sub><b>Déposer</b> un lot</sub></td>
+    <td align="center"><sub><b>Valider</b> (Tadarida)</sub></td>
+  </tr>
+</table>
+
+<sub>👉 Galerie complète des écrans (tous états) : <a href=".github/assets/README.md">.github/assets/README.md</a></sub>
 
 L'application est née d'une **commande réelle** (Samuel Busson, CEREMA), dans le cadre de la
 SAÉ 2.01 du BUT Informatique de l'IUT d'Aix-Marseille. C'est une application **locale** (base SQLite
@@ -175,6 +203,7 @@ Le détail (exécution headless, taxonomie des tests, ce qui bloque la CI) est d
 
 - **Documentation utilisateur** : [site MkDocs](docs/) (prise en main, écrans, parcours, raccourcis,
   glossaire, FAQ).
+- **Galerie des écrans** : [.github/assets/README.md](.github/assets/README.md) (chaque vue, états pertinents côte à côte).
 - [Java 25 API](https://docs.oracle.com/en/java/javase/25/docs/api/) · [JavaFX 26 API](https://openjfx.io/javadoc/26/) · [Tutoriel FXML](https://openjfx.io/openjfx-docs/)
 - [JUnit 5](https://junit.org/junit5/docs/current/user-guide/) · [AssertJ](https://assertj.github.io/doc/) · [TestFX](https://github.com/TestFX/TestFX) · [Mockito](https://site.mockito.org)
 - [Guice (DI)](https://github.com/google/guice/wiki) · [Refactoring (Martin Fowler)](https://refactoring.com)
