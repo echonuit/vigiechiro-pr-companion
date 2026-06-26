@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.6.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.5.0...v1.6.0) (2026-06-26)
+
+
+### Features
+
+* **captures:** spectrogrammes lisibles dans les aperçus bibliothèque et qualification ([#252](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/252)) ([3794456](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/37944569921ab9a10816fd226b0a5c2fda05c174)), closes [#159](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/159) [#tableEntrees](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/tableEntrees)
+
 # [1.5.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.4.1...v1.5.0) (2026-06-25)
 
 
