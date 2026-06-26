@@ -91,6 +91,11 @@ class ImportationClicImporterTest {
         Parent vue = loader.load();
         controleur = (ImportationController) loader.getController();
         viewModel = extraireViewModel(controleur);
+        // Confirmateur par défaut NON bloquant : depuis #214/#147, importer une nuit déjà importée ouvre
+        // une confirmation. En headless, la boîte de dialogue native (Alert.showAndWait) bloquerait le fil
+        // JavaFX indéfiniment. On injecte donc un confirmateur qui accepte ; les tests qui vérifient le
+        // dialogue le surchargent (setConfirmateur) pour capturer/refuser.
+        controleur.setConfirmateur(message -> true);
         stage.setScene(new Scene(vue, 1100, 760));
         stage.show();
 
