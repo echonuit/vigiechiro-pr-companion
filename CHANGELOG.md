@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.28.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.28.0...v1.28.1) (2026-06-27)
+
+
+### Bug Fixes
+
+* **captures:** CaptureEcrans rend le chrome complet (RechercheGlobale bindé) ([#334](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/334)) ([5d48eb2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/5d48eb23de6bba01c578bdf7dec3c19531d58c22)), closes [#333](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/333) [#144](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/144)
+
 # [1.28.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.27.0...v1.28.0) (2026-06-27)
 
 
