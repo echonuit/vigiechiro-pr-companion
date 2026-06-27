@@ -161,6 +161,16 @@ public class MultisiteController implements RafraichirAuRetour {
         viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>)
                 changement -> carte.setDonnees(ConstructeurDonneesCarte.depuis(viewModel.carresCarte())));
 
+        // Liaisons carte ↔ tableau (#152) :
+        // - clic d'un carré sur la carte → filtre le tableau par ce carré (met aussi à jour le champ) ;
+        carte.setOnCarreClic(carreGeo -> viewModel.filtreNumeroCarreProperty().set(carreGeo.numeroCarre()));
+        // - sélection d'une ligne du tableau → met le carré correspondant en surbrillance sur la carte.
+        tableLignes
+                .getSelectionModel()
+                .selectedItemProperty()
+                .addListener(
+                        (obs, ancienne, ligne) -> carte.surbrillanceCarre(ligne == null ? null : ligne.numeroCarre()));
+
         viewModel.rafraichir();
         viewModel.rafraichirCarte();
     }
