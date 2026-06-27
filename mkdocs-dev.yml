@@ -54,6 +54,7 @@ theme:
 nav:
   - Vue d'ensemble: index.md
   - Architecture: architecture.md
+  - Patterns et principes: patterns.md
   - Navigation et chrome: navigation.md
   - Persistance: persistance.md
   - Injection (Guice): injection.md
