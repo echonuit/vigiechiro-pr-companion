@@ -152,8 +152,9 @@ public final class CaptureDiagnostic {
         JournalDuCapteurDao journalDao = new JournalDuCapteurDao(source);
         ReleveClimatiqueDao releveDao = new ReleveClimatiqueDao(source);
 
+        // Même carré que le contexte ouvert plus haut (640380, dépt 64) : site, GPS et nom de session cohérents.
         Site site = siteDao.insert(new Site(
-                null, "040962", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
+                null, "640380", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
         Long idPoint = pointDao.insert(new PointDEcoute(null, "A1", 43.4010, -1.5740, "lisière", site.id()))
                 .id();
 
@@ -194,7 +195,7 @@ public final class CaptureDiagnostic {
                 SERIE));
         Long idSession = sessionDao
                 .insert(new SessionDEnregistrement(
-                        null, "Car040962-2026-Pass" + numero + "-A1", null, null, passage.id()))
+                        null, "Car640380-2026-Pass" + numero + "-A1", null, null, passage.id()))
                 .id();
         List<String> evenements = List.of("### Démarrage PR" + SERIE, "Arrêt programmé à 06:00:00");
         List<String> anomalies = List.of(
