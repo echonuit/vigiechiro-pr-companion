@@ -5,6 +5,7 @@
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -110,6 +111,10 @@
       </VBox>
 
       <!-- ============ Colonne droite : détail + verdict ============ -->
+      <!-- Sur une fenêtre courte, la colonne défile au lieu de laisser l'AudioView (hauteur mini)
+           déborder sur le verdict. fitToHeight : l'AudioView grandit quand il y a de la place, et un
+           ascenseur vertical apparaît dès que la hauteur disponible passe sous le minimum. -->
+      <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="colonne-detail-scroll">
       <VBox spacing="14.0" styleClass="colonne-detail">
         <VBox spacing="4.0">
           <Label text="📋 Séquence sélectionnée" styleClass="section-titre"/>
@@ -123,7 +128,7 @@
              la source suit la séquence courante, le marquage R10 se fait au début de lecture. -->
         <VBox spacing="4.0" VBox.vgrow="ALWAYS">
           <Label text="🎵 Vue audio (sonogramme + spectrogramme)" styleClass="section-titre"/>
-          <AudioView fx:id="audioView" VBox.vgrow="ALWAYS"/>
+          <AudioView fx:id="audioView" minHeight="220.0" VBox.vgrow="ALWAYS"/>
         </VBox>
 
         <VBox spacing="6.0">
@@ -154,6 +159,7 @@
                   styleClass="bouton-primaire" onAction="#enregistrer"/>
         </HBox>
       </VBox>
+      </ScrollPane>
     </SplitPane>
   </center>
 </BorderPane>
