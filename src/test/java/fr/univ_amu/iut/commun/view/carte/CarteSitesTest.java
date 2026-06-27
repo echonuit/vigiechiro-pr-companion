@@ -1,11 +1,14 @@
 package fr.univ_amu.iut.commun.view.carte;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
@@ -170,5 +173,68 @@ class CarteSitesTest {
         assertThat(rectangle.getStrokeWidth())
                 .as("la surbrillance survit à un refresh de la carte (#152)")
                 .isEqualTo(3.0);
+    }
+
+    @Test
+    void centrer_sur_recentre_et_zoome(FxRobot robot) {
+        robot.interact(() -> carte.centrerSur(43.4031, -1.5708, 14));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(carte.vueCarte().getCenter().getLatitude()).isCloseTo(43.4031, within(1e-6));
+        assertThat(carte.vueCarte().getCenter().getLongitude()).isCloseTo(-1.5708, within(1e-6));
+        assertThat(carte.vueCarte().getZoom()).isEqualTo(14.0);
+    }
+
+    @Test
+    void mode_edition_deplace_le_marqueur_au_clavier(FxRobot robot) {
+        AtomicReference<double[]> dernier = new AtomicReference<>();
+        PointGeo z1 = new PointGeo("Z1", 43.4031, -1.5708, Color.GREEN);
+        robot.interact(() -> {
+            carte.setEditionActive(true);
+            carte.setOnPointDeplace((point, lat, lon) -> dernier.set(new double[] {lat, lon}));
+            carte.setDonnees(new DonneesCarte(List.of(), List.of(z1)));
+            carte.centrerSur(43.4031, -1.5708, 14); // marqueur près du centre, déplaçable sans sortir
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Node marqueur =
+                carte.lookupAll(".carte-point-libelle").iterator().next().getParent();
+        robot.interact(marqueur::requestFocus);
+        robot.type(KeyCode.RIGHT); // vers l'est → longitude augmente
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(dernier.get())
+                .as("le déplacement clavier remonte une nouvelle position")
+                .isNotNull();
+        assertThat(dernier.get()[1]).as("→ longitude vers l'est").isGreaterThan(-1.5708);
+
+        robot.type(KeyCode.DOWN); // vers le sud → latitude diminue
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(dernier.get()[0]).as("↓ latitude vers le sud").isLessThan(43.4031);
+    }
+
+    @Test
+    void hors_edition_le_marqueur_ne_se_deplace_pas(FxRobot robot) {
+        AtomicReference<double[]> deplace = new AtomicReference<>();
+        List<PointGeo> clics = new ArrayList<>();
+        PointGeo z1 = new PointGeo("Z1", 43.4031, -1.5708, Color.GREEN);
+        robot.interact(() -> {
+            carte.setEditionActive(false);
+            carte.setOnPointDeplace((point, lat, lon) -> deplace.set(new double[] {lat, lon}));
+            carte.setOnPointClic(clics::add);
+            carte.setDonnees(new DonneesCarte(List.of(), List.of(z1)));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Node marqueur =
+                carte.lookupAll(".carte-point-libelle").iterator().next().getParent();
+        robot.interact(marqueur::requestFocus);
+        robot.type(KeyCode.RIGHT);
+        robot.interact(() -> marqueur.getOnMouseClicked().handle(null));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(deplace.get())
+                .as("hors édition, aucune flèche ne déplace le point")
+                .isNull();
+        assertThat(clics).as("hors édition, le clic reste un clic").hasSize(1);
     }
 }
