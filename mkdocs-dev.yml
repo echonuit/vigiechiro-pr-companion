@@ -57,11 +57,13 @@ nav:
   - Patterns et principes: patterns.md
   - Navigation et chrome: navigation.md
   - Persistance: persistance.md
+  - Modèle de données et domaine: modele-de-donnees.md
   - Injection (Guice): injection.md
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
   - Tests et qualité: tests-et-qualite.md
   - Captures d'écran: captures.md
   - CI/CD et release: ci-cd-release.md
+  - Sécurité et données sensibles: securite.md
 
 markdown_extensions:
   - admonition
