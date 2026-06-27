@@ -154,7 +154,7 @@ public final class CaptureDiagnostic {
 
         Site site = siteDao.insert(new Site(
                 null, "040962", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
-        Long idPoint = pointDao.insert(new PointDEcoute(null, "A1", 43.5298, 5.4474, "lisière", site.id()))
+        Long idPoint = pointDao.insert(new PointDEcoute(null, "A1", 43.4010, -1.5740, "lisière", site.id()))
                 .id();
 
         long idAvecReleve = passageAvecJournal(passageDao, sessionDao, journalDao, idPoint, 2, "2026-06-22");

@@ -98,7 +98,7 @@ class ParcoursPremiereNuitE2ETest {
         // ── Étape 1 — Déclarer le site (P1) ────────────────────────────────────────────────────
         ServiceSites sites = injector.getInstance(ServiceSites.class);
         Site site = sites.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
-        PointDEcoute point = sites.ajouterPoint(site.id(), CODE_POINT, 43.5298, 5.4474, "Près du chêne");
+        PointDEcoute point = sites.ajouterPoint(site.id(), CODE_POINT, 43.4010, -1.5740, "Près du chêne");
         assertThat(site.id()).isNotNull();
         assertThat(point.id()).isNotNull();
         assertThat(point.code()).isEqualTo(CODE_POINT);
@@ -145,7 +145,7 @@ class ParcoursPremiereNuitE2ETest {
     void les_fichiers_d_origine_de_la_sd_restent_intacts() throws Exception {
         ServiceSites sites = injector.getInstance(ServiceSites.class);
         Site site = sites.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
-        PointDEcoute point = sites.ajouterPoint(site.id(), CODE_POINT, 43.5298, 5.4474, null);
+        PointDEcoute point = sites.ajouterPoint(site.id(), CODE_POINT, 43.4010, -1.5740, null);
 
         Path sd = creerNuitSynthetique(workspace.resolve("sd"));
         Path wavOrigine = sd.resolve(NOM_WAV);

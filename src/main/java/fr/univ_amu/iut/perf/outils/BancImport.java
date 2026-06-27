@@ -242,7 +242,7 @@ public final class BancImport {
                 .insert(new Utilisateur(ID_UTILISATEUR, "Banc de mesure (demo)"));
         ServiceSites service = injecteur.getInstance(ServiceSites.class);
         Site site = service.creerSite("640380", "Carré du banc", Protocole.STANDARD, "Aix-en-Provence", ID_UTILISATEUR);
-        PointDEcoute point = service.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, "Pres du grand chene");
+        PointDEcoute point = service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Pres du grand chene");
         return point.id();
     }
 

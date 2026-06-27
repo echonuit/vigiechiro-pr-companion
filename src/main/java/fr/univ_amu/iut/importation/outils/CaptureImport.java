@@ -243,7 +243,7 @@ public final class CaptureImport {
         ServiceSites service = injecteur.getInstance(ServiceSites.class);
         var site = service.creerSite(
                 "640380", "Etang de la Tuiliere", Protocole.STANDARD, "Aix-en-Provence", ID_UTILISATEUR);
-        service.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, "Pres du grand chene");
+        service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Pres du grand chene");
     }
 
     /// Dossier d'exemple **standard** (chemin déterministe) : journal + relevé + deux WAV cohérents

@@ -203,9 +203,11 @@ public final class CaptureMultisite {
                 null, "640380", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
         Site chenes = siteDao.insert(
                 new Site(null, "640381", "Bois des Chênes", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
-        Long pointA = pointDao.insert(new PointDEcoute(null, "A1", 43.5298, 5.4474, null, tuiliere.id()))
+        // Points calés DANS leur carré national réel (centroïdes carrenat dépt 64, cf. carrenat.csv) :
+        // 640380 ≈ (43.4031, -1.5708) et 640381 ≈ (43.4040, -1.5462), deux mailles 2 km adjacentes.
+        Long pointA = pointDao.insert(new PointDEcoute(null, "A1", 43.4010, -1.5740, null, tuiliere.id()))
                 .id();
-        Long pointB = pointDao.insert(new PointDEcoute(null, "B2", 43.5510, 5.4602, null, chenes.id()))
+        Long pointB = pointDao.insert(new PointDEcoute(null, "B2", 43.4040, -1.5470, null, chenes.id()))
                 .id();
 
         passage(passageDao, 2, 2026, "2026-06-22", StatutWorkflow.DEPOSE, Verdict.OK, pointA);

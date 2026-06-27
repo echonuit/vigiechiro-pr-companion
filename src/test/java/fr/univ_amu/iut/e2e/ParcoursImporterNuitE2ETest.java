@@ -85,7 +85,7 @@ class ParcoursImporterNuitE2ETest {
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur E2E"));
         ServiceSites sites = injector.getInstance(ServiceSites.class);
         site = sites.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
-        point = sites.ajouterPoint(site.id(), CODE_POINT, 43.5298, 5.4474, "Près du chêne");
+        point = sites.ajouterPoint(site.id(), CODE_POINT, 43.4010, -1.5740, "Près du chêne");
 
         dossierSource = creerNuitSynthetique(workspace.resolve("sd"));
     }

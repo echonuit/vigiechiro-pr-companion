@@ -221,7 +221,7 @@ public final class CaptureLot {
                         "2026-01-01",
                         ID_UTILISATEUR));
         return new PointDao(source)
-                .insert(new PointDEcoute(null, CODE_POINT, 43.5298, 5.4474, "Près du grand chêne", site.id()))
+                .insert(new PointDEcoute(null, CODE_POINT, 43.4010, -1.5740, "Près du grand chêne", site.id()))
                 .id();
     }
 

@@ -83,7 +83,7 @@ class MultisiteVueIntegrationTest {
                 .thenReturn(List.of(new CarreAgrege(
                         "640380",
                         "Étang",
-                        List.of(new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE)),
+                        List.of(new PointAgrege("A1", 43.4010, -1.5740, 2, StatutWorkflow.VERIFIE)),
                         2)));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override

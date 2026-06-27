@@ -9,8 +9,8 @@ sites et qu'on veut une vision d'ensemble.
 
 ![La vue multi-sites : carte des sites/points à gauche, tableau des passages à droite.](../assets/captures/apercu-multisite.png)
 
-À **gauche**, la **carte** affiche chaque **carré** (emprise ≈ 2 km du site) et ses **points
-d'écoute** sous forme de marqueurs **colorés selon le statut** du dernier passage (gris = importé,
+À **gauche**, la **carte** affiche chaque **carré** (maille 2 km du carroyage national Vigie-Chiro) et
+ses **points d'écoute** sous forme de marqueurs **colorés selon le statut** du dernier passage (gris = importé,
 indigo = transformé / vérifié, cyan = prêt à déposer, vert = déposé). Chaque marqueur porte son
 libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le **remplissage
 de chaque carré** reflète sa **densité de passages** : plus un carré est fréquenté, plus son indigo

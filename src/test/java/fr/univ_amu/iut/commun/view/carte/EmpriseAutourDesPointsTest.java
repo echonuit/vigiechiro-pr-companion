@@ -23,7 +23,7 @@ class EmpriseAutourDesPointsTest {
     void emprise_centree_contient_les_points() {
         // Deux points dans le département 64 (Pyrénées-Atlantiques), ~1 km d'écart.
         EmpriseCarre emprise = fournisseur
-                .emprise("640380", List.of(point(43.300, -0.360), point(43.310, -0.350)))
+                .emprise("999999", List.of(point(43.300, -0.360), point(43.310, -0.350)))
                 .orElseThrow();
 
         assertThat(emprise.latCentre()).isCloseTo(43.305, within(1e-6));
@@ -41,7 +41,7 @@ class EmpriseAutourDesPointsTest {
         // exclurait l'excentré. Centré sur la boîte englobante, l'emprise doit tous les contenir.
         List<PointGeo> points = List.of(point(43.300, -0.360), point(43.300, -0.360), point(43.317, -0.345));
 
-        EmpriseCarre emprise = fournisseur.emprise("640380", points).orElseThrow();
+        EmpriseCarre emprise = fournisseur.emprise("999999", points).orElseThrow();
 
         for (PointGeo p : points) {
             assertThat(emprise.contient(p.latitude(), p.longitude()))
@@ -53,8 +53,8 @@ class EmpriseAutourDesPointsTest {
     @Test
     @DisplayName("sans point géolocalisé (liste vide ou GPS manquant), pas d'emprise")
     void sans_point_geolocalise_vide() {
-        assertThat(fournisseur.emprise("640380", List.of())).isEmpty();
-        assertThat(fournisseur.emprise("640380", List.of(point(Double.NaN, Double.NaN))))
+        assertThat(fournisseur.emprise("999999", List.of())).isEmpty();
+        assertThat(fournisseur.emprise("999999", List.of(point(Double.NaN, Double.NaN))))
                 .as("un point au GPS manquant (NaN) n'ancre pas l'emprise")
                 .isEmpty();
     }

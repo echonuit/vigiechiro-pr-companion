@@ -33,7 +33,7 @@ class CarteSitesTest {
 
     private static DonneesCarte deuxPointsUnCarre() {
         List<PointGeo> points = List.of(
-                new PointGeo("Z1", 43.300, -0.360, Color.GREEN), new PointGeo("Z2", 43.310, -0.350, Color.ORANGE));
+                new PointGeo("Z1", 43.4010, -1.5740, Color.GREEN), new PointGeo("Z2", 43.4055, -1.5680, Color.ORANGE));
         EmpriseCarre emprise =
                 new EmpriseAutourDesPoints().emprise("640380", points).orElseThrow();
         CarreGeo carre = new CarreGeo("640380", emprise, Color.color(0.2, 0.4, 0.8, 0.3));
@@ -64,7 +64,7 @@ class CarteSitesTest {
     @Test
     void point_sans_gps_non_place(FxRobot robot) {
         List<PointGeo> points = List.of(
-                new PointGeo("Z1", 43.300, -0.360, Color.GREEN),
+                new PointGeo("Z1", 43.4010, -1.5740, Color.GREEN),
                 new PointGeo("SansGPS", Double.NaN, Double.NaN, Color.GRAY));
         robot.interact(() -> carte.setDonnees(new DonneesCarte(List.of(), points)));
         WaitForAsyncUtils.waitForFxEvents();
@@ -125,7 +125,7 @@ class CarteSitesTest {
 
     @Test
     void infobulle_posee_sur_carre_et_point(FxRobot robot) {
-        PointGeo point = new PointGeo("Z1", 43.300, -0.360, Color.GREEN, "Z1\n5 passages\nStatut : Déposé");
+        PointGeo point = new PointGeo("Z1", 43.4010, -1.5740, Color.GREEN, "Z1\n5 passages\nStatut : Déposé");
         EmpriseCarre emprise =
                 new EmpriseAutourDesPoints().emprise("640380", List.of(point)).orElseThrow();
         CarreGeo carre = new CarreGeo("640380", emprise, Color.color(0.2, 0.4, 0.8, 0.3), "Étang (640380)\n9 passages");
