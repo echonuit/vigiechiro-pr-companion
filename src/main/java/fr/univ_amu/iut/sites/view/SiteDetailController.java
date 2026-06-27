@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.sites.viewmodel.LienCarte;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -24,19 +26,24 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import javafx.util.StringConverter;
 
 /// Controller de l'écran de détail **M-Site-detail** (`SiteDetail.fxml`).
 ///
@@ -173,8 +180,7 @@ public class SiteDetailController implements RafraichirAuRetour {
                         .otherwise("Suppression impossible : ce site porte des passages."
                                 + " Supprimez d'abord les passages rattachés."));
         Tooltip.install(enveloppeSupprimer, infoSupprimer);
-        boutonModifier.setDisable(true);
-        boutonModifier.setTooltip(new Tooltip("Édition de la fiche site : à venir."));
+        boutonModifier.setTooltip(new Tooltip("Modifier la fiche du site (carré, nom, protocole…)."));
         configurerColonnes();
         tablePassages.setItems(viewModel.passages());
         tablePassages.setRowFactory(tableau -> {
@@ -208,6 +214,20 @@ public class SiteDetailController implements RafraichirAuRetour {
     @FXML
     private void importerNuit() {
         ouvrirImportation.ouvrirPourSite(viewModel.siteCourant().id());
+    }
+
+    /// Ouvre la boîte d'édition pré-remplie ; à la validation, applique la modification via le
+    /// ViewModel (qui recharge la fiche). Un refus métier (carré déjà pris) ou un format invalide
+    /// (R1) est rapporté sans quitter l'écran.
+    @FXML
+    private void modifierSite() {
+        demanderModificationSite(viewModel.siteCourant()).ifPresent(saisie -> {
+            try {
+                viewModel.modifierSite(saisie.numeroCarre(), saisie.nom(), saisie.protocole(), saisie.commentaire());
+            } catch (RegleMetierException | IllegalArgumentException refus) {
+                alerteErreur(refus.getMessage());
+            }
+        });
     }
 
     @FXML
@@ -313,6 +333,70 @@ public class SiteDetailController implements RafraichirAuRetour {
             }
         };
     }
+
+    /// Boîte de dialogue d'édition de la fiche, **pré-remplie** avec les valeurs courantes (carré,
+    /// nom, protocole, commentaire). Le protocole est choisi dans une liste affichant son libellé
+    /// métier. Renvoie la saisie validée, ou vide si l'utilisateur annule.
+    private Optional<SaisieEditionSite> demanderModificationSite(Site site) {
+        Dialog<SaisieEditionSite> dialogue = new Dialog<>();
+        dialogue.setTitle("Modifier le site");
+        dialogue.setHeaderText("Fiche du carré " + site.numeroCarre() + ".");
+        ButtonType valider = new ButtonType("Enregistrer", ButtonType.OK.getButtonData());
+        dialogue.getDialogPane().getButtonTypes().addAll(valider, ButtonType.CANCEL);
+
+        TextField champCarre = new TextField(site.numeroCarre());
+        champCarre.setPromptText("640380");
+        TextField champNom = new TextField(ouVide(site.nomConvivial()));
+        champNom.setPromptText("Étang de la Tuilière (optionnel)");
+        ComboBox<Protocole> champProtocole = new ComboBox<>();
+        champProtocole.getItems().setAll(Protocole.values());
+        champProtocole.setValue(site.protocole());
+        champProtocole.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Protocole protocole) {
+                return protocole == null ? "" : protocole.libelle();
+            }
+
+            @Override
+            public Protocole fromString(String libelle) {
+                return Protocole.parLibelle(libelle);
+            }
+        });
+        TextField champCommentaire = new TextField(ouVide(site.commentaire()));
+        champCommentaire.setPromptText("Commentaire (optionnel)");
+
+        GridPane grille = new GridPane();
+        grille.setHgap(8);
+        grille.setVgap(8);
+        grille.addRow(0, new Label("N° de carré"), champCarre);
+        grille.addRow(1, new Label("Nom convivial"), champNom);
+        grille.addRow(2, new Label("Protocole"), champProtocole);
+        grille.addRow(3, new Label("Commentaire"), champCommentaire);
+        dialogue.getDialogPane().setContent(grille);
+
+        dialogue.setResultConverter(bouton -> bouton == valider
+                ? new SaisieEditionSite(
+                        champCarre.getText(),
+                        vide(champNom.getText()),
+                        champProtocole.getValue(),
+                        vide(champCommentaire.getText()))
+                : null);
+        return dialogue.showAndWait();
+    }
+
+    /// Texte saisi → `null` si vide (champ optionnel non renseigné).
+    private static String vide(String texte) {
+        return texte == null || texte.isBlank() ? null : texte;
+    }
+
+    /// Valeur de champ → chaîne vide si `null` (pour pré-remplir un `TextField`).
+    private static String ouVide(String texte) {
+        return texte == null ? "" : texte;
+    }
+
+    /// Valeurs saisies dans la boîte d'édition d'un site (carré requis ; nom et commentaire
+    /// optionnels ; protocole choisi dans la liste).
+    private record SaisieEditionSite(String numeroCarre, String nom, Protocole protocole, String commentaire) {}
 
     private Window fenetre() {
         return cartesPoints.getScene().getWindow();

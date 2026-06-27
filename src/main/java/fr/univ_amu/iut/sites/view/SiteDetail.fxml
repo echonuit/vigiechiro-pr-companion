@@ -30,7 +30,8 @@
     </VBox>
     <Button fx:id="boutonImporterNuit" text="📥 Importer une nuit" styleClass="bouton-primaire"
             onAction="#importerNuit"/>
-    <Button fx:id="boutonModifier" text="✏ Modifier" styleClass="bouton-secondaire"/>
+    <Button fx:id="boutonModifier" text="✏ Modifier" styleClass="bouton-secondaire"
+            onAction="#modifierSite"/>
     <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe donc sur ce
          conteneur (qui, lui, reçoit le survol) pour expliquer pourquoi la suppression est bloquée. -->
     <StackPane fx:id="enveloppeSupprimer">

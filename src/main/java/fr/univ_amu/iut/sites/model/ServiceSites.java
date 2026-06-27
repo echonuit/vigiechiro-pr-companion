@@ -73,6 +73,44 @@ public class ServiceSites {
         return siteDao.insert(aCreer);
     }
 
+    /// Modifie la fiche d'un site existant (bouton « ✏ Modifier » de M-Site-detail).
+    ///
+    /// - Le site doit exister.
+    /// - R1 (dur) : le numéro de carré doit être valide (6 chiffres), cf. [ValidateurCarre].
+    /// - R5 (dur) : le carré reste unique pour l'utilisateur — la vérification **exclut le site
+    ///   courant** (renommer un site, ou le ré-enregistrer sans changer son carré, ne doit pas
+    ///   déclencher un faux conflit).
+    /// - Protocole : conserve celui du site si `null`.
+    /// - L'`id`, la date de création et le propriétaire sont **conservés**.
+    ///
+    /// @return le site mis à jour
+    /// @throws IllegalArgumentException si le numéro de carré est mal formé (R1)
+    /// @throws RegleMetierException si le site est introuvable, ou si le carré est déjà déclaré par
+    ///     un AUTRE site de l'utilisateur (R5)
+    public Site modifierSite(
+            Long idSite, String numeroCarre, String nomConvivial, Protocole protocole, String commentaire) {
+        ValidateurCarre.exigerValide(numeroCarre); // R1
+        Site existant =
+                siteDao.findById(idSite).orElseThrow(() -> new RegleMetierException("Site introuvable : " + idSite));
+        boolean carreDejaPris = siteDao.findByUtilisateur(existant.idUtilisateur()).stream()
+                .anyMatch(autre ->
+                        autre.numeroCarre().equals(numeroCarre) && !autre.id().equals(idSite)); // R5
+        if (carreDejaPris) {
+            throw new RegleMetierException("Le carré " + numeroCarre + " est déjà déclaré pour cet utilisateur.");
+        }
+        Protocole effectif = protocole != null ? protocole : existant.protocole();
+        Site aMettreAJour = new Site(
+                existant.id(),
+                numeroCarre,
+                nomConvivial,
+                effectif,
+                commentaire,
+                existant.dateCreation(),
+                existant.idUtilisateur());
+        siteDao.update(aMettreAJour);
+        return aMettreAJour;
+    }
+
     /// Ajoute un point d'écoute à un site existant.
     ///
     /// - Le site doit exister.

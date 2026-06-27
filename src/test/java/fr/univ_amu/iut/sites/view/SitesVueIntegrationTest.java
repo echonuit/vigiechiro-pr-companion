@@ -141,8 +141,8 @@ class SitesVueIntegrationTest {
         Button boutonModifier = robot.lookup("#boutonModifier").queryAs(Button.class);
         Button boutonSupprimer = robot.lookup("#boutonSupprimer").queryAs(Button.class);
 
-        // « Modifier » est figé désactivé (édition de fiche à venir).
-        assertThat(boutonModifier.isDisabled()).isTrue();
+        // « Modifier » est actif : il ouvre la boîte d'édition de la fiche site.
+        assertThat(boutonModifier.isDisabled()).isFalse();
         // Aucun passage rattaché : la suppression est possible, donc le bouton est actif.
         assertThat(boutonSupprimer.isDisabled()).isFalse();
     }

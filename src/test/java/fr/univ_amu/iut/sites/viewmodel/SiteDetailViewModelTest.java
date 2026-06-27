@@ -151,6 +151,48 @@ class SiteDetailViewModelTest {
                 .hasMessageContaining("A1");
     }
 
+    @Test
+    @DisplayName("Modifier la fiche met à jour carré, nom et protocole, et recharge l'écran")
+    void modifier_site_met_a_jour_la_fiche() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, "Aix", ID_USER);
+        viewModel.chargerSite(site);
+
+        viewModel.modifierSite("130010", "Calanques", Protocole.RECHERCHE, "Marseille");
+
+        assertThat(viewModel.numeroCarreProperty().get()).isEqualTo("130010");
+        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 130010 — Calanques");
+        assertThat(viewModel.protocoleProperty().get()).isEqualTo("PointFixeRecherche");
+        assertThat(service.listerSites(ID_USER)).singleElement().satisfies(enregistre -> {
+            assertThat(enregistre.numeroCarre()).isEqualTo("130010");
+            assertThat(enregistre.nomConvivial()).isEqualTo("Calanques");
+            assertThat(enregistre.protocole()).isEqualTo(Protocole.RECHERCHE);
+            assertThat(enregistre.commentaire()).isEqualTo("Marseille");
+        });
+    }
+
+    @Test
+    @DisplayName("Renommer un site sans changer son carré ne déclenche pas de faux conflit d'unicité")
+    void modifier_site_meme_carre_pas_de_conflit() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        viewModel.chargerSite(site);
+
+        viewModel.modifierSite("640380", "Nouveau nom", Protocole.STANDARD, null);
+
+        assertThat(viewModel.titreProperty().get()).isEqualTo("Carré 640380 — Nouveau nom");
+    }
+
+    @Test
+    @DisplayName("Modifier vers un carré déjà pris par un autre site est refusé (R5)")
+    void modifier_site_carre_deja_pris_refuse() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        service.creerSite("130010", "Calanques", Protocole.STANDARD, null, ID_USER);
+        viewModel.chargerSite(site);
+
+        assertThatThrownBy(() -> viewModel.modifierSite("130010", "Étang", Protocole.STANDARD, null))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("130010");
+    }
+
     private void insererPassage(PointDEcoute point, int numeroPassage, String date, Verdict verdict) {
         passageDao.insert(new Passage(
                 null,

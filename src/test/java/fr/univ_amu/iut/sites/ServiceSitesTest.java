@@ -109,6 +109,64 @@ class ServiceSitesTest {
         assertThat(autre.id()).isNotNull();
     }
 
+    // --- Modification de site (R1, R5, conservation des invariants) ---
+
+    @Test
+    @DisplayName("Modifier un site met à jour les champs et conserve id, date de création et propriétaire")
+    void modifier_site_conserve_invariants() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, "Aix", ID_USER);
+
+        Site modifie = service.modifierSite(site.id(), "130010", "Calanques", Protocole.RECHERCHE, "Marseille");
+
+        assertThat(modifie.id()).isEqualTo(site.id());
+        assertThat(modifie.dateCreation()).isEqualTo(site.dateCreation());
+        assertThat(modifie.idUtilisateur()).isEqualTo(ID_USER);
+        assertThat(modifie.numeroCarre()).isEqualTo("130010");
+        assertThat(modifie.nomConvivial()).isEqualTo("Calanques");
+        assertThat(modifie.protocole()).isEqualTo(Protocole.RECHERCHE);
+        assertThat(service.listerSites(ID_USER))
+                .singleElement()
+                .satisfies(enregistre -> assertThat(enregistre.numeroCarre()).isEqualTo("130010"));
+    }
+
+    @Test
+    @DisplayName("Modifier un site introuvable est refusé")
+    void modifier_site_introuvable_refuse() {
+        assertThatThrownBy(() -> service.modifierSite(999L, "640380", null, Protocole.STANDARD, null))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("introuvable");
+    }
+
+    @Test
+    @DisplayName("R1 : modifier vers un numéro de carré mal formé est refusé")
+    void modifier_site_carre_invalide_refuse() {
+        Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+
+        assertThatThrownBy(() -> service.modifierSite(site.id(), "64038", null, Protocole.STANDARD, null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("R5 : modifier vers un carré déjà pris par un autre site du même utilisateur est refusé")
+    void modifier_site_carre_pris_par_autre_refuse() {
+        Site premier = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+        service.creerSite("130010", null, Protocole.STANDARD, null, ID_USER);
+
+        assertThatThrownBy(() -> service.modifierSite(premier.id(), "130010", null, Protocole.STANDARD, null))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("130010");
+    }
+
+    @Test
+    @DisplayName("Modifier un site en gardant son carré reste possible (pas de faux conflit avec lui-même)")
+    void modifier_site_meme_carre_possible() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+
+        Site modifie = service.modifierSite(site.id(), "640380", "Renommé", Protocole.STANDARD, null);
+
+        assertThat(modifie.nomConvivial()).isEqualTo("Renommé");
+    }
+
     // --- Ajout de point (R2, unicité code) ---
 
     @Test

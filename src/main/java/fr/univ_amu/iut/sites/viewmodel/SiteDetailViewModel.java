@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -84,6 +85,17 @@ public class SiteDetailViewModel {
         mettreAJourTableauPassages(pointsDuSite, passagesDuSite);
         mettreAJourBandeau(passagesDuSite);
         suppressionPossible.set(passagesDuSite.isEmpty());
+    }
+
+    /// Modifie la fiche du site courant (bouton header `✏ Modifier`) puis recharge l'écran pour
+    /// refléter les nouvelles valeurs (titre, bandeau).
+    ///
+    /// @throws RegleMetierException si le carré est déjà déclaré par un autre site (refus côté
+    ///     service)
+    /// @throws IllegalArgumentException si le numéro de carré est mal formé (R1)
+    public void modifierSite(String numeroCarre, String nomConvivial, Protocole protocole, String commentaire) {
+        this.site = service.modifierSite(site.id(), numeroCarre, nomConvivial, protocole, commentaire);
+        rafraichir();
     }
 
     /// Supprime le site courant (bouton header `🗑 Supprimer`).
