@@ -7,6 +7,7 @@ import java.util.List;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -88,5 +89,69 @@ class CarteSitesTest {
         robot.interact(() -> marqueur.getOnMouseClicked().handle(null));
 
         assertThat(cliques).as("le clic d'un point remonte le PointGeo").hasSize(1);
+    }
+
+    @Test
+    void clic_reel_sur_marqueur_positionne_remonte_le_point(FxRobot robot) {
+        List<PointGeo> cliques = new ArrayList<>();
+        robot.interact(() -> {
+            carte.setOnPointClic(cliques::add);
+            carte.setDonnees(deuxPointsUnCarre());
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Clic RÉEL à l'écran sur le libellé « Z1 » : ne réussit que si le marqueur a été **projeté** à une
+        // position d'écran valide (couvre le positionnement, pas seulement la présence — vigilance #294).
+        robot.clickOn("Z1");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(cliques).extracting(PointGeo::libelle).contains("Z1");
+    }
+
+    @Test
+    void clic_carre_declenche_le_callback(FxRobot robot) {
+        List<CarreGeo> cliques = new ArrayList<>();
+        robot.interact(() -> {
+            carte.setOnCarreClic(cliques::add);
+            carte.setDonnees(deuxPointsUnCarre());
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Node rectangle = carte.lookup(".carte-carre");
+        robot.interact(() -> rectangle.getOnMouseClicked().handle(null));
+
+        assertThat(cliques).extracting(CarreGeo::numeroCarre).containsExactly("640380");
+    }
+
+    @Test
+    void surbrillance_met_le_carre_en_evidence(FxRobot robot) {
+        robot.interact(() -> carte.setDonnees(deuxPointsUnCarre()));
+        WaitForAsyncUtils.waitForFxEvents();
+        Rectangle rectangle = (Rectangle) carte.lookup(".carte-carre");
+        assertThat(rectangle.getStrokeWidth()).isEqualTo(1.5);
+
+        robot.interact(() -> carte.surbrillanceCarre("640380"));
+
+        assertThat(rectangle.getStrokeWidth())
+                .as("le carré sélectionné est mis en évidence (bordure épaissie)")
+                .isEqualTo(3.0);
+    }
+
+    @Test
+    void surbrillance_survit_a_un_refresh(FxRobot robot) {
+        robot.interact(() -> {
+            carte.setDonnees(deuxPointsUnCarre());
+            carte.surbrillanceCarre("640380");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // setDonnees recrée les rectangles : la surbrillance mémorisée doit être réappliquée.
+        robot.interact(() -> carte.setDonnees(deuxPointsUnCarre()));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Rectangle rectangle = (Rectangle) carte.lookup(".carte-carre");
+        assertThat(rectangle.getStrokeWidth())
+                .as("la surbrillance survit à un refresh de la carte (#152)")
+                .isEqualTo(3.0);
     }
 }

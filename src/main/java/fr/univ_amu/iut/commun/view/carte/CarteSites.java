@@ -32,6 +32,10 @@ public class CarteSites extends Region {
     private final CoucheCarres coucheCarres = new CoucheCarres();
     private final CouchePoints couchePoints = new CouchePoints();
 
+    /// Numéro du carré actuellement en surbrillance (sélection liée au tableau), ou `null`. Mémorisé pour
+    /// **réappliquer** la surbrillance après un `setDonnees` qui recrée les tracés (refresh de la carte).
+    private String carreSurbrillance;
+
     public CarteSites() {
         getStyleClass().add("carte-sites");
         // Les carrés d'abord (dessous), les points ensuite (au-dessus).
@@ -47,10 +51,25 @@ public class CarteSites extends Region {
         couchePoints.setOnClic(Objects.requireNonNull(onPointClic, "onPointClic"));
     }
 
-    /// Affiche les carrés et points de `donnees`, puis recadre la vue sur leur emprise.
+    /// Définit le handler de clic sur un carré (souris ou Entrée/Espace au clavier).
+    public void setOnCarreClic(Consumer<CarreGeo> onCarreClic) {
+        coucheCarres.setOnClic(Objects.requireNonNull(onCarreClic, "onCarreClic"));
+    }
+
+    /// Met en **surbrillance** le carré de numéro `numeroCarre` (les autres reviennent à la normale).
+    /// `null` n'en surligne aucun. Sert à refléter sur la carte la sélection faite dans le tableau.
+    public void surbrillanceCarre(String numeroCarre) {
+        carreSurbrillance = numeroCarre;
+        coucheCarres.surbrillance(numeroCarre);
+    }
+
+    /// Affiche les carrés et points de `donnees`, puis recadre la vue sur leur emprise. La surbrillance
+    /// active (sélection du tableau) est **réappliquée** après recréation des tracés, pour qu'elle survive
+    /// à un refresh de la carte.
     public void setDonnees(DonneesCarte donnees) {
         Objects.requireNonNull(donnees, "donnees");
         coucheCarres.definirCarres(donnees.carres());
+        coucheCarres.surbrillance(carreSurbrillance);
         couchePoints.definirPoints(donnees.points());
         recadrerSur(donnees);
     }

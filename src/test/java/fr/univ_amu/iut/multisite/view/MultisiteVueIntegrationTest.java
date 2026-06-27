@@ -34,6 +34,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.junit.jupiter.api.DisplayName;
@@ -151,6 +152,37 @@ class MultisiteVueIntegrationTest {
         assertThat(marqueurs)
                 .as("un marqueur pour le point géolocalisé du carré 640380")
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#152 : cliquer un carré sur la carte filtre le tableau par ce carré")
+    void clic_carre_filtre_le_tableau(FxRobot robot) {
+        Node rectangle = robot.lookup(".carte-carre").query();
+        robot.interact(() -> rectangle.getOnMouseClicked().handle(null));
+
+        ArgumentCaptor<FiltresMultisite> capteur = ArgumentCaptor.forClass(FiltresMultisite.class);
+        verify(service, atLeastOnce()).listerPassages(eq("u-1"), capteur.capture(), any());
+        assertThat(capteur.getAllValues())
+                .as("le filtre carré du tableau prend le n° du carré cliqué")
+                .anyMatch(filtre -> "640380".equals(filtre.numeroCarre()));
+    }
+
+    @Test
+    @DisplayName("#152 : sélectionner une ligne met le carré correspondant en surbrillance sur la carte")
+    void selection_ligne_surbrillance_carre(FxRobot robot) {
+        Rectangle rectangle = (Rectangle) robot.lookup(".carte-carre").query();
+        assertThat(rectangle.getStrokeWidth()).isEqualTo(1.5);
+
+        // 1re ligne = carré 640380 (le carré tracé sur la carte).
+        @SuppressWarnings("unchecked")
+        TableView<LignePassage> table = (TableView<LignePassage>)
+                (TableView<?>) robot.lookup("#tableLignes").queryTableView();
+        robot.interact(() -> table.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(rectangle.getStrokeWidth())
+                .as("le carré de la ligne sélectionnée est mis en évidence")
+                .isEqualTo(3.0);
     }
 
     @Test
