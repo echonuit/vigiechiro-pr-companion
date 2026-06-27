@@ -10,8 +10,10 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import java.io.File;
+import java.util.Comparator;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -103,7 +105,12 @@ public class MultisiteController implements RafraichirAuRetour {
     @FXML
     private void initialize() {
         configurerColonnes();
-        tableLignes.setItems(viewModel.lignes());
+        // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
+        // la liste (déjà filtrée/ordonnée côté service) ; performant (~4000 lignes) et le tri colonne
+        // persiste à travers les rafraîchissements de filtres.
+        SortedList<LignePassage> lignesTriees = new SortedList<>(viewModel.lignes());
+        lignesTriees.comparatorProperty().bind(tableLignes.comparatorProperty());
+        tableLignes.setItems(lignesTriees);
         // Double-clic sur une ligne → ouvre M-Passage (contrat socle, aucune dépendance vers passage.view).
         tableLignes.setRowFactory(tableau -> {
             TableRow<LignePassage> ligne = new TableRow<>();
@@ -121,6 +128,12 @@ public class MultisiteController implements RafraichirAuRetour {
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(convertisseur(MultisiteController::libelleTri));
         choixTri.valueProperty().bindBidirectional(viewModel.triProperty());
+        // Choisir un ordre nommé (combo) réinitialise le tri par colonne, pour que l'ordre nommé soit
+        // visible (sinon le comparateur de colonne masquerait le tri serveur). #145.
+        viewModel
+                .triProperty()
+                .addListener(
+                        (obs, ancien, nouveau) -> tableLignes.getSortOrder().clear());
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
         boutonExporter.disableProperty().bind(viewModel.nonVideProperty().not());
@@ -149,6 +162,9 @@ public class MultisiteController implements RafraichirAuRetour {
                 c -> new ReadOnlyStringWrapper(String.valueOf(c.getValue().annee())));
         colNumero.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(String.valueOf(c.getValue().numeroPassage())));
+        // #145 : tri NUMÉRIQUE (et non alphabétique) au clic d'en-tête sur Année et N° de passage.
+        colAnnee.setComparator(Comparator.comparingInt(Integer::parseInt));
+        colNumero.setComparator(Comparator.comparingInt(Integer::parseInt));
         colDate.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().dateEnregistrement()));
         colStatut.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(c.getValue().statut().libelle()));
@@ -218,6 +234,7 @@ public class MultisiteController implements RafraichirAuRetour {
         // VM, donc reinitialiserFiltres seul laisserait ce texte affiché (P3 revue codex).
         champCarre.clear();
         champAnnee.clear();
+        tableLignes.getSortOrder().clear(); // #145 : la réinitialisation efface aussi le tri par colonne.
         viewModel.reinitialiserFiltres();
     }
 
