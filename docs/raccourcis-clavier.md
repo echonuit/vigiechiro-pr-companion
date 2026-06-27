@@ -7,6 +7,7 @@ disponibles : ceux qui marchent partout, puis ceux propres à l'écran de qualif
 
 | Raccourci | Action |
 |---|---|
+| <kbd>Ctrl</kbd> + <kbd>F</kbd> | Rechercher (place le curseur dans le champ de recherche) |
 | <kbd>Alt</kbd> + <kbd>←</kbd> | Revenir à l'écran précédent |
 | <kbd>Alt</kbd> + <kbd>Début</kbd> | Revenir directement à l'accueil |
 | <kbd>Tab</kbd> | Parcourir les éléments au clavier (cartes, champs, boutons) |
@@ -14,6 +15,21 @@ disponibles : ceux qui marchent partout, puis ceux propres à l'écran de qualif
 
 Sur les écrans organisés en cartes (l'accueil, « Mes sites »), <kbd>Entrée</kbd> ou <kbd>Espace</kbd>
 ouvre la carte qui a le focus.
+
+## Recherche globale
+
+Le champ de recherche, en haut à droite de la barre de navigation, est accessible depuis n'importe quel
+écran (<kbd>Ctrl</kbd> + <kbd>F</kbd>). Il filtre **instantanément** les sites, points d'écoute et
+passages, sans tenir compte de la casse ni des accents. Les résultats s'affichent dans une liste
+déroulante groupée (Sites, Points, Passages).
+
+| Raccourci | Action |
+|---|---|
+| <kbd>Ctrl</kbd> + <kbd>F</kbd> | Activer la recherche |
+| <kbd>↓</kbd> | Depuis le champ, entrer dans la liste des résultats |
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Parcourir les résultats |
+| <kbd>Entrée</kbd> | Ouvrir le résultat sélectionné |
+| <kbd>Échap</kbd> | Fermer la liste des résultats |
 
 !!! tip "Navigation au clavier"
     La touche <kbd>Tab</kbd> déplace le focus d'un élément à l'autre, avec un liseré visible sur

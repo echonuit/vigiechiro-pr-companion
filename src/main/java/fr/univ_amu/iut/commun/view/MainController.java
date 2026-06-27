@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.RechercheGlobale;
+import fr.univ_amu.iut.commun.model.ResultatRecherche;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.Set;
@@ -13,7 +15,9 @@ import javafx.scene.Parent;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -44,6 +48,9 @@ public class MainController {
     private final Navigateur navigateur;
     private final Set<ActiviteAccueil> activites;
     private final Set<IndicateurAccueil> indicateurs;
+    private final RechercheGlobale recherche;
+    private final OuvrirSite ouvrirSite;
+    private final OuvrirPassage ouvrirPassage;
 
     @FXML
     private BorderPane racine;
@@ -69,21 +76,39 @@ public class MainController {
     @FXML
     private FlowPane cartesActivites;
 
+    @FXML
+    private TextField champRecherche;
+
+    @FXML
+    private VBox panneauResultats;
+
+    @FXML
+    private ListView<ResultatRecherche> listeResultats;
+
     /// Hôte de défilement permanent de la zone centrale : une barre verticale apparaît quand la vue
     /// courante dépasse la hauteur disponible (écrans de résolution normale), sans jamais masquer la
     /// barre de navigation ni le pied (qui restent dans le chrome, hors de cette zone).
     private final ScrollPane defilementCentral = new ScrollPane();
+
+    /// Recherche globale du chrome (#144), câblée à l'initialisation.
+    private RechercheChrome rechercheChrome;
 
     @Inject
     public MainController(
             NavigationViewModel navigation,
             Navigateur navigateur,
             Set<ActiviteAccueil> activites,
-            Set<IndicateurAccueil> indicateurs) {
+            Set<IndicateurAccueil> indicateurs,
+            RechercheGlobale recherche,
+            OuvrirSite ouvrirSite,
+            OuvrirPassage ouvrirPassage) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
         this.indicateurs = indicateurs;
+        this.recherche = recherche;
+        this.ouvrirSite = ouvrirSite;
+        this.ouvrirPassage = ouvrirPassage;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -139,6 +164,10 @@ public class MainController {
         navigateur.historique().addListener((ListChangeListener<EtapeNavigation>) changement -> rafraichirNavigation());
         rafraichirNavigation();
 
+        rechercheChrome = new RechercheChrome(
+                champRecherche, panneauResultats, listeResultats, recherche, ouvrirSite, ouvrirPassage);
+        rechercheChrome.configurer();
+
         // Raccourcis clavier de navigation, posés dès que la scène est disponible :
         //  - Alt+← : ← Retour (écran précédent réel) ;
         //  - Alt+Début : retour direct à l'accueil (saut en tête du fil).
@@ -152,6 +181,10 @@ public class MainController {
                         .put(
                                 new KeyCodeCombination(KeyCode.HOME, KeyCombination.ALT_DOWN),
                                 navigateur::afficherAccueil);
+                // Ctrl+F : place le focus dans le champ de recherche globale (#144) et présélectionne
+                // son contenu, pour rechercher de n'importe quel écran.
+                scene.getAccelerators()
+                        .put(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN), rechercheChrome::activer);
             }
         });
     }
