@@ -47,6 +47,17 @@ public class CarteSites extends Region {
         couchePoints.setOnClic(Objects.requireNonNull(onPointClic, "onPointClic"));
     }
 
+    /// Définit le handler de clic sur un carré (souris ou Entrée/Espace au clavier).
+    public void setOnCarreClic(Consumer<CarreGeo> onCarreClic) {
+        coucheCarres.setOnClic(Objects.requireNonNull(onCarreClic, "onCarreClic"));
+    }
+
+    /// Met en **surbrillance** le carré de numéro `numeroCarre` (les autres reviennent à la normale).
+    /// `null` n'en surligne aucun. Sert à refléter sur la carte la sélection faite dans le tableau.
+    public void surbrillanceCarre(String numeroCarre) {
+        coucheCarres.surbrillance(numeroCarre);
+    }
+
     /// Affiche les carrés et points de `donnees`, puis recadre la vue sur leur emprise.
     public void setDonnees(DonneesCarte donnees) {
         Objects.requireNonNull(donnees, "donnees");
