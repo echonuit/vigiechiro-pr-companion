@@ -28,9 +28,12 @@ public class CarteSites extends Region {
     private static final int ZOOM_MAX = 15;
     private static final int ZOOM_MIN = 4;
 
+    /// Zoom de mise au point sur un carré 2 km (un seul site/point) : assez serré pour le voir en entier.
+    private static final int ZOOM_CARRE = 14;
+
     private final MapView carte = new MapView();
     private final CoucheCarres coucheCarres = new CoucheCarres();
-    private final CouchePoints couchePoints = new CouchePoints();
+    private final CouchePoints couchePoints = new CouchePoints(carte);
 
     /// Numéro du carré actuellement en surbrillance (sélection liée au tableau), ou `null`. Mémorisé pour
     /// **réappliquer** la surbrillance après un `setDonnees` qui recrée les tracés (refresh de la carte).
@@ -56,11 +59,35 @@ public class CarteSites extends Region {
         coucheCarres.setOnClic(Objects.requireNonNull(onCarreClic, "onCarreClic"));
     }
 
+    /// Active/désactive le **mode édition** : un marqueur de point se déplace alors au glisser ou aux
+    /// flèches du clavier (la position est remontée par [#setOnPointDeplace]). Désactivé par défaut.
+    public void setEditionActive(boolean active) {
+        couchePoints.setEditable(active);
+    }
+
+    /// Définit le rappel appelé quand un marqueur est **déplacé** (glisser/clavier) en mode édition.
+    public void setOnPointDeplace(DeplacementMarqueur onPointDeplace) {
+        couchePoints.setOnDeplace(Objects.requireNonNull(onPointDeplace, "onPointDeplace"));
+    }
+
     /// Met en **surbrillance** le carré de numéro `numeroCarre` (les autres reviennent à la normale).
     /// `null` n'en surligne aucun. Sert à refléter sur la carte la sélection faite dans le tableau.
     public void surbrillanceCarre(String numeroCarre) {
         carreSurbrillance = numeroCarre;
         coucheCarres.surbrillance(numeroCarre);
+    }
+
+    /// Centre la carte sur `(lat, lon)` au `zoom` donné (borné `[ZOOM_MIN, ZOOM_MAX]`). Sert à **focaliser**
+    /// la carte sur un élément précis (« voir sur la carte » d'un site/point/passage).
+    public void centrerSur(double latitude, double longitude, int zoom) {
+        carte.setCenter(new MapPoint(latitude, longitude));
+        carte.setZoom(Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom)));
+    }
+
+    /// Focalise sur un **carré** (centre de son emprise, zoom adapté à une maille 2 km).
+    public void centrerSurCarre(EmpriseCarre emprise) {
+        Objects.requireNonNull(emprise, "emprise");
+        centrerSur(emprise.latCentre(), emprise.lonCentre(), ZOOM_CARRE);
     }
 
     /// Affiche les carrés et points de `donnees`, puis recadre la vue sur leur emprise. La surbrillance
@@ -113,5 +140,10 @@ public class CarteSites extends Region {
     @Override
     protected void layoutChildren() {
         carte.resizeRelocate(0, 0, getWidth(), getHeight());
+    }
+
+    /// Accès au fond de carte Gluon — **réservé aux tests** du même paquet (centre/zoom courants).
+    MapView vueCarte() {
+        return carte;
     }
 }
