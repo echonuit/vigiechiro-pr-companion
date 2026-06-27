@@ -71,3 +71,11 @@ Chaque installeur embarque son **runtime** (jpackage, profil `-Pinstaller`) : l'
     `fix:` → patch, `feat:` → minor, `BREAKING CHANGE` → major. Le `[skip ci]` du commit de CHANGELOG
     évite que la release se redéclenche en boucle. Détails de conventions :
     [CONTRIBUTING.md](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md).
+
+## Dépendances
+
+Les mises à jour sont proposées par **Dependabot**
+([`.github/dependabot.yml`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/dependabot.yml)),
+**mensuellement**, pour `maven` et `github-actions`. **JavaFX (`org.openjfx:*`) est volontairement
+exclu** de l'automatisation : ses bumps ont un impact fort (rendu, Headless Platform) et se décident à
+la main.

@@ -55,6 +55,12 @@ public class MaFeatureViewModel {
   touche **jamais** la base directement (test `view_sans_jdbc`).
 - Le controller est **injecté** : il reçoit son ViewModel par constructeur `@Inject`.
 
+!!! note "Où placer les `.fxml` / `.css`"
+    **À côté du controller**, dans `src/main/java/.../view/` (pas dans `src/main/resources`). Le
+    `pom.xml` copie les fichiers non-Java de `src/main/java` dans `target/classes` au même chemin de
+    paquetage. Seules les ressources **partagées** (migrations `db/migration`, thème) vivent dans
+    `src/main/resources`.
+
 ```java
 public class MaFeatureController {
     @FXML private TableView<Truc> table;
@@ -131,6 +137,27 @@ Les écrans documentés ont un aperçu PNG régénéré en CI. Pour le vôtre :
 - **Parcours complet** : un test `fr.univ_amu.iut.e2e.*` si votre écran s'inscrit dans un flux.
 
 Détails et pièges dans [Tests et qualité](tests-et-qualite.md).
+
+## Conventions de code et de commit
+
+**Code** :
+
+- formatage **Spotless / Palantir Java Format** (le *hook* pre-commit s'en charge ; sinon
+  `./mvnw spotless:apply`) ;
+- doc-comments **Markdown `///`** (JEP 467), pas de `/** */` HTML ;
+- **noms de classes en français**, sans accents dans les identifiants (`Navigateur`, `Passage`,
+  `EtapeNavigation`…) ;
+- **pas de tiret cadratin** dans la doc et les commentaires : tiret simple ou deux-points.
+
+**Commits** : [Conventional Commits](https://www.conventionalcommits.org/fr/) **en français**, le
+*scope* étant le nom de la feature ou du domaine (`feat(passage): …`). Le **type** pilote la version
+publiée (`feat:` mineure, `fix:` patch, `BREAKING CHANGE:` majeure ; cf.
+[CI/CD et release](ci-cd-release.md)). Petits commits logiques (un par préoccupation) ; toujours
+**créer** un commit plutôt qu'amender.
+
+!!! info "Le flux complet de contribution"
+    Le parcours **fork → branche → PR** (reviewer automatique, identité git à vérifier) est décrit
+    dans [CONTRIBUTING.md](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md).
 
 ## Checklist avant la PR
 

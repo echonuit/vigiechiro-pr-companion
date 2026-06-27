@@ -4,6 +4,9 @@ Ce document décrit la **suite de tests** : comment l'exécuter, ce qu'elle cont
 (ou non) l'intégration continue. Il complète [CONTRIBUTING.md](CONTRIBUTING.md) (workflow général) et
 le [README §4](README.md#4-développement-et-qualité) (vue d'ensemble).
 
+> 📖 Version structurée (mêmes infos, navigation + recherche) :
+> [doc dev · Tests et qualité](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/tests-et-qualite/).
+
 ---
 
 ## 1. L'environnement de test

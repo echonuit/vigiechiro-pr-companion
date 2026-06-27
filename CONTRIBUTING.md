@@ -6,6 +6,10 @@ l'environnement, respecter l'architecture, et soumettre une Pull Request.
 Le détail des tests est dans [TESTING.md](TESTING.md) ; la politique de sécurité et de données dans
 [SECURITY.md](SECURITY.md).
 
+> 📖 **Documentation développeur** (architecture, navigation, persistance, injection, captures,
+> CI/CD…, avec diagrammes) : **<https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/>**.
+> Ce fichier reste le point d'entrée « contribution » ; la doc dev en est la version approfondie.
+
 ---
 
 ## 1. Mettre en place l'environnement
@@ -31,6 +35,13 @@ Ce hook **formate les `.java` stagés** avec **Spotless** (Palantir Java Format)
 L'architecture est **package-by-feature + MVVM** (cf. [README §3](README.md#3-architecture--package-by-feature--mvvm)).
 Chaque feature vit dans `src/main/java/fr/univ_amu/iut/<feature>/` et se découpe en `model/`,
 `viewmodel/`, `view/`, `di/`.
+
+> 📖 En détail dans la doc dev :
+> [Architecture](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/architecture/) ·
+> [Navigation](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/navigation/) ·
+> [Persistance](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/persistance/) ·
+> [Injection](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/injection/) ·
+> [Ajouter une fonctionnalité](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/ajouter-une-fonctionnalite/).
 
 Points d'attention :
 
@@ -126,6 +137,9 @@ Reproduire le portail qualité **en local** :
 Les autres workflows : `capture-vues.yml` (régénère les aperçus de la doc), `docs.yml`
 (construit/publie le site de documentation), `devcontainer-image.yml` (image GHCR pré-buildée).
 
+> 📖 Carte complète des workflows et du portail qualité :
+> [doc dev · CI/CD et release](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/ci-cd-release/).
+
 ---
 
 ## 6. Publier une version
@@ -137,7 +151,7 @@ Les **releases sont automatiques**, pilotées par les Conventional Commits (cf. 
 - **semantic-release** ([.releaserc.json](.releaserc.json)) calcule la version, crée le tag `vX.Y.Z`,
   la Release GitHub et met à jour le [CHANGELOG.md](CHANGELOG.md) ;
 - le workflow [`release.yml`](.github/workflows/release.yml) construit alors les **installeurs natifs**
-  (Linux `.deb`, macOS `.dmg` arm64 et Intel, Windows `.msi`) via le profil `-Pinstaller`, et les
+  (Linux `.deb`, macOS `.dmg` Apple Silicon, Windows `.msi`) via le profil `-Pinstaller`, et les
   attache à la Release (rendue publique seulement une fois **tous** les installeurs téléversés).
 
 Vous n'avez donc **rien à taguer ni à versionner à la main** : merger des commits conventionnels suffit.
