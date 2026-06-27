@@ -3,8 +3,7 @@ package fr.univ_amu.iut.sites.outils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
-import fr.univ_amu.iut.commun.di.CommunModule;
-import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -16,12 +15,10 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
-import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -45,8 +42,9 @@ import javafx.scene.Scene;
 ///
 /// 1. base SQLite temporaire seedee avec des donnees d'exemple realistes (3 sites, points GPS,
 ///    passages aux statuts/verdicts varies) ;
-/// 2. injecteur Guice minimal (socle + sites + passage) avec une [HorlogeFigee] pour un rendu
-///    deterministe (fraicheur, « il y a N j », annee courante figes) ;
+/// 2. injecteur Guice du **chrome complet** ([RacineInjecteur#modules()] : toutes les features, car
+///    `MainController` en dépend) avec une [HorlogeFigee] pour un rendu deterministe (fraicheur,
+///    « il y a N j », annee courante figes) et un `OuvrirImportation` no-op ;
 /// 3. chaque vue est chargee via la `controllerFactory` Guice du `FXMLLoader`, puis rendue
 ///    hors-ecran par [ApercuFx] (snapshot + SwingFXUtils) dans `.github/assets/`.
 ///
@@ -173,16 +171,16 @@ public final class CaptureEcrans {
         return loader.load();
     }
 
-    /// Injecteur minimal : socle + sites + passage, horloge figee pour un rendu reproductible.
+    /// Injecteur du **chrome complet** (toutes les features, comme l'application réelle), car cet
+    /// outil rend `MesSites` à l'intérieur de `MainView` — dont le `MainController` dépend de tout le
+    /// graphe (recherche globale, etc.). On part de [RacineInjecteur#modules()] et on **surcharge**
+    /// l'horloge (rendu reproductible) et `OuvrirImportation` (no-op : la capture ne déclenche pas
+    /// d'import).
     private static Injector creerInjecteur() {
-        return Guice.createInjector(
-                Modules.override(new CommunModule(), new PersistenceModule(), new SitesModule(), new PassageModule())
-                        .with(liaison -> {
-                            liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
-                            // L'outil de capture REND la fiche site (sans cliquer « Importer ») : un
-                            // OuvrirImportation no-op suffit, sans installer toute la feature importation.
-                            liaison.bind(OuvrirImportation.class).toInstance(idSite -> {});
-                        }));
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(liaison -> {
+            liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
+            liaison.bind(OuvrirImportation.class).toInstance(idSite -> {});
+        }));
     }
 
     /// Insere les donnees d'exemple et renvoie le site + point captures en detail et en modale.

@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.di;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.diagnostic.di.DiagnosticModule;
 import fr.univ_amu.iut.importation.di.ImportationModule;
@@ -12,6 +13,7 @@ import fr.univ_amu.iut.qualification.di.QualificationModule;
 import fr.univ_amu.iut.recherche.di.RechercheModule;
 import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.validation.di.ValidationModule;
+import java.util.List;
 
 /// Racine de composition Guice de l'application (composition root).
 ///
@@ -32,7 +34,16 @@ public final class RacineInjecteur {
 
     /// Crée l'injecteur applicatif avec tous les modules câblés.
     public static Injector creer() {
-        return Guice.createInjector(
+        return Guice.createInjector(modules());
+    }
+
+    /// Liste des modules applicatifs (socle + toutes les features), **source unique** de la
+    /// composition. Exposée pour permettre des **overrides ciblés** sans la dupliquer :
+    /// `Modules.override(RacineInjecteur.modules()).with(...)`, utilisé par les outils de capture qui
+    /// rendent le **chrome complet** (`MainView`/`MainController`, qui dépend de toutes les features)
+    /// avec une horloge figée ou un service no-op.
+    public static List<Module> modules() {
+        return List.of(
                 new CommunModule(),
                 new PersistenceModule(),
                 new SitesModule(),
