@@ -10,6 +10,7 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -248,7 +249,9 @@ public class MultisiteController implements RafraichirAuRetour {
         selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
         File fichier = selecteur.showSaveDialog(boutonExporter.getScene().getWindow());
         if (fichier != null) {
-            viewModel.exporter(fichier.toPath());
+            // #291 : on exporte l'ordre RÉELLEMENT affiché (tri par clic d'en-tête inclus), donc un
+            // instantané des items de la table (SortedList), et non l'ordre interne du ViewModel.
+            viewModel.exporter(fichier.toPath(), new ArrayList<>(tableLignes.getItems()));
         }
     }
 

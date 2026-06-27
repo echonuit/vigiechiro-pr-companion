@@ -148,6 +148,19 @@ class MultisiteViewModelTest {
     }
 
     @Test
+    @DisplayName("#291 : exporter(lignes fournies) écrit EXACTEMENT l'ordre donné (le tri affiché)")
+    void exporter_respecte_l_ordre_fourni() {
+        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        // Ordre « affiché » (p. ex. après un tri par clic d'en-tête) différent de l'ordre interne.
+        List<LignePassage> ordreAffiche = List.of(ligne("640381", "B2", 2025, 3), ligne("640380", "A1", 2026, 1));
+
+        boolean ok = vm.exporter(Path.of("/tmp/vue.csv"), ordreAffiche);
+
+        assertThat(ok).isTrue();
+        verify(service).exporterCsvVers(eq(Path.of("/tmp/vue.csv")), eq(ordreAffiche));
+    }
+
+    @Test
     @DisplayName("enregistrerVue enregistre la combinaison courante et recharge la liste des vues")
     void enregistrer_vue() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());

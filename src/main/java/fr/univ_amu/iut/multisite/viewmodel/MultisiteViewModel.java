@@ -9,6 +9,7 @@ import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -118,19 +119,29 @@ public class MultisiteViewModel {
         appliquerFiltres(FiltresMultisite.aucun());
     }
 
-    /// Exporte le tableau courant (lignes déjà filtrées et triées) en CSV vers `destination`
-    /// (P5-CA5). Sans dossier, l'appel est ignoré ; le bilan (ou l'erreur) va dans
+    /// Exporte les lignes **internes** du tableau (ordre filtré/trié côté service) en CSV vers
+    /// `destination`. La vue préfère [#exporter(Path, List)] pour exporter l'ordre **affiché** (tri par
+    /// clic d'en-tête inclus).
+    public boolean exporter(Path destination) {
+        return exporter(destination, lignes);
+    }
+
+    /// Exporte les **lignes fournies** en CSV vers `destination` (P5-CA5). Permet à la vue d'exporter
+    /// l'ordre **réellement affiché** (le tri par clic d'en-tête vit côté `TableView`, pas dans le
+    /// ViewModel, cf. #291). Sans dossier, l'appel est ignoré ; le bilan (ou l'erreur) va dans
     /// [#messageProperty()].
     ///
     /// @param destination fichier cible choisi par l'observateur
+    /// @param lignesAExporter lignes à écrire, dans l'ordre voulu
     /// @return `true` si le fichier a été écrit
-    public boolean exporter(Path destination) {
+    public boolean exporter(Path destination, List<LignePassage> lignesAExporter) {
         if (destination == null) {
             return false;
         }
         try {
-            service.exporterCsvVers(destination, lignes);
-            message.set("Tableau exporté vers " + destination.getFileName() + " (" + lignes.size() + " ligne(s)).");
+            service.exporterCsvVers(destination, lignesAExporter);
+            message.set("Tableau exporté vers " + destination.getFileName() + " (" + lignesAExporter.size()
+                    + " ligne(s)).");
             return true;
         } catch (RuntimeException echec) {
             message.set(echec.getMessage());
