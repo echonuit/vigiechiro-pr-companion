@@ -264,18 +264,18 @@ public class MultisiteController implements RafraichirAuRetour {
 
         configurerPoignee(
                 boutonReplierCarte,
-                carteVisible ? FLECHE_GAUCHE : FLECHE_DROITE,
+                (carteVisible ? FLECHE_GAUCHE : FLECHE_DROITE) + " Carte",
                 carteVisible ? "Masquer la carte" : "Afficher la carte",
                 tableauVisible);
         configurerPoignee(
                 boutonReplierTableau,
-                tableauVisible ? FLECHE_DROITE : FLECHE_GAUCHE,
+                "Tableau " + (tableauVisible ? FLECHE_DROITE : FLECHE_GAUCHE),
                 tableauVisible ? "Masquer le tableau" : "Afficher le tableau",
                 carteVisible);
     }
 
-    private static void configurerPoignee(Button poignee, String glyphe, String description, boolean actif) {
-        poignee.setText(glyphe);
+    private static void configurerPoignee(Button poignee, String libelle, String description, boolean actif) {
+        poignee.setText(libelle);
         poignee.setAccessibleText(description);
         poignee.setTooltip(new Tooltip(description));
         poignee.setDisable(!actif);
