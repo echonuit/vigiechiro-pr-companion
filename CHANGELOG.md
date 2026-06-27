@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.24.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.24.0...v1.24.1) (2026-06-27)
+
+
+### Bug Fixes
+
+* **sites:** explique pourquoi « Supprimer » est grisé (tooltip) ([#320](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/320)) ([e73b8a9](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/e73b8a9548ce0bb8d8eb0acf9fb204f4afab6c41))
+
 # [1.24.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.23.0...v1.24.0) (2026-06-27)
 
 
