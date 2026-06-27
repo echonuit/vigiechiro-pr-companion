@@ -26,6 +26,8 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
@@ -37,6 +39,7 @@ import org.mockito.ArgumentCaptor;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX **ciblant le câblage réel des contrôles** de l'écran M-Multisite via
 /// un **lookup des `fx:id`** (et non une simple lecture des propriétés du ViewModel). L'audit
@@ -66,7 +69,7 @@ class MultisiteVueIntegrationTest {
         OuvrirPassage ouvrirPassage = mock(OuvrirPassage.class);
         when(service.listerPassages(anyString(), any(), any()))
                 .thenReturn(List.of(
-                        ligne(42L, "640380", "A1", 2026, 1, "2026-06-21"),
+                        ligne(42L, "640380", "A1", 2026, 10, "2026-06-21"),
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02")));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
@@ -106,6 +109,25 @@ class MultisiteVueIntegrationTest {
         assertThat(choixVerdict.getItems()).hasSize(Verdict.values().length + 1);
         // Tri (souvent absent) : les 4 critères de TriMultisite.
         assertThat(choixTri.getItems()).hasSize(TriMultisite.values().length);
+    }
+
+    @Test
+    @DisplayName("#145 : trier par la colonne N° de passage (clic en-tête) réordonne, de façon NUMÉRIQUE")
+    void tri_par_colonne_numero_est_numerique(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        TableView<LignePassage> table = (TableView<LignePassage>)
+                (TableView<?>) robot.lookup("#tableLignes").queryTableView();
+        TableColumn<LignePassage, ?> colNumero = table.getColumns().get(3); // colonne « N° passage »
+
+        robot.interact(() -> {
+            colNumero.setSortType(TableColumn.SortType.DESCENDING);
+            table.getSortOrder().setAll(colNumero);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Données n° 10 et 3 : un tri NUMÉRIQUE décroissant donne 10 puis 3 (un tri alphabétique sur les
+        // chaînes « 10 »/« 3 » donnerait l'inverse). Prouve le comparateur numérique de la colonne.
+        assertThat(table.getItems()).extracting(LignePassage::numeroPassage).containsExactly(10, 3);
     }
 
     @Test
