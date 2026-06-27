@@ -25,7 +25,7 @@ src/main/java/fr/univ_amu/iut/
 │   └── outils/                  ·   harnais de capture d'écran (ApercuFx...)
 │
 ├── sites/        passage/       importation/   qualification/   lot/
-├── validation/   multisite/     diagnostic/    bibliotheque/                ← les 9 fonctionnalités
+├── validation/   multisite/     diagnostic/    bibliotheque/   recherche/   ← les 10 fonctionnalités
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
 └── perf/outils/                 ← bancs de mesure de performance
@@ -50,6 +50,14 @@ Chaque feature (ex. `sites/`) suit le même découpage, **du métier vers l'IHM*
     Le `model` ignore l'IHM ; le `viewmodel` porte l'état en **propriétés observables**
     (`IntegerProperty`, `ObservableList`…) sans toucher aux composants graphiques ; la `view`
     **observe** le viewmodel par *data binding* JavaFX.
+
+!!! info "Une feature peut être *sans écran*"
+    Toutes n'ont pas les 4 couches. `recherche/` (#144) est une feature **de service** : `model` + `di`
+    seulement, **pas de `view`**. La recherche globale est exposée par un contrat
+    [`commun.model.RechercheGlobale`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/RechercheGlobale.java)
+    (*Separated Interface*), implémenté par `recherche.model.ServiceRechercheGlobale` qui **agrège**
+    les autres features, et **surfacé par le chrome** (la barre de recherche de `MainView`) plutôt que
+    par un écran dédié.
 
 ## Les règles d'architecture sont des tests
 

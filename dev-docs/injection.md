@@ -7,7 +7,7 @@ Toutes les dépendances sont câblées par **Guice 7** : services, DAO, ViewMode
 
 [`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
 est le **seul** endroit qui connaît la liste des modules : le socle (`CommunModule` +
-`PersistenceModule`) et les **9 modules de feature**. Chaque feature publie ses DAO/services via son
+`PersistenceModule`) et les **10 modules de feature**. Chaque feature publie ses DAO/services via son
 propre module ; la racine se contente de les **installer**.
 
 ```java
@@ -16,7 +16,8 @@ public static Injector creer() {
         new CommunModule(), new PersistenceModule(),
         new SitesModule(), new PassageModule(), new QualificationModule(),
         new ValidationModule(), new MultisiteModule(), new ImportationModule(),
-        new LotModule(), new DiagnosticModule(), new BibliothequeModule());
+        new LotModule(), new DiagnosticModule(), new BibliothequeModule(),
+        new RechercheModule());
 }
 ```
 

@@ -76,7 +76,7 @@ même fonctionnalité dans tout le projet : pour modifier un écran, on touche p
 **La solution.** Regrouper le code **par fonctionnalité** : `sites/`, `passage/`… chacun contenant ses
 4 couches. Une feature devient une **tranche verticale** autonome.
 
-**Dans VigieChiro.** Les 9 features sont des paquets autonomes ; le socle `commun/` porte le partagé
+**Dans VigieChiro.** Les 10 features sont des paquets autonomes ; le socle `commun/` porte le partagé
 (chrome, persistance, DI). On ouvre, modifie ou supprime une feature sans naviguer ailleurs.
 
 **Principes.** **Forte cohésion / faible couplage** ; **OCP** à l'échelle du produit (ajouter une
@@ -94,14 +94,14 @@ impossible à substituer en test, et le câblage est dispersé partout.
 *Composition Root*, assemble le graphe complet.
 
 **Dans VigieChiro.** [`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
-installe le socle + les 9 modules de feature (Guice). Même les controllers FXML sont injectés (cf.
+installe le socle + les 10 modules de feature (Guice). Même les controllers FXML sont injectés (cf.
 *Factory* plus bas). En test, on substitue une base jetable sans changer le code de production.
 
 ```java
 public static Injector creer() {
     return Guice.createInjector(
         new CommunModule(), new PersistenceModule(),
-        new SitesModule(), new PassageModule(), /* … */ new BibliothequeModule());
+        new SitesModule(), new PassageModule(), /* … */ new RechercheModule());
 }
 ```
 
