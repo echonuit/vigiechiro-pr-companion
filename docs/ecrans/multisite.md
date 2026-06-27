@@ -12,9 +12,17 @@ sites et qu'on veut une vision d'ensemble.
 À **gauche**, la **carte** affiche chaque **carré** (emprise ≈ 2 km du site) et ses **points
 d'écoute** sous forme de marqueurs **colorés selon le statut** du dernier passage (gris = importé,
 indigo = transformé / vérifié, cyan = prêt à déposer, vert = déposé). Chaque marqueur porte son
-libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le fond de carte
-OpenStreetMap apparaît quand une connexion est disponible. La carte montre **tous** les sites (vue
-d'ensemble) : elle n'est pas restreinte par les filtres du tableau.
+libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le **remplissage
+de chaque carré** reflète sa **densité de passages** : plus un carré est fréquenté, plus son indigo
+est foncé (échelle relative au carré le plus actif). Une **légende** superposée en bas à gauche
+rappelle le code couleur des statuts et l'échelle de densité ; un chevron la **replie** pour dégager
+la carte. Le fond de carte OpenStreetMap apparaît quand une connexion est disponible. La carte montre
+**tous** les sites (vue d'ensemble) : elle n'est pas restreinte par les filtres du tableau.
+
+Deux poignées **◀ / ▶** posées au sommet du séparateur **replient entièrement** un panneau pour donner
+toute la largeur à l'autre (et le rouvrent) : **◀** masque la carte, **▶** masque le tableau ; on ne
+peut pas masquer les deux. Replier la carte est aussi la **dégradation élégante hors connexion** :
+quand le fond OpenStreetMap n'est pas joignable, le tableau seul reste pleinement exploitable.
 
 À **droite**, le **tableau** liste chaque passage (carré, point, année, numéro, date, **statut**,
 **verdict**). La barre du haut permet de **filtrer** (par carré, statut, verdict, année), de

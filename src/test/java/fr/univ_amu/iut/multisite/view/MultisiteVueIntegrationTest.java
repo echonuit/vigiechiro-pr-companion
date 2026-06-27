@@ -29,7 +29,9 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -152,6 +154,78 @@ class MultisiteVueIntegrationTest {
         assertThat(marqueurs)
                 .as("un marqueur pour le point géolocalisé du carré 640380")
                 .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#152 : la légende est superposée à la carte (code couleur des statuts + densité)")
+    void la_legende_est_superposee_a_la_carte(FxRobot robot) {
+        Node legende = robot.lookup(".legende-carte").query();
+        assertThat(legende)
+                .as("le panneau de légende est présent dans la zone carte")
+                .isNotNull();
+        // La légende nomme chaque statut (pas que la couleur, #163). On **scope** la recherche au panneau de
+        // légende : sinon le texte « Déposé » du tableau ferait passer le test même si la légende ne listait
+        // plus les statuts.
+        assertThat(robot.from(legende).lookup(StatutWorkflow.DEPOSE.libelle()).queryAll())
+                .as("la légende elle-même affiche le libellé d'un statut workflow")
+                .isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("#152 : le chevron de la légende la replie (corps masqué) puis la rouvre")
+    void legende_repliable(FxRobot robot) {
+        Node corps = robot.lookup(".legende-corps").query();
+        assertThat(corps.isVisible()).as("légende dépliée au départ").isTrue();
+
+        robot.clickOn(".bascule-legende");
+        assertThat(corps.isManaged())
+                .as("la légende repliée libère la carte (corps non géré/affiché)")
+                .isFalse();
+
+        robot.clickOn(".bascule-legende");
+        assertThat(corps.isVisible()).as("la légende se rouvre").isTrue();
+    }
+
+    @Test
+    @DisplayName("#152 : la poignée ◀ replie la carte (le tableau prend toute la largeur), puis la rouvre")
+    void poignee_replie_et_rouvre_la_carte(FxRobot robot) {
+        SplitPane split = robot.lookup("#splitCarteTableau").queryAs(SplitPane.class);
+        Node zoneCarte = robot.lookup("#zoneCarte").query();
+        Button replierTableau = robot.lookup("#boutonReplierTableau").queryAs(Button.class);
+        assertThat(split.getItems()).as("carte + tableau visibles au départ").hasSize(2);
+
+        robot.clickOn("#boutonReplierCarte");
+        assertThat(split.getItems())
+                .as("la carte est repliée : seul le tableau reste")
+                .hasSize(1)
+                .doesNotContain(zoneCarte);
+        assertThat(replierTableau.isDisable())
+                .as("on ne peut pas replier aussi le tableau (dernier panneau)")
+                .isTrue();
+
+        robot.clickOn("#boutonReplierCarte");
+        assertThat(split.getItems())
+                .as("la carte est rouverte, à sa place (index 0)")
+                .hasSize(2)
+                .containsExactly(zoneCarte, robot.lookup("#panneauTableau").query());
+        assertThat(replierTableau.isDisable()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#152 : la poignée ▶ replie le tableau (la carte prend toute la largeur)")
+    void poignee_replie_le_tableau(FxRobot robot) {
+        SplitPane split = robot.lookup("#splitCarteTableau").queryAs(SplitPane.class);
+        Node panneauTableau = robot.lookup("#panneauTableau").query();
+        Button replierCarte = robot.lookup("#boutonReplierCarte").queryAs(Button.class);
+
+        robot.clickOn("#boutonReplierTableau");
+        assertThat(split.getItems())
+                .as("le tableau est replié : seule la carte reste")
+                .hasSize(1)
+                .doesNotContain(panneauTableau);
+        assertThat(replierCarte.isDisable())
+                .as("on ne peut pas replier aussi la carte (dernier panneau)")
+                .isTrue();
     }
 
     @Test

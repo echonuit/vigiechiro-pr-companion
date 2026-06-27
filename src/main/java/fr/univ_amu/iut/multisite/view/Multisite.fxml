@@ -8,6 +8,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -47,27 +48,37 @@
   </FlowPane>
 
   <!-- Carte (sites + points) à gauche, tableau des passages à droite (#152). La carte est remplie en
-       code par le controller (composant CarteSites, dépendance Gluon Maps). -->
-  <SplitPane dividerPositions="0.42" VBox.vgrow="ALWAYS" styleClass="split-carte-tableau">
-    <items>
-      <StackPane fx:id="zoneCarte" styleClass="zone-carte"/>
-      <VBox spacing="6.0">
-        <TableView fx:id="tableLignes" VBox.vgrow="ALWAYS">
-          <columns>
-            <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
-            <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
-            <TableColumn fx:id="colAnnee" text="Année" prefWidth="70.0"/>
-            <TableColumn fx:id="colNumero" text="N° passage" prefWidth="90.0"/>
-            <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
-            <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
-            <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
-          </columns>
-        </TableView>
-        <Label text="Astuce : double-cliquez une ligne pour ouvrir l'écran du passage."
-               styleClass="section-sous"/>
-      </VBox>
-    </items>
-  </SplitPane>
+       code par le controller (composant CarteSites, dépendance Gluon Maps).
+       Les poignées ◀/▶ superposées replient entièrement un côté (carte ou tableau) pour donner toute
+       la largeur à l'autre, et le rouvrent. Câblage et libellés dans le controller. -->
+  <StackPane VBox.vgrow="ALWAYS">
+    <SplitPane fx:id="splitCarteTableau" dividerPositions="0.42" styleClass="split-carte-tableau">
+      <items>
+        <StackPane fx:id="zoneCarte" styleClass="zone-carte"/>
+        <VBox fx:id="panneauTableau" spacing="6.0">
+          <TableView fx:id="tableLignes" VBox.vgrow="ALWAYS">
+            <columns>
+              <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+              <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+              <TableColumn fx:id="colAnnee" text="Année" prefWidth="70.0"/>
+              <TableColumn fx:id="colNumero" text="N° passage" prefWidth="90.0"/>
+              <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
+              <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
+              <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
+            </columns>
+          </TableView>
+          <Label text="Astuce : double-cliquez une ligne pour ouvrir l'écran du passage."
+                 styleClass="section-sous"/>
+        </VBox>
+      </items>
+    </SplitPane>
+    <HBox fx:id="poigneesAffichage" styleClass="poignees-affichage"
+          maxWidth="-Infinity" maxHeight="-Infinity" pickOnBounds="false"
+          spacing="4.0" StackPane.alignment="TOP_CENTER">
+      <Button fx:id="boutonReplierCarte" styleClass="poignee-repli" onAction="#basculerCarte"/>
+      <Button fx:id="boutonReplierTableau" styleClass="poignee-repli" onAction="#basculerTableau"/>
+    </HBox>
+  </StackPane>
 
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
 </VBox>

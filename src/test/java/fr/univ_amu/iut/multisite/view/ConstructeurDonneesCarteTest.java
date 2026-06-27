@@ -58,4 +58,58 @@ class ConstructeurDonneesCarteTest {
                 .as("aucun passage → couleur neutre, pas null")
                 .isNotNull();
     }
+
+    @Test
+    @DisplayName("la densité fonce le remplissage : plus de passages → plus opaque, borné au carré le plus actif")
+    void couleur_densite_croit_avec_les_passages() {
+        // Un carré peu actif est plus transparent qu'un carré actif (même max de référence).
+        assertThat(ConstructeurDonneesCarte.couleurDensite(1, 10).getOpacity())
+                .as("peu de passages → faible opacité")
+                .isLessThan(ConstructeurDonneesCarte.couleurDensite(8, 10).getOpacity());
+        // Le carré le plus actif atteint l'opacité maximale ; aucun passage nulle part → opacité minimale.
+        assertThat(ConstructeurDonneesCarte.couleurDensite(10, 10).getOpacity())
+                .isGreaterThan(ConstructeurDonneesCarte.couleurDensite(0, 0).getOpacity());
+    }
+
+    @Test
+    @DisplayName("entre deux carrés, le plus fréquenté est tracé plus foncé (densité relative)")
+    void emprise_du_carre_le_plus_actif_est_plus_opaque() {
+        CarreAgrege calme = new CarreAgrege(
+                "640380", "Calme", List.of(new PointAgrege("A1", 43.30, -0.36, 1, StatutWorkflow.IMPORTE)), 1);
+        CarreAgrege actif = new CarreAgrege(
+                "640381", "Actif", List.of(new PointAgrege("B1", 43.50, -0.20, 9, StatutWorkflow.DEPOSE)), 9);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(calme, actif));
+
+        double opaciteCalme = opaciteDuCarre(donnees, "640380");
+        double opaciteActif = opaciteDuCarre(donnees, "640381");
+        assertThat(opaciteActif)
+                .as("le carré le plus fréquenté est tracé plus foncé")
+                .isGreaterThan(opaciteCalme);
+    }
+
+    @Test
+    @DisplayName("un carré très actif mais sans GPS (invisible) ne pâlit pas les carrés affichés")
+    void carre_invisible_n_influence_pas_la_densite() {
+        // 80 passages mais aucun point géolocalisé → jamais tracé, donc hors normalisation de densité.
+        CarreAgrege fantome =
+                new CarreAgrege("130001", "Fantôme", List.of(new PointAgrege("X", null, null, 80, null)), 80);
+        CarreAgrege visible = new CarreAgrege(
+                "640380", "Visible", List.of(new PointAgrege("A1", 43.30, -0.36, 9, StatutWorkflow.DEPOSE)), 9);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(fantome, visible));
+
+        // Le carré visible est le plus actif PARMI les traçables → opacité maximale (et non pâlie par les 80).
+        assertThat(opaciteDuCarre(donnees, "640380"))
+                .as("normalisation sur les carrés traçables, pas sur le fantôme invisible")
+                .isEqualTo(ConstructeurDonneesCarte.couleurDensite(9, 9).getOpacity());
+    }
+
+    private static double opaciteDuCarre(DonneesCarte donnees, String numeroCarre) {
+        return donnees.carres().stream()
+                .filter(c -> c.numeroCarre().equals(numeroCarre))
+                .map(c -> c.remplissage().getOpacity())
+                .findFirst()
+                .orElseThrow();
+    }
 }
