@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Group;
 import javafx.scene.Parent;
@@ -240,7 +241,7 @@ class MainViewTest {
                 (ListView<Object>) robot.lookup("#listeResultats").queryAs(ListView.class);
 
         robot.interact(() -> champ.setText("640380"));
-        WaitForAsyncUtils.waitForFxEvents();
+        attendreRecherche(); // laisse passer l'anti-rebond (#314 P3)
         assertThat(liste.getItems())
                 .as("le site correspondant apparaît dans la liste")
                 .isNotEmpty();
@@ -267,9 +268,47 @@ class MainViewTest {
         VBox panneau = robot.lookup("#panneauResultats").queryAs(VBox.class);
 
         robot.interact(() -> champ.setText("zzz-introuvable"));
-        WaitForAsyncUtils.waitForFxEvents();
+        attendreRecherche();
 
         assertThat(panneau.isVisible()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#314 P2 : après Échap, Entrée/↓ dans le champ n'agissent plus sur des résultats cachés")
+    void echap_invalide_la_navigation_clavier(FxRobot robot) {
+        String utilisateur = injector.getInstance(Key.get(String.class, Names.named("idUtilisateurCourant")));
+        robot.interact(() -> injector.getInstance(ServiceSites.class)
+                .creerSite("640380", "Étang de la Tuilière", Protocole.STANDARD, null, utilisateur));
+        TextField champ = robot.lookup("#champRecherche").queryAs(TextField.class);
+        VBox panneau = robot.lookup("#panneauResultats").queryAs(VBox.class);
+        ListView<?> liste = robot.lookup("#listeResultats").queryAs(ListView.class);
+
+        robot.interact(champ::requestFocus);
+        robot.interact(() -> champ.setText("640380"));
+        attendreRecherche();
+        assertThat(panneau.isVisible()).isTrue();
+
+        // Échap ferme la liste...
+        robot.type(KeyCode.ESCAPE);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(panneau.isVisible()).isFalse();
+
+        // ...et invalide la navigation clavier : Entrée ne navigue pas, ↓ ne déplace pas le focus.
+        robot.type(KeyCode.ENTER);
+        robot.type(KeyCode.DOWN);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(navigation.vueCouranteProperty().get())
+                .as("Entrée sur une liste fermée ne doit pas naviguer")
+                .isEqualTo("accueil");
+        assertThat(liste.isFocused())
+                .as("↓ sur une liste fermée ne doit pas y déplacer le focus")
+                .isFalse();
+    }
+
+    /// Laisse passer l'anti-rebond de la recherche (#314 P3) avant d'observer les résultats.
+    private static void attendreRecherche() {
+        WaitForAsyncUtils.sleep(350, TimeUnit.MILLISECONDS);
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @Test

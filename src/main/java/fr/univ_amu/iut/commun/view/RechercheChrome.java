@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import java.util.List;
+import javafx.animation.PauseTransition;
 import javafx.application.Platform;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -12,6 +13,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
+import javafx.util.Duration;
 
 /// Recherche globale du chrome (#144) : câble le **champ** de recherche, la **liste déroulante** de
 /// résultats et la **navigation** au clic/clavier. Extrait de `MainController` pour garder le contrôleur
@@ -29,6 +31,11 @@ final class RechercheChrome {
     private final RechercheGlobale recherche;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
+
+    /// Anti-rebond de la saisie (#314 P3) : on **coalesce** les frappes rapides en une seule recherche
+    /// après une courte pause, pour ne pas relancer la recherche (lecture sites/points/passages) à chaque
+    /// caractère et garder la saisie fluide.
+    private final PauseTransition antiRebond = new PauseTransition(Duration.millis(180));
 
     RechercheChrome(
             TextField champ,
@@ -48,7 +55,11 @@ final class RechercheChrome {
     /// Installe la cellule, les écouteurs de saisie/clavier/souris et la fermeture automatique.
     void configurer() {
         liste.setCellFactory(vue -> new CelluleResultat());
-        champ.textProperty().addListener((obs, ancien, texte) -> majResultats(texte));
+        // Anti-rebond : chaque frappe redémarre le minuteur ; la recherche ne part qu'après une pause.
+        champ.textProperty().addListener((obs, ancien, texte) -> {
+            antiRebond.setOnFinished(evenement -> majResultats(texte));
+            antiRebond.playFromStart();
+        });
 
         liste.setOnMouseClicked(
                 evenement -> naviguerVers(liste.getSelectionModel().getSelectedItem()));
@@ -61,11 +72,14 @@ final class RechercheChrome {
             }
         });
         champ.setOnKeyPressed(evenement -> {
-            if (evenement.getCode() == KeyCode.DOWN && !liste.getItems().isEmpty()) {
+            // Entrée/↓ n'agissent que si la liste est **visible** : après Échap (liste fermée), ils ne
+            // doivent ni ouvrir un résultat caché ni déplacer le focus vers une liste invisible (#314 P2).
+            boolean listeOuverte = panneau.isVisible() && !liste.getItems().isEmpty();
+            if (evenement.getCode() == KeyCode.DOWN && listeOuverte) {
                 liste.getSelectionModel().select(0);
                 liste.requestFocus();
                 evenement.consume();
-            } else if (evenement.getCode() == KeyCode.ENTER && !liste.getItems().isEmpty()) {
+            } else if (evenement.getCode() == KeyCode.ENTER && listeOuverte) {
                 naviguerVers(liste.getItems()
                         .get(Math.max(0, liste.getSelectionModel().getSelectedIndex())));
             } else if (evenement.getCode() == KeyCode.ESCAPE) {
@@ -96,9 +110,13 @@ final class RechercheChrome {
         }
     }
 
+    /// Ferme la liste **et invalide la navigation** : on vide les résultats et la sélection pour qu'aucune
+    /// frappe (Entrée/↓) ne puisse agir sur des éléments cachés (#314 P2).
     private void masquer() {
         panneau.setVisible(false);
         panneau.setManaged(false);
+        liste.getItems().clear();
+        liste.getSelectionModel().clearSelection();
     }
 
     private void masquerSiHorsRecherche() {
