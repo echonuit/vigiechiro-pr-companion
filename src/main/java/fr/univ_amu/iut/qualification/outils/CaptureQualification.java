@@ -184,7 +184,7 @@ public final class CaptureQualification {
                 "2026-01-01",
                 ID_UTILISATEUR));
         PointDEcoute point =
-                pointDao.insert(new PointDEcoute(null, "A1", 43.5298, 5.4474, "Près du grand chêne", site.id()));
+                pointDao.insert(new PointDEcoute(null, "A1", 43.4010, -1.5740, "Près du grand chêne", site.id()));
         Passage passage = passageDao.insert(new Passage(
                 null,
                 2,

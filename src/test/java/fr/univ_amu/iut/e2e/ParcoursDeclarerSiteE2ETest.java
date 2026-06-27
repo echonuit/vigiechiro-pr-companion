@@ -101,7 +101,7 @@ class ParcoursDeclarerSiteE2ETest {
         assertThat(persiste.protocole()).isEqualTo(Protocole.STANDARD);
 
         // Jalon 3 : Marie ajoute ses points d'écoute (GPS et descriptif optionnels).
-        PointDEcoute a1 = service.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, "Près du chêne");
+        PointDEcoute a1 = service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Près du chêne");
         PointDEcoute b2 = service.ajouterPoint(site.id(), "B2", null, null, null);
         assertThat(a1.id()).isNotNull();
         assertThat(b2.id()).isNotNull();

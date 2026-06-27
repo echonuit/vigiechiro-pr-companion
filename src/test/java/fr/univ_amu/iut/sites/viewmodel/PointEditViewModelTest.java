@@ -83,7 +83,7 @@ class PointEditViewModelTest {
         viewModel.latitudeProperty().set("200");
         assertThat(viewModel.peutEnregistrer().get()).isFalse();
 
-        viewModel.latitudeProperty().set("43,5298");
+        viewModel.latitudeProperty().set("43,4010");
         assertThat(viewModel.peutEnregistrer().get()).isTrue();
     }
 
@@ -92,8 +92,8 @@ class PointEditViewModelTest {
     void enregistrer_creation() {
         viewModel.preparerCreation(site);
         viewModel.codeProperty().set("A1");
-        viewModel.latitudeProperty().set("43,5298");
-        viewModel.longitudeProperty().set("5,4474");
+        viewModel.latitudeProperty().set("43,4010");
+        viewModel.longitudeProperty().set("-1,5740");
         viewModel.descriptionProperty().set("Près du chêne");
 
         boolean ok = viewModel.enregistrer();
@@ -101,7 +101,7 @@ class PointEditViewModelTest {
         assertThat(ok).isTrue();
         assertThat(service.listerPoints(site.id())).singleElement().satisfies(point -> {
             assertThat(point.code()).isEqualTo("A1");
-            assertThat(point.latitude()).isEqualTo(43.5298);
+            assertThat(point.latitude()).isEqualTo(43.4010);
             assertThat(point.description()).isEqualTo("Près du chêne");
         });
     }
@@ -123,7 +123,7 @@ class PointEditViewModelTest {
     @Test
     @DisplayName("En édition, les champs sont pré-remplis et l'enregistrement met à jour le point")
     void enregistrer_edition() {
-        PointDEcoute existant = service.ajouterPoint(site.id(), "A1", 43.5, 5.4, "Ancienne note");
+        PointDEcoute existant = service.ajouterPoint(site.id(), "A1", 43.40, -1.57, "Ancienne note");
         viewModel.preparerEdition(site, existant);
 
         assertThat(viewModel.codeProperty().get()).isEqualTo("A1");

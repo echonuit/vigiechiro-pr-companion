@@ -319,8 +319,8 @@ public final class CaptureValidation {
             }
             try (PreparedStatement ps = cx.prepareStatement(insertPoint, Statement.RETURN_GENERATED_KEYS)) {
                 ps.setString(1, CODE_POINT);
-                ps.setDouble(2, 43.5298);
-                ps.setDouble(3, 5.4474);
+                ps.setDouble(2, 43.4010);
+                ps.setDouble(3, -1.5740);
                 ps.setString(4, "Près du grand chêne");
                 ps.setLong(5, idSite);
                 ps.executeUpdate();

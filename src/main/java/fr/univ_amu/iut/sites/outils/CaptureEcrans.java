@@ -199,8 +199,8 @@ public final class CaptureEcrans {
         Site etang = service.creerSite(
                 "640380", "Etang de la Tuiliere", Protocole.STANDARD, "Aix-en-Provence", ID_UTILISATEUR);
         PointDEcoute a1 =
-                service.ajouterPoint(etang.id(), "A1", 43.5298, 5.4474, "Pres du grand chene, a 30 m du chemin");
-        PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.5301, 5.4489, "Lisiere de roseliere");
+                service.ajouterPoint(etang.id(), "A1", 43.4010, -1.5740, "Pres du grand chene, a 30 m du chemin");
+        PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.4055, -1.5680, "Lisiere de roseliere");
         service.ajouterPoint(etang.id(), "C3", null, null, "Bord de l'etang - GPS a relever");
         passages.insert(passage(2, "2026-08-22", a1.id(), SERIE_PR1, StatutWorkflow.DEPOSE, Verdict.OK, "2026-08-25"));
         passages.insert(passage(1, "2026-06-18", a1.id(), SERIE_PR1, StatutWorkflow.VERIFIE, Verdict.OK, null));

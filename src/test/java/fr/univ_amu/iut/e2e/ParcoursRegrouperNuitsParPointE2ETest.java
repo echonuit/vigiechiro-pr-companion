@@ -129,7 +129,7 @@ class ParcoursRegrouperNuitsParPointE2ETest {
         validation = injector.getInstance(ServiceValidation.class);
 
         Site site = sites.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
-        point = sites.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, null);
+        point = sites.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, null);
         PointDEcoute autrePoint = sites.ajouterPoint(site.id(), "B2", null, null, null);
 
         // 4 nuits successives sur le point A1 (dates croissantes, n° 1→4) + 1 nuit sur un AUTRE point

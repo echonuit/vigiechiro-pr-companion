@@ -129,7 +129,7 @@ class RetourPassageApresVerificationE2ETest {
                 .insert(new Site(
                         null, CARRE, "Étang de la Tuilière", Protocole.STANDARD, "Aix", "2026-01-01", ID_USER));
         PointDEcoute point =
-                new PointDao(source).insert(new PointDEcoute(null, POINT, 43.5298, 5.4474, "Chêne", site.id()));
+                new PointDao(source).insert(new PointDEcoute(null, POINT, 43.4010, -1.5740, "Chêne", site.id()));
 
         Passage passage = new PassageDao(source)
                 .insert(new Passage(

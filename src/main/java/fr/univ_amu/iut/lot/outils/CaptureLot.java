@@ -217,11 +217,12 @@ public final class CaptureLot {
                         NUMERO_CARRE,
                         NOM_SITE,
                         Protocole.STANDARD,
-                        "Aix-en-Provence",
+                        "Digne-les-Bains",
                         "2026-01-01",
                         ID_UTILISATEUR));
+        // GPS cohérent avec le carré 040962 (département 04, Alpes-de-Haute-Provence ; cf. ValidateurCarre).
         return new PointDao(source)
-                .insert(new PointDEcoute(null, CODE_POINT, 43.5298, 5.4474, "Près du grand chêne", site.id()))
+                .insert(new PointDEcoute(null, CODE_POINT, 44.0900, 6.2400, "Près du grand chêne", site.id()))
                 .id();
     }
 

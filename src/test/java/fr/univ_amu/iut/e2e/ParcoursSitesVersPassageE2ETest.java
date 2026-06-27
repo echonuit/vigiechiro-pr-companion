@@ -75,7 +75,7 @@ class ParcoursSitesVersPassageE2ETest {
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur E2E"));
         ServiceSites sites = injector.getInstance(ServiceSites.class);
         Site site = sites.creerSite(CARRE, "Étang de la Tuilière", Protocole.STANDARD, null, ID_USER);
-        PointDEcoute point = sites.ajouterPoint(site.id(), "A1", 43.5298, 5.4474, null);
+        PointDEcoute point = sites.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, null);
         Path sd = creerNuitSynthetique(workspace.resolve("sd"));
         injector.getInstance(ServiceImport.class).importer(sd, point.id(), new Prefixe(CARRE, 2026, 1, "A1"));
 

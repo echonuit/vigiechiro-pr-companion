@@ -22,13 +22,13 @@ class ConstructeurDonneesCarteTest {
                 "640380",
                 "Étang",
                 List.of(
-                        new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE),
+                        new PointAgrege("A1", 43.4010, -1.5740, 2, StatutWorkflow.VERIFIE),
                         new PointAgrege("B2", null, null, 1, StatutWorkflow.IMPORTE)), // sans GPS
                 3);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
 
-        // Seul A1 (géolocalisé) donne un marqueur ; le carré est tracé (emprise autour de A1).
+        // Seul A1 (géolocalisé) donne un marqueur ; le carré (du référentiel carrenat) est tracé.
         assertThat(donnees.points()).hasSize(1);
         assertThat(donnees.points().get(0).libelle()).isEqualTo("640380 / A1");
         assertThat(donnees.points().get(0).couleur())
@@ -37,16 +37,53 @@ class ConstructeurDonneesCarteTest {
     }
 
     @Test
-    @DisplayName("un carré sans aucun point géolocalisé n'est ni marqué ni tracé")
+    @DisplayName("un carré hors référentiel et sans point géolocalisé n'est ni marqué ni tracé")
     void carre_sans_point_geolocalise_n_est_pas_trace() {
-        CarreAgrege carre = new CarreAgrege("640381", null, List.of(new PointAgrege("A1", null, null, 0, null)), 0);
+        // Carré ABSENT du carroyage officiel (999999) : on retombe sur le repli, qui sans point géolocalisé
+        // ne peut rien ancrer. (Un carré DU référentiel, lui, est tracé même sans point — cf. carroyage #325.)
+        CarreAgrege carre = new CarreAgrege("999999", null, List.of(new PointAgrege("A1", null, null, 0, null)), 0);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
 
         assertThat(donnees.points()).isEmpty();
         assertThat(donnees.carres())
-                .as("aucun point géolocalisé → pas d'emprise")
+                .as("hors référentiel et aucun point géolocalisé → pas d'emprise")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#325 : un carré DU carroyage officiel est tracé même sans point géolocalisé")
+    void carre_du_referentiel_trace_sans_point() {
+        // 640380 est dans le référentiel carrenat : son emprise vient du centroïde national, indépendamment
+        // des points. Le carré est donc tracé même si son seul point n'a pas de GPS.
+        CarreAgrege carre = new CarreAgrege("640380", "Étang", List.of(new PointAgrege("A1", null, null, 1, null)), 1);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
+
+        assertThat(donnees.points()).as("aucun marqueur sans GPS").isEmpty();
+        assertThat(donnees.carres())
+                .as("mais le carré est calé sur le carroyage officiel")
+                .extracting(c -> c.numeroCarre())
+                .containsExactly("640380");
+    }
+
+    @Test
+    @DisplayName("#327 : un carré officiel SANS GPS, mais tracé, compte dans l'échelle de densité")
+    void carre_officiel_sans_gps_participe_a_la_densite() {
+        // 640380 : 80 passages, AUCUN point GPS → tracé via le carroyage officiel (donc visible).
+        CarreAgrege sansGps =
+                new CarreAgrege("640380", "Actif", List.of(new PointAgrege("A1", null, null, 80, null)), 80);
+        // 640381 : 8 passages, géolocalisé.
+        CarreAgrege geo = new CarreAgrege(
+                "640381", "Calme", List.of(new PointAgrege("B1", 43.4040, -1.5470, 8, StatutWorkflow.DEPOSE)), 8);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(sansGps, geo));
+
+        // Le carré sans GPS (le plus actif) doit être le plus foncé, et fixer le maximum de l'échelle.
+        assertThat(opaciteDuCarre(donnees, "640380"))
+                .as("le carré officiel sans GPS participe à la normalisation (max)")
+                .isEqualTo(ConstructeurDonneesCarte.couleurDensite(80, 80).getOpacity())
+                .isGreaterThan(opaciteDuCarre(donnees, "640381"));
     }
 
     @Test
@@ -75,9 +112,9 @@ class ConstructeurDonneesCarteTest {
     @DisplayName("entre deux carrés, le plus fréquenté est tracé plus foncé (densité relative)")
     void emprise_du_carre_le_plus_actif_est_plus_opaque() {
         CarreAgrege calme = new CarreAgrege(
-                "640380", "Calme", List.of(new PointAgrege("A1", 43.30, -0.36, 1, StatutWorkflow.IMPORTE)), 1);
+                "640380", "Calme", List.of(new PointAgrege("A1", 43.4010, -1.5740, 1, StatutWorkflow.IMPORTE)), 1);
         CarreAgrege actif = new CarreAgrege(
-                "640381", "Actif", List.of(new PointAgrege("B1", 43.50, -0.20, 9, StatutWorkflow.DEPOSE)), 9);
+                "640381", "Actif", List.of(new PointAgrege("B1", 43.4040, -1.5470, 9, StatutWorkflow.DEPOSE)), 9);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(calme, actif));
 
@@ -95,7 +132,7 @@ class ConstructeurDonneesCarteTest {
         CarreAgrege fantome =
                 new CarreAgrege("130001", "Fantôme", List.of(new PointAgrege("X", null, null, 80, null)), 80);
         CarreAgrege visible = new CarreAgrege(
-                "640380", "Visible", List.of(new PointAgrege("A1", 43.30, -0.36, 9, StatutWorkflow.DEPOSE)), 9);
+                "640380", "Visible", List.of(new PointAgrege("A1", 43.4010, -1.5740, 9, StatutWorkflow.DEPOSE)), 9);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(fantome, visible));
 
@@ -112,7 +149,7 @@ class ConstructeurDonneesCarteTest {
                 "640380",
                 "Étang",
                 List.of(
-                        new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE),
+                        new PointAgrege("A1", 43.4010, -1.5740, 2, StatutWorkflow.VERIFIE),
                         new PointAgrege("B2", null, null, 1, StatutWorkflow.IMPORTE)), // sans GPS, exclu du compte
                 3);
 
@@ -129,7 +166,7 @@ class ConstructeurDonneesCarteTest {
     @DisplayName("info-bulle d'un point : libellé, total de passages et statut dominant")
     void infobulle_point_resume_les_stats() {
         CarreAgrege carre = new CarreAgrege(
-                "640380", "Étang", List.of(new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE)), 2);
+                "640380", "Étang", List.of(new PointAgrege("A1", 43.4010, -1.5740, 2, StatutWorkflow.VERIFIE)), 2);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
 
