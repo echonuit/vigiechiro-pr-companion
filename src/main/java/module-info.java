@@ -27,6 +27,10 @@ open module vigiechiro {
     // Composant audio fourni pour la SAÉ 2.01 (sonogramme / spectrogramme).
     requires fr.nedjar.vigiechiro.audio;
 
+    // Carte interactive des points d'écoute (#152) : Gluon Maps (MapView + MapLayer). Tire les modules
+    // Attach storage/util (cache de tuiles). Licence GPL → le dépôt passe en GPL en conséquence.
+    requires com.gluonhq.maps;
+
     // Icônes vectorielles FontAwesome 5 via Ikonli (FontIcon), utilisées par l'écran d'accueil du
     // socle. Le pack `fontawesome5` est requis pour que son IkonProvider soit découvert par le
     // ServiceLoader d'Ikonli dans le graphe de modules (JPMS).

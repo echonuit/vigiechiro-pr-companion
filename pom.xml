@@ -12,6 +12,15 @@
     <version>1.0-SNAPSHOT</version>
     <url>https://github.com/IUTInfoAix-S201</url>
 
+    <!-- Licence GPLv3 : conséquence de la dépendance Gluon Maps (carte interactive #152), elle-même GPL. -->
+    <licenses>
+        <license>
+            <name>GNU General Public License v3.0</name>
+            <url>https://www.gnu.org/licenses/gpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <maven.compiler.release>25</maven.compiler.release>
@@ -27,6 +36,7 @@
         <git.build.hook.plugin.version>3.6.0</git.build.hook.plugin.version>
         <maven.pmd.plugin.version>3.28.0</maven.pmd.plugin.version>
         <javafx.version>26</javafx.version>
+        <gluon.maps.version>2.0.0-ea+6</gluon.maps.version>
         <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
         <javafx.mainClass>vigiechiro/fr.univ_amu.iut.App</javafx.mainClass>
         <testfx.version>4.0.18</testfx.version>
@@ -132,6 +142,13 @@
             <groupId>fr.nedjar.vigiechiro</groupId>
             <artifactId>audio-view</artifactId>
             <version>${audio.view.version}</version>
+        </dependency>
+        <!-- Carte interactive (#152) : Gluon Maps (MapView + MapLayer). ATTENTION licence GPL :
+             le dépôt passe en GPL en conséquence. -->
+        <dependency>
+            <groupId>com.gluonhq</groupId>
+            <artifactId>maps</artifactId>
+            <version>${gluon.maps.version}</version>
         </dependency>
         <!-- Persistance JDBC : driver SQLite (module automatique org.xerial.sqlitejdbc). -->
         <dependency>
