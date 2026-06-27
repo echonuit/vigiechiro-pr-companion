@@ -136,4 +136,22 @@ class CarteSitesTest {
                 .as("le carré sélectionné est mis en évidence (bordure épaissie)")
                 .isEqualTo(3.0);
     }
+
+    @Test
+    void surbrillance_survit_a_un_refresh(FxRobot robot) {
+        robot.interact(() -> {
+            carte.setDonnees(deuxPointsUnCarre());
+            carte.surbrillanceCarre("640380");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // setDonnees recrée les rectangles : la surbrillance mémorisée doit être réappliquée.
+        robot.interact(() -> carte.setDonnees(deuxPointsUnCarre()));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Rectangle rectangle = (Rectangle) carte.lookup(".carte-carre");
+        assertThat(rectangle.getStrokeWidth())
+                .as("la surbrillance survit à un refresh de la carte (#152)")
+                .isEqualTo(3.0);
+    }
 }
