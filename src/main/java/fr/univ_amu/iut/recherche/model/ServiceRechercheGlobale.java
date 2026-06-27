@@ -55,14 +55,23 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
         List<ResultatRecherche> sites = new ArrayList<>();
         List<ResultatRecherche> points = new ArrayList<>();
         for (Site site : services.listerSites(idUtilisateur)) {
+            // Les deux plafonds atteints : inutile de continuer (et surtout d'interroger d'autres points).
+            if (sites.size() >= MAX_PAR_TYPE && points.size() >= MAX_PAR_TYPE) {
+                break;
+            }
             if (sites.size() < MAX_PAR_TYPE && correspond(aiguille, site.numeroCarre(), site.nomConvivial())) {
                 sites.add(resultatSite(site));
             }
-            if (site.id() == null) {
+            // N'interroge les points d'un site (requête par site) que s'il reste de la place côté points :
+            // une fois le plafond de points atteint, on évite un listerPoints inutile pour chaque site.
+            if (site.id() == null || points.size() >= MAX_PAR_TYPE) {
                 continue;
             }
             for (PointDEcoute point : services.listerPoints(site.id())) {
-                if (points.size() < MAX_PAR_TYPE && correspond(aiguille, point.code(), point.description())) {
+                if (points.size() >= MAX_PAR_TYPE) {
+                    break;
+                }
+                if (correspond(aiguille, point.code(), point.description())) {
                     points.add(resultatPoint(site, point));
                 }
             }
@@ -73,6 +82,10 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     }
 
     /// Passages correspondants (par n° de carré, code point, n° de passage, année ou date), plafonnés.
+    ///
+    /// Limite connue : `listerPassages` **matérialise** tous les passages de l'utilisateur avant le
+    /// filtrage/plafond. Suffisant aux volumes actuels ; si le nombre de passages grandit nettement, une
+    /// **projection dédiée** (requête filtrante en base) remplacera ce balayage en mémoire.
     private List<ResultatRecherche> chercherPassages(String aiguille) {
         List<ResultatRecherche> passages = new ArrayList<>();
         for (LignePassage ligne : multisite.listerPassages(idUtilisateur)) {

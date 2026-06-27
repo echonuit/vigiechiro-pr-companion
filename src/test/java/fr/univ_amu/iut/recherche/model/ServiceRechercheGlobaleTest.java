@@ -1,9 +1,12 @@
 package fr.univ_amu.iut.recherche.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -101,6 +104,27 @@ class ServiceRechercheGlobaleTest {
             assertThat(r.idPassage()).isEqualTo(42L);
         });
         assertThat(recherche.rechercher("2026-06")).anyMatch(r -> r.type() == TypeResultat.PASSAGE);
+    }
+
+    @Test
+    @DisplayName("les points sont plafonnés ; listerPoints n'est plus appelé une fois le plafond atteint")
+    void points_plafonnes_et_court_circuites() {
+        // Beaucoup de sites (noms qui ne matchent PAS « zone ») ayant chacun un point dont la description
+        // matche : seuls les points correspondent, donc seul leur plafond peut déclencher le court-circuit.
+        List<Site> sites = IntStream.range(0, ServiceRechercheGlobale.MAX_PAR_TYPE + 5)
+                .mapToObj(i -> site((long) i, "64038" + i, "Site " + i))
+                .toList();
+        when(services.listerSites(UTILISATEUR)).thenReturn(sites);
+        when(services.listerPoints(anyLong()))
+                .thenReturn(List.of(new PointDEcoute(1L, "A1", 43.0, -0.3, "zone humide", 1L)));
+
+        long points = recherche.rechercher("zone").stream()
+                .filter(r -> r.type() == TypeResultat.POINT)
+                .count();
+
+        assertThat(points).isEqualTo(ServiceRechercheGlobale.MAX_PAR_TYPE);
+        // Court-circuit (#312 P3) : une fois 8 points trouvés, on n'interroge plus listerPoints.
+        verify(services, times(ServiceRechercheGlobale.MAX_PAR_TYPE)).listerPoints(anyLong());
     }
 
     @Test
