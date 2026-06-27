@@ -12,9 +12,12 @@ sites et qu'on veut une vision d'ensemble.
 À **gauche**, la **carte** affiche chaque **carré** (emprise ≈ 2 km du site) et ses **points
 d'écoute** sous forme de marqueurs **colorés selon le statut** du dernier passage (gris = importé,
 indigo = transformé / vérifié, cyan = prêt à déposer, vert = déposé). Chaque marqueur porte son
-libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le fond de carte
-OpenStreetMap apparaît quand une connexion est disponible. La carte montre **tous** les sites (vue
-d'ensemble) : elle n'est pas restreinte par les filtres du tableau.
+libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le **remplissage
+de chaque carré** reflète sa **densité de passages** : plus un carré est fréquenté, plus son indigo
+est foncé (échelle relative au carré le plus actif). Une **légende** superposée en bas à gauche
+rappelle le code couleur des statuts et l'échelle de densité. Le fond de carte OpenStreetMap apparaît
+quand une connexion est disponible. La carte montre **tous** les sites (vue d'ensemble) : elle n'est
+pas restreinte par les filtres du tableau.
 
 À **droite**, le **tableau** liste chaque passage (carré, point, année, numéro, date, **statut**,
 **verdict**). La barre du haut permet de **filtrer** (par carré, statut, verdict, année), de
