@@ -25,12 +25,15 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 
@@ -105,8 +108,29 @@ public class MultisiteController implements RafraichirAuRetour {
     @FXML
     private StackPane zoneCarte;
 
+    @FXML
+    private VBox panneauTableau;
+
+    @FXML
+    private SplitPane splitCarteTableau;
+
+    @FXML
+    private Button boutonReplierCarte;
+
+    @FXML
+    private Button boutonReplierTableau;
+
     /// Composant carte réutilisable (#152), rempli à partir de l'agrégat carte du ViewModel.
     private final CarteSites carte = new CarteSites();
+
+    /// Dernière position du diviseur quand carte ET tableau sont visibles, restaurée à la réouverture
+    /// d'un panneau replié (un `SplitPane` réinitialise ses diviseurs quand on retire/rajoute un item).
+    private double derniereDivision = 0.42;
+
+    /// Chevrons des poignées de repli (pointent vers le panneau qui va se replier / se rouvrir).
+    private static final String FLECHE_GAUCHE = "◀";
+
+    private static final String FLECHE_DROITE = "▶";
 
     @Inject
     public MultisiteController(
@@ -179,8 +203,82 @@ public class MultisiteController implements RafraichirAuRetour {
                 .addListener(
                         (obs, ancienne, ligne) -> carte.surbrillanceCarre(ligne == null ? null : ligne.numeroCarre()));
 
+        majPoignees();
+
         viewModel.rafraichir();
         viewModel.rafraichirCarte();
+    }
+
+    /// Replie (ou rouvre) la **carte** : le tableau prend alors toute la largeur. On ne peut pas replier
+    /// les deux panneaux à la fois (cf. [#majPoignees]).
+    @FXML
+    private void basculerCarte() {
+        if (estVisible(zoneCarte)) {
+            replier(zoneCarte);
+        } else {
+            rouvrir(zoneCarte, 0);
+        }
+        majPoignees();
+    }
+
+    /// Replie (ou rouvre) le **tableau** : la carte prend alors toute la largeur.
+    @FXML
+    private void basculerTableau() {
+        if (estVisible(panneauTableau)) {
+            replier(panneauTableau);
+        } else {
+            rouvrir(panneauTableau, splitCarteTableau.getItems().size());
+        }
+        majPoignees();
+    }
+
+    private boolean estVisible(Node panneau) {
+        return splitCarteTableau.getItems().contains(panneau);
+    }
+
+    /// Retire un panneau du `SplitPane` (repli complet), après avoir mémorisé la position du diviseur
+    /// pour pouvoir la restaurer à la réouverture.
+    private void replier(Node panneau) {
+        if (splitCarteTableau.getDividerPositions().length > 0) {
+            derniereDivision = splitCarteTableau.getDividerPositions()[0];
+        }
+        splitCarteTableau.getItems().remove(panneau);
+    }
+
+    /// Réinsère un panneau à sa place canonique (carte en 0, tableau en fin) et restaure le diviseur.
+    private void rouvrir(Node panneau, int index) {
+        if (!splitCarteTableau.getItems().contains(panneau)) {
+            splitCarteTableau
+                    .getItems()
+                    .add(Math.min(index, splitCarteTableau.getItems().size()), panneau);
+            splitCarteTableau.setDividerPositions(derniereDivision);
+        }
+    }
+
+    /// Met à jour le libellé, l'info-bulle, le texte accessible (#163) et l'état activé des deux poignées
+    /// selon ce qui est visible. La poignée d'un panneau **déjà seul** est désactivée (interdit de tout
+    /// replier), celle du panneau replié invite à le rouvrir.
+    private void majPoignees() {
+        boolean carteVisible = estVisible(zoneCarte);
+        boolean tableauVisible = estVisible(panneauTableau);
+
+        configurerPoignee(
+                boutonReplierCarte,
+                carteVisible ? FLECHE_GAUCHE : FLECHE_DROITE,
+                carteVisible ? "Masquer la carte" : "Afficher la carte",
+                tableauVisible);
+        configurerPoignee(
+                boutonReplierTableau,
+                tableauVisible ? FLECHE_DROITE : FLECHE_GAUCHE,
+                tableauVisible ? "Masquer le tableau" : "Afficher le tableau",
+                carteVisible);
+    }
+
+    private static void configurerPoignee(Button poignee, String glyphe, String description, boolean actif) {
+        poignee.setText(glyphe);
+        poignee.setAccessibleText(description);
+        poignee.setTooltip(new Tooltip(description));
+        poignee.setDisable(!actif);
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur l'agrégat
