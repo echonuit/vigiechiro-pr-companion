@@ -14,8 +14,10 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import fr.univ_amu.iut.multisite.model.PointAgrege;
 import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
@@ -107,6 +109,40 @@ class ServiceMultisiteTest {
                 null,
                 idPoint,
                 SERIE));
+    }
+
+    @Test
+    @DisplayName("#152 : agrège les carrés pour la carte (points, statut dominant, comptes)")
+    void agreger_pour_carte() {
+        List<CarreAgrege> carres = service.agregerPourCarte(ID_USER);
+        assertThat(carres).extracting(CarreAgrege::numeroCarre).containsExactlyInAnyOrder("640380", "640381");
+
+        CarreAgrege c640380 = carres.stream()
+                .filter(c -> c.numeroCarre().equals("640380"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(c640380.nomConvivial()).isEqualTo("Étang");
+        assertThat(c640380.nombrePassages()).isEqualTo(3);
+        assertThat(c640380.points()).extracting(PointAgrege::codePoint).containsExactlyInAnyOrder("A1", "B2");
+
+        PointAgrege a1 = c640380.points().stream()
+                .filter(p -> p.codePoint().equals("A1"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(a1.nombrePassages()).isEqualTo(2);
+        assertThat(a1.statutDominant())
+                .as("statut du passage le plus récent (1/2026)")
+                .isEqualTo(StatutWorkflow.VERIFIE);
+        assertThat(a1.estGeolocalise()).as("pas de GPS dans le seed").isFalse();
+
+        // Point A1 du carré 640381 : DEPOSE (passage 1) puis VERIFIE (passage 2) → dominant = le plus récent.
+        CarreAgrege c640381 = carres.stream()
+                .filter(c -> c.numeroCarre().equals("640381"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(c640381.points().get(0).statutDominant())
+                .as("n° de passage 2 plus récent que 1, même année")
+                .isEqualTo(StatutWorkflow.VERIFIE);
     }
 
     // --- Agrégation + tri par défaut ---

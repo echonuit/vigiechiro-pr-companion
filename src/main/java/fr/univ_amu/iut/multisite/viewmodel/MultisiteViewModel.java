@@ -2,6 +2,7 @@ package fr.univ_amu.iut.multisite.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.SavedView;
@@ -50,6 +51,8 @@ public class MultisiteViewModel {
 
     private final ObservableList<LignePassage> lignes = FXCollections.observableArrayList();
     private final ObservableList<SavedView> vues = FXCollections.observableArrayList();
+    /// Agrégat des carrés pour la carte (#152) : vue d'ensemble **non filtrée** (carrés + points + statut).
+    private final ObservableList<CarreAgrege> carresCarte = FXCollections.observableArrayList();
     private final ReadOnlyBooleanWrapper nonVide = new ReadOnlyBooleanWrapper(this, "nonVide", false);
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
@@ -70,6 +73,8 @@ public class MultisiteViewModel {
     /// l'écran ; ensuite déclenché automatiquement par tout changement de filtre ou de tri.
     public void rafraichir() {
         lignes.setAll(service.listerPassages(idUtilisateur, filtresCourants(), tri.get()));
+        // Carte (#152) : vue d'ensemble non filtrée des carrés/points (indépendante des filtres du tableau).
+        carresCarte.setAll(service.agregerPourCarte(idUtilisateur));
         nonVide.set(!lignes.isEmpty());
         resume.set(lignes.size() + " passage(s) affiché(s).");
         message.set("");
@@ -210,6 +215,12 @@ public class MultisiteViewModel {
 
     public ObservableList<LignePassage> lignes() {
         return lignes;
+    }
+
+    /// Agrégat des carrés pour la **carte** (#152) : carrés + points (GPS, statut dominant) de l'utilisateur,
+    /// vue d'ensemble non filtrée. La couche `view` le traduit en marqueurs/emprises.
+    public ObservableList<CarreAgrege> carresCarte() {
+        return carresCarte;
     }
 
     public ObservableList<SavedView> vues() {

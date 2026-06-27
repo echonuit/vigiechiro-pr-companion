@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.model;
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -13,6 +14,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -113,6 +115,36 @@ public class ServiceMultisite {
     public List<LignePassage> listerPassagesDeLaSaison(String idUtilisateur) {
         int saison = horloge.aujourdhui().getYear();
         return listerPassages(idUtilisateur, FiltresMultisite.parAnnee(saison));
+    }
+
+    /// Agrège les sites de l'utilisateur **pour la carte** (#152) : par carré, ses points (avec GPS, code,
+    /// nombre de passages et statut workflow dominant) et le total de passages. Vue **non filtrée** (la
+    /// carte est une vue d'ensemble ; le filtrage carte↔tableau viendra séparément). Données domaine : la
+    /// couche `view` les traduit en marqueurs/emprises colorés.
+    public List<CarreAgrege> agregerPourCarte(String idUtilisateur) {
+        Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        List<CarreAgrege> carres = new ArrayList<>();
+        for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
+            List<PointAgrege> points = new ArrayList<>();
+            int passagesDuCarre = 0;
+            for (PointDEcoute point : pointDao.findBySite(site.id())) {
+                List<Passage> passages = passageDao.findByPoint(point.id());
+                passagesDuCarre += passages.size();
+                points.add(new PointAgrege(
+                        point.code(), point.latitude(), point.longitude(), passages.size(), statutDominant(passages)));
+            }
+            carres.add(new CarreAgrege(site.numeroCarre(), site.nomConvivial(), points, passagesDuCarre));
+        }
+        return carres;
+    }
+
+    /// Statut workflow du passage **le plus récent** (année puis n° de passage), représentatif de l'état
+    /// courant du point sur la carte ; `null` si le point n'a aucun passage.
+    private static StatutWorkflow statutDominant(List<Passage> passages) {
+        return passages.stream()
+                .max(Comparator.comparingInt(Passage::annee).thenComparingInt(Passage::numeroPassage))
+                .map(Passage::statutWorkflow)
+                .orElse(null);
     }
 
     /// Sérialise des lignes de la vue en CSV déterministe (en-tête + une ligne par passage), via
