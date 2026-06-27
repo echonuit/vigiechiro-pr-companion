@@ -1,191 +1,450 @@
 # Patterns et principes
 
-L'architecture (cf. [Architecture](architecture.md)) n'est pas un assemblage ad hoc : elle applique
-des **patrons de conception** connus, chacun choisi pour une raison précise et pour faire respecter
-les principes **SOLID** (et quelques autres : DRY, faible couplage, IoC).
+L'architecture (cf. [Architecture](architecture.md)) applique des **patrons de conception** connus,
+chacun choisi pour une raison précise et pour faire respecter les principes **SOLID** (et d'autres :
+DRY, IoC, faible couplage).
 
-Cette page liste, pour chaque patron : **ce que c'est**, **pourquoi il est pertinent ici**, et **les
-principes qu'il sert**.
+Chaque patron est présenté ainsi : **le problème** qu'il résout, **la solution**, **comment il est
+utilisé ici** (avec un extrait et un lien vers le code), un **diagramme**, et les **principes** qu'il
+sert.
 
 !!! abstract "Rappel SOLID"
-    **S**RP (responsabilité unique) · **O**CP (ouvert/fermé) · **L**SP (substitution de Liskov) ·
-    **I**SP (ségrégation des interfaces) · **D**IP (inversion des dépendances).
+    **S**RP responsabilité unique · **O**CP ouvert/fermé · **L**SP substitution de Liskov ·
+    **I**SP ségrégation des interfaces · **D**IP inversion des dépendances.
 
-## Patrons architecturaux
+---
 
-### MVVM (Model-View-ViewModel)
+## MVVM (Model-View-ViewModel)
 
-**Quoi.** Trois couches : le `model` (métier), le `viewmodel` (état observable + logique de
-présentation), la `view` (FXML + controller) qui **observe** le viewmodel par *data binding*.
+**Le problème.** Mélanger affichage, logique de présentation et règles métier dans les controllers
+rend le code **intestable** (il faut une fenêtre) et **non réutilisable** (tout est lié à JavaFX).
 
-**Ici.** C'est le squelette de chaque feature. La vue ne contient aucune règle ; le viewmodel ne
-connaît aucun widget ; le modèle ignore l'IHM. On peut tester la présentation **sans fenêtre** et
-réutiliser le métier **sans JavaFX**.
+**La solution.** Trois couches : le `model` (métier pur), le `viewmodel` (état **observable** +
+logique de présentation), la `view` (FXML + controller) qui **observe** le viewmodel par *data
+binding*. Le flux de dépendances va de la vue vers le modèle, jamais l'inverse.
 
-**Principes.** **SRP** (chaque couche une responsabilité), **DIP** (la vue dépend d'abstractions
-observables, pas de logique concrète). Frontières **garanties par ArchUnit**.
+**Dans VigieChiro.** Chaque feature suit ce découpage. La vue ne fait que **lier** des contrôles à des
+propriétés ; elle ne calcule rien et ne touche pas la base.
 
-### Package-by-feature (tranches verticales)
+```mermaid
+classDiagram
+    class View {
+        Controller
+        FXML
+    }
+    class ViewModel {
+        Property
+        ObservableList
+    }
+    class Model {
+        services
+        DAO
+    }
+    View ..> ViewModel : se lie
+    ViewModel ..> Model : appelle
+```
 
-**Quoi.** Organiser le code **par fonctionnalité** (sites, passage, …), chacune contenant ses 4
-couches, plutôt que par couche technique transverse.
+**Principes.** **SRP** (une responsabilité par couche), **DIP** (la vue dépend d'abstractions
+observables, pas de logique concrète). Frontières **garanties par ArchUnit** (`viewmodel_sans_javafx_ui`,
+`view_sans_jdbc`).
 
-**Ici.** Une nuit de capture se traite écran par écran ; chaque écran est un paquet autonome. On
-ouvre, modifie ou supprime une feature **sans naviguer dans tout le code**.
+---
+
+## Objets-valeurs (records immuables)
+
+**Le problème.** Des entités **mutables** (avec setters) se prêtent aux états incohérents, au partage
+accidentel d'une instance et aux bugs d'égalité (comparaison par référence).
+
+**La solution.** Modéliser le domaine en **`record` immuables** : champs finaux, égalité **par
+valeur**, aucun setter. Pour « modifier », on **crée** une nouvelle instance.
+
+**Dans VigieChiro.** Le domaine est quasi entièrement en records (**≈ 70** : `Passage`, `Site`,
+`SequenceDEcoute`, `Observation`…). Les DAO **construisent** ces records ligne par ligne via un
+`RowMapper`, et les ViewModels les exposent dans des `ObservableList`.
+
+**Principes.** Immuabilité (sûreté en lecture, raisonnement local) et **SRP** (l'entité ne porte que
+ses données). Socle naturel du DAO et du `RowMapper`.
+
+---
+
+## Package-by-feature (tranches verticales)
+
+**Le problème.** Une organisation **par couche** (`controllers/`, `services/`, `dao/`…) éparpille une
+même fonctionnalité dans tout le projet : pour modifier un écran, on touche partout.
+
+**La solution.** Regrouper le code **par fonctionnalité** : `sites/`, `passage/`… chacun contenant ses
+4 couches. Une feature devient une **tranche verticale** autonome.
+
+**Dans VigieChiro.** Les 9 features sont des paquets autonomes ; le socle `commun/` porte le partagé
+(chrome, persistance, DI). On ouvre, modifie ou supprime une feature sans naviguer ailleurs.
 
 **Principes.** **Forte cohésion / faible couplage** ; **OCP** à l'échelle du produit (ajouter une
-feature ≈ ajouter un paquet, sans toucher aux autres — garanti par la règle ArchUnit
+feature ≈ ajouter un paquet, sans toucher aux autres — garanti par
 `pas_de_dependance_inter_feature_vers_la_vue`).
 
-## Couplage et extension
+---
 
-### Injection de dépendances + Composition Root
+## Injection de dépendances + Composition Root
 
-**Quoi.** Les objets reçoivent leurs dépendances (au lieu de les créer) ; un **unique** point,
-[`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di), assemble le graphe (Guice).
+**Le problème.** Si chaque objet **crée** ses dépendances (`new ServiceX()`), le graphe est figé,
+impossible à substituer en test, et le câblage est dispersé partout.
 
-**Ici.** Aucun `new` métier dispersé : services, DAO, ViewModels et même les controllers FXML sont
-**injectés** (cf. [Injection](injection.md)). Les tests substituent une base jetable ou un service
-mocké sans changer le code de production.
+**La solution.** Les objets **reçoivent** leurs dépendances (constructeur), et **un seul** endroit, la
+*Composition Root*, assemble le graphe complet.
+
+**Dans VigieChiro.** [`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
+installe le socle + les 9 modules de feature (Guice). Même les controllers FXML sont injectés (cf.
+*Factory* plus bas). En test, on substitue une base jetable sans changer le code de production.
+
+```java
+public static Injector creer() {
+    return Guice.createInjector(
+        new CommunModule(), new PersistenceModule(),
+        new SitesModule(), new PassageModule(), /* … */ new BibliothequeModule());
+}
+```
+
+Détails et diagramme de séquence : [Injection (Guice)](injection.md).
 
 **Principes.** **DIP** (on dépend d'abstractions, le câblage est externalisé) et **IoC** (« ne nous
-appelez pas, nous vous appellerons » : c'est le conteneur qui instancie).
+appelez pas, nous vous appellerons » : le conteneur instancie).
 
-### Separated Interface (contrats `Ouvrir*`)
+---
 
-**Quoi.** Publier une **interface dans le socle**, l'implémenter ailleurs : l'appelant dépend de
-l'abstraction, jamais de l'implémentation concrète.
+## Singleton (géré par le conteneur)
 
-**Ici.** `sites` ouvre M-Passage via `commun.view.OuvrirPassage`, implémenté par `passage`. La
-dépendance est **inversée** : ni `sites` ni `passage` ne se voient (cf.
-[Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre)).
+**Le problème.** Certaines ressources doivent être **uniques** dans toute l'application : une seule
+base, un seul service de navigation. Les multiplier créerait des incohérences (deux connexions, deux
+historiques).
+
+**La solution.** Plutôt que le Singleton « maison » (constructeur privé + champ statique, difficile à
+tester et à substituer), on **délègue l'unicité au conteneur** : `@Singleton` Guice.
+
+**Dans VigieChiro.** `SourceDeDonnees`, `Navigateur` et les `Navigation*` sont `@Singleton` (≈ 20
+bindings) : une seule instance par injecteur, mais **toujours injectée** (donc remplaçable en test).
+
+**Principes.** Évite l'**état statique global** tout en restant **testable** : l'unicité est une
+décision de **câblage**, pas une contrainte gravée dans la classe.
+
+---
+
+## Separated Interface (contrats `Ouvrir*`)
+
+**Le problème.** Si `sites` appelait directement `passage.view.NavigationPassage`, les features
+seraient **couplées** entre elles — impossible de les faire évoluer indépendamment (et la règle
+ArchUnit l'interdit).
+
+**La solution.** Publier une **interface dans le socle**, l'implémenter dans la feature cible :
+l'appelant dépend de l'**abstraction**, jamais de l'implémentation. La dépendance est **inversée**.
+
+**Dans VigieChiro.** [`OuvrirPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/OuvrirPassage.java)
+(socle) est implémenté par
+[`NavigationPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java)
+(feature `passage`) et **bindé** par `PassageModule`. `sites` injecte `OuvrirPassage`.
+
+```mermaid
+classDiagram
+    class OuvrirPassage {
+        <<interface>>
+        +ouvrir(Long, ContexteSite)
+    }
+    class NavigationPassage
+    SiteDetailController ..> OuvrirPassage : injecte
+    NavigationPassage ..|> OuvrirPassage : implémente
+    note for OuvrirPassage "dans le socle commun.view"
+```
 
 **Principes.** **DIP** (les deux features dépendent du contrat, pas l'une de l'autre) et **OCP**
-(brancher une nouvelle implémentation sans modifier l'appelant).
+(brancher une nouvelle implémentation sans modifier l'appelant). Tous les contrats : `OuvrirSite`,
+`OuvrirPassage`, `OuvrirVerification`, `OuvrirImportation`, `OuvrirLot`, `OuvrirValidation`,
+`OuvrirDiagnostic`. Voir aussi [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre).
 
-### Plugin / Extension (Multibinder)
+---
 
-**Quoi.** Le socle agrège un `Set<T>` que **chaque feature alimente** par multibinding, sans que le
-socle connaisse les contributeurs.
+## Facade (`Navigation*`)
 
-**Ici.** L'accueil collecte les `ActiviteAccueil` (cartes) et `IndicateurAccueil` (compteurs)
-publiés par les features (cf. [Injection](injection.md)). Ajouter une carte d'accueil **ne modifie
-pas** le `MainController`.
+**Le problème.** Ouvrir un écran demande plusieurs gestes : charger le FXML, brancher la
+`controllerFactory`, ouvrir le controller sur son contexte, empiler dans le `Navigateur`. Répétés tels
+quels chez chaque appelant, ils seraient verbeux et fragiles.
 
-**Principes.** **OCP** par excellence : le chrome est *fermé à la modification* mais *ouvert à
-l'extension*.
+**La solution.** Une **façade** par feature expose une opération **simple** (`ouvrir(...)`) qui
+orchestre ces gestes en interne.
 
-### Interfaces de rôle fines (ISP)
+**Dans VigieChiro.** [`NavigationPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java)
+(et ses homologues `Navigation*`) implémente le contrat `Ouvrir*` en **cachant** le `FXMLLoader` et le
+`Navigateur` : l'appelant ne voit qu'`ouvrir(idPassage, contexte)`. Le `Navigateur` lui-même est une
+façade sur la zone centrale du chrome + l'historique.
 
-**Quoi.** De petites interfaces **optionnelles** à responsabilité unique, qu'un écran implémente
-**seulement si** la capacité le concerne :
-[`GardeQuitter`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/GardeQuitter.java),
-[`EmplacementNavigation`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/EmplacementNavigation.java),
-[`RafraichirAuRetour`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/RafraichirAuRetour.java).
+**Principes.** **SRP** (la mécanique d'ouverture est encapsulée) et **faible couplage** (l'appelant
+ignore FXML / Navigateur).
 
-**Ici.** Le `Navigateur` les détecte par `instanceof` sur le controller. Un écran sans saisie
-n'implémente pas `GardeQuitter` ; un écran sans données mutables n'implémente pas `RafraichirAuRetour`.
+---
+
+## Plugin / Extension (Multibinder)
+
+**Le problème.** L'accueil affiche une carte **par feature**. Si le `MainController` connaissait
+chaque feature, ajouter un écran l'obligerait à **se modifier** à chaque fois.
+
+**La solution.** Le socle déclare un `Set<T>` que **chaque feature alimente** (multibinding Guice),
+sans que le socle connaisse les contributeurs. Il injecte l'ensemble et l'agrège.
+
+**Dans VigieChiro.** Chaque module fait `Multibinder...addBinding().to(...)` pour publier son
+`ActiviteAccueil` (carte) et son `IndicateurAccueil` (compteur). Le `MainController` injecte le
+`Set<ActiviteAccueil>` complet et bâtit les cartes.
+
+```mermaid
+classDiagram
+    class MainController {
+        Set~ActiviteAccueil~ activites
+    }
+    class ActiviteAccueil {
+        <<interface>>
+    }
+    MainController o-- ActiviteAccueil : agrège
+    ActiviteAccueil <|.. ActiviteSites
+    ActiviteAccueil <|.. ActiviteImporterNuit
+```
+
+**Principes.** **OCP** par excellence : le chrome est **fermé à la modification** mais **ouvert à
+l'extension** (une nouvelle carte = un nouveau binding, zéro ligne touchée dans le socle).
+
+---
+
+## Interfaces de rôle fines (ISP)
+
+**Le problème.** Une grosse interface « écran » avec *garde de sortie + fil d'Ariane + rafraîchissement
++ …* forcerait **chaque** écran à tout implémenter, même ce qu'il n'utilise pas.
+
+**La solution.** De petites interfaces **optionnelles**, à responsabilité unique, qu'un écran
+implémente **seulement si** la capacité le concerne. Le `Navigateur` les détecte par `instanceof`.
+
+**Dans VigieChiro.**
+
+| Interface (1 rôle) | Implémentée par les écrans qui… |
+|---|---|
+| [`GardeQuitter`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/GardeQuitter.java) | ont une **saisie non enregistrée** |
+| [`EmplacementNavigation`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/EmplacementNavigation.java) | ont une **place hiérarchique** (fil d'Ariane) |
+| [`RafraichirAuRetour`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/RafraichirAuRetour.java) | affichent des **données mutables** |
+
+Un écran lecture seule n'implémente **aucune** des trois.
 
 **Principes.** **ISP** (aucun écran n'est forcé d'implémenter ce qu'il n'utilise pas) et **OCP** (le
 Navigateur honore de nouvelles capacités sans connaître les écrans).
 
-## Accès aux données
+---
 
-### DAO (Data Access Object)
+## DAO (Data Access Object)
 
-**Quoi.** Isoler l'accès SQL derrière des objets dédiés ; le reste du code ignore JDBC.
+**Le problème.** Du SQL `PreparedStatement` mélangé à la logique métier ou à l'IHM est impossible à
+tester, à réutiliser, et viole la séparation des couches.
 
-**Ici.** Chaque entité a son DAO (`*/model/dao/`). La règle ArchUnit `view_sans_jdbc` interdit à
-l'IHM de parler à la base : tout passe par les services/VM.
+**La solution.** Isoler l'accès aux données derrière des objets dédiés ; le reste du code ignore JDBC
+et dialogue avec des **services**.
+
+**Dans VigieChiro.** Chaque entité a son DAO dans `*/model/dao/`. La règle ArchUnit `view_sans_jdbc`
+**interdit** à l'IHM de toucher `model.dao` ou `java.sql`.
 
 **Principes.** **SRP** (la persistance est une responsabilité à part) et **DIP** (le métier dépend
 d'abstractions de données, pas de l'API JDBC).
 
-### Template Method (`DaoGenerique`)
+---
 
-**Quoi.** Une classe de base définit le **squelette** d'un algorithme et délègue les détails variables
-à des méthodes abstraites que les sous-classes remplissent.
+## Template Method (`DaoGenerique`)
 
-**Ici.** [`DaoGenerique`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/DaoGenerique.java)
-offre `findAll`/`findById`/`delete` **gratuitement** ; un DAO concret fournit seulement `table()`,
-`colonneCle()` et son `RowMapper`.
+**Le problème.** Tous les DAO réécriraient la même mécanique : ouvrir une connexion, exécuter, itérer
+le `ResultSet`, fermer. Beaucoup de **duplication**.
 
-**Principes.** **DRY** (la boucle `ResultSet` n'est écrite qu'une fois), **OCP** (un nouveau DAO
-**étend** sans modifier la base) et **LSP** (tout `DaoGenerique` concret est substituable).
+**La solution.** Une classe de base fixe le **squelette** de l'algorithme (`findAll`, `findById`,
+`delete`) et **délègue** les détails variables à des méthodes que les sous-classes remplissent.
 
-### Strategy (`RowMapper`, génération de sélection)
+**Dans VigieChiro.** [`DaoGenerique<T, ID>`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/DaoGenerique.java)
+fournit les opérations communes ; un DAO concret donne seulement `table()`, `colonneCle()` et son
+`RowMapper`.
 
-**Quoi.** Encapsuler un algorithme interchangeable derrière une interface, pour le faire varier sans
-toucher au client.
+```mermaid
+classDiagram
+    class DaoGenerique {
+        <<abstract>>
+        +findAll()
+        +findById(id)
+        +delete(id)
+        #table()
+        #colonneCle()
+        #rowMapper()
+    }
+    class SiteDao
+    class PassageDao
+    DaoGenerique <|-- SiteDao
+    DaoGenerique <|-- PassageDao
+```
 
-**Ici.** Deux exemples :
+**Principes.** **DRY** (la boucle `ResultSet` n'existe qu'une fois), **OCP** (un nouveau DAO **étend**
+sans modifier la base) et **LSP** (tout `DaoGenerique` concret est substituable à l'abstraction).
+
+---
+
+## Strategy (`RowMapper`, génération de sélection)
+
+**Le problème.** Une partie d'un algorithme **varie** (comment lire une ligne ? comment choisir des
+séquences ?) alors que le reste est stable. Un `if/else` géant serait fragile et fermé.
+
+**La solution.** Encapsuler la partie variable derrière une **abstraction interchangeable**, injectée
+ou passée au client.
+
+**Dans VigieChiro.** Deux usages :
 
 - [`RowMapper<T>`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/RowMapper.java)
-  (`@FunctionalInterface`) : « comment transformer **une** ligne en entité » varie par DAO, l'itération
-  reste dans `DaoGenerique`.
-- [`GenerateurSelection`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/qualification/model/GenerateurSelection.java)
-  + `MethodeSelection` : « comment choisir les séquences à écouter » (répartition temporelle vs
-  aléatoire) varie indépendamment du service.
+  (`@FunctionalInterface`) : « transformer **une** ligne en entité » varie par DAO (souvent une
+  lambda) ; l'itération reste dans `DaoGenerique`.
+
+  ```java
+  @FunctionalInterface
+  public interface RowMapper<T> { T mapper(ResultSet rs) throws SQLException; }
+  ```
+
+- [`GenerateurSelection`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/qualification/model/GenerateurSelection.java) :
+  `selectionner(sequences, methode, taille)` choisit un sous-ensemble selon la `MethodeSelection`
+  (répartition temporelle vs aléatoire vs manuel) — une **règle pure**, sans base ni IHM.
+
+```mermaid
+classDiagram
+    class RowMapper {
+        <<interface>>
+        +mapper(ResultSet) T
+    }
+    class DaoGenerique
+    DaoGenerique o-- RowMapper : utilise (stratégie)
+```
 
 **Principes.** **OCP** (ajouter une stratégie sans modifier l'appelant), **SRP** (chaque stratégie est
-une règle pure, testable sans base ni IHM).
+une règle isolée, **testable sans persistance ni IHM** — objectif réutilisation O6).
 
-### Unit of Work (`UniteDeTravail`)
+---
 
-**Quoi.** Regrouper plusieurs écritures dans **une transaction** : tout réussit, ou tout est annulé.
+## Unit of Work (`UniteDeTravail`)
 
-**Ici.** [`UniteDeTravail`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/UniteDeTravail.java)
-encadre par exemple « créer un passage **et** sa session » : une exception déclenche un *rollback*, la
-base reste cohérente.
+**Le problème.** Par défaut, chaque écriture DAO s'auto-commit. Mais « créer un passage **et** sa
+session » doit être **atomique** : si la 2ᵉ échoue, la 1ʳᵉ ne doit pas rester en base.
 
-**Principes.** **SRP** (la gestion transactionnelle est isolée des DAO) et **cohésion** d'une opération
-métier atomique (intégrité O7).
+**La solution.** Regrouper les écritures dans **une transaction** : tout réussit (commit), ou tout est
+annulé (rollback).
 
-## Comportement et présentation
+**Dans VigieChiro.** [`UniteDeTravail`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/UniteDeTravail.java)
+exécute un bloc sur **une seule connexion** :
 
-### Observer (propriétés et *binding* JavaFX)
+```java
+uniteDeTravail.executer(connexion -> {
+    // plusieurs écritures... une exception => rollback
+});
+```
 
-**Quoi.** Des observateurs réagissent aux changements d'un sujet observable, sans que le sujet les
-connaisse.
+```mermaid
+sequenceDiagram
+    participant S as Service
+    participant U as UniteDeTravail
+    participant DB as Connexion
+    S->>U: executer(co -> { écritures })
+    U->>DB: autoCommit(false)
+    U->>DB: écritures…
+    alt tout réussit
+        U->>DB: commit()
+    else exception
+        U->>DB: rollback()
+    end
+```
 
-**Ici.** Le viewmodel expose des `Property`/`ObservableList` ; la vue s'y **lie**. Quand l'état change,
-l'IHM se met à jour **toute seule** : la vue *observe*, elle ne *tire* pas.
+**Principes.** **SRP** (la gestion transactionnelle est isolée des DAO) ; garantit l'**intégrité** O7.
+
+---
+
+## Observer (propriétés et *binding* JavaFX)
+
+**Le problème.** Comment garder l'IHM **synchronisée** avec l'état sans que le modèle « pousse » vers
+des widgets qu'il ne devrait pas connaître ?
+
+**La solution.** Le sujet (une `Property` / `ObservableList`) **notifie** ses observateurs au
+changement ; la vue **s'abonne** par *binding*. Le sujet ignore qui l'observe.
+
+**Dans VigieChiro.** Le viewmodel expose des propriétés ; la vue s'y lie. Quand l'état change, l'IHM se
+met à jour **toute seule** : la vue *observe*, elle ne *tire* pas. C'est le moteur de MVVM.
+
+```mermaid
+sequenceDiagram
+    participant VM as ViewModel
+    participant P as Property
+    participant V as Vue
+    VM->>P: set(nouvelle valeur)
+    P-->>V: notifie (invalidation)
+    V->>V: met à jour le widget
+```
 
 **Principes.** **Faible couplage** View↔ViewModel et **DIP** (la vue dépend d'abstractions
-observables). C'est le moteur de MVVM.
+observables, pas de logique).
 
-### Factory (`controllerFactory`)
+!!! note "API fluente (le « builder » le plus proche)"
+    Les liaisons s'écrivent souvent avec l'**API fluente** de JavaFX :
+    `Bindings.when(cond).then(a).otherwise(b)`, `Bindings.createStringBinding(...)`. C'est un
+    *builder* conditionnel **fourni par la bibliothèque** — pas un patron Builder que nous
+    implémentons. Le projet n'a d'ailleurs **pas de Builder maison** : les entités sont des `record`
+    immuables (cf. *Objets-valeurs*), qui rendraient un builder superflu.
 
-**Quoi.** Déléguer la **création** d'objets à une fabrique plutôt que de les instancier soi-même.
+---
 
-**Ici.** `FXMLLoader.setControllerFactory(injector::getInstance)` : les controllers FXML sont créés
-**par Guice**, donc reçoivent leurs ViewModels/services par injection (cf.
-[Injection](injection.md#des-controllers-fxml-injectes)).
+## Factory (`controllerFactory`)
+
+**Le problème.** Par défaut, `FXMLLoader` crée les controllers avec `new` (constructeur vide) : ils ne
+peuvent **pas** recevoir de dépendances injectées.
+
+**La solution.** Fournir au loader une **fabrique** qui délègue la création à Guice.
+
+**Dans VigieChiro.** `loader.setControllerFactory(injector::getInstance)` : chaque controller est
+instancié **par le conteneur**, donc reçoit ses ViewModels/services par constructeur (cf.
+[`App`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/App.java)).
+Diagramme de séquence du bootstrap : [Injection](injection.md#des-controllers-fxml-injectes).
 
 **Principes.** **DIP** (le controller ne construit pas ses dépendances) et **IoC**.
 
-### Machine à états (`MoteurWorkflowPassage`)
+---
 
-**Quoi.** Centraliser les **transitions autorisées** d'un objet selon son état courant.
+## Machine à états (`MoteurWorkflowPassage`)
 
-**Ici.** [`MoteurWorkflowPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/MoteurWorkflowPassage.java)
-encode le workflow linéaire `Importé → … → Déposé` : une seule transition (le **successeur immédiat**)
-est permise — interdit de sauter une étape ou de revenir en arrière. Logique **isolée** de l'énum
+**Le problème.** Le statut d'un passage (`Importé → … → Déposé`) doit avancer **dans l'ordre** : on ne
+doit ni sauter une étape (importer puis déposer) ni revenir en arrière. Disséminer ces règles dans les
+services serait fragile.
+
+**La solution.** Centraliser les **transitions autorisées** dans un objet dédié : depuis un état, une
+seule cible permise (le successeur immédiat).
+
+**Dans VigieChiro.** [`MoteurWorkflowPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/MoteurWorkflowPassage.java)
+porte l'ordre et expose `suivant(...)` / `estTransitionAutorisee(...)` / `exigerTransitionAutorisee(...)`.
+La logique est **isolée** de l'énum
 [`StatutWorkflow`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/StatutWorkflow.java)
-(qui reste un simple porteur de libellés).
+(simple porteur de libellés).
 
-**Principes.** **SRP** (les règles de transition ne polluent pas l'énum ni les services) et un point
-de vérité unique pour l'avancement d'une nuit.
+```mermaid
+stateDiagram-v2
+    [*] --> IMPORTE
+    IMPORTE --> TRANSFORME
+    TRANSFORME --> VERIFIE
+    VERIFIE --> PRET_A_DEPOSER
+    PRET_A_DEPOSER --> DEPOSE
+    DEPOSE --> [*]
+```
+
+**Principes.** **SRP** (les règles de transition ne polluent ni l'énum ni les services) et un **point
+de vérité unique** pour l'avancement d'une nuit.
+
+---
 
 ## Synthèse : où vit chaque principe SOLID
 
 | Principe | Incarné surtout par |
 |---|---|
-| **S**RP | MVVM (couches), DAO, `UniteDeTravail`, `MoteurWorkflowPassage` |
+| **S**RP | MVVM (couches), DAO, `UniteDeTravail`, `MoteurWorkflowPassage`, Facade, objets-valeurs |
 | **O**CP | Contrats `Ouvrir*`, Multibinder d'accueil, Template Method, Strategy |
 | **L**SP | Sous-types de `DaoGenerique` substituables |
 | **I**SP | Interfaces de rôle fines (`GardeQuitter`, `RafraichirAuRetour`, `EmplacementNavigation`) |
-| **D**IP | Injection + Composition Root, contrats `Ouvrir*`, *binding* observable |
+| **D**IP | Injection + Composition Root, contrats `Ouvrir*`, *binding* observable, Factory |
 
-Et au-delà de SOLID : **DRY** (Template Method, `RowMapper`), **IoC** (DI, Factory), **faible
-couplage / forte cohésion** (package-by-feature, Observer).
+Au-delà de SOLID : **DRY** (Template Method, `RowMapper`), **IoC** (DI, Factory), **faible couplage /
+forte cohésion** (package-by-feature, Observer).
