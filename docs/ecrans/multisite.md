@@ -14,7 +14,10 @@ d'écoute** sous forme de marqueurs **colorés selon le statut** du dernier pass
 indigo = transformé / vérifié, cyan = prêt à déposer, vert = déposé). Chaque marqueur porte son
 libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le **remplissage
 de chaque carré** reflète sa **densité de passages** : plus un carré est fréquenté, plus son indigo
-est foncé (échelle relative au carré le plus actif). Une **légende** superposée en bas à gauche
+est foncé (échelle relative au carré le plus actif). **Au survol** d'un carré ou d'un point, une
+**info-bulle** récapitule ses mini-stats (nombre de passages, points, répartition des statuts ;
+statut dominant pour un point) ; ces stats sont aussi lues par les lecteurs d'écran. Une **légende**
+superposée en bas à gauche
 rappelle le code couleur des statuts et l'échelle de densité ; un chevron la **replie** pour dégager
 la carte. Le fond de carte OpenStreetMap apparaît quand une connexion est disponible. La carte montre
 **tous** les sites (vue d'ensemble) : elle n'est pas restreinte par les filtres du tableau.

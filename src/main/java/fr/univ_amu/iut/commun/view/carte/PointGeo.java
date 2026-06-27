@@ -14,10 +14,16 @@ import javafx.scene.paint.Color;
 /// @param latitude latitude WGS84
 /// @param longitude longitude WGS84
 /// @param couleur couleur du marqueur (jamais nulle)
-public record PointGeo(String libelle, double latitude, double longitude, Color couleur) {
+/// @param infobulle mini-stats affichées au survol (et exposées en `accessibleHelp`, #163) ; `null` = aucune
+public record PointGeo(String libelle, double latitude, double longitude, Color couleur, String infobulle) {
 
     public PointGeo {
         Objects.requireNonNull(libelle, "libelle");
         Objects.requireNonNull(couleur, "couleur");
+    }
+
+    /// Marqueur sans info-bulle (forme rétro-compatible).
+    public PointGeo(String libelle, double latitude, double longitude, Color couleur) {
+        this(libelle, latitude, longitude, couleur, null);
     }
 }

@@ -25,6 +25,9 @@ final class ConstructeurDonneesCarte {
     private static final double OPACITE_MIN = 0.12;
     private static final double OPACITE_MAX = 0.55;
 
+    /// Séparateur de lignes des info-bulles (mini-stats au survol).
+    private static final String SAUT = "\n";
+
     private ConstructeurDonneesCarte() {}
 
     /// Construit les données de carte à partir des carrés agrégés : un marqueur par point **géolocalisé**
@@ -43,22 +46,74 @@ final class ConstructeurDonneesCarte {
         List<PointGeo> tousLesPoints = new ArrayList<>();
         for (CarreAgrege carre : carres) {
             List<PointGeo> pointsDuCarre = new ArrayList<>();
+            List<PointAgrege> geolocalises = new ArrayList<>();
             for (PointAgrege point : carre.points()) {
                 if (point.estGeolocalise()) {
                     PointGeo marqueur = new PointGeo(
                             carre.numeroCarre() + " / " + point.codePoint(),
                             point.latitude(),
                             point.longitude(),
-                            couleurStatut(point.statutDominant()));
+                            couleurStatut(point.statutDominant()),
+                            infobullePoint(carre, point));
                     pointsDuCarre.add(marqueur);
                     tousLesPoints.add(marqueur);
+                    geolocalises.add(point);
                 }
             }
             Color remplissage = couleurDensite(carre.nombrePassages(), maxPassages);
+            String infobulle = infobulleCarre(carre, geolocalises);
             EMPRISE.emprise(carre.numeroCarre(), pointsDuCarre)
-                    .ifPresent(emprise -> carresGeo.add(new CarreGeo(carre.numeroCarre(), emprise, remplissage)));
+                    .ifPresent(emprise ->
+                            carresGeo.add(new CarreGeo(carre.numeroCarre(), emprise, remplissage, infobulle)));
         }
         return new DonneesCarte(carresGeo, tousLesPoints);
+    }
+
+    /// Mini-stats d'un **carré** au survol : nom (et numéro), total de passages, nombre de points
+    /// géolocalisés, et répartition des statuts dominants. Lignes jointes par [#SAUT].
+    private static String infobulleCarre(CarreAgrege carre, List<PointAgrege> geolocalises) {
+        String entete = carre.nomConvivial() != null && !carre.nomConvivial().isBlank()
+                ? carre.nomConvivial() + " (" + carre.numeroCarre() + ")"
+                : "Carré " + carre.numeroCarre();
+        List<String> lignes = new ArrayList<>();
+        lignes.add(entete);
+        lignes.add(quantite(carre.nombrePassages(), "passage") + " · " + quantite(geolocalises.size(), "point"));
+        String repartition = repartitionStatuts(geolocalises);
+        if (!repartition.isEmpty()) {
+            lignes.add(repartition);
+        }
+        return String.join(SAUT, lignes);
+    }
+
+    /// Mini-stats d'un **point** au survol : son libellé, son total de passages et son statut dominant.
+    private static String infobullePoint(CarreAgrege carre, PointAgrege point) {
+        String statut = point.statutDominant() == null
+                ? "Aucun passage qualifié"
+                : "Statut : " + point.statutDominant().libelle();
+        return String.join(
+                SAUT,
+                carre.numeroCarre() + " / " + point.codePoint(),
+                quantite(point.nombrePassages(), "passage"),
+                statut);
+    }
+
+    /// Répartition des statuts dominants des points (ordre du workflow), p. ex. `Vérifié ×2, Déposé ×1`.
+    /// Les points sans statut (aucun passage qualifié) sont omis ; chaîne vide si aucun statut.
+    private static String repartitionStatuts(List<PointAgrege> points) {
+        List<String> parts = new ArrayList<>();
+        for (StatutWorkflow statut : StatutWorkflow.values()) {
+            long compte =
+                    points.stream().filter(p -> p.statutDominant() == statut).count();
+            if (compte > 0) {
+                parts.add(statut.libelle() + " ×" + compte);
+            }
+        }
+        return String.join(", ", parts);
+    }
+
+    /// Accord en nombre : `quantite(3, "passage")` → `3 passages` ; `quantite(1, "point")` → `1 point`.
+    private static String quantite(int nombre, String unite) {
+        return nombre + " " + unite + (nombre > 1 ? "s" : "");
     }
 
     /// Un carré est **traçable** s'il a au moins un point géolocalisé (donc une emprise dessinable) ; sert

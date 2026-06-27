@@ -124,6 +124,23 @@ class CarteSitesTest {
     }
 
     @Test
+    void infobulle_posee_sur_carre_et_point(FxRobot robot) {
+        PointGeo point = new PointGeo("Z1", 43.300, -0.360, Color.GREEN, "Z1\n5 passages\nStatut : Déposé");
+        EmpriseCarre emprise =
+                new EmpriseAutourDesPoints().emprise("640380", List.of(point)).orElseThrow();
+        CarreGeo carre = new CarreGeo("640380", emprise, Color.color(0.2, 0.4, 0.8, 0.3), "Étang (640380)\n9 passages");
+        robot.interact(() -> carte.setDonnees(new DonneesCarte(List.of(carre), List.of(point))));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Les mini-stats au survol (#152) sont aussi exposées en accessibleHelp (#163) → testables headless.
+        Node rectangle = carte.lookup(".carte-carre");
+        assertThat(rectangle.getAccessibleHelp()).as("stats du carré au survol").contains("9 passages");
+        Node marqueur =
+                carte.lookupAll(".carte-point-libelle").iterator().next().getParent();
+        assertThat(marqueur.getAccessibleHelp()).as("stats du point au survol").contains("5 passages");
+    }
+
+    @Test
     void surbrillance_met_le_carre_en_evidence(FxRobot robot) {
         robot.interact(() -> carte.setDonnees(deuxPointsUnCarre()));
         WaitForAsyncUtils.waitForFxEvents();

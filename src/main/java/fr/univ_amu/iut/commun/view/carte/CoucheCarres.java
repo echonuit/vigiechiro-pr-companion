@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
@@ -87,6 +88,11 @@ final class CoucheCarres extends MapLayer {
             rectangle.getStyleClass().add("carte-carre");
             rectangle.setFocusTraversable(true); // navigation clavier (#163)
             rectangle.setAccessibleText("Carré " + carre.numeroCarre());
+            if (carre.infobulle() != null) {
+                // Mini-stats au survol (#152) ; aussi en accessibleHelp pour les lecteurs d'écran (#163).
+                Tooltip.install(rectangle, new Tooltip(carre.infobulle()));
+                rectangle.setAccessibleHelp(carre.infobulle());
+            }
             rectangle.setOnMouseClicked(evenement -> onClic.accept(carre));
             rectangle.setOnKeyPressed(evenement -> {
                 if (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE) {

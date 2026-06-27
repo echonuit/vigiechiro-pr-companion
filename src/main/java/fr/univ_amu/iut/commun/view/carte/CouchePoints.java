@@ -8,6 +8,7 @@ import java.util.function.Consumer;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
@@ -77,6 +78,11 @@ final class CouchePoints extends MapLayer {
             Group groupe = new Group(pastille, libelle);
             groupe.setFocusTraversable(true); // navigation clavier (#163)
             groupe.setAccessibleText("Point d'écoute " + point.libelle());
+            if (point.infobulle() != null) {
+                // Mini-stats au survol (#152) ; aussi en accessibleHelp pour les lecteurs d'écran (#163).
+                Tooltip.install(groupe, new Tooltip(point.infobulle()));
+                groupe.setAccessibleHelp(point.infobulle());
+            }
             groupe.setOnMouseClicked(evenement -> onClic.accept(point));
             groupe.setOnKeyPressed(evenement -> {
                 if (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE) {
