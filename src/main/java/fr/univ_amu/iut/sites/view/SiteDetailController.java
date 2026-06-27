@@ -15,6 +15,7 @@ import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
 import java.util.function.Function;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -33,6 +34,7 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 
@@ -87,6 +89,9 @@ public class SiteDetailController implements RafraichirAuRetour {
 
     @FXML
     private Button boutonSupprimer;
+
+    @FXML
+    private StackPane enveloppeSupprimer;
 
     @FXML
     private FlowPane cartesPoints;
@@ -158,6 +163,16 @@ public class SiteDetailController implements RafraichirAuRetour {
         boutonSupprimer
                 .disableProperty()
                 .bind(viewModel.suppressionPossibleProperty().not());
+        // Un Tooltip ne s'affiche pas sur un Button désactivé : on l'installe sur l'enveloppe (qui
+        // reçoit le survol) et on lie son texte à l'état pour expliquer le blocage (règle métier R…).
+        Tooltip infoSupprimer = new Tooltip();
+        infoSupprimer
+                .textProperty()
+                .bind(Bindings.when(viewModel.suppressionPossibleProperty())
+                        .then("Supprimer ce site et ses points d'écoute.")
+                        .otherwise("Suppression impossible : ce site porte des passages."
+                                + " Supprimez d'abord les passages rattachés."));
+        Tooltip.install(enveloppeSupprimer, infoSupprimer);
         boutonModifier.setDisable(true);
         boutonModifier.setTooltip(new Tooltip("Édition de la fiche site : à venir."));
         configurerColonnes();
