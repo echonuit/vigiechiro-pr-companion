@@ -102,6 +102,7 @@
       <HBox spacing="16.0" fillHeight="true" styleClass="cartes-actions">
         <Button fx:id="boutonVerifier" styleClass="carte-action"
                 onAction="#verifier" contentDisplay="GRAPHIC_ONLY"
+                accessibleText="Vérifier l'enregistrement : sound check par échantillonnage"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
@@ -113,6 +114,7 @@
         </Button>
         <Button fx:id="boutonDiagnostic" styleClass="carte-action"
                 onAction="#diagnostiquer" contentDisplay="GRAPHIC_ONLY"
+                accessibleText="Diagnostic matériel : température, hygrométrie, anomalies, journal"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
@@ -124,6 +126,7 @@
         </Button>
         <Button fx:id="boutonDepot" styleClass="carte-action"
                 onAction="#preparerDepot" contentDisplay="GRAPHIC_ONLY"
+                accessibleText="Préparer le dépôt : constituer le lot Tadarida"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
@@ -135,6 +138,7 @@
         </Button>
         <Button fx:id="boutonValidation" styleClass="carte-action"
                 onAction="#validerTadarida" contentDisplay="GRAPHIC_ONLY"
+                accessibleText="Validation Tadarida : valider les identifications"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">

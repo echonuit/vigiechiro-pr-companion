@@ -197,4 +197,15 @@ class PassageViewTest {
 
         assertThat(rattachement.isDisabled()).isFalse();
     }
+
+    @Test
+    @DisplayName("#163 : les cartes d'action (icône seule) portent un nom accessible")
+    void cartes_action_ont_un_nom_accessible(FxRobot robot) {
+        // contentDisplay=GRAPHIC_ONLY : le libellé visible est dans le graphique, pas dans la propriété
+        // text du bouton. Sans accessibleText, un lecteur d'écran n'annoncerait rien.
+        for (String id : new String[] {"#boutonVerifier", "#boutonDiagnostic", "#boutonDepot", "#boutonValidation"}) {
+            Button bouton = robot.lookup(id).queryAs(Button.class);
+            assertThat(bouton.getAccessibleText()).as("nom accessible de " + id).isNotBlank();
+        }
+    }
 }
