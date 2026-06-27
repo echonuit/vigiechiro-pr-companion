@@ -1,6 +1,6 @@
-# Documentation utilisateur (MkDocs Material).
+# Documentation MkDocs Material : site UTILISATEUR (docs/) + site DÉVELOPPEUR (dev-docs/, sous /dev/).
 #
-# - build : construit le site à chaque push/PR touchant la doc (mkdocs build --strict).
+# - build : construit les deux sites à chaque push/PR touchant la doc (mkdocs build --strict).
 #   Toujours actif : valide que la doc compile (liens, nav) sans rien publier.
 # - deploy : publie sur GitHub Pages, mais DORMANT tant que la variable de dépôt
 #   ENABLE_PAGES != 'true'. À activer quand le dépôt est public et Pages configuré
@@ -21,6 +21,8 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "dev-docs/**"
+      - "mkdocs-dev.yml"
       - "scripts/mkdocs_hooks.py"
       - ".github/assets/apercu-*.png"
       - ".github/assets/captures.manifest"
@@ -30,6 +32,8 @@ on:
     paths:
       - "docs/**"
       - "mkdocs.yml"
+      - "dev-docs/**"
+      - "mkdocs-dev.yml"
       - "scripts/mkdocs_hooks.py"
       - ".github/assets/apercu-*.png"
       - ".github/assets/captures.manifest"
@@ -73,6 +77,10 @@ jobs:
         run: bash .github/assets/check-doc-images.sh
       - name: Construire le site (strict)
         run: mkdocs build --strict
+      # Site DÉVELOPPEUR (config autonome) construit dans site/dev/ -> publié sous /dev/.
+      # APRÈS le site user : `mkdocs build` ci-dessus nettoie site/, donc on bâtit le sous-site ensuite.
+      - name: Construire le site développeur (strict)
+        run: mkdocs build -f mkdocs-dev.yml --strict
       - name: Téléverser l'artefact Pages
         uses: actions/upload-pages-artifact@v3
         with:

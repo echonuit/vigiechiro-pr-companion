@@ -1,0 +1,91 @@
+# Documentation DÉVELOPPEUR de VigieChiro PR Companion.
+#
+# Site MkDocs **autonome**, volontairement séparé du site utilisateur (mkdocs.yml + docs/) :
+# la doc dev vit près du code et pourra rester ici si la doc utilisateur déménage un jour dans
+# son propre dépôt. Construit dans `site/dev/` pour être publié sous le sous-chemin `/dev/` du
+# même GitHub Pages (cf. .github/workflows/docs.yml).
+#
+# Build :   mkdocs build -f mkdocs-dev.yml --strict
+# Aperçu :  mkdocs serve -f mkdocs-dev.yml
+site_name: VigieChiro · Doc développeur
+site_description: >-
+  Documentation développeur de VigieChiro PR Companion : architecture, conventions,
+  et comment contribuer au code.
+site_url: https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/
+repo_url: https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion
+repo_name: IUTInfoAix-S201/vigiechiro-pr-companion
+edit_uri: edit/main/dev-docs/
+copyright: IUT d'Aix-Marseille - Département Informatique
+docs_dir: dev-docs
+site_dir: site/dev
+
+theme:
+  name: material
+  language: fr
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: deep orange
+      toggle:
+        icon: material/weather-sunny
+        name: Mode sombre
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: deep orange
+      toggle:
+        icon: material/weather-night
+        name: Mode clair
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - navigation.footer
+    - toc.follow
+    - search.suggest
+    - search.highlight
+    - content.action.edit
+    - content.action.view
+    - content.code.copy
+  icon:
+    repo: fontawesome/brands/github
+
+nav:
+  - Vue d'ensemble: index.md
+  - Architecture: architecture.md
+  - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
+  - Tests et qualité: tests-et-qualite.md
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - footnotes
+  - toc:
+      permalink: true
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+
+plugins:
+  - search:
+      lang: fr
+
+extra_css:
+  - stylesheets/extra.css

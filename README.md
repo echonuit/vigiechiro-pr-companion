@@ -139,6 +139,9 @@ propre paquet, qui contient ses **4 couches MVVM** (`model` / `viewmodel` / `vie
 frontière MVVM et l'absence de cycles sont **vérifiées automatiquement** (ArchUnit) : les tests
 échouent si un `viewmodel` touche `javafx.scene`, ou si un `model` parle JavaFX.
 
+> 📖 **Documentation développeur** (architecture détaillée, « ajouter une fonctionnalité », tests et
+> qualité) : **<https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/>**
+
 <details>
 <summary><b>Détail de l'architecture et des fonctionnalités</b></summary>
 
