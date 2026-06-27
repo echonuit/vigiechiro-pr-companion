@@ -105,6 +105,40 @@ class ConstructeurDonneesCarteTest {
                 .isEqualTo(ConstructeurDonneesCarte.couleurDensite(9, 9).getOpacity());
     }
 
+    @Test
+    @DisplayName("info-bulle d'un carré : nom + numéro, total de passages, nombre de points, répartition statuts")
+    void infobulle_carre_resume_les_stats() {
+        CarreAgrege carre = new CarreAgrege(
+                "640380",
+                "Étang",
+                List.of(
+                        new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE),
+                        new PointAgrege("B2", null, null, 1, StatutWorkflow.IMPORTE)), // sans GPS, exclu du compte
+                3);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
+
+        assertThat(donnees.carres().get(0).infobulle())
+                .contains("Étang (640380)")
+                .contains("3 passages")
+                .contains("1 point") // un seul point géolocalisé
+                .contains(StatutWorkflow.VERIFIE.libelle() + " ×1");
+    }
+
+    @Test
+    @DisplayName("info-bulle d'un point : libellé, total de passages et statut dominant")
+    void infobulle_point_resume_les_stats() {
+        CarreAgrege carre = new CarreAgrege(
+                "640380", "Étang", List.of(new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE)), 2);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
+
+        assertThat(donnees.points().get(0).infobulle())
+                .contains("640380 / A1")
+                .contains("2 passages")
+                .contains(StatutWorkflow.VERIFIE.libelle());
+    }
+
     private static double opaciteDuCarre(DonneesCarte donnees, String numeroCarre) {
         return donnees.carres().stream()
                 .filter(c -> c.numeroCarre().equals(numeroCarre))
