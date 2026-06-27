@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.26.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.25.0...v1.26.0) (2026-06-27)
+
+
+### Features
+
+* **carte:** carroyage national officiel + recalage du carré d'exemple ([#325](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/325)) ([#327](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/327)) ([ef01917](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/ef0191715e0165a50a64f4cb70fbd226770271a9))
+
 # [1.25.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.24.1...v1.25.0) (2026-06-27)
 
 
