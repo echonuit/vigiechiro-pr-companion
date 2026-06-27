@@ -3,10 +3,12 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -44,19 +46,28 @@
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
   </FlowPane>
 
-  <TableView fx:id="tableLignes" VBox.vgrow="ALWAYS">
-    <columns>
-      <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
-      <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
-      <TableColumn fx:id="colAnnee" text="Année" prefWidth="70.0"/>
-      <TableColumn fx:id="colNumero" text="N° passage" prefWidth="90.0"/>
-      <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
-      <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
-      <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
-    </columns>
-  </TableView>
+  <!-- Carte (sites + points) à gauche, tableau des passages à droite (#152). La carte est remplie en
+       code par le controller (composant CarteSites, dépendance Gluon Maps). -->
+  <SplitPane dividerPositions="0.42" VBox.vgrow="ALWAYS" styleClass="split-carte-tableau">
+    <items>
+      <StackPane fx:id="zoneCarte" styleClass="zone-carte"/>
+      <VBox spacing="6.0">
+        <TableView fx:id="tableLignes" VBox.vgrow="ALWAYS">
+          <columns>
+            <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+            <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+            <TableColumn fx:id="colAnnee" text="Année" prefWidth="70.0"/>
+            <TableColumn fx:id="colNumero" text="N° passage" prefWidth="90.0"/>
+            <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
+            <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
+            <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
+          </columns>
+        </TableView>
+        <Label text="Astuce : double-cliquez une ligne pour ouvrir l'écran du passage."
+               styleClass="section-sous"/>
+      </VBox>
+    </items>
+  </SplitPane>
 
-  <Label text="Astuce : double-cliquez une ligne pour ouvrir l'écran du passage."
-         styleClass="section-sous"/>
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
 </VBox>

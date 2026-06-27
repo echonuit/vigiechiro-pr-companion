@@ -61,6 +61,7 @@ class MultisiteViewTest {
                 .thenReturn(List.of(
                         ligne(42L, "640380", "A1", 2026, 1, "2026-06-21"),
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02")));
+        when(service.agregerPourCarte(anyString())).thenReturn(List.of()); // carte (#152) : pas de NPE à l'init
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {

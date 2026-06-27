@@ -16,13 +16,17 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
+import fr.univ_amu.iut.multisite.model.PointAgrege;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import java.util.List;
+import java.util.Set;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
@@ -71,6 +75,13 @@ class MultisiteVueIntegrationTest {
                 .thenReturn(List.of(
                         ligne(42L, "640380", "A1", 2026, 10, "2026-06-21"),
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02")));
+        // Carte (#152) : un carré avec un point géolocalisé → un marqueur attendu sur la carte.
+        when(service.agregerPourCarte(anyString()))
+                .thenReturn(List.of(new CarreAgrege(
+                        "640380",
+                        "Étang",
+                        List.of(new PointAgrege("A1", 43.30, -0.36, 2, StatutWorkflow.VERIFIE)),
+                        2)));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
@@ -128,6 +139,18 @@ class MultisiteVueIntegrationTest {
         // Données n° 10 et 3 : un tri NUMÉRIQUE décroissant donne 10 puis 3 (un tri alphabétique sur les
         // chaînes « 10 »/« 3 » donnerait l'inverse). Prouve le comparateur numérique de la colonne.
         assertThat(table.getItems()).extracting(LignePassage::numeroPassage).containsExactly(10, 3);
+    }
+
+    @Test
+    @DisplayName("#152 : la carte est présente et affiche un marqueur par point géolocalisé")
+    void la_carte_affiche_les_points(FxRobot robot) {
+        assertThat(robot.lookup("#zoneCarte").queryAll())
+                .as("la zone carte est dans la vue")
+                .isNotEmpty();
+        Set<Node> marqueurs = robot.lookup(".carte-point-libelle").queryAll();
+        assertThat(marqueurs)
+                .as("un marqueur pour le point géolocalisé du carré 640380")
+                .hasSize(1);
     }
 
     @Test
