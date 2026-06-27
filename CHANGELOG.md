@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.24.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.23.0...v1.24.0) (2026-06-27)
+
+
+### Features
+
+* **accessibilité:** nom accessible sur les cartes d'action M-Passage ([#163](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/163)) ([#319](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/319)) ([9692edd](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/9692edda19496441f0dd589753044f8c878a491f))
+
 # [1.23.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.22.0...v1.23.0) (2026-06-27)
 
 
