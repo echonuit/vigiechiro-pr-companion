@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.20.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.19.0...v1.20.0) (2026-06-27)
+
+
+### Features
+
+* **multisite:** tableau de bord — densité par carré + légende ([#152](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/152)) ([#304](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/304)) ([315f36a](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/315f36ae6daaaf44f79dccfc354adaa8175f3b03)), closes [#163](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/163) [#163](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/163)
+
 # [1.19.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.18.0...v1.19.0) (2026-06-27)
 
 
