@@ -1,8 +1,9 @@
 # Patterns et principes
 
 L'architecture (cf. [Architecture](architecture.md)) applique des **patrons de conception** connus,
-chacun choisi pour une raison précise et pour faire respecter les principes **SOLID** (et d'autres :
-DRY, IoC, faible couplage).
+chacun choisi pour une raison précise et pour faire respecter les principes **SOLID** ainsi que
+d'autres principes transverses (loi de Déméter, YAGNI, KISS, DRY… détaillés en fin de page,
+[Au-delà de SOLID](#au-dela-de-solid)).
 
 Chaque patron est présenté ainsi : **le problème** qu'il résout, **la solution**, **comment il est
 utilisé ici** (avec un extrait et un lien vers le code), un **diagramme**, et les **principes** qu'il
@@ -446,5 +447,61 @@ de vérité unique** pour l'avancement d'une nuit.
 | **I**SP | Interfaces de rôle fines (`GardeQuitter`, `RafraichirAuRetour`, `EmplacementNavigation`) |
 | **D**IP | Injection + Composition Root, contrats `Ouvrir*`, *binding* observable, Factory |
 
-Au-delà de SOLID : **DRY** (Template Method, `RowMapper`), **IoC** (DI, Factory), **faible couplage /
-forte cohésion** (package-by-feature, Observer).
+## Au-delà de SOLID
+
+SOLID n'est pas seul : l'architecture respecte aussi plusieurs principes transverses, eux aussi
+visibles dans le code.
+
+### Loi de Déméter (« ne parle qu'à tes amis proches »)
+
+Un objet ne devrait appeler que les méthodes de **lui-même**, de ses **paramètres**, de ce qu'il
+**crée** et de ses **champs directs** — pas de chaîne `a.getB().getC().faire()`.
+
+**Ici.** La vue se lie à `vm.titreProperty()` (un collaborateur **direct**), jamais à
+`vm.modele().site().nom()`. Les contrats `Ouvrir*` reçoivent un `ContexteSite` / `ContextePassage`
+(données **passées en paramètre**) plutôt que de fouiller dans l'écran appelant. Et `view_sans_jdbc`
+interdit à la vue de « traverser » les couches jusqu'à la base.
+
+### YAGNI (« vous n'en aurez pas besoin »)
+
+Ne pas construire de **généricité spéculative**.
+
+**Ici.** Pas d'ORM (des DAO `PreparedStatement` directs) ; le workflow est une simple `List` ordonnée
+(`suivant()` = `index + 1`), pas un moteur d'états générique ; `DaoGenerique` n'offre que les
+opérations **réellement** communes (lecture/suppression), les `insert`/`update` n'étant écrits que là
+où on en a besoin ; l'application étant mono-utilisateur, `idUtilisateurCourant` est simplement le
+premier utilisateur (aucune machinerie d'authentification construite « au cas où »).
+
+### KISS (« reste simple »)
+
+**Ici.** SQLite fichier (pas de serveur), tests headless **en mémoire** (pas de `xvfb`), capture par
+`Scene.snapshot()` (pas d'orchestration lourde).
+
+### DRY (« ne te répète pas »)
+
+**Ici.** `DaoGenerique` (Template Method) et `RowMapper` (Strategy) factorisent la boucle `ResultSet`
+écrite **une seule fois** ; les sections communes de doc renvoient à une source unique.
+
+### Tell, Don't Ask
+
+Demander à un objet d'**agir**, plutôt que de lire son état pour décider à sa place.
+
+**Ici.** `MoteurWorkflowPassage.exigerTransitionAutorisee(actuel, cible)` **vérifie et lève** si la
+transition est interdite, au lieu d'exposer l'ordre pour que chaque appelant le re-teste.
+
+### Composition plutôt qu'héritage
+
+**Ici.** Le chrome **compose** des capacités via de petites interfaces optionnelles (ISP) détectées à
+l'exécution, et l'injection **compose** le graphe d'objets — au lieu d'une hiérarchie de classes
+profonde. (`DaoGenerique` reste un héritage **assumé**, limité au Template Method.)
+
+### Convention plutôt que configuration
+
+**Ici.** Les `.fxml`/`.css` à côté de leur controller, les paquets de test en **miroir** de la
+production, le `captures.manifest`, les noms `Capture*` / `Navigation*` / `*Module` : autant de
+conventions qui évitent de la configuration.
+
+### Fail-fast
+
+**Ici.** `exigerTransitionAutorisee` lève **tôt** ; `Objects.requireNonNull(...)` garde les
+constructeurs ; `DataAccessException` remonte une erreur SQL sans la masquer.
