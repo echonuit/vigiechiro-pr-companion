@@ -155,6 +155,18 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#152 : la légende est superposée à la carte (code couleur des statuts + densité)")
+    void la_legende_est_superposee_a_la_carte(FxRobot robot) {
+        assertThat(robot.lookup(".legende-carte").queryAll())
+                .as("le panneau de légende est présent dans la zone carte")
+                .isNotEmpty();
+        // La légende nomme chaque statut (pas que la couleur, #163) : on retrouve au moins un libellé de statut.
+        assertThat(robot.lookup(StatutWorkflow.DEPOSE.libelle()).queryAll())
+                .as("la légende affiche le libellé d'un statut workflow")
+                .isNotEmpty();
+    }
+
+    @Test
     @DisplayName("#152 : cliquer un carré sur la carte filtre le tableau par ce carré")
     void clic_carre_filtre_le_tableau(FxRobot robot) {
         Node rectangle = robot.lookup(".carte-carre").query();

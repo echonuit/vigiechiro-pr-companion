@@ -19,6 +19,9 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -158,6 +161,11 @@ public class MultisiteController implements RafraichirAuRetour {
         // l'agrégat carte (non filtré) en DonneesCarte à chaque mise à jour. La carte ne dépend pas des
         // filtres/tri du tableau, d'où un rafraîchissement DÉDIÉ (rafraichirCarte), au chargement et au retour.
         zoneCarte.getChildren().add(carte);
+        // Légende superposée en bas à gauche (#152) : code couleur des statuts + échelle de densité.
+        Node legende = LegendeCarte.creer();
+        StackPane.setAlignment(legende, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(legende, new Insets(8));
+        zoneCarte.getChildren().add(legende);
         viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>)
                 changement -> carte.setDonnees(ConstructeurDonneesCarte.depuis(viewModel.carresCarte())));
 
