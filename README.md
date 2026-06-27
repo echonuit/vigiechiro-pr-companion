@@ -19,7 +19,7 @@
   <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/releases"><img alt="Dernière version" src="https://img.shields.io/github/v/release/IUTInfoAix-S201/vigiechiro-pr-companion?label=release&color=3f51b5"></a>
   <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/maven.yml"><img alt="Intégration continue" src="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/maven.yml/badge.svg"></a>
   <a href="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/lint.yml"><img alt="Portail qualité" src="https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/actions/workflows/lint.yml/badge.svg"></a>
-  <a href="LICENSE"><img alt="Licence MIT" src="https://img.shields.io/badge/licence-MIT-blue"></a>
+  <a href="LICENSE"><img alt="Licence GPLv3" src="https://img.shields.io/badge/licence-GPLv3-blue"></a>
   <a href="https://doi.org/10.5281/zenodo.20492247"><img alt="Jeu de données exemple sur Zenodo" src="https://img.shields.io/badge/donn%C3%A9es_exemple-DOI%20Zenodo-1682d4"></a>
 </p>
 
@@ -247,5 +247,5 @@ travail vivent dans l'organisation [IUTInfoAix-S201-2026](https://github.com/IUT
 ---
 
 <p align="center"><sub>
-  SAÉ 2.01 · BUT Informatique · IUT d'Aix-Marseille, sous licence <a href="LICENSE">MIT</a>.
+  SAÉ 2.01 · BUT Informatique · IUT d'Aix-Marseille, sous licence <a href="LICENSE">GPLv3</a>.
 </sub></p>
