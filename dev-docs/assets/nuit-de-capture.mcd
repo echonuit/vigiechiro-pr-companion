@@ -1,0 +1,34 @@
+Utilisateur: identifiant local, nom affiché
+Site de suivi: numéro de carré, nom convivial, protocole, commentaire, créé le
+Point d'écoute: code, latitude, longitude, description
+Enregistreur: numéro de série, version de modèle, commentaire
+Micro: réf micro, référence modèle, bande passante, sensibilité, mis en service le, retiré le, actif, commentaire
+Passage: réf passage, numéro de passage, année, date d'enregistrement, heure de début, heure de fin, paramètres d'acquisition, statut workflow, verdict de vérification, commentaire, données météo, déposé le
+Session d'enregistrement: réf session, chemin racine, octets originaux, octets séquences
+Enregistrement original: réf wav, nom de fichier, chemin, durée (s), fréquence d'échantillonnage (Hz), sha256
+Séquence d'écoute: réf séquence, nom de fichier, index source, décalage source (s), durée (s), chemin, dans la sélection
+Journal du capteur: réf journal, chemin, événements analysés, anomalies détectées
+Relevé climatique: réf relevé, chemin, mesures
+Sélection d'écoute: réf sélection, méthode de sélection, taille
+Résultats d'identification: réf résultats, chemin, format détecté, importé le
+Observation: réf observation, début (s), fin (s), fréquence médiane (Hz), proba Tadarida, proba observateur, commentaire, est référence, mode de validation
+Taxon: code taxon, nom latin, nom vernaculaire
+Groupe taxonomique: réf groupe, niveau, nom
+
+Déclarer, 0N Utilisateur, 11 Site de suivi
+Comporter, 0N Site de suivi, 11 Point d'écoute
+Accueillir, 0N Point d'écoute, 11 Passage
+Mobiliser, 0N Enregistreur, 11 Passage
+Équiper, 0N Enregistreur, 11 Micro
+Produire, 11 Passage, 11 Session d'enregistrement
+Contenir, 1N Session d'enregistrement, 11 Enregistrement original
+Découper, 1N Enregistrement original, 11 Séquence d'écoute
+Journaliser, 11 Session d'enregistrement, 11 Journal du capteur
+Mesurer climat, 01 Session d'enregistrement, 11 Relevé climatique
+Choisir, 01 Passage, 11 Sélection d'écoute
+Retenir, 1N Sélection d'écoute, 0N Séquence d'écoute
+Aboutir, 01 Passage, 11 Résultats d'identification
+Regrouper, 1N Résultats d'identification, 11 Observation
+Porter, 0N Séquence d'écoute, 11 Observation
+Concerner, 0N Taxon, 11 Observation
+Classer, 1N Groupe taxonomique, 11 Taxon

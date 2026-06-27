@@ -9,7 +9,7 @@ d'origine (le brief) à son **implémentation** (entités-`record` + tables SQLi
     diagramme de classes. Les **noms y sont ceux de l'IHM** (langage utilisateur). Cette page-ci montre
     comment ces concepts deviennent des records Java et des tables SQL.
 
-## L'agrégat « nuit de capture »
+## Le modèle conceptuel (MCD Merise)
 
 Un **utilisateur** déclare des **sites de suivi**, chacun avec des **points d'écoute**. Sur un point,
 il réalise des **passages** (une nuit). Un passage est la **racine d'agrégat** : il possède une
@@ -21,9 +21,27 @@ classées par **taxon**).
 C'est cet agrégat qui avance dans le [workflow à états](patterns.md#machine-a-etats-moteurworkflowpassage)
 `Importé → … → Déposé`.
 
+Au **niveau conceptuel**, on raisonne avec le **MCD Merise** (la notation enseignée en France) :
+**entités** (identifiant souligné), **associations** porteuses d'un verbe, et **cardinalités
+`(min,max)`** sur chaque patte. Les clés étrangères n'y figurent pas : elles sont *portées par les
+associations*.
+
+<figure markdown="span">
+  ![Modèle conceptuel de données (MCD Merise) de la nuit de capture](assets/nuit-de-capture.svg){ width="100%" }
+  <figcaption>MCD Merise de la « nuit de capture ». Source <a href="assets/nuit-de-capture.mcd"><code>nuit-de-capture.mcd</code></a>, rendu avec <a href="https://www.mocodo.net/">Mocodo</a> (voir <a href="#regenerer-le-mcd-mocodo">Régénérer le MCD</a>).</figcaption>
+</figure>
+
+!!! note "MCD conceptuel ≠ schéma physique"
+    Ce MCD décrit le **domaine**, indépendamment du stockage. Sa traduction relationnelle (le
+    **schéma physique** ci-dessous) ajoute les clés primaires techniques, les clés étrangères, et
+    transforme l'association N:N **Retenir** (Sélection ↔ Séquence) en **table de jonction**
+    (`selection_sequence`).
+
 ## Le schéma physique (SQLite)
 
-19 tables, créées par
+Le **schéma physique** est plus proche de la machine. On le donne en notation **pattes-de-corbeille**
+(IE / *crow's foot*, celle de Mermaid) : relations binaires, clés étrangères explicites. C'est la
+traduction du MCD ci-dessus. 19 tables, créées par
 [`V01__schema.sql`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/resources/db/migration/V01__schema.sql),
 clés étrangères **`ON DELETE CASCADE`** (supprimer un passage emporte sa session, ses séquences, ses
 observations…).
@@ -85,6 +103,22 @@ Plutôt que des codes magiques, les états sont des **énums** dans `commun.mode
 (`IMPORTE → … → DEPOSE`), `Verdict` (OK / Douteux / À jeter), `MethodeSelection`, `Protocole`,
 `ModeValidation`. Chacune porte un **libellé** d'affichage, et les transitions de statut sont gardées
 par [`MoteurWorkflowPassage`](patterns.md#machine-a-etats-moteurworkflowpassage).
+
+## Régénérer le MCD (Mocodo)
+
+Le MCD est **versionné comme source** ([`nuit-de-capture.mcd`](assets/nuit-de-capture.mcd), 16 entités
++ 17 associations) et rendu avec [Mocodo](https://www.mocodo.net/), l'outil de référence pour le MCD
+Merise. Après modification de la source, régénérez le SVG :
+
+```bash
+pip install mocodo                       # une fois
+cd dev-docs/assets
+mocodo -i nuit-de-capture.mcd -t arrange:wide=8   # agencement auto + dessin SVG
+```
+
+`arrange:wide=8` agence les boîtes sur ~8 colonnes (essayez `wide=6`/`7` pour un autre format). Mocodo
+sait aussi dériver le schéma relationnel (`-t mld`/`-t sql`) à partir de la **même** source : c'est
+exactement le passage *conceptuel → physique* décrit sur cette page.
 
 ---
 
