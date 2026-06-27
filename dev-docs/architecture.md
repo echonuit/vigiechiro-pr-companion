@@ -4,6 +4,11 @@ L'application est **locale** (base SQLite fichier, sans serveur), en **JavaFX 26
 par **Guice 7**. L'organisation est en **paquet-par-fonctionnalité** : chaque écran/parcours vit dans
 **son propre paquet**, qui contient lui-même ses **4 couches MVVM**.
 
+!!! tip "Les patrons derrière cette architecture"
+    Chaque choix (MVVM, contrats, DAO, Template Method…) applique un **patron de conception** au
+    service des principes **SOLID**. La page **[Patterns et principes](patterns.md)** les détaille un
+    par un (le quoi, le pourquoi ici, et les principes servis).
+
 ## Carte du code
 
 ```
