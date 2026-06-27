@@ -10,12 +10,18 @@ import javafx.scene.paint.Color;
 /// @param numeroCarre numéro à 6 chiffres (jamais nul ; sert de libellé accessible du tracé)
 /// @param emprise emprise géographique du carré (jamais nulle)
 /// @param remplissage couleur de remplissage du tracé (jamais nulle ; opacité à la charge de l'appelant)
-public record CarreGeo(String numeroCarre, EmpriseCarre emprise, Color remplissage) {
+/// @param infobulle mini-stats affichées au survol (et exposées en `accessibleHelp`, #163) ; `null` = aucune
+public record CarreGeo(String numeroCarre, EmpriseCarre emprise, Color remplissage, String infobulle) {
 
     public CarreGeo {
         Objects.requireNonNull(numeroCarre, "numeroCarre");
         Objects.requireNonNull(emprise, "emprise");
         Objects.requireNonNull(remplissage, "remplissage");
+    }
+
+    /// Tracé sans info-bulle (forme rétro-compatible).
+    public CarreGeo(String numeroCarre, EmpriseCarre emprise, Color remplissage) {
+        this(numeroCarre, emprise, remplissage, null);
     }
 
     /// Code département (2 premiers chiffres du numéro de carré, cf. brief Glossaire métier), ou chaîne
