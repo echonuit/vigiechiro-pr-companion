@@ -44,6 +44,19 @@ Quand un filtre est actif, le tableau et le résumé se recalculent en conséque
 
 ![La vue multi-sites filtrée (ici par verdict) : le résumé est recalculé.](../assets/captures/apercu-multisite-filtre.png)
 
+## Éditer les positions des points
+
+Le bouton **« ✎ Éditer les positions »** (barre du haut) fait passer la carte en **mode édition** : on
+peut alors **glisser un marqueur** pour corriger le GPS d'un point. Le marqueur **reste dans son
+carré** (il s'arrête au bord de la maille 2 km) ; un point **sans GPS**, affiché au centre de son carré,
+se **place** en le faisant glisser à l'endroit voulu. Déplacer un point ne touche **que** ses
+coordonnées : son code, son descriptif et ses passages sont conservés.
+
+Les déplacements ne sont **pas enregistrés au fil de l'eau** : ils s'accumulent jusqu'au clic sur
+**« 💾 Enregistrer les positions »** (inactif tant qu'aucun point n'a bougé). Si vous **quittez le mode
+édition** alors que des déplacements ne sont pas enregistrés, une fenêtre vous propose de les
+**Enregistrer**, de les **Abandonner**, ou d'**Annuler** (pour rester en édition).
+
 ## Vues sauvegardées
 
 Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic.
