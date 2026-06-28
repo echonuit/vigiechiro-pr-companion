@@ -36,6 +36,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -132,7 +133,22 @@ public final class CaptureAnalyse {
             bascule.fire();
         }
         Scene scene = new Scene(vue, 1080, 640);
-        ApercuFx.capturerApresPreparation(scene, CaptureAnalyse::attendreTuiles, fichier);
+        ApercuFx.capturerApresPreparation(
+                scene,
+                () -> {
+                    // Filtre sur l'espèce (la barre reflète ainsi la sélection), puis sélectionne la ligne
+                    // restante APRÈS l'affichage (la table est alors attachée au graphe) : peuple le panneau
+                    // détail (bas) et bascule la carte en **répartition** (carrés de l'espèce mis en avant).
+                    if (vue.lookup("#champFiltre") instanceof TextField champ) {
+                        champ.setText("Pipistrelle");
+                    }
+                    if (vue.lookup("#tableEspeces") instanceof TableView<?> table
+                            && !table.getItems().isEmpty()) {
+                        table.getSelectionModel().select(0);
+                    }
+                    attendreTuiles();
+                },
+                fichier);
     }
 
     /// Laisse tourner le fil JavaFX (boucle d'évènements imbriquée) le temps que les tuiles OSM arrivées en
