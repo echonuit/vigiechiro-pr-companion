@@ -27,7 +27,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
@@ -41,7 +40,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
-import javafx.util.StringConverter;
 
 /// Controller de l'écran **M-Multisite** (`Multisite.fxml`).
 ///
@@ -186,17 +184,10 @@ public class MultisiteController implements RafraichirAuRetour {
 
         configurerFiltres();
         choixTri.getItems().setAll(TriMultisite.values());
-        choixTri.setConverter(convertisseur(MultisiteController::libelleTri));
+        choixTri.setConverter(Convertisseurs.parLibelle(MultisiteController::libelleTri));
         // #370 : sans étiquette « Tri : » avant la liste, on préfixe l'intitulé DANS la cellule-bouton (la
         // valeur sélectionnée affichée), sans toucher aux items du menu déroulant qui restent bruts.
-        choixTri.setButtonCell(new ListCell<>() {
-            @Override
-            protected void updateItem(TriMultisite tri, boolean vide) {
-                super.updateItem(tri, vide);
-                setText(vide || tri == null ? null : "Tri : " + libelleTri(tri));
-            }
-        });
-        choixTri.setAccessibleText("Trier les passages");
+        choixTri.setButtonCell(new CelluleTri());
         choixTri.valueProperty().bindBidirectional(viewModel.triProperty());
         // Choisir un ordre nommé (combo) réinitialise le tri par colonne, pour que l'ordre nommé soit
         // visible (sinon le comparateur de colonne masquerait le tri serveur). #145.
@@ -426,12 +417,12 @@ public class MultisiteController implements RafraichirAuRetour {
         // Statut / verdict : la 1re entrée (null) lève le filtre ; les suivantes restreignent.
         choixStatut.getItems().add(null);
         choixStatut.getItems().addAll(StatutWorkflow.values());
-        choixStatut.setConverter(convertisseur(s -> s == null ? "Tous les statuts" : s.libelle()));
+        choixStatut.setConverter(Convertisseurs.parLibelle(s -> s == null ? "Tous les statuts" : s.libelle()));
         choixStatut.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
 
         choixVerdict.getItems().add(null);
         choixVerdict.getItems().addAll(Verdict.values());
-        choixVerdict.setConverter(convertisseur(v -> v == null ? "Tous les verdicts" : v.libelle()));
+        choixVerdict.setConverter(Convertisseurs.parLibelle(v -> v == null ? "Tous les verdicts" : v.libelle()));
         choixVerdict.valueProperty().bindBidirectional(viewModel.filtreVerdictProperty());
 
         // Champs texte : appliqués à la validation (Entrée) pour ne pas ré-interroger à chaque frappe ;
@@ -447,14 +438,8 @@ public class MultisiteController implements RafraichirAuRetour {
                 .filtreAnneeProperty()
                 .addListener(
                         (obs, ancien, nouveau) -> champAnnee.setText(nouveau == null ? "" : String.valueOf(nouveau)));
-
-        // #370 : étiquettes visuelles retirées → on garde les libellés ACCESSIBLES (#163) sur chaque
-        // contrôle (le promptText des champs et la valeur par défaut des listes ne suffisent pas aux
-        // lecteurs d'écran). Le tri porte déjà son accessibleText là où il est configuré.
-        champCarre.setAccessibleText("Filtrer par numéro de carré");
-        choixStatut.setAccessibleText("Filtrer par statut");
-        choixVerdict.setAccessibleText("Filtrer par verdict");
-        champAnnee.setAccessibleText("Filtrer par année");
+        // #370 : les étiquettes visuelles « Carré : / … » sont retirées ; les libellés ACCESSIBLES (#163)
+        // sont posés directement dans le FXML (attribut accessibleText sur chaque contrôle).
     }
 
     /// Parse l'année saisie : un champ vide lève le filtre, une valeur non numérique est ignorée
@@ -512,21 +497,8 @@ public class MultisiteController implements RafraichirAuRetour {
         }
     }
 
-    private static <T> StringConverter<T> convertisseur(java.util.function.Function<T, String> versTexte) {
-        return new StringConverter<>() {
-            @Override
-            public String toString(T valeur) {
-                return versTexte.apply(valeur);
-            }
-
-            @Override
-            public T fromString(String libelle) {
-                return null; // ComboBox non éditable : conversion inverse inutile
-            }
-        };
-    }
-
-    private static String libelleTri(TriMultisite tri) {
+    /// Libellé d'un ordre de tri (paquet-privé : réutilisé par [CelluleTri] pour la cellule-bouton).
+    static String libelleTri(TriMultisite tri) {
         if (tri == null) {
             return "";
         }

@@ -45,11 +45,13 @@
            listes (« Tous les statuts/verdicts », « Tri : … » via la cellule-bouton). Les libellés
            accessibles (#163) sont conservés en code (accessibleText). -->
       <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
-        <TextField fx:id="champCarre" promptText="N° carré" prefWidth="110.0"/>
-        <ComboBox fx:id="choixStatut"/>
-        <ComboBox fx:id="choixVerdict"/>
-        <TextField fx:id="champAnnee" promptText="Année" prefWidth="90.0"/>
-        <ComboBox fx:id="choixTri"/>
+        <TextField fx:id="champCarre" promptText="N° carré" prefWidth="110.0"
+                   accessibleText="Filtrer par numéro de carré"/>
+        <ComboBox fx:id="choixStatut" accessibleText="Filtrer par statut"/>
+        <ComboBox fx:id="choixVerdict" accessibleText="Filtrer par verdict"/>
+        <TextField fx:id="champAnnee" promptText="Année" prefWidth="90.0"
+                   accessibleText="Filtrer par année"/>
+        <ComboBox fx:id="choixTri" accessibleText="Trier les passages"/>
         <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
       </FlowPane>
     </center>
