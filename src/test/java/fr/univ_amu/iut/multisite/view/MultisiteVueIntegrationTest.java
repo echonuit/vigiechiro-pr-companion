@@ -172,18 +172,20 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#152 : le chevron de la légende la replie (corps masqué) puis la rouvre")
+    @DisplayName("#337 : la légende est repliée par défaut ; le chevron la déplie puis la replie")
     void legende_repliable(FxRobot robot) {
         Node corps = robot.lookup(".legende-corps").query();
-        assertThat(corps.isVisible()).as("légende dépliée au départ").isTrue();
-
-        robot.clickOn(".bascule-legende");
         assertThat(corps.isManaged())
-                .as("la légende repliée libère la carte (corps non géré/affiché)")
+                .as("légende repliée au départ (#337) : corps non géré, carte dégagée")
                 .isFalse();
 
         robot.clickOn(".bascule-legende");
-        assertThat(corps.isVisible()).as("la légende se rouvre").isTrue();
+        assertThat(corps.isVisible()).as("le chevron déplie la légende").isTrue();
+
+        robot.clickOn(".bascule-legende");
+        assertThat(corps.isManaged())
+                .as("le chevron la replie (corps non géré/affiché)")
+                .isFalse();
     }
 
     @Test

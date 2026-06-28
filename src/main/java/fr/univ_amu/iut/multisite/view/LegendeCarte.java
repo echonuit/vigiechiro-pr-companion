@@ -35,9 +35,8 @@ final class LegendeCarte {
         corps.getChildren().add(titre("Densité de passages"));
         corps.getChildren().add(ligneDensite());
 
-        Button bascule = new Button("▾");
+        Button bascule = new Button();
         bascule.getStyleClass().add("bascule-legende");
-        bascule.setAccessibleText("Replier la légende");
         bascule.setOnAction(evenement -> {
             boolean ouverte = !corps.isVisible();
             corps.setVisible(ouverte);
@@ -45,6 +44,12 @@ final class LegendeCarte {
             bascule.setText(ouverte ? "▾" : "▸");
             bascule.setAccessibleText(ouverte ? "Replier la légende" : "Déplier la légende");
         });
+        // #337 : repliée par défaut. Étalée, la légende recouvre les carrés/points du coin où elle est
+        // posée (gênant sur petit écran) ; l'utilisateur la déplie au besoin via le chevron.
+        corps.setVisible(false);
+        corps.setManaged(false);
+        bascule.setText("▸");
+        bascule.setAccessibleText("Déplier la légende");
 
         Label entete = titre("Légende");
         Region espace = new Region();
