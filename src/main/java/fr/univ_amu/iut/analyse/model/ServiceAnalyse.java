@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.model;
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Path;
@@ -35,6 +36,13 @@ public class ServiceAnalyse {
     /// `statut` (`null` = tous).
     public List<CarreEspeces> inventaireParCarre(String idUtilisateur, StatutObservation statut) {
         return observationDao.inventaireParCarre(idUtilisateur, statut);
+    }
+
+    /// **Détail** d'une espèce : ses observations à travers les passages de l'utilisateur, filtrées par
+    /// `statut` (`null` = tous). Alimente le panneau maître-détail de l'écran.
+    public List<ObservationEspece> observationsDeLEspece(
+            String idUtilisateur, String codeEspece, StatutObservation statut) {
+        return observationDao.observationsDeLEspece(idUtilisateur, codeEspece, statut);
     }
 
     /// En-têtes CSV des deux inventaires (séparés ici : un seul endroit où vit le libellé, cf. PMD
