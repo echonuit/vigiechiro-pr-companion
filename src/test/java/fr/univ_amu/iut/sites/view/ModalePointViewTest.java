@@ -16,11 +16,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -29,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de la **modale d'ajout d'un point** ouverte depuis M-Site-detail :
 /// ouverture du Stage modal, pilotage du bouton par la validité R2 et apparition de la carte du
@@ -96,6 +100,47 @@ class ModalePointViewTest {
 
         Button valider = robot.lookup("#boutonValider").queryAs(Button.class);
         assertThat(valider.isDisabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#153 : la carte-outil trace le carré et suit la saisie GPS (approximatif → réel)")
+    void la_carte_outil_suit_la_saisie_gps(FxRobot robot) {
+        ouvrirModale(robot);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Le carré du site (640380) est tracé, et un marqueur est présent même sans GPS : il démarre au
+        // centre du carré, en position approximative (anneau pointillé).
+        assertThat(robot.lookup(".carte-carre").queryAll())
+                .as("carré du site tracé")
+                .isNotEmpty();
+        assertThat(premierePastille(robot).getStrokeDashArray())
+                .as("sans GPS : marqueur approximatif (pointillé), au centre du carré")
+                .isNotEmpty();
+
+        // Saisir un GPS valide (dans le carré) déplace le marqueur, qui devient une position réelle :
+        // pastille pleine, sans pointillés. C'est la synchro champs → carte.
+        TextField latitude = robot.lookup("#champLatitude").queryAs(TextField.class);
+        TextField longitude = robot.lookup("#champLongitude").queryAs(TextField.class);
+        robot.interact(() -> {
+            latitude.setText("43.4031");
+            longitude.setText("-1.5708");
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(premierePastille(robot).getStrokeDashArray())
+                .as("GPS saisi : marqueur réel (pastille pleine, sans pointillés)")
+                .isEmpty();
+    }
+
+    /// Pastille (cercle) du premier marqueur de la carte-outil : enfant du groupe portant le libellé.
+    private static Circle premierePastille(FxRobot robot) {
+        Node libelle =
+                robot.lookup(".carte-point-libelle").queryAll().iterator().next();
+        Group marqueur = (Group) libelle.getParent();
+        return (Circle) marqueur.getChildren().stream()
+                .filter(Circle.class::isInstance)
+                .findFirst()
+                .orElseThrow();
     }
 
     private void ouvrirModale(FxRobot robot) {

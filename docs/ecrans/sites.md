@@ -48,6 +48,12 @@ L'ajout ou la modification d'un point d'écoute se fait dans une **fenêtre déd
 description, et coordonnées GPS (facultatives). En création, le formulaire est vierge ; en
 modification, il est pré-rempli avec les valeurs existantes.
 
+La fenêtre intègre une **carte-outil** centrée sur le carré du site, **synchronisée dans les deux
+sens** avec les champs latitude / longitude (#153) : **glissez le marqueur** sur la carte pour fixer
+la position (les champs se remplissent), ou **saisissez les coordonnées** (le marqueur se déplace).
+Tant qu'aucun GPS n'est renseigné, le marqueur démarre **au centre du carré** en position
+**approximative** (anneau pointillé) : un point de départ à caler, pas une position mesurée.
+
 ![La fenêtre de création d'un point d'écoute : formulaire vierge.](../assets/captures/apercu-sites-modale-point-creation.png)
 
 ![La même fenêtre en modification : les champs sont pré-remplis avec les valeurs du point existant.](../assets/captures/apercu-sites-modale-point.png)

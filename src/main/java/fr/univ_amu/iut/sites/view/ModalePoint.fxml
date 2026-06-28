@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -49,6 +50,13 @@
     </VBox>
   </HBox>
   <Label text="Décimal, virgule = point. Latitude −90..90, longitude −180..180."
+         styleClass="field-hint"/>
+
+  <!-- Carte-outil de saisie GPS (#153) : remplie par le controller (composant CarteSites, Gluon Maps),
+       centrée sur le carré du site. Glisser le marqueur OU saisir les champs : les deux restent
+       synchronisés. Sans GPS, le marqueur démarre au centre du carré (position approximative à caler). -->
+  <StackPane fx:id="zoneCarte" styleClass="zone-carte-modale" minHeight="220.0" prefHeight="240.0"/>
+  <Label text="Astuce : glissez le marqueur sur la carte pour fixer la position (ou saisissez les coordonnées)."
          styleClass="field-hint"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
