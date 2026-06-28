@@ -13,8 +13,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyIntegerProperty;
-import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -40,12 +38,10 @@ import javafx.collections.transformation.FilteredList;
 /// slices reste acyclique. VM agnostique de l'IHM (`viewmodel_sans_javafx_ui` : seuls `javafx.beans` /
 /// `javafx.collections`). Non-singleton.
 ///
-/// `@SuppressWarnings("PMD.GodClass")` (bypass documenté du ruleset) : la logique a déjà été extraite
-/// dans [FormatLigneAudio] (rendu) et `ResolveurSourceAudio` (dépiautage des variantes de source). Le
-/// signal restant tient aux **~19 accesseurs de propriétés observables** d'un ViewModel MVVM complet,
-/// qui abaissent mécaniquement la cohésion (chaque getter touche un champ distinct) sans concentration
-/// de comportement : même forme que `validation.viewmodel.ValidationViewModel`.
-@SuppressWarnings("PMD.GodClass")
+/// La logique non-MVVM est sortie en collaborateurs cohésifs : [FormatLigneAudio] (rendu),
+/// [ResolveurSourceAudio] (dépiautage des variantes de source) et [ComptageAudio] (compteurs de revue
+/// regroupés en un seul value object), pour que le ViewModel garde la seule responsabilité d'orchestrer
+/// la revue.
 public class AudioViewModel {
 
     private final ServiceValidation service;
@@ -78,10 +74,8 @@ public class AudioViewModel {
     private final ReadOnlyBooleanWrapper resultatsDisponibles =
             new ReadOnlyBooleanWrapper(this, "resultatsDisponibles", false);
 
-    private final ReadOnlyIntegerWrapper nombreTotal = new ReadOnlyIntegerWrapper(this, "nombreTotal", 0);
-    private final ReadOnlyIntegerWrapper nombreValidees = new ReadOnlyIntegerWrapper(this, "nombreValidees", 0);
-    private final ReadOnlyIntegerWrapper nombreCorrigees = new ReadOnlyIntegerWrapper(this, "nombreCorrigees", 0);
-    private final ReadOnlyStringWrapper progression = new ReadOnlyStringWrapper(this, "progression", "");
+    private final ReadOnlyObjectWrapper<ComptageAudio> comptage =
+            new ReadOnlyObjectWrapper<>(this, "comptage", ComptageAudio.VIDE);
 
     private final ReadOnlyStringWrapper detail = new ReadOnlyStringWrapper(this, "detail", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
@@ -233,17 +227,7 @@ public class AudioViewModel {
     }
 
     private void majCompteurs() {
-        int total = observations.size();
-        int validees = (int) observations.stream()
-                .filter(ligne -> ligne.statut() == StatutObservation.VALIDEE)
-                .count();
-        int corrigees = (int) observations.stream()
-                .filter(ligne -> ligne.statut() == StatutObservation.CORRIGEE)
-                .count();
-        nombreTotal.set(total);
-        nombreValidees.set(validees);
-        nombreCorrigees.set(corrigees);
-        progression.set(total == 0 ? "" : (validees + corrigees) + " / " + total + " revues");
+        comptage.set(ComptageAudio.de(observations));
     }
 
     private void majSelection(LigneObservationAudio courant) {
@@ -263,10 +247,7 @@ public class AudioViewModel {
         observations.clear();
         taxons.clear();
         detail.set("");
-        nombreTotal.set(0);
-        nombreValidees.set(0);
-        nombreCorrigees.set(0);
-        progression.set("");
+        comptage.set(ComptageAudio.VIDE);
         message.set("");
     }
 
@@ -278,14 +259,10 @@ public class AudioViewModel {
         return source;
     }
 
-    /// Lignes **filtrées** (par [#filtreStatutProperty()]) à afficher dans la table.
+    /// Lignes **filtrées** (par [#filtreStatutProperty()]) à afficher dans la table. Les compteurs
+    /// ([#comptageProperty()]) reflètent l'ensemble **non filtré**.
     public ObservableList<LigneObservationAudio> observationsFiltrees() {
         return observationsFiltrees;
-    }
-
-    /// Lignes **non filtrées** (les compteurs de progression les reflètent intégralement).
-    public ObservableList<LigneObservationAudio> observations() {
-        return observations;
     }
 
     /// Filtre de statut de la table (`null` = tous) : À revoir / Validée / Corrigée.
@@ -339,33 +316,14 @@ public class AudioViewModel {
         return detail.getReadOnlyProperty();
     }
 
-    /// Nombre total d'observations de la source.
-    public ReadOnlyIntegerProperty nombreTotalProperty() {
-        return nombreTotal.getReadOnlyProperty();
-    }
-
-    /// Nombre d'observations validées (R15).
-    public ReadOnlyIntegerProperty nombreValideesProperty() {
-        return nombreValidees.getReadOnlyProperty();
-    }
-
-    /// Nombre d'observations corrigées (R16).
-    public ReadOnlyIntegerProperty nombreCorrigeesProperty() {
-        return nombreCorrigees.getReadOnlyProperty();
-    }
-
-    /// Avancement de la revue (`N / T revues`), vide tant qu'aucune observation n'est chargée.
-    public ReadOnlyStringProperty progressionProperty() {
-        return progression.getReadOnlyProperty();
+    /// Compteurs de progression de la revue (total / validées / corrigées + libellé d'avancement),
+    /// regroupés en un seul value object [ComptageAudio].
+    public ReadOnlyObjectProperty<ComptageAudio> comptageProperty() {
+        return comptage.getReadOnlyProperty();
     }
 
     /// Message d'état (erreur de chargement, ou source vide), vide en nominal.
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
-    }
-
-    /// Identifiant du jeu de résultats Tadarida chargé, `null` hors source `ParPassage` ou sans import.
-    public Long idResultats() {
-        return idResultats;
     }
 }
