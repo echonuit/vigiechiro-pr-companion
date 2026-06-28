@@ -13,12 +13,18 @@ import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -28,6 +34,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -45,6 +52,22 @@ public class AnalyseController implements RafraichirAuRetour {
     private final AnalyseViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirValidation ouvrirValidation;
+
+    /// État de la bascule Tableau ⇄ Carte (vue, pas de domaine) ; la carte elle-même est gérée par
+    /// [CarteRepartition], installée **paresseusement** au premier affichage (`null` tant qu'on reste en
+    /// tableau).
+    private final BooleanProperty carteAffichee = new SimpleBooleanProperty(this, "carteAffichee", false);
+    private CarteRepartition carteRepartition;
+
+    /// Richesse (nombre d'espèces distinctes) par numéro de carré, tenue à jour depuis l'inventaire par
+    /// carré, pour afficher la richesse du carré de chaque observation du détail (lien avec la carte).
+    private final Map<String, Integer> richesseParCarre = new HashMap<>();
+
+    @FXML
+    private StackPane zoneCarte;
+
+    @FXML
+    private Button boutonCarte;
 
     @FXML
     private Label lblResume;
@@ -137,6 +160,9 @@ public class AnalyseController implements RafraichirAuRetour {
     private TableColumn<ObservationEspece, String> colObsCarre;
 
     @FXML
+    private TableColumn<ObservationEspece, String> colObsRichesse;
+
+    @FXML
     private TableColumn<ObservationEspece, String> colObsPoint;
 
     @FXML
@@ -180,10 +206,14 @@ public class AnalyseController implements RafraichirAuRetour {
         lblExport.visibleProperty().bind(exportPresent);
         lblExport.managedProperty().bind(exportPresent);
 
-        // La table visible suit le regroupement.
+        // En mode Tableau, la table visible suit le regroupement ; en mode Carte, les deux tables
+        // s'effacent au profit de la carte de répartition.
         var parEspece = viewModel.regroupementProperty().isEqualTo(Regroupement.PAR_ESPECE);
-        lierVisibilite(tableEspeces, parEspece);
-        lierVisibilite(tableCarres, parEspece.not());
+        var tableauAffiche = carteAffichee.not();
+        lierVisibilite(tableEspeces, parEspece.and(tableauAffiche));
+        lierVisibilite(tableCarres, parEspece.not().and(tableauAffiche));
+        lierVisibilite(zoneCarte, carteAffichee);
+        configurerCarte();
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
 
@@ -199,7 +229,21 @@ public class AnalyseController implements RafraichirAuRetour {
 
         configurerDetail();
 
+        // La colonne « Espèces du carré » du détail lit la richesse depuis l'inventaire par carré : on la
+        // tient à jour quand cet inventaire change (chargement, filtre statut).
+        viewModel.carresCarte().addListener((InvalidationListener) observable -> majRichesseParCarre());
+
         viewModel.rafraichir();
+    }
+
+    /// Reconstruit la table de correspondance carré → richesse (nb d'espèces distinctes) depuis l'inventaire
+    /// par carré, et rafraîchit le détail pour que sa colonne « Espèces du carré » se mette à jour.
+    private void majRichesseParCarre() {
+        richesseParCarre.clear();
+        for (CarreEspeces carre : viewModel.carresCarte()) {
+            richesseParCarre.put(carre.numeroCarre(), carre.richesse());
+        }
+        tableObservations.refresh();
     }
 
     /// Câble le panneau **détail** (maître-détail) : la sélection d'une espèce dans l'inventaire charge ses
@@ -255,6 +299,26 @@ public class AnalyseController implements RafraichirAuRetour {
         } else if (!parEspece) {
             separateur.getItems().remove(panneauDetail);
         }
+    }
+
+    /// Câble la **carte de répartition** (déléguée à [CarteRepartition]) de façon **paresseuse** : le
+    /// composant carte (et sa dépendance Gluon Maps) n'est créé/installé qu'au **premier** passage en mode
+    /// Carte, pour garder l'écran d'inventaire léger tant qu'on reste en tableau.
+    private void configurerCarte() {
+        carteAffichee.addListener((obs, ancien, affichee) -> {
+            if (Boolean.TRUE.equals(affichee) && carteRepartition == null) {
+                carteRepartition = new CarteRepartition(
+                        viewModel.carresCarte(), viewModel.carresEspeceSelectionnee(), carteAffichee);
+                carteRepartition.installerDans(zoneCarte);
+            }
+        });
+    }
+
+    /// « 🗺️ Carte » / « 📋 Tableau » : bascule l'affichage de la zone maître entre l'inventaire et la carte.
+    @FXML
+    private void basculerCarte() {
+        carteAffichee.set(!carteAffichee.get());
+        boutonCarte.setText(carteAffichee.get() ? "📋 Tableau" : "🗺️ Carte");
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
@@ -329,6 +393,8 @@ public class AnalyseController implements RafraichirAuRetour {
         // Colonnes du détail (observations de l'espèce sélectionnée).
         colObsPassage.setCellValueFactory(c -> texte(libellePassage(c.getValue())));
         colObsCarre.setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
+        colObsRichesse.setCellValueFactory(
+                c -> texte(richesseDuCarre(c.getValue().numeroCarre())));
         colObsPoint.setCellValueFactory(c -> texte(c.getValue().codePoint()));
         colObsTadarida.setCellValueFactory(c ->
                 texte(taxonEtProb(c.getValue().taxonTadarida(), c.getValue().probTadarida())));
@@ -338,6 +404,12 @@ public class AnalyseController implements RafraichirAuRetour {
     }
 
     /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).
+    /// Richesse (nb d'espèces distinctes) du carré `numeroCarre`, ou `—` si inconnue de l'inventaire.
+    private String richesseDuCarre(String numeroCarre) {
+        Integer richesse = richesseParCarre.get(numeroCarre);
+        return richesse == null ? "—" : richesse.toString();
+    }
+
     private static String libellePassage(ObservationEspece observation) {
         return observation.dateEnregistrement() + " · n°" + observation.numeroPassage();
     }
@@ -392,9 +464,9 @@ public class AnalyseController implements RafraichirAuRetour {
         return new ReadOnlyStringWrapper(String.valueOf(valeur));
     }
 
-    private static void lierVisibilite(TableView<?> table, javafx.beans.value.ObservableValue<Boolean> visible) {
-        table.visibleProperty().bind(visible);
-        table.managedProperty().bind(visible);
+    private static void lierVisibilite(Node noeud, ObservableValue<Boolean> visible) {
+        noeud.visibleProperty().bind(visible);
+        noeud.managedProperty().bind(visible);
     }
 
     private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {

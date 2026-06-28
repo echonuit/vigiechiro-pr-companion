@@ -36,12 +36,13 @@
     <ComboBox fx:id="choixRegroupement"/>
     <ComboBox fx:id="choixStatut"/>
     <TextField fx:id="champFiltre" promptText="espèce, carré…" prefWidth="170.0"/>
+    <Button fx:id="boutonCarte" text="🗺️ Carte" onAction="#basculerCarte"/>
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
   </FlowPane>
 
   <SplitPane fx:id="separateur" orientation="VERTICAL" dividerPositions="0.58" VBox.vgrow="ALWAYS">
 
-    <!-- Maître : inventaire (Par espèce / Par carré) -->
+    <!-- Maître : inventaire (Par espèce / Par carré) ou carte de répartition (bascule). -->
     <StackPane>
       <TableView fx:id="tableEspeces">
         <columns>
@@ -63,6 +64,9 @@
           <TableColumn fx:id="colPeriodeCarre" text="Période" prefWidth="110.0"/>
         </columns>
       </TableView>
+      <!-- Carte de répartition : le controller y ajoute le composant CarteSites + la légende (en code,
+           car CarteSites n'est pas un nœud FXML). Masquée tant que la bascule « 🗺️ Carte » n'est pas active. -->
+      <StackPane fx:id="zoneCarte"/>
     </StackPane>
 
     <!-- Détail : observations de l'espèce sélectionnée, à travers les passages.
@@ -79,6 +83,7 @@
           <columns>
             <TableColumn fx:id="colObsPassage" text="Passage" prefWidth="160.0"/>
             <TableColumn fx:id="colObsCarre" text="Carré" prefWidth="90.0"/>
+            <TableColumn fx:id="colObsRichesse" text="Espèces du carré" prefWidth="115.0"/>
             <TableColumn fx:id="colObsPoint" text="Point" prefWidth="70.0"/>
             <TableColumn fx:id="colObsTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
             <TableColumn fx:id="colObsObservateur" text="Votre taxon" prefWidth="150.0"/>

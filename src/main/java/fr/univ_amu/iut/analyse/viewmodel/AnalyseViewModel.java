@@ -60,6 +60,10 @@ public class AnalyseViewModel {
     /// la carte de répartition. Vide tant qu'aucune espèce n'est sélectionnée.
     private final ObservableList<String> carresEspeceSelectionnee = FXCollections.observableArrayList();
 
+    /// Inventaire **par carré** pour la **carte de répartition**, chargé quel que soit le regroupement
+    /// (la carte est carré-centrée même en mode Par espèce), filtré par le statut courant.
+    private final ObservableList<CarreEspeces> carresCarte = FXCollections.observableArrayList();
+
     public AnalyseViewModel(ServiceAnalyse service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
@@ -72,13 +76,20 @@ public class AnalyseViewModel {
     /// le filtre texte. À appeler à l'ouverture de l'écran ; ensuite déclenché par tout changement.
     public void rafraichir() {
         StatutObservation statut = filtreStatut.get();
+        // La carte de répartition est carré-centrée quel que soit le regroupement : on tient son inventaire
+        // par carré à jour (filtré par statut) indépendamment de la table affichée. En mode Par carré, la
+        // table et la carte partagent le même inventaire → une seule requête (réutilisée).
+        List<CarreEspeces> carresPourLaCarte;
         if (regroupement.get() == Regroupement.PAR_CARRE) {
             carresTous = service.inventaireParCarre(idUtilisateur, statut);
             especesTous = List.of();
+            carresPourLaCarte = carresTous;
         } else {
             especesTous = service.inventaireParEspece(idUtilisateur, statut);
             carresTous = List.of();
+            carresPourLaCarte = service.inventaireParCarre(idUtilisateur, statut);
         }
+        carresCarte.setAll(carresPourLaCarte);
         // L'inventaire a changé : l'ancienne sélection de détail est périmée.
         selectionnerEspece(null);
         appliquerFiltreTexte();
@@ -209,6 +220,12 @@ public class AnalyseViewModel {
     /// de répartition. Vide si aucune espèce n'est sélectionnée.
     public ObservableList<String> carresEspeceSelectionnee() {
         return carresEspeceSelectionnee;
+    }
+
+    /// Inventaire par carré alimentant la **carte de répartition** (toujours chargé, filtré par statut),
+    /// indépendant du regroupement de la table.
+    public ObservableList<CarreEspeces> carresCarte() {
+        return carresCarte;
     }
 
     public ReadOnlyStringProperty detailTitreProperty() {
