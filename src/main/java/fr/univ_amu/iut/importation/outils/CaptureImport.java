@@ -57,6 +57,7 @@ public final class CaptureImport {
     private static final String ID_UTILISATEUR = "demo-enseignant";
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 20);
     private static final String IMPORT_FXML = "/fr/univ_amu/iut/importation/view/Importation.fxml";
+    private static final long DELAI_TUILES_MS = 6000;
 
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
@@ -133,7 +134,8 @@ public final class CaptureImport {
                     .set(vm.rattachement().points().get(0));
         }
 
-        rendre(scene, sortie.resolve("apercu-import-assistant.png"));
+        // La carte de rattachement est peuplée (site/point sélectionnés) : on attend les tuiles OSM.
+        rendreAvecCarte(scene, sortie.resolve("apercu-import-assistant.png"));
 
         // État « import en cours » (#33/#146) : barre de progression déterminée, temps restant estimé,
         // bouton « Annuler », formulaire gelé. Phase de copie en début d'import (l'ETA y est parlant).
@@ -181,6 +183,32 @@ public final class CaptureImport {
     private static void rendre(Scene scene, Path fichier) {
         ApercuFx.enregistrerPng(scene, fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Comme [#rendre], mais **après attente des tuiles OSM** : la carte de rattachement (composant
+    /// [CarteSites][fr.univ_amu.iut.commun.view.carte.CarteSites]) charge son fond de carte de façon
+    /// asynchrone ; sans cette attente, le PNG la fige avant l'arrivée des tuiles (carte vide). Même
+    /// mécanisme que les autres captures à carte (CaptureMultisite).
+    private static void rendreAvecCarte(Scene scene, Path fichier) {
+        ApercuFx.capturerApresPreparation(scene, CaptureImport::attendreTuiles, fichier);
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Laisse tourner le fil JavaFX (boucle d'évènements imbriquée) le temps que les tuiles OSM arrivées
+    /// en fond soient peintes, puis rend la main (un minuteur de fond déclenche la sortie de boucle).
+    private static void attendreTuiles() {
+        Object cle = new Object();
+        Thread minuteur = new Thread(() -> {
+            try {
+                Thread.sleep(DELAI_TUILES_MS);
+            } catch (InterruptedException interruption) {
+                Thread.currentThread().interrupt();
+            }
+            Platform.runLater(() -> Platform.exitNestedEventLoop(cle, null));
+        });
+        minuteur.setDaemon(true);
+        minuteur.start();
+        Platform.enterNestedEventLoop(cle);
     }
 
     /// Pause (outil de capture uniquement) : laisse s'écouler un peu de temps après le début d'une
