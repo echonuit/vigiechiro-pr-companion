@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.31.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.30.0...v1.31.0) (2026-06-28)
+
+
+### Features
+
+* carte-outil de saisie GPS dans la modale point ([#153](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/153)) ([#345](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/345)) ([9302c30](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/9302c30643235ee6117c5a77714df73ac901a8f9))
+* **multisite:** « Voir sur la carte » replie le tableau ([#338](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/338)) ([#347](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/347)) ([0ae770b](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/0ae770b87f7dfb86f97c9dc4d99689b02e40d369))
+
 # [1.30.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.29.0...v1.30.0) (2026-06-28)
 
 
