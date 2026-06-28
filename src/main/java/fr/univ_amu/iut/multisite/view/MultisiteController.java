@@ -122,7 +122,7 @@ public class MultisiteController implements RafraichirAuRetour {
     @FXML
     private Button boutonReplierTableau;
 
-    @FXML
+    /// Toggle « ✎ Éditer les positions » : créé en code et superposé à la carte (#154 → overlay).
     private ToggleButton boutonEditerPositions;
 
     @FXML
@@ -216,8 +216,22 @@ public class MultisiteController implements RafraichirAuRetour {
         zoneCarte.getChildren().add(recadrer);
         viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>) changement -> rafraichirTracesCarte());
 
+        // Toggle « ✎ Éditer les positions » superposé en haut à gauche de la carte (#154 → overlay) :
+        // icône seule, plus lisible et à portée de la carte qu'un bouton texte dans la barre. L'id est
+        // conservé pour les tests/CSS ; l'action et la visibilité de « Enregistrer » sont gérées par
+        // EditionPositionsCarte.
+        boutonEditerPositions = new ToggleButton("✎");
+        boutonEditerPositions.setId("boutonEditerPositions");
+        boutonEditerPositions.getStyleClass().add("bouton-editer-positions");
+        boutonEditerPositions.setAccessibleText("Éditer les positions des points");
+        boutonEditerPositions.setTooltip(new Tooltip("Éditer les positions des points"));
+        boutonEditerPositions.setOnAction(evenement -> basculerEdition());
+        StackPane.setAlignment(boutonEditerPositions, Pos.TOP_LEFT);
+        StackPane.setMargin(boutonEditerPositions, new Insets(8));
+        zoneCarte.getChildren().add(boutonEditerPositions);
+
         // Édition des positions (#154) : déléguée à EditionPositionsCarte (clamp au carré, file en attente,
-        // alerte de sortie). Le controller ne fait que la brancher et relayer les actions FXML.
+        // alerte de sortie). Le controller ne fait que la brancher et relayer les actions.
         edition = new EditionPositionsCarte(carte, viewModel, boutonEditerPositions, boutonEnregistrerPositions);
         edition.brancher();
 
@@ -348,8 +362,7 @@ public class MultisiteController implements RafraichirAuRetour {
         edition.indexer(donnees, viewModel.carresCarte());
     }
 
-    /// Toggle « ✎ Éditer les positions » (délégué à [EditionPositionsCarte]).
-    @FXML
+    /// Toggle « ✎ Éditer les positions » (overlay de la carte, délégué à [EditionPositionsCarte]).
     private void basculerEdition() {
         edition.basculer();
     }
