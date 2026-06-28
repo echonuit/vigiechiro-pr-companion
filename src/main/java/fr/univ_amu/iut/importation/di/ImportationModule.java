@@ -3,13 +3,11 @@ package fr.univ_amu.iut.importation.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
-import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
@@ -19,7 +17,6 @@ import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
-import fr.univ_amu.iut.importation.view.ActiviteImporterNuit;
 import fr.univ_amu.iut.importation.view.NavigationImportation;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -43,14 +40,12 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 /// validé par `ImportationModuleTest` (injecteur local socle + passage + importation).
 public class ImportationModule extends AbstractModule {
 
-    /// Enregistre la carte d'accueil de la feature dans le point d'extension du socle. Le
-    /// `MainController` la découvre via `Set<ActiviteAccueil>` sans que `commun` dépende de
-    /// `importation`.
+    /// L'import est une **action contextuelle** (la nuit d'un site précis) : pas de carte d'accueil. Le
+    /// point d'entrée est la fiche d'un site, qui ouvre l'import pré-rattaché via le contrat socle
+    /// [OuvrirImportation] — `NavigationImportation` (singleton) le fournit, sans que `sites` dépende du
+    /// `view` de cette feature.
     @Override
     protected void configure() {
-        Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(ActiviteImporterNuit.class);
-        // Permet à la fiche d'un site (feature `sites`) d'ouvrir l'import pré-rattaché, sans dépendre
-        // du `view` de cette feature : `NavigationImportation` (singleton) fournit le contrat du socle.
         bind(OuvrirImportation.class).to(NavigationImportation.class);
     }
 
