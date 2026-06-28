@@ -29,12 +29,12 @@
 
   <Label fx:id="lblResume" styleClass="analyse-resume"/>
 
+  <!-- Barre de filtres sans étiquettes (alignée sur M-Multisite) : chaque contrôle se décrit par sa
+       valeur ou son promptText (regroupement et statut affichent toujours une option ; le champ texte
+       porte son indice de saisie). -->
   <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="analyse-barre">
-    <Label text="Regrouper :" styleClass="analyse-label"/>
     <ComboBox fx:id="choixRegroupement"/>
-    <Label text="Statut :" styleClass="analyse-label"/>
     <ComboBox fx:id="choixStatut"/>
-    <Label text="Filtrer :" styleClass="analyse-label"/>
     <TextField fx:id="champFiltre" promptText="espèce, carré…" prefWidth="170.0"/>
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
   </FlowPane>
