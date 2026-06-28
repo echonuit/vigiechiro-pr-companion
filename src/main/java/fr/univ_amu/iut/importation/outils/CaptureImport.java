@@ -269,8 +269,7 @@ public final class CaptureImport {
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         ServiceSites service = injecteur.getInstance(ServiceSites.class);
-        var site = service.creerSite(
-                "640380", "Etang de la Tuiliere", Protocole.STANDARD, "Aix-en-Provence", ID_UTILISATEUR);
+        var site = service.creerSite("640380", "Etang de la Tuiliere", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
         service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Pres du grand chene");
     }
 
