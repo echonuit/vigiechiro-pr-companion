@@ -13,4 +13,12 @@ public interface OuvrirMultisite {
     /// Ouvre la vue multi-sites et **centre/surligne** la carte sur le carré `numeroCarre` (sans effet
     /// si le numéro est nul/vide ou introuvable).
     void ouvrirSurCarre(String numeroCarre);
+
+    /// Ouvre la vue multi-sites **centrée sur un point précis** : surbrillance de son carré + recentrage
+    /// serré sur ses coordonnées (#154), pour le voir (et, en mode édition, le corriger) sur LA carte de
+    /// référence. Par défaut, se rabat sur le carré ([#ouvrirSurCarre]) ; l'implémentation réelle centre
+    /// plus finement. Ce défaut garde le contrat **fonctionnel** (implémentable par une lambda côté tests).
+    default void ouvrirSurPoint(String numeroCarre, double latitude, double longitude) {
+        ouvrirSurCarre(numeroCarre);
+    }
 }

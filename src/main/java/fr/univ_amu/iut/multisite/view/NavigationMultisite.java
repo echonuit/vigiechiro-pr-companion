@@ -47,6 +47,12 @@ public class NavigationMultisite implements OuvrirMultisite {
         publier().focaliserSur(numeroCarre);
     }
 
+    /// Ouvre la vue multi-sites et **focalise** la carte sur un **point précis** (carré + GPS, #154).
+    @Override
+    public void ouvrirSurPoint(String numeroCarre, double latitude, double longitude) {
+        publier().focaliserSurPoint(numeroCarre, latitude, longitude);
+    }
+
     /// Charge `Multisite.fxml`, le publie dans la zone centrale et renvoie son controller.
     private MultisiteController publier() {
         FXMLLoader loader = new FXMLLoader(NavigationMultisite.class.getResource("Multisite.fxml"));

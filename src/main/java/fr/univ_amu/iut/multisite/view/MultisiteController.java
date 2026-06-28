@@ -7,7 +7,6 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
-import fr.univ_amu.iut.commun.view.carte.FournisseurEmpriseCarre;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -16,7 +15,6 @@ import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
@@ -144,6 +142,9 @@ public class MultisiteController implements RafraichirAuRetour {
     private static final String FLECHE_GAUCHE = "◀";
 
     private static final String FLECHE_DROITE = "▶";
+
+    /// Focalisation « voir sur la carte » (carré ou point) déléguée, pour garder le controller mince.
+    private final FocalisationCarte focalisation = new FocalisationCarte(carte, this::degagerLaCarte);
 
     @Inject
     public MultisiteController(
@@ -318,17 +319,21 @@ public class MultisiteController implements RafraichirAuRetour {
         viewModel.rafraichirCarte(); // un passage modifié peut changer le statut dominant d'un point (#152)
     }
 
-    /// Focalise la carte sur un carré (« voir sur la carte » depuis un autre écran) : surbrillance + recentrage
-    /// sur l'emprise officielle du carré, **et repli du tableau** pour dégager la carte (#338). Sans effet
-    /// si le numéro est vide ou hors carroyage.
+    /// Focalise la carte sur un **carré** (« voir sur la carte » d'un site/passage). Délégué à
+    /// [FocalisationCarte].
     public void focaliserSur(String numeroCarre) {
-        if (numeroCarre == null || numeroCarre.isBlank()) {
-            return;
-        }
-        carte.surbrillanceCarre(numeroCarre);
-        FournisseurEmpriseCarre.parDefaut().emprise(numeroCarre, List.of()).ifPresent(carte::centrerSurCarre);
-        // #338 : on arrive par « Voir sur la carte » → la carte est le but du clic. On replie le tableau
-        // pour lui donner toute la largeur ; l'utilisateur le rouvre au besoin via la poignée « Tableau ◀ ».
+        focalisation.surCarre(numeroCarre);
+    }
+
+    /// Focalise la carte sur un **point précis** (« voir sur la carte » d'un point GPS, #154). Délégué à
+    /// [FocalisationCarte] ; l'édition des positions (toggle) permet alors de corriger ce point.
+    public void focaliserSurPoint(String numeroCarre, double latitude, double longitude) {
+        focalisation.surPoint(numeroCarre, latitude, longitude);
+    }
+
+    /// Replie le tableau (#338) pour donner toute la largeur à la carte : c'est le but du clic « Voir sur
+    /// la carte ». L'utilisateur le rouvre au besoin via la poignée « Tableau ◀ ».
+    private void degagerLaCarte() {
         if (estVisible(panneauTableau)) {
             replier(panneauTableau);
             majPoignees();
