@@ -3,6 +3,11 @@
  * S'appuie sur les tokens de palette.css (jointe au FXML). Style sobre, aligné sur les autres écrans.
  */
 
+.ecran-analyse {
+    -fx-background-color: #fafbfc;
+    -fx-padding: 18;
+}
+
 .analyse-resume {
     -fx-font-size: 13px;
     -fx-text-fill: #6a737d;

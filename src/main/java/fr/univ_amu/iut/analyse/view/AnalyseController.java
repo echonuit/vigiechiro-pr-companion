@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -22,7 +23,11 @@ import javafx.util.StringConverter;
 /// tables (inventaire par espèce / par carré), le sélecteur de regroupement et le filtre de statut à
 /// l'[AnalyseViewModel]. La table affichée suit le regroupement ; le chargement initial est déclenché ici
 /// (écran sans paramètre). Aucun accès base de données (règle ArchUnit `view_sans_jdbc`).
-public class AnalyseController {
+///
+/// Implémente [RafraichirAuRetour] : l'écran reste vivant dans l'historique du [Navigateur] ; quand on y
+/// revient après avoir modifié des observations ailleurs (validation d'un passage…), l'inventaire est
+/// rechargé pour ne pas afficher des compteurs périmés.
+public class AnalyseController implements RafraichirAuRetour {
 
     private final AnalyseViewModel viewModel;
 
@@ -119,6 +124,13 @@ public class AnalyseController {
         lblMessage.visibleProperty().bind(vide);
         lblMessage.managedProperty().bind(vide);
 
+        viewModel.rafraichir();
+    }
+
+    /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
+    /// observations ont pu être validées/corrigées entre-temps, l'inventaire est donc ré-interrogé.
+    @Override
+    public void rafraichirAuRetour() {
         viewModel.rafraichir();
     }
 

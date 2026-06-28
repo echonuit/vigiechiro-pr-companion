@@ -37,6 +37,7 @@ import org.testfx.framework.junit5.Start;
 class AnalyseViewTest {
 
     private ServiceAnalyse service;
+    private AnalyseController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -64,6 +65,7 @@ class AnalyseViewTest {
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
+        controleur = loader.getController();
         stage.setScene(new Scene(vue, 1000, 640));
         stage.show();
     }
@@ -93,5 +95,43 @@ class AnalyseViewTest {
         assertThat(carres.getItems()).hasSize(1);
         assertThat(robot.lookup("#tableEspeces").queryAs(TableView.class).isVisible())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("Au retour sur l'écran, l'inventaire est rechargé (RafraichirAuRetour)")
+    void retour_recharge_l_inventaire(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        assertThat(especes.getItems()).as("état initial").hasSize(1);
+
+        // Des observations ont été validées ailleurs : le service renvoie désormais deux espèces.
+        when(service.inventaireParEspece(anyString(), any()))
+                .thenReturn(List.of(
+                        new EspeceAgregee(
+                                "Pippip",
+                                "Pipistrellus pipistrellus",
+                                "Pipistrelle commune",
+                                "Pipistrellus",
+                                5,
+                                2,
+                                1,
+                                1,
+                                2026,
+                                2026),
+                        new EspeceAgregee(
+                                "Nyclei",
+                                "Nyctalus leisleri",
+                                "Noctule de Leisler",
+                                "Nyctalus",
+                                3,
+                                1,
+                                1,
+                                1,
+                                2026,
+                                2026)));
+        robot.interact(controleur::rafraichirAuRetour);
+
+        assertThat(especes.getItems())
+                .as("le retour recharge l'inventaire (plus de compteurs périmés)")
+                .hasSize(2);
     }
 }
