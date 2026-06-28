@@ -1,0 +1,25 @@
+/*
+ * analyse.css - feuille de style de l'écran transverse « Espèces & observations » (prisme biodiversité).
+ * S'appuie sur les tokens de palette.css (jointe au FXML). Style sobre, aligné sur les autres écrans.
+ */
+
+.analyse-resume {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6a737d;
+}
+
+.analyse-label {
+    -fx-font-size: 12px;
+    -fx-text-fill: #495057;
+    -fx-font-weight: bold;
+}
+
+.analyse-barre {
+    -fx-padding: 2 0 2 0;
+}
+
+.analyse-vide {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6a737d;
+    -fx-padding: 8 0 0 0;
+}

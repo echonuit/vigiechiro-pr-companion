@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Analyse - vue transverse « Espèces & observations » (prisme biodiversité). Inventaire des espèces
+  détectées par l'utilisateur, regroupé Par espèce / Par carré (richesse), filtré par statut de revue.
+  Pur câblage : le controller lie les deux tables et la barre de regroupement/filtre à l'AnalyseViewModel.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.analyse.view.AnalyseController"
+      stylesheets="@../../commun/view/palette.css, @analyse.css"
+      styleClass="ecran-analyse"
+      spacing="10.0">
+
+  <Label fx:id="lblResume" styleClass="analyse-resume"/>
+
+  <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="analyse-barre">
+    <Label text="Regrouper :" styleClass="analyse-label"/>
+    <ComboBox fx:id="choixRegroupement"/>
+    <Label text="Statut :" styleClass="analyse-label"/>
+    <ComboBox fx:id="choixStatut"/>
+  </FlowPane>
+
+  <StackPane VBox.vgrow="ALWAYS">
+    <!-- Inventaire Par espèce -->
+    <TableView fx:id="tableEspeces">
+      <columns>
+        <TableColumn fx:id="colEspece" text="Espèce" prefWidth="240.0"/>
+        <TableColumn fx:id="colGroupe" text="Groupe" prefWidth="140.0"/>
+        <TableColumn fx:id="colDetections" text="Détections" prefWidth="95.0"/>
+        <TableColumn fx:id="colPassages" text="Passages" prefWidth="90.0"/>
+        <TableColumn fx:id="colCarres" text="Carrés" prefWidth="80.0"/>
+        <TableColumn fx:id="colPoints" text="Points" prefWidth="80.0"/>
+        <TableColumn fx:id="colPeriode" text="Période" prefWidth="110.0"/>
+      </columns>
+    </TableView>
+    <!-- Inventaire Par carré (richesse spécifique) -->
+    <TableView fx:id="tableCarres">
+      <columns>
+        <TableColumn fx:id="colCarre" text="Carré" prefWidth="120.0"/>
+        <TableColumn fx:id="colSite" text="Site" prefWidth="240.0"/>
+        <TableColumn fx:id="colRichesse" text="Richesse (espèces)" prefWidth="150.0"/>
+        <TableColumn fx:id="colDetectionsCarre" text="Détections" prefWidth="100.0"/>
+        <TableColumn fx:id="colPeriodeCarre" text="Période" prefWidth="110.0"/>
+      </columns>
+    </TableView>
+  </StackPane>
+
+  <Label fx:id="lblMessage" styleClass="analyse-vide" wrapText="true"/>
+</VBox>
