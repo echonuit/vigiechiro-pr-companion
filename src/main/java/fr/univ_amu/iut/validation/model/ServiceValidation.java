@@ -104,6 +104,12 @@ public class ServiceValidation {
         return observationDao.especesObserveesParUtilisateur(idUtilisateur);
     }
 
+    /// Observations **marquées référence** de l'utilisateur (#audio) : la **source « Références »** de la
+    /// vue audio unifiée (corpus de sons de référence, ex-bibliothèque). Façade sur [ObservationDao].
+    public List<Observation> references(String idUtilisateur) {
+        return observationDao.referencesDeLUtilisateur(idUtilisateur);
+    }
+
     /// Importe les résultats Tadarida d'un passage : parse le CSV, crée les résultats
     /// d'identification et insère les observations en masse, raccrochées à leurs séquences.
     ///

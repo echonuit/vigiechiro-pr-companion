@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,10 +26,12 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -145,17 +148,32 @@ class ServiceValidationMockTest {
     }
 
     @Test
-    @DisplayName("marquerReference : pose/retire is_reference sans toucher au taxon ni au mode, une écriture")
+    @DisplayName("marquerReference : pose PUIS retire is_reference, sans toucher au taxon ni au mode")
     void marquer_reference() {
         when(observationDao.findById(1L)).thenReturn(Optional.of(observation("Pippip", "Nyclei", 0.9)));
+        ArgumentCaptor<Observation> ecrites = ArgumentCaptor.forClass(Observation.class);
 
         Observation marquee = service().marquerReference(1L, true);
-
         assertThat(marquee.reference()).isTrue();
         assertThat(marquee.taxonObservateur()).isEqualTo("Nyclei"); // taxon observateur inchangé
         assertThat(marquee.taxonTadarida()).isEqualTo("Pippip");
         assertThat(marquee.modeValidation()).isEqualTo(ModeValidation.NON_VALIDE); // mode inchangé
-        verify(observationDao).update(any(Observation.class));
+
+        Observation retiree = service().marquerReference(1L, false);
+        assertThat(retiree.reference()).isFalse();
+
+        // L'objet réellement persisté porte bien le flag demandé (pose puis retrait).
+        verify(observationDao, times(2)).update(ecrites.capture());
+        assertThat(ecrites.getAllValues()).extracting(Observation::reference).containsExactly(true, false);
+    }
+
+    @Test
+    @DisplayName("references : façade qui délègue au DAO la liste des observations de référence")
+    void references_delegue_au_dao() {
+        when(observationDao.referencesDeLUtilisateur("u-1")).thenReturn(List.of(observation("Pippip", null, null)));
+
+        assertThat(service().references("u-1")).hasSize(1);
+        verify(observationDao).referencesDeLUtilisateur("u-1");
     }
 
     @Test
