@@ -71,6 +71,7 @@
       <HBox alignment="CENTER_LEFT" spacing="10.0">
         <Label fx:id="lblDetailTitre" styleClass="analyse-detail-titre"/>
         <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="boutonEcouter" text="🎧 Écouter / valider" onAction="#ecouterValider"/>
         <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage →" onAction="#ouvrirPassage"/>
       </HBox>
       <StackPane VBox.vgrow="ALWAYS">

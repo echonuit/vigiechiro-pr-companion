@@ -4,7 +4,9 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
@@ -42,6 +44,7 @@ public class AnalyseController implements RafraichirAuRetour {
 
     private final AnalyseViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
+    private final OuvrirValidation ouvrirValidation;
 
     @FXML
     private Label lblResume;
@@ -122,6 +125,9 @@ public class AnalyseController implements RafraichirAuRetour {
     private Button boutonOuvrirPassage;
 
     @FXML
+    private Button boutonEcouter;
+
+    @FXML
     private TableView<ObservationEspece> tableObservations;
 
     @FXML
@@ -143,9 +149,11 @@ public class AnalyseController implements RafraichirAuRetour {
     private TableColumn<ObservationEspece, String> colObsStatut;
 
     @Inject
-    public AnalyseController(AnalyseViewModel viewModel, OuvrirPassage ouvrirPassage) {
+    public AnalyseController(
+            AnalyseViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirValidation ouvrirValidation) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.ouvrirValidation = Objects.requireNonNull(ouvrirValidation, "ouvrirValidation");
     }
 
     @FXML
@@ -218,9 +226,10 @@ public class AnalyseController implements RafraichirAuRetour {
         lblDetailVide.visibleProperty().bind(detailVide);
         lblDetailVide.managedProperty().bind(detailVide);
 
-        // « Ouvrir le passage » actif seulement quand une observation est sélectionnée.
+        // Actions du détail actives seulement quand une observation est sélectionnée.
         var selection = tableObservations.getSelectionModel().selectedItemProperty();
         boutonOuvrirPassage.disableProperty().bind(selection.isNull());
+        boutonEcouter.disableProperty().bind(selection.isNull());
 
         // Double-clic sur une observation → ouvre son passage.
         tableObservations.setRowFactory(tableau -> {
@@ -283,6 +292,21 @@ public class AnalyseController implements RafraichirAuRetour {
         ouvrirPassage.ouvrir(
                 observation.idPassage(),
                 new ContexteSite(observation.numeroCarre(), observation.codePoint(), observation.nomSite()));
+    }
+
+    /// « 🎧 Écouter / valider » : ouvre l'écran de validation Tadarida du passage de l'observation
+    /// sélectionnée, **pré-focalisé sur cette détection** (écoute de la séquence + valider/corriger), via
+    /// le contrat socle [OuvrirValidation]. Au retour, [#rafraichirAuRetour()] met l'inventaire à jour.
+    @FXML
+    private void ecouterValider() {
+        ObservationEspece observation = tableObservations.getSelectionModel().getSelectedItem();
+        if (observation != null) {
+            ContextePassage passage = new ContextePassage(
+                    observation.idPassage(),
+                    observation.numeroPassage(),
+                    new ContexteSite(observation.numeroCarre(), observation.codePoint(), observation.nomSite()));
+            ouvrirValidation.ouvrir(passage, observation.idObservation());
+        }
     }
 
     private void configurerColonnes() {

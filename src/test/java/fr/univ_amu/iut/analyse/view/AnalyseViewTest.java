@@ -16,6 +16,8 @@ import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirValidation;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
@@ -46,12 +48,14 @@ class AnalyseViewTest {
 
     private ServiceAnalyse service;
     private OuvrirPassage ouvrirPassage;
+    private OuvrirValidation ouvrirValidation;
     private AnalyseController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceAnalyse.class);
         ouvrirPassage = mock(OuvrirPassage.class);
+        ouvrirValidation = mock(OuvrirValidation.class);
         when(service.inventaireParEspece(anyString(), any()))
                 .thenReturn(List.of(new EspeceAgregee(
                         "Pippip",
@@ -82,7 +86,8 @@ class AnalyseViewTest {
                         "Pippip",
                         0.95,
                         StatutObservation.VALIDEE)));
-        OuvrirPassage navigation = ouvrirPassage;
+        OuvrirPassage navigationPassage = ouvrirPassage;
+        OuvrirValidation navigationValidation = ouvrirValidation;
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             AnalyseViewModel viewModel() {
@@ -91,7 +96,12 @@ class AnalyseViewTest {
 
             @Provides
             OuvrirPassage ouvrirPassage() {
-                return navigation;
+                return navigationPassage;
+            }
+
+            @Provides
+            OuvrirValidation ouvrirValidation() {
+                return navigationValidation;
             }
         });
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
@@ -191,5 +201,27 @@ class AnalyseViewTest {
         assertThat(contexte.getValue().numeroCarre()).isEqualTo("640380");
         assertThat(contexte.getValue().codePoint()).isEqualTo("A1");
         assertThat(contexte.getValue().nomSite()).isEqualTo("Étang");
+    }
+
+    @Test
+    @DisplayName("« Écouter / valider » ouvre la validation du passage, ciblée sur l'observation")
+    void ecouter_valider_ouvre_la_validation_ciblee(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        TableView<Object> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        TableView<?> observations = robot.lookup("#tableObservations").queryAs(TableView.class);
+        Button ecouter = robot.lookup("#boutonEcouter").queryAs(Button.class);
+        assertThat(ecouter.isDisabled()).as("rien à écouter sans sélection").isTrue();
+
+        robot.interact(() -> especes.getSelectionModel().select(0));
+        robot.interact(() -> observations.getSelectionModel().select(0));
+        assertThat(ecouter.isDisabled()).isFalse();
+        robot.interact(ecouter::fire);
+
+        ArgumentCaptor<ContextePassage> passage = ArgumentCaptor.forClass(ContextePassage.class);
+        verify(ouvrirValidation).ouvrir(passage.capture(), eq(7L));
+        assertThat(passage.getValue().idPassage()).isEqualTo(42L);
+        assertThat(passage.getValue().numeroPassage()).isEqualTo(2);
+        assertThat(passage.getValue().site().numeroCarre()).isEqualTo("640380");
+        assertThat(passage.getValue().site().codePoint()).isEqualTo("A1");
     }
 }

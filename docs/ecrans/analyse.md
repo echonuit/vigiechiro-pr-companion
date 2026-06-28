@@ -31,8 +31,14 @@ point, **proposition Tadarida** (avec sa probabilité), **votre taxon** (la sais
 `—` si la séquence n'a pas encore été revue) et le **statut**. C'est la réponse à « où et quand ai-je
 détecté cette espèce ? », toutes nuits confondues.
 
-Sélectionnez une observation puis **« Ouvrir le passage → »** (ou double-cliquez la ligne) pour aller
-directement à l'écran du passage concerné, et y poursuivre l'écoute ou la validation.
+Sélectionnez une observation, puis :
+
+- **« 🎧 Écouter / valider »** ouvre l'écran de validation Tadarida du passage **droit sur cette
+  détection** : la séquence est prête à être **réécoutée**, **validée** ou **corrigée**, sans avoir à la
+  retrouver dans la liste. C'est l'écoute transverse : depuis n'importe quelle espèce, on saute à la bonne
+  séquence. Au retour sur l'écran, l'inventaire reflète vos décisions.
+- **« Ouvrir le passage → »** (ou un double-clic sur la ligne) ouvre l'écran du passage concerné pour en
+  voir le contexte complet.
 
 ## Filtrer par niveau de confiance
 
