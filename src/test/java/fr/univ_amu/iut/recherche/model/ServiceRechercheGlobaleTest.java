@@ -19,6 +19,8 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.validation.model.EspeceObservee;
+import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,7 +35,12 @@ class ServiceRechercheGlobaleTest {
 
     private ServiceSites services;
     private ServiceMultisite multisite;
+    private ServiceValidation validation;
     private ServiceRechercheGlobale recherche;
+
+    private static EspeceObservee espece(String code, String latin, String vern, long idPassage) {
+        return new EspeceObservee(code, latin, vern, idPassage, "640380", "A1", 2026, 2, "2026-06-21");
+    }
 
     private static Site site(Long id, String numeroCarre, String nom) {
         return new Site(id, numeroCarre, nom, Protocole.STANDARD, null, "2026-01-01", UTILISATEUR);
@@ -47,12 +54,14 @@ class ServiceRechercheGlobaleTest {
     void preparer() {
         services = mock(ServiceSites.class);
         multisite = mock(ServiceMultisite.class);
+        validation = mock(ServiceValidation.class);
         lenient().when(services.listerSites(anyString())).thenReturn(List.of());
         lenient()
                 .when(services.listerPoints(org.mockito.ArgumentMatchers.anyLong()))
                 .thenReturn(List.of());
         lenient().when(multisite.listerPassages(anyString())).thenReturn(List.of());
-        recherche = new ServiceRechercheGlobale(services, multisite, UTILISATEUR);
+        lenient().when(validation.especesObservees(anyString())).thenReturn(List.of());
+        recherche = new ServiceRechercheGlobale(services, multisite, validation, UTILISATEUR);
     }
 
     @Test
@@ -140,5 +149,42 @@ class ServiceRechercheGlobaleTest {
                 .count();
 
         assertThat(passages).isEqualTo(ServiceRechercheGlobale.MAX_PAR_TYPE);
+    }
+
+    @Test
+    @DisplayName("#323 : trouve une espèce par nom vernaculaire/latin/code, et porte l'idPassage à ouvrir")
+    void trouve_espece_par_nom() {
+        when(validation.especesObservees(UTILISATEUR))
+                .thenReturn(List.of(espece("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune", 42L)));
+
+        // par nom vernaculaire (tolérant casse/accents), par nom latin, par code.
+        for (String requete : List.of("pipistrelle", "pipistrellus", "pippip")) {
+            assertThat(recherche.rechercher(requete))
+                    .as("requête « %s »", requete)
+                    .anySatisfy(r -> {
+                        assertThat(r.type()).isEqualTo(TypeResultat.ESPECE);
+                        assertThat(r.libelle()).contains("Pipistrelle commune").contains("Pippip");
+                        assertThat(r.idPassage())
+                                .as("ouvre le passage où l'espèce a été observée")
+                                .isEqualTo(42L);
+                        assertThat(r.numeroCarre()).isEqualTo("640380");
+                        assertThat(r.codePoint()).isEqualTo("A1");
+                    });
+        }
+    }
+
+    @Test
+    @DisplayName("#323 : une espèce vue dans plusieurs passages donne une entrée par passage, plafonnée")
+    void especes_une_entree_par_passage_plafonnees() {
+        List<EspeceObservee> beaucoup = IntStream.range(0, ServiceRechercheGlobale.MAX_PAR_TYPE + 5)
+                .mapToObj(i -> espece("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune", (long) i))
+                .toList();
+        when(validation.especesObservees(UTILISATEUR)).thenReturn(beaucoup);
+
+        long especes = recherche.rechercher("pipistrelle").stream()
+                .filter(r -> r.type() == TypeResultat.ESPECE)
+                .count();
+
+        assertThat(especes).isEqualTo(ServiceRechercheGlobale.MAX_PAR_TYPE);
     }
 }

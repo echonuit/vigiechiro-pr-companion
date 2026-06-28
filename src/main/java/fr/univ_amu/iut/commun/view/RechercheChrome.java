@@ -135,7 +135,8 @@ final class RechercheChrome {
         champ.clear();
         switch (resultat.type()) {
             case SITE, POINT -> ouvrirSite.ouvrirDetail(resultat.numeroCarre());
-            case PASSAGE ->
+            // Un résultat espèce (#323) cible le passage où elle a été observée : même navigation qu'un passage.
+            case PASSAGE, ESPECE ->
                 ouvrirPassage.ouvrir(
                         resultat.idPassage(),
                         new ContexteSite(resultat.numeroCarre(), resultat.codePoint(), resultat.nomSite()));

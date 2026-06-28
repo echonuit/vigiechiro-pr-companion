@@ -8,7 +8,9 @@ public enum TypeResultat {
     /// Un point d'écoute d'un site.
     POINT("Points"),
     /// Un passage (nuit de capture) sur un point.
-    PASSAGE("Passages");
+    PASSAGE("Passages"),
+    /// Une espèce observée, rattachée à un passage où elle a été relevée (#323).
+    ESPECE("Espèces");
 
     private final String libellePluriel;
 
