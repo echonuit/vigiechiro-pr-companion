@@ -19,9 +19,10 @@ ouvre la carte qui a le focus.
 ## Recherche globale
 
 Le champ de recherche, en haut à droite de la barre de navigation, est accessible depuis n'importe quel
-écran (<kbd>Ctrl</kbd> + <kbd>F</kbd>). Il filtre **instantanément** les sites, points d'écoute et
-passages, sans tenir compte de la casse ni des accents. Les résultats s'affichent dans une liste
-déroulante groupée (Sites, Points, Passages).
+écran (<kbd>Ctrl</kbd> + <kbd>F</kbd>). Il filtre **instantanément** les sites, points d'écoute,
+passages et **espèces** (par code ou nom latin / vernaculaire), sans tenir compte de la casse ni des
+accents. Les résultats s'affichent dans une liste déroulante groupée (Sites, Points, Passages, Espèces).
+Une espèce apparaît **une fois par passage** où elle a été observée : la sélectionner ouvre ce passage.
 
 | Raccourci | Action |
 |---|---|

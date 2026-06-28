@@ -97,6 +97,13 @@ public class ServiceValidation {
         return observationDao.compter();
     }
 
+    /// **Espèces observées** par l'utilisateur, rattachées à leur passage (#323) : une entrée par couple
+    /// (espèce, passage), du plus récent au plus ancien. Sert à la recherche globale (4ᵉ groupe). L'espèce
+    /// est le taxon validé sinon la proposition Tadarida ; les pseudo-taxons bruit/oiseau sont exclus.
+    public List<EspeceObservee> especesObservees(String idUtilisateur) {
+        return observationDao.especesObserveesParUtilisateur(idUtilisateur);
+    }
+
     /// Importe les résultats Tadarida d'un passage : parse le CSV, crée les résultats
     /// d'identification et insère les observations en masse, raccrochées à leurs séquences.
     ///

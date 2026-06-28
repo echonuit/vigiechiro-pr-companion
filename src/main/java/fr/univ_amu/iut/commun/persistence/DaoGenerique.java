@@ -70,7 +70,13 @@ public abstract class DaoGenerique<T, ID> implements Dao<T, ID> {
 
     /// Exécute un `SELECT` et renvoie une entité mappée par ligne.
     protected List<T> query(String sql, RowMapper<T> mapper, Object... parametres) {
-        List<T> resultats = new ArrayList<>();
+        return projeter(sql, mapper, parametres);
+    }
+
+    /// Exécute un `SELECT` et mappe chaque ligne vers un type de **projection** arbitraire `R` (lecture
+    /// transverse ne correspondant pas à l'entité du DAO, p. ex. une agrégation jointe à d'autres tables).
+    protected <R> List<R> projeter(String sql, RowMapper<R> mapper, Object... parametres) {
+        List<R> resultats = new ArrayList<>();
         try (Connection connexion = source.getConnection();
                 PreparedStatement ps = connexion.prepareStatement(sql)) {
             lier(ps, parametres);

@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Path;
@@ -39,6 +40,7 @@ class ObservationDaoTest {
     private ObservationDao dao;
     private long idSequence;
     private long idResultats;
+    private long idPassage;
 
     @BeforeEach
     void preparer() throws SQLException {
@@ -52,7 +54,7 @@ class ObservationDaoTest {
                             + " VALUES ('640380', 'Point fixe standard', '2026-05-01', 'u-1')");
             long idPoint = insererCle(cx, "INSERT INTO listening_point(code, site_id) VALUES ('A1', ?)", idSite);
             executer(cx, "INSERT INTO recorder(serial_number) VALUES ('SN-1')");
-            long idPassage = insererCle(
+            idPassage = insererCle(
                     cx,
                     "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
                             + " workflow_status, point_id, recorder_id)"
@@ -292,6 +294,56 @@ class ObservationDaoTest {
         assertThat(dao.findByResults(idResultats))
                 .as("ON DELETE CASCADE doit avoir supprimé les observations")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#323 : especesObserveesParUtilisateur agrège par espèce×passage, exclut bruit/oiseau")
+    void especes_observees_par_utilisateur() {
+        dao.insererTout(List.of(
+                observation("Nyclei", "Pippip"), // validé Pippip (le tadarida Nyclei est masqué)
+                observation("Tadten", null), // non validé → proposition Tadarida Tadten
+                observation("Pippip", null), // Pippip à nouveau, MÊME passage → dédupliqué (DISTINCT)
+                observation("noise", null))); // pseudo-taxon bruit → exclu
+
+        List<EspeceObservee> especes = dao.especesObserveesParUtilisateur("u-1");
+
+        assertThat(especes)
+                .extracting(EspeceObservee::code)
+                .as("Pippip (validé + dédupliqué) et Tadten ; ni Nyclei (masqué) ni noise (exclu)")
+                .containsExactlyInAnyOrder("Pippip", "Tadten");
+        assertThat(especes).allSatisfy(espece -> {
+            assertThat(espece.idPassage()).isEqualTo(idPassage);
+            assertThat(espece.numeroCarre()).isEqualTo("640380");
+            assertThat(espece.codePoint()).isEqualTo("A1");
+            assertThat(espece.annee()).isEqualTo(2026);
+            assertThat(espece.numeroPassage()).isEqualTo(1);
+        });
+    }
+
+    @Test
+    @DisplayName("#323 : especesObserveesParUtilisateur ne renvoie rien pour un autre utilisateur")
+    void especes_observees_autre_utilisateur_vide() {
+        dao.insert(observationComplete());
+
+        assertThat(dao.especesObserveesParUtilisateur("autre")).isEmpty();
+    }
+
+    private Observation observation(String codeTadarida, String codeObservateur) {
+        return new Observation(
+                null,
+                idSequence,
+                null,
+                null,
+                null,
+                codeTadarida,
+                null,
+                null,
+                codeObservateur,
+                null,
+                null,
+                false,
+                ModeValidation.NON_VALIDE,
+                idResultats);
     }
 
     private Observation avecTaxon(String codeTadarida) {

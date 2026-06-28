@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.Observation;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -77,6 +78,39 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     public List<Observation> findBySequence(Long idSequence) {
         return query("SELECT * FROM observation WHERE sequence_id = ? ORDER BY start_time_s", MAPPER, idSequence);
     }
+
+    /// Projection des **espèces observées par l'utilisateur, rattachées à leur passage** (#323). Une ligne
+    /// par couple (espèce, passage) — `DISTINCT` car un passage peut contenir plusieurs observations de la
+    /// même espèce. L'espèce est le taxon **validé** s'il existe, sinon la proposition Tadarida. Les
+    /// **pseudo-taxons** `noise` (bruit) et `piaf` (oiseau) sont exclus : ce ne sont pas des espèces de
+    /// chiroptères. Triée du passage le plus récent au plus ancien (le plafond garde les plus récents).
+    public List<EspeceObservee> especesObserveesParUtilisateur(String idUtilisateur) {
+        return projeter(SQL_ESPECES, MAPPER_ESPECE, idUtilisateur);
+    }
+
+    private static final String SQL_ESPECES = "SELECT DISTINCT t.code AS code, t.latin_name AS latin,"
+            + " t.vernacular_name_fr AS vern, p.id AS passage_id, ms.square_number AS carre,"
+            + " lp.code AS point, p.year AS annee, p.passage_number AS num, p.recording_date AS date_enr"
+            + " FROM observation o"
+            + " JOIN taxon t ON t.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
+            + " JOIN listening_sequence ls ON o.sequence_id = ls.id"
+            + " JOIN recording_session rs ON ls.session_id = rs.id"
+            + " JOIN passage p ON rs.passage_id = p.id"
+            + " JOIN listening_point lp ON p.point_id = lp.id"
+            + " JOIN monitoring_site ms ON lp.site_id = ms.id"
+            + " WHERE ms.user_id = ? AND t.code NOT IN ('noise', 'piaf')"
+            + " ORDER BY p.year DESC, p.passage_number DESC, t.vernacular_name_fr";
+
+    private static final RowMapper<EspeceObservee> MAPPER_ESPECE = rs -> new EspeceObservee(
+            rs.getString("code"),
+            rs.getString("latin"),
+            rs.getString("vern"),
+            rs.getLong("passage_id"),
+            rs.getString("carre"),
+            rs.getString("point"),
+            rs.getInt("annee"),
+            rs.getInt("num"),
+            rs.getString("date_enr"));
 
     @Override
     public Observation insert(Observation observation) {

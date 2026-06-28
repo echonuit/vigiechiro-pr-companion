@@ -9,6 +9,8 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.validation.model.EspeceObservee;
+import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -29,11 +31,14 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
 
     private final ServiceSites services;
     private final ServiceMultisite multisite;
+    private final ServiceValidation validation;
     private final String idUtilisateur;
 
-    public ServiceRechercheGlobale(ServiceSites services, ServiceMultisite multisite, String idUtilisateur) {
+    public ServiceRechercheGlobale(
+            ServiceSites services, ServiceMultisite multisite, ServiceValidation validation, String idUtilisateur) {
         this.services = Objects.requireNonNull(services, "services");
         this.multisite = Objects.requireNonNull(multisite, "multisite");
+        this.validation = Objects.requireNonNull(validation, "validation");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
     }
 
@@ -46,7 +51,28 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
         List<ResultatRecherche> resultats = new ArrayList<>();
         resultats.addAll(chercherSitesEtPoints(aiguille));
         resultats.addAll(chercherPassages(aiguille));
+        resultats.addAll(chercherEspeces(aiguille));
         return resultats;
+    }
+
+    /// Espèces observées correspondantes (par code ou nom latin / vernaculaire), **une entrée par
+    /// passage** où l'espèce a été relevée (#323), plafonnée à [#MAX_PAR_TYPE]. Cliquer une entrée ouvre
+    /// ce passage. La projection est déjà triée du plus récent au plus ancien : le plafond garde les plus
+    /// récents.
+    ///
+    /// Limite connue (comme [#chercherPassages]) : la projection matérialise tous les couples
+    /// (espèce, passage) de l'utilisateur avant filtrage/plafond. Suffisant aux volumes actuels.
+    private List<ResultatRecherche> chercherEspeces(String aiguille) {
+        List<ResultatRecherche> especes = new ArrayList<>();
+        for (EspeceObservee espece : validation.especesObservees(idUtilisateur)) {
+            if (especes.size() >= MAX_PAR_TYPE) {
+                break;
+            }
+            if (correspond(aiguille, espece.code(), espece.nomLatin(), espece.nomVernaculaireFr())) {
+                especes.add(resultatEspece(espece));
+            }
+        }
+        return especes;
     }
 
     /// Sites correspondants (par n° de carré ou nom) puis, pour chaque site, ses points correspondants
@@ -114,8 +140,13 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
                 TypeResultat.SITE, libelle, details, site.numeroCarre(), null, site.nomConvivial(), null);
     }
 
+    /// Libellé `carré / point` (p. ex. `640380 / A1`), partagé par les résultats point/passage/espèce.
+    private static String carreEtPoint(String numeroCarre, String codePoint) {
+        return numeroCarre + " / " + codePoint;
+    }
+
     private static ResultatRecherche resultatPoint(Site site, PointDEcoute point) {
-        String libelle = site.numeroCarre() + " / " + point.code();
+        String libelle = carreEtPoint(site.numeroCarre(), point.code());
         String details =
                 point.description() != null && !point.description().isBlank() ? point.description() : "Point d'écoute";
         return new ResultatRecherche(
@@ -123,7 +154,7 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     }
 
     private static ResultatRecherche resultatPassage(LignePassage ligne) {
-        String libelle = ligne.numeroCarre() + " / " + ligne.codePoint() + " · n°" + ligne.numeroPassage();
+        String libelle = carreEtPoint(ligne.numeroCarre(), ligne.codePoint()) + " · n°" + ligne.numeroPassage();
         String details = ligne.dateEnregistrement() != null
                 ? "Passage " + ligne.annee() + " · " + ligne.dateEnregistrement()
                 : "Passage " + ligne.annee();
@@ -135,6 +166,34 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
                 ligne.codePoint(),
                 null,
                 ligne.idPassage());
+    }
+
+    /// Résultat **espèce** rattaché à un passage : libellé = nom (vernaculaire, sinon latin, sinon code)
+    /// + code entre parenthèses ; détail = la nuit où elle a été observée. Cliquer ouvre ce passage (mêmes
+    /// clés d'identité qu'un résultat passage).
+    private static ResultatRecherche resultatEspece(EspeceObservee espece) {
+        String nom = premierNonVide(espece.nomVernaculaireFr(), espece.nomLatin(), espece.code());
+        String libelle = nom + " (" + espece.code() + ")";
+        String details = carreEtPoint(espece.numeroCarre(), espece.codePoint()) + " · n°" + espece.numeroPassage()
+                + (espece.dateEnregistrement() != null ? " · " + espece.dateEnregistrement() : "");
+        return new ResultatRecherche(
+                TypeResultat.ESPECE,
+                libelle,
+                details,
+                espece.numeroCarre(),
+                espece.codePoint(),
+                null,
+                espece.idPassage());
+    }
+
+    /// Premier des `candidats` non nul et non blanc (le dernier sert de repli garanti).
+    private static String premierNonVide(String... candidats) {
+        for (String candidat : candidats) {
+            if (candidat != null && !candidat.isBlank()) {
+                return candidat;
+            }
+        }
+        return "";
     }
 
     /// Vrai si au moins un des `champs` (non nuls) contient l'`aiguille` déjà normalisée.
