@@ -36,6 +36,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -93,6 +94,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
 
     @FXML
     private ComboBox<PointDEcoute> comboPoints;
+
+    @FXML
+    private StackPane zoneCarteRattachement;
 
     @FXML
     private TextField champAnnee;
@@ -158,6 +162,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     /// comme le `ConfirmateurQuitter` du Navigateur. Reçoit le message, renvoie `true` si l'utilisateur
     /// confirme.
     private final ConfirmationsImport confirmations = new ConfirmationsImport(this::confirmerParDialogue);
+
+    /// Carte de confirmation du rattachement (#154, lecture seule) : carré du site + point choisi.
+    private final CarteRattachement carteRattachement = new CarteRattachement();
 
     @Inject
     public ImportationController(ImportationViewModel viewModel) {
@@ -277,6 +284,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         comboPoints.setItems(rattachement.points());
         comboPoints.setConverter(convertisseur(PointDEcoute::code));
         comboPoints.valueProperty().bindBidirectional(rattachement.pointSelectionneProperty());
+        // Carte de confirmation (#154, lecture seule) : reflète le carré du site et le point choisi.
+        zoneCarteRattachement.getChildren().add(carteRattachement.vue());
+        carteRattachement.lier(rattachement);
         Bindings.bindBidirectional(
                 champAnnee.textProperty(), rattachement.anneeProperty(), new NumberStringConverter("0"));
         Bindings.bindBidirectional(
