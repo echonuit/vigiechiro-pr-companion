@@ -28,7 +28,7 @@ Cette section regroupe les **wireframes basse fidélité** de l'application *Vig
 | [M-MultiSite](M-MultiSite.md) | Carte & passages (carte au carroyage + tableau) | Vue plein écran | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | [E5](../Story%20mapping/E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md) |
 | [M-Diagnostic](M-Diagnostic.md) | Diagnostic matériel d'un passage | Vue secondaire (depuis M-Passage) | [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | [E6](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md) |
 | [M-Vision-Tadarida](M-Vision-Tadarida.md) | Validation taxonomique post-Tadarida | Vue plein écran (cible étirée) | [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md) | [E7](../Story%20mapping/E7%20-%20Valider%20les%20résultats%20Tadarida.md), [E8](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md) |
-| [M-Bibliotheque](M-Bibliotheque.md) | Bibliothèque de sons de référence | Vue plein écran (cible étirée) | [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | [E8.S2](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md#e8s2) |
+| [M-Bibliotheque](M-Bibliotheque.md) | Bibliothèque de sons de référence | Vue plein écran | [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | prisme biodiversité |
 | [M-Analyse](M-Analyse.md) | Espèces & observations (inventaire transverse) | Vue plein écran | [P11](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md) | prisme biodiversité |
 | [M-Recherche](M-Recherche.md) | Recherche globale (liste déroulante du chrome) | Transverse (tous écrans) | [P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md) | recherche transverse |
 
@@ -95,20 +95,20 @@ flowchart TB
 
 ## Pattern visuel partagé
 
-Toutes les maquettes utilisent un cadre fenêtre commun :
+Toutes les maquettes reprennent le **cadre fenêtre** du chrome (`MainView.fxml`) :
 
-- **Title bar** sombre (`#2c3e50`) avec logo 🦇 + nom de l'application.
-- **Top nav** un cran plus clair (`#34495e`) avec 4 entrées principales (Mes sites, Importer, Vue tabulaire, Paramètres).
-- **Breadcrumb** quand l'écran est en profondeur dans la navigation.
-- **Page header** avec titre principal et sous-titre éventuel.
-- **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou panneau de détail (M-Qualification, M-Vision-Tadarida).
-- **Footer** avec astuces clavier et indicateurs d'état.
+- **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro PR Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, et le champ de **recherche globale** (`Ctrl+F`) aligné à droite.
+- **En-tête de page** avec titre principal et sous-titre éventuel, juste sous le bandeau.
+- **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou **panneau de détail** « liste + détail » (M-Qualification, M-Vision-Tadarida, M-Bibliotheque).
+- **Pied de page** discret (`SAÉ 2.01 · IUT d'Aix-Marseille`).
+
+L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **hero nocturne** (titre, invite, tableau de bord de compteurs) puis deux **sections-prismes** de cartes d'activité.
 
 **Palette de couleurs** (cohérente avec le reste du dossier) :
 
 | Usage | Couleur | Exemple |
 |---|---|---|
-| Primary actions / liens | `#4a90d9` (bleu) | Boutons « Importer », liens breadcrumb |
+| Primary actions / liens | `#4a90d9` (bleu) | Boutons primaires, liens d'action |
 | Success / verdict OK | `#1e8449` (vert) | Badges Déposé OK, statut Vérifié |
 | Warning / verdict Douteux | `#b9770e` (orange) | Statut Transformé, cible étirée |
 | Danger / verdict À jeter | `#a93226` (rouge) | Bouton Supprimer, verdict À jeter |
@@ -125,6 +125,6 @@ Toutes les maquettes utilisent un cadre fenêtre commun :
 Certains écrans secondaires ne font pas l'objet d'un wireframe complet mais sont décrits dans les fiches correspondantes :
 
 - **Formulaire de création d'un site** : décrit dans la variante de [M-Site-detail](M-Site-detail.md) et invocable depuis [M-Sites](M-Sites.md).
-- **Modal de re-rattachement d'un passage** ([E2.S8](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s8)) : action accessible depuis [M-Passage](M-Passage.md).
-- **Sélecteur de taxon de correction** ([E7.S4](../Story%20mapping/E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s4)) : autocomplete sur code à 6 lettres. Décrit dans [M-Vision-Tadarida](M-Vision-Tadarida.md).
-- **Modal de confirmation « J'ai déposé »** ([E4.S3](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s3)) : avant transition vers le statut Déposé. Décrite dans [M-Lot](M-Lot.md).
+- **Modal de re-rattachement d'un passage** : action accessible depuis [M-Passage](M-Passage.md).
+- **Sélecteur de taxon de correction** : autocomplete sur code à 6 lettres. Décrit dans [M-Vision-Tadarida](M-Vision-Tadarida.md).
+- **Modal de confirmation « J'ai déposé »** : avant transition vers le statut Déposé. Décrite dans [M-Lot](M-Lot.md).
