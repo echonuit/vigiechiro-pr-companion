@@ -11,6 +11,18 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 public interface OuvrirValidation {
 
     /// Ouvre l'écran de validation taxonomique des résultats Tadarida du passage décrit par `passage`
-    /// (identité + contexte site, pour le fil d'Ariane).
+    /// (identité + contexte site, pour le fil d'Ariane). Méthode principale du contrat (SAM) : les
+    /// appelants historiques (M-Passage) et les doublures de test la fournissent telle quelle.
     void ouvrir(ContextePassage passage);
+
+    /// Ouvre la validation du `passage`, **pré-focalisée sur l'observation** `idObservationCible` si elle
+    /// est non nulle : la ligne correspondante est sélectionnée à l'ouverture (ce qui déclenche l'écoute
+    /// de sa séquence), prête à être validée/corrigée. Permet d'arriver depuis l'écran transverse
+    /// « Espèces & observations » droit sur la détection à réécouter.
+    ///
+    /// Par défaut, la cible est **ignorée** (ouverture classique) : seules les implémentations réelles
+    /// (`NavigationValidation`) la prennent en compte, ce qui évite d'alourdir les doublures de test.
+    default void ouvrir(ContextePassage passage, Long idObservationCible) {
+        ouvrir(passage);
+    }
 }

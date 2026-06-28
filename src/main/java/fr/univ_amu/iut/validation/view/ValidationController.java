@@ -196,8 +196,31 @@ public class ValidationController implements EmplacementNavigation {
     /// Ouvre la validation du passage `passage`. Appelée par [NavigationValidation] après le chargement
     /// du FXML ; mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
+        ouvrirSur(passage, null);
+    }
+
+    /// Comme [#ouvrirSur(ContextePassage)] mais **pré-sélectionne** l'observation `idObservationCible`
+    /// (si non nulle) une fois la table chargée : sélectionner la ligne déclenche, via le ViewModel,
+    /// l'écoute de sa séquence. Permet d'arriver depuis « Espèces & observations » droit sur la détection.
+    public void ouvrirSur(ContextePassage passage, Long idObservationCible) {
         this.contexte = passage;
         viewModel.ouvrirSur(passage.idPassage());
+        if (idObservationCible != null) {
+            selectionnerObservation(idObservationCible);
+        }
+    }
+
+    /// Sélectionne dans la table l'observation d'identifiant `idObservation`, si elle est présente (la
+    /// sélection se propage au ViewModel, qui charge le détail et l'audio). Sans correspondance (ligne
+    /// masquée par un filtre, par exemple), aucune action.
+    private void selectionnerObservation(Long idObservation) {
+        for (ObservationStatut ligne : tableObservations.getItems()) {
+            if (idObservation.equals(ligne.observation().id())) {
+                tableObservations.getSelectionModel().select(ligne);
+                tableObservations.scrollTo(ligne);
+                return;
+            }
+        }
     }
 
     /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Validation

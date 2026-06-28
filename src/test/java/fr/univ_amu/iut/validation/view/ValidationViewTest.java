@@ -49,6 +49,7 @@ import org.testfx.framework.junit5.Start;
 class ValidationViewTest {
 
     private ServiceValidation service;
+    private ValidationController controleur;
 
     private static Observation observation(long id, String taxonObservateur) {
         return new Observation(
@@ -93,7 +94,7 @@ class ValidationViewTest {
         FXMLLoader loader = new FXMLLoader(ValidationController.class.getResource("Validation.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        ValidationController controleur = loader.getController();
+        controleur = loader.getController();
         controleur.ouvrirSur(new ContextePassage(42L, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")));
         stage.setScene(new Scene(vue, 1000, 720));
         stage.show();
@@ -174,5 +175,24 @@ class ValidationViewTest {
         assertThat(audio.isNormalisation()).isTrue();
         robot.interact(() -> table.getSelectionModel().select(0));
         assertThat(audio.getAudioFile().toString()).endsWith("seq.wav");
+    }
+
+    @Test
+    @DisplayName("Ouvrir en ciblant une observation la pré-sélectionne (et charge son écoute)")
+    void ouvrir_cible_preselectionne_l_observation(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        TableView<ObservationStatut> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+
+        // Rouvre le même passage en ciblant l'observation d'id 2 (la seconde ligne).
+        robot.interact(() -> controleur.ouvrirSur(
+                new ContextePassage(42L, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")), 2L));
+
+        ObservationStatut selection = table.getSelectionModel().getSelectedItem();
+        assertThat(selection).isNotNull();
+        assertThat(selection.observation().id()).isEqualTo(2L);
+        assertThat(audio.getAudioFile())
+                .as("la séquence de la cible est chargée")
+                .isNotNull();
     }
 }

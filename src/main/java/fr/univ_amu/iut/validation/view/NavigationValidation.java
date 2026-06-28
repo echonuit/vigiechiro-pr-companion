@@ -31,16 +31,22 @@ public class NavigationValidation implements OuvrirValidation {
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
     }
 
-    /// Affiche la validation Tadarida du passage `passage` dans la zone centrale du chrome (le contexte
-    /// alimente le fil d'Ariane).
     @Override
     public void ouvrir(ContextePassage passage) {
+        ouvrir(passage, null);
+    }
+
+    /// Affiche la validation Tadarida du passage `passage` dans la zone centrale du chrome (le contexte
+    /// alimente le fil d'Ariane), en pré-sélectionnant l'observation `idObservationCible` si elle est
+    /// fournie (arrivée depuis l'écran « Espèces & observations » droit sur une détection).
+    @Override
+    public void ouvrir(ContextePassage passage, Long idObservationCible) {
         FXMLLoader loader = new FXMLLoader(NavigationValidation.class.getResource("Validation.fxml"));
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
             ValidationController controleur = loader.getController();
-            controleur.ouvrirSur(passage);
+            controleur.ouvrirSur(passage, idObservationCible);
             navigateur.empiler(vue, "validation", "Validation Tadarida", controleur);
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
