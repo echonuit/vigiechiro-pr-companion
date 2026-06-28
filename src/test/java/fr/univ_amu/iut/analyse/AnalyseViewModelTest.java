@@ -13,6 +13,7 @@ import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.nio.file.Path;
 import java.util.List;
@@ -39,6 +40,24 @@ class AnalyseViewModelTest {
 
     private static CarreEspeces carre(String numero, int richesse, int nbObs) {
         return new CarreEspeces(numero, "Étang", richesse, nbObs, 2025, 2026);
+    }
+
+    private static ObservationEspece observation(long idPassage) {
+        return new ObservationEspece(
+                idPassage,
+                idPassage,
+                idPassage,
+                1,
+                2026,
+                "2026-06-20",
+                "640380",
+                "A1",
+                "Étang",
+                "Pippip",
+                0.9,
+                "Pippip",
+                0.95,
+                StatutObservation.VALIDEE);
     }
 
     @Test
@@ -123,5 +142,38 @@ class AnalyseViewModelTest {
         assertThat(ok).isTrue();
         verify(service).exporterEspeces(eq(cible), anyList());
         assertThat(vm.messageProperty().get()).contains("exporté");
+    }
+
+    @Test
+    @DisplayName("Sélectionner une espèce charge ses observations (détail) et titre le panneau")
+    void selectionner_espece_charge_le_detail() {
+        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 2)));
+        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), isNull()))
+                .thenReturn(List.of(observation(10L), observation(11L)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
+
+        vm.selectionnerEspece(espece("Pippip", 2));
+
+        assertThat(vm.observations()).extracting(ObservationEspece::idPassage).containsExactly(10L, 11L);
+        assertThat(vm.detailTitreProperty().get())
+                .contains("Pipistrelle commune")
+                .contains("2 observations");
+    }
+
+    @Test
+    @DisplayName("Sélectionner null (ou Par carré) vide le panneau détail")
+    void selectionner_null_vide_le_detail() {
+        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 2)));
+        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), isNull())).thenReturn(List.of(observation(10L)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
+        vm.selectionnerEspece(espece("Pippip", 2));
+        assertThat(vm.observations()).isNotEmpty();
+
+        vm.selectionnerEspece(null);
+
+        assertThat(vm.observations()).isEmpty();
+        assertThat(vm.detailTitreProperty().get()).isEmpty();
     }
 }
