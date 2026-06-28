@@ -498,6 +498,74 @@ class ObservationDaoTest {
     }
 
     @Test
+    @DisplayName("#audio : l'espèce retenue suit la correction observateur (COALESCE(observer, tadarida))")
+    void lignes_audio_espece_retenue_par_correction() {
+        // Proposée Nyclei par Tadarida, mais corrigée en Pippip par l'observateur (R16).
+        dao.insert(observation("Nyclei", "Pippip"));
+
+        assertThat(dao.lignesAudioDeLEspece("u-1", "Pippip", null))
+                .as("retrouvée sous l'espèce corrigée, pas sous la proposition Tadarida")
+                .singleElement()
+                .satisfies(ligne -> {
+                    assertThat(ligne.taxonObservateur()).isEqualTo("Pippip");
+                    assertThat(ligne.taxonTadarida()).isEqualTo("Nyclei");
+                    assertThat(ligne.statut()).isEqualTo(StatutObservation.CORRIGEE);
+                });
+        assertThat(dao.lignesAudioDeLEspece("u-1", "Nyclei", null))
+                .as("plus rattachée à la proposition Tadarida d'origine")
+                .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#audio : les pseudo-taxons (noise/piaf) sont inclus (contrairement aux espèces observées)")
+    void lignes_audio_inclut_pseudo_taxons() {
+        dao.insert(observation("noise", null)); // bruit : exclu des espèces, mais à réécouter
+        dao.insert(observationValidee("Pippip"));
+
+        assertThat(dao.lignesAudioDuPassage(idPassage))
+                .as("la revue audio porte sur TOUT le passage, pseudo-taxons compris")
+                .extracting(LigneObservationAudio::taxonTadarida)
+                .containsExactlyInAnyOrder("noise", "Pippip");
+        assertThat(dao.especesObserveesParUtilisateur("u-1"))
+                .as("garde-fou : les espèces observées, elles, excluent les pseudo-taxons")
+                .extracting(EspeceObservee::code)
+                .doesNotContain("noise");
+    }
+
+    @Test
+    @DisplayName("#audio : ordre de revue chronologique (date, point, id) verrouillé, toutes sources")
+    void lignes_audio_ordre_de_revue() throws SQLException {
+        // Passage 1 (date 2026-06-20) : deux observations -> départage par id croissant.
+        dao.insert(observationValidee("Pippip"));
+        dao.insert(observation("Nyclei", null));
+        // Passage 2 (date 2026-07-15) : postérieur -> doit venir après celles de juin.
+        long[] second = creerSecondPassage();
+        dao.insert(new Observation(
+                null,
+                second[1],
+                null,
+                null,
+                null,
+                "Pippip",
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                ModeValidation.NON_VALIDE,
+                second[2]));
+
+        List<LigneObservationAudio> lignes = dao.lignesAudioDesPassages(List.of(idPassage, second[0]));
+
+        assertThat(lignes)
+                .as("date croissante (juin avant juillet), puis id croissant dans le passage de juin")
+                .extracting(LigneObservationAudio::idPassage)
+                .containsExactly(idPassage, idPassage, second[0]);
+        assertThat(lignes.get(0).idObservation()).isLessThan(lignes.get(1).idObservation());
+    }
+
+    @Test
     @DisplayName("#analyse : observationsDeLEspece liste les observations d'une espèce à travers les passages")
     void observations_d_une_espece_a_travers_les_passages() throws SQLException {
         // Passage 1 (seedé) : Pippip validée + Nyclei non touchée (autre espèce, ne doit pas remonter).

@@ -295,6 +295,13 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + ")";
 
     private static final String SELECT_AUDIO = CTE_AUDIO + " SELECT * FROM obs WHERE obs.";
+
+    /// Ordre **de revue** commun à toutes les sources audio : **chronologique** (date d'enregistrement
+    /// du passage croissante = on revoit la nuit la plus ancienne d'abord), puis par **point d'écoute**
+    /// et enfin par **id** (tri stable et déterministe à l'intérieur d'un passage). Choisi pour qu'une
+    /// liste de travail se parcoure dans l'ordre naturel du terrain, identique quelle que soit la source
+    /// (un passage, un lot multisite, une espèce ou les références) : pas de « plus récent d'abord » ni
+    /// d'ordre propre au lot multisite. Verrouillé par `ObservationDaoTest#lignes_audio_ordre_de_revue`.
     private static final String ORDRE_AUDIO = " ORDER BY obs.date_enr, obs.point_code, obs.id";
 
     private static final RowMapper<LigneObservationAudio> MAPPER_LIGNE_AUDIO = rs -> new LigneObservationAudio(
