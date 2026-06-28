@@ -28,6 +28,7 @@ Cette section regroupe les **wireframes basse fidélité** de l'application *Vig
 | [M-Diagnostic](M-Diagnostic.md) | Diagnostic matériel d'un passage | Vue secondaire (depuis M-Passage) | [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | [E6](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md) |
 | [M-Vision-Tadarida](M-Vision-Tadarida.md) | Validation taxonomique post-Tadarida | Vue plein écran (cible étirée) | [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md) | [E7](../Story%20mapping/E7%20-%20Valider%20les%20résultats%20Tadarida.md), [E8](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md) |
 | [M-Bibliotheque](M-Bibliotheque.md) | Bibliothèque de sons de référence | Vue plein écran (cible étirée) | [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | [E8.S2](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md#e8s2) |
+| [M-Analyse](M-Analyse.md) | Espèces & observations (inventaire transverse) | Vue plein écran | [P11](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md) | prisme biodiversité |
 
 ## Comment lire une maquette
 
