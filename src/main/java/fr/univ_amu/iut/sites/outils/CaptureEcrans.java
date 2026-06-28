@@ -220,8 +220,7 @@ public final class CaptureEcrans {
         enregistreurs.insert(new Enregistreur(SERIE_PR2, "V1.01, T4.1", null));
 
         // Site 1 (tiede) : riche, c'est lui qui est capture en detail et dont A1 alimente la modale.
-        Site etang = service.creerSite(
-                "640380", "Etang de la Tuiliere", Protocole.STANDARD, "Aix-en-Provence", ID_UTILISATEUR);
+        Site etang = service.creerSite("640380", "Etang de la Tuiliere", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
         PointDEcoute a1 =
                 service.ajouterPoint(etang.id(), "A1", 43.4010, -1.5740, "Pres du grand chene, a 30 m du chemin");
         PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.4055, -1.5680, "Lisiere de roseliere");
@@ -232,13 +231,15 @@ public final class CaptureEcrans {
         passages.insert(
                 passage(1, "2026-06-20", b2.id(), SERIE_PR2, StatutWorkflow.DEPOSE, Verdict.DOUTEUX, "2026-06-23"));
 
-        // Site 2 (frais) : un passage tout recent, pas encore verifie.
-        Site zac = service.creerSite("752204", "ZAC Nord", Protocole.STANDARD, "Marseille", ID_UTILISATEUR);
+        // Site 2 (frais) : un passage tout recent, pas encore verifie. Carre 131165 = maille reelle de
+        // Marseille (centroide 43.342, 5.355), coherente avec les coordonnees du point.
+        Site zac = service.creerSite("131165", "ZAC Nord", Protocole.STANDARD, "Marseille", ID_UTILISATEUR);
         PointDEcoute zacA1 = service.ajouterPoint(zac.id(), "A1", 43.3400, 5.3600, null);
         passages.insert(passage(1, "2026-09-15", zacA1.id(), SERIE_PR1, StatutWorkflow.IMPORTE, null, null));
 
         // Site 3 (froid) : aucun passage, protocole recherche. Capture en detail « sans passage ».
-        Site calanques = service.creerSite("130010", "Calanques", Protocole.RECHERCHE, null, ID_UTILISATEUR);
+        // Carre 131275 = maille reelle des Calanques (centroide 43.213, 5.447), coherente avec le point.
+        Site calanques = service.creerSite("131275", "Calanques", Protocole.RECHERCHE, null, ID_UTILISATEUR);
         service.ajouterPoint(calanques.id(), "A1", 43.2100, 5.4400, "Crete sud");
 
         return new Seed(etang, a1, calanques);
