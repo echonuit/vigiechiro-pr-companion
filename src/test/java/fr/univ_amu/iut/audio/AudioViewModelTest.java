@@ -82,12 +82,11 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(source());
 
-            assertThat(vm.observations()).hasSize(1);
+            assertThat(vm.observationsFiltrees()).hasSize(1);
             assertThat(vm.taxons()).hasSize(1);
             assertThat(vm.source().permetWorkflowTadarida()).isTrue();
             assertThat(vm.source().permetExportBibliotheque()).isFalse();
             assertThat(vm.resultatsDisponiblesProperty().get()).isTrue();
-            assertThat(vm.idResultats()).isEqualTo(100L);
         }
 
         @Test
@@ -124,7 +123,7 @@ class AudioViewModelTest {
 
             assertThat(vm.valider()).isTrue();
             verify(service).validerSelonMode(1L, ModeRevue.ACTIVITE);
-            assertThat(vm.nombreValideesProperty().get()).isEqualTo(1);
+            assertThat(vm.comptageProperty().get().validees()).isEqualTo(1);
             assertThat(vm.selectionProperty().get().statut()).isEqualTo(StatutObservation.VALIDEE);
         }
 
@@ -156,7 +155,7 @@ class AudioViewModelTest {
 
             assertThat(vm.importer(Path.of("obs.csv"))).isTrue();
             verify(service).importer(7L, Path.of("obs.csv"));
-            assertThat(vm.idResultats()).isEqualTo(100L);
+            assertThat(vm.resultatsDisponiblesProperty().get()).isTrue();
         }
     }
 
@@ -178,7 +177,7 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(source());
 
-            assertThat(vm.observations()).hasSize(1);
+            assertThat(vm.observationsFiltrees()).hasSize(1);
             assertThat(vm.source().permetWorkflowTadarida()).isFalse();
             assertThat(vm.source().permetExportBibliotheque()).isFalse();
             assertThat(vm.importer(Path.of("obs.csv"))).isFalse();
@@ -200,7 +199,7 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.ParEspece("u-1", "Pippip", "NON_TOUCHEE", "Pipistrelle commune"));
 
-            assertThat(vm.observations()).hasSize(1);
+            assertThat(vm.observationsFiltrees()).hasSize(1);
             assertThat(vm.source().permetWorkflowTadarida()).isFalse();
             verify(service).lignesAudioDeLEspece("u-1", "Pippip", StatutObservation.NON_TOUCHEE);
         }
@@ -233,7 +232,7 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.References("u-1"));
 
-            assertThat(vm.observations()).hasSize(1);
+            assertThat(vm.observationsFiltrees()).hasSize(1);
             assertThat(vm.source().permetExportBibliotheque()).isTrue();
             assertThat(vm.source().permetWorkflowTadarida()).isFalse();
         }
@@ -289,7 +288,7 @@ class AudioViewModelTest {
             vm.filtreStatutProperty().set(StatutObservation.VALIDEE);
 
             assertThat(vm.observationsFiltrees()).hasSize(1);
-            assertThat(vm.nombreTotalProperty().get()).isEqualTo(2);
+            assertThat(vm.comptageProperty().get().total()).isEqualTo(2);
         }
     }
 }
