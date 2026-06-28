@@ -23,6 +23,17 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
 L'espèce retenue pour chaque observation est le **taxon validé** par l'observateur s'il existe, sinon la
 **proposition Tadarida** ; les pseudo-taxons « bruit » et « oiseau » sont exclus.
 
+## Le détail : les observations d'une espèce
+
+L'écran est en **maître-détail**. En sélectionnant une espèce dans l'inventaire (mode *Par espèce*), le
+panneau du bas liste **toutes ses observations à travers les passages** : date et n° de passage, carré,
+point, **proposition Tadarida** (avec sa probabilité), **votre taxon** (la saisie de l'observateur, ou
+`—` si la séquence n'a pas encore été revue) et le **statut**. C'est la réponse à « où et quand ai-je
+détecté cette espèce ? », toutes nuits confondues.
+
+Sélectionnez une observation puis **« Ouvrir le passage → »** (ou double-cliquez la ligne) pour aller
+directement à l'écran du passage concerné, et y poursuivre l'écoute ou la validation.
+
 ## Filtrer par niveau de confiance
 
 Le filtre **Statut** restreint l'inventaire selon l'état de revue des observations :

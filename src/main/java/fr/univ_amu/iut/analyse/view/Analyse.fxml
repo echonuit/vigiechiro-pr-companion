@@ -3,17 +3,22 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Priority?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
-  M-Analyse - vue transverse « Espèces & observations » (prisme biodiversité). Inventaire des espèces
-  détectées par l'utilisateur, regroupé Par espèce / Par carré (richesse), filtré par statut de revue.
-  Pur câblage : le controller lie les deux tables et la barre de regroupement/filtre à l'AnalyseViewModel.
+  M-Analyse - vue transverse « Espèces & observations » (prisme biodiversité). Écran maître-détail :
+  en haut l'inventaire des espèces (regroupé Par espèce / Par carré, filtré par statut), en bas le détail
+  des observations de l'espèce sélectionnée, à travers les passages, avec « ouvrir le passage ».
+  Pur câblage : le controller lie tables, barre de regroupement/filtre et navigation à l'AnalyseViewModel.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -34,30 +39,56 @@
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
   </FlowPane>
 
-  <StackPane VBox.vgrow="ALWAYS">
-    <!-- Inventaire Par espèce -->
-    <TableView fx:id="tableEspeces">
-      <columns>
-        <TableColumn fx:id="colEspece" text="Espèce" prefWidth="240.0"/>
-        <TableColumn fx:id="colGroupe" text="Groupe" prefWidth="140.0"/>
-        <TableColumn fx:id="colDetections" text="Détections" prefWidth="95.0"/>
-        <TableColumn fx:id="colPassages" text="Passages" prefWidth="90.0"/>
-        <TableColumn fx:id="colCarres" text="Carrés" prefWidth="80.0"/>
-        <TableColumn fx:id="colPoints" text="Points" prefWidth="80.0"/>
-        <TableColumn fx:id="colPeriode" text="Période" prefWidth="110.0"/>
-      </columns>
-    </TableView>
-    <!-- Inventaire Par carré (richesse spécifique) -->
-    <TableView fx:id="tableCarres">
-      <columns>
-        <TableColumn fx:id="colCarre" text="Carré" prefWidth="120.0"/>
-        <TableColumn fx:id="colSite" text="Site" prefWidth="240.0"/>
-        <TableColumn fx:id="colRichesse" text="Richesse (espèces)" prefWidth="150.0"/>
-        <TableColumn fx:id="colDetectionsCarre" text="Détections" prefWidth="100.0"/>
-        <TableColumn fx:id="colPeriodeCarre" text="Période" prefWidth="110.0"/>
-      </columns>
-    </TableView>
-  </StackPane>
+  <SplitPane fx:id="separateur" orientation="VERTICAL" dividerPositions="0.58" VBox.vgrow="ALWAYS">
+
+    <!-- Maître : inventaire (Par espèce / Par carré) -->
+    <StackPane>
+      <TableView fx:id="tableEspeces">
+        <columns>
+          <TableColumn fx:id="colEspece" text="Espèce" prefWidth="240.0"/>
+          <TableColumn fx:id="colGroupe" text="Groupe" prefWidth="140.0"/>
+          <TableColumn fx:id="colDetections" text="Détections" prefWidth="95.0"/>
+          <TableColumn fx:id="colPassages" text="Passages" prefWidth="90.0"/>
+          <TableColumn fx:id="colCarres" text="Carrés" prefWidth="80.0"/>
+          <TableColumn fx:id="colPoints" text="Points" prefWidth="80.0"/>
+          <TableColumn fx:id="colPeriode" text="Période" prefWidth="110.0"/>
+        </columns>
+      </TableView>
+      <TableView fx:id="tableCarres">
+        <columns>
+          <TableColumn fx:id="colCarre" text="Carré" prefWidth="120.0"/>
+          <TableColumn fx:id="colSite" text="Site" prefWidth="240.0"/>
+          <TableColumn fx:id="colRichesse" text="Richesse (espèces)" prefWidth="150.0"/>
+          <TableColumn fx:id="colDetectionsCarre" text="Détections" prefWidth="100.0"/>
+          <TableColumn fx:id="colPeriodeCarre" text="Période" prefWidth="110.0"/>
+        </columns>
+      </TableView>
+    </StackPane>
+
+    <!-- Détail : observations de l'espèce sélectionnée, à travers les passages -->
+    <VBox styleClass="analyse-detail" spacing="8.0">
+      <HBox alignment="CENTER_LEFT" spacing="10.0">
+        <Label fx:id="lblDetailTitre" styleClass="analyse-detail-titre"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage →" onAction="#ouvrirPassage"/>
+      </HBox>
+      <StackPane VBox.vgrow="ALWAYS">
+        <TableView fx:id="tableObservations">
+          <columns>
+            <TableColumn fx:id="colObsPassage" text="Passage" prefWidth="160.0"/>
+            <TableColumn fx:id="colObsCarre" text="Carré" prefWidth="90.0"/>
+            <TableColumn fx:id="colObsPoint" text="Point" prefWidth="70.0"/>
+            <TableColumn fx:id="colObsTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
+            <TableColumn fx:id="colObsObservateur" text="Votre taxon" prefWidth="150.0"/>
+            <TableColumn fx:id="colObsStatut" text="Statut" prefWidth="110.0"/>
+          </columns>
+        </TableView>
+        <Label fx:id="lblDetailVide" styleClass="analyse-detail-vide" wrapText="true"
+               text="Sélectionnez une espèce dans l'inventaire (regroupement « Par espèce ») pour lister ses observations à travers les passages."/>
+      </StackPane>
+    </VBox>
+
+  </SplitPane>
 
   <Label fx:id="lblExport" styleClass="analyse-message" wrapText="true"/>
   <Label fx:id="lblMessage" styleClass="analyse-vide" wrapText="true"/>

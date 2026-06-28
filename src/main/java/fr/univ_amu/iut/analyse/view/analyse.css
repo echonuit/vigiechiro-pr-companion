@@ -33,3 +33,21 @@
     -fx-font-size: 12px;
     -fx-text-fill: #1e6f3f;
 }
+
+/* Panneau détail (maître-détail) : observations de l'espèce sélectionnée. */
+.analyse-detail {
+    -fx-padding: 10 0 0 0;
+}
+
+.analyse-detail-titre {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #24292e;
+}
+
+.analyse-detail-vide {
+    -fx-font-size: 13px;
+    -fx-text-fill: #6a737d;
+    -fx-padding: 12;
+    -fx-text-alignment: center;
+}
