@@ -386,3 +386,11 @@
     -fx-border-width: 1.5;
     -fx-border-radius: 3;
 }
+
+/* Carte-outil de saisie GPS de la modale point (#153) : cadre discret, coins arrondis. */
+.zone-carte-modale {
+    -fx-border-color: #d0d7de;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+}

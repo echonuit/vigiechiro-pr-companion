@@ -70,6 +70,12 @@ public final class CaptureEcrans {
     private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";
     private static final String MODALE = "/fr/univ_amu/iut/sites/view/ModalePoint.fxml";
 
+    /// Délai d'attente des tuiles OpenStreetMap (#153) avant la capture d'une modale **à carte** : les
+    /// tuiles se téléchargent en arrière-plan (réseau) puis se peignent sur le fil JavaFX ; on laisse ce
+    /// temps au fond de carte d'apparaître (même patron que `CaptureMultisite`). **Best-effort** :
+    /// hors-ligne, la capture reste lisible (carré + marqueur sur fond clair), seul le fond manque.
+    private static final long DELAI_TUILES_MS = 6000;
+
     private CaptureEcrans() {}
 
     public static void main(String[] args) throws InterruptedException {
@@ -146,23 +152,43 @@ public final class CaptureEcrans {
         ApercuFx.enregistrerPng(new Scene(chrome, 1180, 920), fichier);
     }
 
-    /// Modale d'edition d'un point d'ecoute (champs pre-remplis), rendue seule (fenetre modale).
+    /// Modale d'edition d'un point d'ecoute (champs pre-remplis), rendue seule (fenetre modale). La
+    /// modale embarque desormais une carte-outil (#153) : on attend les tuiles OSM avant le snapshot.
     private static void capturerModaleEdition(Injector injecteur, Site site, PointDEcoute point, Path fichier)
             throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ((ModalePointController) loader.getController()).demarrerEdition(site, point, () -> {});
-        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        ApercuFx.capturerApresPreparation(new Scene(vue), CaptureEcrans::attendreTuiles, fichier);
     }
 
-    /// Modale de creation d'un point d'ecoute (formulaire vierge), rendue seule (fenetre modale).
+    /// Modale de creation d'un point d'ecoute (formulaire vierge), rendue seule (fenetre modale). Comme
+    /// l'edition, on laisse les tuiles OSM de la carte-outil se charger avant le snapshot (#153).
     private static void capturerModaleCreation(Injector injecteur, Site site, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {});
-        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        ApercuFx.capturerApresPreparation(new Scene(vue), CaptureEcrans::attendreTuiles, fichier);
+    }
+
+    /// Laisse tourner le fil JavaFX (boucle d'evenements imbriquee) le temps que les tuiles OSM arrivees
+    /// en fond soient peintes, puis rend la main (un minuteur de fond declenche la sortie de boucle).
+    /// Meme mecanisme que `CaptureMultisite#attendreTuiles`.
+    private static void attendreTuiles() {
+        Object cle = new Object();
+        Thread minuteur = new Thread(() -> {
+            try {
+                Thread.sleep(DELAI_TUILES_MS);
+            } catch (InterruptedException interruption) {
+                Thread.currentThread().interrupt();
+            }
+            Platform.runLater(() -> Platform.exitNestedEventLoop(cle, null));
+        });
+        minuteur.setDaemon(true);
+        minuteur.start();
+        Platform.enterNestedEventLoop(cle);
     }
 
     private static Parent chargerFxml(Injector injecteur, String chemin) throws IOException {

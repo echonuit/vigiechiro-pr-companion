@@ -94,11 +94,20 @@ public class CarteSites extends Region {
     /// active (sélection du tableau) est **réappliquée** après recréation des tracés, pour qu'elle survive
     /// à un refresh de la carte.
     public void setDonnees(DonneesCarte donnees) {
+        setDonnees(donnees, true);
+    }
+
+    /// Variante avec contrôle du **recadrage**. Avec `recadrer=false`, la vue (centre/zoom) **ne bouge
+    /// pas** : utile quand on rafraîchit fréquemment les tracés sans vouloir suivre la donnée (p. ex. une
+    /// carte-outil de saisie GPS qui reste calée sur le carré pendant qu'on déplace le marqueur).
+    public void setDonnees(DonneesCarte donnees, boolean recadrer) {
         Objects.requireNonNull(donnees, "donnees");
         coucheCarres.definirCarres(donnees.carres());
         coucheCarres.surbrillance(carreSurbrillance);
         couchePoints.definirPoints(donnees.points());
-        recadrerSur(donnees);
+        if (recadrer) {
+            recadrerSur(donnees);
+        }
     }
 
     /// Recadre la carte sur l'ensemble des coordonnées (points géolocalisés + centres des carrés) :
