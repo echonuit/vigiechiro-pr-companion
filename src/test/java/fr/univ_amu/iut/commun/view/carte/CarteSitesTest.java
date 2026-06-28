@@ -214,6 +214,29 @@ class CarteSitesTest {
         assertThat(carte.vueCarte().getZoom()).isEqualTo(14.0);
     }
 
+    // #339 : recadrer() revient sur l'emprise des données après un déplacement manuel.
+    @Test
+    void recadrer_revient_sur_les_donnees(FxRobot robot) {
+        robot.interact(() -> carte.setDonnees(deuxPointsUnCarre()));
+        WaitForAsyncUtils.waitForFxEvents();
+        double latFit = carte.vueCarte().getCenter().getLatitude();
+        double lonFit = carte.vueCarte().getCenter().getLongitude();
+        double zoomFit = carte.vueCarte().getZoom();
+
+        // Déplacement/zoom manuel ailleurs.
+        robot.interact(() -> carte.centrerSur(10.0, 10.0, 4));
+        assertThat(carte.vueCarte().getZoom())
+                .as("déplacement manuel : la vue a bougé")
+                .isEqualTo(4.0);
+
+        robot.interact(carte::recadrer);
+        assertThat(carte.vueCarte().getCenter().getLatitude())
+                .as("recadrer revient au centre de l'emprise")
+                .isCloseTo(latFit, within(1e-6));
+        assertThat(carte.vueCarte().getCenter().getLongitude()).isCloseTo(lonFit, within(1e-6));
+        assertThat(carte.vueCarte().getZoom()).as("et au zoom englobant").isEqualTo(zoomFit);
+    }
+
     @Test
     void mode_edition_deplace_le_marqueur_au_clavier(FxRobot robot) {
         AtomicReference<double[]> dernier = new AtomicReference<>();

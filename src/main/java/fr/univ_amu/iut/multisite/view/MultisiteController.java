@@ -192,6 +192,16 @@ public class MultisiteController implements RafraichirAuRetour {
         StackPane.setAlignment(legende, Pos.BOTTOM_LEFT);
         StackPane.setMargin(legende, new Insets(8));
         zoneCarte.getChildren().add(legende);
+        // Bouton « recadrer » superposé en haut à droite (#339) : recentre/zoome la carte sur tous les
+        // carrés/points affichés (utile après un zoom ou un déplacement manuel).
+        Button recadrer = new Button("⤢");
+        recadrer.getStyleClass().add("bouton-recadrer");
+        recadrer.setAccessibleText("Recadrer la carte sur les éléments visibles");
+        recadrer.setTooltip(new Tooltip("Recadrer sur les éléments visibles"));
+        recadrer.setOnAction(evenement -> carte.recadrer());
+        StackPane.setAlignment(recadrer, Pos.TOP_RIGHT);
+        StackPane.setMargin(recadrer, new Insets(8));
+        zoneCarte.getChildren().add(recadrer);
         viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>)
                 changement -> carte.setDonnees(ConstructeurDonneesCarte.depuis(viewModel.carresCarte())));
 

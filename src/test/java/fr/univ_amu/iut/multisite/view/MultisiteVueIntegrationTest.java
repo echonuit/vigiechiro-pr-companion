@@ -278,6 +278,16 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#339 : un bouton « recadrer » est superposé à la carte et déclenche le recadrage sans erreur")
+    void bouton_recadrer_superpose_a_la_carte(FxRobot robot) {
+        assertThat(robot.lookup(".bouton-recadrer").queryAll())
+                .as("le bouton « recadrer » est superposé à la carte")
+                .isNotEmpty();
+        // Déclencher l'action ne doit pas lever (recadre sur les données affichées).
+        robot.interact(robot.lookup(".bouton-recadrer").queryButton()::fire);
+    }
+
+    @Test
     @DisplayName("Choisir un filtre de verdict ré-interroge le service avec ce critère")
     void filtre_verdict_re_interroge_le_service(FxRobot robot) {
         ComboBox<?> choixVerdict = robot.lookup("#choixVerdict").queryAs(ComboBox.class);

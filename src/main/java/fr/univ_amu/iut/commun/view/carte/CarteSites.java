@@ -35,6 +35,10 @@ public class CarteSites extends Region {
     private final CoucheCarres coucheCarres = new CoucheCarres();
     private final CouchePoints couchePoints = new CouchePoints(carte);
 
+    /// Dernières données affichées, mémorisées pour pouvoir **recadrer à la demande** ([#recadrer()])
+    /// sur les éléments visibles après un zoom/déplacement manuel.
+    private DonneesCarte donneesCourantes;
+
     /// Numéro du carré actuellement en surbrillance (sélection liée au tableau), ou `null`. Mémorisé pour
     /// **réappliquer** la surbrillance après un `setDonnees` qui recrée les tracés (refresh de la carte).
     private String carreSurbrillance;
@@ -102,11 +106,21 @@ public class CarteSites extends Region {
     /// carte-outil de saisie GPS qui reste calée sur le carré pendant qu'on déplace le marqueur).
     public void setDonnees(DonneesCarte donnees, boolean recadrer) {
         Objects.requireNonNull(donnees, "donnees");
+        donneesCourantes = donnees;
         coucheCarres.definirCarres(donnees.carres());
         coucheCarres.surbrillance(carreSurbrillance);
         couchePoints.definirPoints(donnees.points());
         if (recadrer) {
             recadrerSur(donnees);
+        }
+    }
+
+    /// Recadre la carte sur les **données actuellement affichées** (fit-bounds) : utile pour revenir à une
+    /// vue englobant tous les carrés/points après un zoom ou un déplacement manuel (#339). Sans données
+    /// chargées, ne fait rien.
+    public void recadrer() {
+        if (donneesCourantes != null) {
+            recadrerSur(donneesCourantes);
         }
     }
 

@@ -44,3 +44,19 @@
   -fx-padding: 0 4 0 4;
   -fx-font-size: 12px;
 }
+
+/* Bouton « recadrer » superposé en haut à droite de la carte (#339) : recentre/zoome sur le visible. */
+.bouton-recadrer {
+  -fx-background-color: rgba(255, 255, 255, 0.9);
+  -fx-border-color: #d0d7de;
+  -fx-border-radius: 6;
+  -fx-background-radius: 6;
+  -fx-text-fill: #34495e;
+  -fx-font-size: 15px;
+  -fx-padding: 2 8 2 8;
+}
+
+.bouton-recadrer:hover {
+  -fx-background-color: #ffffff;
+  -fx-text-fill: #1a5276;
+}
