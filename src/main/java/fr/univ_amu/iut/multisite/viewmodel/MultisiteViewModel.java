@@ -8,6 +8,7 @@ import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -40,6 +41,10 @@ public class MultisiteViewModel {
     private final ServiceMultisite service;
     private final String idUtilisateur;
 
+    /// File des déplacements de points en attente (mode édition des positions, #154). Responsabilité
+    /// extraite : le ViewModel l'expose, la vue la pilote.
+    private final PositionsEnAttente positionsEnAttente;
+
     /// Vrai pendant l'application groupée de plusieurs filtres (réinitialisation, vue sauvegardée) :
     /// les listeners ne rafraîchissent pas à chaque propriété, un seul rafraîchissement suit le lot.
     private boolean chargementGroupe;
@@ -58,9 +63,10 @@ public class MultisiteViewModel {
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
-    public MultisiteViewModel(ServiceMultisite service, String idUtilisateur) {
+    public MultisiteViewModel(ServiceMultisite service, ServiceSites serviceSites, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        this.positionsEnAttente = new PositionsEnAttente(serviceSites, this::rafraichirCarte, message::set);
         // Tout changement interactif de filtre ou de tri ré-interroge le service et rafraîchit le
         // tableau (sauf pendant une application groupée : un seul rafraîchissement la conclut).
         filtreNumeroCarre.addListener((obs, ancien, nouveau) -> rafraichirSiInteractif());
@@ -92,6 +98,12 @@ public class MultisiteViewModel {
     /// vue (controller).
     public void rafraichirCarte() {
         carresCarte.setAll(service.agregerPourCarte(idUtilisateur));
+    }
+
+    /// File des déplacements de points **en attente** (mode édition de la carte, #154) : la vue y met les
+    /// marqueurs glissés, puis enregistre ou abandonne. Voir [PositionsEnAttente].
+    public PositionsEnAttente positionsEnAttente() {
+        return positionsEnAttente;
     }
 
     private FiltresMultisite filtresCourants() {

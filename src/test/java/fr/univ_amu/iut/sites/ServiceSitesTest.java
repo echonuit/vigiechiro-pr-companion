@@ -288,6 +288,33 @@ class ServiceSitesTest {
                 .hasMessageContaining("n'appartient pas");
     }
 
+    @Test
+    @DisplayName("#154 : déplacer un point ne change QUE le GPS (code et description préservés)")
+    void deplacer_point_ne_change_que_le_gps() {
+        Site site = service.creerSite("640380", null, Protocole.STANDARD, null, ID_USER);
+        PointDEcoute point = service.ajouterPoint(site.id(), "A1", 43.40, -1.57, "Près du chêne");
+
+        PointDEcoute deplace = service.deplacerPoint(point.id(), 43.4055, -1.5680);
+
+        assertThat(deplace.latitude()).isEqualTo(43.4055);
+        assertThat(deplace.longitude()).isEqualTo(-1.5680);
+        assertThat(pointDao.findById(point.id())).get().satisfies(p -> {
+            assertThat(p.latitude()).isEqualTo(43.4055);
+            assertThat(p.longitude()).isEqualTo(-1.5680);
+            assertThat(p.code()).as("le code est préservé").isEqualTo("A1");
+            assertThat(p.description()).as("la description est préservée").isEqualTo("Près du chêne");
+            assertThat(p.idSite()).isEqualTo(site.id());
+        });
+    }
+
+    @Test
+    @DisplayName("#154 : déplacer un point introuvable est refusé")
+    void deplacer_point_introuvable() {
+        assertThatThrownBy(() -> service.deplacerPoint(9999L, 43.4, -1.5))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("introuvable");
+    }
+
     // --- Suppression de site (refus si passage rattaché) ---
 
     @Test

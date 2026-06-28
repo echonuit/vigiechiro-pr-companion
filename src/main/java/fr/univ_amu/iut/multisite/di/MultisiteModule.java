@@ -15,6 +15,7 @@ import fr.univ_amu.iut.multisite.view.ActiviteMultisite;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 
@@ -59,7 +60,7 @@ public class MultisiteModule extends AbstractModule {
     // de l'utilisateur courant publiée par SitesModule.
     @Provides
     MultisiteViewModel fournirMultisiteViewModel(
-            ServiceMultisite service, @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new MultisiteViewModel(service, idUtilisateur);
+            ServiceMultisite service, ServiceSites serviceSites, @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new MultisiteViewModel(service, serviceSites, idUtilisateur);
     }
 }

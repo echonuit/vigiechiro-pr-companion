@@ -265,6 +265,34 @@ class CarteSitesTest {
     }
 
     @Test
+    void edition_la_contrainte_clampe_le_deplacement(FxRobot robot) {
+        AtomicReference<double[]> dernier = new AtomicReference<>();
+        double latClamp = 43.4031;
+        double lonClamp = -1.5708;
+        PointGeo z1 = new PointGeo("Z1", 43.4031, -1.5708, Color.GREEN);
+        robot.interact(() -> {
+            carte.setEditionActive(true);
+            // Contrainte « bord du carré » simulée : quelle que soit la position visée, on retient un point
+            // fixe. C'est exactement ce que fait un clamp une fois la souris sortie de la maille.
+            carte.setContrainteDeplacement((point, lat, lon) -> new double[] {latClamp, lonClamp});
+            carte.setOnPointDeplace((point, lat, lon) -> dernier.set(new double[] {lat, lon}));
+            carte.setDonnees(new DonneesCarte(List.of(), List.of(z1)));
+            carte.centrerSur(43.4031, -1.5708, 14);
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Node marqueur =
+                carte.lookupAll(".carte-point-libelle").iterator().next().getParent();
+        robot.interact(marqueur::requestFocus);
+        robot.type(KeyCode.RIGHT);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(dernier.get())
+                .as("la position remontée est celle imposée par la contrainte, pas la position brute visée")
+                .containsExactly(latClamp, lonClamp);
+    }
+
+    @Test
     void hors_edition_le_marqueur_ne_se_deplace_pas(FxRobot robot) {
         AtomicReference<double[]> deplace = new AtomicReference<>();
         List<PointGeo> clics = new ArrayList<>();

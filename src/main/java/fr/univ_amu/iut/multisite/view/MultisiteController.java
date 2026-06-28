@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
+import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
 import fr.univ_amu.iut.commun.view.carte.FournisseurEmpriseCarre;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
@@ -32,6 +33,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
@@ -122,8 +124,17 @@ public class MultisiteController implements RafraichirAuRetour {
     @FXML
     private Button boutonReplierTableau;
 
+    @FXML
+    private ToggleButton boutonEditerPositions;
+
+    @FXML
+    private Button boutonEnregistrerPositions;
+
     /// Composant carte réutilisable (#152), rempli à partir de l'agrégat carte du ViewModel.
     private final CarteSites carte = new CarteSites();
+
+    /// Mode édition des positions (#154) : toute la logique (clamp, file en attente, alerte) est déléguée.
+    private EditionPositionsCarte edition;
 
     /// Dernière position du diviseur quand carte ET tableau sont visibles, restaurée à la réouverture
     /// d'un panneau replié (un `SplitPane` réinitialise ses diviseurs quand on retire/rajoute un item).
@@ -202,8 +213,12 @@ public class MultisiteController implements RafraichirAuRetour {
         StackPane.setAlignment(recadrer, Pos.TOP_RIGHT);
         StackPane.setMargin(recadrer, new Insets(8));
         zoneCarte.getChildren().add(recadrer);
-        viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>)
-                changement -> carte.setDonnees(ConstructeurDonneesCarte.depuis(viewModel.carresCarte())));
+        viewModel.carresCarte().addListener((ListChangeListener<CarreAgrege>) changement -> rafraichirTracesCarte());
+
+        // Édition des positions (#154) : déléguée à EditionPositionsCarte (clamp au carré, file en attente,
+        // alerte de sortie). Le controller ne fait que la brancher et relayer les actions FXML.
+        edition = new EditionPositionsCarte(carte, viewModel, boutonEditerPositions, boutonEnregistrerPositions);
+        edition.brancher();
 
         // Liaisons carte ↔ tableau (#152) :
         // - clic d'un carré sur la carte → filtre le tableau par ce carré (met aussi à jour le champ) ;
@@ -318,6 +333,26 @@ public class MultisiteController implements RafraichirAuRetour {
             replier(panneauTableau);
             majPoignees();
         }
+    }
+
+    /// Retrace la carte depuis l'agrégat (traduction domaine → [DonneesCarte]) **et** réindexe l'édition
+    /// (libellé → idPoint, carré → emprise) pour que glisser/clamper retrouve la bonne donnée.
+    private void rafraichirTracesCarte() {
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(viewModel.carresCarte());
+        carte.setDonnees(donnees);
+        edition.indexer(donnees, viewModel.carresCarte());
+    }
+
+    /// Toggle « ✎ Éditer les positions » (délégué à [EditionPositionsCarte]).
+    @FXML
+    private void basculerEdition() {
+        edition.basculer();
+    }
+
+    /// Bouton « 💾 Enregistrer les positions » (délégué à [EditionPositionsCarte]).
+    @FXML
+    private void enregistrerPositions() {
+        edition.enregistrer();
     }
 
     private void configurerColonnes() {

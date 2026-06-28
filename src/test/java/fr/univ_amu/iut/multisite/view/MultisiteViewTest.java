@@ -21,6 +21,7 @@ import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,6 +31,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +49,9 @@ import org.testfx.framework.junit5.Start;
 class MultisiteViewTest {
 
     private ServiceMultisite service;
+    private ServiceSites serviceSites;
     private OuvrirPassage ouvrirPassage;
+    private MultisiteViewModel viewModel;
 
     private static LignePassage ligne(long id, String carre, String point, int annee, int numero, String date) {
         return new LignePassage(id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, Verdict.OK);
@@ -56,12 +60,14 @@ class MultisiteViewTest {
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceMultisite.class);
+        serviceSites = mock(ServiceSites.class);
         ouvrirPassage = mock(OuvrirPassage.class);
         when(service.listerPassages(anyString(), any(), any()))
                 .thenReturn(List.of(
                         ligne(42L, "640380", "A1", 2026, 1, "2026-06-21"),
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02")));
         when(service.agregerPourCarte(anyString())).thenReturn(List.of()); // carte (#152) : pas de NPE à l'init
+        viewModel = new MultisiteViewModel(service, serviceSites, "u-1");
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
@@ -71,7 +77,7 @@ class MultisiteViewTest {
 
             @Provides
             MultisiteViewModel viewModel() {
-                return new MultisiteViewModel(service, "u-1");
+                return viewModel;
             }
         });
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
@@ -128,5 +134,29 @@ class MultisiteViewTest {
         robot.doubleClickOn("2026-06-21"); // date unique de la ligne idPassage = 42
 
         verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
+    }
+
+    @Test
+    @DisplayName("#154 : « Éditer les positions » montre le bouton Enregistrer (inactif), activé par un déplacement")
+    void mode_edition_montre_et_active_enregistrer(FxRobot robot) {
+        ToggleButton editer = robot.lookup("#boutonEditerPositions").queryAs(ToggleButton.class);
+        Button enregistrer = robot.lookup("#boutonEnregistrerPositions").queryAs(Button.class);
+        assertThat(enregistrer.isVisible()).as("masqué hors édition").isFalse();
+
+        robot.interact(editer::fire); // entrer en édition
+        assertThat(enregistrer.isVisible()).isTrue();
+        assertThat(enregistrer.isDisabled()).as("rien à enregistrer au départ").isTrue();
+
+        // Un déplacement en attente (simulé via le ViewModel) active le bouton.
+        robot.interact(() -> viewModel.positionsEnAttente().deplacer(1L, 43.40, -1.57));
+        assertThat(enregistrer.isDisabled())
+                .as("un déplacement en attente active Enregistrer")
+                .isFalse();
+
+        robot.interact(enregistrer::fire); // enregistrer → persistance via ServiceSites
+        verify(serviceSites).deplacerPoint(1L, 43.40, -1.57);
+        assertThat(enregistrer.isDisabled())
+                .as("plus rien en attente après enregistrement")
+                .isTrue();
     }
 }

@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -43,6 +44,11 @@
     <Label text="Tri :" styleClass="section-sous"/>
     <ComboBox fx:id="choixTri"/>
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
+    <!-- Édition des positions (#154) : le toggle passe la carte en mode déplacement (glisser un marqueur,
+         clampé à son carré) ; le bouton enregistre les déplacements en attente (inactif sinon, visible en
+         édition seulement). Décliquer le toggle avec des changements non enregistrés ouvre une alerte. -->
+    <ToggleButton fx:id="boutonEditerPositions" text="✎ Éditer les positions" onAction="#basculerEdition"/>
+    <Button fx:id="boutonEnregistrerPositions" text="💾 Enregistrer les positions" onAction="#enregistrerPositions"/>
     <!-- Repli carte/tableau (#328) : déplacé de la superposition (qui mordait l'en-tête du tableau)
          vers la barre d'actions. Libellé et état gérés par MultisiteController#majPoignees. -->
     <Button fx:id="boutonReplierCarte" onAction="#basculerCarte"/>

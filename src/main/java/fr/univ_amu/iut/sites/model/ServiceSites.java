@@ -168,6 +168,18 @@ public class ServiceSites {
         return aMettreAJour;
     }
 
+    /// **Déplace** un point d'écoute : met à jour ses **seules coordonnées GPS**, en préservant son code,
+    /// sa description et son site. Recharge le point pour conserver ces champs, puis délègue à
+    /// [#modifierPoint] (mêmes contrôles d'intégrité). Sert au glisser d'un marqueur sur la carte
+    /// multi-sites (#154) : seul le GPS change, jamais le code ni le descriptif.
+    ///
+    /// @throws RegleMetierException si le point est introuvable
+    public PointDEcoute deplacerPoint(Long idPoint, Double latitude, Double longitude) {
+        PointDEcoute existant = pointDao.findById(idPoint)
+                .orElseThrow(() -> new RegleMetierException("Point introuvable : " + idPoint));
+        return modifierPoint(idPoint, existant.idSite(), existant.code(), latitude, longitude, existant.description());
+    }
+
     /// Sites d'un utilisateur, triés par numéro de carré.
     public List<Site> listerSites(String idUtilisateur) {
         return siteDao.findByUtilisateur(idUtilisateur);

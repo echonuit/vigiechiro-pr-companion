@@ -32,6 +32,8 @@ final class CouchePoints extends MapLayer {
     private final List<Marqueur> marqueurs = new ArrayList<>();
     private Consumer<PointGeo> onClic = point -> {};
     private DeplacementMarqueur onDeplace = (point, lat, lon) -> {};
+    /// Contrainte appliquée à chaque position de glisser/clavier (défaut : identité, aucune contrainte).
+    private ContrainteDeplacement contrainte = (point, lat, lon) -> new double[] {lat, lon};
     private boolean editable;
 
     CouchePoints(MapView carte) {
@@ -44,6 +46,10 @@ final class CouchePoints extends MapLayer {
 
     void setOnDeplace(DeplacementMarqueur onDeplace) {
         this.onDeplace = Objects.requireNonNull(onDeplace, "onDeplace");
+    }
+
+    void setContrainte(ContrainteDeplacement contrainte) {
+        this.contrainte = Objects.requireNonNull(contrainte, "contrainte");
     }
 
     /// Active/désactive l'édition (déplacement des marqueurs au glisser/clavier). Met à jour le curseur.
@@ -179,22 +185,19 @@ final class CouchePoints extends MapLayer {
             this.noeud = groupe;
         }
 
-        /// Déplace le marqueur sous la position écran donnée ; si `valider`, remonte le nouveau GPS.
+        /// Déplace le marqueur sous la position écran donnée ; si `valider`, remonte le nouveau GPS. La
+        /// position proposée passe d'abord par la [#contrainte] (p. ex. clamp au carré).
         private void deplacerVers(double sceneX, double sceneY, boolean valider) {
-            Point2D local = carte.sceneToLocal(sceneX, sceneY);
             MapPoint geo = versGeo(sceneX, sceneY);
-            if (local == null || geo == null) {
+            if (geo == null) {
                 return;
             }
-            positionEcranModifiee = true;
-            noeud.setTranslateX(local.getX());
-            noeud.setTranslateY(local.getY());
-            if (valider) {
-                onDeplace.deplace(point, geo.getLatitude(), geo.getLongitude());
-            }
+            double[] retenu = contrainte.contraindre(point, geo.getLatitude(), geo.getLongitude());
+            placerEtRemonter(retenu[0], retenu[1], valider);
         }
 
-        /// Déplacement clavier : décale la position écran de quelques pixels, reconvertit en GPS et valide.
+        /// Déplacement clavier : décale la position écran de quelques pixels, reconvertit en GPS, applique
+        /// la contrainte, puis repositionne et valide.
         private void nudge(Point2D deltaPx) {
             double x = noeud.getTranslateX() + deltaPx.getX();
             double y = noeud.getTranslateY() + deltaPx.getY();
@@ -202,10 +205,24 @@ final class CouchePoints extends MapLayer {
             if (geo == null) {
                 return;
             }
+            double[] retenu = contrainte.contraindre(point, geo.getLatitude(), geo.getLongitude());
+            placerEtRemonter(retenu[0], retenu[1], true);
+        }
+
+        /// Place le marqueur **à la position géographique** `(latitude, longitude)` (reprojetée à l'écran),
+        /// et remonte le GPS si `valider`. Repositionner par la projection (et non la position brute de la
+        /// souris) est ce qui rend le **clamp** visible : un point bloqué au bord du carré s'y affiche.
+        private void placerEtRemonter(double latitude, double longitude, boolean valider) {
+            Point2D ecran = getMapPoint(latitude, longitude);
+            if (ecran == null) {
+                return;
+            }
             positionEcranModifiee = true;
-            noeud.setTranslateX(x);
-            noeud.setTranslateY(y);
-            onDeplace.deplace(point, geo.getLatitude(), geo.getLongitude());
+            noeud.setTranslateX(ecran.getX());
+            noeud.setTranslateY(ecran.getY());
+            if (valider) {
+                onDeplace.deplace(point, latitude, longitude);
+            }
         }
 
         private Point2D deltaClavier(KeyCode code) {

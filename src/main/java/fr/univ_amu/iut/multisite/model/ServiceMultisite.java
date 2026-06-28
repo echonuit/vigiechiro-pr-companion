@@ -131,7 +131,12 @@ public class ServiceMultisite {
                 List<Passage> passages = passageDao.findByPoint(point.id());
                 passagesDuCarre += passages.size();
                 points.add(new PointAgrege(
-                        point.code(), point.latitude(), point.longitude(), passages.size(), statutDominant(passages)));
+                        point.code(),
+                        point.latitude(),
+                        point.longitude(),
+                        passages.size(),
+                        statutDominant(passages),
+                        point.id()));
             }
             carres.add(new CarreAgrege(site.numeroCarre(), site.nomConvivial(), points, passagesDuCarre));
         }
