@@ -43,6 +43,7 @@ L'écran rassemble les **meilleurs exemples sonores par espèce** que l'utilisat
     .btn-txt { fill: #ffffff; font: 600 12px sans-serif; }
   </style>
 
+  <rect x="0" y="0" width="1000" height="600" fill="#f7f9fb"/>
   <text x="30" y="40" class="pagetitle">🔊 Bibliothèque de sons</text>
   <text x="30" y="62" class="pagesub">3 son(s) de référence.</text>
 
@@ -131,6 +132,7 @@ Tant qu'aucune observation n'a été marquée « référence » pendant la valid
     .btn-disabled { fill: #e1e6eb; stroke: #c4ccd4; stroke-width: 1; }
     .btn-disabled-txt { fill: #9aa4ae; font: 600 12px sans-serif; }
   </style>
+  <rect x="0" y="0" width="1000" height="170" fill="#f7f9fb"/>
   <text x="30" y="36" class="pagetitle">🔊 Bibliothèque de sons</text>
   <text x="30" y="58" class="pagesub">Aucun son de référence : marquez des observations « référence » pendant la validation.</text>
   <rect x="30" y="74" width="365" height="80" class="panel"/>

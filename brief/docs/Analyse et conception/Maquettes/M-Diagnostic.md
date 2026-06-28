@@ -2,9 +2,7 @@
 
 > **Type** : écran **« Diagnostic matériel »** d'un passage (atteint depuis [M-Passage](M-Passage.md) pour un passage disposant d'un journal du capteur et/ou d'un relevé climatique).
 > **Persona principal** : [Karim](../Personas/Karim.md) et [Samuel](../Personas/Samuel.md) (exploitation pro, contrôle du parc d'enregistreurs).
-> **Priorité** : 🟧 SHOULD (utile en exploitation, hors fil rouge MVP).
 > **Parcours couverts** : [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md).
-> **Stories couvertes** : [E6 - Diagnostiquer le matériel](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md).
 
 L'écran présente, pour le passage courant, un **bilan technique** de la nuit : un **graphe climatique** (température / hygrométrie) issu du relevé de la sonde, la liste des **anomalies** détectées dans le journal du capteur (R19), le **journal** brut des évènements, et un indicateur de **disponibilité des coordonnées GPS** (préalable à un éventuel contrôle de cohérence des horaires). L'objectif : décider si un enregistreur doit être révisé.
 
@@ -15,6 +13,12 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
 <div markdown="0">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 660" role="img" aria-label="Maquette M-Diagnostic - diagnostic materiel d'un passage" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #f7f9fb;">
   <style>
+    .chrome { fill: #3f51b5; }
+    .chrometxt { fill: #ffffff; font: 600 14px sans-serif; }
+    .crumb { fill: #c5cae9; font: 13px sans-serif; }
+    .crumb-curr { fill: #ffffff; font: 700 13px sans-serif; }
+    .search { fill: #ffffff; stroke: #c5cae9; stroke-width: 1; }
+    .search-txt { fill: #9aa0b3; font: 13px sans-serif; }
     .pagetitle { font: 700 22px sans-serif; fill: #2c3e50; }
     .pagesub { font: 13px sans-serif; fill: #4a6785; }
     .pagesub2 { font: 12px sans-serif; fill: #6a737d; }
@@ -37,9 +41,16 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
     .footer-txt { font: 12px sans-serif; fill: #4a6785; }
   </style>
 
-  <text x="30" y="40" class="pagetitle">🩺 Diagnostic matériel</text>
-  <text x="30" y="62" class="pagesub">PR 1925492</text>
-  <text x="30" y="86" class="pagesub2">10 mesures T°/hygrométrie</text>
+  <rect x="0" y="0" width="1000" height="660" fill="#f7f9fb"/>
+  <rect x="0" y="0" width="1000" height="44" class="chrome"/>
+  <text x="20" y="28" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="210" y="28" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
+  <text x="600" y="28" class="crumb-curr">Diagnostic</text>
+  <rect x="780" y="12" width="200" height="22" rx="11" class="search"/>
+  <text x="794" y="28" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+
+  <text x="30" y="78" class="pagetitle">🩺 Diagnostic matériel</text>
+  <text x="30" y="98" class="pagesub2">PR 1925492 · 10 mesures T°/hygrométrie</text>
 
   <!-- Graphe climat -->
   <rect x="60" y="110" width="900" height="160" class="chart-bg"/>
@@ -116,6 +127,7 @@ Si la sonde est absente ou défaillante, la section climat **n'est pas masquée*
     .banner-txt { font: 13px sans-serif; fill: #5d4e00; }
     .sub-grey { font: 12px sans-serif; fill: #6a737d; }
   </style>
+  <rect x="0" y="0" width="1000" height="200" fill="#f7f9fb"/>
   <text x="30" y="38" class="pagetitle">🩺 Diagnostic matériel</text>
   <text x="30" y="60" class="pagesub">PR 1925492</text>
   <rect x="30" y="78" width="640" height="40" rx="4" class="banner"/>
@@ -139,5 +151,5 @@ Si la sonde est absente ou défaillante, la section climat **n'est pas masquée*
 - **`LineChart` JavaFX** : deux `XYChart.Series` (température, hygrométrie). Lier les séries à des collections observables du ViewModel ; gérer proprement le cas « série vide » (graphe affiché, pas d'exception).
 - **`ListView` pour anomalies et journal** : `cellFactory` simple (texte). La virtualisation native suffit même pour un journal volumineux.
 - **Données manquantes explicites (R20)** : ne jamais masquer une section absente. Piloter la visibilité du bandeau via une `BooleanProperty` du ViewModel (`releveClimatiquePresent`).
-- **Cohérence horaires (extension P6)** : l'écran livré se limite à indiquer la **disponibilité** des coordonnées GPS. Le calcul astronomique complet (coucher/lever du soleil, plage théorique vs effective) décrit dans [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) est une **extension** : à isoler dans un service du socle, testable hors JavaFX.
+- **Cohérence horaires astronomiques** : **non implémentée**. L'écran livré se limite à signaler la **disponibilité** des coordonnées GPS du point ; le calcul astronomique complet (coucher/lever du soleil, plage théorique vs effective) reste une **piste d'extension**.
 - **Réutilisation** : l'écran consomme le **relevé climatique** et le **journal du capteur** déjà chargés par le socle pour le passage ; le ViewModel expose des propriétés observables, la vue ne fait que les lier.
