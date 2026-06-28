@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.49.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.49.0...v1.49.1) (2026-06-28)
+
+
+### Bug Fixes
+
+* **captures:** cohérence géographique carré ↔ coordonnées ([#392](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/392)) ([e335fc0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/e335fc02bcd8094ac51094b2f68eed262919542c))
+
 # [1.49.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.48.0...v1.49.0) (2026-06-28)
 
 
