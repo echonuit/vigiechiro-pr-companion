@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.54.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.53.0...v1.54.0) (2026-06-28)
+
+
+### Features
+
+* **audio:** couche modèle de la vue audio unifiée (record + projections) ([#404](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/404)) ([924a395](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/924a39533fca8d414c4376564727be65feab1d5d)), closes [#audio](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/audio)
+
 # [1.53.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.52.0...v1.53.0) (2026-06-28)
 
 
