@@ -88,6 +88,31 @@ class PointEditViewModelTest {
     }
 
     @Test
+    @DisplayName("coordonneesValides() : couple complet et borné seulement (sert à la carte-outil, #153)")
+    void coordonnees_valides_pour_la_carte() {
+        viewModel.preparerCreation(site);
+
+        // Aucune saisie → vide (pas de marqueur réel à projeter).
+        assertThat(viewModel.coordonneesValides()).isEmpty();
+
+        // Latitude seule → couple incomplet → vide.
+        viewModel.latitudeProperty().set("43.4010");
+        assertThat(viewModel.coordonneesValides()).isEmpty();
+
+        // Couple complet et borné (virgule tolérée) → présent, parsé.
+        viewModel.longitudeProperty().set("-1,5740");
+        assertThat(viewModel.coordonneesValides()).hasValueSatisfying(gps -> {
+            assertThat(gps[0]).isEqualTo(43.4010);
+            assertThat(gps[1]).isEqualTo(-1.5740);
+        });
+
+        // Latitude hors bornes (200, refusée par le formulaire) → vide : la carte ne projette pas un
+        // point hors [-90,90] (finding #345).
+        viewModel.latitudeProperty().set("200");
+        assertThat(viewModel.coordonneesValides()).isEmpty();
+    }
+
+    @Test
     @DisplayName("Enregistrer en création insère le point (coordonnées parsées)")
     void enregistrer_creation() {
         viewModel.preparerCreation(site);

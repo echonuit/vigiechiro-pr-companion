@@ -43,9 +43,6 @@ public class ModalePointController {
     /// Remplissage translucide du carré du site (repère, ne masque pas le fond de carte).
     private static final Color COULEUR_CARRE = Color.web("#3f51b5", 0.12);
 
-    /// Zoom de mise au point sur le GPS existant quand le carré n'est pas dans le carroyage officiel.
-    private static final int ZOOM_POINT = 14;
-
     private final PointEditViewModel viewModel;
     private final CarteSites carte = new CarteSites();
     private Runnable apresSucces = () -> {};
@@ -136,16 +133,11 @@ public class ModalePointController {
         preparerCarte(site);
     }
 
-    /// Centre la carte-outil sur le carré du site (une seule fois), puis pose le marqueur. Si le carré
-    /// n'est pas dans le carroyage officiel mais que le point a déjà un GPS, on cadre sur ce GPS.
+    /// Centre la carte-outil sur le carré du site (une seule fois), puis pose le marqueur. Le carré vient
+    /// du carroyage officiel, ou du repli autour du GPS existant s'il y en a un (carré hors référentiel).
     private void preparerCarte(Site site) {
         this.numeroCarre = site.numeroCarre();
-        Optional<EmpriseCarre> emprise = empriseDuCarre();
-        if (emprise.isPresent()) {
-            carte.centrerSurCarre(emprise.get());
-        } else {
-            coordonneesSaisies().ifPresent(gps -> carte.centrerSur(gps[0], gps[1], ZOOM_POINT));
-        }
+        empriseDuCarre().ifPresent(carte::centrerSurCarre);
         majMarqueur();
     }
 
@@ -165,7 +157,7 @@ public class ModalePointController {
             return;
         }
         Optional<EmpriseCarre> emprise = empriseDuCarre();
-        Optional<double[]> gps = coordonneesSaisies();
+        Optional<double[]> gps = viewModel.coordonneesValides();
         List<CarreGeo> carres = emprise.map(e -> List.of(new CarreGeo(numeroCarre, e, COULEUR_CARRE)))
                 .orElse(List.of());
         List<PointGeo> points;
@@ -179,37 +171,25 @@ public class ModalePointController {
         carte.setDonnees(new DonneesCarte(carres, points), false);
     }
 
-    /// Emprise (et donc centre) du carré du site : carroyage officiel, ou repli vide si inconnu.
+    /// Emprise (et centre) du carré du site, pour le repère et le centrage : **carroyage officiel** si le
+    /// carré y figure ; sinon **repli autour du GPS saisi** (s'il y en a un), pour tracer tout de même un
+    /// carré-repère (#153). Vide seulement si le carré est hors référentiel **et** sans GPS exploitable
+    /// (impossible à situer). Le repère suit alors le GPS pendant la saisie : c'est voulu, faute de grille.
     private Optional<EmpriseCarre> empriseDuCarre() {
-        return numeroCarre == null
-                ? Optional.empty()
-                : FournisseurEmpriseCarre.parDefaut().emprise(numeroCarre, List.of());
-    }
-
-    /// Coordonnées GPS saisies si **les deux** champs sont renseignés et valides, sinon vide.
-    private Optional<double[]> coordonneesSaisies() {
-        Double lat = coordonneeOuNull(viewModel.latitudeProperty().get());
-        Double lon = coordonneeOuNull(viewModel.longitudeProperty().get());
-        return lat == null || lon == null ? Optional.empty() : Optional.of(new double[] {lat, lon});
+        if (numeroCarre == null) {
+            return Optional.empty();
+        }
+        List<PointGeo> reperes = viewModel
+                .coordonneesValides()
+                .map(gps -> List.of(new PointGeo(libelleMarqueur(), gps[0], gps[1], COULEUR_POINT)))
+                .orElseGet(List::of);
+        return FournisseurEmpriseCarre.parDefaut().emprise(numeroCarre, reperes);
     }
 
     /// Libellé du marqueur : le code saisi, ou « Point » tant qu'aucun code n'est entré.
     private String libelleMarqueur() {
         String code = viewModel.codeProperty().get();
         return code == null || code.isBlank() ? "Point" : code;
-    }
-
-    /// Parse une coordonnée (virgule tolérée), ou `null` si vide ou mal formée (pas d'exception : la
-    /// carte ne doit jamais casser pendant la frappe).
-    private static Double coordonneeOuNull(String texte) {
-        if (texte == null || texte.isBlank()) {
-            return null;
-        }
-        try {
-            return Double.parseDouble(texte.trim().replace(',', '.'));
-        } catch (NumberFormatException malForme) {
-            return null;
-        }
     }
 
     /// Formate une coordonnée issue du glisser : 6 décimales (~0,1 m), point décimal.

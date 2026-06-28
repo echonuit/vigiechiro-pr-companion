@@ -130,6 +130,14 @@ class ModalePointViewTest {
         assertThat(premierePastille(robot).getStrokeDashArray())
                 .as("GPS saisi : marqueur réel (pastille pleine, sans pointillés)")
                 .isEmpty();
+
+        // Une latitude hors bornes (200) est refusée par le formulaire ET ne doit pas être projetée :
+        // le marqueur redevient approximatif (au centre du carré) plutôt qu'un point réel aberrant.
+        robot.interact(() -> latitude.setText("200"));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(premierePastille(robot).getStrokeDashArray())
+                .as("GPS hors bornes : pas de projection, retour au marqueur approximatif")
+                .isNotEmpty();
     }
 
     /// Pastille (cercle) du premier marqueur de la carte-outil : enfant du groupe portant le libellé.

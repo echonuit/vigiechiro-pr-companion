@@ -5,6 +5,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -149,6 +150,19 @@ public class PointEditViewModel {
     /// Conjonction des validités : pilote l'activation du bouton de validation.
     public BooleanBinding peutEnregistrer() {
         return peutEnregistrer;
+    }
+
+    /// Coordonnées GPS saisies **uniquement si les deux champs sont renseignés et valides** (bornes
+    /// incluses : latitude −90..90, longitude −180..180), sinon vide. Pensé pour la **carte-outil** : elle
+    /// ne pose un marqueur à une position réelle que pour un couple complet et borné (un champ vide, ou
+    /// un nombre hors bornes que le formulaire refuse déjà, ne doit pas être projeté). Tableau `{lat, lon}`.
+    public Optional<double[]> coordonneesValides() {
+        if (!latitudeValide.get() || !longitudeValide.get()) {
+            return Optional.empty();
+        }
+        Double lat = parserCoordonnee(latitude.get());
+        Double lon = parserCoordonnee(longitude.get());
+        return lat == null || lon == null ? Optional.empty() : Optional.of(new double[] {lat, lon});
     }
 
     private void reinitialiserChamps() {
