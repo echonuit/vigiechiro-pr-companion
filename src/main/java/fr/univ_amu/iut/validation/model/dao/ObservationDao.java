@@ -5,8 +5,11 @@ import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.validation.model.CarreEspeces;
+import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.Observation;
+import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -111,6 +114,83 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getInt("annee"),
             rs.getInt("num"),
             rs.getString("date_enr"));
+
+    /// **Inventaire par espèce** (#analyse) : agrège les observations de l'utilisateur par espèce
+    /// (`COALESCE(observateur, tadarida)`, pseudo-taxons exclus), filtrées par `statut` (`null` = tous).
+    /// Compteurs : détections, passages/carrés/points distincts, période. Statut dérivé en SQL (CASE),
+    /// fidèle à [ServiceValidation#statut].
+    public List<EspeceAgregee> inventaireParEspece(String idUtilisateur, StatutObservation statut) {
+        String filtre = statut == null ? null : statut.name();
+        return projeter(SQL_PAR_ESPECE, MAPPER_ESPECE_AGREGEE, idUtilisateur, filtre, filtre);
+    }
+
+    /// **Inventaire par carré** (#analyse) : agrège par carré (site), filtré par `statut` (`null` = tous).
+    /// Donne la **richesse** (nombre d'espèces distinctes) et le total de détections par carré.
+    public List<CarreEspeces> inventaireParCarre(String idUtilisateur, StatutObservation statut) {
+        String filtre = statut == null ? null : statut.name();
+        return projeter(SQL_PAR_CARRE, MAPPER_CARRE_ESPECES, idUtilisateur, filtre, filtre);
+    }
+
+    /// CTE commune : une ligne **par observation** de l'utilisateur, avec l'espèce retenue, le statut
+    /// dérivé et le contexte (passage/carré/point/année). Les pseudo-taxons bruit/oiseau sont exclus.
+    private static final String CTE_OBSERVATIONS = "WITH obs AS ("
+            + " SELECT COALESCE(o.taxon_observer, o.taxon_tadarida) AS taxon_code,"
+            + " CASE"
+            + "   WHEN o.taxon_observer IS NULL THEN 'NON_TOUCHEE'"
+            + "   WHEN o.taxon_observer = o.taxon_tadarida AND o.prob_observer IS NOT NULL THEN 'VALIDEE'"
+            + "   WHEN o.taxon_observer = o.taxon_tadarida THEN 'NON_TOUCHEE'"
+            + "   ELSE 'CORRIGEE'"
+            + " END AS statut,"
+            + " p.id AS passage_id, p.year AS annee, ms.square_number AS carre,"
+            + " ms.friendly_name AS nom_site, lp.id AS point_id"
+            + " FROM observation o"
+            + " JOIN listening_sequence ls ON o.sequence_id = ls.id"
+            + " JOIN recording_session rs ON ls.session_id = rs.id"
+            + " JOIN passage p ON rs.passage_id = p.id"
+            + " JOIN listening_point lp ON p.point_id = lp.id"
+            + " JOIN monitoring_site ms ON lp.site_id = ms.id"
+            + " WHERE ms.user_id = ? AND COALESCE(o.taxon_observer, o.taxon_tadarida) NOT IN ('noise', 'piaf'))";
+
+    private static final String SQL_PAR_ESPECE = CTE_OBSERVATIONS
+            + " SELECT obs.taxon_code AS code, t.latin_name AS latin, t.vernacular_name_fr AS vern,"
+            + " g.name AS groupe, COUNT(*) AS nb_obs, COUNT(DISTINCT obs.passage_id) AS nb_passages,"
+            + " COUNT(DISTINCT obs.carre) AS nb_carres, COUNT(DISTINCT obs.point_id) AS nb_points,"
+            + " MIN(obs.annee) AS annee_min, MAX(obs.annee) AS annee_max"
+            + " FROM obs"
+            + " JOIN taxon t ON t.code = obs.taxon_code"
+            + " LEFT JOIN taxonomic_group g ON g.id = t.group_id"
+            + " WHERE (? IS NULL OR obs.statut = ?)"
+            + " GROUP BY obs.taxon_code, t.latin_name, t.vernacular_name_fr, g.name"
+            + " ORDER BY nb_obs DESC, t.vernacular_name_fr";
+
+    private static final RowMapper<EspeceAgregee> MAPPER_ESPECE_AGREGEE = rs -> new EspeceAgregee(
+            rs.getString("code"),
+            rs.getString("latin"),
+            rs.getString("vern"),
+            rs.getString("groupe"),
+            rs.getInt("nb_obs"),
+            rs.getInt("nb_passages"),
+            rs.getInt("nb_carres"),
+            rs.getInt("nb_points"),
+            rs.getInt("annee_min"),
+            rs.getInt("annee_max"));
+
+    private static final String SQL_PAR_CARRE = CTE_OBSERVATIONS
+            + " SELECT obs.carre AS carre, obs.nom_site AS nom_site,"
+            + " COUNT(DISTINCT obs.taxon_code) AS richesse, COUNT(*) AS nb_obs,"
+            + " MIN(obs.annee) AS annee_min, MAX(obs.annee) AS annee_max"
+            + " FROM obs"
+            + " WHERE (? IS NULL OR obs.statut = ?)"
+            + " GROUP BY obs.carre, obs.nom_site"
+            + " ORDER BY richesse DESC, obs.carre";
+
+    private static final RowMapper<CarreEspeces> MAPPER_CARRE_ESPECES = rs -> new CarreEspeces(
+            rs.getString("carre"),
+            rs.getString("nom_site"),
+            rs.getInt("richesse"),
+            rs.getInt("nb_obs"),
+            rs.getInt("annee_min"),
+            rs.getInt("annee_max"));
 
     @Override
     public Observation insert(Observation observation) {

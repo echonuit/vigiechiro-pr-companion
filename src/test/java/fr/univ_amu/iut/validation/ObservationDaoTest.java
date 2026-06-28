@@ -8,8 +8,10 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.Observation;
+import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Path;
 import java.sql.Connection;
@@ -326,6 +328,99 @@ class ObservationDaoTest {
         dao.insert(observationComplete());
 
         assertThat(dao.especesObserveesParUtilisateur("autre")).isEmpty();
+    }
+
+    // --- Inventaire transverse (#analyse) ---
+
+    /// Sème 3 observations dans l'unique passage seedé, une par statut dérivé :
+    /// Pippip VALIDÉE, Tadten CORRIGÉE (observateur ≠ Tadarida), Nyclei NON_TOUCHÉE.
+    private void semerTroisStatuts() {
+        dao.insert(observationValidee("Pippip")); // observateur = tadarida + prob → VALIDEE, espèce Pippip
+        dao.insert(observation("Nyclei", "Tadten")); // observateur ≠ tadarida → CORRIGEE, espèce Tadten
+        dao.insert(observation("Nyclei", null)); // pas d'observateur → NON_TOUCHEE, espèce Nyclei
+    }
+
+    @Test
+    @DisplayName("#analyse : inventaire par espèce — compteurs et choix d'espèce (validé sinon Tadarida)")
+    void inventaire_par_espece_compteurs() {
+        semerTroisStatuts();
+
+        List<EspeceAgregee> inventaire = dao.inventaireParEspece("u-1", null);
+
+        assertThat(inventaire)
+                .extracting(EspeceAgregee::code)
+                .as("3 espèces : Pippip (validé), Tadten (corrigé), Nyclei (proposition)")
+                .containsExactlyInAnyOrder("Pippip", "Tadten", "Nyclei");
+        assertThat(inventaire).allSatisfy(espece -> {
+            assertThat(espece.nbObservations()).isEqualTo(1);
+            assertThat(espece.nbPassages()).isEqualTo(1);
+            assertThat(espece.nbCarres()).isEqualTo(1);
+            assertThat(espece.nbPoints()).isEqualTo(1);
+            assertThat(espece.anneeMin()).isEqualTo(2026);
+            assertThat(espece.anneeMax()).isEqualTo(2026);
+        });
+    }
+
+    @Test
+    @DisplayName("#analyse : le filtre de statut restreint l'inventaire par espèce")
+    void inventaire_par_espece_filtre_statut() {
+        semerTroisStatuts();
+
+        assertThat(dao.inventaireParEspece("u-1", StatutObservation.VALIDEE))
+                .extracting(EspeceAgregee::code)
+                .containsExactly("Pippip");
+        assertThat(dao.inventaireParEspece("u-1", StatutObservation.CORRIGEE))
+                .extracting(EspeceAgregee::code)
+                .containsExactly("Tadten");
+        assertThat(dao.inventaireParEspece("u-1", StatutObservation.NON_TOUCHEE))
+                .extracting(EspeceAgregee::code)
+                .containsExactly("Nyclei");
+    }
+
+    @Test
+    @DisplayName("#analyse : inventaire par carré — richesse = nb d'espèces distinctes, total de détections")
+    void inventaire_par_carre_richesse() {
+        semerTroisStatuts();
+
+        assertThat(dao.inventaireParCarre("u-1", null)).singleElement().satisfies(carre -> {
+            assertThat(carre.numeroCarre()).isEqualTo("640380");
+            assertThat(carre.richesse()).as("3 espèces distinctes").isEqualTo(3);
+            assertThat(carre.nbObservations()).isEqualTo(3);
+        });
+        // Filtré sur les validées : une seule espèce (Pippip), une détection.
+        assertThat(dao.inventaireParCarre("u-1", StatutObservation.VALIDEE))
+                .singleElement()
+                .satisfies(carre -> {
+                    assertThat(carre.richesse()).isEqualTo(1);
+                    assertThat(carre.nbObservations()).isEqualTo(1);
+                });
+    }
+
+    @Test
+    @DisplayName("#analyse : l'inventaire ne renvoie rien pour un autre utilisateur (périmètre)")
+    void inventaire_autre_utilisateur_vide() {
+        semerTroisStatuts();
+
+        assertThat(dao.inventaireParEspece("autre", null)).isEmpty();
+        assertThat(dao.inventaireParCarre("autre", null)).isEmpty();
+    }
+
+    private Observation observationValidee(String code) {
+        return new Observation(
+                null,
+                idSequence,
+                null,
+                null,
+                null,
+                code,
+                null,
+                null,
+                code,
+                0.9,
+                null,
+                false,
+                ModeValidation.MANUEL,
+                idResultats);
     }
 
     private Observation observation(String codeTadarida, String codeObservateur) {
