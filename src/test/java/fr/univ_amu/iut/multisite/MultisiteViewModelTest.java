@@ -19,6 +19,7 @@ import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +40,9 @@ class MultisiteViewModelTest {
     @Mock
     private ServiceMultisite service;
 
+    @Mock
+    private ServiceSites serviceSites;
+
     private static LignePassage ligne(String carre, String point, int annee, int numero) {
         return new LignePassage(
                 (long) numero, carre, point, annee, numero, "2026-06-2" + numero, StatutWorkflow.DEPOSE, Verdict.OK);
@@ -49,7 +53,7 @@ class MultisiteViewModelTest {
     void rafraichir_charge_et_resume() {
         when(service.listerPassages(eq(ID), any(), any()))
                 .thenReturn(List.of(ligne("640380", "A1", 2026, 1), ligne("640381", "B2", 2026, 2)));
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.rafraichir();
 
@@ -62,7 +66,7 @@ class MultisiteViewModelTest {
     @DisplayName("#152 : rafraichirCarte alimente l'agrégat des carrés (séparé du tableau)")
     void rafraichirCarte_alimente_la_carte() {
         when(service.agregerPourCarte(ID)).thenReturn(List.of(new CarreAgrege("640380", "Étang", List.of(), 0)));
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.rafraichirCarte();
 
@@ -73,7 +77,7 @@ class MultisiteViewModelTest {
     @DisplayName("#152 : rafraichir (filtres/tri) ne recalcule PAS l'agrégat carte (coût évité)")
     void rafraichir_ne_touche_pas_la_carte() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.rafraichir();
         vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE); // re-déclenche rafraichir
@@ -85,7 +89,7 @@ class MultisiteViewModelTest {
     @DisplayName("Changer un filtre ré-interroge le service avec les critères courants")
     void filtre_re_interroge_le_service() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE);
 
@@ -98,7 +102,7 @@ class MultisiteViewModelTest {
     @DisplayName("Changer le tri ré-interroge le service avec le critère de tri choisi")
     void tri_re_interroge_le_service() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.triProperty().set(TriMultisite.PAR_ANNEE);
 
@@ -109,7 +113,7 @@ class MultisiteViewModelTest {
     @DisplayName("Un numéro de carré vide ou en blanc n'applique aucun filtre (null)")
     void numero_carre_blanc_pas_de_filtre() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.filtreNumeroCarreProperty().set("640380");
         vm.filtreNumeroCarreProperty().set("   "); // blanc → aucun filtre
@@ -123,7 +127,7 @@ class MultisiteViewModelTest {
     @DisplayName("reinitialiserFiltres remet tous les critères à zéro")
     void reinitialiser_remet_a_zero() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
         vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE);
         vm.filtreNumeroCarreProperty().set("640380");
 
@@ -137,7 +141,7 @@ class MultisiteViewModelTest {
     @DisplayName("exporter délègue l'écriture au service et restitue un bilan")
     void exporter_delegue_au_service() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of(ligne("640380", "A1", 2026, 1)));
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
         vm.rafraichir();
 
         boolean ok = vm.exporter(Path.of("/tmp/vue-multisite.csv"));
@@ -150,7 +154,7 @@ class MultisiteViewModelTest {
     @Test
     @DisplayName("#291 : exporter(lignes fournies) écrit EXACTEMENT l'ordre donné (le tri affiché)")
     void exporter_respecte_l_ordre_fourni() {
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
         // Ordre « affiché » (p. ex. après un tri par clic d'en-tête) différent de l'ordre interne.
         List<LignePassage> ordreAffiche = List.of(ligne("640381", "B2", 2025, 3), ligne("640380", "A1", 2026, 1));
 
@@ -165,7 +169,7 @@ class MultisiteViewModelTest {
     void enregistrer_vue() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
         when(service.listerVues()).thenReturn(List.of(new SavedView(1L, "Déposés 2026", "{}")));
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
         vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE);
 
         boolean ok = vm.enregistrerVue("Déposés 2026");
@@ -180,7 +184,7 @@ class MultisiteViewModelTest {
     @Test
     @DisplayName("enregistrerVue refuse un nom vide")
     void enregistrer_vue_refuse_nom_vide() {
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         assertThat(vm.enregistrerVue("   ")).isFalse();
         assertThat(vm.messageProperty().get()).contains("nom");
@@ -191,7 +195,7 @@ class MultisiteViewModelTest {
     void appliquer_vue() {
         when(service.listerPassages(eq(ID), any(), any())).thenReturn(List.of());
         when(service.chargerVue(5L)).thenReturn(new FiltresMultisite("640380", StatutWorkflow.VERIFIE, null, 2026));
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         boolean ok = vm.appliquerVue(new SavedView(5L, "Ma vue", "{}"));
 
@@ -207,7 +211,7 @@ class MultisiteViewModelTest {
     @DisplayName("mettreAJourVue met à jour la vue avec la combinaison courante")
     void mettre_a_jour_vue() {
         when(service.listerVues()).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         boolean ok = vm.mettreAJourVue(new SavedView(8L, "Ancien", "{}"), "Nouveau");
 
@@ -219,11 +223,58 @@ class MultisiteViewModelTest {
     @DisplayName("supprimerVue supprime la vue et recharge la liste")
     void supprimer_vue() {
         when(service.listerVues()).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, ID);
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         boolean ok = vm.supprimerVue(new SavedView(3L, "X", "{}"));
 
         assertThat(ok).isTrue();
         verify(service).supprimerVue(3L);
+    }
+
+    // --- Édition des positions (#154) ---
+
+    @Test
+    @DisplayName("#154 : un déplacement est mis en attente (rien n'est écrit), le bouton s'active")
+    void deplacement_en_attente_n_ecrit_rien() {
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
+
+        vm.positionsEnAttente().deplacer(42L, 43.4055, -1.5680);
+
+        assertThat(vm.positionsEnAttente().aDesEnAttente()).isTrue();
+        assertThat(vm.positionsEnAttente().modifieesProperty().get()).isTrue();
+        verify(serviceSites, never()).deplacerPoint(any(), any(), any());
+    }
+
+    @Test
+    @DisplayName("#154 : enregistrer persiste chaque déplacement puis recharge la carte et vide la file")
+    void enregistrer_positions_persiste_et_recharge() {
+        when(service.agregerPourCarte(ID)).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
+        vm.positionsEnAttente().deplacer(42L, 43.4055, -1.5680);
+        vm.positionsEnAttente().deplacer(7L, 43.4010, -1.5740);
+
+        int enregistres = vm.positionsEnAttente().enregistrer();
+
+        assertThat(enregistres).isEqualTo(2);
+        verify(serviceSites).deplacerPoint(42L, 43.4055, -1.5680);
+        verify(serviceSites).deplacerPoint(7L, 43.4010, -1.5740);
+        assertThat(vm.positionsEnAttente().aDesEnAttente()).isFalse();
+        assertThat(vm.positionsEnAttente().modifieesProperty().get()).isFalse();
+        verify(service, atLeastOnce()).agregerPourCarte(ID); // carte rechargée après enregistrement
+    }
+
+    @Test
+    @DisplayName("#154 : abandonner vide la file sans rien persister et recharge la carte")
+    void annuler_positions_n_ecrit_rien() {
+        when(service.agregerPourCarte(ID)).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
+        vm.positionsEnAttente().deplacer(42L, 43.4055, -1.5680);
+
+        vm.positionsEnAttente().annuler();
+
+        assertThat(vm.positionsEnAttente().aDesEnAttente()).isFalse();
+        assertThat(vm.positionsEnAttente().modifieesProperty().get()).isFalse();
+        verify(serviceSites, never()).deplacerPoint(any(), any(), any());
+        verify(service, atLeastOnce()).agregerPourCarte(ID);
     }
 }

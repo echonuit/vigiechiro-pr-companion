@@ -12,6 +12,7 @@ import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -41,7 +42,7 @@ class ModaleVuesViewTest {
         when(service.listerPassages(anyString(), any(), any())).thenReturn(List.of());
         when(service.listerVues())
                 .thenReturn(List.of(new SavedView(1L, "Déposés 2026", "{}"), new SavedView(2L, "Douteux", "{}")));
-        viewModel = new MultisiteViewModel(service, "u-1");
+        viewModel = new MultisiteViewModel(service, mock(ServiceSites.class), "u-1");
 
         FXMLLoader loader = new FXMLLoader(ModaleVuesController.class.getResource("ModaleVues.fxml"));
         Parent vue = loader.load();

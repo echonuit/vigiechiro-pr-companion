@@ -23,6 +23,7 @@ import fr.univ_amu.iut.multisite.model.PointAgrege;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
@@ -95,7 +96,7 @@ class MultisiteVueIntegrationTest {
 
             @Provides
             MultisiteViewModel viewModel() {
-                return new MultisiteViewModel(service, "u-1");
+                return new MultisiteViewModel(service, mock(ServiceSites.class), "u-1");
             }
         });
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
