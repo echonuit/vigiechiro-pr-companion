@@ -99,9 +99,11 @@ class CarteSitesTest {
                         .findFirst()
                         .orElseThrow();
         assertThat(pastille.getStrokeDashArray()).as("anneau pointillé").isNotEmpty();
+        assertThat(pastille.getStroke()).as("anneau coloré par le statut").isEqualTo(Color.GREEN);
         assertThat(pastille.getFill())
-                .as("intérieur creux (pas une pastille pleine)")
-                .isEqualTo(Color.TRANSPARENT);
+                .as("fond blanc contrastant, distinct d'une pastille pleine colorée")
+                .isEqualTo(Color.WHITE)
+                .isNotEqualTo(approche.couleur());
     }
 
     @Test
