@@ -10,7 +10,11 @@ package fr.univ_amu.iut.commun.view;
 /// écrire une implémentation + une ligne de binding — le socle n'est jamais retouché.
 public interface ActiviteAccueil {
 
-    /// Rang d'affichage (ordre croissant : les plus petits en premier).
+    /// **Prisme** auquel rattacher l'activité : le [MainController] regroupe les cartes d'accueil en deux
+    /// sections selon cette valeur (« Collecte & passages » / « Espèces & biodiversité »).
+    Prisme prisme();
+
+    /// Rang d'affichage **dans son prisme** (ordre croissant : les plus petits en premier).
     int ordre();
 
     /// Code d'icône [Ikonli](https://kordamp.org/ikonli/) FontAwesome 5 affiché en tête de carte

@@ -2,14 +2,15 @@ package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
+import fr.univ_amu.iut.commun.view.Prisme;
 import java.util.Objects;
 
 /// Carte d'accueil de la feature `multisite` : ouvre l'écran « Carte & passages ».
 ///
 /// Implémente le contrat du socle [ActiviteAccueil] et délègue l'ouverture à
 /// [NavigationMultisite] (même feature). Enregistrée dans le `Multibinder<ActiviteAccueil>` par
-/// [fr.univ_amu.iut.multisite.di.MultisiteModule]. Rang 40 : après « Mes sites » (10),
-/// « Importer une nuit » (20) et « Bibliothèque de sons » (30).
+/// [fr.univ_amu.iut.multisite.di.MultisiteModule]. Prisme **Collecte & passages**, rang 20 : après
+/// « Mes sites » (10).
 public final class ActiviteMultisite implements ActiviteAccueil {
 
     private final NavigationMultisite navigation;
@@ -20,8 +21,13 @@ public final class ActiviteMultisite implements ActiviteAccueil {
     }
 
     @Override
+    public Prisme prisme() {
+        return Prisme.COLLECTE_PASSAGES;
+    }
+
+    @Override
     public int ordre() {
-        return 40;
+        return 20;
     }
 
     @Override

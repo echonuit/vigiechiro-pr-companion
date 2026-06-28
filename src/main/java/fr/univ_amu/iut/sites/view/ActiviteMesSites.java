@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
+import fr.univ_amu.iut.commun.view.Prisme;
 import java.util.Objects;
 
 /// Carte d'accueil de la feature `sites` : ouvre l'écran « Mes sites de suivi ».
@@ -16,6 +17,11 @@ public final class ActiviteMesSites implements ActiviteAccueil {
     @Inject
     public ActiviteMesSites(NavigationSites navigation) {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
+    }
+
+    @Override
+    public Prisme prisme() {
+        return Prisme.COLLECTE_PASSAGES;
     }
 
     @Override

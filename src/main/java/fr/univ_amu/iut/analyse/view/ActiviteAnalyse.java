@@ -2,13 +2,13 @@ package fr.univ_amu.iut.analyse.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
+import fr.univ_amu.iut.commun.view.Prisme;
 import java.util.Objects;
 
 /// Carte d'accueil de la feature `analyse` (prisme **« Espèces & biodiversité »**) : ouvre l'écran
 /// transverse « Espèces & observations ». Implémente le contrat socle [ActiviteAccueil] et délègue à
 /// [NavigationAnalyse]. Enregistrée dans le `Multibinder<ActiviteAccueil>` par
-/// [fr.univ_amu.iut.analyse.di.AnalyseModule]. Rang 50 : après les cartes du prisme « Collecte &
-/// passages » (Mes sites 10, Importer 20, Bibliothèque 30, Carte & passages 40).
+/// [fr.univ_amu.iut.analyse.di.AnalyseModule]. Rang 10 : carte de tête de son prisme.
 public final class ActiviteAnalyse implements ActiviteAccueil {
 
     private final NavigationAnalyse navigation;
@@ -19,8 +19,13 @@ public final class ActiviteAnalyse implements ActiviteAccueil {
     }
 
     @Override
+    public Prisme prisme() {
+        return Prisme.ESPECES_BIODIVERSITE;
+    }
+
+    @Override
     public int ordre() {
-        return 50;
+        return 10;
     }
 
     @Override
