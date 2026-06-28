@@ -74,6 +74,13 @@ public class CarteSites extends Region {
         couchePoints.setOnDeplace(Objects.requireNonNull(onPointDeplace, "onPointDeplace"));
     }
 
+    /// Définit la **contrainte de déplacement** (mode édition) : chaque position proposée au glisser/clavier
+    /// est ajustée par `contrainte` avant d'être appliquée (p. ex. clamp d'un point à son carré). Par
+    /// défaut, aucune contrainte.
+    public void setContrainteDeplacement(ContrainteDeplacement contrainte) {
+        couchePoints.setContrainte(Objects.requireNonNull(contrainte, "contrainte"));
+    }
+
     /// Met en **surbrillance** le carré de numéro `numeroCarre` (les autres reviennent à la normale).
     /// `null` n'en surligne aucun. Sert à refléter sur la carte la sélection faite dans le tableau.
     public void surbrillanceCarre(String numeroCarre) {
