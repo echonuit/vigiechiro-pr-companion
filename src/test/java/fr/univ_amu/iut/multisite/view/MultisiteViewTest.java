@@ -29,6 +29,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -110,10 +112,15 @@ class MultisiteViewTest {
     }
 
     @Test
-    @DisplayName("L'export est actif dès qu'il y a des passages à exporter")
+    @DisplayName("L'export (item du menu ☰) est actif dès qu'il y a des passages à exporter")
     void export_actif_quand_non_vide(FxRobot robot) {
-        Button boutonExporter = robot.lookup("#boutonExporter").queryAs(Button.class);
-        assertThat(boutonExporter.isDisabled()).isFalse();
+        // #370 : Exporter est un item du menu « ☰ ». On inspecte son état désactivé directement.
+        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        MenuItem itemExporter = menu.getItems().stream()
+                .filter(item -> "itemExporter".equals(item.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(itemExporter.isDisable()).isFalse();
     }
 
     @Test

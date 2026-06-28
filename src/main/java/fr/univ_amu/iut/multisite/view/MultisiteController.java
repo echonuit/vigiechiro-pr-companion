@@ -27,6 +27,9 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -75,11 +78,15 @@ public class MultisiteController implements RafraichirAuRetour {
     @FXML
     private ComboBox<TriMultisite> choixTri;
 
+    /// Menu « ☰ » regroupant les actions secondaires (Vues, Exporter) pour alléger la barre (#370).
     @FXML
-    private Button boutonExporter;
+    private MenuButton menuActions;
 
     @FXML
-    private Button boutonGererVues;
+    private MenuItem itemExporter;
+
+    @FXML
+    private MenuItem itemGererVues;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -180,6 +187,16 @@ public class MultisiteController implements RafraichirAuRetour {
         configurerFiltres();
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(convertisseur(MultisiteController::libelleTri));
+        // #370 : sans étiquette « Tri : » avant la liste, on préfixe l'intitulé DANS la cellule-bouton (la
+        // valeur sélectionnée affichée), sans toucher aux items du menu déroulant qui restent bruts.
+        choixTri.setButtonCell(new ListCell<>() {
+            @Override
+            protected void updateItem(TriMultisite tri, boolean vide) {
+                super.updateItem(tri, vide);
+                setText(vide || tri == null ? null : "Tri : " + libelleTri(tri));
+            }
+        });
+        choixTri.setAccessibleText("Trier les passages");
         choixTri.valueProperty().bindBidirectional(viewModel.triProperty());
         // Choisir un ordre nommé (combo) réinitialise le tri par colonne, pour que l'ordre nommé soit
         // visible (sinon le comparateur de colonne masquerait le tri serveur). #145.
@@ -189,7 +206,7 @@ public class MultisiteController implements RafraichirAuRetour {
                         (obs, ancien, nouveau) -> tableLignes.getSortOrder().clear());
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
-        boutonExporter.disableProperty().bind(viewModel.nonVideProperty().not());
+        itemExporter.disableProperty().bind(viewModel.nonVideProperty().not());
 
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
@@ -430,6 +447,14 @@ public class MultisiteController implements RafraichirAuRetour {
                 .filtreAnneeProperty()
                 .addListener(
                         (obs, ancien, nouveau) -> champAnnee.setText(nouveau == null ? "" : String.valueOf(nouveau)));
+
+        // #370 : étiquettes visuelles retirées → on garde les libellés ACCESSIBLES (#163) sur chaque
+        // contrôle (le promptText des champs et la valeur par défaut des listes ne suffisent pas aux
+        // lecteurs d'écran). Le tri porte déjà son accessibleText là où il est configuré.
+        champCarre.setAccessibleText("Filtrer par numéro de carré");
+        choixStatut.setAccessibleText("Filtrer par statut");
+        choixVerdict.setAccessibleText("Filtrer par verdict");
+        champAnnee.setAccessibleText("Filtrer par année");
     }
 
     /// Parse l'année saisie : un champ vide lève le filtre, une valeur non numérique est ignorée
@@ -458,7 +483,7 @@ public class MultisiteController implements RafraichirAuRetour {
     /// (appliquer une vue met donc à jour les filtres et le tableau de cet écran).
     @FXML
     private void gererVues() {
-        navigation.ouvrirModaleVues(boutonGererVues.getScene().getWindow(), viewModel);
+        navigation.ouvrirModaleVues(menuActions.getScene().getWindow(), viewModel);
     }
 
     @FXML
@@ -479,7 +504,7 @@ public class MultisiteController implements RafraichirAuRetour {
         selecteur.setTitle("Exporter les passages en CSV");
         selecteur.setInitialFileName("vue-multisite.csv");
         selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
-        File fichier = selecteur.showSaveDialog(boutonExporter.getScene().getWindow());
+        File fichier = selecteur.showSaveDialog(menuActions.getScene().getWindow());
         if (fichier != null) {
             // #291 : on exporte l'ordre RÉELLEMENT affiché (tri par clic d'en-tête inclus), donc un
             // instantané des items de la table (SortedList), et non l'ordre interne du ViewModel.

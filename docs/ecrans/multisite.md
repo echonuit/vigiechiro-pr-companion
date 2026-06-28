@@ -35,14 +35,16 @@ bouton **⤢** en haut à droite **recadre** la carte sur l'ensemble des carrés
 connexion est disponible. La carte montre
 **tous** les sites (vue d'ensemble) : elle n'est pas restreinte par les filtres du tableau.
 
-Deux poignées **◀ / ▶** posées au sommet du séparateur **replient entièrement** un panneau pour donner
-toute la largeur à l'autre (et le rouvrent) : **◀** masque la carte, **▶** masque le tableau ; on ne
-peut pas masquer les deux. Replier la carte est aussi la **dégradation élégante hors connexion** :
-quand le fond OpenStreetMap n'est pas joignable, le tableau seul reste pleinement exploitable.
+Deux boutons placés **en bas**, chacun à l'extrémité **sous le panneau qu'il masque** (**◀ Carte** à
+gauche, **Tableau ▶** à droite), **replient entièrement** un panneau pour donner toute la largeur à
+l'autre (et le rouvrent) ; on ne peut pas masquer les deux. Replier la carte est aussi la
+**dégradation élégante hors connexion** : quand le fond OpenStreetMap n'est pas joignable, le tableau
+seul reste pleinement exploitable.
 
 À **droite**, le **tableau** liste chaque passage (carré, point, année, numéro, date, **statut**,
-**verdict**). La barre du haut permet de **filtrer** (par carré, statut, verdict, année), de
-**réinitialiser** les filtres, et d'**exporter** la sélection. On **trie** en cliquant l'en-tête d'une
+**verdict**). La barre du haut permet de **filtrer** (par carré, statut, verdict, année) et de
+**réinitialiser** les filtres ; un menu **☰** à droite de la barre regroupe les actions secondaires
+(**Vues** enregistrées et **export** de la sélection). On **trie** en cliquant l'en-tête d'une
 colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
 **double-clic** sur une ligne ouvre l'écran du passage correspondant.
 
