@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.47.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.46.1...v1.47.0) (2026-06-28)
+
+
+### Features
+
+* **analyse:** détail des observations d'une espèce à travers les passages + ouvrir le passage ([#379](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/379)) ([d45333b](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/d45333b291e4868fa2330c9015b871c5c5509c81)), closes [#381](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/381)
+
 ## [1.46.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.46.0...v1.46.1) (2026-06-28)
 
 
