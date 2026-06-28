@@ -23,12 +23,11 @@
       fx:controller="fr.univ_amu.iut.multisite.view.MultisiteController"
       stylesheets="@../../commun/view/palette.css, @multisite.css"
       styleClass="ecran-multisite"
-      spacing="12.0">
+      spacing="10.0">
 
-  <VBox spacing="2.0">
-    <Label text="🗂 Vue multi-sites" styleClass="titre-page"/>
-    <Label fx:id="lblResume" styleClass="sous-titre-page"/>
-  </VBox>
+  <!-- #341 : pas de titre de page (le fil d'Ariane du chrome indique déjà « … › Vue multi-sites »).
+       On ne garde qu'une ligne fine de résumé pour récupérer de la hauteur, critique sur petit écran. -->
+  <Label fx:id="lblResume" styleClass="sous-titre-page"/>
 
   <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
     <Label text="Carré :" styleClass="section-sous"/>
