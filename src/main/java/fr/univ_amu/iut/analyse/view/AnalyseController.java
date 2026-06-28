@@ -3,9 +3,12 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.File;
 import java.util.Objects;
@@ -17,9 +20,13 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 
@@ -34,6 +41,7 @@ import javafx.util.StringConverter;
 public class AnalyseController implements RafraichirAuRetour {
 
     private final AnalyseViewModel viewModel;
+    private final OuvrirPassage ouvrirPassage;
 
     @FXML
     private Label lblResume;
@@ -98,9 +106,46 @@ public class AnalyseController implements RafraichirAuRetour {
     @FXML
     private TableColumn<CarreEspeces, String> colPeriodeCarre;
 
+    @FXML
+    private SplitPane separateur;
+
+    @FXML
+    private VBox panneauDetail;
+
+    @FXML
+    private Label lblDetailTitre;
+
+    @FXML
+    private Label lblDetailVide;
+
+    @FXML
+    private Button boutonOuvrirPassage;
+
+    @FXML
+    private TableView<ObservationEspece> tableObservations;
+
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsPassage;
+
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsCarre;
+
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsPoint;
+
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsTadarida;
+
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsObservateur;
+
+    @FXML
+    private TableColumn<ObservationEspece, String> colObsStatut;
+
     @Inject
-    public AnalyseController(AnalyseViewModel viewModel) {
+    public AnalyseController(AnalyseViewModel viewModel, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     @FXML
@@ -144,7 +189,63 @@ public class AnalyseController implements RafraichirAuRetour {
         lblMessage.visibleProperty().bind(vide);
         lblMessage.managedProperty().bind(vide);
 
+        configurerDetail();
+
         viewModel.rafraichir();
+    }
+
+    /// Câble le panneau **détail** (maître-détail) : la sélection d'une espèce dans l'inventaire charge ses
+    /// observations à travers les passages ; double-clic ou bouton « Ouvrir le passage » navigue vers
+    /// M-Passage (contrat socle [OuvrirPassage], aucune dépendance vers `passage.view`).
+    private void configurerDetail() {
+        tableObservations.setItems(viewModel.observations());
+
+        // Le panneau détail n'a de sens qu'en regroupement Par espèce : on le retire du SplitPane en Par
+        // carré pour rendre toute la hauteur à la table des carrés (plutôt qu'un placeholder inutile).
+        viewModel.regroupementProperty().addListener((obs, ancien, regroupement) -> afficherDetail(regroupement));
+        afficherDetail(viewModel.regroupementProperty().get());
+
+        // La ligne sélectionnée de l'inventaire pilote le détail (null en Par carré → détail vidé).
+        tableEspeces
+                .getSelectionModel()
+                .selectedItemProperty()
+                .addListener((obs, ancien, espece) -> viewModel.selectionnerEspece(espece));
+
+        lblDetailTitre.textProperty().bind(viewModel.detailTitreProperty());
+
+        // Placeholder tant qu'aucune observation n'est listée (aucune espèce sélectionnée).
+        var detailVide = Bindings.isEmpty(viewModel.observations());
+        lblDetailVide.visibleProperty().bind(detailVide);
+        lblDetailVide.managedProperty().bind(detailVide);
+
+        // « Ouvrir le passage » actif seulement quand une observation est sélectionnée.
+        var selection = tableObservations.getSelectionModel().selectedItemProperty();
+        boutonOuvrirPassage.disableProperty().bind(selection.isNull());
+
+        // Double-clic sur une observation → ouvre son passage.
+        tableObservations.setRowFactory(tableau -> {
+            TableRow<ObservationEspece> ligne = new TableRow<>();
+            ligne.setOnMouseClicked(evenement -> {
+                if (evenement.getButton() == MouseButton.PRIMARY
+                        && evenement.getClickCount() == 2
+                        && !ligne.isEmpty()) {
+                    ouvrirPassageDe(ligne.getItem());
+                }
+            });
+            return ligne;
+        });
+    }
+
+    /// Affiche le panneau détail (et restaure la position du séparateur) en regroupement **Par espèce**,
+    /// le retire du `SplitPane` sinon — la table des carrés récupère alors toute la hauteur.
+    private void afficherDetail(Regroupement regroupement) {
+        boolean parEspece = regroupement == Regroupement.PAR_ESPECE;
+        if (parEspece && !separateur.getItems().contains(panneauDetail)) {
+            separateur.getItems().add(panneauDetail);
+            separateur.setDividerPositions(0.58);
+        } else if (!parEspece) {
+            separateur.getItems().remove(panneauDetail);
+        }
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
@@ -169,6 +270,21 @@ public class AnalyseController implements RafraichirAuRetour {
         }
     }
 
+    /// « Ouvrir le passage → » : ouvre M-Passage pour l'observation sélectionnée du détail.
+    @FXML
+    private void ouvrirPassage() {
+        ObservationEspece observation = tableObservations.getSelectionModel().getSelectedItem();
+        if (observation != null) {
+            ouvrirPassageDe(observation);
+        }
+    }
+
+    private void ouvrirPassageDe(ObservationEspece observation) {
+        ouvrirPassage.ouvrir(
+                observation.idPassage(),
+                new ContexteSite(observation.numeroCarre(), observation.codePoint(), observation.nomSite()));
+    }
+
     private void configurerColonnes() {
         colEspece.setCellValueFactory(c -> texte(libelleEspece(c.getValue())));
         colGroupe.setCellValueFactory(c -> texte(ouTiret(c.getValue().groupe())));
@@ -185,6 +301,32 @@ public class AnalyseController implements RafraichirAuRetour {
         colDetectionsCarre.setCellValueFactory(c -> texte(c.getValue().nbObservations()));
         colPeriodeCarre.setCellValueFactory(
                 c -> texte(periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
+
+        // Colonnes du détail (observations de l'espèce sélectionnée).
+        colObsPassage.setCellValueFactory(c -> texte(libellePassage(c.getValue())));
+        colObsCarre.setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
+        colObsPoint.setCellValueFactory(c -> texte(c.getValue().codePoint()));
+        colObsTadarida.setCellValueFactory(c ->
+                texte(taxonEtProb(c.getValue().taxonTadarida(), c.getValue().probTadarida())));
+        colObsObservateur.setCellValueFactory(c ->
+                texte(taxonEtProb(c.getValue().taxonObservateur(), c.getValue().probObservateur())));
+        colObsStatut.setCellValueFactory(c -> texte(libelleStatut(c.getValue().statut())));
+    }
+
+    /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).
+    private static String libellePassage(ObservationEspece observation) {
+        return observation.dateEnregistrement() + " · n°" + observation.numeroPassage();
+    }
+
+    /// Taxon suivi de sa probabilité si présente (`Pippip (0,92)`) ; `—` si pas de taxon (non touchée).
+    private static String taxonEtProb(String taxon, Double probabilite) {
+        if (taxon == null || taxon.isBlank()) {
+            return "—";
+        }
+        if (probabilite == null) {
+            return taxon;
+        }
+        return taxon + " (" + String.format("%.2f", probabilite) + ")";
     }
 
     /// Libellé d'une espèce : nom vernaculaire (sinon latin, sinon code) suivi du code entre parenthèses.

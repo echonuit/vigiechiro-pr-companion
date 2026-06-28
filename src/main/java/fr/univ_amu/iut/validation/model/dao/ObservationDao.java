@@ -9,6 +9,7 @@ import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.Observation;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,6 +31,9 @@ import java.util.List;
 ///   d'un coup, un aller-retour par ligne serait coûteux ;
 /// - la requête métier [#findByResults(Long)] (toutes les observations d'un jeu de résultats).
 public class ObservationDao extends DaoGenerique<Observation, Long> {
+
+    /// Nom de colonne projetée du carré (alias `carre`), partagé par les mappers transverses.
+    private static final String COL_CARRE = "carre";
 
     private static final String SQL_INSERT = "INSERT INTO observation"
             + " (sequence_id, start_time_s, end_time_s, median_freq_hz, taxon_tadarida,"
@@ -109,7 +113,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("latin"),
             rs.getString("vern"),
             rs.getLong("passage_id"),
-            rs.getString("carre"),
+            rs.getString(COL_CARRE),
             rs.getString("point"),
             rs.getInt("annee"),
             rs.getInt("num"),
@@ -131,25 +135,49 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
         return projeter(SQL_PAR_CARRE, MAPPER_CARRE_ESPECES, idUtilisateur, filtre, filtre);
     }
 
-    /// CTE commune : une ligne **par observation** de l'utilisateur, avec l'espèce retenue, le statut
-    /// dérivé et le contexte (passage/carré/point/année). Les pseudo-taxons bruit/oiseau sont exclus.
-    private static final String CTE_OBSERVATIONS = "WITH obs AS ("
-            + " SELECT COALESCE(o.taxon_observer, o.taxon_tadarida) AS taxon_code,"
-            + " CASE"
+    /// **Détail d'une espèce** (#analyse) : toutes les observations de l'utilisateur portant sur l'espèce
+    /// `codeEspece` (au sens `COALESCE(observateur, tadarida)`), **à travers les passages**, filtrées par
+    /// `statut` (`null` = tous). Une ligne [ObservationEspece] par observation, ordonnée année décroissante
+    /// puis date/point, avec les clés de navigation (ouvrir le passage) et d'écoute (séquence).
+    public List<ObservationEspece> observationsDeLEspece(
+            String idUtilisateur, String codeEspece, StatutObservation statut) {
+        String filtre = statut == null ? null : statut.name();
+        return projeter(SQL_OBSERVATIONS_ESPECE, MAPPER_OBSERVATION_ESPECE, idUtilisateur, codeEspece, filtre, filtre);
+    }
+
+    /// Statut de revue **dérivé en SQL** (CASE), fidèle à `ServiceValidation#statut` : pas d'observateur →
+    /// non touchée ; observateur = Tadarida avec probabilité → validée ; sinon (égal sans prob) non
+    /// touchée ; observateur ≠ Tadarida → corrigée. Facteur commun aux projections (#analyse).
+    private static final String CASE_STATUT = "CASE"
             + "   WHEN o.taxon_observer IS NULL THEN 'NON_TOUCHEE'"
             + "   WHEN o.taxon_observer = o.taxon_tadarida AND o.prob_observer IS NOT NULL THEN 'VALIDEE'"
             + "   WHEN o.taxon_observer = o.taxon_tadarida THEN 'NON_TOUCHEE'"
             + "   ELSE 'CORRIGEE'"
-            + " END AS statut,"
-            + " p.id AS passage_id, p.year AS annee, ms.square_number AS carre,"
-            + " ms.friendly_name AS nom_site, lp.id AS point_id"
-            + " FROM observation o"
+            + " END";
+
+    /// Chaîne de jointures `observation → … → monitoring_site` (le contexte d'un relevé), partagée par
+    /// toutes les projections transverses.
+    private static final String DE_OBSERVATION_AU_SITE = " FROM observation o"
             + " JOIN listening_sequence ls ON o.sequence_id = ls.id"
             + " JOIN recording_session rs ON ls.session_id = rs.id"
             + " JOIN passage p ON rs.passage_id = p.id"
             + " JOIN listening_point lp ON p.point_id = lp.id"
-            + " JOIN monitoring_site ms ON lp.site_id = ms.id"
-            + " WHERE ms.user_id = ? AND COALESCE(o.taxon_observer, o.taxon_tadarida) NOT IN ('noise', 'piaf'))";
+            + " JOIN monitoring_site ms ON lp.site_id = ms.id";
+
+    /// Périmètre commun : observations **de l'utilisateur** (`?`), pseudo-taxons bruit/oiseau exclus.
+    private static final String FILTRE_UTILISATEUR_HORS_PSEUDO =
+            " WHERE ms.user_id = ? AND COALESCE(o.taxon_observer, o.taxon_tadarida) NOT IN ('noise', 'piaf')";
+
+    /// CTE commune : une ligne **par observation** de l'utilisateur, avec l'espèce retenue, le statut
+    /// dérivé et le contexte (passage/carré/point/année). Les pseudo-taxons bruit/oiseau sont exclus.
+    private static final String CTE_OBSERVATIONS = "WITH obs AS ("
+            + " SELECT COALESCE(o.taxon_observer, o.taxon_tadarida) AS taxon_code,"
+            + CASE_STATUT + " AS statut,"
+            + " p.id AS passage_id, p.year AS annee, ms.square_number AS carre,"
+            + " ms.friendly_name AS nom_site, lp.id AS point_id"
+            + DE_OBSERVATION_AU_SITE
+            + FILTRE_UTILISATEUR_HORS_PSEUDO
+            + ")";
 
     private static final String SQL_PAR_ESPECE = CTE_OBSERVATIONS
             + " SELECT obs.taxon_code AS code, t.latin_name AS latin, t.vernacular_name_fr AS vern,"
@@ -185,12 +213,47 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " ORDER BY richesse DESC, obs.carre";
 
     private static final RowMapper<CarreEspeces> MAPPER_CARRE_ESPECES = rs -> new CarreEspeces(
-            rs.getString("carre"),
+            rs.getString(COL_CARRE),
             rs.getString("nom_site"),
             rs.getInt("richesse"),
             rs.getInt("nb_obs"),
             rs.getInt("annee_min"),
             rs.getInt("annee_max"));
+
+    /// CTE de **détail** : une ligne par observation (clé, séquence, contexte passage/carré/point, les deux
+    /// taxons et probabilités, statut dérivé), pour le panneau « observations d'une espèce » (#analyse).
+    private static final String CTE_DETAIL = "WITH obs AS ("
+            + " SELECT o.id AS id, o.sequence_id AS seq,"
+            + " COALESCE(o.taxon_observer, o.taxon_tadarida) AS taxon_code,"
+            + CASE_STATUT + " AS statut,"
+            + " p.id AS passage_id, p.passage_number AS num_passage, p.year AS annee,"
+            + " p.recording_date AS date_enr, ms.square_number AS carre, ms.friendly_name AS nom_site,"
+            + " lp.code AS point_code, o.taxon_tadarida AS tadarida, o.prob_tadarida AS prob_tadarida,"
+            + " o.taxon_observer AS observer, o.prob_observer AS prob_observer"
+            + DE_OBSERVATION_AU_SITE
+            + FILTRE_UTILISATEUR_HORS_PSEUDO
+            + ")";
+
+    private static final String SQL_OBSERVATIONS_ESPECE = CTE_DETAIL
+            + " SELECT * FROM obs"
+            + " WHERE obs.taxon_code = ? AND (? IS NULL OR obs.statut = ?)"
+            + " ORDER BY obs.annee DESC, obs.date_enr, obs.point_code";
+
+    private static final RowMapper<ObservationEspece> MAPPER_OBSERVATION_ESPECE = rs -> new ObservationEspece(
+            rs.getLong("id"),
+            rs.getLong("seq"),
+            rs.getLong("passage_id"),
+            rs.getInt("num_passage"),
+            rs.getInt("annee"),
+            rs.getString("date_enr"),
+            rs.getString(COL_CARRE),
+            rs.getString("point_code"),
+            rs.getString("nom_site"),
+            rs.getString("tadarida"),
+            (Double) rs.getObject("prob_tadarida"),
+            rs.getString("observer"),
+            (Double) rs.getObject("prob_observer"),
+            StatutObservation.valueOf(rs.getString("statut")));
 
     @Override
     public Observation insert(Observation observation) {

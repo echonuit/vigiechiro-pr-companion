@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.validation.di.ValidationModule;
+import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.io.IOException;
@@ -33,6 +34,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.TableView;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -97,17 +99,32 @@ public final class CaptureAnalyse {
         System.out.println("Apercus ecrits dans " + sortie.toAbsolutePath());
     }
 
-    /// Charge `Analyse.fxml`, applique éventuellement un regroupement (`Par carré`), puis rend l'écran.
+    /// Charge `Analyse.fxml`, applique éventuellement un regroupement (`Par carré`), puis rend l'écran. En
+    /// mode Par espèce (regroupement nul), sélectionne la première espèce pour peupler le panneau détail.
+    ///
+    /// La sélection se fait **après l'affichage** (via [ApercuFx#capturerApresPreparation]) : le `SplitPane`
+    /// n'attache ses enfants au graphe de scène qu'une fois son skin appliqué, donc `lookup("#tableEspeces")`
+    /// renverrait `null` avant la première mise en page.
     private static void rendre(Injector injecteur, Regroupement regroupement, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
+        Scene scene = new Scene(vue, 1080, 640);
+        ApercuFx.capturerApresPreparation(scene, () -> preparer(vue, regroupement), fichier);
+    }
+
+    /// Préparation post-affichage : applique le regroupement Par carré, ou sélectionne la première espèce
+    /// (mode Par espèce) pour peupler le panneau détail des observations.
+    private static void preparer(Parent vue, Regroupement regroupement) {
         if (regroupement != null && vue.lookup("#choixRegroupement") instanceof ComboBox<?> combo) {
             @SuppressWarnings("unchecked")
             ComboBox<Regroupement> choix = (ComboBox<Regroupement>) combo;
             choix.getSelectionModel().select(regroupement);
+        } else if (regroupement == null && vue.lookup("#tableEspeces") instanceof TableView<?> table) {
+            @SuppressWarnings("unchecked")
+            TableView<EspeceAgregee> especes = (TableView<EspeceAgregee>) table;
+            especes.getSelectionModel().select(0);
         }
-        ApercuFx.enregistrerPng(new Scene(vue, 1080, 600), fichier);
     }
 
     /// Seede l'utilisateur courant, un site/point, un passage et sa séquence, puis quelques observations

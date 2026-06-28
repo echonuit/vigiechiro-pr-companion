@@ -4,6 +4,7 @@ import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.nio.file.Path;
 import java.util.List;
@@ -27,6 +28,9 @@ import javafx.collections.ObservableList;
 /// `viewmodel_sans_javafx_ui`). Non-singleton (un VM frais par chargement d'écran).
 public class AnalyseViewModel {
 
+    /// Séparateur des compteurs dans les libellés (résumé, titre du détail).
+    private static final String SEPARATEUR = " · ";
+
     private final ServiceAnalyse service;
     private final String idUtilisateur;
 
@@ -47,6 +51,11 @@ public class AnalyseViewModel {
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
+    /// Détail de l'espèce sélectionnée : ses observations à travers les passages (vide tant qu'aucune
+    /// espèce n'est sélectionnée), et le titre du panneau.
+    private final ObservableList<ObservationEspece> observations = FXCollections.observableArrayList();
+    private final ReadOnlyStringWrapper detailTitre = new ReadOnlyStringWrapper(this, "detailTitre", "");
+
     public AnalyseViewModel(ServiceAnalyse service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
@@ -66,7 +75,24 @@ public class AnalyseViewModel {
             especesTous = service.inventaireParEspece(idUtilisateur, statut);
             carresTous = List.of();
         }
+        // L'inventaire a changé : l'ancienne sélection de détail est périmée.
+        selectionnerEspece(null);
         appliquerFiltreTexte();
+    }
+
+    /// Charge dans le **détail** les observations de l'`espece` sélectionnée, à travers les passages
+    /// (filtrées par le statut courant, cohérent avec l'inventaire). `null` (ou en regroupement Par carré)
+    /// vide le panneau. Appelé par la vue quand la ligne sélectionnée de l'inventaire change.
+    public void selectionnerEspece(EspeceAgregee espece) {
+        if (espece == null || regroupement.get() == Regroupement.PAR_CARRE) {
+            observations.clear();
+            detailTitre.set("");
+            return;
+        }
+        List<ObservationEspece> detail =
+                service.observationsDeLEspece(idUtilisateur, espece.code(), filtreStatut.get());
+        observations.setAll(detail);
+        detailTitre.set(libelleEspece(espece) + SEPARATEUR + quantite(detail.size(), "observation"));
     }
 
     /// Filtre **en mémoire** la liste active par le texte courant, et met à jour résumé/listes affichées.
@@ -79,7 +105,7 @@ public class AnalyseViewModel {
             especes.clear();
             int detections =
                     carres.stream().mapToInt(CarreEspeces::nbObservations).sum();
-            resume.set(quantite(carres.size(), "carré") + " · " + quantite(detections, "détection"));
+            resume.set(quantite(carres.size(), "carré") + SEPARATEUR + quantite(detections, "détection"));
         } else {
             especes.setAll(especesTous.stream()
                     .filter(e -> correspond(aiguille, e.code(), e.nomVernaculaireFr(), e.nomLatin()))
@@ -87,7 +113,7 @@ public class AnalyseViewModel {
             carres.clear();
             int detections =
                     especes.stream().mapToInt(EspeceAgregee::nbObservations).sum();
-            resume.set(quantite(especes.size(), "espèce") + " · " + quantite(detections, "détection"));
+            resume.set(quantite(especes.size(), "espèce") + SEPARATEUR + quantite(detections, "détection"));
         }
     }
 
@@ -131,6 +157,17 @@ public class AnalyseViewModel {
         return nombre + " " + unite + (nombre > 1 ? "s" : "");
     }
 
+    /// Libellé d'une espèce pour le titre du détail : nom vernaculaire, sinon latin, sinon code.
+    private static String libelleEspece(EspeceAgregee espece) {
+        if (espece.nomVernaculaireFr() != null && !espece.nomVernaculaireFr().isBlank()) {
+            return espece.nomVernaculaireFr();
+        }
+        if (espece.nomLatin() != null && !espece.nomLatin().isBlank()) {
+            return espece.nomLatin();
+        }
+        return espece.code();
+    }
+
     public ObjectProperty<Regroupement> regroupementProperty() {
         return regroupement;
     }
@@ -151,6 +188,15 @@ public class AnalyseViewModel {
     /// Inventaire par carré filtré (alimenté quand le regroupement est [Regroupement#PAR_CARRE]).
     public ObservableList<CarreEspeces> carres() {
         return carres;
+    }
+
+    /// Observations de l'espèce sélectionnée, à travers les passages (panneau détail).
+    public ObservableList<ObservationEspece> observations() {
+        return observations;
+    }
+
+    public ReadOnlyStringProperty detailTitreProperty() {
+        return detailTitre.getReadOnlyProperty();
     }
 
     public ReadOnlyStringProperty resumeProperty() {

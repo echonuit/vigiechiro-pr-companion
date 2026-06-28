@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.Observation;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Path;
@@ -403,6 +404,91 @@ class ObservationDaoTest {
 
         assertThat(dao.inventaireParEspece("autre", null)).isEmpty();
         assertThat(dao.inventaireParCarre("autre", null)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#analyse : observationsDeLEspece liste les observations d'une espèce à travers les passages")
+    void observations_d_une_espece_a_travers_les_passages() throws SQLException {
+        // Passage 1 (seedé) : Pippip validée + Nyclei non touchée (autre espèce, ne doit pas remonter).
+        dao.insert(observationValidee("Pippip"));
+        dao.insert(observation("Nyclei", null));
+        // Passage 2 (autre nuit, même point) : Pippip à nouveau (validée).
+        long[] second = creerSecondPassage();
+        long idPassage2 = second[0];
+        long idSequence2 = second[1];
+        long idResultats2 = second[2];
+        dao.insert(new Observation(
+                null,
+                idSequence2,
+                null,
+                null,
+                null,
+                "Pippip",
+                null,
+                null,
+                "Pippip",
+                0.9,
+                null,
+                false,
+                ModeValidation.MANUEL,
+                idResultats2));
+
+        List<ObservationEspece> detail = dao.observationsDeLEspece("u-1", "Pippip", null);
+
+        assertThat(detail)
+                .as("les deux observations de Pippip, une par passage")
+                .hasSize(2)
+                .extracting(ObservationEspece::idPassage)
+                .containsExactlyInAnyOrder(idPassage, idPassage2);
+        assertThat(detail).allSatisfy(observation -> {
+            assertThat(observation.numeroCarre()).isEqualTo("640380");
+            assertThat(observation.codePoint()).isEqualTo("A1");
+            assertThat(observation.statut()).isEqualTo(StatutObservation.VALIDEE);
+            assertThat(observation.idObservation()).isPositive();
+            assertThat(observation.idSequence()).isPositive();
+        });
+        // Filtre statut : aucune Pippip non touchée ; périmètre par utilisateur respecté.
+        assertThat(dao.observationsDeLEspece("u-1", "Pippip", StatutObservation.NON_TOUCHEE))
+                .isEmpty();
+        assertThat(dao.observationsDeLEspece("autre", "Pippip", null)).isEmpty();
+    }
+
+    /// Sème un **second passage** (autre nuit, même point A1) avec sa séquence et ses résultats.
+    /// Retourne `{idPassage, idSequence, idResultats}`.
+    private long[] creerSecondPassage() throws SQLException {
+        try (Connection cx = source.getConnection()) {
+            long idPoint;
+            try (Statement st = cx.createStatement();
+                    ResultSet rs = st.executeQuery("SELECT id FROM listening_point LIMIT 1")) {
+                rs.next();
+                idPoint = rs.getLong(1);
+            }
+            long idPassage2 = insererCle(
+                    cx,
+                    "INSERT INTO passage(passage_number, year, recording_date, start_time, end_time,"
+                            + " workflow_status, point_id, recorder_id)"
+                            + " VALUES (3, 2026, '2026-07-15', '21:00', '05:00', 'Importé', ?, 'SN-1')",
+                    idPoint);
+            long idSession2 = insererCle(
+                    cx, "INSERT INTO recording_session(root_path, passage_id) VALUES ('/ws2', ?)", idPassage2);
+            long idOriginal2 = insererCle(
+                    cx,
+                    "INSERT INTO original_recording(file_name, file_path, session_id)"
+                            + " VALUES ('b.wav', '/ws2/bruts/b.wav', ?)",
+                    idSession2);
+            long idSequence2 = insererCle(
+                    cx,
+                    "INSERT INTO listening_sequence(file_name, original_recording_id, file_path,"
+                            + " session_id) VALUES ('b_000.wav', ?, '/ws2/transformes/b_000.wav', ?)",
+                    idOriginal2,
+                    idSession2);
+            long idResultats2 = insererCle(
+                    cx,
+                    "INSERT INTO identification_results(file_path, detected_format, imported_at,"
+                            + " passage_id) VALUES ('/ws2/transformes/obs.csv', 'Vu', '2026-07-16', ?)",
+                    idPassage2);
+            return new long[] {idPassage2, idSequence2, idResultats2};
+        }
     }
 
     private Observation observationValidee(String code) {
