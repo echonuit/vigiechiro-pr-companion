@@ -12,7 +12,9 @@ L'écran **Importation** copie une nuit depuis la carte SD, la renomme et la tra
    et les enregistrements WAV, et annonce ce qu'elle va renommer. **Aucun fichier de la carte n'est
    modifié à ce stade.**
 3. **Rattachement** : indiquez le site, le point d'écoute, l'année et le numéro de passage ; un
-   aperçu montre le préfixe qui sera appliqué.
+   aperçu montre le préfixe qui sera appliqué. Une **carte de confirmation** (lecture seule) affiche le
+   **carré du site** et **ses points**, le **point choisi en surbrillance** (indigo) et les autres en
+   gris : un coup d'œil pour vérifier qu'on rattache la nuit au bon endroit.
 
 Le bouton **Importer cette nuit** lance la copie (sans toucher aux originaux), le renommage avec le
 préfixe `CarXXXXXX-AAAA-PassN-YY-`, puis la transformation des enregistrements en séquences de 5 s

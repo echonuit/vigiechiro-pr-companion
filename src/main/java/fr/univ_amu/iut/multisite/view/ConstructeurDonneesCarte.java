@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.carte.CarreGeo;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
 import fr.univ_amu.iut.commun.view.carte.EmpriseCarre;
+import fr.univ_amu.iut.commun.view.carte.EventailCentre;
 import fr.univ_amu.iut.commun.view.carte.FournisseurEmpriseCarre;
 import fr.univ_amu.iut.commun.view.carte.PointGeo;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
@@ -34,10 +35,6 @@ final class ConstructeurDonneesCarte {
     private static final String UNITE_POINT = "point";
 
     private ConstructeurDonneesCarte() {}
-
-    /// Fraction du demi-côté du carré servant de rayon à l'éventail des points **sans GPS** (placés au
-    /// centre du carré) : assez petit pour rester bien à l'intérieur de la maille tout en les désempilant.
-    private static final double RAYON_EVENTAIL = 0.30;
 
     /// Construit les données de carte à partir des carrés agrégés : un marqueur par point **géolocalisé**
     /// (coloré par statut dominant), un marqueur **approximatif** par point **sans GPS** placé au centre de
@@ -101,31 +98,19 @@ final class ConstructeurDonneesCarte {
                 infobullePoint(carre, point));
     }
 
-    /// Marqueurs **approximatifs** des points sans GPS : placés au centre du carré (#153). Un seul point →
-    /// pile au centre ; plusieurs → répartis en **éventail** sur un petit cercle ([#RAYON_EVENTAIL] du
-    /// demi-côté) pour ne pas se superposer, en restant à l'intérieur de la maille. Marqués `approximatif`
-    /// (rendu pointillé par la couche) pour ne pas être pris pour des positions réelles.
+    /// Marqueurs **approximatifs** des points sans GPS : placés au centre du carré (#153), **désempilés en
+    /// éventail** ([EventailCentre]) pour ne pas se superposer. Marqués `approximatif` (rendu pointillé par
+    /// la couche) pour ne pas être pris pour des positions réelles.
     private static List<PointGeo> marqueursApproches(
             CarreAgrege carre, EmpriseCarre emprise, List<PointAgrege> sansGps) {
+        List<double[]> positions = EventailCentre.positions(emprise, sansGps.size());
         List<PointGeo> resultat = new ArrayList<>();
-        int total = sansGps.size();
-        double latCentre = emprise.latCentre();
-        double lonCentre = emprise.lonCentre();
-        double rayonLat = RAYON_EVENTAIL * (emprise.latMax() - emprise.latMin()) / 2.0;
-        double rayonLon = RAYON_EVENTAIL * (emprise.lonMax() - emprise.lonMin()) / 2.0;
-        for (int i = 0; i < total; i++) {
-            double lat = latCentre;
-            double lon = lonCentre;
-            if (total > 1) {
-                double angle = 2.0 * Math.PI * i / total;
-                lat += rayonLat * Math.cos(angle);
-                lon += rayonLon * Math.sin(angle);
-            }
+        for (int i = 0; i < sansGps.size(); i++) {
             PointAgrege point = sansGps.get(i);
             resultat.add(new PointGeo(
                     libellePoint(carre, point),
-                    lat,
-                    lon,
+                    positions.get(i)[0],
+                    positions.get(i)[1],
                     couleurStatut(point.statutDominant()),
                     infobullePointApproche(carre, point),
                     true));
