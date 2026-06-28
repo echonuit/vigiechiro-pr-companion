@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -30,30 +31,39 @@
        On ne garde qu'une ligne fine de résumé pour récupérer de la hauteur, critique sur petit écran. -->
   <Label fx:id="lblResume" styleClass="sous-titre-page"/>
 
-  <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
-    <Label text="Carré :" styleClass="section-sous"/>
-    <TextField fx:id="champCarre" promptText="640380" prefWidth="100.0"/>
-    <Label text="Statut :" styleClass="section-sous"/>
-    <ComboBox fx:id="choixStatut"/>
-    <Label text="Verdict :" styleClass="section-sous"/>
-    <ComboBox fx:id="choixVerdict"/>
-    <Label text="Année :" styleClass="section-sous"/>
-    <TextField fx:id="champAnnee" promptText="2026" prefWidth="70.0"/>
-    <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
-    <Button fx:id="boutonGererVues" text="⭐ Vues…" onAction="#gererVues"/>
-    <Label text="Tri :" styleClass="section-sous"/>
-    <ComboBox fx:id="choixTri"/>
-    <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
-    <!-- Édition des positions (#154) : le toggle passe la carte en mode déplacement (glisser un marqueur,
-         clampé à son carré) ; le bouton enregistre les déplacements en attente (inactif sinon, visible en
-         édition seulement). Décliquer le toggle avec des changements non enregistrés ouvre une alerte. -->
-    <ToggleButton fx:id="boutonEditerPositions" text="✎ Éditer les positions" onAction="#basculerEdition"/>
-    <Button fx:id="boutonEnregistrerPositions" text="💾 Enregistrer les positions" onAction="#enregistrerPositions"/>
-    <!-- Repli carte/tableau (#328) : déplacé de la superposition (qui mordait l'en-tête du tableau)
-         vers la barre d'actions. Libellé et état gérés par MultisiteController#majPoignees. -->
-    <Button fx:id="boutonReplierCarte" onAction="#basculerCarte"/>
-    <Button fx:id="boutonReplierTableau" onAction="#basculerTableau"/>
-  </FlowPane>
+  <!-- #340 : barre réorganisée en DEUX rangées pour la lisibilité (filtres/tri/actions/édition/replis
+       étaient mélangés sur une seule ligne). Rangée 1 = filtrer & trier ; rangée 2 = actions, puis,
+       après un séparateur, les replis d'affichage. Le tout dans une seule boîte « barre-filtres ». -->
+  <VBox spacing="6.0" styleClass="barre-filtres">
+    <!-- Rangée 1 : filtrer & trier -->
+    <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT">
+      <Label text="Carré :" styleClass="section-sous"/>
+      <TextField fx:id="champCarre" promptText="640380" prefWidth="100.0"/>
+      <Label text="Statut :" styleClass="section-sous"/>
+      <ComboBox fx:id="choixStatut"/>
+      <Label text="Verdict :" styleClass="section-sous"/>
+      <ComboBox fx:id="choixVerdict"/>
+      <Label text="Année :" styleClass="section-sous"/>
+      <TextField fx:id="champAnnee" promptText="2026" prefWidth="70.0"/>
+      <Label text="Tri :" styleClass="section-sous"/>
+      <ComboBox fx:id="choixTri"/>
+      <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
+    </FlowPane>
+    <!-- Rangée 2 : actions | affichage -->
+    <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT">
+      <Button fx:id="boutonGererVues" text="⭐ Vues…" onAction="#gererVues"/>
+      <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
+      <!-- Édition des positions (#154) : le toggle passe la carte en mode déplacement (glisser un marqueur,
+           clampé à son carré) ; le bouton enregistre les déplacements en attente (inactif sinon, visible en
+           édition seulement). Décliquer le toggle avec des changements non enregistrés ouvre une alerte. -->
+      <ToggleButton fx:id="boutonEditerPositions" text="✎ Éditer les positions" onAction="#basculerEdition"/>
+      <Button fx:id="boutonEnregistrerPositions" text="💾 Enregistrer les positions" onAction="#enregistrerPositions"/>
+      <Separator orientation="VERTICAL"/>
+      <!-- Repli carte/tableau (#328) : libellé et état gérés par MultisiteController#majPoignees. -->
+      <Button fx:id="boutonReplierCarte" onAction="#basculerCarte"/>
+      <Button fx:id="boutonReplierTableau" onAction="#basculerTableau"/>
+    </FlowPane>
+  </VBox>
 
   <!-- Carte (sites + points) à gauche, tableau des passages à droite (#152). La carte est remplie en
        code par le controller (composant CarteSites, dépendance Gluon Maps). Le repli d'un côté
