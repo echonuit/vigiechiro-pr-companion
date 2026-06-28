@@ -32,6 +32,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -56,7 +58,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// mort) : autant de manques **invisibles** aux tests canoniques qui passent par le VM.
 ///
 /// Ces tests forcent donc une vraie **interaction** sur chaque contrôle (`#choixVerdict`,
-/// `#champCarre`, `#champAnnee`, `#choixTri`, `#boutonGererVues`) et vérifient que le service est
+/// `#champCarre`, `#champAnnee`, `#choixTri`, item « Vues » du menu `#menuActions`) et vérifient que le service est
 /// ré-interrogé avec le bon critère (R2/R3) ou que la navigation vers la modale est déclenchée
 /// (E5.S3). Complète [MultisiteViewTest] sans le dupliquer (statut, export, réinitialiser et
 /// double-clic y sont déjà couverts). Pas de base de données.
@@ -332,11 +334,18 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Le bouton « Vues… » ouvre la modale branchée sur le même ViewModel (E5.S3)")
-    void bouton_vues_ouvre_la_modale(FxRobot robot) {
-        robot.clickOn("#boutonGererVues");
+    @DisplayName("L'item « Vues… » du menu ☰ ouvre la modale branchée sur le même ViewModel (E5.S3)")
+    void menu_vues_ouvre_la_modale(FxRobot robot) {
+        // #370 : Vues est désormais un item du menu « ☰ ». On déclenche directement l'item (fire) plutôt
+        // que d'ouvrir le popup puis cliquer, plus déterministe en headless.
+        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        MenuItem vues = menu.getItems().stream()
+                .filter(item -> "itemGererVues".equals(item.getId()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(vues::fire);
 
-        // La feature délègue à NavigationMultisite (contrat de navigation) : le bouton n'est pas mort.
+        // La feature délègue à NavigationMultisite (contrat de navigation) : l'action n'est pas morte.
         verify(navigation).ouvrirModaleVues(any(Window.class), any(MultisiteViewModel.class));
     }
 }

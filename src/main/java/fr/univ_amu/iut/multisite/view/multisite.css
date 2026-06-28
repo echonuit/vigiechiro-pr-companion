@@ -37,6 +37,20 @@
   -fx-text-fill: #a93226;
 }
 
+/* #370 : menu « ☰ » des actions secondaires (Vues, Exporter), pour alléger la barre de filtres. */
+.menu-actions {
+  -fx-font-size: 14px;
+}
+
+/* #370 : barre du bas portant les replis carte/tableau, chacun à une extrémité (sous son panneau). */
+.barre-replis {
+  -fx-padding: 2 0 0 0;
+}
+
+.bouton-repli {
+  -fx-font-size: 12px;
+}
+
 /* Bouton chevron qui replie/déplie la légende posée sur la carte (#152). */
 .bascule-legende {
   -fx-background-color: transparent;
