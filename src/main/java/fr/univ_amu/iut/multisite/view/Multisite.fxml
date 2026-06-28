@@ -4,7 +4,6 @@
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.Separator?>
-<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -53,10 +52,9 @@
     <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT">
       <Button fx:id="boutonGererVues" text="⭐ Vues…" onAction="#gererVues"/>
       <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
-      <!-- Édition des positions (#154) : le toggle passe la carte en mode déplacement (glisser un marqueur,
-           clampé à son carré) ; le bouton enregistre les déplacements en attente (inactif sinon, visible en
-           édition seulement). Décliquer le toggle avec des changements non enregistrés ouvre une alerte. -->
-      <ToggleButton fx:id="boutonEditerPositions" text="✎ Éditer les positions" onAction="#basculerEdition"/>
+      <!-- Édition des positions (#154) : le toggle « ✎ » est désormais superposé à la CARTE (créé par
+           MultisiteController, icône seule). « Enregistrer » reste ici mais n'apparaît qu'en mode édition,
+           pour persister les déplacements en attente (inactif tant qu'aucun point n'a bougé). -->
       <Button fx:id="boutonEnregistrerPositions" text="💾 Enregistrer les positions" onAction="#enregistrerPositions"/>
       <Separator orientation="VERTICAL"/>
       <!-- Repli carte/tableau (#328) : libellé et état gérés par MultisiteController#majPoignees. -->

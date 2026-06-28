@@ -60,3 +60,26 @@
   -fx-background-color: #ffffff;
   -fx-text-fill: #1a5276;
 }
+
+/* Toggle « ✎ Éditer les positions » superposé en haut à gauche de la carte (#154) : même look que
+   les autres contrôles de carte ; mis en évidence (fond ambré) quand le mode édition est actif. */
+.bouton-editer-positions {
+  -fx-background-color: rgba(255, 255, 255, 0.9);
+  -fx-border-color: #d0d7de;
+  -fx-border-radius: 6;
+  -fx-background-radius: 6;
+  -fx-text-fill: #34495e;
+  -fx-font-size: 15px;
+  -fx-padding: 2 8 2 8;
+}
+
+.bouton-editer-positions:hover {
+  -fx-background-color: #ffffff;
+  -fx-text-fill: #1a5276;
+}
+
+.bouton-editer-positions:selected {
+  -fx-background-color: #e8a838;
+  -fx-text-fill: #ffffff;
+  -fx-border-color: #b7860b;
+}
