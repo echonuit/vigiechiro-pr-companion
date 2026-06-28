@@ -32,9 +32,11 @@ création, dernière nuit importée, nombre de passages), ses **points d'écoute
 
 ![Le détail d'un site : bandeau d'identité, points d'écoute et tableau des passages.](../assets/captures/apercu-sites-detail.png)
 
-- **Points d'écoute** : une carte par point, avec sa description, son **statut GPS** (coordonnées
-  renseignées et consultables sur OpenStreetMap, ou manquantes) et le nombre de passages rattachés.
-  Le bouton **+ Ajouter un point** crée un nouveau point.
+- **Points d'écoute** : une carte par point, avec sa description, son **statut GPS** et le nombre de
+  passages rattachés. Quand les coordonnées sont renseignées, le lien **« ✓ GPS — voir sur la carte »**
+  ouvre la **carte multi-sites centrée sur ce point** (où le mode édition permet de corriger sa
+  position) ; sinon le point est signalé **« ⚠ GPS manquant »**. Le bouton **+ Ajouter un point** crée
+  un nouveau point.
 - **Passages enregistrés** : un tableau récapitulant, pour chaque nuit, sa date, son point, son
   numéro, son **statut** (Transformé, Vérifié, Déposé...), son **verdict** et son enregistreur.
 

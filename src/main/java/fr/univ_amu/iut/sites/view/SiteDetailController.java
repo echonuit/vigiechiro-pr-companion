@@ -3,7 +3,6 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -12,7 +11,6 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
-import fr.univ_amu.iut.sites.viewmodel.LienCarte;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
@@ -66,7 +64,6 @@ public class SiteDetailController implements RafraichirAuRetour {
     private final NavigationSites navigation;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirImportation ouvrirImportation;
-    private final OuvreurDeLien ouvreurDeLien;
     private final OuvrirMultisite ouvrirMultisite;
 
     @FXML
@@ -135,13 +132,11 @@ public class SiteDetailController implements RafraichirAuRetour {
             NavigationSites navigation,
             OuvrirPassage ouvrirPassage,
             OuvrirImportation ouvrirImportation,
-            OuvreurDeLien ouvreurDeLien,
             OuvrirMultisite ouvrirMultisite) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirImportation = Objects.requireNonNull(ouvrirImportation, "ouvrirImportation");
-        this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
     }
 
@@ -289,8 +284,10 @@ public class SiteDetailController implements RafraichirAuRetour {
         return boite;
     }
 
-    /// Badge GPS de la carte de point : un [Hyperlink] cliquable qui ouvre le point sur
-    /// OpenStreetMap quand les coordonnées sont présentes, sinon un simple libellé « manquant ».
+    /// Badge GPS de la carte de point : un [Hyperlink] qui, quand les coordonnées sont présentes, ouvre
+    /// **LA carte multi-sites centrée sur ce point** (#154) ; sinon un simple libellé « manquant ». On
+    /// renvoie vers la carte de référence (qui montre déjà le fond OSM et permet de corriger la position
+    /// en mode édition) plutôt que vers un OpenStreetMap externe.
     private Node construireBadgeGps(CartePoint carte) {
         PointDEcoute point = carte.point();
         if (!carte.gpsPresent()) {
@@ -298,11 +295,12 @@ public class SiteDetailController implements RafraichirAuRetour {
             manquant.getStyleClass().add("gps-manquant");
             return manquant;
         }
-        String url = LienCarte.osm(point.latitude(), point.longitude());
-        Hyperlink lien = new Hyperlink("✓ GPS — voir sur OpenStreetMap");
+        Hyperlink lien = new Hyperlink("✓ GPS — voir sur la carte");
         lien.getStyleClass().add("gps-ok");
-        lien.setOnAction(evenement -> ouvreurDeLien.ouvrir(url));
-        lien.setTooltip(new Tooltip("Ouvrir " + point.latitude() + ", " + point.longitude() + " sur OpenStreetMap"));
+        lien.setOnAction(evenement -> ouvrirMultisite.ouvrirSurPoint(
+                viewModel.siteCourant().numeroCarre(), point.latitude(), point.longitude()));
+        lien.setTooltip(
+                new Tooltip("Voir " + point.latitude() + ", " + point.longitude() + " sur la carte multi-sites"));
         return lien;
     }
 
