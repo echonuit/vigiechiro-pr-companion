@@ -28,3 +28,8 @@
     -fx-text-fill: #6a737d;
     -fx-padding: 8 0 0 0;
 }
+
+.analyse-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: #1e6f3f;
+}

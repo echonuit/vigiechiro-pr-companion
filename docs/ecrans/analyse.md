@@ -33,3 +33,10 @@ Le filtre **Statut** restreint l'inventaire selon l'état de revue des observati
 
 Sans filtre (**Tous les statuts**), tout est pris en compte. Tant qu'aucune nuit n'a été importée et
 validée (résultats Tadarida), l'écran invite à le faire.
+
+## Filtrer et exporter
+
+Le champ **Filtrer** restreint la table à la volée (insensible à la casse et aux accents) : par **nom ou
+code d'espèce** en mode *Par espèce*, par **numéro de carré ou nom de site** en mode *Par carré*. Le
+bouton **« 📤 Exporter… »** enregistre l'inventaire **affiché** (tel que filtré) en **CSV**, prêt pour un
+tableur ou un partage.

@@ -7,16 +7,20 @@ import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.io.File;
 import java.util.Objects;
 import java.util.function.Function;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
+import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 
 /// Controller de l'écran **« Espèces & observations »** (`Analyse.fxml`). Pur câblage : lie les deux
@@ -42,6 +46,15 @@ public class AnalyseController implements RafraichirAuRetour {
 
     @FXML
     private ComboBox<StatutObservation> choixStatut;
+
+    @FXML
+    private TextField champFiltre;
+
+    @FXML
+    private Button boutonExporter;
+
+    @FXML
+    private Label lblExport;
 
     @FXML
     private TableView<EspeceAgregee> tableEspeces;
@@ -107,6 +120,13 @@ public class AnalyseController implements RafraichirAuRetour {
         choixStatut.setConverter(convertisseur(AnalyseController::libelleStatut));
         choixStatut.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
 
+        // Filtre texte (en mémoire) et message d'export.
+        champFiltre.textProperty().bindBidirectional(viewModel.filtreTexteProperty());
+        var exportPresent = viewModel.messageProperty().isNotEmpty();
+        lblExport.textProperty().bind(viewModel.messageProperty());
+        lblExport.visibleProperty().bind(exportPresent);
+        lblExport.managedProperty().bind(exportPresent);
+
         // La table visible suit le regroupement.
         var parEspece = viewModel.regroupementProperty().isEqualTo(Regroupement.PAR_ESPECE);
         lierVisibilite(tableEspeces, parEspece);
@@ -132,6 +152,21 @@ public class AnalyseController implements RafraichirAuRetour {
     @Override
     public void rafraichirAuRetour() {
         viewModel.rafraichir();
+    }
+
+    /// « 📤 Exporter… » : sélecteur de fichier natif (enregistrement) puis délègue au ViewModel l'écriture
+    /// CSV de l'inventaire **affiché** (liste filtrée courante). Le dialog vit dans la vue (non testé en
+    /// TestFX) ; l'écriture est testée côté ViewModel/service.
+    @FXML
+    private void exporter() {
+        FileChooser selecteur = new FileChooser();
+        selecteur.setTitle("Exporter l'inventaire des espèces en CSV");
+        selecteur.setInitialFileName("inventaire-especes.csv");
+        selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
+        File fichier = selecteur.showSaveDialog(boutonExporter.getScene().getWindow());
+        if (fichier != null) {
+            viewModel.exporter(fichier.toPath());
+        }
     }
 
     private void configurerColonnes() {
