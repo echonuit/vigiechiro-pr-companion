@@ -62,6 +62,7 @@ nav:
       - Lot: ecrans/lot.md
       - Validation: ecrans/validation.md
       - "Carte & passages": ecrans/multisite.md
+      - "Espèces & observations": ecrans/analyse.md
       - Diagnostic: ecrans/diagnostic.md
       - Bibliothèque: ecrans/bibliotheque.md
   - Raccourcis clavier: raccourcis-clavier.md
