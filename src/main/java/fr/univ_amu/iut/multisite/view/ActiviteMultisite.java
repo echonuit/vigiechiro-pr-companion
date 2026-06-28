@@ -26,7 +26,9 @@ public final class ActiviteMultisite implements ActiviteAccueil {
 
     @Override
     public String iconeLiteral() {
-        return "fas-layer-group";
+        // Carte dépliée : évoque la vue cartographique d'ensemble. Distinct du marqueur de « Mes sites »
+        // (fas-map-marked-alt), qui cible un site précis.
+        return "fas-map";
     }
 
     @Override
