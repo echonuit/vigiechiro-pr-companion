@@ -10,15 +10,16 @@ Cette section regroupe les **wireframes basse fidélité** de l'application *Vig
 - des **notes d'implémentation** ciblées (composants JavaFX recommandés, points d'attention performance ou UX, raccourcis claviers).
 
 !!! warning "Wireframes basse fidélité, pas spec figée"
-    Ces maquettes posent l'**organisation** des écrans et la **hiérarchie** des informations à afficher. Elles n'imposent pas le style visuel final (couleurs, typographies, icônes, espacements précis) — ce travail vous revient et fait partie de l'évaluation R2.02 / R2.03.
+    Ces maquettes posent l'**organisation** des écrans et la **hiérarchie** des informations à afficher. Elles n'imposent pas le style visuel final (couleurs, typographies, icônes, espacements précis) : ce travail vous revient et fait partie de l'évaluation R2.02 / R2.03.
 
-    Vous pouvez **proposer une variante** d'un écran si vous identifiez une meilleure organisation — dans ce cas, justifiez le choix dans votre soutenance.
+    Vous pouvez **proposer une variante** d'un écran si vous identifiez une meilleure organisation : dans ce cas, justifiez le choix dans votre soutenance.
 
 ## Cartographie des écrans
 
 | # | Écran | Type | Parcours principal | Épopées couvertes |
 |---|---|---|---|---|
-| [M-Sites](M-Sites.md) | Vue de mes sites de suivi | Vue principale (accueil) | [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | [E1.S1](../Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s1), [E1.S4](../Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4) |
+| [M-Accueil](M-Accueil.md) | Lanceur (hero + deux prismes) | Écran d'accueil (point d'entrée) | transverse (tous) | toutes (lanceur) |
+| [M-Sites](M-Sites.md) | Vue de mes sites de suivi | Vue principale | [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | [E1.S1](../Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s1), [E1.S4](../Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4) |
 | [M-Site-detail](M-Site-detail.md) | Fiche détail d'un site | Vue secondaire | [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | [E1.S2](../Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s2), [E1.S3](../Story%20mapping/E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s3) |
 | [M-Import](M-Import.md) | Assistant d'import d'une nuit | Vue principale | [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | [E2.S1](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s1) à [E2.S7](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s7) |
 | [M-Passage](M-Passage.md) | Détail d'un passage (4 onglets) | Vue pivot | transverse | [E0.S3](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s3), [E4.S4](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s4), [E6](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md) |
@@ -39,7 +40,7 @@ Chaque fichier `.md` suit la même structure :
 2. **Wireframe principal** : un SVG inline qui représente l'écran cible avec des données d'exemple cohérentes (n° de carré 640380, PR 1925492…).
 3. **Annotations** : explication de chaque zone du wireframe (header, sections numérotées, badges, etc.).
 4. **Interactions clés** : tableau des actions disponibles sur chaque élément cliquable.
-5. **Variantes** (quand pertinent) : wireframes secondaires dans le même fichier — état vide, modales, écrans intermédiaires (ex. progression d'un import), bascule de mode (vue tableau vs arborescence).
+5. **Variantes** (quand pertinent) : wireframes secondaires dans le même fichier : état vide, modales, écrans intermédiaires (ex. progression d'un import), bascule de mode (vue tableau vs arborescence).
 6. **Notes pour l'implémentation** : composants JavaFX recommandés, points de performance, raccourcis claviers, dépendances entre maquettes.
 
 ## Convention de navigation entre écrans
@@ -47,6 +48,7 @@ Chaque fichier `.md` suit la même structure :
 ```mermaid
 %%{init: {"flowchart": {"defaultRenderer": "elk"}, "themeCSS": ".nodeLabel, .nodeLabel p, .nodeLabel span { color: #fff !important; fill: #fff !important; }"}}%%
 flowchart TB
+    Accueil[🧭 M-Accueil]
     Sites[🏠 M-Sites]
     MultiSite[📊 M-MultiSite]
     Detail[🌐 M-Site-detail]
@@ -55,7 +57,13 @@ flowchart TB
     Qualif[🎧 M-Qualification]
     Lot[📦 M-Lot]
     Tadarida[✅ M-Vision-Tadarida]
+    Analyse[🪶 M-Analyse]
+    Biblio[🔊 M-Bibliotheque]
 
+    Accueil --> Sites
+    Accueil --> MultiSite
+    Accueil --> Analyse
+    Accueil --> Biblio
     Sites --> Detail
     Sites --> Import
     MultiSite -.alternative.- Sites
@@ -67,17 +75,23 @@ flowchart TB
     Passage --> Lot
     Lot -.dépôt VigieChiro<br/>+ retour Tadarida.-> Tadarida
 
+    classDef accueil fill:#3f51b5,stroke:#2c3a8c,color:#fff,stroke-width:2px
     classDef main fill:#1e8449,stroke:#0e5128,color:#fff,stroke-width:2px
     classDef detail fill:#4a90d9,stroke:#2563a3,color:#fff,stroke-width:2px
     classDef etiree fill:#b9770e,stroke:#7e5109,color:#fff,stroke-width:2px
+    classDef biodiv fill:#6c3483,stroke:#4a235a,color:#fff,stroke-width:2px
+    class Accueil accueil
     class Sites,Import,Qualif,Lot main
     class Detail,Passage,MultiSite detail
     class Tadarida etiree
+    class Analyse,Biblio biodiv
 ```
 
+- 🟦 **Indigo** : écran d'accueil (lanceur à deux prismes).
 - 🟩 **Vert** : maquettes de la chaîne fil rouge (MUST).
 - 🟦 **Bleu** : maquettes de soutien (détails, navigation multi-sites).
 - 🟧 **Orange** : maquette de cible étirée hors MVP strict.
+- 🟪 **Violet** : prisme espèces & biodiversité (inventaire, sons de référence).
 
 ## Pattern visuel partagé
 

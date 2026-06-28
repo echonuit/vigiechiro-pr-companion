@@ -158,6 +158,7 @@ nav:
           - E8 - Productivité avancée Tadarida: Analyse et conception/Story mapping/E8 - Productivité avancée Tadarida.md
       - Maquettes:
           - Vue d'ensemble: Analyse et conception/Maquettes/index.md
+          - M-Accueil: Analyse et conception/Maquettes/M-Accueil.md
           - M-Sites: Analyse et conception/Maquettes/M-Sites.md
           - M-Site-detail: Analyse et conception/Maquettes/M-Site-detail.md
           - M-Import: Analyse et conception/Maquettes/M-Import.md
@@ -170,7 +171,6 @@ nav:
           - M-Bibliotheque: Analyse et conception/Maquettes/M-Bibliotheque.md
           - M-Analyse: Analyse et conception/Maquettes/M-Analyse.md
           - M-Recherche: Analyse et conception/Maquettes/M-Recherche.md
-          - Vue d'ensemble: Analyse et conception/Maquettes/index.md
       - Périmètre MVP: Analyse et conception/Périmètre MVP.md
       - Planification: Analyse et conception/Planification.md
       - Planification plein écran: Analyse et conception/Planification - plein écran.md
