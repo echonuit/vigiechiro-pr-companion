@@ -40,6 +40,20 @@ Sélectionnez une observation, puis :
 - **« Ouvrir le passage → »** (ou un double-clic sur la ligne) ouvre l'écran du passage concerné pour en
   voir le contexte complet.
 
+## La carte de répartition
+
+Le bouton **« 🗺️ Carte »** bascule la zone du haut entre le **tableau** et une **carte**. Par défaut, la
+carte est une **choroplèthe de richesse** : chaque **carré** est d'autant plus **vert** qu'il abrite
+**d'espèces distinctes** (une légende « faible → élevée » le rappelle). Le survol d'un carré affiche ses
+mini-statistiques (espèces, détections, période).
+
+![La carte de répartition : richesse par carré (choroplèthe verte) avec sa légende.](../assets/captures/apercu-analyse-carte.png)
+
+Quand une **espèce est sélectionnée** (mode *Par espèce*), la carte montre sa **répartition** : les carrés
+**où elle est présente** ressortent, les autres sont atténués. On répond ainsi d'un coup d'œil à « **où est
+ma biodiversité la plus riche ?** » et « **où ai-je vu cette espèce ?** ». Le filtre **Statut** recolore la
+carte ; **« 📋 Tableau »** revient à la liste.
+
 ## Filtrer par niveau de confiance
 
 Le filtre **Statut** restreint l'inventaire selon l'état de revue des observations :

@@ -45,3 +45,32 @@
     -fx-padding: 12;
     -fx-text-alignment: center;
 }
+
+/* Carte de répartition : légende (dégradé de richesse) et bouton « recadrer », superposés à la carte. */
+.carte-legende {
+    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-background-radius: 6;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 6;
+    -fx-padding: 6 8 6 8;
+}
+
+.carte-legende-titre {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #24292e;
+}
+
+.carte-legende-borne {
+    -fx-font-size: 10px;
+    -fx-text-fill: #6a737d;
+}
+
+.carte-recadrer {
+    -fx-background-color: rgba(255, 255, 255, 0.92);
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-font-size: 13px;
+    -fx-padding: 2 8 2 8;
+}

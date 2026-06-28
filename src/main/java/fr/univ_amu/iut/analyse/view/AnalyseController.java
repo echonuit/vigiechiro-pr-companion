@@ -16,9 +16,12 @@ import java.io.File;
 import java.util.Objects;
 import java.util.function.Function;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -28,6 +31,7 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -45,6 +49,16 @@ public class AnalyseController implements RafraichirAuRetour {
     private final AnalyseViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirValidation ouvrirValidation;
+
+    /// État de la bascule Tableau ⇄ Carte (vue, pas de domaine) ; la carte elle-même est gérée par
+    /// [CarteRepartition].
+    private final BooleanProperty carteAffichee = new SimpleBooleanProperty(this, "carteAffichee", false);
+
+    @FXML
+    private StackPane zoneCarte;
+
+    @FXML
+    private Button boutonCarte;
 
     @FXML
     private Label lblResume;
@@ -180,10 +194,14 @@ public class AnalyseController implements RafraichirAuRetour {
         lblExport.visibleProperty().bind(exportPresent);
         lblExport.managedProperty().bind(exportPresent);
 
-        // La table visible suit le regroupement.
+        // En mode Tableau, la table visible suit le regroupement ; en mode Carte, les deux tables
+        // s'effacent au profit de la carte de répartition.
         var parEspece = viewModel.regroupementProperty().isEqualTo(Regroupement.PAR_ESPECE);
-        lierVisibilite(tableEspeces, parEspece);
-        lierVisibilite(tableCarres, parEspece.not());
+        var tableauAffiche = carteAffichee.not();
+        lierVisibilite(tableEspeces, parEspece.and(tableauAffiche));
+        lierVisibilite(tableCarres, parEspece.not().and(tableauAffiche));
+        lierVisibilite(zoneCarte, carteAffichee);
+        configurerCarte();
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
 
@@ -255,6 +273,20 @@ public class AnalyseController implements RafraichirAuRetour {
         } else if (!parEspece) {
             separateur.getItems().remove(panneauDetail);
         }
+    }
+
+    /// Câble la **carte de répartition** (déléguée à [CarteRepartition] : composant carte + overlays +
+    /// rafraîchissements selon l'inventaire par carré et la répartition de l'espèce sélectionnée).
+    private void configurerCarte() {
+        new CarteRepartition(viewModel.carresCarte(), viewModel.carresEspeceSelectionnee(), carteAffichee)
+                .installerDans(zoneCarte);
+    }
+
+    /// « 🗺️ Carte » / « 📋 Tableau » : bascule l'affichage de la zone maître entre l'inventaire et la carte.
+    @FXML
+    private void basculerCarte() {
+        carteAffichee.set(!carteAffichee.get());
+        boutonCarte.setText(carteAffichee.get() ? "📋 Tableau" : "🗺️ Carte");
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
@@ -392,9 +424,9 @@ public class AnalyseController implements RafraichirAuRetour {
         return new ReadOnlyStringWrapper(String.valueOf(valeur));
     }
 
-    private static void lierVisibilite(TableView<?> table, javafx.beans.value.ObservableValue<Boolean> visible) {
-        table.visibleProperty().bind(visible);
-        table.managedProperty().bind(visible);
+    private static void lierVisibilite(Node noeud, ObservableValue<Boolean> visible) {
+        noeud.visibleProperty().bind(visible);
+        noeud.managedProperty().bind(visible);
     }
 
     private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {

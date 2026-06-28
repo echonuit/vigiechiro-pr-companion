@@ -31,6 +31,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -223,5 +224,30 @@ class AnalyseViewTest {
         assertThat(passage.getValue().numeroPassage()).isEqualTo(2);
         assertThat(passage.getValue().site().numeroCarre()).isEqualTo("640380");
         assertThat(passage.getValue().site().codePoint()).isEqualTo("A1");
+    }
+
+    @Test
+    @DisplayName("La bascule « 🗺️ Carte » affiche la carte de répartition à la place des tables")
+    void bascule_carte_affiche_la_carte_de_repartition(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        StackPane zoneCarte = robot.lookup("#zoneCarte").queryAs(StackPane.class);
+        Button boutonCarte = robot.lookup("#boutonCarte").queryAs(Button.class);
+        assertThat(zoneCarte.isVisible()).as("carte masquée au départ").isFalse();
+        assertThat(especes.isVisible()).isTrue();
+
+        robot.interact(boutonCarte::fire);
+
+        assertThat(zoneCarte.isVisible()).as("la carte remplace les tables").isTrue();
+        assertThat(especes.isVisible()).isFalse();
+        assertThat(boutonCarte.getText()).contains("Tableau");
+        assertThat(robot.lookup(".carte-legende").tryQuery())
+                .as("la légende de richesse est superposée")
+                .isPresent();
+
+        robot.interact(boutonCarte::fire);
+
+        assertThat(zoneCarte.isVisible()).isFalse();
+        assertThat(especes.isVisible()).isTrue();
+        assertThat(boutonCarte.getText()).contains("Carte");
     }
 }
