@@ -110,6 +110,37 @@ public class ServiceValidation {
         return observationDao.referencesDeLUtilisateur(idUtilisateur);
     }
 
+    // ---------------------------------------------------------------------------------------------
+    // Vue audio unifiée (#audio) : projections LigneObservationAudio par source, façades sur le DAO
+    // ---------------------------------------------------------------------------------------------
+
+    /// Lignes audio d'**un passage** (source `ParPassage` de la vue audio unifiée).
+    public List<LigneObservationAudio> lignesAudioDuPassage(Long idPassage) {
+        return observationDao.lignesAudioDuPassage(idPassage);
+    }
+
+    /// Lignes audio d'**un lot de passages** (source `ParPassages`, multisite filtré).
+    public List<LigneObservationAudio> lignesAudioDesPassages(List<Long> idPassages) {
+        return observationDao.lignesAudioDesPassages(idPassages);
+    }
+
+    /// Lignes audio d'**une espèce** d'un utilisateur (source `ParEspece`), filtre `statut` optionnel.
+    public List<LigneObservationAudio> lignesAudioDeLEspece(
+            String idUtilisateur, String codeEspece, StatutObservation statut) {
+        return observationDao.lignesAudioDeLEspece(idUtilisateur, codeEspece, statut);
+    }
+
+    /// Lignes audio du **corpus de référence** d'un utilisateur (source `References`).
+    public List<LigneObservationAudio> lignesAudioReferences(String idUtilisateur) {
+        return observationDao.lignesAudioReferences(idUtilisateur);
+    }
+
+    /// Identifiant du jeu de résultats Tadarida d'un passage (`null` si aucun import), pour activer
+    /// l'export `_Vu` de la source `ParPassage` sans recharger toute la vue de validation.
+    public Optional<Long> resultatsDuPassage(Long idPassage) {
+        return resultatsDao.findByPassage(idPassage).map(ResultatsIdentification::id);
+    }
+
     /// Importe les résultats Tadarida d'un passage : parse le CSV, crée les résultats
     /// d'identification et insère les observations en masse, raccrochées à leurs séquences.
     ///
