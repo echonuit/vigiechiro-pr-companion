@@ -1,23 +1,29 @@
 package fr.univ_amu.iut.analyse.viewmodel;
 
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
+import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 /// ViewModel de l'écran transverse **« Espèces & observations »** (feature `analyse`, prisme
 /// biodiversité). Pilote l'**inventaire** des observations de l'utilisateur, regroupé **par espèce** ou
-/// **par carré** ([Regroupement]) et filtré par **statut** de revue (`null` = toutes).
+/// **par carré** ([Regroupement]), filtré par **statut** de revue (`null` = toutes) et par un **texte**
+/// (nom/code d'espèce, ou n°/nom de carré), avec **export CSV**.
 ///
-/// Tout changement de regroupement ou de filtre **ré-interroge** [ServiceAnalyse] et recharge la liste
-/// active. Le VM ne fait que relayer (le service agrège côté SQL). Agnostique de l'IHM (ArchUnit
+/// Le filtre de statut ré-interroge le service (filtrage SQL) ; le filtre texte s'applique **en mémoire**
+/// sur la liste chargée (pas de requête par frappe). Agnostique de l'IHM (ArchUnit
 /// `viewmodel_sans_javafx_ui`). Non-singleton (un VM frais par chargement d'écran).
 public class AnalyseViewModel {
 
@@ -28,35 +34,96 @@ public class AnalyseViewModel {
             new SimpleObjectProperty<>(this, "regroupement", Regroupement.PAR_ESPECE);
     /// Filtre de statut de revue ; `null` = toutes les observations.
     private final ObjectProperty<StatutObservation> filtreStatut = new SimpleObjectProperty<>(this, "filtreStatut");
+    /// Filtre texte (insensible casse/accents) ; vide = aucun filtre.
+    private final StringProperty filtreTexte = new SimpleStringProperty(this, "filtreTexte", "");
+
+    /// Listes **complètes** (réponse du service) avant le filtre texte, conservées pour re-filtrer en
+    /// mémoire sans ré-interroger la base à chaque frappe.
+    private List<EspeceAgregee> especesTous = List.of();
+    private List<CarreEspeces> carresTous = List.of();
 
     private final ObservableList<EspeceAgregee> especes = FXCollections.observableArrayList();
     private final ObservableList<CarreEspeces> carres = FXCollections.observableArrayList();
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
+    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
     public AnalyseViewModel(ServiceAnalyse service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         regroupement.addListener((obs, ancien, nouveau) -> rafraichir());
         filtreStatut.addListener((obs, ancien, nouveau) -> rafraichir());
+        filtreTexte.addListener((obs, ancien, nouveau) -> appliquerFiltreTexte());
     }
 
-    /// (Re)charge la liste **active** (selon le regroupement) avec le filtre de statut courant, et met à
-    /// jour le résumé. À appeler à l'ouverture de l'écran ; ensuite déclenché par tout changement.
+    /// (Re)charge depuis le service la liste **active** (selon le regroupement et le statut), puis applique
+    /// le filtre texte. À appeler à l'ouverture de l'écran ; ensuite déclenché par tout changement.
     public void rafraichir() {
         StatutObservation statut = filtreStatut.get();
         if (regroupement.get() == Regroupement.PAR_CARRE) {
-            carres.setAll(service.inventaireParCarre(idUtilisateur, statut));
+            carresTous = service.inventaireParCarre(idUtilisateur, statut);
+            especesTous = List.of();
+        } else {
+            especesTous = service.inventaireParEspece(idUtilisateur, statut);
+            carresTous = List.of();
+        }
+        appliquerFiltreTexte();
+    }
+
+    /// Filtre **en mémoire** la liste active par le texte courant, et met à jour résumé/listes affichées.
+    private void appliquerFiltreTexte() {
+        String aiguille = NormalisationTexte.normaliser(filtreTexte.get());
+        if (regroupement.get() == Regroupement.PAR_CARRE) {
+            carres.setAll(carresTous.stream()
+                    .filter(c -> correspond(aiguille, c.numeroCarre(), c.nomSite()))
+                    .toList());
             especes.clear();
             int detections =
                     carres.stream().mapToInt(CarreEspeces::nbObservations).sum();
             resume.set(quantite(carres.size(), "carré") + " · " + quantite(detections, "détection"));
         } else {
-            especes.setAll(service.inventaireParEspece(idUtilisateur, statut));
+            especes.setAll(especesTous.stream()
+                    .filter(e -> correspond(aiguille, e.code(), e.nomVernaculaireFr(), e.nomLatin()))
+                    .toList());
             carres.clear();
             int detections =
                     especes.stream().mapToInt(EspeceAgregee::nbObservations).sum();
             resume.set(quantite(especes.size(), "espèce") + " · " + quantite(detections, "détection"));
         }
+    }
+
+    /// **Exporte** l'inventaire affiché (liste filtrée courante) en CSV vers `destination`. Sans dossier,
+    /// l'appel est ignoré ; le bilan (ou l'erreur) va dans [#messageProperty()].
+    ///
+    /// @return `true` si le fichier a été écrit
+    public boolean exporter(Path destination) {
+        if (destination == null) {
+            return false;
+        }
+        try {
+            if (regroupement.get() == Regroupement.PAR_CARRE) {
+                service.exporterCarres(destination, List.copyOf(carres));
+            } else {
+                service.exporterEspeces(destination, List.copyOf(especes));
+            }
+            message.set("Inventaire exporté vers " + destination.getFileName() + ".");
+            return true;
+        } catch (RuntimeException echec) {
+            message.set(echec.getMessage());
+            return false;
+        }
+    }
+
+    /// Vrai si au moins un des `champs` (non nuls) contient l'`aiguille` normalisée (vide → toujours vrai).
+    private static boolean correspond(String aiguille, String... champs) {
+        if (aiguille.isEmpty()) {
+            return true;
+        }
+        for (String champ : champs) {
+            if (champ != null && NormalisationTexte.normaliser(champ).contains(aiguille)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /// Accord en nombre : `quantite(3, "espèce")` → `3 espèces` ; `quantite(1, "carré")` → `1 carré`.
@@ -72,17 +139,25 @@ public class AnalyseViewModel {
         return filtreStatut;
     }
 
-    /// Inventaire par espèce (alimenté quand le regroupement est [Regroupement#PAR_ESPECE]).
+    public StringProperty filtreTexteProperty() {
+        return filtreTexte;
+    }
+
+    /// Inventaire par espèce filtré (alimenté quand le regroupement est [Regroupement#PAR_ESPECE]).
     public ObservableList<EspeceAgregee> especes() {
         return especes;
     }
 
-    /// Inventaire par carré (alimenté quand le regroupement est [Regroupement#PAR_CARRE]).
+    /// Inventaire par carré filtré (alimenté quand le regroupement est [Regroupement#PAR_CARRE]).
     public ObservableList<CarreEspeces> carres() {
         return carres;
     }
 
     public ReadOnlyStringProperty resumeProperty() {
         return resume.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty messageProperty() {
+        return message.getReadOnlyProperty();
     }
 }

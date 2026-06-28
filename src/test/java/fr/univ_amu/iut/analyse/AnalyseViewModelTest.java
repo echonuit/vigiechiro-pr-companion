@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.analyse;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,10 +14,12 @@ import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -77,5 +81,47 @@ class AnalyseViewModelTest {
 
         verify(service).inventaireParEspece(ID, StatutObservation.VALIDEE);
         assertThat(vm.especes()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Le filtre texte s'applique en mémoire (sans nouvelle requête), insensible aux accents")
+    void filtre_texte_en_memoire() {
+        when(service.inventaireParEspece(eq(ID), isNull()))
+                .thenReturn(List.of(
+                        espece("Pippip", 5), // Pipistrelle commune
+                        new EspeceAgregee(
+                                "Nyclei",
+                                "Nyctalus leisleri",
+                                "Noctule de Leisler",
+                                "Nyctalus",
+                                3,
+                                1,
+                                1,
+                                1,
+                                2026,
+                                2026)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
+        assertThat(vm.especes()).hasSize(2);
+
+        vm.filtreTexteProperty().set("noctule");
+
+        assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Nyclei");
+        verify(service, times(1)).inventaireParEspece(eq(ID), isNull()); // pas de re-requête au filtre texte
+    }
+
+    @Test
+    @DisplayName("Exporter délègue au service l'écriture CSV de l'inventaire affiché et restitue un bilan")
+    void exporter_delegue_au_service(@TempDir Path dossier) {
+        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 5)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
+        Path cible = dossier.resolve("inventaire.csv");
+
+        boolean ok = vm.exporter(cible);
+
+        assertThat(ok).isTrue();
+        verify(service).exporterEspeces(eq(cible), anyList());
+        assertThat(vm.messageProperty().get()).contains("exporté");
     }
 }
