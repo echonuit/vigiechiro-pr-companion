@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
+import fr.univ_amu.iut.commun.view.carte.EmpriseCarre;
+import fr.univ_amu.iut.commun.view.carte.FournisseurEmpriseCarre;
+import fr.univ_amu.iut.commun.view.carte.PointGeo;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.PointAgrege;
 import java.util.List;
@@ -28,11 +31,19 @@ class ConstructeurDonneesCarteTest {
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
 
-        // Seul A1 (géolocalisé) donne un marqueur ; le carré (du référentiel carrenat) est tracé.
-        assertThat(donnees.points()).hasSize(1);
-        assertThat(donnees.points().get(0).libelle()).isEqualTo("640380 / A1");
-        assertThat(donnees.points().get(0).couleur())
-                .isEqualTo(ConstructeurDonneesCarte.couleurStatut(StatutWorkflow.VERIFIE));
+        // A1 (géolocalisé) → marqueur réel ; B2 (sans GPS) → marqueur approché au centre du carré (#153).
+        assertThat(donnees.points()).hasSize(2);
+        PointGeo reel = donnees.points().stream()
+                .filter(p -> !p.approximatif())
+                .findFirst()
+                .orElseThrow();
+        PointGeo approche = donnees.points().stream()
+                .filter(PointGeo::approximatif)
+                .findFirst()
+                .orElseThrow();
+        assertThat(reel.libelle()).isEqualTo("640380 / A1");
+        assertThat(reel.couleur()).isEqualTo(ConstructeurDonneesCarte.couleurStatut(StatutWorkflow.VERIFIE));
+        assertThat(approche.libelle()).isEqualTo("640380 / B2");
         assertThat(donnees.carres()).extracting(c -> c.numeroCarre()).containsExactly("640380");
     }
 
@@ -52,19 +63,77 @@ class ConstructeurDonneesCarteTest {
     }
 
     @Test
-    @DisplayName("#325 : un carré DU carroyage officiel est tracé même sans point géolocalisé")
-    void carre_du_referentiel_trace_sans_point() {
-        // 640380 est dans le référentiel carrenat : son emprise vient du centroïde national, indépendamment
-        // des points. Le carré est donc tracé même si son seul point n'a pas de GPS.
+    @DisplayName("#153 : un point sans GPS d'un carré officiel est placé (approché) au centre du carré")
+    void point_sans_gps_place_au_centre_du_carre() {
+        // 640380 est dans le référentiel carrenat : son emprise (et donc son centre) vient du centroïde
+        // national, indépendamment des points. Le point sans GPS y est posé au centre, marqué approximatif.
         CarreAgrege carre = new CarreAgrege("640380", "Étang", List.of(new PointAgrege("A1", null, null, 1, null)), 1);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
 
-        assertThat(donnees.points()).as("aucun marqueur sans GPS").isEmpty();
+        EmpriseCarre emprise =
+                FournisseurEmpriseCarre.parDefaut().emprise("640380", List.of()).orElseThrow();
+        assertThat(donnees.points()).hasSize(1);
+        PointGeo approche = donnees.points().get(0);
+        assertThat(approche.approximatif())
+                .as("position approchée, pas un GPS réel")
+                .isTrue();
+        assertThat(approche.latitude()).isEqualTo(emprise.latCentre());
+        assertThat(approche.longitude()).isEqualTo(emprise.lonCentre());
+        assertThat(approche.infobulle()).contains("Position approximative");
         assertThat(donnees.carres())
-                .as("mais le carré est calé sur le carroyage officiel")
+                .as("le carré reste calé sur le carroyage officiel (#325)")
                 .extracting(c -> c.numeroCarre())
                 .containsExactly("640380");
+    }
+
+    @Test
+    @DisplayName("#153 : plusieurs points sans GPS d'un carré sont désempilés (positions distinctes, dans l'emprise)")
+    void plusieurs_points_sans_gps_desempiles() {
+        CarreAgrege carre = new CarreAgrege(
+                "640380",
+                "Étang",
+                List.of(
+                        new PointAgrege("A1", null, null, 1, null),
+                        new PointAgrege("B2", null, null, 1, null),
+                        new PointAgrege("C3", null, null, 1, null)),
+                3);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
+
+        EmpriseCarre emprise =
+                FournisseurEmpriseCarre.parDefaut().emprise("640380", List.of()).orElseThrow();
+        assertThat(donnees.points()).hasSize(3).allMatch(PointGeo::approximatif);
+        assertThat(donnees.points().stream()
+                        .map(p -> p.latitude() + "," + p.longitude())
+                        .distinct()
+                        .count())
+                .as("trois positions distinctes (désempilées en éventail)")
+                .isEqualTo(3);
+        assertThat(donnees.points())
+                .as("toutes à l'intérieur de la maille")
+                .allSatisfy(p -> assertThat(emprise.contient(p.latitude(), p.longitude()))
+                        .isTrue());
+    }
+
+    @Test
+    @DisplayName("#153 : hors référentiel mais ancré par un point GPS, un point sans GPS est placé au centre du repli")
+    void point_sans_gps_place_au_centre_du_repli() {
+        // 999999 absent du carroyage : l'emprise vient du repli autour du seul point géolocalisé (A1).
+        // Le point sans GPS (B2) est tout de même situé, au centre de ce repli, marqué approximatif.
+        CarreAgrege carre = new CarreAgrege(
+                "999999",
+                null,
+                List.of(
+                        new PointAgrege("A1", 43.4010, -1.5740, 1, StatutWorkflow.VERIFIE),
+                        new PointAgrege("B2", null, null, 1, null)),
+                2);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
+
+        assertThat(donnees.points()).hasSize(2);
+        assertThat(donnees.points()).filteredOn(PointGeo::approximatif).hasSize(1);
+        assertThat(donnees.points()).filteredOn(p -> !p.approximatif()).hasSize(1);
     }
 
     @Test
@@ -143,23 +212,47 @@ class ConstructeurDonneesCarteTest {
     }
 
     @Test
-    @DisplayName("info-bulle d'un carré : nom + numéro, total de passages, nombre de points, répartition statuts")
+    @DisplayName("info-bulle d'un carré : nom + numéro, passages, points GPS vs à localiser, répartition statuts")
     void infobulle_carre_resume_les_stats() {
         CarreAgrege carre = new CarreAgrege(
                 "640380",
                 "Étang",
                 List.of(
                         new PointAgrege("A1", 43.4010, -1.5740, 2, StatutWorkflow.VERIFIE),
-                        new PointAgrege("B2", null, null, 1, StatutWorkflow.IMPORTE)), // sans GPS, exclu du compte
+                        new PointAgrege("B2", null, null, 1, StatutWorkflow.IMPORTE)), // sans GPS → au centre
+                3);
+
+        DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
+
+        // Le décompte distingue le point géolocalisé du point sans GPS (affiché au centre), au lieu de
+        // l'ignorer (#153 : cohérent avec les marqueurs réellement visibles).
+        assertThat(donnees.carres().get(0).infobulle())
+                .contains("Étang (640380)")
+                .contains("3 passages")
+                .contains("1 point GPS")
+                .contains("1 à localiser")
+                .contains(StatutWorkflow.VERIFIE.libelle() + " ×1") // A1 géolocalisé
+                .contains(StatutWorkflow.IMPORTE.libelle() + " ×1"); // B2 sans GPS, désormais compté
+    }
+
+    @Test
+    @DisplayName("#153 : info-bulle cohérente quand TOUS les points d'un carré sont sans GPS (pas « 0 point »)")
+    void infobulle_carre_tous_points_sans_gps() {
+        CarreAgrege carre = new CarreAgrege(
+                "640380",
+                "Étang",
+                List.of(
+                        new PointAgrege("A1", null, null, 1, StatutWorkflow.IMPORTE),
+                        new PointAgrege("B2", null, null, 2, StatutWorkflow.IMPORTE)),
                 3);
 
         DonneesCarte donnees = ConstructeurDonneesCarte.depuis(List.of(carre));
 
         assertThat(donnees.carres().get(0).infobulle())
-                .contains("Étang (640380)")
-                .contains("3 passages")
-                .contains("1 point") // un seul point géolocalisé
-                .contains(StatutWorkflow.VERIFIE.libelle() + " ×1");
+                .as("ne dit pas « 0 point » alors que 2 marqueurs approximatifs sont visibles")
+                .doesNotContain("0 point")
+                .contains("2 points à localiser (sans GPS)")
+                .contains(StatutWorkflow.IMPORTE.libelle() + " ×2");
     }
 
     @Test

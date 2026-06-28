@@ -7,10 +7,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -76,6 +78,32 @@ class CarteSitesTest {
         assertThat(carte.lookupAll(".carte-point-libelle"))
                 .as("un point au GPS manquant (NaN) n'est pas placé sur la carte (#152 P2)")
                 .hasSize(1);
+    }
+
+    @Test
+    void point_approximatif_rendu_distinctement(FxRobot robot) {
+        // Un point sans GPS posé au centre de son carré (#153) est marqué `approximatif` : la couche doit le
+        // rendre distinctement (anneau pointillé creux) ET l'annoncer (accessibilité #163, pas que la forme).
+        PointGeo approche = new PointGeo("A3", 43.4031, -1.5708, Color.GREEN, "A3\nPosition approximative", true);
+        robot.interact(() -> carte.setDonnees(new DonneesCarte(List.of(), List.of(approche))));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Node marqueur =
+                carte.lookupAll(".carte-point-libelle").iterator().next().getParent();
+        assertThat(marqueur.getAccessibleText())
+                .as("l'état approché est annoncé aux lecteurs d'écran")
+                .contains("approximative");
+        Circle pastille = (Circle) ((Group) marqueur)
+                .getChildren().stream()
+                        .filter(Circle.class::isInstance)
+                        .findFirst()
+                        .orElseThrow();
+        assertThat(pastille.getStrokeDashArray()).as("anneau pointillé").isNotEmpty();
+        assertThat(pastille.getStroke()).as("anneau coloré par le statut").isEqualTo(Color.GREEN);
+        assertThat(pastille.getFill())
+                .as("fond blanc contrastant, distinct d'une pastille pleine colorée")
+                .isEqualTo(Color.WHITE)
+                .isNotEqualTo(approche.couleur());
     }
 
     @Test

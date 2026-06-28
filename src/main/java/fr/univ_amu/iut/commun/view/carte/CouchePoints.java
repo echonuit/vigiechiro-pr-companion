@@ -114,16 +114,29 @@ final class CouchePoints extends MapLayer {
 
         private Marqueur(PointGeo point) {
             this.point = point;
-            Circle pastille = new Circle(6, point.couleur());
-            pastille.setStroke(Color.WHITE);
-            pastille.setStrokeWidth(1.5);
+            Circle pastille = new Circle(point.approximatif() ? 7.5 : 6);
+            if (point.approximatif()) {
+                // Position approchée (centre du carré, faute de GPS) : disque BLANC cerné d'un anneau
+                // POINTILLÉ coloré, et un peu plus gros. Le fond blanc le fait ressortir sur la carte ET sur
+                // le remplissage translucide du carré (sinon il s'y noie) ; l'anneau pointillé (vs pastille
+                // pleine) le distingue d'un point réellement géolocalisé (#163 : forme + texte, pas la couleur).
+                pastille.setFill(Color.WHITE);
+                pastille.setStroke(point.couleur());
+                pastille.setStrokeWidth(2.5);
+                pastille.getStrokeDashArray().addAll(3.0, 3.0);
+            } else {
+                pastille.setFill(point.couleur());
+                pastille.setStroke(Color.WHITE);
+                pastille.setStrokeWidth(1.5);
+            }
             Label libelle = new Label(point.libelle());
             libelle.getStyleClass().add("carte-point-libelle");
             libelle.setTranslateX(9);
             libelle.setTranslateY(-8);
             Group groupe = new Group(pastille, libelle);
             groupe.setFocusTraversable(true); // navigation clavier (#163)
-            groupe.setAccessibleText("Point d'écoute " + point.libelle());
+            groupe.setAccessibleText("Point d'écoute " + point.libelle()
+                    + (point.approximatif() ? " (position approximative, centre du carré)" : ""));
             groupe.setCursor(editable ? Cursor.OPEN_HAND : Cursor.HAND);
             if (point.infobulle() != null) {
                 // Mini-stats au survol (#152) ; aussi en accessibleHelp pour les lecteurs d'écran (#163).

@@ -12,11 +12,18 @@ sites et qu'on veut une vision d'ensemble.
 À **gauche**, la **carte** affiche chaque **carré** (maille 2 km du carroyage national Vigie-Chiro) et
 ses **points d'écoute** sous forme de marqueurs **colorés selon le statut** du dernier passage (gris = importé,
 indigo = transformé / vérifié, cyan = prêt à déposer, vert = déposé). Chaque marqueur porte son
-libellé (`carré / point`) ; les points sans coordonnées GPS ne sont pas placés. Le **remplissage
+libellé (`carré / point`). Un point **sans coordonnées GPS** est tout de même affiché, **au centre de
+son carré**, sous forme de marqueur **approximatif** : un disque blanc cerné d'un **anneau pointillé**
+(au lieu d'une pastille pleine), pour qu'on le repère sans le confondre avec une position mesurée ; son
+info-bulle le signale (« position approximative, centre du carré »). Si plusieurs points d'un même carré
+sont sans GPS, ils sont **répartis en éventail** autour du centre pour ne pas se superposer. Seul reste
+**non plaçable** un point dont le carré est **hors carroyage officiel et sans aucun point géolocalisé**
+(centre inconnu) : il n'apparaît pas sur la carte. Le **remplissage
 de chaque carré** reflète sa **densité de passages** : plus un carré est fréquenté, plus son indigo
 est foncé (échelle relative au carré le plus actif). **Au survol** d'un carré ou d'un point, une
-**info-bulle** récapitule ses mini-stats (nombre de passages, points, répartition des statuts ;
-statut dominant pour un point) ; ces stats sont aussi lues par les lecteurs d'écran. Une **légende**
+**info-bulle** récapitule ses mini-stats (nombre de passages, points **avec GPS** et points **à
+localiser**, répartition des statuts ; statut dominant pour un point) ; ces stats sont aussi lues par
+les lecteurs d'écran. Une **légende**
 superposée en bas à gauche
 rappelle le code couleur des statuts et l'échelle de densité ; un chevron la **replie** pour dégager
 la carte. Le fond de carte OpenStreetMap apparaît quand une connexion est disponible. La carte montre
