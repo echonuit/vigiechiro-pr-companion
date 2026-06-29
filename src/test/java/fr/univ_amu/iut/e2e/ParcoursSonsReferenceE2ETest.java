@@ -23,8 +23,8 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// **Test E2E (smoke) de l'entrée « Sons de référence »** (#audio) : depuis le **tableau de bord**, un
-/// clic réel sur la carte **« Sons de référence »** ouvre la **vue audio unifiée** (« Sons & validation »)
+/// **Test E2E (smoke) de l'entrée « Sons & validation »** (#audio) : depuis le **tableau de bord**, un
+/// clic réel sur la carte **« Sons & validation »** ouvre la **vue audio unifiée** (sur la source `References`)
 /// sur la source `References` (`accueil → audio`). Vérifie le câblage carte d'accueil → contrat socle
 /// `OuvrirAudio` → navigation et le chargement sans erreur de l'écran (table des observations présente),
 /// sur une base vide : il s'agit d'un fumigène, pas d'un parcours de données (le corpus de référence est
@@ -55,12 +55,12 @@ class ParcoursSonsReferenceE2ETest {
     }
 
     @Test
-    @DisplayName("Tableau de bord : la carte « Sons de référence » ouvre la vue audio unifiée")
+    @DisplayName("Tableau de bord : la carte « Sons & validation » ouvre la vue audio unifiée")
     void accueil_ouvre_vue_audio(FxRobot robot) {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
-        robot.clickOn("Sons de référence");
+        robot.clickOn("Sons & validation");
 
         assertThat(navigation.getVueCourante()).isEqualTo("audio");
         assertThat(robot.lookup("#tableObservations").queryAs(TableView.class)).isNotNull();

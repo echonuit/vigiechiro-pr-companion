@@ -3,7 +3,7 @@
 L'écran **Validation** (la vue audio unifiée « Sons & validation ») sert à **écouter, relire et
 corriger** les espèces identifiées par l'outil Tadarida, et à constituer votre **corpus de sons de
 référence**. On y arrive depuis plusieurs points : un **passage** (après dépôt, pour valider ses
-résultats Tadarida), l'accueil (**Sons de référence**), **Espèces & observations** (les détections d'une
+résultats Tadarida), l'accueil (**Sons & validation**), **Espèces & observations** (les détections d'une
 espèce) et **Carte & passages** (un passage ou le lot filtré).
 
 ![Sons & validation : table des observations, écoute pleine largeur et barre d'actions.](../assets/captures/apercu-sons-validation.png)
@@ -32,7 +32,7 @@ d'**importer le fichier CSV** de résultats Tadarida, puis d'**exporter** le fic
 
 ## Sons de référence
 
-Depuis l'accueil, l'activité **Sons de référence** ouvre l'écran sur **toutes les observations marquées
+Depuis l'accueil, l'activité **Sons & validation** ouvre l'écran sur **toutes les observations marquées
 « référence »** : vous les **écoutez**, les **validez / corrigez**, **retirez** la référence, et
 **exportez la bibliothèque** (un récapitulatif CSV + la copie des fichiers son) vers un dossier de votre
 choix.

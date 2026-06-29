@@ -48,7 +48,7 @@ d'entrée :
 |---|---|
 | **Mes sites** | Gérer vos carrés et points d'écoute. C'est le point de départ : on déclare d'abord *où* l'on capture. |
 | **Importer une nuit** | Importer une nuit de Passive Recorder depuis la carte SD. |
-| **Sons de référence** | Écouter, valider et exporter votre corpus de sons de référence (dans la vue audio « Sons & validation »). |
+| **Sons & validation** | Écouter, valider et exporter votre corpus de sons de référence. |
 | **Carte & passages** | La carte de vos sites et le tableau de tous vos passages, avec filtres, tri et export. |
 
 Depuis ces points d'entrée, vous atteignez ensuite les autres écrans : un **site** donne accès à

@@ -9,7 +9,7 @@ L'**écran d'accueil** est le point d'entrée de l'application. Il vous invite �
 |---|---|---|
 | **Mes sites** | [Sites](sites.md) | gérer vos carrés et points d'écoute |
 | **Importer une nuit** | [Importation](importation.md) | importer une nuit depuis la carte SD |
-| **Sons de référence** | [Validation](validation.md) | écouter, valider et exporter vos sons de référence |
+| **Sons & validation** | [Sons & validation](validation.md) | écouter, valider et exporter vos sons de référence |
 | **Carte & passages** | [Carte & passages](multisite.md) | la carte de vos sites + le tableau de tous vos passages |
 
 Depuis ces points d'entrée, vous atteignez ensuite les autres écrans : un **site** donne accès à

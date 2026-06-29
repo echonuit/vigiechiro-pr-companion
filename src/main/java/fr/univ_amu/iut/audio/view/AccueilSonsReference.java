@@ -51,12 +51,12 @@ public final class AccueilSonsReference implements ActiviteAccueil {
 
     @Override
     public String titre() {
-        return "Sons de référence";
+        return "Sons & validation";
     }
 
     @Override
     public String description() {
-        return "Vos sons de référence à écouter, valider et exporter.";
+        return "Écouter, valider et exporter vos sons de référence.";
     }
 
     @Override

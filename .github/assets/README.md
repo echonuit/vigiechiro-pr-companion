@@ -235,6 +235,40 @@ Vues sauvegardées, une vue sélectionnée.
 
 ---
 
+## Espèces & observations
+
+### Inventaire (`analyse/view/Analyse.fxml`)
+
+Inventaire transverse des espèces détectées (prisme biodiversité), regroupable **par espèce** ou
+**par carré** (richesse spécifique) et filtrable par statut.
+
+<table>
+<tr>
+<th>Par espèce : détections, passages, carrés, période</th>
+<th>Par carré : richesse spécifique</th>
+</tr>
+<tr>
+<td><a href="apercu-analyse.png"><img src="apercu-analyse.png" width="440" alt="Analyse par espèce"></a></td>
+<td><a href="apercu-analyse-carre.png"><img src="apercu-analyse-carre.png" width="440" alt="Analyse par carré"></a></td>
+</tr>
+</table>
+
+### Carte de répartition
+
+Bascule cartographique : richesse par carré sur la carte (espèce sélectionnée surlignée).
+
+<a href="apercu-analyse-carte.png"><img src="apercu-analyse-carte.png" width="560" alt="Carte de répartition"></a>
+
+---
+
+## Recherche globale
+
+Recherche transverse (sites, points, passages) accessible au clavier (Ctrl+F).
+
+<a href="apercu-recherche.png"><img src="apercu-recherche.png" width="560" alt="Recherche globale"></a>
+
+---
+
 ## Autres ressources de ce dossier
 
 Ce dossier contient aussi des illustrations hors galerie UI :
