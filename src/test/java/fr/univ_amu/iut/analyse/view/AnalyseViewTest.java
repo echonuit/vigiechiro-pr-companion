@@ -15,10 +15,10 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
-import fr.univ_amu.iut.commun.view.OuvrirValidation;
-import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
@@ -49,14 +49,14 @@ class AnalyseViewTest {
 
     private ServiceAnalyse service;
     private OuvrirPassage ouvrirPassage;
-    private OuvrirValidation ouvrirValidation;
+    private OuvrirAudio ouvrirAudio;
     private AnalyseController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceAnalyse.class);
         ouvrirPassage = mock(OuvrirPassage.class);
-        ouvrirValidation = mock(OuvrirValidation.class);
+        ouvrirAudio = mock(OuvrirAudio.class);
         when(service.inventaireParEspece(anyString(), any()))
                 .thenReturn(List.of(new EspeceAgregee(
                         "Pippip",
@@ -88,7 +88,7 @@ class AnalyseViewTest {
                         0.95,
                         StatutObservation.VALIDEE)));
         OuvrirPassage navigationPassage = ouvrirPassage;
-        OuvrirValidation navigationValidation = ouvrirValidation;
+        OuvrirAudio navigationAudio = ouvrirAudio;
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             AnalyseViewModel viewModel() {
@@ -101,8 +101,8 @@ class AnalyseViewTest {
             }
 
             @Provides
-            OuvrirValidation ouvrirValidation() {
-                return navigationValidation;
+            OuvrirAudio ouvrirAudio() {
+                return navigationAudio;
             }
         });
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
@@ -205,8 +205,8 @@ class AnalyseViewTest {
     }
 
     @Test
-    @DisplayName("« Écouter / valider » ouvre la validation du passage, ciblée sur l'observation")
-    void ecouter_valider_ouvre_la_validation_ciblee(FxRobot robot) {
+    @DisplayName("« Écouter / valider » ouvre la vue audio sur l'espèce, ciblée sur l'observation")
+    void ecouter_valider_ouvre_la_vue_audio_sur_l_espece(FxRobot robot) {
         @SuppressWarnings("unchecked")
         TableView<Object> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
         TableView<?> observations = robot.lookup("#tableObservations").queryAs(TableView.class);
@@ -218,12 +218,14 @@ class AnalyseViewTest {
         assertThat(ecouter.isDisabled()).isFalse();
         robot.interact(ecouter::fire);
 
-        ArgumentCaptor<ContextePassage> passage = ArgumentCaptor.forClass(ContextePassage.class);
-        verify(ouvrirValidation).ouvrir(passage.capture(), eq(7L));
-        assertThat(passage.getValue().idPassage()).isEqualTo(42L);
-        assertThat(passage.getValue().numeroPassage()).isEqualTo(2);
-        assertThat(passage.getValue().site().numeroCarre()).isEqualTo("640380");
-        assertThat(passage.getValue().site().codePoint()).isEqualTo("A1");
+        // Ouvre la vue audio sur TOUTE l'espèce (source ParEspece), focalisée sur la détection cliquée.
+        ArgumentCaptor<SourceObservations> source = ArgumentCaptor.forClass(SourceObservations.class);
+        verify(ouvrirAudio).ouvrir(source.capture(), eq(7L));
+        assertThat(source.getValue()).isInstanceOfSatisfying(SourceObservations.ParEspece.class, espece -> {
+            assertThat(espece.idUtilisateur()).isEqualTo("u-1");
+            assertThat(espece.codeEspece()).isEqualTo("Pippip");
+            assertThat(espece.statut()).as("aucun filtre de statut actif").isNull();
+        });
     }
 
     @Test

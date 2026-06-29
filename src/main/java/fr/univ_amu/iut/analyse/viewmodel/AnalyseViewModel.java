@@ -2,6 +2,7 @@ package fr.univ_amu.iut.analyse.viewmodel;
 
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
+import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
@@ -56,6 +57,10 @@ public class AnalyseViewModel {
     private final ObservableList<ObservationEspece> observations = FXCollections.observableArrayList();
     private final ReadOnlyStringWrapper detailTitre = new ReadOnlyStringWrapper(this, "detailTitre", "");
 
+    /// Espèce dont le détail est affiché (`null` hors regroupement Par espèce ou sans sélection), mémorisée
+    /// pour décrire la **source audio** au moment d'« Écouter / valider » sans la repasser par la vue.
+    private EspeceAgregee especeSelectionnee;
+
     /// **Numéros de carré** où l'espèce sélectionnée est présente (distincts), pour la **surbrillance** de
     /// la carte de répartition. Vide tant qu'aucune espèce n'est sélectionnée.
     private final ObservableList<String> carresEspeceSelectionnee = FXCollections.observableArrayList();
@@ -100,11 +105,13 @@ public class AnalyseViewModel {
     /// vide le panneau. Appelé par la vue quand la ligne sélectionnée de l'inventaire change.
     public void selectionnerEspece(EspeceAgregee espece) {
         if (espece == null || regroupement.get() == Regroupement.PAR_CARRE) {
+            especeSelectionnee = null;
             observations.clear();
             carresEspeceSelectionnee.clear();
             detailTitre.set("");
             return;
         }
+        especeSelectionnee = espece;
         List<ObservationEspece> detail =
                 service.observationsDeLEspece(idUtilisateur, espece.code(), filtreStatut.get());
         observations.setAll(detail);
@@ -187,6 +194,19 @@ public class AnalyseViewModel {
             return espece.nomLatin();
         }
         return espece.code();
+    }
+
+    /// Décrit la **source audio** des observations de l'**espèce sélectionnée** pour la vue audio unifiée
+    /// (#audio) : toutes ses détections à travers les passages de l'utilisateur courant, **avec le filtre
+    /// de statut courant** (`null` = toutes). Construite ici car le ViewModel détient l'`idUtilisateur`, le
+    /// filtre et l'espèce sélectionnée ; le statut est porté en texte (le socle `SourceObservations` ne
+    /// dépend pas de `validation`). Précondition : une espèce est sélectionnée (le bouton « Écouter /
+    /// valider » n'est actif qu'avec une observation, donc une espèce, à l'écran).
+    public SourceObservations sourceAudioEspece() {
+        Objects.requireNonNull(especeSelectionnee, "aucune espèce sélectionnée");
+        String statut = filtreStatut.get() == null ? null : filtreStatut.get().name();
+        return new SourceObservations.ParEspece(
+                idUtilisateur, especeSelectionnee.code(), statut, libelleEspece(especeSelectionnee));
     }
 
     public ObjectProperty<Regroupement> regroupementProperty() {

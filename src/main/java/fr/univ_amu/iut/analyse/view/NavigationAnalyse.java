@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
@@ -16,7 +17,7 @@ import javafx.scene.Parent;
 /// [AnalyseController] reçoive son ViewModel. L'écran n'a pas de paramètre (chargement initial dans
 /// `initialize()`).
 @Singleton
-public class NavigationAnalyse {
+public class NavigationAnalyse implements OuvrirAnalyse {
 
     private final Injector injector;
     private final Navigateur navigateur;

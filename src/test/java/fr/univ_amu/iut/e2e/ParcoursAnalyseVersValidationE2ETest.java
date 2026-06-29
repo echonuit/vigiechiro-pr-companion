@@ -38,10 +38,10 @@ import org.testfx.framework.junit5.Start;
 
 /// **Test E2E de parcours** : depuis la vue transverse **« Espèces & observations »** (`analyse`), on
 /// sélectionne une espèce puis une de ses détections et on déclenche **« Écouter / valider »** ; le
-/// câblage inter-écran réel (`analyse → OuvrirValidation → NavigationValidation → OuvrirAudio →
-/// SonsValidationController`) doit ouvrir la **vue audio unifiée** (source `ParPassage`) **pré-focalisée**
-/// sur cette observation. Sur le vrai chrome et le vrai injecteur, base seedée directement (un
-/// utilisateur, un passage, une observation).
+/// câblage inter-écran réel (`analyse → OuvrirAudio → SonsValidationController`) doit ouvrir la **vue
+/// audio unifiée** sur **toute l'espèce** (source `ParEspece`) **pré-focalisée** sur cette observation.
+/// Sur le vrai chrome et le vrai injecteur, base seedée directement (un utilisateur, un passage, une
+/// observation).
 @ExtendWith(ApplicationExtension.class)
 class ParcoursAnalyseVersValidationE2ETest {
 

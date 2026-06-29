@@ -32,4 +32,9 @@ public final class NavigationDeTestModule extends AbstractModule {
     OuvrirMultisite ouvrirMultisite() {
         return numeroCarre -> {};
     }
+
+    @Provides
+    OuvrirAnalyse ouvrirAnalyse() {
+        return () -> {};
+    }
 }

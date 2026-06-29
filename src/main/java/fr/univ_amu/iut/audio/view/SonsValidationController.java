@@ -8,6 +8,7 @@ import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -46,6 +47,7 @@ public class SonsValidationController implements EmplacementNavigation {
     private final AudioViewModel viewModel;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
+    private final OuvrirAnalyse ouvrirAnalyse;
 
     /// Source courante, mémorisée pour adapter colonnes / actions / fil d'Ariane.
     private SourceObservations source;
@@ -123,10 +125,12 @@ public class SonsValidationController implements EmplacementNavigation {
     private Label lblMessage;
 
     @Inject
-    public SonsValidationController(AudioViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
+    public SonsValidationController(
+            AudioViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage, OuvrirAnalyse ouvrirAnalyse) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.ouvrirAnalyse = Objects.requireNonNull(ouvrirAnalyse, "ouvrirAnalyse");
     }
 
     @FXML
@@ -269,6 +273,10 @@ public class SonsValidationController implements EmplacementNavigation {
         if (source instanceof SourceObservations.ParPassage parPassage) {
             return EmplacementPassage.emplacementEnfant(
                     parPassage.contexte(), ouvrirSite, ouvrirPassage, libelleEcran());
+        }
+        if (source instanceof SourceObservations.ParEspece) {
+            // Accueil › Espèces & observations › Écoute : [espèce] — le segment analyse rouvre l'écran.
+            return List.of(Lieu.vers("Espèces & observations", ouvrirAnalyse::ouvrir), Lieu.courant(libelleEcran()));
         }
         return List.of(Lieu.courant(libelleEcran()));
     }

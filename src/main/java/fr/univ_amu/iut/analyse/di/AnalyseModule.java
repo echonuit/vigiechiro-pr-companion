@@ -7,8 +7,10 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.view.ActiviteAnalyse;
+import fr.univ_amu.iut.analyse.view.NavigationAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
+import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 
 /// Module Guice de la feature `analyse` (prisme « Espèces & biodiversité »). Enregistre sa carte
@@ -20,6 +22,9 @@ public class AnalyseModule extends AbstractModule {
     @Override
     protected void configure() {
         Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(ActiviteAnalyse.class);
+        // Contrat socle de retour vers l'analyse (segment cliquable du fil d'Ariane de la vue audio
+        // ouverte sur une source ParEspece).
+        bind(OuvrirAnalyse.class).to(NavigationAnalyse.class);
     }
 
     @Provides
