@@ -21,6 +21,8 @@ import fr.univ_amu.iut.commun.outils.AttenteAudio;
 import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -123,6 +125,24 @@ public final class CaptureSonsValidation {
                     @Provides
                     AudioViewModel viewModel(ServiceValidation validation, ServiceBibliotheque bibliotheque) {
                         return new AudioViewModel(validation, bibliotheque);
+                    }
+
+                    // Contrats de navigation requis par le controller pour son fil d'Ariane. La source
+                    // References ne les exerce pas : des no-op suffisent (on évite d'inclure sites/passage).
+                    @Provides
+                    OuvrirSite ouvrirSite() {
+                        return new OuvrirSite() {
+                            @Override
+                            public void ouvrirListe() {}
+
+                            @Override
+                            public void ouvrirDetail(String numeroCarre) {}
+                        };
+                    }
+
+                    @Provides
+                    OuvrirPassage ouvrirPassage() {
+                        return (idPassage, contexte) -> {};
                     }
                 });
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);

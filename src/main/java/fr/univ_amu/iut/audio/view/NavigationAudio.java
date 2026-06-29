@@ -20,9 +20,10 @@ import javafx.scene.Parent;
 /// pour que [SonsValidationController] reçoive son ViewModel par injection. La [SourceObservations] (et
 /// la cible de focus éventuelle) est transmise au controller **après** le chargement, avant publication.
 ///
-/// PR-3a : ouverture **en racine** (la source `References`, atteinte depuis l'accueil, remplace l'écran
-/// bibliothèque). Les sources atteintes depuis un écran parent (passage, analyse, multisite) seront
-/// empilées avec leur fil d'Ariane lors de leurs branchements respectifs.
+/// La source `References` (atteinte depuis l'accueil, elle remplace l'écran bibliothèque) ouvre **en
+/// racine** ; les sources atteintes depuis un écran parent (un passage via M-Passage, et à terme analyse
+/// et multisite) sont **empilées** sur l'historique pour offrir le « ← Retour ». Le fil d'Ariane
+/// hiérarchique, lui, est reconstruit par le controller ([SonsValidationController#emplacement]).
 @Singleton
 public class NavigationAudio implements OuvrirAudio {
 
@@ -48,7 +49,11 @@ public class NavigationAudio implements OuvrirAudio {
             Parent vue = loader.load();
             SonsValidationController controleur = loader.getController();
             controleur.ouvrirSur(source, idObservationCible);
-            navigateur.ouvrirRacine(vue, "audio", "Sons & validation", controleur);
+            if (source instanceof SourceObservations.References) {
+                navigateur.ouvrirRacine(vue, "audio", "Sons & validation", controleur);
+            } else {
+                navigateur.empiler(vue, "audio", "Sons & validation", controleur);
+            }
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }
