@@ -213,23 +213,6 @@ déposé (+ cas bloquant).
 
 ---
 
-## Bibliothèque de sons
-
-Sons de référence à écouter (`bibliotheque/view/Bibliotheque.fxml`).
-
-<table>
-<tr>
-<th>État vide : aucun son, export inactif</th>
-<th>Peuplée : sons de référence, détail + écoute, export actif</th>
-</tr>
-<tr>
-<td><a href="apercu-bibliotheque-vide.png"><img src="apercu-bibliotheque-vide.png" width="440" alt="M-Bibliothèque vide"></a></td>
-<td><a href="apercu-bibliotheque-sons.png"><img src="apercu-bibliotheque-sons.png" width="440" alt="M-Bibliothèque peuplée"></a></td>
-</tr>
-</table>
-
----
-
 ## Vue multi-sites
 
 ### Tableau agrégé (`multisite/view/Multisite.fxml`)
