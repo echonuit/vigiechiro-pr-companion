@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
@@ -46,6 +47,7 @@ public class AudioViewModel {
 
     private final ServiceValidation service;
     private final ResolveurSourceAudio resolveur;
+    private final ExporteurAudio exporteur;
 
     /// Source courante (provenance + portée). Conservée pour recharger après une action de revue.
     private SourceObservations source;
@@ -80,9 +82,10 @@ public class AudioViewModel {
     private final ReadOnlyStringWrapper detail = new ReadOnlyStringWrapper(this, "detail", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
-    public AudioViewModel(ServiceValidation service) {
+    public AudioViewModel(ServiceValidation service, ServiceBibliotheque bibliotheque) {
         this.service = Objects.requireNonNull(service, "service");
         this.resolveur = new ResolveurSourceAudio(service);
+        this.exporteur = new ExporteurAudio(service, bibliotheque);
         selection.addListener((obs, ancien, nouveau) -> majSelection(nouveau));
         filtreStatut.addListener((obs, ancien, nouveau) ->
                 observationsFiltrees.setPredicate(nouveau == null ? null : ligne -> ligne.statut() == nouveau));
@@ -174,23 +177,28 @@ public class AudioViewModel {
     }
 
     /// Exporte le CSV `_Vu` réinjectable du jeu de résultats courant (R17, R24). Réservé à la source
-    /// `ParPassage` avec des résultats importés. Le chemin écrit (ou l'erreur) est restitué dans le
-    /// message.
+    /// `ParPassage` avec des résultats importés. Le chemin écrit (ou l'erreur) est restitué dans le message.
     ///
     /// @param destination fichier cible choisi par l'observateur
     /// @return `true` si le fichier a été écrit
     public boolean exporterVu(Path destination) {
-        if (idResultats == null || destination == null) {
-            return false;
+        return appliquerExport(exporteur.vu(idResultats, destination, inclureMode.get()));
+    }
+
+    /// Exporte la **bibliothèque de sons de référence** vers le dossier `destination` (P10). Réservé à la
+    /// source `References`. Le bilan (ou l'erreur d'écriture) est restitué dans le message.
+    ///
+    /// @param destination dossier cible choisi par l'observateur
+    /// @return `true` si l'export a réussi
+    public boolean exporterBibliotheque(Path destination) {
+        return appliquerExport(exporteur.bibliotheque(destination));
+    }
+
+    private boolean appliquerExport(ExporteurAudio.ResultatExport resultat) {
+        if (resultat.message() != null) {
+            message.set(resultat.message());
         }
-        try {
-            Path ecrit = service.exporter(idResultats, destination, inclureMode.get());
-            message.set("Fichier _Vu exporté : " + ecrit.getFileName());
-            return true;
-        } catch (RuntimeException echec) {
-            message.set(echec.getMessage());
-            return false;
-        }
+        return resultat.reussi();
     }
 
     private boolean appliquerAction(Runnable action) {
