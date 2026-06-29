@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
@@ -64,6 +65,25 @@ class AnalyseViewModelTest {
                 "Pippip",
                 0.95,
                 StatutObservation.VALIDEE);
+    }
+
+    @Test
+    @DisplayName("#audio : sourceAudioEspece porte l'espèce sélectionnée ET le filtre de statut actif")
+    void source_audio_espece_avec_filtre_actif() {
+        when(service.inventaireParEspece(eq(ID), any())).thenReturn(List.of(espece("Pippip", 3)));
+        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), any())).thenReturn(List.of(observation(42L)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        // Chemin complet : un filtre de statut actif + une espèce sélectionnée → la source audio porte
+        // l'utilisateur, le code d'espèce ET le statut (en texte), prête à être reconvertie par AudioViewModel.
+        vm.filtreStatutProperty().set(StatutObservation.VALIDEE);
+        vm.selectionnerEspece(espece("Pippip", 3));
+
+        assertThat(vm.sourceAudioEspece()).isInstanceOfSatisfying(SourceObservations.ParEspece.class, espece -> {
+            assertThat(espece.idUtilisateur()).isEqualTo(ID);
+            assertThat(espece.codeEspece()).isEqualTo("Pippip");
+            assertThat(espece.statut()).isEqualTo("VALIDEE");
+            assertThat(espece.libelle()).isEqualTo("Pipistrelle commune");
+        });
     }
 
     @Test
