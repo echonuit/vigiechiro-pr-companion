@@ -55,7 +55,6 @@ MAINS=(
   "fr.univ_amu.iut.importation.outils.CaptureImport"
   "fr.univ_amu.iut.qualification.outils.CaptureQualification"
   "fr.univ_amu.iut.passage.outils.CapturePassage"
-  "fr.univ_amu.iut.validation.outils.CaptureValidation"
   "fr.univ_amu.iut.lot.outils.CaptureLot"
   "fr.univ_amu.iut.multisite.outils.CaptureMultisite"
   "fr.univ_amu.iut.analyse.outils.CaptureAnalyse"

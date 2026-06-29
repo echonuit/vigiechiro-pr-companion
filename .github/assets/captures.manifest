@@ -14,7 +14,6 @@ fr/univ_amu/iut/qualification/view/Qualification.fxml    : apercu-qualification.
 fr/univ_amu/iut/passage/view/Passage.fxml                : apercu-passage.png apercu-passage-depose.png
 fr/univ_amu/iut/passage/view/RattachementModale.fxml     : apercu-passage-rattachement.png
 fr/univ_amu/iut/diagnostic/view/Diagnostic.fxml          : apercu-diagnostic.png apercu-diagnostic-sans-releve.png
-fr/univ_amu/iut/validation/view/Validation.fxml          : apercu-validation-import.png apercu-validation-revue.png
 fr/univ_amu/iut/lot/view/Lot.fxml                        : apercu-lot-preparer.png apercu-lot-deposer.png apercu-lot-generation.png apercu-lot-archives.png apercu-lot-depose.png apercu-lot-alertes.png
 fr/univ_amu/iut/multisite/view/Multisite.fxml            : apercu-multisite.png apercu-multisite-filtre.png apercu-multisite-edition.png
 fr/univ_amu/iut/multisite/view/ModaleVues.fxml           : apercu-multisite-vues.png

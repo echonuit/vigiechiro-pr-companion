@@ -78,7 +78,7 @@ ouvrir sa page de documentation** (rôle, captures commentées, astuces).
   <tr>
     <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/qualification/"><img src=".github/assets/apercu-qualification.png" alt="Qualification"></a><br><b>Qualification</b><br><sub>Écoute (sono + spectrogramme) et verdict</sub></td>
     <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/lot/"><img src=".github/assets/apercu-lot-preparer.png" alt="Lot"></a><br><b>Lot</b><br><sub>Préparer et déposer un lot vérifié</sub></td>
-    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/validation/"><img src=".github/assets/apercu-validation-revue.png" alt="Validation"></a><br><b>Validation</b><br><sub>Revue des espèces Tadarida</sub></td>
+    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/validation/"><img src=".github/assets/apercu-sons-validation.png" alt="Sons & validation"></a><br><b>Sons &amp; validation</b><br><sub>Écoute, validation, sons de référence</sub></td>
   </tr>
   <tr>
     <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/multisite/"><img src=".github/assets/apercu-multisite.png" alt="Multisite"></a><br><b>Multisite</b><br><sub>Vue agrégée (tri, filtres, vues)</sub></td>

@@ -90,7 +90,7 @@ Sur l'écran **Lot**, le dépôt se fait en trois temps :
 détectées dans chaque séquence, avec leur probabilité). L'écran **Validation** vous permet alors de
 relire ces résultats, séquence par séquence, et de **confirmer ou corriger** les identifications.
 
-![L'écran de validation des résultats Tadarida : revue des espèces séquence par séquence.](../assets/captures/apercu-validation-revue.png)
+![L'écran « Sons & validation » : revue des espèces, écoute et actions.](../assets/captures/apercu-sons-validation.png)
 
 Cette étape est accessible une fois le passage déposé (voir l'avertissement plus haut).
 

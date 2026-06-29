@@ -20,7 +20,6 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 import fr.univ_amu.iut.validation.view.NavigationValidation;
 import fr.univ_amu.iut.validation.viewmodel.IndicateurObservations;
-import fr.univ_amu.iut.validation.viewmodel.ValidationViewModel;
 
 /// Module Guice de la feature `validation` : fournit ses DAO, ses moteurs CSV
 /// ([ParserCsvTadarida], [ExportVuCsv]) et son service ([ServiceValidation]) à partir de la
@@ -104,11 +103,5 @@ public class ValidationModule extends AbstractModule {
                 export,
                 uniteDeTravail,
                 horloge);
-    }
-
-    /// ViewModel de M-Vision-Tadarida. **Non-singleton** (un VM frais par chargement FXML).
-    @Provides
-    ValidationViewModel fournirValidationViewModel(ServiceValidation service) {
-        return new ValidationViewModel(service);
     }
 }

@@ -164,18 +164,17 @@ Conditions de la nuit et anomalies (`diagnostic/view/Diagnostic.fxml`).
 
 ---
 
-## Validation Tadarida
+## Sons & validation
 
-Import et revue des résultats Tadarida (`validation/view/Validation.fxml`).
+Vue audio unifiée (`audio/view/SonsValidation.fxml`) : écoute, validation / correction et corpus de
+sons de référence, alimentée par le passage, l'analyse, le multisite et l'accueil.
 
 <table>
 <tr>
-<th>État d'entrée : avant import, bouton import</th>
-<th>Revue : statuts variés + détail sélectionné</th>
+<th>Sur le corpus de référence : table, écoute pleine largeur, actions</th>
 </tr>
 <tr>
-<td><a href="apercu-validation-import.png"><img src="apercu-validation-import.png" width="440" alt="M-Validation entrée"></a></td>
-<td><a href="apercu-validation-revue.png"><img src="apercu-validation-revue.png" width="440" alt="M-Validation revue"></a></td>
+<td><a href="apercu-sons-validation.png"><img src="apercu-sons-validation.png" width="560" alt="Sons & validation"></a></td>
 </tr>
 </table>
 
