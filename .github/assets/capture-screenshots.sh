@@ -61,6 +61,7 @@ MAINS=(
   "fr.univ_amu.iut.multisite.outils.CaptureMultisite"
   "fr.univ_amu.iut.analyse.outils.CaptureAnalyse"
   "fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic"
+  "fr.univ_amu.iut.audio.outils.CaptureSonsValidation"
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 

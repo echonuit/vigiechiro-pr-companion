@@ -3,11 +3,8 @@ package fr.univ_amu.iut.bibliotheque.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
-import fr.univ_amu.iut.bibliotheque.view.ActiviteBibliotheque;
 import fr.univ_amu.iut.bibliotheque.viewmodel.BibliothequeViewModel;
-import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 
@@ -21,17 +18,12 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 /// validation` et `bibliotheque → passage`, graphe acyclique).
 ///
 /// **Intégration** : ce module est installé dans `RacineInjecteur` (aux côtés de `ValidationModule`
-/// et `PassageModule` qui fournissent ses DAO). Il enregistre la carte d'accueil
-/// [ActiviteBibliotheque] dans le `Multibinder<ActiviteAccueil>` du socle : le `MainController` la
-/// découvre via `Set<ActiviteAccueil>` sans que `commun` dépende de `bibliotheque` (graphe de slices
-/// acyclique, cf. `ArchitectureTest`).
+/// et `PassageModule` qui fournissent ses DAO). Depuis la vue audio unifiée (#audio), l'**entrée
+/// d'accueil** des sons de référence n'est plus enregistrée ici : c'est la carte
+/// `fr.univ_amu.iut.audio.view.AccueilSonsReference` (feature `audio`) qui ouvre la vue unifiée sur la
+/// source `References`. Ce module ne fournit donc plus que le service (et l'ancien `BibliothequeViewModel`,
+/// conservé jusqu'au démantèlement de l'ancien écran).
 public class BibliothequeModule extends AbstractModule {
-
-    /// Enregistre la carte d'accueil de la feature dans le point d'extension du socle.
-    @Override
-    protected void configure() {
-        Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(ActiviteBibliotheque.class);
-    }
 
     @Provides
     @Singleton

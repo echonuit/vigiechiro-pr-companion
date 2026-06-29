@@ -1,0 +1,54 @@
+/*
+ * Sons & validation - feuille de style de la vue audio unifiée (#audio).
+ * Calquée sur les autres écrans (barre de filtres, menu d'actions, message). Disposition empilée :
+ * le panneau d'écoute du bas porte le spectrogramme pleine largeur.
+ */
+
+.ecran-audio {
+  -fx-background-color: #fafbfc;
+  -fx-padding: 18;
+}
+
+.sous-titre-page {
+  -fx-font-size: 13px;
+  -fx-text-fill: #6a737d;
+}
+
+.barre-filtres {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e1e4e8;
+  -fx-border-radius: 4;
+  -fx-background-radius: 4;
+  -fx-padding: 8;
+}
+
+.menu-actions {
+  -fx-font-size: 14px;
+}
+
+/* Panneau d'écoute (bas du SplitPane) : fond clair, et surtout une hauteur minimale pour que
+   l'AudioView ne soit jamais aplati par la table quand on tire le diviseur (incident #329). */
+.panneau-ecoute {
+  -fx-background-color: #ffffff;
+  -fx-border-color: #e1e4e8;
+  -fx-border-radius: 4;
+  -fx-background-radius: 4;
+  -fx-padding: 10;
+}
+
+.audio-detail {
+  -fx-font-size: 12px;
+  -fx-text-fill: #34495e;
+}
+
+/* État vide superposé à la table (aucune observation pour la source courante). */
+.audio-vide {
+  -fx-font-size: 13px;
+  -fx-text-fill: #6a737d;
+  -fx-padding: 16;
+}
+
+.audio-message {
+  -fx-font-size: 12px;
+  -fx-text-fill: #a93226;
+}

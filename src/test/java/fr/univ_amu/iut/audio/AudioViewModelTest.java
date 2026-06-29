@@ -7,6 +7,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
+import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -35,11 +37,14 @@ class AudioViewModelTest {
     @Mock
     ServiceValidation service;
 
+    @Mock
+    ServiceBibliotheque bibliotheque;
+
     private static final ContextePassage PASSAGE_7 =
             new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Mon site"));
 
     private AudioViewModel vm() {
-        return new AudioViewModel(service);
+        return new AudioViewModel(service, bibliotheque);
     }
 
     private static LigneObservationAudio ligne(
@@ -235,6 +240,45 @@ class AudioViewModelTest {
             assertThat(vm.observationsFiltrees()).hasSize(1);
             assertThat(vm.source().permetExportBibliotheque()).isTrue();
             assertThat(vm.source().permetWorkflowTadarida()).isFalse();
+        }
+
+        @Test
+        @DisplayName("exporterBibliotheque délègue au service bibliothèque et rapporte le bilan")
+        void exporter_bibliotheque() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.lignesAudioReferences("u-1")).thenReturn(List.of());
+            ExportBiblioSons export = org.mockito.Mockito.mock(ExportBiblioSons.class);
+            when(bibliotheque.exporterBibliotheque()).thenReturn(export);
+            when(export.exporterVers(Path.of("/sortie"))).thenReturn(3);
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(new SourceObservations.References("u-1"));
+
+            assertThat(vm.exporterBibliotheque(Path.of("/sortie"))).isTrue();
+            verify(bibliotheque).exporterBibliotheque();
+            assertThat(vm.messageProperty().get()).contains("3 fichier(s)");
+        }
+
+        @Test
+        @DisplayName("si la bascule fait quitter la source, la sélection (détail/audio) est remise à zéro")
+        void basculer_reference_fait_disparaitre_la_ligne() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            LigneObservationAudio ligne = ligne(1, 10, "Pippip", "Pippip", StatutObservation.VALIDEE, true);
+            // La ligne est référencée au départ, puis quitte le corpus au rechargement (liste vide).
+            when(service.lignesAudioReferences("u-1")).thenReturn(List.of(ligne), List.of());
+            when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/p.wav")));
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(new SourceObservations.References("u-1"));
+            vm.selectionProperty().set(ligne);
+            assertThat(vm.cheminAudioCourantProperty().get()).isNotNull();
+
+            assertThat(vm.basculerReference()).isTrue();
+            verify(service).marquerReference(1L, false);
+            assertThat(vm.selectionProperty().get()).isNull();
+            assertThat(vm.selectionPresenteProperty().get()).isFalse();
+            assertThat(vm.cheminAudioCourantProperty().get()).isNull();
+            assertThat(vm.detailProperty().get()).isEmpty();
         }
 
         @Test

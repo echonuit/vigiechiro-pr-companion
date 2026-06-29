@@ -4,6 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import fr.univ_amu.iut.analyse.di.AnalyseModule;
+import fr.univ_amu.iut.audio.di.AudioModule;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.diagnostic.di.DiagnosticModule;
 import fr.univ_amu.iut.importation.di.ImportationModule;
@@ -57,6 +58,7 @@ public final class RacineInjecteur {
                 new DiagnosticModule(),
                 new BibliothequeModule(),
                 new RechercheModule(),
-                new AnalyseModule());
+                new AnalyseModule(),
+                new AudioModule());
     }
 }

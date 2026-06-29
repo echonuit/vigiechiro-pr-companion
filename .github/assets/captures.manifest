@@ -20,3 +20,4 @@ fr/univ_amu/iut/bibliotheque/view/Bibliotheque.fxml      : apercu-bibliotheque-v
 fr/univ_amu/iut/multisite/view/Multisite.fxml            : apercu-multisite.png apercu-multisite-filtre.png apercu-multisite-edition.png
 fr/univ_amu/iut/multisite/view/ModaleVues.fxml           : apercu-multisite-vues.png
 fr/univ_amu/iut/analyse/view/Analyse.fxml                : apercu-analyse.png apercu-analyse-carre.png apercu-analyse-carte.png
+fr/univ_amu/iut/audio/view/SonsValidation.fxml           : apercu-sons-validation.png

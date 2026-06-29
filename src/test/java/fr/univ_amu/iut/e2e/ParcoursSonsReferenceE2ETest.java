@@ -23,19 +23,21 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// **Test E2E (smoke) de la feature `bibliotheque`** (COULD) : depuis le **tableau de bord**, un
-/// clic réel sur la carte **« Bibliothèque de sons »** ouvre l'écran **M-Bibliotheque**
-/// (`accueil → bibliotheque`). Vérifie le câblage carte d'accueil → navigation et le chargement
-/// sans erreur de l'écran (table des entrées présente), sur une base vide : il s'agit d'un fumigène,
-/// pas d'un parcours de données (la bibliothèque de sons de référence est alimentée séparément).
+/// **Test E2E (smoke) de l'entrée « Sons de référence »** (#audio) : depuis le **tableau de bord**, un
+/// clic réel sur la carte **« Sons de référence »** ouvre la **vue audio unifiée** (« Sons & validation »)
+/// sur la source `References` (`accueil → audio`). Vérifie le câblage carte d'accueil → contrat socle
+/// `OuvrirAudio` → navigation et le chargement sans erreur de l'écran (table des observations présente),
+/// sur une base vide : il s'agit d'un fumigène, pas d'un parcours de données (le corpus de référence est
+/// alimenté séparément). Remplace l'ancien parcours « accueil → bibliotheque » depuis que la carte est
+/// repointée vers la vue audio unifiée.
 @ExtendWith(ApplicationExtension.class)
-class ParcoursBibliothequeE2ETest {
+class ParcoursSonsReferenceE2ETest {
 
     private Injector injector;
 
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-e2e-biblio");
+        Path workspace = Files.createTempDirectory("vc-e2e-sons-reference");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         new MigrationSchema(injector.getInstance(SourceDeDonnees.class)).migrer();
@@ -53,14 +55,14 @@ class ParcoursBibliothequeE2ETest {
     }
 
     @Test
-    @DisplayName("Tableau de bord : la carte « Bibliothèque de sons » ouvre M-Bibliotheque")
-    void accueil_ouvre_bibliotheque(FxRobot robot) {
+    @DisplayName("Tableau de bord : la carte « Sons de référence » ouvre la vue audio unifiée")
+    void accueil_ouvre_vue_audio(FxRobot robot) {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
-        robot.clickOn("Bibliothèque de sons");
+        robot.clickOn("Sons de référence");
 
-        assertThat(navigation.getVueCourante()).isEqualTo("bibliotheque");
-        assertThat(robot.lookup("#tableEntrees").queryAs(TableView.class)).isNotNull();
+        assertThat(navigation.getVueCourante()).isEqualTo("audio");
+        assertThat(robot.lookup("#tableObservations").queryAs(TableView.class)).isNotNull();
     }
 }
