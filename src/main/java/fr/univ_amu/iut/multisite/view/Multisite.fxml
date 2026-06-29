@@ -61,6 +61,8 @@
           <Insets left="8.0"/>
         </BorderPane.margin>
         <items>
+          <MenuItem fx:id="itemEcouterPassage" text="🎧 Écouter le passage sélectionné" onAction="#ecouterPassage"/>
+          <MenuItem fx:id="itemEcouterLot" text="🎧 Écouter le lot filtré" onAction="#ecouterLot"/>
           <MenuItem fx:id="itemGererVues" text="⭐ Vues…" onAction="#gererVues"/>
           <MenuItem fx:id="itemExporter" text="📤 Exporter…" onAction="#exporter"/>
         </items>

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
+import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -48,6 +49,7 @@ public class SonsValidationController implements EmplacementNavigation {
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAnalyse ouvrirAnalyse;
+    private final OuvrirMultisite ouvrirMultisite;
 
     /// Source courante, mémorisée pour adapter colonnes / actions / fil d'Ariane.
     private SourceObservations source;
@@ -126,11 +128,16 @@ public class SonsValidationController implements EmplacementNavigation {
 
     @Inject
     public SonsValidationController(
-            AudioViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage, OuvrirAnalyse ouvrirAnalyse) {
+            AudioViewModel viewModel,
+            OuvrirSite ouvrirSite,
+            OuvrirPassage ouvrirPassage,
+            OuvrirAnalyse ouvrirAnalyse,
+            OuvrirMultisite ouvrirMultisite) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAnalyse = Objects.requireNonNull(ouvrirAnalyse, "ouvrirAnalyse");
+        this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
     }
 
     @FXML
@@ -278,6 +285,12 @@ public class SonsValidationController implements EmplacementNavigation {
             // Accueil › Espèces & observations › Écoute : [espèce] — le segment analyse rouvre l'écran.
             return List.of(Lieu.vers("Espèces & observations", ouvrirAnalyse::ouvrir), Lieu.courant(libelleEcran()));
         }
+        if (source instanceof SourceObservations.ParPassages) {
+            // Accueil › Carte & passages › Écoute : lot — le segment multisite rouvre la vue agrégée.
+            return List.of(
+                    Lieu.vers("Carte & passages", () -> ouvrirMultisite.ouvrirSurCarre(null)),
+                    Lieu.courant(libelleEcran()));
+        }
         return List.of(Lieu.courant(libelleEcran()));
     }
 
@@ -287,6 +300,9 @@ public class SonsValidationController implements EmplacementNavigation {
         }
         if (source instanceof SourceObservations.ParEspece espece) {
             return "Écoute : " + espece.libelle();
+        }
+        if (source instanceof SourceObservations.ParPassages lot) {
+            return "Écoute : " + lot.libelle();
         }
         return "Sons & validation";
     }

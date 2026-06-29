@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
@@ -12,6 +13,7 @@ import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.multisite.viewmodel.SourcesAudioMultisite;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,7 +26,6 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBase;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
@@ -35,7 +36,6 @@ import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -56,6 +56,7 @@ public class MultisiteController implements RafraichirAuRetour {
 
     private final MultisiteViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
+    private final OuvrirAudio ouvrirAudio;
     private final NavigationMultisite navigation;
 
     @FXML
@@ -85,6 +86,12 @@ public class MultisiteController implements RafraichirAuRetour {
 
     @FXML
     private MenuItem itemGererVues;
+
+    @FXML
+    private MenuItem itemEcouterPassage;
+
+    @FXML
+    private MenuItem itemEcouterLot;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -154,9 +161,13 @@ public class MultisiteController implements RafraichirAuRetour {
 
     @Inject
     public MultisiteController(
-            MultisiteViewModel viewModel, OuvrirPassage ouvrirPassage, NavigationMultisite navigation) {
+            MultisiteViewModel viewModel,
+            OuvrirPassage ouvrirPassage,
+            OuvrirAudio ouvrirAudio,
+            NavigationMultisite navigation) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
     }
 
@@ -198,6 +209,11 @@ public class MultisiteController implements RafraichirAuRetour {
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
         itemExporter.disableProperty().bind(viewModel.nonVideProperty().not());
+        // Écoute : le lot suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
+        itemEcouterLot.disableProperty().bind(viewModel.nonVideProperty().not());
+        itemEcouterPassage
+                .disableProperty()
+                .bind(tableLignes.getSelectionModel().selectedItemProperty().isNull());
 
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
@@ -246,7 +262,7 @@ public class MultisiteController implements RafraichirAuRetour {
         zoneCarte.getChildren().add(legende);
 
         Button recadrer = new Button("⤢");
-        styleOverlay(recadrer, "bouton-recadrer", "Recadrer la carte sur les éléments visibles");
+        StyleControlesCarte.overlay(recadrer, "bouton-recadrer", "Recadrer la carte sur les éléments visibles");
         recadrer.setOnAction(evenement -> carte.recadrer());
         StackPane.setAlignment(recadrer, Pos.TOP_RIGHT);
         StackPane.setMargin(recadrer, new Insets(8));
@@ -254,11 +270,13 @@ public class MultisiteController implements RafraichirAuRetour {
 
         boutonEditerPositions = new ToggleButton("✎");
         boutonEditerPositions.setId("boutonEditerPositions");
-        styleOverlay(boutonEditerPositions, "bouton-editer-positions", "Éditer les positions des points");
+        StyleControlesCarte.overlay(
+                boutonEditerPositions, "bouton-editer-positions", "Éditer les positions des points");
         boutonEditerPositions.setOnAction(evenement -> basculerEdition());
         boutonEnregistrerPositions = new Button("💾");
         boutonEnregistrerPositions.setId("boutonEnregistrerPositions");
-        styleOverlay(boutonEnregistrerPositions, "bouton-editer-positions", "Enregistrer les positions déplacées");
+        StyleControlesCarte.overlay(
+                boutonEnregistrerPositions, "bouton-editer-positions", "Enregistrer les positions déplacées");
         boutonEnregistrerPositions.setOnAction(evenement -> enregistrerPositions());
         VBox controlesEdition = new VBox(6, boutonEditerPositions, boutonEnregistrerPositions);
         controlesEdition.setPickOnBounds(false);
@@ -268,13 +286,6 @@ public class MultisiteController implements RafraichirAuRetour {
     }
 
     /// Applique le look d'un bouton superposé à la carte : classe de style, texte accessible (#163) et
-    /// info-bulle (même libellé). Factorisé pour les trois contrôles overlay.
-    private static void styleOverlay(ButtonBase bouton, String classe, String description) {
-        bouton.getStyleClass().add(classe);
-        bouton.setAccessibleText(description);
-        bouton.setTooltip(new Tooltip(description));
-    }
-
     /// Replie (ou rouvre) la **carte** : le tableau prend alors toute la largeur. On ne peut pas replier
     /// les deux panneaux à la fois (cf. [#majPoignees]).
     @FXML
@@ -328,23 +339,16 @@ public class MultisiteController implements RafraichirAuRetour {
         boolean carteVisible = estVisible(zoneCarte);
         boolean tableauVisible = estVisible(panneauTableau);
 
-        configurerPoignee(
+        StyleControlesCarte.poignee(
                 boutonReplierCarte,
                 (carteVisible ? FLECHE_GAUCHE : FLECHE_DROITE) + " Carte",
                 carteVisible ? "Masquer la carte" : "Afficher la carte",
                 tableauVisible);
-        configurerPoignee(
+        StyleControlesCarte.poignee(
                 boutonReplierTableau,
                 "Tableau " + (tableauVisible ? FLECHE_DROITE : FLECHE_GAUCHE),
                 tableauVisible ? "Masquer le tableau" : "Afficher le tableau",
                 carteVisible);
-    }
-
-    private static void configurerPoignee(Button poignee, String libelle, String description, boolean actif) {
-        poignee.setText(libelle);
-        poignee.setAccessibleText(description);
-        poignee.setTooltip(new Tooltip(description));
-        poignee.setDisable(!actif);
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur l'agrégat
@@ -502,5 +506,21 @@ public class MultisiteController implements RafraichirAuRetour {
             // instantané des items de la table (SortedList), et non l'ordre interne du ViewModel.
             viewModel.exporter(fichier.toPath(), new ArrayList<>(tableLignes.getItems()));
         }
+    }
+
+    /// « 🎧 Écouter le passage sélectionné » : ouvre la vue audio unifiée sur les observations de ce
+    /// passage (source `ParPassage`). L'item de menu est désactivé sans sélection (binding), donc la ligne
+    /// est ici toujours présente.
+    @FXML
+    private void ecouterPassage() {
+        ouvrirAudio.ouvrir(
+                SourcesAudioMultisite.parPassage(tableLignes.getSelectionModel().getSelectedItem()));
+    }
+
+    /// « 🎧 Écouter le lot filtré » : ouvre la vue audio unifiée sur les observations de **tous** les
+    /// passages affichés (source `ParPassages`) - écoute / validation en lot à travers plusieurs passages.
+    @FXML
+    private void ecouterLot() {
+        ouvrirAudio.ouvrir(SourcesAudioMultisite.parLot(viewModel.lignes()));
     }
 }

@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
+import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.di.PassageModule;
@@ -146,6 +147,11 @@ public final class CaptureSonsValidation {
                     @Provides
                     OuvrirAnalyse ouvrirAnalyse() {
                         return () -> {};
+                    }
+
+                    @Provides
+                    OuvrirMultisite ouvrirMultisite() {
+                        return numeroCarre -> {};
                     }
                 });
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
