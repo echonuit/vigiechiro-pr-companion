@@ -519,8 +519,11 @@ public class MultisiteController implements RafraichirAuRetour {
 
     /// « 🎧 Écouter le lot filtré » : ouvre la vue audio unifiée sur les observations de **tous** les
     /// passages affichés (source `ParPassages`) - écoute / validation en lot à travers plusieurs passages.
+    /// On part de l'**instantané réellement affiché** (`tableLignes.getItems()`, tri colonne inclus), comme
+    /// l'export (#291) : « le lot filtré » = exactement ce qui est dans le tableau. L'ordre de revue est de
+    /// toute façon ré-appliqué côté vue audio (`ORDRE_AUDIO`), mais on garde un contrat cohérent.
     @FXML
     private void ecouterLot() {
-        ouvrirAudio.ouvrir(SourcesAudioMultisite.parLot(viewModel.lignes()));
+        ouvrirAudio.ouvrir(SourcesAudioMultisite.parLot(new ArrayList<>(tableLignes.getItems())));
     }
 }
