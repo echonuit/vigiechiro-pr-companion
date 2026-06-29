@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import fr.nedjar.vigiechiro.audio.AudioView?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Sons & validation - vue audio unifiée (#audio) : écouter, valider / corriger et archiver en référence
+  un ensemble d'observations, quelle que soit sa provenance (un passage, un lot, une espèce, le corpus de
+  référence). Disposition EMPILÉE (alignée sur l'analyse) : la table en haut, l'écoute pleine largeur en
+  bas - le spectrogramme (temps en X) profite de toute la largeur. Les actions propres à la source (import
+  CSV / export _Vu d'un passage, export bibliothèque des références) vivent dans le menu « ☰ ».
+  Pur câblage : table, sélection, audio, revue et actions sont liés au AudioViewModel par le controller.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.audio.view.SonsValidationController"
+      stylesheets="@../../commun/view/palette.css, @sons-validation.css"
+      styleClass="ecran-audio"
+      spacing="10.0">
+
+  <Label fx:id="lblResume" styleClass="sous-titre-page"/>
+
+  <!-- Barre allégée : filtre de statut au centre (auto-descriptif), actions propres à la source épinglées
+       à droite dans un menu « ☰ » (patron multisite) - seuls les items pertinents s'affichent. -->
+  <BorderPane styleClass="barre-filtres">
+    <center>
+      <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
+        <ComboBox fx:id="choixFiltre" accessibleText="Filtrer par statut de revue"/>
+      </FlowPane>
+    </center>
+    <right>
+      <MenuButton fx:id="menuActions" text="☰" styleClass="menu-actions" BorderPane.alignment="CENTER">
+        <items>
+          <MenuItem fx:id="itemImporter" text="📥 Importer un CSV Tadarida…" onAction="#importer"/>
+          <MenuItem fx:id="itemExporterVu" text="📤 Exporter _Vu…" onAction="#exporterVu"/>
+          <MenuItem fx:id="itemExporterBiblio" text="📤 Exporter la bibliothèque…" onAction="#exporterBibliotheque"/>
+        </items>
+      </MenuButton>
+    </right>
+  </BorderPane>
+
+  <SplitPane fx:id="separateur" orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
+
+    <!-- Haut : la table des observations, pleine largeur. -->
+    <StackPane>
+      <TableView fx:id="tableObservations">
+        <columns>
+          <TableColumn fx:id="colEspece" text="Espèce" prefWidth="170.0"/>
+          <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="170.0"/>
+          <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="140.0"/>
+          <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
+          <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+          <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+          <TableColumn fx:id="colStatut" text="Statut" prefWidth="110.0"/>
+          <TableColumn fx:id="colReference" text="⭐" prefWidth="50.0"/>
+        </columns>
+      </TableView>
+      <Label fx:id="lblVide" styleClass="audio-vide" wrapText="true"/>
+    </StackPane>
+
+    <!-- Bas : écoute pleine largeur + revue. minHeight pour que le spectrogramme ne soit jamais écrasé
+         par la table quand on tire le diviseur (cf. incident #329 : vgrow qui aplatit l'AudioView). -->
+    <VBox fx:id="panneauEcoute" styleClass="panneau-ecoute" spacing="8.0" minHeight="240.0">
+      <Label fx:id="lblDetail" styleClass="audio-detail" wrapText="true"/>
+      <AudioView fx:id="audioView" VBox.vgrow="ALWAYS" minHeight="150.0"/>
+      <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">
+        <ComboBox fx:id="choixMode"/>
+        <Button fx:id="btnValider" text="✔ Valider" onAction="#valider"/>
+        <Region prefWidth="12.0"/>
+        <ComboBox fx:id="choixTaxon" promptText="Choisir un taxon…"/>
+        <Button fx:id="btnCorriger" text="✎ Corriger" onAction="#corriger"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnReference" onAction="#basculerReference"/>
+      </HBox>
+    </VBox>
+
+  </SplitPane>
+
+  <Label fx:id="lblMessage" styleClass="audio-message" wrapText="true"/>
+</VBox>
