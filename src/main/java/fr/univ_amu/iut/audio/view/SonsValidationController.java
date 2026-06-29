@@ -24,6 +24,7 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
@@ -65,6 +66,9 @@ public class SonsValidationController implements EmplacementNavigation {
 
     @FXML
     private MenuItem itemImporter;
+
+    @FXML
+    private CheckMenuItem itemInclureMode;
 
     @FXML
     private MenuItem itemExporterVu;
@@ -213,6 +217,8 @@ public class SonsValidationController implements EmplacementNavigation {
         itemExporterVu
                 .disableProperty()
                 .bind(viewModel.resultatsDisponiblesProperty().not());
+        // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24), coché par défaut.
+        itemInclureMode.selectedProperty().bindBidirectional(viewModel.inclureModeProperty());
 
         // État vide superposé à la table ; message d'erreur en bas seulement quand la liste n'est pas vide.
         var listeVide = Bindings.isEmpty(viewModel.observationsFiltrees());
@@ -255,6 +261,7 @@ public class SonsValidationController implements EmplacementNavigation {
         boolean workflow = source.permetWorkflowTadarida();
         boolean biblio = source.permetExportBibliotheque();
         itemImporter.setVisible(workflow);
+        itemInclureMode.setVisible(workflow);
         itemExporterVu.setVisible(workflow);
         itemExporterBiblio.setVisible(biblio);
         menuActions.setVisible(workflow || biblio);
@@ -312,7 +319,11 @@ public class SonsValidationController implements EmplacementNavigation {
             return "";
         }
         ComptageAudio comptage = viewModel.comptageProperty().get();
-        return comptage.total() == 0 ? libelleEcran() : libelleEcran() + " — " + comptage.total() + " observation(s)";
+        if (comptage.total() == 0) {
+            return libelleEcran();
+        }
+        // Total + avancement de la revue (« N / T revues » = validées + corrigées sur le total).
+        return libelleEcran() + " — " + comptage.total() + " observation(s) · " + comptage.progression();
     }
 
     @FXML

@@ -104,7 +104,11 @@ class SonsValidationViewTest {
         Label resume = robot.lookup("#lblResume").queryAs(Label.class);
 
         assertThat(table.getItems()).hasSize(2);
-        assertThat(resume.getText()).contains("Sons de référence").contains("2 observation(s)");
+        // Résumé : libellé de source + total + avancement de la revue (les 2 lignes sont VALIDEE).
+        assertThat(resume.getText())
+                .contains("Sons de référence")
+                .contains("2 observation(s)")
+                .contains("2 / 2 revues");
     }
 
     @Test
@@ -139,15 +143,17 @@ class SonsValidationViewTest {
     @DisplayName("Source References : menu « Exporter la bibliothèque » visible, actions passage masquées")
     void menu_adapte_a_la_source(FxRobot robot) {
         // Les MenuItem ne sont pas des Node : on passe par le MenuButton et ses items (ordre du FXML :
-        // importer, exporter _Vu, exporter bibliothèque).
+        // importer, inclure le mode, exporter _Vu, exporter bibliothèque).
         MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
         MenuItem importer = menu.getItems().get(0);
-        MenuItem exporterVu = menu.getItems().get(1);
-        MenuItem exporterBiblio = menu.getItems().get(2);
+        MenuItem inclureMode = menu.getItems().get(1);
+        MenuItem exporterVu = menu.getItems().get(2);
+        MenuItem exporterBiblio = menu.getItems().get(3);
 
         assertThat(menu.isVisible()).isTrue();
         assertThat(exporterBiblio.isVisible()).isTrue();
         assertThat(importer.isVisible()).isFalse();
+        assertThat(inclureMode.isVisible()).isFalse();
         assertThat(exporterVu.isVisible()).isFalse();
         // Source multi-passages : les colonnes de contexte restent visibles.
         assertThat(colonne(robot, "Passage").isVisible()).isTrue();
