@@ -15,7 +15,7 @@ import javafx.scene.Parent;
 /// Implémentation du contrat socle [OuvrirAudio] : charge la vue audio unifiée (`SonsValidation.fxml`)
 /// et la publie dans la zone centrale du chrome via le [Navigateur].
 ///
-/// Même patron que [fr.univ_amu.iut.bibliotheque.view.NavigationBibliotheque] : seul point de la feature
+/// Même patron que les autres façades de navigation du projet (`NavigationSites`…) : seul point de la feature
 /// qui sait charger un FXML, avec la `controllerFactory` branchée sur Guice (`injector::getInstance`)
 /// pour que [SonsValidationController] reçoive son ViewModel par injection. La [SourceObservations] (et
 /// la cible de focus éventuelle) est transmise au controller **après** le chargement, avant publication.

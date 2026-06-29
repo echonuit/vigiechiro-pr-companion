@@ -83,7 +83,7 @@ ouvrir sa page de documentation** (rôle, captures commentées, astuces).
   <tr>
     <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/multisite/"><img src=".github/assets/apercu-multisite.png" alt="Multisite"></a><br><b>Multisite</b><br><sub>Vue agrégée (tri, filtres, vues)</sub></td>
     <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/diagnostic/"><img src=".github/assets/apercu-diagnostic.png" alt="Diagnostic"></a><br><b>Diagnostic</b><br><sub>Climat, anomalies du capteur</sub></td>
-    <td align="center"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/bibliotheque/"><img src=".github/assets/apercu-bibliotheque-sons.png" alt="Bibliothèque"></a><br><b>Bibliothèque</b><br><sub>Sons de référence + export</sub></td>
+    <td width="33%"></td>
   </tr>
   <tr>
     <td align="center" width="33%"><a href="https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/analyse/"><img src=".github/assets/apercu-analyse.png" alt="Espèces & observations"></a><br><b>Espèces &amp; observations</b><br><sub>Inventaire par espèce / par carré</sub></td>
@@ -197,7 +197,7 @@ son **parcours** au **[brief](https://iutinfoaix-s201.github.io/brief/)** (l'én
 | [`validation`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/validation/) | [P7](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida/) | Revue des observations Tadarida (espèces), import/export CSV `_Vu` |
 | [`multisite`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/multisite/) | [P5](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages/) | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
 | [`diagnostic`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/diagnostic/) | [P6](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20mat%C3%A9riel/) | Diagnostic d'une nuit (courbe climat, anomalies) |
-| [`bibliotheque`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/bibliotheque/) | [P10](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence/) | Bibliothèque de sons de référence + export |
+| `bibliotheque` (modèle) | [P10](https://iutinfoaix-s201.github.io/brief/Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence/) | Corpus de sons de référence + export, désormais servis par la vue audio unifiée (source References) |
 | [`analyse`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/analyse/) | transverse | Inventaire des espèces détectées (prisme biodiversité), regroupé par espèce ou par carré et filtrable par statut |
 | [`recherche`](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/ecrans/recherche/) | transverse | Recherche globale du chrome (Ctrl+F) : sauter à un site, un point ou un passage, résultats groupés |
 

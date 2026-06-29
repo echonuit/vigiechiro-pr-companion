@@ -27,3 +27,20 @@ Pour l'observation sélectionnée, le **détail** affiche la proposition (espèc
 
 Un **mode inventaire** permet de propager une validation aux autres détections de la même espèce.
 L'**export** du fichier peut, en option (une case à cocher), inclure la trace du mode de validation.
+
+Chaque observation peut aussi être **marquée comme « référence »** (ou retirée du corpus) : c'est ce
+qui alimente vos **sons de référence**.
+
+## Sons de référence
+
+Le même écran constitue votre **corpus de sons de référence**. Depuis l'accueil, l'activité
+**Sons de référence** l'ouvre directement sur **toutes les observations marquées « référence »** : vous
+les **écoutez**, pouvez les **valider / corriger**, **retirer** la référence, et **exporter la
+bibliothèque** (un récapitulatif CSV + la copie des fichiers son) vers un dossier de votre choix.
+
+![Sons & validation, sur le corpus de sons de référence : table, écoute pleine largeur et actions.](../assets/captures/apercu-sons-validation.png)
+
+Cet écran est partagé : on y arrive aussi depuis un **passage** (validation Tadarida), depuis
+**Espèces & observations** (toutes les détections d'une espèce) et depuis **Carte & passages** (un
+passage ou le lot filtré). Les colonnes de contexte (passage, carré, point) s'affichent quand la source
+couvre plusieurs passages, et se masquent pour un passage unique.

@@ -65,7 +65,6 @@ nav:
       - "Carte & passages": ecrans/multisite.md
       - "Espèces & observations": ecrans/analyse.md
       - Diagnostic: ecrans/diagnostic.md
-      - Bibliothèque: ecrans/bibliotheque.md
   - Raccourcis clavier: raccourcis-clavier.md
   - Glossaire: glossaire.md
   - FAQ et dépannage: faq.md

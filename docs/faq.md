@@ -67,8 +67,8 @@ serveur : les échanges avec Vigie-Chiro (dépôt, récupération des résultats
 ### Comment écouter une séquence ?
 
 La **vue audio** (sonogramme et spectrogramme) est présente dans les écrans de
-[Qualification](ecrans/qualification.md), de [Validation](ecrans/validation.md) et de la
-[Bibliothèque](ecrans/bibliotheque.md). La barre <kbd>Espace</kbd> lance ou met en pause la lecture
+[Qualification](ecrans/qualification.md) et de [Validation](ecrans/validation.md) (écoute, validation
+et corpus de sons de référence). La barre <kbd>Espace</kbd> lance ou met en pause la lecture
 (voir les [Raccourcis clavier](raccourcis-clavier.md)).
 
 Le **niveau sonore est normalisé** automatiquement : les cris de faible et de forte amplitude sont
