@@ -6,7 +6,10 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
+import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
@@ -41,6 +44,8 @@ import javafx.util.StringConverter;
 public class SonsValidationController implements EmplacementNavigation {
 
     private final AudioViewModel viewModel;
+    private final OuvrirSite ouvrirSite;
+    private final OuvrirPassage ouvrirPassage;
 
     /// Source courante, mémorisée pour adapter colonnes / actions / fil d'Ariane.
     private SourceObservations source;
@@ -118,8 +123,10 @@ public class SonsValidationController implements EmplacementNavigation {
     private Label lblMessage;
 
     @Inject
-    public SonsValidationController(AudioViewModel viewModel) {
+    public SonsValidationController(AudioViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     @FXML
@@ -253,11 +260,16 @@ public class SonsValidationController implements EmplacementNavigation {
         }
     }
 
-    /// Emplacement dans le fil d'Ariane, **piloté par la source**. PR-3a : la source `References` est un
-    /// écran racine (`Accueil › Sons de référence`). Les ancêtres des sources passage / espèce / lot
-    /// (retour au passage, à l'analyse, au multisite) seront ajoutés avec leurs branchements respectifs.
+    /// Emplacement dans le fil d'Ariane, **piloté par la source** : pour `ParPassage`, on reconstruit les
+    /// ancêtres site/passage (retour au passage via les contrats socle, comme l'ancienne validation) ;
+    /// pour `References` (et, à terme, les autres sources atteintes depuis un écran parent) l'écran est
+    /// autonome (segment courant seul).
     @Override
     public List<Lieu> emplacement() {
+        if (source instanceof SourceObservations.ParPassage parPassage) {
+            return EmplacementPassage.emplacementEnfant(
+                    parPassage.contexte(), ouvrirSite, ouvrirPassage, libelleEcran());
+        }
         return List.of(Lieu.courant(libelleEcran()));
     }
 

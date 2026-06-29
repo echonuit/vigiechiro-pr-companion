@@ -13,6 +13,7 @@ import com.google.inject.Provides;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -79,12 +80,14 @@ class SonsValidationViewTest {
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
 
-        Injector injector = Guice.createInjector(new AbstractModule() {
-            @Provides
-            AudioViewModel viewModel() {
-                return new AudioViewModel(service, bibliotheque);
-            }
-        });
+        Injector injector = Guice.createInjector(
+                new AbstractModule() {
+                    @Provides
+                    AudioViewModel viewModel() {
+                        return new AudioViewModel(service, bibliotheque);
+                    }
+                },
+                new NavigationDeTestModule());
         FXMLLoader loader = new FXMLLoader(SonsValidationController.class.getResource("SonsValidation.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();

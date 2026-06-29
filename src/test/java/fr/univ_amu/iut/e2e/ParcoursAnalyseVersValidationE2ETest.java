@@ -12,8 +12,8 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Observation;
-import fr.univ_amu.iut.validation.model.ObservationStatut;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -38,9 +38,10 @@ import org.testfx.framework.junit5.Start;
 
 /// **Test E2E de parcours** : depuis la vue transverse **« Espèces & observations »** (`analyse`), on
 /// sélectionne une espèce puis une de ses détections et on déclenche **« Écouter / valider »** ; le
-/// câblage inter-écran réel (`analyse → OuvrirValidation → NavigationValidation → ValidationController`)
-/// doit ouvrir **M-Vision-Tadarida** **pré-focalisé** sur cette observation. Sur le vrai chrome et le vrai
-/// injecteur, base seedée directement (un utilisateur, un passage, une observation).
+/// câblage inter-écran réel (`analyse → OuvrirValidation → NavigationValidation → OuvrirAudio →
+/// SonsValidationController`) doit ouvrir la **vue audio unifiée** (source `ParPassage`) **pré-focalisée**
+/// sur cette observation. Sur le vrai chrome et le vrai injecteur, base seedée directement (un
+/// utilisateur, un passage, une observation).
 @ExtendWith(ApplicationExtension.class)
 class ParcoursAnalyseVersValidationE2ETest {
 
@@ -72,7 +73,7 @@ class ParcoursAnalyseVersValidationE2ETest {
     }
 
     @Test
-    @DisplayName("Analyse → « Écouter / valider » ouvre la validation pré-focalisée sur l'observation")
+    @DisplayName("Analyse → « Écouter / valider » ouvre la vue audio pré-focalisée sur l'observation")
     void analyse_ecouter_ouvre_la_validation_ciblee(FxRobot robot) {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
 
@@ -91,12 +92,12 @@ class ParcoursAnalyseVersValidationE2ETest {
         robot.interact(() -> observations.getSelectionModel().select(0));
         robot.interact(robot.lookup("#boutonEcouter").queryAs(Button.class)::fire);
 
-        // 4) On est sur M-Vision-Tadarida, pré-focalisé sur la bonne observation.
-        assertThat(navigation.getVueCourante()).isEqualTo("validation");
+        // 4) On est sur la vue audio unifiée, pré-focalisée sur la bonne observation.
+        assertThat(navigation.getVueCourante()).isEqualTo("audio");
         TableView<?> tableValidation = robot.lookup("#tableObservations").queryAs(TableView.class);
         Object selection = tableValidation.getSelectionModel().getSelectedItem();
-        assertThat(selection).isInstanceOf(ObservationStatut.class);
-        assertThat(((ObservationStatut) selection).observation().id()).isEqualTo(idObservation);
+        assertThat(selection).isInstanceOf(LigneObservationAudio.class);
+        assertThat(((LigneObservationAudio) selection).idObservation()).isEqualTo(idObservation);
     }
 
     /// Sème un site/point/passage/séquence/résultats puis une observation validée (Pipistrelle), et

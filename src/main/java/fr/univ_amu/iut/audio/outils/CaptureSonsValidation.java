@@ -18,9 +18,11 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.AttenteAudio;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -119,10 +121,25 @@ public final class CaptureSonsValidation {
                 new PassageModule(),
                 new ValidationModule(),
                 new BibliothequeModule(),
+                new ModuleCaptureNavigationAudio(),
                 new AbstractModule() {
                     @Provides
                     AudioViewModel viewModel(ServiceValidation validation, ServiceBibliotheque bibliotheque) {
                         return new AudioViewModel(validation, bibliotheque);
+                    }
+
+                    // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est
+                    // pas inclus : no-op (la source References ne l'exerce pas). OuvrirPassage, lui, est
+                    // déjà fourni par PassageModule (inclus) - ne pas le rebinder (BindingAlreadySet).
+                    @Provides
+                    OuvrirSite ouvrirSite() {
+                        return new OuvrirSite() {
+                            @Override
+                            public void ouvrirListe() {}
+
+                            @Override
+                            public void ouvrirDetail(String numeroCarre) {}
+                        };
                     }
                 });
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);

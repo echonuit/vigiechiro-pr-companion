@@ -26,11 +26,11 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 /// Test d'intégration TestFX de la **façade** [NavigationValidation] : sur le vrai injecteur
-/// ([RacineInjecteur]) + chrome, on appelle `ouvrir(idPassage)`. On vérifie que l'écran
-/// M-Vision-Tadarida se charge via Guice + le `Navigateur` du socle (ressource FXML,
-/// controllerFactory, publication), comme `NavigationDiagnosticViewTest`. Le passage est absent :
-/// aucun résultat n'est importé, le ViewModel affiche l'état vide, ce qui exerce toute la chaîne
-/// sans seeding complet.
+/// ([RacineInjecteur]) + chrome, on appelle `ouvrir(idPassage)`. Depuis la vue audio unifiée, la façade
+/// **délègue à `OuvrirAudio`** (source `ParPassage`) : on vérifie que l'écran « Sons & validation » se
+/// charge via Guice + le `Navigateur` du socle. Le passage est absent : aucun résultat n'est importé, le
+/// ViewModel affiche l'état vide (« Aucun résultat Tadarida importé pour ce passage »), ce qui exerce
+/// toute la chaîne sans seeding complet.
 @ExtendWith(ApplicationExtension.class)
 class NavigationValidationViewTest {
 

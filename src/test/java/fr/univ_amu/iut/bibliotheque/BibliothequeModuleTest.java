@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import fr.univ_amu.iut.audio.di.AudioModule;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.di.CommunModule;
@@ -17,15 +18,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Filet d'intégration Guice de la feature `bibliotheque` : on assemble un injecteur dédié
-/// (socle + `ValidationModule` + `PassageModule` + `BibliothequeModule`) et on vérifie que
-/// [ServiceBibliotheque] est résoluble et que la feature coexiste sans conflit de binding.
+/// (socle + `ValidationModule` + `PassageModule` + `BibliothequeModule` + `AudioModule`) et on vérifie
+/// que [ServiceBibliotheque] est résoluble et que la feature coexiste sans conflit de binding.
 ///
 /// `ValidationModule` et `PassageModule` sont requis car le service reçoit leurs DAO
-/// ([ObservationDao], [SequenceDao]) ; le socle (`CommunModule`) fournit le `Navigateur` et le
-/// `NavigationViewModel` dont dépend la carte d'accueil
-/// [fr.univ_amu.iut.bibliotheque.view.ActiviteBibliotheque] enregistrée par le module. On surcharge
-/// le workspace vers un `@TempDir` (propriété `vigiechiro.workspace`) pour ne pas toucher au
-/// workspace réel.
+/// ([ObservationDao], [SequenceDao]) ; `AudioModule` l'est depuis que `NavigationValidation`
+/// (`OuvrirValidation`) délègue à `OuvrirAudio` (#audio). On surcharge le workspace vers un `@TempDir`
+/// (propriété `vigiechiro.workspace`) pour ne pas toucher au workspace réel.
 class BibliothequeModuleTest {
 
     @TempDir
@@ -46,7 +45,10 @@ class BibliothequeModuleTest {
                 new PersistenceModule(),
                 new ValidationModule(),
                 new PassageModule(),
-                new BibliothequeModule());
+                new BibliothequeModule(),
+                // Requis depuis que NavigationValidation (OuvrirValidation) délègue à OuvrirAudio (#audio),
+                // bindé par AudioModule ; AudioModule consomme aussi les services validation + bibliotheque.
+                new AudioModule());
 
         assertThat(injecteur.getInstance(ServiceBibliotheque.class)).isNotNull();
     }
