@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.di.PassageModule;
@@ -90,7 +91,8 @@ public final class CaptureAnalyse {
                 new SitesModule(),
                 new PassageModule(),
                 new ValidationModule(),
-                new AnalyseModule());
+                new AnalyseModule(),
+                new ModuleCaptureNavigationAudio());
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(injecteur, source);

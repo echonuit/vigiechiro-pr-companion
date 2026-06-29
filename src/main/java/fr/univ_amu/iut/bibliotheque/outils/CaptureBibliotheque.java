@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.AttenteAudio;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -122,7 +123,8 @@ public final class CaptureBibliotheque {
                 new PersistenceModule(),
                 new PassageModule(),
                 new ValidationModule(),
-                new BibliothequeModule());
+                new BibliothequeModule(),
+                new ModuleCaptureNavigationAudio());
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
