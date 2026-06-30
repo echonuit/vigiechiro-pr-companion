@@ -167,12 +167,12 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     }
 
     /// Statut de revue **dérivé en SQL** (CASE), fidèle à `ServiceValidation#statut` : pas d'observateur →
-    /// non touchée ; observateur = Tadarida avec probabilité → validée ; sinon (égal sans prob) non
-    /// touchée ; observateur ≠ Tadarida → corrigée. Facteur commun aux projections (#analyse).
+    /// non touchée ; observateur = Tadarida → validée ; observateur ≠ Tadarida → corrigée. La décision
+    /// tient à la **présence du `taxon_observer`**, pas à sa probabilité (un _Vu réel peut porter une
+    /// confiance textuelle « SUR » lue comme prob inconnue). Facteur commun aux projections (#analyse).
     private static final String CASE_STATUT = "CASE"
             + "   WHEN o.taxon_observer IS NULL THEN 'NON_TOUCHEE'"
-            + "   WHEN o.taxon_observer = o.taxon_tadarida AND o.prob_observer IS NOT NULL THEN 'VALIDEE'"
-            + "   WHEN o.taxon_observer = o.taxon_tadarida THEN 'NON_TOUCHEE'"
+            + "   WHEN o.taxon_observer = o.taxon_tadarida THEN 'VALIDEE'"
             + "   ELSE 'CORRIGEE'"
             + " END";
 

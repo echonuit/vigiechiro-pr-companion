@@ -148,4 +148,33 @@ class ParserCsvTadaridaTest {
 
         assertThat(parser.parser(avecLigneVide).lignes()).hasSize(1);
     }
+
+    @Test
+    @DisplayName("Une probabilité textuelle d'un _Vu (« SUR ») est lue comme inconnue, sans planter")
+    void tolere_une_probabilite_textuelle() {
+        // Cas réel du dataset SAÉ (observations_Vu.csv ligne 2627) : l'observateur a saisi un code de
+        // confiance « SUR » dans observateur_probabilite, là où un flottant est attendu. L'import ne
+        // doit pas échouer pour autant (cf. incident « For input string: SUR »).
+        String vuAvecConfiance = "nom du fichier;temps_debut;temps_fin;frequence_mediane;tadarida_taxon;"
+                + "tadarida_probabilite;tadarida_taxon_autre;observateur_taxon;observateur_probabilite\n"
+                + "seq_000;0.0;3.6;79.0;Rhifer;0.99;;Rhifer;SUR\n";
+
+        LigneObservation ligne = parser.parser(vuAvecConfiance).lignes().get(0);
+
+        assertThat(ligne.probObservateur())
+                .as("confiance textuelle → probabilité inconnue")
+                .isNull();
+        assertThat(ligne.taxonObservateur()).isEqualTo("Rhifer");
+        assertThat(ligne.probTadarida()).isEqualTo(0.99);
+    }
+
+    @Test
+    @DisplayName("La tolérance ne s'applique qu'aux probabilités : un temps non numérique reste rejeté")
+    void rejette_un_champ_non_probabilite_invalide() {
+        // temps_debut hors colonnes *_probabilite : une valeur malformée doit lever (pas d'avalage
+        // silencieux), pour ne pas masquer une donnée corrompue.
+        String tempsInvalide = "nom du fichier;temps_debut;tadarida_taxon\nseq_000;abc;Pippip\n";
+
+        assertThatThrownBy(() -> parser.parser(tempsInvalide)).isInstanceOf(NumberFormatException.class);
+    }
 }
