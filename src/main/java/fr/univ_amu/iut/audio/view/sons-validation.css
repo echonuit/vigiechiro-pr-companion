@@ -62,20 +62,48 @@
   -fx-border-width: 1 1 1 6;
 }
 
+/* Couleurs par sévérité : fond + filet d'accent sur le conteneur, couleur de texte sur le libellé et la
+   croix (le texte-fill ne s'hérite pas du conteneur de façon fiable). */
 .retour-succes {
-  -fx-text-fill: #14532d;
   -fx-background-color: #d4edda;
   -fx-border-color: #28a745;
 }
 
+.retour-succes .label,
+.retour-succes .fermer-retour {
+  -fx-text-fill: #14532d;
+}
+
 .retour-info {
-  -fx-text-fill: #0c4a6e;
   -fx-background-color: #d1ecf1;
   -fx-border-color: #17a2b8;
 }
 
+.retour-info .label,
+.retour-info .fermer-retour {
+  -fx-text-fill: #0c4a6e;
+}
+
 .retour-erreur {
-  -fx-text-fill: #842029;
   -fx-background-color: #f8d7da;
   -fx-border-color: #dc3545;
+}
+
+.retour-erreur .label,
+.retour-erreur .fermer-retour {
+  -fx-text-fill: #842029;
+}
+
+/* Croix de fermeture : bouton plat qui hérite de la couleur de sévérité, plus marqué au survol. */
+.fermer-retour {
+  -fx-background-color: transparent;
+  -fx-font-size: 14px;
+  -fx-font-weight: bold;
+  -fx-padding: 1 7;
+  -fx-background-radius: 4;
+  -fx-cursor: hand;
+}
+
+.fermer-retour:hover {
+  -fx-background-color: rgba(0, 0, 0, 0.08);
 }

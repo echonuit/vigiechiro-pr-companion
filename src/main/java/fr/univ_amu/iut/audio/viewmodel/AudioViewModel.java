@@ -350,4 +350,9 @@ public class AudioViewModel {
     public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
         return messages.retourProperty();
     }
+
+    /// Efface le retour d'opération (l'utilisateur a lu le bandeau et le ferme). Le bandeau disparaît.
+    public void effacerRetour() {
+        messages.effacerRetour();
+    }
 }

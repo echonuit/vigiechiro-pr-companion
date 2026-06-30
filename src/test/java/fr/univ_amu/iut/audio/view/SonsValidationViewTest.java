@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Optional;
 import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -151,12 +152,13 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("Un échec d'opération s'affiche dans le bandeau de retour (erreur), pas dans le placeholder")
-    void echec_affiche_bandeau_de_retour(FxRobot robot) {
+    @DisplayName("Un échec s'affiche dans le bandeau de retour (erreur) et la croix le ferme")
+    void echec_affiche_puis_ferme_le_bandeau(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        Node bandeau = robot.lookup("#bandeauRetour").query();
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
 
-        assertThat(message.isVisible()).as("aucun retour au départ").isFalse();
+        assertThat(bandeau.isVisible()).as("aucun retour au départ").isFalse();
 
         Button btnReference = robot.lookup("#btnReference").queryAs(Button.class);
         robot.interact(() -> table.getSelectionModel().select(0)); // ligne id=1, déjà référence
@@ -164,9 +166,16 @@ class SonsValidationViewTest {
         robot.interact(btnReference::fire);
 
         // Le retour d'erreur est visible et stylé erreur, indépendamment du placeholder d'état vide.
-        assertThat(message.isVisible()).isTrue();
+        assertThat(bandeau.isVisible()).isTrue();
         assertThat(message.getText()).contains("Échec simulé");
-        assertThat(message.getStyleClass()).contains("retour-erreur");
+        assertThat(bandeau.getStyleClass()).contains("retour-erreur");
+
+        // La croix ferme le bandeau (l'utilisateur l'a lu).
+        Button btnFermer = robot.lookup("#btnFermerRetour").queryAs(Button.class);
+        robot.interact(btnFermer::fire);
+        assertThat(bandeau.isVisible())
+                .as("le bandeau est masqué après fermeture")
+                .isFalse();
     }
 
     @Test
