@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.62.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.61.1...v1.62.0) (2026-06-30)
+
+
+### Features
+
+* **audio:** import Tadarida tolérant (séquences manquantes + taxons hors référentiel) ([#432](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/432)) ([e424154](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/e42415441839139a5e1263f3b8bb9022d167afd9))
+
 ## [1.61.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.61.0...v1.61.1) (2026-06-30)
 
 
