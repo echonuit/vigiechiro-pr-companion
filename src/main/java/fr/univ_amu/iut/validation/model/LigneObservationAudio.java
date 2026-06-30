@@ -25,6 +25,10 @@ package fr.univ_amu.iut.validation.model;
 /// @param reference `true` si l'observation est dans le corpus de référence (`is_reference`)
 /// @param commentaire commentaire libre de l'observateur, ou `null`
 /// @param frequenceHz fréquence médiane en Hz, ou `null`
+/// @param nomEspece nom vernaculaire FR de l'espèce **retenue** (`COALESCE(observateur, tadarida)`), ou
+///     `null` si le taxon n'a pas de nom vernaculaire (souche hors référentiel) — la vue affiche alors le code
+/// @param nomTadarida nom vernaculaire FR de la **proposition Tadarida** (`taxon_tadarida`), ou `null`
+///     (souche hors référentiel) — la vue affiche alors le code
 public record LigneObservationAudio(
         long idObservation,
         long idSequence,
@@ -41,4 +45,6 @@ public record LigneObservationAudio(
         StatutObservation statut,
         boolean reference,
         String commentaire,
-        Integer frequenceHz) {}
+        Integer frequenceHz,
+        String nomEspece,
+        String nomTadarida) {}

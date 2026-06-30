@@ -290,8 +290,11 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " ms.square_number AS carre, ms.friendly_name AS nom_site, lp.code AS point_code,"
             + " ms.user_id AS user_id, o.taxon_tadarida AS tadarida, o.prob_tadarida AS prob_tadarida,"
             + " o.taxon_observer AS observer, o.prob_observer AS prob_observer,"
-            + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_hz AS frequence"
+            + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_hz AS frequence,"
+            + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida"
             + DE_OBSERVATION_AU_SITE
+            + " LEFT JOIN taxon te ON te.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
+            + " LEFT JOIN taxon tt ON tt.code = o.taxon_tadarida"
             + ")";
 
     private static final String SELECT_AUDIO = CTE_AUDIO + " SELECT * FROM obs WHERE obs.";
@@ -320,7 +323,9 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             StatutObservation.valueOf(rs.getString("statut")),
             rs.getInt("is_reference") != 0,
             rs.getString("commentaire"),
-            entierNullable(rs, "frequence"));
+            entierNullable(rs, "frequence"),
+            rs.getString("nom_espece"),
+            rs.getString("nom_tadarida"));
 
     /// Source **Passage** : toutes les observations d'un passage (pseudo-taxons compris : on revoit tout).
     public List<LigneObservationAudio> lignesAudioDuPassage(Long idPassage) {

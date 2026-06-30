@@ -57,8 +57,10 @@ public class TaxonDao extends DaoGenerique<Taxon, String> {
         if (codes.isEmpty()) {
             return;
         }
+        // Nom latin et vernaculaire NULL : la souche est identifiée par son groupe « Hors référentiel »
+        // (V04), et la vue affiche alors le code Tadarida brut (pas un nom inventé).
         String sql = "INSERT OR IGNORE INTO taxon (code, latin_name, vernacular_name_fr, group_id)"
-                + " SELECT ?, NULL, 'Hors référentiel', g.id FROM taxonomic_group g WHERE g.name = 'Hors référentiel'";
+                + " SELECT ?, NULL, NULL, g.id FROM taxonomic_group g WHERE g.name = 'Hors référentiel'";
         try (PreparedStatement ps = connexion.prepareStatement(sql)) {
             for (String code : codes) {
                 ps.setString(1, code);

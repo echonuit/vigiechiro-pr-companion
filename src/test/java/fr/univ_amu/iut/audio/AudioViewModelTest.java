@@ -69,7 +69,9 @@ class AudioViewModelTest {
                 statut,
                 ref,
                 null,
-                45000);
+                45000,
+                null,
+                null);
     }
 
     @Nested

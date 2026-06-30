@@ -91,6 +91,9 @@ public class SonsValidationController implements EmplacementNavigation {
     private TableColumn<LigneObservationAudio, String> colTadarida;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colProba;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colObservateur;
 
     @FXML
@@ -157,9 +160,10 @@ public class SonsValidationController implements EmplacementNavigation {
 
     @FXML
     private void initialize() {
-        colEspece.setCellValueFactory(c -> new ReadOnlyStringWrapper(especeRetenue(c.getValue())));
-        colTadarida.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(c.getValue().taxonTadarida()));
+        colEspece.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.espece(c.getValue())));
+        colTadarida.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.tadarida(c.getValue())));
+        colProba.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                FormatLigneAudio.probabilite(c.getValue().probTadarida())));
         colObservateur.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().taxonObservateur())));
         colPassage.setCellValueFactory(
@@ -414,11 +418,6 @@ public class SonsValidationController implements EmplacementNavigation {
 
     private javafx.stage.Window fenetre() {
         return tableObservations.getScene().getWindow();
-    }
-
-    private static String especeRetenue(LigneObservationAudio ligne) {
-        String observateur = ligne.taxonObservateur();
-        return observateur == null || observateur.isBlank() ? ligne.taxonTadarida() : observateur;
     }
 
     private static String ouTiret(String valeur) {

@@ -69,8 +69,9 @@
     <StackPane>
       <TableView fx:id="tableObservations">
         <columns>
-          <TableColumn fx:id="colEspece" text="Espèce" prefWidth="170.0"/>
-          <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="170.0"/>
+          <TableColumn fx:id="colEspece" text="Espèce" prefWidth="180.0"/>
+          <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="160.0"/>
+          <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
           <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="140.0"/>
           <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
           <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>

@@ -61,7 +61,8 @@ class SonsValidationViewTest {
 
     private ServiceValidation service;
 
-    private static LigneObservationAudio ligne(long id, long seq, String tadarida, String observateur) {
+    private static LigneObservationAudio ligne(
+            long id, long seq, String tadarida, String observateur, String nomEspece, String nomTadarida) {
         return new LigneObservationAudio(
                 id,
                 seq,
@@ -78,7 +79,9 @@ class SonsValidationViewTest {
                 StatutObservation.VALIDEE,
                 true,
                 "beau cri",
-                45000);
+                45000,
+                nomEspece,
+                nomTadarida);
     }
 
     @Start
@@ -88,7 +91,9 @@ class SonsValidationViewTest {
         when(service.taxonsDisponibles())
                 .thenReturn(List.of(new Taxon("Nyclei", "Nyctalus leisleri", "Noctule de Leisler", 1L)));
         when(service.lignesAudioReferences("u-1"))
-                .thenReturn(List.of(ligne(1, 10, "Pippip", "Pippip"), ligne(2, 11, "Nyclei", "Nyclei")));
+                .thenReturn(List.of(
+                        ligne(1, 10, "Pippip", "Pippip", "Pipistrelle commune", "Pipistrelle commune"),
+                        ligne(2, 11, "Nyclei", "Nyclei", "Noctule de Leisler", "Noctule de Leisler")));
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
 
@@ -121,6 +126,17 @@ class SonsValidationViewTest {
                 .contains("Sons de référence")
                 .contains("2 observation(s)")
                 .contains("2 / 2 revues");
+    }
+
+    @Test
+    @DisplayName("La colonne Espèce affiche le nom vernaculaire, la colonne Proba la probabilité Tadarida")
+    void affiche_nom_vernaculaire_et_proba(FxRobot robot) {
+        // Espèce ET proposition Tadarida affichent le nom vernaculaire (plus lisible).
+        assertThat(colonne(robot, "Espèce").getCellData(0)).isEqualTo("Pipistrelle commune");
+        assertThat(colonne(robot, "Espèce").getCellData(1)).isEqualTo("Noctule de Leisler");
+        assertThat(colonne(robot, "Proposition Tadarida").getCellData(0)).isEqualTo("Pipistrelle commune");
+        // Proba = probabilité Tadarida formatée (0.9 → « 90 % »).
+        assertThat(colonne(robot, "Proba.").getCellData(0)).isEqualTo("90 %");
     }
 
     @Test

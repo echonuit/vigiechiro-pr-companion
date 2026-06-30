@@ -34,6 +34,28 @@ public final class FormatLigneAudio {
                 + (o.reference() ? "\nRéférence : oui" : "");
     }
 
+    /// Libellé d'**espèce** affiché en colonne : le **nom vernaculaire** de l'espèce retenue s'il est
+    /// connu (plus lisible), sinon le **code** Tadarida retenu (observateur sinon proposition) — cas d'une
+    /// souche hors référentiel sans nom vernaculaire.
+    public static String espece(LigneObservationAudio o) {
+        if (o.nomEspece() != null && !o.nomEspece().isBlank()) {
+            return o.nomEspece();
+        }
+        String observateur = o.taxonObservateur();
+        return observateur != null && !observateur.isBlank() ? observateur : o.taxonTadarida();
+    }
+
+    /// Libellé de la **proposition Tadarida** affiché en colonne : le **nom vernaculaire** du taxon
+    /// proposé par Tadarida s'il est connu, sinon le **code** (souche hors référentiel).
+    public static String tadarida(LigneObservationAudio o) {
+        return o.nomTadarida() != null && !o.nomTadarida().isBlank() ? o.nomTadarida() : o.taxonTadarida();
+    }
+
+    /// Probabilité de détection formatée pour la colonne (« 81 % »), tiret si absente.
+    public static String probabilite(Double probabilite) {
+        return probabilite == null ? "—" : Math.round(probabilite * 100) + " %";
+    }
+
     /// Libellé d'affichage du statut de revue (partagé avec la colonne « Statut » de la vue).
     public static String libelleStatut(StatutObservation statut) {
         return switch (statut) {
