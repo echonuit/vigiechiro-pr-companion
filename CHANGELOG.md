@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.65.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.64.0...v1.65.0) (2026-06-30)
+
+
+### Features
+
+* **audio:** nom vernaculaire (espèce + Tadarida) et probabilité dans la table de validation ([#437](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/437)) ([a64cc06](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/a64cc06651a1f6e9a3d524be8c0003c373ddc599))
+
 # [1.64.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.63.0...v1.64.0) (2026-06-30)
 
 
