@@ -33,6 +33,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
@@ -56,6 +57,9 @@ public class SonsValidationController implements EmplacementNavigation {
 
     /// Source courante, mémorisée pour adapter colonnes / actions / fil d'Ariane.
     private SourceObservations source;
+
+    @FXML
+    private VBox racine;
 
     @FXML
     private Label lblResume;
@@ -241,6 +245,20 @@ public class SonsValidationController implements EmplacementNavigation {
         lblMessage.managedProperty().bind(retourPresent);
         viewModel.retourProperty().addListener((obs, avant, apres) -> appliquerStyleRetour(apres));
         appliquerStyleRetour(viewModel.retourProperty().get());
+
+        // Glisser-déposer d'un CSV Tadarida sur l'écran : alternative au FileChooser natif (qui coince
+        // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).
+        DepotFichier.installer(racine, () -> source != null && source.permetWorkflowTadarida(), this::deposerFichiers);
+    }
+
+    /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue au
+    /// ViewModel, qui garde ses garde-fous (source `ParPassage`, un seul jeu de résultats) et restitue le
+    /// retour visible. `false` si rien n'est pris en charge (le dépôt n'est alors pas marqué complété).
+    boolean deposerFichiers(List<File> fichiers) {
+        if (fichiers.isEmpty()) {
+            return false;
+        }
+        return viewModel.importer(fichiers.get(0).toPath());
     }
 
     /// Classe CSS du bandeau de retour selon la sévérité (succès vert / info neutre / erreur rouge).
