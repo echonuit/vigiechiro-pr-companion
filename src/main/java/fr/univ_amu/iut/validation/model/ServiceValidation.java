@@ -166,8 +166,10 @@ public class ServiceValidation {
         // Pré-validation : on refuse l'import en bloc plutôt que de laisser des résultats orphelins.
         for (LigneObservation ligne : parse.lignes()) {
             if (!sequenceParNom.containsKey(cleSequence(ligne.nomSequence()))) {
-                throw new RegleMetierException(
-                        "Séquence d'écoute introuvable en base pour « " + ligne.nomSequence() + GUILLEMET_FERMANT);
+                throw new RegleMetierException("Séquence d'écoute introuvable en base pour « "
+                        + ligne.nomSequence()
+                        + " ». Importez d'abord la nuit de ce passage (carré, année, n° de passage et"
+                        + " point doivent correspondre au nom du fichier Tadarida).");
             }
             if (ligne.taxonTadarida() == null || !taxonsConnus.contains(ligne.taxonTadarida())) {
                 throw new RegleMetierException(

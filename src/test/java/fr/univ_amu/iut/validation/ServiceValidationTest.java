@@ -257,7 +257,9 @@ class ServiceValidationTest {
 
         assertThatThrownBy(() -> service.importer(idPassage, fichier))
                 .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("Séquence");
+                .hasMessageContaining("Séquence")
+                .as("le message guide l'utilisateur vers l'import de la nuit")
+                .hasMessageContaining("Importez d'abord la nuit");
         assertThat(resultatsDao.findByPassage(idPassage))
                 .as("rien ne doit être écrit si l'import est refusé")
                 .isEmpty();
