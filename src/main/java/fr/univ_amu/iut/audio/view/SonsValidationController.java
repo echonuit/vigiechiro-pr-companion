@@ -254,14 +254,14 @@ public class SonsValidationController implements EmplacementNavigation {
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à
-    /// [ImportTadarida] (import, ou réimport avec confirmation si un jeu existe déjà). `true` si le dépôt
-    /// est pris en charge (fichier non vide), pour marquer le dépôt complété.
+    /// [ImportTadarida] (import, ou réimport avec confirmation si un jeu existe déjà) et propage son
+    /// résultat réel : `true` seulement si un import a abouti, pour ne pas marquer le dépôt complété
+    /// quand l'utilisateur annule le remplacement ou que l'import échoue.
     boolean deposerFichiers(List<File> fichiers) {
         if (fichiers.isEmpty()) {
             return false;
         }
-        ImportTadarida.lancer(viewModel, fichiers.get(0).toPath());
-        return true;
+        return ImportTadarida.lancer(viewModel, fichiers.get(0).toPath());
     }
 
     /// Ouvre la vue audio sur `source`, en adaptant colonnes, actions et fil d'Ariane. Appelée par

@@ -13,13 +13,14 @@ final class ImportTadarida {
     private ImportTadarida() {}
 
     /// Lance l'import de `cheminCsv` via le `viewModel` : import direct si aucun résultat, sinon réimport
-    /// (remplacement) après confirmation de l'utilisateur.
-    static void lancer(AudioViewModel viewModel, Path cheminCsv) {
+    /// (remplacement) après confirmation de l'utilisateur. Renvoie `true` **seulement si un import a
+    /// réellement abouti** : `false` si l'utilisateur annule la confirmation de remplacement ou si
+    /// l'import échoue, pour que le glisser-déposer ne signale pas un dépôt réussi à tort.
+    static boolean lancer(AudioViewModel viewModel, Path cheminCsv) {
         if (!viewModel.resultatsDisponiblesProperty().get()) {
-            viewModel.importer(cheminCsv, false);
-        } else if (confirmerRemplacement()) {
-            viewModel.importer(cheminCsv, true);
+            return viewModel.importer(cheminCsv, false);
         }
+        return confirmerRemplacement() && viewModel.importer(cheminCsv, true);
     }
 
     private static boolean confirmerRemplacement() {
