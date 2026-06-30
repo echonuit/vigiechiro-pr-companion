@@ -129,12 +129,13 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("La colonne Espèce affiche le nom vernaculaire, la colonne Proba la probabilité Tadarida")
+    @DisplayName("Proposition Tadarida et Votre taxon affichent le vernaculaire ; Proba la probabilité")
     void affiche_nom_vernaculaire_et_proba(FxRobot robot) {
-        // Espèce ET proposition Tadarida affichent le nom vernaculaire (plus lisible).
-        assertThat(colonne(robot, "Espèce").getCellData(0)).isEqualTo("Pipistrelle commune");
-        assertThat(colonne(robot, "Espèce").getCellData(1)).isEqualTo("Noctule de Leisler");
+        // Les deux lignes sont revues (taxon observateur renseigné) : « Votre taxon » montre le
+        // vernaculaire retenu, comme « Proposition Tadarida ». Plus de colonne « Espèce » redondante.
         assertThat(colonne(robot, "Proposition Tadarida").getCellData(0)).isEqualTo("Pipistrelle commune");
+        assertThat(colonne(robot, "Votre taxon").getCellData(0)).isEqualTo("Pipistrelle commune");
+        assertThat(colonne(robot, "Votre taxon").getCellData(1)).isEqualTo("Noctule de Leisler");
         // Proba = probabilité Tadarida formatée (0.9 → « 90 % »).
         assertThat(colonne(robot, "Proba.").getCellData(0)).isEqualTo("90 %");
     }

@@ -34,15 +34,17 @@ public final class FormatLigneAudio {
                 + (o.reference() ? "\nRéférence : oui" : "");
     }
 
-    /// Libellé d'**espèce** affiché en colonne : le **nom vernaculaire** de l'espèce retenue s'il est
-    /// connu (plus lisible), sinon le **code** Tadarida retenu (observateur sinon proposition) — cas d'une
-    /// souche hors référentiel sans nom vernaculaire.
-    public static String espece(LigneObservationAudio o) {
-        if (o.nomEspece() != null && !o.nomEspece().isBlank()) {
-            return o.nomEspece();
-        }
+    /// Libellé de **votre taxon** (décision de l'observateur) affiché en colonne : tiret tant que
+    /// l'observation n'a pas été revue (aucun taxon observateur), sinon le **nom vernaculaire** du taxon
+    /// retenu (plus lisible), avec repli sur le **code** si ce taxon est une souche hors référentiel sans
+    /// vernaculaire. Comme `nomEspece` projette le vernaculaire de `COALESCE(observateur, Tadarida)`, il
+    /// vaut le vernaculaire de l'observateur dès que celui-ci est renseigné.
+    public static String votreTaxon(LigneObservationAudio o) {
         String observateur = o.taxonObservateur();
-        return observateur != null && !observateur.isBlank() ? observateur : o.taxonTadarida();
+        if (observateur == null || observateur.isBlank()) {
+            return "—";
+        }
+        return o.nomEspece() != null && !o.nomEspece().isBlank() ? o.nomEspece() : observateur;
     }
 
     /// Libellé de la **proposition Tadarida** affiché en colonne : le **nom vernaculaire** du taxon
