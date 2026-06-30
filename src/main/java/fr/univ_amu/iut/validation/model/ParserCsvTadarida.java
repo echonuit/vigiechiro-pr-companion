@@ -50,6 +50,15 @@ import java.util.Objects;
 /// `temps_fin`, `frequence_mediane`, `tadarida_taxon`, `tadarida_probabilite`,
 /// `tadarida_taxon_autre`, `observateur_taxon`, `observateur_probabilite`. La colonne
 /// `validation_mode` (R24) est facultative.
+///
+/// ## Probabilités non numériques
+///
+/// Les colonnes `*_probabilite` d'un _Vu réel ne contiennent pas toujours un flottant : l'observateur
+/// peut y avoir saisi un **code de confiance textuel** (p. ex. `SUR` pour « sûr »). Une telle valeur
+/// est tolérée et lue comme une **probabilité inconnue** (`null`) plutôt que de faire échouer tout
+/// l'import (cf. [#probabilite(String)]). Cette tolérance est **limitée aux colonnes de probabilité** :
+/// `temps_debut`, `temps_fin` et `frequence_mediane` restent en lecture stricte (une valeur malformée
+/// y lève, plutôt que d'être avalée silencieusement).
 public final class ParserCsvTadarida {
 
     static final String COL_NOM = "nom du fichier";
@@ -106,10 +115,10 @@ public final class ParserCsvTadarida {
                     nombre(cellule(ligne, index.get(COL_FIN))),
                     entier(cellule(ligne, index.get(COL_FREQ))),
                     texte(cellule(ligne, colTaxon)),
-                    nombre(cellule(ligne, index.get(COL_PROB_TADARIDA))),
+                    probabilite(cellule(ligne, index.get(COL_PROB_TADARIDA))),
                     texte(cellule(ligne, index.get(COL_TAXON_AUTRE))),
                     texte(cellule(ligne, index.get(COL_TAXON_OBSERVATEUR))),
-                    nombre(cellule(ligne, index.get(COL_PROB_OBSERVATEUR))),
+                    probabilite(cellule(ligne, index.get(COL_PROB_OBSERVATEUR))),
                     mode(cellule(ligne, index.get(COL_MODE_VALIDATION)))));
         }
         return new ResultatParseTadarida(format, observations);
@@ -174,12 +183,31 @@ public final class ParserCsvTadarida {
         return estVide(champ) ? null : champ.trim();
     }
 
+    /// Lit un nombre **strict** (temps, …) : une valeur non vide non numérique lève — une donnée
+    /// malformée hors colonnes de probabilité n'est pas silencieusement avalée.
     private static Double nombre(String champ) {
         return estVide(champ) ? null : Double.valueOf(champ.trim());
     }
 
+    /// Lit un entier **strict** (fréquence médiane) : arrondi du nombre, lève si non numérique.
     private static Integer entier(String champ) {
         return estVide(champ) ? null : (int) Math.round(Double.parseDouble(champ.trim()));
+    }
+
+    /// Lit une **probabilité tolérante** (colonnes `*_probabilite`) : les fichiers _Vu réels y portent
+    /// parfois un **code de confiance textuel** (p. ex. « SUR » pour « sûr », cf. ligne 2627 du dataset
+    /// SAÉ) là où le Brut a un flottant. Une valeur non numérique est lue comme une **probabilité
+    /// inconnue** (`null`) plutôt que de faire échouer tout l'import. La tolérance est volontairement
+    /// **limitée à ces colonnes** : temps et fréquence restent stricts (cf. [#nombre(String)]).
+    private static Double probabilite(String champ) {
+        if (estVide(champ)) {
+            return null;
+        }
+        try {
+            return Double.valueOf(champ.trim());
+        } catch (NumberFormatException confianceTextuelle) {
+            return null;
+        }
     }
 
     private static ModeValidation mode(String champ) {

@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.59.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.59.1...v1.59.2) (2026-06-30)
+
+
+### Bug Fixes
+
+* **validation:** tolère une probabilité textuelle dans un _Vu Tadarida (SUR) ([#425](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/425)) ([a85d35b](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/a85d35b448af5a29b8d4d942bd8c4e8b304812fc))
+
 ## [1.59.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.59.0...v1.59.1) (2026-06-29)
 
 

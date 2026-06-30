@@ -426,4 +426,32 @@ class ServiceValidationTest {
         assertThat(vue.idResultats()).isNull();
         assertThat(vue.observations()).isEmpty();
     }
+
+    @Test
+    @DisplayName("Import _Vu : une décision observateur avec confiance textuelle (« SUR ») ressort VALIDEE")
+    void import_vu_confiance_textuelle_reste_validee() {
+        // _Vu réel (entête nue) où l'observateur a confirmé la proposition Tadarida avec une confiance
+        // TEXTUELLE (« SUR ») au lieu d'un flottant. La confiance est lue comme prob inconnue ; la
+        // décision tient à la présence du taxon observateur → l'observation doit ressortir VALIDEE, pas
+        // « non revue ».
+        String contenu = "nom du fichier;temps_debut;temps_fin;frequence_mediane;tadarida_taxon;"
+                + "tadarida_probabilite;tadarida_taxon_autre;observateur_taxon;observateur_probabilite;"
+                + "validateur_taxon;validateur_probabilite\n"
+                + "seqA_000;0.3;3.9;153;Pippip;0.93;;Pippip;SUR;;\n";
+        Path fichier = dossier.resolve("entree_vu_confiance.csv");
+        try {
+            Files.writeString(fichier, contenu, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        service.importer(idPassage, fichier);
+        Observation obs = observation("Pippip");
+
+        assertThat(obs.taxonObservateur()).isEqualTo("Pippip");
+        assertThat(obs.probObservateur())
+                .as("confiance textuelle SUR → probabilité inconnue")
+                .isNull();
+        assertThat(service.statut(obs)).isEqualTo(StatutObservation.VALIDEE);
+    }
 }
