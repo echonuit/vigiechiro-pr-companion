@@ -5,7 +5,6 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
-import fr.univ_amu.iut.audio.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
@@ -20,7 +19,6 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.io.File;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -33,6 +31,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.FileChooser;
@@ -134,7 +133,13 @@ public class SonsValidationController implements EmplacementNavigation {
     private Button btnReference;
 
     @FXML
+    private HBox bandeauRetour;
+
+    @FXML
     private Label lblMessage;
+
+    @FXML
+    private Button btnFermerRetour;
 
     @Inject
     public SonsValidationController(
@@ -232,19 +237,11 @@ public class SonsValidationController implements EmplacementNavigation {
         lblVide.visibleProperty().bind(listeVide);
         lblVide.managedProperty().bind(listeVide);
 
-        // Retour d'opération (import / export / valider / corriger) : bandeau **toujours visible quand
-        // présent** (même table vide), coloré selon la sévérité. Décorrélé de l'état vide pour qu'une
-        // erreur d'import ne soit plus noyée dans le placeholder gris (incident « For input string: SUR »).
-        lblMessage
-                .textProperty()
-                .bind(Bindings.createStringBinding(
-                        () -> viewModel.retourProperty().get().texte(), viewModel.retourProperty()));
-        var retourPresent = Bindings.createBooleanBinding(
-                () -> viewModel.retourProperty().get().present(), viewModel.retourProperty());
-        lblMessage.visibleProperty().bind(retourPresent);
-        lblMessage.managedProperty().bind(retourPresent);
-        viewModel.retourProperty().addListener((obs, avant, apres) -> appliquerStyleRetour(apres));
-        appliquerStyleRetour(viewModel.retourProperty().get());
+        // Bandeau de retour d'opération (import / export / valider / corriger) : libellé, visibilité,
+        // couleur de sévérité et croix de fermeture, décorrélés de l'état vide pour qu'une erreur d'import
+        // ne soit plus noyée dans le placeholder gris. Câblage isolé dans BandeauRetour.
+        BandeauRetour.installer(
+                bandeauRetour, lblMessage, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // Glisser-déposer d'un CSV Tadarida sur l'écran : alternative au FileChooser natif (qui coince
         // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).
@@ -259,19 +256,6 @@ public class SonsValidationController implements EmplacementNavigation {
             return false;
         }
         return viewModel.importer(fichiers.get(0).toPath());
-    }
-
-    /// Classe CSS du bandeau de retour selon la sévérité (succès vert / info neutre / erreur rouge).
-    private static final Map<RetourOperation.Severite, String> CLASSE_RETOUR = Map.of(
-            RetourOperation.Severite.SUCCES, "retour-succes",
-            RetourOperation.Severite.INFO, "retour-info",
-            RetourOperation.Severite.ERREUR, "retour-erreur");
-
-    /// Colore le bandeau de retour selon la sévérité de la dernière opération, en échangeant la classe
-    /// CSS portée par `lblMessage`.
-    private void appliquerStyleRetour(RetourOperation retour) {
-        lblMessage.getStyleClass().removeAll(CLASSE_RETOUR.values());
-        lblMessage.getStyleClass().add(CLASSE_RETOUR.get(retour.severite()));
     }
 
     /// Ouvre la vue audio sur `source`, en adaptant colonnes, actions et fil d'Ariane. Appelée par

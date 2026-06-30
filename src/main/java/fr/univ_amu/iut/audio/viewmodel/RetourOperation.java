@@ -26,17 +26,17 @@ public record RetourOperation(String texte, Severite severite) {
 
     /// Retour de **succès** (vert) : opération réussie, avec un bilan.
     public static RetourOperation succes(String texte) {
-        return new RetourOperation(texte, Severite.SUCCES);
+        return new RetourOperation("✅ " + texte, Severite.SUCCES);
     }
 
     /// Retour d'**information** (neutre) : action refusée ou guidage, sans échec technique.
     public static RetourOperation info(String texte) {
-        return new RetourOperation(texte, Severite.INFO);
+        return new RetourOperation("ℹ " + texte, Severite.INFO);
     }
 
     /// Retour d'**erreur** (rouge) : l'opération a échoué.
     public static RetourOperation erreur(String texte) {
-        return new RetourOperation(texte == null ? "Une erreur est survenue." : texte, Severite.ERREUR);
+        return new RetourOperation("⚠ " + (texte == null ? "Une erreur est survenue." : texte), Severite.ERREUR);
     }
 
     /// `true` s'il y a un texte à présenter (bandeau visible).

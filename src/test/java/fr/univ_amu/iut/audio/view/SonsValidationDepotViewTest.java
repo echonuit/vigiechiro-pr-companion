@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
@@ -71,14 +72,15 @@ class SonsValidationDepotViewTest {
     @Test
     @DisplayName("Déposer un CSV sur un passage déclenche l'import et affiche le bandeau de succès")
     void depot_csv_declenche_import(FxRobot robot) {
+        Node bandeau = robot.lookup("#bandeauRetour").query();
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
 
         robot.interact(() -> assertThat(controleur.deposerFichiers(List.of(new File("obs.csv"))))
                 .isTrue());
 
         verify(service).importer(7L, Path.of("obs.csv"));
-        assertThat(message.isVisible()).isTrue();
+        assertThat(bandeau.isVisible()).isTrue();
         assertThat(message.getText()).contains("Import réussi");
-        assertThat(message.getStyleClass()).contains("retour-succes");
+        assertThat(bandeau.getStyleClass()).contains("retour-succes");
     }
 }
