@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -141,15 +142,25 @@ public class ServiceValidation {
         return resultatsDao.findByPassage(idPassage).map(ResultatsIdentification::id);
     }
 
-    /// Importe les résultats Tadarida d'un passage : parse le CSV, crée les résultats
-    /// d'identification et insère les observations en masse, raccrochées à leurs séquences.
+    /// Importe les résultats Tadarida d'un passage, **en mode tolérant** : parse le CSV, crée les
+    /// résultats d'identification et insère les observations raccrochées à leurs séquences.
+    ///
+    /// Un CSV Tadarida réel référence souvent des segments dont **l'audio n'a pas été conservé** et des
+    /// **taxons hors du référentiel** semé. Plutôt que de tout rejeter, l'import garde ce qu'il peut :
+    /// - les lignes dont la **séquence audio est absente** de la base sont **ignorées** (comptées) ;
+    /// - les **taxons inconnus** (parmi les lignes retenues) sont **auto-enregistrés en souches**
+    ///   ([TaxonDao#enregistrerHorsReferentiel]) pour respecter la FK, plutôt que de lever.
+    ///
+    /// Reste **dur** : un passage **sans session** lève (il faut importer la nuit d'abord), et un CSV
+    /// dont **aucune** ligne n'a de séquence en base lève aussi (rien à importer). Le [BilanImport]
+    /// restitue le détail (importées / ignorées / taxons hors référentiel).
     ///
     /// @param idPassage passage annoté (doit posséder une session d'enregistrement)
     /// @param cheminCsv chemin du fichier `*-observations.csv` ou `_Vu.csv` (R23)
-    /// @return les résultats d'identification insérés (avec leur id et le format détecté)
-    /// @throws RegleMetierException si le passage n'a pas de session, si une séquence est
-    /// introuvable ou si un taxon Tadarida est inconnu
-    public ResultatsIdentification importer(Long idPassage, Path cheminCsv) {
+    /// @return le bilan de l'import (résultats créés + compteurs)
+    /// @throws RegleMetierException si le passage n'a pas de session, ou si aucune séquence du CSV
+    /// n'existe en base
+    public BilanImport importer(Long idPassage, Path cheminCsv) {
         Objects.requireNonNull(idPassage, "idPassage");
         Objects.requireNonNull(cheminCsv, "cheminCsv");
 
@@ -163,19 +174,23 @@ public class ServiceValidation {
         Map<String, Long> sequenceParNom = indexerSequences(session.id());
         Set<String> taxonsConnus = chargerCodesTaxons();
 
-        // Pré-validation : on refuse l'import en bloc plutôt que de laisser des résultats orphelins.
-        for (LigneObservation ligne : parse.lignes()) {
-            if (!sequenceParNom.containsKey(cleSequence(ligne.nomSequence()))) {
-                throw new RegleMetierException("Séquence d'écoute introuvable en base pour « "
-                        + ligne.nomSequence()
-                        + " ». Importez d'abord la nuit de ce passage (carré, année, n° de passage et"
-                        + " point doivent correspondre au nom du fichier Tadarida).");
-            }
-            if (ligne.taxonTadarida() == null || !taxonsConnus.contains(ligne.taxonTadarida())) {
-                throw new RegleMetierException(
-                        "Taxon Tadarida inconnu (non semé) : « " + ligne.taxonTadarida() + GUILLEMET_FERMANT);
-            }
+        // Tolérance séquences : ne garder que les lignes dont la séquence audio est en base.
+        List<LigneObservation> retenues = parse.lignes().stream()
+                .filter(ligne -> sequenceParNom.containsKey(cleSequence(ligne.nomSequence())))
+                .toList();
+        int ignoreesSequence = parse.lignes().size() - retenues.size();
+        if (retenues.isEmpty()) {
+            throw new RegleMetierException("Séquence d'écoute introuvable : aucune des "
+                    + parse.lignes().size()
+                    + " observations du CSV n'a de séquence audio en base. Importez d'abord la nuit de ce"
+                    + " passage (carré, année, n° de passage et point doivent correspondre au nom du fichier"
+                    + " Tadarida).");
         }
+
+        // Tolérance taxons : auto-souches pour les codes Tadarida hors référentiel des lignes retenues.
+        Set<String> taxonsAutoCrees = taxonsHorsReferentiel(retenues, taxonsConnus);
+        Set<String> taxonsApresImport = new HashSet<>(taxonsConnus);
+        taxonsApresImport.addAll(taxonsAutoCrees);
 
         ResultatsIdentification aCreer = new ResultatsIdentification(
                 null,
@@ -184,22 +199,41 @@ public class ServiceValidation {
                 horloge.maintenant().toString(),
                 idPassage);
 
-        // Le jeu de résultats et ses observations sont écrits dans une **seule transaction** : un arrêt
-        // entre les deux laisserait sinon un jeu vide durable, bloquant à jamais la reprise de l'import
-        // (passage_id unique). Tout réussit ou tout est annulé (rollback).
+        // Souches + jeu de résultats + observations dans une **seule transaction** (atomicité, FK).
         ResultatsIdentification[] insere = {null};
         uniteDeTravail.executer(connexion -> {
+            taxonDao.enregistrerHorsReferentiel(connexion, taxonsAutoCrees);
             insere[0] = resultatsDao.insert(connexion, aCreer);
             observationDao.insererTout(
-                    connexion, construireObservations(parse, sequenceParNom, taxonsConnus, insere[0].id()));
+                    connexion, construireObservations(retenues, sequenceParNom, taxonsApresImport, insere[0].id()));
         });
-        return insere[0];
+        return new BilanImport(insere[0], retenues.size(), ignoreesSequence, taxonsAutoCrees.size());
+    }
+
+    /// Codes Tadarida hors référentiel parmi `lignes` : taxon principal (stocké tel quel → FK obligatoire)
+    /// et taxon observateur (la décision de l'observateur, à préserver), absents de `taxonsConnus`.
+    private static Set<String> taxonsHorsReferentiel(List<LigneObservation> lignes, Set<String> taxonsConnus) {
+        Set<String> manquants = new LinkedHashSet<>();
+        for (LigneObservation ligne : lignes) {
+            ajouterSiInconnu(manquants, ligne.taxonTadarida(), taxonsConnus);
+            ajouterSiInconnu(manquants, ligne.taxonObservateur(), taxonsConnus);
+        }
+        return manquants;
+    }
+
+    private static void ajouterSiInconnu(Set<String> cible, String code, Set<String> taxonsConnus) {
+        if (code != null && !taxonsConnus.contains(code)) {
+            cible.add(code);
+        }
     }
 
     private List<Observation> construireObservations(
-            ResultatParseTadarida parse, Map<String, Long> sequenceParNom, Set<String> taxonsConnus, Long idResultats) {
+            List<LigneObservation> lignes,
+            Map<String, Long> sequenceParNom,
+            Set<String> taxonsConnus,
+            Long idResultats) {
         List<Observation> aInserer = new ArrayList<>();
-        for (LigneObservation ligne : parse.lignes()) {
+        for (LigneObservation ligne : lignes) {
             Long idSequence = sequenceParNom.get(cleSequence(ligne.nomSequence()));
             aInserer.add(new Observation(
                     null,

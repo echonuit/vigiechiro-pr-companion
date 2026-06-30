@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -172,13 +173,17 @@ public class AudioViewModel {
             messages.info("Des résultats Tadarida sont déjà importés pour ce passage : un seul jeu est permis.");
             return false;
         }
-        boolean ok = appliquerAction(() -> service.importer(idPassage, cheminCsv));
-        if (ok) {
-            idResultats = service.resultatsDuPassage(idPassage).orElse(null);
+        try {
+            BilanImport bilan = service.importer(idPassage, cheminCsv);
+            charger();
+            idResultats = bilan.idResultats();
             resultatsDisponibles.set(idResultats != null);
-            messages.succes("Import réussi : " + comptage.get().total() + " observation(s) chargée(s).");
+            messages.succesImport(bilan);
+            return true;
+        } catch (RuntimeException echec) {
+            messages.erreur(echec.getMessage());
+            return false;
         }
-        return ok;
     }
 
     /// Exporte le CSV `_Vu` réinjectable du jeu de résultats courant (R17, R24). Réservé à la source

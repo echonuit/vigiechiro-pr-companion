@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.validation.model.BilanImport;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -38,6 +39,19 @@ final class MessagesAudio {
 
     void succes(String texte) {
         retour.set(RetourOperation.succes(texte));
+    }
+
+    /// Retour de succès d'un import tolérant : nombre d'observations chargées, et le cas échéant le
+    /// nombre de lignes ignorées (audio absent) et de taxons hors référentiel auto-créés.
+    void succesImport(BilanImport bilan) {
+        StringBuilder resume = new StringBuilder("Import réussi : " + bilan.importees() + " observation(s) chargée(s)");
+        if (bilan.ignoreesSequence() > 0) {
+            resume.append(" · ").append(bilan.ignoreesSequence()).append(" ignorée(s) (audio absent)");
+        }
+        if (bilan.taxonsHorsReferentiel() > 0) {
+            resume.append(" · ").append(bilan.taxonsHorsReferentiel()).append(" taxon(s) hors référentiel");
+        }
+        succes(resume.append('.').toString());
     }
 
     void info(String texte) {

@@ -15,6 +15,8 @@ import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.BilanImport;
+import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.io.File;
 import java.nio.file.Path;
@@ -47,9 +49,13 @@ class SonsValidationDepotViewTest {
         service = mock(ServiceValidation.class);
         ServiceBibliotheque bibliotheque = mock(ServiceBibliotheque.class);
         when(service.taxonsDisponibles()).thenReturn(List.of());
-        // Passage sans résultats à l'ouverture (import permis), puis 1 jeu après l'import.
-        when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty(), Optional.of(100L));
+        // Passage sans résultats à l'ouverture (import permis).
+        when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
         when(service.lignesAudioDuPassage(7L)).thenReturn(List.of());
+        // L'import déposé renvoie un bilan (1 observation importée).
+        when(service.importer(7L, Path.of("obs.csv")))
+                .thenReturn(new BilanImport(
+                        new ResultatsIdentification(100L, "obs.csv", "Brut", "2026-06-30T00:00", 7L), 1, 0, 0));
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {

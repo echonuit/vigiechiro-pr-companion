@@ -14,8 +14,10 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
+import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
@@ -154,10 +156,14 @@ class AudioViewModelTest {
         @DisplayName("importer délègue, rafraîchit l'identifiant de résultats et rend un retour de succès")
         void importer_delegue() {
             when(service.taxonsDisponibles()).thenReturn(List.of());
-            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty(), Optional.of(100L));
-            // Passage vide à l'ouverture, puis 1 observation après l'import (le résumé compte le rechargé).
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            // Passage vide à l'ouverture, puis 1 observation après l'import (table rechargée).
             when(service.lignesAudioDuPassage(7L))
                     .thenReturn(List.of(), List.of(ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
+            // Bilan d'import : 1 importée, rien d'ignoré, aucun taxon hors référentiel.
+            when(service.importer(7L, Path.of("obs.csv")))
+                    .thenReturn(new BilanImport(
+                            new ResultatsIdentification(100L, "obs.csv", "Brut", "2026-06-30T00:00", 7L), 1, 0, 0));
 
             AudioViewModel vm = vm();
             vm.ouvrirSur(source());

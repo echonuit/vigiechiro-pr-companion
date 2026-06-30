@@ -29,6 +29,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.LigneObservation;
 import fr.univ_amu.iut.validation.model.ModeRevue;
@@ -201,12 +202,17 @@ class ServiceValidationTest {
     @Test
     @DisplayName("Import : crée les résultats (format Brut, date de l'horloge) et insère les 4 observations")
     void importe_les_observations_en_masse() {
-        ResultatsIdentification resultats = service.importer(idPassage, ecrireBrut());
+        BilanImport bilan = service.importer(idPassage, ecrireBrut());
+        ResultatsIdentification resultats = bilan.resultats();
 
         assertThat(resultats.id()).isNotNull();
         assertThat(resultats.formatDetecte()).isEqualTo("Brut");
         assertThat(resultats.dateImport()).isEqualTo("2026-05-31T00:00");
         assertThat(resultats.idPassage()).isEqualTo(idPassage);
+        // Brut « propre » : 4 importées, rien d'ignoré, aucun taxon hors référentiel (tous semés).
+        assertThat(bilan.importees()).isEqualTo(4);
+        assertThat(bilan.ignoreesSequence()).isZero();
+        assertThat(bilan.taxonsHorsReferentiel()).isZero();
 
         List<Observation> observations = observationDao.findByResults(resultats.id());
         assertThat(observations).hasSize(4);
@@ -222,7 +228,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("Import : chaque observation est raccrochée à sa séquence par le nom de fichier")
     void raccroche_les_observations_aux_sequences() {
-        Long idResultats = service.importer(idPassage, ecrireBrut()).id();
+        Long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
 
         // 4 observations réparties sur 3 séquences distinctes (seqA porte 2 lignes).
         assertThat(observationDao.findByResults(idResultats))
@@ -233,7 +239,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("Import atomique : un second import (passage_id unique) échoue sans altérer le premier")
     void import_second_echec_preserve_le_premier() {
-        Long idResultats1 = service.importer(idPassage, ecrireBrut()).id();
+        Long idResultats1 = service.importer(idPassage, ecrireBrut()).idResultats();
         int nbObs1 = observationDao.findByResults(idResultats1).size();
 
         // Le 2e import insère d'abord le jeu de résultats : passage_id étant unique, l'écriture échoue
@@ -245,8 +251,8 @@ class ServiceValidationTest {
     }
 
     @Test
-    @DisplayName("Import refusé (dur) si une séquence du CSV n'existe pas en base")
-    void import_refuse_si_sequence_absente() {
+    @DisplayName("Import refusé (dur) si AUCUNE séquence du CSV n'existe en base (rien à importer)")
+    void import_refuse_si_aucune_sequence() {
         String contenu = guillemets("nom du fichier", "tadarida_taxon") + guillemets("sequence_inconnue_000", "Pippip");
         Path fichier = dossier.resolve("inconnue.csv");
         try {
@@ -266,19 +272,47 @@ class ServiceValidationTest {
     }
 
     @Test
-    @DisplayName("Import refusé (dur) si un taxon Tadarida n'est pas semé")
-    void import_refuse_si_taxon_inconnu() {
-        String contenu = guillemets("nom du fichier", "tadarida_taxon") + guillemets("seqA_000", "Tetvir");
-        Path fichier = dossier.resolve("taxon_inconnu.csv");
+    @DisplayName("Import tolérant : les lignes sans séquence audio sont ignorées, les autres importées")
+    void import_tolere_les_sequences_manquantes() {
+        // Une ligne sur séquence présente (seqA_000), une sur séquence absente (perdue_000).
+        String contenu = guillemets("nom du fichier", "tadarida_taxon")
+                + guillemets("seqA_000", "Pippip")
+                + guillemets("perdue_000", "Pippip");
+        Path fichier = dossier.resolve("partiel.csv");
         try {
             Files.writeString(fichier, contenu, StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
 
-        assertThatThrownBy(() -> service.importer(idPassage, fichier))
-                .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("Taxon Tadarida inconnu");
+        BilanImport bilan = service.importer(idPassage, fichier);
+
+        assertThat(bilan.importees()).isEqualTo(1);
+        assertThat(bilan.ignoreesSequence()).isEqualTo(1);
+        assertThat(observationDao.findByResults(bilan.idResultats())).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Import tolérant : un taxon hors référentiel est auto-enregistré en souche, pas rejeté")
+    void import_tolere_un_taxon_hors_referentiel() {
+        // Tetvir n'est pas semé ; la séquence seqA_000 existe → l'observation doit être importée.
+        String contenu = guillemets("nom du fichier", "tadarida_taxon") + guillemets("seqA_000", "Tetvir");
+        Path fichier = dossier.resolve("taxon_hors_referentiel.csv");
+        try {
+            Files.writeString(fichier, contenu, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        BilanImport bilan = service.importer(idPassage, fichier);
+
+        assertThat(bilan.importees()).isEqualTo(1);
+        assertThat(bilan.taxonsHorsReferentiel()).isEqualTo(1);
+        // L'insertion FK a réussi : le code brut « Tetvir » est conservé (la souche existe désormais).
+        assertThat(observationDao.findByResults(bilan.idResultats()))
+                .singleElement()
+                .extracting(Observation::taxonTadarida)
+                .isEqualTo("Tetvir");
     }
 
     @Test
@@ -325,7 +359,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("R18 inventaire : valider une espèce propage en auto aux autres détections non touchées")
     void r18_mode_inventaire_propage_en_auto() {
-        Long idResultats = service.importer(idPassage, ecrireBrut()).id();
+        Long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
         Observation unPippip = observationDao.findByResults(idResultats).stream()
                 .filter(o -> o.taxonTadarida().equals("Pippip"))
                 .findFirst()
@@ -350,7 +384,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("R18 activité : valider ne propage pas, seule l'observation visée change")
     void r18_mode_activite_ne_propage_pas() {
-        Long idResultats = service.importer(idPassage, ecrireBrut()).id();
+        Long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
         Observation unPippip = observationDao.findByResults(idResultats).stream()
                 .filter(o -> o.taxonTadarida().equals("Pippip"))
                 .findFirst()
@@ -368,7 +402,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("R17 : l'export _Vu conserve les colonnes Tadarida des lignes non touchées")
     void r17_export_conserve_les_non_touchees() {
-        Long idResultats = service.importer(idPassage, ecrireBrut()).id();
+        Long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
         Observation noise = observation("noise");
         service.valider(noise.id()); // seule cette ligne est touchée
 
@@ -389,7 +423,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("Round-trip : import → exporter(_Vu) → reparse redonne les mêmes lignes")
     void round_trip_import_export_reparse() {
-        Long idResultats = service.importer(idPassage, ecrireBrut()).id();
+        Long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
 
         Path vu = service.exporter(idResultats, dossier.resolve("sortie_Vu.csv"), false);
         ResultatParseTadarida reparse = parser.parser(vu);
@@ -411,7 +445,7 @@ class ServiceValidationTest {
     @Test
     @DisplayName("chargerValidation : le jeu de résultats importé + ses observations (statut dérivé)")
     void charger_validation_avec_resultats() {
-        long idResultats = service.importer(idPassage, ecrireBrut()).id();
+        long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
 
         VueValidation vue = service.chargerValidation(idPassage);
 
