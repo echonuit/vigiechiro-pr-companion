@@ -159,21 +159,26 @@ public class AudioViewModel {
     }
 
     /// Importe un CSV Tadarida (R23) pour le passage courant, puis recharge. Réservé à la source
-    /// `ParPassage` ; un second import (résultats déjà présents) est refusé. Sans passage ni fichier,
-    /// l'appel est ignoré.
+    /// `ParPassage`. Si un jeu de résultats existe déjà : l'import est **refusé** sauf si `remplacer` est
+    /// vrai — auquel cas le jeu existant (et ses observations, cascade) est **supprimé** avant d'importer
+    /// le nouveau (réimport, confirmation gérée par la vue). Sans passage ni fichier, l'appel est ignoré.
     ///
     /// @param cheminCsv fichier CSV choisi par l'observateur
+    /// @param remplacer `true` pour remplacer un jeu existant (réimport) plutôt que de refuser
     /// @return `true` si l'import a réussi
-    public boolean importer(Path cheminCsv) {
+    public boolean importer(Path cheminCsv, boolean remplacer) {
         Long idPassage = ResolveurSourceAudio.idPassage(source);
         if (idPassage == null || cheminCsv == null) {
             return false;
         }
-        if (idResultats != null) {
+        if (!remplacer && idResultats != null) {
             messages.info("Des résultats Tadarida sont déjà importés pour ce passage : un seul jeu est permis.");
             return false;
         }
         try {
+            if (remplacer) {
+                service.supprimerResultatsDuPassage(idPassage);
+            }
             BilanImport bilan = service.importer(idPassage, cheminCsv);
             charger();
             idResultats = bilan.idResultats();
@@ -192,7 +197,9 @@ public class AudioViewModel {
     /// @param destination fichier cible choisi par l'observateur
     /// @return `true` si le fichier a été écrit
     public boolean exporterVu(Path destination) {
-        return appliquerExport(exporteur.vu(idResultats, destination, inclureMode.get()));
+        ExporteurAudio.ResultatExport resultat = exporteur.vu(idResultats, destination, inclureMode.get());
+        messages.export(resultat.reussi(), resultat.message());
+        return resultat.reussi();
     }
 
     /// Exporte la **bibliothèque de sons de référence** vers le dossier `destination` (P10). Réservé à la
@@ -201,10 +208,7 @@ public class AudioViewModel {
     /// @param destination dossier cible choisi par l'observateur
     /// @return `true` si l'export a réussi
     public boolean exporterBibliotheque(Path destination) {
-        return appliquerExport(exporteur.bibliotheque(destination));
-    }
-
-    private boolean appliquerExport(ExporteurAudio.ResultatExport resultat) {
+        ExporteurAudio.ResultatExport resultat = exporteur.bibliotheque(destination);
         messages.export(resultat.reussi(), resultat.message());
         return resultat.reussi();
     }
@@ -229,7 +233,7 @@ public class AudioViewModel {
         List<LigneObservationAudio> lignes = resolveur.lignes(source);
         observations.setAll(lignes);
         reselectionner(observationSelectionnee);
-        majCompteurs();
+        comptage.set(ComptageAudio.de(observations));
         messages.majEtatVide(lignes.isEmpty(), ResolveurSourceAudio.messageVide(source));
     }
 
@@ -246,10 +250,6 @@ public class AudioViewModel {
                         .findFirst()
                         .orElse(null);
         selection.set(retrouvee);
-    }
-
-    private void majCompteurs() {
-        comptage.set(ComptageAudio.de(observations));
     }
 
     private void majSelection(LigneObservationAudio courant) {

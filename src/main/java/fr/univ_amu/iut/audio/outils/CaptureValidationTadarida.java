@@ -183,7 +183,7 @@ public final class CaptureValidationTadarida {
                 new ContextePassage(idPassage, 2, new ContexteSite(NUMERO_CARRE, CODE_POINT, NOM_SITE));
         controleur.ouvrirSur(new SourceObservations.ParPassage(contexte));
         // Import réel du CSV (tolérant) : peuple la table et arme le bandeau de retour de succès.
-        injecteur.getInstance(AudioViewModel.class).importer(csv);
+        injecteur.getInstance(AudioViewModel.class).importer(csv, false);
 
         Scene scene = new Scene(vue, 1100, 720);
         ApercuFx.capturerApresPreparation(

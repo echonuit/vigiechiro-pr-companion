@@ -223,8 +223,13 @@ public class SonsValidationController implements EmplacementNavigation {
                         .then("☆ Retirer la référence")
                         .otherwise("⭐ Marquer référence"));
 
-        // Workflow Tadarida (source ParPassage) : importer tant qu'aucun résultat ; exporter une fois chargés.
-        itemImporter.disableProperty().bind(viewModel.resultatsDisponiblesProperty());
+        // Workflow Tadarida (source ParPassage) : toujours actif ; « Importer » tant qu'aucun résultat,
+        // « Réimporter » (remplacement après confirmation) une fois un jeu chargé.
+        itemImporter
+                .textProperty()
+                .bind(Bindings.when(viewModel.resultatsDisponiblesProperty())
+                        .then("🔁 Réimporter un CSV Tadarida…")
+                        .otherwise("📥 Importer un CSV Tadarida…"));
         itemExporterVu
                 .disableProperty()
                 .bind(viewModel.resultatsDisponiblesProperty().not());
@@ -248,14 +253,15 @@ public class SonsValidationController implements EmplacementNavigation {
         DepotFichier.installer(racine, () -> source != null && source.permetWorkflowTadarida(), this::deposerFichiers);
     }
 
-    /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue au
-    /// ViewModel, qui garde ses garde-fous (source `ParPassage`, un seul jeu de résultats) et restitue le
-    /// retour visible. `false` si rien n'est pris en charge (le dépôt n'est alors pas marqué complété).
+    /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à
+    /// [ImportTadarida] (import, ou réimport avec confirmation si un jeu existe déjà). `true` si le dépôt
+    /// est pris en charge (fichier non vide), pour marquer le dépôt complété.
     boolean deposerFichiers(List<File> fichiers) {
         if (fichiers.isEmpty()) {
             return false;
         }
-        return viewModel.importer(fichiers.get(0).toPath());
+        ImportTadarida.lancer(viewModel, fichiers.get(0).toPath());
+        return true;
     }
 
     /// Ouvre la vue audio sur `source`, en adaptant colonnes, actions et fil d'Ariane. Appelée par
@@ -368,7 +374,8 @@ public class SonsValidationController implements EmplacementNavigation {
         viewModel.basculerReference();
     }
 
-    /// « Importer un CSV Tadarida » : sélecteur de fichier natif (ouverture) puis délégation au VM.
+    /// « Importer / Réimporter un CSV Tadarida » : sélecteur de fichier natif (ouverture) puis
+    /// [#lancerImport(Path)] (import, ou réimport avec confirmation si un jeu existe déjà).
     @FXML
     private void importer() {
         FileChooser selecteur = new FileChooser();
@@ -376,7 +383,7 @@ public class SonsValidationController implements EmplacementNavigation {
         selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
         File fichier = selecteur.showOpenDialog(fenetre());
         if (fichier != null) {
-            viewModel.importer(fichier.toPath());
+            ImportTadarida.lancer(viewModel, fichier.toPath());
         }
     }
 

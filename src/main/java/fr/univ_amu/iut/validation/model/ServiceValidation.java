@@ -61,6 +61,9 @@ public class ServiceValidation {
     /// Fin de citation `« … ».` des messages d'erreur métier (guillemet fermant + point).
     private static final String GUILLEMET_FERMANT = " ».";
 
+    /// Nom du paramètre `idPassage` (messages de `Objects.requireNonNull`).
+    private static final String PARAM_ID_PASSAGE = "idPassage";
+
     private final ResultatsIdentificationDao resultatsDao;
     private final ObservationDao observationDao;
     private final TaxonDao taxonDao;
@@ -145,6 +148,14 @@ public class ServiceValidation {
         return resultatsDao.findByPassage(idPassage).map(ResultatsIdentification::id);
     }
 
+    /// Supprime le jeu de résultats Tadarida d'un passage (s'il existe) **et ses observations** (cascade
+    /// `ON DELETE CASCADE`). Permet de **réimporter** un CSV sur un passage déjà importé (un seul jeu par
+    /// passage). Sans effet si aucun import.
+    public void supprimerResultatsDuPassage(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        resultatsDao.findByPassage(idPassage).ifPresent(resultats -> resultatsDao.delete(resultats.id()));
+    }
+
     /// Importe les résultats Tadarida d'un passage, **en mode tolérant** : parse le CSV, crée les
     /// résultats d'identification et insère les observations raccrochées à leurs séquences.
     ///
@@ -164,7 +175,7 @@ public class ServiceValidation {
     /// @throws RegleMetierException si le passage n'a pas de session, ou si aucune séquence du CSV
     /// n'existe en base
     public BilanImport importer(Long idPassage, Path cheminCsv) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Objects.requireNonNull(cheminCsv, "cheminCsv");
 
         ResultatParseTadarida parse = parser.parser(cheminCsv);
@@ -374,7 +385,7 @@ public class ServiceValidation {
     /// Renvoie une vue **vide** (`idResultats` null, liste vide) si aucun CSV Tadarida n'a encore été
     /// importé pour le passage — l'écran affiche alors un état vide plutôt que de lever.
     public VueValidation chargerValidation(Long idPassage) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Optional<ResultatsIdentification> resultats = resultatsDao.findByPassage(idPassage);
         if (resultats.isEmpty()) {
             return new VueValidation(null, List.of());

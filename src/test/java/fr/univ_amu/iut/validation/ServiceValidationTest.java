@@ -237,6 +237,22 @@ class ServiceValidationTest {
     }
 
     @Test
+    @DisplayName("supprimerResultatsDuPassage efface le jeu et ses observations, et libère le passage pour réimport")
+    void supprimer_resultats_permet_reimport() {
+        long idResultats = service.importer(idPassage, ecrireBrut()).idResultats();
+        assertThat(observationDao.findByResults(idResultats)).isNotEmpty();
+
+        service.supprimerResultatsDuPassage(idPassage);
+
+        assertThat(resultatsDao.findByPassage(idPassage)).isEmpty();
+        assertThat(observationDao.findByResults(idResultats))
+                .as("les observations sont supprimées en cascade")
+                .isEmpty();
+        // passage_id de nouveau libre : un réimport réussit.
+        assertThat(service.importer(idPassage, ecrireBrut()).importees()).isEqualTo(4);
+    }
+
+    @Test
     @DisplayName("Import atomique : un second import (passage_id unique) échoue sans altérer le premier")
     void import_second_echec_preserve_le_premier() {
         Long idResultats1 = service.importer(idPassage, ecrireBrut()).idResultats();
