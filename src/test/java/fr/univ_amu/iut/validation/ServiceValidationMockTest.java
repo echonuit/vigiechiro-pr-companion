@@ -105,6 +105,15 @@ class ServiceValidationMockTest {
     }
 
     @Test
+    @DisplayName("statut : taxon observateur = Tadarida SANS probabilité numérique → VALIDEE (confiance _Vu)")
+    void statut_validee_sans_probabilite() {
+        // Un _Vu réel peut porter une confiance textuelle (« SUR ») lue comme prob inconnue : la décision
+        // tient à la présence du taxon observateur, pas à sa probabilité (sinon une validation réelle
+        // ressortirait « non revue »).
+        assertThat(service().statut(observation("Pippip", "Pippip", null))).isEqualTo(StatutObservation.VALIDEE);
+    }
+
+    @Test
     @DisplayName("statut : taxon observateur différent → CORRIGEE (R16)")
     void statut_corrigee() {
         assertThat(service().statut(observation("noise", "Pippip", 0.9))).isEqualTo(StatutObservation.CORRIGEE);

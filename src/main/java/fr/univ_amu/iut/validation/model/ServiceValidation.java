@@ -306,18 +306,21 @@ public class ServiceValidation {
         return affectees;
     }
 
-    /// Statut dérivé d'une observation (R15/R16/R17) : NON_TOUCHEE (pas de taxon observateur),
-    /// VALIDEE (taxon observateur = Tadarida et probabilité renseignée), CORRIGEE (taxon
-    /// observateur différent).
+    /// Statut dérivé d'une observation (R15/R16/R17) : la **décision de l'observateur est portée par la
+    /// présence d'un `taxon_observer`**, pas par la forme de sa probabilité. NON_TOUCHEE (pas de taxon
+    /// observateur), VALIDEE (taxon observateur = Tadarida), CORRIGEE (taxon observateur différent).
+    ///
+    /// La probabilité de l'observateur n'entre **pas** dans le statut : un _Vu réel peut porter un code de
+    /// confiance **textuel** (« SUR »), lu comme probabilité inconnue par [ParserCsvTadarida] ; exiger une
+    /// probabilité numérique ferait alors apparaître une observation pourtant validée comme « non revue ».
     public StatutObservation statut(Observation observation) {
         Objects.requireNonNull(observation, "observation");
         if (observation.taxonObservateur() == null) {
             return StatutObservation.NON_TOUCHEE;
         }
-        if (observation.taxonObservateur().equals(observation.taxonTadarida())) {
-            return observation.probObservateur() != null ? StatutObservation.VALIDEE : StatutObservation.NON_TOUCHEE;
-        }
-        return StatutObservation.CORRIGEE;
+        return observation.taxonObservateur().equals(observation.taxonTadarida())
+                ? StatutObservation.VALIDEE
+                : StatutObservation.CORRIGEE;
     }
 
     /// Charge la **vue de validation** d'un passage pour M-Vision-Tadarida : le jeu de résultats
