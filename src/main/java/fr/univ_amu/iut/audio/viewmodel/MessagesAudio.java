@@ -45,8 +45,8 @@ final class MessagesAudio {
     /// nombre de lignes ignorées (audio absent) et de taxons hors référentiel auto-créés.
     void succesImport(BilanImport bilan) {
         StringBuilder resume = new StringBuilder("Import réussi : " + bilan.importees() + " observation(s) chargée(s)");
-        if (bilan.ignoreesSequence() > 0) {
-            resume.append(" · ").append(bilan.ignoreesSequence()).append(" ignorée(s) (audio absent)");
+        if (bilan.ignorees() > 0) {
+            resume.append(" · ").append(bilan.ignorees()).append(" ignorée(s) (audio absent)");
         }
         if (bilan.taxonsHorsReferentiel() > 0) {
             resume.append(" · ").append(bilan.taxonsHorsReferentiel()).append(" taxon(s) hors référentiel");

@@ -49,10 +49,13 @@ import java.util.Set;
 /// les observations à leurs séquences. Le sens `validation → passage` reste acyclique (contrôlé
 /// par `ArchitectureTest`).
 ///
-/// ## Règles dures
+/// ## Import tolérant et règles dures
 ///
-/// Une séquence introuvable, un passage sans session ou un taxon Tadarida inconnu lèvent une
-/// [RegleMetierException] (l'import est refusé en bloc, rien n'est laissé à demi-écrit).
+/// L'import ([#importer(Long, Path)]) est **tolérant** : les lignes dont la séquence audio est absente de
+/// la base sont **ignorées**, et les taxons Tadarida hors référentiel sont **auto-enregistrés en souches**
+/// plutôt que de lever (cf. la méthode pour le détail). Restent **durs** (lèvent une [RegleMetierException],
+/// rien n'est laissé à demi-écrit) : un **passage sans session** et un CSV dont **aucune** ligne n'est
+/// importable.
 public class ServiceValidation {
 
     /// Fin de citation `« … ».` des messages d'erreur métier (guillemet fermant + point).
@@ -174,17 +177,22 @@ public class ServiceValidation {
         Map<String, Long> sequenceParNom = indexerSequences(session.id());
         Set<String> taxonsConnus = chargerCodesTaxons();
 
-        // Tolérance séquences : ne garder que les lignes dont la séquence audio est en base.
+        // Lignes **importables** : séquence audio en base ET taxon Tadarida renseigné (`taxon_tadarida`
+        // est NOT NULL en base ; Tadarida en assigne toujours un, une ligne sans taxon est un CSV invalide).
+        // Tout le reste est ignoré (audio non fourni — cas courant d'un échantillon — ou ligne sans taxon)
+        // plutôt que de faire échouer l'import en bloc ou de laisser planter l'insertion.
         List<LigneObservation> retenues = parse.lignes().stream()
                 .filter(ligne -> sequenceParNom.containsKey(cleSequence(ligne.nomSequence())))
+                .filter(ligne ->
+                        ligne.taxonTadarida() != null && !ligne.taxonTadarida().isBlank())
                 .toList();
-        int ignoreesSequence = parse.lignes().size() - retenues.size();
+        int ignorees = parse.lignes().size() - retenues.size();
         if (retenues.isEmpty()) {
             throw new RegleMetierException("Séquence d'écoute introuvable : aucune des "
                     + parse.lignes().size()
-                    + " observations du CSV n'a de séquence audio en base. Importez d'abord la nuit de ce"
-                    + " passage (carré, année, n° de passage et point doivent correspondre au nom du fichier"
-                    + " Tadarida).");
+                    + " observations du CSV n'est importable (séquence audio absente, ou ligne sans taxon)."
+                    + " Importez d'abord la nuit de ce passage (carré, année, n° de passage et point doivent"
+                    + " correspondre au nom du fichier Tadarida).");
         }
 
         // Tolérance taxons : auto-souches pour les codes Tadarida hors référentiel des lignes retenues.
@@ -207,7 +215,7 @@ public class ServiceValidation {
             observationDao.insererTout(
                     connexion, construireObservations(retenues, sequenceParNom, taxonsApresImport, insere[0].id()));
         });
-        return new BilanImport(insere[0], retenues.size(), ignoreesSequence, taxonsAutoCrees.size());
+        return new BilanImport(insere[0], retenues.size(), ignorees, taxonsAutoCrees.size());
     }
 
     /// Codes Tadarida hors référentiel parmi `lignes` : taxon principal (stocké tel quel → FK obligatoire)

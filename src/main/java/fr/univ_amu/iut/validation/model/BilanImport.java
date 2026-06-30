@@ -6,11 +6,10 @@ package fr.univ_amu.iut.validation.model;
 /// compte. La vue audio en fait un message de retour.
 ///
 /// @param resultats jeu de résultats d'identification créé
-/// @param importees nombre d'observations insérées (séquence audio présente en base)
-/// @param ignoreesSequence nombre de lignes ignorées faute de séquence audio en base
+/// @param importees nombre d'observations insérées (séquence audio présente et taxon renseigné)
+/// @param ignorees nombre de lignes ignorées (séquence audio absente, ou ligne sans taxon)
 /// @param taxonsHorsReferentiel nombre de taxons inconnus auto-enregistrés en souches
-public record BilanImport(
-        ResultatsIdentification resultats, int importees, int ignoreesSequence, int taxonsHorsReferentiel) {
+public record BilanImport(ResultatsIdentification resultats, int importees, int ignorees, int taxonsHorsReferentiel) {
 
     /// Identifiant du jeu de résultats créé (raccourci sur [#resultats()]).
     public Long idResultats() {

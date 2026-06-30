@@ -211,7 +211,7 @@ class ServiceValidationTest {
         assertThat(resultats.idPassage()).isEqualTo(idPassage);
         // Brut « propre » : 4 importées, rien d'ignoré, aucun taxon hors référentiel (tous semés).
         assertThat(bilan.importees()).isEqualTo(4);
-        assertThat(bilan.ignoreesSequence()).isZero();
+        assertThat(bilan.ignorees()).isZero();
         assertThat(bilan.taxonsHorsReferentiel()).isZero();
 
         List<Observation> observations = observationDao.findByResults(resultats.id());
@@ -288,8 +288,33 @@ class ServiceValidationTest {
         BilanImport bilan = service.importer(idPassage, fichier);
 
         assertThat(bilan.importees()).isEqualTo(1);
-        assertThat(bilan.ignoreesSequence()).isEqualTo(1);
+        assertThat(bilan.ignorees()).isEqualTo(1);
         assertThat(observationDao.findByResults(bilan.idResultats())).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("Import tolérant : une ligne avec séquence mais SANS taxon Tadarida est ignorée, pas en erreur SQL")
+    void import_ignore_une_ligne_sans_taxon() {
+        // seqA_000 existe, mais la 2e ligne n'a pas de taxon Tadarida (CSV invalide). taxon_tadarida étant
+        // NOT NULL en base, l'insérer planterait : elle doit être ignorée comme non importable.
+        String contenu = guillemets("nom du fichier", "tadarida_taxon")
+                + guillemets("seqA_000", "Pippip")
+                + guillemets("seqB_000", "");
+        Path fichier = dossier.resolve("sans_taxon.csv");
+        try {
+            Files.writeString(fichier, contenu, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        BilanImport bilan = service.importer(idPassage, fichier);
+
+        assertThat(bilan.importees()).isEqualTo(1);
+        assertThat(bilan.ignorees()).isEqualTo(1);
+        assertThat(observationDao.findByResults(bilan.idResultats()))
+                .singleElement()
+                .extracting(Observation::taxonTadarida)
+                .isEqualTo("Pippip");
     }
 
     @Test
