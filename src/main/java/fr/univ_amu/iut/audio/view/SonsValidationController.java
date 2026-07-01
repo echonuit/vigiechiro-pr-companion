@@ -85,9 +85,6 @@ public class SonsValidationController implements EmplacementNavigation {
     private TableView<LigneObservationAudio> tableObservations;
 
     @FXML
-    private TableColumn<LigneObservationAudio, String> colEspece;
-
-    @FXML
     private TableColumn<LigneObservationAudio, String> colTadarida;
 
     @FXML
@@ -160,12 +157,10 @@ public class SonsValidationController implements EmplacementNavigation {
 
     @FXML
     private void initialize() {
-        colEspece.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.espece(c.getValue())));
         colTadarida.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.tadarida(c.getValue())));
         colProba.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.probabilite(c.getValue().probTadarida())));
-        colObservateur.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().taxonObservateur())));
+        colObservateur.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.votreTaxon(c.getValue())));
         colPassage.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper("N°" + c.getValue().numeroPassage()));
         colCarre.setCellValueFactory(
