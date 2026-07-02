@@ -189,12 +189,13 @@ public class SonsValidationController implements EmplacementNavigation {
         lblResume.textProperty().bind(Bindings.createStringBinding(this::resumeTexte, viewModel.comptageProperty()));
 
         // Vue audio (composant fourni, E7.S3) : la source suit l'observation sélectionnée ; le clip est
-        // libéré quand la vue quitte la scène. Deux normalisations activées, complémentaires : celle du
-        // NIVEAU à la lecture (#109) pour égaliser le volume d'un cri à l'autre, et la VISUELLE du
-        // sonogramme (audio-view 1.13) pour que la forme d'onde des cris faibles remplisse la gouttière
-        // au lieu de rester plate.
+        // libéré quand la vue quitte la scène. Trois normalisations activées, complémentaires : celle du
+        // NIVEAU à la lecture (#109) pour égaliser le volume d'un cri à l'autre, et les deux VISUELLES
+        // (audio-view 1.14) pour les cris faibles — l'onde du sonogramme remplit la gouttière au lieu de
+        // rester plate, et la fenêtre dB du spectrogramme se recale sur le pic au lieu de rester noire.
         audioView.setNormalisation(true);
         audioView.setWaveNormalisation(true);
+        audioView.setSpectrogramNormalisation(true);
         audioView.audioFileProperty().bind(viewModel.cheminAudioCourantProperty());
         audioView.sceneProperty().addListener((obs, avant, scene) -> {
             if (scene == null) {
