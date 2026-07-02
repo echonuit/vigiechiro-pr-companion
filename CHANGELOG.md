@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.70.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.70.0...v1.70.1) (2026-07-02)
+
+
+### Bug Fixes
+
+* **import:** purge des temporaires zip au démarrage + message « disque plein » explicite ([#462](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/462)) ([88ec1c0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/88ec1c05a41b43e78900481a855a162e2d36971f))
+
 # [1.70.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.69.0...v1.70.0) (2026-07-02)
 
 
