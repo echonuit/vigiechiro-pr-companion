@@ -54,8 +54,8 @@ import org.testfx.util.WaitForAsyncUtils;
 class ImportationClicImporterTest {
 
     private static final String ID_USER = "u-clic";
-    private static final int FREQUENCE_WAV = 2000; // Hz, multiple de 10
-    private static final int TRAMES = 3000;
+    private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10
+    private static final int TRAMES = 576_000;
 
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"

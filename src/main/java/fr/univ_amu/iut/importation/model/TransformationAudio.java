@@ -52,9 +52,14 @@ public class TransformationAudio {
     /// @param originalWav chemin du WAV original (mono 16 bits, ex. 384 kHz)
     /// @param dossierSortie dossier `transformes/` où écrire les séquences (créé si absent)
     /// @param prefixe préfixe de la session (sert au nommage R8 des séquences)
+    /// @param frequenceAcquisitionLogHz fréquence d'acquisition déclarée par le log de l'enregistreur
+    ///     (`Fe…kHz`), ou `null` si aucun journal (mode dégradé). Sert à **rejeter** une source déjà
+    ///     ralentie (cf. [DetectionRalenti]) au lieu de la ré-expanser (double expansion).
     /// @return le détail de la transformation (métadonnées de l'original + séquences produites)
+    /// @throws OriginalDejaRalentiException si la source est déjà ralentie (rejet récupérable #155)
     /// @throws IllegalArgumentException si la fréquence source n'est pas un multiple de 10
-    public TransformationOriginal transformer(Path originalWav, Path dossierSortie, Prefixe prefixe) {
+    public TransformationOriginal transformer(
+            Path originalWav, Path dossierSortie, Prefixe prefixe, Integer frequenceAcquisitionLogHz) {
         Objects.requireNonNull(originalWav, "originalWav");
         Objects.requireNonNull(dossierSortie, "dossierSortie");
         Objects.requireNonNull(prefixe, "prefixe");
@@ -62,6 +67,19 @@ public class TransformationAudio {
         // Lecture + format de la SOURCE : un échec ici est **récupérable** (#155) → l'original est rejeté.
         FichierWav source = lireSource(originalWav);
         int frequenceSource = source.frequenceEchantillonnageHz();
+        // Garde-fou double expansion : une source déjà ralentie (en-tête trop bas au regard du log, ou
+        // sous le seuil d'un ultrason brut) est REJETÉE — la ré-expanser donnerait des fréquences 10×
+        // trop basses. Rejet récupérable (#155) : le fichier est consigné et l'import continue.
+        if (DetectionRalenti.estDejaRalenti(frequenceSource, frequenceAcquisitionLogHz)) {
+            throw new OriginalDejaRalentiException("Enregistrement déjà ralenti (en-tête "
+                    + frequenceSource
+                    + " Hz"
+                    + (frequenceAcquisitionLogHz != null
+                            ? " vs acquisition " + frequenceAcquisitionLogHz + " Hz du log"
+                            : ", sous le seuil d'un ultrason brut")
+                    + ") : ce n'est pas un enregistrement brut, il ne peut pas être importé tel quel : "
+                    + originalWav.getFileName());
+        }
         if (frequenceSource % FACTEUR_EXPANSION != 0) {
             throw new OriginalIllisibleException("Fréquence source "
                     + frequenceSource

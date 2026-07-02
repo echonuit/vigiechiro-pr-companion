@@ -39,6 +39,7 @@ final class DecoupageParallele {
             List<Path> originaux,
             Path dossierTransformes,
             Prefixe prefixe,
+            Integer frequenceAcquisitionLogHz,
             int nbOriginaux,
             int totalEtapes,
             Consumer<Progression> progres,
@@ -52,6 +53,7 @@ final class DecoupageParallele {
                             original,
                             dossierTransformes,
                             prefixe,
+                            frequenceAcquisitionLogHz,
                             nbOriginaux,
                             totalEtapes,
                             progres,
@@ -77,6 +79,7 @@ final class DecoupageParallele {
             Path original,
             Path dossierTransformes,
             Prefixe prefixe,
+            Integer frequenceAcquisitionLogHz,
             int nbOriginaux,
             int totalEtapes,
             Consumer<Progression> progres,
@@ -90,13 +93,14 @@ final class DecoupageParallele {
             jeton.leverSiAnnule(); // l'annulation (#146) interrompt ; un rejet de fichier, lui, est capturé
             ResultatDecoupage resultat;
             try {
-                TransformationOriginal t = transformation.transformer(original, dossierTransformes, prefixe);
+                TransformationOriginal t =
+                        transformation.transformer(original, dossierTransformes, prefixe, frequenceAcquisitionLogHz);
                 resultat = new ResultatDecoupage(original, t, null);
-            } catch (OriginalIllisibleException illisible) {
-                // Résilience (#155) : SEULE une erreur de lecture/format SOURCE est consignée en rejet et
-                // l'import continue. Une erreur d'écriture workspace (UncheckedIOException) reste fatale et
-                // se propage (elle ne doit pas être masquée en « fichier rejeté »).
-                resultat = new ResultatDecoupage(original, null, raison(illisible));
+            } catch (OriginalIllisibleException | OriginalDejaRalentiException rejet) {
+                // Résilience (#155) : une erreur de lecture/format SOURCE OU un enregistrement déjà ralenti
+                // (garde-fou double expansion) est consigné en rejet et l'import continue. Une erreur
+                // d'écriture workspace (UncheckedIOException) reste fatale et se propage.
+                resultat = new ResultatDecoupage(original, null, raison(rejet));
             }
             synchronized (verrouProgression) {
                 int faits = traites.incrementAndGet();

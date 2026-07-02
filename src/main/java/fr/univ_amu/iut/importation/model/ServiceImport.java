@@ -289,8 +289,17 @@ public class ServiceImport {
             // 2) Renommage R6/R7 sur la copie, puis 3) transformation R10/R11 (découpée en parallèle, #12,
             //    résiliente #155 : un original invalide est rejeté et consigné, pas bloquant).
             originauxRenommes = renommeur.renommer(dossierBruts, prefixe);
+            // Garde-fou double expansion (#…) : la fréquence d'acquisition du log (Fe…kHz) fait foi pour
+            // rejeter une source déjà ralentie ; null en mode dégradé (pas de journal → seuil absolu).
             resultatsDecoupage = decoupage.decouper(
-                    originauxRenommes, dossierTransformes, prefixe, nbOriginaux, totalEtapes, progres, jeton);
+                    originauxRenommes,
+                    dossierTransformes,
+                    prefixe,
+                    journal.frequenceEchantillonnageHz(),
+                    nbOriginaux,
+                    totalEtapes,
+                    progres,
+                    jeton);
             // Re-vérification après la phase de transformation : une annulation pendant la DERNIÈRE
             // transformation (postérieure à son propre point de contrôle) doit aussi stopper l'import.
             jeton.leverSiAnnule();

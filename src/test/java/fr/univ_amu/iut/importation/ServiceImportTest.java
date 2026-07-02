@@ -66,8 +66,10 @@ import org.junit.jupiter.api.io.TempDir;
 class ServiceImportTest {
 
     private static final String ID_USER = "u-1";
-    private static final int FREQUENCE_WAV = 2000; // Hz, multiple de 10
-    private static final int TRAMES = 3000; // 1,5 s -> ceil(2 × 1,5) = 3 séquences par original
+    // Vrai rythme d'un brut ultrason (384 kHz), cohérent avec le log Fe384kHz : sans quoi le garde-fou
+    // « déjà ralenti » (en-tête < Fe du log) rejetterait ces fixtures.
+    private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10, = Fe du log
+    private static final int TRAMES = 576_000; // 1,5 s à 384 kHz -> ceil(2 × 1,5) = 3 séquences par original
     private static final String SERIE = "1925492";
 
     private static final String LOG =

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.Empreintes;
+import fr.univ_amu.iut.importation.model.OriginalDejaRalentiException;
 import fr.univ_amu.iut.importation.model.OriginalIllisibleException;
 import fr.univ_amu.iut.importation.model.SequenceProduite;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
@@ -58,7 +59,7 @@ class TransformationAudioTest {
     void reprise_regenere_les_sequences_corrompues() throws IOException {
         Path transformes = dossier.resolve("transformes");
         Path sequence = transformation
-                .transformer(originalWav, transformes, prefixe)
+                .transformer(originalWav, transformes, prefixe, FREQUENCE_SOURCE)
                 .sequences()
                 .get(0)
                 .chemin();
@@ -69,7 +70,7 @@ class TransformationAudioTest {
         Files.write(sequence, new byte[correct.length]);
         assertThat(Files.readAllBytes(sequence)).isNotEqualTo(correct);
 
-        transformation.transformer(originalWav, transformes, prefixe);
+        transformation.transformer(originalWav, transformes, prefixe, FREQUENCE_SOURCE);
 
         // La séquence a été régénérée au bit près, jamais laissée corrompue.
         assertThat(Files.readAllBytes(sequence)).isEqualTo(correct);
@@ -79,7 +80,7 @@ class TransformationAudioTest {
     @DisplayName("R10 : le nombre de séquences vaut ceil(2 × durée source)")
     void nombre_de_sequences() {
         TransformationOriginal resultat =
-                transformation.transformer(originalWav, dossier.resolve("transformes"), prefixe);
+                transformation.transformer(originalWav, dossier.resolve("transformes"), prefixe, FREQUENCE_SOURCE);
 
         // durée source = 5200 / 2000 = 2,6 s -> ceil(2 × 2,6) = ceil(5,2) = 6
         assertThat(resultat.sequences()).hasSize(6);
@@ -92,7 +93,7 @@ class TransformationAudioTest {
     @DisplayName("R10 : 5 séquences pleines de 5 s + une dernière plus courte (1 s)")
     void duree_de_chaque_sequence() {
         List<SequenceProduite> sequences = transformation
-                .transformer(originalWav, dossier.resolve("transformes"), prefixe)
+                .transformer(originalWav, dossier.resolve("transformes"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
 
         for (int i = 0; i < 5; i++) {
@@ -110,7 +111,7 @@ class TransformationAudioTest {
     @DisplayName("R10 : la fréquence de sortie des fichiers écrits vaut source / 10")
     void frequence_de_sortie_dans_le_fichier() throws IOException {
         List<SequenceProduite> sequences = transformation
-                .transformer(originalWav, dossier.resolve("transformes"), prefixe)
+                .transformer(originalWav, dossier.resolve("transformes"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
 
         byte[] entete = Files.readAllBytes(sequences.get(0).chemin());
@@ -122,7 +123,7 @@ class TransformationAudioTest {
     @DisplayName("R10/R11 : la concaténation des séquences reconstitue exactement le PCM source")
     void continuite_et_aucun_sample_modifie() throws IOException {
         List<SequenceProduite> sequences = transformation
-                .transformer(originalWav, dossier.resolve("transformes"), prefixe)
+                .transformer(originalWav, dossier.resolve("transformes"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
 
         ByteArrayOutputStream concatenation = new ByteArrayOutputStream();
@@ -140,10 +141,10 @@ class TransformationAudioTest {
     @DisplayName("R11 : deux exécutions produisent des fichiers identiques au bit près (déterminisme)")
     void determinisme_hash_stable() {
         List<SequenceProduite> premier = transformation
-                .transformer(originalWav, dossier.resolve("run1"), prefixe)
+                .transformer(originalWav, dossier.resolve("run1"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
         List<SequenceProduite> second = transformation
-                .transformer(originalWav, dossier.resolve("run2"), prefixe)
+                .transformer(originalWav, dossier.resolve("run2"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
 
         assertThat(premier).hasSameSizeAs(second);
@@ -158,7 +159,7 @@ class TransformationAudioTest {
     @DisplayName("R8 : les séquences reprennent le nom de l'original + suffixe _000, _001…")
     void nommage_des_sequences() {
         List<SequenceProduite> sequences = transformation
-                .transformer(originalWav, dossier.resolve("transformes"), prefixe)
+                .transformer(originalWav, dossier.resolve("transformes"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
 
         assertThat(sequences.get(0).nomFichier()).isEqualTo("PaRecPR1925492_20260422_203922_000.wav");
@@ -173,9 +174,29 @@ class TransformationAudioTest {
 
         // Défaut de format de la SOURCE (#155) : récupérable → l'original est rejeté (et consigné au
         // rapport par l'appelant), pas une erreur fatale d'écriture du workspace.
-        assertThatThrownBy(() -> transformation.transformer(mauvais, dossier.resolve("ko"), prefixe))
+        assertThatThrownBy(() -> transformation.transformer(mauvais, dossier.resolve("ko"), prefixe, FREQUENCE_SOURCE))
                 .isInstanceOf(OriginalIllisibleException.class)
                 .hasMessageContaining("384003");
+    }
+
+    @Test
+    @DisplayName("Garde-fou : un original déjà ralenti (en-tête < Fe du log) est rejeté (récupérable)")
+    void original_deja_ralenti_avec_log_est_rejete() {
+        // En-tête 2000 Hz alors que le log annonce une acquisition à 20000 Hz → source déjà ralentie
+        // (elle serait ré-expansée ×10). Rejet récupérable, pas une transformation.
+        assertThatThrownBy(() -> transformation.transformer(originalWav, dossier.resolve("ko"), prefixe, 20000))
+                .isInstanceOf(OriginalDejaRalentiException.class)
+                .hasMessageContaining("2000")
+                .hasMessageContaining("20000");
+    }
+
+    @Test
+    @DisplayName("Garde-fou sans log : un en-tête sous le seuil d'un ultrason brut est rejeté")
+    void original_deja_ralenti_sans_log_est_rejete() {
+        // Pas de journal (mode dégradé) : 2000 Hz est bien en dessous du seuil d'un ultrason brut → rejet.
+        assertThatThrownBy(() -> transformation.transformer(originalWav, dossier.resolve("ko"), prefixe, null))
+                .isInstanceOf(OriginalDejaRalentiException.class)
+                .hasMessageContaining("2000");
     }
 
     // --- Helpers (autonomes, pas de helper partagé entre fichiers de test) --------------------

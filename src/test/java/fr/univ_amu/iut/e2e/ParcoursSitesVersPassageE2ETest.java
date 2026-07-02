@@ -53,8 +53,8 @@ class ParcoursSitesVersPassageE2ETest {
 
     private static final String ID_USER = "u-e2e-sites";
     private static final String SERIE = "1925492";
-    private static final int FREQUENCE_WAV = 2000;
-    private static final int TRAMES = 3000;
+    private static final int FREQUENCE_WAV = 384_000;
+    private static final int TRAMES = 576_000;
     private static final String CARRE = "640380";
     private static final String DATE_NUIT = "2026-04-22"; // cellule date du tableau (unique à l'écran)
     private static final String LOG = "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie"

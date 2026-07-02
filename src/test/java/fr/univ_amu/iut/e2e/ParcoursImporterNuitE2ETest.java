@@ -60,8 +60,8 @@ class ParcoursImporterNuitE2ETest {
     private static final String CARRE = "640380";
     private static final String CODE_POINT = "A1";
     private static final int ANNEE = 2026;
-    private static final int FREQUENCE_WAV = 2000; // Hz, multiple de 10 (R10)
-    private static final int TRAMES = 3000;
+    private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10 (R10)
+    private static final int TRAMES = 576_000;
     private static final String LOG = "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie"
             + " 1925492, V1.01, CPU 600000000, T4.1\n";
 

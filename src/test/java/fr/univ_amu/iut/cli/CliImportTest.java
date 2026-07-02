@@ -41,8 +41,8 @@ import org.junit.jupiter.api.io.TempDir;
 class CliImportTest {
 
     private static final String ID_USER = "u-cli";
-    private static final int FREQUENCE_WAV = 2000; // Hz, multiple de 10
-    private static final int TRAMES = 3000; // 1,5 s -> 3 séquences par original
+    private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10
+    private static final int TRAMES = 576_000; // 1,5 s -> 3 séquences par original
 
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Démarrage Passive Recorder numéro de série 1925492, V1.01,"
