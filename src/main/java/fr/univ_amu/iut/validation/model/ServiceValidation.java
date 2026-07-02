@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -222,6 +223,12 @@ public class ServiceValidation {
         Set<String> taxonsApresImport = new HashSet<>(taxonsConnus);
         taxonsApresImport.addAll(taxonsAutoCrees);
 
+        // Réimport : on mémorise les **validations observateur** de l'ancien jeu (taxon corrigé, marquage
+        // référence, commentaire) AVANT sa suppression, pour les réattacher aux nouvelles observations de
+        // même (séquence, taxon Tadarida, début, fin). Sans cela, réimporter un CSV corrigé effacerait tout
+        // le travail de validation déjà saisi. Vide hors réimport.
+        Map<CleObservation, Observation> validationsAnciennes = remplacer ? validationsExistantes(idPassage) : Map.of();
+
         ResultatsIdentification aCreer = new ResultatsIdentification(
                 null,
                 cheminCsv.toString(),
@@ -234,16 +241,88 @@ public class ServiceValidation {
         // parse et la validation ont réussi : un nouveau CSV invalide a déjà levé plus haut, sans
         // rien supprimer. En cas d'échec d'écriture, le rollback préserve l'ancien jeu.
         ResultatsIdentification[] insere = {null};
+        int[] preservees = {0};
         uniteDeTravail.executer(connexion -> {
             if (remplacer) {
                 resultatsDao.deleteParPassage(connexion, idPassage);
             }
             taxonDao.enregistrerHorsReferentiel(connexion, taxonsAutoCrees);
             insere[0] = resultatsDao.insert(connexion, aCreer);
-            observationDao.insererTout(
-                    connexion, construireObservations(retenues, sequenceParNom, taxonsApresImport, insere[0].id()));
+            List<Observation> neuves =
+                    construireObservations(retenues, sequenceParNom, taxonsApresImport, insere[0].id());
+            preservees[0] = reappliquerValidations(neuves, validationsAnciennes);
+            observationDao.insererTout(connexion, neuves);
         });
-        return new BilanImport(insere[0], retenues.size(), ignorees, taxonsAutoCrees.size());
+        int perdues = validationsAnciennes.size() - preservees[0];
+        return new BilanImport(insere[0], retenues.size(), ignorees, taxonsAutoCrees.size(), preservees[0], perdues);
+    }
+
+    /// Clé d'appariement d'une observation entre deux imports : même séquence, même taxon Tadarida et même
+    /// fenêtre temporelle. **Exacte** (aucune tolérance) : Tadarida est déterministe pour un segment donné,
+    /// donc réimporter le même cri reproduit ces quatre valeurs à l'identique.
+    private record CleObservation(Long idSequence, String taxonTadarida, Double debutS, Double finS) {}
+
+    /// Observations de l'ancien jeu du passage portant une **validation observateur** (taxon corrigé,
+    /// marquage référence ou commentaire), indexées par [CleObservation]. Vide si le passage n'a pas encore
+    /// de jeu. Lu **avant** la transaction de remplacement (aucun écrivain concurrent sur ce poste).
+    private Map<CleObservation, Observation> validationsExistantes(Long idPassage) {
+        Map<CleObservation, Observation> parCle = new LinkedHashMap<>();
+        resultatsDao.findByPassage(idPassage).map(r -> observationDao.findByResults(r.id())).orElse(List.of()).stream()
+                .filter(ServiceValidation::estValidee)
+                .forEach(obs -> parCle.putIfAbsent(cleDe(obs), obs));
+        return parCle;
+    }
+
+    /// Une observation « validée » par l'observateur : elle porte un taxon corrigé, un marquage référence
+    /// ou un commentaire. Ce sont les décisions humaines à préserver au fil des réimports (les champs
+    /// purement Tadarida, eux, sont recalculés à chaque import).
+    private static boolean estValidee(Observation observation) {
+        return observation.reference() || observation.commentaire() != null || observation.taxonObservateur() != null;
+    }
+
+    private static CleObservation cleDe(Observation observation) {
+        return new CleObservation(
+                observation.idSequence(), observation.taxonTadarida(), observation.debutS(), observation.finS());
+    }
+
+    /// Réattache **en place** les validations observateur mémorisées aux nouvelles observations de même
+    /// [CleObservation] (les champs Tadarida et l'`idResultats` du nouveau jeu restent ceux de la nouvelle
+    /// observation). Renvoie le nombre de validations distinctes effectivement réappliquées ; celles dont la
+    /// clé a disparu du nouveau CSV sont perdues (comptées par différence).
+    private static int reappliquerValidations(List<Observation> neuves, Map<CleObservation, Observation> anciennes) {
+        if (anciennes.isEmpty()) {
+            return 0;
+        }
+        Set<CleObservation> reattachees = new HashSet<>();
+        for (int i = 0; i < neuves.size(); i++) {
+            CleObservation cle = cleDe(neuves.get(i));
+            Observation ancienne = anciennes.get(cle);
+            if (ancienne != null) {
+                neuves.set(i, avecValidation(neuves.get(i), ancienne));
+                reattachees.add(cle);
+            }
+        }
+        return reattachees.size();
+    }
+
+    /// Copie `neuve` en y réinjectant les cinq champs de validation observateur de `ancienne` : taxon
+    /// observateur, probabilité observateur, commentaire, référence et mode de validation.
+    private static Observation avecValidation(Observation neuve, Observation ancienne) {
+        return new Observation(
+                neuve.id(),
+                neuve.idSequence(),
+                neuve.debutS(),
+                neuve.finS(),
+                neuve.frequenceMedianeHz(),
+                neuve.taxonTadarida(),
+                neuve.probTadarida(),
+                neuve.taxonAutreTadarida(),
+                ancienne.taxonObservateur(),
+                ancienne.probObservateur(),
+                ancienne.commentaire(),
+                ancienne.reference(),
+                ancienne.modeValidation(),
+                neuve.idResultats());
     }
 
     /// Codes Tadarida hors référentiel parmi `lignes` : taxon principal (stocké tel quel → FK obligatoire)

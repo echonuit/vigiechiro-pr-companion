@@ -218,9 +218,15 @@ class AudioViewModelTest {
             when(service.resultatsDuPassage(7L)).thenReturn(Optional.of(100L)); // un jeu existe déjà
             when(service.lignesAudioDuPassage(7L))
                     .thenReturn(List.of(ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
+            // Bilan de réimport : 2 validations observateur réattachées, 1 perdue (observation disparue).
             when(service.reimporter(7L, Path.of("neuf.csv")))
                     .thenReturn(new BilanImport(
-                            new ResultatsIdentification(101L, "neuf.csv", "Brut", "2026-06-30T00:00", 7L), 1, 0, 0));
+                            new ResultatsIdentification(101L, "neuf.csv", "Brut", "2026-06-30T00:00", 7L),
+                            1,
+                            0,
+                            0,
+                            2,
+                            1));
 
             AudioViewModel vm = vm();
             vm.ouvrirSur(source());
@@ -230,6 +236,9 @@ class AudioViewModelTest {
             verify(service).reimporter(7L, Path.of("neuf.csv"));
             verify(service, never()).importer(any(), any());
             assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+            assertThat(vm.retourProperty().get().texte())
+                    .contains("2 validation(s) conservée(s)")
+                    .contains("1 validation(s) perdue(s)");
         }
     }
 

@@ -220,6 +220,43 @@ class ServiceValidationTest {
                 .orElseThrow();
     }
 
+    /// Observation d'un jeu précisée par son taxon Tadarida **et** son début (seqA porte deux lignes,
+    /// dont une Pippip : le seul taxon ne suffit pas à cibler une observation unique).
+    private Observation observationCiblee(long idResultats, String taxonTadarida, double debut) {
+        return observationDao.findByResults(idResultats).stream()
+                .filter(o -> taxonTadarida.equals(o.taxonTadarida())
+                        && Double.valueOf(debut).equals(o.debutS()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    /// Variante de [#ecrireBrut()] **sans la ligne seqC** : sert à vérifier qu'une validation posée sur
+    /// seqC est comptée « perdue » quand le nouveau CSV ne contient plus cette observation.
+    private Path ecrireBrutSansSeqC() {
+        String contenu = guillemets(
+                        "nom du fichier",
+                        "temps_debut",
+                        "temps_fin",
+                        "frequence_mediane",
+                        "tadarida_taxon",
+                        "tadarida_probabilite",
+                        "tadarida_taxon_autre",
+                        "observateur_taxon",
+                        "observateur_probabilite",
+                        "validateur_taxon",
+                        "validateur_probabilite")
+                + guillemets("seqA_000", "0.3", "3.9", "153", "noise", "0.93", "", "", "", "", "")
+                + guillemets("seqA_000", "0.4", "4.1", "45", "Pippip", "0.80", "Nyclei", "", "", "", "")
+                + guillemets("seqB_000", "1.0", "2.0", "40", "Pippip", "0.60", "", "", "", "", "");
+        Path fichier = dossier.resolve("entree_sans_seqc.csv");
+        try {
+            Files.writeString(fichier, contenu, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return fichier;
+    }
+
     private Long premiereImportation() {
         return resultatsDao.findByPassage(idPassage).orElseThrow().id();
     }
@@ -291,6 +328,41 @@ class ServiceValidationTest {
         // L'ancien jeu et ses observations sont intacts (pas de perte de données).
         assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().id()).isEqualTo(idAncien);
         assertThat(observationDao.findByResults(idAncien)).hasSize(nbObs);
+    }
+
+    @Test
+    @DisplayName(
+            "Réimport : les validations observateur (correction, référence) sont réattachées aux mêmes observations")
+    void reimport_preserve_les_validations() {
+        long idAncien = service.importer(idPassage, ecrireBrut()).idResultats();
+        // Correction de l'observation seqB (Pippip → Nyclei) et marquage référence de l'observation seqC.
+        service.corriger(observationCiblee(idAncien, "Pippip", 1.0).id(), "Nyclei", 0.95);
+        service.marquerReference(observationCiblee(idAncien, "Nyclei", 0.0).id(), true);
+
+        BilanImport bilan = service.reimporter(idPassage, ecrireBrut());
+
+        assertThat(bilan.validationsPreservees()).isEqualTo(2);
+        assertThat(bilan.validationsPerdues()).isZero();
+        // Les deux validations retrouvent leur observation dans le nouveau jeu (clé exacte séquence + taxon
+        // Tadarida + début + fin), les champs Tadarida restant recalculés depuis le CSV.
+        Observation correction = observationCiblee(bilan.idResultats(), "Pippip", 1.0);
+        assertThat(correction.taxonObservateur()).isEqualTo("Nyclei");
+        assertThat(correction.modeValidation()).isEqualTo(ModeValidation.MANUEL);
+        assertThat(observationCiblee(bilan.idResultats(), "Nyclei", 0.0).reference())
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("Réimport : une validation dont l'observation disparaît du nouveau CSV est comptée perdue")
+    void reimport_compte_les_validations_perdues() {
+        long idAncien = service.importer(idPassage, ecrireBrut()).idResultats();
+        service.marquerReference(observationCiblee(idAncien, "Nyclei", 0.0).id(), true);
+
+        // Nouveau CSV **sans** la ligne seqC : la référence posée sur seqC ne retrouve aucune observation.
+        BilanImport bilan = service.reimporter(idPassage, ecrireBrutSansSeqC());
+
+        assertThat(bilan.validationsPreservees()).isZero();
+        assertThat(bilan.validationsPerdues()).isEqualTo(1);
     }
 
     @Test

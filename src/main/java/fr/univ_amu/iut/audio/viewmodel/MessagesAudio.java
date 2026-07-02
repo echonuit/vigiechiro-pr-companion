@@ -18,6 +18,9 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 /// [ExporteurAudio]). Agnostique de l'IHM (seuls `javafx.beans`).
 final class MessagesAudio {
 
+    /// Séparateur des segments du résumé d'import (« … · … · … »).
+    private static final String SEPARATEUR = " · ";
+
     private final ReadOnlyStringWrapper etatVide = new ReadOnlyStringWrapper(this, "etatVide", "");
     private final ReadOnlyObjectWrapper<RetourOperation> retour =
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
@@ -46,10 +49,18 @@ final class MessagesAudio {
     void succesImport(BilanImport bilan) {
         StringBuilder resume = new StringBuilder("Import réussi : " + bilan.importees() + " observation(s) chargée(s)");
         if (bilan.ignorees() > 0) {
-            resume.append(" · ").append(bilan.ignorees()).append(" ignorée(s) (audio absent)");
+            resume.append(SEPARATEUR).append(bilan.ignorees()).append(" ignorée(s) (audio absent)");
         }
         if (bilan.taxonsHorsReferentiel() > 0) {
-            resume.append(" · ").append(bilan.taxonsHorsReferentiel()).append(" taxon(s) hors référentiel");
+            resume.append(SEPARATEUR).append(bilan.taxonsHorsReferentiel()).append(" taxon(s) hors référentiel");
+        }
+        // Réimport : rend compte des validations observateur réattachées (préservées) et de celles
+        // définitivement perdues faute d'observation correspondante dans le nouveau CSV.
+        if (bilan.validationsPreservees() > 0) {
+            resume.append(SEPARATEUR).append(bilan.validationsPreservees()).append(" validation(s) conservée(s)");
+        }
+        if (bilan.validationsPerdues() > 0) {
+            resume.append(SEPARATEUR).append(bilan.validationsPerdues()).append(" validation(s) perdue(s)");
         }
         succes(resume.append('.').toString());
     }
