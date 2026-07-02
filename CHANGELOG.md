@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.67.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.66.0...v1.67.0) (2026-07-02)
+
+
+### Features
+
+* **audio:** activer la normalisation visuelle du sonogramme (audio-view 1.13.1) ([#444](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/444)) ([b27752f](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/b27752f83d9bd1ad1684929c091fbb7ea0f45cac))
+
 # [1.66.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.65.1...v1.66.0) (2026-07-01)
 
 
