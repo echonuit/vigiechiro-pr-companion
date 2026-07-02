@@ -82,7 +82,7 @@ jobs:
       - name: Construire le site développeur (strict)
         run: mkdocs build -f mkdocs-dev.yml --strict
       - name: Téléverser l'artefact Pages
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
