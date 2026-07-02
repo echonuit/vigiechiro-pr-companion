@@ -2,8 +2,10 @@ package fr.univ_amu.iut;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
+import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -26,6 +28,14 @@ public class App extends Application {
         // Même amorçage que le CLI (Cli) et les outils Capture* : sans cela, le premier écran qui
         // lit la base échoue sur « no such table ».
         injector.getInstance(MigrationSchema.class).migrer();
+
+        // Filet anti-fuite : supprime au démarrage les temporaires d'extraction `import-zip-*` résiduels
+        // d'une session précédente interrompue (application fermée/plantée pendant ou après un import
+        // `.zip`). Ce nettoyage n'était rejoué qu'avant une nouvelle extraction de zip ; une suite d'imports
+        // de dossier ne le déclenchait jamais, laissant un résidu de plusieurs Go saturer le disque et
+        // faire échouer l'import suivant (« disque plein »). Best-effort.
+        ExtracteurZip.nettoyerTemporairesResiduels(
+                injector.getInstance(Workspace.class).racine());
 
         // Branche le navigateur web (coordonnées GPS -> OpenStreetMap, etc.) sur le HostServices
         // JavaFX, seul disponible depuis une Application. Hors application graphique (CLI/tests),

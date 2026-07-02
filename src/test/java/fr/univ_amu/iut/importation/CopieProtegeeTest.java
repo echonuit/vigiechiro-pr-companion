@@ -70,6 +70,25 @@ class CopieProtegeeTest {
         assertThat(Files.isDirectory(cible.getParent())).isTrue();
     }
 
+    @Test
+    @DisplayName("Le message d'échec « disque plein » (ENOSPC) est explicite et actionnable")
+    void message_echec_disque_plein() {
+        String message = CopieProtegee.messageEchec(source.resolve("a.wav"), "No space left on device");
+
+        assertThat(message)
+                .contains("Espace disque insuffisant")
+                .contains("a.wav")
+                .doesNotContain("copie protégée");
+    }
+
+    @Test
+    @DisplayName("Pour toute autre cause d'IOException, la cause technique est jointe au message")
+    void message_echec_joint_la_cause() {
+        String message = CopieProtegee.messageEchec(source.resolve("a.wav"), "Permission denied");
+
+        assertThat(message).contains("Échec de la copie protégée").contains("Permission denied");
+    }
+
     /// Empreinte SHA-256 de chaque fichier du dossier (clé = nom de fichier).
     private static Map<Path, String> empreintesDuDossier(Path dossier) throws IOException {
         Map<Path, String> empreintes = new LinkedHashMap<>();

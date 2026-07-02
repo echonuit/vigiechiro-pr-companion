@@ -42,8 +42,27 @@ public class CopieProtegee {
             }
             return destination;
         } catch (IOException e) {
-            throw new UncheckedIOException("Échec de la copie protégée de " + source, e);
+            throw new UncheckedIOException(messageEchec(source, e.getMessage()), e);
         }
+    }
+
+    /// Construit le message d'échec présenté à l'utilisateur. Le cas **disque plein** (ENOSPC) est le
+    /// plus courant en pratique (un workspace de plusieurs Go) : on le reconnaît pour donner une consigne
+    /// actionnable (« libérez de la place ») plutôt que l'opaque « Échec de la copie protégée ». Pour toute
+    /// autre `IOException`, la cause technique est **jointe** au message (au lieu d'être masquée), afin que
+    /// l'utilisateur — et le support — voient la vraie raison.
+    ///
+    /// Statique et publique pour être testable directement, sans provoquer une vraie panne d'espace disque.
+    public static String messageEchec(Path source, String messageCause) {
+        String nom = source.getFileName() == null
+                ? source.toString()
+                : source.getFileName().toString();
+        if (messageCause != null && messageCause.contains("No space left on device")) {
+            return "Espace disque insuffisant pour copier « " + nom
+                    + " » : libérez de la place dans le dossier de travail (ou choisissez une source plus petite,"
+                    + " par exemple le jeu d'exemple) puis relancez l'import.";
+        }
+        return "Échec de la copie protégée de " + source + (messageCause == null ? "" : " (" + messageCause + ")");
     }
 
     /// Copie `source` dans le dossier `dossierDestination`, en conservant le nom de fichier
