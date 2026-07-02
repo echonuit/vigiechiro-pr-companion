@@ -35,7 +35,7 @@ jobs:
     if: github.repository == 'IUTInfoAix-S201/vigiechiro-pr-companion'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       # Étapes shell plutôt que docker/login-action + docker/setup-buildx-action :
       # ces actions JS tournaient sur Node 20 (déprécié au 16/06/2026). Du shell

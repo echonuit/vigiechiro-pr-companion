@@ -35,7 +35,7 @@ jobs:
     outputs:
       tag: ${{ steps.tag.outputs.value }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           fetch-depth: 0 # semantic-release a besoin de tout l'historique + des tags
       - uses: actions/setup-node@v6
@@ -85,7 +85,7 @@ jobs:
             arch: x64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.release.outputs.tag }} # le commit taggué (code + CHANGELOG à jour)
       - uses: actions/setup-java@v5
