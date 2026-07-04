@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
+import java.util.Locale;
 
 /// Formatages d'affichage d'une [LigneObservationAudio] pour la vue audio unifiée : détail multi-ligne
 /// du panneau d'écoute et libellé de statut de la colonne « Statut ». Pendant de
@@ -82,6 +83,17 @@ public final class FormatLigneAudio {
         return Math.round((finS - debutS) / FACTEUR_EXPANSION_TEMPS * 1000) + " ms";
     }
 
+    /// Position **réelle** du début du cri dans le fichier, formatée pour la colonne (« 0,03 s »), tiret si
+    /// absente. La borne stockée `debutS` est sur la timeline **transformée** ; on la ramène à la timeline
+    /// réelle (÷ [#FACTEUR_EXPANSION_TEMPS]). Situe le cri dans le fichier et distingue les lignes d'un même
+    /// enregistrement (plusieurs cris → plusieurs positions).
+    public static String positionColonne(Double debutS) {
+        if (debutS == null) {
+            return "—";
+        }
+        return String.format(Locale.FRENCH, "%.2f s", debutS / FACTEUR_EXPANSION_TEMPS);
+    }
+
     /// Libellé d'affichage du statut de revue (partagé avec la colonne « Statut » de la vue).
     public static String libelleStatut(StatutObservation statut) {
         return switch (statut) {
@@ -113,6 +125,13 @@ public final class FormatLigneAudio {
     /// Comparateur de tri de la colonne « Durée » : ordonne selon la valeur en ms (« 5 ms » < « 12 ms »),
     /// et non alphabétiquement ; absente (« — ») classée en tête.
     public static Comparator<String> comparateurDuree() {
+        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
+    }
+
+    /// Comparateur de tri de la colonne « Début » : ordonne selon la position réelle (« 0,50 s » < « 3,20 s
+    /// »), et non alphabétiquement ; absente (« — ») classée en tête. Le format à deux décimales rend les
+    /// chiffres extraits (centièmes de seconde) monotones vis-à-vis de la valeur.
+    public static Comparator<String> comparateurPosition() {
         return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
     }
 

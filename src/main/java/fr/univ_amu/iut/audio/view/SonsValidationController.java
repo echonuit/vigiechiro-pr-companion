@@ -99,6 +99,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private TableColumn<LigneObservationAudio, String> colFrequence;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colDebut;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colDuree;
 
     @FXML
@@ -182,6 +185,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 FormatLigneAudio.probabilite(c.getValue().probTadarida())));
         colFrequence.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.frequenceColonne(c.getValue().frequenceHz())));
+        colDebut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                FormatLigneAudio.positionColonne(c.getValue().debutS())));
         colDuree.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.dureeColonne(
                 c.getValue().debutS(), c.getValue().finS())));
         colObservateur.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.votreTaxon(c.getValue())));
@@ -203,6 +208,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         colProba.setComparator(FormatLigneAudio.comparateurPourcentage());
         colFrequence.setComparator(FormatLigneAudio.comparateurFrequence());
+        colDebut.setComparator(FormatLigneAudio.comparateurPosition());
         colDuree.setComparator(FormatLigneAudio.comparateurDuree());
         colPassage.setComparator(FormatLigneAudio.comparateurNumeroPassage());
         colStatut.setComparator(FormatLigneAudio.comparateurStatut());
@@ -338,6 +344,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         new GestionnaireColonnes.Colonne(colTadarida, "Proposition Tadarida", true),
                         new GestionnaireColonnes.Colonne(colProba, "Proba.", false),
                         new GestionnaireColonnes.Colonne(colFrequence, "Fréquence", false),
+                        new GestionnaireColonnes.Colonne(colDebut, "Début", false),
                         new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
                         new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
                         new GestionnaireColonnes.Colonne(colFichier, "Fichier", false),
