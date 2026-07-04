@@ -149,6 +149,45 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("Les colonnes sont triables : trier « Fichier » en décroissant réordonne les lignes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void colonnes_triables(FxRobot robot) {
+        TableView table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        TableColumn fichier = colonne(robot, "Fichier");
+
+        // Sans l'enveloppe SortedList, trier une table alimentée par une FilteredList ne réordonne rien.
+        robot.interact(() -> {
+            table.getSortOrder().setAll(fichier);
+            fichier.setSortType(TableColumn.SortType.DESCENDING);
+            table.sort();
+        });
+
+        assertThat(colonne(robot, "Fichier").getCellData(0)).isEqualTo("PaRec_11_000.wav");
+        assertThat(colonne(robot, "Fichier").getCellData(1)).isEqualTo("PaRec_10_000.wav");
+    }
+
+    @Test
+    @DisplayName("Après un Valider, la ligne revue reste surlignée (sélection re-synchronisée VM → table)")
+    void selection_reste_surlignee_apres_action(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        Button valider = robot.lookup("#btnValider").queryAs(Button.class);
+
+        // Le rechargement post-action renvoie la même observation (id=1) mais **modifiée** (nouvelle
+        // instance de record, non égale à l'ancienne) : sans resync, la table perdrait sa surbrillance.
+        when(service.lignesAudioReferences("u-1"))
+                .thenReturn(List.of(
+                        ligne(1, 10, "Pippip", "Nyclei", "Noctule de Leisler", "Pipistrelle commune"),
+                        ligne(2, 11, "Nyclei", "Nyclei", "Noctule de Leisler", "Noctule de Leisler")));
+
+        robot.interact(() -> table.getSelectionModel().select(0)); // observation id=1
+        robot.interact(valider::fire);
+
+        Object surlignee = table.getSelectionModel().getSelectedItem();
+        assertThat(surlignee).isNotNull();
+        assertThat(((LigneObservationAudio) surlignee).idObservation()).isEqualTo(1L);
+    }
+
+    @Test
     @DisplayName("Sélectionner une ligne alimente le détail et l'écoute (AudioView)")
     void selection_alimente_detail_et_audio(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);

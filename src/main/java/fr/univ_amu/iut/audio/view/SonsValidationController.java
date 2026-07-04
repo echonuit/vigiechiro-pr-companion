@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
@@ -182,12 +183,37 @@ public class SonsValidationController implements EmplacementNavigation {
         colReference.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper(c.getValue().reference() ? "⭐" : ""));
 
-        tableObservations.setItems(viewModel.observationsFiltrees());
+        // Tri **numérique / par ordre de revue** là où l'affichage est une chaîne formatée : sans ces
+        // comparateurs, « 100 % » précèderait « 83 % » et « N°10 » précèderait « N°2 » (tri alphabétique).
+        // Les autres colonnes (taxon, fichier, carré, point) gardent le tri texte par défaut.
+        colProba.setComparator(FormatLigneAudio.comparateurPourcentage());
+        colPassage.setComparator(FormatLigneAudio.comparateurNumeroPassage());
+        colStatut.setComparator(FormatLigneAudio.comparateurStatut());
+
+        // Rendre les en-têtes cliquables réellement triants : la table est alimentée par une FilteredList
+        // (non triable en place) ; on l'enveloppe dans une SortedList dont le comparateur suit celui de la
+        // table. Sans cela, cliquer un en-tête ne réordonnait rien. L'ordre initial reste l'ordre de revue.
+        SortedList<LigneObservationAudio> triees = new SortedList<>(viewModel.observationsFiltrees());
+        triees.comparatorProperty().bind(tableObservations.comparatorProperty());
+        tableObservations.setItems(triees);
         tableObservations
                 .getSelectionModel()
                 .selectedItemProperty()
                 .addListener((obs, ancienne, nouvelle) ->
                         viewModel.selectionProperty().set(nouvelle));
+        // Resynchronisation **VM → table** : après un Valider/Corriger, charger() reconstruit la liste avec
+        // de nouvelles instances de record (statut/taxon changés), ce qui vide la surbrillance de la table
+        // alors que le VM restaure la sélection par identifiant. On réaligne la ligne surlignée sur la
+        // sélection du VM (et on désélectionne si null). La garde d'égalité empêche toute boucle avec le
+        // listener table → VM ci-dessus (une sélection déjà alignée ne redéclenche rien).
+        viewModel.selectionProperty().addListener((obs, ancienne, nouvelle) -> {
+            var modele = tableObservations.getSelectionModel();
+            if (nouvelle == null) {
+                modele.clearSelection();
+            } else if (!nouvelle.equals(modele.getSelectedItem())) {
+                modele.select(nouvelle);
+            }
+        });
 
         choixFiltre.getItems().add(null);
         choixFiltre.getItems().addAll(StatutObservation.values());
