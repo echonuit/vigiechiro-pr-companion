@@ -7,6 +7,7 @@ import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -194,18 +195,20 @@ public class SonsValidationController implements EmplacementNavigation {
                 c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().dateEnregistrement())));
         colStatut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.libelleStatut(c.getValue().statut())));
-        colReference.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(c.getValue().reference() ? "⭐" : ""));
-        // Indicateur de commentaire : « 💬 » si un commentaire est présent, avec son texte en infobulle.
-        // La valeur de cellule est l'icône (tri = présence) ; le texte complet vient de la ligne.
-        colCommentaire.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                CellulesAudio.estRenseigne(c.getValue().commentaire()) ? "💬" : ""));
-        colCommentaire.setCellFactory(colonne -> CellulesAudio.commentaire());
 
         colProba.setComparator(FormatLigneAudio.comparateurPourcentage());
         colFrequence.setComparator(FormatLigneAudio.comparateurFrequence());
         colPassage.setComparator(FormatLigneAudio.comparateurNumeroPassage());
         colStatut.setComparator(FormatLigneAudio.comparateurStatut());
+
+        // Indicateurs référence / commentaire : en-tête et cellule rendus par une **icône Ikonli colorée**
+        // (les emojis ⭐/💬 ne s'affichaient pas dans toutes les polices). En-tête sans texte (icône seule),
+        // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et **non triables** (trier
+        // une icône n'a pas de sens et donnait une colonne « vide » triable déroutante).
+        CellulesAudio.configurerColonne(
+                colReference, "colReference", CellulesAudio.ICONE_REFERENCE, CellulesAudio::reference);
+        CellulesAudio.configurerColonne(
+                colCommentaire, "colCommentaire", CellulesAudio.ICONE_COMMENTAIRE, CellulesAudio::commentaire);
     }
 
     @FXML
@@ -283,12 +286,13 @@ public class SonsValidationController implements EmplacementNavigation {
         btnReference
                 .disableProperty()
                 .bind(viewModel.selectionPresenteProperty().not());
-        // Libellé de la bascule selon l'état de l'observation sélectionnée (marquer vs retirer).
+        // Libellé + icône (étoile dorée) de la bascule selon l'état de l'observation sélectionnée.
+        btnReference.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_REFERENCE, CellulesAudio.STYLE_REFERENCE));
         btnReference
                 .textProperty()
                 .bind(Bindings.when(viewModel.selectionReferenceProperty())
-                        .then("☆ Retirer la référence")
-                        .otherwise("⭐ Marquer référence"));
+                        .then("Retirer la référence")
+                        .otherwise("Marquer référence"));
 
         // Workflow Tadarida (source ParPassage) : toujours actif ; « Importer » tant qu'aucun résultat,
         // « Réimporter » (remplacement après confirmation) une fois un jeu chargé.
@@ -319,23 +323,25 @@ public class SonsValidationController implements EmplacementNavigation {
         // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).
         DepotFichier.installer(racine, () -> source != null && source.permetWorkflowTadarida(), this::deposerFichiers);
 
-        // Choix d'affichage des colonnes : menu contextuel (clic droit) + sous-menu « Colonnes » dans le ☰
-        // (la proposition Tadarida, colonne d'identité, reste toujours affichée).
-        SelecteurColonnes.installer(
+        // Gestion des colonnes (afficher/masquer + réordonner par glisser) : menu contextuel (clic droit)
+        // et item « Colonnes… » du ☰ ouvrent le même panneau. La proposition Tadarida, colonne d'identité,
+        // reste toujours affichée (visibilité verrouillée) mais peut être déplacée comme les autres.
+        GestionnaireColonnes.installer(
                 tableObservations,
                 menuActions,
                 List.of(
-                        new SelecteurColonnes.ColonneAffichable(colProba, "Proba."),
-                        new SelecteurColonnes.ColonneAffichable(colFrequence, "Fréquence"),
-                        new SelecteurColonnes.ColonneAffichable(colObservateur, "Votre taxon"),
-                        new SelecteurColonnes.ColonneAffichable(colFichier, "Fichier"),
-                        new SelecteurColonnes.ColonneAffichable(colPassage, "Passage"),
-                        new SelecteurColonnes.ColonneAffichable(colCarre, "Carré"),
-                        new SelecteurColonnes.ColonneAffichable(colPoint, "Point"),
-                        new SelecteurColonnes.ColonneAffichable(colDate, "Date"),
-                        new SelecteurColonnes.ColonneAffichable(colStatut, "Statut"),
-                        new SelecteurColonnes.ColonneAffichable(colReference, "Référence ⭐"),
-                        new SelecteurColonnes.ColonneAffichable(colCommentaire, "Commentaire 💬")));
+                        new GestionnaireColonnes.Colonne(colTadarida, "Proposition Tadarida", true),
+                        new GestionnaireColonnes.Colonne(colProba, "Proba.", false),
+                        new GestionnaireColonnes.Colonne(colFrequence, "Fréquence", false),
+                        new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
+                        new GestionnaireColonnes.Colonne(colFichier, "Fichier", false),
+                        new GestionnaireColonnes.Colonne(colPassage, "Passage", false),
+                        new GestionnaireColonnes.Colonne(colCarre, "Carré", false),
+                        new GestionnaireColonnes.Colonne(colPoint, "Point", false),
+                        new GestionnaireColonnes.Colonne(colDate, "Date", false),
+                        new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
+                        new GestionnaireColonnes.Colonne(colReference, "Référence", false),
+                        new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false)));
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à

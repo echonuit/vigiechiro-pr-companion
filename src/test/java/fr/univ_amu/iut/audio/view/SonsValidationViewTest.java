@@ -33,9 +33,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
-import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
@@ -49,6 +47,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -151,12 +150,26 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("Colonnes Date, Fréquence et indicateur de commentaire")
-    void affiche_date_frequence_commentaire(FxRobot robot) {
+    @DisplayName("Colonnes Date et Fréquence")
+    void affiche_date_et_frequence(FxRobot robot) {
         assertThat(colonne(robot, "Date").getCellData(0)).isEqualTo("2026-06-20");
         assertThat(colonne(robot, "Fréquence").getCellData(0)).isEqualTo("45000 Hz");
-        // Les deux lignes de la fixture portent un commentaire (« beau cri ») → icône 💬.
-        assertThat(colonne(robot, "💬").getCellData(0)).isEqualTo("💬");
+    }
+
+    @Test
+    @DisplayName("Indicateurs référence / commentaire : en-tête et cellules en icônes Ikonli colorées")
+    void indicateurs_en_icones(FxRobot robot) {
+        TableColumn<?, ?> ref = colonneParId(robot, "colReference");
+        TableColumn<?, ?> commentaire = colonneParId(robot, "colCommentaire");
+        // En-tête : pas de texte (emoji retiré), une icône colorée à la place.
+        assertThat(ref.getText()).isEmpty();
+        assertThat(ref.getGraphic()).isInstanceOf(FontIcon.class);
+        assertThat(ref.getGraphic().getStyleClass()).contains("icone-reference");
+        assertThat(commentaire.getGraphic().getStyleClass()).contains("icone-commentaire");
+        // Les deux lignes de la fixture sont en référence et commentées → icônes aussi en cellule
+        // (donc plus d'occurrences que le seul en-tête).
+        assertThat(robot.lookup(".icone-reference").queryAll()).hasSizeGreaterThan(1);
+        assertThat(robot.lookup(".icone-commentaire").queryAll()).hasSizeGreaterThan(1);
     }
 
     @Test
@@ -254,28 +267,46 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("Sélecteur de colonnes : menu contextuel (clic droit) + sous-menu ☰ masquent une colonne")
-    void selecteur_colonnes_masque_une_colonne(FxRobot robot) {
+    @DisplayName(
+            "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
+    void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        // Les 10 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
+        assertThat(table.getColumns().stream()
+                        .limit(10)
+                        .map(TableColumn::getText)
+                        .toList())
+                .containsExactly(
+                        "Date",
+                        "Passage",
+                        "Carré",
+                        "Point",
+                        "Fichier",
+                        "Proposition Tadarida",
+                        "Proba.",
+                        "Votre taxon",
+                        "Fréquence",
+                        "Statut");
+        assertThat(table.getColumns().get(10).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(11).getId()).isEqualTo("colCommentaire");
+        // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
+        assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
+        assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Gestion des colonnes : item « Colonnes… » dans le menu contextuel (clic droit) et dans le ☰")
+    void gestion_colonnes_accessible(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         assertThat(table.getContextMenu())
                 .as("menu contextuel installé (clic droit)")
                 .isNotNull();
+        assertThat(table.getContextMenu().getItems())
+                .anySatisfy(item -> assertThat(item.getText()).isEqualTo("Colonnes…"));
 
         MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
-        Menu colonnes = (Menu) menu.getItems().stream()
-                .filter(item -> "Colonnes".equals(item.getText()))
-                .findFirst()
-                .orElseThrow();
-        CheckMenuItem caseFichier = (CheckMenuItem) colonnes.getItems().stream()
-                .filter(item -> "Fichier".equals(item.getText()))
-                .findFirst()
-                .orElseThrow();
-
-        assertThat(colonne(robot, "Fichier").isVisible()).isTrue();
-        robot.interact(() -> caseFichier.setSelected(false));
-        assertThat(colonne(robot, "Fichier").isVisible())
-                .as("décocher la case masque la colonne (liaison bidirectionnelle)")
-                .isFalse();
+        assertThat(menu.getItems())
+                .anySatisfy(item -> assertThat(item.getText()).isEqualTo("Colonnes…"));
     }
 
     @Test
@@ -331,6 +362,14 @@ class SonsValidationViewTest {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         return table.getColumns().stream()
                 .filter(c -> entete.equals(c.getText()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    private static TableColumn<?, ?> colonneParId(FxRobot robot, String id) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        return table.getColumns().stream()
+                .filter(c -> id.equals(c.getId()))
                 .findFirst()
                 .orElseThrow();
     }

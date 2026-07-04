@@ -107,3 +107,15 @@
 .fermer-retour:hover {
   -fx-background-color: rgba(0, 0, 0, 0.08);
 }
+
+/* Icônes-indicateurs (Ikonli FontAwesome) : colorées pour être distinctives, en en-tête et en cellule.
+   L'étoile « référence » est dorée, l'icône « commentaire » bleue. */
+.icone-reference {
+  -fx-icon-color: #f1c40f;
+  -fx-icon-size: 15px;
+}
+
+.icone-commentaire {
+  -fx-icon-color: #3498db;
+  -fx-icon-size: 14px;
+}
