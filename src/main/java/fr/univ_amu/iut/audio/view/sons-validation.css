@@ -35,7 +35,10 @@
   -fx-border-color: #e1e4e8;
   -fx-border-radius: 4;
   -fx-background-radius: 4;
-  -fx-padding: 8;
+  /* Pas de padding : le spectrogramme (et la barre d'actions) s'étendent sur toute la largeur du panneau,
+     alignés sur la table au-dessus (elle-même à ras bord). L'espacement vertical entre l'AudioView et la
+     barre d'actions est porté par le `spacing` du VBox. */
+  -fx-padding: 0;
 }
 
 /* Détail de l'observation sélectionnée : une seule ligne (séparée par « · ») qui utilise la largeur. */
