@@ -114,4 +114,22 @@ class FormatLigneAudioTest {
         tri.sort(FormatLigneAudio.comparateurDuree());
         assertThat(tri).containsExactly("—", "5 ms", "12 ms");
     }
+
+    @Test
+    @DisplayName(
+            "Début colonne : position réelle en secondes (borne transformée ÷ ×10), FR à 2 décimales, tiret si absente")
+    void position_colonne_reelle() {
+        // debutS est sur la timeline transformée (×10) : 3,2 s transformé → 0,32 s réel.
+        assertThat(FormatLigneAudio.positionColonne(3.2)).isEqualTo("0,32 s");
+        assertThat(FormatLigneAudio.positionColonne(0.5)).isEqualTo("0,05 s");
+        assertThat(FormatLigneAudio.positionColonne(null)).isEqualTo("—");
+    }
+
+    @Test
+    @DisplayName("Comparateur Début : ordre par position (« 0,05 s » < « 0,32 s »), absente (« — ») en tête")
+    void comparateur_position_ordonne_par_valeur() {
+        var tri = new java.util.ArrayList<>(java.util.List.of("0,32 s", "0,05 s", "1,20 s", "—"));
+        tri.sort(FormatLigneAudio.comparateurPosition());
+        assertThat(tri).containsExactly("—", "0,05 s", "0,32 s", "1,20 s");
+    }
 }
