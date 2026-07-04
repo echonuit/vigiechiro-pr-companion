@@ -318,6 +318,24 @@ public class SonsValidationController implements EmplacementNavigation {
         // Glisser-déposer d'un CSV Tadarida sur l'écran : alternative au FileChooser natif (qui coince
         // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).
         DepotFichier.installer(racine, () -> source != null && source.permetWorkflowTadarida(), this::deposerFichiers);
+
+        // Choix d'affichage des colonnes : menu contextuel (clic droit) + sous-menu « Colonnes » dans le ☰
+        // (la proposition Tadarida, colonne d'identité, reste toujours affichée).
+        SelecteurColonnes.installer(
+                tableObservations,
+                menuActions,
+                List.of(
+                        new SelecteurColonnes.ColonneAffichable(colProba, "Proba."),
+                        new SelecteurColonnes.ColonneAffichable(colFrequence, "Fréquence"),
+                        new SelecteurColonnes.ColonneAffichable(colObservateur, "Votre taxon"),
+                        new SelecteurColonnes.ColonneAffichable(colFichier, "Fichier"),
+                        new SelecteurColonnes.ColonneAffichable(colPassage, "Passage"),
+                        new SelecteurColonnes.ColonneAffichable(colCarre, "Carré"),
+                        new SelecteurColonnes.ColonneAffichable(colPoint, "Point"),
+                        new SelecteurColonnes.ColonneAffichable(colDate, "Date"),
+                        new SelecteurColonnes.ColonneAffichable(colStatut, "Statut"),
+                        new SelecteurColonnes.ColonneAffichable(colReference, "Référence ⭐"),
+                        new SelecteurColonnes.ColonneAffichable(colCommentaire, "Commentaire 💬")));
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à
@@ -351,7 +369,8 @@ public class SonsValidationController implements EmplacementNavigation {
     }
 
     /// Adapte l'affichage à la source : colonnes de contexte masquées si la source est un unique passage,
-    /// items du menu « ☰ » et visibilité du menu selon les capacités de la source.
+    /// et **items** du menu « ☰ » propres à la source. Le menu ☰ lui-même reste toujours affiché : il porte
+    /// désormais le choix des colonnes, pertinent pour toutes les sources.
     private void adapterAffichage(SourceObservations source) {
         boolean passageUnique = source instanceof SourceObservations.ParPassage;
         colPassage.setVisible(!passageUnique);
@@ -361,13 +380,10 @@ public class SonsValidationController implements EmplacementNavigation {
         colDate.setVisible(!passageUnique);
 
         boolean workflow = source.permetWorkflowTadarida();
-        boolean biblio = source.permetExportBibliotheque();
         itemImporter.setVisible(workflow);
         itemInclureMode.setVisible(workflow);
         itemExporterVu.setVisible(workflow);
-        itemExporterBiblio.setVisible(biblio);
-        menuActions.setVisible(workflow || biblio);
-        menuActions.setManaged(workflow || biblio);
+        itemExporterBiblio.setVisible(source.permetExportBibliotheque());
     }
 
     private void selectionnerObservation(Long idObservation) {
