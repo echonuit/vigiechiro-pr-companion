@@ -92,7 +92,7 @@ class ParserCsvTadaridaTest {
         assertThat(premiere.nomSequence()).isEqualTo("Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_203922_000");
         assertThat(premiere.debutS()).isEqualTo(0.3);
         assertThat(premiere.finS()).isEqualTo(3.9);
-        assertThat(premiere.frequenceMedianeHz()).isEqualTo(153);
+        assertThat(premiere.frequenceMedianeKHz()).isEqualTo(153);
         assertThat(premiere.taxonTadarida()).isEqualTo("noise");
         assertThat(premiere.probTadarida()).isEqualTo(0.93);
         assertThat(premiere.taxonAutreTadarida()).as("colonne vide → null").isNull();

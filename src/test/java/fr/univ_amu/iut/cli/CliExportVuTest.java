@@ -136,7 +136,7 @@ class CliExportVuTest {
                 sequence.id(),
                 0.5,
                 2.5,
-                45000,
+                45,
                 "Pippip",
                 0.98,
                 null,

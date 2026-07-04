@@ -21,7 +21,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 /// @param idSequence séquence d'écoute source (FK → `listening_sequence.id`, obligatoire)
 /// @param debutS temps de début dans la séquence en secondes (optionnel)
 /// @param finS temps de fin dans la séquence en secondes (optionnel)
-/// @param frequenceMedianeHz fréquence médiane en Hz (métrique Tadarida, optionnelle au schéma)
+/// @param frequenceMedianeKHz fréquence médiane en kHz (métrique Tadarida, optionnelle au schéma)
 /// @param taxonTadarida code du taxon proposé par Tadarida (FK → `taxon.code`, obligatoire)
 /// @param probTadarida probabilité Tadarida dans `[0,1]` (optionnelle)
 /// @param taxonAutreTadarida code de la 2e proposition Tadarida (FK → `taxon.code`, optionnel)
@@ -36,7 +36,7 @@ public record Observation(
         Long idSequence,
         Double debutS,
         Double finS,
-        Integer frequenceMedianeHz,
+        Integer frequenceMedianeKHz,
         String taxonTadarida,
         Double probTadarida,
         String taxonAutreTadarida,

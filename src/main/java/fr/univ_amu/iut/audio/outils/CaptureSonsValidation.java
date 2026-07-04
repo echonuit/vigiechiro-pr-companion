@@ -256,14 +256,14 @@ public final class CaptureSonsValidation {
 
         observationDao.insert(reference(
                 seq.get(0), 27000, "Pippip", "Nyclei", "Cri social typique, capté en fin de nuit.", idResultats));
-        observationDao.insert(reference(seq.get(1), 45000, "Pippip", null, null, idResultats));
+        observationDao.insert(reference(seq.get(1), 45, "Pippip", null, null, idResultats));
         observationDao.insert(
                 reference(seq.get(2), 23000, "Rhihip", "Rhihip", "Excellent rapport signal sur bruit.", idResultats));
     }
 
     private static Observation reference(
             long idSequence,
-            int frequenceHz,
+            int frequenceKHz,
             String taxonTadarida,
             String taxonObservateur,
             String commentaire,
@@ -273,7 +273,7 @@ public final class CaptureSonsValidation {
                 idSequence,
                 0.5,
                 3.8,
-                frequenceHz,
+                frequenceKHz,
                 taxonTadarida,
                 0.74,
                 null,

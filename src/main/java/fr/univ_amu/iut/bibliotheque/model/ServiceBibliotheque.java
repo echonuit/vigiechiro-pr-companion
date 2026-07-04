@@ -78,7 +78,7 @@ public class ServiceBibliotheque {
                 taxonRetenu,
                 sequence.nomFichier(),
                 sequence.cheminFichier(),
-                observation.frequenceMedianeHz(),
+                observation.frequenceMedianeKHz(),
                 observation.commentaire());
     }
 }

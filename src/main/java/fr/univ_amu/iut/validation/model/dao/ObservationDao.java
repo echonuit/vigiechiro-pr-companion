@@ -26,7 +26,7 @@ import java.util.List;
 /// - le mapping de l'énum [ModeValidation] (colonne `validation_mode`, `null` →
 ///   [ModeValidation#NON_VALIDE]) et du booléen `is_reference` (`INTEGER` 0/1) ;
 /// - les colonnes numériques **nullable** : `REAL` lus via `rs.getObject`, `INTEGER` nullable
-///   (`median_freq_hz`) lu via `getInt` + [ResultSet#wasNull()] (robuste quel que soit le type
+///   (`median_freq_khz`) lu via `getInt` + [ResultSet#wasNull()] (robuste quel que soit le type
 ///   retourné par le pilote) ;
 /// - un **insert en lot** ([#insererTout(List)]) regroupé en une seule transaction
 ///   (`addBatch`/`executeBatch`) : l'import d'un CSV Tadarida crée des centaines d'observations
@@ -47,7 +47,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String ALIAS_STATUT = " AS statut,";
 
     private static final String SQL_INSERT = "INSERT INTO observation"
-            + " (sequence_id, start_time_s, end_time_s, median_freq_hz, taxon_tadarida,"
+            + " (sequence_id, start_time_s, end_time_s, median_freq_khz, taxon_tadarida,"
             + " prob_tadarida, taxon_other_tadarida, taxon_observer, prob_observer, user_comment,"
             + " is_reference, validation_mode, results_id)"
             + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
@@ -57,7 +57,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getLong("sequence_id"),
             (Double) rs.getObject("start_time_s"),
             (Double) rs.getObject("end_time_s"),
-            entierNullable(rs, "median_freq_hz"),
+            entierNullable(rs, "median_freq_khz"),
             rs.getString("taxon_tadarida"),
             (Double) rs.getObject(COL_PROB_TADARIDA),
             rs.getString("taxon_other_tadarida"),
@@ -290,7 +290,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " ms.square_number AS carre, ms.friendly_name AS nom_site, lp.code AS point_code,"
             + " ms.user_id AS user_id, o.taxon_tadarida AS tadarida, o.prob_tadarida AS prob_tadarida,"
             + " o.taxon_observer AS observer, o.prob_observer AS prob_observer,"
-            + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_hz AS frequence,"
+            + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
             + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida,"
             + " ls.file_name AS nom_fichier, o.start_time_s AS debut_s, o.end_time_s AS fin_s"
             + DE_OBSERVATION_AU_SITE
@@ -376,7 +376,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
                 observation.idSequence(),
                 observation.debutS(),
                 observation.finS(),
-                observation.frequenceMedianeHz(),
+                observation.frequenceMedianeKHz(),
                 observation.taxonTadarida(),
                 observation.probTadarida(),
                 observation.taxonAutreTadarida(),
@@ -435,13 +435,13 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     public void update(Observation observation) {
         executerMaj(
                 "UPDATE observation SET sequence_id = ?, start_time_s = ?, end_time_s = ?,"
-                        + " median_freq_hz = ?, taxon_tadarida = ?, prob_tadarida = ?, taxon_other_tadarida = ?,"
+                        + " median_freq_khz = ?, taxon_tadarida = ?, prob_tadarida = ?, taxon_other_tadarida = ?,"
                         + " taxon_observer = ?, prob_observer = ?, user_comment = ?, is_reference = ?,"
                         + " validation_mode = ?, results_id = ? WHERE id = ?",
                 observation.idSequence(),
                 observation.debutS(),
                 observation.finS(),
-                observation.frequenceMedianeHz(),
+                observation.frequenceMedianeKHz(),
                 observation.taxonTadarida(),
                 observation.probTadarida(),
                 observation.taxonAutreTadarida(),
@@ -460,7 +460,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             observation.idSequence(),
             observation.debutS(),
             observation.finS(),
-            observation.frequenceMedianeHz(),
+            observation.frequenceMedianeKHz(),
             observation.taxonTadarida(),
             observation.probTadarida(),
             observation.taxonAutreTadarida(),

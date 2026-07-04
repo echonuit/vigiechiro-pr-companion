@@ -1,4 +1,4 @@
 taxon;sequence source;fichier;frequence;commentaire
 Nyclei;b_000.wav;/ws/transformes/b_000.wav;22000;noctule claire
-Pippip;a_000.wav;/ws/transformes/a_000.wav;45000;signal net
+Pippip;a_000.wav;/ws/transformes/a_000.wav;45;signal net
 Rhihip;c_000.wav;/ws/transformes/c_000.wav;30000;

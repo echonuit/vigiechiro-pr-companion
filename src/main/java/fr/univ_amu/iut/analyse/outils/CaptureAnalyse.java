@@ -259,7 +259,7 @@ public final class CaptureAnalyse {
                 idSequence,
                 0.5,
                 3.0,
-                45000,
+                45,
                 code,
                 0.9,
                 null,

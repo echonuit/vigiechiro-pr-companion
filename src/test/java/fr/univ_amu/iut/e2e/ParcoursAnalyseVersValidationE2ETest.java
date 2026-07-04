@@ -142,7 +142,7 @@ class ParcoursAnalyseVersValidationE2ETest {
                 idSequence,
                 0.5,
                 3.0,
-                45000,
+                45,
                 "Pippip",
                 0.9,
                 null,

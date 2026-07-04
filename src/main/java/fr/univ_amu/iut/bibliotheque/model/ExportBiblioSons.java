@@ -59,7 +59,7 @@ public record ExportBiblioSons(List<EntreeBiblio> entrees) {
                     texte(entree.taxon()),
                     texte(entree.nomSequence()),
                     texte(entree.cheminFichier()),
-                    entree.frequenceHz() == null ? "" : String.valueOf(entree.frequenceHz()),
+                    entree.frequenceKHz() == null ? "" : String.valueOf(entree.frequenceKHz()),
                     texte(entree.commentaire())));
         }
         return lignes;

@@ -99,7 +99,7 @@ public final class ExportVuCsv {
         champs.add(texte(l.nomSequence()));
         champs.add(nombre(l.debutS()));
         champs.add(nombre(l.finS()));
-        champs.add(entier(l.frequenceMedianeHz()));
+        champs.add(entier(l.frequenceMedianeKHz()));
         champs.add(texte(l.taxonTadarida())); // R17 : verbatim
         champs.add(nombre(l.probTadarida())); // R17 : verbatim
         champs.add(texte(l.taxonAutreTadarida())); // R17 : verbatim (peut être multi-valué)

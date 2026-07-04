@@ -269,7 +269,7 @@ public final class CaptureValidationTadarida {
                         "validateur_taxon",
                         "validateur_probabilite")
                 + guillemets("seqA_000", "0.4", "2.6", "18000", "noise", "0.88", "", "", "", "", "")
-                + guillemets("seqB_000", "0.2", "3.1", "45000", "Pippip", "0.81", "", "", "", "", "")
+                + guillemets("seqB_000", "0.2", "3.1", "45", "Pippip", "0.81", "", "", "", "", "")
                 + guillemets("seqC_000", "0.5", "3.8", "23000", "Rhihip", "0.76", "", "", "", "", "")
                 + guillemets("seqD_000", "0.3", "2.9", "27000", "Nyclei", "0.69", "", "", "", "", "")
                 + guillemets("seqE_000", "0.1", "2.2", "8000", "piaf", "0.72", "", "", "", "", "")

@@ -82,7 +82,7 @@ class SonsValidationViewTest {
                 StatutObservation.VALIDEE,
                 true,
                 "beau cri",
-                45000,
+                45,
                 nomEspece,
                 nomTadarida,
                 "PaRec_" + seq + "_000.wav",
@@ -157,7 +157,7 @@ class SonsValidationViewTest {
     @DisplayName("Colonnes Date, Fréquence, Début et Durée (position et durée réelles du cri)")
     void affiche_date_frequence_debut_duree(FxRobot robot) {
         assertThat(colonne(robot, "Date").getCellData(0)).isEqualTo("2026-06-20");
-        assertThat(colonne(robot, "Fréquence").getCellData(0)).isEqualTo("45000 Hz");
+        assertThat(colonne(robot, "Fréquence").getCellData(0)).isEqualTo("45 kHz");
         // Borne debutS 0.20 s transformée → position réelle 0,02 s (÷ facteur d'expansion ×10).
         assertThat(colonne(robot, "Début").getCellData(0)).isEqualTo("0,02 s");
         // Bornes 0.20→0.32 s transformées → durée réelle 12 ms (÷ facteur d'expansion ×10).

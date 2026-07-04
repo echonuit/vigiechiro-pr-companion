@@ -109,7 +109,7 @@ class ServiceBibliothequeTest {
     void seules_les_references_sont_exportees() {
         // 3 références (Nyclei sans observateur, Pippip validé, Rhihip corrigé) + 2 non-références.
         observationDao.insert(reference(idSeqBeta, "Nyclei", null, 22000, "noctule claire"));
-        observationDao.insert(reference(idSeqAlpha, "Pippip", "Pippip", 45000, "signal net"));
+        observationDao.insert(reference(idSeqAlpha, "Pippip", "Pippip", 45, "signal net"));
         observationDao.insert(reference(idSeqGamma, "Pippip", "Rhihip", 30000, null));
         observationDao.insert(nonReference(idSeqAlpha, "Tadten"));
         observationDao.insert(nonReference(idSeqBeta, "Pippip"));
@@ -133,7 +133,7 @@ class ServiceBibliothequeTest {
     @DisplayName("Le récapitulatif CSV reprend taxon, séquence, fichier, fréquence et commentaire")
     void csv_recapitulatif_correct() {
         observationDao.insert(reference(idSeqBeta, "Nyclei", null, 22000, "noctule claire"));
-        observationDao.insert(reference(idSeqAlpha, "Pippip", "Pippip", 45000, "signal net"));
+        observationDao.insert(reference(idSeqAlpha, "Pippip", "Pippip", 45, "signal net"));
         observationDao.insert(reference(idSeqGamma, "Pippip", "Rhihip", 30000, null));
 
         String csv = service.exporterBibliotheque().versCsv();
@@ -141,7 +141,7 @@ class ServiceBibliothequeTest {
         assertThat(csv)
                 .startsWith("taxon;sequence source;fichier;frequence;commentaire\n")
                 .contains("Nyclei;b_000.wav;/ws/transformes/b_000.wav;22000;noctule claire\n")
-                .contains("Pippip;a_000.wav;/ws/transformes/a_000.wav;45000;signal net\n")
+                .contains("Pippip;a_000.wav;/ws/transformes/a_000.wav;45;signal net\n")
                 .contains("Rhihip;c_000.wav;/ws/transformes/c_000.wav;30000;\n");
         assertThat(csv.lines()).as("en-tête + 3 lignes de données").hasSize(4);
     }
@@ -150,7 +150,7 @@ class ServiceBibliothequeTest {
     @DisplayName("La liste des fichiers à copier est dédupliquée et dans l'ordre des entrées")
     void chemins_a_copier_dedupliques() {
         // Deux observations de référence sur la MÊME séquence (espèces différentes) → un seul fichier.
-        observationDao.insert(reference(idSeqAlpha, "Pippip", "Pippip", 45000, "m1"));
+        observationDao.insert(reference(idSeqAlpha, "Pippip", "Pippip", 45, "m1"));
         observationDao.insert(reference(idSeqAlpha, "Nyclei", "Nyclei", 40000, "m2"));
         observationDao.insert(reference(idSeqBeta, "Rhihip", "Rhihip", 30000, "m3"));
 

@@ -21,13 +21,13 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 ///   incombe au service.)
 /// - `taxonObservateur` / `probObservateur` : `null` tant que l'observateur n'a pas tranché (cas
 ///   d'un fichier Brut ou d'une ligne non touchée, R17).
-/// - `frequenceMedianeHz` : [Integer] (la colonne `median_freq_hz` est `INTEGER`) ; un éventuel
+/// - `frequenceMedianeKHz` : [Integer] (la colonne `median_freq_khz` est `INTEGER`) ; un éventuel
 ///   `"153.0"` du CSV est arrondi à l'entier le plus proche.
 ///
 /// @param nomSequence nom de fichier de la séquence d'écoute source (sans clé technique)
 /// @param debutS temps de début dans la séquence en secondes (optionnel)
 /// @param finS temps de fin dans la séquence en secondes (optionnel)
-/// @param frequenceMedianeHz fréquence médiane (métrique Tadarida, optionnelle)
+/// @param frequenceMedianeKHz fréquence médiane (métrique Tadarida, optionnelle)
 /// @param taxonTadarida code du taxon proposé par Tadarida (obligatoire)
 /// @param probTadarida probabilité Tadarida dans `[0,1]` (optionnelle)
 /// @param taxonAutreTadarida 2e proposition Tadarida, brute (optionnelle, parfois multi-valuée)
@@ -38,7 +38,7 @@ public record LigneObservation(
         String nomSequence,
         Double debutS,
         Double finS,
-        Integer frequenceMedianeHz,
+        Integer frequenceMedianeKHz,
         String taxonTadarida,
         Double probTadarida,
         String taxonAutreTadarida,

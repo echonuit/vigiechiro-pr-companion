@@ -37,7 +37,7 @@ public final class FormatLigneAudio {
                 + " ("
                 + proba(o.probObservateur())
                 + ") · Fréquence médiane : "
-                + frequence(o.frequenceHz())
+                + frequence(o.frequenceKHz())
                 + " · Statut : "
                 + libelleStatut(o.statut());
         return o.reference() ? detail + " · Référence : oui" : detail;
@@ -67,10 +67,11 @@ public final class FormatLigneAudio {
         return probabilite == null ? "—" : Math.round(probabilite * 100) + " %";
     }
 
-    /// Fréquence médiane formatée pour la **colonne** (« 45000 Hz »), tiret si absente. (Le pendant privé
+    /// Fréquence médiane formatée pour la **colonne** (« 52 kHz »), tiret si absente. La valeur Tadarida est
+    /// en **kHz** (fréquences de pic des chiroptères : dizaines de kHz), pas en Hz. (Le pendant privé
     /// [#frequence(Integer)] sert au panneau de détail avec le libellé « non renseigné ».)
-    public static String frequenceColonne(Integer frequenceHz) {
-        return frequenceHz == null ? "—" : frequenceHz + " Hz";
+    public static String frequenceColonne(Integer frequenceKHz) {
+        return frequenceKHz == null ? "—" : frequenceKHz + " kHz";
     }
 
     /// Durée **réelle** du cri formatée pour la colonne (« 12 ms »), tiret si les temps sont absents.
@@ -116,8 +117,8 @@ public final class FormatLigneAudio {
         return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
     }
 
-    /// Comparateur de tri de la colonne « Fréquence » : ordonne selon la valeur en Hz (« 9000 Hz » <
-    /// « 45000 Hz »), et non alphabétiquement ; absente (« — ») classée en tête.
+    /// Comparateur de tri de la colonne « Fréquence » : ordonne selon la valeur en kHz (« 9 kHz » <
+    /// « 45 kHz »), et non alphabétiquement ; absente (« — ») classée en tête.
     public static Comparator<String> comparateurFrequence() {
         return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
     }
@@ -132,6 +133,14 @@ public final class FormatLigneAudio {
     /// »), et non alphabétiquement ; absente (« — ») classée en tête. Le format à deux décimales rend les
     /// chiffres extraits (centièmes de seconde) monotones vis-à-vis de la valeur.
     public static Comparator<String> comparateurPosition() {
+        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
+    }
+
+    /// Comparateur de tri **numérique** commun aux colonnes dont l'affichage est une chaîne préfixée/suffixée
+    /// d'un nombre (« 90 % », « 45 kHz », « 0,02 s », « 12 ms », « N°2 ») : ordonne selon le premier entier
+    /// lu ([#premierEntierOuMoinsUn]) plutôt qu'alphabétiquement ; valeur absente (« — ») classée en tête.
+    /// Les alias par colonne ([#comparateurPourcentage], [#comparateurFrequence], etc.) délèguent tous ici.
+    public static Comparator<String> comparateurNumerique() {
         return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
     }
 
@@ -170,7 +179,7 @@ public final class FormatLigneAudio {
         return code == null || code.isBlank() ? NON_RENSEIGNE : code;
     }
 
-    private static String frequence(Integer hz) {
-        return hz == null ? NON_RENSEIGNE : hz + " Hz";
+    private static String frequence(Integer khz) {
+        return khz == null ? NON_RENSEIGNE : khz + " kHz";
     }
 }

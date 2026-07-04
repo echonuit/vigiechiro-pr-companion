@@ -18,7 +18,7 @@ import org.junit.jupiter.api.io.TempDir;
 class ExportBiblioSonsTest {
 
     private static EntreeBiblio entree(String taxon, String nom, String chemin) {
-        return new EntreeBiblio(taxon, nom, chemin, 45000, null);
+        return new EntreeBiblio(taxon, nom, chemin, 45, null);
     }
 
     @Test

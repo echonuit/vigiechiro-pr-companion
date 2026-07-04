@@ -90,7 +90,7 @@ class ServiceBibliothequeApprovalTest {
                 .id();
 
         observationDao.insert(reference(idBeta, "Nyclei", null, 22000, "noctule claire"));
-        observationDao.insert(reference(idAlpha, "Pippip", "Pippip", 45000, "signal net"));
+        observationDao.insert(reference(idAlpha, "Pippip", "Pippip", 45, "signal net"));
         observationDao.insert(reference(idGamma, "Pippip", "Rhihip", 30000, null));
         observationDao.insert(nonReference(idAlpha, "Tadten"));
 

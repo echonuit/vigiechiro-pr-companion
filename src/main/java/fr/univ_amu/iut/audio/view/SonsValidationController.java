@@ -184,7 +184,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         colProba.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.probabilite(c.getValue().probTadarida())));
         colFrequence.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                FormatLigneAudio.frequenceColonne(c.getValue().frequenceHz())));
+                FormatLigneAudio.frequenceColonne(c.getValue().frequenceKHz())));
         colDebut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.positionColonne(c.getValue().debutS())));
         colDuree.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.dureeColonne(
@@ -206,11 +206,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         colStatut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.libelleStatut(c.getValue().statut())));
 
-        colProba.setComparator(FormatLigneAudio.comparateurPourcentage());
-        colFrequence.setComparator(FormatLigneAudio.comparateurFrequence());
-        colDebut.setComparator(FormatLigneAudio.comparateurPosition());
-        colDuree.setComparator(FormatLigneAudio.comparateurDuree());
-        colPassage.setComparator(FormatLigneAudio.comparateurNumeroPassage());
+        // Colonnes dont l'affichage est une chaîne à préfixe/suffixe numérique : même comparateur numérique
+        // (sinon « 100 % » précèderait « 83 % » et « N°10 » « N°2 »). Le statut a son propre ordre de revue.
+        List.of(colProba, colFrequence, colDebut, colDuree, colPassage)
+                .forEach(colonne -> colonne.setComparator(FormatLigneAudio.comparateurNumerique()));
         colStatut.setComparator(FormatLigneAudio.comparateurStatut());
 
         // Indicateurs référence / commentaire : en-tête et cellule rendus par une **icône Ikonli colorée**

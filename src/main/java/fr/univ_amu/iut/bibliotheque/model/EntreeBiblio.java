@@ -14,7 +14,7 @@ package fr.univ_amu.iut.bibliotheque.model;
 ///     (`listening_sequence.file_name`)
 /// @param cheminFichier chemin sur disque du fichier de séquence à copier
 ///     (`listening_sequence.file_path`, sous-dossier `transformes/`)
-/// @param frequenceHz fréquence médiane en Hz de l'observation (`null` si absente)
+/// @param frequenceKHz fréquence médiane en kHz de l'observation (`null` si absente)
 /// @param commentaire commentaire libre de l'observateur (`null` si absent)
 public record EntreeBiblio(
-        String taxon, String nomSequence, String cheminFichier, Integer frequenceHz, String commentaire) {}
+        String taxon, String nomSequence, String cheminFichier, Integer frequenceKHz, String commentaire) {}

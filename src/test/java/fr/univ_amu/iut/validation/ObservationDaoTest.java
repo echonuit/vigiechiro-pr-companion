@@ -92,7 +92,7 @@ class ObservationDaoTest {
                 idSequence,
                 0.5,
                 3.2,
-                45000,
+                45,
                 "Pippip",
                 0.92,
                 "Nyclei",
@@ -114,7 +114,7 @@ class ObservationDaoTest {
         assertThat(relu.idSequence()).isEqualTo(idSequence);
         assertThat(relu.debutS()).isEqualTo(0.5);
         assertThat(relu.finS()).isEqualTo(3.2);
-        assertThat(relu.frequenceMedianeHz()).isEqualTo(45000);
+        assertThat(relu.frequenceMedianeKHz()).isEqualTo(45);
         assertThat(relu.taxonTadarida()).isEqualTo("Pippip");
         assertThat(relu.taxonAutreTadarida()).isEqualTo("Nyclei");
         assertThat(relu.taxonObservateur()).isEqualTo("Pippip");
@@ -148,7 +148,7 @@ class ObservationDaoTest {
         assertThat(relu.taxonObservateur()).isNull();
         assertThat(relu.debutS()).isNull();
         assertThat(relu.finS()).isNull();
-        assertThat(relu.frequenceMedianeHz()).isNull();
+        assertThat(relu.frequenceMedianeKHz()).isNull();
         assertThat(relu.probTadarida()).isNull();
         assertThat(relu.reference()).isFalse();
         assertThat(relu.modeValidation())
@@ -422,7 +422,7 @@ class ObservationDaoTest {
     @Test
     @DisplayName("#audio : lignesAudioDuPassage porte le contexte, les champs d'archivage et le statut")
     void lignes_audio_du_passage() {
-        dao.insert(observationComplete()); // Pippip validé, is_reference, commentaire « signal net », 45000 Hz
+        dao.insert(observationComplete()); // Pippip validé, is_reference, commentaire « signal net », 45 kHz
         dao.insert(observation("Nyclei", null)); // non touchée
 
         List<LigneObservationAudio> lignes = dao.lignesAudioDuPassage(idPassage);
@@ -439,7 +439,7 @@ class ObservationDaoTest {
                 .orElseThrow();
         assertThat(reference.statut()).isEqualTo(StatutObservation.VALIDEE);
         assertThat(reference.commentaire()).isEqualTo("signal net");
-        assertThat(reference.frequenceHz()).isEqualTo(45000);
+        assertThat(reference.frequenceKHz()).isEqualTo(45);
         // Bornes du cri (timeline transformée) portées par la projection : servent à la durée et au repérage.
         assertThat(reference.debutS()).isEqualTo(0.5);
         assertThat(reference.finS()).isEqualTo(3.2);

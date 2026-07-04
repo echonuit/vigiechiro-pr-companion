@@ -69,7 +69,7 @@ class AudioViewModelTest {
                 statut,
                 ref,
                 null,
-                45000,
+                45,
                 null,
                 null,
                 "PaRec_" + idSeq + "_000.wav",
