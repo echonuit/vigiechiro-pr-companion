@@ -266,13 +266,16 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // originaux ralentis ×10 (importation.model.TransformationAudio.FACTEUR_EXPANSION). Réglé ici
         // pour que les axes affichent les grandeurs RÉELLES : fréquences × 10 (les vraies fréquences,
         // pas celles du signal ralenti) et temps ÷ 10. N'affecte que les libellés, pas l'audio.
-        audioView.setTimeExpansionFactor(10);
+        audioView.setTimeExpansionFactor(RepereCriAudio.FACTEUR_EXPANSION_TEMPS);
         audioView.audioFileProperty().bind(viewModel.cheminAudioCourantProperty());
         audioView.sceneProperty().addListener((obs, avant, scene) -> {
             if (scene == null) {
                 audioView.dispose();
             }
         });
+        // Repérage du cri sélectionné (#482) : surligne la fenêtre [début, fin] sur l'onde et le
+        // spectrogramme (emphase) et y positionne la lecture (seek). Détail dans RepereCriAudio.
+        RepereCriAudio.installer(audioView, viewModel.selectionProperty());
 
         choixMode.getItems().setAll(ModeRevue.values());
         choixMode.setConverter(libelleConverter(mode -> mode == null ? "" : libelleMode(mode)));

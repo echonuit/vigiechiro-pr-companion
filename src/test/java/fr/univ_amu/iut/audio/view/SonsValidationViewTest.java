@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
@@ -193,6 +194,24 @@ class SonsValidationViewTest {
 
         assertThat(colonne(robot, "Fichier").getCellData(0)).isEqualTo("PaRec_11_000.wav");
         assertThat(colonne(robot, "Fichier").getCellData(1)).isEqualTo("PaRec_10_000.wav");
+    }
+
+    @Test
+    @DisplayName("Sélection d'un cri : la fenêtre [début, fin] réelle est surlignée sur l'AudioView (#482)")
+    void selection_surligne_la_fenetre_du_cri(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+
+        // Bornes du cri 0.20→0.32 s transformées → 0,02–0,032 s réelles (÷ facteur d'expansion ×10).
+        robot.interact(() -> table.getSelectionModel().select(0));
+        double[] fenetre = audio.getHighlightedWindow();
+        assertThat(fenetre).hasSize(2);
+        assertThat(fenetre[0]).isEqualTo(0.02, within(1e-9));
+        assertThat(fenetre[1]).isEqualTo(0.032, within(1e-9));
+
+        // Désélection → surlignage effacé.
+        robot.interact(() -> table.getSelectionModel().clearSelection());
+        assertThat(audio.getHighlightedWindow()).isNull();
     }
 
     @Test
