@@ -252,6 +252,31 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName(
+            "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
+    void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        assertThat(table.getColumns())
+                .extracting(TableColumn::getText)
+                .containsExactly(
+                        "Date",
+                        "Passage",
+                        "Carré",
+                        "Point",
+                        "Fichier",
+                        "Proposition Tadarida",
+                        "Proba.",
+                        "Votre taxon",
+                        "Fréquence",
+                        "Statut",
+                        "⭐",
+                        "💬");
+        // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
+        assertThat(colonne(robot, "⭐").isSortable()).isFalse();
+        assertThat(colonne(robot, "💬").isSortable()).isFalse();
+    }
+
+    @Test
     @DisplayName("Gestion des colonnes : item « Colonnes… » dans le menu contextuel (clic droit) et dans le ☰")
     void gestion_colonnes_accessible(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);

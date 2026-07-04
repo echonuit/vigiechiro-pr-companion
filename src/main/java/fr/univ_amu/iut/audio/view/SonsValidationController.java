@@ -207,6 +207,10 @@ public class SonsValidationController implements EmplacementNavigation {
         colFrequence.setComparator(FormatLigneAudio.comparateurFrequence());
         colPassage.setComparator(FormatLigneAudio.comparateurNumeroPassage());
         colStatut.setComparator(FormatLigneAudio.comparateurStatut());
+        // Colonnes-indicateurs (icône ⭐/💬) : trier une icône n'a pas de sens et donne une colonne
+        // « vide » triable déroutante → tri désactivé (le repérage passera par les filtres dédiés).
+        colReference.setSortable(false);
+        colCommentaire.setSortable(false);
     }
 
     @FXML
