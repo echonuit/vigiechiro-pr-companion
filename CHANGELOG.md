@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.79.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.78.0...v1.79.0) (2026-07-04)
+
+
+### Features
+
+* **audio:** retirer la ligne de détail redondante du panneau d'écoute ([#493](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/493)) ([#498](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/498)) ([8da64ff](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/8da64ff2bd1848637e000d1669a290ef2b6d7bef)), closes [#495](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/495)
+
 # [1.78.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.77.0...v1.78.0) (2026-07-04)
 
 
