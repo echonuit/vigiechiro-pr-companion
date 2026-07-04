@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.82.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.81.2...v1.82.0) (2026-07-04)
+
+
+### Features
+
+* **audio:** colonnes FME & fréquence terminale (grandeurs d'identification) ([#500](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/500)) ([#505](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/505)) ([c03db0f](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/c03db0f8e0fa0c3ceff942d7409c94c740b7e816))
+
 ## [1.81.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.81.1...v1.81.2) (2026-07-04)
 
 
