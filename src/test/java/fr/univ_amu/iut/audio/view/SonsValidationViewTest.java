@@ -213,17 +213,19 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("Sélectionner une ligne alimente le détail et l'écoute (AudioView)")
-    void selection_alimente_detail_et_audio(FxRobot robot) {
+    @DisplayName("Sélectionner une ligne charge l'écoute (AudioView) ; plus de ligne de détail dans le panneau")
+    void selection_alimente_l_audio(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
-        Label detail = robot.lookup("#lblDetail").queryAs(Label.class);
+
+        // La ligne de détail redondante avec la table a été retirée du panneau (déportée en barre de statut,
+        // #495) : le détail reste calculé côté ViewModel (couvert par AudioViewModelTest).
+        assertThat(robot.lookup("#lblDetail").tryQuery()).isEmpty();
 
         assertThat(audio.getAudioFile()).isNull();
         assertThat(audio.isNormalisation()).isTrue();
         robot.interact(() -> table.getSelectionModel().select(0));
         assertThat(audio.getAudioFile().toString()).endsWith("p.wav");
-        assertThat(detail.getText()).contains("Tadarida : Pippip").contains("Référence : oui");
     }
 
     @Test

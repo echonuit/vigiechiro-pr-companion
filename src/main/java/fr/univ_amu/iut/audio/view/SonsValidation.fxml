@@ -91,8 +91,9 @@
 
     <!-- Bas : écoute pleine largeur + revue. minHeight pour que le spectrogramme ne soit jamais écrasé
          par la table quand on tire le diviseur (cf. incident #329 : vgrow qui aplatit l'AudioView). -->
-    <VBox fx:id="panneauEcoute" styleClass="panneau-ecoute" spacing="6.0" minHeight="230.0">
-      <Label fx:id="lblDetail" styleClass="audio-detail" wrapText="true"/>
+    <VBox fx:id="panneauEcoute" styleClass="panneau-ecoute" spacing="6.0" minHeight="210.0">
+      <!-- Détail de l'observation retiré du panneau (redondant avec la table) : il sera rendu dans la
+           barre de statut lors de la structuration en 3 zones (#495). Le VM garde detailProperty prête. -->
       <AudioView fx:id="audioView" VBox.vgrow="ALWAYS" minHeight="150.0"/>
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">
         <ComboBox fx:id="choixMode"/>

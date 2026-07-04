@@ -129,9 +129,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private Label lblVide;
 
     @FXML
-    private Label lblDetail;
-
-    @FXML
     private AudioView audioView;
 
     @FXML
@@ -249,7 +246,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 statut -> statut == null ? "Tous les statuts" : FormatLigneAudio.libelleStatut(statut)));
         choixFiltre.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
 
-        lblDetail.textProperty().bind(viewModel.detailProperty());
         resumeStatut.bind(Bindings.createStringBinding(this::resumeStatutTexte, viewModel.comptageProperty()));
 
         // Vue audio (composant fourni, E7.S3) : la source suit l'observation sélectionnée ; le clip est
