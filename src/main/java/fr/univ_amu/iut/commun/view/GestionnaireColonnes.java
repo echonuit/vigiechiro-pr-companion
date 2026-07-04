@@ -11,6 +11,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -58,11 +59,19 @@ public final class GestionnaireColonnes {
         menu.getItems().add(itemMenu);
     }
 
-    /// Affiche le panneau de gestion des colonnes dans une fenêtre flottante ancrée sous `ancre`.
+    /// Affiche le panneau de gestion des colonnes dans une fenêtre flottante ancrée sous `ancre`. Un bouton
+    /// **Fermer** (en plus de l'auto-masquage au clic extérieur, peu fiable selon l'environnement) garantit
+    /// qu'on peut toujours refermer le panneau. Les changements (ordre, visibilité) sont appliqués **en
+    /// direct**, il n'y a donc rien à « valider ».
     public static void ouvrir(TableView<?> table, List<Colonne> colonnes, Node ancre) {
         Popup popup = new Popup();
         popup.setAutoHide(true);
-        popup.getContent().add(construirePanneau(table, colonnes));
+        VBox panneau = construirePanneau(table, colonnes);
+        Button fermer = new Button("Fermer");
+        fermer.setMaxWidth(Double.MAX_VALUE);
+        fermer.setOnAction(e -> popup.hide());
+        panneau.getChildren().add(fermer);
+        popup.getContent().add(panneau);
         Bounds ecran = ancre.localToScreen(ancre.getBoundsInLocal());
         popup.show(ancre, ecran.getMinX(), ecran.getMaxY());
     }
