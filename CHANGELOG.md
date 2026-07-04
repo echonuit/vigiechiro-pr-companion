@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.81.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.81.1...v1.81.2) (2026-07-04)
+
+
+### Bug Fixes
+
+* temps du cri en secondes réelles + découpage à 5 s réelles (fidèle à Tadarida) ([#504](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/504)) ([4cc2455](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/4cc245580b107219c26ded0438d3c74f4d361add)), closes [501/#482](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/482)
+
 ## [1.81.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.81.0...v1.81.1) (2026-07-04)
 
 
