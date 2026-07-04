@@ -44,23 +44,38 @@ final class MetriquesAcoustiquesAudio {
                 cache.frequenceTerminaleColonne(c.getValue().idObservation())));
         colFme.setComparator(ComparateursAudio.comparateurNumerique());
         colFreqTerminale.setComparator(ComparateursAudio.comparateurNumerique());
-        audioView.fmeHzProperty().addListener((obs, avant, apres) -> {
+        // FME et fréquence terminale ne se stabilisent pas forcément au même instant : on capte sur les
+        // DEUX propriétés (et on relit les deux à chaque fois) pour ne rater aucune grandeur tardive.
+        Runnable capter = () -> {
             LigneObservationAudio observation = selection.getValue();
             if (observation != null
                     && cache.memoriser(
                             observation.idObservation(), audioView.getFmeHz(), audioView.getFrequenceTerminaleHz())) {
                 table.refresh(); // peuple les cellules FME / fréquence terminale de la ligne
             }
-        });
+        };
+        audioView.fmeHzProperty().addListener((obs, avant, apres) -> capter.run());
+        audioView.frequenceTerminaleHzProperty().addListener((obs, avant, apres) -> capter.run());
     }
 
-    /// Mémorise les grandeurs (en Hz) d'une observation, **sauf** si les deux sont indéterminées (`NaN`,
-    /// ex. audio absent ou silence). Renvoie `true` si quelque chose a été mémorisé (→ rafraîchir la table).
+    /// Mémorise les grandeurs (en Hz) d'une observation, en **fusionnant** avec ce qui est déjà connu : une
+    /// grandeur `NaN` (indéterminée à cet instant) ne **remplace pas** une valeur finie déjà captée. Renvoie
+    /// `true` seulement si le cache a **changé** (→ inutile de rafraîchir sinon). Rien n'est mémorisé si les
+    /// deux grandeurs restent indéterminées.
     boolean memoriser(long idObservation, double fmeHz, double frequenceTerminaleHz) {
-        if (Double.isNaN(fmeHz) && Double.isNaN(frequenceTerminaleHz)) {
+        Mesures avant = parObservation.get(idObservation);
+        double fme = Double.isNaN(fmeHz) && avant != null ? avant.fmeHz() : fmeHz;
+        double terminale = Double.isNaN(frequenceTerminaleHz) && avant != null
+                ? avant.frequenceTerminaleHz()
+                : frequenceTerminaleHz;
+        if (Double.isNaN(fme) && Double.isNaN(terminale)) {
             return false;
         }
-        parObservation.put(idObservation, new Mesures(fmeHz, frequenceTerminaleHz));
+        Mesures apres = new Mesures(fme, terminale);
+        if (apres.equals(avant)) {
+            return false; // rien de nouveau
+        }
+        parObservation.put(idObservation, apres);
         return true;
     }
 

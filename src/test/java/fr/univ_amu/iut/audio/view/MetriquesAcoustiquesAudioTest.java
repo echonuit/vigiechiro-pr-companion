@@ -41,4 +41,18 @@ class MetriquesAcoustiquesAudioTest {
         assertThat(metriques.fmeColonne(7L)).isEqualTo("52 kHz");
         assertThat(metriques.frequenceTerminaleColonne(7L)).isEqualTo("—");
     }
+
+    @Test
+    @DisplayName("Fusion : une lecture tardive complète l'autre grandeur sans effacer la première")
+    void fusion_ne_perd_pas_une_grandeur_deja_captee() {
+        MetriquesAcoustiquesAudio metriques = new MetriquesAcoustiquesAudio();
+        // 1re capture : FME seule (fréq. terminale pas encore stabilisée).
+        assertThat(metriques.memoriser(7L, 52_000, Double.NaN)).isTrue();
+        // 2e capture : fréq. terminale arrive, FME relue NaN transitoirement → on garde la FME captée.
+        assertThat(metriques.memoriser(7L, Double.NaN, 45_000)).isTrue();
+        assertThat(metriques.fmeColonne(7L)).isEqualTo("52 kHz");
+        assertThat(metriques.frequenceTerminaleColonne(7L)).isEqualTo("45 kHz");
+        // 3e capture identique : rien de nouveau → pas de rafraîchissement.
+        assertThat(metriques.memoriser(7L, 52_000, 45_000)).isFalse();
+    }
 }
