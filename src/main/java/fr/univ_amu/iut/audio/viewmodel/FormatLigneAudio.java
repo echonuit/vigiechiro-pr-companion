@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.util.Comparator;
 
 /// Formatages d'affichage d'une [LigneObservationAudio] pour la vue audio unifiée : détail multi-ligne
 /// du panneau d'écoute et libellé de statut de la colonne « Statut ». Pendant de
@@ -65,6 +66,46 @@ public final class FormatLigneAudio {
             case VALIDEE -> "Validée";
             case CORRIGEE -> "Corrigée";
         };
+    }
+
+    /// Comparateur de tri de la colonne « Proba. » : ordonne selon la **valeur numérique** du pourcentage
+    /// affiché (« 100 % » > « 83 % »), et non alphabétiquement (où « 100 % » précèderait « 83 % »). Une
+    /// probabilité absente (« — ») est classée avant toute valeur (traitée comme -1).
+    public static Comparator<String> comparateurPourcentage() {
+        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
+    }
+
+    /// Comparateur de tri de la colonne « Passage » : ordonne selon le **numéro** (« N°2 » < « N°10 »), et
+    /// non alphabétiquement.
+    public static Comparator<String> comparateurNumeroPassage() {
+        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
+    }
+
+    /// Comparateur de tri de la colonne « Statut » : ordonne selon l'**ordre de revue** (À revoir → Validée
+    /// → Corrigée), l'ordre naturel de [StatutObservation], plutôt qu'alphabétiquement.
+    public static Comparator<String> comparateurStatut() {
+        return Comparator.comparingInt(FormatLigneAudio::ordreStatut);
+    }
+
+    /// Premier entier lu dans l'affichage (chiffres extraits : « 83 % » → 83, « N°10 » → 10), ou -1 si
+    /// aucun chiffre (« — », vide, nul). Support des comparateurs numériques ci-dessus.
+    private static int premierEntierOuMoinsUn(String affichage) {
+        if (affichage == null) {
+            return -1;
+        }
+        String chiffres = affichage.replaceAll("\\D", "");
+        return chiffres.isEmpty() ? -1 : Integer.parseInt(chiffres);
+    }
+
+    /// Rang de revue d'un libellé de statut (inverse de [#libelleStatut(StatutObservation)]), ou -1 si le
+    /// libellé n'est pas reconnu.
+    private static int ordreStatut(String libelle) {
+        for (StatutObservation statut : StatutObservation.values()) {
+            if (libelleStatut(statut).equals(libelle)) {
+                return statut.ordinal();
+            }
+        }
+        return -1;
     }
 
     private static String proba(Double probabilite) {

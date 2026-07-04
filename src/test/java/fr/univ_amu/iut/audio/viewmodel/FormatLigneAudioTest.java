@@ -56,4 +56,28 @@ class FormatLigneAudioTest {
     void votre_taxon_code_si_souche() {
         assertThat(FormatLigneAudio.votreTaxon(ligne("Xxxsp", null))).isEqualTo("Xxxsp");
     }
+
+    @Test
+    @DisplayName("Comparateur Proba : ordre numérique (« 9 % » < « 83 % » < « 100 % »), absent (« — ») en tête")
+    void comparateur_pourcentage_ordonne_par_valeur() {
+        var tri = new java.util.ArrayList<>(java.util.List.of("83 %", "100 %", "9 %", "—"));
+        tri.sort(FormatLigneAudio.comparateurPourcentage());
+        assertThat(tri).containsExactly("—", "9 %", "83 %", "100 %");
+    }
+
+    @Test
+    @DisplayName("Comparateur Passage : ordre numérique (« N°2 » < « N°10 »)")
+    void comparateur_passage_ordonne_par_numero() {
+        var tri = new java.util.ArrayList<>(java.util.List.of("N°10", "N°2", "N°1"));
+        tri.sort(FormatLigneAudio.comparateurNumeroPassage());
+        assertThat(tri).containsExactly("N°1", "N°2", "N°10");
+    }
+
+    @Test
+    @DisplayName("Comparateur Statut : ordre de revue (À revoir → Validée → Corrigée), pas alphabétique")
+    void comparateur_statut_ordonne_par_revue() {
+        var tri = new java.util.ArrayList<>(java.util.List.of("Corrigée", "À revoir", "Validée"));
+        tri.sort(FormatLigneAudio.comparateurStatut());
+        assertThat(tri).containsExactly("À revoir", "Validée", "Corrigée");
+    }
 }

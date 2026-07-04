@@ -149,6 +149,24 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("Les colonnes sont triables : trier « Fichier » en décroissant réordonne les lignes")
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    void colonnes_triables(FxRobot robot) {
+        TableView table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        TableColumn fichier = colonne(robot, "Fichier");
+
+        // Sans l'enveloppe SortedList, trier une table alimentée par une FilteredList ne réordonne rien.
+        robot.interact(() -> {
+            table.getSortOrder().setAll(fichier);
+            fichier.setSortType(TableColumn.SortType.DESCENDING);
+            table.sort();
+        });
+
+        assertThat(colonne(robot, "Fichier").getCellData(0)).isEqualTo("PaRec_11_000.wav");
+        assertThat(colonne(robot, "Fichier").getCellData(1)).isEqualTo("PaRec_10_000.wav");
+    }
+
+    @Test
     @DisplayName("Sélectionner une ligne alimente le détail et l'écoute (AudioView)")
     void selection_alimente_detail_et_audio(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
