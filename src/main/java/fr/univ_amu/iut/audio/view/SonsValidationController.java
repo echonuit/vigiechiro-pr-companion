@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
@@ -208,9 +209,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         // Colonnes dont l'affichage est une chaîne à préfixe/suffixe numérique : même comparateur numérique
         // (sinon « 100 % » précèderait « 83 % » et « N°10 » « N°2 »). Le statut a son propre ordre de revue.
-        List.of(colProba, colFrequence, colDebut, colDuree, colPassage)
-                .forEach(colonne -> colonne.setComparator(FormatLigneAudio.comparateurNumerique()));
-        colStatut.setComparator(FormatLigneAudio.comparateurStatut());
+        List.of(colProba, colFrequence, colDebut, colPassage)
+                .forEach(colonne -> colonne.setComparator(ComparateursAudio.comparateurNumerique()));
+        // Durée : unité adaptative ms/s → comparateur dédié (le tri numérique naïf mêlerait « 120 ms » et
+        // « 2,1 s »).
+        colDuree.setComparator(ComparateursAudio.comparateurDuree());
+        colStatut.setComparator(ComparateursAudio.comparateurStatut());
 
         // Indicateurs référence / commentaire : en-tête et cellule rendus par une **icône Ikonli colorée**
         // (les emojis ⭐/💬 ne s'affichaient pas dans toutes les polices). En-tête sans texte (icône seule),

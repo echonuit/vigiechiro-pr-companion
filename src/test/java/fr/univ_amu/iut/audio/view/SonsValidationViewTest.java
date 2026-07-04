@@ -158,10 +158,10 @@ class SonsValidationViewTest {
     void affiche_date_frequence_debut_duree(FxRobot robot) {
         assertThat(colonne(robot, "Date").getCellData(0)).isEqualTo("2026-06-20");
         assertThat(colonne(robot, "Fréquence").getCellData(0)).isEqualTo("45 kHz");
-        // Borne debutS 0.20 s transformée → position réelle 0,02 s (÷ facteur d'expansion ×10).
-        assertThat(colonne(robot, "Début").getCellData(0)).isEqualTo("0,02 s");
-        // Bornes 0.20→0.32 s transformées → durée réelle 12 ms (÷ facteur d'expansion ×10).
-        assertThat(colonne(robot, "Durée").getCellData(0)).isEqualTo("12 ms");
+        // debutS 0.20 s est déjà en secondes réelles → position affichée telle quelle.
+        assertThat(colonne(robot, "Début").getCellData(0)).isEqualTo("0,20 s");
+        // Bornes réelles 0.20→0.32 s → durée 0,12 s = 120 ms (< 1 s, unité adaptative).
+        assertThat(colonne(robot, "Durée").getCellData(0)).isEqualTo("120 ms");
     }
 
     @Test
@@ -204,12 +204,12 @@ class SonsValidationViewTest {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
 
-        // Bornes du cri 0.20→0.32 s transformées → 0,02–0,032 s réelles (÷ facteur d'expansion ×10).
+        // Bornes du cri déjà en secondes réelles (0.20–0.32 s) → surlignées telles quelles sur l'axe réel.
         robot.interact(() -> table.getSelectionModel().select(0));
         double[] fenetre = audio.getHighlightedWindow();
         assertThat(fenetre).hasSize(2);
-        assertThat(fenetre[0]).isEqualTo(0.02, within(1e-9));
-        assertThat(fenetre[1]).isEqualTo(0.032, within(1e-9));
+        assertThat(fenetre[0]).isEqualTo(0.20, within(1e-9));
+        assertThat(fenetre[1]).isEqualTo(0.32, within(1e-9));
 
         // Désélection → surlignage effacé.
         robot.interact(() -> table.getSelectionModel().clearSelection());

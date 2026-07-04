@@ -2,7 +2,6 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
-import java.util.Comparator;
 import java.util.Locale;
 
 /// Formatages d'affichage d'une [LigneObservationAudio] pour la vue audio unifiée : détail multi-ligne
@@ -15,11 +14,6 @@ public final class FormatLigneAudio {
 
     /// Affichage des valeurs optionnelles absentes (probabilité, taxon observateur non saisi).
     private static final String NON_RENSEIGNE = "non renseigné";
-
-    /// Facteur d'expansion temporelle ×10 du protocole Vigie-Chiro : les séquences transformées sont
-    /// ralenties ×10, donc les temps du CSV (et `debutS`/`finS`) sont dans la timeline **transformée**. La
-    /// durée **réelle** du cri s'obtient en divisant par ce facteur (cohérent avec `setTimeExpansionFactor`).
-    private static final int FACTEUR_EXPANSION_TEMPS = 10;
 
     private FormatLigneAudio() {}
 
@@ -74,25 +68,30 @@ public final class FormatLigneAudio {
         return frequenceKHz == null ? "—" : frequenceKHz + " kHz";
     }
 
-    /// Durée **réelle** du cri formatée pour la colonne (« 12 ms »), tiret si les temps sont absents.
-    /// Calculée à partir des bornes **transformées** `(finS − debutS)` ramenées à la timeline réelle (÷
-    /// [#FACTEUR_EXPANSION_TEMPS]). C'est un discriminant utile là où la fréquence médiane l'est peu.
+    /// Durée du cri formatée pour la colonne, en unité **adaptative** : millisecondes sous 1 s (« 120 ms »),
+    /// secondes au-delà (« 2,1 s ») ; tiret si les temps sont absents. Les bornes `debutS`/`finS` sont **déjà
+    /// en secondes réelles** (temps Tadarida au sein de la tranche de 5 s), donc `finS − debutS` est la durée
+    /// réelle, **sans** division : l'audio-view affiche la même échelle (axe réel via `setTimeExpansionFactor`).
     public static String dureeColonne(Double debutS, Double finS) {
         if (debutS == null || finS == null) {
             return "—";
         }
-        return Math.round((finS - debutS) / FACTEUR_EXPANSION_TEMPS * 1000) + " ms";
+        double secondes = finS - debutS;
+        if (secondes < 1.0) {
+            return Math.round(secondes * 1000) + " ms";
+        }
+        return String.format(Locale.FRENCH, "%.1f s", secondes);
     }
 
-    /// Position **réelle** du début du cri dans le fichier, formatée pour la colonne (« 0,03 s »), tiret si
-    /// absente. La borne stockée `debutS` est sur la timeline **transformée** ; on la ramène à la timeline
-    /// réelle (÷ [#FACTEUR_EXPANSION_TEMPS]). Situe le cri dans le fichier et distingue les lignes d'un même
-    /// enregistrement (plusieurs cris → plusieurs positions).
+    /// Position du début du cri dans la tranche, en secondes **réelles** (« 0,40 s »), tiret si absente. La
+    /// borne `debutS` est déjà réelle (temps Tadarida), affichée telle quelle — cohérente avec l'axe de
+    /// l'audio-view. Situe le cri et distingue les lignes d'un même fichier (plusieurs cris → plusieurs
+    /// positions).
     public static String positionColonne(Double debutS) {
         if (debutS == null) {
             return "—";
         }
-        return String.format(Locale.FRENCH, "%.2f s", debutS / FACTEUR_EXPANSION_TEMPS);
+        return String.format(Locale.FRENCH, "%.2f s", debutS);
     }
 
     /// Libellé d'affichage du statut de revue (partagé avec la colonne « Statut » de la vue).
@@ -102,73 +101,6 @@ public final class FormatLigneAudio {
             case VALIDEE -> "Validée";
             case CORRIGEE -> "Corrigée";
         };
-    }
-
-    /// Comparateur de tri de la colonne « Proba. » : ordonne selon la **valeur numérique** du pourcentage
-    /// affiché (« 100 % » > « 83 % »), et non alphabétiquement (où « 100 % » précèderait « 83 % »). Une
-    /// probabilité absente (« — ») est classée avant toute valeur (traitée comme -1).
-    public static Comparator<String> comparateurPourcentage() {
-        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
-    }
-
-    /// Comparateur de tri de la colonne « Passage » : ordonne selon le **numéro** (« N°2 » < « N°10 »), et
-    /// non alphabétiquement.
-    public static Comparator<String> comparateurNumeroPassage() {
-        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
-    }
-
-    /// Comparateur de tri de la colonne « Fréquence » : ordonne selon la valeur en kHz (« 9 kHz » <
-    /// « 45 kHz »), et non alphabétiquement ; absente (« — ») classée en tête.
-    public static Comparator<String> comparateurFrequence() {
-        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
-    }
-
-    /// Comparateur de tri de la colonne « Durée » : ordonne selon la valeur en ms (« 5 ms » < « 12 ms »),
-    /// et non alphabétiquement ; absente (« — ») classée en tête.
-    public static Comparator<String> comparateurDuree() {
-        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
-    }
-
-    /// Comparateur de tri de la colonne « Début » : ordonne selon la position réelle (« 0,50 s » < « 3,20 s
-    /// »), et non alphabétiquement ; absente (« — ») classée en tête. Le format à deux décimales rend les
-    /// chiffres extraits (centièmes de seconde) monotones vis-à-vis de la valeur.
-    public static Comparator<String> comparateurPosition() {
-        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
-    }
-
-    /// Comparateur de tri **numérique** commun aux colonnes dont l'affichage est une chaîne préfixée/suffixée
-    /// d'un nombre (« 90 % », « 45 kHz », « 0,02 s », « 12 ms », « N°2 ») : ordonne selon le premier entier
-    /// lu ([#premierEntierOuMoinsUn]) plutôt qu'alphabétiquement ; valeur absente (« — ») classée en tête.
-    /// Les alias par colonne ([#comparateurPourcentage], [#comparateurFrequence], etc.) délèguent tous ici.
-    public static Comparator<String> comparateurNumerique() {
-        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
-    }
-
-    /// Comparateur de tri de la colonne « Statut » : ordonne selon l'**ordre de revue** (À revoir → Validée
-    /// → Corrigée), l'ordre naturel de [StatutObservation], plutôt qu'alphabétiquement.
-    public static Comparator<String> comparateurStatut() {
-        return Comparator.comparingInt(FormatLigneAudio::ordreStatut);
-    }
-
-    /// Premier entier lu dans l'affichage (chiffres extraits : « 83 % » → 83, « N°10 » → 10), ou -1 si
-    /// aucun chiffre (« — », vide, nul). Support des comparateurs numériques ci-dessus.
-    private static int premierEntierOuMoinsUn(String affichage) {
-        if (affichage == null) {
-            return -1;
-        }
-        String chiffres = affichage.replaceAll("\\D", "");
-        return chiffres.isEmpty() ? -1 : Integer.parseInt(chiffres);
-    }
-
-    /// Rang de revue d'un libellé de statut (inverse de [#libelleStatut(StatutObservation)]), ou -1 si le
-    /// libellé n'est pas reconnu.
-    private static int ordreStatut(String libelle) {
-        for (StatutObservation statut : StatutObservation.values()) {
-            if (libelleStatut(statut).equals(libelle)) {
-                return statut.ordinal();
-            }
-        }
-        return -1;
     }
 
     private static String proba(Double probabilite) {

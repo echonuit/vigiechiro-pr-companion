@@ -10,13 +10,16 @@ import javafx.beans.value.ObservableValue;
 /// Logique sortie du `SonsValidationController` (pur câblage) pour le garder sous les seuils de cohésion
 /// PMD (NcssCount / GodClass), comme `CellulesAudio`.
 ///
-/// **Convention de temps.** Les bornes `debutS`/`finS` du modèle sont sur la timeline **transformée**
-/// (protocole Vigie-Chiro ×10) ; les API temporelles de l'AudioView (`seek`, `highlightWindow`) parlent en
-/// **secondes réelles**. On divise donc par [#FACTEUR_EXPANSION_TEMPS] (le même facteur que
-/// `setTimeExpansionFactor`, exposé ici pour rester l'unique source).
+/// **Convention de temps.** Les bornes `debutS`/`finS` (temps Tadarida) sont **déjà en secondes réelles**
+/// au sein de la tranche de 5 s. Les API temporelles de l'AudioView (`seek`, `highlightWindow`) attendent
+/// aussi des **secondes réelles** (l'axe est réel grâce à `setTimeExpansionFactor`). On passe donc les
+/// bornes **telles quelles**, sans conversion. [#FACTEUR_EXPANSION_TEMPS] ne sert plus qu'à configurer
+/// l'AudioView (le fichier joué est, lui, ralenti ×10).
 final class RepereCriAudio {
 
-    /// Facteur d'expansion temporelle ×10 : temps réel = temps transformé ÷ ce facteur.
+    /// Facteur d'expansion temporelle ×10 du fichier d'écoute, passé à `AudioView.setTimeExpansionFactor`
+    /// pour que ses axes affichent les grandeurs réelles. **Ne sert pas** à convertir les temps du cri
+    /// (déjà réels).
     static final double FACTEUR_EXPANSION_TEMPS = 10;
 
     private RepereCriAudio() {}
@@ -34,18 +37,19 @@ final class RepereCriAudio {
     }
 
     /// Surligne la fenêtre du cri et y positionne la lecture. Sans observation ou sans bornes temporelles,
-    /// efface le surlignage. Le seek n'est tenté que si le clip est chargé ([AudioView#isReady]) — sinon il
-    /// serait borné à zéro ; il est rejoué au passage à « prêt ».
+    /// efface le surlignage. Les bornes (secondes réelles) sont passées **telles quelles** à l'AudioView.
+    /// Le seek n'est tenté que si le clip est chargé ([AudioView#isReady]) — sinon il serait borné à zéro ;
+    /// il est rejoué au passage à « prêt ».
     static void appliquer(AudioView audioView, LigneObservationAudio observation) {
         if (observation == null || observation.debutS() == null || observation.finS() == null) {
             audioView.clearHighlight();
             return;
         }
-        double debutReel = observation.debutS() / FACTEUR_EXPANSION_TEMPS;
-        double finReel = observation.finS() / FACTEUR_EXPANSION_TEMPS;
-        audioView.highlightWindow(debutReel, finReel);
+        double debut = observation.debutS();
+        double fin = observation.finS();
+        audioView.highlightWindow(debut, fin);
         if (audioView.isReady()) {
-            audioView.seek(debutReel);
+            audioView.seek(debut);
         }
     }
 }
