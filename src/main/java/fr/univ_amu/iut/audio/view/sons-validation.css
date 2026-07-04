@@ -6,7 +6,9 @@
 
 .ecran-audio {
   -fx-background-color: #fafbfc;
-  -fx-padding: 18;
+  /* Padding resserré (surtout vertical) : moins d'espace perdu au-dessus de la barre de filtres et en
+     bas avant la barre de statut, au bénéfice de la table et du spectrogramme. */
+  -fx-padding: 8 14;
 }
 
 .sous-titre-page {
@@ -33,9 +35,10 @@
   -fx-border-color: #e1e4e8;
   -fx-border-radius: 4;
   -fx-background-radius: 4;
-  -fx-padding: 10;
+  -fx-padding: 8;
 }
 
+/* Détail de l'observation sélectionnée : une seule ligne (séparée par « · ») qui utilise la largeur. */
 .audio-detail {
   -fx-font-size: 12px;
   -fx-text-fill: #34495e;

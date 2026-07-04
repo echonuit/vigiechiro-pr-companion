@@ -31,9 +31,10 @@
       fx:controller="fr.univ_amu.iut.audio.view.SonsValidationController"
       stylesheets="@../../commun/view/palette.css, @sons-validation.css"
       styleClass="ecran-audio"
-      spacing="10.0">
+      spacing="6.0">
 
-  <Label fx:id="lblResume" styleClass="sous-titre-page"/>
+  <!-- Pas de bandeau de titre ici : le nom d'écran est déjà porté par le fil d'Ariane, et le résumé
+       (compteurs de revue) est déporté dans la barre de statut via ResumeStatut (gain d'espace vertical). -->
 
   <!-- Barre allégée : filtre de statut au centre (auto-descriptif), actions propres à la source épinglées
        à droite dans un menu « ☰ » (patron multisite) - seuls les items pertinents s'affichent. -->
@@ -90,7 +91,7 @@
 
     <!-- Bas : écoute pleine largeur + revue. minHeight pour que le spectrogramme ne soit jamais écrasé
          par la table quand on tire le diviseur (cf. incident #329 : vgrow qui aplatit l'AudioView). -->
-    <VBox fx:id="panneauEcoute" styleClass="panneau-ecoute" spacing="8.0" minHeight="240.0">
+    <VBox fx:id="panneauEcoute" styleClass="panneau-ecoute" spacing="6.0" minHeight="230.0">
       <Label fx:id="lblDetail" styleClass="audio-detail" wrapText="true"/>
       <AudioView fx:id="audioView" VBox.vgrow="ALWAYS" minHeight="150.0"/>
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">

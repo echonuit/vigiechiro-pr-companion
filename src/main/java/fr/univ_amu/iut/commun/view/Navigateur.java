@@ -238,6 +238,17 @@ public class Navigateur {
         vueCentrale.set(sommet.vue());
         navigation.setVueCourante(sommet.id());
         navigation.setFilAriane(filActuel().stream().map(Lieu::libelle).collect(Collectors.joining(" › ")));
+
+        // Barre de statut : le pied suit le **résumé** de l'écran au sommet s'il en déclare un
+        // ([ResumeStatut], lié pour une mise à jour en direct) ; sinon on revient à la mention par défaut.
+        // Centralisé ici (appelé à chaque changement d'écran), donc aucun nettoyage par écran n'est requis.
+        navigation.piedDePageProperty().unbind();
+        ResumeStatut resume = sommet.resumeStatut();
+        if (resume != null) {
+            navigation.piedDePageProperty().bind(resume.resumeStatutProperty());
+        } else {
+            navigation.setPiedDePage(NavigationViewModel.PIED_DEFAUT);
+        }
     }
 
     /// Recharge le sommet courant s'il déclare [RafraichirAuRetour]. Appelé uniquement par les

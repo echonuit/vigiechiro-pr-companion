@@ -20,12 +20,16 @@ import javafx.beans.property.StringProperty;
 /// les met à jour quand une feature change de zone centrale.
 public class NavigationViewModel {
 
+    /// Mention par défaut de la barre de statut, affichée quand l'écran courant ne fournit pas de résumé
+    /// (cf. [fr.univ_amu.iut.commun.view.ResumeStatut]). Le [fr.univ_amu.iut.commun.view.Navigateur] y
+    /// revient à chaque changement d'écran.
+    public static final String PIED_DEFAUT = "SAÉ 2.01 · IUT d'Aix-Marseille";
+
     private final StringProperty titreApplication =
             new SimpleStringProperty(this, "titreApplication", "VigieChiro PR Companion");
     private final StringProperty vueCourante = new SimpleStringProperty(this, "vueCourante", "accueil");
     private final StringProperty filAriane = new SimpleStringProperty(this, "filAriane", "Accueil");
-    private final StringProperty piedDePage =
-            new SimpleStringProperty(this, "piedDePage", "SAÉ 2.01 · IUT d'Aix-Marseille");
+    private final StringProperty piedDePage = new SimpleStringProperty(this, "piedDePage", PIED_DEFAUT);
 
     /// Verrou de navigation (#54) : `true` pendant une opération longue (ex. un import en cours) qui ne
     /// doit pas être quittée. Le chrome lie le `disable` du lien « 🏠 Accueil » à cette propriété et le

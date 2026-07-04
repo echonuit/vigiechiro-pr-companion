@@ -61,6 +61,7 @@ import org.testfx.framework.junit5.Start;
 class SonsValidationViewTest {
 
     private ServiceValidation service;
+    private SonsValidationController controleur;
 
     private static LigneObservationAudio ligne(
             long id, long seq, String tadarida, String observateur, String nomEspece, String nomTadarida) {
@@ -110,24 +111,24 @@ class SonsValidationViewTest {
         FXMLLoader loader = new FXMLLoader(SonsValidationController.class.getResource("SonsValidation.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        SonsValidationController controleur = loader.getController();
+        controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References("u-1"));
         stage.setScene(new Scene(vue, 1000, 700));
         stage.show();
     }
 
     @Test
-    @DisplayName("La table liste les références ; le résumé les compte")
+    @DisplayName("La table liste les références ; le résumé de statut compte + l'avancement (sans bandeau de titre)")
     void affiche_table_et_resume(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        Label resume = robot.lookup("#lblResume").queryAs(Label.class);
-
         assertThat(table.getItems()).hasSize(2);
-        // Résumé : libellé de source + total + avancement de la revue (les 2 lignes sont VALIDEE).
-        assertThat(resume.getText())
-                .contains("Sons de référence")
-                .contains("2 observation(s)")
-                .contains("2 / 2 revues");
+
+        // Plus de bandeau de titre en tête de vue (déporté : nom d'écran dans le fil d'Ariane).
+        assertThat(robot.lookup("#lblResume").tryQuery()).isEmpty();
+
+        // Le résumé destiné à la barre de statut porte le total + l'avancement (les 2 lignes sont VALIDEE),
+        // sans répéter le nom d'écran.
+        assertThat(controleur.resumeStatutProperty().get()).isEqualTo("2 observation(s) · 2 / 2 revues");
     }
 
     @Test

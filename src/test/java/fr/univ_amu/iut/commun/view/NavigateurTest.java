@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.List;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.stage.Stage;
@@ -244,5 +245,31 @@ class NavigateurTest {
         navigateur.ouvrirRacine(new Group(), "import2", "Importer", autre);
         navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null); // nouvelle racine → autre retiré
         assertThat(autre.departs).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("La barre de statut suit le résumé de l'écran au sommet (ResumeStatut), défaut sinon")
+    void pied_suit_le_resume_de_l_ecran() {
+        NavigationViewModel navigation = new NavigationViewModel();
+        Navigateur navigateur = navigateur(navigation, new Group());
+        assertThat(navigation.getPiedDePage())
+                .as("accueil sans résumé → mention par défaut")
+                .isEqualTo(NavigationViewModel.PIED_DEFAUT);
+
+        // Écran déclarant un résumé de statut (contrat ResumeStatut, ici via une propriété mutable).
+        ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper("42 observation(s) · 3 / 42 revues");
+        ResumeStatut ecranAudio = resume::getReadOnlyProperty;
+        navigateur.empiler(new Group(), "audio", "Sons & validation", ecranAudio);
+        assertThat(navigation.getPiedDePage()).isEqualTo("42 observation(s) · 3 / 42 revues");
+
+        // Mise à jour en direct du résumé → le pied suit.
+        resume.set("42 observation(s) · 10 / 42 revues");
+        assertThat(navigation.getPiedDePage()).isEqualTo("42 observation(s) · 10 / 42 revues");
+
+        // Écran sans résumé au sommet → retour à la mention par défaut (et plus de lien vivant).
+        navigateur.empiler(new Group(), "autre", "Autre écran", null);
+        assertThat(navigation.getPiedDePage()).isEqualTo(NavigationViewModel.PIED_DEFAUT);
+        resume.set("ne doit plus être reflété");
+        assertThat(navigation.getPiedDePage()).isEqualTo(NavigationViewModel.PIED_DEFAUT);
     }
 }

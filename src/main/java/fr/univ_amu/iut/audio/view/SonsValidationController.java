@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
@@ -22,6 +23,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -48,7 +50,7 @@ import javafx.util.StringConverter;
 /// « ☰ » que pour la source concernée, et les colonnes de **contexte** (passage / carré / point) sont
 /// masquées quand la source est un **unique passage** (elles y seraient constantes). Aucun accès base
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
-public class SonsValidationController implements EmplacementNavigation {
+public class SonsValidationController implements EmplacementNavigation, ResumeStatut {
 
     private final AudioViewModel viewModel;
     private final OuvrirSite ouvrirSite;
@@ -59,11 +61,12 @@ public class SonsValidationController implements EmplacementNavigation {
     /// Source courante, mémorisée pour adapter colonnes / actions / fil d'Ariane.
     private SourceObservations source;
 
-    @FXML
-    private VBox racine;
+    /// Résumé exposé à la **barre de statut** ([ResumeStatut]) : compteurs de revue de la source courante,
+    /// mis à jour en direct. Remplace l'ancien bandeau de titre (redondant avec le fil d'Ariane).
+    private final ReadOnlyStringWrapper resumeStatut = new ReadOnlyStringWrapper(this, "resumeStatut", "");
 
     @FXML
-    private Label lblResume;
+    private VBox racine;
 
     @FXML
     private ComboBox<StatutObservation> choixFiltre;
@@ -247,7 +250,7 @@ public class SonsValidationController implements EmplacementNavigation {
         choixFiltre.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
 
         lblDetail.textProperty().bind(viewModel.detailProperty());
-        lblResume.textProperty().bind(Bindings.createStringBinding(this::resumeTexte, viewModel.comptageProperty()));
+        resumeStatut.bind(Bindings.createStringBinding(this::resumeStatutTexte, viewModel.comptageProperty()));
 
         // Vue audio (composant fourni, E7.S3) : la source suit l'observation sélectionnée ; le clip est
         // libéré quand la vue quitte la scène. Trois normalisations activées, complémentaires : celle du
@@ -438,16 +441,22 @@ public class SonsValidationController implements EmplacementNavigation {
         return "Sons & validation";
     }
 
-    private String resumeTexte() {
+    /// Texte de la **barre de statut** : total d'observations + avancement de la revue (« N observation(s)
+    /// · X / N revues »). Sans le nom d'écran (déjà porté par le fil d'Ariane).
+    private String resumeStatutTexte() {
         if (source == null) {
             return "";
         }
         ComptageAudio comptage = viewModel.comptageProperty().get();
         if (comptage.total() == 0) {
-            return libelleEcran();
+            return "Aucune observation";
         }
-        // Total + avancement de la revue (« N / T revues » = validées + corrigées sur le total).
-        return libelleEcran() + " — " + comptage.total() + " observation(s) · " + comptage.progression();
+        return comptage.total() + " observation(s) · " + comptage.progression();
+    }
+
+    @Override
+    public ReadOnlyStringProperty resumeStatutProperty() {
+        return resumeStatut.getReadOnlyProperty();
     }
 
     @FXML

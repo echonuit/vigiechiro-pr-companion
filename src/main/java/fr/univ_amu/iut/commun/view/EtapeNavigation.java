@@ -41,4 +41,9 @@ public record EtapeNavigation(String id, String libelle, Parent vue, Object cont
     public AuDepartEcran auDepartEcran() {
         return controleur instanceof AuDepartEcran d ? d : null;
     }
+
+    /// Le **résumé de barre de statut** déclaré par l'écran, ou `null` s'il n'en déclare pas.
+    public ResumeStatut resumeStatut() {
+        return controleur instanceof ResumeStatut r ? r : null;
+    }
 }

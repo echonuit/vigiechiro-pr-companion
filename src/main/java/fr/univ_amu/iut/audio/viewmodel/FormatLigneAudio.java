@@ -20,19 +20,21 @@ public final class FormatLigneAudio {
     /// Détail multi-ligne d'une observation sélectionnée (proposition Tadarida, saisie observateur,
     /// fréquence médiane, statut de revue, et mention « référence » si archivée).
     public static String detail(LigneObservationAudio o) {
-        return "Tadarida : "
+        // Une seule ligne séparée par « · » : utilise la largeur disponible plutôt que d'empiler
+        // verticalement (gain d'espace pour le spectrogramme).
+        String detail = "Tadarida : "
                 + o.taxonTadarida()
                 + " ("
                 + proba(o.probTadarida())
-                + ")\nObservateur : "
+                + ") · Observateur : "
                 + valeurOuAbsente(o.taxonObservateur())
                 + " ("
                 + proba(o.probObservateur())
-                + ")\nFréquence médiane : "
+                + ") · Fréquence médiane : "
                 + frequence(o.frequenceHz())
-                + "\nStatut : "
-                + libelleStatut(o.statut())
-                + (o.reference() ? "\nRéférence : oui" : "");
+                + " · Statut : "
+                + libelleStatut(o.statut());
+        return o.reference() ? detail + " · Référence : oui" : detail;
     }
 
     /// Libellé de **votre taxon** (décision de l'observateur) affiché en colonne : tiret tant que
