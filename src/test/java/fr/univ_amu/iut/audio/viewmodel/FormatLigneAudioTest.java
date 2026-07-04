@@ -34,7 +34,9 @@ class FormatLigneAudioTest {
                 45000,
                 nomEspece,
                 "Pipistrelle commune",
-                "PaRec_20260620_000.wav");
+                "PaRec_20260620_000.wav",
+                0.20,
+                0.32);
     }
 
     @Test
@@ -94,5 +96,22 @@ class FormatLigneAudioTest {
         var tri = new java.util.ArrayList<>(java.util.List.of("45000 Hz", "9000 Hz", "—"));
         tri.sort(FormatLigneAudio.comparateurFrequence());
         assertThat(tri).containsExactly("—", "9000 Hz", "45000 Hz");
+    }
+
+    @Test
+    @DisplayName("Durée colonne : durée réelle en ms (bornes transformées ÷ expansion ×10), tiret si absente")
+    void duree_colonne_reelle() {
+        // (0.32 − 0.20) s transformées = 0,12 s ; ÷ 10 (expansion) = 0,012 s = 12 ms.
+        assertThat(FormatLigneAudio.dureeColonne(0.20, 0.32)).isEqualTo("12 ms");
+        assertThat(FormatLigneAudio.dureeColonne(null, 0.32)).isEqualTo("—");
+        assertThat(FormatLigneAudio.dureeColonne(0.20, null)).isEqualTo("—");
+    }
+
+    @Test
+    @DisplayName("Comparateur Durée : ordre numérique (« 5 ms » < « 12 ms »), absente en tête")
+    void comparateur_duree_ordonne_par_valeur() {
+        var tri = new java.util.ArrayList<>(java.util.List.of("12 ms", "5 ms", "—"));
+        tri.sort(FormatLigneAudio.comparateurDuree());
+        assertThat(tri).containsExactly("—", "5 ms", "12 ms");
     }
 }

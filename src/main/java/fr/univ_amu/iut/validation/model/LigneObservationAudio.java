@@ -31,6 +31,9 @@ package fr.univ_amu.iut.validation.model;
 ///     (souche hors référentiel) — la vue affiche alors le code
 /// @param nomFichier nom de fichier de la séquence d'écoute (`listening_sequence.file_name`), pour relier
 ///     la ligne à l'enregistrement écouté
+/// @param debutS début du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null`
+/// @param finS fin du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null` — la durée
+///     **réelle** du cri se déduit de `(finS − debutS)` divisé par le facteur d'expansion (cf. formatage)
 public record LigneObservationAudio(
         long idObservation,
         long idSequence,
@@ -50,4 +53,6 @@ public record LigneObservationAudio(
         Integer frequenceHz,
         String nomEspece,
         String nomTadarida,
-        String nomFichier) {}
+        String nomFichier,
+        Double debutS,
+        Double finS) {}

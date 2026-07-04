@@ -15,6 +15,11 @@ public final class FormatLigneAudio {
     /// Affichage des valeurs optionnelles absentes (probabilité, taxon observateur non saisi).
     private static final String NON_RENSEIGNE = "non renseigné";
 
+    /// Facteur d'expansion temporelle ×10 du protocole Vigie-Chiro : les séquences transformées sont
+    /// ralenties ×10, donc les temps du CSV (et `debutS`/`finS`) sont dans la timeline **transformée**. La
+    /// durée **réelle** du cri s'obtient en divisant par ce facteur (cohérent avec `setTimeExpansionFactor`).
+    private static final int FACTEUR_EXPANSION_TEMPS = 10;
+
     private FormatLigneAudio() {}
 
     /// Détail multi-ligne d'une observation sélectionnée (proposition Tadarida, saisie observateur,
@@ -67,6 +72,16 @@ public final class FormatLigneAudio {
         return frequenceHz == null ? "—" : frequenceHz + " Hz";
     }
 
+    /// Durée **réelle** du cri formatée pour la colonne (« 12 ms »), tiret si les temps sont absents.
+    /// Calculée à partir des bornes **transformées** `(finS − debutS)` ramenées à la timeline réelle (÷
+    /// [#FACTEUR_EXPANSION_TEMPS]). C'est un discriminant utile là où la fréquence médiane l'est peu.
+    public static String dureeColonne(Double debutS, Double finS) {
+        if (debutS == null || finS == null) {
+            return "—";
+        }
+        return Math.round((finS - debutS) / FACTEUR_EXPANSION_TEMPS * 1000) + " ms";
+    }
+
     /// Libellé d'affichage du statut de revue (partagé avec la colonne « Statut » de la vue).
     public static String libelleStatut(StatutObservation statut) {
         return switch (statut) {
@@ -92,6 +107,12 @@ public final class FormatLigneAudio {
     /// Comparateur de tri de la colonne « Fréquence » : ordonne selon la valeur en Hz (« 9000 Hz » <
     /// « 45000 Hz »), et non alphabétiquement ; absente (« — ») classée en tête.
     public static Comparator<String> comparateurFrequence() {
+        return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
+    }
+
+    /// Comparateur de tri de la colonne « Durée » : ordonne selon la valeur en ms (« 5 ms » < « 12 ms »),
+    /// et non alphabétiquement ; absente (« — ») classée en tête.
+    public static Comparator<String> comparateurDuree() {
         return Comparator.comparingInt(FormatLigneAudio::premierEntierOuMoinsUn);
     }
 

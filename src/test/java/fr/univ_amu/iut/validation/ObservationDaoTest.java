@@ -440,6 +440,9 @@ class ObservationDaoTest {
         assertThat(reference.statut()).isEqualTo(StatutObservation.VALIDEE);
         assertThat(reference.commentaire()).isEqualTo("signal net");
         assertThat(reference.frequenceHz()).isEqualTo(45000);
+        // Bornes du cri (timeline transformée) portées par la projection : servent à la durée et au repérage.
+        assertThat(reference.debutS()).isEqualTo(0.5);
+        assertThat(reference.finS()).isEqualTo(3.2);
     }
 
     @Test
