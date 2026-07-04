@@ -53,6 +53,15 @@ final class CellulesAudio {
         colonne.setCellFactory(c -> fournisseurCellule.get());
     }
 
+    /// Configure les **deux colonnes-indicateurs** (référence ⭐ et commentaire 💬) via
+    /// [#configurerColonne] : icône colorée en en-tête, cellule dédiée, non triables.
+    static void configurerIndicateurs(
+            TableColumn<LigneObservationAudio, String> colReference,
+            TableColumn<LigneObservationAudio, String> colCommentaire) {
+        configurerColonne(colReference, "colReference", ICONE_REFERENCE, CellulesAudio::reference);
+        configurerColonne(colCommentaire, "colCommentaire", ICONE_COMMENTAIRE, CellulesAudio::commentaire);
+    }
+
     /// Cellule texte qui **élide** un contenu long et en expose la valeur complète via une infobulle au
     /// survol. Ni infobulle ni décoration pour un contenu vide ou le tiret « — ».
     static TableCell<LigneObservationAudio, String> avecInfobulle() {

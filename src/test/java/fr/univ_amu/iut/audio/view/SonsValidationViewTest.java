@@ -158,6 +158,10 @@ class SonsValidationViewTest {
     void affiche_date_frequence_debut_duree(FxRobot robot) {
         assertThat(colonne(robot, "Date").getCellData(0)).isEqualTo("2026-06-20");
         assertThat(colonne(robot, "Fréquence").getCellData(0)).isEqualTo("45 kHz");
+        // FME / fréquence terminale (#500) : « — » tant que le cri n'a pas été sélectionné (calcul
+        // paresseux par l'audio-view ; aucun audio ne se charge en headless).
+        assertThat(colonne(robot, "FME").getCellData(0)).isEqualTo("—");
+        assertThat(colonne(robot, "Fréq. term.").getCellData(0)).isEqualTo("—");
         // debutS 0.20 s est déjà en secondes réelles → position affichée telle quelle.
         assertThat(colonne(robot, "Début").getCellData(0)).isEqualTo("0,20 s");
         // Bornes réelles 0.20→0.32 s → durée 0,12 s = 120 ms (< 1 s, unité adaptative).
@@ -299,9 +303,9 @@ class SonsValidationViewTest {
             "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
     void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        // Les 12 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
+        // Les 14 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
         assertThat(table.getColumns().stream()
-                        .limit(12)
+                        .limit(14)
                         .map(TableColumn::getText)
                         .toList())
                 .containsExactly(
@@ -314,11 +318,13 @@ class SonsValidationViewTest {
                         "Proba.",
                         "Votre taxon",
                         "Fréquence",
+                        "FME",
+                        "Fréq. term.",
                         "Début",
                         "Durée",
                         "Statut");
-        assertThat(table.getColumns().get(12).getId()).isEqualTo("colReference");
-        assertThat(table.getColumns().get(13).getId()).isEqualTo("colCommentaire");
+        assertThat(table.getColumns().get(14).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(15).getId()).isEqualTo("colCommentaire");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();

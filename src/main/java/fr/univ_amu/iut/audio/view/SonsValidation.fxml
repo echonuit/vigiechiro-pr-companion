@@ -81,6 +81,8 @@
           <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
           <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="180.0"/>
           <TableColumn fx:id="colFrequence" text="Fréquence" prefWidth="100.0"/>
+          <TableColumn fx:id="colFme" text="FME" prefWidth="90.0"/>
+          <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="100.0"/>
           <TableColumn fx:id="colDebut" text="Début" prefWidth="80.0"/>
           <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
           <TableColumn fx:id="colStatut" text="Statut" prefWidth="110.0"/>

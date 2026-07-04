@@ -100,6 +100,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private TableColumn<LigneObservationAudio, String> colFrequence;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colFme;
+
+    @FXML
+    private TableColumn<LigneObservationAudio, String> colFreqTerminale;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colDebut;
 
     @FXML
@@ -220,10 +226,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // (les emojis ⭐/💬 ne s'affichaient pas dans toutes les polices). En-tête sans texte (icône seule),
         // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et **non triables** (trier
         // une icône n'a pas de sens et donnait une colonne « vide » triable déroutante).
-        CellulesAudio.configurerColonne(
-                colReference, "colReference", CellulesAudio.ICONE_REFERENCE, CellulesAudio::reference);
-        CellulesAudio.configurerColonne(
-                colCommentaire, "colCommentaire", CellulesAudio.ICONE_COMMENTAIRE, CellulesAudio::commentaire);
+        CellulesAudio.configurerIndicateurs(colReference, colCommentaire);
     }
 
     @FXML
@@ -285,6 +288,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Repérage du cri sélectionné (#482) : surligne la fenêtre [début, fin] sur l'onde et le
         // spectrogramme (emphase) et y positionne la lecture (seek). Détail dans RepereCriAudio.
         RepereCriAudio.installer(audioView, viewModel.selectionProperty());
+        // Grandeurs acoustiques (#500) : FME / fréq. terminale calculées paresseusement par l'audio-view
+        // pour le cri sélectionné, colonnes peuplées au fil de la navigation (détail dans le helper).
+        MetriquesAcoustiquesAudio.installer(
+                audioView, viewModel.selectionProperty(), tableObservations, colFme, colFreqTerminale);
 
         choixMode.getItems().setAll(ModeRevue.values());
         choixMode.setConverter(libelleConverter(mode -> mode == null ? "" : libelleMode(mode)));
@@ -350,6 +357,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         new GestionnaireColonnes.Colonne(colTadarida, "Proposition Tadarida", true),
                         new GestionnaireColonnes.Colonne(colProba, "Proba.", false),
                         new GestionnaireColonnes.Colonne(colFrequence, "Fréquence", false),
+                        new GestionnaireColonnes.Colonne(colFme, "FME", false),
+                        new GestionnaireColonnes.Colonne(colFreqTerminale, "Fréq. terminale", false),
                         new GestionnaireColonnes.Colonne(colDebut, "Début", false),
                         new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
                         new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
