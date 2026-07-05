@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.83.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.82.0...v1.83.0) (2026-07-05)
+
+
+### Features
+
+* taxon parent dans les vues centrees observation ([#507](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/507)) ([25b30ef](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/25b30ef829a0f9b0b578cb988bb0382879dc6b27))
+
 # [1.82.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.81.2...v1.82.0) (2026-07-04)
 
 
