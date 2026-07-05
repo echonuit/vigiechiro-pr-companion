@@ -321,6 +321,9 @@ class ObservationDaoTest {
             assertThat(espece.codePoint()).isEqualTo("A1");
             assertThat(espece.annee()).isEqualTo(2026);
             assertThat(espece.numeroPassage()).isEqualTo(1);
+            // Taxon parent (join taxonomic_group) : Pippip et Tadten sont des chiroptères, tous deux
+            // rattachés à la catégorie « Chiroptères » depuis la normalisation V08 (fil rouge sous genre → catégorie).
+            assertThat(espece.groupe()).isEqualTo("Chiroptères");
         });
     }
 

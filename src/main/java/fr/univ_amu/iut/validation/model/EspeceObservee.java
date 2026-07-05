@@ -13,6 +13,8 @@ package fr.univ_amu.iut.validation.model;
 /// @param code code 6 lettres du taxon (clé naturelle)
 /// @param nomLatin nom latin (optionnel)
 /// @param nomVernaculaireFr nom vernaculaire français (optionnel)
+/// @param groupe taxon parent : nom du groupe taxonomique du taxon (ex. « Chiroptères »), tel qu'affiché
+///     par le portail VigieChiro ; `null` si le taxon n'est rattaché à aucun groupe
 /// @param idPassage passage où l'espèce a été observée (cible de navigation)
 /// @param numeroCarre n° de carré du site du passage
 /// @param codePoint code du point d'écoute du passage
@@ -23,6 +25,7 @@ public record EspeceObservee(
         String code,
         String nomLatin,
         String nomVernaculaireFr,
+        String groupe,
         long idPassage,
         String numeroCarre,
         String codePoint,

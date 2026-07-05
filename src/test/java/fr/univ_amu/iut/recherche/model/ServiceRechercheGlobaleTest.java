@@ -39,7 +39,7 @@ class ServiceRechercheGlobaleTest {
     private ServiceRechercheGlobale recherche;
 
     private static EspeceObservee espece(String code, String latin, String vern, long idPassage) {
-        return new EspeceObservee(code, latin, vern, idPassage, "640380", "A1", 2026, 2, "2026-06-21");
+        return new EspeceObservee(code, latin, vern, "Chiroptères", idPassage, "640380", "A1", 2026, 2, "2026-06-21");
     }
 
     private static Site site(Long id, String numeroCarre, String nom) {
@@ -164,6 +164,9 @@ class ServiceRechercheGlobaleTest {
                     .anySatisfy(r -> {
                         assertThat(r.type()).isEqualTo(TypeResultat.ESPECE);
                         assertThat(r.libelle()).contains("Pipistrelle commune").contains("Pippip");
+                        assertThat(r.details())
+                                .as("le taxon parent ouvre le détail, comme la colonne « Taxon parent » du portail")
+                                .startsWith("Chiroptères · ");
                         assertThat(r.idPassage())
                                 .as("ouvre le passage où l'espèce a été observée")
                                 .isEqualTo(42L);

@@ -33,7 +33,8 @@ public class MigrationSchema {
         "V04__groupe_hors_referentiel.sql",
         "V05__seed_taxons_officiels.sql",
         "V06__reparer_souches_referentiel.sql",
-        "V07__renommer_median_freq_khz.sql"
+        "V07__renommer_median_freq_khz.sql",
+        "V08__rattacher_fil_rouge_chiropteres.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

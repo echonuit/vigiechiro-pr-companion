@@ -29,6 +29,9 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     /// Au-delà, l'utilisateur affine sa saisie (les résultats supplémentaires sont silencieusement omis).
     static final int MAX_PAR_TYPE = 8;
 
+    /// Séparateur des segments d'un libellé/détail de résultat (p. ex. `Chiroptères · 640380 / A1 · n°2`).
+    private static final String SEPARATEUR = " · ";
+
     private final ServiceSites services;
     private final ServiceMultisite multisite;
     private final ServiceValidation validation;
@@ -154,9 +157,10 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     }
 
     private static ResultatRecherche resultatPassage(LignePassage ligne) {
-        String libelle = carreEtPoint(ligne.numeroCarre(), ligne.codePoint()) + " · n°" + ligne.numeroPassage();
+        String libelle =
+                carreEtPoint(ligne.numeroCarre(), ligne.codePoint()) + SEPARATEUR + "n°" + ligne.numeroPassage();
         String details = ligne.dateEnregistrement() != null
-                ? "Passage " + ligne.annee() + " · " + ligne.dateEnregistrement()
+                ? "Passage " + ligne.annee() + SEPARATEUR + ligne.dateEnregistrement()
                 : "Passage " + ligne.annee();
         return new ResultatRecherche(
                 TypeResultat.PASSAGE,
@@ -169,13 +173,16 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     }
 
     /// Résultat **espèce** rattaché à un passage : libellé = nom (vernaculaire, sinon latin, sinon code)
-    /// + code entre parenthèses ; détail = la nuit où elle a été observée. Cliquer ouvre ce passage (mêmes
-    /// clés d'identité qu'un résultat passage).
+    /// + code entre parenthèses ; détail = le taxon parent (ex. « Chiroptères », si connu) puis la nuit où
+    /// elle a été observée. Cliquer ouvre ce passage (mêmes clés d'identité qu'un résultat passage).
     private static ResultatRecherche resultatEspece(EspeceObservee espece) {
         String nom = premierNonVide(espece.nomVernaculaireFr(), espece.nomLatin(), espece.code());
         String libelle = nom + " (" + espece.code() + ")";
-        String details = carreEtPoint(espece.numeroCarre(), espece.codePoint()) + " · n°" + espece.numeroPassage()
-                + (espece.dateEnregistrement() != null ? " · " + espece.dateEnregistrement() : "");
+        String prefixeGroupe =
+                espece.groupe() != null && !espece.groupe().isBlank() ? espece.groupe() + SEPARATEUR : "";
+        String details = prefixeGroupe + carreEtPoint(espece.numeroCarre(), espece.codePoint()) + SEPARATEUR + "n°"
+                + espece.numeroPassage()
+                + (espece.dateEnregistrement() != null ? SEPARATEUR + espece.dateEnregistrement() : "");
         return new ResultatRecherche(
                 TypeResultat.ESPECE,
                 libelle,

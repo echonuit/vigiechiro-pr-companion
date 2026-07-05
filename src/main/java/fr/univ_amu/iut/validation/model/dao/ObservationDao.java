@@ -117,10 +117,11 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     }
 
     private static final String SQL_ESPECES = "SELECT DISTINCT t.code AS code, t.latin_name AS latin,"
-            + " t.vernacular_name_fr AS vern, p.id AS passage_id, ms.square_number AS carre,"
+            + " t.vernacular_name_fr AS vern, g.name AS groupe, p.id AS passage_id, ms.square_number AS carre,"
             + " lp.code AS point, p.year AS annee, p.passage_number AS num, p.recording_date AS date_enr"
             + " FROM observation o"
             + " JOIN taxon t ON t.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
+            + " LEFT JOIN taxonomic_group g ON g.id = t.group_id"
             + " JOIN listening_sequence ls ON o.sequence_id = ls.id"
             + " JOIN recording_session rs ON ls.session_id = rs.id"
             + " JOIN passage p ON rs.passage_id = p.id"
@@ -133,6 +134,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("code"),
             rs.getString("latin"),
             rs.getString("vern"),
+            rs.getString("groupe"),
             rs.getLong(COL_PASSAGE_ID),
             rs.getString(COL_CARRE),
             rs.getString("point"),

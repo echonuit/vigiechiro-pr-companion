@@ -10,7 +10,7 @@ package fr.univ_amu.iut.validation.model;
 /// @param code code 6 lettres du taxon
 /// @param nomLatin nom latin (optionnel)
 /// @param nomVernaculaireFr nom vernaculaire français (optionnel)
-/// @param groupe nom du groupe taxonomique (ex. « Pipistrellus »), optionnel
+/// @param groupe taxon parent : nom du groupe taxonomique (ex. « Chiroptères »), optionnel
 /// @param nbObservations nombre de détections
 /// @param nbPassages nombre de passages distincts où l'espèce apparaît
 /// @param nbCarres nombre de carrés distincts
