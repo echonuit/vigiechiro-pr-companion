@@ -310,7 +310,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         CriteresAudio.taxon(viewModel::observationsFiltrees),
                         CriteresAudio.references(),
                         CriteresAudio.probabilite(),
-                        CriteresAudio.heure()));
+                        CriteresAudio.heure(viewModel::plageNuitParDefaut)));
         // Mémoire de session (#484) : restaure le tri et l'état des filtres de la dernière ouverture, et les
         // re-mémorise à la fermeture. Placée après le gestionnaire de filtres (dont elle restitue l'état).
         memoire.installer(tableObservations, gestionnaireFiltres);

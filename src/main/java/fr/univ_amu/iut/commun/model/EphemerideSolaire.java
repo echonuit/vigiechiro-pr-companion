@@ -2,6 +2,8 @@ package fr.univ_amu.iut.commun.model;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Optional;
 
 /// Éphéméride solaire **locale et déterministe** : heures de **lever** et de **coucher** du soleil
@@ -57,6 +59,36 @@ public final class EphemerideSolaire {
     /// @return l'heure UTC du coucher, ou [Optional#empty()] si le soleil ne se couche pas ce jour-là
     public static Optional<LocalTime> coucher(double latitude, double longitude, LocalDate date) {
         return evenement(latitude, longitude, date, false);
+    }
+
+    /// Heure **locale** du coucher du soleil dans le fuseau `zone` (converti depuis l'UTC de [#coucher]),
+    /// ou vide en cas de jour/nuit polaire.
+    ///
+    /// @param latitude latitude du lieu en degrés décimaux (positif vers le nord)
+    /// @param longitude longitude du lieu en degrés décimaux (positif vers l'est)
+    /// @param date date considérée
+    /// @param zone fuseau horaire du lieu (gère l'heure d'été)
+    /// @return l'heure locale du coucher, ou [Optional#empty()]
+    public static Optional<LocalTime> coucherLocal(double latitude, double longitude, LocalDate date, ZoneId zone) {
+        return enHeureLocale(coucher(latitude, longitude, date), date, zone);
+    }
+
+    /// Heure **locale** du lever du soleil dans le fuseau `zone` (converti depuis l'UTC de [#lever]), ou
+    /// vide en cas de jour/nuit polaire.
+    ///
+    /// @param latitude latitude du lieu en degrés décimaux (positif vers le nord)
+    /// @param longitude longitude du lieu en degrés décimaux (positif vers l'est)
+    /// @param date date considérée
+    /// @param zone fuseau horaire du lieu (gère l'heure d'été)
+    /// @return l'heure locale du lever, ou [Optional#empty()]
+    public static Optional<LocalTime> leverLocal(double latitude, double longitude, LocalDate date, ZoneId zone) {
+        return enHeureLocale(lever(latitude, longitude, date), date, zone);
+    }
+
+    /// Convertit une heure UTC (survenant le jour `date`) en heure locale du fuseau `zone`.
+    private static Optional<LocalTime> enHeureLocale(Optional<LocalTime> heureUtc, LocalDate date, ZoneId zone) {
+        return heureUtc.map(
+                utc -> date.atTime(utc).toInstant(ZoneOffset.UTC).atZone(zone).toLocalTime());
     }
 
     /// Cœur du calcul, partagé par [#lever] et [#coucher] : la seule différence est le signe de

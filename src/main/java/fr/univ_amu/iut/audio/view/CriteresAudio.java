@@ -1,11 +1,13 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -226,12 +228,23 @@ final class CriteresAudio {
         return ligne -> ligne.probTadarida() == null || ligne.probTadarida() >= seuil;
     }
 
+    /// Critère **Plage horaire**, avec le défaut fixe **nuit (21 h → 6 h)** (#531). Variante sans plage
+    /// dynamique, utilisée là où la nuit réelle n'est pas connue (tests, sources multi-nuits).
+    static CritereFiltre heure() {
+        return heure(Optional::empty);
+    }
+
     /// Critère **Plage horaire** : deux listes déroulantes « de » / « à » (heures 0–23) ; garde les
     /// observations dont l'**heure de capture** tombe dans la plage. Gère le **passage à minuit** : si `de`
-    /// > `à` (ex. 21 h → 6 h), la plage traverse minuit (`heure ≥ de` **ou** `heure ≤ à`). Défaut **nuit
-    /// (21 h → 6 h)** pour écarter d'emblée les heures de jour (#531). Les observations **sans heure** sont
-    /// **toujours conservées** (comme le seuil de proba, on évite de perdre des lignes).
-    static CritereFiltre heure() {
+    /// > `à` (ex. 21 h → 6 h), la plage traverse minuit (`heure ≥ de` **ou** `heure ≤ à`). Les observations
+    /// **sans heure** sont **toujours conservées** (comme le seuil de proba, on évite de perdre des lignes).
+    ///
+    /// Le **défaut** des bornes est fourni par `plageParDefaut`, évalué à l'ouverture de l'éditeur (#549) :
+    /// sur un passage, la **nuit réelle** (coucher → lever du soleil) ; sinon le défaut fixe **21 h → 6 h**,
+    /// qui écarte trop en été et trop peu en hiver mais reste un repli raisonnable.
+    ///
+    /// @param plageParDefaut source des bornes par défaut, évaluée quand la puce « Heure » est ajoutée
+    static CritereFiltre heure(Supplier<Optional<PlageNuit>> plageParDefaut) {
         return new CritereFiltre() {
             @Override
             public String nom() {
@@ -245,10 +258,11 @@ final class CriteresAudio {
 
             @Override
             public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
+                PlageNuit defaut = plageParDefaut.get().orElse(new PlageNuit(HEURE_DEBUT_NUIT, HEURE_FIN_NUIT));
                 ComboBox<Integer> de = choixHeure();
                 ComboBox<Integer> a = choixHeure();
-                de.setValue(HEURE_DEBUT_NUIT);
-                a.setValue(HEURE_FIN_NUIT);
+                de.setValue(defaut.heureDebut());
+                a.setValue(defaut.heureFin());
                 de.valueProperty()
                         .addListener((obs, avant, apres) -> applique.accept(dansPlage(de.getValue(), a.getValue())));
                 a.valueProperty()

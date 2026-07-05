@@ -35,6 +35,7 @@ import fr.univ_amu.iut.validation.model.LigneObservation;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
+import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ResultatParseTadarida;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -50,6 +51,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -132,7 +134,8 @@ class ServiceValidationTest {
                 parser,
                 new ExportVuCsv(),
                 new UniteDeTravail(source),
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                new PlageNuitPassage(passageDao, idPoint -> Optional.empty()));
     }
 
     private void insererSequence(EnregistrementOriginalDao originalDao, SequenceDao sequenceDao, String base) {

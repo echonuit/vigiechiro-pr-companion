@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.within;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -81,6 +82,24 @@ class EphemerideSolaireTest {
         LocalDate jour = LocalDate.of(2026, 12, 21);
         assertThat(EphemerideSolaire.lever(78.22, 15.65, jour)).isEmpty();
         assertThat(EphemerideSolaire.coucher(78.22, 15.65, jour)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Heure locale (Europe/Paris) au solstice d'été : coucher ≈ 21:58, lever ≈ 05:48")
+    void paris_solstice_ete_heure_locale() {
+        LocalDate jour = LocalDate.of(2026, 6, 21);
+        ZoneId paris = ZoneId.of("Europe/Paris");
+        proche(EphemerideSolaire.coucherLocal(PARIS_LAT, PARIS_LON, jour, paris), LocalTime.of(21, 58));
+        proche(EphemerideSolaire.leverLocal(PARIS_LAT, PARIS_LON, jour, paris), LocalTime.of(5, 48));
+    }
+
+    @Test
+    @DisplayName("Heure locale : jour polaire → vide (propagé depuis le calcul UTC)")
+    void heure_locale_jour_polaire_vide() {
+        LocalDate jour = LocalDate.of(2026, 6, 21);
+        ZoneId oslo = ZoneId.of("Europe/Oslo");
+        assertThat(EphemerideSolaire.coucherLocal(78.22, 15.65, jour, oslo)).isEmpty();
+        assertThat(EphemerideSolaire.leverLocal(78.22, 15.65, jour, oslo)).isEmpty();
     }
 
     @Test

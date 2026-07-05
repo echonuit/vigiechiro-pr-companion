@@ -8,16 +8,23 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ModeValidation;
+import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
+import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
@@ -61,6 +68,12 @@ class ServiceValidationMockTest {
     @Mock
     UniteDeTravail uniteDeTravail;
 
+    @Mock
+    PassageDao passageDao;
+
+    @Mock
+    CoordonneesPoint coordonnees;
+
     private ServiceValidation service() {
         return new ServiceValidation(
                 resultatsDao,
@@ -71,7 +84,27 @@ class ServiceValidationMockTest {
                 new ParserCsvTadarida(),
                 new ExportVuCsv(),
                 uniteDeTravail,
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                new PlageNuitPassage(passageDao, coordonnees));
+    }
+
+    private static Passage passageAix() {
+        // Nuit du 20 juin 2026, point d'Aix (idPoint 5) : coucher ~21:23, lever ~05:58 (heure locale).
+        return new Passage(
+                1L,
+                1,
+                2026,
+                "2026-06-20",
+                "22:00:00",
+                "05:00:00",
+                null,
+                StatutWorkflow.TRANSFORME,
+                null,
+                null,
+                null,
+                null,
+                5L,
+                "1925492");
     }
 
     private static Observation observation(String taxonTadarida, String observateur, Double probObs) {
@@ -202,5 +235,32 @@ class ServiceValidationMockTest {
 
         when(sequenceDao.findById(99L)).thenReturn(Optional.empty());
         assertThat(service().cheminAudio(99L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#549 : plage nuit par défaut = heures pleines du coucher/lever au GPS du point")
+    void plage_nuit_par_defaut_depuis_ephemeride() {
+        when(passageDao.findById(1L)).thenReturn(Optional.of(passageAix()));
+        when(coordonnees.pour(5L)).thenReturn(Optional.of(new PositionGeo(43.529, 5.447)));
+
+        // Aix, nuit du 20 juin 2026 : coucher ~21:23 (heure 21), lever ~05:58 (heure 5).
+        assertThat(service().plageNuitParDefaut(1L)).contains(new PlageNuit(21, 5));
+    }
+
+    @Test
+    @DisplayName("#549 : point sans GPS → pas de plage nuit (repli sur le défaut fixe 21 h → 6 h)")
+    void plage_nuit_sans_gps_est_vide() {
+        when(passageDao.findById(1L)).thenReturn(Optional.of(passageAix()));
+        when(coordonnees.pour(5L)).thenReturn(Optional.empty());
+
+        assertThat(service().plageNuitParDefaut(1L)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#549 : passage introuvable → pas de plage nuit")
+    void plage_nuit_passage_introuvable_est_vide() {
+        when(passageDao.findById(1L)).thenReturn(Optional.empty());
+
+        assertThat(service().plageNuitParDefaut(1L)).isEmpty();
     }
 }
