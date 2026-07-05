@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.model;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -100,6 +101,30 @@ public record Prefixe(String carre, int annee, int numeroPassage, String codePoi
             return nommerSequence(nomOriginal, index); // repli : pas d'horodatage → suffixe indexé
         }
         return baseDecalee + "_000" + extension;
+    }
+
+    /// Extrait l'**horodatage de capture** `_AAAAMMJJ_HHMMSS` porté par un nom de fichier de séquence (R7/R8)
+    /// : le nom d'une tranche de 5 s porte l'heure réelle de son début. On prend le **dernier** horodatage du
+    /// nom (comme [#decalerHorodatage], pour éviter toute ambiguïté avec des chiffres du préfixe R6).
+    /// `Optional.empty()` si le nom est `null` ou ne porte pas d'horodatage reconnu (nom de test / non
+    /// standard). Parseur canonique partagé (extraction à l'import, backfill).
+    public static Optional<LocalDateTime> horodatageDe(String nomFichier) {
+        if (nomFichier == null) {
+            return Optional.empty();
+        }
+        Matcher m = MOTIF_HORODATAGE.matcher(nomFichier);
+        String horodatage = null;
+        while (m.find()) {
+            horodatage = m.group(1) + "_" + m.group(2);
+        }
+        if (horodatage == null) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.of(LocalDateTime.parse(horodatage, FORMAT_HORODATAGE));
+        } catch (RuntimeException invalide) {
+            return Optional.empty();
+        }
     }
 
     /// Décale le **dernier** horodatage `_AAAAMMJJ_HHMMSS` de `base` de `decalageSecondes`, ou `null` si

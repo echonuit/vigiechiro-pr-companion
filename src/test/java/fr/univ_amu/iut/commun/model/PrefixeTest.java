@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -38,5 +39,25 @@ class PrefixeTest {
         assertThat(Prefixe.estNomPrefixe("Carto_20260422.wav")).isFalse();
         assertThat(Prefixe.estNomPrefixe("Car_old.wav")).isFalse();
         assertThat(Prefixe.estNomPrefixe("Car640380-2026-A1.wav")).isFalse(); // pas de segment Pass<n>
+    }
+
+    @Test
+    @DisplayName("#530 : horodatageDe extrait l'heure de capture du nom de séquence (dernier _AAAAMMJJ_HHMMSS)")
+    void horodatage_de_extrait_l_heure_de_capture() {
+        // Nom de tranche horodaté : l'heure réelle de début de la séquence.
+        assertThat(Prefixe.horodatageDe("PaRecPR1925492_20260422_225859_000.wav"))
+                .contains(LocalDateTime.of(2026, 4, 22, 22, 58, 59));
+        // Nom entièrement préfixé R6 : on prend le DERNIER horodatage, sans se laisser piéger par les
+        // chiffres du préfixe (640380 / 2026 / 1925492).
+        assertThat(Prefixe.horodatageDe("Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922_000.wav"))
+                .contains(LocalDateTime.of(2026, 4, 22, 20, 39, 22));
+    }
+
+    @Test
+    @DisplayName("#530 : horodatageDe est vide pour un nom nul ou non horodaté")
+    void horodatage_de_vide_si_absent() {
+        assertThat(Prefixe.horodatageDe(null)).isEmpty();
+        assertThat(Prefixe.horodatageDe("seqA_000.wav")).isEmpty();
+        assertThat(Prefixe.horodatageDe("sans_horodatage.wav")).isEmpty();
     }
 }
