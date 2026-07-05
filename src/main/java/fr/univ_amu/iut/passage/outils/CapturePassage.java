@@ -108,7 +108,7 @@ public final class CapturePassage {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = Guice.createInjector(new CommunModule(), new PersistenceModule(), new PassageModule());
+        Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
@@ -124,6 +124,12 @@ public final class CapturePassage {
         rendrePivot(injecteur, idDepose, sortie.resolve("apercu-passage-depose.png"));
         // Modale « Modifier le rattachement » (année + n° de passage) ouverte sur le passage vérifié.
         rendreRattachement(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement.png"));
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(new CommunModule(), new PersistenceModule(), new PassageModule());
     }
 
     /// Charge `Passage.fxml` sur `idPassage` (ViewModel connu + contrats de navigation neutres) et

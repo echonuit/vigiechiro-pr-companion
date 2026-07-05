@@ -117,7 +117,20 @@ public final class CaptureSonsValidation {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = Guice.createInjector(
+        Injector injecteur = creerInjecteur();
+        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        new MigrationSchema(source).migrer();
+
+        Graine graine = seeder(source, workspace);
+        seederReferences(source, graine);
+
+        rendre(injecteur, sortie.resolve("apercu-sons-validation.png"));
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
                 new CommunModule(),
                 new PersistenceModule(),
                 new PassageModule(),
@@ -154,13 +167,6 @@ public final class CaptureSonsValidation {
                         return numeroCarre -> {};
                     }
                 });
-        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
-
-        Graine graine = seeder(source, workspace);
-        seederReferences(source, graine);
-
-        rendre(injecteur, sortie.resolve("apercu-sons-validation.png"));
     }
 
     /// Charge `SonsValidation.fxml`, ouvre la vue sur la source `References` et rend la scène hors-écran.

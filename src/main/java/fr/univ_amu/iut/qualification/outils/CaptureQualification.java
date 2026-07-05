@@ -108,12 +108,7 @@ public final class CaptureQualification {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = Guice.createInjector(
-                new CommunModule(),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new QualificationModule());
+        Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         long idPassage = seeder(source, workspace);
@@ -160,6 +155,17 @@ public final class CaptureQualification {
             ApercuFx.enregistrerPng(scene, fichier);
         }
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
+                new CommunModule(),
+                new PersistenceModule(),
+                new SitesModule(),
+                new PassageModule(),
+                new QualificationModule());
     }
 
     /// Seede une nuit complète (chemins sous le `workspace` temporaire) et renvoie l'identifiant du

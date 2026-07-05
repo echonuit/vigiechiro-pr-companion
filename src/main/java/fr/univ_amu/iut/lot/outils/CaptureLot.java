@@ -128,17 +128,7 @@ public final class CaptureLot {
 
         // Horloge figée : la date de dépôt (marquerDepose) est ainsi **déterministe** dans l'aperçu
         // « déposé » (sinon l'horodatage système changerait le PNG à chaque régénération).
-        Injector injecteur = Guice.createInjector(
-                Modules.override(new CommunModule()).with(new AbstractModule() {
-                    @Provides
-                    Horloge horlogeFigee() {
-                        return new HorlogeFigee(LocalDateTime.of(2026, 6, 21, 8, 0));
-                    }
-                }),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new LotModule());
+        Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         ServiceLot service = injecteur.getInstance(ServiceLot.class);
@@ -170,6 +160,22 @@ public final class CaptureLot {
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-depose.png"));
         // Cas bloquant : Vérifié incohérent → zone d'alertes (R14), « Préparer » désactivé.
         rendre(injecteur, idIncoherent, sortie.resolve("apercu-lot-alertes.png"));
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
+                Modules.override(new CommunModule()).with(new AbstractModule() {
+                    @Provides
+                    Horloge horlogeFigee() {
+                        return new HorlogeFigee(LocalDateTime.of(2026, 6, 21, 8, 0));
+                    }
+                }),
+                new PersistenceModule(),
+                new SitesModule(),
+                new PassageModule(),
+                new LotModule());
     }
 
     /// Charge `Lot.fxml`, l'ouvre sur le passage puis rend la scène hors-écran en PNG.

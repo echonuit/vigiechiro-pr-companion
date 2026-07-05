@@ -113,12 +113,7 @@ public final class CaptureDiagnostic {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = Guice.createInjector(
-                new CommunModule(),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new DiagnosticModule());
+        Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
@@ -126,6 +121,17 @@ public final class CaptureDiagnostic {
 
         rendre(injecteur, graine.idAvecReleve(), sortie.resolve("apercu-diagnostic.png"));
         rendre(injecteur, graine.idSansReleve(), sortie.resolve("apercu-diagnostic-sans-releve.png"));
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
+                new CommunModule(),
+                new PersistenceModule(),
+                new SitesModule(),
+                new PassageModule(),
+                new DiagnosticModule());
     }
 
     /// Charge `Diagnostic.fxml`, l'ouvre sur le passage puis rend la scène hors-écran en PNG.

@@ -85,14 +85,7 @@ public final class CaptureAnalyse {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = Guice.createInjector(
-                new CommunModule(),
-                new PersistenceModule(),
-                new SitesModule(),
-                new PassageModule(),
-                new ValidationModule(),
-                new AnalyseModule(),
-                new ModuleCaptureNavigationAudio());
+        Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(injecteur, source);
@@ -102,6 +95,19 @@ public final class CaptureAnalyse {
         rendreCarte(injecteur, sortie.resolve("apercu-analyse-carte.png"));
 
         System.out.println("Apercus ecrits dans " + sortie.toAbsolutePath());
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
+                new CommunModule(),
+                new PersistenceModule(),
+                new SitesModule(),
+                new PassageModule(),
+                new ValidationModule(),
+                new AnalyseModule(),
+                new ModuleCaptureNavigationAudio());
     }
 
     /// Charge `Analyse.fxml`, applique éventuellement un regroupement (`Par carré`), puis rend l'écran. En

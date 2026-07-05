@@ -121,7 +121,20 @@ public final class CaptureValidationTadarida {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = Guice.createInjector(
+        Injector injecteur = creerInjecteur();
+        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        new MigrationSchema(source).migrer();
+
+        long idPassage = seeder(source, workspace);
+        Path csv = ecrireCsvTadarida(workspace);
+
+        rendre(injecteur, idPassage, csv, sortie.resolve("apercu-validation-tadarida.png"));
+    }
+
+    /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
+    /// (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
                 new CommunModule(),
                 new PersistenceModule(),
                 new PassageModule(),
@@ -160,13 +173,6 @@ public final class CaptureValidationTadarida {
                         return numeroCarre -> {};
                     }
                 });
-        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
-        new MigrationSchema(source).migrer();
-
-        long idPassage = seeder(source, workspace);
-        Path csv = ecrireCsvTadarida(workspace);
-
-        rendre(injecteur, idPassage, csv, sortie.resolve("apercu-validation-tadarida.png"));
     }
 
     /// Charge `SonsValidation.fxml`, ouvre la vue sur le **passage** puis **importe** le CSV Tadarida sur

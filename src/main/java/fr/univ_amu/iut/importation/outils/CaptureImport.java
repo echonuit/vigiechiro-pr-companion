@@ -256,7 +256,7 @@ public final class CaptureImport {
         return sd;
     }
 
-    private static Injector creerInjecteur() {
+    public static Injector creerInjecteur() {
         return Guice.createInjector(Modules.override(
                         new CommunModule(),
                         new PersistenceModule(),
