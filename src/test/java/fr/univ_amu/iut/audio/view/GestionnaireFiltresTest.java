@@ -128,7 +128,7 @@ class GestionnaireFiltresTest {
         // Ajouter la puce Groupe : le sélecteur liste les groupes présents (distincts, triés) et défaut
         // « Chiroptères » → seules les chauves-souris restent.
         robot.interact(() -> menuLocal.getItems().get(0).fire());
-        ComboBox<String> choixGroupe = comboDe(pucesLocales);
+        ComboBox<Object> choixGroupe = comboDe(pucesLocales);
         assertThat(choixGroupe.getItems()).containsExactly("Chiroptères", "Oiseaux");
         assertThat(choixGroupe.getValue()).isEqualTo("Chiroptères");
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L, 3L);
@@ -138,15 +138,45 @@ class GestionnaireFiltresTest {
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
     }
 
+    @Test
+    @DisplayName("Critère Espèce : liste les espèces présentes (taxon retenu) ; sélectionner restreint à l'espèce")
+    void filtre_taxon(FxRobot robot) {
+        // Ligne 1 retenue Pippip (sans vernaculaire → libellé = code) ; ligne 2 corrigée : Tadarida dit
+        // « Bruit » mais l'observateur a retenu « Rhifer » (Grand Rhinolophe) → le taxon retenu est Rhifer.
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligne(1, "Pippip", "PaRec_1.wav", StatutObservation.VALIDEE),
+                ligneCorrigee(2, "Bruit", "Rhifer", "Grand Rhinolophe", "PaRec_2.wav"));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres ignore = new GestionnaireFiltres(
+                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.taxon(() -> source)));
+        assertThat(ignore).isNotNull();
+
+        // Ajouter la puce Espèce : espèces présentes triées par libellé, aucune présélection (rien masqué).
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        ComboBox<Object> choix = comboDe(pucesLocales);
+        List<String> libelles = choix.getItems().stream()
+                .map(espece -> choix.getConverter().toString(espece))
+                .toList();
+        assertThat(libelles).containsExactly("Grand Rhinolophe", "Pippip");
+        assertThat(vues).hasSize(2);
+
+        // Sélectionner « Grand Rhinolophe » (taxon retenu Rhifer, corrigé depuis Bruit) → seule cette obs.
+        robot.interact(() -> choix.setValue(choix.getItems().get(0)));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+    }
+
     private Button boutonRetirer() {
         return (Button) puces.lookupAll(".puce-filtre-retirer").iterator().next();
     }
 
-    /// L'éditeur du critère Groupe est le 2e enfant de la puce (Label, ComboBox, bouton ✕).
+    /// L'éditeur d'un critère à liste déroulante est le 2e enfant de sa puce (Label, ComboBox, bouton ✕).
     @SuppressWarnings("unchecked")
-    private static ComboBox<String> comboDe(FlowPane puces) {
+    private static ComboBox<Object> comboDe(FlowPane puces) {
         HBox puce = (HBox) puces.getChildren().get(0);
-        return (ComboBox<String>) puce.getChildren().get(1);
+        return (ComboBox<Object>) puce.getChildren().get(1);
     }
 
     private static LigneObservationAudio ligne(long id, String taxon, String fichier, StatutObservation statut) {

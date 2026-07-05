@@ -276,7 +276,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 menuAjoutFiltre,
                 pucesFiltres,
                 viewModel.filtres(),
-                List.of(CriteresAudio.statut(), CriteresAudio.groupe(viewModel::observationsFiltrees)));
+                List.of(
+                        CriteresAudio.statut(),
+                        CriteresAudio.groupe(viewModel::observationsFiltrees),
+                        CriteresAudio.taxon(viewModel::observationsFiltrees)));
 
         resumeStatut.bind(Bindings.createStringBinding(this::resumeStatutTexte, viewModel.comptageProperty()));
 
