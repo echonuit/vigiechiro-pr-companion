@@ -79,6 +79,13 @@ d'**ignorer** la nuit (garder l'existant) ou de l'**écraser** (remplacer l'anci
 **atomique** : soit le remplacement aboutit entièrement, soit rien n'est modifié, jamais un état
 intermédiaire. Le rapport final distingue les enregistrements **importés**, **ignorés** et **rejetés**.
 
+![Confirmation d'une nuit déjà importée : importer quand même comme nouveau passage, ou annuler.](../assets/captures/apercu-import-doublon.png)
+
+Choisir d'**écraser** demande une **seconde confirmation** qui rappelle ce qui sera **définitivement
+supprimé** (séquences, et le cas échéant les validations Tadarida déjà saisies) : l'action est irréversible.
+
+![Seconde confirmation d'écrasement : rappel de la suppression définitive (séquences et validations) avant de confirmer.](../assets/captures/apercu-import-ecrasement.png)
+
 ### Reprise d'un import interrompu
 
 Si un import a été **interrompu** (fenêtre fermée, coupure, annulation), il suffit de le **relancer** :

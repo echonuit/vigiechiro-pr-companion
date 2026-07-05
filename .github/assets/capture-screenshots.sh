@@ -63,6 +63,7 @@ MAINS=(
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationFiltres"
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes"
   "fr.univ_amu.iut.audio.outils.CaptureValidationTadarida"
+  "fr.univ_amu.iut.commun.outils.CaptureDialogues"
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
 

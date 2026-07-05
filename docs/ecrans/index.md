@@ -21,3 +21,11 @@ L'écran **Qualification** propose en plus des [raccourcis clavier](../raccourci
 
 Chaque écran ci-dessus dispose de sa **fiche détaillée** (son nom est un lien), illustrée par les
 captures de ses différents états.
+
+## Quitter un écran en cours de saisie
+
+Un garde-fou **transverse** vous protège des pertes accidentelles : si vous tentez de **quitter un écran
+où une saisie n'est pas enregistrée**, l'application **demande confirmation** avant de partir. Vous pouvez
+annuler pour revenir enregistrer, ou confirmer pour quitter en abandonnant les modifications.
+
+![Confirmation avant de quitter un écran avec des modifications non enregistrées.](../assets/captures/apercu-navigation-garde-saisie.png)

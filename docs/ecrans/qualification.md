@@ -15,6 +15,12 @@ sondage.
   pour confirmer qu'aucun défaut global (saturation, parasite continu, micro défaillant) ne s'est
   produit. La sélection peut être **régénérée** ou **personnalisée**.
 
+**Personnaliser la sélection** ouvre une fenêtre où vous choisissez la **méthode** de constitution
+(**RéparTemporel**, réparties sur la nuit, ou **Aléatoire**) et la **taille** de la sélection, avant de la
+**régénérer**. Régénérer efface la progression d'écoute (le verdict, lui, est conservé).
+
+![La fenêtre « Personnaliser la sélection d'écoute » : méthode (RéparTemporel / Aléatoire) et taille, avec le bouton Régénérer.](../assets/captures/apercu-qualification-personnaliser.png)
+
 ## Poser un verdict
 
 Au terme du contrôle, vous posez un **verdict global** sur la nuit : **OK**, **Douteux** ou
