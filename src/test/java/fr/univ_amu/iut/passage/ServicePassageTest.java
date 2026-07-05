@@ -38,6 +38,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -85,7 +86,9 @@ class ServicePassageTest {
                 new ReprefixeurSession(),
                 new UniteDeTravail(source),
                 new RattachementDao(),
-                new MaterielMicroDao(source));
+                new MaterielMicroDao(source),
+                idPoint -> Optional.empty(),
+                (lat, lon, jour, debut, fin) -> Optional.empty());
     }
 
     /// Construit un passage candidat (non persisté) pour les vérifications R3/R4.

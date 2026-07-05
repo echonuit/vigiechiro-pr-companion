@@ -15,6 +15,7 @@ import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -161,6 +162,41 @@ class PassageViewModelTest {
 
         assertThat(viewModel.messageProperty().get()).contains("invalide");
         verify(service, never()).definirMateriel(any());
+    }
+
+    @Test
+    @DisplayName("#547 : recupererMeteo délègue au service (relevé remonté tel quel)")
+    void recuperer_meteo_delegue_au_service() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        when(service.recupererMeteo(ID_PASSAGE)).thenReturn(Optional.of(new MeteoReleve(9.0, 3.0, 12.0, 40.0)));
+
+        assertThat(viewModel.conditions().recupererMeteo()).contains(new MeteoReleve(9.0, 3.0, 12.0, 40.0));
+    }
+
+    @Test
+    @DisplayName("#547 : un relevé récupéré pré-remplit les champs météo + message de confirmation")
+    void appliquer_meteo_recuperee_prefill() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        viewModel.conditions().appliquerMeteoRecuperee(Optional.of(new MeteoReleve(9.0, 3.0, 12.0, 40.0)));
+
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("9.0");
+        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo("12.0");
+        assertThat(viewModel.messageProperty().get()).contains("pré-remplie");
+    }
+
+    @Test
+    @DisplayName("#547 : météo indisponible → message d'aide, champs inchangés")
+    void appliquer_meteo_recuperee_absente() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        viewModel.conditions().appliquerMeteoRecuperee(Optional.empty());
+
+        assertThat(viewModel.messageProperty().get()).contains("indisponible");
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
     }
 
     @Test

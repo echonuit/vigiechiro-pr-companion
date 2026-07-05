@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
@@ -25,6 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.css.PseudoClass;
@@ -134,6 +137,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
 
     @FXML
     private Button boutonMeteo;
+
+    @FXML
+    private Button boutonRecupererMeteo;
 
     @FXML
     private ComboBox<PositionMicro> champPosition;
@@ -409,6 +415,22 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private void enregistrerMeteo() {
         viewModel.conditions().enregistrerMeteo();
+    }
+
+    /// « Récupérer la météo » (#547) : l'appel Open-Meteo est **réseau**, donc lancé en **tâche de fond**
+    /// (thread virtuel) pour ne pas geler l'IHM ; le bouton est désactivé le temps de l'appel, et le
+    /// pré-remplissage des champs (ou le message d'indisponibilité) revient sur le fil JavaFX via
+    /// [Platform#runLater].
+    @FXML
+    private void recupererMeteo() {
+        boutonRecupererMeteo.setDisable(true);
+        Thread.ofVirtual().name("recuperation-meteo").start(() -> {
+            Optional<MeteoReleve> releve = viewModel.conditions().recupererMeteo();
+            Platform.runLater(() -> {
+                viewModel.conditions().appliquerMeteoRecuperee(releve);
+                boutonRecupererMeteo.setDisable(false);
+            });
+        });
     }
 
     /// « Enregistrer » le matériel du micro (dépôt VigieChiro) : délègue au VM (grandeur vide = effacer ;

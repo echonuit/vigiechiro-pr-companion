@@ -111,6 +111,7 @@
         <Label text="\%"/>
       </HBox>
       <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Button fx:id="boutonRecupererMeteo" text="Récupérer la météo" onAction="#recupererMeteo"/>
         <Button fx:id="boutonMeteo" text="Enregistrer" onAction="#enregistrerMeteo"/>
       </HBox>
 

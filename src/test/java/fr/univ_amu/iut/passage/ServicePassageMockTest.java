@@ -5,12 +5,17 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.passage.model.FournisseurMeteo;
+import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
@@ -21,6 +26,7 @@ import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,6 +57,12 @@ class ServicePassageMockTest {
     private RattachementDao rattachementDao;
 
     @Mock
+    private CoordonneesPoint coordonnees;
+
+    @Mock
+    private FournisseurMeteo fournisseurMeteo;
+
+    @Mock
     private MaterielMicroDao materielDao;
 
     private ServicePassage service() {
@@ -63,7 +75,9 @@ class ServicePassageMockTest {
                 new ReprefixeurSession(),
                 uniteDeTravail,
                 rattachementDao,
-                materielDao);
+                materielDao,
+                coordonnees,
+                fournisseurMeteo);
     }
 
     @Test
@@ -119,5 +133,45 @@ class ServicePassageMockTest {
 
         assertThat(cree).isEqualTo(attendu);
         verify(passageDao).insert(any());
+    }
+
+    @Test
+    @DisplayName("#547 : recupererMeteo interroge le fournisseur au GPS du point et aux heures du passage")
+    void recuperer_meteo_delegue_avec_gps_et_heures() {
+        when(passageDao.findById(7L)).thenReturn(Optional.of(passageNuit(7L)));
+        when(coordonnees.pour(1L)).thenReturn(Optional.of(new PositionGeo(43.4, -1.5)));
+        MeteoReleve attendu = new MeteoReleve(8.5, 4.0, 12.0, 40.0);
+        when(fournisseurMeteo.pour(43.4, -1.5, LocalDate.of(2026, 6, 20), LocalTime.of(21, 30), LocalTime.of(5, 15)))
+                .thenReturn(Optional.of(attendu));
+
+        assertThat(service().recupererMeteo(7L)).contains(attendu);
+    }
+
+    @Test
+    @DisplayName("#547 : sans GPS sur le point, recupererMeteo est vide et n appelle pas le fournisseur")
+    void recuperer_meteo_sans_gps_est_empty() {
+        when(passageDao.findById(7L)).thenReturn(Optional.of(passageNuit(7L)));
+        when(coordonnees.pour(1L)).thenReturn(Optional.empty());
+
+        assertThat(service().recupererMeteo(7L)).isEmpty();
+        verifyNoInteractions(fournisseurMeteo);
+    }
+
+    private static Passage passageNuit(long id) {
+        return new Passage(
+                id,
+                1,
+                2026,
+                "2026-06-20",
+                "21:30:00",
+                "05:15:00",
+                null,
+                StatutWorkflow.IMPORTE,
+                null,
+                null,
+                null,
+                null,
+                1L,
+                "1925492");
     }
 }

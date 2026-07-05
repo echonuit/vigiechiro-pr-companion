@@ -35,6 +35,7 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -82,7 +83,9 @@ class ServicePassageDetailTest {
                 new ReprefixeurSession(),
                 new UniteDeTravail(source),
                 new RattachementDao(),
-                new MaterielMicroDao(source));
+                new MaterielMicroDao(source),
+                idPoint -> Optional.empty(),
+                (lat, lon, jour, debut, fin) -> Optional.empty());
     }
 
     private Passage insererPassage(int numero, StatutWorkflow statut) {
