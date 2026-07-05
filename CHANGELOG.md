@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.109.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.108.0...v1.109.0) (2026-07-05)
+
+
+### Features
+
+* **diagnostic:** cohérence horaires (nuit réelle vs enregistrement) ([#548](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/548)) ([#589](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/589)) ([245f936](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/245f93639ad2d531cee5f841a873526339107365))
+
 # [1.108.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.107.0...v1.108.0) (2026-07-05)
 
 
