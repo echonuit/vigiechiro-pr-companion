@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.97.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.96.0...v1.97.0) (2026-07-05)
+
+
+### Features
+
+* **passage:** materiel du micro (position, hauteur, type) — modele + DAO ([#556](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/556)) ([a0a734e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/a0a734e77b1f4ecfe266b86da36bcad4ba8ce60f))
+
 # [1.96.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.95.0...v1.96.0) (2026-07-05)
 
 
