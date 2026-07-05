@@ -64,3 +64,47 @@ importé, **ignoré** (fichier non pertinent) ou **rejeté** (avec la raison). L
 listés directement sous le message de fin d'import.
 
 ![Import terminé avec rapport : la liste des fichiers rejetés et leur raison s'affiche sous le message de succès.](../assets/captures/apercu-import-rejets.png)
+
+## Sécurités et cas particuliers
+
+Au-delà du chemin nominal, l'import intègre plusieurs **garde-fous** qui vous protègent des erreurs
+courantes. La plupart agissent en silence ; les autres vous **demandent confirmation** avant toute action
+irréversible.
+
+### Nuit déjà importée (doublon)
+
+Si le passage que vous rattachez (même site, point, année et numéro de passage) a **déjà été importé**,
+l'application le **détecte** et vous **demande confirmation** avant d'aller plus loin. Vous choisissez alors
+d'**ignorer** la nuit (garder l'existant) ou de l'**écraser** (remplacer l'ancien import). L'écrasement est
+**atomique** : soit le remplacement aboutit entièrement, soit rien n'est modifié, jamais un état
+intermédiaire. Le rapport final distingue les enregistrements **importés**, **ignorés** et **rejetés**.
+
+### Reprise d'un import interrompu
+
+Si un import a été **interrompu** (fenêtre fermée, coupure, annulation), il suffit de le **relancer** :
+l'application reconnaît les fichiers déjà copiés et transformés et les **saute**, pour reprendre là où elle
+s'était arrêtée au lieu de tout refaire.
+
+### Import sans journal (mode dégradé)
+
+Le **journal du capteur** enrichit l'inspection (série, dates, fréquence d'acquisition), mais **n'est pas
+obligatoire** : si le dossier n'en contient pas, l'import reste possible en **mode dégradé**. Les contrôles
+qui dépendent du journal sont simplement allégés ; vous restez responsable de vérifier que le dossier
+correspond bien à la nuit attendue.
+
+### Intégrité des fichiers et espace disque
+
+Pendant la copie, l'application **vérifie l'intégrité** de chaque enregistrement (comparaison d'empreinte
+entre l'original et la copie) pour écarter une copie corrompue. Si le **disque est plein**, un message
+l'indique explicitement et les **fichiers temporaires sont purgés** pour ne pas laisser le disque encombré.
+
+### Numéro de passage, préfixes et enregistrements déjà ralentis
+
+- **Numéro de passage déjà pris** : au rattachement, si ce numéro est déjà utilisé sur ce point, un
+  pré-contrôle vous en **avertit** avant l'import.
+- **Fichiers déjà préfixés** : si les enregistrements portent déjà un préfixe Vigie-Chiro (nuit déjà
+  renommée), l'application **ne le double pas** et **signale toute discordance** entre ce préfixe et le
+  rattachement demandé.
+- **Enregistrements déjà ralentis** : un fichier dont le son a **déjà** subi l'expansion temporelle ×10 est
+  **rejeté** (avec explication dans le rapport), pour éviter une **double expansion** qui rendrait les
+  fréquences dix fois trop basses. Importez toujours les **fichiers bruts** issus du capteur.
