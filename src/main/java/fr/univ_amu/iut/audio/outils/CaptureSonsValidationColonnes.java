@@ -51,7 +51,10 @@ public final class CaptureSonsValidationColonnes {
                 injecteur,
                 GraineSonsValidation.dossierSortie().resolve("apercu-sons-validation-colonnes.png"),
                 1500,
-                CaptureSonsValidationColonnes::afficherToutesLesColonnes);
+                vue -> {
+                    afficherToutesLesColonnes(vue);
+                    GraineSonsValidation.selectionner(vue, 0);
+                });
     }
 
     /// Rend visibles toutes les colonnes de la table (celles masquées par défaut : FME, fréquence terminale,

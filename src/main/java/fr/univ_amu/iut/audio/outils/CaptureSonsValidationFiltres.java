@@ -50,7 +50,10 @@ public final class CaptureSonsValidationFiltres {
                 injecteur,
                 GraineSonsValidation.dossierSortie().resolve("apercu-sons-validation-filtres.png"),
                 1100,
-                CaptureSonsValidationFiltres::activerFiltreGroupe);
+                vue -> {
+                    activerFiltreGroupe(vue);
+                    GraineSonsValidation.selectionner(vue, 0);
+                });
     }
 
     /// Ajoute la puce **Groupe** en actionnant l'entrée correspondante du menu « + Filtre » : la puce
