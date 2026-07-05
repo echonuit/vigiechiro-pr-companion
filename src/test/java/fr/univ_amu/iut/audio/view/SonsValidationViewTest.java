@@ -27,6 +27,7 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.io.File;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import javafx.event.Event;
@@ -90,7 +91,10 @@ class SonsValidationViewTest {
                 "Chiroptères",
                 "PaRec_" + seq + "_000.wav",
                 0.20,
-                0.32);
+                0.32,
+                // Heure de capture : 22:00 + n° de séquence (seq 10 → 22:10, seq 11 → 22:11), pour vérifier
+                // l'affichage de la colonne « Heure ».
+                LocalDateTime.of(2026, 4, 22, 22, 0).plusMinutes(seq));
     }
 
     @Start
@@ -154,6 +158,15 @@ class SonsValidationViewTest {
     void affiche_le_nom_de_fichier(FxRobot robot) {
         assertThat(colonne(robot, "Fichier").getCellData(0)).isEqualTo("PaRec_10_000.wav");
         assertThat(colonne(robot, "Fichier").getCellData(1)).isEqualTo("PaRec_11_000.wav");
+    }
+
+    @Test
+    @DisplayName("#530 : la colonne Heure porte l'instant de capture et est triable (tri chronologique)")
+    void colonne_heure_porte_l_instant(FxRobot robot) {
+        // Valeur = l'instant complet (LocalDateTime), pour un tri chronologique correct à cheval sur minuit.
+        assertThat(colonne(robot, "Heure").getCellData(0)).isEqualTo(LocalDateTime.of(2026, 4, 22, 22, 10));
+        assertThat(colonne(robot, "Heure").getCellData(1)).isEqualTo(LocalDateTime.of(2026, 4, 22, 22, 11));
+        assertThat(colonne(robot, "Heure").isSortable()).isTrue();
     }
 
     @Test
@@ -328,13 +341,14 @@ class SonsValidationViewTest {
             "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
     void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        // Les 14 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
+        // Les 15 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
         assertThat(table.getColumns().stream()
-                        .limit(14)
+                        .limit(15)
                         .map(TableColumn::getText)
                         .toList())
                 .containsExactly(
                         "Date",
+                        "Heure",
                         "Passage",
                         "Carré",
                         "Point",
@@ -348,8 +362,8 @@ class SonsValidationViewTest {
                         "Début",
                         "Durée",
                         "Statut");
-        assertThat(table.getColumns().get(14).getId()).isEqualTo("colReference");
-        assertThat(table.getColumns().get(15).getId()).isEqualTo("colCommentaire");
+        assertThat(table.getColumns().get(15).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(16).getId()).isEqualTo("colCommentaire");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();

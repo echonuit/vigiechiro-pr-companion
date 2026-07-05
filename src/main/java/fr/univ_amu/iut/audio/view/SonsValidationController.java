@@ -20,6 +20,7 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.io.File;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
@@ -116,6 +117,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private TableColumn<LigneObservationAudio, String> colFreqTerminale;
 
+    /// Colonne « Heure » typée par l'**instant** de capture (et non une chaîne) : le tri par défaut de
+    /// [LocalDateTime] est chronologique et gère le passage à minuit (00:15 après 22:00). L'affichage « HH:mm »
+    /// est produit par une cellule dédiée. #530.
+    @FXML
+    private TableColumn<LigneObservationAudio, LocalDateTime> colHeure;
+
     @FXML
     private TableColumn<LigneObservationAudio, String> colDebut;
 
@@ -208,24 +215,28 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         colDuree.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.dureeColonne(
                 c.getValue().debutS(), c.getValue().finS())));
         colObservateur.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.votreTaxon(c.getValue())));
-        colFichier.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().nomFichier())));
+        colFichier.setCellValueFactory(c ->
+                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().nomFichier())));
         // Le nom de fichier transformé est long (préfixe de campagne + suffixe de segment) : la cellule
         // l'élide, une infobulle en donne la valeur complète au survol.
         colFichier.setCellFactory(colonne -> CellulesAudio.avecInfobulle());
         colPassage.setCellValueFactory(
                 c -> new ReadOnlyStringWrapper("N°" + c.getValue().numeroPassage()));
-        colCarre.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().numeroCarre())));
-        colPoint.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().codePoint())));
-        colDate.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(ouTiret(c.getValue().dateEnregistrement())));
+        colCarre.setCellValueFactory(c ->
+                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().numeroCarre())));
+        colPoint.setCellValueFactory(c ->
+                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().codePoint())));
+        colDate.setCellValueFactory(c ->
+                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().dateEnregistrement())));
+        // « Heure » : valeur = l'INSTANT complet (tri chronologique naturel de LocalDateTime, correct à cheval
+        // sur minuit) ; affichage « HH:mm » via une cellule dédiée. Pas de comparateur de chaîne.
+        CellulesAudio.configurerColonneHeure(colHeure);
         colStatut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 FormatLigneAudio.libelleStatut(c.getValue().statut())));
 
         // Colonnes dont l'affichage est une chaîne à préfixe/suffixe numérique : même comparateur numérique
-        // (sinon « 100 % » précèderait « 83 % » et « N°10 » « N°2 »). Le statut a son propre ordre de revue.
+        // (sinon « 100 % » précèderait « 83 % » et « N°10 » « N°2 »). Le statut a son propre ordre de revue ;
+        // « Heure » utilise le tri naturel de LocalDateTime (chronologique).
         List.of(colProba, colFrequence, colDebut, colPassage)
                 .forEach(colonne -> colonne.setComparator(ComparateursAudio.comparateurNumerique()));
         // Durée : unité adaptative ms/s → comparateur dédié (le tri numérique naïf mêlerait « 120 ms » et
@@ -386,6 +397,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         new GestionnaireColonnes.Colonne(colCarre, "Carré", false),
                         new GestionnaireColonnes.Colonne(colPoint, "Point", false),
                         new GestionnaireColonnes.Colonne(colDate, "Date", false),
+                        new GestionnaireColonnes.Colonne(colHeure, "Heure", false),
                         new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
                         new GestionnaireColonnes.Colonne(colReference, "Référence", false),
                         new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false)));
@@ -558,10 +570,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     private javafx.stage.Window fenetre() {
         return tableObservations.getScene().getWindow();
-    }
-
-    private static String ouTiret(String valeur) {
-        return valeur == null || valeur.isBlank() ? "—" : valeur;
     }
 
     private static <T> StringConverter<T> libelleConverter(java.util.function.Function<T, String> versLibelle) {

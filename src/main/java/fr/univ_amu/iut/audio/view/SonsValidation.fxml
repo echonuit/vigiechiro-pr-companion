@@ -78,6 +78,7 @@
           <!-- Ordre par défaut voulu pour les tables à espèces : contexte (Date + Passage/Carré/Point,
                masqués pour un passage unique) puis fichier, puis identification, statut et indicateurs. -->
           <TableColumn fx:id="colDate" text="Date" prefWidth="110.0"/>
+          <TableColumn fx:id="colHeure" text="Heure" prefWidth="80.0"/>
           <TableColumn fx:id="colPassage" text="Passage" prefWidth="150.0"/>
           <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
           <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
