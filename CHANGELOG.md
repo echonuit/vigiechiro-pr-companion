@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.85.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.84.1...v1.85.0) (2026-07-05)
+
+
+### Features
+
+* **audio:** filtre par groupe taxonomique (Chiroptères, Oiseaux…) dans la barre Notion ([#512](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/512)) ([38dc1f2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/38dc1f29abe3f4d800aca346e94e6f0f2c69998b)), closes [#507](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/507) [#471](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/471)
+
 ## [1.84.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.84.0...v1.84.1) (2026-07-05)
 
 
