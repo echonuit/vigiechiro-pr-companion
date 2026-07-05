@@ -40,6 +40,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.di.ValidationModule;
+import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -146,8 +147,9 @@ public final class CaptureValidationTadarida {
                     /// ViewModel, pour pouvoir déclencher l'import après l'ouverture.
                     @Provides
                     @Singleton
-                    AudioViewModel viewModel(ServiceValidation validation, ServiceBibliotheque bibliotheque) {
-                        return new AudioViewModel(validation, bibliotheque);
+                    AudioViewModel viewModel(
+                            ServiceValidation validation, RevueEnLot revueEnLot, ServiceBibliotheque bibliotheque) {
+                        return new AudioViewModel(validation, revueEnLot, bibliotheque);
                     }
 
                     // OuvrirSite requis par le fil d'Ariane du controller (SitesModule non inclus) : no-op.

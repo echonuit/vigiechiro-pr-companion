@@ -19,6 +19,7 @@ import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
+import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
@@ -43,13 +44,16 @@ class AudioViewModelTest {
     ServiceValidation service;
 
     @Mock
+    RevueEnLot revueEnLot;
+
+    @Mock
     ServiceBibliotheque bibliotheque;
 
     private static final ContextePassage PASSAGE_7 =
             new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Mon site"));
 
     private AudioViewModel vm() {
-        return new AudioViewModel(service, bibliotheque);
+        return new AudioViewModel(service, revueEnLot, bibliotheque);
     }
 
     private static LigneObservationAudio ligne(
@@ -466,6 +470,39 @@ class AudioViewModelTest {
             // Retirer le filtre : l'indice disparaît (rien à signaler).
             vm.filtres().definir("statut", null);
             assertThat(vm.messageProperty().get()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("#479 : validerLot délègue à RevueEnLot, recharge et rapporte le nombre + un retour de succès")
+        void valider_lot_delegue_et_rapporte() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.lignesAudioReferences("u-1"))
+                    .thenReturn(List.of(ligne(1, 10, "Pippip", "Pippip", StatutObservation.VALIDEE, true)));
+            when(revueEnLot.valider(List.of(1L, 2L))).thenReturn(2);
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(new SourceObservations.References("u-1"));
+
+            assertThat(vm.validerLot(List.of(1L, 2L))).isEqualTo(2);
+            verify(revueEnLot).valider(List.of(1L, 2L));
+            // Rechargement post-lot (2e lecture) + retour de succès « N validée(s) ».
+            verify(service, times(2)).lignesAudioReferences("u-1");
+            assertThat(vm.retourProperty().get().texte()).contains("2 observation(s) validée(s)");
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        }
+
+        @Test
+        @DisplayName("#479 : basculerReferenceLot délègue à RevueEnLot (marquer/retirer) et rapporte le nombre")
+        void basculer_reference_lot_delegue() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.lignesAudioReferences("u-1")).thenReturn(List.of());
+            when(revueEnLot.marquerReference(List.of(3L, 4L), true)).thenReturn(2);
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(new SourceObservations.References("u-1"));
+
+            assertThat(vm.basculerReferenceLot(List.of(3L, 4L), true)).isEqualTo(2);
+            verify(revueEnLot).marquerReference(List.of(3L, 4L), true);
         }
     }
 }
