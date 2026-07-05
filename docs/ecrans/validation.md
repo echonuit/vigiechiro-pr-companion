@@ -43,6 +43,8 @@ plus sûres. Les **compteurs** de la barre de statut (À revoir / Validées / Co
 le **sous-ensemble affiché**, pas la nuit entière : vous voyez toujours combien il reste à traiter dans ce
 que vous avez sous les yeux.
 
+![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
+
 ## Choisir et organiser les colonnes
 
 La table s'adapte à votre façon de travailler :
@@ -57,6 +59,12 @@ Outre l'espèce, le statut et la proposition Tadarida, la table peut afficher : 
 séquence, la **date d'enregistrement**, l'**heure de capture**, la **fréquence médiane**, un **indicateur
 de commentaire**, et les mesures d'identification **FME** (fréquence de moindre énergie) et **fréquence
 terminale**, calculées sur le cri sélectionné.
+
+![La table avec toutes les colonnes affichées, dont la fréquence médiane et les mesures FME / fréquence terminale.](../assets/captures/apercu-sons-validation-colonnes.png)
+
+Les mesures **FME** et **fréquence terminale** demandent d'analyser le signal du cri : elles se
+**remplissent au fil de l'écoute** (un tiret « — » tant que la ligne n'a pas été sélectionnée), pour ne pas
+analyser toute la nuit d'un coup.
 
 ## Repérer et écouter le cri
 
