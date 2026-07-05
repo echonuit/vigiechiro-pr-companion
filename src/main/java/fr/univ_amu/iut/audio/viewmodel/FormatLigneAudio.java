@@ -2,6 +2,8 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
 /// Formatages d'affichage d'une [LigneObservationAudio] pour la vue audio unifiée : détail multi-ligne
@@ -92,6 +94,20 @@ public final class FormatLigneAudio {
             return "—";
         }
         return String.format(Locale.FRENCH, "%.2f s", debutS);
+    }
+
+    /// Motif d'affichage de l'heure de capture dans la colonne (« 22:37 »).
+    private static final DateTimeFormatter HEURE_COLONNE = DateTimeFormatter.ofPattern("HH:mm");
+
+    /// Heure de capture formatée pour la **colonne** (« 22:37 », heure de la nuit extraite de l'instant),
+    /// tiret si absente (#530).
+    public static String heureColonne(LocalDateTime heureCapture) {
+        return heureCapture == null ? "—" : HEURE_COLONNE.format(heureCapture);
+    }
+
+    /// Valeur d'une colonne texte, ou **tiret** « — » si absente/blanche (colonnes de contexte de la table).
+    public static String ouTiret(String valeur) {
+        return valeur == null || valeur.isBlank() ? "—" : valeur;
     }
 
     /// Libellé d'affichage du statut de revue (partagé avec la colonne « Statut » de la vue).

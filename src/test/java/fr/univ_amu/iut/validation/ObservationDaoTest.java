@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -21,6 +22,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -449,6 +451,20 @@ class ObservationDaoTest {
         // Bornes du cri (timeline transformée) portées par la projection : servent à la durée et au repérage.
         assertThat(reference.debutS()).isEqualTo(0.5);
         assertThat(reference.finS()).isEqualTo(3.2);
+    }
+
+    @Test
+    @DisplayName("#audio/#530 : la projection porte l'heure de capture (instant complet) depuis recorded_at")
+    void lignes_audio_portent_l_heure_de_capture() {
+        dao.insert(observation("Nyclei", null));
+        // La séquence est horodatée après minuit : la projection doit porter l'INSTANT complet (date + heure)
+        // pour un tri chronologique correct, pas seulement 00:15.
+        new SequenceDao(source).majHorodatage(idSequence, LocalDateTime.of(2026, 4, 23, 0, 15, 0));
+
+        assertThat(dao.lignesAudioDuPassage(idPassage))
+                .isNotEmpty()
+                .allSatisfy(
+                        ligne -> assertThat(ligne.heureCapture()).isEqualTo(LocalDateTime.of(2026, 4, 23, 0, 15, 0)));
     }
 
     @Test

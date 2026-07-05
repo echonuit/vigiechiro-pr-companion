@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.validation.model;
 
+import java.time.LocalDateTime;
+
 /// Projection **unifiée** d'une observation pour la **vue audio** (#audio) : tout ce qu'il faut pour
 /// l'écouter, la situer, la valider/corriger et l'archiver, **quelle que soit la source** (un passage, un
 /// lot de passages, une espèce à travers les passages, ou le corpus de référence).
@@ -37,6 +39,11 @@ package fr.univ_amu.iut.validation.model;
 /// @param debutS début du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null`
 /// @param finS fin du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null` — la durée
 ///     **réelle** du cri se déduit de `(finS − debutS)` divisé par le facteur d'expansion (cf. formatage)
+/// @param heureCapture **instant réel** de capture (date + heure) de la séquence, issu de son horodatage
+///     persisté (`listening_sequence.recorded_at`, #530), ou `null` si la séquence n'est pas horodatée. On
+///     porte l'instant complet (et non l'heure seule) pour un **tri chronologique correct à cheval sur
+///     minuit** (00:15 est *après* 22:00 dans une même nuit) ; le filtre par plage horaire raisonne, lui,
+///     sur l'heure du jour (`heureCapture.toLocalTime()`)
 public record LigneObservationAudio(
         long idObservation,
         long idSequence,
@@ -59,4 +66,5 @@ public record LigneObservationAudio(
         String groupe,
         String nomFichier,
         Double debutS,
-        Double finS) {}
+        Double finS,
+        LocalDateTime heureCapture) {}

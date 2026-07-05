@@ -16,6 +16,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 
@@ -296,7 +297,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
             + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida,"
             + " g.name AS groupe,"
-            + " ls.file_name AS nom_fichier, o.start_time_s AS debut_s, o.end_time_s AS fin_s"
+            + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at,"
+            + " o.start_time_s AS debut_s, o.end_time_s AS fin_s"
             + DE_OBSERVATION_AU_SITE
             + " LEFT JOIN taxon te ON te.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
             + " LEFT JOIN taxon tt ON tt.code = o.taxon_tadarida"
@@ -335,7 +337,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString(COL_GROUPE),
             rs.getString("nom_fichier"),
             (Double) rs.getObject("debut_s"),
-            (Double) rs.getObject("fin_s"));
+            (Double) rs.getObject("fin_s"),
+            heureCaptureDe(rs.getString("recorded_at")));
 
     /// Source **Passage** : toutes les observations d'un passage (pseudo-taxons compris : on revoit tout).
     public List<LigneObservationAudio> lignesAudioDuPassage(Long idPassage) {
@@ -494,5 +497,12 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static Integer entierNullable(ResultSet rs, String colonne) throws SQLException {
         int valeur = rs.getInt(colonne);
         return rs.wasNull() ? null : valeur;
+    }
+
+    /// Instant de capture depuis l'horodatage persisté `recorded_at` (image ISO-8601 d'un [LocalDateTime],
+    /// #530) : `null` si la séquence n'est pas horodatée. On projette l'**instant complet** (date + heure)
+    /// pour un tri chronologique correct à cheval sur minuit (cf. [LigneObservationAudio#heureCapture]).
+    private static LocalDateTime heureCaptureDe(String recordedAt) {
+        return recordedAt == null ? null : LocalDateTime.parse(recordedAt);
     }
 }

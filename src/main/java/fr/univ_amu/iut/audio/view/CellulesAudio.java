@@ -1,8 +1,11 @@
 package fr.univ_amu.iut.audio.view;
 
+import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import java.time.LocalDateTime;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Cursor;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -82,6 +85,27 @@ final class CellulesAudio {
                 }
             }
         };
+    }
+
+    /// Cellule de la colonne « **Heure** » : affiche l'heure de la nuit (« 22:37 ») extraite de l'**instant**
+    /// de capture, tiret si absent. La colonne est typée par l'instant [LocalDateTime] (et non une chaîne)
+    /// pour que le tri soit chronologique et gère le passage à minuit (00:15 après 22:00). #530.
+    static TableCell<LigneObservationAudio, LocalDateTime> heure() {
+        return new TableCell<>() {
+            @Override
+            protected void updateItem(LocalDateTime instant, boolean vide) {
+                super.updateItem(instant, vide);
+                setText(vide ? null : FormatLigneAudio.heureColonne(instant));
+            }
+        };
+    }
+
+    /// Configure la colonne « **Heure** » : valeur = l'**instant** de capture (tri chronologique naturel de
+    /// [LocalDateTime], correct à cheval sur minuit), rendu « HH:mm » par [#heure()]. #530.
+    static void configurerColonneHeure(TableColumn<LigneObservationAudio, LocalDateTime> colonne) {
+        colonne.setCellValueFactory(
+                c -> new ReadOnlyObjectWrapper<>(c.getValue().heureCapture()));
+        colonne.setCellFactory(col -> heure());
     }
 
     /// Cellule de la colonne « référence » : **étoile dorée** si l'observation est archivée en référence,

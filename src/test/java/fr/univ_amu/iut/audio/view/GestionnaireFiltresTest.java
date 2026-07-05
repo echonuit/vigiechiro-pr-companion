@@ -275,7 +275,8 @@ class GestionnaireFiltresTest {
                 groupe,
                 fichier,
                 0.2,
-                0.4);
+                0.4,
+                null);
     }
 
     /// Observation **corrigée** : Tadarida a proposé `taxonTadarida`, l'observateur a retenu le taxon
@@ -305,7 +306,8 @@ class GestionnaireFiltresTest {
                 "Chiroptères",
                 fichier,
                 0.2,
-                0.4);
+                0.4,
+                null);
     }
 
     /// Observation portant une **probabilité Tadarida** donnée (ou `null` = sans proba), pour le critère Proba.
@@ -332,7 +334,8 @@ class GestionnaireFiltresTest {
                 "Chiroptères",
                 "f" + id + ".wav",
                 0.2,
-                0.4);
+                0.4,
+                null);
     }
 
     /// Observation **archivée en référence** (`is_reference` = true), pour le critère Références.
@@ -359,6 +362,7 @@ class GestionnaireFiltresTest {
                 "Chiroptères",
                 fichier,
                 0.2,
-                0.4);
+                0.4,
+                null);
     }
 }

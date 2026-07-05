@@ -76,7 +76,8 @@ class AudioViewModelTest {
                 "Chiroptères",
                 "PaRec_" + idSeq + "_000.wav",
                 0.20,
-                0.32);
+                0.32,
+                null);
     }
 
     @Nested
