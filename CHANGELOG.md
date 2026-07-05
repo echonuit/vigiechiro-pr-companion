@@ -2,6 +2,14 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.104.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.103.0...v1.104.0) (2026-07-05)
+
+
+### Features
+
+* **audio:** mémoriser les filtres entre deux ouvertures ([#484](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/484) partie 2/2) ([#568](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/568)) ([d37f1a2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/d37f1a2c25a3752eef728a08bbb94705193e8d67))
+* **passage:** saisie du materiel du micro (P3b, ferme [#546](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/546)) ([#569](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/569)) ([84e7917](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/84e7917f644bc8f387cd3d9f148a25e096fa32db)), closes [#543](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/543)
+
 # [1.103.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.102.0...v1.103.0) (2026-07-05)
 
 
