@@ -5,12 +5,12 @@ import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ModeRevue;
+import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -49,6 +49,10 @@ public class AudioViewModel {
     private final ServiceValidation service;
     private final ResolveurSourceAudio resolveur;
     private final ExporteurAudio exporteur;
+
+    /// Actions de revue (unitaires + en lot), déléguées à un collaborateur pour que le VM garde la seule
+    /// orchestration (cohésion, seuil PMD). Voir [ActionsRevueAudio].
+    private final ActionsRevueAudio actions;
 
     /// Source courante (provenance + portée). Conservée pour recharger après une action de revue.
     private SourceObservations source;
@@ -95,10 +99,17 @@ public class AudioViewModel {
                 observations.isEmpty(), observationsFiltrees.isEmpty(), ResolveurSourceAudio.messageVide(source));
     });
 
-    public AudioViewModel(ServiceValidation service, ServiceBibliotheque bibliotheque) {
+    public AudioViewModel(ServiceValidation service, RevueEnLot revueEnLot, ServiceBibliotheque bibliotheque) {
         this.service = Objects.requireNonNull(service, "service");
         this.resolveur = new ResolveurSourceAudio(service);
         this.exporteur = new ExporteurAudio(service, bibliotheque);
+        this.actions = new ActionsRevueAudio(
+                service,
+                Objects.requireNonNull(revueEnLot, "revueEnLot"),
+                selection::get,
+                modeRevue::get,
+                this::charger,
+                messages);
         selection.addListener((obs, ancien, nouveau) -> majSelection(nouveau));
     }
 
@@ -119,56 +130,59 @@ public class AudioViewModel {
         }
     }
 
-    /// Valide l'observation sélectionnée selon le [#modeRevueProperty()] (R15, R18), puis recharge.
-    /// Disponible **dans toutes les sources**. Sans sélection, l'appel est ignoré.
+    /// Valide l'observation **sélectionnée** selon le [#modeRevueProperty()] (R15, R18), puis recharge.
+    /// Sans sélection, l'appel est ignoré. Délégué à [ActionsRevueAudio].
     ///
     /// @return `true` si la validation a été appliquée
     public boolean valider() {
-        return surSelection(
-                courant -> appliquerAction(() -> service.validerSelonMode(courant.idObservation(), modeRevue.get())));
+        return actions.valider();
     }
 
-    /// Corrige l'observation sélectionnée (R16 : retient le `taxon` de l'observateur, distinct de
-    /// Tadarida) puis recharge. Corriger vers la proposition Tadarida elle-même est refusé (ce serait une
-    /// **validation**) : on invite alors à utiliser [#valider()]. Sans sélection ni taxon, l'appel est
-    /// ignoré.
+    /// Corrige l'observation **sélectionnée** (R16 : retient le `taxon` de l'observateur, distinct de
+    /// Tadarida) puis recharge. Corriger vers la proposition Tadarida elle-même est refusé (utiliser
+    /// [#valider()]). Sans sélection ni taxon, l'appel est ignoré.
     ///
     /// @param taxon taxon retenu par l'observateur
     /// @return `true` si la correction a été appliquée
     public boolean corriger(Taxon taxon) {
-        if (taxon == null) {
-            return false;
-        }
-        return surSelection(courant -> {
-            if (taxon.code().equals(courant.taxonTadarida())) {
-                messages.info("Pour retenir la proposition Tadarida, utilisez « Valider » : corriger attend"
-                        + " un autre taxon.");
-                return false;
-            }
-            return appliquerAction(() -> service.corriger(courant.idObservation(), taxon.code(), null));
-        });
+        return actions.corriger(taxon);
     }
 
-    /// Bascule l'**archivage en référence** (`is_reference`) de l'observation sélectionnée puis recharge.
-    /// Action **commune à toutes les sources** : c'est le maillon manquant qui alimente le corpus de
-    /// référence depuis l'application. Sans sélection, l'appel est ignoré.
+    /// Bascule l'**archivage en référence** (`is_reference`) de l'observation **sélectionnée** puis recharge.
+    /// Sans sélection, l'appel est ignoré.
     ///
     /// @return `true` si la bascule a été appliquée
     public boolean basculerReference() {
-        return surSelection(courant ->
-                appliquerAction(() -> service.marquerReference(courant.idObservation(), !courant.reference())));
+        return actions.basculerReference();
     }
 
     /// Enregistre (ou efface) le **commentaire** de l'observation d'identifiant `idObservation`, puis
-    /// recharge. Prend l'identifiant en paramètre (et non la sélection courante) pour servir l'**édition
-    /// inline** de la case commentaire dans la table : la cellule connaît sa propre ligne, indépendamment de
-    /// la sélection. Un texte vide/`null` efface le commentaire (cf. [ServiceValidation#commenter]).
+    /// recharge. Par identifiant (et non la sélection) pour servir l'**édition inline** de la case commentaire.
     ///
-    /// @param idObservation identifiant de l'observation à commenter
-    /// @param texte commentaire à enregistrer, ou vide/`null` pour l'effacer
     /// @return `true` si l'enregistrement a réussi
     public boolean commenter(long idObservation, String texte) {
-        return appliquerAction(() -> service.commenter(idObservation, texte));
+        return actions.commenter(idObservation, texte);
+    }
+
+    /// Valide **en lot** les observations `ids` (mode Activité, sans propagation), en une transaction (#479).
+    ///
+    /// @return le nombre validé
+    public int validerLot(List<Long> ids) {
+        return actions.validerLot(ids);
+    }
+
+    /// Corrige **en lot** les observations `ids` vers `taxon`, en une transaction (#479).
+    ///
+    /// @return le nombre corrigé
+    public int corrigerLot(List<Long> ids, Taxon taxon) {
+        return actions.corrigerLot(ids, taxon);
+    }
+
+    /// **Marque ou retire** en lot (`reference`) les observations `ids` du corpus de référence (#479).
+    ///
+    /// @return le nombre traité
+    public int basculerReferenceLot(List<Long> ids, boolean reference) {
+        return actions.marquerReferenceLot(ids, reference);
     }
 
     /// Importe un CSV Tadarida (R23) pour le passage courant, puis recharge. Réservé à la source
@@ -224,26 +238,6 @@ public class AudioViewModel {
         ExporteurAudio.ResultatExport resultat = exporteur.bibliotheque(destination);
         messages.export(resultat.reussi(), resultat.message());
         return resultat.reussi();
-    }
-
-    /// Exécute `action` sur l'observation **sélectionnée**, ou renvoie `false` s'il n'y a pas de sélection.
-    /// Factorise la garde commune à [#valider()], [#corriger(Taxon)] et [#basculerReference()] (les actions
-    /// de revue portent sur la ligne courante ; sans sélection, l'appel est ignoré).
-    private boolean surSelection(Predicate<LigneObservationAudio> action) {
-        LigneObservationAudio courant = selection.get();
-        return courant != null && action.test(courant);
-    }
-
-    private boolean appliquerAction(Runnable action) {
-        try {
-            action.run();
-            charger();
-            messages.effacerRetour();
-            return true;
-        } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
-            return false;
-        }
     }
 
     /// Recharge les lignes de la source courante en préservant la sélection (par identifiant

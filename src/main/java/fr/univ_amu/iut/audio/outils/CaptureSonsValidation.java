@@ -40,6 +40,7 @@ import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.di.ValidationModule;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
+import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -139,8 +140,9 @@ public final class CaptureSonsValidation {
                 new ModuleCaptureNavigationAudio(),
                 new AbstractModule() {
                     @Provides
-                    AudioViewModel viewModel(ServiceValidation validation, ServiceBibliotheque bibliotheque) {
-                        return new AudioViewModel(validation, bibliotheque);
+                    AudioViewModel viewModel(
+                            ServiceValidation validation, RevueEnLot revueEnLot, ServiceBibliotheque bibliotheque) {
+                        return new AudioViewModel(validation, revueEnLot, bibliotheque);
                     }
 
                     // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est

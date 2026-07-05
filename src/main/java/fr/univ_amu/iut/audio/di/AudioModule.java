@@ -9,6 +9,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
+import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 
 /// Module Guice de la feature `audio` (vue audio unifiée « Sons & validation »).
@@ -34,7 +35,8 @@ public class AudioModule extends AbstractModule {
     // ViewModel non-singleton (cf. analyse / multisite) : un VM frais par chargement d'écran, pour éviter
     // que des listeners de vues fermées restent accrochés.
     @Provides
-    AudioViewModel fournirAudioViewModel(ServiceValidation validation, ServiceBibliotheque bibliotheque) {
-        return new AudioViewModel(validation, bibliotheque);
+    AudioViewModel fournirAudioViewModel(
+            ServiceValidation validation, RevueEnLot revueEnLot, ServiceBibliotheque bibliotheque) {
+        return new AudioViewModel(validation, revueEnLot, bibliotheque);
     }
 }
