@@ -90,6 +90,8 @@ Un **mode inventaire** permet de propager une validation aux autres détections 
 **Éditer un commentaire** : cliquez sur la **case Commentaire** d'une ligne pour saisir ou modifier une note
 sur cette observation (l'indicateur de commentaire de la table signale les lignes annotées).
 
+![L'éditeur de commentaire ouvert au clic sur la case : une zone de texte et le bouton Enregistrer.](../assets/captures/apercu-sons-validation-commentaire.png)
+
 ### Aller vite : clavier et lots
 
 La revue est pensée pour **enchaîner** les observations sans quitter le clavier :
@@ -101,6 +103,8 @@ Vous pouvez aussi **sélectionner plusieurs lignes** (Ctrl+clic, ou Maj+clic pou
 corriger ou marquer en référence tout le lot d'un coup**. Une action groupée est **tout ou rien** (si elle
 échoue, aucune ligne n'est modifiée) et enregistre la validation en **mode activité** (sans propagation
 inventaire, qui n'aurait pas de sens sur une sélection hétérogène).
+
+![Trois observations sélectionnées d'un coup dans la table : l'action (valider, corriger, référence) s'applique à tout le lot.](../assets/captures/apercu-sons-validation-lot.png)
 
 ## Validation d'un passage (Tadarida)
 

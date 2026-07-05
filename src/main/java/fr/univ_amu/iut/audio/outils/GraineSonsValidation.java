@@ -160,11 +160,7 @@ final class GraineSonsValidation {
         ApercuFx.capturerApresPreparation(
                 scene,
                 () -> {
-                    preparation.accept(vue);
-                    if (vue.lookup("#tableObservations") instanceof TableView<?> table
-                            && !table.getItems().isEmpty()) {
-                        table.getSelectionModel().select(0); // déclenche le chargement audio + les mesures
-                    }
+                    preparation.accept(vue); // l'appelant sélectionne la/les ligne(s) et applique ses réglages
                     if (vue.lookup("#audioView") instanceof AudioView audio) {
                         audio.setMinHeight(340); // place pour spectrogramme + sonogramme
                         audio.setPrefHeight(340);
@@ -173,6 +169,21 @@ final class GraineSonsValidation {
                 },
                 fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Sélectionne une ou plusieurs lignes de la table (par index) et **donne le focus** à la table, pour que
+    /// les lignes retenues ressortent en surbrillance accentuée sur la capture. La sélection de la ligne
+    /// « courante » déclenche aussi le chargement audio et le calcul des mesures.
+    static void selectionner(Parent vue, int... indices) {
+        if (vue.lookup("#tableObservations") instanceof TableView<?> table) {
+            table.getSelectionModel().clearSelection();
+            for (int index : indices) {
+                if (index < table.getItems().size()) {
+                    table.getSelectionModel().select(index);
+                }
+            }
+            table.requestFocus();
+        }
     }
 
     private static Parent charger(FXMLLoader loader) {
