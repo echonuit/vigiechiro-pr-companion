@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.84.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.84.0...v1.84.1) (2026-07-05)
+
+
+### Bug Fixes
+
+* **captures:** reparer CaptureImport (binding CompteurValidations manquant) ([#509](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/509)) ([07a8b07](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/07a8b07f1649bcf7c672da2a675c2b01412e9870))
+
 # [1.84.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.83.0...v1.84.0) (2026-07-05)
 
 
