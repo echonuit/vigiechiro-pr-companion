@@ -270,9 +270,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         });
 
         // Barre de filtres « à la Notion » (#470/#471) : recherche texte permanente + « + Filtre » + puces,
-        // pilotant les filtres composables du view-model. Catalogue de critères (statut pour l'instant).
+        // pilotant les filtres composables du view-model. Catalogue de critères : statut et groupe taxon.
         gestionnaireFiltres = new GestionnaireFiltres(
-                champRecherche, menuAjoutFiltre, pucesFiltres, viewModel.filtres(), List.of(CriteresAudio.statut()));
+                champRecherche,
+                menuAjoutFiltre,
+                pucesFiltres,
+                viewModel.filtres(),
+                List.of(CriteresAudio.statut(), CriteresAudio.groupe(viewModel::observationsFiltrees)));
 
         resumeStatut.bind(Bindings.createStringBinding(this::resumeStatutTexte, viewModel.comptageProperty()));
 
