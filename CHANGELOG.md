@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.110.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.109.0...v1.110.0) (2026-07-05)
+
+
+### Features
+
+* **captures:** tableau replié / carte plein écran de Carte & passages ([#527](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/527)) ([#591](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/591)) ([9bec5f0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/9bec5f0821217bd816f6a8b61b839ebbf87e58e5)), closes [#347](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/347)
+
 # [1.109.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.108.0...v1.109.0) (2026-07-05)
 
 
