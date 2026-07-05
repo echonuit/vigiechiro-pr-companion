@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -18,12 +19,18 @@ import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de la table audio (patron « à la Notion »). Chaque critère est
 /// une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut**, **Groupe** taxonomique,
-/// **Espèce** (taxon), **Références** et **Proba** (seuil de probabilité Tadarida).
+/// **Espèce** (taxon), **Références**, **Proba** (seuil de probabilité Tadarida) et **Heure** (plage horaire).
 final class CriteresAudio {
 
     /// Groupe des chauves-souris (`taxonomic_group.name`, cf. #507) : sélection par défaut du critère
     /// Groupe, car isoler les chiroptères est le levier n°1 de la revue (#471).
     private static final String GROUPE_CHIROPTERES = "Chiroptères";
+
+    /// Bornes de la plage **nuit** par défaut du critère Heure (21 h → 6 h, à cheval sur minuit) : écarte
+    /// d'emblée les heures de jour, cas d'usage principal (#531).
+    private static final int HEURE_DEBUT_NUIT = 21;
+
+    private static final int HEURE_FIN_NUIT = 6;
 
     private CriteresAudio() {}
 
@@ -217,6 +224,69 @@ final class CriteresAudio {
     /// **ou** si elle n'en a pas (sans proba toujours conservée, cf. [#probabilite()]).
     private static Predicate<LigneObservationAudio> auMoins(double seuil) {
         return ligne -> ligne.probTadarida() == null || ligne.probTadarida() >= seuil;
+    }
+
+    /// Critère **Plage horaire** : deux listes déroulantes « de » / « à » (heures 0–23) ; garde les
+    /// observations dont l'**heure de capture** tombe dans la plage. Gère le **passage à minuit** : si `de`
+    /// > `à` (ex. 21 h → 6 h), la plage traverse minuit (`heure ≥ de` **ou** `heure ≤ à`). Défaut **nuit
+    /// (21 h → 6 h)** pour écarter d'emblée les heures de jour (#531). Les observations **sans heure** sont
+    /// **toujours conservées** (comme le seuil de proba, on évite de perdre des lignes).
+    static CritereFiltre heure() {
+        return new CritereFiltre() {
+            @Override
+            public String nom() {
+                return "heure";
+            }
+
+            @Override
+            public String libelle() {
+                return "Heure";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
+                ComboBox<Integer> de = choixHeure();
+                ComboBox<Integer> a = choixHeure();
+                de.setValue(HEURE_DEBUT_NUIT);
+                a.setValue(HEURE_FIN_NUIT);
+                de.valueProperty()
+                        .addListener((obs, avant, apres) -> applique.accept(dansPlage(de.getValue(), a.getValue())));
+                a.valueProperty()
+                        .addListener((obs, avant, apres) -> applique.accept(dansPlage(de.getValue(), a.getValue())));
+                applique.accept(dansPlage(de.getValue(), a.getValue())); // application initiale (nuit)
+                return new HBox(6.0, new Label("de"), de, new Label("à"), a);
+            }
+        };
+    }
+
+    /// Liste déroulante des heures de la journée (0 h – 23 h), affichées « 21 h ».
+    private static ComboBox<Integer> choixHeure() {
+        ComboBox<Integer> choix = new ComboBox<>();
+        choix.getItems().setAll(IntStream.range(0, 24).boxed().toList());
+        choix.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Integer heure) {
+                return heure == null ? "" : heure + " h";
+            }
+
+            @Override
+            public Integer fromString(String texte) {
+                return null; // liste non éditable
+            }
+        });
+        return choix;
+    }
+
+    /// Prédicat de plage horaire sur l'**heure de capture** (0–23). Gère le passage à minuit (`de` > `à` →
+    /// `heure ≥ de` ou `heure ≤ à`) ; une observation **sans heure** est toujours conservée (cf. [#heure()]).
+    private static Predicate<LigneObservationAudio> dansPlage(int de, int a) {
+        return ligne -> {
+            if (ligne.heureCapture() == null) {
+                return true;
+            }
+            int h = ligne.heureCapture().getHour();
+            return de <= a ? (h >= de && h <= a) : (h >= de || h <= a);
+        };
     }
 
     /// Espèces présentes dans `lignes`, une par **taxon retenu**, **distinctes** et triées par libellé
