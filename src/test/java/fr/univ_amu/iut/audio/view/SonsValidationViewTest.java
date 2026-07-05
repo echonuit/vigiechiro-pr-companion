@@ -69,6 +69,7 @@ import org.testfx.framework.junit5.Start;
 class SonsValidationViewTest {
 
     private ServiceValidation service;
+    private RevueEnLot revueEnLot;
     private SonsValidationController controleur;
 
     private static LigneObservationAudio ligne(
@@ -104,6 +105,7 @@ class SonsValidationViewTest {
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceValidation.class);
+        revueEnLot = mock(RevueEnLot.class);
         ServiceBibliotheque bibliotheque = mock(ServiceBibliotheque.class);
         when(service.taxonsDisponibles())
                 .thenReturn(List.of(new Taxon("Nyclei", "Nyctalus leisleri", "Noctule de Leisler", 1L)));
@@ -118,7 +120,7 @@ class SonsValidationViewTest {
                 new AbstractModule() {
                     @Provides
                     AudioViewModel viewModel() {
-                        return new AudioViewModel(service, mock(RevueEnLot.class), bibliotheque);
+                        return new AudioViewModel(service, revueEnLot, bibliotheque);
                     }
                 },
                 new NavigationDeTestModule());
@@ -289,6 +291,34 @@ class SonsValidationViewTest {
 
         robot.interact(btnReference::fire);
         verify(service).marquerReference(1L, false);
+    }
+
+    @Test
+    @DisplayName("#479 : multi-sélection puis Valider délègue au LOT (RevueEnLot), pas à l'action unitaire")
+    void valider_lot_sur_multi_selection(FxRobot robot) {
+        when(revueEnLot.valider(List.of(1L, 2L))).thenReturn(2);
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        Button btnValider = robot.lookup("#btnValider").queryAs(Button.class);
+
+        robot.interact(() -> table.getSelectionModel().selectIndices(0, 1));
+        robot.interact(btnValider::fire);
+
+        verify(revueEnLot).valider(List.of(1L, 2L));
+        verify(service, never()).validerSelonMode(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("#479 : multi-sélection puis Référence bascule tout le lot (retire si toutes déjà en référence)")
+    void reference_lot_sur_multi_selection(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        Button btnReference = robot.lookup("#btnReference").queryAs(Button.class);
+
+        robot.interact(() -> table.getSelectionModel().selectIndices(0, 1));
+        robot.interact(btnReference::fire);
+
+        // Les deux lignes sont déjà en référence → le lot les RETIRE toutes (marquer = false). Le passage par
+        // RevueEnLot (et non l'action unitaire du service) prouve l'aiguillage vers le lot.
+        verify(revueEnLot).marquerReference(List.of(1L, 2L), false);
     }
 
     @Test

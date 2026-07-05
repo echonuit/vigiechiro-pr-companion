@@ -22,22 +22,28 @@ final class RevueClavier {
 
     private RevueClavier() {}
 
-    /// Installe les raccourcis de revue sur `table`, agissant sur `viewModel`, et documente les touches via
-    /// l'**aide d'accessibilité** de la table (lecteurs d'écran).
-    static void installer(TableView<LigneObservationAudio> table, AudioViewModel viewModel) {
-        table.setOnKeyPressed(evenement -> traiter(evenement, table, viewModel));
-        table.setAccessibleHelp("Revue au clavier : Entrée valide l'observation, R bascule l'archivage en"
+    /// Installe les raccourcis de revue sur `table` : Entrée / R passent par `actions` (unitaire si une seule
+    /// ligne, **en lot** si plusieurs, #479) ; N (prochaine « À revoir ») pilote la sélection de la table via
+    /// `viewModel`. Documente les touches via l'**aide d'accessibilité** (lecteurs d'écran).
+    static void installer(
+            TableView<LigneObservationAudio> table, AudioViewModel viewModel, ActionsSelectionAudio actions) {
+        table.setOnKeyPressed(evenement -> traiter(evenement, table, viewModel, actions));
+        table.setAccessibleHelp("Revue au clavier : Entrée valide la sélection, R bascule l'archivage en"
                 + " référence, N va à la prochaine « À revoir » ; les flèches haut et bas naviguent.");
     }
 
-    private static void traiter(KeyEvent evenement, TableView<LigneObservationAudio> table, AudioViewModel vm) {
+    private static void traiter(
+            KeyEvent evenement,
+            TableView<LigneObservationAudio> table,
+            AudioViewModel vm,
+            ActionsSelectionAudio actions) {
         switch (evenement.getCode()) {
             case ENTER -> {
-                vm.valider();
+                actions.valider();
                 evenement.consume();
             }
             case R -> {
-                vm.basculerReference();
+                actions.basculerReference();
                 evenement.consume();
             }
             case N -> {
@@ -50,13 +56,13 @@ final class RevueClavier {
         }
     }
 
-    /// Sélectionne (et fait défiler jusqu'à) la prochaine observation **« À revoir »** après la sélection
-    /// courante ; ne fait rien s'il n'y en a aucune.
+    /// Sélectionne (**seule**, `clearAndSelect`) et fait défiler jusqu'à la prochaine observation **« À
+    /// revoir »** après la sélection courante ; ne fait rien s'il n'y en a aucune.
     private static void allerProchaineARevoir(TableView<LigneObservationAudio> table, AudioViewModel vm) {
         int depart = table.getItems().indexOf(vm.selectionProperty().get());
         int cible = indexProchaineARevoir(table.getItems(), depart);
         if (cible >= 0) {
-            table.getSelectionModel().select(cible);
+            table.getSelectionModel().clearAndSelect(cible);
             table.scrollTo(cible);
         }
     }

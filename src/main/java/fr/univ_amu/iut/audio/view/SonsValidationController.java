@@ -34,6 +34,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SelectionMode;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -83,6 +84,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// Barre de filtres « à la Notion » (#470/#471) : recherche + « + Filtre » + puces, pilotant
     /// [AudioViewModel#filtres]. Mémorisée pour la réinitialiser lors d'une navigation ciblée.
     private GestionnaireFiltres gestionnaireFiltres;
+
+    /// Aiguillage des actions de revue selon la sélection (unitaire vs lot, #479), partagé par les boutons et
+    /// les raccourcis clavier.
+    private ActionsSelectionAudio actionsSelection;
 
     @FXML
     private MenuButton menuActions;
@@ -261,9 +266,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         SortedList<LigneObservationAudio> triees = new SortedList<>(viewModel.observationsFiltrees());
         triees.comparatorProperty().bind(tableObservations.comparatorProperty());
         tableObservations.setItems(triees);
+        // Multi-sélection (#479) : traiter un lot d'un coup. Le suivi audio/détail suit la DERNIÈRE ligne
+        // sélectionnée (selectedItemProperty), les actions opèrent sur tout le lot via actionsSelection.
+        tableObservations.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+        actionsSelection = new ActionsSelectionAudio(tableObservations, viewModel);
         // Revue au clavier (#478) : Entrée = valider, R = référence, N = prochaine « À revoir » ; ↑/↓ =
-        // navigation native. Handler posé sur la table → n'agit pas quand un champ a le focus.
-        RevueClavier.installer(tableObservations, viewModel);
+        // navigation native. Entrée/R passent par actionsSelection (unitaire si 1 ligne, lot si plusieurs).
+        RevueClavier.installer(tableObservations, viewModel, actionsSelection);
         tableObservations
                 .getSelectionModel()
                 .selectedItemProperty()
@@ -507,17 +516,17 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private void valider() {
-        viewModel.valider();
+        actionsSelection.valider();
     }
 
     @FXML
     private void corriger() {
-        viewModel.corriger(choixTaxon.getValue());
+        actionsSelection.corriger(choixTaxon.getValue());
     }
 
     @FXML
     private void basculerReference() {
-        viewModel.basculerReference();
+        actionsSelection.basculerReference();
     }
 
     /// « Importer / Réimporter un CSV Tadarida » : sélecteur de fichier natif (ouverture) puis
