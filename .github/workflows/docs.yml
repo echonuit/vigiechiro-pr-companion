@@ -96,8 +96,32 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.d1.outputs.page_url || steps.d2.outputs.page_url || steps.d3.outputs.page_url }}
     steps:
-      - name: Déployer sur GitHub Pages
-        id: deployment
+      # actions/deploy-pages échoue parfois sur une erreur TRANSITOIRE d'infra GitHub
+      # (« Deployment failed, try again later »). On retente jusqu'à 3 fois avant
+      # d'abandonner, ce qui absorbe ces aléas sans intervention manuelle. Seul le
+      # dernier essai peut faire rougir le job (les précédents sont continue-on-error).
+      - name: Déployer sur GitHub Pages (essai 1)
+        id: d1
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - name: Attente avant réessai
+        if: steps.d1.outcome == 'failure'
+        run: sleep 20
+
+      - name: Déployer sur GitHub Pages (essai 2)
+        id: d2
+        if: steps.d1.outcome == 'failure'
+        continue-on-error: true
+        uses: actions/deploy-pages@v5
+
+      - name: Attente avant réessai
+        if: steps.d1.outcome == 'failure' && steps.d2.outcome == 'failure'
+        run: sleep 45
+
+      - name: Déployer sur GitHub Pages (essai 3, dernier)
+        id: d3
+        if: steps.d1.outcome == 'failure' && steps.d2.outcome == 'failure'
         uses: actions/deploy-pages@v5
