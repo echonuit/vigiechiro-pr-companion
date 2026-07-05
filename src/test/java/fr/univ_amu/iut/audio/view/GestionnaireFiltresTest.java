@@ -11,10 +11,12 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -107,11 +109,53 @@ class GestionnaireFiltresTest {
         assertThat(recherche.getText()).isEmpty();
     }
 
+    @Test
+    @DisplayName("Critère Groupe : choix = groupes présents (distincts, triés) ; défaut « Chiroptères » ; re-filtre")
+    void filtre_groupe(FxRobot robot) {
+        // Jeu mixte chauves-souris / oiseaux (deux Chiroptères pour vérifier la déduplication).
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligne(1, "Pippip", "PaRec_1.wav", StatutObservation.VALIDEE), // Chiroptères
+                ligneGroupe(2, "Turmer", "PaRec_2.wav", StatutObservation.VALIDEE, "Oiseaux"),
+                ligne(3, "Nyclei", "PaRec_3.wav", StatutObservation.VALIDEE)); // Chiroptères
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres ignore = new GestionnaireFiltres(
+                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.groupe(() -> source)));
+        assertThat(ignore).isNotNull();
+
+        // Ajouter la puce Groupe : le sélecteur liste les groupes présents (distincts, triés) et défaut
+        // « Chiroptères » → seules les chauves-souris restent.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        ComboBox<String> choixGroupe = comboDe(pucesLocales);
+        assertThat(choixGroupe.getItems()).containsExactly("Chiroptères", "Oiseaux");
+        assertThat(choixGroupe.getValue()).isEqualTo("Chiroptères");
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L, 3L);
+
+        // Le même critère sert tout groupe : basculer sur « Oiseaux » → seule l'observation d'oiseau reste.
+        robot.interact(() -> choixGroupe.setValue("Oiseaux"));
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+    }
+
     private Button boutonRetirer() {
         return (Button) puces.lookupAll(".puce-filtre-retirer").iterator().next();
     }
 
+    /// L'éditeur du critère Groupe est le 2e enfant de la puce (Label, ComboBox, bouton ✕).
+    @SuppressWarnings("unchecked")
+    private static ComboBox<String> comboDe(FlowPane puces) {
+        HBox puce = (HBox) puces.getChildren().get(0);
+        return (ComboBox<String>) puce.getChildren().get(1);
+    }
+
     private static LigneObservationAudio ligne(long id, String taxon, String fichier, StatutObservation statut) {
+        return ligneGroupe(id, taxon, fichier, statut, "Chiroptères");
+    }
+
+    /// Variante fixant le **groupe taxon parent** (pour le critère Groupe) : Chiroptères, Oiseaux…
+    private static LigneObservationAudio ligneGroupe(
+            long id, String taxon, String fichier, StatutObservation statut, String groupe) {
         return new LigneObservationAudio(
                 id,
                 10 + id,
@@ -131,6 +175,7 @@ class GestionnaireFiltresTest {
                 45,
                 null,
                 taxon,
+                groupe,
                 fichier,
                 0.2,
                 0.4);
@@ -160,6 +205,7 @@ class GestionnaireFiltresTest {
                 45,
                 nomEspece,
                 taxonTadarida,
+                "Chiroptères",
                 fichier,
                 0.2,
                 0.4);

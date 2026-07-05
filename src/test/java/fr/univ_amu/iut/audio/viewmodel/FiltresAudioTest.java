@@ -75,6 +75,7 @@ class FiltresAudioTest {
                 45,
                 null,
                 taxonTadarida,
+                "Chiroptères",
                 "f" + id + ".wav",
                 0.2,
                 0.4);

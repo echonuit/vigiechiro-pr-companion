@@ -43,6 +43,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String COL_PASSAGE_ID = "passage_id";
     private static final String COL_DATE_ENR = "date_enr";
     private static final String COL_NOM_SITE = "nom_site";
+    private static final String COL_GROUPE = "groupe";
     private static final String DEBUT_CTE = "WITH obs AS (";
     private static final String ALIAS_STATUT = " AS statut,";
 
@@ -134,7 +135,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("code"),
             rs.getString("latin"),
             rs.getString("vern"),
-            rs.getString("groupe"),
+            rs.getString(COL_GROUPE),
             rs.getLong(COL_PASSAGE_ID),
             rs.getString(COL_CARRE),
             rs.getString("point"),
@@ -218,7 +219,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("code"),
             rs.getString("latin"),
             rs.getString("vern"),
-            rs.getString("groupe"),
+            rs.getString(COL_GROUPE),
             rs.getInt("nb_obs"),
             rs.getInt("nb_passages"),
             rs.getInt("nb_carres"),
@@ -294,10 +295,12 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " o.taxon_observer AS observer, o.prob_observer AS prob_observer,"
             + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
             + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida,"
+            + " g.name AS groupe,"
             + " ls.file_name AS nom_fichier, o.start_time_s AS debut_s, o.end_time_s AS fin_s"
             + DE_OBSERVATION_AU_SITE
             + " LEFT JOIN taxon te ON te.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
             + " LEFT JOIN taxon tt ON tt.code = o.taxon_tadarida"
+            + " LEFT JOIN taxonomic_group g ON g.id = te.group_id"
             + ")";
 
     private static final String SELECT_AUDIO = CTE_AUDIO + " SELECT * FROM obs WHERE obs.";
@@ -329,6 +332,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             entierNullable(rs, "frequence"),
             rs.getString("nom_espece"),
             rs.getString("nom_tadarida"),
+            rs.getString(COL_GROUPE),
             rs.getString("nom_fichier"),
             (Double) rs.getObject("debut_s"),
             (Double) rs.getObject("fin_s"));

@@ -29,6 +29,9 @@ package fr.univ_amu.iut.validation.model;
 ///     `null` si le taxon n'a pas de nom vernaculaire (souche hors référentiel) — la vue affiche alors le code
 /// @param nomTadarida nom vernaculaire FR de la **proposition Tadarida** (`taxon_tadarida`), ou `null`
 ///     (souche hors référentiel) — la vue affiche alors le code
+/// @param groupe nom du **groupe taxonomique parent** de l'espèce retenue (`taxonomic_group.name`, ex.
+///     « Chiroptères », « Oiseaux », « Orthoptères et cigales »), ou `null` si le taxon n'a pas de groupe —
+///     permet de filtrer la liste par grand groupe (chauves-souris, oiseaux…) sans lister chaque espèce
 /// @param nomFichier nom de fichier de la séquence d'écoute (`listening_sequence.file_name`), pour relier
 ///     la ligne à l'enregistrement écouté
 /// @param debutS début du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null`
@@ -53,6 +56,7 @@ public record LigneObservationAudio(
         Integer frequenceKHz,
         String nomEspece,
         String nomTadarida,
+        String groupe,
         String nomFichier,
         Double debutS,
         Double finS) {}

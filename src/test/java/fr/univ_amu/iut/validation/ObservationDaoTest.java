@@ -435,6 +435,9 @@ class ObservationDaoTest {
             assertThat(ligne.numeroCarre()).isEqualTo("640380");
             assertThat(ligne.codePoint()).isEqualTo("A1");
             assertThat(ligne.nomFichier()).isEqualTo("a_000.wav");
+            // Groupe taxon parent porté par la projection (LEFT JOIN taxonomic_group) : Pippip et Nyclei
+            // sont rattachés à « Chiroptères » (V08). Alimente le filtre par groupe de la vue audio.
+            assertThat(ligne.groupe()).isEqualTo("Chiroptères");
         });
         LigneObservationAudio reference = lignes.stream()
                 .filter(LigneObservationAudio::reference)
