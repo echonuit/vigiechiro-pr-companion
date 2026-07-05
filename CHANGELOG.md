@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.103.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.102.0...v1.103.0) (2026-07-05)
+
+
+### Features
+
+* **audio:** mémoriser le tri de la table entre deux ouvertures ([#484](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/484) partie 1/2) ([#566](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/566)) ([8809bd0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/8809bd0e12e51d3fd449a157cc985fd4490429d3))
+
 # [1.102.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.101.0...v1.102.0) (2026-07-05)
 
 
