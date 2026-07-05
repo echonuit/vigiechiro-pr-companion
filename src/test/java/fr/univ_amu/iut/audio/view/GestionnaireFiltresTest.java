@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.audio.viewmodel.FiltresAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.time.LocalDateTime;
 import java.util.List;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -222,6 +223,37 @@ class GestionnaireFiltresTest {
         assertThat(vues).hasSize(3);
     }
 
+    @Test
+    @DisplayName("Critère Heure : plage nuit (21h→6h) par défaut ; heures de jour masquées ; passage à minuit géré")
+    void filtre_heure(FxRobot robot) {
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligneHeure(1, LocalDateTime.of(2026, 4, 22, 22, 0)), // 22:00 nuit
+                ligneHeure(2, LocalDateTime.of(2026, 4, 22, 13, 0)), // 13:00 jour
+                ligneHeure(3, LocalDateTime.of(2026, 4, 23, 3, 0)), // 03:00 après minuit (nuit)
+                ligneHeure(4, null)); // sans heure
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres ignore = new GestionnaireFiltres(
+                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.heure()));
+        assertThat(ignore).isNotNull();
+
+        // Ajouter la puce Heure : défaut nuit 21h→6h (à cheval sur minuit) → garde 22:00, 03:00 et la ligne
+        // sans heure ; masque 13:00 (jour).
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(1L, 3L, 4L);
+
+        // Basculer sur les heures de JOUR (6h→20h, sans passage à minuit) → garde 13:00 + sans heure.
+        ComboBox<Integer> de = comboHeure(pucesLocales, 1);
+        ComboBox<Integer> a = comboHeure(pucesLocales, 3);
+        robot.interact(() -> {
+            de.setValue(6);
+            a.setValue(20);
+        });
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L, 4L);
+    }
+
     private Button boutonRetirer() {
         return (Button) puces.lookupAll(".puce-filtre-retirer").iterator().next();
     }
@@ -244,6 +276,15 @@ class GestionnaireFiltresTest {
         HBox puce = (HBox) puces.getChildren().get(0);
         HBox editeur = (HBox) puce.getChildren().get(1);
         return (Slider) editeur.getChildren().get(0);
+    }
+
+    /// L'éditeur du critère Heure est un HBox [Label « de », ComboBox de, Label « à », ComboBox à] : le
+    /// combo « de » est en position 1, le combo « à » en position 3.
+    @SuppressWarnings("unchecked")
+    private static ComboBox<Integer> comboHeure(FlowPane puces, int position) {
+        HBox puce = (HBox) puces.getChildren().get(0);
+        HBox editeur = (HBox) puce.getChildren().get(1);
+        return (ComboBox<Integer>) editeur.getChildren().get(position);
     }
 
     private static LigneObservationAudio ligne(long id, String taxon, String fichier, StatutObservation statut) {
@@ -364,5 +405,33 @@ class GestionnaireFiltresTest {
                 0.2,
                 0.4,
                 null);
+    }
+
+    /// Observation portant un **instant de capture** donné (ou `null` = sans heure), pour le critère Heure.
+    private static LigneObservationAudio ligneHeure(long id, LocalDateTime heure) {
+        return new LigneObservationAudio(
+                id,
+                10 + id,
+                7L,
+                1,
+                "2026-04-22",
+                "640380",
+                "A1",
+                "Site",
+                "Pippip",
+                0.9,
+                null,
+                null,
+                StatutObservation.NON_TOUCHEE,
+                false,
+                null,
+                45,
+                null,
+                "Pippip",
+                "Chiroptères",
+                "f" + id + ".wav",
+                0.2,
+                0.4,
+                heure);
     }
 }
