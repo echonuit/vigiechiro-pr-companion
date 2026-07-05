@@ -85,6 +85,7 @@ class SonsValidationViewTest {
                 45,
                 nomEspece,
                 nomTadarida,
+                "Chiroptères",
                 "PaRec_" + seq + "_000.wav",
                 0.20,
                 0.32);

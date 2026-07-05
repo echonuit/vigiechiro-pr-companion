@@ -34,6 +34,7 @@ class FormatLigneAudioTest {
                 45,
                 nomEspece,
                 "Pipistrelle commune",
+                "Chiroptères",
                 "PaRec_20260620_000.wav",
                 0.20,
                 0.32);

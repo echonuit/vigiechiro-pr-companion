@@ -131,6 +131,7 @@ class GestionnaireFiltresTest {
                 45,
                 null,
                 taxon,
+                "Chiroptères",
                 fichier,
                 0.2,
                 0.4);
@@ -160,6 +161,7 @@ class GestionnaireFiltresTest {
                 45,
                 nomEspece,
                 taxonTadarida,
+                "Chiroptères",
                 fichier,
                 0.2,
                 0.4);
