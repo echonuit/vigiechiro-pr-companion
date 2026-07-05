@@ -73,4 +73,26 @@ public final class ApercuFx {
             throw new UncheckedIOException("Ecriture PNG impossible : " + fichier, echec);
         }
     }
+
+    /// Capture un [javafx.scene.control.DialogPane] hors-ecran en l'enveloppant dans une scene transitoire
+    /// et en y appliquant des feuilles de styles (comme palette.css). A appeler sur le thread JavaFX.
+    public static void enregistrerDialogPane(
+            javafx.scene.control.DialogPane pane, java.util.List<String> feuillesStyle, Path fichier) {
+        javafx.scene.layout.StackPane conteneur = new javafx.scene.layout.StackPane(pane);
+        // Fond sombre translucide pour simuler le background de l'application modale
+        conteneur.setStyle("-fx-background-color: rgba(0, 0, 0, 0.4); -fx-padding: 30;");
+        Scene scene = new Scene(conteneur);
+        if (feuillesStyle != null) {
+            scene.getStylesheets().addAll(feuillesStyle);
+        }
+        pane.layout();
+        enregistrerPng(scene, fichier);
+    }
+
+    /// Capture un [javafx.scene.control.Dialog] hors-ecran en extrayant son [DialogPane].
+    /// A appeler sur le thread JavaFX.
+    public static void enregistrerDialog(
+            javafx.scene.control.Dialog<?> dialog, java.util.List<String> feuillesStyle, Path fichier) {
+        enregistrerDialogPane(dialog.getDialogPane(), feuillesStyle, fichier);
+    }
 }
