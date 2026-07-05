@@ -47,7 +47,7 @@
       <TableView fx:id="tableEspeces">
         <columns>
           <TableColumn fx:id="colEspece" text="Espèce" prefWidth="240.0"/>
-          <TableColumn fx:id="colGroupe" text="Groupe" prefWidth="140.0"/>
+          <TableColumn fx:id="colGroupe" text="Taxon parent" prefWidth="140.0"/>
           <TableColumn fx:id="colDetections" text="Détections" prefWidth="95.0"/>
           <TableColumn fx:id="colPassages" text="Passages" prefWidth="90.0"/>
           <TableColumn fx:id="colCarres" text="Carrés" prefWidth="80.0"/>
