@@ -16,6 +16,9 @@ open module vigiechiro {
     requires javafx.swing;
     requires java.desktop;
 
+    // Client HTTP (JDK) pour le pré-remplissage météo Open-Meteo (#547).
+    requires java.net.http;
+
     // Persistance : API JDBC + driver SQLite (module automatique).
     requires java.sql;
     requires org.xerial.sqlitejdbc;
