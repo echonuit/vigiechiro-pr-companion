@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -156,6 +157,24 @@ class AudioViewModelTest {
 
             assertThat(vm.basculerReference()).isTrue();
             verify(service).marquerReference(1L, true);
+        }
+
+        @Test
+        @DisplayName("commenter délègue au service par identifiant (sans dépendre de la sélection) et recharge")
+        void commenter_delegue_par_identifiant() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            LigneObservationAudio l = ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false);
+            when(service.lignesAudioDuPassage(7L)).thenReturn(List.of(l));
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(source());
+            // Volontairement AUCUNE sélection : l'édition inline commente la ligne de la cellule, pas la sélection.
+
+            assertThat(vm.commenter(1L, "beau cri")).isTrue();
+            verify(service).commenter(1L, "beau cri");
+            // Rechargement post-action : la source est relue une 2e fois (1re à l'ouverture).
+            verify(service, times(2)).lignesAudioDuPassage(7L);
         }
 
         @Test

@@ -10,6 +10,7 @@ import fr.univ_amu.iut.validation.model.Taxon;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -123,11 +124,8 @@ public class AudioViewModel {
     ///
     /// @return `true` si la validation a été appliquée
     public boolean valider() {
-        LigneObservationAudio courant = selection.get();
-        if (courant == null) {
-            return false;
-        }
-        return appliquerAction(() -> service.validerSelonMode(courant.idObservation(), modeRevue.get()));
+        return surSelection(
+                courant -> appliquerAction(() -> service.validerSelonMode(courant.idObservation(), modeRevue.get())));
     }
 
     /// Corrige l'observation sélectionnée (R16 : retient le `taxon` de l'observateur, distinct de
@@ -138,16 +136,17 @@ public class AudioViewModel {
     /// @param taxon taxon retenu par l'observateur
     /// @return `true` si la correction a été appliquée
     public boolean corriger(Taxon taxon) {
-        LigneObservationAudio courant = selection.get();
-        if (courant == null || taxon == null) {
+        if (taxon == null) {
             return false;
         }
-        if (taxon.code().equals(courant.taxonTadarida())) {
-            messages.info("Pour retenir la proposition Tadarida, utilisez « Valider » : corriger attend"
-                    + " un autre taxon.");
-            return false;
-        }
-        return appliquerAction(() -> service.corriger(courant.idObservation(), taxon.code(), null));
+        return surSelection(courant -> {
+            if (taxon.code().equals(courant.taxonTadarida())) {
+                messages.info("Pour retenir la proposition Tadarida, utilisez « Valider » : corriger attend"
+                        + " un autre taxon.");
+                return false;
+            }
+            return appliquerAction(() -> service.corriger(courant.idObservation(), taxon.code(), null));
+        });
     }
 
     /// Bascule l'**archivage en référence** (`is_reference`) de l'observation sélectionnée puis recharge.
@@ -156,11 +155,20 @@ public class AudioViewModel {
     ///
     /// @return `true` si la bascule a été appliquée
     public boolean basculerReference() {
-        LigneObservationAudio courant = selection.get();
-        if (courant == null) {
-            return false;
-        }
-        return appliquerAction(() -> service.marquerReference(courant.idObservation(), !courant.reference()));
+        return surSelection(courant ->
+                appliquerAction(() -> service.marquerReference(courant.idObservation(), !courant.reference())));
+    }
+
+    /// Enregistre (ou efface) le **commentaire** de l'observation d'identifiant `idObservation`, puis
+    /// recharge. Prend l'identifiant en paramètre (et non la sélection courante) pour servir l'**édition
+    /// inline** de la case commentaire dans la table : la cellule connaît sa propre ligne, indépendamment de
+    /// la sélection. Un texte vide/`null` efface le commentaire (cf. [ServiceValidation#commenter]).
+    ///
+    /// @param idObservation identifiant de l'observation à commenter
+    /// @param texte commentaire à enregistrer, ou vide/`null` pour l'effacer
+    /// @return `true` si l'enregistrement a réussi
+    public boolean commenter(long idObservation, String texte) {
+        return appliquerAction(() -> service.commenter(idObservation, texte));
     }
 
     /// Importe un CSV Tadarida (R23) pour le passage courant, puis recharge. Réservé à la source
@@ -216,6 +224,14 @@ public class AudioViewModel {
         ExporteurAudio.ResultatExport resultat = exporteur.bibliotheque(destination);
         messages.export(resultat.reussi(), resultat.message());
         return resultat.reussi();
+    }
+
+    /// Exécute `action` sur l'observation **sélectionnée**, ou renvoie `false` s'il n'y a pas de sélection.
+    /// Factorise la garde commune à [#valider()], [#corriger(Taxon)] et [#basculerReference()] (les actions
+    /// de revue portent sur la ligne courante ; sans sélection, l'appel est ignoré).
+    private boolean surSelection(Predicate<LigneObservationAudio> action) {
+        LigneObservationAudio courant = selection.get();
+        return courant != null && action.test(courant);
     }
 
     private boolean appliquerAction(Runnable action) {
