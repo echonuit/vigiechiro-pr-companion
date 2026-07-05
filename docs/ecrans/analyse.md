@@ -7,16 +7,19 @@ validation), qui produit la donnée nuit par nuit.
 
 On l'ouvre depuis la carte **« Espèces & observations »** de l'accueil.
 
-![L'inventaire par espèce : chaque espèce détectée, son groupe, ses compteurs et sa période.](../assets/captures/apercu-analyse.png)
+![L'inventaire par espèce : chaque espèce détectée, son taxon parent, ses compteurs et sa période.](../assets/captures/apercu-analyse.png)
 
 ## L'inventaire
 
 Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux angles (le pivot espèce ↔ lieu) :
 
-- **Par espèce** : une ligne par espèce, avec son **groupe** taxonomique, le nombre de **détections**, de
-  **passages**, de **carrés** et de **points** où elle apparaît, et sa **période** d'observation.
+- **Par espèce** : une ligne par espèce, avec son **taxon parent** (sa catégorie taxonomique, par exemple
+  « Chiroptères »), le nombre de **détections**, de **passages**, de **carrés** et de **points** où elle
+  apparaît, et sa **période** d'observation.
 - **Par carré** : une ligne par carré, avec sa **richesse spécifique** (nombre d'espèces distinctes) et son
   total de détections — utile pour le rendu Vigie-Chiro.
+
+> Le **taxon parent** est la même notion que le filtre **« Groupe »** de la vue [Sons & validation](validation.md#filtrer-les-observations) : la catégorie taxonomique (Chiroptères, Oiseaux, Orthoptères…) qui coiffe l'espèce.
 
 ![L'inventaire par carré : la richesse spécifique (nombre d'espèces) de chaque carré.](../assets/captures/apercu-analyse-carre.png)
 

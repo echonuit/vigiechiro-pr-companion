@@ -14,11 +14,17 @@ La liste se remplit **au fil de la frappe**, **insensible à la casse et aux acc
 
 - les **sites** : par **numéro de carré** ou **nom** ;
 - les **points d'écoute** : par **code** ou **description** ;
-- les **passages** : par **carré**, **code de point**, **numéro de passage**, **année** ou **date**.
+- les **passages** : par **carré**, **code de point**, **numéro de passage**, **année** ou **date** ;
+- les **espèces observées** : par **code**, **nom latin** ou **nom français**.
 
-Les résultats sont **groupés par type** (Sites, puis Points, puis Passages), chaque groupe affichant un
-**en-tête** ; chaque ligne montre un **libellé principal** et un **détail** de contexte. Le nombre de
-résultats par type est **borné** pour garder la liste lisible.
+Les résultats sont **groupés par type** (Sites, puis Points, puis Passages, puis Espèces), chaque groupe
+affichant un **en-tête** ; chaque ligne montre un **libellé principal** et un **détail** de contexte. Le
+nombre de résultats par type est **borné** pour garder la liste lisible.
+
+Pour une **espèce**, le détail commence par son **taxon parent** (sa catégorie taxonomique, par exemple
+« Chiroptères » — la même notion que le filtre « Groupe » de [Sons & validation](validation.md#filtrer-les-observations)),
+suivi du carré / point, du numéro de passage et de la date. Ouvrir une entrée espèce mène au **passage** où
+elle a été relevée.
 
 ## Naviguer au clavier
 
