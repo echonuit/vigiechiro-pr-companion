@@ -45,4 +45,48 @@ public record Observation(
         String commentaire,
         boolean reference,
         ModeValidation modeValidation,
-        Long idResultats) {}
+        Long idResultats) {
+
+    /// Copie de cette observation avec un **commentaire** différent (tous les autres champs inchangés) :
+    /// évite de réénumérer les 14 composants du record à chaque mise à jour mono-champ côté service. Le
+    /// texte est **normalisé** : un commentaire vide ou uniquement composé d'espaces est ramené à `null`
+    /// (« pas de commentaire »), sinon il est enregistré sans espaces de bordure.
+    public Observation avecCommentaire(String texte) {
+        String commentaire = (texte == null || texte.isBlank()) ? null : texte.strip();
+        return new Observation(
+                id,
+                idSequence,
+                debutS,
+                finS,
+                frequenceMedianeKHz,
+                taxonTadarida,
+                probTadarida,
+                taxonAutreTadarida,
+                taxonObservateur,
+                probObservateur,
+                commentaire,
+                reference,
+                modeValidation,
+                idResultats);
+    }
+
+    /// Copie de cette observation avec l'archivage en **référence** modifié (tous les autres champs
+    /// inchangés).
+    public Observation avecReference(boolean reference) {
+        return new Observation(
+                id,
+                idSequence,
+                debutS,
+                finS,
+                frequenceMedianeKHz,
+                taxonTadarida,
+                probTadarida,
+                taxonAutreTadarida,
+                taxonObservateur,
+                probObservateur,
+                commentaire,
+                reference,
+                modeValidation,
+                idResultats);
+    }
+}

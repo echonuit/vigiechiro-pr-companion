@@ -427,22 +427,21 @@ public class ServiceValidation implements CompteurValidations {
     /// @return l'observation relue, à jour
     /// @throws RegleMetierException si l'observation est introuvable
     public Observation marquerReference(Long idObservation, boolean reference) {
-        Observation o = chargerObservation(idObservation);
-        Observation mise = new Observation(
-                o.id(),
-                o.idSequence(),
-                o.debutS(),
-                o.finS(),
-                o.frequenceMedianeKHz(),
-                o.taxonTadarida(),
-                o.probTadarida(),
-                o.taxonAutreTadarida(),
-                o.taxonObservateur(),
-                o.probObservateur(),
-                o.commentaire(),
-                reference,
-                o.modeValidation(),
-                o.idResultats());
+        Observation mise = chargerObservation(idObservation).avecReference(reference);
+        observationDao.update(mise);
+        return mise;
+    }
+
+    /// Enregistre (ou efface) le **commentaire libre** d'une observation (`user_comment`). Un texte vide ou
+    /// blanc **efface** le commentaire (remis à `null`), sinon il est enregistré après `strip()`. Même patron
+    /// que [#marquerReference] : un seul champ modifié sur le record immuable, écrit via `update`.
+    ///
+    /// @param idObservation identifiant de l'observation à commenter
+    /// @param texte commentaire à enregistrer, ou vide/`null` pour l'effacer
+    /// @return l'observation relue, à jour
+    /// @throws RegleMetierException si l'observation est introuvable
+    public Observation commenter(Long idObservation, String texte) {
+        Observation mise = chargerObservation(idObservation).avecCommentaire(texte);
         observationDao.update(mise);
         return mise;
     }

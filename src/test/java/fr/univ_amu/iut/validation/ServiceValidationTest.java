@@ -522,6 +522,26 @@ class ServiceValidationTest {
     }
 
     @Test
+    @DisplayName("commenter enregistre le texte ; un texte vide/blanc efface le commentaire")
+    void commenter_enregistre_et_efface() {
+        service.importer(idPassage, ecrireBrut());
+        Observation noise = observation("noise");
+
+        Observation avec = service.commenter(noise.id(), "  beau cri de Pipistrelle  ");
+        assertThat(avec.commentaire())
+                .as("texte enregistré, espaces de bordure retirés")
+                .isEqualTo("beau cri de Pipistrelle");
+        assertThat(observationDao.findById(noise.id()).orElseThrow().commentaire())
+                .as("persisté")
+                .isEqualTo("beau cri de Pipistrelle");
+
+        Observation efface = service.commenter(noise.id(), "   ");
+        assertThat(efface.commentaire()).as("texte blanc → commentaire effacé").isNull();
+        assertThat(observationDao.findById(noise.id()).orElseThrow().commentaire())
+                .isNull();
+    }
+
+    @Test
     @DisplayName("Corriger vers un taxon inconnu est refusé (dur)")
     void corriger_taxon_inconnu_refuse() {
         service.importer(idPassage, ecrireBrut());
