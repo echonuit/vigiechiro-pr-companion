@@ -35,7 +35,8 @@ public class MigrationSchema {
         "V06__reparer_souches_referentiel.sql",
         "V07__renommer_median_freq_khz.sql",
         "V08__rattacher_fil_rouge_chiropteres.sql",
-        "V09__horodatage_capture_sequence.sql"
+        "V09__horodatage_capture_sequence.sql",
+        "V10__materiel_micro_passage.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";
