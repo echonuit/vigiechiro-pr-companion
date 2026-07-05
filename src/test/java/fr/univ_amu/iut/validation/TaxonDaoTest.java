@@ -100,13 +100,15 @@ class TaxonDaoTest {
     @Test
     @DisplayName("Filtrer par groupe ne retient que les taxons de ce groupe")
     void filtrer_par_groupe() {
-        // Le seed officiel (V05) range les chauves-souris sous la catégorie « Chiroptères », pas sous les
-        // groupes de genre de V02 : le genre Pipistrellus ne contient donc que Pippip + ce qu'on ajoute.
+        // Depuis la normalisation V08, les chauves-souris fil rouge (dont Pippip) sont rattachées à la
+        // catégorie « Chiroptères », plus au genre Pipistrellus de V02 : ce genre ne contient donc que ce
+        // qu'on y insère, et surtout plus Pippip.
         dao.insert(new Taxon("Zzzpip", "Pipistrellus testus", "Pipistrelle de test", idGenrePipistrellus));
 
         assertThat(dao.findByGroupe(idGenrePipistrellus))
                 .extracting(Taxon::code)
-                .contains("Pippip", "Zzzpip");
+                .contains("Zzzpip")
+                .doesNotContain("Pippip");
     }
 
     @Test
@@ -131,9 +133,12 @@ class TaxonDaoTest {
     @DisplayName("Supprimer un groupe encore référencé par un taxon est rejeté")
     void supprimer_un_groupe_reference_est_rejete() {
         GroupeTaxonomiqueDao groupes = new GroupeTaxonomiqueDao(new SourceDeDonnees(new Workspace(dossier)));
+        // La normalisation V08 a vidé le genre Pipistrellus (Pippip est passé sous « Chiroptères ») ; on y
+        // rattache un taxon pour éprouver le refus de supprimer un groupe encore référencé.
+        dao.insert(new Taxon("Zzzpip", "Pipistrellus testus", "Pipistrelle de test", idGenrePipistrellus));
 
         assertThatThrownBy(() -> groupes.delete(idGenrePipistrellus))
-                .as("le groupe Pipistrellus est référencé par le taxon Pippip : suppression refusée")
+                .as("le groupe Pipistrellus est référencé par un taxon : suppression refusée")
                 .isInstanceOf(DataAccessException.class);
     }
 }
