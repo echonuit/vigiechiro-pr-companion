@@ -25,6 +25,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -83,7 +84,8 @@ class ServicePassageTest {
                 new SequenceDao(source),
                 new ReprefixeurSession(),
                 new UniteDeTravail(source),
-                new RattachementDao());
+                new RattachementDao(),
+                new MaterielMicroDao(source));
     }
 
     /// Construit un passage candidat (non persisté) pour les vérifications R3/R4.

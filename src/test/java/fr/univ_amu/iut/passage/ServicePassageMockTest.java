@@ -15,6 +15,7 @@ import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -49,6 +50,9 @@ class ServicePassageMockTest {
     @Mock
     private RattachementDao rattachementDao;
 
+    @Mock
+    private MaterielMicroDao materielDao;
+
     private ServicePassage service() {
         return new ServicePassage(
                 passageDao,
@@ -58,7 +62,8 @@ class ServicePassageMockTest {
                 sequenceDao,
                 new ReprefixeurSession(),
                 uniteDeTravail,
-                rattachementDao);
+                rattachementDao,
+                materielDao);
     }
 
     @Test

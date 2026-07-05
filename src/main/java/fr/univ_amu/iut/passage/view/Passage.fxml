@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
@@ -111,6 +112,21 @@
       </HBox>
       <HBox spacing="10.0" alignment="CENTER_LEFT">
         <Button fx:id="boutonMeteo" text="Enregistrer" onAction="#enregistrerMeteo"/>
+      </HBox>
+
+      <!-- Matériel du micro déployé (dépôt VigieChiro) : grandeurs optionnelles. -->
+      <Label text="Matériel du micro (optionnel)" styleClass="section-sous"/>
+      <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Label text="Position :"/>
+        <ComboBox fx:id="champPosition" prefWidth="130.0"/>
+        <Label text="Hauteur :"/>
+        <TextField fx:id="champHauteur" promptText="ex. 4" prefWidth="70.0"/>
+        <Label text="m"/>
+        <Label text="Type de micro :"/>
+        <TextField fx:id="champTypeMicro" promptText="ex. SM4 externe" prefWidth="150.0"/>
+      </HBox>
+      <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Button fx:id="boutonMateriel" text="Enregistrer" onAction="#enregistrerMateriel"/>
       </HBox>
 
       <!-- Actions : avancer dans le workflow (le retour et le fil d'Ariane sont portés par le chrome) -->

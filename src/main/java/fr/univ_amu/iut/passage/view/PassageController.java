@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -32,10 +33,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.util.StringConverter;
 
 /// Controller de l'écran pivot **M-Passage** (`Passage.fxml`), en « hub à plat » : bandeau d'identité,
 /// stepper de statut, résumé de la nuit (stats) et cartes d'actions « avancer ». Le retour et le fil
@@ -132,6 +135,18 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private Button boutonMeteo;
 
+    @FXML
+    private ComboBox<PositionMicro> champPosition;
+
+    @FXML
+    private TextField champHauteur;
+
+    @FXML
+    private TextField champTypeMicro;
+
+    @FXML
+    private Button boutonMateriel;
+
     @Inject
     public PassageController(
             PassageViewModel viewModel,
@@ -183,10 +198,30 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         lblNbSequences.textProperty().bind(viewModel.nombreSequencesProperty().asString());
 
         // Conditions météo (#106 étendu) : saisie bidirectionnelle des quatre grandeurs.
-        champTemperature.textProperty().bindBidirectional(viewModel.temperatureSaisieProperty());
-        champTemperatureFin.textProperty().bindBidirectional(viewModel.temperatureFinSaisieProperty());
-        champVent.textProperty().bindBidirectional(viewModel.ventSaisieProperty());
-        champCouverture.textProperty().bindBidirectional(viewModel.couvertureNuageuseSaisieProperty());
+        champTemperature.textProperty().bindBidirectional(viewModel.conditions().temperatureSaisieProperty());
+        champTemperatureFin
+                .textProperty()
+                .bindBidirectional(viewModel.conditions().temperatureFinSaisieProperty());
+        champVent.textProperty().bindBidirectional(viewModel.conditions().ventSaisieProperty());
+        champCouverture.textProperty().bindBidirectional(viewModel.conditions().couvertureNuageuseSaisieProperty());
+
+        // Matériel du micro : position (liste sol/canopée, avec entrée vide « non renseigné »), hauteur,
+        // type. Le convertisseur affiche le libellé lisible de la position.
+        champPosition.getItems().setAll(null, PositionMicro.SOL, PositionMicro.CANOPEE);
+        champPosition.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(PositionMicro position) {
+                return position == null ? "" : position.libelle();
+            }
+
+            @Override
+            public PositionMicro fromString(String texte) {
+                return null;
+            }
+        });
+        champPosition.valueProperty().bindBidirectional(viewModel.conditions().positionSaisieProperty());
+        champHauteur.textProperty().bindBidirectional(viewModel.conditions().hauteurSaisieProperty());
+        champTypeMicro.textProperty().bindBidirectional(viewModel.conditions().typeMicroSaisieProperty());
 
         boutonVerifier
                 .disableProperty()
@@ -373,7 +408,14 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// invalide = message d'erreur, sans modification).
     @FXML
     private void enregistrerMeteo() {
-        viewModel.enregistrerMeteo();
+        viewModel.conditions().enregistrerMeteo();
+    }
+
+    /// « Enregistrer » le matériel du micro (dépôt VigieChiro) : délègue au VM (grandeur vide = effacer ;
+    /// hauteur invalide = message d'erreur, sans modification).
+    @FXML
+    private void enregistrerMateriel() {
+        viewModel.conditions().enregistrerMateriel();
     }
 
     private void majStepper() {

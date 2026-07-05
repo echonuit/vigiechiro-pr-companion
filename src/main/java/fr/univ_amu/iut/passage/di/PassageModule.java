@@ -15,6 +15,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.MicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
@@ -62,6 +63,12 @@ public class PassageModule extends AbstractModule {
     @Singleton
     PassageDao fournirPassageDao(SourceDeDonnees source) {
         return new PassageDao(source);
+    }
+
+    @Provides
+    @Singleton
+    MaterielMicroDao fournirMaterielMicroDao(SourceDeDonnees source) {
+        return new MaterielMicroDao(source);
     }
 
     @Provides
@@ -130,9 +137,18 @@ public class PassageModule extends AbstractModule {
             SequenceDao sequenceDao,
             ReprefixeurSession reprefixeur,
             UniteDeTravail uniteDeTravail,
-            RattachementDao rattachementDao) {
+            RattachementDao rattachementDao,
+            MaterielMicroDao materielDao) {
         return new ServicePassage(
-                passageDao, moteur, horloge, sessionDao, sequenceDao, reprefixeur, uniteDeTravail, rattachementDao);
+                passageDao,
+                moteur,
+                horloge,
+                sessionDao,
+                sequenceDao,
+                reprefixeur,
+                uniteDeTravail,
+                rattachementDao,
+                materielDao);
     }
 
     /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les

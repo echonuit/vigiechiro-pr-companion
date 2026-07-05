@@ -5,8 +5,6 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.MeteoPassage;
-import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +17,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -56,15 +52,9 @@ public class PassageViewModel {
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
-    /// Saisies éditables du relevé météo (#106 étendu) : chaque grandeur est optionnelle (un nombre, ou
-    /// vide pour l'effacer), enregistrée d'un bloc.
-    private final StringProperty temperatureSaisie = new SimpleStringProperty(this, "temperatureSaisie", "");
-
-    private final StringProperty temperatureFinSaisie = new SimpleStringProperty(this, "temperatureFinSaisie", "");
-    private final StringProperty ventSaisie = new SimpleStringProperty(this, "ventSaisie", "");
-
-    private final StringProperty couvertureNuageuseSaisie =
-            new SimpleStringProperty(this, "couvertureNuageuseSaisie", "");
+    /// Saisie des **conditions de dépôt** (relevé météo + matériel du micro), extraite dans son propre
+    /// ViewModel pour garder cet écran focalisé sur l'identité et le workflow du passage.
+    private final SaisiePassageConditions conditions;
 
     /// Identifiant du passage affiché, mémorisé pour les actions (ex. suppression).
     private Long idPassage;
@@ -75,6 +65,12 @@ public class PassageViewModel {
 
     public PassageViewModel(ServicePassage service) {
         this.service = Objects.requireNonNull(service, "service");
+        this.conditions = new SaisiePassageConditions(service, message);
+    }
+
+    /// Sous-ViewModel de saisie des conditions de dépôt (météo + matériel), lié aux champs de M-Passage.
+    public SaisiePassageConditions conditions() {
+        return conditions;
     }
 
     /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
@@ -106,39 +102,6 @@ public class PassageViewModel {
         service.annulerDepot(idPassage);
     }
 
-    /// Enregistre le **relevé météo** saisi (#106 étendu) : chaque grandeur (température début/fin, vent,
-    /// couverture nuageuse) est **optionnelle** ; une saisie vide l'efface, une saisie non numérique
-    /// publie un message d'erreur sans rien modifier. Délègue à [ServicePassage#definirMeteo] puis
-    /// renormalise les champs.
-    public void enregistrerMeteo() {
-        try {
-            MeteoReleve releve = new MeteoReleve(
-                    MeteoPassage.lireSaisie(temperatureSaisie.get()),
-                    MeteoPassage.lireSaisie(temperatureFinSaisie.get()),
-                    MeteoPassage.lireSaisie(ventSaisie.get()),
-                    MeteoPassage.lireSaisie(couvertureNuageuseSaisie.get()));
-            service.definirMeteo(idPassage, releve);
-            appliquerMeteo(releve);
-            message.set("");
-        } catch (NumberFormatException invalide) {
-            message.set("Valeur météo invalide : saisissez des nombres, ou laissez vide.");
-        }
-    }
-
-    /// Renseigne les champs de saisie météo depuis un `releve` (tolérant à un `releve` nul → tout vide) :
-    /// chaque grandeur nulle donne un champ vide.
-    private void appliquerMeteo(MeteoReleve releve) {
-        MeteoReleve valeurs = releve == null ? MeteoReleve.VIDE : releve;
-        temperatureSaisie.set(texteOuVide(valeurs.temperatureDebutNuit()));
-        temperatureFinSaisie.set(texteOuVide(valeurs.temperatureFinNuit()));
-        ventSaisie.set(texteOuVide(valeurs.vent()));
-        couvertureNuageuseSaisie.set(texteOuVide(valeurs.couvertureNuageuse()));
-    }
-
-    private static String texteOuVide(Double valeur) {
-        return valeur == null ? "" : valeur.toString();
-    }
-
     private void appliquer(DetailPassage detail, ContexteSite contexte) {
         titreContexte.set("Carré "
                 + contexte.numeroCarre()
@@ -165,7 +128,7 @@ public class PassageViewModel {
                 detail.statut() == StatutWorkflow.VERIFIE || detail.statut() == StatutWorkflow.PRET_A_DEPOSER);
         annulationDepotDisponible.set(detail.statut() == StatutWorkflow.DEPOSE);
         actionRecommandee.set(prochaineAction(detail.statut()));
-        appliquerMeteo(detail.meteo());
+        conditions.charger(idPassage, detail.meteo());
     }
 
     /// Déduit la prochaine action recommandée du statut (progression linéaire du workflow) : la carte
@@ -196,7 +159,7 @@ public class PassageViewModel {
         depotDisponible.set(false);
         annulationDepotDisponible.set(false);
         actionRecommandee.set(ActionRecommandee.AUCUNE);
-        appliquerMeteo(MeteoReleve.VIDE);
+        conditions.reinitialiser();
     }
 
     private static List<EtapeWorkflow> construireEtapes(StatutWorkflow courant) {
@@ -300,22 +263,5 @@ public class PassageViewModel {
     /// Message d'erreur (passage introuvable), vide en fonctionnement nominal.
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
-    }
-
-    /// Saisies éditables du relevé météo (liées bidirectionnellement aux champs de M-Passage, #106 étendu).
-    public StringProperty temperatureSaisieProperty() {
-        return temperatureSaisie;
-    }
-
-    public StringProperty temperatureFinSaisieProperty() {
-        return temperatureFinSaisie;
-    }
-
-    public StringProperty ventSaisieProperty() {
-        return ventSaisie;
-    }
-
-    public StringProperty couvertureNuageuseSaisieProperty() {
-        return couvertureNuageuseSaisie;
     }
 }

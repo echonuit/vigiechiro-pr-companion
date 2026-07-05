@@ -11,7 +11,9 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
+import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -79,10 +81,11 @@ class PassageViewModelTest {
     void meteo_affichee() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(new MeteoReleve(8.5, 4.0, 12.0, 40.0)));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.temperatureSaisieProperty().get()).isEqualTo("8.5");
-        assertThat(viewModel.temperatureFinSaisieProperty().get()).isEqualTo("4.0");
-        assertThat(viewModel.ventSaisieProperty().get()).isEqualTo("12.0");
-        assertThat(viewModel.couvertureNuageuseSaisieProperty().get()).isEqualTo("40.0");
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("8.5");
+        assertThat(viewModel.conditions().temperatureFinSaisieProperty().get()).isEqualTo("4.0");
+        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo("12.0");
+        assertThat(viewModel.conditions().couvertureNuageuseSaisieProperty().get())
+                .isEqualTo("40.0");
     }
 
     @Test
@@ -90,8 +93,8 @@ class PassageViewModelTest {
     void meteo_absente() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.temperatureSaisieProperty().get()).isEmpty();
-        assertThat(viewModel.ventSaisieProperty().get()).isEmpty();
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
+        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEmpty();
     }
 
     @Test
@@ -99,10 +102,10 @@ class PassageViewModelTest {
     void enregistrer_meteo_valide() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        viewModel.temperatureSaisieProperty().set("9,0");
-        viewModel.ventSaisieProperty().set("12");
+        viewModel.conditions().temperatureSaisieProperty().set("9,0");
+        viewModel.conditions().ventSaisieProperty().set("12");
 
-        viewModel.enregistrerMeteo();
+        viewModel.conditions().enregistrerMeteo();
 
         verify(service).definirMeteo(ID_PASSAGE, new MeteoReleve(9.0, null, 12.0, null));
         assertThat(viewModel.messageProperty().get()).isEmpty();
@@ -113,12 +116,51 @@ class PassageViewModelTest {
     void enregistrer_meteo_invalide() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        viewModel.temperatureSaisieProperty().set("froid");
+        viewModel.conditions().temperatureSaisieProperty().set("froid");
 
-        viewModel.enregistrerMeteo();
+        viewModel.conditions().enregistrerMeteo();
 
         assertThat(viewModel.messageProperty().get()).contains("invalide");
         verify(service, never()).definirMeteo(any(), any());
+    }
+
+    @Test
+    @DisplayName("dépôt : ouvrirSur pré-remplit les champs matériel depuis le passage")
+    void materiel_affiche() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
+        when(service.materiel(ID_PASSAGE)).thenReturn(new MaterielMicro(ID_PASSAGE, PositionMicro.CANOPEE, 4.0, "SM4"));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        assertThat(viewModel.conditions().positionSaisieProperty().get()).isEqualTo(PositionMicro.CANOPEE);
+        assertThat(viewModel.conditions().hauteurSaisieProperty().get()).isEqualTo("4.0");
+        assertThat(viewModel.conditions().typeMicroSaisieProperty().get()).isEqualTo("SM4");
+    }
+
+    @Test
+    @DisplayName("dépôt : enregistrerMateriel valide délègue le matériel au service, sans message")
+    void enregistrer_materiel_valide() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        viewModel.conditions().positionSaisieProperty().set(PositionMicro.SOL);
+        viewModel.conditions().hauteurSaisieProperty().set("2,5");
+        viewModel.conditions().typeMicroSaisieProperty().set(" interne ");
+
+        viewModel.conditions().enregistrerMateriel();
+
+        verify(service).definirMateriel(new MaterielMicro(ID_PASSAGE, PositionMicro.SOL, 2.5, "interne"));
+        assertThat(viewModel.messageProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("dépôt : une hauteur de fixation invalide publie un message, sans appeler le service")
+    void enregistrer_materiel_hauteur_invalide() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        viewModel.conditions().hauteurSaisieProperty().set("haut");
+
+        viewModel.conditions().enregistrerMateriel();
+
+        assertThat(viewModel.messageProperty().get()).contains("invalide");
+        verify(service, never()).definirMateriel(any());
     }
 
     @Test

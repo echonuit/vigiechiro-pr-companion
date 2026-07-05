@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -61,6 +62,7 @@ public class ServicePassage {
     private final ReprefixeurSession reprefixeur;
     private final UniteDeTravail uniteDeTravail;
     private final RattachementDao rattachementDao;
+    private final MaterielMicroDao materielDao;
 
     public ServicePassage(
             PassageDao passageDao,
@@ -70,7 +72,8 @@ public class ServicePassage {
             SequenceDao sequenceDao,
             ReprefixeurSession reprefixeur,
             UniteDeTravail uniteDeTravail,
-            RattachementDao rattachementDao) {
+            RattachementDao rattachementDao,
+            MaterielMicroDao materielDao) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
@@ -79,6 +82,7 @@ public class ServicePassage {
         this.reprefixeur = Objects.requireNonNull(reprefixeur, "reprefixeur");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.rattachementDao = Objects.requireNonNull(rattachementDao, "rattachementDao");
+        this.materielDao = Objects.requireNonNull(materielDao, "materielDao");
     }
 
     /// Nombre total de passages (compteur du tableau de bord d'accueil).
@@ -172,6 +176,24 @@ public class ServicePassage {
                 passage.deposeLe(),
                 passage.idPoint(),
                 passage.idEnregistreur());
+    }
+
+    /// Matériel du micro déployé pour le passage `idPassage` (position sol/canopée, hauteur de fixation,
+    /// type ; métadonnées de dépôt VigieChiro). Renvoie un [MaterielMicro#vide] si rien n'a été saisi —
+    /// jamais `null`. Le n° de série du détecteur n'est pas ici (il vit sur l'enregistreur du passage).
+    public MaterielMicro materiel(Long idPassage) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        return materielDao.pour(idPassage);
+    }
+
+    /// Enregistre le **matériel du micro** d'un passage (ou **efface** la ligne si le relevé est vide),
+    /// dans la table `passage_equipment`. Le passage lui-même n'est pas modifié. Le `materiel` porte son
+    /// `idPassage`.
+    ///
+    /// @param materiel matériel saisi (grandeurs optionnelles), rattaché à son passage
+    public void definirMateriel(MaterielMicro materiel) {
+        Objects.requireNonNull(materiel, "materiel");
+        materielDao.definir(materiel);
     }
 
     /// Crée un passage à l'état initial [StatutWorkflow#IMPORTE], sans verdict.
