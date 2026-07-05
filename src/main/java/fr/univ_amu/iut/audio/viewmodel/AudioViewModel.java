@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -11,6 +12,7 @@ import fr.univ_amu.iut.validation.model.Taxon;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -128,6 +130,17 @@ public class AudioViewModel {
             reinitialiser();
             messages.erreur(echec.getMessage());
         }
+    }
+
+    /// Plage **nuit** par défaut à proposer au filtre « Heure » (#549) : pour une source **`ParPassage`**,
+    /// le coucher/lever du soleil de la nuit de la relève (via l'éphéméride, au GPS du point) ; **vide**
+    /// pour les autres sources (plusieurs nuits, pas de coucher/lever unique) ou faute de coordonnées, le
+    /// filtre retombant alors sur son défaut fixe 21 h → 6 h.
+    public Optional<PlageNuit> plageNuitParDefaut() {
+        if (source instanceof SourceObservations.ParPassage parPassage) {
+            return service.plageNuitParDefaut(parPassage.contexte().idPassage());
+        }
+        return Optional.empty();
     }
 
     /// Valide l'observation **sélectionnée** selon le [#modeRevueProperty()] (R15, R18), puis recharge.

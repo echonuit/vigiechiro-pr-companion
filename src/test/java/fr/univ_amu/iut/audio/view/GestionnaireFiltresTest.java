@@ -3,10 +3,12 @@ package fr.univ_amu.iut.audio.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.audio.viewmodel.FiltresAudio;
+import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -252,6 +254,28 @@ class GestionnaireFiltresTest {
             a.setValue(20);
         });
         assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L, 4L);
+    }
+
+    @Test
+    @DisplayName("#549 : critère Heure — le défaut suit la nuit fournie (coucher/lever) plutôt que 21h→6h")
+    void filtre_heure_defaut_depuis_ephemeride(FxRobot robot) {
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(FXCollections.observableArrayList());
+        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        GestionnaireFiltres ignore = new GestionnaireFiltres(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.heure(() -> Optional.of(new PlageNuit(19, 7)))));
+        assertThat(ignore).isNotNull();
+
+        // Ajouter la puce Heure : le défaut vient de la plage nuit fournie (19 h → 7 h), pas du fixe 21→6.
+        robot.interact(() -> menuLocal.getItems().get(0).fire());
+
+        assertThat(comboHeure(pucesLocales, 1).getValue()).isEqualTo(19);
+        assertThat(comboHeure(pucesLocales, 3).getValue()).isEqualTo(7);
     }
 
     private Button boutonRetirer() {
