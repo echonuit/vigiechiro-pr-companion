@@ -60,4 +60,69 @@ class MeteoPassageTest {
         assertThatThrownBy(() -> MeteoPassage.lireSaisie("NaN")).isInstanceOf(NumberFormatException.class);
         assertThatThrownBy(() -> MeteoPassage.lireSaisie("Infinity")).isInstanceOf(NumberFormatException.class);
     }
+
+    @Test
+    @DisplayName("lire remonte un relevé complet ; les grandeurs absentes valent null")
+    void lecture_releve_complet() {
+        assertThat(MeteoPassage.lire(null)).isEqualTo(MeteoReleve.VIDE);
+        assertThat(MeteoPassage.lire("{}")).isEqualTo(MeteoReleve.VIDE);
+
+        MeteoReleve r = MeteoPassage.lire("{\"tempDebut\":8.5,\"tempFin\":3,\"vent\":12.4,\"couvertureNuageuse\":75}");
+        assertThat(r.temperatureDebutNuit()).isEqualTo(8.5);
+        assertThat(r.temperatureFinNuit()).isEqualTo(3.0);
+        assertThat(r.vent()).isEqualTo(12.4);
+        assertThat(r.couvertureNuageuse()).isEqualTo(75.0);
+
+        // Relevé partiel : seules les clés présentes sont remontées, le reste null.
+        MeteoReleve partiel = MeteoPassage.lire("{\"tempFin\":4.0}");
+        assertThat(partiel.temperatureFinNuit()).isEqualTo(4.0);
+        assertThat(partiel.temperatureDebutNuit()).isNull();
+        assertThat(partiel.vent()).isNull();
+        assertThat(partiel.estVide()).isFalse();
+    }
+
+    @Test
+    @DisplayName("definir(MeteoReleve) écrit les 4 grandeurs, préserve les clés inconnues, efface les null")
+    void ecriture_releve_preserve_et_efface() {
+        MeteoReleve complet = new MeteoReleve(8.5, 3.0, 12.0, 60.0);
+        String json = MeteoPassage.definirReleve("{\"hygro\":80}", complet);
+        assertThat(json)
+                .contains("\"hygro\":80")
+                .contains("\"tempDebut\":8.5")
+                .contains("\"tempFin\":3.0")
+                .contains("\"vent\":12.0")
+                .contains("\"couvertureNuageuse\":60.0");
+        assertThat(MeteoPassage.lire(json)).as("round-trip").isEqualTo(complet);
+
+        // Un champ null efface SA clé sans toucher aux autres.
+        String sansVent = MeteoPassage.definirReleve(json, new MeteoReleve(8.5, 3.0, null, 60.0));
+        assertThat(sansVent)
+                .doesNotContain("\"vent\"")
+                .contains("\"tempDebut\":8.5")
+                .contains("\"hygro\":80");
+
+        // Relevé vide → efface toutes les clés météo, mais garde la clé inconnue (hygro).
+        String toutEfface = MeteoPassage.definirReleve(json, MeteoReleve.VIDE);
+        assertThat(toutEfface)
+                .contains("\"hygro\":80")
+                .doesNotContain("tempDebut")
+                .doesNotContain("\"vent\"");
+    }
+
+    @Test
+    @DisplayName("definir(MeteoReleve) refuse une grandeur non finie (NaN/Infini)")
+    void ecriture_releve_refuse_non_finie() {
+        assertThatThrownBy(() -> MeteoPassage.definirReleve(null, new MeteoReleve(null, Double.NaN, null, null)))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() ->
+                        MeteoPassage.definirReleve(null, new MeteoReleve(null, null, Double.POSITIVE_INFINITY, null)))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("MeteoReleve.VIDE est vide ; un relevé avec au moins une grandeur ne l'est pas")
+    void releve_vide() {
+        assertThat(MeteoReleve.VIDE.estVide()).isTrue();
+        assertThat(new MeteoReleve(null, null, null, 0.0).estVide()).isFalse();
+    }
 }
