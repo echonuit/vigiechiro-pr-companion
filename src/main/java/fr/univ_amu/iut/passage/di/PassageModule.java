@@ -4,11 +4,15 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.OptionalBinder;
+import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.IndicateurAccueil;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.passage.model.FournisseurMeteo;
+import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -26,6 +30,7 @@ import fr.univ_amu.iut.passage.view.NavigationPassage;
 import fr.univ_amu.iut.passage.viewmodel.IndicateurPassages;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
+import java.util.Optional;
 
 /// Module Guice de la feature `passage` : fournit ses DAO à partir de la [SourceDeDonnees]
 /// (singleton fourni par `CommunModule`).
@@ -45,6 +50,13 @@ public class PassageModule extends AbstractModule {
         bind(OuvrirPassage.class).to(NavigationPassage.class);
         // Compteur du tableau de bord d'accueil : nombre de passages.
         Multibinder.newSetBinder(binder(), IndicateurAccueil.class).addBinding().to(IndicateurPassages.class);
+        // Port socle CoordonneesPoint (#547) : cette feature CONSOMME le GPS d'un point (pré-remplissage
+        // météo) mais ne peut pas dépendre de `sites` (cycle). Elle pose donc un défaut no-op ; l'app
+        // complète installe SitesModule, dont le `setBinding` fournit l'implémentation réelle. Les
+        // injecteurs partiels (captures, tests de module) restent construisibles grâce à ce défaut.
+        OptionalBinder.newOptionalBinder(binder(), CoordonneesPoint.class)
+                .setDefault()
+                .toInstance(idPoint -> Optional.empty());
     }
 
     @Provides
@@ -123,10 +135,19 @@ public class PassageModule extends AbstractModule {
         return new RattachementDao();
     }
 
+    /// Fournisseur météo (pré-remplissage du dépôt, #547) : implémentation Open-Meteo, jamais
+    /// bloquante (repli silencieux hors-ligne, pas de GPS ou données absentes).
+    @Provides
+    @Singleton
+    FournisseurMeteo fournirFournisseurMeteo() {
+        return new MeteoOpenMeteo();
+    }
+
     /// Service métier transverse de la feature. Comme le service de référence `ServiceSites`, il
     /// reste sans annotation d'injection : c'est ce module qui assemble ses dépendances (DAO de la
     /// feature, [MoteurWorkflowPassage], [Horloge], et pour E2.S8 le [ReprefixeurSession],
-    /// l'[UniteDeTravail] du socle et le [RattachementDao]).
+    /// l'[UniteDeTravail] du socle et le [RattachementDao] ; pour le pré-remplissage météo #547, le
+    /// port socle [CoordonneesPoint] (GPS du point, implémenté par `sites`) et le [FournisseurMeteo]).
     @Provides
     @Singleton
     ServicePassage fournirServicePassage(
@@ -138,7 +159,9 @@ public class PassageModule extends AbstractModule {
             ReprefixeurSession reprefixeur,
             UniteDeTravail uniteDeTravail,
             RattachementDao rattachementDao,
-            MaterielMicroDao materielDao) {
+            MaterielMicroDao materielDao,
+            CoordonneesPoint coordonnees,
+            FournisseurMeteo fournisseurMeteo) {
         return new ServicePassage(
                 passageDao,
                 moteur,
@@ -148,7 +171,9 @@ public class PassageModule extends AbstractModule {
                 reprefixeur,
                 uniteDeTravail,
                 rattachementDao,
-                materielDao);
+                materielDao,
+                coordonnees,
+                fournisseurMeteo);
     }
 
     /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les

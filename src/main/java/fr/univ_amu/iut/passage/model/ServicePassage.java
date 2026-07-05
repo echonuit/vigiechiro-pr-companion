@@ -1,7 +1,9 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.Alerte;
+import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -16,6 +18,8 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,6 +67,8 @@ public class ServicePassage {
     private final UniteDeTravail uniteDeTravail;
     private final RattachementDao rattachementDao;
     private final MaterielMicroDao materielDao;
+    private final CoordonneesPoint coordonnees;
+    private final FournisseurMeteo fournisseurMeteo;
 
     public ServicePassage(
             PassageDao passageDao,
@@ -73,7 +79,9 @@ public class ServicePassage {
             ReprefixeurSession reprefixeur,
             UniteDeTravail uniteDeTravail,
             RattachementDao rattachementDao,
-            MaterielMicroDao materielDao) {
+            MaterielMicroDao materielDao,
+            CoordonneesPoint coordonnees,
+            FournisseurMeteo fournisseurMeteo) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
@@ -83,6 +91,8 @@ public class ServicePassage {
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.rattachementDao = Objects.requireNonNull(rattachementDao, "rattachementDao");
         this.materielDao = Objects.requireNonNull(materielDao, "materielDao");
+        this.coordonnees = Objects.requireNonNull(coordonnees, "coordonnees");
+        this.fournisseurMeteo = Objects.requireNonNull(fournisseurMeteo, "fournisseurMeteo");
     }
 
     /// Nombre total de passages (compteur du tableau de bord d'accueil).
@@ -194,6 +204,38 @@ public class ServicePassage {
     public void definirMateriel(MaterielMicro materiel) {
         Objects.requireNonNull(materiel, "materiel");
         materielDao.definir(materiel);
+    }
+
+    /// Tente de **récupérer la météo** de la nuit d'un passage via le [FournisseurMeteo] (Open-Meteo),
+    /// pour pré-remplir le relevé : au **GPS du point** (obtenu via le port socle [CoordonneesPoint],
+    /// implémenté par `sites`, pour éviter un cycle passage ↔ sites) et aux **heures de début/fin**
+    /// du passage. **Jamais bloquant** : [Optional#empty()] si le point n'a pas de GPS, si les
+    /// horodatages sont illisibles, ou si le service est indisponible (hors-ligne).
+    ///
+    /// ⚠️ **Opération réseau** : à appeler **hors du fil JavaFX** (l'IHM la lance en tâche de fond).
+    ///
+    /// @param idPassage passage cible
+    /// @return le relevé météo récupéré (grandeurs éventuellement partielles), ou vide
+    public Optional<MeteoReleve> recupererMeteo(Long idPassage) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        Passage passage = passageDao
+                .findById(idPassage)
+                .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
+        Optional<PositionGeo> position = coordonnees.pour(passage.idPoint());
+        if (position.isEmpty()) {
+            return Optional.empty();
+        }
+        PositionGeo point = position.get();
+        try {
+            return fournisseurMeteo.pour(
+                    point.latitude(),
+                    point.longitude(),
+                    LocalDate.parse(passage.dateEnregistrement()),
+                    LocalTime.parse(passage.heureDebut()),
+                    LocalTime.parse(passage.heureFin()));
+        } catch (DateTimeParseException horodatageInvalide) {
+            return Optional.empty();
+        }
     }
 
     /// Crée un passage à l'état initial [StatutWorkflow#IMPORTE], sans verdict.
