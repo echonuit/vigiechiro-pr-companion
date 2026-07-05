@@ -14,6 +14,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
+import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -96,7 +97,8 @@ public class ValidationModule extends AbstractModule {
             ParserCsvTadarida parser,
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
-            Horloge horloge) {
+            Horloge horloge,
+            PlageNuitPassage plageNuitPassage) {
         return new ServiceValidation(
                 resultatsDao,
                 observationDao,
@@ -106,6 +108,7 @@ public class ValidationModule extends AbstractModule {
                 parser,
                 export,
                 uniteDeTravail,
-                horloge);
+                horloge,
+                plageNuitPassage);
     }
 }
