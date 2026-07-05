@@ -45,7 +45,7 @@ class MemoireRevueAudioTest {
         TableView<LigneObservationAudio> premiere = tableAvecColonnes();
         robot.interact(() -> {
             racine.getChildren().add(premiere);
-            memoire.installer(premiere);
+            memoire.installer(premiere, null);
             TableColumn<LigneObservationAudio, ?> heure = premiere.getColumns().get(1);
             heure.setSortType(SortType.DESCENDING);
             premiere.getSortOrder().add(heure);
@@ -56,7 +56,7 @@ class MemoireRevueAudioTest {
         TableView<LigneObservationAudio> seconde = tableAvecColonnes();
         robot.interact(() -> {
             racine.getChildren().add(seconde);
-            memoire.installer(seconde);
+            memoire.installer(seconde, null);
         });
 
         assertThat(seconde.getSortOrder()).extracting(TableColumn::getText).containsExactly("Heure");

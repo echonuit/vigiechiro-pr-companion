@@ -278,8 +278,6 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Revue au clavier (#478) : Entrée = valider, R = référence, N = prochaine « À revoir » ; ↑/↓ =
         // navigation native. Entrée/R passent par actionsSelection (unitaire si 1 ligne, lot si plusieurs).
         RevueClavier.installer(tableObservations, viewModel, actionsSelection);
-        // Mémoire de session (#484) : restaure le tri de la dernière ouverture et le re-mémorise à la fermeture.
-        memoire.installer(tableObservations);
         tableObservations
                 .getSelectionModel()
                 .selectedItemProperty()
@@ -313,6 +311,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         CriteresAudio.references(),
                         CriteresAudio.probabilite(),
                         CriteresAudio.heure()));
+        // Mémoire de session (#484) : restaure le tri et l'état des filtres de la dernière ouverture, et les
+        // re-mémorise à la fermeture. Placée après le gestionnaire de filtres (dont elle restitue l'état).
+        memoire.installer(tableObservations, gestionnaireFiltres);
 
         resumeStatut.bind(Bindings.createStringBinding(this::resumeStatutTexte, viewModel.comptageProperty()));
 
