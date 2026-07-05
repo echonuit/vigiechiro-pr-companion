@@ -5,6 +5,7 @@ import fr.univ_amu.iut.passage.model.MeteoPassage;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import java.util.Optional;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -88,6 +89,25 @@ public class SaisiePassageConditions {
             message.set("");
         } catch (NumberFormatException invalide) {
             message.set("Hauteur invalide : saisissez un nombre (m), ou laissez vide.");
+        }
+    }
+
+    /// **Récupère** la météo de la nuit via le service (#547) : opération **réseau**, donc appelée par
+    /// l'IHM **hors du fil JavaFX**. Renvoie le relevé (ou vide si indisponible). Ne touche à aucune
+    /// propriété : le pré-remplissage se fait ensuite par [#appliquerMeteoRecuperee] (sur le fil JavaFX).
+    public Optional<MeteoReleve> recupererMeteo() {
+        return service.recupererMeteo(idPassage);
+    }
+
+    /// Pré-remplit les champs météo depuis un relevé **récupéré** (sur le fil JavaFX) : présent → les
+    /// champs sont renseignés (l'utilisateur vérifie puis enregistre) ; absent → message d'aide, champs
+    /// inchangés.
+    public void appliquerMeteoRecuperee(Optional<MeteoReleve> releve) {
+        if (releve.isPresent()) {
+            appliquerMeteo(releve.get());
+            message.set("Météo pré-remplie : vérifiez puis enregistrez.");
+        } else {
+            message.set("Météo indisponible (hors-ligne, pas de GPS ou données manquantes) : saisissez à la main.");
         }
     }
 
