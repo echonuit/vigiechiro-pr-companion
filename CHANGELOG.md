@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.105.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.104.0...v1.105.0) (2026-07-05)
+
+
+### Features
+
+* **passage:** client Open-Meteo (P4a, offline-friendly) ([#572](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/572)) ([47de721](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/47de72111b580e449619ae9a1a2fe4a295fff81c)), closes [#547](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/547) [#543](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/543)
+
 # [1.104.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.103.0...v1.104.0) (2026-07-05)
 
 
