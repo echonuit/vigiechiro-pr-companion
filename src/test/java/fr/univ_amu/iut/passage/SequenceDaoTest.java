@@ -26,6 +26,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -122,6 +123,31 @@ class SequenceDaoTest {
         assertThat(dao.findByOriginal(idOriginal))
                 .extracting(SequenceDEcoute::indexSource)
                 .containsExactly(0, 1);
+    }
+
+    @Test
+    @DisplayName("#530 : l'horodatage de capture est persisté et relu (recorded_at)")
+    void horodatage_capture_persiste() {
+        LocalDateTime heure = LocalDateTime.of(2026, 4, 22, 22, 58, 59);
+        SequenceDEcoute avecHeure = new SequenceDEcoute(
+                null, "seq_000.wav", idOriginal, 0, 0.0, 5.0, "transformes/seq_000.wav", false, idSession, heure);
+
+        SequenceDEcoute relu = dao.findById(dao.insert(avecHeure).id()).orElseThrow();
+
+        assertThat(relu.horodatageCapture()).isEqualTo(heure);
+    }
+
+    @Test
+    @DisplayName("#530 : sansHorodatage liste les recorded_at NULL ; majHorodatage le renseigne (backfill)")
+    void backfill_sans_horodatage_puis_maj() {
+        long id = dao.insert(sequence("orig_000.wav", 0, true)).id(); // constructeur compat → recorded_at NULL
+        assertThat(dao.sansHorodatage()).extracting(SequenceDEcoute::id).contains(id);
+
+        LocalDateTime heure = LocalDateTime.of(2026, 4, 22, 23, 5, 0);
+        dao.majHorodatage(id, heure);
+
+        assertThat(dao.findById(id).orElseThrow().horodatageCapture()).isEqualTo(heure);
+        assertThat(dao.sansHorodatage()).extracting(SequenceDEcoute::id).doesNotContain(id);
     }
 
     @Test

@@ -1,0 +1,13 @@
+-- ============================================================================
+-- Horodatage de capture des séquences d'écoute (#530).
+--
+-- L'heure réelle de début d'une tranche de 5 s est encodée dans son nom de fichier
+-- (« ..._AAAAMMJJ_HHMMSS_000.wav »), mais n'était jamais persistée : impossible de trier
+-- ou filtrer les observations par heure de la nuit. On ajoute une colonne `recorded_at`
+-- (TEXT ISO-8601, image d'un LocalDateTime) alimentée À L'IMPORT (extraction du nom via
+-- Prefixe.horodatageDe). Les séquences DÉJÀ importées sont remplies par un backfill
+-- APPLICATIF (re-parsing du file_name en Java, plus fiable qu'un substr SQLite) : rien ici.
+--
+-- Nullable : les noms non horodatés (jeux de test, fichiers non standard) restent à NULL.
+-- ============================================================================
+ALTER TABLE listening_sequence ADD COLUMN recorded_at TEXT;

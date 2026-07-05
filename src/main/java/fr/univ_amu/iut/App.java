@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
+import fr.univ_amu.iut.passage.model.BackfillHorodatageCapture;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -28,6 +29,11 @@ public class App extends Application {
         // Même amorçage que le CLI (Cli) et les outils Capture* : sans cela, le premier écran qui
         // lit la base échoue sur « no such table ».
         injector.getInstance(MigrationSchema.class).migrer();
+
+        // Backfill applicatif de l'horodatage de capture (#530) : les séquences importées avant la colonne
+        // recorded_at (V09) n'ont pas d'heure ; on la reconstruit en re-parsant leur nom de fichier. Idempotent
+        // (ne touche que les séquences sans horodatage) et peu coûteux, rejoué à chaque démarrage.
+        injector.getInstance(BackfillHorodatageCapture.class).remplir();
 
         // Filet anti-fuite : supprime au démarrage les temporaires d'extraction `import-zip-*` résiduels
         // d'une session précédente interrompue (application fermée/plantée pendant ou après un import

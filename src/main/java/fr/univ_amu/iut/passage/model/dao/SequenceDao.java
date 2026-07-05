@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /// DAO de l'entité [SequenceDEcoute] (table `listening_sequence`).
@@ -26,12 +27,24 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
             (Double) rs.getObject("duration_s"),
             rs.getString("file_path"),
             rs.getInt("in_selection") != 0,
-            rs.getLong("session_id"));
+            rs.getLong("session_id"),
+            lireHorodatage(rs, "recorded_at"));
 
     /// Lit une colonne `INTEGER` nullable en [Integer], en préservant le `null`.
     private static Integer lireIntNullable(ResultSet rs, String colonne) throws SQLException {
         Object valeur = rs.getObject(colonne);
         return valeur == null ? null : ((Number) valeur).intValue();
+    }
+
+    /// Lit une colonne `TEXT` ISO-8601 nullable en [LocalDateTime] (image de `recorded_at`), `null` si absente.
+    private static LocalDateTime lireHorodatage(ResultSet rs, String colonne) throws SQLException {
+        String valeur = rs.getString(colonne);
+        return valeur == null ? null : LocalDateTime.parse(valeur);
+    }
+
+    /// Représentation TEXT ISO-8601 d'un horodatage pour la persistance (`null` conservé).
+    private static String texteHorodatage(LocalDateTime horodatage) {
+        return horodatage == null ? null : horodatage.toString();
     }
 
     public SequenceDao(SourceDeDonnees source) {
@@ -71,8 +84,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
         long id = insererEtRecupererCle(
                 "INSERT INTO listening_sequence"
                         + " (file_name, original_recording_id, source_index, source_offset_s, duration_s,"
-                        + " file_path, in_selection, session_id)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " file_path, in_selection, session_id, recorded_at)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 sequence.nomFichier(),
                 sequence.idEnregistrementOriginal(),
                 sequence.indexSource(),
@@ -80,7 +93,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.dureeSecondes(),
                 sequence.cheminFichier(),
                 sequence.dansSelection() ? 1 : 0,
-                sequence.idSession());
+                sequence.idSession(),
+                texteHorodatage(sequence.horodatageCapture()));
         return new SequenceDEcoute(
                 id,
                 sequence.nomFichier(),
@@ -90,7 +104,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.dureeSecondes(),
                 sequence.cheminFichier(),
                 sequence.dansSelection(),
-                sequence.idSession());
+                sequence.idSession(),
+                sequence.horodatageCapture());
     }
 
     @Override
@@ -98,7 +113,7 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
         executerMaj(
                 "UPDATE listening_sequence SET"
                         + " file_name = ?, original_recording_id = ?, source_index = ?, source_offset_s = ?,"
-                        + " duration_s = ?, file_path = ?, in_selection = ?, session_id = ?"
+                        + " duration_s = ?, file_path = ?, in_selection = ?, session_id = ?, recorded_at = ?"
                         + " WHERE id = ?",
                 sequence.nomFichier(),
                 sequence.idEnregistrementOriginal(),
@@ -108,6 +123,19 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.cheminFichier(),
                 sequence.dansSelection() ? 1 : 0,
                 sequence.idSession(),
+                texteHorodatage(sequence.horodatageCapture()),
                 sequence.id());
+    }
+
+    /// Séquences **sans horodatage de capture** (`recorded_at` NULL) : cible du backfill applicatif (#530),
+    /// qui re-parse leur nom de fichier pour renseigner l'heure rétroactivement.
+    public List<SequenceDEcoute> sansHorodatage() {
+        return query("SELECT * FROM listening_sequence WHERE recorded_at IS NULL", MAPPER);
+    }
+
+    /// Renseigne l'horodatage de capture d'une séquence (backfill ciblé, sans réécrire les autres colonnes).
+    public void majHorodatage(long idSequence, LocalDateTime horodatage) {
+        executerMaj(
+                "UPDATE listening_sequence SET recorded_at = ? WHERE id = ?", texteHorodatage(horodatage), idSequence);
     }
 }

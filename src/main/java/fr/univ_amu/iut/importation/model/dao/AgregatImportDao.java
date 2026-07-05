@@ -337,8 +337,8 @@ public class AgregatImportDao {
             throws SQLException {
         try (PreparedStatement ps = cx.prepareStatement("INSERT INTO listening_sequence"
                 + " (file_name, original_recording_id, source_index, source_offset_s, duration_s,"
-                + " file_path, in_selection, session_id)"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + " file_path, in_selection, session_id, recorded_at)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             ps.setString(1, sequence.nomFichier());
             ps.setLong(2, idOriginal);
             ps.setObject(3, sequence.indexSource());
@@ -347,6 +347,11 @@ public class AgregatImportDao {
             ps.setString(6, sequence.cheminFichier());
             ps.setInt(7, sequence.dansSelection() ? 1 : 0);
             ps.setLong(8, idSession);
+            ps.setString(
+                    9,
+                    sequence.horodatageCapture() == null
+                            ? null
+                            : sequence.horodatageCapture().toString());
             ps.executeUpdate();
         }
     }

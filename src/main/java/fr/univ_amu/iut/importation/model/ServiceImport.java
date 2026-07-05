@@ -392,6 +392,8 @@ public class ServiceImport {
                         null);
                 long idOriginal = agregatDao.insererOriginal(cx, ids[1], original);
                 for (SequenceProduite sp : t.sequences()) {
+                    // #530 : l'heure réelle de la tranche est encodée dans son nom (_AAAAMMJJ_HHMMSS_000),
+                    // extraite ici pour être persistée (recorded_at) et servir le tri / filtre par heure.
                     SequenceDEcoute sequence = new SequenceDEcoute(
                             null,
                             sp.nomFichier(),
@@ -401,7 +403,8 @@ public class ServiceImport {
                             sp.dureeSecondes(),
                             sp.chemin().toString(),
                             false,
-                            null);
+                            null,
+                            Prefixe.horodatageDe(sp.nomFichier()).orElse(null));
                     agregatDao.insererSequence(cx, ids[1], idOriginal, sequence);
                 }
             }
