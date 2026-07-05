@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.95.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.94.0...v1.95.0) (2026-07-05)
+
+
+### Features
+
+* **passage:** modele meteo etendue (temp fin, vent, couverture nuageuse) ([#551](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/551)) ([52693bc](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/52693bc90dfb97a50e0a1cbaa9dcdfef76a6772f)), closes [#106](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/106) [#546](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/546) [#547](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/547) [#543](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/543)
+
 # [1.94.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.93.0...v1.94.0) (2026-07-05)
 
 
