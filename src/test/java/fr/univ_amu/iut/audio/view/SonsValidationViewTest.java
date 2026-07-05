@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -39,6 +40,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.PickResult;
@@ -270,6 +272,28 @@ class SonsValidationViewTest {
 
         robot.interact(btnReference::fire);
         verify(service).marquerReference(1L, false);
+    }
+
+    @Test
+    @DisplayName("Cliquer une case commentaire ouvre l'éditeur pré-rempli ; enregistrer appelle le service")
+    void clic_commentaire_edite_via_service(FxRobot robot) {
+        // La colonne commentaire est à droite : la faire défiler dans le viewport avant de cliquer.
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> table.scrollToColumnIndex(15));
+
+        // Clique l'icône commentaire d'une ligne de données (pas l'en-tête) → ouvre le popup d'édition.
+        Node iconeCommentaire = robot.lookup(".table-cell .icone-commentaire").query();
+        robot.clickOn(iconeCommentaire);
+
+        TextArea zone = robot.lookup(".popup-commentaire .text-area").queryAs(TextArea.class);
+        assertThat(zone.getText())
+                .as("popup pré-rempli avec le commentaire de la ligne")
+                .isEqualTo("beau cri");
+
+        robot.interact(() -> zone.setText("commentaire modifié"));
+        robot.clickOn(".bouton-enregistrer-commentaire");
+
+        verify(service).commenter(anyLong(), eq("commentaire modifié"));
     }
 
     @Test

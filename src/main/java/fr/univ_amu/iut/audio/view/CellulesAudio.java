@@ -1,7 +1,9 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import javafx.scene.Cursor;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.Tooltip;
@@ -57,9 +59,11 @@ final class CellulesAudio {
     /// [#configurerColonne] : icône colorée en en-tête, cellule dédiée, non triables.
     static void configurerIndicateurs(
             TableColumn<LigneObservationAudio, String> colReference,
-            TableColumn<LigneObservationAudio, String> colCommentaire) {
+            TableColumn<LigneObservationAudio, String> colCommentaire,
+            BiConsumer<Long, String> enregistrerCommentaire) {
         configurerColonne(colReference, "colReference", ICONE_REFERENCE, CellulesAudio::reference);
-        configurerColonne(colCommentaire, "colCommentaire", ICONE_COMMENTAIRE, CellulesAudio::commentaire);
+        configurerColonne(
+                colCommentaire, "colCommentaire", ICONE_COMMENTAIRE, () -> commentaire(enregistrerCommentaire));
     }
 
     /// Cellule texte qui **élide** un contenu long et en expose la valeur complète via une infobulle au
@@ -100,22 +104,31 @@ final class CellulesAudio {
         };
     }
 
-    /// Cellule de la colonne « commentaire » : **icône bleue** si un commentaire est présent, avec le
-    /// **texte complet** (lu sur la ligne) en infobulle ; vide sinon.
-    static TableCell<LigneObservationAudio, String> commentaire() {
+    /// Cellule de la colonne « commentaire », **éditable au clic** (#477) : **icône bleue** + infobulle du
+    /// texte complet si un commentaire est présent, sinon case vide avec l'infobulle « cliquer pour ajouter ».
+    /// Un clic ouvre l'[EditeurCommentaire] pré-rempli ; l'enregistrement appelle `enregistrer(id, texte)`
+    /// (l'édition porte sur la ligne de la **cellule**, pas sur la sélection). Le curseur main signale
+    /// l'interactivité sur les lignes de données.
+    static TableCell<LigneObservationAudio, String> commentaire(BiConsumer<Long, String> enregistrer) {
         return new TableCell<>() {
             @Override
             protected void updateItem(String valeur, boolean vide) {
                 super.updateItem(valeur, vide);
                 LigneObservationAudio ligne =
                         getTableRow() == null ? null : getTableRow().getItem();
-                if (vide || ligne == null || !estRenseigne(ligne.commentaire())) {
+                if (vide || ligne == null) {
                     setGraphic(null);
                     setTooltip(null);
-                } else {
-                    setGraphic(icone(ICONE_COMMENTAIRE, STYLE_COMMENTAIRE));
-                    setTooltip(new Tooltip(ligne.commentaire()));
+                    setCursor(Cursor.DEFAULT);
+                    setOnMouseClicked(null);
+                    return;
                 }
+                boolean aCommentaire = estRenseigne(ligne.commentaire());
+                setGraphic(aCommentaire ? icone(ICONE_COMMENTAIRE, STYLE_COMMENTAIRE) : null);
+                setTooltip(new Tooltip(aCommentaire ? ligne.commentaire() : "Cliquer pour ajouter un commentaire"));
+                setCursor(Cursor.HAND);
+                setOnMouseClicked(evenement -> EditeurCommentaire.ouvrir(
+                        this, ligne.commentaire(), texte -> enregistrer.accept(ligne.idObservation(), texte)));
             }
         };
     }

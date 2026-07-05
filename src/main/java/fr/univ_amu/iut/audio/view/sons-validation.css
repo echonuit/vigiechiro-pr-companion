@@ -164,3 +164,25 @@
 .puce-filtre-retirer:hover {
   -fx-background-color: rgba(0, 0, 0, 0.08);
 }
+
+/* Éditeur de commentaire en popup (#477) : petite carte ancrée à la case commentaire, ouverte au clic. */
+.popup-commentaire {
+  -fx-background-color: white;
+  -fx-border-color: -couleur-primaire-fond;
+  -fx-border-radius: 8;
+  -fx-background-radius: 8;
+  -fx-padding: 12;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.25), 12, 0, 0, 4);
+}
+
+.popup-commentaire > .label {
+  -fx-font-weight: bold;
+  -fx-text-fill: -couleur-primaire-sombre;
+}
+
+.bouton-enregistrer-commentaire {
+  -fx-background-color: -couleur-primaire-fond;
+  -fx-text-fill: white;
+  -fx-background-radius: 6;
+  -fx-cursor: hand;
+}

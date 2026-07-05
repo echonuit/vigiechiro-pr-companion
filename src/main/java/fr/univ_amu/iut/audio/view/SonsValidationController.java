@@ -237,7 +237,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // (les emojis ⭐/💬 ne s'affichaient pas dans toutes les polices). En-tête sans texte (icône seule),
         // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et **non triables** (trier
         // une icône n'a pas de sens et donnait une colonne « vide » triable déroutante).
-        CellulesAudio.configurerIndicateurs(colReference, colCommentaire);
+        CellulesAudio.configurerIndicateurs(colReference, colCommentaire, viewModel::commenter);
     }
 
     @FXML
