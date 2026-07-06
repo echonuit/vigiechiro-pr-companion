@@ -9,6 +9,7 @@ import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -86,7 +87,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     /// Barre de filtres « à la Notion » (#470/#471) : recherche + « + Filtre » + puces, pilotant
     /// [AudioViewModel#filtres]. Mémorisée pour la réinitialiser lors d'une navigation ciblée.
-    private GestionnaireFiltres gestionnaireFiltres;
+    private GestionnaireFiltres<LigneObservationAudio> gestionnaireFiltres;
 
     /// Aiguillage des actions de revue selon la sélection (unitaire vs lot, #479), partagé par les boutons et
     /// les raccourcis clavier.
@@ -299,7 +300,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         // Barre de filtres « à la Notion » (#470/#471) : recherche texte permanente + « + Filtre » + puces,
         // pilotant les filtres composables du view-model. Catalogue de critères : statut et groupe taxon.
-        gestionnaireFiltres = new GestionnaireFiltres(
+        gestionnaireFiltres = new GestionnaireFiltres<>(
                 champRecherche,
                 menuAjoutFiltre,
                 pucesFiltres,
@@ -310,7 +311,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         CriteresAudio.taxon(viewModel::observationsFiltrees),
                         CriteresAudio.references(),
                         CriteresAudio.probabilite(),
-                        CriteresAudio.heure(viewModel::plageNuitParDefaut)));
+                        CriteresAudio.heure(viewModel::plageNuitParDefaut)),
+                CriteresAudio.rechercheTexte());
         // Mémoire de session (#484) : restaure le tri et l'état des filtres de la dernière ouverture, et les
         // re-mémorise à la fermeture. Placée après le gestionnaire de filtres (dont elle restitue l'état).
         memoire.installer(tableObservations, gestionnaireFiltres);

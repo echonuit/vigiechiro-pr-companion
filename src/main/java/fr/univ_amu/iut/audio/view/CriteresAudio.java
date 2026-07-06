@@ -1,13 +1,16 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -38,8 +41,8 @@ final class CriteresAudio {
 
     /// Critère **Statut de revue** : éditeur = liste déroulante (À revoir / Validée / Corrigée) dans la
     /// puce ; par défaut **À revoir** (le plus utile pour la revue), appliqué dès l'ajout.
-    static CritereFiltre statut() {
-        return new CritereFiltre() {
+    static CritereFiltre<LigneObservationAudio> statut() {
+        return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
                 return "statut";
@@ -79,8 +82,9 @@ final class CriteresAudio {
     /// et cigales…). Sélectionner « Chiroptères » revient à « chauves-souris uniquement » (#471), mais tout
     /// autre groupe est accessible. Par défaut **Chiroptères** s'il est présent (levier n°1 de la revue),
     /// sinon le premier groupe ; l'application est déclenchée dès l'ajout de la puce.
-    static CritereFiltre groupe(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
-        return new CritereFiltre() {
+    static CritereFiltre<LigneObservationAudio> groupe(
+            Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
+        return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
                 return "groupe";
@@ -128,8 +132,8 @@ final class CriteresAudio {
     /// courantes**, chacune identifiée par son **taxon retenu** (`COALESCE(observateur, tadarida)`) et
     /// affichée par son nom vernaculaire (à défaut le code). Aucune présélection : la puce n'ajoutée ne
     /// filtre rien tant qu'une espèce n'est pas choisie (#472), pour ne pas masquer arbitrairement la table.
-    static CritereFiltre taxon(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
-        return new CritereFiltre() {
+    static CritereFiltre<LigneObservationAudio> taxon(Supplier<? extends List<LigneObservationAudio>> lignesCourantes) {
+        return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
                 return "taxon";
@@ -170,8 +174,8 @@ final class CriteresAudio {
     /// (`is_reference`). Critère **sans éditeur** — la simple présence de la puce active le filtre (#473),
     /// son retrait le désactive. Libellé en texte (l'étoile ⭐ ne rend pas dans toutes les polices, cf.
     /// [CellulesAudio] ; l'indication visuelle reste la colonne-icône dorée de la table).
-    static CritereFiltre references() {
-        return new CritereFiltre() {
+    static CritereFiltre<LigneObservationAudio> references() {
+        return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
                 return "references";
@@ -194,8 +198,8 @@ final class CriteresAudio {
     /// observations dont la probabilité Tadarida est **≥ au seuil** (isoler les détections les plus sûres).
     /// Les observations **sans probabilité** sont **toujours conservées** (elles n'ont pas de confiance
     /// comparable au seuil, on évite de perdre des lignes à revoir). Défaut **50 %**, appliqué dès l'ajout.
-    static CritereFiltre probabilite() {
-        return new CritereFiltre() {
+    static CritereFiltre<LigneObservationAudio> probabilite() {
+        return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
                 return "proba";
@@ -230,7 +234,7 @@ final class CriteresAudio {
 
     /// Critère **Plage horaire**, avec le défaut fixe **nuit (21 h → 6 h)** (#531). Variante sans plage
     /// dynamique, utilisée là où la nuit réelle n'est pas connue (tests, sources multi-nuits).
-    static CritereFiltre heure() {
+    static CritereFiltre<LigneObservationAudio> heure() {
         return heure(Optional::empty);
     }
 
@@ -244,8 +248,8 @@ final class CriteresAudio {
     /// qui écarte trop en été et trop peu en hiver mais reste un repli raisonnable.
     ///
     /// @param plageParDefaut source des bornes par défaut, évaluée quand la puce « Heure » est ajoutée
-    static CritereFiltre heure(Supplier<Optional<PlageNuit>> plageParDefaut) {
-        return new CritereFiltre() {
+    static CritereFiltre<LigneObservationAudio> heure(Supplier<Optional<PlageNuit>> plageParDefaut) {
+        return new CritereFiltre<LigneObservationAudio>() {
             @Override
             public String nom() {
                 return "heure";
@@ -301,6 +305,30 @@ final class CriteresAudio {
             int h = ligne.heureCapture().getHour();
             return de <= a ? (h >= de && h <= a) : (h >= de || h <= a);
         };
+    }
+
+    /// **Recherche texte** de la barre de filtres audio : vrai si un des champs cherchables d'une ligne
+    /// contient l'aiguille (comparaison **insensible casse/accents**) : fichier, **espèce retenue** (taxon +
+    /// vernaculaire observateur `nomEspece`, ou Tadarida à défaut) et commentaire. On inclut
+    /// `taxonObservateur`/`nomEspece` pour qu'une observation **corrigée** vers une autre espèce (visible en
+    /// « Votre taxon ») soit trouvable en cherchant cette espèce. Fournie au [GestionnaireFiltres] générique,
+    /// qui ignore les champs propres au type filtré.
+    static BiPredicate<LigneObservationAudio, String> rechercheTexte() {
+        return CriteresAudio::correspond;
+    }
+
+    private static boolean correspond(LigneObservationAudio ligne, String texte) {
+        String aiguille = NormalisationTexte.normaliser(texte);
+        return contient(ligne.nomFichier(), aiguille)
+                || contient(ligne.taxonTadarida(), aiguille)
+                || contient(ligne.nomTadarida(), aiguille)
+                || contient(ligne.taxonObservateur(), aiguille)
+                || contient(ligne.nomEspece(), aiguille)
+                || contient(ligne.commentaire(), aiguille);
+    }
+
+    private static boolean contient(String champ, String aiguille) {
+        return champ != null && NormalisationTexte.normaliser(champ).contains(aiguille);
     }
 
     /// Espèces présentes dans `lignes`, une par **taxon retenu**, **distinctes** et triées par libellé

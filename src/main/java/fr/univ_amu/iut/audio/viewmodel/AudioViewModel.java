@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -95,7 +96,7 @@ public class AudioViewModel {
     /// recalcule les **compteurs** sur le sous-ensemble affiché **et** l'**indice d'état vide** (distingue
     /// « source sans observation » de « filtres qui masquent tout »). Déclaré après ses dépendances
     /// (`comptage`, `messages`, `source`) que le callback référence.
-    private final FiltresAudio filtres = new FiltresAudio(observationsFiltrees, () -> {
+    private final Filtres<LigneObservationAudio> filtres = new Filtres<>(observationsFiltrees, () -> {
         comptage.set(ComptageAudio.de(observationsFiltrees));
         messages.majEtatVide(
                 observations.isEmpty(), observationsFiltrees.isEmpty(), ResolveurSourceAudio.messageVide(source));
@@ -318,9 +319,9 @@ public class AudioViewModel {
 
     /// Filtres **composables** de la table (#470/#471) : la barre de filtres (patron « à la Notion ») y
     /// branche/retire ses critères (statut, chauves-souris, taxon, références, proba, texte) via
-    /// [FiltresAudio#definir] ; la conjonction est appliquée à [#observationsFiltrees] et les compteurs
+    /// [Filtres#definir] ; la conjonction est appliquée à [#observationsFiltrees] et les compteurs
     /// suivent le sous-ensemble affiché.
-    public FiltresAudio filtres() {
+    public Filtres<LigneObservationAudio> filtres() {
         return filtres;
     }
 

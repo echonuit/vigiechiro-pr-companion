@@ -1,19 +1,20 @@
-package fr.univ_amu.iut.audio.view;
+package fr.univ_amu.iut.commun.view;
 
-import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javafx.scene.Node;
 
-/// Un **critère** de la barre de filtres audio (patron « à la Notion », #470/#471) : une entrée du menu
-/// « + Filtre » qui, une fois choisie, s'ajoute comme **puce** active. Prototype dans `audio/view` ; sera
-/// généralisé (composant partagé) à la phase d'uniformisation.
+/// Un **critère** d'une barre de filtres composables (patron « à la Notion », #470/#537), **générique** sur
+/// le type de ligne filtrée `T` : une entrée du menu « + Filtre » qui, une fois choisie, s'ajoute comme
+/// **puce** active. Socle partagé (`commun`) des vues tabulaires (audio, puis analyse / multisite).
 ///
 /// Une puce active **filtre toujours** (la retirer se fait par le ✕ de la puce) : l'[#editeur] doit donc
 /// appeler `applique` avec un **prédicat non nul** dès sa création, puis à chaque changement de valeur.
-interface CritereFiltre {
+///
+/// @param <T> type des lignes filtrées (ex. `LigneObservationAudio`)
+public interface CritereFiltre<T> {
 
-    /// Clé **stable** du filtre : identifie le prédicat dans [FiltresAudio] et dédoublonne le menu
+    /// Clé **stable** du filtre : identifie le prédicat dans le gestionnaire et dédoublonne le menu
     /// (un critère déjà actif n'y réapparaît pas).
     String nom();
 
@@ -23,5 +24,5 @@ interface CritereFiltre {
     /// Construit le **contenu éditable** de la puce (contrôles de valeur : liste, seuil…), ou `null` pour un
     /// critère **booléen** sans valeur (la seule présence de la puce filtre). Doit appeler `applique` avec le
     /// prédicat courant **immédiatement** (activation) puis à chaque changement.
-    Node editeur(Consumer<Predicate<LigneObservationAudio>> applique);
+    Node editeur(Consumer<Predicate<T>> applique);
 }
