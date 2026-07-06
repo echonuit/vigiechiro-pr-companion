@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.model;
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -16,9 +17,10 @@ import java.util.Objects;
 /// transverse** des observations, agrégées par **espèce** ou par **carré** (richesse spécifique), pour
 /// répondre à « quelles espèces, où, combien ». Pur **model** (aucune dépendance IHM/navigation).
 ///
-/// S'appuie sur les projections de [ObservationDao] (feature `validation`) — comme [ServiceMultisite]
-/// s'appuie sur les DAO de `sites`/`passage` — sans redéfinir l'agrégation. Le **filtre de statut** de
-/// revue (`null` = toutes les observations) est appliqué à la source (SQL).
+/// S'appuie sur les **observations enrichies** de [ObservationDao] (feature `validation`), puis **filtre
+/// (statut) et agrège côté client** via [AgregationAnalyse] (#537 étape 4) — l'agrégation n'est plus faite
+/// en SQL. À l'échelle visée (~4000 observations), le regroupement en mémoire est immédiat et évite de
+/// ré-interroger la base à chaque changement de filtre.
 public class ServiceAnalyse {
 
     private final ObservationDao observationDao;
@@ -28,14 +30,24 @@ public class ServiceAnalyse {
     }
 
     /// Inventaire **par espèce** des observations de l'utilisateur, filtré par `statut` (`null` = tous).
+    /// L'agrégation se fait **côté client** (#537 étape 4) : on lit les observations enrichies puis on les
+    /// regroupe via [AgregationAnalyse], plutôt qu'en SQL.
     public List<EspeceAgregee> inventaireParEspece(String idUtilisateur, StatutObservation statut) {
-        return observationDao.inventaireParEspece(idUtilisateur, statut);
+        return AgregationAnalyse.parEspece(observationsFiltrees(idUtilisateur, statut));
     }
 
     /// Inventaire **par carré** (richesse spécifique) des observations de l'utilisateur, filtré par
-    /// `statut` (`null` = tous).
+    /// `statut` (`null` = tous). Agrégation **côté client** (cf. [#inventaireParEspece]).
     public List<CarreEspeces> inventaireParCarre(String idUtilisateur, StatutObservation statut) {
-        return observationDao.inventaireParCarre(idUtilisateur, statut);
+        return AgregationAnalyse.parCarre(observationsFiltrees(idUtilisateur, statut));
+    }
+
+    /// Observations enrichies de l'utilisateur, **filtrées par statut** en mémoire (`null` = toutes) :
+    /// matière commune des deux agrégations. Un [ObservationAnalyse#statut()] est comparé au statut demandé.
+    private List<ObservationAnalyse> observationsFiltrees(String idUtilisateur, StatutObservation statut) {
+        return observationDao.observationsAnalyse(idUtilisateur).stream()
+                .filter(observation -> statut == null || observation.statut() == statut)
+                .toList();
     }
 
     /// **Détail** d'une espèce : ses observations à travers les passages de l'utilisateur, filtrées par

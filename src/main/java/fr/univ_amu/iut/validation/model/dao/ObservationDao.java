@@ -5,11 +5,10 @@ import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.validation.model.CarreEspeces;
-import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Observation;
+import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.sql.Connection;
@@ -45,6 +44,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String COL_DATE_ENR = "date_enr";
     private static final String COL_NOM_SITE = "nom_site";
     private static final String COL_GROUPE = "groupe";
+    private static final String COL_ANNEE = "annee";
+    private static final String COL_STATUT = "statut";
     private static final String DEBUT_CTE = "WITH obs AS (";
     private static final String ALIAS_STATUT = " AS statut,";
 
@@ -145,24 +146,17 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getLong(COL_PASSAGE_ID),
             rs.getString(COL_CARRE),
             rs.getString("point"),
-            rs.getInt("annee"),
+            rs.getInt(COL_ANNEE),
             rs.getInt("num"),
             rs.getString(COL_DATE_ENR));
 
-    /// **Inventaire par espèce** (#analyse) : agrège les observations de l'utilisateur par espèce
-    /// (`COALESCE(observateur, tadarida)`, pseudo-taxons exclus), filtrées par `statut` (`null` = tous).
-    /// Compteurs : détections, passages/carrés/points distincts, période. Statut dérivé en SQL (CASE),
-    /// fidèle à [ServiceValidation#statut].
-    public List<EspeceAgregee> inventaireParEspece(String idUtilisateur, StatutObservation statut) {
-        String filtre = statut == null ? null : statut.name();
-        return projeter(SQL_PAR_ESPECE, MAPPER_ESPECE_AGREGEE, idUtilisateur, filtre, filtre);
-    }
-
-    /// **Inventaire par carré** (#analyse) : agrège par carré (site), filtré par `statut` (`null` = tous).
-    /// Donne la **richesse** (nombre d'espèces distinctes) et le total de détections par carré.
-    public List<CarreEspeces> inventaireParCarre(String idUtilisateur, StatutObservation statut) {
-        String filtre = statut == null ? null : statut.name();
-        return projeter(SQL_PAR_CARRE, MAPPER_CARRE_ESPECES, idUtilisateur, filtre, filtre);
+    /// **Observations enrichies** de l'utilisateur (#analyse, #537 étape 4) : une ligne [ObservationAnalyse]
+    /// par observation (`COALESCE(observateur, tadarida)`, pseudo-taxons exclus), avec l'espèce (latin,
+    /// vernaculaire, groupe), le statut dérivé (CASE, fidèle à [ServiceValidation#statut]) et le contexte
+    /// (passage, année, carré, site, point). **Sans filtre de statut** : le filtrage (statut, texte…) et
+    /// l'agrégation (par espèce / par carré) se font **côté client** via [AgregationAnalyse].
+    public List<ObservationAnalyse> observationsAnalyse(String idUtilisateur) {
+        return projeter(SQL_OBSERVATIONS_ANALYSE, MAPPER_OBSERVATION_ANALYSE, idUtilisateur);
     }
 
     /// **Détail d'une espèce** (#analyse) : toutes les observations de l'utilisateur portant sur l'espèce
@@ -209,46 +203,28 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + FILTRE_UTILISATEUR_HORS_PSEUDO
             + ")";
 
-    private static final String SQL_PAR_ESPECE = CTE_OBSERVATIONS
+    /// Observations enrichies (#537 étape 4) : la CTE `obs` (une ligne par observation, contexte + statut
+    /// dérivé) jointe au taxon pour le nom latin/vernaculaire et le groupe. **Aucun** filtre de statut ni
+    /// `GROUP BY` : le filtrage et l'agrégation se font côté client ([AgregationAnalyse]).
+    private static final String SQL_OBSERVATIONS_ANALYSE = CTE_OBSERVATIONS
             + " SELECT obs.taxon_code AS code, t.latin_name AS latin, t.vernacular_name_fr AS vern,"
-            + " g.name AS groupe, COUNT(*) AS nb_obs, COUNT(DISTINCT obs.passage_id) AS nb_passages,"
-            + " COUNT(DISTINCT obs.carre) AS nb_carres, COUNT(DISTINCT obs.point_id) AS nb_points,"
-            + " MIN(obs.annee) AS annee_min, MAX(obs.annee) AS annee_max"
+            + " g.name AS groupe, obs.statut AS statut, obs.passage_id AS passage_id, obs.annee AS annee,"
+            + " obs.carre AS carre, obs.nom_site AS nom_site, obs.point_id AS point_id"
             + " FROM obs"
             + " JOIN taxon t ON t.code = obs.taxon_code"
-            + " LEFT JOIN taxonomic_group g ON g.id = t.group_id"
-            + " WHERE (? IS NULL OR obs.statut = ?)"
-            + " GROUP BY obs.taxon_code, t.latin_name, t.vernacular_name_fr, g.name"
-            + " ORDER BY nb_obs DESC, t.vernacular_name_fr";
+            + " LEFT JOIN taxonomic_group g ON g.id = t.group_id";
 
-    private static final RowMapper<EspeceAgregee> MAPPER_ESPECE_AGREGEE = rs -> new EspeceAgregee(
+    private static final RowMapper<ObservationAnalyse> MAPPER_OBSERVATION_ANALYSE = rs -> new ObservationAnalyse(
             rs.getString("code"),
             rs.getString("latin"),
             rs.getString("vern"),
             rs.getString(COL_GROUPE),
-            rs.getInt("nb_obs"),
-            rs.getInt("nb_passages"),
-            rs.getInt("nb_carres"),
-            rs.getInt("nb_points"),
-            rs.getInt("annee_min"),
-            rs.getInt("annee_max"));
-
-    private static final String SQL_PAR_CARRE = CTE_OBSERVATIONS
-            + " SELECT obs.carre AS carre, obs.nom_site AS nom_site,"
-            + " COUNT(DISTINCT obs.taxon_code) AS richesse, COUNT(*) AS nb_obs,"
-            + " MIN(obs.annee) AS annee_min, MAX(obs.annee) AS annee_max"
-            + " FROM obs"
-            + " WHERE (? IS NULL OR obs.statut = ?)"
-            + " GROUP BY obs.carre, obs.nom_site"
-            + " ORDER BY richesse DESC, obs.carre";
-
-    private static final RowMapper<CarreEspeces> MAPPER_CARRE_ESPECES = rs -> new CarreEspeces(
+            StatutObservation.valueOf(rs.getString(COL_STATUT)),
+            rs.getLong(COL_PASSAGE_ID),
+            rs.getInt(COL_ANNEE),
             rs.getString(COL_CARRE),
             rs.getString(COL_NOM_SITE),
-            rs.getInt("richesse"),
-            rs.getInt("nb_obs"),
-            rs.getInt("annee_min"),
-            rs.getInt("annee_max"));
+            rs.getLong("point_id"));
 
     /// CTE de **détail** : une ligne par observation (clé, séquence, contexte passage/carré/point, les deux
     /// taxons et probabilités, statut dérivé), pour le panneau « observations d'une espèce » (#analyse).
@@ -274,7 +250,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getLong("seq"),
             rs.getLong(COL_PASSAGE_ID),
             rs.getInt("num_passage"),
-            rs.getInt("annee"),
+            rs.getInt(COL_ANNEE),
             rs.getString(COL_DATE_ENR),
             rs.getString(COL_CARRE),
             rs.getString("point_code"),
@@ -283,7 +259,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             (Double) rs.getObject(COL_PROB_TADARIDA),
             rs.getString("observer"),
             (Double) rs.getObject(COL_PROB_OBSERVER),
-            StatutObservation.valueOf(rs.getString("statut")));
+            StatutObservation.valueOf(rs.getString(COL_STATUT)));
 
     // --- Projection unifiée pour la vue audio (#audio) : observations + contexte passage + champs
     // d'archivage (reference/commentaire/fréquence). Pas d'exclusion de pseudo-taxons : la validation
@@ -333,7 +309,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             (Double) rs.getObject(COL_PROB_TADARIDA),
             rs.getString("observer"),
             (Double) rs.getObject(COL_PROB_OBSERVER),
-            StatutObservation.valueOf(rs.getString("statut")),
+            StatutObservation.valueOf(rs.getString(COL_STATUT)),
             rs.getInt("is_reference") != 0,
             rs.getString("commentaire"),
             entierNullable(rs, "frequence"),
