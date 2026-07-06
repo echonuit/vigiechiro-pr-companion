@@ -44,6 +44,13 @@ jobs:
           chmod +x .github/assets/check-captures.sh
           ./.github/assets/check-captures.sh
 
+      - name: Enregistrement des outils de capture
+        # Chaque outil de capture (classe outils/Capture* avec un main) doit figurer dans le
+        # tableau MAINS de capture-screenshots.sh, sinon ses PNG ne seraient jamais régénérés.
+        run: |
+          chmod +x .github/assets/check-capture-mains.sh
+          ./.github/assets/check-capture-mains.sh
+
       - name: Portail qualité (PMD + couverture, bloquant)
         # AppTest (TestFX) tourne en headless via la Headless Platform JavaFX 26
         # (glass.platform=Headless) : aucun display X11 requis.
