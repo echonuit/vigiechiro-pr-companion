@@ -2,8 +2,9 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.audio.viewmodel.FiltresAudio;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.time.LocalDateTime;
@@ -31,7 +32,7 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
 /// Barre de filtres « à la Notion » (#470/#471) : ajouter/retirer une puce via « + Filtre », recherche
-/// texte permanente, réinitialisation. Vérifie le câblage sur la [FilteredList] via [FiltresAudio].
+/// texte permanente, réinitialisation. Vérifie le câblage sur la [FilteredList] via [Filtres].
 @ExtendWith(ApplicationExtension.class)
 class GestionnaireFiltresTest {
 
@@ -39,7 +40,7 @@ class GestionnaireFiltresTest {
     private MenuButton menu;
     private FlowPane puces;
     private FilteredList<LigneObservationAudio> affichees;
-    private GestionnaireFiltres gestionnaire;
+    private GestionnaireFiltres<LigneObservationAudio> gestionnaire;
 
     @Start
     void start(Stage stage) {
@@ -52,8 +53,9 @@ class GestionnaireFiltresTest {
                 // Observation CORRIGÉE : Tadarida disait « Bruit », l'observateur a retenu « Grand Rhinolophe ».
                 ligneCorrigee(3, "Bruit", "Rhifer", "Grand Rhinolophe", "PaRec_3.wav"));
         affichees = new FilteredList<>(source);
-        FiltresAudio filtres = new FiltresAudio(affichees, () -> {});
-        gestionnaire = new GestionnaireFiltres(recherche, menu, puces, filtres, List.of(CriteresAudio.statut()));
+        Filtres<LigneObservationAudio> filtres = new Filtres<>(affichees, () -> {});
+        gestionnaire = new GestionnaireFiltres<>(
+                recherche, menu, puces, filtres, List.of(CriteresAudio.statut()), CriteresAudio.rechercheTexte());
         stage.setScene(new Scene(new VBox(recherche, menu, puces), 400, 200));
         stage.show();
     }
@@ -122,11 +124,16 @@ class GestionnaireFiltresTest {
                 ligneGroupe(2, "Turmer", "PaRec_2.wav", StatutObservation.VALIDEE, "Oiseaux"),
                 ligne(3, "Nyclei", "PaRec_3.wav", StatutObservation.VALIDEE)); // Chiroptères
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
-        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
         FlowPane pucesLocales = new FlowPane();
-        GestionnaireFiltres ignore = new GestionnaireFiltres(
-                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.groupe(() -> source)));
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.groupe(() -> source)),
+                CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
         // Ajouter la puce Groupe : le sélecteur liste les groupes présents (distincts, triés) et défaut
@@ -151,11 +158,16 @@ class GestionnaireFiltresTest {
                 ligne(1, "Pippip", "PaRec_1.wav", StatutObservation.VALIDEE),
                 ligneCorrigee(2, "Bruit", "Rhifer", "Grand Rhinolophe", "PaRec_2.wav"));
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
-        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
         FlowPane pucesLocales = new FlowPane();
-        GestionnaireFiltres ignore = new GestionnaireFiltres(
-                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.taxon(() -> source)));
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.taxon(() -> source)),
+                CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
         // Ajouter la puce Espèce : espèces présentes triées par libellé, aucune présélection (rien masqué).
@@ -179,11 +191,16 @@ class GestionnaireFiltresTest {
                 ligne(1, "Pippip", "PaRec_1.wav", StatutObservation.VALIDEE), // pas en référence
                 ligneReference(2, "Nyclei", "PaRec_2.wav")); // en référence
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
-        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
         FlowPane pucesLocales = new FlowPane();
-        GestionnaireFiltres ignore = new GestionnaireFiltres(
-                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.references()));
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.references()),
+                CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
         // Ajouter la puce Références : critère booléen (puce = Label + ✕, sans éditeur) → filtre actif.
@@ -204,11 +221,16 @@ class GestionnaireFiltresTest {
                 ligneProba(2, "Nyclei", 0.3), // peu sûre
                 ligneProba(3, "Tadten", null)); // sans proba
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
-        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
         FlowPane pucesLocales = new FlowPane();
-        GestionnaireFiltres ignore = new GestionnaireFiltres(
-                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.probabilite()));
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.probabilite()),
+                CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
         // Ajouter la puce Proba : défaut 50 % → garde 0.9 (≥ 0.5) et la ligne sans proba ; 0.3 masquée.
@@ -234,11 +256,16 @@ class GestionnaireFiltresTest {
                 ligneHeure(3, LocalDateTime.of(2026, 4, 23, 3, 0)), // 03:00 après minuit (nuit)
                 ligneHeure(4, null)); // sans heure
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
-        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
         FlowPane pucesLocales = new FlowPane();
-        GestionnaireFiltres ignore = new GestionnaireFiltres(
-                new TextField(), menuLocal, pucesLocales, filtresLocaux, List.of(CriteresAudio.heure()));
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
+                new TextField(),
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.heure()),
+                CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
         // Ajouter la puce Heure : défaut nuit 21h→6h (à cheval sur minuit) → garde 22:00, 03:00 et la ligne
@@ -260,15 +287,16 @@ class GestionnaireFiltresTest {
     @DisplayName("#549 : critère Heure — le défaut suit la nuit fournie (coucher/lever) plutôt que 21h→6h")
     void filtre_heure_defaut_depuis_ephemeride(FxRobot robot) {
         FilteredList<LigneObservationAudio> vues = new FilteredList<>(FXCollections.observableArrayList());
-        FiltresAudio filtresLocaux = new FiltresAudio(vues, () -> {});
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
         MenuButton menuLocal = new MenuButton();
         FlowPane pucesLocales = new FlowPane();
-        GestionnaireFiltres ignore = new GestionnaireFiltres(
+        GestionnaireFiltres<LigneObservationAudio> ignore = new GestionnaireFiltres<>(
                 new TextField(),
                 menuLocal,
                 pucesLocales,
                 filtresLocaux,
-                List.of(CriteresAudio.heure(() -> Optional.of(new PlageNuit(19, 7)))));
+                List.of(CriteresAudio.heure(() -> Optional.of(new PlageNuit(19, 7)))),
+                CriteresAudio.rechercheTexte());
         assertThat(ignore).isNotNull();
 
         // Ajouter la puce Heure : le défaut vient de la plage nuit fournie (19 h → 7 h), pas du fixe 21→6.

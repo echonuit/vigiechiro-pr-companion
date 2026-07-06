@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import javafx.collections.FXCollections;
@@ -23,7 +24,7 @@ class FiltresAudioTest {
                 ligne(3, "Pippip", StatutObservation.NON_TOUCHEE));
         FilteredList<LigneObservationAudio> affichees = new FilteredList<>(source);
         int[] notifications = {0};
-        FiltresAudio filtres = new FiltresAudio(affichees, () -> notifications[0]++);
+        Filtres<LigneObservationAudio> filtres = new Filtres<>(affichees, () -> notifications[0]++);
 
         // Filtre A : taxon Tadarida = Pippip → lignes 1 et 3.
         filtres.definir("taxon", ligne -> "Pippip".equals(ligne.taxonTadarida()));
@@ -46,7 +47,7 @@ class FiltresAudioTest {
         ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
                 ligne(1, "Pippip", StatutObservation.VALIDEE), ligne(2, "Nyclei", StatutObservation.NON_TOUCHEE));
         FilteredList<LigneObservationAudio> affichees = new FilteredList<>(source);
-        FiltresAudio filtres = new FiltresAudio(affichees, () -> {});
+        Filtres<LigneObservationAudio> filtres = new Filtres<>(affichees, () -> {});
 
         filtres.definir("taxon", ligne -> "Pippip".equals(ligne.taxonTadarida()));
         assertThat(affichees).hasSize(1);

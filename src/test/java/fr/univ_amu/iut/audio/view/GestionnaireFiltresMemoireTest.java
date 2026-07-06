@@ -2,9 +2,10 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import fr.univ_amu.iut.audio.view.GestionnaireFiltres.EtatCritere;
-import fr.univ_amu.iut.audio.view.GestionnaireFiltres.EtatFiltres;
-import fr.univ_amu.iut.audio.viewmodel.FiltresAudio;
+import fr.univ_amu.iut.commun.view.EtatCritere;
+import fr.univ_amu.iut.commun.view.EtatFiltres;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.util.List;
 import javafx.collections.FXCollections;
@@ -25,13 +26,13 @@ import org.testfx.framework.junit5.Start;
 @ExtendWith(ApplicationExtension.class)
 class GestionnaireFiltresMemoireTest {
 
-    private GestionnaireFiltres gestion;
+    private GestionnaireFiltres<LigneObservationAudio> gestion;
 
     @Start
     void start(javafx.stage.Stage stage) {
         FilteredList<LigneObservationAudio> affichees = new FilteredList<>(FXCollections.observableArrayList());
-        FiltresAudio filtres = new FiltresAudio(affichees, () -> {});
-        gestion = new GestionnaireFiltres(
+        Filtres<LigneObservationAudio> filtres = new Filtres<>(affichees, () -> {});
+        gestion = new GestionnaireFiltres<>(
                 new TextField(),
                 new MenuButton(),
                 new HBox(),
@@ -40,7 +41,8 @@ class GestionnaireFiltresMemoireTest {
                         CriteresAudio.statut(),
                         CriteresAudio.probabilite(),
                         CriteresAudio.heure(),
-                        CriteresAudio.references()));
+                        CriteresAudio.references()),
+                CriteresAudio.rechercheTexte());
     }
 
     @Test

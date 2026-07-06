@@ -1,7 +1,8 @@
 package fr.univ_amu.iut.audio.view;
 
 import com.google.inject.Singleton;
-import fr.univ_amu.iut.audio.view.GestionnaireFiltres.EtatFiltres;
+import fr.univ_amu.iut.commun.view.EtatFiltres;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.util.List;
 import java.util.Optional;
@@ -26,7 +27,8 @@ public class MemoireRevueAudio {
     /// Branche la mémoire sur `table` et son `gestionnaireFiltres` (peut être `null` : mémoire du tri seul) :
     /// **restaure** immédiatement le tri et les filtres mémorisés, puis les **re-mémorise** quand la vue quitte
     /// la scène (fermeture / navigation).
-    public void installer(TableView<LigneObservationAudio> table, GestionnaireFiltres gestionnaireFiltres) {
+    public void installer(
+            TableView<LigneObservationAudio> table, GestionnaireFiltres<LigneObservationAudio> gestionnaireFiltres) {
         restaurerTri(table);
         if (gestionnaireFiltres != null && filtres != null) {
             gestionnaireFiltres.restaurer(filtres);
