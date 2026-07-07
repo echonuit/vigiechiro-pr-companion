@@ -34,6 +34,7 @@ import picocli.CommandLine.Spec;
             ListerPassages.class,
             StatutPassage.class,
             Importer.class,
+            ImporterTadarida.class,
             ExporterLot.class,
             ExporterVu.class
         })

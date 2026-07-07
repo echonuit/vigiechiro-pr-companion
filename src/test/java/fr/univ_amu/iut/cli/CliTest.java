@@ -197,6 +197,42 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("importer-tadarida sans --csv : argument manquant, code 2")
+    void importer_tadarida_argument_manquant() {
+        int code = cli.executer(new String[] {"importer-tadarida", "--passage", "1"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("--csv");
+    }
+
+    @Test
+    @DisplayName("importer-tadarida avec un CSV introuvable : erreur d'usage (code 2)")
+    void importer_tadarida_csv_introuvable() {
+        Path absent = workspace.resolve("nexiste-pas.csv");
+
+        int code = cli.executer(
+                new String[] {"importer-tadarida", "--passage", "1", "--csv", absent.toString()}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("introuvable");
+    }
+
+    @Test
+    @DisplayName("importer-tadarida sur un passage sans nuit importée : échec métier (1)")
+    void importer_tadarida_passage_sans_session_echoue() throws Exception {
+        Path csv = workspace.resolve("observations.csv");
+        try (var flux = getClass().getResourceAsStream("/validation/observations_brut.csv")) {
+            Files.copy(flux, csv);
+        }
+
+        int code = cli.executer(
+                new String[] {"importer-tadarida", "--passage", "999", "--csv", csv.toString()}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("session");
+    }
+
+    @Test
     @DisplayName("exporter-vu sans --sortie : argument manquant, code 2, rien écrit")
     void exporter_vu_argument_manquant() {
         int code = cli.executer(new String[] {"exporter-vu", "--passage", "1"}, sortie, erreur);
