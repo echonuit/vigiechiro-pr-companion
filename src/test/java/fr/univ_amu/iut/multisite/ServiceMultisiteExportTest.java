@@ -7,7 +7,6 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -29,9 +28,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class ServiceMultisiteExportTest {
 
     @Mock
-    private SavedViewDao savedViewDao;
-
-    @Mock
     private SiteDao siteDao;
 
     @Mock
@@ -46,7 +42,7 @@ class ServiceMultisiteExportTest {
     @Test
     @DisplayName("exporterCsvVers écrit dans le fichier le même CSV que exporterCsv")
     void exporterCsvVers_ecrit_le_meme_csv(@TempDir Path dossier) throws Exception {
-        ServiceMultisite service = new ServiceMultisite(savedViewDao, siteDao, pointDao, passageDao, horloge);
+        ServiceMultisite service = new ServiceMultisite(siteDao, pointDao, passageDao, horloge);
         List<LignePassage> lignes = List.of(
                 new LignePassage(1L, "640380", "A1", 2026, 1, "2026-06-21", StatutWorkflow.DEPOSE, Verdict.OK),
                 new LignePassage(2L, "640381", "B2", 2025, 3, "2025-07-02", StatutWorkflow.VERIFIE, null));

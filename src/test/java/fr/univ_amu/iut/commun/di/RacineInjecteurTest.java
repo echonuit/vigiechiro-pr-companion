@@ -3,12 +3,12 @@ package fr.univ_amu.iut.commun.di;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.lot.model.ServiceLot;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.qualification.model.dao.SelectionDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -55,7 +55,7 @@ class RacineInjecteurTest {
         assertThat(injecteur.getInstance(PassageDao.class)).isNotNull();
         assertThat(injecteur.getInstance(SelectionDao.class)).isNotNull();
         assertThat(injecteur.getInstance(ObservationDao.class)).isNotNull();
-        assertThat(injecteur.getInstance(SavedViewDao.class)).isNotNull();
+        assertThat(injecteur.getInstance(DepotVues.class)).isNotNull();
         // Service de référence : valide le câblage inter-modules (SitesModule reçoit le PassageDao de
         // PassageModule et l'Horloge du socle).
         assertThat(injecteur.getInstance(ServiceSites.class)).isNotNull();

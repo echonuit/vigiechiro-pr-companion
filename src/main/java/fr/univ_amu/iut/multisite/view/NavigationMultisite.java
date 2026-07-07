@@ -5,16 +5,11 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
-import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.Objects;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
-import javafx.stage.Window;
 
 /// Façade de navigation de la feature `multisite` : charge la vue FXML et la publie dans la zone
 /// centrale du chrome via le [Navigateur] du socle.
@@ -68,29 +63,6 @@ public class NavigationMultisite implements OuvrirMultisite {
             MultisiteController controleur = loader.getController();
             navigateur.ouvrirRacine(vue, "multisite", "Carte & passages", controleur);
             return controleur;
-        } catch (IOException echec) {
-            throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
-        }
-    }
-
-    /// Ouvre la **modale de gestion des vues sauvegardées**, branchée sur le `viewModel` de l'écran
-    /// (état de filtres partagé : appliquer une vue met à jour le tableau sous-jacent).
-    ///
-    /// @param parent fenêtre propriétaire (pour la modalité)
-    /// @param viewModel le ViewModel de l'écran M-Multisite courant
-    public void ouvrirModaleVues(Window parent, MultisiteViewModel viewModel) {
-        FXMLLoader loader = new FXMLLoader(NavigationMultisite.class.getResource("ModaleVues.fxml"));
-        loader.setControllerFactory(injector::getInstance);
-        try {
-            Parent vue = loader.load();
-            ModaleVuesController controleur = loader.getController();
-            controleur.demarrer(viewModel);
-            Stage modale = new Stage();
-            modale.initOwner(parent);
-            modale.initModality(Modality.WINDOW_MODAL);
-            modale.setTitle("Vues sauvegardées");
-            modale.setScene(new Scene(vue));
-            modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

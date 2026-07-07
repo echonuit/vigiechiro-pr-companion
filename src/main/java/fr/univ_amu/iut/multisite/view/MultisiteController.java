@@ -1,8 +1,9 @@
 package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -17,7 +18,9 @@ import fr.univ_amu.iut.multisite.viewmodel.SourcesAudioMultisite;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
@@ -35,16 +38,19 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 
 /// Controller de l'écran **M-Multisite** (`Multisite.fxml`).
 ///
-/// Pur câblage (patron CM4) : lie le tableau des passages agrégés, les filtres (carré, statut,
-/// verdict, année), le tri et l'export au [MultisiteViewModel]. Le **double-clic** sur une ligne
+/// Pur câblage (patron CM4) : lie le tableau des passages agrégés, la **barre de filtres à puces**
+/// (#537 étape 6b : carré, statut, verdict, année + recherche), les **onglets de vues mémorisées**
+/// (`GestionnaireVues`), le tri et l'export au [MultisiteViewModel]. Le **double-clic** sur une ligne
 /// ouvre l'écran M-Passage via le contrat socle [OuvrirPassage] (inversion de dépendance : la
 /// feature ne dépend pas de `passage.view`). Le chargement initial est déclenché ici (écran sans
 /// paramètre). Aucun accès base de données ni logique métier (règle ArchUnit `view_sans_jdbc`).
@@ -54,38 +60,40 @@ import javafx.stage.FileChooser;
 /// nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant dans la pile).
 public class MultisiteController implements RafraichirAuRetour {
 
+    /// Clé de la feature pour les vues mémorisées (`saved_filter_view.feature`).
+    private static final String FEATURE = "multisite";
+
     private final MultisiteViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
-    private final NavigationMultisite navigation;
+    private final DepotVues depotVues;
 
     @FXML
     private Label lblResume;
 
+    /// Barre de filtres « à la Notion » (#537 étape 6b) : recherche + « + Filtre » + puces actives.
     @FXML
-    private TextField champCarre;
+    private TextField champRecherche;
 
     @FXML
-    private ComboBox<StatutWorkflow> choixStatut;
+    private MenuButton menuAjoutFiltre;
 
     @FXML
-    private ComboBox<Verdict> choixVerdict;
+    private FlowPane pucesFiltres;
 
+    /// Conteneur des onglets de vues mémorisées (`GestionnaireVues`).
     @FXML
-    private TextField champAnnee;
+    private FlowPane barreOnglets;
 
     @FXML
     private ComboBox<TriMultisite> choixTri;
 
-    /// Menu « ☰ » regroupant les actions secondaires (Vues, Exporter) pour alléger la barre (#370).
+    /// Menu « ☰ » regroupant les actions secondaires (Exporter, Écouter) pour alléger la barre (#370).
     @FXML
     private MenuButton menuActions;
 
     @FXML
     private MenuItem itemExporter;
-
-    @FXML
-    private MenuItem itemGererVues;
 
     @FXML
     private MenuItem itemEcouterPassage;
@@ -141,6 +149,9 @@ public class MultisiteController implements RafraichirAuRetour {
 
     private Button boutonEnregistrerPositions;
 
+    /// Barre de filtres à puces (#537 étape 6b) : la carte y pose une puce « carré » au clic.
+    private GestionnaireFiltres<LignePassage> gestionnaireFiltres;
+
     /// Composant carte réutilisable (#152), rempli à partir de l'agrégat carte du ViewModel.
     private final CarteSites carte = new CarteSites();
 
@@ -161,21 +172,18 @@ public class MultisiteController implements RafraichirAuRetour {
 
     @Inject
     public MultisiteController(
-            MultisiteViewModel viewModel,
-            OuvrirPassage ouvrirPassage,
-            OuvrirAudio ouvrirAudio,
-            NavigationMultisite navigation) {
+            MultisiteViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirAudio ouvrirAudio, DepotVues depotVues) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
-        this.navigation = Objects.requireNonNull(navigation, "navigation");
+        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
     }
 
     @FXML
     private void initialize() {
         configurerColonnes();
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
-        // la liste (déjà filtrée/ordonnée côté service) ; performant (~4000 lignes) et le tri colonne
+        // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne
         // persiste à travers les rafraîchissements de filtres.
         SortedList<LignePassage> lignesTriees = new SortedList<>(viewModel.lignes());
         lignesTriees.comparatorProperty().bind(tableLignes.comparatorProperty());
@@ -193,7 +201,22 @@ public class MultisiteController implements RafraichirAuRetour {
             return ligne;
         });
 
-        configurerFiltres();
+        // Barre de filtres à puces (#537 étape 6b) : Carré / Statut / Verdict / Année + recherche. Le tri
+        // (choixTri) reste un contrôle fixe : c'est un axe d'ordonnancement, pas un filtre.
+        gestionnaireFiltres = new GestionnaireFiltres<>(
+                champRecherche,
+                menuAjoutFiltre,
+                pucesFiltres,
+                viewModel.filtres(),
+                List.of(
+                        CriteresMultisite.carre(),
+                        CriteresMultisite.statut(),
+                        CriteresMultisite.verdict(),
+                        CriteresMultisite.annee()),
+                CriteresMultisite.rechercheTexte());
+        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres.
+        new GestionnaireVues<>(barreOnglets, gestionnaireFiltres, depotVues, FEATURE, this::demanderNomVue);
+
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(Convertisseurs.parLibelle(tri -> tri == null ? "" : tri.libelle()));
         // #370 : sans étiquette « Tri : » avant la liste, on préfixe l'intitulé DANS la cellule-bouton (la
@@ -201,7 +224,7 @@ public class MultisiteController implements RafraichirAuRetour {
         choixTri.setButtonCell(new CelluleTri());
         choixTri.valueProperty().bindBidirectional(viewModel.triProperty());
         // Choisir un ordre nommé (combo) réinitialise le tri par colonne, pour que l'ordre nommé soit
-        // visible (sinon le comparateur de colonne masquerait le tri serveur). #145.
+        // visible (sinon le comparateur de colonne masquerait le tri du VM). #145.
         viewModel
                 .triProperty()
                 .addListener(
@@ -235,8 +258,8 @@ public class MultisiteController implements RafraichirAuRetour {
         edition.brancher();
 
         // Liaisons carte ↔ tableau (#152) :
-        // - clic d'un carré sur la carte → filtre le tableau par ce carré (met aussi à jour le champ) ;
-        carte.setOnCarreClic(carreGeo -> viewModel.filtreNumeroCarreProperty().set(carreGeo.numeroCarre()));
+        // - clic d'un carré sur la carte → pose une puce « carré » qui filtre le tableau par ce carré ;
+        carte.setOnCarreClic(carreGeo -> gestionnaireFiltres.poser("carre", List.of(carreGeo.numeroCarre())));
         // - sélection d'une ligne du tableau → met le carré correspondant en surbrillance sur la carte.
         tableLignes
                 .getSelectionModel()
@@ -285,7 +308,6 @@ public class MultisiteController implements RafraichirAuRetour {
         zoneCarte.getChildren().add(controlesEdition);
     }
 
-    /// Applique le look d'un bouton superposé à la carte : classe de style, texte accessible (#163) et
     /// Replie (ou rouvre) la **carte** : le tableau prend alors toute la largeur. On ne peut pas replier
     /// les deux panneaux à la fois (cf. [#majPoignees]).
     @FXML
@@ -424,72 +446,28 @@ public class MultisiteController implements RafraichirAuRetour {
                 c.getValue().verdict() == null ? "" : c.getValue().verdict().libelle()));
     }
 
-    private void configurerFiltres() {
-        // Statut / verdict : la 1re entrée (null) lève le filtre ; les suivantes restreignent.
-        choixStatut.getItems().add(null);
-        choixStatut.getItems().addAll(StatutWorkflow.values());
-        choixStatut.setConverter(Convertisseurs.parLibelle(s -> s == null ? "Tous les statuts" : s.libelle()));
-        choixStatut.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
-
-        choixVerdict.getItems().add(null);
-        choixVerdict.getItems().addAll(Verdict.values());
-        choixVerdict.setConverter(Convertisseurs.parLibelle(v -> v == null ? "Tous les verdicts" : v.libelle()));
-        choixVerdict.valueProperty().bindBidirectional(viewModel.filtreVerdictProperty());
-
-        // Champs texte : appliqués à la validation (Entrée) pour ne pas ré-interroger à chaque frappe ;
-        // les champs reflètent la propriété (vidés lors de la réinitialisation).
-        champCarre.setOnAction(
-                evenement -> viewModel.filtreNumeroCarreProperty().set(champCarre.getText()));
-        viewModel
-                .filtreNumeroCarreProperty()
-                .addListener((obs, ancien, nouveau) -> champCarre.setText(nouveau == null ? "" : nouveau));
-
-        champAnnee.setOnAction(evenement -> appliquerAnnee());
-        viewModel
-                .filtreAnneeProperty()
-                .addListener(
-                        (obs, ancien, nouveau) -> champAnnee.setText(nouveau == null ? "" : String.valueOf(nouveau)));
-        // #370 : les étiquettes visuelles « Carré : / … » sont retirées ; les libellés ACCESSIBLES (#163)
-        // sont posés directement dans le FXML (attribut accessibleText sur chaque contrôle).
-    }
-
-    /// Parse l'année saisie : un champ vide lève le filtre, une valeur non numérique est ignorée
-    /// (le champ est restauré à la valeur courante du filtre).
-    private void appliquerAnnee() {
-        String saisie = champAnnee.getText() == null ? "" : champAnnee.getText().trim();
-        if (saisie.isEmpty()) {
-            viewModel.filtreAnneeProperty().set(null);
-            return;
-        }
-        try {
-            viewModel.filtreAnneeProperty().set(Integer.valueOf(saisie));
-        } catch (NumberFormatException invalide) {
-            Integer courant = viewModel.filtreAnneeProperty().get();
-            champAnnee.setText(courant == null ? "" : String.valueOf(courant));
-        }
-    }
-
     private void ouvrirPassageDeLaLigne(LignePassage ligne) {
         // Le nom convivial du site n'est pas porté par la vue agrégée : carré + point suffisent au
         // fil d'Ariane de M-Passage (nomSite n'y est pas utilisé).
         ouvrirPassage.ouvrir(ligne.idPassage(), new ContexteSite(ligne.numeroCarre(), ligne.codePoint(), null));
     }
 
-    /// « Vues enregistrées… » : ouvre la modale de gestion, branchée sur ce même ViewModel
-    /// (appliquer une vue met donc à jour les filtres et le tableau de cet écran).
-    @FXML
-    private void gererVues() {
-        navigation.ouvrirModaleVues(menuActions.getScene().getWindow(), viewModel);
+    /// Demande à l'utilisateur un **nom de vue** (nouvelle vue ou renommage), pré-rempli par `defaut`, via
+    /// une petite boîte de saisie. Fournie au [GestionnaireVues] (qui reste ainsi testable sans dialogue).
+    private Optional<String> demanderNomVue(String defaut) {
+        TextInputDialog dialogue = new TextInputDialog(defaut);
+        dialogue.initOwner(barreOnglets.getScene().getWindow());
+        dialogue.setHeaderText("Nom de la vue");
+        dialogue.setContentText("Nom :");
+        return dialogue.showAndWait().map(String::trim).filter(nom -> !nom.isBlank());
     }
 
+    /// « Réinitialiser » : retire tous les filtres (recherche + puces) via le gestionnaire, et efface le
+    /// tri par clic d'en-tête (#145).
     @FXML
     private void reinitialiser() {
-        // Vide d'abord les champs texte : une saisie non validée (sans Entrée) n'a pas mis à jour le
-        // VM, donc reinitialiserFiltres seul laisserait ce texte affiché (P3 revue codex).
-        champCarre.clear();
-        champAnnee.clear();
-        tableLignes.getSortOrder().clear(); // #145 : la réinitialisation efface aussi le tri par colonne.
-        viewModel.reinitialiserFiltres();
+        gestionnaireFiltres.reinitialiser();
+        tableLignes.getSortOrder().clear();
     }
 
     /// « Exporter » : ouvre le sélecteur de fichier natif (enregistrement) puis délègue au VM.

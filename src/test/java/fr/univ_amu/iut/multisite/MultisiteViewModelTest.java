@@ -13,9 +13,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
-import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
-import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
@@ -25,15 +23,15 @@ import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Tests unitaires du [MultisiteViewModel]. Depuis #537, les passages sont chargés **une fois**
-/// puis filtrés/triés **en mémoire** via le socle partagé : ces tests vérifient donc le
-/// chargement/résumé du tableau, le **filtrage client-side sans ré-interroger le service**, la
-/// réinitialisation, les vues sauvegardées et la délégation de l'export. Service mocké, pas de base
-/// de données ni de JavaFX UI.
+/// Tests unitaires du [MultisiteViewModel]. Depuis #537, les passages sont chargés **une fois** puis
+/// filtrés/triés **en mémoire** via le socle partagé [MultisiteViewModel#filtres()] (piloté par la barre à
+/// puces de la vue depuis l'étape 6b) : ces tests vérifient le chargement/résumé du tableau, le **filtrage
+/// client-side sans ré-interroger le service**, le tri, l'export et l'édition des positions. Les **vues
+/// mémorisées** ne sont plus ici (composant partagé `GestionnaireVues`). Service mocké, pas de base ni de
+/// JavaFX UI.
 @ExtendWith(MockitoExtension.class)
 class MultisiteViewModelTest {
 
@@ -80,18 +78,18 @@ class MultisiteViewModelTest {
 
     @Test
     @DisplayName("#152 : filtrer ne recalcule PAS l'agrégat carte (coût évité)")
-    void rafraichir_ne_touche_pas_la_carte() {
+    void filtrer_ne_touche_pas_la_carte() {
         when(service.listerPassages(ID)).thenReturn(List.of());
         MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
 
         vm.rafraichir();
-        vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE); // re-filtre en mémoire
+        vm.filtres().definir("statut", ligne -> ligne.statut() == StatutWorkflow.DEPOSE); // re-filtre en mémoire
 
         verify(service, never()).agregerPourCarte(any());
     }
 
     @Test
-    @DisplayName("#537 : changer un filtre filtre EN MÉMOIRE, sans ré-interroger le service")
+    @DisplayName("#537 : un prédicat posé sur le socle filtre EN MÉMOIRE, sans ré-interroger le service")
     void filtre_filtre_en_memoire() {
         when(service.listerPassages(ID))
                 .thenReturn(List.of(
@@ -101,7 +99,7 @@ class MultisiteViewModelTest {
         vm.rafraichir();
         assertThat(vm.lignes()).hasSize(2);
 
-        vm.filtreStatutProperty().set(StatutWorkflow.VERIFIE);
+        vm.filtres().definir("statut", ligne -> ligne.statut() == StatutWorkflow.VERIFIE);
 
         assertThat(vm.lignes()).extracting(LignePassage::statut).containsExactly(StatutWorkflow.VERIFIE);
         verify(service, times(1)).listerPassages(ID); // chargé une fois, pas de ré-requête au filtrage
@@ -119,41 +117,6 @@ class MultisiteViewModelTest {
 
         assertThat(vm.lignes()).extracting(LignePassage::annee).containsExactly(2024, 2026);
         verify(service, times(1)).listerPassages(ID);
-    }
-
-    @Test
-    @DisplayName("Un numéro de carré vide ou en blanc n'applique aucun filtre")
-    void numero_carre_blanc_pas_de_filtre() {
-        when(service.listerPassages(ID))
-                .thenReturn(List.of(ligne("640380", "A1", 2026, 1), ligne("640381", "B2", 2026, 2)));
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-        vm.rafraichir();
-
-        vm.filtreNumeroCarreProperty().set("640380");
-        assertThat(vm.lignes()).extracting(LignePassage::numeroCarre).containsExactly("640380");
-
-        vm.filtreNumeroCarreProperty().set("   "); // blanc → aucun filtre
-        assertThat(vm.lignes()).hasSize(2);
-    }
-
-    @Test
-    @DisplayName("reinitialiserFiltres remet tous les critères à zéro et réaffiche tout")
-    void reinitialiser_remet_a_zero() {
-        when(service.listerPassages(ID))
-                .thenReturn(List.of(
-                        ligne("640380", "A1", 2026, 1, StatutWorkflow.DEPOSE),
-                        ligne("640381", "B2", 2026, 2, StatutWorkflow.VERIFIE)));
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-        vm.rafraichir();
-        vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE);
-        vm.filtreNumeroCarreProperty().set("640380");
-        assertThat(vm.lignes()).hasSize(1);
-
-        vm.reinitialiserFiltres();
-
-        assertThat(vm.filtreStatutProperty().get()).isNull();
-        assertThat(vm.filtreNumeroCarreProperty().get()).isEmpty();
-        assertThat(vm.lignes()).hasSize(2);
     }
 
     @Test
@@ -181,76 +144,6 @@ class MultisiteViewModelTest {
 
         assertThat(ok).isTrue();
         verify(service).exporterCsvVers(eq(Path.of("/tmp/vue.csv")), eq(ordreAffiche));
-    }
-
-    @Test
-    @DisplayName("enregistrerVue enregistre la combinaison courante et recharge la liste des vues")
-    void enregistrer_vue() {
-        when(service.listerVues()).thenReturn(List.of(new SavedView(1L, "Déposés 2026", "{}")));
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-        vm.filtreStatutProperty().set(StatutWorkflow.DEPOSE);
-
-        boolean ok = vm.enregistrerVue("Déposés 2026");
-
-        assertThat(ok).isTrue();
-        ArgumentCaptor<FiltresMultisite> capteur = ArgumentCaptor.forClass(FiltresMultisite.class);
-        verify(service).enregistrerVue(eq("Déposés 2026"), capteur.capture());
-        assertThat(capteur.getValue().statut()).isEqualTo(StatutWorkflow.DEPOSE);
-        assertThat(vm.vues()).hasSize(1);
-    }
-
-    @Test
-    @DisplayName("enregistrerVue refuse un nom vide")
-    void enregistrer_vue_refuse_nom_vide() {
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-
-        assertThat(vm.enregistrerVue("   ")).isFalse();
-        assertThat(vm.messageProperty().get()).contains("nom");
-    }
-
-    @Test
-    @DisplayName("appliquerVue rejoue les filtres de la vue (re-filtrage en mémoire, sans ré-requête)")
-    void appliquer_vue() {
-        when(service.listerPassages(ID))
-                .thenReturn(List.of(
-                        ligne("640380", "A1", 2026, 1, StatutWorkflow.VERIFIE),
-                        ligne("640381", "B2", 2025, 2, StatutWorkflow.DEPOSE)));
-        when(service.chargerVue(5L)).thenReturn(new FiltresMultisite("640380", StatutWorkflow.VERIFIE, null, 2026));
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-        vm.rafraichir();
-
-        boolean ok = vm.appliquerVue(new SavedView(5L, "Ma vue", "{}"));
-
-        assertThat(ok).isTrue();
-        assertThat(vm.filtreNumeroCarreProperty().get()).isEqualTo("640380");
-        assertThat(vm.filtreStatutProperty().get()).isEqualTo(StatutWorkflow.VERIFIE);
-        assertThat(vm.filtreAnneeProperty().get()).isEqualTo(2026);
-        assertThat(vm.lignes()).extracting(LignePassage::numeroCarre).containsExactly("640380");
-        verify(service, times(1)).listerPassages(ID); // aucune ré-requête : re-filtrage en mémoire
-    }
-
-    @Test
-    @DisplayName("mettreAJourVue met à jour la vue avec la combinaison courante")
-    void mettre_a_jour_vue() {
-        when(service.listerVues()).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-
-        boolean ok = vm.mettreAJourVue(new SavedView(8L, "Ancien", "{}"), "Nouveau");
-
-        assertThat(ok).isTrue();
-        verify(service).mettreAJourVue(eq(8L), eq("Nouveau"), any(FiltresMultisite.class));
-    }
-
-    @Test
-    @DisplayName("supprimerVue supprime la vue et recharge la liste")
-    void supprimer_vue() {
-        when(service.listerVues()).thenReturn(List.of());
-        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
-
-        boolean ok = vm.supprimerVue(new SavedView(3L, "X", "{}"));
-
-        assertThat(ok).isTrue();
-        verify(service).supprimerVue(3L);
     }
 
     // --- Édition des positions (#154) ---

@@ -3,8 +3,10 @@ package fr.univ_amu.iut.commun.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -45,6 +47,15 @@ public class CommunModule extends AbstractModule {
     @Singleton
     SourceDeDonnees fournirSourceDeDonnees(Workspace workspace) {
         return new SourceDeDonnees(workspace);
+    }
+
+    /// Dépôt des **vues mémorisées** (#623), partagé par toutes les vues tabulaires (multisite, puis
+    /// audio / analyse) : le composant d'onglets `commun.view.GestionnaireVues` y passe (via l'interface
+    /// [DepotVues]) plutôt que par le DAO concret. Bindé au socle pour éviter une liaison par feature.
+    @Provides
+    @Singleton
+    DepotVues fournirDepotVues(SourceDeDonnees source) {
+        return new VueSauvegardeeDao(source);
     }
 
     /// Horloge applicative : l'horloge système en production. Transverse (les règles de dates R3/R4

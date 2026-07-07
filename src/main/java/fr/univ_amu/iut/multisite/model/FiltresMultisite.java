@@ -8,10 +8,10 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// renseignés se combinent en ET logique (le passage doit satisfaire **tous** les critères
 /// présents).
 ///
-/// C'est aussi ce que mémorise une vue sauvegardée (« ⭐ Mes vues », story E5.S3) :
-/// [ServiceMultisite#enregistrerVue(String, FiltresMultisite)] le sérialise en JSON
-/// ([FiltresMultisiteJson]) dans la colonne `saved_view.filters_json`, et
-/// [ServiceMultisite#chargerVue(Long)] le reconstruit.
+/// Reste la **sémantique de filtrage** de la feature : les prédicats de la barre à puces
+/// (`CriteresMultisite`) et la vue « saison » du service ([ServiceMultisite#listerPassagesDeLaSaison(String)])
+/// réutilisent [#accepte(LignePassage)]. Les vues mémorisées ne s'appuient plus dessus (#537 étape 6b) :
+/// elles passent par le descripteur générique (`commun.view.DescripteurFiltre`).
 ///
 /// @param numeroCarre n° de carré du site à conserver, ou `null` pour tous les sites
 /// @param statut statut de workflow à conserver, ou `null` pour tous les statuts

@@ -14,11 +14,7 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.multisite.di.MultisiteModule;
-import fr.univ_amu.iut.multisite.model.FiltresMultisite;
-import fr.univ_amu.iut.multisite.model.ServiceMultisite;
-import fr.univ_amu.iut.multisite.view.ModaleVuesController;
 import fr.univ_amu.iut.multisite.view.MultisiteController;
-import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -39,8 +35,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -52,14 +47,12 @@ import javafx.scene.control.ToggleButton;
 ///   et verdicts variés), barre de filtres et de tri, export ;
 /// - `apercu-multisite-filtre.png` : le tableau **filtré** par verdict, résumé recalculé ;
 /// - `apercu-multisite-edition.png` : le **mode édition des positions** (#154) — le toggle « ✎ »
-///   superposé à la carte est actif (ambré), le bouton « Enregistrer les positions » apparaît ;
-/// - `apercu-multisite-vues.png` : la **modale des vues sauvegardées** (deux vues seedées, la
-///   première sélectionnée → son nom pré-rempli).
+///   superposé à la carte est actif (ambré), le bouton « Enregistrer les positions » apparaît.
 ///
 /// On seede une base SQLite temporaire via les **DAO réels** (la feature `multisite` dépend déjà de
-/// `sites` et `passage`, dépendance autorisée) : utilisateur, deux sites/points et cinq passages,
-/// plus deux vues sauvegardées via [ServiceMultisite]. L'utilisateur seedé devient l'utilisateur
-/// courant (premier en base), donc le tableau liste ses passages. Les vues sont chargées via une
+/// `sites` et `passage`, dépendance autorisée) : utilisateur, deux sites/points et cinq passages.
+/// L'utilisateur seedé devient l'utilisateur courant (premier en base), donc le tableau liste ses
+/// passages. Les vues sont chargées via une
 /// `controllerFactory` Guice (socle + sites + passage + multisite) et rendues hors-écran par
 /// [ApercuFx].
 ///
@@ -111,7 +104,6 @@ public final class CaptureMultisite {
         rendreEcranFiltre(injecteur, sortie.resolve("apercu-multisite-filtre.png"));
         rendreEcranEdition(injecteur, sortie.resolve("apercu-multisite-edition.png"));
         rendreEcranCartePleine(injecteur, sortie.resolve("apercu-multisite-carte-pleine.png"));
-        rendreModale(injecteur, sortie.resolve("apercu-multisite-vues.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -126,15 +118,15 @@ public final class CaptureMultisite {
                 new ModuleCaptureNavigationAudio());
     }
 
-    /// Rend le tableau **filtré** par verdict « OK » (sélection dans le ComboBox de filtre), pour
-    /// montrer la restriction du tableau et le résumé recalculé.
+    /// Rend le tableau **filtré** via la recherche de la barre à puces (#537 étape 6b), pour montrer la
+    /// restriction du tableau et le résumé recalculé.
     private static void rendreEcranFiltre(Injector injecteur, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource(FXML));
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
-        // Items du filtre verdict : [Tous(null), A_VERIFIER, OK, DOUTEUX, A_JETER] → index 2 = OK.
-        if (vue.lookup("#choixVerdict") instanceof ComboBox<?> choixVerdict) {
-            choixVerdict.getSelectionModel().select(2);
+        // Recherche sur un carré : le tableau ne montre plus que ses passages (le résumé se recalcule).
+        if (vue.lookup("#champRecherche") instanceof TextField recherche) {
+            recherche.setText("640380");
         }
         // Même fond de carte OSM que la capture principale (la carte n'est pas filtrée).
         capturerCarte(new Scene(vue, 1100, 620), fichier);
@@ -214,22 +206,6 @@ public final class CaptureMultisite {
         Platform.enterNestedEventLoop(cle);
     }
 
-    /// Charge `ModaleVues.fxml`, la branche sur un ViewModel (qui charge les vues seedées),
-    /// sélectionne la première vue (nom pré-rempli) puis rend la modale.
-    private static void rendreModale(Injector injecteur, Path fichier) throws IOException {
-        MultisiteViewModel viewModel = injecteur.getInstance(MultisiteViewModel.class);
-        FXMLLoader loader = new FXMLLoader(ModaleVuesController.class.getResource("ModaleVues.fxml"));
-        loader.setControllerFactory(injecteur::getInstance);
-        Parent vue = loader.load();
-        ModaleVuesController controleur = loader.getController();
-        controleur.demarrer(viewModel);
-        if (vue.lookup("#listeVues") instanceof ListView<?> liste
-                && !liste.getItems().isEmpty()) {
-            liste.getSelectionModel().select(0);
-        }
-        ecrire(new Scene(vue, 440, 440), fichier);
-    }
-
     /// Rend `scene` hors-écran en PNG et journalise (helper factorisé).
     private static void ecrire(Scene scene, Path fichier) {
         ApercuFx.enregistrerPng(scene, fichier);
@@ -248,8 +224,8 @@ public final class CaptureMultisite {
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// Seede l'utilisateur courant, deux sites avec un point chacun, cinq passages aux statuts et
-    /// verdicts variés, et deux vues sauvegardées.
+    /// Seede l'utilisateur courant, deux sites avec un point chacun, et cinq passages aux statuts et
+    /// verdicts variés.
     private static void seeder(Injector injecteur, SourceDeDonnees source) {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
@@ -273,10 +249,6 @@ public final class CaptureMultisite {
         passage(passageDao, 3, 2025, "2025-07-19", StatutWorkflow.TRANSFORME, Verdict.A_VERIFIER, pointA);
         passage(passageDao, 1, 2026, "2026-06-15", StatutWorkflow.PRET_A_DEPOSER, Verdict.OK, pointB);
         passage(passageDao, 2, 2026, "2026-06-29", StatutWorkflow.IMPORTE, Verdict.A_VERIFIER, pointB);
-
-        ServiceMultisite service = injecteur.getInstance(ServiceMultisite.class);
-        service.enregistrerVue("Déposés 2026", new FiltresMultisite(null, StatutWorkflow.DEPOSE, null, 2026));
-        service.enregistrerVue("À revérifier", new FiltresMultisite(null, null, Verdict.DOUTEUX, null));
     }
 
     private static void passage(
