@@ -38,7 +38,8 @@ import picocli.CommandLine.Spec;
             Qualifier.class,
             ExporterLot.class,
             Deposer.class,
-            ExporterVu.class
+            ExporterVu.class,
+            ExporterObservations.class
         })
 public final class CommandeRacine implements Runnable {
 
