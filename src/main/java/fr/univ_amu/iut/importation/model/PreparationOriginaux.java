@@ -33,20 +33,20 @@ final class PreparationOriginaux {
     /// lecture directe de la source avec nom R6 calculé (aucun `bruts/`).
     List<SourceOriginal> preparer(
             boolean conserverOriginaux,
-            RapportInspection rapport,
+            List<Path> originaux,
             Path dossierBruts,
             Prefixe prefixe,
             int totalEtapes,
             Consumer<Progression> progres,
             JetonAnnulation jeton) {
         if (!conserverOriginaux) {
-            return rapport.originaux().stream()
+            return originaux.stream()
                     .map(source -> new SourceOriginal(
                             source,
                             Renommeur.nomApresRenommage(source.getFileName().toString(), prefixe)))
                     .toList();
         }
-        copierOriginaux(rapport.originaux(), dossierBruts, prefixe, totalEtapes, progres, jeton);
+        copierOriginaux(originaux, dossierBruts, prefixe, totalEtapes, progres, jeton);
         return renommeur.renommer(dossierBruts, prefixe).stream()
                 .map(chemin -> new SourceOriginal(chemin, chemin.getFileName().toString()))
                 .toList();

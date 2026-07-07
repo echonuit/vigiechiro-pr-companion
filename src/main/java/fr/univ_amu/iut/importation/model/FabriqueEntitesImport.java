@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.passage.model.Micro;
 import fr.univ_amu.iut.passage.model.Passage;
+import java.time.LocalDate;
 import java.util.Objects;
 
 /// Construit les entités d'agrégat d'un import (passage, micro) à partir du journal parsé. Extrait de
@@ -25,12 +26,18 @@ final class FabriqueEntitesImport {
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
-    /// Passage au statut [StatutWorkflow#TRANSFORME] (état final d'un import complet). Date/heures issues
-    /// du journal, avec repli (date du jour, heures `00:00:00`) si le journal ne les renseigne pas.
+    /// Passage au statut [StatutWorkflow#TRANSFORME] (état final d'un import complet), daté du journal.
     Passage passage(JournalParse journal, Long idPoint, Prefixe prefixe) {
-        String date = journal.dateDebut() != null
-                ? journal.dateDebut().toString()
-                : horloge.aujourdhui().toString();
+        return passage(journal, idPoint, prefixe, journal.dateDebut());
+    }
+
+    /// Variante **datée par nuit** : lors d'un import découpé en plusieurs nuits, le journal unique ne
+    /// décrit que la première nuit ; chaque passage porte donc la **date propre de sa nuit** (issue des
+    /// noms de fichiers). Repli sur la date du jour si `dateNuit` est `null`. Heures d'acquisition et
+    /// paramètres restent ceux du journal (fenêtre commune à toutes les nuits).
+    Passage passage(JournalParse journal, Long idPoint, Prefixe prefixe, LocalDate dateNuit) {
+        String date =
+                dateNuit != null ? dateNuit.toString() : horloge.aujourdhui().toString();
         String heureDebut = journal.heureDebut() != null ? journal.heureDebut() : HEURE_INCONNUE;
         String heureFin = journal.heureFin() != null ? journal.heureFin() : HEURE_INCONNUE;
         return new Passage(

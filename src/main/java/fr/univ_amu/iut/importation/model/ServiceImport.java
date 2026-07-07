@@ -8,17 +8,6 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
-import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
-import fr.univ_amu.iut.passage.model.Enregistreur;
-import fr.univ_amu.iut.passage.model.JournalDuCapteur;
-import fr.univ_amu.iut.passage.model.Micro;
-import fr.univ_amu.iut.passage.model.Passage;
-import fr.univ_amu.iut.passage.model.ReleveClimatique;
-import fr.univ_amu.iut.passage.model.SequenceDEcoute;
-import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -67,15 +56,14 @@ public class ServiceImport {
     private static final int PARALLELISME_DECOUPAGE = Runtime.getRuntime().availableProcessors();
 
     private final InspecteurDossier inspecteur;
-    private final CopieProtegee copie;
-    private final PreparationOriginaux preparation;
-    private final DecoupageParallele decoupage;
     private final AgregatImportDao agregatDao;
-    private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
-    private final FabriqueEntitesImport fabriqueEntites;
     private final CompteurValidations compteurValidations;
     private final ServiceSauvegarde serviceSauvegarde;
+
+    /// Cœur d'exécution (copie/transformation/persistance par nuit), extrait pour garder le service en
+    /// façade (verrou, inspection, requêtes). Partagé par l'import mono-nuit et multi-nuits.
+    private final MoteurImport moteur;
 
     /// Verrou anti-import-concurrent (#54) : le service étant un **singleton** partagé, il refuse un
     /// second import tant qu'un autre tourne. Filet « pire cas » indépendant de l'IHM (deux
@@ -94,15 +82,15 @@ public class ServiceImport {
             CompteurValidations compteurValidations,
             ServiceSauvegarde serviceSauvegarde) {
         this.inspecteur = Objects.requireNonNull(inspecteur, "inspecteur");
-        this.copie = Objects.requireNonNull(copie, "copie");
-        this.preparation = new PreparationOriginaux(copie, renommeur);
-        this.decoupage = new DecoupageParallele(transformation, PARALLELISME_DECOUPAGE);
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
-        this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
-        this.fabriqueEntites = new FabriqueEntitesImport(horloge);
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
         this.serviceSauvegarde = Objects.requireNonNull(serviceSauvegarde, "serviceSauvegarde");
+        PreparationOriginaux preparation = new PreparationOriginaux(copie, renommeur);
+        DecoupageParallele decoupage = new DecoupageParallele(transformation, PARALLELISME_DECOUPAGE);
+        FabriqueEntitesImport fabriqueEntites = new FabriqueEntitesImport(horloge);
+        this.moteur =
+                new MoteurImport(copie, preparation, decoupage, fabriqueEntites, agregatDao, uniteDeTravail, workspace);
     }
 
     /// Inspecte (lecture seule) le dossier SD sans rien importer : utile pour prévisualiser le
@@ -161,11 +149,8 @@ public class ServiceImport {
             Consumer<Progression> progres,
             JetonAnnulation jeton,
             boolean conserverOriginaux) {
-        Objects.requireNonNull(dossierSource, "dossierSource");
-        Objects.requireNonNull(idPoint, "idPoint");
+        exigerParametresCommuns(dossierSource, idPoint, progres, jeton);
         Objects.requireNonNull(prefixe, "prefixe");
-        Objects.requireNonNull(progres, "progres");
-        Objects.requireNonNull(jeton, "jeton");
 
         return sousVerrouImport(dossierSource, idPoint, prefixe, progres, jeton, false, conserverOriginaux);
     }
@@ -266,13 +251,56 @@ public class ServiceImport {
             Consumer<Progression> progres,
             JetonAnnulation jeton,
             boolean conserverOriginaux) {
-        Objects.requireNonNull(dossierSource, "dossierSource");
-        Objects.requireNonNull(idPoint, "idPoint");
+        exigerParametresCommuns(dossierSource, idPoint, progres, jeton);
         Objects.requireNonNull(prefixe, "prefixe");
-        Objects.requireNonNull(progres, "progres");
-        Objects.requireNonNull(jeton, "jeton");
         serviceSauvegarde.sauvegarder(serviceSauvegarde.dossierParDefaut());
         return sousVerrouImport(dossierSource, idPoint, prefixe, progres, jeton, true, conserverOriginaux);
+    }
+
+    /// Importe **plusieurs nuits** d'une même carte SD en **un passage par nuit** (même point, n° de
+    /// passage propres portés par chaque [NuitAImporter], date propre à la nuit), sous **un seul** verrou
+    /// anti-concurrent (#54). Chemin cible quand un enregistreur a tourné plusieurs nuits d'affilée : une
+    /// **unique inspection** de la carte, puis une transformation + persistance atomique (O7) **par nuit**.
+    ///
+    /// **Échec rapide (R5)** : tous les n° de passage sont vérifiés **libres avant** la première copie ;
+    /// aucun demi-groupe n'est amorcé si l'un est déjà pris. **Atomicité par nuit** : chaque nuit est une
+    /// transaction distincte, donc si la nuit *i* échoue, les nuits *0..i-1* déjà importées demeurent.
+    /// La progression (#33) est agrégée sur l'ensemble (« Nuit i/N · … »), l'annulation (#146) est
+    /// vérifiée entre deux nuits.
+    ///
+    /// @param prefixeBase gabarit de [Prefixe] (carré/année/codePoint communs) ; le n° de passage de
+    ///     chaque nuit provient de la [NuitAImporter] correspondante
+    /// @param nuits nuits à importer (≥ 1), dans l'ordre où les passages seront créés
+    public ResultatImportMultiNuits importerNuits(
+            Path dossierSource,
+            Long idPoint,
+            Prefixe prefixeBase,
+            List<NuitAImporter> nuits,
+            boolean conserverOriginaux,
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
+        exigerParametresCommuns(dossierSource, idPoint, progres, jeton);
+        Objects.requireNonNull(prefixeBase, "prefixeBase");
+        Objects.requireNonNull(nuits, "nuits");
+        if (nuits.isEmpty()) {
+            throw new RegleMetierException("Aucune nuit à importer : cochez au moins une nuit.");
+        }
+        if (!importEnCours.compareAndSet(false, true)) {
+            throw new RegleMetierException("Un import est déjà en cours : attendez sa fin avant d'en lancer un autre.");
+        }
+        try {
+            // Inspection **unique** de la carte, partagée par toutes les nuits (portée par le contexte) ;
+            // le découpage réel « une nuit = un passage » est exécuté par le moteur.
+            RapportInspection rapport = inspecteur.inspecter(dossierSource);
+            boolean sansJournal = rapport.journalOptionnel().isEmpty();
+            JournalParse journal =
+                    rapport.journalOptionnel().orElseGet(() -> JournalDeRepli.depuis(rapport.originaux()));
+            ContexteImport ctx = new ContexteImport(
+                    rapport, journal, sansJournal, dossierSource, idPoint, conserverOriginaux, false, jeton);
+            return moteur.importerNuits(ctx, prefixeBase, nuits, progres);
+        } finally {
+            importEnCours.set(false);
+        }
     }
 
     /// Corps de l'import (inspection, copie protégée R9, renommage R6/R7, transformation R10/R11,
@@ -309,213 +337,20 @@ public class ServiceImport {
         boolean sansJournal = rapport.journalOptionnel().isEmpty();
         JournalParse journal = rapport.journalOptionnel().orElseGet(() -> JournalDeRepli.depuis(rapport.originaux()));
 
-        String nomSession = prefixe.nomDossierSession();
-        Path dossierSession = workspace.dossierSession(nomSession);
-        Path dossierBruts = workspace.dossierBruts(nomSession);
-        Path dossierTransformes = workspace.dossierTransformes(nomSession);
-
-        // Progression déterminée (#33) : N transformations, précédées de N copies UNIQUEMENT quand on
-        // conserve les originaux (mode sans copie → pas de phase de copie, la source est lue en place).
-        int nbOriginaux = rapport.originaux().size();
-        int totalEtapes = (conserverOriginaux ? nbOriginaux : 0) + nbOriginaux;
-
-        // Annulation (#146) : la copie et la transformation se font dans un dossier de session neuf ;
-        // une annulation lève AnnulationImportException et on supprime la session partielle. Comme la
-        // persistance est atomique en fin de course (O7), aucun passage n'est créé → pas de demi-état.
-        List<SourceOriginal> sources;
-        long volumeOriginaux;
-        List<ResultatDecoupage> resultatsDecoupage;
-        Path cheminJournalCopie;
-        Path cheminReleveCopie;
-        try {
-            // 1-2) Originaux à transformer : copie protégée + renommage R6 (mode conservation) OU lecture
-            //      directe de la source avec nom R6 calculé (mode sans copie). Cf. PreparationOriginaux.
-            sources = preparation.preparer(
-                    conserverOriginaux, rapport, dossierBruts, prefixe, totalEtapes, progres, jeton);
-            volumeOriginaux =
-                    volumeTotal(sources.stream().map(SourceOriginal::chemin).toList());
-
-            // Journal + relevé à la racine de la session, indépendamment du choix de conservation (petits
-            // fichiers nécessaires à l'aval) ; cette écriture crée aussi le dossier de session en mode
-            // sans copie (où aucun bruts/ n'est produit).
-            cheminJournalCopie = sansJournal
-                    ? JournalDeRepli.ecrireTraceSynthetique(dossierSession)
-                    : copie.copierVers(rapport.cheminJournal(), dossierSession);
-            cheminReleveCopie = rapport.aUnReleveClimatique()
-                    ? copie.copierVers(rapport.cheminReleveClimatique(), dossierSession)
-                    : null;
-
-            // 3) Transformation R10/R11 (découpée en parallèle, #12, résiliente #155 : un original invalide
-            //    est rejeté et consigné, pas bloquant).
-            // Garde-fou double expansion (#…) : la fréquence d'acquisition du log (Fe…kHz) fait foi pour
-            // rejeter une source déjà ralentie ; null en mode dégradé (pas de journal → seuil absolu).
-            resultatsDecoupage = decoupage.decouper(
-                    sources,
-                    dossierTransformes,
-                    prefixe,
-                    journal.frequenceEchantillonnageHz(),
-                    nbOriginaux,
-                    totalEtapes,
-                    progres,
-                    jeton);
-            // Re-vérification après la phase de transformation : une annulation pendant la DERNIÈRE
-            // transformation (postérieure à son propre point de contrôle) doit aussi stopper l'import.
-            jeton.leverSiAnnule();
-        } catch (RuntimeException echec) {
-            // Annulation (#146) OU erreur fatale (p. ex. écriture workspace impossible, #155) : on nettoie
-            // la session partielle et on remonte — pas de demi-état sur disque ni de passage persisté.
-            supprimerSessionPartielle(dossierSession);
-            throw echec;
-        }
-
-        // Dimension doublon (#214/#147) : passages déjà en base pour cette nuit (même série + date) AVANT
-        // cet import (vide en écrasement : c'est un remplacement, pas un doublon). Décision déléguée au DAO,
-        // qui possède déjà les lectures de nuit, pour garder l'orchestrateur cohésif. Date null-safe via
-        // String.valueOf (→ "null", sans correspondance).
-        List<PassageExistant> doublonsNuit = agregatDao.doublonsDeNuitPourRapport(
-                ecraser, journal.numeroSerie(), String.valueOf(journal.dateDebut()));
-
-        // Bilan d'import résilient (#155) : tri transformés / rejetés + rapport, délégué à la fabrique.
-        RapportImportFabrique.BilanImport bilan =
-                RapportImportFabrique.bilan(dossierSource, rapport, resultatsDecoupage, doublonsNuit);
-        List<TransformationOriginal> transformations = bilan.transformations();
-        if (transformations.isEmpty()) {
-            supprimerSessionPartielle(dossierSession);
-            throw new RegleMetierException("Aucun enregistrement original n'a pu être importé : "
-                    + bilan.rejets().size()
-                    + " fichier(s) rejeté(s) (ex. « "
-                    + (bilan.rejets().isEmpty() ? "" : bilan.rejets().get(0).erreur())
-                    + " »).");
-        }
-        RapportImport rapportImport = bilan.rapport();
-
-        // 4) Construction des entités de l'agrégat.
-        Enregistreur enregistreur = new Enregistreur(journal.numeroSerie(), journal.versionModele(), null);
-        Micro micro = fabriqueEntites.micro(journal);
-        Passage passage = fabriqueEntites.passage(journal, idPoint, prefixe);
-        long volumeSequences = transformations.stream()
-                .flatMap(t -> t.sequences().stream())
-                .mapToLong(SequenceProduite::octets)
-                .sum();
-        SessionDEnregistrement session =
-                new SessionDEnregistrement(null, dossierSession.toString(), volumeOriginaux, volumeSequences, null);
-        // Entité journal **uniforme** : en mode dégradé, le journal de repli porte déjà des évènements
-        // vides et l'anomalie « import dégradé », donc on construit la trace de la même façon (#107).
-        JournalDuCapteur journalEntite = new JournalDuCapteur(
-                null, cheminJournalCopie.toString(), journal.evenementsJson(), journal.anomaliesJson(), null);
-        ReleveClimatique releveEntite =
-                cheminReleveCopie == null ? null : new ReleveClimatique(null, cheminReleveCopie.toString(), null, null);
-
-        // Dernière fenêtre d'annulation : juste avant le point de non-retour (la persistance). Au-delà,
-        // le passage est créé. Cette vérification nettoie elle-même la session (hors du bloc try/catch).
-        verifierAnnulation(jeton, dossierSession);
-
-        // 5) Persistance atomique de l'agrégat (O7 : tout ou rien).
-        long[] ids = new long[2]; // [idPassage, idSession]
-        uniteDeTravail.executer(cx -> {
-            // Écrasement (#214) : on supprime l'ancien passage au quadruplet DANS la même transaction que
-            // l'insertion du nouveau, donc tout-ou-rien (ON DELETE CASCADE pour session/originaux/séquences).
-            if (ecraser) {
-                agregatDao.supprimerPassageAuQuadruplet(cx, idPoint, prefixe.annee(), prefixe.numeroPassage());
-            }
-            agregatDao.upsertEnregistreur(cx, enregistreur);
-            if (micro != null) {
-                agregatDao.insererMicroSiAbsent(cx, micro);
-            }
-            ids[0] = agregatDao.insererPassage(cx, passage);
-            ids[1] = agregatDao.insererSession(cx, ids[0], session);
-            agregatDao.insererJournal(cx, ids[1], journalEntite);
-            if (releveEntite != null) {
-                agregatDao.insererReleve(cx, ids[1], releveEntite);
-            }
-            for (TransformationOriginal t : transformations) {
-                EnregistrementOriginal original = new EnregistrementOriginal(
-                        null,
-                        t.nomOriginal(),
-                        t.cheminOriginal().toString(),
-                        t.dureeSourceSecondes(),
-                        t.frequenceSourceHz(),
-                        t.sha256(),
-                        null);
-                long idOriginal = agregatDao.insererOriginal(cx, ids[1], original);
-                for (SequenceProduite sp : t.sequences()) {
-                    // #530 : l'heure réelle de la tranche est encodée dans son nom (_AAAAMMJJ_HHMMSS_000),
-                    // extraite ici pour être persistée (recorded_at) et servir le tri / filtre par heure.
-                    SequenceDEcoute sequence = new SequenceDEcoute(
-                            null,
-                            sp.nomFichier(),
-                            null,
-                            sp.index(),
-                            sp.offsetSourceSecondes(),
-                            sp.dureeSecondes(),
-                            sp.chemin().toString(),
-                            false,
-                            null,
-                            Prefixe.horodatageDe(sp.nomFichier()).orElse(null));
-                    agregatDao.insererSequence(cx, ids[1], idOriginal, sequence);
-                }
-            }
-        });
-
-        Passage passagePersiste = avecId(passage, ids[0]);
-        SessionDEnregistrement sessionPersistee =
-                new SessionDEnregistrement(ids[1], session.cheminRacine(), volumeOriginaux, volumeSequences, ids[0]);
-        int nombreSequences =
-                transformations.stream().mapToInt(t -> t.sequences().size()).sum();
-        return new ResultatImport(
-                passagePersiste,
-                sessionPersistee,
-                journal.numeroSerie(),
-                transformations.size(),
-                nombreSequences,
-                journal.anomalies(),
-                rapportImport);
+        // Import mono-nuit historique : une seule nuit = tous les originaux, datée du journal.
+        ContexteImport ctx = new ContexteImport(
+                rapport, journal, sansJournal, dossierSource, idPoint, conserverOriginaux, ecraser, jeton);
+        return moteur.importerUneNuit(ctx, prefixe, rapport.originaux(), journal.dateDebut(), progres);
     }
 
-    /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)
-    /// laissée par un import **annulé** (#146), pour ne pas accumuler des fichiers à moitié copiés.
-    /// Best-effort (cf. [ExtracteurZip#supprimerRecursivement]).
-    private static void supprimerSessionPartielle(Path dossierSession) {
-        ExtracteurZip.supprimerRecursivement(dossierSession);
-    }
-
-    /// Vérifie l'annulation **hors du bloc try/catch de nettoyage** (#146) : si annulé, supprime la
-    /// session partielle puis lève [AnnulationImportException]. Utilisé juste avant la persistance, où le
-    /// `catch` couvrant la copie/transformation ne s'applique plus.
-    private static void verifierAnnulation(JetonAnnulation jeton, Path dossierSession) {
-        if (jeton.estAnnule()) {
-            supprimerSessionPartielle(dossierSession);
-            throw new AnnulationImportException();
-        }
-    }
-
-    private static Passage avecId(Passage p, long id) {
-        return new Passage(
-                id,
-                p.numeroPassage(),
-                p.annee(),
-                p.dateEnregistrement(),
-                p.heureDebut(),
-                p.heureFin(),
-                p.parametresAcquisition(),
-                p.statutWorkflow(),
-                p.verdictVerification(),
-                p.commentaire(),
-                p.donneesMeteo(),
-                p.deposeLe(),
-                p.idPoint(),
-                p.idEnregistreur());
-    }
-
-    private static long volumeTotal(List<Path> fichiers) {
-        long total = 0;
-        try {
-            for (Path fichier : fichiers) {
-                total += Files.size(fichier);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException("Calcul du volume des originaux impossible", e);
-        }
-        return total;
+    /// Rejette (NPE) tout paramètre commun manquant d'un import, factorisé pour éviter la duplication : les
+    /// trois points d'entrée ([#importer], [#ecraserEtImporter], [#importerNuits]) partagent ces quatre
+    /// paramètres. Les paramètres spécifiques (préfixe, nuits) sont vérifiés par chaque appelant.
+    private static void exigerParametresCommuns(
+            Path dossierSource, Long idPoint, Consumer<Progression> progres, JetonAnnulation jeton) {
+        Objects.requireNonNull(dossierSource, "dossierSource");
+        Objects.requireNonNull(idPoint, "idPoint");
+        Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(jeton, "jeton");
     }
 }

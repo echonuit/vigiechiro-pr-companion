@@ -22,10 +22,13 @@ import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
+import fr.univ_amu.iut.importation.model.NuitAImporter;
+import fr.univ_amu.iut.importation.model.NuitDetectee;
 import fr.univ_amu.iut.importation.model.Progression;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ResultatImport;
+import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
@@ -758,12 +761,103 @@ class ServiceImportTest {
 
     // --- Helpers (autonomes) ----------------------------------------------------
 
+    @Test
+    @DisplayName("Import multi-nuits : une nuit = un passage (n° consécutifs, dates propres, même point)")
+    void import_multi_nuits_cree_un_passage_par_nuit() throws IOException {
+        Path carte = preparerCarteMultiNuits(racine.resolve("sd-multi"));
+        List<NuitDetectee> nuits =
+                new InspecteurDossier(new AnalyseurLogPR()).inspecter(carte).partitionNuits();
+        assertThat(nuits).hasSize(3);
+
+        int base = service.prochainNumeroPassageLibre(idPoint, 2026); // 1 : aucun passage encore
+        List<NuitAImporter> aImporter = new ArrayList<>();
+        for (int i = 0; i < nuits.size(); i++) {
+            aImporter.add(new NuitAImporter(base + i, nuits.get(i)));
+        }
+
+        ResultatImportMultiNuits resultat = service.importerNuits(
+                carte, idPoint, prefixe, aImporter, true, progression -> {}, JetonAnnulation.neutre());
+
+        assertThat(resultat.nombrePassages()).isEqualTo(3);
+        // Chaque nuit devient un passage : n° consécutifs 1,2,3 et dates propres croissantes.
+        assertThat(resultat.parNuit())
+                .extracting(r -> r.passage().numeroPassage())
+                .containsExactly(1, 2, 3);
+        assertThat(resultat.parNuit())
+                .extracting(r -> r.passage().dateEnregistrement())
+                .containsExactly("2026-04-22", "2026-04-23", "2026-04-24");
+        // Tous rattachés au même point, persistés (statut Transformé + session en base).
+        assertThat(resultat.parNuit()).allSatisfy(r -> {
+            assertThat(r.passage().id()).isNotNull();
+            assertThat(r.passage().idPoint()).isEqualTo(idPoint);
+            assertThat(r.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+            assertThat(sessionDao.trouverParPassage(r.passage().id())).isPresent();
+        });
+    }
+
+    @Test
+    @DisplayName("Import multi-nuits : un sous-ensemble (exclusion) crée un passage par nuit incluse")
+    void import_multi_nuits_sous_ensemble() throws IOException {
+        Path carte = preparerCarteMultiNuits(racine.resolve("sd-sous-ensemble"));
+        List<NuitDetectee> nuits =
+                new InspecteurDossier(new AnalyseurLogPR()).inspecter(carte).partitionNuits();
+
+        // On exclut la nuit du milieu : seules les nuits 0 et 2 sont importées (n° consécutifs 1,2).
+        List<NuitAImporter> aImporter = List.of(new NuitAImporter(1, nuits.get(0)), new NuitAImporter(2, nuits.get(2)));
+
+        ResultatImportMultiNuits resultat = service.importerNuits(
+                carte, idPoint, prefixe, aImporter, true, progression -> {}, JetonAnnulation.neutre());
+
+        assertThat(resultat.nombrePassages()).isEqualTo(2);
+        assertThat(resultat.parNuit())
+                .extracting(r -> r.passage().dateEnregistrement())
+                .containsExactly("2026-04-22", "2026-04-24");
+    }
+
+    @Test
+    @DisplayName("Import multi-nuits : un n° déjà pris est refusé AVANT tout import (échec rapide, pas de demi-groupe)")
+    void import_multi_nuits_precontrole_numero_pris() throws IOException {
+        Path carte = preparerCarteMultiNuits(racine.resolve("sd-conflit"));
+        List<NuitDetectee> nuits =
+                new InspecteurDossier(new AnalyseurLogPR()).inspecter(carte).partitionNuits();
+
+        // La nuit 0 est déjà importée au passage n°1.
+        service.importerNuits(
+                carte,
+                idPoint,
+                prefixe,
+                List.of(new NuitAImporter(1, nuits.get(0))),
+                true,
+                progression -> {},
+                JetonAnnulation.neutre());
+
+        // On retente avec [1, 2] : le n°1 est pris → refus avant toute copie, le n°2 n'est jamais créé.
+        List<NuitAImporter> conflit = List.of(new NuitAImporter(1, nuits.get(1)), new NuitAImporter(2, nuits.get(2)));
+        assertThatThrownBy(() -> service.importerNuits(
+                        carte, idPoint, prefixe, conflit, true, progression -> {}, JetonAnnulation.neutre()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("passage n°1");
+        assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
+    }
+
     private Path preparerCarteSD(Path dossier) throws IOException {
         Files.createDirectories(dossier);
         Files.writeString(dossier.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(dossier.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_203922.wav"));
         ecrireWav(dossier.resolve("PaRecPR1925492_20260422_204326.wav"));
+        return dossier;
+    }
+
+    /// Carte SD **multi-nuits** : trois soirées distinctes (2 WAV chacune) du même enregistreur, plus le
+    /// journal LogPR de la carte. Chaque soirée (horodatage > midi) forme une nuit distincte.
+    private Path preparerCarteMultiNuits(Path dossier) throws IOException {
+        Files.createDirectories(dossier);
+        Files.writeString(dossier.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        for (String jour : List.of("20260422", "20260423", "20260424")) {
+            ecrireWav(dossier.resolve("PaRecPR1925492_" + jour + "_203922.wav"));
+            ecrireWav(dossier.resolve("PaRecPR1925492_" + jour + "_204326.wav"));
+        }
         return dossier;
     }
 
