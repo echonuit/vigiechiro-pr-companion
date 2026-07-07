@@ -3,20 +3,25 @@ package fr.univ_amu.iut.analyse.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
+import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// [ServiceAnalyse] avec un [ObservationDao] mocké : vérifie que le **filtre de statut** et l'agrégation
-/// **côté client** (#537 étape 4) reproduisent le comportement de l'ancienne agrégation SQL — mêmes
-/// espèces retenues par statut, même richesse par carré — sans base de données.
+/// [ServiceAnalyse] avec [ObservationDao] mocké : le service **fournit** les observations enrichies (le
+/// filtrage et l'agrégation vivent désormais dans le ViewModel, #537) et **exporte** l'inventaire en CSV.
 @ExtendWith(MockitoExtension.class)
 class ServiceAnalyseTest {
 
@@ -25,54 +30,78 @@ class ServiceAnalyseTest {
     @Mock
     private ObservationDao observationDao;
 
-    /// Une observation d'analyse sur le carré 640380, statut donné (le taxon retenu identifie l'espèce).
-    private static ObservationAnalyse obs(String taxon, StatutObservation statut) {
-        return new ObservationAnalyse(taxon, null, taxon, "Chiroptères", statut, 1L, 2026, "640380", "Étang", 10L);
-    }
+    @Test
+    @DisplayName("observationsAnalyse délègue au DAO la lecture des observations enrichies")
+    void observations_analyse_delegue_au_dao() {
+        ObservationAnalyse obs = new ObservationAnalyse(
+                "Pippip",
+                "Pipistrellus",
+                "Pipistrelle commune",
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                1L,
+                2026,
+                "640380",
+                "Étang",
+                10L);
+        when(observationDao.observationsAnalyse(ID)).thenReturn(List.of(obs));
 
-    private ServiceAnalyse serviceAvecTroisStatuts() {
-        when(observationDao.observationsAnalyse(ID))
-                .thenReturn(List.of(
-                        obs("Pippip", StatutObservation.VALIDEE),
-                        obs("Tadten", StatutObservation.CORRIGEE),
-                        obs("Nyclei", StatutObservation.NON_TOUCHEE)));
-        return new ServiceAnalyse(observationDao);
+        assertThat(new ServiceAnalyse(observationDao).observationsAnalyse(ID)).containsExactly(obs);
     }
 
     @Test
-    @DisplayName("inventaire par espèce : le filtre de statut restreint l'inventaire (agrégation client)")
-    void inventaire_par_espece_filtre_statut() {
-        ServiceAnalyse service = serviceAvecTroisStatuts();
+    @DisplayName("observationsDeLEspece délègue au DAO le détail filtré par statut")
+    void observations_de_l_espece_delegue_au_dao() {
+        ObservationEspece detail = new ObservationEspece(
+                1L,
+                1L,
+                1L,
+                1,
+                2026,
+                "2026-06-20",
+                "640380",
+                "A1",
+                "Étang",
+                "Pippip",
+                0.9,
+                "Pippip",
+                0.95,
+                StatutObservation.VALIDEE);
+        when(observationDao.observationsDeLEspece(ID, "Pippip", StatutObservation.VALIDEE))
+                .thenReturn(List.of(detail));
 
-        assertThat(service.inventaireParEspece(ID, null))
-                .extracting(EspeceAgregee::code)
-                .containsExactlyInAnyOrder("Pippip", "Tadten", "Nyclei");
-        assertThat(service.inventaireParEspece(ID, StatutObservation.VALIDEE))
-                .extracting(EspeceAgregee::code)
-                .containsExactly("Pippip");
-        assertThat(service.inventaireParEspece(ID, StatutObservation.CORRIGEE))
-                .extracting(EspeceAgregee::code)
-                .containsExactly("Tadten");
-        assertThat(service.inventaireParEspece(ID, StatutObservation.NON_TOUCHEE))
-                .extracting(EspeceAgregee::code)
-                .containsExactly("Nyclei");
+        assertThat(new ServiceAnalyse(observationDao).observationsDeLEspece(ID, "Pippip", StatutObservation.VALIDEE))
+                .containsExactly(detail);
     }
 
     @Test
-    @DisplayName("inventaire par carré : richesse = espèces distinctes, restreinte par le statut")
-    void inventaire_par_carre_filtre_statut() {
-        ServiceAnalyse service = serviceAvecTroisStatuts();
+    @DisplayName("exporterEspeces écrit un CSV avec en-tête et une ligne par espèce")
+    void exporter_especes_ecrit_le_csv(@TempDir Path dossier) throws IOException {
+        Path cible = dossier.resolve("especes.csv");
+        EspeceAgregee espece = new EspeceAgregee(
+                "Pippip", "Pipistrellus", "Pipistrelle commune", "Chiroptères", 5, 3, 2, 2, 2024, 2026);
 
-        assertThat(service.inventaireParCarre(ID, null)).singleElement().satisfies(carre -> {
-            assertThat(carre.numeroCarre()).isEqualTo("640380");
-            assertThat(carre.richesse()).as("3 espèces distinctes").isEqualTo(3);
-            assertThat(carre.nbObservations()).isEqualTo(3);
-        });
-        assertThat(service.inventaireParCarre(ID, StatutObservation.VALIDEE))
-                .singleElement()
-                .satisfies(carre -> {
-                    assertThat(carre.richesse()).isEqualTo(1);
-                    assertThat(carre.nbObservations()).isEqualTo(1);
-                });
+        new ServiceAnalyse(observationDao).exporterEspeces(cible, List.of(espece));
+
+        String contenu = Files.readString(cible);
+        assertThat(contenu).contains("code").contains("detections"); // en-tête
+        assertThat(contenu)
+                .contains("Pippip")
+                .contains("Pipistrelle commune")
+                .contains("Chiroptères")
+                .contains("5");
+    }
+
+    @Test
+    @DisplayName("exporterCarres écrit un CSV avec en-tête et une ligne par carré")
+    void exporter_carres_ecrit_le_csv(@TempDir Path dossier) throws IOException {
+        Path cible = dossier.resolve("carres.csv");
+        CarreEspeces carre = new CarreEspeces("640380", "Étang", 4, 10, 2025, 2026);
+
+        new ServiceAnalyse(observationDao).exporterCarres(cible, List.of(carre));
+
+        String contenu = Files.readString(cible);
+        assertThat(contenu).contains("carre").contains("richesse"); // en-tête
+        assertThat(contenu).contains("640380").contains("Étang").contains("4").contains("10");
     }
 }

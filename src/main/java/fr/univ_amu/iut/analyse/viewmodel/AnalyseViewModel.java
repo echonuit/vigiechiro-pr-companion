@@ -1,15 +1,19 @@
 package fr.univ_amu.iut.analyse.viewmodel;
 
+import fr.univ_amu.iut.analyse.model.AgregationAnalyse;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
+import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -18,19 +22,28 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 
 /// ViewModel de l'écran transverse **« Espèces & observations »** (feature `analyse`, prisme
 /// biodiversité). Pilote l'**inventaire** des observations de l'utilisateur, regroupé **par espèce** ou
-/// **par carré** ([Regroupement]), filtré par **statut** de revue (`null` = toutes) et par un **texte**
-/// (nom/code d'espèce, ou n°/nom de carré), avec **export CSV**.
+/// **par carré** ([Regroupement]), filtré par **statut** de revue, **taxon parent** (groupe, #518) et un
+/// **texte** (nom/code d'espèce, ou n°/nom de carré), avec **export CSV**.
 ///
-/// Le filtre de statut ré-interroge le service (filtrage SQL) ; le filtre texte s'applique **en mémoire**
-/// sur la liste chargée (pas de requête par frappe). Agnostique de l'IHM (ArchUnit
+/// Filtrage **client-side unifié** (#537) : les observations enrichies sont chargées **une fois**, puis
+/// filtrées par le socle partagé [Filtres] (conjonction de prédicats sur une [FilteredList]) ; à chaque
+/// changement, elles sont **agrégées en mémoire** ([AgregationAnalyse]) vers les tables, le résumé et la
+/// carte. Le regroupement ne change que l'agrégation, pas le filtre. Agnostique de l'IHM (ArchUnit
 /// `viewmodel_sans_javafx_ui`). Non-singleton (un VM frais par chargement d'écran).
 public class AnalyseViewModel {
 
     /// Séparateur des compteurs dans les libellés (résumé, titre du détail).
     private static final String SEPARATEUR = " · ";
+
+    /// Clés des prédicats du socle de filtres (une par critère).
+    private static final String FILTRE_STATUT = "statut";
+
+    private static final String FILTRE_GROUPE = "groupe";
+    private static final String FILTRE_TEXTE = "texte";
 
     private final ServiceAnalyse service;
     private final String idUtilisateur;
@@ -39,13 +52,19 @@ public class AnalyseViewModel {
             new SimpleObjectProperty<>(this, "regroupement", Regroupement.PAR_ESPECE);
     /// Filtre de statut de revue ; `null` = toutes les observations.
     private final ObjectProperty<StatutObservation> filtreStatut = new SimpleObjectProperty<>(this, "filtreStatut");
+    /// Filtre de **taxon parent** (groupe, #518) ; `null` = tous les groupes.
+    private final ObjectProperty<String> filtreGroupe = new SimpleObjectProperty<>(this, "filtreGroupe");
     /// Filtre texte (insensible casse/accents) ; vide = aucun filtre.
     private final StringProperty filtreTexte = new SimpleStringProperty(this, "filtreTexte", "");
 
-    /// Listes **complètes** (réponse du service) avant le filtre texte, conservées pour re-filtrer en
-    /// mémoire sans ré-interroger la base à chaque frappe.
-    private List<EspeceAgregee> especesTous = List.of();
-    private List<CarreEspeces> carresTous = List.of();
+    /// Observations enrichies de l'utilisateur (source complète), filtrées par le socle [#filtres] en une
+    /// [FilteredList] ; agrégées à chaque changement vers les tables et la carte.
+    private final ObservableList<ObservationAnalyse> toutesObservations = FXCollections.observableArrayList();
+    private final FilteredList<ObservationAnalyse> observationsFiltrees = new FilteredList<>(toutesObservations);
+    private final Filtres<ObservationAnalyse> filtres = new Filtres<>(observationsFiltrees, this::agreger);
+
+    /// **Taxons parents** présents dans les observations (source de la liste déroulante du filtre #518).
+    private final ObservableList<String> groupesDisponibles = FXCollections.observableArrayList();
 
     private final ObservableList<EspeceAgregee> especes = FXCollections.observableArrayList();
     private final ObservableList<CarreEspeces> carres = FXCollections.observableArrayList();
@@ -65,39 +84,73 @@ public class AnalyseViewModel {
     /// la carte de répartition. Vide tant qu'aucune espèce n'est sélectionnée.
     private final ObservableList<String> carresEspeceSelectionnee = FXCollections.observableArrayList();
 
-    /// Inventaire **par carré** pour la **carte de répartition**, chargé quel que soit le regroupement
-    /// (la carte est carré-centrée même en mode Par espèce), filtré par le statut courant.
+    /// Inventaire **par carré** pour la **carte de répartition**, dérivé des observations filtrées (la carte
+    /// est carré-centrée même en mode Par espèce).
     private final ObservableList<CarreEspeces> carresCarte = FXCollections.observableArrayList();
 
     public AnalyseViewModel(ServiceAnalyse service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-        regroupement.addListener((obs, ancien, nouveau) -> rafraichir());
-        filtreStatut.addListener((obs, ancien, nouveau) -> rafraichir());
-        filtreTexte.addListener((obs, ancien, nouveau) -> appliquerFiltreTexte());
+        // Le regroupement ne change que l'agrégation (mêmes observations filtrées).
+        regroupement.addListener((obs, ancien, nouveau) -> agreger());
+        // Chaque filtre (re)définit son prédicat sur le socle, qui réagrège via le callback.
+        filtreStatut.addListener((obs, ancien, nouveau) -> filtres.definir(FILTRE_STATUT, predicatStatut()));
+        filtreGroupe.addListener((obs, ancien, nouveau) -> filtres.definir(FILTRE_GROUPE, predicatGroupe()));
+        filtreTexte.addListener((obs, ancien, nouveau) -> filtres.definir(FILTRE_TEXTE, predicatTexte()));
     }
 
-    /// (Re)charge depuis le service la liste **active** (selon le regroupement et le statut), puis applique
-    /// le filtre texte. À appeler à l'ouverture de l'écran ; ensuite déclenché par tout changement.
+    /// (Re)charge les observations enrichies de l'utilisateur, met à jour la liste des taxons parents, puis
+    /// **agrège** selon les filtres et le regroupement courants. À appeler à l'ouverture de l'écran.
     public void rafraichir() {
-        StatutObservation statut = filtreStatut.get();
-        // La carte de répartition est carré-centrée quel que soit le regroupement : on tient son inventaire
-        // par carré à jour (filtré par statut) indépendamment de la table affichée. En mode Par carré, la
-        // table et la carte partagent le même inventaire → une seule requête (réutilisée).
-        List<CarreEspeces> carresPourLaCarte;
-        if (regroupement.get() == Regroupement.PAR_CARRE) {
-            carresTous = service.inventaireParCarre(idUtilisateur, statut);
-            especesTous = List.of();
-            carresPourLaCarte = carresTous;
-        } else {
-            especesTous = service.inventaireParEspece(idUtilisateur, statut);
-            carresTous = List.of();
-            carresPourLaCarte = service.inventaireParCarre(idUtilisateur, statut);
-        }
-        carresCarte.setAll(carresPourLaCarte);
-        // L'inventaire a changé : l'ancienne sélection de détail est périmée.
+        toutesObservations.setAll(service.observationsAnalyse(idUtilisateur));
+        groupesDisponibles.setAll(toutesObservations.stream()
+                .map(ObservationAnalyse::groupe)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList());
         selectionnerEspece(null);
-        appliquerFiltreTexte();
+        agreger();
+    }
+
+    /// Agrège les observations **filtrées** vers les tables (selon le regroupement), la carte et le résumé.
+    /// Callback du socle de filtres (rejoué à chaque changement de prédicat) et du changement de regroupement.
+    private void agreger() {
+        List<ObservationAnalyse> filtrees = List.copyOf(observationsFiltrees);
+        carresCarte.setAll(AgregationAnalyse.parCarre(filtrees));
+        int detections = filtrees.size();
+        if (regroupement.get() == Regroupement.PAR_CARRE) {
+            carres.setAll(AgregationAnalyse.parCarre(filtrees));
+            especes.clear();
+            resume.set(quantite(carres.size(), "carré") + SEPARATEUR + quantite(detections, "détection"));
+        } else {
+            especes.setAll(AgregationAnalyse.parEspece(filtrees));
+            carres.clear();
+            resume.set(quantite(especes.size(), "espèce") + SEPARATEUR + quantite(detections, "détection"));
+        }
+    }
+
+    private Predicate<ObservationAnalyse> predicatStatut() {
+        StatutObservation statut = filtreStatut.get();
+        return statut == null ? null : observation -> observation.statut() == statut;
+    }
+
+    private Predicate<ObservationAnalyse> predicatGroupe() {
+        String groupe = filtreGroupe.get();
+        return groupe == null ? null : observation -> groupe.equals(observation.groupe());
+    }
+
+    private Predicate<ObservationAnalyse> predicatTexte() {
+        String aiguille = NormalisationTexte.normaliser(filtreTexte.get());
+        return aiguille.isEmpty()
+                ? null
+                : observation -> correspond(
+                        aiguille,
+                        observation.taxonRetenu(),
+                        observation.nomVernaculaireFr(),
+                        observation.nomLatin(),
+                        observation.numeroCarre(),
+                        observation.nomSite());
     }
 
     /// Charge dans le **détail** les observations de l'`espece` sélectionnée, à travers les passages
@@ -123,28 +176,6 @@ public class AnalyseViewModel {
         detailTitre.set(libelleEspece(espece) + SEPARATEUR + quantite(detail.size(), "observation"));
     }
 
-    /// Filtre **en mémoire** la liste active par le texte courant, et met à jour résumé/listes affichées.
-    private void appliquerFiltreTexte() {
-        String aiguille = NormalisationTexte.normaliser(filtreTexte.get());
-        if (regroupement.get() == Regroupement.PAR_CARRE) {
-            carres.setAll(carresTous.stream()
-                    .filter(c -> correspond(aiguille, c.numeroCarre(), c.nomSite()))
-                    .toList());
-            especes.clear();
-            int detections =
-                    carres.stream().mapToInt(CarreEspeces::nbObservations).sum();
-            resume.set(quantite(carres.size(), "carré") + SEPARATEUR + quantite(detections, "détection"));
-        } else {
-            especes.setAll(especesTous.stream()
-                    .filter(e -> correspond(aiguille, e.code(), e.nomVernaculaireFr(), e.nomLatin()))
-                    .toList());
-            carres.clear();
-            int detections =
-                    especes.stream().mapToInt(EspeceAgregee::nbObservations).sum();
-            resume.set(quantite(especes.size(), "espèce") + SEPARATEUR + quantite(detections, "détection"));
-        }
-    }
-
     /// **Exporte** l'inventaire affiché (liste filtrée courante) en CSV vers `destination`. Sans dossier,
     /// l'appel est ignoré ; le bilan (ou l'erreur) va dans [#messageProperty()].
     ///
@@ -167,11 +198,8 @@ public class AnalyseViewModel {
         }
     }
 
-    /// Vrai si au moins un des `champs` (non nuls) contient l'`aiguille` normalisée (vide → toujours vrai).
+    /// Vrai si au moins un des `champs` (non nuls) contient l'`aiguille` normalisée (déjà non vide).
     private static boolean correspond(String aiguille, String... champs) {
-        if (aiguille.isEmpty()) {
-            return true;
-        }
         for (String champ : champs) {
             if (champ != null && NormalisationTexte.normaliser(champ).contains(aiguille)) {
                 return true;
@@ -217,8 +245,18 @@ public class AnalyseViewModel {
         return filtreStatut;
     }
 
+    /// Filtre **taxon parent** (groupe, #518) ; `null` = tous les groupes.
+    public ObjectProperty<String> filtreGroupeProperty() {
+        return filtreGroupe;
+    }
+
     public StringProperty filtreTexteProperty() {
         return filtreTexte;
+    }
+
+    /// Taxons parents présents dans les observations (liste déroulante du filtre #518), triés.
+    public ObservableList<String> groupesDisponibles() {
+        return groupesDisponibles;
     }
 
     /// Inventaire par espèce filtré (alimenté quand le regroupement est [Regroupement#PAR_ESPECE]).
@@ -242,7 +280,7 @@ public class AnalyseViewModel {
         return carresEspeceSelectionnee;
     }
 
-    /// Inventaire par carré alimentant la **carte de répartition** (toujours chargé, filtré par statut),
+    /// Inventaire par carré alimentant la **carte de répartition** (dérivé des observations filtrées),
     /// indépendant du regroupement de la table.
     public ObservableList<CarreEspeces> carresCarte() {
         return carresCarte;

@@ -14,8 +14,8 @@ import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.nio.file.Path;
@@ -27,26 +27,31 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Tests unitaires de [AnalyseViewModel] avec [ServiceAnalyse] mocké : chargement selon le regroupement
-/// (espèce/carré), passage du filtre de statut au service, et résumé. Pas de base ni de JavaFX UI.
+/// Tests unitaires de [AnalyseViewModel] avec [ServiceAnalyse] mocké : le VM charge les observations
+/// **brutes** une fois, puis **filtre** (statut, taxon parent #518, texte) et **agrège** côté client
+/// (#537). Pas de base ni de JavaFX UI.
 @ExtendWith(MockitoExtension.class)
 class AnalyseViewModelTest {
 
     private static final String ID = "u-1";
+    private static final String CARRE = "640380";
 
     @Mock
     private ServiceAnalyse service;
 
-    private static EspeceAgregee espece(String code, int nbObs) {
-        return new EspeceAgregee(code, null, "Pipistrelle commune", "Pipistrellus", nbObs, 1, 1, 1, 2026, 2026);
+    /// Observation enrichie de test : carré/point/passage fixes (les compteurs distincts sont testés dans
+    /// AgregationAnalyseTest) ; seuls taxon, vernaculaire, groupe, statut et carré varient selon le besoin.
+    private static ObservationAnalyse obs(
+            String taxon, String vern, String groupe, StatutObservation statut, String carre) {
+        return new ObservationAnalyse(taxon, taxon + " (latin)", vern, groupe, statut, 1L, 2026, carre, "Étang", 10L);
     }
 
-    private static CarreEspeces carre(String numero, int richesse, int nbObs) {
-        return new CarreEspeces(numero, "Étang", richesse, nbObs, 2025, 2026);
+    private static ObservationAnalyse chiro(String taxon, String vern, StatutObservation statut) {
+        return obs(taxon, vern, "Chiroptères", statut, CARRE);
     }
 
-    private static ObservationEspece observation(long idPassage) {
-        return observation(idPassage, "640380");
+    private static EspeceAgregee espece(String code) {
+        return new EspeceAgregee(code, null, "Pipistrelle commune", "Chiroptères", 1, 1, 1, 1, 2026, 2026);
     }
 
     private static ObservationEspece observation(long idPassage, String carre) {
@@ -70,13 +75,11 @@ class AnalyseViewModelTest {
     @Test
     @DisplayName("#audio : sourceAudioEspece porte l'espèce sélectionnée ET le filtre de statut actif")
     void source_audio_espece_avec_filtre_actif() {
-        when(service.inventaireParEspece(eq(ID), any())).thenReturn(List.of(espece("Pippip", 3)));
-        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), any())).thenReturn(List.of(observation(42L)));
+        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), any())).thenReturn(List.of(observation(42L, CARRE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
-        // Chemin complet : un filtre de statut actif + une espèce sélectionnée → la source audio porte
-        // l'utilisateur, le code d'espèce ET le statut (en texte), prête à être reconvertie par AudioViewModel.
+
         vm.filtreStatutProperty().set(StatutObservation.VALIDEE);
-        vm.selectionnerEspece(espece("Pippip", 3));
+        vm.selectionnerEspece(espece("Pippip"));
 
         assertThat(vm.sourceAudioEspece()).isInstanceOfSatisfying(SourceObservations.ParEspece.class, espece -> {
             assertThat(espece.idUtilisateur()).isEqualTo(ID);
@@ -87,64 +90,86 @@ class AnalyseViewModelTest {
     }
 
     @Test
-    @DisplayName("Par espèce (défaut) : rafraichir charge l'inventaire par espèce et résume")
-    void par_espece_charge_et_resume() {
-        when(service.inventaireParEspece(eq(ID), isNull()))
-                .thenReturn(List.of(espece("Pippip", 5), espece("Nyclei", 3)));
+    @DisplayName("Par espèce (défaut) : rafraichir agrège l'inventaire par espèce et résume")
+    void par_espece_agrege_et_resume() {
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(
+                        chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE),
+                        chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE),
+                        chiro("Nyclei", "Noctule de Leisler", StatutObservation.VALIDEE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
 
         vm.rafraichir();
 
-        assertThat(vm.especes()).hasSize(2);
+        assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip", "Nyclei");
         assertThat(vm.carres()).isEmpty();
-        assertThat(vm.resumeProperty().get()).contains("2 espèces").contains("8 détections");
+        assertThat(vm.resumeProperty().get()).contains("2 espèces").contains("3 détections");
     }
 
     @Test
-    @DisplayName("Basculer Par carré charge l'inventaire par carré (et vide la liste espèces)")
-    void par_carre_charge_la_richesse() {
-        when(service.inventaireParCarre(eq(ID), isNull())).thenReturn(List.of(carre("640380", 4, 10)));
+    @DisplayName("Basculer Par carré agrège par carré (richesse = espèces distinctes) et vide la liste espèces")
+    void par_carre_agrege_la_richesse() {
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(
+                        chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE),
+                        chiro("Nyclei", "Noctule de Leisler", StatutObservation.VALIDEE),
+                        chiro("Tadten", "Molosse de Cestoni", StatutObservation.VALIDEE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
 
         vm.regroupementProperty().set(Regroupement.PAR_CARRE);
 
-        assertThat(vm.carres())
-                .singleElement()
-                .satisfies(c -> assertThat(c.richesse()).isEqualTo(4));
+        assertThat(vm.carres()).singleElement().satisfies(carre -> {
+            assertThat(carre.numeroCarre()).isEqualTo(CARRE);
+            assertThat(carre.richesse()).isEqualTo(3);
+        });
         assertThat(vm.especes()).isEmpty();
-        assertThat(vm.resumeProperty().get()).contains("1 carré").contains("10 détections");
+        assertThat(vm.resumeProperty().get()).contains("1 carré").contains("3 détections");
     }
 
     @Test
-    @DisplayName("Changer le filtre de statut ré-interroge le service avec ce statut")
-    void filtre_statut_re_interroge() {
-        when(service.inventaireParEspece(eq(ID), eq(StatutObservation.VALIDEE)))
-                .thenReturn(List.of(espece("Pippip", 2)));
+    @DisplayName("#537 : le filtre de statut s'applique côté client, sans ré-interroger le service")
+    void filtre_statut_client_side() {
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(
+                        chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE),
+                        chiro("Nyclei", "Noctule de Leisler", StatutObservation.NON_TOUCHEE),
+                        chiro("Tadten", "Molosse de Cestoni", StatutObservation.CORRIGEE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
+        assertThat(vm.especes()).hasSize(3);
 
         vm.filtreStatutProperty().set(StatutObservation.VALIDEE);
 
-        verify(service).inventaireParEspece(ID, StatutObservation.VALIDEE);
-        assertThat(vm.especes()).hasSize(1);
+        assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip");
+        verify(service, times(1)).observationsAnalyse(ID); // pas de re-requête au changement de statut
     }
 
     @Test
-    @DisplayName("Le filtre texte s'applique en mémoire (sans nouvelle requête), insensible aux accents")
-    void filtre_texte_en_memoire() {
-        when(service.inventaireParEspece(eq(ID), isNull()))
+    @DisplayName("#518 : le filtre Taxon parent (groupe) s'applique côté client ; groupes présents listés")
+    void filtre_taxon_parent_client_side() {
+        when(service.observationsAnalyse(ID))
                 .thenReturn(List.of(
-                        espece("Pippip", 5), // Pipistrelle commune
-                        new EspeceAgregee(
-                                "Nyclei",
-                                "Nyctalus leisleri",
-                                "Noctule de Leisler",
-                                "Nyctalus",
-                                3,
-                                1,
-                                1,
-                                1,
-                                2026,
-                                2026)));
+                        chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE),
+                        obs("Turmer", "Merle noir", "Oiseaux", StatutObservation.VALIDEE, CARRE)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
+        assertThat(vm.especes()).hasSize(2);
+        assertThat(vm.groupesDisponibles()).containsExactly("Chiroptères", "Oiseaux");
+
+        vm.filtreGroupeProperty().set("Chiroptères");
+
+        assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip");
+        verify(service, times(1)).observationsAnalyse(ID);
+    }
+
+    @Test
+    @DisplayName("Le filtre texte s'applique côté client (sans nouvelle requête), insensible aux accents")
+    void filtre_texte_client_side() {
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(
+                        chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE),
+                        chiro("Nyclei", "Noctule de Leisler", StatutObservation.VALIDEE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
         assertThat(vm.especes()).hasSize(2);
@@ -152,13 +177,14 @@ class AnalyseViewModelTest {
         vm.filtreTexteProperty().set("noctule");
 
         assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Nyclei");
-        verify(service, times(1)).inventaireParEspece(eq(ID), isNull()); // pas de re-requête au filtre texte
+        verify(service, times(1)).observationsAnalyse(ID);
     }
 
     @Test
     @DisplayName("Exporter délègue au service l'écriture CSV de l'inventaire affiché et restitue un bilan")
     void exporter_delegue_au_service(@TempDir Path dossier) {
-        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 5)));
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
         Path cible = dossier.resolve("inventaire.csv");
@@ -173,13 +199,14 @@ class AnalyseViewModelTest {
     @Test
     @DisplayName("Sélectionner une espèce charge ses observations (détail) et titre le panneau")
     void selectionner_espece_charge_le_detail() {
-        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 2)));
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
         when(service.observationsDeLEspece(eq(ID), eq("Pippip"), isNull()))
-                .thenReturn(List.of(observation(10L), observation(11L)));
+                .thenReturn(List.of(observation(10L, CARRE), observation(11L, CARRE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
 
-        vm.selectionnerEspece(espece("Pippip", 2));
+        vm.selectionnerEspece(espece("Pippip"));
 
         assertThat(vm.observations()).extracting(ObservationEspece::idPassage).containsExactly(10L, 11L);
         assertThat(vm.detailTitreProperty().get())
@@ -188,13 +215,15 @@ class AnalyseViewModelTest {
     }
 
     @Test
-    @DisplayName("Sélectionner null (ou Par carré) vide le panneau détail")
+    @DisplayName("Sélectionner null vide le panneau détail")
     void selectionner_null_vide_le_detail() {
-        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 2)));
-        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), isNull())).thenReturn(List.of(observation(10L)));
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
+        when(service.observationsDeLEspece(eq(ID), eq("Pippip"), isNull()))
+                .thenReturn(List.of(observation(10L, CARRE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
-        vm.selectionnerEspece(espece("Pippip", 2));
+        vm.selectionnerEspece(espece("Pippip"));
         assertThat(vm.observations()).isNotEmpty();
 
         vm.selectionnerEspece(null);
@@ -206,15 +235,15 @@ class AnalyseViewModelTest {
     @Test
     @DisplayName("Sélectionner une espèce expose ses carrés distincts (carte) ; null les vide")
     void selectionner_espece_expose_les_carres_distincts() {
-        when(service.inventaireParEspece(eq(ID), isNull())).thenReturn(List.of(espece("Pippip", 3)));
-        // Présente dans 640380 (deux passages) et 640381 → deux carrés distincts.
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
         when(service.observationsDeLEspece(eq(ID), eq("Pippip"), isNull()))
                 .thenReturn(
                         List.of(observation(10L, "640380"), observation(11L, "640380"), observation(12L, "640381")));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
 
-        vm.selectionnerEspece(espece("Pippip", 3));
+        vm.selectionnerEspece(espece("Pippip"));
         assertThat(vm.carresEspeceSelectionnee()).containsExactly("640380", "640381");
 
         vm.selectionnerEspece(null);
@@ -224,11 +253,13 @@ class AnalyseViewModelTest {
     @Test
     @DisplayName("En regroupement Par carré, sélectionner une espèce ne charge aucun détail")
     void selectionner_espece_sans_effet_en_par_carre() {
-        when(service.inventaireParCarre(eq(ID), isNull())).thenReturn(List.of(carre("640380", 4, 10)));
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+        vm.rafraichir();
         vm.regroupementProperty().set(Regroupement.PAR_CARRE);
 
-        vm.selectionnerEspece(espece("Pippip", 2));
+        vm.selectionnerEspece(espece("Pippip"));
 
         assertThat(vm.observations()).isEmpty();
         assertThat(vm.detailTitreProperty().get()).isEmpty();

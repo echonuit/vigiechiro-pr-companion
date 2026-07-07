@@ -12,6 +12,7 @@ import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -22,6 +23,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -79,6 +81,9 @@ public class AnalyseController implements RafraichirAuRetour {
 
     @FXML
     private ComboBox<StatutObservation> choixStatut;
+
+    @FXML
+    private ComboBox<String> choixGroupe;
 
     @FXML
     private TextField champFiltre;
@@ -194,8 +199,15 @@ public class AnalyseController implements RafraichirAuRetour {
         // Filtre de statut de revue : 1re entrée (null) = tous, puis les trois statuts.
         choixStatut.getItems().add(null);
         choixStatut.getItems().addAll(StatutObservation.values());
-        choixStatut.setConverter(convertisseur(AnalyseController::libelleStatut));
+        choixStatut.setConverter(convertisseur(FormatAnalyse::libelleStatut));
         choixStatut.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
+
+        // Filtre Taxon parent (groupe, #518) : 1re entrée (null) = tous, puis les groupes présents (chargés
+        // à l'ouverture, resynchronisés si l'inventaire change). Client-side comme statut/texte.
+        choixGroupe.setConverter(convertisseur(g -> g == null ? "Tous les taxons parents" : g));
+        synchroniserGroupes();
+        viewModel.groupesDisponibles().addListener((ListChangeListener<String>) changement -> synchroniserGroupes());
+        choixGroupe.valueProperty().bindBidirectional(viewModel.filtreGroupeProperty());
 
         // Filtre texte (en mémoire) et message d'export.
         champFiltre.textProperty().bindBidirectional(viewModel.filtreTexteProperty());
@@ -371,33 +383,36 @@ public class AnalyseController implements RafraichirAuRetour {
     }
 
     private void configurerColonnes() {
-        colEspece.setCellValueFactory(c -> texte(libelleEspece(c.getValue())));
-        colGroupe.setCellValueFactory(c -> texte(ouTiret(c.getValue().groupe())));
+        colEspece.setCellValueFactory(c -> texte(FormatAnalyse.libelleEspece(c.getValue())));
+        colGroupe.setCellValueFactory(
+                c -> texte(FormatAnalyse.ouTiret(c.getValue().groupe())));
         colDetections.setCellValueFactory(c -> texte(c.getValue().nbObservations()));
         colPassages.setCellValueFactory(c -> texte(c.getValue().nbPassages()));
         colCarres.setCellValueFactory(c -> texte(c.getValue().nbCarres()));
         colPoints.setCellValueFactory(c -> texte(c.getValue().nbPoints()));
-        colPeriode.setCellValueFactory(
-                c -> texte(periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
+        colPeriode.setCellValueFactory(c -> texte(
+                FormatAnalyse.periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
 
         colCarre.setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
-        colSite.setCellValueFactory(c -> texte(ouTiret(c.getValue().nomSite())));
+        colSite.setCellValueFactory(
+                c -> texte(FormatAnalyse.ouTiret(c.getValue().nomSite())));
         colRichesse.setCellValueFactory(c -> texte(c.getValue().richesse()));
         colDetectionsCarre.setCellValueFactory(c -> texte(c.getValue().nbObservations()));
-        colPeriodeCarre.setCellValueFactory(
-                c -> texte(periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
+        colPeriodeCarre.setCellValueFactory(c -> texte(
+                FormatAnalyse.periode(c.getValue().anneeMin(), c.getValue().anneeMax())));
 
         // Colonnes du détail (observations de l'espèce sélectionnée).
-        colObsPassage.setCellValueFactory(c -> texte(libellePassage(c.getValue())));
+        colObsPassage.setCellValueFactory(c -> texte(FormatAnalyse.libellePassage(c.getValue())));
         colObsCarre.setCellValueFactory(c -> texte(c.getValue().numeroCarre()));
         colObsRichesse.setCellValueFactory(
                 c -> texte(richesseDuCarre(c.getValue().numeroCarre())));
         colObsPoint.setCellValueFactory(c -> texte(c.getValue().codePoint()));
-        colObsTadarida.setCellValueFactory(c ->
-                texte(taxonEtProb(c.getValue().taxonTadarida(), c.getValue().probTadarida())));
-        colObsObservateur.setCellValueFactory(c ->
-                texte(taxonEtProb(c.getValue().taxonObservateur(), c.getValue().probObservateur())));
-        colObsStatut.setCellValueFactory(c -> texte(libelleStatut(c.getValue().statut())));
+        colObsTadarida.setCellValueFactory(c -> texte(FormatAnalyse.taxonEtProb(
+                c.getValue().taxonTadarida(), c.getValue().probTadarida())));
+        colObsObservateur.setCellValueFactory(c -> texte(FormatAnalyse.taxonEtProb(
+                c.getValue().taxonObservateur(), c.getValue().probObservateur())));
+        colObsStatut.setCellValueFactory(
+                c -> texte(FormatAnalyse.libelleStatut(c.getValue().statut())));
     }
 
     /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).
@@ -407,54 +422,17 @@ public class AnalyseController implements RafraichirAuRetour {
         return richesse == null ? "—" : richesse.toString();
     }
 
-    private static String libellePassage(ObservationEspece observation) {
-        return observation.dateEnregistrement() + " · n°" + observation.numeroPassage();
-    }
-
-    /// Taxon suivi de sa probabilité si présente (`Pippip (0,92)`) ; `—` si pas de taxon (non touchée).
-    private static String taxonEtProb(String taxon, Double probabilite) {
-        if (taxon == null || taxon.isBlank()) {
-            return "—";
+    /// Reconstruit les options du filtre **Taxon parent** (#518) : « Tous » (`null`) puis les groupes
+    /// présents dans l'inventaire courant (dynamiques), en conservant la sélection si elle existe encore.
+    private void synchroniserGroupes() {
+        String selection = choixGroupe.getValue();
+        var options = new ArrayList<String>();
+        options.add(null);
+        options.addAll(viewModel.groupesDisponibles());
+        choixGroupe.getItems().setAll(options);
+        if (options.contains(selection)) {
+            choixGroupe.setValue(selection);
         }
-        if (probabilite == null) {
-            return taxon;
-        }
-        return taxon + " (" + String.format("%.2f", probabilite) + ")";
-    }
-
-    /// Libellé d'une espèce : nom vernaculaire (sinon latin, sinon code) suivi du code entre parenthèses.
-    private static String libelleEspece(EspeceAgregee espece) {
-        String nom = premierNonVide(espece.nomVernaculaireFr(), espece.nomLatin(), espece.code());
-        return nom + " (" + espece.code() + ")";
-    }
-
-    /// Période d'observation : une seule année (`2026`) ou un intervalle (`2024–2026`).
-    private static String periode(int anneeMin, int anneeMax) {
-        return anneeMin == anneeMax ? Integer.toString(anneeMin) : anneeMin + "–" + anneeMax;
-    }
-
-    private static String libelleStatut(StatutObservation statut) {
-        if (statut == null) {
-            return "Tous les statuts";
-        }
-        return switch (statut) {
-            case NON_TOUCHEE -> "Non touchée";
-            case VALIDEE -> "Validée";
-            case CORRIGEE -> "Corrigée";
-        };
-    }
-
-    private static String premierNonVide(String... candidats) {
-        for (String candidat : candidats) {
-            if (candidat != null && !candidat.isBlank()) {
-                return candidat;
-            }
-        }
-        return "";
-    }
-
-    private static String ouTiret(String valeur) {
-        return valeur == null || valeur.isBlank() ? "—" : valeur;
     }
 
     private static ObservableValue<String> texte(Object valeur) {
