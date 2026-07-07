@@ -7,6 +7,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 
@@ -52,6 +53,30 @@ public final class GestionnaireVues<T> {
         this.feature = Objects.requireNonNull(feature, "feature");
         this.saisieNom = Objects.requireNonNull(saisieNom, "saisieNom");
         rafraichir();
+    }
+
+    /// Construit la barre d'onglets avec la **boîte de saisie standard** du nom de vue : un [TextInputDialog]
+    /// ancré sur la fenêtre de `onglets`. Les écrans tabulaires (audio, analyse, multisite) partagent ce
+    /// dialogue au lieu d'en dupliquer un chacun. Le constructeur à `saisieNom` explicite reste disponible
+    /// pour les tests (qui pilotent le nommage sans ouvrir de modale).
+    ///
+    /// @param onglets conteneur des onglets (fournit aussi la fenêtre propriétaire du dialogue)
+    /// @param filtres barre de filtres pilotée
+    /// @param depot dépôt de persistance des vues
+    /// @param feature clé de l'écran/table
+    public static <T> GestionnaireVues<T> avecDialogue(
+            Pane onglets, GestionnaireFiltres<T> filtres, DepotVues depot, String feature) {
+        return new GestionnaireVues<>(onglets, filtres, depot, feature, defaut -> demanderNom(onglets, defaut));
+    }
+
+    /// Boîte de saisie standard du nom d'une vue (création ou renommage) : renvoie le nom nettoyé, ou vide
+    /// si l'utilisateur annule ou laisse le champ blanc.
+    private static Optional<String> demanderNom(Pane onglets, String defaut) {
+        TextInputDialog dialogue = new TextInputDialog(defaut);
+        dialogue.initOwner(onglets.getScene().getWindow());
+        dialogue.setHeaderText("Nom de la vue");
+        dialogue.setContentText("Nom :");
+        return dialogue.showAndWait().map(String::trim).filter(nom -> !nom.isBlank());
     }
 
     /// Recharge les vues de la `feature` et reconstruit la barre (un onglet par vue + le bouton « + Vue »).

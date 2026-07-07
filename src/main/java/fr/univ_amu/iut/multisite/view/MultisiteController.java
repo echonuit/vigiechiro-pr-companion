@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
@@ -38,7 +37,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
@@ -215,7 +213,7 @@ public class MultisiteController implements RafraichirAuRetour {
                         CriteresMultisite.annee()),
                 CriteresMultisite.rechercheTexte());
         // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres.
-        new GestionnaireVues<>(barreOnglets, gestionnaireFiltres, depotVues, FEATURE, this::demanderNomVue);
+        GestionnaireVues.avecDialogue(barreOnglets, gestionnaireFiltres, depotVues, FEATURE);
 
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(Convertisseurs.parLibelle(tri -> tri == null ? "" : tri.libelle()));
@@ -450,16 +448,6 @@ public class MultisiteController implements RafraichirAuRetour {
         // Le nom convivial du site n'est pas porté par la vue agrégée : carré + point suffisent au
         // fil d'Ariane de M-Passage (nomSite n'y est pas utilisé).
         ouvrirPassage.ouvrir(ligne.idPassage(), new ContexteSite(ligne.numeroCarre(), ligne.codePoint(), null));
-    }
-
-    /// Demande à l'utilisateur un **nom de vue** (nouvelle vue ou renommage), pré-rempli par `defaut`, via
-    /// une petite boîte de saisie. Fournie au [GestionnaireVues] (qui reste ainsi testable sans dialogue).
-    private Optional<String> demanderNomVue(String defaut) {
-        TextInputDialog dialogue = new TextInputDialog(defaut);
-        dialogue.initOwner(barreOnglets.getScene().getWindow());
-        dialogue.setHeaderText("Nom de la vue");
-        dialogue.setContentText("Nom :");
-        return dialogue.showAndWait().map(String::trim).filter(nom -> !nom.isBlank());
     }
 
     /// « Réinitialiser » : retire tous les filtres (recherche + puces) via le gestionnaire, et efface le

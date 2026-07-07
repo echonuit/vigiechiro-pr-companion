@@ -37,6 +37,10 @@
   <!-- Pas de bandeau de titre ici : le nom d'écran est déjà porté par le fil d'Ariane, et le résumé
        (compteurs de revue) est déporté dans la barre de statut via ResumeStatut (gain d'espace vertical). -->
 
+  <!-- Onglets de vues mémorisées « à la Notion » (#623) : un onglet par combinaison de filtres enregistrée.
+       Rempli en code par le composant partagé GestionnaireVues (le controller le construit). -->
+  <FlowPane fx:id="barreOnglets" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-onglets"/>
+
   <!-- Barre de filtres « à la Notion » (#470/#471) : recherche texte permanente + « + Filtre » (menu des
        critères) + puces des filtres actifs. Actions propres à la source épinglées à droite dans « ☰ ». -->
   <BorderPane styleClass="barre-filtres">

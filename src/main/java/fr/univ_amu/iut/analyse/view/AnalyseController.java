@@ -20,7 +20,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -39,7 +38,6 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -228,7 +226,7 @@ public class AnalyseController implements RafraichirAuRetour {
                 List.of(CriteresAnalyse.statut(), CriteresAnalyse.groupe(viewModel::groupesDisponibles)),
                 CriteresAnalyse.rechercheTexte());
         // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres.
-        new GestionnaireVues<>(barreOnglets, gestionnaireFiltres, depotVues, FEATURE, this::demanderNomVue);
+        GestionnaireVues.avecDialogue(barreOnglets, gestionnaireFiltres, depotVues, FEATURE);
 
         // Message d'export.
         var exportPresent = viewModel.messageProperty().isNotEmpty();
@@ -461,17 +459,6 @@ public class AnalyseController implements RafraichirAuRetour {
     private static void lierVisibilite(Node noeud, ObservableValue<Boolean> visible) {
         noeud.visibleProperty().bind(visible);
         noeud.managedProperty().bind(visible);
-    }
-
-    /// Demande à l'utilisateur le nom d'une vue (création ou renommage) via une boîte de saisie ; renvoie le
-    /// nom nettoyé, ou vide si l'utilisateur annule ou laisse le champ blanc. Injecté dans [GestionnaireVues]
-    /// pour le garder indépendant de tout dialogue concret.
-    private Optional<String> demanderNomVue(String defaut) {
-        TextInputDialog dialogue = new TextInputDialog(defaut);
-        dialogue.initOwner(barreOnglets.getScene().getWindow());
-        dialogue.setHeaderText("Nom de la vue");
-        dialogue.setContentText("Nom :");
-        return dialogue.showAndWait().map(String::trim).filter(nom -> !nom.isBlank());
     }
 
     private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {
