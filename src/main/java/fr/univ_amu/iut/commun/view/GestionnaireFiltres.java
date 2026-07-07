@@ -161,6 +161,28 @@ public final class GestionnaireFiltres<T> {
         }
     }
 
+    /// Rejoue une vue mémorisée décrite **sémantiquement** ([DescripteurFiltre], #623) : réinitialise,
+    /// réapplique la recherche texte, puis ré-ajoute chaque puce (l'éditeur repart de ses valeurs par défaut,
+    /// appliquées à l'ajout) avant d'y restaurer les valeurs **en clair** via
+    /// [CritereFiltre#restaurerValeurs(Node, List)]. À la différence de [#restaurer(EtatFiltres)] (index de
+    /// contrôles, mémoire de session #484), l'entrée est **transportable / persistée** (base
+    /// `vue_sauvegardee`) : les critères inconnus du catalogue sont ignorés.
+    public void restaurer(DescripteurFiltre descripteur) {
+        reinitialiser();
+        if (descripteur == null) {
+            return;
+        }
+        if (!descripteur.texte().isBlank()) {
+            recherche.setText(descripteur.texte());
+        }
+        for (DescripteurCritere memorise : descripteur.criteres()) {
+            critereParNom(memorise.nom()).ifPresent(critere -> {
+                ajouterPuce(critere);
+                critere.restaurerValeurs(actifs.get(critere.nom()), memorise.valeurs());
+            });
+        }
+    }
+
     /// **Décrit** l'état courant des filtres sous une forme **sémantique et transportable** (#537 étape 2) :
     /// recherche texte + valeur en clair de chaque puce active (via [CritereFiltre#valeurCourante]), dans
     /// l'ordre d'ajout. À la différence de [#capturer()] (index de contrôles, mémoire de session #484), ce

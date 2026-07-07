@@ -80,6 +80,13 @@ final class CriteresAudio {
                 Object valeur = ((ComboBox<?>) editeur).getValue();
                 return valeur == null ? List.of() : List.of(((StatutObservation) valeur).name());
             }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (!valeurs.isEmpty()) {
+                    selectionnerParValeur(editeur, StatutObservation.valueOf(valeurs.get(0)));
+                }
+            }
         };
     }
 
@@ -117,6 +124,13 @@ final class CriteresAudio {
                 Object valeur = ((ComboBox<?>) editeur).getValue();
                 return valeur == null ? List.of() : List.of((String) valeur);
             }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (!valeurs.isEmpty()) {
+                    selectionnerParValeur(editeur, valeurs.get(0));
+                }
+            }
         };
     }
 
@@ -138,6 +152,13 @@ final class CriteresAudio {
             return GROUPE_CHIROPTERES;
         }
         return groupes.isEmpty() ? null : groupes.get(0);
+    }
+
+    /// Sélectionne dans une liste déroulante l'élément **égal** à `valeur` (ou vide la sélection s'il est
+    /// absent : `indexOf` → -1), pour restaurer une valeur mémorisée **sans cast générique non vérifié**.
+    private static void selectionnerParValeur(Node comboBox, Object valeur) {
+        ComboBox<?> choix = (ComboBox<?>) comboBox;
+        choix.getSelectionModel().select(choix.getItems().indexOf(valeur));
     }
 
     /// Critère **Taxon (espèce)** : éditeur = liste déroulante des espèces **présentes dans les lignes
@@ -184,6 +205,21 @@ final class CriteresAudio {
             public List<String> valeurCourante(Node editeur) {
                 Object valeur = ((ComboBox<?>) editeur).getValue();
                 return valeur == null ? List.of() : List.of(((EspecePresente) valeur).code());
+            }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (valeurs.isEmpty()) {
+                    return;
+                }
+                ComboBox<?> choix = (ComboBox<?>) editeur;
+                for (int i = 0; i < choix.getItems().size(); i++) {
+                    if (choix.getItems().get(i) instanceof EspecePresente espece
+                            && espece.code().equals(valeurs.get(0))) {
+                        choix.getSelectionModel().select(i);
+                        return;
+                    }
+                }
             }
         };
     }
@@ -247,6 +283,13 @@ final class CriteresAudio {
                 Slider curseur = (Slider) ((HBox) editeur).getChildren().get(0);
                 return List.of(Double.toString(curseur.getValue()));
             }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (!valeurs.isEmpty()) {
+                    ((Slider) ((HBox) editeur).getChildren().get(0)).setValue(Double.parseDouble(valeurs.get(0)));
+                }
+            }
         };
     }
 
@@ -305,6 +348,15 @@ final class CriteresAudio {
                 int debut = (Integer) ((ComboBox<?>) conteneur.getChildren().get(1)).getValue();
                 int fin = (Integer) ((ComboBox<?>) conteneur.getChildren().get(3)).getValue();
                 return List.of(Integer.toString(debut), Integer.toString(fin));
+            }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (valeurs.size() >= 2) {
+                    HBox conteneur = (HBox) editeur;
+                    selectionnerParValeur(conteneur.getChildren().get(1), Integer.valueOf(valeurs.get(0)));
+                    selectionnerParValeur(conteneur.getChildren().get(3), Integer.valueOf(valeurs.get(1)));
+                }
             }
         };
     }

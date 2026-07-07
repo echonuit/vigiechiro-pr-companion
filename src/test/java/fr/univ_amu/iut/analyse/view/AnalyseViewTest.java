@@ -29,7 +29,10 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -39,6 +42,7 @@ import org.mockito.ArgumentCaptor;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de l'écran **« Espèces & observations »** : chargement du FXML via Guice
 /// (avec un [ServiceAnalyse] mocké), table par espèce affichée par défaut, et bascule Par carré qui
@@ -232,5 +236,36 @@ class AnalyseViewTest {
         assertThat(zoneCarte.isVisible()).isFalse();
         assertThat(especes.isVisible()).isTrue();
         assertThat(boutonCarte.getText()).contains("Carte");
+    }
+
+    @Test
+    @DisplayName("#537 : ajouter un filtre « Statut » via la barre à puces filtre l'inventaire côté client")
+    void filtre_statut_via_la_barre_a_puces(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        assertThat(especes.getItems())
+                .as("l'espèce validée est affichée au départ")
+                .hasSize(1);
+
+        // Ouvrir le menu « + Filtre » et ajouter la puce Statut (l'item porte le libellé du critère).
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        MenuItem itemStatut = menuAjout.getItems().stream()
+                .filter(item -> "Statut".equals(item.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(itemStatut::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Choisir « Non touchée » dans la liste de la puce : la seule observation (validée) est écartée →
+        // l'inventaire se vide, ce qui prouve que la puce filtre bien la table côté client.
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<StatutObservation> choixStatut = (ComboBox<StatutObservation>)
+                robot.from(puces).lookup(".combo-box").queryAs(ComboBox.class);
+        robot.interact(() -> choixStatut.setValue(StatutObservation.NON_TOUCHEE));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(especes.getItems())
+                .as("le filtre statut « Non touchée » écarte l'observation validée")
+                .isEmpty();
     }
 }

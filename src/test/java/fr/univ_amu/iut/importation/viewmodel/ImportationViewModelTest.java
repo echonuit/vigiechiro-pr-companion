@@ -79,15 +79,17 @@ class ImportationViewModelTest {
 
     private final InspecteurDossier inspecteur = new InspecteurDossier(new AnalyseurLogPR());
     private final NavigationViewModel navigation = new NavigationViewModel();
+    private PreferenceConservation conservation;
     private ImportationViewModel viewModel;
     private Path sd;
 
     @BeforeEach
     void preparer() throws IOException {
-        // Réglage « conserver les originaux » non écrit → le VM lit le défaut (conservation activée).
+        // Réglage « conserver les originaux » non écrit → la préférence lit le défaut (conservation activée).
         when(reglages.lireBooleen(anyString(), anyBoolean())).thenAnswer(invocation -> invocation.getArgument(1));
+        conservation = new PreferenceConservation(reglages);
         viewModel = new ImportationViewModel(
-                serviceImport, serviceSites, new HorlogeFigee(JOUR), ID_USER, navigation, reglages);
+                serviceImport, serviceSites, new HorlogeFigee(JOUR), ID_USER, navigation, conservation);
         sd = Files.createDirectories(racine.resolve("sd"));
         Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
@@ -380,15 +382,23 @@ class ImportationViewModelTest {
     }
 
     @Test
-    @DisplayName("« Conserver les originaux » lit le réglage persisté (défaut activé) et mémorise chaque changement")
+    @DisplayName(
+            "« Conserver les originaux » lit le réglage persisté (défaut activé) et le mémorise au lancement de l'import")
     void conserver_originaux_lit_et_persiste_le_reglage() {
         // À la construction, le défaut (conservation activée) est lu depuis Reglages.
-        assertThat(viewModel.conserverOriginauxProperty().get()).isTrue();
+        assertThat(conservation.conserverOriginauxProperty().get()).isTrue();
 
-        // Décocher persiste immédiatement le nouveau choix (mémoire du dernier réglage d'un lancement à l'autre).
-        viewModel.conserverOriginauxProperty().set(false);
+        // L'utilisateur décoche puis lance l'import : le choix est mémorisé au moment de préparer la demande.
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        prepareRattachement(site, point);
+        conservation.conserverOriginauxProperty().set(false);
 
-        verify(reglages).ecrireBooleen(ImportationViewModel.CLE_CONSERVER_ORIGINAUX, false);
+        viewModel.preparerImport();
+
+        verify(reglages).ecrireBooleen(PreferenceConservation.CLE, false);
     }
 
     @Test

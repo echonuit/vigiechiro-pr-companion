@@ -2,6 +2,34 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.124.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.123.0...v1.124.0) (2026-07-07)
+
+
+### Features
+
+* **commun:** socle des vues mémorisées (Gson + persistance + restauration) ([#623](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/623)) ([ffbe598](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/ffbe59804229f26ae8fe677f8f7e58752b620f3c)), closes [#537](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/537)
+
+# [1.123.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.122.0...v1.123.0) (2026-07-07)
+
+
+### Features
+
+* **export:** exporter les observations affichées en CSV ([#149](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/149)) ([0678b0f](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/0678b0fd88ea75a5ae9e25b260cda7e31833b56a)), closes [#618](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/618) [#537](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/537)
+
+# [1.122.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.121.0...v1.122.0) (2026-07-07)
+
+
+### Features
+
+* **analyse:** barre de filtres « à la Notion » sur le socle partagé ([#622](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/622)) ([5634a4c](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/5634a4c50e6832ee16dd43f3b817180b6afccfbf)), closes [#537](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/537) [#518](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/518) [#537](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/537)
+
+# [1.121.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.120.0...v1.121.0) (2026-07-07)
+
+
+### Features
+
+* **data:** sauvegarde automatique avant un écrasement d'import ([#148](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/148)) ([1ea7158](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/1ea715863c3099bdc959c11dead98a789508afa7))
+
 # [1.120.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.119.0...v1.120.0) (2026-07-07)
 
 

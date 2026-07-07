@@ -144,10 +144,10 @@ public final class CaptureAnalyse {
         ApercuFx.capturerApresPreparation(
                 scene,
                 () -> {
-                    // Filtre sur l'espèce (la barre reflète ainsi la sélection), puis sélectionne la ligne
+                    // Recherche sur l'espèce (la barre reflète ainsi la sélection), puis sélectionne la ligne
                     // restante APRÈS l'affichage (la table est alors attachée au graphe) : peuple le panneau
                     // détail (bas) et bascule la carte en **répartition** (carrés de l'espèce mis en avant).
-                    if (vue.lookup("#champFiltre") instanceof TextField champ) {
+                    if (vue.lookup("#champRecherche") instanceof TextField champ) {
                         champ.setText("Pipistrelle");
                     }
                     if (vue.lookup("#tableEspeces") instanceof TableView<?> table

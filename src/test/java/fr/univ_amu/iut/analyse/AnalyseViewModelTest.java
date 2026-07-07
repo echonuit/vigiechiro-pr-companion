@@ -28,8 +28,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /// Tests unitaires de [AnalyseViewModel] avec [ServiceAnalyse] mocké : le VM charge les observations
-/// **brutes** une fois, puis **filtre** (statut, taxon parent #518, texte) et **agrège** côté client
-/// (#537). Pas de base ni de JavaFX UI.
+/// **brutes** une fois, puis les **filtre** via le socle partagé ([AnalyseViewModel#filtres()], piloté par
+/// la barre à puces de la vue depuis #537 étape 6) et **agrège** côté client. Le détail et la source audio
+/// reçoivent le **statut courant en paramètre** (lu par la vue sur la barre). Pas de base ni de JavaFX UI.
 @ExtendWith(MockitoExtension.class)
 class AnalyseViewModelTest {
 
@@ -73,20 +74,20 @@ class AnalyseViewModelTest {
     }
 
     @Test
-    @DisplayName("#audio : sourceAudioEspece porte l'espèce sélectionnée ET le filtre de statut actif")
-    void source_audio_espece_avec_filtre_actif() {
+    @DisplayName("#audio : sourceAudioEspece porte l'espèce sélectionnée ET le statut courant fourni")
+    void source_audio_espece_avec_statut_courant() {
         when(service.observationsDeLEspece(eq(ID), eq("Pippip"), any())).thenReturn(List.of(observation(42L, CARRE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
 
-        vm.filtreStatutProperty().set(StatutObservation.VALIDEE);
-        vm.selectionnerEspece(espece("Pippip"));
+        vm.selectionnerEspece(espece("Pippip"), StatutObservation.VALIDEE);
 
-        assertThat(vm.sourceAudioEspece()).isInstanceOfSatisfying(SourceObservations.ParEspece.class, espece -> {
-            assertThat(espece.idUtilisateur()).isEqualTo(ID);
-            assertThat(espece.codeEspece()).isEqualTo("Pippip");
-            assertThat(espece.statut()).isEqualTo("VALIDEE");
-            assertThat(espece.libelle()).isEqualTo("Pipistrelle commune");
-        });
+        assertThat(vm.sourceAudioEspece(StatutObservation.VALIDEE))
+                .isInstanceOfSatisfying(SourceObservations.ParEspece.class, espece -> {
+                    assertThat(espece.idUtilisateur()).isEqualTo(ID);
+                    assertThat(espece.codeEspece()).isEqualTo("Pippip");
+                    assertThat(espece.statut()).isEqualTo("VALIDEE");
+                    assertThat(espece.libelle()).isEqualTo("Pipistrelle commune");
+                });
     }
 
     @Test
@@ -128,7 +129,7 @@ class AnalyseViewModelTest {
     }
 
     @Test
-    @DisplayName("#537 : le filtre de statut s'applique côté client, sans ré-interroger le service")
+    @DisplayName("#537 : un prédicat de statut posé sur le socle filtre côté client, sans ré-interroger le service")
     void filtre_statut_client_side() {
         when(service.observationsAnalyse(ID))
                 .thenReturn(List.of(
@@ -139,14 +140,14 @@ class AnalyseViewModelTest {
         vm.rafraichir();
         assertThat(vm.especes()).hasSize(3);
 
-        vm.filtreStatutProperty().set(StatutObservation.VALIDEE);
+        vm.filtres().definir("statut", o -> o.statut() == StatutObservation.VALIDEE);
 
         assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip");
-        verify(service, times(1)).observationsAnalyse(ID); // pas de re-requête au changement de statut
+        verify(service, times(1)).observationsAnalyse(ID); // pas de re-requête au changement de filtre
     }
 
     @Test
-    @DisplayName("#518 : le filtre Taxon parent (groupe) s'applique côté client ; groupes présents listés")
+    @DisplayName("#518 : un prédicat de taxon parent (groupe) filtre côté client ; groupes présents listés")
     void filtre_taxon_parent_client_side() {
         when(service.observationsAnalyse(ID))
                 .thenReturn(List.of(
@@ -157,14 +158,14 @@ class AnalyseViewModelTest {
         assertThat(vm.especes()).hasSize(2);
         assertThat(vm.groupesDisponibles()).containsExactly("Chiroptères", "Oiseaux");
 
-        vm.filtreGroupeProperty().set("Chiroptères");
+        vm.filtres().definir("groupe", o -> "Chiroptères".equals(o.groupe()));
 
         assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip");
         verify(service, times(1)).observationsAnalyse(ID);
     }
 
     @Test
-    @DisplayName("Le filtre texte s'applique côté client (sans nouvelle requête), insensible aux accents")
+    @DisplayName("Un prédicat texte posé sur le socle filtre côté client, sans nouvelle requête")
     void filtre_texte_client_side() {
         when(service.observationsAnalyse(ID))
                 .thenReturn(List.of(
@@ -174,7 +175,11 @@ class AnalyseViewModelTest {
         vm.rafraichir();
         assertThat(vm.especes()).hasSize(2);
 
-        vm.filtreTexteProperty().set("noctule");
+        vm.filtres()
+                .definir(
+                        "texte",
+                        o -> o.nomVernaculaireFr() != null
+                                && o.nomVernaculaireFr().contains("Noctule"));
 
         assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Nyclei");
         verify(service, times(1)).observationsAnalyse(ID);
@@ -197,7 +202,7 @@ class AnalyseViewModelTest {
     }
 
     @Test
-    @DisplayName("Sélectionner une espèce charge ses observations (détail) et titre le panneau")
+    @DisplayName("Sélectionner une espèce charge ses observations (détail, statut courant) et titre le panneau")
     void selectionner_espece_charge_le_detail() {
         when(service.observationsAnalyse(ID))
                 .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
@@ -206,7 +211,7 @@ class AnalyseViewModelTest {
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
 
-        vm.selectionnerEspece(espece("Pippip"));
+        vm.selectionnerEspece(espece("Pippip"), null);
 
         assertThat(vm.observations()).extracting(ObservationEspece::idPassage).containsExactly(10L, 11L);
         assertThat(vm.detailTitreProperty().get())
@@ -223,10 +228,10 @@ class AnalyseViewModelTest {
                 .thenReturn(List.of(observation(10L, CARRE)));
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
-        vm.selectionnerEspece(espece("Pippip"));
+        vm.selectionnerEspece(espece("Pippip"), null);
         assertThat(vm.observations()).isNotEmpty();
 
-        vm.selectionnerEspece(null);
+        vm.selectionnerEspece(null, null);
 
         assertThat(vm.observations()).isEmpty();
         assertThat(vm.detailTitreProperty().get()).isEmpty();
@@ -243,10 +248,10 @@ class AnalyseViewModelTest {
         AnalyseViewModel vm = new AnalyseViewModel(service, ID);
         vm.rafraichir();
 
-        vm.selectionnerEspece(espece("Pippip"));
+        vm.selectionnerEspece(espece("Pippip"), null);
         assertThat(vm.carresEspeceSelectionnee()).containsExactly("640380", "640381");
 
-        vm.selectionnerEspece(null);
+        vm.selectionnerEspece(null, null);
         assertThat(vm.carresEspeceSelectionnee()).isEmpty();
     }
 
@@ -259,7 +264,7 @@ class AnalyseViewModelTest {
         vm.rafraichir();
         vm.regroupementProperty().set(Regroupement.PAR_CARRE);
 
-        vm.selectionnerEspece(espece("Pippip"));
+        vm.selectionnerEspece(espece("Pippip"), null);
 
         assertThat(vm.observations()).isEmpty();
         assertThat(vm.detailTitreProperty().get()).isEmpty();

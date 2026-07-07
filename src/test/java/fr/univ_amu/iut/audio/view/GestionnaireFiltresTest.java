@@ -349,6 +349,48 @@ class GestionnaireFiltresTest {
                                 new DescripteurCritere("references", List.of()))));
     }
 
+    @Test
+    @DisplayName("#623 : restaurer(descripteur) reconstruit les puces ET leurs valeurs (rejoue une vue mémorisée)")
+    void restaurer_reconstruit_les_puces_depuis_un_descripteur(FxRobot robot) {
+        ObservableList<LigneObservationAudio> source = FXCollections.observableArrayList(
+                ligne(1, "Pippip", "PaRec_1.wav", StatutObservation.NON_TOUCHEE),
+                ligne(2, "Nyclei", "PaRec_2.wav", StatutObservation.VALIDEE));
+        FilteredList<LigneObservationAudio> vues = new FilteredList<>(source);
+        Filtres<LigneObservationAudio> filtresLocaux = new Filtres<>(vues, () -> {});
+        MenuButton menuLocal = new MenuButton();
+        FlowPane pucesLocales = new FlowPane();
+        TextField rechercheLocale = new TextField();
+        GestionnaireFiltres<LigneObservationAudio> gestion = new GestionnaireFiltres<>(
+                rechercheLocale,
+                menuLocal,
+                pucesLocales,
+                filtresLocaux,
+                List.of(CriteresAudio.statut(), CriteresAudio.heure()),
+                CriteresAudio.rechercheTexte());
+
+        // Rejouer une vue décrite sémantiquement : recherche « pa » + statut Validée + heures de jour 6→20.
+        robot.interact(() -> gestion.restaurer(new DescripteurFiltre(
+                "pa",
+                List.of(
+                        new DescripteurCritere("statut", List.of("VALIDEE")),
+                        new DescripteurCritere("heure", List.of("6", "20"))))));
+
+        // Recherche + deux puces reconstruites, dans l'ordre du descripteur.
+        assertThat(rechercheLocale.getText()).isEqualTo("pa");
+        assertThat(pucesLocales.getChildren()).hasSize(2);
+        // La puce Statut porte la valeur RESTAURÉE (Validée), pas le défaut À revoir.
+        assertThat(comboDe(pucesLocales).getValue()).isEqualTo(StatutObservation.VALIDEE);
+        // Le filtre reflète les valeurs restaurées : seule la ligne 2 (VALIDEE, fichier « PaRec ») reste.
+        assertThat(vues).extracting(LigneObservationAudio::idObservation).containsExactly(2L);
+        // Round-trip sémantique : decrire() reproduit exactement le descripteur restauré.
+        assertThat(gestion.decrire())
+                .isEqualTo(new DescripteurFiltre(
+                        "pa",
+                        List.of(
+                                new DescripteurCritere("statut", List.of("VALIDEE")),
+                                new DescripteurCritere("heure", List.of("6", "20")))));
+    }
+
     private Button boutonRetirer() {
         return (Button) puces.lookupAll(".puce-filtre-retirer").iterator().next();
     }

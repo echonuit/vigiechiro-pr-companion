@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -58,10 +59,6 @@ import java.util.function.Consumer;
 /// SQL est annulée (base cohérente, O7), mais les fichiers déjà copiés/transformés restent dans le
 /// workspace. Ces opérations étant idempotentes et déterministes (R11), un réimport réécrit les
 /// mêmes fichiers sans dommage ; la base reste la source de vérité.
-// God Class marginal (WMC 51 vs seuil 47) : orchestrateur cohésif du parcours d'import (cf. Javadoc).
-// Le scinder éclaterait la séquence inspecter→copier/renommer→transformer→persister, plus lisible d'un
-// tenant. Bypass ponctuel sanctionné par le ruleset PMD (§ EXCLUSIONS / @SuppressWarnings).
-@SuppressWarnings("PMD.GodClass")
 public class ServiceImport {
 
     /// Plafond de découpages audio **simultanés** (#12) : les threads virtuels sont bornés au nombre de
@@ -71,13 +68,14 @@ public class ServiceImport {
 
     private final InspecteurDossier inspecteur;
     private final CopieProtegee copie;
-    private final Renommeur renommeur;
+    private final PreparationOriginaux preparation;
     private final DecoupageParallele decoupage;
     private final AgregatImportDao agregatDao;
     private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
     private final FabriqueEntitesImport fabriqueEntites;
     private final CompteurValidations compteurValidations;
+    private final ServiceSauvegarde serviceSauvegarde;
 
     /// Verrou anti-import-concurrent (#54) : le service étant un **singleton** partagé, il refuse un
     /// second import tant qu'un autre tourne. Filet « pire cas » indépendant de l'IHM (deux
@@ -93,16 +91,18 @@ public class ServiceImport {
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
             Horloge horloge,
-            CompteurValidations compteurValidations) {
+            CompteurValidations compteurValidations,
+            ServiceSauvegarde serviceSauvegarde) {
         this.inspecteur = Objects.requireNonNull(inspecteur, "inspecteur");
         this.copie = Objects.requireNonNull(copie, "copie");
-        this.renommeur = Objects.requireNonNull(renommeur, "renommeur");
+        this.preparation = new PreparationOriginaux(copie, renommeur);
         this.decoupage = new DecoupageParallele(transformation, PARALLELISME_DECOUPAGE);
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.fabriqueEntites = new FabriqueEntitesImport(horloge);
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
+        this.serviceSauvegarde = Objects.requireNonNull(serviceSauvegarde, "serviceSauvegarde");
     }
 
     /// Inspecte (lecture seule) le dossier SD sans rien importer : utile pour prévisualiser le
@@ -246,6 +246,10 @@ public class ServiceImport {
     /// originaux, séquences, journal, relevé) **puis** importe la nuit, sous le même verrou
     /// anti-concurrent (#54) que [#importer]. À n'appeler qu'après **double confirmation** côté IHM (#214).
     ///
+    /// **Filet de sécurité (#148)** : une **sauvegarde automatique** de la base est écrite **avant** la
+    /// suppression destructive. Si elle échoue (disque plein…), l'exception remonte et l'écrasement
+    /// **n'a pas lieu** : on ne détruit jamais sans copie de secours.
+    ///
     /// @return le compte rendu de l'import qui suit l'écrasement
     public ResultatImport ecraserEtImporter(
             Path dossierSource, Long idPoint, Prefixe prefixe, Consumer<Progression> progres, JetonAnnulation jeton) {
@@ -267,6 +271,7 @@ public class ServiceImport {
         Objects.requireNonNull(prefixe, "prefixe");
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
+        serviceSauvegarde.sauvegarder(serviceSauvegarde.dossierParDefaut());
         return sousVerrouImport(dossierSource, idPoint, prefixe, progres, jeton, true, conserverOriginaux);
     }
 
@@ -324,9 +329,9 @@ public class ServiceImport {
         Path cheminReleveCopie;
         try {
             // 1-2) Originaux à transformer : copie protégée + renommage R6 (mode conservation) OU lecture
-            //      directe de la source avec nom R6 calculé (mode sans copie). Cf. #preparerOriginaux.
-            sources =
-                    preparerOriginaux(conserverOriginaux, rapport, dossierBruts, prefixe, totalEtapes, progres, jeton);
+            //      directe de la source avec nom R6 calculé (mode sans copie). Cf. PreparationOriginaux.
+            sources = preparation.preparer(
+                    conserverOriginaux, rapport, dossierBruts, prefixe, totalEtapes, progres, jeton);
             volumeOriginaux =
                     volumeTotal(sources.stream().map(SourceOriginal::chemin).toList());
 
@@ -465,72 +470,6 @@ public class ServiceImport {
                 nombreSequences,
                 journal.anomalies(),
                 rapportImport);
-    }
-
-    /// Prépare la liste des originaux à transformer selon le choix de **conservation** (#…), en découplant
-    /// le chemin physiquement lu de son nom logique R6 (cf. [SourceOriginal]) :
-    ///
-    /// - **conservation** : copie protégée dans `bruts/` (R9, reprise #231) puis renommage R6/R7 ; la
-    ///   lecture se fait ensuite sur ces copies (dont le nom est déjà le nom R6) ;
-    /// - **sans copie** : aucune écriture — les WAV de la source sont lus **en place** (R9, lecture seule),
-    ///   avec leur nom R6 **calculé** ([Renommeur#nomApresRenommage]) ; `bruts/` n'est jamais créé.
-    ///
-    /// Dans les deux cas la sortie (noms des séquences produites) est **identique**.
-    private List<SourceOriginal> preparerOriginaux(
-            boolean conserverOriginaux,
-            RapportInspection rapport,
-            Path dossierBruts,
-            Prefixe prefixe,
-            int totalEtapes,
-            Consumer<Progression> progres,
-            JetonAnnulation jeton) {
-        if (!conserverOriginaux) {
-            return rapport.originaux().stream()
-                    .map(source -> new SourceOriginal(
-                            source,
-                            Renommeur.nomApresRenommage(source.getFileName().toString(), prefixe)))
-                    .toList();
-        }
-        copierOriginaux(rapport.originaux(), dossierBruts, prefixe, totalEtapes, progres, jeton);
-        return renommeur.renommer(dossierBruts, prefixe).stream()
-                .map(chemin -> new SourceOriginal(chemin, chemin.getFileName().toString()))
-                .toList();
-    }
-
-    /// Copie protégée (R9) des originaux vers `dossierBruts`, en émettant la progression « Copie X/N ·
-    /// fichier ». Vérifie l'annulation (#146) entre deux fichiers.
-    ///
-    /// **Reprise sécurisée (#231)** : un original n'est sauté que si une version renommée existe **et**
-    /// que son empreinte SHA-256 est **identique à celle de la source SD** — contenu vérifié, pas
-    /// seulement le nom ni la taille. Un fichier absent, périmé ou corrompu (même nom, session orpheline
-    /// incohérente) est re-copié : on ne persiste jamais un agrégat sur des fichiers douteux. Sauter une
-    /// copie **fidèle** évite au passage le conflit de renommage qu'une re-copie déclencherait.
-    private void copierOriginaux(
-            List<Path> originaux,
-            Path dossierBruts,
-            Prefixe prefixe,
-            int totalEtapes,
-            Consumer<Progression> progres,
-            JetonAnnulation jeton) {
-        int nbOriginaux = originaux.size();
-        int indiceCopie = 0;
-        for (Path original : originaux) {
-            jeton.leverSiAnnule(); // arrêt au plus tôt, entre deux fichiers
-            // Copie **directement au nom final** (R6) : pas d'état intermédiaire au nom d'origine, donc
-            // aucun doublon ni conflit lors du renommage si une version renommée traînait déjà (reprise).
-            Path cible = dossierBruts.resolve(
-                    Renommeur.nomApresRenommage(original.getFileName().toString(), prefixe));
-            boolean dejaFidele =
-                    Files.isRegularFile(cible) && Empreintes.sha256Hex(cible).equals(Empreintes.sha256Hex(original));
-            if (!dejaFidele) {
-                copie.copier(original, cible); // écrase une cible corrompue (REPLACE_EXISTING + vérif R9)
-            }
-            indiceCopie++;
-            progres.accept(new Progression(
-                    "Copie " + indiceCopie + "/" + nbOriginaux + " · " + original.getFileName()
-                            + (dejaFidele ? " (déjà présent)" : ""),
-                    (double) indiceCopie / totalEtapes));
-        }
     }
 
     /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)

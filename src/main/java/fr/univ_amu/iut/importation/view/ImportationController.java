@@ -12,6 +12,7 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.InspectionImportViewModel;
+import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.importation.viewmodel.RattachementImportViewModel;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
@@ -23,7 +24,9 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -50,16 +53,16 @@ import javafx.util.converter.NumberStringConverter;
 /// rattachement / action) aux propriétés de l'[ImportationViewModel]. Aucun accès base de données
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`) : « Parcourir » délègue à
 /// [ImportationViewModel#inspecter()] ; « Importer » lance le travail lourd hors du fil JavaFX.
-// NcssCount marginal (201 lignes vs seuil 200) : contrôleur de **pur câblage** FXML (aucune logique
-// métier, cf. Javadoc) où chaque contrôle ajoute des lignes de liaison. Faux positif du détecteur de God
-// Class sur du wiring. Bypass ponctuel sanctionné par le ruleset PMD.
-@SuppressWarnings("PMD.NcssCount")
 public class ImportationController implements GardeQuitter, AuDepartEcran {
 
     /// Classe CSS du retour visuel de glisser-déposer (#139), posée sur la racine pendant le survol.
     private static final String CLASSE_ZONE_DEPOT_ACTIVE = "zone-depot-active";
 
     private final ImportationViewModel viewModel;
+
+    /// Préférence « conserver les originaux » **partagée** (singleton) avec le ViewModel : la case s'y lie
+    /// bidirectionnellement, et le ViewModel la relit au lancement de l'import.
+    private final PreferenceConservation conservation;
 
     @FXML
     private VBox racineImport;
@@ -178,8 +181,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     private final CarteRattachement carteRattachement = new CarteRattachement();
 
     @Inject
-    public ImportationController(ImportationViewModel viewModel) {
+    public ImportationController(ImportationViewModel viewModel, PreferenceConservation conservation) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.conservation = Objects.requireNonNull(conservation, "conservation");
     }
 
     /// Remplace le confirmateur (#214), pour les tests (évite la boîte de dialogue native).
@@ -221,11 +225,19 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         lierDossierEtInspection(viewModel.inspection());
         lierRattachement(viewModel.rattachement());
         lierAction();
-        // Option « conserver les originaux » : la case reflète le choix persisté (initialisé par le VM)
-        // et le met à jour dans les deux sens ; le VM mémorise chaque changement (cf. Reglages).
-        caseConserverOriginaux.selectedProperty().bindBidirectional(viewModel.conserverOriginauxProperty());
+        // Option « conserver les originaux » : la case reflète le choix persisté (défaut : conservation
+        // activée) et le met à jour dans les deux sens ; il est mémorisé au lancement de l'import.
+        caseConserverOriginaux.selectedProperty().bindBidirectional(conservation.conserverOriginauxProperty());
         installerGlisserDeposer();
         viewModel.chargerSites();
+    }
+
+    /// Lie la **visibilité** d'un nœud à `condition` en gardant `managed` synchronisé avec `visible` : un
+    /// nœud masqué ne doit pas occuper d'espace dans la mise en page (sinon un « trou » subsisterait). Le
+    /// même couple visible/managed est appliqué à tous les éléments conditionnels de l'écran.
+    private static void lierVisibiliteGeree(Node noeud, ObservableValue<? extends Boolean> condition) {
+        noeud.visibleProperty().bind(condition);
+        noeud.managedProperty().bind(condition);
     }
 
     /// Sections 1-2 : chemin du dossier source + section d'inspection (journal, relevé, compte, nommage,
@@ -242,8 +254,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
                         inspection.dossierSourceProperty()));
 
         // 2. Inspection : section visible une fois le dossier inspecté.
-        sectionInspection.visibleProperty().bind(inspection.inspecteProperty());
-        sectionInspection.managedProperty().bind(inspection.inspecteProperty());
+        lierVisibiliteGeree(sectionInspection, inspection.inspecteProperty());
         labelJournal
                 .textProperty()
                 .bind(Bindings.createStringBinding(
@@ -274,26 +285,22 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         // Avertissement « mélange » (#33) : visible seulement s'il y a un message.
         labelMelange.textProperty().bind(inspection.avertissementMelangeProperty());
         var aUnMelange = inspection.avertissementMelangeProperty().isNotEmpty();
-        labelMelange.visibleProperty().bind(aUnMelange);
-        labelMelange.managedProperty().bind(aUnMelange);
+        lierVisibiliteGeree(labelMelange, aUnMelange);
 
         labelIncoherence.textProperty().bind(inspection.avertissementIncoherenceProperty());
         var aUneIncoherence = inspection.avertissementIncoherenceProperty().isNotEmpty();
-        labelIncoherence.visibleProperty().bind(aUneIncoherence);
-        labelIncoherence.managedProperty().bind(aUneIncoherence);
+        lierVisibiliteGeree(labelIncoherence, aUneIncoherence);
 
         // Détection « nuit déjà importée » (#147) : même patron, visible seulement s'il y a un message.
         labelNuitExistante.textProperty().bind(inspection.avertissementNuitExistanteProperty());
         var nuitExistante = inspection.avertissementNuitExistanteProperty().isNotEmpty();
-        labelNuitExistante.visibleProperty().bind(nuitExistante);
-        labelNuitExistante.managedProperty().bind(nuitExistante);
+        lierVisibiliteGeree(labelNuitExistante, nuitExistante);
 
         // Garde-fou « enregistrements déjà ralentis » : même patron, visible seulement s'il y a un message.
         labelFichiersRalentis.textProperty().bind(inspection.avertissementFichiersRalentisProperty());
         var fichiersRalentis =
                 inspection.avertissementFichiersRalentisProperty().isNotEmpty();
-        labelFichiersRalentis.visibleProperty().bind(fichiersRalentis);
-        labelFichiersRalentis.managedProperty().bind(fichiersRalentis);
+        lierVisibiliteGeree(labelFichiersRalentis, fichiersRalentis);
     }
 
     /// Section 3 : combos site/point, champs année/n° de passage, aperçu du préfixe et avertissement de
@@ -316,8 +323,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         // Discordance de préfixe (#111) : déjà-préfixés ne correspondant pas au rattachement (non bloquant).
         labelPrefixeDiscordant.textProperty().bind(rattachement.avertissementPrefixeProperty());
         var aDiscordance = rattachement.avertissementPrefixeProperty().isNotEmpty();
-        labelPrefixeDiscordant.visibleProperty().bind(aDiscordance);
-        labelPrefixeDiscordant.managedProperty().bind(aDiscordance);
+        lierVisibiliteGeree(labelPrefixeDiscordant, aDiscordance);
     }
 
     /// Section 4 : pendant l'import (EN_COURS), la barre de progression s'affiche (avancement réel
@@ -330,8 +336,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
                 .etatProperty()
                 .isEqualTo(EtatImport.EN_COURS)
                 .or(viewModel.etatProperty().isEqualTo(EtatImport.EXTRACTION));
-        zoneProgression.visibleProperty().bind(traitement);
-        zoneProgression.managedProperty().bind(traitement);
+        lierVisibiliteGeree(zoneProgression, traitement);
         barreProgression.progressProperty().bind(viewModel.progressionProperty());
         labelProgression.textProperty().bind(viewModel.messageProgressionProperty());
         boutonImporter.disableProperty().bind(viewModel.peutImporter().not().or(traitement));
@@ -346,8 +351,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         // pendant l'import). Même patron que les avertissements « mélange »/« incohérence » ci-dessus.
         labelPassageExistant.textProperty().bind(viewModel.avertissementNumeroPassageProperty());
         var aUnDoublon = viewModel.avertissementNumeroPassageProperty().isNotEmpty();
-        zonePassageExistant.visibleProperty().bind(aUnDoublon);
-        zonePassageExistant.managedProperty().bind(aUnDoublon);
+        lierVisibiliteGeree(zonePassageExistant, aUnDoublon);
         boutonNumeroLibre.disableProperty().bind(traitement);
         // « Écraser et réimporter » (#214) : possible seulement si une nuit est inspectée (sinon rien à
         // réimporter) et hors traitement. Visible dans la même zone que l'avertissement de doublon.
@@ -363,8 +367,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         // Rapport d'import (#155) : la liste des fichiers rejetés n'apparaît que s'il y en a.
         listeRejets.setItems(viewModel.rejetsImport());
         var aDesRejets = Bindings.isNotEmpty(viewModel.rejetsImport());
-        zoneRejets.visibleProperty().bind(aDesRejets);
-        zoneRejets.managedProperty().bind(aDesRejets);
+        lierVisibiliteGeree(zoneRejets, aDesRejets);
     }
 
     /// « Parcourir » : ouvre le sélecteur de **dossier** natif puis charge la source.

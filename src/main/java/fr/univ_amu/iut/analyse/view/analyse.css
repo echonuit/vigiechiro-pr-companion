@@ -13,8 +13,54 @@
     -fx-text-fill: #6a737d;
 }
 
-.analyse-barre {
-    -fx-padding: 2 0 2 0;
+/* Barre de filtres « à la Notion » (#537, étape 6) : carte claire, bouton « + Filtre » discret et puces
+   des filtres actifs (pilules indigo clair, ✕ pour retirer). Mêmes règles que l'audio (à consolider un jour
+   dans une feuille partagée `commun`). Couleurs de la palette (indigo). */
+.barre-filtres {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e1e4e8;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 8;
+}
+
+.menu-ajout-filtre {
+    -fx-background-color: transparent;
+    -fx-border-color: -couleur-primaire-fond;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-text-fill: -couleur-primaire-sombre;
+}
+
+.menu-ajout-filtre:hover {
+    -fx-background-color: -couleur-primaire-voile;
+}
+
+.puce-filtre {
+    -fx-background-color: -couleur-primaire-voile;
+    -fx-border-color: -couleur-primaire-fond;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-padding: 2 4 2 10;
+    -fx-alignment: center-left;
+}
+
+.puce-filtre > .label {
+    -fx-text-fill: -couleur-primaire-sombre;
+    -fx-font-size: 0.9em;
+}
+
+.puce-filtre-retirer {
+    -fx-background-color: transparent;
+    -fx-text-fill: -couleur-primaire-sombre;
+    -fx-padding: 0 5;
+    -fx-background-radius: 10;
+    -fx-cursor: hand;
+    -fx-font-size: 0.85em;
+}
+
+.puce-filtre-retirer:hover {
+    -fx-background-color: rgba(0, 0, 0, 0.08);
 }
 
 .analyse-vide {

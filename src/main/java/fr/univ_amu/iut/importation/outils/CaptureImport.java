@@ -22,6 +22,7 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -106,8 +107,9 @@ public final class CaptureImport {
         // remplir l'assistant comme le « cas standard » de la maquette.
         ImportationViewModel vm = injecteur.getInstance(ImportationViewModel.class);
         FXMLLoader loader = new FXMLLoader(CaptureImport.class.getResource(IMPORT_FXML));
-        loader.setControllerFactory(type ->
-                type == ImportationController.class ? new ImportationController(vm) : injecteur.getInstance(type));
+        loader.setControllerFactory(type -> type == ImportationController.class
+                ? new ImportationController(vm, injecteur.getInstance(PreferenceConservation.class))
+                : injecteur.getInstance(type));
         Parent vue = loader.load();
         Scene scene = new Scene(vue, 1100, 860);
 

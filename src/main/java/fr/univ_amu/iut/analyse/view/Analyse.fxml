@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
@@ -29,14 +30,17 @@
 
   <Label fx:id="lblResume" styleClass="analyse-resume"/>
 
-  <!-- Barre de filtres sans étiquettes (alignée sur M-Multisite) : chaque contrôle se décrit par sa
-       valeur ou son promptText (regroupement et statut affichent toujours une option ; le champ texte
-       porte son indice de saisie). -->
-  <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="analyse-barre">
+  <!-- Barre de filtres « à la Notion » (#537, étape 6) : le pivot de regroupement (espèce ↔ carré), la
+       recherche texte permanente, le bouton « + Filtre » (statut, taxon parent) et les puces des filtres
+       actifs, puis les actions carte/export. Le regroupement n'est PAS un filtre : il change l'agrégation,
+       pas le sous-ensemble affiché, d'où sa place à part (contrôle fixe). -->
+  <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
     <ComboBox fx:id="choixRegroupement"/>
-    <ComboBox fx:id="choixStatut"/>
-    <ComboBox fx:id="choixGroupe"/>
-    <TextField fx:id="champFiltre" promptText="espèce, carré…" prefWidth="170.0"/>
+    <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)"
+               accessibleText="Rechercher dans l'inventaire" prefWidth="200.0"/>
+    <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
+                accessibleText="Ajouter un filtre"/>
+    <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"/>
     <Button fx:id="boutonCarte" text="🗺️ Carte" onAction="#basculerCarte"/>
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
   </FlowPane>

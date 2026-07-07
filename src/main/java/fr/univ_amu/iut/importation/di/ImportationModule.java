@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
@@ -21,6 +22,7 @@ import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.importation.view.NavigationImportation;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 
 /// Module Guice de la feature `importation` : fournit les moteurs du parcours d'import P2
@@ -98,7 +100,8 @@ public class ImportationModule extends AbstractModule {
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
             Horloge horloge,
-            CompteurValidations compteurValidations) {
+            CompteurValidations compteurValidations,
+            ServiceSauvegarde serviceSauvegarde) {
         return new ServiceImport(
                 inspecteur,
                 copie,
@@ -108,7 +111,8 @@ public class ImportationModule extends AbstractModule {
                 uniteDeTravail,
                 workspace,
                 horloge,
-                compteurValidations);
+                compteurValidations,
+                serviceSauvegarde);
     }
 
     /// ViewModel de l'assistant M-Import. **Non-singleton** (un VM frais par chargement FXML : un
@@ -122,7 +126,16 @@ public class ImportationModule extends AbstractModule {
             Horloge horloge,
             @Named("idUtilisateurCourant") String idUtilisateur,
             NavigationViewModel navigation,
-            Reglages reglages) {
-        return new ImportationViewModel(serviceImport, serviceSites, horloge, idUtilisateur, navigation, reglages);
+            PreferenceConservation conservation) {
+        return new ImportationViewModel(serviceImport, serviceSites, horloge, idUtilisateur, navigation, conservation);
+    }
+
+    /// Préférence « conserver les originaux » **partagée** (singleton) entre l'écran d'import (liaison de
+    /// la case) et son ViewModel (recréé à chaque chargement FXML) : le choix survit à la réouverture de
+    /// l'écran et, via [Reglages], d'une session à l'autre.
+    @Provides
+    @Singleton
+    PreferenceConservation fournirPreferenceConservation(Reglages reglages) {
+        return new PreferenceConservation(reglages);
     }
 }

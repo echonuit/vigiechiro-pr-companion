@@ -39,4 +39,18 @@ public interface CritereFiltre<T> {
     default List<String> valeurCourante(Node editeur) {
         return List.of();
     }
+
+    /// **Restaure**, sur l'`editeur` déjà construit, les `valeurs` sémantiques d'un critère (telles que
+    /// produites par [#valeurCourante(Node)]) : c'est l'**inverse** de valeurCourante, pour **rejouer une vue
+    /// mémorisée** (#623). L'implémentation traduit les valeurs en clair vers les contrôles (sélection d'une
+    /// liste, position d'un curseur…), ce qui déclenche leurs écouteurs et donc la réapplication du prédicat.
+    ///
+    /// Défaut : **no-op** — convient aux critères **booléens** (éditeur `null`, la présence de la puce suffit)
+    /// et à tout critère sans valeur à restaurer ; les critères à valeur le redéfinissent.
+    ///
+    /// @param editeur le Node renvoyé par [#editeur] pour cette puce (peut être `null` pour un booléen)
+    /// @param valeurs les valeurs sémantiques à restaurer (mêmes clés/ordre que [#valeurCourante(Node)])
+    default void restaurerValeurs(Node editeur, List<String> valeurs) {
+        // no-op par défaut : critère booléen ou sans valeur restaurable.
+    }
 }

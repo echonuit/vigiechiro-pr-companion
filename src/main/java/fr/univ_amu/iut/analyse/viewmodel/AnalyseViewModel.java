@@ -2,7 +2,6 @@ package fr.univ_amu.iut.analyse.viewmodel;
 
 import fr.univ_amu.iut.analyse.model.AgregationAnalyse;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
-import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
@@ -13,13 +12,10 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -39,26 +35,16 @@ public class AnalyseViewModel {
     /// Séparateur des compteurs dans les libellés (résumé, titre du détail).
     private static final String SEPARATEUR = " · ";
 
-    /// Clés des prédicats du socle de filtres (une par critère).
-    private static final String FILTRE_STATUT = "statut";
-
-    private static final String FILTRE_GROUPE = "groupe";
-    private static final String FILTRE_TEXTE = "texte";
-
     private final ServiceAnalyse service;
     private final String idUtilisateur;
 
     private final ObjectProperty<Regroupement> regroupement =
             new SimpleObjectProperty<>(this, "regroupement", Regroupement.PAR_ESPECE);
-    /// Filtre de statut de revue ; `null` = toutes les observations.
-    private final ObjectProperty<StatutObservation> filtreStatut = new SimpleObjectProperty<>(this, "filtreStatut");
-    /// Filtre de **taxon parent** (groupe, #518) ; `null` = tous les groupes.
-    private final ObjectProperty<String> filtreGroupe = new SimpleObjectProperty<>(this, "filtreGroupe");
-    /// Filtre texte (insensible casse/accents) ; vide = aucun filtre.
-    private final StringProperty filtreTexte = new SimpleStringProperty(this, "filtreTexte", "");
 
     /// Observations enrichies de l'utilisateur (source complète), filtrées par le socle [#filtres] en une
-    /// [FilteredList] ; agrégées à chaque changement vers les tables et la carte.
+    /// [FilteredList] ; agrégées à chaque changement vers les tables et la carte. Les filtres (statut, taxon
+    /// parent #518, texte) sont **pilotés par la barre à puces** de la vue (#537, étape 6) via [#filtres()],
+    /// et non plus par des propriétés du ViewModel.
     private final ObservableList<ObservationAnalyse> toutesObservations = FXCollections.observableArrayList();
     private final FilteredList<ObservationAnalyse> observationsFiltrees = new FilteredList<>(toutesObservations);
     private final Filtres<ObservationAnalyse> filtres = new Filtres<>(observationsFiltrees, this::agreger);
@@ -91,12 +77,9 @@ public class AnalyseViewModel {
     public AnalyseViewModel(ServiceAnalyse service, String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
-        // Le regroupement ne change que l'agrégation (mêmes observations filtrées).
+        // Le regroupement ne change que l'agrégation (mêmes observations filtrées). Les filtres sont posés
+        // sur [#filtres] par la barre à puces de la vue, qui réagrège via le callback `agreger`.
         regroupement.addListener((obs, ancien, nouveau) -> agreger());
-        // Chaque filtre (re)définit son prédicat sur le socle, qui réagrège via le callback.
-        filtreStatut.addListener((obs, ancien, nouveau) -> filtres.definir(FILTRE_STATUT, predicatStatut()));
-        filtreGroupe.addListener((obs, ancien, nouveau) -> filtres.definir(FILTRE_GROUPE, predicatGroupe()));
-        filtreTexte.addListener((obs, ancien, nouveau) -> filtres.definir(FILTRE_TEXTE, predicatTexte()));
     }
 
     /// (Re)charge les observations enrichies de l'utilisateur, met à jour la liste des taxons parents, puis
@@ -109,7 +92,7 @@ public class AnalyseViewModel {
                 .distinct()
                 .sorted()
                 .toList());
-        selectionnerEspece(null);
+        selectionnerEspece(null, null); // rechargement : on repart d'un détail vide (le statut est indifférent)
         agreger();
     }
 
@@ -130,33 +113,11 @@ public class AnalyseViewModel {
         }
     }
 
-    private Predicate<ObservationAnalyse> predicatStatut() {
-        StatutObservation statut = filtreStatut.get();
-        return statut == null ? null : observation -> observation.statut() == statut;
-    }
-
-    private Predicate<ObservationAnalyse> predicatGroupe() {
-        String groupe = filtreGroupe.get();
-        return groupe == null ? null : observation -> groupe.equals(observation.groupe());
-    }
-
-    private Predicate<ObservationAnalyse> predicatTexte() {
-        String aiguille = NormalisationTexte.normaliser(filtreTexte.get());
-        return aiguille.isEmpty()
-                ? null
-                : observation -> correspond(
-                        aiguille,
-                        observation.taxonRetenu(),
-                        observation.nomVernaculaireFr(),
-                        observation.nomLatin(),
-                        observation.numeroCarre(),
-                        observation.nomSite());
-    }
-
     /// Charge dans le **détail** les observations de l'`espece` sélectionnée, à travers les passages
-    /// (filtrées par le statut courant, cohérent avec l'inventaire). `null` (ou en regroupement Par carré)
-    /// vide le panneau. Appelé par la vue quand la ligne sélectionnée de l'inventaire change.
-    public void selectionnerEspece(EspeceAgregee espece) {
+    /// (filtrées par le `statut` courant de la barre à puces, `null` = tous, cohérent avec l'inventaire).
+    /// `null` (ou en regroupement Par carré) vide le panneau. Appelé par la vue quand la ligne sélectionnée
+    /// de l'inventaire change ; le statut courant est lu par la vue sur la barre de filtres (#537, étape 6).
+    public void selectionnerEspece(EspeceAgregee espece, StatutObservation statut) {
         if (espece == null || regroupement.get() == Regroupement.PAR_CARRE) {
             especeSelectionnee = null;
             observations.clear();
@@ -165,8 +126,7 @@ public class AnalyseViewModel {
             return;
         }
         especeSelectionnee = espece;
-        List<ObservationEspece> detail =
-                service.observationsDeLEspece(idUtilisateur, espece.code(), filtreStatut.get());
+        List<ObservationEspece> detail = service.observationsDeLEspece(idUtilisateur, espece.code(), statut);
         observations.setAll(detail);
         carresEspeceSelectionnee.setAll(detail.stream()
                 .map(ObservationEspece::numeroCarre)
@@ -198,16 +158,6 @@ public class AnalyseViewModel {
         }
     }
 
-    /// Vrai si au moins un des `champs` (non nuls) contient l'`aiguille` normalisée (déjà non vide).
-    private static boolean correspond(String aiguille, String... champs) {
-        for (String champ : champs) {
-            if (champ != null && NormalisationTexte.normaliser(champ).contains(aiguille)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     /// Accord en nombre : `quantite(3, "espèce")` → `3 espèces` ; `quantite(1, "carré")` → `1 carré`.
     private static String quantite(int nombre, String unite) {
         return nombre + " " + unite + (nombre > 1 ? "s" : "");
@@ -225,33 +175,29 @@ public class AnalyseViewModel {
     }
 
     /// Décrit la **source audio** des observations de l'**espèce sélectionnée** pour la vue audio unifiée
-    /// (#audio) : toutes ses détections à travers les passages de l'utilisateur courant, **avec le filtre
-    /// de statut courant** (`null` = toutes). Construite ici car le ViewModel détient l'`idUtilisateur`, le
-    /// filtre et l'espèce sélectionnée ; le statut est porté en texte (le socle `SourceObservations` ne
-    /// dépend pas de `validation`). Précondition : une espèce est sélectionnée (le bouton « Écouter /
-    /// valider » n'est actif qu'avec une observation, donc une espèce, à l'écran).
-    public SourceObservations sourceAudioEspece() {
+    /// (#audio) : toutes ses détections à travers les passages de l'utilisateur courant, **avec le `statut`
+    /// courant de la barre à puces** (`null` = tous). Construite ici car le ViewModel détient l'`idUtilisateur`
+    /// et l'espèce sélectionnée ; le statut, lu par la vue sur la barre de filtres (#537, étape 6), est porté
+    /// en texte (le socle `SourceObservations` ne dépend pas de `validation`). Précondition : une espèce est
+    /// sélectionnée (le bouton « Écouter / valider » n'est actif qu'avec une observation, donc une espèce).
+    public SourceObservations sourceAudioEspece(StatutObservation statut) {
         Objects.requireNonNull(especeSelectionnee, "aucune espèce sélectionnée");
-        String statut = filtreStatut.get() == null ? null : filtreStatut.get().name();
         return new SourceObservations.ParEspece(
-                idUtilisateur, especeSelectionnee.code(), statut, libelleEspece(especeSelectionnee));
+                idUtilisateur,
+                especeSelectionnee.code(),
+                statut == null ? null : statut.name(),
+                libelleEspece(especeSelectionnee));
     }
 
     public ObjectProperty<Regroupement> regroupementProperty() {
         return regroupement;
     }
 
-    public ObjectProperty<StatutObservation> filtreStatutProperty() {
-        return filtreStatut;
-    }
-
-    /// Filtre **taxon parent** (groupe, #518) ; `null` = tous les groupes.
-    public ObjectProperty<String> filtreGroupeProperty() {
-        return filtreGroupe;
-    }
-
-    public StringProperty filtreTexteProperty() {
-        return filtreTexte;
+    /// Socle de filtres composables (#537) sur les observations : la **barre à puces** de la vue (#537,
+    /// étape 6) y branche/retire ses prédicats (statut, taxon parent #518, texte). Le callback `agreger`
+    /// réagrège tables, carte et résumé à chaque changement.
+    public Filtres<ObservationAnalyse> filtres() {
+        return filtres;
     }
 
     /// Taxons parents présents dans les observations (liste déroulante du filtre #518), triés.

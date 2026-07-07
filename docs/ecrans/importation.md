@@ -105,6 +105,11 @@ supprimé** (séquences, et le cas échéant les validations Tadarida déjà sai
 
 ![Seconde confirmation d'écrasement : rappel de la suppression définitive (séquences et validations) avant de confirmer.](../assets/captures/apercu-import-ecrasement.png)
 
+Par sécurité, une **sauvegarde automatique de la base est écrite juste avant l'écrasement** (dans
+`<workspace>/sauvegardes`) : si cette sauvegarde échoue, l'écrasement **n'a pas lieu**. Vous pouvez donc
+toujours revenir en arrière via **☰ → Restaurer une sauvegarde…** (voir [Sauvegarder et restaurer la
+base](index.md#sauvegarder-et-restaurer-la-base)).
+
 ### Reprise d'un import interrompu
 
 Si un import a été **interrompu** (fenêtre fermée, coupure, annulation), il suffit de le **relancer** :

@@ -3,17 +3,19 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
@@ -23,18 +25,19 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
@@ -80,13 +83,17 @@ public class AnalyseController implements RafraichirAuRetour {
     private ComboBox<Regroupement> choixRegroupement;
 
     @FXML
-    private ComboBox<StatutObservation> choixStatut;
+    private TextField champRecherche;
 
     @FXML
-    private ComboBox<String> choixGroupe;
+    private MenuButton menuAjoutFiltre;
 
     @FXML
-    private TextField champFiltre;
+    private FlowPane pucesFiltres;
+
+    /// Barre de filtres « à la Notion » (#537, étape 6) : pilote le socle `Filtres` du ViewModel (statut,
+    /// taxon parent #518, recherche texte). Construite dans [#initialize()].
+    private GestionnaireFiltres<ObservationAnalyse> gestionnaireFiltres;
 
     @FXML
     private Button boutonExporter;
@@ -196,21 +203,18 @@ public class AnalyseController implements RafraichirAuRetour {
         choixRegroupement.setConverter(convertisseur(r -> r == null ? "" : r.libelle()));
         choixRegroupement.valueProperty().bindBidirectional(viewModel.regroupementProperty());
 
-        // Filtre de statut de revue : 1re entrée (null) = tous, puis les trois statuts.
-        choixStatut.getItems().add(null);
-        choixStatut.getItems().addAll(StatutObservation.values());
-        choixStatut.setConverter(convertisseur(FormatAnalyse::libelleStatut));
-        choixStatut.valueProperty().bindBidirectional(viewModel.filtreStatutProperty());
+        // Barre de filtres « à la Notion » (#537, étape 6) : Statut et Taxon parent (#518) en puces
+        // ajoutables, recherche texte permanente. La barre pilote directement le socle Filtres du ViewModel
+        // (le regroupement, lui, reste un contrôle fixe : c'est un pivot d'agrégation, pas un filtre).
+        gestionnaireFiltres = new GestionnaireFiltres<>(
+                champRecherche,
+                menuAjoutFiltre,
+                pucesFiltres,
+                viewModel.filtres(),
+                List.of(CriteresAnalyse.statut(), CriteresAnalyse.groupe(viewModel::groupesDisponibles)),
+                CriteresAnalyse.rechercheTexte());
 
-        // Filtre Taxon parent (groupe, #518) : 1re entrée (null) = tous, puis les groupes présents (chargés
-        // à l'ouverture, resynchronisés si l'inventaire change). Client-side comme statut/texte.
-        choixGroupe.setConverter(convertisseur(g -> g == null ? "Tous les taxons parents" : g));
-        synchroniserGroupes();
-        viewModel.groupesDisponibles().addListener((ListChangeListener<String>) changement -> synchroniserGroupes());
-        choixGroupe.valueProperty().bindBidirectional(viewModel.filtreGroupeProperty());
-
-        // Filtre texte (en mémoire) et message d'export.
-        champFiltre.textProperty().bindBidirectional(viewModel.filtreTexteProperty());
+        // Message d'export.
         var exportPresent = viewModel.messageProperty().isNotEmpty();
         lblExport.textProperty().bind(viewModel.messageProperty());
         lblExport.visibleProperty().bind(exportPresent);
@@ -271,7 +275,7 @@ public class AnalyseController implements RafraichirAuRetour {
         tableEspeces
                 .getSelectionModel()
                 .selectedItemProperty()
-                .addListener((obs, ancien, espece) -> viewModel.selectionnerEspece(espece));
+                .addListener((obs, ancien, espece) -> viewModel.selectionnerEspece(espece, statutCourant()));
 
         lblDetailTitre.textProperty().bind(viewModel.detailTitreProperty());
 
@@ -378,7 +382,7 @@ public class AnalyseController implements RafraichirAuRetour {
         if (observation != null) {
             // L'espèce de la source est l'espèce sélectionnée (détenue par le ViewModel) : le détail, donc
             // l'observation cliquée, n'existe que pour une espèce sélectionnée.
-            ouvrirAudio.ouvrir(viewModel.sourceAudioEspece(), observation.idObservation());
+            ouvrirAudio.ouvrir(viewModel.sourceAudioEspece(statutCourant()), observation.idObservation());
         }
     }
 
@@ -422,17 +426,16 @@ public class AnalyseController implements RafraichirAuRetour {
         return richesse == null ? "—" : richesse.toString();
     }
 
-    /// Reconstruit les options du filtre **Taxon parent** (#518) : « Tous » (`null`) puis les groupes
-    /// présents dans l'inventaire courant (dynamiques), en conservant la sélection si elle existe encore.
-    private void synchroniserGroupes() {
-        String selection = choixGroupe.getValue();
-        var options = new ArrayList<String>();
-        options.add(null);
-        options.addAll(viewModel.groupesDisponibles());
-        choixGroupe.getItems().setAll(options);
-        if (options.contains(selection)) {
-            choixGroupe.setValue(selection);
-        }
+    /// Statut de revue actuellement filtré par la barre à puces (`null` si aucune puce « Statut » active),
+    /// lu sur le **descripteur** de la barre. Garde le détail et la source audio cohérents avec l'inventaire
+    /// (#537, étape 6) sans exposer de propriété de filtre côté ViewModel : la barre est l'unique source.
+    private StatutObservation statutCourant() {
+        return gestionnaireFiltres.decrire().criteres().stream()
+                .filter(critere -> "statut".equals(critere.nom()))
+                .flatMap(critere -> critere.valeurs().stream())
+                .findFirst()
+                .map(StatutObservation::valueOf)
+                .orElse(null);
     }
 
     private static ObservableValue<String> texte(Object valeur) {

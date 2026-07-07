@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
@@ -128,7 +129,8 @@ class ServiceImportTest {
                 new UniteDeTravail(source),
                 workspace,
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                idPassage -> 0);
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
 
         sd = preparerCarteSD(racine.resolve("sd"));
     }
@@ -298,7 +300,8 @@ class ServiceImportTest {
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                idPassage -> 0);
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
 
         ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
 
@@ -342,7 +345,8 @@ class ServiceImportTest {
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                idPassage -> 0);
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
 
         ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
 
@@ -586,6 +590,10 @@ class ServiceImportTest {
         assertThat(reimport.rapport().aDoublonDeNuit())
                 .as("un écrasement remplace, il n'est pas un doublon de nuit")
                 .isFalse();
+        // #148 : avant la suppression destructive, une sauvegarde automatique de la base a été écrite.
+        assertThat(source.workspace().racine().resolve("sauvegardes"))
+                .as("l'écrasement doit d'abord sauvegarder la base (#148)")
+                .isDirectoryContaining("glob:**/vigiechiro-sauvegarde-*.db");
     }
 
     @Test
@@ -602,7 +610,8 @@ class ServiceImportTest {
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                idPassage -> 3);
+                idPassage -> 3,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
 
         // Quadruplet déjà pris → le passage est résolu et interrogé (3) ; n° libre → aucun passage (0).
         assertThat(avecCompteur.apercuEcrasement(idPoint, 2026, 2).validations())

@@ -2,7 +2,6 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
@@ -17,14 +16,12 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.ReadOnlyDoubleWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
@@ -49,26 +46,14 @@ import javafx.collections.ObservableList;
 /// ([#executerImport(DemandeImport, java.util.function.Consumer)]) pour ne pas figer l'IHM, et relaie
 /// la **progression déterminée** (#33) au fil JavaFX via [#appliquerProgression]. Seul `javafx.beans` /
 /// `javafx.collections` est importé ici, jamais `javafx.scene` (règle `viewmodel_sans_javafx_ui`).
-// God Class marginal (WMC 47) : ce ViewModel est explicitement un **orchestrateur** (cf. Javadoc), qui
-// compose les sous-VM inspection/rattachement/contrôle et porte l'exécution — cohésif par conception.
-// Bypass ponctuel sanctionné par le ruleset PMD.
-@SuppressWarnings("PMD.GodClass")
 public class ImportationViewModel {
-
-    /// Clé du réglage persisté « conserver les originaux » (cf. [Reglages]).
-    static final String CLE_CONSERVER_ORIGINAUX = "import.conserver-originaux";
 
     private final ServiceImport serviceImport;
 
-    /// Réglages persistés : lit le défaut de « conserver les originaux » à l'ouverture de l'écran et
-    /// mémorise chaque changement, pour que le choix survive d'un lancement à l'autre.
-    private final Reglages reglages;
-
-    /// Choix « conserver les originaux » (#…) : `true` copie les WAV dans `bruts/` (défaut, comportement
-    /// historique), `false` transforme directement depuis la carte SD sans les copier (économie d'espace).
-    /// Éditable (liée bidirectionnellement à la case de la vue), initialisée depuis [Reglages] et persistée
-    /// à chaque changement.
-    private final BooleanProperty conserverOriginaux = new SimpleBooleanProperty(this, "conserverOriginaux", true);
+    /// Préférence **« conserver les originaux »** (#…), extraite dans un collaborateur partagé : le VM la
+    /// lit au lancement de l'import (et l'y mémorise) ; la vue lie la case à sa propriété. Cf.
+    /// [PreferenceConservation].
+    private final PreferenceConservation conservation;
 
     /// Socle de navigation : la feature y pousse le **verrou** (#54) pour interdire de quitter
     /// l'assistant pendant un import (l'écran porte la seule vue/VM qui reçoit le résultat).
@@ -123,15 +108,10 @@ public class ImportationViewModel {
             Horloge horloge,
             String idUtilisateur,
             NavigationViewModel navigation,
-            Reglages reglages) {
+            PreferenceConservation conservation) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
-        this.reglages = Objects.requireNonNull(reglages, "reglages");
-        // Restaure le dernier choix « conserver les originaux » (défaut : conservation activée), puis
-        // mémorise chaque changement — l'utilisateur ne re-décoche pas la case à chaque nuit importée.
-        conserverOriginaux.set(reglages.lireBooleen(CLE_CONSERVER_ORIGINAUX, true));
-        conserverOriginaux.addListener(
-                (obs, ancien, nouveau) -> reglages.ecrireBooleen(CLE_CONSERVER_ORIGINAUX, nouveau));
+        this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.inspection = new InspectionImportViewModel(serviceImport);
         // Sous-VM rattachement (#183) : il valide serviceSites / horloge / idUtilisateur et préremplit
         // l'année courante.
@@ -225,13 +205,6 @@ public class ImportationViewModel {
     /// Libellé d'étape de l'import en cours (« Copie X/N », « Transformation X/N »).
     public ReadOnlyStringProperty messageProgressionProperty() {
         return messageProgression.getReadOnlyProperty();
-    }
-
-    /// Choix **éditable** « conserver les originaux » : la vue y **lie bidirectionnellement** sa case à
-    /// cocher. `true` (défaut) copie les WAV dans `bruts/` ; `false` les transforme directement depuis la
-    /// carte SD sans les copier (économie d'espace). Persisté à chaque changement (cf. [Reglages]).
-    public BooleanProperty conserverOriginauxProperty() {
-        return conserverOriginaux;
     }
 
     /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un
@@ -377,11 +350,13 @@ public class ImportationViewModel {
     /// pour les passer à [#executerImport(DemandeImport)] sans relire de `Property` hors-thread.
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
     public DemandeImport preparerImport() {
+        // Mémorise le choix « conserver les originaux » au moment de lancer l'import (survit aux sessions).
+        conservation.memoriser();
         return new DemandeImport(
                 inspection.dossier(),
                 rattachement.idPointSelectionne(),
                 rattachement.prefixeCourant(),
-                conserverOriginaux.get());
+                conservation.valeur());
     }
 
     /// Exécute le travail lourd de l'import (copie + renommage + transformation) via
