@@ -132,6 +132,20 @@ public final class GestionnaireFiltres<T> {
         reconstruireMenu();
     }
 
+    /// **Pose** (ou met à jour) par programme le critère `nom` avec les `valeurs` sémantiques données :
+    /// ajoute sa puce si elle n'est pas déjà active, puis y restaure les valeurs (via
+    /// [CritereFiltre#restaurerValeurs(Node, List)]). Permet à la vue de piloter un filtre sans clic
+    /// utilisateur : p. ex. le multisite filtre par le carré **cliqué sur la carte** (#152/#476). Sans
+    /// effet si `nom` n'appartient pas au catalogue des critères.
+    public void poser(String nom, List<String> valeurs) {
+        critereParNom(nom).ifPresent(critere -> {
+            if (!actifs.containsKey(nom)) {
+                ajouterPuce(critere);
+            }
+            critere.restaurerValeurs(actifs.get(nom), valeurs);
+        });
+    }
+
     /// **Photographie** l'état courant des filtres (recherche texte + puces actives avec leurs valeurs), pour
     /// le mémoriser le temps de la session (#484). Chaque puce est décrite par le [CritereFiltre#nom()] et les
     /// valeurs de ses contrôles (index de liste déroulante, valeur de curseur), dans l'ordre d'ajout.
