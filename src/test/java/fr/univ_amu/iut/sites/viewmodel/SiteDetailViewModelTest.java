@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -87,6 +88,35 @@ class SiteDetailViewModelTest {
         assertThat(carteA1.gpsPresent()).isTrue();
         assertThat(carteA1.nombrePassages()).isEqualTo(1);
         assertThat(viewModel.points().get(1).gpsPresent()).isFalse();
+        // Un seul point géolocalisé (B2 sans GPS) → pas de distance au plus proche.
+        assertThat(carteA1.distanceProche()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Distance au point le plus proche et alerte si sous le seuil (#154)")
+    void distance_et_alerte_proximite() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        // A1 et B2 séparés d'environ 100 m (≈ 0,0009° de latitude) → sous le seuil de 200 m.
+        service.ajouterPoint(site.id(), "A1", 43.5000, 5.4000, null);
+        service.ajouterPoint(site.id(), "B2", 43.5009, 5.4000, null);
+        // C3 éloigné (≈ 1 km) → au-dessus du seuil.
+        service.ajouterPoint(site.id(), "C3", 43.5090, 5.4000, null);
+
+        viewModel.chargerSite(site);
+
+        CartePoint a1 = viewModel.points().stream()
+                .filter(c -> c.point().code().equals("A1"))
+                .findFirst()
+                .orElseThrow();
+        assertThat(a1.distanceProche()).hasValueSatisfying(d -> assertThat(d).isCloseTo(100, within(10.0)));
+        assertThat(a1.tropProche()).isTrue();
+
+        CartePoint c3 = viewModel.points().stream()
+                .filter(c -> c.point().code().equals("C3"))
+                .findFirst()
+                .orElseThrow();
+        // Le plus proche de C3 est B2 (≈ 900 m) → au-dessus du seuil, pas d'alerte.
+        assertThat(c3.tropProche()).isFalse();
     }
 
     @Test

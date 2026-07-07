@@ -60,6 +60,9 @@ import javafx.util.StringConverter;
 /// refléter le nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant).
 public class SiteDetailController implements RafraichirAuRetour {
 
+    /// Classe de style des lignes secondaires d'une carte de point (description, compteur, distance).
+    private static final String STYLE_DESC = "carte-point-desc";
+
     private final SiteDetailViewModel viewModel;
     private final NavigationSites navigation;
     private final OuvrirPassage ouvrirPassage;
@@ -275,13 +278,33 @@ public class SiteDetailController implements RafraichirAuRetour {
         Label code = new Label(point.code());
         code.getStyleClass().add("carte-point-code");
         Label description = new Label(libelleDescription(point));
-        description.getStyleClass().add("carte-point-desc");
+        description.getStyleClass().add(STYLE_DESC);
         Node gps = construireBadgeGps(carte);
         Label passages = new Label(carte.nombrePassages() + " passage(s) rattaché(s)");
-        passages.getStyleClass().add("carte-point-desc");
-        VBox boite = new VBox(code, description, gps, passages, actionsPoint(carte));
+        passages.getStyleClass().add(STYLE_DESC);
+        VBox boite = new VBox(code, description, gps, passages);
+        carte.distanceProche()
+                .ifPresent(distance -> boite.getChildren().add(etiquetteProximite(distance, carte.tropProche())));
+        boite.getChildren().add(actionsPoint(carte));
         boite.getStyleClass().add("carte-point");
         return boite;
+    }
+
+    /// Étiquette « à … du point le plus proche » (#154). Passe en **alerte** (⚠, style dédié) quand la
+    /// distance est sous le seuil de proximité, pour signaler des points anormalement rapprochés.
+    private static Label etiquetteProximite(double metres, boolean tropProche) {
+        Label proximite =
+                new Label((tropProche ? "⚠ " : "") + "à " + distanceLisible(metres) + " du point le plus proche");
+        proximite.getStyleClass().add(tropProche ? "carte-point-alerte" : STYLE_DESC);
+        proximite.setWrapText(true);
+        return proximite;
+    }
+
+    /// Distance lisible : mètres arrondis en deçà de 1 km, kilomètres à une décimale au-delà.
+    private static String distanceLisible(double metres) {
+        return metres >= 1000
+                ? String.format(java.util.Locale.FRENCH, "%.1f km", metres / 1000)
+                : String.format(java.util.Locale.FRENCH, "%.0f m", metres);
     }
 
     /// Badge GPS de la carte de point : un [Hyperlink] qui, quand les coordonnées sont présentes, ouvre

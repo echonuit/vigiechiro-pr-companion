@@ -331,6 +331,13 @@
     -fx-text-fill: #6a737d;
 }
 
+/* #154 : deux points trop proches (sous le seuil) - avertissement orange, non bloquant. */
+.carte-point-alerte {
+    -fx-font-size: 12px;
+    -fx-text-fill: #b9770e;
+    -fx-font-weight: bold;
+}
+
 .carte-point-actions {
     -fx-spacing: 10;
 }

@@ -168,7 +168,8 @@ public class SiteDetailViewModel {
     private void mettreAJourCartesPoints(List<PointDEcoute> pointsDuSite) {
         List<CartePoint> cartes = new ArrayList<>();
         for (PointDEcoute point : pointsDuSite) {
-            cartes.add(new CartePoint(point, passageDao.findByPoint(point.id()).size()));
+            Double distanceProche = ProximitePoints.distanceAuPlusProche(point, pointsDuSite);
+            cartes.add(new CartePoint(point, passageDao.findByPoint(point.id()).size(), distanceProche));
         }
         points.setAll(cartes);
     }
