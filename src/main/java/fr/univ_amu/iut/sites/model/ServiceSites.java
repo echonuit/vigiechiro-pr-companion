@@ -114,7 +114,7 @@ public class ServiceSites {
     /// Ajoute un point d'écoute à un site existant.
     ///
     /// - Le site doit exister.
-    /// - R2 (dur) : le code de point doit valider `[A-Z][0-9]`, cf. [ValidateurCodePoint].
+    /// - R2 (dur) : le code de point doit valider `[A-Z][0-9]+`, cf. [ValidateurCodePoint].
     /// - Unicité (dur) : le code doit être unique dans le site.
     ///
     /// @return le point inséré, avec son `id` auto-généré
@@ -137,7 +137,7 @@ public class ServiceSites {
 
     /// Met à jour un point d'écoute existant (édition depuis la modale).
     ///
-    /// - R2 (dur) : le code doit valider `[A-Z][0-9]`, cf. [ValidateurCodePoint].
+    /// - R2 (dur) : le code doit valider `[A-Z][0-9]+`, cf. [ValidateurCodePoint].
     /// - Intégrité (dur) : le point doit exister et appartenir au site fourni (on refuse un couple
     ///   `idPoint`/`idSite` incohérent qui déplacerait silencieusement un point d'un site à l'autre).
     /// - Unicité (dur) : le code doit rester unique dans le site, **en excluant le point courant**

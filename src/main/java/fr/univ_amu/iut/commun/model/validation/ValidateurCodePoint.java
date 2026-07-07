@@ -4,17 +4,17 @@ import java.util.regex.Pattern;
 
 /// Validation d'un code de point d'écoute (R2).
 ///
-/// Un code de point vaut **exactement 2 caractères : une lettre majuscule suivie d'un
-/// chiffre** (ex. `A1`, `Z4`). La validation se fait à la saisie.
+/// Un code de point vaut **une lettre majuscule suivie d'un ou plusieurs chiffres** (ex. `A1`, `Z4`,
+/// `Z41`). Le numéro peut comporter **plusieurs chiffres**. La validation se fait à la saisie.
 public final class ValidateurCodePoint {
 
-    private static final Pattern LETTRE_CHIFFRE = Pattern.compile("[A-Z][0-9]");
+    private static final Pattern LETTRE_CHIFFRES = Pattern.compile("[A-Z][0-9]+");
 
     private ValidateurCodePoint() {}
 
-    /// `true` si `code` est une lettre majuscule suivie d'un chiffre.
+    /// `true` si `code` est une lettre majuscule suivie d'un ou plusieurs chiffres.
     public static boolean estValide(String code) {
-        return code != null && LETTRE_CHIFFRE.matcher(code).matches();
+        return code != null && LETTRE_CHIFFRES.matcher(code).matches();
     }
 
     /// Vérifie `code` et le renvoie inchangé, ou lève une [IllegalArgumentException] si la
@@ -22,7 +22,7 @@ public final class ValidateurCodePoint {
     public static String exigerValide(String code) {
         if (!estValide(code)) {
             throw new IllegalArgumentException(
-                    "Code de point invalide (une lettre majuscule + un chiffre, ex. A1) : " + code);
+                    "Code de point invalide (une lettre majuscule + un ou plusieurs chiffres, ex. A1, Z41) : " + code);
         }
         return code;
     }
