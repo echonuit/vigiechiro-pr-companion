@@ -438,7 +438,8 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR111_20260422_200000.wav"), Path.of("PaRecPR222_20260422_200000.wav")),
                         EtatNommage.BRUT,
-                        null));
+                        null,
+                        List.of()));
         viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
@@ -458,7 +459,8 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR1925492_20260422_200000.wav")),
                         EtatNommage.BRUT,
-                        38400));
+                        38400,
+                        List.of()));
         viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
@@ -495,7 +497,8 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR1648011_20260422_203000.wav")), // série ≠ journal
                         EtatNommage.BRUT,
-                        null));
+                        null,
+                        List.of()));
         viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();

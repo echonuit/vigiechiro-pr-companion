@@ -21,6 +21,8 @@ import java.util.Optional;
 /// @param frequenceEnTeteHz fréquence d'échantillonnage lue dans l'en-tête d'un original représentatif
 ///     (le premier lisible), ou `null` si aucun original lisible. Sert à repérer, à l'aperçu, un
 ///     enregistrement **déjà ralenti** (cf. [DetectionRalenti]) au regard de la fréquence du journal.
+/// @param cyclesJournal cycles d'acquisition (réveil→veille) extraits du journal, un par nuit ; vide si
+///     pas de journal. Sert à qualifier la **complétude** des nuits détectées (cf. [#partitionNuits()]).
 public record RapportInspection(
         Path dossierSource,
         Path cheminJournal,
@@ -28,10 +30,12 @@ public record RapportInspection(
         Path cheminReleveClimatique,
         List<Path> originaux,
         EtatNommage etatNommage,
-        Integer frequenceEnTeteHz) {
+        Integer frequenceEnTeteHz,
+        List<CycleAcquisition> cyclesJournal) {
 
     public RapportInspection {
         originaux = List.copyOf(originaux);
+        cyclesJournal = List.copyOf(cyclesJournal);
     }
 
     /// `true` si un journal du capteur a pu être localisé et parsé.
@@ -66,5 +70,12 @@ public record RapportInspection(
     /// d'avertissement non bloquant à l'inspection.
     public AnalyseCoherence coherence() {
         return AnalyseCoherence.depuis(journal, cheminReleveClimatique, originaux);
+    }
+
+    /// Partition des [#originaux] en **nuits** (soir → matin), avec l'état complet/tronqué de chacune
+    /// déduit des [#cyclesJournal()]. Une seule nuit ⇒ liste à un élément (import classique). Sert à
+    /// l'IHM (liste des nuits + inclure/exclure) et au découpage de l'import en un passage par nuit.
+    public List<NuitDetectee> partitionNuits() {
+        return PartitionNuits.partitionner(originaux, cyclesJournal);
     }
 }

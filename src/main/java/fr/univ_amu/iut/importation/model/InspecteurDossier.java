@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.model;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -41,12 +42,25 @@ public class InspecteurDossier {
             throw new IllegalArgumentException("Dossier source introuvable : " + dossierSource);
         }
         Path cheminJournal = trouverPremier(dossierSource, this::estJournalLog);
-        JournalParse journal = cheminJournal == null ? null : analyseurLog.analyser(cheminJournal);
+        // Le journal est lu **une** fois : il alimente à la fois l'identité/paramètres (AnalyseurLogPR) et
+        // les cycles réveil/veille par nuit (CyclesJournal, pour la complétude des nuits détectées).
+        List<String> lignesJournal = cheminJournal == null ? List.of() : lireLignesJournal(cheminJournal);
+        JournalParse journal = cheminJournal == null ? null : analyseurLog.analyser(lignesJournal);
+        List<CycleAcquisition> cycles = CyclesJournal.depuis(lignesJournal);
         Path releve = trouverPremier(dossierSource, this::estReleveClimatique);
         List<Path> originaux = listerOriginaux(dossierSource);
         EtatNommage etat = determinerEtatNommage(originaux);
         Integer frequenceEnTete = lireFrequenceRepresentative(originaux);
-        return new RapportInspection(dossierSource, cheminJournal, journal, releve, originaux, etat, frequenceEnTete);
+        return new RapportInspection(
+                dossierSource, cheminJournal, journal, releve, originaux, etat, frequenceEnTete, cycles);
+    }
+
+    private static List<String> lireLignesJournal(Path cheminJournal) {
+        try {
+            return Files.readAllLines(cheminJournal, StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Lecture impossible du journal " + cheminJournal, e);
+        }
     }
 
     /// Fréquence d'échantillonnage du **premier original lisible** (en-tête seulement, sans charger le
