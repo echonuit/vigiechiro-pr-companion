@@ -133,7 +133,7 @@ final class GraineSonsValidation {
 
                     @Provides
                     OuvrirAnalyse ouvrirAnalyse() {
-                        return () -> {};
+                        return (filtres, afficherCarte) -> {};
                     }
 
                     @Provides

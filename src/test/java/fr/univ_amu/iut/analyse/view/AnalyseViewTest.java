@@ -17,6 +17,8 @@ import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -34,6 +36,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -297,5 +300,36 @@ class AnalyseViewTest {
                         .queryAs(Button.class)
                         .getText())
                 .isEqualTo("+ Vue");
+    }
+
+    @Test
+    @DisplayName("#476 : appliquer(descripteur, carte) rejoue les filtres partagés et ouvre la carte")
+    void appliquer_transporte_les_filtres_partages_et_ouvre_la_carte(FxRobot robot) {
+        StackPane zoneCarte = robot.lookup("#zoneCarte").queryAs(StackPane.class);
+        Button boutonCarte = robot.lookup("#boutonCarte").queryAs(Button.class);
+        TextField recherche = robot.lookup("#champRecherche").queryAs(TextField.class);
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        assertThat(zoneCarte.isVisible()).as("carte masquée au départ").isFalse();
+
+        // Descripteur tel que transporté depuis l'audio : recherche texte + critère partagé « statut » et un
+        // critère « proba » propre à l'audio, que l'analyse doit ignorer (catalogue différent).
+        DescripteurFiltre descripteur = new DescripteurFiltre(
+                "Pippip",
+                List.of(
+                        new DescripteurCritere("statut", List.of("VALIDEE")),
+                        new DescripteurCritere("proba", List.of("0.5"))));
+
+        robot.interact(() -> controleur.appliquer(descripteur, true));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // La carte s'ouvre et le libellé du bouton suit la bascule **programmatique** (#476).
+        assertThat(zoneCarte.isVisible()).as("la carte s'ouvre").isTrue();
+        assertThat(boutonCarte.getText()).contains("Tableau");
+        // La recherche texte est transportée telle quelle.
+        assertThat(recherche.getText()).isEqualTo("Pippip");
+        // Seul le critère partagé « statut » est rejoué (une puce à combo) ; « proba » (audio) est ignoré.
+        assertThat(robot.from(puces).lookup(".combo-box").queryAllAs(ComboBox.class))
+                .as("seul le critère partagé est rejoué, le critère propre à l'audio est ignoré")
+                .hasSize(1);
     }
 }

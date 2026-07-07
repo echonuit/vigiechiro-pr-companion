@@ -35,7 +35,7 @@ public final class NavigationDeTestModule extends AbstractModule {
 
     @Provides
     OuvrirAnalyse ouvrirAnalyse() {
-        return () -> {};
+        return (filtres, afficherCarte) -> {};
     }
 
     @Provides

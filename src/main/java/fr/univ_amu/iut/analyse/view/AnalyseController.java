@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -333,6 +334,11 @@ public class AnalyseController implements RafraichirAuRetour {
     /// composant carte (et sa dépendance Gluon Maps) n'est créé/installé qu'au **premier** passage en mode
     /// Carte, pour garder l'écran d'inventaire léger tant qu'on reste en tableau.
     private void configurerCarte() {
+        // Le libellé du bouton suit l'état d'affichage : robuste à une bascule **programmatique** (« Voir sur
+        // la carte » depuis l'audio, #476), pas seulement au clic sur le bouton lui-même.
+        boutonCarte
+                .textProperty()
+                .bind(Bindings.when(carteAffichee).then("📋 Tableau").otherwise("🗺️ Carte"));
         carteAffichee.addListener((obs, ancien, affichee) -> {
             if (Boolean.TRUE.equals(affichee) && carteRepartition == null) {
                 carteRepartition = new CarteRepartition(
@@ -342,11 +348,11 @@ public class AnalyseController implements RafraichirAuRetour {
         });
     }
 
-    /// « 🗺️ Carte » / « 📋 Tableau » : bascule l'affichage de la zone maître entre l'inventaire et la carte.
+    /// « 🗺️ Carte » / « 📋 Tableau » : bascule l'affichage de la zone maître entre l'inventaire et la carte
+    /// (le libellé du bouton est **lié** à [#carteAffichee], cf. [#configurerCarte]).
     @FXML
     private void basculerCarte() {
         carteAffichee.set(!carteAffichee.get());
-        boutonCarte.setText(carteAffichee.get() ? "📋 Tableau" : "🗺️ Carte");
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] au **retour** sur l'écran : des
@@ -354,6 +360,20 @@ public class AnalyseController implements RafraichirAuRetour {
     @Override
     public void rafraichirAuRetour() {
         viewModel.rafraichir();
+    }
+
+    /// Rejoue un descripteur de filtres transporté depuis une autre vue (« Voir sur la carte » depuis
+    /// l'audio, #476) et bascule éventuellement sur la carte. Le socle
+    /// [GestionnaireFiltres#restaurer(DescripteurFiltre)] **ignore les critères inconnus** de l'analyse :
+    /// seuls les critères partagés (statut, groupe) et la recherche texte sont réappliqués.
+    ///
+    /// @param filtres descripteur à rejouer, ou `null` pour ne rien changer aux filtres
+    /// @param afficherCarte `true` pour basculer sur la carte de répartition
+    public void appliquer(DescripteurFiltre filtres, boolean afficherCarte) {
+        if (filtres != null) {
+            gestionnaireFiltres.restaurer(filtres);
+        }
+        carteAffichee.set(afficherCarte);
     }
 
     /// « 📤 Exporter… » : sélecteur de fichier natif (enregistrement) puis délègue au ViewModel l'écriture

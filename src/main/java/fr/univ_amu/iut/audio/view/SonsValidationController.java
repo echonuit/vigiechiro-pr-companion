@@ -105,6 +105,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private MenuButton menuActions;
 
     @FXML
+    private MenuItem itemVoirCarte;
+
+    @FXML
     private MenuItem itemImporter;
 
     @FXML
@@ -546,6 +549,15 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private void basculerReference() {
         actionsSelection.basculerReference();
+    }
+
+    /// « 🗺 Voir sur la carte » (#476) : rouvre l'analyse « Espèces & observations » directement sur la
+    /// **carte de répartition**, en y transportant les filtres courants. Le socle ne rejoue que les critères
+    /// que l'analyse connaît (statut, groupe) et la recherche texte ; les filtres propres à l'audio (proba,
+    /// références, espèce, heure) sont ignorés.
+    @FXML
+    private void voirSurCarte() {
+        ouvrirAnalyse.ouvrir(gestionnaireFiltres.decrire(), true);
     }
 
     /// « Importer / Réimporter un CSV Tadarida » : sélecteur de fichier natif (ouverture) puis

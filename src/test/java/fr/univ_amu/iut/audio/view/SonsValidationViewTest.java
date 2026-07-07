@@ -15,13 +15,16 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
+import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
@@ -74,6 +77,7 @@ class SonsValidationViewTest {
     private ServiceValidation service;
     private RevueEnLot revueEnLot;
     private DepotVues depotVues;
+    private OuvrirAnalyse ouvrirAnalyse;
     private SonsValidationController controleur;
 
     private static LigneObservationAudio ligne(
@@ -120,6 +124,7 @@ class SonsValidationViewTest {
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
         depotVues = mock(DepotVues.class);
+        ouvrirAnalyse = mock(OuvrirAnalyse.class);
         // Une vue déjà enregistrée pour cet écran : elle doit apparaître comme onglet (nom seul lu à l'init).
         when(depotVues.findByFeature("audio"))
                 .thenReturn(List.of(new VueSauvegardee(1L, "audio", "À revoir", "{\"criteres\":[]}")));
@@ -136,7 +141,14 @@ class SonsValidationViewTest {
                         return depotVues;
                     }
                 },
-                new NavigationDeTestModule());
+                // Le socle de navigation est neutre par défaut ; on remplace OuvrirAnalyse par un mock pour
+                // vérifier l'appel « Voir sur la carte » (#476).
+                Modules.override(new NavigationDeTestModule()).with(new AbstractModule() {
+                    @Provides
+                    OuvrirAnalyse ouvrirAnalyse() {
+                        return ouvrirAnalyse;
+                    }
+                }));
         FXMLLoader loader = new FXMLLoader(SonsValidationController.class.getResource("SonsValidation.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
@@ -158,6 +170,19 @@ class SonsValidationViewTest {
         // Le résumé destiné à la barre de statut porte le total + l'avancement (les 2 lignes sont VALIDEE),
         // sans répéter le nom d'écran.
         assertThat(controleur.resumeStatutProperty().get()).isEqualTo("2 observation(s) · 2 / 2 revues");
+    }
+
+    @Test
+    @DisplayName("#476 : « Voir sur la carte » rouvre l'analyse sur la carte avec les filtres courants")
+    void voir_sur_la_carte_ouvre_l_analyse_avec_carte(FxRobot robot) {
+        MenuButton menuActions = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        MenuItem voirCarte = itemParLibelle(menuActions, "🗺 Voir sur la carte");
+
+        robot.interact(voirCarte::fire);
+
+        // Le clic rouvre l'analyse en demandant la carte (afficherCarte=true), avec un descripteur des
+        // filtres courants (jamais null : la barre décrit au moins une recherche vide).
+        verify(ouvrirAnalyse).ouvrir(any(DescripteurFiltre.class), eq(true));
     }
 
     @Test
@@ -434,13 +459,13 @@ class SonsValidationViewTest {
     @Test
     @DisplayName("Source References : menu « Exporter la bibliothèque » visible, actions passage masquées")
     void menu_adapte_a_la_source(FxRobot robot) {
-        // Les MenuItem ne sont pas des Node : on passe par le MenuButton et ses items (ordre du FXML :
-        // importer, inclure le mode, exporter _Vu, exporter bibliothèque).
+        // Les MenuItem ne sont pas des Node : on passe par le MenuButton et ses items, repérés par leur
+        // libellé (robuste à l'ordre / aux ajouts, comme « Voir sur la carte » en tête, #476).
         MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
-        MenuItem importer = menu.getItems().get(0);
-        MenuItem inclureMode = menu.getItems().get(1);
-        MenuItem exporterVu = menu.getItems().get(2);
-        MenuItem exporterBiblio = menu.getItems().get(3);
+        MenuItem importer = itemParLibelle(menu, "📥 Importer un CSV Tadarida…");
+        MenuItem inclureMode = itemParLibelle(menu, "Inclure le mode de validation à l'export _Vu");
+        MenuItem exporterVu = itemParLibelle(menu, "📤 Exporter _Vu…");
+        MenuItem exporterBiblio = itemParLibelle(menu, "📤 Exporter la bibliothèque…");
 
         assertThat(menu.isVisible()).isTrue();
         assertThat(exporterBiblio.isVisible()).isTrue();
@@ -449,6 +474,14 @@ class SonsValidationViewTest {
         assertThat(exporterVu.isVisible()).isFalse();
         // Source multi-passages : les colonnes de contexte restent visibles.
         assertThat(colonne(robot, "Passage").isVisible()).isTrue();
+    }
+
+    /// Retrouve un MenuItem par son libellé exact (les MenuItem ne sont pas des Node, donc pas de lookup CSS).
+    private static MenuItem itemParLibelle(MenuButton menu, String libelle) {
+        return menu.getItems().stream()
+                .filter(item -> libelle.equals(item.getText()))
+                .findFirst()
+                .orElseThrow();
     }
 
     @Test
