@@ -269,6 +269,31 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("exporter-observations sans --sortie : argument manquant (code 2)")
+    void exporter_observations_argument_manquant() {
+        int code = cli.executer(new String[] {"exporter-observations", "--passage", "1"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("--sortie");
+    }
+
+    @Test
+    @DisplayName("exporter-observations sur un passage sans observation : CSV d'en-têtes seuls, succès (0)")
+    void exporter_observations_csv_entetes() throws Exception {
+        Path cible = workspace.resolve("observations.csv");
+
+        int code = cli.executer(
+                new String[] {"exporter-observations", "--passage", "999", "--sortie", cible.toString()},
+                sortie,
+                erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(Files.exists(cible)).isTrue();
+        assertThat(Files.readString(cible)).contains("Carré").contains("Taxon Tadarida");
+        assertThat(texteSortie()).contains("0 ligne(s)");
+    }
+
+    @Test
     @DisplayName("exporter-vu sans --sortie : argument manquant, code 2, rien écrit")
     void exporter_vu_argument_manquant() {
         int code = cli.executer(new String[] {"exporter-vu", "--passage", "1"}, sortie, erreur);

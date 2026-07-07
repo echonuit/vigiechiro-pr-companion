@@ -58,6 +58,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
+| `exporter-observations` | `--passage <id> --sortie <fichier>` | #149 | `ServiceValidation.lignesAudioDuPassage` + `ExportObservationsCsv` |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
 
 ### Socle : registre de commandes picocli (#614)
