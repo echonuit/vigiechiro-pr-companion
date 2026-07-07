@@ -54,9 +54,8 @@ avant de poursuivre l'inspection comme pour un dossier ordinaire.
 
 L'inspection signale les anomalies **avant** l'import, pour éviter d'importer une mauvaise nuit.
 
-Un **mélange** dans le dossier (plusieurs enregistreurs aux séries différentes, ou plusieurs nuits
-aux dates non consécutives, alors qu'un dossier ne devrait contenir qu'une seule nuit d'un seul
-enregistreur) déclenche un avertissement, sans bloquer l'import :
+Un **mélange** dans le dossier (plusieurs enregistreurs aux séries différentes) déclenche un
+avertissement, sans bloquer l'import :
 
 ![Cas « mélange » : un avertissement signale que le dossier contient plusieurs enregistreurs ou plusieurs nuits.](../assets/captures/apercu-import-melange.png)
 
@@ -65,8 +64,39 @@ correspondent pas) est signalée plus fermement :
 
 ![Cas « incohérence » : le journal ne correspond pas aux enregistrements (série et date).](../assets/captures/apercu-import-incoherence.png)
 
-Dans les deux cas, l'import reste possible : à vous de vérifier que le dossier correspond bien à une
-seule et même nuit avant de continuer.
+Dans les deux cas, l'import reste possible : à vous de vérifier que le dossier correspond bien à ce
+que vous attendez avant de continuer. Le cas de **plusieurs nuits** d'un même enregistreur, lui, n'est
+pas un simple avertissement : il est **pris en charge** par le découpage décrit ci-dessous.
+
+## Plusieurs nuits sur une même carte
+
+Si vous laissez l'enregistreur tourner **plusieurs nuits** d'affilée (jusqu'à saturation de la carte),
+le dossier contient les enregistrements de **N nuits**. Un passage Vigie-Chiro correspondant à **une
+seule** nuit, l'inspection **détecte les nuits** et propose de **découper l'import** : chaque nuit
+donnera un **passage distinct** (au même point, avec des **numéros de passage consécutifs** et la
+**date propre** de chaque nuit).
+
+Une **table des nuits** apparaît alors, une ligne par nuit :
+
+- **Importer** : case à cocher (cochée par défaut). Décochez une nuit pour ne pas l'importer ; les
+  numéros de passage proposés se **renumérotent** automatiquement pour rester consécutifs.
+- **Nuit du** : date du soir de la nuit (date du futur passage).
+- **Fichiers** : nombre d'enregistrements de la nuit.
+- **État** : **complète** ou **incomplète**. Une nuit est signalée **incomplète** quand le journal
+  montre qu'elle s'est arrêtée anormalement (carte SD pleine, interruption). Elle reste **incluse par
+  défaut** — à vous de décider de la conserver (pour la faire traiter par Tadarida) ou de la décocher.
+- **Passage n°** : numéro attribué à la nuit, **auto-numéroté** à partir du prochain numéro libre du
+  point (« — » si la nuit est décochée).
+- La mention **« déjà importée »** rappelle qu'un passage existe déjà en base pour cette nuit.
+
+Les numéros sont proposés **automatiquement** (consécutifs depuis le prochain libre) ; le bouton
+**Importer** reste indisponible tant qu'aucune nuit n'est cochée ou qu'un numéro proposé est déjà pris.
+Chaque nuit incluse est importée **indépendamment** (une transaction par nuit) : si l'une échoue, les
+nuits déjà importées demeurent. À la fin, le récapitulatif indique le **nombre de passages créés** et
+la **plage de dates** couverte.
+
+Une carte ne contenant **qu'une seule** nuit est importée comme avant, sans table (le parcours
+mono-nuit est inchangé).
 
 ## Pendant l'import
 
