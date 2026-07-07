@@ -36,7 +36,8 @@ public class MigrationSchema {
         "V07__renommer_median_freq_khz.sql",
         "V08__rattacher_fil_rouge_chiropteres.sql",
         "V09__horodatage_capture_sequence.sql",
-        "V10__materiel_micro_passage.sql"
+        "V10__materiel_micro_passage.sql",
+        "V11__reglages.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";
