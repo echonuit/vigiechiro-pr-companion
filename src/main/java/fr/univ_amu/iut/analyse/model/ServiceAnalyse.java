@@ -14,13 +14,13 @@ import java.util.List;
 import java.util.Objects;
 
 /// Service de la feature **`analyse`** (prisme « Espèces & biodiversité ») : expose la **lecture
-/// transverse** des observations, agrégées par **espèce** ou par **carré** (richesse spécifique), pour
-/// répondre à « quelles espèces, où, combien ». Pur **model** (aucune dépendance IHM/navigation).
+/// transverse** des observations de l'utilisateur, pour répondre à « quelles espèces, où, combien ». Pur
+/// **model** (aucune dépendance IHM/navigation).
 ///
-/// S'appuie sur les **observations enrichies** de [ObservationDao] (feature `validation`), puis **filtre
-/// (statut) et agrège côté client** via [AgregationAnalyse] (#537 étape 4) — l'agrégation n'est plus faite
-/// en SQL. À l'échelle visée (~4000 observations), le regroupement en mémoire est immédiat et évite de
-/// ré-interroger la base à chaque changement de filtre.
+/// Fournit les **observations enrichies** de [ObservationDao] (feature `validation`) ; le **filtrage**
+/// (statut, taxon parent, texte) et l'**agrégation** (par espèce / par carré, via [AgregationAnalyse]) se
+/// font **côté client** dans le ViewModel (#537), sur le socle partagé de filtres. À l'échelle visée
+/// (~4000 observations), tout se fait en mémoire, sans ré-interroger la base à chaque changement de filtre.
 public class ServiceAnalyse {
 
     private final ObservationDao observationDao;
@@ -29,25 +29,11 @@ public class ServiceAnalyse {
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
     }
 
-    /// Inventaire **par espèce** des observations de l'utilisateur, filtré par `statut` (`null` = tous).
-    /// L'agrégation se fait **côté client** (#537 étape 4) : on lit les observations enrichies puis on les
-    /// regroupe via [AgregationAnalyse], plutôt qu'en SQL.
-    public List<EspeceAgregee> inventaireParEspece(String idUtilisateur, StatutObservation statut) {
-        return AgregationAnalyse.parEspece(observationsFiltrees(idUtilisateur, statut));
-    }
-
-    /// Inventaire **par carré** (richesse spécifique) des observations de l'utilisateur, filtré par
-    /// `statut` (`null` = tous). Agrégation **côté client** (cf. [#inventaireParEspece]).
-    public List<CarreEspeces> inventaireParCarre(String idUtilisateur, StatutObservation statut) {
-        return AgregationAnalyse.parCarre(observationsFiltrees(idUtilisateur, statut));
-    }
-
-    /// Observations enrichies de l'utilisateur, **filtrées par statut** en mémoire (`null` = toutes) :
-    /// matière commune des deux agrégations. Un [ObservationAnalyse#statut()] est comparé au statut demandé.
-    private List<ObservationAnalyse> observationsFiltrees(String idUtilisateur, StatutObservation statut) {
-        return observationDao.observationsAnalyse(idUtilisateur).stream()
-                .filter(observation -> statut == null || observation.statut() == statut)
-                .toList();
+    /// **Observations enrichies** de l'utilisateur (#537 étape 4) : la matière **filtrée et agrégée côté
+    /// client** par le ViewModel (statut, taxon parent, texte via le socle [Filtres], puis [AgregationAnalyse]
+    /// par espèce / par carré). Chargées une fois à l'ouverture de l'écran.
+    public List<ObservationAnalyse> observationsAnalyse(String idUtilisateur) {
+        return observationDao.observationsAnalyse(idUtilisateur);
     }
 
     /// **Détail** d'une espèce : ses observations à travers les passages de l'utilisateur, filtrées par

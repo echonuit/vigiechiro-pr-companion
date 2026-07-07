@@ -35,6 +35,7 @@
   <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="analyse-barre">
     <ComboBox fx:id="choixRegroupement"/>
     <ComboBox fx:id="choixStatut"/>
+    <ComboBox fx:id="choixGroupe"/>
     <TextField fx:id="champFiltre" promptText="espèce, carré…" prefWidth="170.0"/>
     <Button fx:id="boutonCarte" text="🗺️ Carte" onAction="#basculerCarte"/>
     <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>

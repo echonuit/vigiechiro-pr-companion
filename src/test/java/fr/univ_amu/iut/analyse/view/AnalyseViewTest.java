@@ -19,8 +19,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import fr.univ_amu.iut.validation.model.CarreEspeces;
-import fr.univ_amu.iut.validation.model.EspeceAgregee;
+import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
@@ -57,20 +56,7 @@ class AnalyseViewTest {
         service = mock(ServiceAnalyse.class);
         ouvrirPassage = mock(OuvrirPassage.class);
         ouvrirAudio = mock(OuvrirAudio.class);
-        when(service.inventaireParEspece(anyString(), any()))
-                .thenReturn(List.of(new EspeceAgregee(
-                        "Pippip",
-                        "Pipistrellus pipistrellus",
-                        "Pipistrelle commune",
-                        "Pipistrellus",
-                        5,
-                        2,
-                        1,
-                        1,
-                        2026,
-                        2026)));
-        when(service.inventaireParCarre(anyString(), any()))
-                .thenReturn(List.of(new CarreEspeces("640380", "Étang", 4, 10, 2025, 2026)));
+        when(service.observationsAnalyse(anyString())).thenReturn(List.of(obsAnalyse("Pippip", "Pipistrelle commune")));
         when(service.observationsDeLEspece(anyString(), anyString(), any()))
                 .thenReturn(List.of(new ObservationEspece(
                         7L,
@@ -113,6 +99,22 @@ class AnalyseViewTest {
         stage.show();
     }
 
+    /// Une observation enrichie de l'espèce `taxon` sur le carré 640380 (statut validé) : matière brute que
+    /// le ViewModel filtre puis agrège (#537).
+    private static ObservationAnalyse obsAnalyse(String taxon, String vern) {
+        return new ObservationAnalyse(
+                taxon,
+                taxon + " (latin)",
+                vern,
+                "Chiroptères",
+                StatutObservation.VALIDEE,
+                42L,
+                2026,
+                "640380",
+                "Étang",
+                1L);
+    }
+
     @Test
     @DisplayName("Par défaut : la table par espèce est affichée et peuplée ; le résumé compte les espèces")
     void affiche_inventaire_par_espece_par_defaut(FxRobot robot) {
@@ -147,30 +149,9 @@ class AnalyseViewTest {
         assertThat(especes.getItems()).as("état initial").hasSize(1);
 
         // Des observations ont été validées ailleurs : le service renvoie désormais deux espèces.
-        when(service.inventaireParEspece(anyString(), any()))
+        when(service.observationsAnalyse(anyString()))
                 .thenReturn(List.of(
-                        new EspeceAgregee(
-                                "Pippip",
-                                "Pipistrellus pipistrellus",
-                                "Pipistrelle commune",
-                                "Pipistrellus",
-                                5,
-                                2,
-                                1,
-                                1,
-                                2026,
-                                2026),
-                        new EspeceAgregee(
-                                "Nyclei",
-                                "Nyctalus leisleri",
-                                "Noctule de Leisler",
-                                "Nyctalus",
-                                3,
-                                1,
-                                1,
-                                1,
-                                2026,
-                                2026)));
+                        obsAnalyse("Pippip", "Pipistrelle commune"), obsAnalyse("Nyclei", "Noctule de Leisler")));
         robot.interact(controleur::rafraichirAuRetour);
 
         assertThat(especes.getItems())
