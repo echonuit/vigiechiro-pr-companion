@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.133.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.132.0...v1.133.0) (2026-07-07)
+
+
+### Features
+
+* **import:** découper l'import d'une carte SD en plusieurs nuits (un passage par nuit) ([#664](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/664)) ([9f147bb](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/9f147bb60187aa57e58a705cd374c65551823db9)), closes [R5/#147](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/147) [#147](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/147) [#139](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/139)
+
 # [1.132.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.131.0...v1.132.0) (2026-07-07)
 
 
