@@ -50,6 +50,15 @@ s'ouvre directement dans un tableur (Excel, LibreOffice) pour l'analyse ou la tr
 
 ![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
 
+### Vues sauvegardées
+
+La revue **au fil de l'eau** est déjà mémorisée automatiquement (vous retrouvez vos filtres et votre tri à
+la réouverture). Au-delà, une combinaison de filtres utile peut être **enregistrée sous un nom** pour être
+rejouée d'un clic : les vues enregistrées s'affichent comme des **onglets** au-dessus de la barre de
+filtres. Cliquer sur le nom d'un onglet **rejoue** sa combinaison ; le bouton **« + Vue »**, au bout de la
+barre, enregistre les filtres **courants** sous un nouveau nom ; sur chaque onglet, **« ✎ »** le renomme et
+**« ✕ »** le supprime.
+
 ## Choisir et organiser les colonnes
 
 La table s'adapte à votre façon de travailler :

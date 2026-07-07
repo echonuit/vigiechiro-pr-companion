@@ -6,10 +6,12 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -43,7 +45,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.util.StringConverter;
 
 /// Controller de la **vue audio unifiée** (`SonsValidation.fxml`, #audio).
 ///
@@ -56,11 +57,15 @@ import javafx.util.StringConverter;
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
 public class SonsValidationController implements EmplacementNavigation, ResumeStatut {
 
+    /// Clé de la feature pour les vues mémorisées (`saved_filter_view.feature`) : isole les vues de cet écran.
+    private static final String FEATURE = "audio";
+
     private final AudioViewModel viewModel;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAnalyse ouvrirAnalyse;
     private final OuvrirMultisite ouvrirMultisite;
+    private final DepotVues depotVues;
 
     /// Mémoire de session (tri, #484) : conserve l'état de la table entre deux ouvertures de la vue.
     private final MemoireRevueAudio memoire;
@@ -83,6 +88,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private FlowPane pucesFiltres;
+
+    /// Conteneur des onglets de vues mémorisées (`GestionnaireVues`, #623).
+    @FXML
+    private FlowPane barreOnglets;
 
     /// Barre de filtres « à la Notion » (#470/#471) : recherche + « + Filtre » + puces, pilotant
     /// [AudioViewModel#filtres]. Mémorisée pour la réinitialiser lors d'une navigation ciblée.
@@ -204,13 +213,15 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             OuvrirPassage ouvrirPassage,
             OuvrirAnalyse ouvrirAnalyse,
             OuvrirMultisite ouvrirMultisite,
-            MemoireRevueAudio memoire) {
+            MemoireRevueAudio memoire,
+            DepotVues depotVues) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAnalyse = Objects.requireNonNull(ouvrirAnalyse, "ouvrirAnalyse");
         this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
+        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
     }
 
     /// Câble chaque colonne à son champ de la ligne (valeur affichée), ses cellules personnalisées (fichier
@@ -318,6 +329,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Mémoire de session (#484) : restaure le tri et l'état des filtres de la dernière ouverture, et les
         // re-mémorise à la fermeture. Placée après le gestionnaire de filtres (dont elle restitue l'état).
         memoire.installer(tableObservations, gestionnaireFiltres);
+        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres. La mémoire
+        // de session (ci-dessus) reste la vue « au fil de l'eau » ; les onglets sont des vues nommées durables.
+        GestionnaireVues.avecDialogue(barreOnglets, gestionnaireFiltres, depotVues, FEATURE);
 
         resumeStatut.bind(Bindings.createStringBinding(this::resumeStatutTexte, viewModel.comptageProperty()));
 
@@ -326,11 +340,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         PanneauEcouteAudio.installer(audioView, viewModel, tableObservations, colFme, colFreqTerminale, menuActions);
 
         choixMode.getItems().setAll(ModeRevue.values());
-        choixMode.setConverter(libelleConverter(mode -> mode == null ? "" : libelleMode(mode)));
+        choixMode.setConverter(LibellesAudio.converter(mode -> mode == null ? "" : LibellesAudio.mode(mode)));
         choixMode.valueProperty().bindBidirectional(viewModel.modeRevueProperty());
 
         choixTaxon.setItems(viewModel.taxons());
-        choixTaxon.setConverter(libelleConverter(taxon -> taxon == null ? "" : libelleTaxon(taxon)));
+        choixTaxon.setConverter(LibellesAudio.converter(taxon -> taxon == null ? "" : LibellesAudio.taxon(taxon)));
 
         btnValider.disableProperty().bind(viewModel.selectionPresenteProperty().not());
         btnCorriger
@@ -580,31 +594,5 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     private javafx.stage.Window fenetre() {
         return tableObservations.getScene().getWindow();
-    }
-
-    private static <T> StringConverter<T> libelleConverter(java.util.function.Function<T, String> versLibelle) {
-        return new StringConverter<>() {
-            @Override
-            public String toString(T valeur) {
-                return versLibelle.apply(valeur);
-            }
-
-            @Override
-            public T fromString(String libelle) {
-                return null; // ComboBox non éditables : conversion inverse inutile
-            }
-        };
-    }
-
-    private static String libelleTaxon(Taxon taxon) {
-        String nom = taxon.nomVernaculaireFr();
-        return nom == null || nom.isBlank() ? taxon.code() : taxon.code() + " (" + nom + ")";
-    }
-
-    private static String libelleMode(ModeRevue mode) {
-        return switch (mode) {
-            case ACTIVITE -> "Activité (une par une)";
-            case INVENTAIRE -> "Inventaire (propage l'espèce)";
-        };
     }
 }

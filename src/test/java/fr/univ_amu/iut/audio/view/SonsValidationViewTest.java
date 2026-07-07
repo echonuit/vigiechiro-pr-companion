@@ -18,7 +18,9 @@ import com.google.inject.Provides;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -50,6 +52,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.PickResult;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -70,6 +73,7 @@ class SonsValidationViewTest {
 
     private ServiceValidation service;
     private RevueEnLot revueEnLot;
+    private DepotVues depotVues;
     private SonsValidationController controleur;
 
     private static LigneObservationAudio ligne(
@@ -115,12 +119,21 @@ class SonsValidationViewTest {
                         ligne(2, 11, "Nyclei", "Nyclei", "Noctule de Leisler", "Noctule de Leisler")));
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
+        depotVues = mock(DepotVues.class);
+        // Une vue déjà enregistrée pour cet écran : elle doit apparaître comme onglet (nom seul lu à l'init).
+        when(depotVues.findByFeature("audio"))
+                .thenReturn(List.of(new VueSauvegardee(1L, "audio", "À revoir", "{\"criteres\":[]}")));
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
                     @Provides
                     AudioViewModel viewModel() {
                         return new AudioViewModel(service, revueEnLot, bibliotheque);
+                    }
+
+                    @Provides
+                    DepotVues depotVues() {
+                        return depotVues;
                     }
                 },
                 new NavigationDeTestModule());
@@ -511,6 +524,23 @@ class SonsValidationViewTest {
                         item.getText().toLowerCase(java.util.Locale.ROOT).contains(motCle))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    @Test
+    @DisplayName("#623 : les vues enregistrées s'affichent en onglets, avec le bouton « + Vue »")
+    void onglets_de_vues_affiche_les_vues_et_le_bouton_nouvelle(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+
+        // La vue persistée « À revoir » (fournie par le dépôt) apparaît comme onglet.
+        assertThat(robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .contains("À revoir");
+        // Le bouton « + Vue » clôt la barre : il enregistre les filtres courants comme une nouvelle vue.
+        assertThat(robot.from(onglets)
+                        .lookup(".onglet-vue-nouvelle")
+                        .queryAs(Button.class)
+                        .getText())
+                .isEqualTo("+ Vue");
     }
 
     private static TableColumn<?, ?> colonne(FxRobot robot, String entete) {

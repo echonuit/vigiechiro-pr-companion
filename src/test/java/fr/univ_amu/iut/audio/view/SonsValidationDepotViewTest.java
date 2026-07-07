@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -63,6 +64,11 @@ class SonsValidationDepotViewTest {
                     @Provides
                     AudioViewModel viewModel() {
                         return new AudioViewModel(service, mock(RevueEnLot.class), bibliotheque);
+                    }
+
+                    @Provides
+                    DepotVues depotVues() {
+                        return mock(DepotVues.class); // findByFeature -> liste vide par défaut (Mockito)
                     }
                 },
                 new NavigationDeTestModule());
