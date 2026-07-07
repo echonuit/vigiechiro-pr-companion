@@ -27,6 +27,10 @@ open module vigiechiro {
     // à la réflexion, donc Guice peut instancier les classes sans `opens ... to`.
     requires com.google.guice;
 
+    // Sérialisation JSON (Gson) des descripteurs de filtres des vues mémorisées (#623). Module
+    // automatique ; `open module` ouvre déjà les records du descripteur à sa réflexion.
+    requires com.google.gson;
+
     // Composant audio fourni pour la SAÉ 2.01 (sonogramme / spectrogramme).
     requires fr.nedjar.vigiechiro.audio;
 
