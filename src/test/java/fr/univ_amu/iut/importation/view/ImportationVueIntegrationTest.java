@@ -25,6 +25,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -139,6 +140,8 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#labelPrefixeDiscordant").queryAs(Label.class)).isNotNull(); // #111
         assertThat(robot.lookup("#labelNuitExistante").queryAs(Label.class)).isNotNull(); // #147
         assertThat(robot.lookup("#boutonImporter").queryAs(Button.class)).isNotNull();
+        assertThat(robot.lookup("#caseConserverOriginaux").queryAs(CheckBox.class))
+                .isNotNull(); // conservation
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
         assertThat(robot.lookup("#boutonAnnuler").queryAs(Button.class)).isNotNull(); // #146 (annulation)
         assertThat(robot.lookup("#zoneRejets").queryAs(VBox.class)).isNotNull(); // #155 (rapport d'import)

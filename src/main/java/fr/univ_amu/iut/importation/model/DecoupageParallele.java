@@ -42,7 +42,7 @@ final class DecoupageParallele {
     }
 
     List<ResultatDecoupage> decouper(
-            List<Path> originaux,
+            List<SourceOriginal> originaux,
             Path dossierTransformes,
             Prefixe prefixe,
             Integer frequenceAcquisitionLogHz,
@@ -108,7 +108,7 @@ final class DecoupageParallele {
     }
 
     private ResultatDecoupage decouperUn(
-            Path original,
+            SourceOriginal source,
             Path dossierSortieOriginal,
             Prefixe prefixe,
             Integer frequenceAcquisitionLogHz,
@@ -123,10 +123,13 @@ final class DecoupageParallele {
         creneaux.acquire();
         try {
             jeton.leverSiAnnule(); // l'annulation (#146) interrompt ; un rejet de fichier, lui, est capturé
+            Path original = source.chemin();
             ResultatDecoupage resultat;
             try {
-                TransformationOriginal t =
-                        transformation.transformer(original, dossierSortieOriginal, prefixe, frequenceAcquisitionLogHz);
+                // Nommage des séquences d'après le nom logique R6 (source.nomR6()), découplé du chemin lu :
+                // en mode « sans copie » on lit la source SD mais on nomme comme si elle était renommée R6.
+                TransformationOriginal t = transformation.transformer(
+                        original, source.nomR6(), dossierSortieOriginal, prefixe, frequenceAcquisitionLogHz);
                 resultat = new ResultatDecoupage(original, t, null);
             } catch (OriginalIllisibleException | OriginalDejaRalentiException rejet) {
                 // Résilience (#155) : une erreur de lecture/format SOURCE OU un enregistrement déjà ralenti
@@ -136,9 +139,13 @@ final class DecoupageParallele {
             }
             synchronized (verrouProgression) {
                 int faits = traites.incrementAndGet();
+                // Les étapes précédant la transformation (les copies, en mode conservation) valent
+                // `totalEtapes - nbOriginaux` : 0 en mode sans copie (total = nbOriginaux). La fraction
+                // reprend donc là où la phase de copie s'est arrêtée.
+                int etapesDejaFaites = totalEtapes - nbOriginaux;
                 progres.accept(new Progression(
                         "Transformation " + faits + "/" + nbOriginaux + " · " + original.getFileName(),
-                        (double) (nbOriginaux + faits) / totalEtapes));
+                        (double) (etapesDejaFaites + faits) / totalEtapes));
             }
             return resultat;
         } finally {

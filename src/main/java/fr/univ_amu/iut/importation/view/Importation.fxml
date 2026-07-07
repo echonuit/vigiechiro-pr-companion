@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
@@ -28,7 +29,7 @@
   <VBox spacing="2.0">
     <Label text="Importer une nuit d'enregistrement" styleClass="titre-page"/>
     <Label styleClass="sous-titre-page" wrapText="true"
-           text="L'application copie les fichiers de la carte SD sans toucher aux originaux, les renomme et les transforme."/>
+           text="L'application prépare les séquences d'écoute à partir de la carte SD, sans jamais modifier vos fichiers d'origine."/>
   </VBox>
 
   <!-- 1. Dossier source -->
@@ -113,6 +114,13 @@
       <Button fx:id="boutonEcraser" text="🗑 Écraser et réimporter" styleClass="action-danger"
               onAction="#ecraserEtReimporter"/>
     </HBox>
+  </VBox>
+
+  <!-- Option d'espace disque (#…) : conserver ou non une copie des originaux dans « bruts/ ». -->
+  <VBox styleClass="section-carte" spacing="4.0">
+    <CheckBox fx:id="caseConserverOriginaux" text="Conserver les originaux sur le disque"/>
+    <Label styleClass="section-sous" wrapText="true"
+           text="Décochez pour économiser l'espace disque : les enregistrements sont transformés directement depuis la carte SD, sans en copier une archive dans le dossier « bruts ». Les séquences d'écoute et le journal sont produits normalement ; seuls les fichiers d'origine ne sont pas conservés."/>
   </VBox>
 
   <!-- 4. Action -->

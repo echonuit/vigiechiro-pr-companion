@@ -1,7 +1,8 @@
 # Importation
 
-L'écran **Importation** copie une nuit depuis la carte SD, la renomme et la transforme en séquences
-écoutables. Il prend la forme d'un **assistant en trois temps**.
+L'écran **Importation** importe une nuit depuis la carte SD, la renomme et la transforme en séquences
+écoutables, **sans jamais modifier vos fichiers d'origine**. Il prend la forme d'un **assistant en
+trois temps**.
 
 ## L'assistant d'import
 
@@ -16,12 +17,30 @@ L'écran **Importation** copie une nuit depuis la carte SD, la renomme et la tra
    **carré du site** et **ses points**, le **point choisi en surbrillance** (indigo) et les autres en
    gris : un coup d'œil pour vérifier qu'on rattache la nuit au bon endroit.
 
-Le bouton **Importer cette nuit** lance la copie (sans toucher aux originaux), le renommage avec le
-préfixe `CarXXXXXX-AAAA-PassN-YY-`, puis la transformation des enregistrements en séquences de 5 s
-ralenties dix fois (une séquence de 5 s devient 50 s à l'écoute, dans la bande audible). Un
-enregistrement de plus de 5 s produit **plusieurs séquences**, chacune nommée avec l'**heure réelle de
-son début** (ex. `…_225849`, `…_225854`, `…_225859`…) : c'est ce qui permet de retrouver, pour chaque
-observation Tadarida, la séquence audio correspondante.
+Le bouton **Importer cette nuit** applique aux enregistrements le préfixe
+`CarXXXXXX-AAAA-PassN-YY-`, puis les transforme en séquences de 5 s ralenties dix fois (une séquence
+de 5 s devient 50 s à l'écoute, dans la bande audible). Un enregistrement de plus de 5 s produit
+**plusieurs séquences**, chacune nommée avec l'**heure réelle de son début** (ex. `…_225849`,
+`…_225854`, `…_225859`…) : c'est ce qui permet de retrouver, pour chaque observation Tadarida, la
+séquence audio correspondante.
+
+## Conserver ou non les originaux (espace disque)
+
+Par défaut, l'import **conserve une copie des enregistrements d'origine** dans un dossier `bruts` de la
+session (les fichiers de la carte SD, eux, ne sont jamais modifiés). Ces originaux ne servent **pas** à
+l'écoute ni à la validation : celles-ci s'appuient sur les **séquences transformées**. Ils constituent
+une archive de sécurité, qui peut peser **plusieurs gigaoctets par nuit**.
+
+La case **« Conserver les originaux sur le disque »**, sous le bouton d'import, permet de **désactiver**
+cette copie :
+
+- **cochée** (par défaut) : les originaux sont copiés dans `bruts`, comme précédemment ;
+- **décochée** : les enregistrements sont transformés **directement depuis la carte SD**, sans copie
+  intermédiaire. Le dossier `bruts` n'est pas créé, ce qui **économise l'espace disque**. Les séquences
+  d'écoute et le journal sont produits normalement ; seuls les fichiers d'origine ne sont pas archivés.
+
+Votre choix est **mémorisé** d'un import à l'autre. Décochez cette case si l'espace disque devient
+limité au fil des nuits importées.
 
 ## Source compressée (.zip)
 

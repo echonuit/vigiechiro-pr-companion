@@ -161,6 +161,34 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName(
+            "Sans conservation : aucun dossier bruts/, mais séquences produites et originaux tracés vers la source (SD)")
+    void import_sans_conservation_ne_cree_pas_bruts() {
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe, p -> {}, JetonAnnulation.neutre(), false);
+
+        Path session = racine.resolve("ws").resolve(prefixe.nomDossierSession());
+        assertThat(session.resolve("bruts"))
+                .as("mode sans copie : aucune archive des originaux n'est écrite dans le workspace")
+                .doesNotExist();
+        assertThat(session.resolve("transformes"))
+                .as("les séquences d'écoute sont produites normalement")
+                .isDirectory();
+
+        // Sortie identique au mode conservation : même nombre d'originaux et de séquences.
+        assertThat(resultat.nombreOriginaux()).isEqualTo(2);
+        assertThat(resultat.nombreSequences()).isEqualTo(2);
+
+        Long idSession = resultat.session().id();
+        assertThat(originalDao.findBySession(idSession)).hasSize(2).allSatisfy(o -> {
+            // Nommage R6 préservé (clé de jointure Tadarida inchangée)…
+            assertThat(o.nomFichier()).startsWith(prefixe.prefixeFichier());
+            // …mais le file_path pointe la SOURCE (SD) : les originaux n'ont pas été copiés.
+            assertThat(o.cheminFichier()).startsWith(sd.toString());
+        });
+        assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
+    }
+
+    @Test
     @DisplayName("#33 : le callback de progression couvre copie + transformation, fraction monotone 0→1")
     void progression_notifiee_pendant_l_import() {
         List<Progression> points = new ArrayList<>();
@@ -175,6 +203,19 @@ class ServiceImportTest {
         assertThat(points).allSatisfy(p -> assertThat(p.libelle()).containsPattern(" · .+\\.wav$"));
         assertThat(points).extracting(Progression::fraction).containsExactly(0.25, 0.5, 0.75, 1.0);
         assertThat(points).extracting(Progression::fraction).isSorted();
+    }
+
+    @Test
+    @DisplayName("Sans conservation : la progression ne compte que les transformations (pas de phase de copie)")
+    void progression_sans_conservation_saute_la_copie() {
+        List<Progression> points = new ArrayList<>();
+        service.importer(sd, idPoint, prefixe, points::add, JetonAnnulation.neutre(), false);
+
+        // Pas de « Copie X/N » : la source est lue en place. Seules les 2 transformations sont notifiées.
+        assertThat(points)
+                .extracting(p -> p.libelle().replaceAll(" · .*$", ""))
+                .containsExactly("Transformation 1/2", "Transformation 2/2");
+        assertThat(points).extracting(Progression::fraction).containsExactly(0.5, 1.0);
     }
 
     @Test

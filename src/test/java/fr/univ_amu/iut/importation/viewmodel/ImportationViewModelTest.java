@@ -3,14 +3,18 @@ package fr.univ_amu.iut.importation.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
@@ -70,14 +74,22 @@ class ImportationViewModelTest {
     @Mock
     private ServiceSites serviceSites;
 
+    @Mock
+    private Reglages reglages;
+
     private final InspecteurDossier inspecteur = new InspecteurDossier(new AnalyseurLogPR());
     private final NavigationViewModel navigation = new NavigationViewModel();
+    private PreferenceConservation conservation;
     private ImportationViewModel viewModel;
     private Path sd;
 
     @BeforeEach
     void preparer() throws IOException {
-        viewModel = new ImportationViewModel(serviceImport, serviceSites, new HorlogeFigee(JOUR), ID_USER, navigation);
+        // Réglage « conserver les originaux » non écrit → la préférence lit le défaut (conservation activée).
+        when(reglages.lireBooleen(anyString(), anyBoolean())).thenAnswer(invocation -> invocation.getArgument(1));
+        conservation = new PreferenceConservation(reglages);
+        viewModel = new ImportationViewModel(
+                serviceImport, serviceSites, new HorlogeFigee(JOUR), ID_USER, navigation, conservation);
         sd = Files.createDirectories(racine.resolve("sd"));
         Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
@@ -316,7 +328,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any()))
+        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean()))
                 .thenReturn(new ResultatImport(null, null, "1925492", 2, 6, List.of()));
         prepareRattachement(site, point);
 
@@ -348,7 +360,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any()))
+        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean()))
                 .thenThrow(new RegleMetierException("R5 : un passage existe déjà pour ce point."));
         prepareRattachement(site, point);
 
@@ -370,6 +382,26 @@ class ImportationViewModelTest {
     }
 
     @Test
+    @DisplayName(
+            "« Conserver les originaux » lit le réglage persisté (défaut activé) et le mémorise au lancement de l'import")
+    void conserver_originaux_lit_et_persiste_le_reglage() {
+        // À la construction, le défaut (conservation activée) est lu depuis Reglages.
+        assertThat(conservation.conserverOriginauxProperty().get()).isTrue();
+
+        // L'utilisateur décoche puis lance l'import : le choix est mémorisé au moment de préparer la demande.
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
+        prepareRattachement(site, point);
+        conservation.conserverOriginauxProperty().set(false);
+
+        viewModel.preparerImport();
+
+        verify(reglages).ecrireBooleen(PreferenceConservation.CLE, false);
+    }
+
+    @Test
     @DisplayName("Découpage async : marquerEnCours, executerImport (pur), marquerTermine")
     void decoupage_async_des_etats() {
         Site site = site(1L, "640380");
@@ -377,7 +409,7 @@ class ImportationViewModelTest {
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
         ResultatImport attendu = new ResultatImport(null, null, "1925492", 2, 6, List.of());
-        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any()))
+        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean()))
                 .thenReturn(attendu);
         prepareRattachement(site, point);
 

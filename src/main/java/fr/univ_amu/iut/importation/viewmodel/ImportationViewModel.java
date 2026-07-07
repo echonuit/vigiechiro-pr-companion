@@ -50,6 +50,11 @@ public class ImportationViewModel {
 
     private final ServiceImport serviceImport;
 
+    /// Préférence **« conserver les originaux »** (#…), extraite dans un collaborateur partagé : le VM la
+    /// lit au lancement de l'import (et l'y mémorise) ; la vue lie la case à sa propriété. Cf.
+    /// [PreferenceConservation].
+    private final PreferenceConservation conservation;
+
     /// Socle de navigation : la feature y pousse le **verrou** (#54) pour interdire de quitter
     /// l'assistant pendant un import (l'écran porte la seule vue/VM qui reçoit le résultat).
     private final NavigationViewModel navigation;
@@ -102,9 +107,11 @@ public class ImportationViewModel {
             ServiceSites serviceSites,
             Horloge horloge,
             String idUtilisateur,
-            NavigationViewModel navigation) {
+            NavigationViewModel navigation,
+            PreferenceConservation conservation) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
+        this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.inspection = new InspectionImportViewModel(serviceImport);
         // Sous-VM rattachement (#183) : il valide serviceSites / horloge / idUtilisateur et préremplit
         // l'année courante.
@@ -343,8 +350,13 @@ public class ImportationViewModel {
     /// pour les passer à [#executerImport(DemandeImport)] sans relire de `Property` hors-thread.
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
     public DemandeImport preparerImport() {
+        // Mémorise le choix « conserver les originaux » au moment de lancer l'import (survit aux sessions).
+        conservation.memoriser();
         return new DemandeImport(
-                inspection.dossier(), rattachement.idPointSelectionne(), rattachement.prefixeCourant());
+                inspection.dossier(),
+                rattachement.idPointSelectionne(),
+                rattachement.prefixeCourant(),
+                conservation.valeur());
     }
 
     /// Exécute le travail lourd de l'import (copie + renommage + transformation) via
@@ -368,11 +380,15 @@ public class ImportationViewModel {
     /// remonte une [fr.univ_amu.iut.importation.model.AnnulationImportException] (RuntimeException) que la
     /// vue traite via [#marquerAnnule()]. **Ne mute aucune `Property`** ici : sûr sur un fil d'arrière-plan.
     public ResultatImport executerImport(DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton) {
-        return serviceImport.importer(demande.dossier(), demande.idPoint(), demande.prefixe(), progres, jeton);
+        return serviceImport.importer(
+                demande.dossier(), demande.idPoint(), demande.prefixe(), progres, jeton, demande.conserverOriginaux());
     }
 
     /// Instantané immuable des entrées d'un import, capturé sur le fil JavaFX par preparerImport.
-    public record DemandeImport(Path dossier, Long idPoint, Prefixe prefixe) {}
+    ///
+    /// @param conserverOriginaux `true` pour copier les WAV dans `bruts/` (défaut), `false` pour les
+    ///     transformer directement depuis la source sans les copier (économie d'espace).
+    public record DemandeImport(Path dossier, Long idPoint, Prefixe prefixe, boolean conserverOriginaux) {}
 
     /// Applique un import réussi (résultat exposé, état `TERMINE`). À appeler sur le fil JavaFX
     /// (depuis `Platform.runLater`).

@@ -4,10 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -34,13 +36,17 @@ class ImportationControllerGardeTest {
     @Mock
     private Horloge horloge;
 
+    @Mock
+    private Reglages reglages;
+
     @Test
     @DisplayName("aSaisieNonEnregistree : faux sans dossier, vrai dès qu'un dossier est choisi (état PRET)")
     void garde_reflete_l_import_prepare() {
         when(horloge.aujourdhui()).thenReturn(LocalDate.of(2026, 6, 21));
-        ImportationViewModel viewModel =
-                new ImportationViewModel(serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel());
-        ImportationController controller = new ImportationController(viewModel);
+        PreferenceConservation conservation = new PreferenceConservation(reglages);
+        ImportationViewModel viewModel = new ImportationViewModel(
+                serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
+        ImportationController controller = new ImportationController(viewModel, conservation);
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
@@ -53,9 +59,10 @@ class ImportationControllerGardeTest {
     @DisplayName("aSaisieNonEnregistree : se ré-arme si le rattachement change après un échec d'import")
     void garde_se_rearme_apres_echec() {
         when(horloge.aujourdhui()).thenReturn(LocalDate.of(2026, 6, 21));
-        ImportationViewModel viewModel =
-                new ImportationViewModel(serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel());
-        ImportationController controller = new ImportationController(viewModel);
+        PreferenceConservation conservation = new PreferenceConservation(reglages);
+        ImportationViewModel viewModel = new ImportationViewModel(
+                serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
+        ImportationController controller = new ImportationController(viewModel, conservation);
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         assertThat(controller.aSaisieNonEnregistree()).isTrue(); // import préparé (PRET)
@@ -73,9 +80,10 @@ class ImportationControllerGardeTest {
     @DisplayName("aSaisieNonEnregistree : se ré-arme si le rattachement change après un import terminé")
     void garde_se_rearme_apres_succes() {
         when(horloge.aujourdhui()).thenReturn(LocalDate.of(2026, 6, 21));
-        ImportationViewModel viewModel =
-                new ImportationViewModel(serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel());
-        ImportationController controller = new ImportationController(viewModel);
+        PreferenceConservation conservation = new PreferenceConservation(reglages);
+        ImportationViewModel viewModel = new ImportationViewModel(
+                serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
+        ImportationController controller = new ImportationController(viewModel, conservation);
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 60, 191, List.of()));

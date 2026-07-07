@@ -103,7 +103,8 @@ public final class ControleNumeroPassage {
     /// confirmation côté IHM. **Ne mute aucune Property** : sûr sur un fil d'arrière-plan.
     public ResultatImport ecraserEtImporter(
             DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton) {
-        return serviceImport.ecraserEtImporter(demande.dossier(), demande.idPoint(), demande.prefixe(), progres, jeton);
+        return serviceImport.ecraserEtImporter(
+                demande.dossier(), demande.idPoint(), demande.prefixe(), progres, jeton, demande.conserverOriginaux());
     }
 
     /// Message à présenter quand l'import est bloqué (`peutImporter` faux) : l'avertissement de doublon

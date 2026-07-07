@@ -37,7 +37,8 @@ public class MigrationSchema {
         "V08__rattacher_fil_rouge_chiropteres.sql",
         "V09__horodatage_capture_sequence.sql",
         "V10__materiel_micro_passage.sql",
-        "V11__saved_filter_view.sql"
+        "V11__saved_filter_view.sql",
+        "V12__reglages.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

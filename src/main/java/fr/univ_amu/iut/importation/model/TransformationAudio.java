@@ -54,9 +54,26 @@ public class TransformationAudio {
     /// Facteur d'expansion temporelle du protocole Vigie-Chiro (R10).
     public static final int FACTEUR_EXPANSION = 10;
 
+    /// Transforme un original en séquences d'écoute, en **nommant** les tranches d'après le nom du
+    /// fichier lu. Surcharge de commodité pour le mode **conservation** (le fichier de `bruts/` porte
+    /// déjà son nom R6) et pour les tests : équivaut à [#transformer(Path, String, Path, Prefixe, Integer)]
+    /// avec `nomR6 = originalWav.getFileName()`.
+    public TransformationOriginal transformer(
+            Path originalWav, Path dossierSortie, Prefixe prefixe, Integer frequenceAcquisitionLogHz) {
+        Objects.requireNonNull(originalWav, "originalWav");
+        return transformer(
+                originalWav, originalWav.getFileName().toString(), dossierSortie, prefixe, frequenceAcquisitionLogHz);
+    }
+
     /// Transforme un enregistrement original en séquences d'écoute écrites dans `dossierSortie`.
     ///
-    /// @param originalWav chemin du WAV original (mono 16 bits, ex. 384 kHz)
+    /// Le **nom logique R6** (`nomR6`) est découplé du chemin **physiquement lu** (`originalWav`) : en
+    /// mode « sans copie », on lit directement le WAV de la carte SD tout en nommant les séquences
+    /// d'après le nom R6 **calculé**, de sorte que la sortie soit identique au mode conservation (même
+    /// clé de jointure Tadarida). Cf. [SourceOriginal].
+    ///
+    /// @param originalWav chemin du WAV **lu** (mono 16 bits, ex. 384 kHz) — `bruts/` ou carte SD
+    /// @param nomR6 nom logique R6 servant au nommage R8 des séquences et au `nomOriginal` du résultat
     /// @param dossierSortie dossier `transformes/` où écrire les séquences (créé si absent)
     /// @param prefixe préfixe de la session (sert au nommage R8 des séquences)
     /// @param frequenceAcquisitionLogHz fréquence d'acquisition déclarée par le log de l'enregistreur
@@ -66,8 +83,9 @@ public class TransformationAudio {
     /// @throws OriginalDejaRalentiException si la source est déjà ralentie (rejet récupérable #155)
     /// @throws IllegalArgumentException si la fréquence source n'est pas un multiple de 10
     public TransformationOriginal transformer(
-            Path originalWav, Path dossierSortie, Prefixe prefixe, Integer frequenceAcquisitionLogHz) {
+            Path originalWav, String nomR6, Path dossierSortie, Prefixe prefixe, Integer frequenceAcquisitionLogHz) {
         Objects.requireNonNull(originalWav, "originalWav");
+        Objects.requireNonNull(nomR6, "nomR6");
         Objects.requireNonNull(dossierSortie, "dossierSortie");
         Objects.requireNonNull(prefixe, "prefixe");
 
@@ -104,7 +122,7 @@ public class TransformationAudio {
         // `frequenceSortie` donnait des séquences de 0,5 s réelles, désalignées des temps Tadarida.)
         int octetsParSequence = DUREE_SEQUENCE_SECONDES * frequenceSource * octetsParTrame;
         byte[] pcm = source.donneesPcm();
-        String nomOriginal = originalWav.getFileName().toString();
+        String nomOriginal = nomR6;
         String sha256 = empreinteSource(originalWav);
 
         // Écriture des séquences dans le WORKSPACE : un échec ici (disque plein, permission…) est
