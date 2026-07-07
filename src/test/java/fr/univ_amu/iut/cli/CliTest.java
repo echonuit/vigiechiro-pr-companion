@@ -233,6 +233,42 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("qualifier avec un verdict inconnu : erreur d'usage (code 2)")
+    void qualifier_verdict_inconnu() {
+        int code = cli.executer(new String[] {"qualifier", "--passage", "1", "--verdict", "peut-etre"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("Verdict inconnu");
+    }
+
+    @Test
+    @DisplayName("qualifier sur un passage introuvable : échec métier (1)")
+    void qualifier_passage_introuvable() {
+        int code = cli.executer(new String[] {"qualifier", "--passage", "999", "--verdict", "ok"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("introuvable");
+    }
+
+    @Test
+    @DisplayName("deposer sur un passage introuvable : échec métier (1)")
+    void deposer_passage_introuvable() {
+        int code = cli.executer(new String[] {"deposer", "--passage", "999"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec");
+    }
+
+    @Test
+    @DisplayName("deposer sans --passage : argument manquant (code 2)")
+    void deposer_argument_manquant() {
+        int code = cli.executer(new String[] {"deposer"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("--passage");
+    }
+
+    @Test
     @DisplayName("exporter-vu sans --sortie : argument manquant, code 2, rien écrit")
     void exporter_vu_argument_manquant() {
         int code = cli.executer(new String[] {"exporter-vu", "--passage", "1"}, sortie, erreur);

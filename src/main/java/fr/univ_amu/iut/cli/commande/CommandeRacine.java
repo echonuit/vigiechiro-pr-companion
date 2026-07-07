@@ -35,7 +35,9 @@ import picocli.CommandLine.Spec;
             StatutPassage.class,
             Importer.class,
             ImporterTadarida.class,
+            Qualifier.class,
             ExporterLot.class,
+            Deposer.class,
             ExporterVu.class
         })
 public final class CommandeRacine implements Runnable {

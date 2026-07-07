@@ -54,7 +54,9 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `statut-passage` | `--passage <id> [--json]` | M-Passage | `ServicePassage.detailPassage` + `ResultatsIdentificationDao` (lecture) |
 | `importer` | `--source <dir> --point <id> [--annee N] [--passage N]` | P2 | `ServiceImport` |
 | `importer-tadarida` | `--passage <id> --csv <fichier> [--remplacer]` | P6 | `ServiceValidation.importer` / `reimporter` |
+| `qualifier` | `--passage <id> --verdict <ok\|douteux\|a-jeter> [--commentaire ..]` | R13 | `ServicePassage.poserVerdict` |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
+| `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
 
