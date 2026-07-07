@@ -75,3 +75,11 @@ Le champ **Filtrer** restreint la table à la volée (insensible à la casse et 
 code d'espèce** en mode *Par espèce*, par **numéro de carré ou nom de site** en mode *Par carré*. Le
 bouton **« 📤 Exporter… »** enregistre l'inventaire **affiché** (tel que filtré) en **CSV**, prêt pour un
 tableur ou un partage.
+
+## Vues sauvegardées
+
+Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic. Les
+vues enregistrées s'affichent comme des **onglets** au-dessus de l'inventaire : cliquer sur le nom d'un
+onglet **rejoue** sa combinaison de filtres. Le bouton **« + Vue »**, au bout de la barre d'onglets,
+enregistre les filtres **courants** sous un nouveau nom. Sur chaque onglet, **« ✎ »** le renomme et
+**« ✕ »** le supprime.

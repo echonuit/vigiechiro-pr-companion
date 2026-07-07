@@ -15,6 +15,8 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -53,6 +55,7 @@ class AnalyseViewTest {
     private ServiceAnalyse service;
     private OuvrirPassage ouvrirPassage;
     private OuvrirAudio ouvrirAudio;
+    private DepotVues depotVues;
     private AnalyseController controleur;
 
     @Start
@@ -79,6 +82,11 @@ class AnalyseViewTest {
                         StatutObservation.VALIDEE)));
         OuvrirPassage navigationPassage = ouvrirPassage;
         OuvrirAudio navigationAudio = ouvrirAudio;
+        depotVues = mock(DepotVues.class);
+        // Une vue déjà enregistrée pour cet écran : elle doit apparaître comme onglet (nom seul lu à l'init).
+        when(depotVues.findByFeature("analyse"))
+                .thenReturn(List.of(new VueSauvegardee(1L, "analyse", "Validées 2026", "{\"criteres\":[]}")));
+        DepotVues depot = depotVues;
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             AnalyseViewModel viewModel() {
@@ -93,6 +101,11 @@ class AnalyseViewTest {
             @Provides
             OuvrirAudio ouvrirAudio() {
                 return navigationAudio;
+            }
+
+            @Provides
+            DepotVues depotVues() {
+                return depot;
             }
         });
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
@@ -267,5 +280,22 @@ class AnalyseViewTest {
         assertThat(especes.getItems())
                 .as("le filtre statut « Non touchée » écarte l'observation validée")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#623 : les vues enregistrées s'affichent en onglets, avec le bouton « + Vue »")
+    void onglets_de_vues_affiche_les_vues_et_le_bouton_nouvelle(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+
+        // La vue persistée « Validées 2026 » (fournie par le dépôt) apparaît comme onglet.
+        assertThat(robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .contains("Validées 2026");
+        // Le bouton « + Vue » clôt la barre : il enregistre les filtres courants comme une nouvelle vue.
+        assertThat(robot.from(onglets)
+                        .lookup(".onglet-vue-nouvelle")
+                        .queryAs(Button.class)
+                        .getText())
+                .isEqualTo("+ Vue");
     }
 }

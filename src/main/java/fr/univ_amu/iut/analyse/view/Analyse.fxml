@@ -30,6 +30,10 @@
 
   <Label fx:id="lblResume" styleClass="analyse-resume"/>
 
+  <!-- Onglets de vues mémorisées « à la Notion » (#623) : un onglet par combinaison de filtres enregistrée.
+       Rempli en code par le composant partagé GestionnaireVues (le controller le construit). -->
+  <FlowPane fx:id="barreOnglets" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-onglets"/>
+
   <!-- Barre de filtres « à la Notion » (#537, étape 6) : le pivot de regroupement (espèce ↔ carré), la
        recherche texte permanente, le bouton « + Filtre » (statut, taxon parent) et les puces des filtres
        actifs, puis les actions carte/export. Le regroupement n'est PAS un filtre : il change l'agrégation,

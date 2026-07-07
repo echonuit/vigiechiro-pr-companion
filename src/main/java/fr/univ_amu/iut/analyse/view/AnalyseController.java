@@ -3,7 +3,9 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
+import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -18,6 +20,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -36,6 +39,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextInputDialog;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -53,9 +57,13 @@ import javafx.util.StringConverter;
 /// rechargé pour ne pas afficher des compteurs périmés.
 public class AnalyseController implements RafraichirAuRetour {
 
+    /// Clé de la feature pour les vues mémorisées (`saved_filter_view.feature`) : isole les vues de cet écran.
+    private static final String FEATURE = "analyse";
+
     private final AnalyseViewModel viewModel;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
+    private final DepotVues depotVues;
 
     /// État de la bascule Tableau ⇄ Carte (vue, pas de domaine) ; la carte elle-même est gérée par
     /// [CarteRepartition], installée **paresseusement** au premier affichage (`null` tant qu'on reste en
@@ -90,6 +98,10 @@ public class AnalyseController implements RafraichirAuRetour {
 
     @FXML
     private FlowPane pucesFiltres;
+
+    /// Conteneur des onglets de vues mémorisées (`GestionnaireVues`, #623).
+    @FXML
+    private FlowPane barreOnglets;
 
     /// Barre de filtres « à la Notion » (#537, étape 6) : pilote le socle `Filtres` du ViewModel (statut,
     /// taxon parent #518, recherche texte). Construite dans [#initialize()].
@@ -186,10 +198,12 @@ public class AnalyseController implements RafraichirAuRetour {
     private TableColumn<ObservationEspece, String> colObsStatut;
 
     @Inject
-    public AnalyseController(AnalyseViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirAudio ouvrirAudio) {
+    public AnalyseController(
+            AnalyseViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirAudio ouvrirAudio, DepotVues depotVues) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
+        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
     }
 
     @FXML
@@ -213,6 +227,8 @@ public class AnalyseController implements RafraichirAuRetour {
                 viewModel.filtres(),
                 List.of(CriteresAnalyse.statut(), CriteresAnalyse.groupe(viewModel::groupesDisponibles)),
                 CriteresAnalyse.rechercheTexte());
+        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres.
+        new GestionnaireVues<>(barreOnglets, gestionnaireFiltres, depotVues, FEATURE, this::demanderNomVue);
 
         // Message d'export.
         var exportPresent = viewModel.messageProperty().isNotEmpty();
@@ -445,6 +461,17 @@ public class AnalyseController implements RafraichirAuRetour {
     private static void lierVisibilite(Node noeud, ObservableValue<Boolean> visible) {
         noeud.visibleProperty().bind(visible);
         noeud.managedProperty().bind(visible);
+    }
+
+    /// Demande à l'utilisateur le nom d'une vue (création ou renommage) via une boîte de saisie ; renvoie le
+    /// nom nettoyé, ou vide si l'utilisateur annule ou laisse le champ blanc. Injecté dans [GestionnaireVues]
+    /// pour le garder indépendant de tout dialogue concret.
+    private Optional<String> demanderNomVue(String defaut) {
+        TextInputDialog dialogue = new TextInputDialog(defaut);
+        dialogue.initOwner(barreOnglets.getScene().getWindow());
+        dialogue.setHeaderText("Nom de la vue");
+        dialogue.setContentText("Nom :");
+        return dialogue.showAndWait().map(String::trim).filter(nom -> !nom.isBlank());
     }
 
     private static <T> StringConverter<T> convertisseur(Function<T, String> versTexte) {
