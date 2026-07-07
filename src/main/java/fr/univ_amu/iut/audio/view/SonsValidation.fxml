@@ -55,6 +55,7 @@
           <MenuItem fx:id="itemImporter" text="📥 Importer un CSV Tadarida…" onAction="#importer"/>
           <CheckMenuItem fx:id="itemInclureMode" text="Inclure le mode de validation à l'export _Vu"/>
           <MenuItem fx:id="itemExporterVu" text="📤 Exporter _Vu…" onAction="#exporterVu"/>
+          <MenuItem fx:id="itemExporterObservations" text="📤 Exporter les observations (CSV)…" onAction="#exporterObservations"/>
           <MenuItem fx:id="itemExporterBiblio" text="📤 Exporter la bibliothèque…" onAction="#exporterBibliotheque"/>
         </items>
       </MenuButton>

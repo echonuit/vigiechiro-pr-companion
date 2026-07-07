@@ -43,6 +43,11 @@ plus sûres. Les **compteurs** de la barre de statut (À revoir / Validées / Co
 le **sous-ensemble affiché**, pas la nuit entière : vous voyez toujours combien il reste à traiter dans ce
 que vous avez sous les yeux.
 
+Vous pouvez **exporter ce sous-ensemble** en **CSV** via **☰ → Exporter les observations (CSV)** : le
+fichier reprend exactement les observations **actuellement affichées** (donc les filtres appliqués), avec
+leurs colonnes (carré, point, site, date, espèce, statut, fréquence, commentaire…). Le CSV est en UTF‑8 et
+s'ouvre directement dans un tableur (Excel, LibreOffice) pour l'analyse ou la transmission.
+
 ![La barre de filtres avec la puce « Groupe : Chiroptères » active : la table ne montre plus que les chauves-souris.](../assets/captures/apercu-sons-validation-filtres.png)
 
 ## Choisir et organiser les colonnes
