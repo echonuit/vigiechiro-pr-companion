@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.120.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.119.0...v1.120.0) (2026-07-07)
+
+
+### Features
+
+* **data:** menu Sauvegarder / Restaurer la base dans le chrome ([#148](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/148) partie 2/2) ([f317dff](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/f317dff7628106981d5b307b27ed39a0ee9a5243))
+
 # [1.119.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.118.0...v1.119.0) (2026-07-07)
 
 
