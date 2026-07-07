@@ -254,6 +254,18 @@ public class AudioViewModel {
         return resultat.reussi();
     }
 
+    /// Exporte en **CSV** les observations **actuellement affichées** (filtres appliqués) vers
+    /// `destination` (#149). Le sous-ensemble est **figé** au moment de l'appel. Le bilan (ou l'erreur
+    /// d'écriture) est restitué dans le message.
+    ///
+    /// @param destination fichier CSV cible choisi par l'observateur
+    /// @return `true` si le fichier a été écrit
+    public boolean exporterObservations(Path destination) {
+        ExporteurAudio.ResultatExport resultat = exporteur.observations(List.copyOf(observationsFiltrees), destination);
+        messages.export(resultat.reussi(), resultat.message());
+        return resultat.reussi();
+    }
+
     /// Recharge les lignes de la source courante en préservant la sélection (par identifiant
     /// d'observation), puis met à jour compteurs et indice d'état vide.
     private void charger() {

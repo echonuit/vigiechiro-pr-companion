@@ -43,7 +43,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.util.StringConverter;
 
 /// Controller de la **vue audio unifiée** (`SonsValidation.fxml`, #audio).
@@ -104,6 +103,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private MenuItem itemExporterVu;
+
+    @FXML
+    private MenuItem itemExporterObservations;
 
     @FXML
     private MenuItem itemExporterBiblio;
@@ -358,6 +360,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         itemExporterVu
                 .disableProperty()
                 .bind(viewModel.resultatsDisponiblesProperty().not());
+        // Export des observations affichées : possible dès qu'il y a au moins une ligne (toutes sources).
+        itemExporterObservations.disableProperty().bind(Bindings.isEmpty(viewModel.observationsFiltrees()));
         // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24), coché par défaut.
         itemInclureMode.selectedProperty().bindBidirectional(viewModel.inclureModeProperty());
 
@@ -534,10 +538,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// [#lancerImport(Path)] (import, ou réimport avec confirmation si un jeu existe déjà).
     @FXML
     private void importer() {
-        FileChooser selecteur = new FileChooser();
-        selecteur.setTitle("Importer un CSV Tadarida (observations ou _Vu)");
-        selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
-        File fichier = selecteur.showOpenDialog(fenetre());
+        File fichier = ChoixFichierCsv.selecteur("Importer un CSV Tadarida (observations ou _Vu)", null)
+                .showOpenDialog(fenetre());
         if (fichier != null) {
             ImportTadarida.lancer(viewModel, fichier.toPath());
         }
@@ -546,13 +548,21 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.
     @FXML
     private void exporterVu() {
-        FileChooser selecteur = new FileChooser();
-        selecteur.setTitle("Exporter le fichier _Vu (réinjectable)");
-        selecteur.setInitialFileName("resultats_Vu.csv");
-        selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
-        File fichier = selecteur.showSaveDialog(fenetre());
+        File fichier = ChoixFichierCsv.selecteur("Exporter le fichier _Vu (réinjectable)", "resultats_Vu.csv")
+                .showSaveDialog(fenetre());
         if (fichier != null) {
             viewModel.exporterVu(fichier.toPath());
+        }
+    }
+
+    /// « Exporter les observations (CSV) » (#149) : sélecteur de fichier natif puis délégation au VM, qui
+    /// écrit le **sous-ensemble affiché** (filtres appliqués).
+    @FXML
+    private void exporterObservations() {
+        File fichier = ChoixFichierCsv.selecteur("Exporter les observations affichées (CSV)", "observations.csv")
+                .showSaveDialog(fenetre());
+        if (fichier != null) {
+            viewModel.exporterObservations(fichier.toPath());
         }
     }
 

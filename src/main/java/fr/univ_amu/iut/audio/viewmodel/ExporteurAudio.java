@@ -2,8 +2,12 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.validation.model.ExportObservationsCsv;
+import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
+import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 
 /// Exports de la vue audio unifiée, sortis du [AudioViewModel] : le CSV `_Vu` réinjectable d'un passage
@@ -39,6 +43,20 @@ final class ExporteurAudio {
             Path ecrit = validation.exporter(idResultats, destination, inclureMode);
             return new ResultatExport(true, "Fichier _Vu exporté : " + ecrit.getFileName());
         } catch (RuntimeException echec) {
+            return new ResultatExport(false, echec.getMessage());
+        }
+    }
+
+    /// Exporte les `lignes` d'observations (typiquement le **sous-ensemble filtré** affiché) en **CSV**
+    /// vers `destination` (#149), pour l'analyse/interop hors application. Ignoré si `destination` est nul.
+    ResultatExport observations(List<LigneObservationAudio> lignes, Path destination) {
+        if (destination == null) {
+            return IGNORE;
+        }
+        try {
+            Path ecrit = ExportObservationsCsv.ecrire(lignes, destination);
+            return new ResultatExport(true, lignes.size() + " observation(s) exportée(s) : " + ecrit.getFileName());
+        } catch (IOException | RuntimeException echec) {
             return new ResultatExport(false, echec.getMessage());
         }
     }
