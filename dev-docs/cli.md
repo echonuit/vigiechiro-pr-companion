@@ -47,17 +47,37 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 
 | Commande | Options | Parcours | Service |
 |---|---|---|---|
-| `lister-passages` | — | P5 | `RegistrePassages` (lecture) |
+| `lister-passages` | `[--json]` | P5 | `RegistrePassages` (lecture) |
 | `importer` | `--source <dir> --point <id> [--annee N] [--passage N]` | P2 | `ServiceImport` |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
-| `aide` (ou `-h`, `--help`, ou aucun argument) | — | — | — |
+| `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
 
-L'analyse des arguments est faite par un mini-parseur **maison**,
-[`ArgumentsCli`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/model/ArgumentsCli.java)
-(options longues `--clé valeur`), **sans bibliothèque tierce** : c'est un choix délibéré pour ne pas
-toucher au `pom.xml` ni au `module-info`. Une option manquante ou mal typée lève une
-[`ErreurUsage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/model/ErreurUsage.java).
+### Socle : registre de commandes picocli (#614)
+
+Le CLI repose sur **[picocli](https://picocli.info) 4.7.7** : chaque commande est une classe annotée
+`@Command` de `cli.commande` (`ListerPassages`, `Importer`, `ExporterLot`, `ExporterVu`) déclarant son nom,
+ses `@Option` (types convertis automatiquement) et son aide. La **commande racine**
+[`CommandeRacine`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/commande/CommandeRacine.java)
+liste les sous-commandes ; l'**aide, l'usage et la liste des commandes sont générés** par picocli (plus de
+texte d'aide maintenu à la main). Les commandes restent des **façades** : aucune logique propre, elles
+appellent les services.
+
+- **Instanciation par Guice** :
+  [`FabriqueGuice`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/FabriqueGuice.java)
+  (une `IFactory` picocli) fait **construire chaque commande par l'injecteur**, pour que ses services
+  `@Inject` soient fournis ; picocli renseigne ensuite les champs `@Option`. Le module étant un
+  `open module`, aucun `opens ... to info.picocli` n'est nécessaire.
+- **Migration** : `Cli.executer` migre la base (idempotent) **avant** d'exécuter une sous-commande (pas
+  pour l'aide seule), via une `IExecutionStrategy`.
+- **Sortie `--json`** : convention uniforme pour les commandes de lecture (scriptabilité), sérialisée par
+  [`FormatJson`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/FormatJson.java)
+  (écrivain JSON minimal, sans dépendance supplémentaire).
+- **Erreurs** : les erreurs de parsing (commande inconnue, argument requis manquant) sont reformulées en
+  français et sortent en code `2` ; une
+  [`ErreurUsage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/model/ErreurUsage.java)
+  levée dans la logique (ex. point introuvable) sort aussi en `2` ; toute autre exception métier en `1`
+  (message seul, jamais la trace).
 
 ### Workspace surchargeable
 

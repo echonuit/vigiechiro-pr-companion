@@ -85,6 +85,24 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("lister-passages --json sur une base vide : tableau JSON vide, succès (0)")
+    void lister_passages_json_base_vide() {
+        int code = cli.executer(new String[] {"lister-passages", "--json"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie().strip()).isEqualTo("[]");
+    }
+
+    @Test
+    @DisplayName("--help : affiche l'aide générée et sort en succès (0)")
+    void aide_via_option_help() {
+        int code = cli.executer(new String[] {"--help"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("Usage").contains("lister-passages").contains("Codes de sortie");
+    }
+
+    @Test
     @DisplayName("exporter-vu sans --sortie : argument manquant, code 2, rien écrit")
     void exporter_vu_argument_manquant() {
         int code = cli.executer(new String[] {"exporter-vu", "--passage", "1"}, sortie, erreur);

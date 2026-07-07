@@ -31,6 +31,10 @@ open module vigiechiro {
     // automatique ; `open module` ouvre déjà les records du descripteur à sa réflexion.
     requires com.google.gson;
 
+    // Interface en ligne de commande (#614) : picocli parse les sous-commandes/options. `open module`
+    // ouvre déjà les paquets à la réflexion picocli (@Command/@Option), donc pas d'`opens ... to`.
+    requires info.picocli;
+
     // Composant audio fourni pour la SAÉ 2.01 (sonogramme / spectrogramme).
     requires fr.nedjar.vigiechiro.audio;
 
