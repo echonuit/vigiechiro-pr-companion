@@ -27,7 +27,10 @@ public final class FormatJson {
         return json.append(']').toString();
     }
 
-    private static String objet(Map<String, ?> champs) {
+    /// Sérialise un **objet plat unique** (map ordonnée `clé → valeur`) en objet JSON `{ ... }` sur une
+    /// seule ligne. Sortie naturelle pour l'inspection d'une **ressource unique** (`statut-passage --json`),
+    /// là où [#tableau] convient aux collections. Valeurs acceptées : `String`, `Number`, `Boolean`, `null`.
+    public static String objet(Map<String, ?> champs) {
         StringBuilder json = new StringBuilder("{");
         boolean premier = true;
         for (Map.Entry<String, ?> champ : champs.entrySet()) {

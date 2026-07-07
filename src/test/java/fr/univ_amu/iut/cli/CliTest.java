@@ -103,6 +103,24 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("statut-passage sans --passage : argument manquant, code 2")
+    void statut_passage_argument_manquant() {
+        int code = cli.executer(new String[] {"statut-passage"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("--passage");
+    }
+
+    @Test
+    @DisplayName("statut-passage sur un passage introuvable : échec métier (1), lecture seule")
+    void statut_passage_introuvable_echoue() {
+        int code = cli.executer(new String[] {"statut-passage", "--passage", "999"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("introuvable");
+    }
+
+    @Test
     @DisplayName("exporter-vu sans --sortie : argument manquant, code 2, rien écrit")
     void exporter_vu_argument_manquant() {
         int code = cli.executer(new String[] {"exporter-vu", "--passage", "1"}, sortie, erreur);

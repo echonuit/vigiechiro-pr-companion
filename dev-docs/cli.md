@@ -48,6 +48,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | Commande | Options | Parcours | Service |
 |---|---|---|---|
 | `lister-passages` | `[--json]` | P5 | `RegistrePassages` (lecture) |
+| `statut-passage` | `--passage <id> [--json]` | M-Passage | `ServicePassage.detailPassage` + `ResultatsIdentificationDao` (lecture) |
 | `importer` | `--source <dir> --point <id> [--annee N] [--passage N]` | P2 | `ServiceImport` |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |

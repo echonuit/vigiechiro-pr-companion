@@ -27,7 +27,7 @@ import picocli.CommandLine.Spec;
             "",
             "Codes de sortie : 0 succès · 1 échec d'exécution (règle métier, E/S) · 2 mauvaise invocation."
         },
-        subcommands = {ListerPassages.class, Importer.class, ExporterLot.class, ExporterVu.class})
+        subcommands = {ListerPassages.class, StatutPassage.class, Importer.class, ExporterLot.class, ExporterVu.class})
 public final class CommandeRacine implements Runnable {
 
     @Spec

@@ -36,6 +36,22 @@ class FormatJsonTest {
     }
 
     @Test
+    @DisplayName("Un objet unique est sérialisé en objet JSON, clés dans l'ordre d'insertion")
+    void objet_unique() {
+        Map<String, Object> objet = new LinkedHashMap<>();
+        objet.put("passage", 7L);
+        objet.put("statut", "Déposé");
+        objet.put("resultatsTadarida", true);
+        objet.put("cheminResultatsTadarida", null);
+
+        String json = FormatJson.objet(objet);
+
+        assertThat(json)
+                .isEqualTo("{\"passage\": 7, \"statut\": \"Déposé\", \"resultatsTadarida\": true, "
+                        + "\"cheminResultatsTadarida\": null}");
+    }
+
+    @Test
     @DisplayName("Les guillemets, antislash et sauts de ligne sont échappés")
     void echappement() {
         Map<String, Object> objet = new LinkedHashMap<>();
