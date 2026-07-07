@@ -211,9 +211,9 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 Activée par **+ Ajouter un point** ou par **✏ Modifier** d'une carte. Le code est obligatoire ; le descriptif et les coordonnées GPS sont optionnels.
 
 <div markdown="0">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Maquette M-Site-detail - Modale d'édition d'un point" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: rgba(44,62,80,0.6);">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500" role="img" aria-label="Maquette M-Site-detail - Modale d'édition d'un point" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #6b7785;">
   <style>
-    .modal-bg { fill: rgba(44,62,80,0.5); }
+    .modal-bg { fill: #6b7785; }
     .modal-frame { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
     .modal-header { fill: #3f51b5; }
     .modal-header-txt { fill: #ffffff; font: 600 16px sans-serif; }
@@ -283,9 +283,9 @@ Activée par **+ Ajouter un point** ou par **✏ Modifier** d'une carte. Le code
 Si on tente de supprimer un point qui porte des passages, l'opération est **bloquée** avec un message explicite ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)).
 
 <div markdown="0">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-label="Maquette M-Site-detail - Suppression de point bloquée" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: rgba(44,62,80,0.6);">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-label="Maquette M-Site-detail - Suppression de point bloquée" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #6b7785;">
   <style>
-    .modal-bg { fill: rgba(44,62,80,0.5); }
+    .modal-bg { fill: #6b7785; }
     .modal-frame { fill: #ffffff; stroke: #a93226; stroke-width: 2; }
     .modal-header { fill: #a93226; }
     .modal-header-txt { fill: #ffffff; font: 600 16px sans-serif; }

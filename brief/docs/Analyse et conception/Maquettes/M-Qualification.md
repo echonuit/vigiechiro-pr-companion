@@ -72,7 +72,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
     .specto-zoom-btn { fill: rgba(255,255,255,0.1); stroke: #6a737d; stroke-width: 1; }
     .specto-zoom-txt { fill: #ffffff; font: 600 11px sans-serif; }
 
-    /* Player audio bar sombre (comme M-SonsValidation) */
+    /* Lecteur audio (barre sombre, comme M-SonsValidation) */
     .player-bar { fill: #2c3e50; }
     .player-time { fill: #ffffff; font: 11px monospace; }
     .player-ctrl { fill: #ffffff; font: 14px sans-serif; }
@@ -277,7 +277,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
   <rect x="280" y="780" width="200" height="30" rx="3" class="btn-secondary-small"/>
   <text x="380" y="800" class="btn-txt-dark-small" text-anchor="middle">↺ Régénérer la sélection</text>
 
-  <!-- ============== Colonne droite : panneau de détail (STYLE M-VISION-TADARIDA, fond clair) ============== -->
+  <!-- ============== Colonne droite : panneau de détail (fond clair) ============== -->
   <rect x="660" y="265" width="500" height="585" rx="4" class="detail-section"/>
 
   <!-- Section 1 : info séquence en haut -->
@@ -424,7 +424,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
     - Ligne courante (n° 04) en surbrillance bleue
     - Boutons en bas : ajouter manuellement / régénérer
 - **Colonne droite - Panneau de détail** (style harmonisé avec [M-SonsValidation](M-SonsValidation.md)) :
-    - **Section 1 : info séquence** (card claire `.seq-info-card`) - N° de séquence + horodatage + métadonnées + position dans la sélection (04/30), miroir de la « card info taxon » de M-SonsValidation.
+    - **Section 1 : info séquence** (card claire `.seq-info-card`) - N° de séquence + horodatage + métadonnées + position dans la sélection (04/30), en tête du panneau d'écoute.
     - **Section 2 : vue audio combinée** (sonogramme + spectrogramme) - **Composant partagé avec [M-SonsValidation](M-SonsValidation.md)**, fourni par l'équipe pédagogique. Le sonogramme (amplitude/temps, fond clair) et le spectrogramme (fréquence/temps, fond sombre) sont **synchronisés** par un curseur rouge vertical unique. Boutons de zoom temps/fréquence accessibles sur le spectrogramme. L'utilisateur peut faire de l'écoute simple (sonogramme) ou analyser plus en détail (spectrogramme) selon ses besoins.
     - **Section 3 : lecteur audio** (barre sombre comme M-SonsValidation) - Contrôles ⏮ ⏯ ⏭, minutage, volume.
     - **Section 4 : verdict global** - 3 boutons colorés grand format (`✓ OK` vert / `⚠ Douteux` orange / `❌ À jeter` rouge). Le bouton sélectionné a une bordure plus épaisse (le `OK` ici est sélectionné). **Sélection différée** : ne persiste pas, attend le bouton « Enregistrer le verdict ».
@@ -441,7 +441,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
 | Décision | **Un verdict GLOBAL** pour toute la nuit | Une décision **par observation** |
 | Persistance | Différée (bouton « Enregistrer ») | Instantanée (par clic Valider/Corriger) |
 | Boutons d'action | OK / Douteux / À jeter | Valider / Corriger / Référence |
-| Statut résultant | Passe au statut `Vérifié` | Passe au statut `Annoté Tadarida` |
+| Statut résultant | Le passage passe au statut `Vérifié` | L'observation passe à `Validée` / `Corrigée` |
 
 ### Interactions clés
 
@@ -465,9 +465,9 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
 Activée par le bouton **⚙ Personnaliser** dans l'en-tête de la liste. Permet de changer la méthode (RéparTemporel ou Aléatoire) et la taille (entre 10 et 100 séquences).
 
 <div markdown="0">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-label="Maquette M-Qualification - Modale personnalisation" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: rgba(44,62,80,0.6);">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 480" role="img" aria-label="Maquette M-Qualification - Modale personnalisation" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #6b7785;">
   <style>
-    .modal-bg { fill: rgba(44,62,80,0.5); }
+    .modal-bg { fill: #6b7785; }
     .modal-frame { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
     .modal-header { fill: #2c3e50; }
     .modal-header-txt { fill: #ffffff; font: 600 16px sans-serif; }
@@ -512,18 +512,18 @@ Activée par le bouton **⚙ Personnaliser** dans l'en-tête de la liste. Permet
   <rect x="406" y="135" width="270" height="80" rx="4" class="radio-card"/>
   <text x="424" y="158" class="radio-icon">○</text>
   <text x="444" y="158" class="radio-title">🎲 Aléatoire</text>
-  <text x="444" y="178" class="radio-sub">Tirage aléatoire (avec seed pour</text>
+  <text x="444" y="178" class="radio-sub">Tirage aléatoire (avec graine pour</text>
   <text x="444" y="194" class="radio-sub">reproductibilité d'une session à l'autre).</text>
 
   <text x="124" y="252" class="field-label">Taille de la sélection</text>
-  <text x="124" y="269" class="field-hint">Entre 10 et 100 séquences. La taille actuelle est appropriée pour ~3 600 séquences totales.</text>
+  <text x="124" y="269" class="field-hint">Entre 10 et 30 séquences, réparties sur les ~3 600 séquences de la nuit.</text>
 
   <rect x="124" y="290" width="450" height="6" rx="3" class="slider-track"/>
-  <rect x="124" y="290" width="100" height="6" rx="3" class="slider-track-fill"/>
-  <circle cx="224" cy="293" r="10" class="slider-handle"/>
+  <rect x="124" y="290" width="450" height="6" rx="3" class="slider-track-fill"/>
+  <circle cx="574" cy="293" r="10" class="slider-handle"/>
   <text x="125" y="318" class="slider-label">10</text>
-  <text x="350" y="318" class="slider-label" text-anchor="middle">55</text>
-  <text x="573" y="318" class="slider-label" text-anchor="end">100</text>
+  <text x="350" y="318" class="slider-label" text-anchor="middle">20</text>
+  <text x="573" y="318" class="slider-label" text-anchor="end">30</text>
   <text x="610" y="298" class="slider-value" text-anchor="end">30</text>
 
   <rect x="124" y="335" width="552" height="50" rx="4" class="preview-box"/>
@@ -549,8 +549,8 @@ Activée par le bouton **⚙ Personnaliser** dans l'en-tête de la liste. Permet
 - **TableView avec virtualisation** : la liste des séquences peut atteindre 100 lignes (taille max). JavaFX `TableView` gère nativement la virtualisation, à confirmer avec un test sur 100+ lignes.
 - **Composant de vue audio fourni** : le bloc `sonogramme + spectrogramme + curseur synchronisé + boutons zoom` est un **composant JavaFX fourni par l'équipe pédagogique** (cf. Contraintes techniques). Les étudiants ne le réimplémentent pas - ils l'instancient avec un `wav:Path` et reçoivent les évènements de lecture / curseur. Ce composant est partagé avec [M-SonsValidation](M-SonsValidation.md), évitant ainsi la duplication d'un calcul FFT non trivial.
 - **Lecteur audio** : `MediaPlayer` JavaFX avec `Media`. Le composant audio fourni gère les contrôles standards (⏮ ⏯ ⏭) et expose une API simple.
-- **Cohérence visuelle avec [M-SonsValidation](M-SonsValidation.md)** : les deux écrans partagent le même style de panneau de détail (fond clair, sections numérotées, vue audio combinée, boutons d'action colorés en bas). Les étudiants n'implémentent qu'un seul pattern de « lieu d'écoute », réutilisé sur les deux écrans.
+- **Cohérence visuelle avec [M-SonsValidation](M-SonsValidation.md)** : les deux écrans partagent le même style de panneau de détail (fond clair, sections numérotées, vue audio combinée, boutons d'action colorés en bas). Les étudiants n'implémentent qu'un seul patron de « lieu d'écoute », réutilisé sur les deux écrans.
 - **Sélection vs persistance du verdict** : le clic sur l'un des 3 boutons (OK / Douteux / À jeter) **sélectionne** mais ne persiste pas. La persistance se fait via le bouton « Enregistrer le verdict » (qui peut aussi être déclenché par ⏎ Entrée). Cette dissociation évite les fausses manipulations et permet de changer d'avis avant de valider.
 - **Synchronisation lecture ↔ progression** : le statut `écouté` doit être marqué dès le début de la lecture (pas à la fin), pour permettre à l'utilisateur de zapper rapidement.
 - **Persistance** : la sélection, son état d'écoute, le verdict et le commentaire sont tous persistés en base. Au retour sur l'écran, on retrouve tout son contexte.
-- **Raccourcis clavier** (O/D/J/⏎/Espace/↑/↓) : à implémenter via `setOnKeyPressed` au niveau de la racine de la vue. Cohérents avec M-SonsValidation (V/C/R/→) pour faciliter le transfert d'apprentissage.
+- **Raccourcis clavier** (O/D/J/⏎/Espace/↑/↓) : à implémenter via `setOnKeyPressed` au niveau de la racine de la vue. Cohérents dans l'esprit avec M-SonsValidation (Entrée/R/N) pour faciliter le transfert d'apprentissage.

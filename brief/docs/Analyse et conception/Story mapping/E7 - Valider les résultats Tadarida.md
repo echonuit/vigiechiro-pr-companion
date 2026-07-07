@@ -57,7 +57,7 @@ Les gains de productivité avancés (regroupement multi-nuits P9, bibliothèque 
 - [ ] Volumétrie cible : la liste reste réactive avec 5 000+ observations (virtualisation TableView).
 
 **Parcours rattaché** : [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md), étapes 3-4<br>
-**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (layout deux colonnes liste + détail)<br>
+**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (patron liste + écoute)<br>
 **Dépendances** : [E3.S3](E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s3), [E7.S1](#e7s1)<br>
 **Complexité** : ★★★ (moyen - TableView avec virtualisation + panneau détail synchronisé + raccourcis clavier)<br>
 **MoSCoW** : 🟠 SHOULD
