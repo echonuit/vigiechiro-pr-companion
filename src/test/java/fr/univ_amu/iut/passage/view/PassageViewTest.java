@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -54,6 +55,7 @@ class PassageViewTest {
     @Start
     void start(Stage stage) throws Exception {
         ServicePassage service = mock(ServicePassage.class);
+        ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
         when(service.detailPassage(anyLong()))
                 .thenReturn(new DetailPassage(
                         2,
@@ -73,7 +75,7 @@ class PassageViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service);
+                return new PassageViewModel(service, purge);
             }
 
             @Provides
@@ -201,6 +203,16 @@ class PassageViewTest {
         Button supprimer = robot.lookup("#boutonSupprimer").queryAs(Button.class);
 
         assertThat(supprimer.isDisabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("Le bouton « Purger les originaux » est présent et visible quand la nuit conserve des originaux")
+    void bouton_purger_present(FxRobot robot) {
+        Button purger = robot.lookup("#boutonPurger").queryAs(Button.class);
+
+        assertThat(purger.isVisible())
+                .as("volume bruts > 0 dans la fixture → purge proposée")
+                .isTrue();
     }
 
     @Test

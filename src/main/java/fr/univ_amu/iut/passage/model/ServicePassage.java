@@ -135,6 +135,24 @@ public class ServicePassage {
                 MeteoPassage.lire(passage.donneesMeteo()));
     }
 
+    /// Dossier de session (`root_path`) d'un passage, s'il en a une : sert à **localiser** ses `bruts/` à
+    /// purger sur disque. La suppression elle-même est déléguée à `ServicePurgeOriginaux` (socle commun),
+    /// pour ne pas coupler `passage` au balayage du workspace. [Optional#empty()] si le passage n'a pas de
+    /// session.
+    public Optional<Path> cheminSession(Long idPassage) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        return sessionDao.trouverParPassage(idPassage).map(s -> Path.of(s.cheminRacine()));
+    }
+
+    /// Marque les originaux d'un passage **purgés** en base (volume des originaux → 0), après suppression
+    /// de ses `bruts/` sur disque : la fiche du passage reflète alors que les originaux ne sont plus
+    /// conservés (l'écoute et la validation s'appuient sur les séquences, inchangées). Sans session, sans
+    /// effet.
+    public void marquerOriginauxPurges(Long idPassage) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        sessionDao.trouverParPassage(idPassage).ifPresent(s -> sessionDao.marquerOriginauxPurges(s.id()));
+    }
+
     /// Renseigne (ou efface, avec `null`) la **température en début de nuit** (°C) d'un passage (#106) :
     /// donnée **optionnelle**, jamais bloquante. Stockée dans `passage.weather_data` via [MeteoPassage].
     ///

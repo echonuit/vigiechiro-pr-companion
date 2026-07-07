@@ -202,4 +202,29 @@ class ServicePassageDetailTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("introuvable");
     }
+
+    @Test
+    @DisplayName("cheminSession renvoie le dossier racine ; marquerOriginauxPurges met le volume bruts à 0")
+    void chemin_session_et_marquage_purge() {
+        Passage passage = insererPassage(5, StatutWorkflow.TRANSFORME);
+        sessionDao.insert(new SessionDEnregistrement(null, "/ws/Car640380-2026-Pass5-A1", 8192L, 1024L, passage.id()));
+
+        assertThat(service.cheminSession(passage.id())).contains(Path.of("/ws/Car640380-2026-Pass5-A1"));
+        assertThat(service.detailPassage(passage.id()).volumeOriginauxOctets()).isEqualTo(8192L);
+
+        service.marquerOriginauxPurges(passage.id());
+
+        assertThat(service.detailPassage(passage.id()).volumeOriginauxOctets())
+                .as("après purge des bruts/, le volume des originaux tombe à 0 (l'écoute reste possible)")
+                .isZero();
+    }
+
+    @Test
+    @DisplayName("Sans session : cheminSession est vide et marquerOriginauxPurges est sans effet (ne lève pas)")
+    void chemin_session_sans_session() {
+        Passage passage = insererPassage(6, StatutWorkflow.IMPORTE);
+
+        assertThat(service.cheminSession(passage.id())).isEmpty();
+        service.marquerOriginauxPurges(passage.id()); // idempotent, aucun effet
+    }
 }

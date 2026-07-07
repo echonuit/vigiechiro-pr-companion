@@ -54,6 +54,13 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
         return queryUnique("SELECT * FROM recording_session WHERE passage_id = ?", MAPPER, idPassage);
     }
 
+    /// Met à **zéro** le volume des originaux (`originals_total_bytes`) d'une session, après purge de ses
+    /// `bruts/` : la fiche du passage reflète alors que les originaux ne sont plus conservés (l'écoute et
+    /// la validation s'appuient sur les séquences transformées, inchangées).
+    public void marquerOriginauxPurges(Long idSession) {
+        executerMaj("UPDATE recording_session SET originals_total_bytes = 0 WHERE id = ?", idSession);
+    }
+
     @Override
     public SessionDEnregistrement insert(SessionDEnregistrement session) {
         long id = insererEtRecupererCle(

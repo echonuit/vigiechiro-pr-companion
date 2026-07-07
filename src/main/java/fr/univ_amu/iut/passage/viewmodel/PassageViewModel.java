@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -30,6 +31,7 @@ import javafx.collections.ObservableList;
 public class PassageViewModel {
 
     private final ServicePassage service;
+    private final ServicePurgeOriginaux purge;
 
     private final ReadOnlyStringWrapper titreContexte = new ReadOnlyStringWrapper(this, "titreContexte", "");
     private final ReadOnlyStringWrapper plageHoraire = new ReadOnlyStringWrapper(this, "plageHoraire", "");
@@ -48,6 +50,7 @@ public class PassageViewModel {
     private final ReadOnlyBooleanWrapper depotDisponible = new ReadOnlyBooleanWrapper(this, "depotDisponible", false);
     private final ReadOnlyBooleanWrapper annulationDepotDisponible =
             new ReadOnlyBooleanWrapper(this, "annulationDepotDisponible", false);
+    private final ReadOnlyBooleanWrapper purgeDisponible = new ReadOnlyBooleanWrapper(this, "purgeDisponible", false);
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
@@ -63,8 +66,9 @@ public class PassageViewModel {
     /// n'est chargé.
     private int numeroPassage;
 
-    public PassageViewModel(ServicePassage service) {
+    public PassageViewModel(ServicePassage service, ServicePurgeOriginaux purge) {
         this.service = Objects.requireNonNull(service, "service");
+        this.purge = Objects.requireNonNull(purge, "purge");
         this.conditions = new SaisiePassageConditions(service, message);
     }
 
@@ -102,6 +106,16 @@ public class PassageViewModel {
         service.annulerDepot(idPassage);
     }
 
+    /// Purge les **originaux** (`bruts/`) du passage courant pour récupérer l'espace disque : supprime les
+    /// fichiers via [ServicePurgeOriginaux] (socle) puis marque les originaux purgés en base
+    /// ([ServicePassage#marquerOriginauxPurges]). Les séquences transformées, la validation et le dépôt
+    /// sont **conservés**. Le rechargement de l'affichage (volume bruts → 0) est à la charge de l'appelant
+    /// (rejeu de [#ouvrirSur]).
+    public void purgerOriginaux() {
+        service.cheminSession(idPassage).ifPresent(purge::purgerSession);
+        service.marquerOriginauxPurges(idPassage);
+    }
+
     private void appliquer(DetailPassage detail, ContexteSite contexte) {
         titreContexte.set("Carré "
                 + contexte.numeroCarre()
@@ -127,6 +141,8 @@ public class PassageViewModel {
         depotDisponible.set(
                 detail.statut() == StatutWorkflow.VERIFIE || detail.statut() == StatutWorkflow.PRET_A_DEPOSER);
         annulationDepotDisponible.set(detail.statut() == StatutWorkflow.DEPOSE);
+        // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
+        purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
         actionRecommandee.set(prochaineAction(detail.statut()));
         conditions.charger(idPassage, detail.meteo());
     }
@@ -158,6 +174,7 @@ public class PassageViewModel {
         validationVerrouillee.set(true);
         depotDisponible.set(false);
         annulationDepotDisponible.set(false);
+        purgeDisponible.set(false);
         actionRecommandee.set(ActionRecommandee.AUCUNE);
         conditions.reinitialiser();
     }
@@ -252,6 +269,12 @@ public class PassageViewModel {
     /// passage à « Prêt à déposer » sans toucher aux validations Tadarida déjà saisies.
     public ReadOnlyBooleanProperty annulationDepotDisponibleProperty() {
         return annulationDepotDisponible.getReadOnlyProperty();
+    }
+
+    /// `true` quand des **originaux** sont encore stockés (volume bruts > 0) : la purge est alors proposée
+    /// pour récupérer l'espace disque.
+    public ReadOnlyBooleanProperty purgeDisponibleProperty() {
+        return purgeDisponible.getReadOnlyProperty();
     }
 
     /// Prochaine action recommandée du workflow (carte mise en avant), dérivée du statut. Se déplace

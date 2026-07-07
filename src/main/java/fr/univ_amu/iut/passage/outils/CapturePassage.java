@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.di.PassageModule;
@@ -135,7 +136,8 @@ public final class CapturePassage {
     /// Charge `Passage.fxml` sur `idPassage` (ViewModel connu + contrats de navigation neutres) et
     /// rend le pivot hors-écran.
     private static void rendrePivot(Injector injecteur, long idPassage, Path fichier) throws IOException {
-        PassageViewModel passageVm = new PassageViewModel(injecteur.getInstance(ServicePassage.class));
+        PassageViewModel passageVm = new PassageViewModel(
+                injecteur.getInstance(ServicePassage.class), injecteur.getInstance(ServicePurgeOriginaux.class));
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(type -> type == PassageController.class
                 ? new PassageController(

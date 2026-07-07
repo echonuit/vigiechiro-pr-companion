@@ -58,6 +58,13 @@ public final class Workspace {
         return dossierSession(prefixe).resolve(SOUS_DOSSIER_BRUTS);
     }
 
+    /// Sous-dossier `bruts/` d'une session **désignée par son dossier racine** (le `root_path` persisté),
+    /// et non par son préfixe : utile pour purger les originaux d'une session existante sans reconstruire
+    /// son préfixe. Complément de [#dossierBruts(String)].
+    public Path dossierBrutsDeSession(Path racineSession) {
+        return racineSession.resolve(SOUS_DOSSIER_BRUTS);
+    }
+
     /// Sous-dossier `transformes/` d'une session (séquences R8 + CSV R23).
     public Path dossierTransformes(String prefixe) {
         return dossierSession(prefixe).resolve(SOUS_DOSSIER_TRANSFORMES);

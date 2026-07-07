@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
+import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
@@ -57,9 +58,13 @@ public class MainController {
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final ServiceSauvegarde serviceSauvegarde;
+    private final ServicePurgeOriginaux servicePurge;
 
     /// Actions de sauvegarde/restauration de la base (menu « ☰ »), initialisées dans `initialize()`.
     private ActionsSauvegarde actionsSauvegarde;
+
+    /// Action de purge globale des originaux (menu « ☰ »), initialisée dans `initialize()`.
+    private ActionsPurge actionsPurge;
 
     @FXML
     private BorderPane racine;
@@ -113,7 +118,8 @@ public class MainController {
             RechercheGlobale recherche,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
-            ServiceSauvegarde serviceSauvegarde) {
+            ServiceSauvegarde serviceSauvegarde,
+            ServicePurgeOriginaux servicePurge) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
@@ -122,6 +128,7 @@ public class MainController {
         this.ouvrirSite = ouvrirSite;
         this.ouvrirPassage = ouvrirPassage;
         this.serviceSauvegarde = serviceSauvegarde;
+        this.servicePurge = servicePurge;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -133,6 +140,9 @@ public class MainController {
         // Menu « ☰ » : sauvegarde/restauration de la base (#148). Après une restauration réussie, on
         // revient à l'accueil pour relire la base restaurée (les écrans ouverts liraient un état périmé).
         actionsSauvegarde = new ActionsSauvegarde(serviceSauvegarde, this::fenetre, navigateur::afficherAccueil);
+        // Menu « ☰ » : purge globale des originaux (bruts/) pour récupérer de l'espace disque. Après une
+        // purge, retour à l'accueil pour rafraîchir les volumes affichés.
+        actionsPurge = new ActionsPurge(servicePurge, this::fenetre, navigateur::afficherAccueil);
 
         // ← Retour (historique) : grisé pendant une opération longue (import en cours, #54) qu'on ne
         // doit pas quitter. Sa visibilité (présent hors accueil) est gérée par rafraichirNavigation().
@@ -216,6 +226,12 @@ public class MainController {
     @FXML
     private void restaurerBase() {
         actionsSauvegarde.restaurer();
+    }
+
+    /// Menu « ☰ » → Purger les originaux importés : délègue à [ActionsPurge].
+    @FXML
+    private void purgerOriginaux() {
+        actionsPurge.purger();
     }
 
     /// Fenêtre propriétaire des sélecteurs/alertes (ou `null` tant que la scène n'est pas attachée).

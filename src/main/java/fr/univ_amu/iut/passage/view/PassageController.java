@@ -121,6 +121,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Button boutonAnnulerDepot;
 
     @FXML
+    private Button boutonPurger;
+
+    @FXML
     private Label lblIndiceAction;
 
     @FXML
@@ -238,6 +241,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         // de place) que dans ce cas, au lieu de rester grisé en permanence dans la barre d'actions.
         boutonAnnulerDepot.visibleProperty().bind(viewModel.annulationDepotDisponibleProperty());
         boutonAnnulerDepot.managedProperty().bind(viewModel.annulationDepotDisponibleProperty());
+        // « Purger les originaux » n'apparaît que si des originaux sont encore stockés (volume bruts > 0).
+        boutonPurger.visibleProperty().bind(viewModel.purgeDisponibleProperty());
+        boutonPurger.managedProperty().bind(viewModel.purgeDisponibleProperty());
         lblIndiceAction
                 .textProperty()
                 .bind(Bindings.createStringBinding(
@@ -386,6 +392,25 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             viewModel.ouvrirSur(idPassage, contexte);
         } catch (RegleMetierException refus) {
             alerteErreur(refus.getMessage());
+        }
+    }
+
+    /// « Purger les originaux » : après confirmation, supprime les fichiers `bruts/` de cette nuit pour
+    /// récupérer l'espace disque, puis recharge l'écran (le volume bruts tombe à 0). Les séquences
+    /// transformées, la validation Tadarida et le dépôt sont **conservés** (ils n'utilisent pas les
+    /// originaux). Action réservée aux nuits qui conservent encore des originaux (bouton masqué sinon).
+    @FXML
+    private void purgerOriginaux() {
+        if (!confirmer("Supprimer les enregistrements originaux (bruts) de cette nuit pour libérer de "
+                + "l'espace disque ? Les séquences d'écoute, la validation et le dépôt sont conservés ; "
+                + "cette suppression est définitive.")) {
+            return;
+        }
+        try {
+            viewModel.purgerOriginaux();
+            viewModel.ouvrirSur(idPassage, contexte);
+        } catch (RuntimeException echec) {
+            alerteErreur(echec.getMessage());
         }
     }
 

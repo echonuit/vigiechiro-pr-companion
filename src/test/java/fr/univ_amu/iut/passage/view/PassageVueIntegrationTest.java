@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -250,11 +251,12 @@ class PassageVueIntegrationTest {
     /// À appeler sur le fil JavaFX (chargement FXML).
     private Parent charger(StatutWorkflow statut, int numero) {
         ServicePassage service = mock(ServicePassage.class);
+        ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
         when(service.detailPassage(anyLong())).thenReturn(detail(statut, numero));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service);
+                return new PassageViewModel(service, purge);
             }
 
             @Provides

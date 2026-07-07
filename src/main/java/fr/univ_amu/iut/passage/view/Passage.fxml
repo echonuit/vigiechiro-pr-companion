@@ -34,6 +34,9 @@
                 styleClass="action-secondaire" onAction="#modifierRattachement"/>
         <Button fx:id="boutonAnnulerDepot" text="↩ Annuler le dépôt"
                 styleClass="action-secondaire" onAction="#annulerDepot"/>
+        <Button fx:id="boutonPurger" text="🧹 Purger les originaux"
+                styleClass="action-secondaire" onAction="#purgerOriginaux"
+                visible="false" managed="false"/>
         <Button fx:id="boutonSupprimer" text="🗑 Supprimer" styleClass="bouton-danger"
                 onAction="#supprimer"/>
       </HBox>

@@ -39,6 +39,20 @@ votre travail de validation, il rouvre seulement l'étape de dépôt (par exempl
 avant de redéposer). Le bouton n'apparaît que lorsqu'il a un sens, c'est-à-dire sur un passage
 effectivement déposé.
 
+## Purger les originaux
+
+Le **Résumé de la nuit** affiche le **volume des bruts** : la copie des enregistrements d'origine
+conservée sur le disque au moment de l'import. Ces fichiers ne servent **pas** à l'écoute ni à la
+validation (celles-ci s'appuient sur les séquences transformées) et peuvent être **volumineux**.
+
+Un bouton **Purger les originaux** (barre du haut) permet, après **confirmation**, de **supprimer** ces
+fichiers bruts pour **récupérer de l'espace disque**. Les **séquences d'écoute, la validation et le
+dépôt sont conservés** : seul le volume des bruts tombe à **0**. Le bouton n'apparaît que si la nuit
+conserve encore des originaux. Cette suppression est **définitive**.
+
+> Pour purger **toutes les nuits** d'un coup, utilisez le menu « ☰ → Purger les originaux importés… »
+> (voir [Accueil et navigation](index.md)).
+
 ## Modifier le rattachement
 
 Si une nuit a été rattachée par erreur (mauvaise année ou mauvais numéro de passage), le bouton

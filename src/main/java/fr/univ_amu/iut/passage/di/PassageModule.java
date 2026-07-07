@@ -7,6 +7,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.IndicateurAccueil;
@@ -179,8 +180,8 @@ public class PassageModule extends AbstractModule {
     /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les
     /// autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
     @Provides
-    PassageViewModel fournirPassageViewModel(ServicePassage service) {
-        return new PassageViewModel(service);
+    PassageViewModel fournirPassageViewModel(ServicePassage service, ServicePurgeOriginaux purge) {
+        return new PassageViewModel(service, purge);
     }
 
     /// ViewModel de la modale « Modifier le rattachement » (E2.S8). **Non-singleton** : un VM frais
