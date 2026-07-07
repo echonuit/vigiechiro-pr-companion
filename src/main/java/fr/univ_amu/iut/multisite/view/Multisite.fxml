@@ -33,24 +33,23 @@
        On ne garde qu'une ligne fine de résumé pour récupérer de la hauteur, critique sur petit écran. -->
   <Label fx:id="lblResume" styleClass="sous-titre-page"/>
 
-  <!-- #370 : barre allégée sur UNE rangée. Les filtres + Réinitialiser au centre (FlowPane qui se replie
-       sur petit écran) ; le menu « ☰ » des actions secondaires (Vues, Exporter) est épinglé À DROITE via
-       un BorderPane, pour ne pas se mêler aux filtres. Les replis carte/tableau (#328) ne sont plus ici :
-       ils sont passés en bas, sous le panneau qu'ils masquent.
-       Édition des positions (#154) : les contrôles « ✎ » / « 💾 » sont superposés à la CARTE. -->
+  <!-- Onglets de vues mémorisées « à la Notion » (#623) : un onglet par vue enregistrée + « + Vue ».
+       Rempli en code par le composant partagé GestionnaireVues (le controller le construit). -->
+  <FlowPane fx:id="barreOnglets" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" styleClass="barre-onglets"/>
+
+  <!-- Barre de filtres « à la Notion » (#537 étape 6b) : recherche permanente + « + Filtre » (Carré,
+       Statut, Verdict, Année) + puces des filtres actifs, puis le TRI (axe d'ordonnancement, pas un
+       filtre) et Réinitialiser. Le menu « ☰ » des actions secondaires (Écouter, Exporter) est épinglé
+       À DROITE. Les replis carte/tableau (#328) sont en bas ; l'édition des positions (#154, « ✎/💾 »)
+       est superposée à la CARTE. -->
   <BorderPane styleClass="barre-filtres">
     <center>
-      <!-- #370 : plus d'étiquettes « Carré : / Statut : … » avant chaque contrôle. L'intitulé vit DANS le
-           contrôle : invite (promptText) pour les champs texte, valeur par défaut auto-explicite pour les
-           listes (« Tous les statuts/verdicts », « Tri : … » via la cellule-bouton). Les libellés
-           accessibles (#163) sont conservés en code (accessibleText). -->
       <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
-        <TextField fx:id="champCarre" promptText="N° carré" prefWidth="110.0"
-                   accessibleText="Filtrer par numéro de carré"/>
-        <ComboBox fx:id="choixStatut" accessibleText="Filtrer par statut"/>
-        <ComboBox fx:id="choixVerdict" accessibleText="Filtrer par verdict"/>
-        <TextField fx:id="champAnnee" promptText="Année" prefWidth="90.0"
-                   accessibleText="Filtrer par année"/>
+        <TextField fx:id="champRecherche" promptText="Rechercher (carré, point, date…)" prefWidth="220.0"
+                   accessibleText="Rechercher dans les passages"/>
+        <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
+                    accessibleText="Ajouter un filtre"/>
+        <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"/>
         <ComboBox fx:id="choixTri" accessibleText="Trier les passages"/>
         <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
       </FlowPane>
@@ -63,7 +62,6 @@
         <items>
           <MenuItem fx:id="itemEcouterPassage" text="🎧 Écouter le passage sélectionné" onAction="#ecouterPassage"/>
           <MenuItem fx:id="itemEcouterLot" text="🎧 Écouter le lot filtré" onAction="#ecouterLot"/>
-          <MenuItem fx:id="itemGererVues" text="⭐ Vues…" onAction="#gererVues"/>
           <MenuItem fx:id="itemExporter" text="📤 Exporter…" onAction="#exporter"/>
         </items>
       </MenuButton>

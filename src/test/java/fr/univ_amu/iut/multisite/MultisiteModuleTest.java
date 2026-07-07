@@ -6,11 +6,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.multisite.di.MultisiteModule;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.sites.di.SitesModule;
@@ -21,9 +21,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /// Filet d'intégration Guice de la feature `multisite` : on assemble un injecteur dédié
-/// (socle + `SitesModule` + `PassageModule` + `MultisiteModule`) et on vérifie que
-/// [SavedViewDao], [ServiceMultisite] et [MultisiteViewModel] sont résolubles, sans conflit de
-/// binding.
+/// (socle + `SitesModule` + `PassageModule` + `MultisiteModule`) et on vérifie que le
+/// [DepotVues] (vues mémorisées, fourni par le socle), [ServiceMultisite] et [MultisiteViewModel]
+/// sont résolubles, sans conflit de binding.
 ///
 /// `SitesModule` et `PassageModule` sont requis car le service reçoit leurs DAO ([SiteDao],
 /// [PointDao], [PassageDao]) et le ViewModel l'identité de l'utilisateur courant
@@ -42,7 +42,7 @@ class MultisiteModuleTest {
     }
 
     @Test
-    @DisplayName("MultisiteModule assemble SavedViewDao, ServiceMultisite et MultisiteViewModel via Guice")
+    @DisplayName("MultisiteModule assemble DepotVues, ServiceMultisite et MultisiteViewModel via Guice")
     void multisite_module_resout_dao_service_et_vm() {
         System.setProperty("vigiechiro.workspace", workspaceJetable.toString());
 
@@ -56,7 +56,7 @@ class MultisiteModuleTest {
         // on migre le schéma avant de le résoudre.
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
 
-        assertThat(injecteur.getInstance(SavedViewDao.class)).isNotNull();
+        assertThat(injecteur.getInstance(DepotVues.class)).isNotNull();
         assertThat(injecteur.getInstance(ServiceMultisite.class)).isNotNull();
         assertThat(injecteur.getInstance(MultisiteViewModel.class)).isNotNull();
     }

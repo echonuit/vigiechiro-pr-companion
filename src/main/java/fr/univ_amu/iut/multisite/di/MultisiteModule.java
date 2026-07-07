@@ -6,11 +6,9 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.multisite.view.ActiviteMultisite;
 import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
@@ -38,21 +36,16 @@ public class MultisiteModule extends AbstractModule {
         bind(OuvrirMultisite.class).to(NavigationMultisite.class);
     }
 
-    @Provides
-    @Singleton
-    SavedViewDao fournirSavedViewDao(SourceDeDonnees source) {
-        return new SavedViewDao(source);
-    }
-
-    /// Vue agrégée multi-sites (parcours P5). Reçoit son propre [SavedViewDao] ainsi que les DAO
-    /// en lecture des features `sites` ([SiteDao], [PointDao]) et `passage`
-    /// ([PassageDao]), fournis par leurs modules respectifs, plus l'[Horloge] du socle.
-    /// L'assemblage inter-modules est résolu par `RacineInjecteur`.
+    /// Vue agrégée multi-sites (parcours P5). Reçoit les DAO en lecture des features `sites`
+    /// ([SiteDao], [PointDao]) et `passage` ([PassageDao]), fournis par leurs modules respectifs, plus
+    /// l'[Horloge] du socle. L'assemblage inter-modules est résolu par `RacineInjecteur`. Les vues
+    /// mémorisées ne passent plus par ce service (#537 étape 6b) : voir le [fr.univ_amu.iut.commun.model.DepotVues]
+    /// fourni par `CommunModule`.
     @Provides
     @Singleton
     ServiceMultisite fournirServiceMultisite(
-            SavedViewDao savedViewDao, SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
-        return new ServiceMultisite(savedViewDao, siteDao, pointDao, passageDao, horloge);
+            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+        return new ServiceMultisite(siteDao, pointDao, passageDao, horloge);
     }
 
     // Le ViewModel n'est volontairement PAS @Singleton (cf. SitesModule) : un VM frais par

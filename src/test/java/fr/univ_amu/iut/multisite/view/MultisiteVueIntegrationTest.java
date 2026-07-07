@@ -1,16 +1,15 @@
 package fr.univ_amu.iut.multisite.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -37,10 +36,9 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.input.KeyCode;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
-import javafx.stage.Window;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,22 +47,16 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// Test d'intégration TestFX **ciblant le câblage réel des contrôles** de l'écran M-Multisite via
-/// un **lookup des `fx:id`** (et non une simple lecture des propriétés du ViewModel). L'audit
-/// 2026-06-18 signale que la vue agrégée n'expose souvent que 2 des 4 filtres (verdict et année non
-/// surfacés), sans sélecteur de tri, et que la modale « Vues » est parfois inatteignable (bouton
-/// mort) : autant de manques **invisibles** aux tests canoniques qui passent par le VM.
-///
-/// Ces tests forcent donc une vraie **interaction** sur chaque contrôle (`#choixVerdict`,
-/// `#champCarre`, `#champAnnee`, `#choixTri`, item « Vues » du menu `#menuActions`) et vérifient que le contrôle
-/// **filtre ou ordonne le tableau** (R2/R3 ; filtrage client-side en mémoire depuis #537) ou que la navigation
-/// vers la modale est déclenchée (E5.S3). Complète [MultisiteViewTest] sans le dupliquer (statut, export,
-/// réinitialiser et double-clic y sont déjà couverts). Pas de base de données.
+/// Test d'intégration TestFX **ciblant le câblage réel des contrôles** de l'écran M-Multisite via un
+/// **lookup des `fx:id`** (et non une simple lecture des propriétés du ViewModel). Depuis #537 étape 6b,
+/// les filtres passent par la **barre à puces** (recherche + « + Filtre » : Carré, Statut, Verdict, Année)
+/// et les vues mémorisées par les **onglets** (`GestionnaireVues`) : ces tests forcent une vraie
+/// **interaction** (ajout d'une puce, saisie, clic-carte, tri) et vérifient que **le tableau reflète le
+/// filtre / le tri**. Complète [MultisiteViewTest] sans le dupliquer. Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
 class MultisiteVueIntegrationTest {
 
     private ServiceMultisite service;
-    private NavigationMultisite navigation;
     private MultisiteController controleur;
 
     private static LignePassage ligne(long id, String carre, String point, int annee, int numero, String date) {
@@ -82,11 +74,23 @@ class MultisiteVueIntegrationTest {
                 (TableView<?>) robot.lookup("#tableLignes").queryTableView();
     }
 
+    /// Ajoute une puce de filtre via le menu « + Filtre » (l'item porte le libellé du critère).
+    private static void ajouterPuce(FxRobot robot, String libelle) {
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        MenuItem item = menuAjout.getItems().stream()
+                .filter(i -> libelle.equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(item::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
     @Start
     void start(Stage stage) throws Exception {
         service = mock(ServiceMultisite.class);
-        navigation = mock(NavigationMultisite.class);
         OuvrirPassage ouvrirPassage = mock(OuvrirPassage.class);
+        DepotVues depotVues = mock(DepotVues.class);
+        when(depotVues.findByFeature(anyString())).thenReturn(List.of());
         when(service.listerPassages(anyString()))
                 .thenReturn(List.of(
                         ligne(42L, "640380", "A1", 2026, 10, "2026-06-21"),
@@ -103,7 +107,7 @@ class MultisiteVueIntegrationTest {
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 bind(OuvrirAudio.class).toInstance(source -> {});
-                bind(NavigationMultisite.class).toInstance(navigation);
+                bind(DepotVues.class).toInstance(depotVues);
             }
 
             @Provides
@@ -120,32 +124,23 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Les quatre filtres ET le sélecteur de tri existent et sont peuplés (R2/R3)")
-    void les_quatre_filtres_et_le_tri_sont_cables(FxRobot robot) {
-        TextField champCarre = robot.lookup("#champCarre").queryAs(TextField.class);
-        ComboBox<?> choixStatut = robot.lookup("#choixStatut").queryAs(ComboBox.class);
-        ComboBox<?> choixVerdict = robot.lookup("#choixVerdict").queryAs(ComboBox.class);
-        TextField champAnnee = robot.lookup("#champAnnee").queryAs(TextField.class);
-        ComboBox<?> choixTri = robot.lookup("#choixTri").queryAs(ComboBox.class);
+    @DisplayName("La barre à puces (recherche, + Filtre : 4 critères) et le sélecteur de tri sont câblés")
+    void la_barre_a_puces_et_le_tri_sont_cables(FxRobot robot) {
+        assertThat(robot.lookup("#champRecherche").queryAs(TextField.class)).isNotNull();
+        assertThat(robot.lookup("#pucesFiltres").queryAs(FlowPane.class)).isNotNull();
 
-        assertThat(champCarre).as("le filtre carré doit être présent").isNotNull();
-        assertThat(champAnnee)
-                .as("le filtre année doit être présent (souvent manquant)")
-                .isNotNull();
-        // Statut : 1re entrée « Tous » (null) + les 5 valeurs de StatutWorkflow.
-        assertThat(choixStatut.getItems()).hasSize(StatutWorkflow.values().length + 1);
-        // Verdict (souvent non surfacé) : entrée « Tous » (null) + les 4 valeurs de Verdict.
-        assertThat(choixVerdict.getItems()).hasSize(Verdict.values().length + 1);
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        assertThat(menuAjout.getItems())
+                .extracting(MenuItem::getText)
+                .containsExactlyInAnyOrder("Carré", "Statut", "Verdict", "Année");
         // Tri (souvent absent) : les 4 critères de TriMultisite.
-        assertThat(choixTri.getItems()).hasSize(TriMultisite.values().length);
+        assertThat(robot.lookup("#choixTri").queryAs(ComboBox.class).getItems()).hasSize(TriMultisite.values().length);
     }
 
     @Test
     @DisplayName("#145 : trier par la colonne N° de passage (clic en-tête) réordonne, de façon NUMÉRIQUE")
     void tri_par_colonne_numero_est_numerique(FxRobot robot) {
-        @SuppressWarnings("unchecked")
-        TableView<LignePassage> table = (TableView<LignePassage>)
-                (TableView<?>) robot.lookup("#tableLignes").queryTableView();
+        TableView<LignePassage> table = tableau(robot);
         TableColumn<LignePassage, ?> colNumero = table.getColumns().get(3); // colonne « N° passage »
 
         robot.interact(() -> {
@@ -178,9 +173,6 @@ class MultisiteVueIntegrationTest {
         assertThat(legende)
                 .as("le panneau de légende est présent dans la zone carte")
                 .isNotNull();
-        // La légende nomme chaque statut (pas que la couleur, #163). On **scope** la recherche au panneau de
-        // légende : sinon le texte « Déposé » du tableau ferait passer le test même si la légende ne listait
-        // plus les statuts.
         assertThat(robot.from(legende).lookup(StatutWorkflow.DEPOSE.libelle()).queryAll())
                 .as("la légende elle-même affiche le libellé d'un statut workflow")
                 .isNotEmpty();
@@ -273,14 +265,14 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#152 : cliquer un carré sur la carte filtre le tableau par ce carré")
+    @DisplayName("#152 : cliquer un carré sur la carte pose une puce « carré » qui filtre le tableau")
     void clic_carre_filtre_le_tableau(FxRobot robot) {
         Node rectangle = robot.lookup(".carte-carre").query();
         robot.interact(() -> rectangle.getOnMouseClicked().handle(null));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(tableau(robot).getItems())
-                .as("le tableau ne montre plus que le carré cliqué (filtrage en mémoire)")
+                .as("le tableau ne montre plus que le carré cliqué (puce carré posée par la carte)")
                 .extracting(LignePassage::numeroCarre)
                 .containsOnly("640380");
     }
@@ -292,10 +284,7 @@ class MultisiteVueIntegrationTest {
         assertThat(rectangle.getStrokeWidth()).isEqualTo(1.5);
 
         // 1re ligne = carré 640380 (le carré tracé sur la carte).
-        @SuppressWarnings("unchecked")
-        TableView<LignePassage> table = (TableView<LignePassage>)
-                (TableView<?>) robot.lookup("#tableLignes").queryTableView();
-        robot.interact(() -> table.getSelectionModel().select(0));
+        robot.interact(() -> tableau(robot).getSelectionModel().select(0));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(rectangle.getStrokeWidth())
@@ -314,11 +303,14 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Choisir un filtre de verdict filtre le tableau sur ce critère")
-    void filtre_verdict_filtre_le_tableau(FxRobot robot) {
-        ComboBox<?> choixVerdict = robot.lookup("#choixVerdict").queryAs(ComboBox.class);
-        // Items : [Tous(null), A_VERIFIER, OK, DOUTEUX, A_JETER] → index 3 = DOUTEUX.
-        robot.interact(() -> choixVerdict.getSelectionModel().select(3));
+    @DisplayName("Ajouter une puce « Verdict » et choisir DOUTEUX filtre le tableau sur ce critère")
+    void filtre_verdict_via_la_barre_a_puces(FxRobot robot) {
+        ajouterPuce(robot, "Verdict");
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<Verdict> choix =
+                (ComboBox<Verdict>) robot.from(puces).lookup(".combo-box").queryAs(ComboBox.class);
+        robot.interact(() -> choix.setValue(Verdict.DOUTEUX));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(tableau(robot).getItems())
@@ -328,9 +320,12 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Saisir un n° de carré et valider (Entrée) filtre le tableau sur ce critère")
-    void filtre_carre_valide_filtre_le_tableau(FxRobot robot) {
-        robot.clickOn("#champCarre").write("640380").type(KeyCode.ENTER);
+    @DisplayName("Ajouter une puce « Carré » et saisir un n° filtre le tableau sur ce carré")
+    void filtre_carre_via_la_barre_a_puces(FxRobot robot) {
+        ajouterPuce(robot, "Carré");
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        TextField champCarre = robot.from(puces).lookup(".text-field").queryAs(TextField.class);
+        robot.interact(() -> champCarre.setText("640380"));
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(tableau(robot).getItems())
@@ -339,12 +334,14 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Saisir une année et valider (Entrée) filtre le tableau sur ce critère")
-    void filtre_annee_valide_filtre_le_tableau(FxRobot robot) {
-        robot.clickOn("#champAnnee").write("2025").type(KeyCode.ENTER);
+    @DisplayName("La recherche filtre le tableau (n° de carré, point, date)")
+    void recherche_filtre_le_tableau(FxRobot robot) {
+        robot.clickOn("#champRecherche").write("640381");
         WaitForAsyncUtils.waitForFxEvents();
 
-        assertThat(tableau(robot).getItems()).extracting(LignePassage::annee).containsOnly(2025);
+        assertThat(tableau(robot).getItems())
+                .extracting(LignePassage::numeroCarre)
+                .containsOnly("640381");
     }
 
     @Test
@@ -359,21 +356,5 @@ class MultisiteVueIntegrationTest {
                 .as("tri par année croissante : 2025 (carré 640381) puis 2026 (carré 640380)")
                 .extracting(LignePassage::annee)
                 .containsExactly(2025, 2026);
-    }
-
-    @Test
-    @DisplayName("L'item « Vues… » du menu ☰ ouvre la modale branchée sur le même ViewModel (E5.S3)")
-    void menu_vues_ouvre_la_modale(FxRobot robot) {
-        // #370 : Vues est désormais un item du menu « ☰ ». On déclenche directement l'item (fire) plutôt
-        // que d'ouvrir le popup puis cliquer, plus déterministe en headless.
-        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
-        MenuItem vues = menu.getItems().stream()
-                .filter(item -> "itemGererVues".equals(item.getId()))
-                .findFirst()
-                .orElseThrow();
-        robot.interact(vues::fire);
-
-        // La feature délègue à NavigationMultisite (contrat de navigation) : l'action n'est pas morte.
-        verify(navigation).ouvrirModaleVues(any(Window.class), any(MultisiteViewModel.class));
     }
 }

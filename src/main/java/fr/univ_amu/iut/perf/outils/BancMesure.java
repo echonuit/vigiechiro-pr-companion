@@ -9,7 +9,6 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
@@ -66,7 +65,6 @@ public final class BancMesure {
         ObservationDao observationDao = new ObservationDao(source);
         long idResultats = premierResultats(source);
         ServiceMultisite multisite = new ServiceMultisite(
-                new SavedViewDao(source),
                 new SiteDao(source),
                 new PointDao(source),
                 new PassageDao(source),

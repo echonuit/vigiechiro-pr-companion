@@ -12,6 +12,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -34,6 +35,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -78,12 +80,14 @@ class MultisiteViewTest {
                         ligne(7L, "640381", "B2", 2025, 3, "2025-07-02", StatutWorkflow.VERIFIE)));
         when(service.agregerPourCarte(anyString())).thenReturn(List.of()); // carte (#152) : pas de NPE à l'init
         viewModel = new MultisiteViewModel(service, serviceSites, "u-1");
+        DepotVues depotVues = mock(DepotVues.class);
+        when(depotVues.findByFeature(anyString())).thenReturn(List.of());
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 bind(OuvrirAudio.class).toInstance(ouvrirAudio);
-                bind(NavigationMultisite.class).toInstance(mock(NavigationMultisite.class));
+                bind(DepotVues.class).toInstance(depotVues);
             }
 
             @Provides
@@ -109,11 +113,21 @@ class MultisiteViewTest {
     }
 
     @Test
-    @DisplayName("Choisir un filtre de statut filtre le tableau sur ce critère")
-    void filtre_statut_filtre_le_tableau(FxRobot robot) {
-        ComboBox<?> choixStatut = robot.lookup("#choixStatut").queryAs(ComboBox.class);
-        // Items : [Tous(null), IMPORTE, TRANSFORME, VERIFIE, PRET_A_DEPOSER, DEPOSE] → index 3 = VERIFIE.
-        robot.interact(() -> choixStatut.getSelectionModel().select(3));
+    @DisplayName("Ajouter une puce « Statut » et choisir VERIFIE filtre le tableau sur ce critère")
+    void filtre_statut_via_la_barre_a_puces(FxRobot robot) {
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        MenuItem itemStatut = menuAjout.getItems().stream()
+                .filter(i -> "Statut".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(itemStatut::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<StatutWorkflow> choix = (ComboBox<StatutWorkflow>)
+                robot.from(puces).lookup(".combo-box").queryAs(ComboBox.class);
+        robot.interact(() -> choix.setValue(StatutWorkflow.VERIFIE));
         WaitForAsyncUtils.waitForFxEvents();
 
         @SuppressWarnings("unchecked")
@@ -138,15 +152,23 @@ class MultisiteViewTest {
     }
 
     @Test
-    @DisplayName("Réinitialiser vide aussi une saisie de carré non validée (sans Entrée)")
-    void reinitialiser_vide_la_saisie_non_validee(FxRobot robot) {
-        TextField champCarre = robot.lookup("#champCarre").queryAs(TextField.class);
-        robot.clickOn("#champCarre").write("640380"); // saisie sans Entrée → VM inchangé
-        assertThat(champCarre.getText()).isEqualTo("640380");
+    @DisplayName("Réinitialiser vide la recherche et réaffiche tous les passages")
+    void reinitialiser_vide_la_recherche(FxRobot robot) {
+        TextField recherche = robot.lookup("#champRecherche").queryAs(TextField.class);
+        robot.clickOn("#champRecherche").write("640380");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(recherche.getText()).isEqualTo("640380");
 
         robot.clickOn("#boutonReinitialiser");
+        WaitForAsyncUtils.waitForFxEvents();
 
-        assertThat(champCarre.getText()).isEmpty();
+        assertThat(recherche.getText()).isEmpty();
+        @SuppressWarnings("unchecked")
+        TableView<LignePassage> table = (TableView<LignePassage>)
+                (TableView<?>) robot.lookup("#tableLignes").queryTableView();
+        assertThat(table.getItems())
+                .as("tout est réaffiché après réinitialisation")
+                .hasSize(2);
     }
 
     @Test

@@ -227,12 +227,6 @@ déposé (+ cas bloquant).
 </tr>
 </table>
 
-### Modale des vues sauvegardées (`multisite/view/ModaleVues.fxml`)
-
-Vues sauvegardées, une vue sélectionnée.
-
-<a href="apercu-multisite-vues.png"><img src="apercu-multisite-vues.png" width="360" alt="Modale des vues sauvegardées"></a>
-
 ---
 
 ## Espèces & observations

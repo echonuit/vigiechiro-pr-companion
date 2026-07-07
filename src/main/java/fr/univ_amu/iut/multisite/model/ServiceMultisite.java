@@ -2,9 +2,7 @@ package fr.univ_amu.iut.multisite.model;
 
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.commun.model.Horloge;
-import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -23,14 +21,15 @@ import java.util.Objects;
 /// d'un utilisateur avec leurs informations clés. Suit le patron du service de référence
 /// `ServiceSites` : pure Java testable, dépendances reçues par constructeur, aucun import JavaFX.
 ///
-/// Trois responsabilités :
+/// Deux responsabilités :
 ///
 /// - **Agrégation** ([#listerPassages(String)]) : croise les DAO de `sites` (sites + points) et
 ///   de `passage` pour aplatir chaque passage en [LignePassage] (P5-CA2). Lecture seule.
 /// - **Tri et filtres** ([FiltresMultisite], [TriMultisite]) : filtrage par site, statut, verdict,
 ///   année ; tri stable et déterministe sur ces mêmes axes.
-/// - **Vues sauvegardées** (CRUD sur [SavedViewDao]) : enregistre/charge un jeu de filtres
-///   sérialisé en JSON (`saved_view.filters_json`, story E5.S3).
+///
+/// Les **vues sauvegardées** ne sont plus gérées ici (#537 étape 6b) : elles passent par le composant
+/// partagé `commun.view.GestionnaireVues` (onglets « à la Notion », table `saved_filter_view`).
 ///
 /// Dépendances inter-features (lecture seule des DAO, jamais des vues) : `multisite → sites` et
 /// `multisite → passage`. Aucune feature ne dépendant de `multisite`, le graphe reste acyclique
@@ -48,15 +47,12 @@ public class ServiceMultisite {
     /// Nom du paramètre `filtres` (messages `requireNonNull`).
     private static final String FILTRES = "filtres";
 
-    private final SavedViewDao savedViewDao;
     private final SiteDao siteDao;
     private final PointDao pointDao;
     private final PassageDao passageDao;
     private final Horloge horloge;
 
-    public ServiceMultisite(
-            SavedViewDao savedViewDao, SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
-        this.savedViewDao = Objects.requireNonNull(savedViewDao, "savedViewDao");
+    public ServiceMultisite(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
@@ -184,61 +180,5 @@ public class ServiceMultisite {
                     ligne.verdict() == null ? "" : ligne.verdict().libelle()));
         }
         return table;
-    }
-
-    // --- Vues sauvegardées (CRUD) ---
-
-    /// Enregistre un jeu de filtres sous un nom (story E5.S3). Les critères sont sérialisés en JSON
-    /// dans `saved_view.filters_json`.
-    ///
-    /// @return la vue insérée, avec son `id` auto-généré
-    public SavedView enregistrerVue(String nom, FiltresMultisite filtres) {
-        Objects.requireNonNull(nom, "nom");
-        Objects.requireNonNull(filtres, FILTRES);
-        return savedViewDao.insert(new SavedView(null, nom, FiltresMultisiteJson.serialiser(filtres)));
-    }
-
-    /// Toutes les vues sauvegardées (menu « ⭐ Mes vues »).
-    public List<SavedView> listerVues() {
-        return savedViewDao.findAll();
-    }
-
-    /// Recharge les critères d'une vue sauvegardée (rejoue une combinaison de filtres sans la
-    /// ressaisir).
-    ///
-    /// @throws RegleMetierException si aucune vue ne porte cet identifiant
-    public FiltresMultisite chargerVue(Long idVue) {
-        SavedView vue = savedViewDao
-                .findById(idVue)
-                .orElseThrow(() -> new RegleMetierException("Vue sauvegardée introuvable : " + idVue));
-        return FiltresMultisiteJson.interpreter(vue.filtresJson());
-    }
-
-    /// Applique une vue sauvegardée à la vue agrégée : charge ses filtres puis liste les passages
-    /// correspondants (tri de lecture par défaut).
-    ///
-    /// @throws RegleMetierException si aucune vue ne porte cet identifiant
-    public List<LignePassage> appliquerVue(String idUtilisateur, Long idVue) {
-        return listerPassages(idUtilisateur, chargerVue(idVue));
-    }
-
-    /// Met à jour le nom et les critères d'une vue existante.
-    ///
-    /// @return la vue mise à jour
-    /// @throws RegleMetierException si aucune vue ne porte cet identifiant
-    public SavedView mettreAJourVue(Long idVue, String nouveauNom, FiltresMultisite filtres) {
-        Objects.requireNonNull(nouveauNom, "nouveauNom");
-        Objects.requireNonNull(filtres, FILTRES);
-        SavedView existante = savedViewDao
-                .findById(idVue)
-                .orElseThrow(() -> new RegleMetierException("Vue sauvegardée introuvable : " + idVue));
-        SavedView miseAJour = new SavedView(existante.id(), nouveauNom, FiltresMultisiteJson.serialiser(filtres));
-        savedViewDao.update(miseAJour);
-        return miseAJour;
-    }
-
-    /// Supprime une vue sauvegardée (idempotent : sans effet si elle n'existe pas).
-    public void supprimerVue(Long idVue) {
-        savedViewDao.delete(idVue);
     }
 }

@@ -1,12 +1,8 @@
 package fr.univ_amu.iut.multisite.viewmodel;
 
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
-import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
-import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -20,8 +16,6 @@ import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
@@ -29,32 +23,17 @@ import javafx.collections.transformation.FilteredList;
 /// ViewModel de l'écran **M-Multisite** (vue agrégée des passages de tous les sites de
 /// l'utilisateur, parcours P5, story E5, statut **SHOULD**).
 ///
-/// Expose le tableau des [lignes][LignePassage], les critères de **filtre** (numéro de carré,
-/// statut, verdict, année) et de **tri** ([TriMultisite]), et l'**export CSV**.
+/// Expose le tableau des [lignes][LignePassage], le **tri** ([TriMultisite]) et l'**export CSV**.
 ///
-/// **Filtrage côté client (#537).** Les passages sont chargés **une seule fois**
-/// ([#rafraichir()]) puis filtrés **en mémoire** via le socle partagé [Filtres] : chaque
-/// changement de filtre recompose la **conjonction** de prédicats sur une [FilteredList], **sans
-/// ré-interroger le service** (le multisite chargeait auparavant tous les passages à chaque
-/// changement de critère). Le **tri nommé** ré-ordonne la liste publiée. Les prédicats
-/// **réutilisent** [FiltresMultisite#accepte(LignePassage)] : même sémantique que les vues
-/// sauvegardées et que la vue « saison » du service, aucune logique de filtrage dupliquée.
-///
-/// Gère aussi les **vues sauvegardées** ([SavedView]) : enregistrer la combinaison de filtres
-/// courante sous un nom, lister, appliquer (rejouer ses filtres), mettre à jour ou supprimer. Une
-/// vue reste sérialisée en [FiltresMultisite] (`saved_view.filters_json`) ; l'appliquer repose les
-/// quatre propriétés de filtre, que le socle traduit en prédicats.
+/// **Filtrage côté client (#537).** Les passages sont chargés **une seule fois** ([#rafraichir()]) puis
+/// filtrés **en mémoire** via le socle partagé [Filtres] : la **barre à puces** de la vue (#537 étape 6b)
+/// branche/retire ses prédicats sur [#filtres()], sans ré-interroger le service. Le **tri nommé**
+/// ré-ordonne la liste publiée. Les **vues mémorisées** ne sont plus gérées ici : elles vivent dans le
+/// composant partagé `commun.view.GestionnaireVues` (onglets « à la Notion »), adossé à la barre de filtres.
 ///
 /// VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`) : seuls
 /// `javafx.beans`/`javafx.collections`. Non-singleton (un VM frais par chargement de vue).
 public class MultisiteViewModel {
-
-    /// Clés des filtres composables (une par critère) dans le socle [Filtres].
-    private static final String CLE_CARRE = "carre";
-
-    private static final String CLE_STATUT = "statut";
-    private static final String CLE_VERDICT = "verdict";
-    private static final String CLE_ANNEE = "annee";
 
     private final ServiceMultisite service;
     private final String idUtilisateur;
@@ -63,10 +42,6 @@ public class MultisiteViewModel {
     /// extraite : le ViewModel l'expose, la vue la pilote.
     private final PositionsEnAttente positionsEnAttente;
 
-    private final StringProperty filtreNumeroCarre = new SimpleStringProperty(this, "filtreNumeroCarre", "");
-    private final ObjectProperty<StatutWorkflow> filtreStatut = new SimpleObjectProperty<>(this, "filtreStatut");
-    private final ObjectProperty<Verdict> filtreVerdict = new SimpleObjectProperty<>(this, "filtreVerdict");
-    private final ObjectProperty<Integer> filtreAnnee = new SimpleObjectProperty<>(this, "filtreAnnee");
     private final ObjectProperty<TriMultisite> tri = new SimpleObjectProperty<>(this, "tri", TriMultisite.PAR_SITE);
 
     /// Tous les passages de l'utilisateur, chargés une fois ([#rafraichir()]). Source **non filtrée**
@@ -80,9 +55,9 @@ public class MultisiteViewModel {
     /// d'en-tête (#145) ; cette liste reste donc la même instance au fil des rafraîchissements.
     private final ObservableList<LignePassage> lignes = FXCollections.observableArrayList();
 
-    private final ObservableList<SavedView> vues = FXCollections.observableArrayList();
     /// Agrégat des carrés pour la carte (#152) : vue d'ensemble **non filtrée** (carrés + points + statut).
     private final ObservableList<CarreAgrege> carresCarte = FXCollections.observableArrayList();
+
     private final ReadOnlyBooleanWrapper nonVide = new ReadOnlyBooleanWrapper(this, "nonVide", false);
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
@@ -95,16 +70,8 @@ public class MultisiteViewModel {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         this.positionsEnAttente = new PositionsEnAttente(serviceSites, this::rafraichirCarte, message::set);
-        // Chaque critère branche/retire son prédicat dans le socle (filtrage en mémoire, sans
-        // ré-interroger le service). Le tri nommé ne re-filtre pas : il ré-ordonne la liste publiée.
-        filtreNumeroCarre.addListener(
-                (obs, ancien, nouveau) -> filtres.definir(CLE_CARRE, CriteresMultisite.parCarre(nouveau)));
-        filtreStatut.addListener(
-                (obs, ancien, nouveau) -> filtres.definir(CLE_STATUT, CriteresMultisite.parStatut(nouveau)));
-        filtreVerdict.addListener(
-                (obs, ancien, nouveau) -> filtres.definir(CLE_VERDICT, CriteresMultisite.parVerdict(nouveau)));
-        filtreAnnee.addListener(
-                (obs, ancien, nouveau) -> filtres.definir(CLE_ANNEE, CriteresMultisite.parAnnee(nouveau)));
+        // Le tri nommé ne re-filtre pas : il ré-ordonne la liste publiée. Les filtres sont posés sur
+        // [#filtres] par la barre à puces de la vue (#537 étape 6b).
         tri.addListener((obs, ancien, nouveau) -> publierLignes());
     }
 
@@ -143,28 +110,6 @@ public class MultisiteViewModel {
         return positionsEnAttente;
     }
 
-    private FiltresMultisite filtresCourants() {
-        return new FiltresMultisite(
-                CriteresMultisite.texteOuNull(filtreNumeroCarre.get()),
-                filtreStatut.get(),
-                filtreVerdict.get(),
-                filtreAnnee.get());
-    }
-
-    /// Applique un jeu de filtres d'un seul tenant (réinitialisation, vue sauvegardée) : repose les
-    /// quatre propriétés, que les listeners traduisent en prédicats du socle (re-filtrage en mémoire).
-    private void appliquerFiltres(FiltresMultisite filtresAAppliquer) {
-        filtreNumeroCarre.set(filtresAAppliquer.numeroCarre() == null ? "" : filtresAAppliquer.numeroCarre());
-        filtreStatut.set(filtresAAppliquer.statut());
-        filtreVerdict.set(filtresAAppliquer.verdict());
-        filtreAnnee.set(filtresAAppliquer.annee());
-    }
-
-    /// Réinitialise tous les filtres (le tri est conservé). Le socle re-filtre en mémoire.
-    public void reinitialiserFiltres() {
-        appliquerFiltres(FiltresMultisite.aucun());
-    }
-
     /// Exporte les lignes **internes** du tableau (sous-ensemble filtré, tri nommé) en CSV vers
     /// `destination`. La vue préfère [#exporter(Path, List)] pour exporter l'ordre **affiché** (tri par
     /// clic d'en-tête inclus).
@@ -195,85 +140,6 @@ public class MultisiteViewModel {
         }
     }
 
-    // --- Vues sauvegardées (story E5.S3) ---
-
-    /// Recharge la liste des vues sauvegardées (à appeler à l'ouverture de la modale de gestion).
-    public void chargerVues() {
-        vues.setAll(service.listerVues());
-    }
-
-    /// Enregistre la combinaison de filtres courante sous `nom`. Un nom vide est refusé.
-    ///
-    /// @return `true` si la vue a été enregistrée
-    public boolean enregistrerVue(String nom) {
-        if (nom == null || nom.isBlank()) {
-            message.set("Donnez un nom à la vue avant de l'enregistrer.");
-            return false;
-        }
-        try {
-            service.enregistrerVue(nom.trim(), filtresCourants());
-            chargerVues();
-            message.set("Vue « " + nom.trim() + " » enregistrée.");
-            return true;
-        } catch (RuntimeException echec) {
-            message.set(echec.getMessage());
-            return false;
-        }
-    }
-
-    /// Applique les filtres d'une vue sauvegardée (rejoue la combinaison). Le socle re-filtre en
-    /// mémoire.
-    ///
-    /// @return `true` si la vue a été appliquée
-    public boolean appliquerVue(SavedView vue) {
-        if (vue == null) {
-            return false;
-        }
-        try {
-            appliquerFiltres(service.chargerVue(vue.id()));
-            return true;
-        } catch (RuntimeException echec) {
-            message.set(echec.getMessage());
-            return false;
-        }
-    }
-
-    /// Met à jour une vue existante : son nom et la combinaison de filtres courante.
-    ///
-    /// @return `true` si la vue a été mise à jour
-    public boolean mettreAJourVue(SavedView vue, String nom) {
-        if (vue == null || nom == null || nom.isBlank()) {
-            return false;
-        }
-        try {
-            service.mettreAJourVue(vue.id(), nom.trim(), filtresCourants());
-            chargerVues();
-            message.set("Vue « " + nom.trim() + " » mise à jour.");
-            return true;
-        } catch (RuntimeException echec) {
-            message.set(echec.getMessage());
-            return false;
-        }
-    }
-
-    /// Supprime une vue sauvegardée.
-    ///
-    /// @return `true` si la vue a été supprimée
-    public boolean supprimerVue(SavedView vue) {
-        if (vue == null) {
-            return false;
-        }
-        try {
-            service.supprimerVue(vue.id());
-            chargerVues();
-            message.set("Vue supprimée.");
-            return true;
-        } catch (RuntimeException echec) {
-            message.set(echec.getMessage());
-            return false;
-        }
-    }
-
     public ObservableList<LignePassage> lignes() {
         return lignes;
     }
@@ -284,24 +150,11 @@ public class MultisiteViewModel {
         return carresCarte;
     }
 
-    public ObservableList<SavedView> vues() {
-        return vues;
-    }
-
-    public StringProperty filtreNumeroCarreProperty() {
-        return filtreNumeroCarre;
-    }
-
-    public ObjectProperty<StatutWorkflow> filtreStatutProperty() {
-        return filtreStatut;
-    }
-
-    public ObjectProperty<Verdict> filtreVerdictProperty() {
-        return filtreVerdict;
-    }
-
-    public ObjectProperty<Integer> filtreAnneeProperty() {
-        return filtreAnnee;
+    /// Socle de filtres composables (#537) sur les passages : la **barre à puces** de la vue (#537 étape 6b)
+    /// y branche/retire ses prédicats (carré, statut, verdict, année), et la **carte** y pose une puce carré
+    /// au clic. Le callback `publierLignes` ré-ordonne et publie à chaque changement.
+    public Filtres<LignePassage> filtres() {
+        return filtres;
     }
 
     public ObjectProperty<TriMultisite> triProperty() {

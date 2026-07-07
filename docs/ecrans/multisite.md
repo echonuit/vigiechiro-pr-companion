@@ -77,6 +77,7 @@ fenêtre vous propose de les **Enregistrer**, de les **Abandonner**, ou d'**Annu
 ## Vues sauvegardées
 
 Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic.
-La fenêtre des vues permet d'**appliquer**, de **mettre à jour** ou de **supprimer** une vue.
-
-![La fenêtre des vues sauvegardées : enregistrer et rejouer une combinaison de filtres.](../assets/captures/apercu-multisite-vues.png)
+Les vues enregistrées s'affichent comme des **onglets** au-dessus du tableau : cliquer sur le nom d'un
+onglet **rejoue** sa combinaison de filtres. Le bouton **« + Vue »**, au bout de la barre d'onglets,
+enregistre les filtres **courants** sous un nouveau nom. Sur chaque onglet, **« ✎ »** le renomme et
+**« ✕ »** le supprime.

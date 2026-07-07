@@ -1,12 +1,10 @@
 package fr.univ_amu.iut.multisite;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -18,10 +16,8 @@ import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.PointAgrege;
-import fr.univ_amu.iut.multisite.model.SavedView;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
-import fr.univ_amu.iut.multisite.model.dao.SavedViewDao;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -62,7 +58,6 @@ class ServiceMultisiteTest {
     Path dossier;
 
     private ServiceMultisite service;
-    private SavedViewDao savedViewDao;
 
     @BeforeEach
     void preparer() {
@@ -73,7 +68,6 @@ class ServiceMultisiteTest {
         SiteDao siteDao = new SiteDao(source);
         PointDao pointDao = new PointDao(source);
         PassageDao passageDao = new PassageDao(source);
-        savedViewDao = new SavedViewDao(source);
         new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
 
         Site siteA = siteDao.insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2025-01-01", ID_USER));
@@ -88,8 +82,7 @@ class ServiceMultisiteTest {
         semerPassage(passageDao, 1, 2026, "2026-06-22", StatutWorkflow.DEPOSE, Verdict.OK, pBa1.id());
         semerPassage(passageDao, 2, 2026, "2026-08-20", StatutWorkflow.VERIFIE, Verdict.A_JETER, pBa1.id());
 
-        service = new ServiceMultisite(
-                savedViewDao, siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+        service = new ServiceMultisite(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 5, 31)));
     }
 
     private void semerPassage(
@@ -271,73 +264,5 @@ class ServiceMultisiteTest {
         assertThat(lignes.get(lignes.size() - 1).verdict())
                 .as("verdict null trié en dernier")
                 .isNull();
-    }
-
-    // --- CRUD des vues sauvegardées ---
-
-    @Test
-    @DisplayName("Enregistrer puis recharger une vue restitue les mêmes critères")
-    void enregistrer_puis_charger_une_vue() {
-        FiltresMultisite filtres = new FiltresMultisite("640380", StatutWorkflow.VERIFIE, Verdict.DOUTEUX, 2026);
-
-        SavedView vue = service.enregistrerVue("Mes nuits douteuses", filtres);
-
-        assertThat(vue.id()).isNotNull();
-        assertThat(service.chargerVue(vue.id())).isEqualTo(filtres);
-    }
-
-    @Test
-    @DisplayName("Appliquer une vue sauvegardée rejoue ses filtres sur la vue agrégée")
-    void appliquer_une_vue() {
-        SavedView vue = service.enregistrerVue(
-                "640380 vérifiés 2026", new FiltresMultisite("640380", StatutWorkflow.VERIFIE, null, 2026));
-
-        List<LignePassage> lignes = service.appliquerVue(ID_USER, vue.id());
-
-        assertThat(lignes).singleElement().satisfies(l -> {
-            assertThat(l.numeroCarre()).isEqualTo("640380");
-            assertThat(l.statut()).isEqualTo(StatutWorkflow.VERIFIE);
-            assertThat(l.annee()).isEqualTo(2026);
-        });
-    }
-
-    @Test
-    @DisplayName("Lister les vues restitue celles enregistrées")
-    void lister_les_vues() {
-        service.enregistrerVue("Vue A", FiltresMultisite.parAnnee(2026));
-        service.enregistrerVue("Vue B", FiltresMultisite.parSite("640381"));
-
-        assertThat(service.listerVues()).extracting(SavedView::nom).containsExactlyInAnyOrder("Vue A", "Vue B");
-    }
-
-    @Test
-    @DisplayName("Mettre à jour une vue change son nom et ses critères")
-    void mettre_a_jour_une_vue() {
-        SavedView vue = service.enregistrerVue("Brouillon", FiltresMultisite.aucun());
-
-        service.mettreAJourVue(vue.id(), "Définitive", FiltresMultisite.parVerdict(Verdict.A_JETER));
-
-        assertThat(service.chargerVue(vue.id())).isEqualTo(FiltresMultisite.parVerdict(Verdict.A_JETER));
-        assertThat(savedViewDao.findById(vue.id()).orElseThrow().nom()).isEqualTo("Définitive");
-    }
-
-    @Test
-    @DisplayName("Supprimer une vue la retire (rechargement refusé)")
-    void supprimer_une_vue() {
-        SavedView vue = service.enregistrerVue("À supprimer", FiltresMultisite.aucun());
-
-        service.supprimerVue(vue.id());
-
-        assertThatThrownBy(() -> service.chargerVue(vue.id()))
-                .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("introuvable");
-    }
-
-    @Test
-    @DisplayName("Charger une vue inexistante est refusé (RegleMetierException)")
-    void charger_vue_inexistante() {
-        assertThatThrownBy(() -> service.chargerVue(9999L))
-                .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("introuvable");
     }
 }

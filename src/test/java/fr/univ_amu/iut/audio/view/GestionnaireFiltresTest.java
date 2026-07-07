@@ -391,6 +391,22 @@ class GestionnaireFiltresTest {
                                 new DescripteurCritere("heure", List.of("6", "20")))));
     }
 
+    @Test
+    @DisplayName("#476 : poser(nom, valeurs) ajoute la puce absente et la règle (filtre piloté par la vue)")
+    void poser_ajoute_et_regle_une_puce(FxRobot robot) {
+        assertThat(puces.getChildren()).isEmpty(); // aucune puce au départ
+
+        robot.interact(() -> gestionnaire.poser("statut", List.of("VALIDEE")));
+
+        assertThat(puces.getChildren()).hasSize(1); // la puce Statut a été ajoutée
+        assertThat(affichees).extracting(LigneObservationAudio::idObservation).containsExactly(2L); // VALIDEE
+
+        // Re-poser une autre valeur met à jour la puce EXISTANTE (pas de doublon).
+        robot.interact(() -> gestionnaire.poser("statut", List.of("NON_TOUCHEE")));
+        assertThat(puces.getChildren()).hasSize(1);
+        assertThat(affichees).extracting(LigneObservationAudio::idObservation).containsExactly(1L); // À revoir
+    }
+
     private Button boutonRetirer() {
         return (Button) puces.lookupAll(".puce-filtre-retirer").iterator().next();
     }
