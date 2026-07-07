@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.List;
@@ -34,6 +35,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -54,6 +56,10 @@ public class MainController {
     private final RechercheGlobale recherche;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
+    private final ServiceSauvegarde serviceSauvegarde;
+
+    /// Actions de sauvegarde/restauration de la base (menu « ☰ »), initialisées dans `initialize()`.
+    private ActionsSauvegarde actionsSauvegarde;
 
     @FXML
     private BorderPane racine;
@@ -106,7 +112,8 @@ public class MainController {
             Set<IndicateurAccueil> indicateurs,
             RechercheGlobale recherche,
             OuvrirSite ouvrirSite,
-            OuvrirPassage ouvrirPassage) {
+            OuvrirPassage ouvrirPassage,
+            ServiceSauvegarde serviceSauvegarde) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
@@ -114,6 +121,7 @@ public class MainController {
         this.recherche = recherche;
         this.ouvrirSite = ouvrirSite;
         this.ouvrirPassage = ouvrirPassage;
+        this.serviceSauvegarde = serviceSauvegarde;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -121,6 +129,10 @@ public class MainController {
     private void initialize() {
         titreApplication.textProperty().bind(navigation.titreApplicationProperty());
         pied.textProperty().bind(navigation.piedDePageProperty());
+
+        // Menu « ☰ » : sauvegarde/restauration de la base (#148). Après une restauration réussie, on
+        // revient à l'accueil pour relire la base restaurée (les écrans ouverts liraient un état périmé).
+        actionsSauvegarde = new ActionsSauvegarde(serviceSauvegarde, this::fenetre, navigateur::afficherAccueil);
 
         // ← Retour (historique) : grisé pendant une opération longue (import en cours, #54) qu'on ne
         // doit pas quitter. Sa visibilité (présent hors accueil) est gérée par rafraichirNavigation().
@@ -192,6 +204,23 @@ public class MainController {
                         .put(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN), rechercheChrome::activer);
             }
         });
+    }
+
+    /// Menu « ☰ » → Sauvegarder la base : délègue à [ActionsSauvegarde] (#148).
+    @FXML
+    private void sauvegarderBase() {
+        actionsSauvegarde.sauvegarder();
+    }
+
+    /// Menu « ☰ » → Restaurer une sauvegarde : délègue à [ActionsSauvegarde] (#148).
+    @FXML
+    private void restaurerBase() {
+        actionsSauvegarde.restaurer();
+    }
+
+    /// Fenêtre propriétaire des sélecteurs/alertes (ou `null` tant que la scène n'est pas attachée).
+    private Window fenetre() {
+        return racine.getScene() == null ? null : racine.getScene().getWindow();
     }
 
     /// ← Retour : revient à l'écran précédent réel (historique), via le socle [Navigateur#revenir].

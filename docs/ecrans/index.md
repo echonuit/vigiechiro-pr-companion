@@ -29,3 +29,16 @@ où une saisie n'est pas enregistrée**, l'application **demande confirmation** 
 annuler pour revenir enregistrer, ou confirmer pour quitter en abandonnant les modifications.
 
 ![Confirmation avant de quitter un écran avec des modifications non enregistrées.](../assets/captures/apercu-navigation-garde-saisie.png)
+
+## Sauvegarder et restaurer la base
+
+Tout votre travail (sites, points, passages, observations) vit dans une **base locale**. Le menu **« ☰ »**
+de la barre du haut permet de la **protéger** :
+
+- **Sauvegarder la base…** : vous choisissez un **dossier** (un disque externe, par exemple) et
+  l'application y écrit une **copie horodatée** et cohérente de la base. À faire régulièrement, et avant
+  toute manipulation importante.
+- **Restaurer une sauvegarde…** : vous choisissez un fichier de sauvegarde ; après **confirmation**,
+  l'application **remplace** la base courante par celle-ci. Par sécurité, l'**état courant est d'abord mis
+  de côté** (fichier `vigiechiro.db.avant-restauration`), et l'application revient à l'accueil pour
+  repartir sur la base restaurée.
