@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.118.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.117.0...v1.118.0) (2026-07-07)
+
+
+### Features
+
+* **multisite:** distance entre points et garde-fou de proximité ([#154](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/154)) ([7865752](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/78657524ee7c7266e5f03a9c00a622e62adb106d))
+
 # [1.117.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.116.0...v1.117.0) (2026-07-07)
 
 
