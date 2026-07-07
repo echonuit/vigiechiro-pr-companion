@@ -168,7 +168,7 @@
 - [ ] Test d'intégration : validation partielle, fermeture, réouverture, vérification de la restauration.
 
 **Parcours rattaché** : transverse à [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)<br>
-**Maquettes cibles** : [M-Vision-Tadarida](../Maquettes/M-Vision-Tadarida.md) (la vue de validation doit indiquer si une session est restaurée)<br>
+**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (la vue de validation doit indiquer si une session est restaurée)<br>
 **Dépendances** : [E0.S1](#e0s1), [E0.S5](#e0s5), E7 (la validation elle-même)<br>
 **Complexité** : ★★★ (moyen - logique de restauration de contexte, mais sur une seule entité)<br>
 **MoSCoW** : 🟠 SHOULD

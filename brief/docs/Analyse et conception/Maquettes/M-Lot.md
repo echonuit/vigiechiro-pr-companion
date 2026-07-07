@@ -229,7 +229,7 @@ Une fois que l'utilisateur a confirmé le dépôt, l'écran évolue : la zone de
 - **Encart vert** « Lot déposé le DD/MM/AAAA » qui remplace les boutons d'action principaux.
 - **✏ Corriger la date** : utile si l'utilisateur a coché « J'ai déposé » un jour après le téléversement réel (modale avec date picker).
 - **↺ Annuler le dépôt** : action de récupération en cas d'erreur (le statut redevient `Vérifié`, la date est effacée).
-- **Bannière bleue « Et maintenant ? »** : guide l'utilisateur vers la suite (validation Tadarida via [M-Vision-Tadarida](M-Vision-Tadarida.md) une fois le CSV reçu). Signale clairement que c'est une **cible étirable**.
+- **Bannière bleue « Et maintenant ? »** : guide l'utilisateur vers la suite (validation Tadarida via [M-SonsValidation](M-SonsValidation.md) une fois le CSV reçu). Signale clairement que c'est une **cible étirable**.
 
 ---
 

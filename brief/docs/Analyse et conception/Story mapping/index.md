@@ -59,6 +59,6 @@ Les **maquettes** sont en cours de refonte (étape ultérieure du dossier). Chaq
 | M-Qualification | Vue vérification d'enregistrement par échantillonnage |
 | M-Lot | Préparation du lot à déposer |
 | M-MultiSite | Tableau croisé Site × Passage |
-| M-Vision-Tadarida | Vue de validation taxonomique (cible étirée) |
+| M-SonsValidation | Vue de validation taxonomique (cible étirée) |
 
 Ces noms deviendront des **liens cliquables** quand les maquettes correspondantes seront produites.

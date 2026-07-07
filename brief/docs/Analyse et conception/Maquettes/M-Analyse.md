@@ -176,7 +176,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
 | Bouton **🗺️ Carte** | Bascule la zone maître entre table d'inventaire et **carte de répartition** (choroplèthe de richesse) |
 | Filtre **Statut** / champ texte | Restreint l'inventaire et le détail |
 | Sélection d'une **espèce** | Charge ses observations dans le panneau du bas |
-| **🎧 Écouter / valider** | Ouvre [M-Vision-Tadarida](M-Vision-Tadarida.md) **droit sur cette détection** (réécoute / validation) |
+| **🎧 Écouter / valider** | Ouvre [M-SonsValidation](M-SonsValidation.md) **droit sur cette détection** (réécoute / validation) |
 | **Ouvrir le passage →** (ou double-clic) | Ouvre [M-Passage](M-Passage.md) du passage concerné |
 | Bouton **📤 Exporter** | Exporte l'inventaire courant (CSV) |
 
@@ -298,7 +298,7 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
 
 ### Notes pour l'implémentation
 
-- **Lecture transverse** : l'écran agrège les observations de **tous** les passages de l'utilisateur, en **consultation seule** ; il ne modifie aucune observation (les décisions se prennent dans [M-Vision-Tadarida](M-Vision-Tadarida.md), et l'inventaire les **reflète** au retour).
+- **Lecture transverse** : l'écran agrège les observations de **tous** les passages de l'utilisateur, en **consultation seule** ; il ne modifie aucune observation (les décisions se prennent dans [M-SonsValidation](M-SonsValidation.md), et l'inventaire les **reflète** au retour).
 - **Maître-détail** : `SplitPane` vertical (inventaire ou carte en haut, observations en bas). La zone maître est un `StackPane` à trois états (table **Par espèce**, table **Par carré**, **carte de répartition**) ; le **regroupement** choisit la table, le bouton **« 🗺️ Carte »** bascule sur la carte.
 - **Carte de répartition** : réutilise le composant socle `CarteSites` (le même que [M-MultiSite](M-MultiSite.md)) ; la couleur des carrés (choroplèthe de richesse) est calculée côté `view`, le `ViewModel` restant agnostique de JavaFX.
 - **Taxon retenu** : taxon observateur si validé, sinon Tadarida ([R17](../Modèle%20conceptuel/Règles%20métier.md#r17)).

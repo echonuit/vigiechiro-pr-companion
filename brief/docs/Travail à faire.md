@@ -48,8 +48,8 @@ Pour les **8 autres features**, vous écrivez l'IHM, soit **trois choses par éc
 | `lot` | [M-Lot](Analyse%20et%20conception/Maquettes/M-Lot.md) | [P4](Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Pr%C3%A9parer%20un%20lot%20pr%C3%AAt%20%C3%A0%20d%C3%A9poser.md) | 🟥 MUST |
 | `multisite` | [M-MultiSite](Analyse%20et%20conception/Maquettes/M-MultiSite.md) + modale | [P5](Analyse%20et%20conception/Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | 🟧 SHOULD |
 | `diagnostic` | [M-Diagnostic](Analyse%20et%20conception/Maquettes/M-Diagnostic.md) | [P6](Analyse%20et%20conception/Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20mat%C3%A9riel.md) | 🟧 SHOULD |
-| `validation` | [M-Vision-Tadarida](Analyse%20et%20conception/Maquettes/M-Vision-Tadarida.md) | [P7](Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida.md) | 🟧 SHOULD |
-| `bibliotheque` | [M-Bibliotheque](Analyse%20et%20conception/Maquettes/M-Bibliotheque.md) | [P10](Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence.md) | 🟩 COULD |
+| `validation` | [M-SonsValidation](Analyse%20et%20conception/Maquettes/M-SonsValidation.md) | [P7](Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20r%C3%A9sultats%20Tadarida.md) | 🟧 SHOULD |
+| `bibliotheque` | [M-SonsValidation](Analyse%20et%20conception/Maquettes/M-SonsValidation.md) | [P10](Analyse%20et%20conception/Parcours%20utilisateurs/P10%20-%20Exporter%20une%20biblioth%C3%A8que%20de%20sons%20de%20r%C3%A9f%C3%A9rence.md) | 🟩 COULD |
 
 > Le **fil rouge** de la SAE (importer → vérifier → déposer → valider) repose sur les features MUST +
 > l'écran pivot `passage`. Visez d'abord ce fil rouge complet, puis les SHOULD, puis les COULD.

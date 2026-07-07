@@ -127,8 +127,8 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
   <rect x="620" y="518" width="540" height="118" rx="10" class="card"/>
   <circle cx="672" cy="577" r="26" fill="#8e44ad"/>
   <text x="672" y="585" class="card-glyph" text-anchor="middle">🔊</text>
-  <text x="720" y="556" font-family="sans-serif" font-size="17" font-weight="700" fill="#8e44ad">Bibliothèque de sons</text>
-  <text x="720" y="582" class="card-desc">Vos sons de référence à écouter et exporter.</text>
+  <text x="720" y="556" font-family="sans-serif" font-size="17" font-weight="700" fill="#8e44ad">Sons &amp; validation</text>
+  <text x="720" y="582" class="card-desc">Écouter, valider et exporter vos sons de référence.</text>
   <text x="1124" y="586" font-family="sans-serif" font-size="28" font-weight="700" fill="#8e44ad">›</text>
 
   <!-- Footer -->
@@ -143,7 +143,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 - **Tableau de bord** : quatre compteurs chiffrés (**Sites**, **Points d'écoute**, **Passages**, **Observations**), chacun avec sa pastille d'icône colorée. Les valeurs sont **recalculées à chaque affichage** de l'accueil (elles reflètent l'état de la base après un import ou une déclaration de site). Le bandeau est **masqué tant qu'aucune donnée** n'existe (premier lancement).
 - **Sections-prismes** : les cartes d'activité sont regroupées en deux sections selon leur **prisme** :
   - **🛰️ Collecte & passages** (*produire la donnée*) : **Mes sites** puis **Carte & passages** ;
-  - **🍃 Espèces & biodiversité** (*exploiter la donnée*) : **Espèces & observations** puis **Bibliothèque de sons**.
+  - **🍃 Espèces & biodiversité** (*exploiter la donnée*) : **Espèces & observations** puis **Sons & validation**.
 - **Cartes** : chaque carte affiche une **pastille d'icône**, un **titre** et une **description** courte, teintés par la **couleur d'accent** de la fonctionnalité ; un **chevron** `›` apparaît au survol et la carte entière est cliquable.
 
 ### Interactions clés
@@ -153,7 +153,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 | Carte **Mes sites** | Ouvre [M-Sites](M-Sites.md) (vos carrés et points d'écoute) |
 | Carte **Carte & passages** | Ouvre [M-MultiSite](M-MultiSite.md) (carte au carroyage + tableau des passages) |
 | Carte **Espèces & observations** | Ouvre [M-Analyse](M-Analyse.md) (inventaire transverse) |
-| Carte **Bibliothèque de sons** | Ouvre [M-Bibliotheque](M-Bibliotheque.md) (sons de référence) |
+| Carte **Sons & validation** | Ouvre [M-SonsValidation](M-SonsValidation.md) (source *références* : écoute, validation, export bibliothèque) |
 | Compteur du tableau de bord | Repère visuel (non cliquable) ; reflète l'état courant de la base |
 | Champ **Rechercher** (Ctrl+F) | Recherche globale ([M-Recherche](M-Recherche.md)), disponible sur tous les écrans |
 

@@ -36,7 +36,7 @@ Sinon, ces stories restent documentées pour une suite éventuelle de l'applicat
 - [ ] Bouton « Sortir du mode regroupé » pour revenir à la validation d'un passage individuel.
 
 **Parcours rattaché** : [P9](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md)<br>
-**Maquettes cibles** : [M-Vision-Tadarida](../Maquettes/M-Vision-Tadarida.md) (variante regroupée), [M-MultiSite](../Maquettes/M-MultiSite.md) (action de regroupement)<br>
+**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (variante regroupée), [M-MultiSite](../Maquettes/M-MultiSite.md) (action de regroupement)<br>
 **Dépendances** : [E5.S2](E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md#e5s2), [E7.S2](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s2), [E7.S4](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s4), [E7.S6](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s6)<br>
 **Complexité** : ★★★★ (significatif - fusion de plusieurs passages, propagation des validations, export multi-fichiers)<br>
 **MoSCoW** : ⚪ COULD (Samuel lui-même la qualifiait de « utile mais peut-être trop complexe »)
@@ -71,7 +71,7 @@ Sinon, ces stories restent documentées pour une suite éventuelle de l'applicat
 - [ ] La sélection « référence » est persistée en BD ([E0.S5](E0%20-%20Fondations%20de%20persistance.md#e0s5)) et réutilisable d'une session à l'autre.
 
 **Parcours rattaché** : [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md)<br>
-**Maquettes cibles** : [M-Vision-Tadarida](../Maquettes/M-Vision-Tadarida.md) (bouton « Marquer comme référence »), [M-Lot](../Maquettes/M-Lot.md) (action « Exporter bibliothèque »)<br>
+**Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (bouton « Marquer comme référence »), [M-Lot](../Maquettes/M-Lot.md) (action « Exporter bibliothèque »)<br>
 **Dépendances** : [E0.S5](E0%20-%20Fondations%20de%20persistance.md#e0s5), [E7.S4](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s4)<br>
 **Complexité** : ★★★ (moyen - flag persisté + export structuré par espèce + zip optionnel + variante PDF)<br>
 **MoSCoW** : ⚪ COULD (fonctionnalité bonus pédagogique, Samuel-only)

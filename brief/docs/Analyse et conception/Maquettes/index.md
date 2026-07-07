@@ -28,8 +28,6 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
 | [M-Lot](M-Lot.md) | Préparation du lot à déposer | Vue plein écran | [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | [E4.S1](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s1) à [E4.S3](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s3) |
 | [M-MultiSite](M-MultiSite.md) | Carte & passages (carte au carroyage + tableau) | Vue plein écran | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | [E5](../Story%20mapping/E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md) |
 | [M-Diagnostic](M-Diagnostic.md) | Diagnostic matériel d'un passage | Vue secondaire (depuis M-Passage) | [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | [E6](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md) |
-| [M-Vision-Tadarida](M-Vision-Tadarida.md) | Validation taxonomique post-Tadarida | Vue plein écran (cible étirée) | [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md) | [E7](../Story%20mapping/E7%20-%20Valider%20les%20résultats%20Tadarida.md), [E8](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md) |
-| [M-Bibliotheque](M-Bibliotheque.md) | Bibliothèque de sons de référence | Vue plein écran | [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | prisme biodiversité |
 | [M-Analyse](M-Analyse.md) | Espèces & observations (inventaire transverse) | Vue plein écran | [P11](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md) | prisme biodiversité |
 | [M-Recherche](M-Recherche.md) | Recherche globale (liste déroulante du chrome) | Transverse (tous écrans) | [P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md) | recherche transverse |
 
@@ -57,14 +55,13 @@ flowchart TB
     Passage[📋 M-Passage]
     Qualif[🎧 M-Qualification]
     Lot[📦 M-Lot]
-    Tadarida[✅ M-Vision-Tadarida]
     Analyse[🪶 M-Analyse]
-    Biblio[🔊 M-Bibliotheque]
+    SonsVal[🔊 M-SonsValidation]
 
     Accueil --> Sites
     Accueil --> MultiSite
     Accueil --> Analyse
-    Accueil --> Biblio
+    Accueil --> SonsVal
     Sites --> Detail
     Sites --> Import
     MultiSite -.alternative.- Sites
@@ -72,27 +69,27 @@ flowchart TB
     Import --> Passage
     MultiSite --> Passage
     Passage --> Qualif
+    Passage --> SonsVal
     Qualif --> Lot
     Passage --> Lot
-    Lot -.dépôt VigieChiro<br/>+ retour Tadarida.-> Tadarida
+    Lot -.dépôt VigieChiro<br/>+ retour Tadarida.-> SonsVal
+    Analyse --> SonsVal
+    MultiSite --> SonsVal
 
     classDef accueil fill:#3f51b5,stroke:#2c3a8c,color:#fff,stroke-width:2px
     classDef main fill:#1e8449,stroke:#0e5128,color:#fff,stroke-width:2px
     classDef detail fill:#4a90d9,stroke:#2563a3,color:#fff,stroke-width:2px
-    classDef etiree fill:#b9770e,stroke:#7e5109,color:#fff,stroke-width:2px
     classDef biodiv fill:#6c3483,stroke:#4a235a,color:#fff,stroke-width:2px
     class Accueil accueil
     class Sites,Import,Qualif,Lot main
     class Detail,Passage,MultiSite detail
-    class Tadarida etiree
-    class Analyse,Biblio biodiv
+    class Analyse,SonsVal biodiv
 ```
 
 - 🟦 **Indigo** : écran d'accueil (lanceur à deux prismes).
 - 🟩 **Vert** : maquettes de la chaîne fil rouge (MUST).
 - 🟦 **Bleu** : maquettes de soutien (détails, navigation multi-sites).
-- 🟧 **Orange** : maquette de cible étirée hors MVP strict.
-- 🟪 **Violet** : prisme espèces & biodiversité (inventaire, sons de référence).
+- 🟪 **Violet** : prisme espèces & biodiversité (inventaire, sons & validation).
 
 ## Pattern visuel partagé
 
@@ -100,7 +97,7 @@ Toutes les maquettes reprennent le **cadre fenêtre** du chrome (`MainView.fxml`
 
 - **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro PR Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, et le champ de **recherche globale** (`Ctrl+F`) aligné à droite.
 - **En-tête de page** avec titre principal et sous-titre éventuel, juste sous le bandeau.
-- **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou **panneau de détail** « liste + détail » (M-Qualification, M-Vision-Tadarida, M-Bibliotheque).
+- **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou **panneau de détail** « liste + détail » (M-Qualification, M-SonsValidation).
 - **Pied de page** discret (`SAÉ 2.01 · IUT d'Aix-Marseille`).
 
 L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titre, invite, tableau de bord de compteurs) puis deux **sections-prismes** de cartes d'activité.
@@ -118,7 +115,7 @@ L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titr
 
 **Cohérence entre écrans similaires** :
 
-- [M-Qualification](M-Qualification.md) et [M-Vision-Tadarida](M-Vision-Tadarida.md) partagent le **même squelette « liste + détail »** (2 colonnes, panneau de détail avec info en haut + visualisation au milieu + boutons d'action colorés en bas). Les étudiants n'implémentent qu'un seul pattern de « lieu d'écoute » qui se décline pour les deux cas.
+- [M-Qualification](M-Qualification.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même squelette « liste + écoute »** (une liste pilote un panneau d'écoute `AudioView` commun). Les étudiants n'implémentent qu'un seul patron de « lieu d'écoute » qui se décline pour les deux modes : **vérification** par échantillonnage d'une part, **validation** taxonomique d'autre part.
 - [M-Sites](M-Sites.md) et [M-Site-detail](M-Site-detail.md) utilisent le **même style de cards** pour les sites et les points d'écoute.
 
 ## Cas non maquettés (documentés textuellement)
@@ -127,5 +124,5 @@ Certains écrans secondaires ne font pas l'objet d'une maquette complète mais s
 
 - **Formulaire de création d'un site** : décrit dans la variante de [M-Site-detail](M-Site-detail.md) et invocable depuis [M-Sites](M-Sites.md).
 - **Fenêtre modale de re-rattachement d'un passage** : action accessible depuis [M-Passage](M-Passage.md).
-- **Sélecteur de taxon de correction** : autocomplete sur code à 6 lettres. Décrit dans [M-Vision-Tadarida](M-Vision-Tadarida.md).
+- **Sélecteur de taxon de correction** : autocomplete sur code à 6 lettres. Décrit dans [M-SonsValidation](M-SonsValidation.md).
 - **Fenêtre modale de confirmation « J'ai déposé »** : avant transition vers le statut Déposé. Décrite dans [M-Lot](M-Lot.md).

@@ -6,7 +6,7 @@
 
 L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des séquences d'écoute échantillonnées (avec leur statut écouté/pas écouté) ; à droite, le panneau de détail avec info de la séquence + visualisation audio + boutons de verdict global + commentaire. L'utilisateur enchaîne typiquement : clic sur une séquence → écoute → coche éventuelle → suivante. Quand assez d'éléments ont été écoutés pour se faire une opinion, il sélectionne son verdict global puis l'enregistre.
 
-> **Pattern visuel partagé avec [M-Vision-Tadarida](M-Vision-Tadarida.md)** : les deux écrans suivent le même squelette « liste + détail » pour offrir une expérience cohérente. La différence porte sur la sémantique (un verdict GLOBAL pour M-Qualification, un verdict PAR observation pour M-Vision-Tadarida) et sur la visualisation (waveform simple ici, spectrogramme avec zoom là-bas).
+> **Patron d'écoute partagé avec [M-SonsValidation](M-SonsValidation.md)** : les deux écrans réutilisent le **même composant d'écoute** (`AudioView` : sonogramme + spectrogramme) sous un squelette « liste ↔ écoute » commun. La différence porte sur le **mode métier** : ici un **verdict global** du passage (mode *Vérification* par échantillonnage), là un **verdict par observation** (mode *Validation* taxonomique).
 
 ## Maquette principale - 12 séquences sur 30 déjà écoutées, lecture en cours
 
@@ -48,7 +48,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
     .btn-txt-dark { fill: #2c3e50; font: 600 12px sans-serif; }
     .btn-txt-dark-small { fill: #2c3e50; font: 11px sans-serif; }
 
-    /* Panneau détail style M-Vision-Tadarida (fond clair) */
+    /* Panneau détail style M-SonsValidation (fond clair) */
     .detail-section { fill: #ffffff; stroke: #d0d7de; stroke-width: 1; }
     .section-title { font: 600 14px sans-serif; fill: #2c3e50; }
     .section-sub { font: 11px sans-serif; fill: #6a737d; }
@@ -64,7 +64,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
     .waveform-bar-pending { fill: #4a90d9; }
     .waveform-curseur { stroke: #e74c3c; stroke-width: 1.5; }
     .waveform-axis-txt { font: 9px monospace; fill: #6a737d; }
-    /* Spectrogramme sur fond sombre (composant audio partagé avec M-Vision-Tadarida) */
+    /* Spectrogramme sur fond sombre (composant audio partagé avec M-SonsValidation) */
     .specto-bg { fill: #1c2833; stroke: #34495e; stroke-width: 1; }
     .specto-axis { stroke: #6a737d; stroke-width: 1; }
     .specto-axis-txt { font: 9px monospace; fill: #bdc3c7; }
@@ -72,12 +72,12 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
     .specto-zoom-btn { fill: rgba(255,255,255,0.1); stroke: #6a737d; stroke-width: 1; }
     .specto-zoom-txt { fill: #ffffff; font: 600 11px sans-serif; }
 
-    /* Player audio bar sombre (comme M-Vision-Tadarida) */
+    /* Player audio bar sombre (comme M-SonsValidation) */
     .player-bar { fill: #2c3e50; }
     .player-time { fill: #ffffff; font: 11px monospace; }
     .player-ctrl { fill: #ffffff; font: 14px sans-serif; }
 
-    /* 3 boutons verdict colorés (style M-Vision-Tadarida) */
+    /* 3 boutons verdict colorés (style M-SonsValidation) */
     .btn-verdict-ok { fill: #1e8449; stroke: #0e5128; stroke-width: 1.5; }
     .btn-verdict-ok-selected { fill: #0e5128; stroke: #0e5128; stroke-width: 3; }
     .btn-verdict-doubt { fill: #b9770e; stroke: #7e5109; stroke-width: 1.5; }
@@ -290,7 +290,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
   <text x="1130" y="332" class="seq-stat-large" text-anchor="end">04 / 30</text>
   <text x="1130" y="350" class="seq-meta" text-anchor="end">⚪ non écoutée</text>
 
-  <!-- Section 2 : VUE AUDIO partagée avec M-Vision-Tadarida (sonogramme + spectrogramme) -->
+  <!-- Section 2 : VUE AUDIO partagée avec M-SonsValidation (sonogramme + spectrogramme) -->
   <text x="680" y="395" class="section-title">🎵 Vue audio (sonogramme + spectrogramme)</text>
   <text x="1130" y="395" class="seq-meta" text-anchor="end">Lecture vitesse normale · R10</text>
 
@@ -423,18 +423,18 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
     - Tableau 7 colonnes (▶, N°, horodatage, durée, fréquence, fichier, écouté ✓/○)
     - Ligne courante (n° 04) en surbrillance bleue
     - Boutons en bas : ajouter manuellement / régénérer
-- **Colonne droite - Panneau de détail** (style harmonisé avec [M-Vision-Tadarida](M-Vision-Tadarida.md)) :
-    - **Section 1 : info séquence** (card claire `.seq-info-card`) - N° de séquence + horodatage + métadonnées + position dans la sélection (04/30), miroir de la « card info taxon » de M-Vision-Tadarida.
-    - **Section 2 : vue audio combinée** (sonogramme + spectrogramme) - **Composant partagé avec [M-Vision-Tadarida](M-Vision-Tadarida.md)**, fourni par l'équipe pédagogique. Le sonogramme (amplitude/temps, fond clair) et le spectrogramme (fréquence/temps, fond sombre) sont **synchronisés** par un curseur rouge vertical unique. Boutons de zoom temps/fréquence accessibles sur le spectrogramme. L'utilisateur peut faire de l'écoute simple (sonogramme) ou analyser plus en détail (spectrogramme) selon ses besoins.
-    - **Section 3 : lecteur audio** (barre sombre comme M-Vision-Tadarida) - Contrôles ⏮ ⏯ ⏭, minutage, volume.
+- **Colonne droite - Panneau de détail** (style harmonisé avec [M-SonsValidation](M-SonsValidation.md)) :
+    - **Section 1 : info séquence** (card claire `.seq-info-card`) - N° de séquence + horodatage + métadonnées + position dans la sélection (04/30), miroir de la « card info taxon » de M-SonsValidation.
+    - **Section 2 : vue audio combinée** (sonogramme + spectrogramme) - **Composant partagé avec [M-SonsValidation](M-SonsValidation.md)**, fourni par l'équipe pédagogique. Le sonogramme (amplitude/temps, fond clair) et le spectrogramme (fréquence/temps, fond sombre) sont **synchronisés** par un curseur rouge vertical unique. Boutons de zoom temps/fréquence accessibles sur le spectrogramme. L'utilisateur peut faire de l'écoute simple (sonogramme) ou analyser plus en détail (spectrogramme) selon ses besoins.
+    - **Section 3 : lecteur audio** (barre sombre comme M-SonsValidation) - Contrôles ⏮ ⏯ ⏭, minutage, volume.
     - **Section 4 : verdict global** - 3 boutons colorés grand format (`✓ OK` vert / `⚠ Douteux` orange / `❌ À jeter` rouge). Le bouton sélectionné a une bordure plus épaisse (le `OK` ici est sélectionné). **Sélection différée** : ne persiste pas, attend le bouton « Enregistrer le verdict ».
     - **Section 5 : commentaire** - Champ texte multi-ligne optionnel.
     - **Bouton « 💾 Enregistrer le verdict »** primary à droite - Action finale qui persiste le verdict + commentaire et passe le passage au statut `Vérifié`.
-- **Pied de page** : raccourcis clavier harmonisés avec M-Vision-Tadarida (↑/↓/Espace/O/D/J/⏎).
+- **Pied de page** : raccourcis clavier harmonisés avec M-SonsValidation (↑/↓/Espace/O/D/J/⏎).
 
-### Différences sémantiques avec [M-Vision-Tadarida](M-Vision-Tadarida.md)
+### Différences sémantiques avec [M-SonsValidation](M-SonsValidation.md)
 
-| Aspect | M-Qualification (cet écran) | M-Vision-Tadarida |
+| Aspect | M-Qualification (cet écran) | M-SonsValidation |
 |---|---|---|
 | Objet de la revue | Séquences d'écoute échantillonnées | Observations Tadarida (avec taxon) |
 | Visualisation audio | **Sonogramme + spectrogramme (composant partagé)** | **Sonogramme + spectrogramme (composant partagé)** |
@@ -547,10 +547,10 @@ Activée par le bouton **⚙ Personnaliser** dans l'en-tête de la liste. Permet
 ## Notes pour l'implémentation
 
 - **TableView avec virtualisation** : la liste des séquences peut atteindre 100 lignes (taille max). JavaFX `TableView` gère nativement la virtualisation, à confirmer avec un test sur 100+ lignes.
-- **Composant de vue audio fourni** : le bloc `sonogramme + spectrogramme + curseur synchronisé + boutons zoom` est un **composant JavaFX fourni par l'équipe pédagogique** (cf. Contraintes techniques). Les étudiants ne le réimplémentent pas - ils l'instancient avec un `wav:Path` et reçoivent les évènements de lecture / curseur. Ce composant est partagé avec [M-Vision-Tadarida](M-Vision-Tadarida.md), évitant ainsi la duplication d'un calcul FFT non trivial.
+- **Composant de vue audio fourni** : le bloc `sonogramme + spectrogramme + curseur synchronisé + boutons zoom` est un **composant JavaFX fourni par l'équipe pédagogique** (cf. Contraintes techniques). Les étudiants ne le réimplémentent pas - ils l'instancient avec un `wav:Path` et reçoivent les évènements de lecture / curseur. Ce composant est partagé avec [M-SonsValidation](M-SonsValidation.md), évitant ainsi la duplication d'un calcul FFT non trivial.
 - **Lecteur audio** : `MediaPlayer` JavaFX avec `Media`. Le composant audio fourni gère les contrôles standards (⏮ ⏯ ⏭) et expose une API simple.
-- **Cohérence visuelle avec [M-Vision-Tadarida](M-Vision-Tadarida.md)** : les deux écrans partagent le même style de panneau de détail (fond clair, sections numérotées, vue audio combinée, boutons d'action colorés en bas). Les étudiants n'implémentent qu'un seul pattern de « lieu d'écoute », réutilisé sur les deux écrans.
+- **Cohérence visuelle avec [M-SonsValidation](M-SonsValidation.md)** : les deux écrans partagent le même style de panneau de détail (fond clair, sections numérotées, vue audio combinée, boutons d'action colorés en bas). Les étudiants n'implémentent qu'un seul pattern de « lieu d'écoute », réutilisé sur les deux écrans.
 - **Sélection vs persistance du verdict** : le clic sur l'un des 3 boutons (OK / Douteux / À jeter) **sélectionne** mais ne persiste pas. La persistance se fait via le bouton « Enregistrer le verdict » (qui peut aussi être déclenché par ⏎ Entrée). Cette dissociation évite les fausses manipulations et permet de changer d'avis avant de valider.
 - **Synchronisation lecture ↔ progression** : le statut `écouté` doit être marqué dès le début de la lecture (pas à la fin), pour permettre à l'utilisateur de zapper rapidement.
 - **Persistance** : la sélection, son état d'écoute, le verdict et le commentaire sont tous persistés en base. Au retour sur l'écran, on retrouve tout son contexte.
-- **Raccourcis clavier** (O/D/J/⏎/Espace/↑/↓) : à implémenter via `setOnKeyPressed` au niveau de la racine de la vue. Cohérents avec M-Vision-Tadarida (V/C/R/→) pour faciliter le transfert d'apprentissage.
+- **Raccourcis clavier** (O/D/J/⏎/Espace/↑/↓) : à implémenter via `setOnKeyPressed` au niveau de la racine de la vue. Cohérents avec M-SonsValidation (V/C/R/→) pour faciliter le transfert d'apprentissage.

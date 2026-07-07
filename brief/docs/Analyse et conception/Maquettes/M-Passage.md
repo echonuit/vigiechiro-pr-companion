@@ -4,7 +4,7 @@
 > **Persona principal** : tous. C'est l'écran pivot qui agrège les fonctionnalités liées à une nuit d'enregistrement spécifique.
 > **Parcours couverts** : transverse - point d'entrée vers [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md).
 
-C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une seule page, sans onglets). Il agrège, de haut en bas : l'en-tête (titre identifiant + actions sur le passage), un **bandeau d'identité** (date/plage, enregistreur, statut, verdict), le **indicateur d’étapes de statut d'avancement**, un **résumé de la nuit** (statistiques) et un jeu de **cartes d'actions « avancer »** vers les écrans spécialisés : [M-Qualification](M-Qualification.md) (vérifier), [M-Diagnostic](M-Diagnostic.md) (diagnostiquer), [M-Lot](M-Lot.md) (préparer le dépôt) et [M-Vision-Tadarida](M-Vision-Tadarida.md) (valider, verrouillée tant que le passage n'est pas déposé).
+C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une seule page, sans onglets). Il agrège, de haut en bas : l'en-tête (titre identifiant + actions sur le passage), un **bandeau d'identité** (date/plage, enregistreur, statut, verdict), le **indicateur d’étapes de statut d'avancement**, un **résumé de la nuit** (statistiques) et un jeu de **cartes d'actions « avancer »** vers les écrans spécialisés : [M-Qualification](M-Qualification.md) (vérifier), [M-Diagnostic](M-Diagnostic.md) (diagnostiquer), [M-Lot](M-Lot.md) (préparer le dépôt) et [M-SonsValidation](M-SonsValidation.md) (valider, verrouillée tant que le passage n'est pas déposé).
 
 > **Navigation** : le **retour** (← écran précédent) et le **fil d'Ariane** (emplacement hiérarchique cliquable `🏠 Accueil › Mes sites › Carré N › Détails du passage N° X`) sont portés par le **chrome** de l'application (cadre commun), pas par cet écran. M-Passage ne porte donc plus de fil d'Ariane interne ni d'onglets : il déclare seulement son emplacement, que le chrome rend dans la barre de navigation.
 
@@ -140,7 +140,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 | Carte **🎧 Vérifier l'enregistrement** | Ouvre [M-Qualification](M-Qualification.md) (active dès que la nuit est transformée) |
 | Carte **🛠 Diagnostic matériel** | Ouvre [M-Diagnostic](M-Diagnostic.md) (toujours disponible : relevé climatique + journal) |
 | Carte **📦 Préparer le dépôt** | Ouvre [M-Lot](M-Lot.md) (active en phase de dépôt : `Vérifié` ou `Prêt à déposer`) |
-| Carte **✅ Validation Tadarida** | Ouvre [M-Vision-Tadarida](M-Vision-Tadarida.md) - **verrouillée** tant que le passage n'est pas `Déposé` |
+| Carte **✅ Validation Tadarida** | Ouvre [M-SonsValidation](M-SonsValidation.md) - **verrouillée** tant que le passage n'est pas `Déposé` |
 
 > **Diagnostic matériel** : son contenu (graphes T° / hygrométrie, batterie, évènements anormaux du `LogPR`) n'est pas un onglet de M-Passage mais un **écran à part entière** - voir [M-Diagnostic](M-Diagnostic.md), ouvert depuis la carte « Diagnostic matériel ».
 

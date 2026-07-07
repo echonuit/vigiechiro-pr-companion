@@ -65,7 +65,7 @@ concentrer le développement sur la chaîne métier :
   (fréquence/temps), avec **curseur de lecture synchronisé** et **zoom temps/fréquence**. Le calcul FFT
   et le rendu graphique sont internes au composant : on l'instancie avec un chemin de fichier et on
   écoute ses évènements. Il est utilisé dans [M-Qualification](Analyse%20et%20conception/Maquettes/M-Qualification.md)
-  et [M-Vision-Tadarida](Analyse%20et%20conception/Maquettes/M-Vision-Tadarida.md).
+  et [M-SonsValidation](Analyse%20et%20conception/Maquettes/M-SonsValidation.md).
 
 ## Licence et publication
 
