@@ -42,3 +42,19 @@ de la barre du haut permet de la **protéger** :
   l'application **remplace** la base courante par celle-ci. Par sécurité, l'**état courant est d'abord mis
   de côté** (fichier `vigiechiro.db.avant-restauration`), et l'application revient à l'accueil pour
   repartir sur la base restaurée.
+
+## Récupérer de l'espace disque : purger les originaux
+
+À chaque import, l'application conserve par défaut une copie des **enregistrements d'origine** (les
+fichiers « bruts »). Ils constituent une archive de sécurité mais **ne servent pas** à l'écoute ni à la
+validation (celles-ci s'appuient sur les séquences transformées) et peuvent peser **plusieurs gigaoctets
+par nuit**.
+
+Le menu **« ☰ » → « 🧹 Purger les originaux importés… »** supprime ces fichiers « bruts » **pour toutes
+les nuits** afin de libérer de l'espace. L'application **annonce l'espace récupérable** et demande
+**confirmation** avant de supprimer ; les **séquences d'écoute, les validations et les dépôts sont
+conservés**. Cette suppression est **définitive**.
+
+> Pour ne purger qu'**une seule nuit**, utilisez le bouton « Purger les originaux » de sa fiche
+> (voir [Passage](passage.md)). Et pour ne **plus jamais** conserver les originaux, décochez « Conserver
+> les originaux » lors de l'[import](importation.md).
