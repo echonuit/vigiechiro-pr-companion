@@ -57,6 +57,14 @@ class CliTest {
         return tamponErreur.toString(StandardCharsets.UTF_8);
     }
 
+    /// Exécute une commande avec un flux de sortie neuf et renvoie sa sortie standard (élaguée) : sert à
+    /// capturer l'identifiant écrit par `creer-site`/`ajouter-point` sans mêler plusieurs sorties.
+    private String executerSortie(String... args) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        cli.executer(args, new PrintStream(out, true, StandardCharsets.UTF_8), erreur);
+        return out.toString(StandardCharsets.UTF_8).strip();
+    }
+
     @Test
     @DisplayName("Sans argument : affiche l'aide et sort en succès (0)")
     void sans_argument_affiche_l_aide() {
@@ -118,6 +126,74 @@ class CliTest {
 
         assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
         assertThat(texteErreur()).contains("Échec").contains("introuvable");
+    }
+
+    @Test
+    @DisplayName("lister-sites sur une base vide : succès (0) et message explicite")
+    void lister_sites_base_vide() {
+        int code = cli.executer(new String[] {"lister-sites"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("Aucun site enregistré.");
+    }
+
+    @Test
+    @DisplayName("lister-sites --json sur une base vide : tableau JSON vide, succès (0)")
+    void lister_sites_json_base_vide() {
+        int code = cli.executer(new String[] {"lister-sites", "--json"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie().strip()).isEqualTo("[]");
+    }
+
+    @Test
+    @DisplayName("Provisionner : creer-site puis ajouter-point écrivent des ids, retrouvés par lister-sites")
+    void provisionner_site_point_et_lister() {
+        String idSite = executerSortie("creer-site", "--carre", "640380", "--nom", "Aix centre");
+        assertThat(idSite).matches("\\d+");
+
+        String idPoint =
+                executerSortie("ajouter-point", "--site", idSite, "--code", "A1", "--lat", "43.5", "--lon", "5.4");
+        assertThat(idPoint).matches("\\d+");
+
+        int code = cli.executer(new String[] {"lister-sites"}, sortie, erreur);
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .contains("640380")
+                .contains("Aix centre")
+                .contains("A1")
+                .contains("(43.50000, 5.40000)");
+    }
+
+    @Test
+    @DisplayName("Site sans point : « (aucun point) » en texte, champ point à null en JSON")
+    void lister_sites_site_sans_point() {
+        executerSortie("creer-site", "--carre", "640381");
+
+        int codeTexte = cli.executer(new String[] {"lister-sites"}, sortie, erreur);
+        assertThat(codeTexte).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("640381").contains("(aucun point)");
+
+        String json = executerSortie("lister-sites", "--json");
+        assertThat(json).contains("\"carre\": \"640381\"").contains("\"point\": null");
+    }
+
+    @Test
+    @DisplayName("creer-site avec un carré mal formé : échec métier (1)")
+    void creer_site_carre_invalide_echoue() {
+        int code = cli.executer(new String[] {"creer-site", "--carre", "pas-un-carre"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec");
+    }
+
+    @Test
+    @DisplayName("ajouter-point sur un site introuvable : échec métier (1)")
+    void ajouter_point_site_introuvable_echoue() {
+        int code = cli.executer(new String[] {"ajouter-point", "--site", "999", "--code", "A1"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("Site introuvable");
     }
 
     @Test

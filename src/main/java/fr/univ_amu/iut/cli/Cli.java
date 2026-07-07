@@ -72,6 +72,7 @@ public final class Cli {
     /// @param erreur flux des messages d'erreur (typiquement `System.err`)
     public int executer(String[] args, PrintStream sortie, PrintStream erreur) {
         CommandLine ligne = new CommandLine(CommandeRacine.class, new FabriqueGuice(injecteur));
+        ligne.setCaseInsensitiveEnumValuesAllowed(true); // --protocole standard == STANDARD (confort de saisie)
         ligne.setOut(new PrintWriter(sortie, true, StandardCharsets.UTF_8));
         ligne.setErr(new PrintWriter(erreur, true, StandardCharsets.UTF_8));
         ligne.setExecutionStrategy(this::migrerPuisExecuter);

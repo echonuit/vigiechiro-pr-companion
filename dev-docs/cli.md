@@ -47,6 +47,9 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 
 | Commande | Options | Parcours | Service |
 |---|---|---|---|
+| `creer-site` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `ServiceSites.creerSite` |
+| `ajouter-point` | `--site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.ajouterPoint` |
+| `lister-sites` | `[--json]` | A10 | `ServiceSites` (lecture) |
 | `lister-passages` | `[--json]` | P5 | `RegistrePassages` (lecture) |
 | `statut-passage` | `--passage <id> [--json]` | M-Passage | `ServicePassage.detailPassage` + `ResultatsIdentificationDao` (lecture) |
 | `importer` | `--source <dir> --point <id> [--annee N] [--passage N]` | P2 | `ServiceImport` |
