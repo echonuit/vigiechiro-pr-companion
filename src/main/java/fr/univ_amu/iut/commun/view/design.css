@@ -8,8 +8,8 @@
  * ponctuellement, le temps de la convergence).
  *
  * Socle du chantier « uniformisation des vues » (#688). Les couleurs proviennent de palette.css ; aucune
- * valeur codée en dur. Les conventions de titres/boutons et les composants (cartes, badges, en-tête) sont
- * traités dans les issues dédiées (#689, #691, #693, #694).
+ * valeur codée en dur. Contient à ce jour la typographie de page/section (#688) et l'échelle de boutons
+ * (#689). Les composants (cartes, badges, en-tête) restent traités dans leurs issues dédiées (#691, #693, #694).
  */
 
 /* Titre de page : accroche en tête d'écran. */
@@ -36,4 +36,74 @@
 .section-sous {
     -fx-font-size: 12px;
     -fx-text-fill: -couleur-texte-discret;
+}
+
+/*
+ * Échelle de boutons (#689). Trois rôles, une seule définition, jusqu'ici
+ * redéclarée dans quatre feuilles de feature (sites, importation, qualification,
+ * passage) sous deux noms parallèles (`bouton-*` et `action-*`) aux paddings et
+ * bordures divergents. Référence retenue : la hiérarchie de la feature « sites ».
+ *
+ * Règle de placement : l'action PRINCIPALE d'un écran — ou de l'étape courante
+ * d'un assistant — porte `.bouton-primaire` ; les actions de soutien portent
+ * `.bouton-secondaire` ; une action destructrice porte `.bouton-danger`. Au plus
+ * une action primaire visible à la fois. (Le bouton « retour » de navigation vit
+ * dans base.css, côté chrome.)
+ */
+.bouton-primaire {
+    -fx-background-color: -couleur-primaire;
+    -fx-text-fill: -couleur-texte-clair;
+    -fx-font-weight: bold;
+    -fx-background-radius: 4;
+    -fx-padding: 8 16 8 16;
+    -fx-cursor: hand;
+}
+
+.bouton-primaire:hover {
+    -fx-background-color: -couleur-primaire-sombre;
+}
+
+.bouton-primaire:disabled {
+    -fx-opacity: 0.45;
+}
+
+/* Variante « grand appel à l'action » : CTA de tête, écran vide invitant à agir. */
+.bouton-primaire-grand {
+    -fx-background-color: -couleur-primaire;
+    -fx-text-fill: -couleur-texte-clair;
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-background-radius: 6;
+    -fx-padding: 14 28 14 28;
+    -fx-cursor: hand;
+}
+
+.bouton-primaire-grand:hover {
+    -fx-background-color: -couleur-primaire-sombre;
+}
+
+.bouton-secondaire {
+    -fx-background-color: -couleur-texte-clair;
+    -fx-text-fill: -couleur-texte;
+    -fx-font-weight: bold;
+    -fx-border-color: -couleur-texte;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 7 14 7 14;
+    -fx-cursor: hand;
+}
+
+.bouton-danger {
+    -fx-background-color: -couleur-texte-clair;
+    -fx-text-fill: -couleur-danger;
+    -fx-font-weight: bold;
+    -fx-border-color: -couleur-danger;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 7 14 7 14;
+    -fx-cursor: hand;
+}
+
+.bouton-danger:disabled {
+    -fx-opacity: 0.45;
 }
