@@ -12,6 +12,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Barre d'**onglets de vues mémorisées** « à la Notion » (#623), au-dessus d'une table : un onglet par
 /// vue enregistrée de la `feature`, plus un bouton **« + Vue »**. Cliquer un onglet **rejoue** sa
@@ -268,11 +269,11 @@ public final class GestionnaireVues<T> {
                     .add(
                             parDefaut
                                     ? bouton(
-                                            "💾",
+                                            "fas-save",
                                             "Enregistrer les filtres courants comme une nouvelle vue",
                                             this::enregistrerCommeNouvelle)
                                     : bouton(
-                                            "💾",
+                                            "fas-save",
                                             "Enregistrer les filtres courants dans la vue " + vue.nom(),
                                             this::enregistrerDansActive));
         }
@@ -280,17 +281,23 @@ public final class GestionnaireVues<T> {
         if (!parDefaut) {
             onglet.getChildren()
                     .add(bouton(
-                            "✎",
+                            "fas-pen",
                             "Renommer la vue " + vue.nom(),
                             () -> saisieNom.apply(vue.nom()).ifPresent(nouveau -> renommer(vue, nouveau))));
-            onglet.getChildren().add(bouton("✕", "Supprimer la vue " + vue.nom(), () -> supprimer(vue)));
+            onglet.getChildren().add(bouton("fas-times", "Supprimer la vue " + vue.nom(), () -> supprimer(vue)));
         }
         return onglet;
     }
 
-    /// Bouton d'action d'un onglet (💾 / ✎ / ✕) : style et libellé accessible communs.
-    private static Button bouton(String texte, String accessible, Runnable action) {
-        Button bouton = new Button(texte);
+    /// Bouton d'action d'un onglet (enregistrer / renommer / supprimer) : une **icône Ikonli** (FontAwesome)
+    /// plutôt qu'un glyphe de police. Les emojis (type 💾) ne se rendent pas dans toutes les polices — même
+    /// constat que pour les indicateurs ⭐/💬 de la table audio, passés en `FontIcon` pour la même raison. Le
+    /// libellé accessible porte le sens de l'action ; l'icône est colorée par la classe CSS `onglet-vue-icone`.
+    private static Button bouton(String iconeLiteral, String accessible, Runnable action) {
+        FontIcon icone = new FontIcon(iconeLiteral);
+        icone.getStyleClass().add("onglet-vue-icone");
+        Button bouton = new Button();
+        bouton.setGraphic(icone);
         bouton.getStyleClass().add("onglet-vue-action");
         bouton.setAccessibleText(accessible);
         bouton.setOnAction(evenement -> action.run());

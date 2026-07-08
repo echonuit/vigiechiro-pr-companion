@@ -94,6 +94,13 @@
   -fx-background-radius: 8;
 }
 
+/* Icônes des actions d'onglet (Ikonli FontAwesome : enregistrer/renommer/supprimer). Embarquées pour se
+   rendre partout, contrairement aux emojis (le 💾 restait invisible dans certaines polices). */
+.onglet-vue-icone {
+  -fx-icon-color: -couleur-primaire-sombre;
+  -fx-icon-size: 13px;
+}
+
 .onglet-vue-nouvelle {
   -fx-background-color: transparent;
   -fx-border-color: -couleur-primaire-fond;

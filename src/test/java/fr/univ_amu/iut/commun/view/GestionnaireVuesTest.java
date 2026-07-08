@@ -178,12 +178,15 @@ class GestionnaireVuesTest {
                 .handle(null));
     }
 
-    /// Le bouton « 💾 Enregistrer dans la vue » de l'onglet, présent seulement quand la vue active a divergé.
+    /// Le bouton « enregistrer » (icône disquette) de l'onglet, présent seulement quand la vue active a
+    /// divergé. Repéré par son **libellé accessible** (« Enregistrer… ») et non par un glyphe : l'icône est
+    /// une FontIcon Ikonli, sans texte.
     private static Optional<Button> boutonEnregistrer(HBox onglet) {
         return onglet.getChildren().stream()
                 .filter(Button.class::isInstance)
                 .map(Button.class::cast)
-                .filter(bouton -> "💾".equals(bouton.getText()))
+                .filter(bouton -> bouton.getAccessibleText() != null
+                        && bouton.getAccessibleText().startsWith("Enregistrer"))
                 .findFirst();
     }
 

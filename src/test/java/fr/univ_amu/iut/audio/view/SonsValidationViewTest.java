@@ -614,7 +614,7 @@ class SonsValidationViewTest {
     }
 
     @Test
-    @DisplayName("#681 : sur une vue active, modifier les filtres fait apparaître le bouton 💾")
+    @DisplayName("#681 : sur une vue active, modifier les filtres fait apparaître le bouton « enregistrer »")
     void modifier_les_filtres_d_une_vue_active_affiche_le_bouton_enregistrer(FxRobot robot) {
         FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
         // Activer la vue « À revoir » (clic sur son libellé) : ses filtres sont rejoués, aucune divergence.
@@ -624,20 +624,24 @@ class SonsValidationViewTest {
                 .orElseThrow();
         robot.interact(() -> nomVue.getOnMouseClicked().handle(null));
         WaitForAsyncUtils.waitForFxEvents();
+        // Le bouton « enregistrer » (icône disquette Ikonli, sans texte) est repéré par son libellé accessible.
         assertThat(robot.from(onglets).lookup(".onglet-vue-action").queryAllAs(Button.class))
-                .extracting(Button::getText)
-                .as("pas de 💾 juste après activation")
-                .doesNotContain("💾");
+                .as("pas de bouton « Enregistrer » juste après activation")
+                .noneMatch(SonsValidationViewTest::estBoutonEnregistrer);
 
-        // Ajouter un filtre « Statut » : les filtres divergent de la vue → le 💾 doit apparaître.
+        // Ajouter un filtre « Statut » : les filtres divergent de la vue → le bouton « enregistrer » apparaît.
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
         robot.interact(() -> itemParLibelle(menuAjout, "Statut").fire());
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(robot.from(onglets).lookup(".onglet-vue-action").queryAllAs(Button.class))
-                .extracting(Button::getText)
-                .as("filtres divergents → bouton Enregistrer présent")
-                .contains("💾");
+                .as("filtres divergents → bouton « Enregistrer » présent")
+                .anyMatch(SonsValidationViewTest::estBoutonEnregistrer);
+    }
+
+    /// Un bouton d'action d'onglet « enregistrer » : icône sans texte, identifié par son libellé accessible.
+    private static boolean estBoutonEnregistrer(Button bouton) {
+        return bouton.getAccessibleText() != null && bouton.getAccessibleText().startsWith("Enregistrer");
     }
 
     private static TableColumn<?, ?> colonne(FxRobot robot, String entete) {
