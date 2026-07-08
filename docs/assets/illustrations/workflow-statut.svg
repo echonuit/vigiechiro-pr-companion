@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 920 132" role="img"
-     aria-label="Statut d'un passage : Importé, Transformé, Vérifié, Prêt à déposer, Déposé ; une fois déposé, la Validation Tadarida se déverrouille.">
+     aria-label="Statut d'un passage : Importé, Transformé, Vérifié, Prêt à déposer, Déposé ; une fois déposé, la carte Sons &amp; validation se déverrouille.">
   <defs>
     <marker id="ah2" markerWidth="8" markerHeight="8" refX="6.5" refY="3" orient="auto" markerUnits="userSpaceOnUse">
       <path d="M0,0 L6.5,3 L0,6 Z" fill="#7f8c8d"/>
@@ -36,5 +36,5 @@
   <text class="lbl" x="637" y="78" text-anchor="middle">Déposé</text>
 
   <rect x="760" y="50" width="150" height="46" rx="11" fill="#935116"/>
-  <text class="lbl" x="835" y="78" text-anchor="middle">Validation Tadarida</text>
+  <text class="lbl" x="835" y="78" text-anchor="middle">Sons &amp; validation</text>
 </svg>

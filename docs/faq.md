@@ -45,7 +45,7 @@ marquer la nuit comme déposée. Voir l'écran [Lot](ecrans/lot.md).
 
 ## Validation des espèces
 
-### L'action « Validation Tadarida » est grisée
+### L'action « Sons & validation » est grisée
 
 La validation des espèces n'est accessible qu'**une fois la nuit déposée** : Vigie-Chiro ne renvoie
 les résultats d'identification que 24 à 48 h après le dépôt. L'ordre est donc Vérifier, puis

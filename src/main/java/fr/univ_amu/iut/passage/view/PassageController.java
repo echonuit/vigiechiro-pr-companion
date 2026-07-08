@@ -43,7 +43,7 @@ import javafx.scene.layout.HBox;
 /// le chrome rend dans le fil.
 ///
 /// Pur câblage (patron CM4) : lie les contrôles aux propriétés du [PassageViewModel]. Les boutons
-/// « Vérifier », « Diagnostic », « Préparer le dépôt » et « Validation Tadarida » ouvrent
+/// « Vérifier », « Diagnostic », « Préparer le dépôt » et « Sons & validation » ouvrent
 /// M-Qualification, M-Diagnostic, M-Lot et M-Vision-Tadarida via les contrats socle
 /// [OuvrirVerification], [OuvrirDiagnostic], [OuvrirLot] et [OuvrirValidation] (sans dépendre des
 /// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
@@ -190,7 +190,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         viewModel.verificationDisponibleProperty()));
 
         // Mise en avant de la « prochaine action » : le liseré recommandé se déplace selon le statut
-        // (Vérifier → Préparer le dépôt → Validation Tadarida), au lieu de rester figé sur Vérifier.
+        // (Vérifier → Préparer le dépôt → Sons & validation), au lieu de rester figé sur Vérifier.
         viewModel.actionRecommandeeProperty().addListener((obs, ancienne, nouvelle) -> majActionRecommandee(nouvelle));
         majActionRecommandee(viewModel.actionRecommandeeProperty().get());
     }
@@ -261,7 +261,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         ouvrirDiagnostic.ouvrir(contextePassage());
     }
 
-    /// « Validation Tadarida » : ouvre M-Vision-Tadarida sur ce passage via le contrat socle
+    /// « Sons & validation » : ouvre l'écran audio du passage (M-Vision-Tadarida) via le contrat socle
     /// [OuvrirValidation] (implémenté par la feature `validation`). Le bouton n'est actif qu'une fois
     /// le passage déposé (validationVerrouillee) : idPassage est alors défini.
     @FXML

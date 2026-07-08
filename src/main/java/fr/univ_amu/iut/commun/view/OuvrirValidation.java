@@ -6,7 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 ///
 /// Même esprit que [OuvrirVerification] / [OuvrirDiagnostic] : le socle inverse la dépendance.
 /// La feature `validation` en fournit l'implémentation (`NavigationValidation`) et la lie dans son
-/// module ; la feature `passage` (M-Passage, carte « Validation Tadarida ») l'injecte pour ouvrir
+/// module ; la feature `passage` (M-Passage, carte « Sons & validation ») l'injecte pour ouvrir
 /// l'écran **sans dépendre** de `validation.view` (le graphe de slices reste acyclique).
 public interface OuvrirValidation {
 

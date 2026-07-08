@@ -43,7 +43,7 @@ import org.testfx.framework.junit5.Start;
 /// **Test E2E de parcours (P7)** : depuis **M-Passage**, l'ouverture de **M-Vision-Tadarida**
 /// (validation des observations) via le contrat socle `OuvrirValidation`. La validation n'est
 /// **déverrouillée que sur un passage déposé** (`validationVerrouillee`) : on prépare donc un passage
-/// importé puis **déposé**, et on vérifie que le bouton « Validation Tadarida » est actif puis qu'il
+/// importé puis **déposé**, et on vérifie que le bouton « Sons & validation » est actif puis qu'il
 /// ouvre l'écran de validation (`passage → validation`, sans dépendance directe).
 @ExtendWith(ApplicationExtension.class)
 class ParcoursPassageVersValidationE2ETest {
@@ -96,7 +96,7 @@ class ParcoursPassageVersValidationE2ETest {
     }
 
     @Test
-    @DisplayName("M-Passage déposé : « Validation Tadarida » est actif et ouvre M-Vision-Tadarida")
+    @DisplayName("M-Passage déposé : « Sons & validation » est actif et ouvre l'écran audio du passage")
     void passage_depose_ouvre_validation(FxRobot robot) {
         // 1) Entrer sur M-Passage (déposé) : le bouton validation est déverrouillé.
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));

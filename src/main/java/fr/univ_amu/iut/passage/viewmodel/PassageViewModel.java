@@ -266,7 +266,7 @@ public class PassageViewModel {
     }
 
     /// Prochaine action recommandée du workflow (carte mise en avant), dérivée du statut. Se déplace
-    /// au fil de l'avancement : Vérifier → Préparer le dépôt → Validation Tadarida.
+    /// au fil de l'avancement : Vérifier → Préparer le dépôt → Sons & validation.
     public ReadOnlyObjectProperty<ActionRecommandee> actionRecommandeeProperty() {
         return actionRecommandee.getReadOnlyProperty();
     }
