@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.134.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.134.1...v1.134.2) (2026-07-08)
+
+
+### Bug Fixes
+
+* **ihm:** aligner horizontalement les puces de filtres des barres « à la Notion » ([0dc7e6f](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/0dc7e6f0424aed58ab73bf9ac364c3a365335f0b))
+
 ## [1.134.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.134.0...v1.134.1) (2026-07-08)
 
 
