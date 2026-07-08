@@ -238,6 +238,28 @@
             </plugin>
 
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <!-- Recopie les ressources (FXML/CSS co-localisées dans src/main/java) APRÈS la
+                         compilation. En incrémental, le compilateur vide `target/classes` dès qu'il détecte
+                         des fichiers source ajoutés/supprimés (typiquement après un `git pull`), effaçant
+                         les FXML copiés en `process-resources` : `./mvnw javafx:run` échouait alors sur
+                         « Location is not set » (MainView.fxml introuvable). Cette copie en `process-classes`
+                         (après `compile`, avant l'exécution/le packaging) les restaure, sans imposer de
+                         `clean`. Le but `resources` réutilise le `<resources>` du projet, sans duplication. -->
+                    <execution>
+                        <id>recopier-ressources-apres-compilation</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>${exec.maven.plugin.version}</version>
