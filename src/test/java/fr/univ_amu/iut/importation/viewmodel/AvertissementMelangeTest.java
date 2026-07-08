@@ -9,8 +9,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Tests de la mise en phrase de l'avertissement **« mélange »** (#33). La détection elle-même est
-/// couverte par `AnalyseMelangeTest` ; ici on vérifie les trois branches du libellé (enregistreurs
-/// seuls, nuits seules, les deux) et le cas homogène (chaîne vide).
+/// couverte par `AnalyseMelangeTest` ; ici on vérifie que seul le mélange de **plusieurs
+/// enregistreurs** déclenche un message (le multi-nuits d'un seul enregistreur est un cas géré, donc
+/// silencieux), et le libellé selon qu'il couvre une ou plusieurs nuits.
 class AvertissementMelangeTest {
 
     @Test
@@ -30,24 +31,23 @@ class AvertissementMelangeTest {
 
         assertThat(AvertissementMelange.rediger(analyse))
                 .contains("plusieurs enregistreurs (séries 1648011, 1925492)")
+                .contains("un import correspond à un seul enregistreur")
                 .doesNotContain("plusieurs nuits");
     }
 
     @Test
-    @DisplayName("Plusieurs nuits seules : le message cite le nombre de dates, pas les séries")
-    void nuits_seules() {
+    @DisplayName("Plusieurs nuits d'un seul enregistreur : cas géré (découpage par nuit), aucun avertissement")
+    void nuits_seules_pas_d_avertissement() {
         AnalyseMelange analyse = AnalyseMelange.depuis(List.of(
                 Path.of("PaRecPR1925492_20260422_203000.wav"),
                 Path.of("PaRecPR1925492_20260423_203000.wav"),
                 Path.of("PaRecPR1925492_20260424_203000.wav")));
 
-        assertThat(AvertissementMelange.rediger(analyse))
-                .contains("plusieurs nuits (3 dates d'acquisition)")
-                .doesNotContain("plusieurs enregistreurs");
+        assertThat(AvertissementMelange.rediger(analyse)).isEmpty();
     }
 
     @Test
-    @DisplayName("Mélange complet : les deux constats sont reliés par « et »")
+    @DisplayName("Plusieurs enregistreurs ET plusieurs nuits : message centré sur les enregistreurs")
     void enregistreurs_et_nuits() {
         AnalyseMelange analyse = AnalyseMelange.depuis(List.of(
                 Path.of("PaRecPR1925492_20260422_203000.wav"),
@@ -55,6 +55,7 @@ class AvertissementMelangeTest {
                 Path.of("PaRecPR1648011_20260424_203000.wav")));
 
         assertThat(AvertissementMelange.rediger(analyse))
-                .contains("plusieurs enregistreurs (séries 1648011, 1925492) et plusieurs nuits");
+                .contains("plusieurs enregistreurs (séries 1648011, 1925492)")
+                .contains("sur plusieurs nuits");
     }
 }
