@@ -26,7 +26,7 @@ public final class AjouterPoint implements Callable<Integer> {
             names = "--code",
             required = true,
             paramLabel = "<code>",
-            description = "Code du point : une lettre suivie d'un chiffre (ex. A1).")
+            description = "Code du point : une lettre suivie d'un ou plusieurs chiffres (ex. A1, Z41).")
     private String code;
 
     @Option(names = "--lat", paramLabel = "<degrés>", description = "Latitude en degrés décimaux (optionnelle).")

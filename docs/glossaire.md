@@ -10,7 +10,7 @@ Les termes du domaine employés dans cette documentation et dans l'application.
 | **Lot** | Ensemble préparé des fichiers d'une nuit vérifiée, prêt à être déposé sur Vigie-Chiro. |
 | **Passage** | Une **nuit d'enregistrement** sur un point d'écoute, identifiée par une année et un numéro de passage. C'est l'unité de travail de l'application. Voir l'écran [Passage](ecrans/passage.md). |
 | **Passive Recorder (PR)** | Enregistreur autonome posé sur le terrain, qui capte les ultrasons des chauves-souris pendant une nuit entière. Le « PR » du nom de l'application. |
-| **Point d'écoute** | Emplacement précis d'enregistrement dans un carré, identifié par un code (lettre + chiffre, par exemple `A1`). |
+| **Point d'écoute** | Emplacement précis d'enregistrement dans un carré, identifié par un code (une lettre majuscule + un ou plusieurs chiffres, par exemple `A1` ou `Z41`). |
 | **Préfixe** | Nommage normalisé appliqué aux fichiers à l'import, de la forme `CarXXXXXX-AAAA-PassN-YY-`, pour rendre chaque fichier identifiable sans ambiguïté. |
 | **Relevé climatique** | Mesures de température et d'hygrométrie de la nuit, affichées sous forme de courbe dans le [diagnostic](ecrans/diagnostic.md). |
 | **Séquence** | Extrait d'écoute de 5 secondes, **ralenti dix fois** (les ultrasons deviennent audibles), produit lors de la transformation des enregistrements bruts. |
