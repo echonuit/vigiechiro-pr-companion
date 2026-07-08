@@ -1,0 +1,39 @@
+/*
+ * design.css — feuille de design PARTAGÉE de VigieChiro PR Companion.
+ *
+ * Classes de présentation communes à TOUS les écrans (typographie de page et de section), jusqu'ici
+ * redéclarées — avec de légères divergences — dans chaque CSS de feature. Centralisées ici et chargées
+ * par chaque FXML sous la forme `@palette.css, @design.css, @<feature>.css` : après palette.css (dont
+ * elles consomment les jetons de couleur) et avant la feuille de la feature (qui peut encore surcharger
+ * ponctuellement, le temps de la convergence).
+ *
+ * Socle du chantier « uniformisation des vues » (#688). Les couleurs proviennent de palette.css ; aucune
+ * valeur codée en dur. Les conventions de titres/boutons et les composants (cartes, badges, en-tête) sont
+ * traités dans les issues dédiées (#689, #691, #693, #694).
+ */
+
+/* Titre de page : accroche en tête d'écran. */
+.titre-page {
+    -fx-font-size: 22px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+}
+
+/* Sous-titre / résumé placé sous le titre de page. */
+.sous-titre-page {
+    -fx-font-size: 13px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+/* Titre d'une section à l'intérieur d'un écran. */
+.section-titre {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+}
+
+/* Libellé secondaire / sous-texte d'une section. */
+.section-sous {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-texte-discret;
+}
