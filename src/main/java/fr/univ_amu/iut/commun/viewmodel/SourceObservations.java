@@ -15,7 +15,12 @@ import java.util.Objects;
 /// dépendre le socle de la feature `validation` (ce qui introduirait un cycle) ; le ViewModel audio
 /// le reconvertit en énumération.
 ///
-/// Variantes initiales (extensible : il suffit d'ajouter un `record` implémentant l'interface) :
+/// Chaque variante **porte son propre comportement** (intitulé, capacités, contexte) : le socle expose
+/// des **défauts** que seuls les sous-types concernés redéfinissent, sans aucun test de type
+/// (`instanceof`/`switch`) côté appelant. Ajouter une source = ajouter un `record` et redéfinir ce qui
+/// diffère.
+///
+/// Variantes :
 /// - [ParPassage] un passage (workflow Tadarida) — seule à permettre l'import CSV / l'export `_Vu` ;
 /// - [ParPassages] un lot de passages (multisite filtré) ;
 /// - [ParEspece] une espèce à travers les passages d'un utilisateur ;
@@ -23,11 +28,57 @@ import java.util.Objects;
 /// - [NonIdentifies] les séquences d'un passage **sans observation Tadarida** (à écouter/valider à la main).
 public sealed interface SourceObservations {
 
+    /// **Intitulé** de la source, tel qu'affiché dans le fil d'Ariane / le titre de l'écran audio. C'est
+    /// une propriété **sémantique** de la source (ce qu'elle représente), pas du rendu : chaque variante
+    /// porte donc le sien.
+    String titre();
+
+    /// `true` si le **workflow Tadarida par passage** (import d'un CSV, export `_Vu`) est pertinent.
+    /// Faux par défaut ; seule [ParPassage] le redéfinit (un lot, une espèce ou les références n'ont pas
+    /// un unique jeu de résultats à importer/exporter).
+    default boolean permetWorkflowTadarida() {
+        return false;
+    }
+
+    /// `true` si l'**export de la bibliothèque** de référence est pertinent. Faux par défaut ; seule
+    /// [References] le redéfinit.
+    default boolean permetExportBibliotheque() {
+        return false;
+    }
+
+    /// Contexte du **passage ciblé** quand la source en vise un seul, `null` sinon (défaut). Redéfini par
+    /// [ParPassage] et [NonIdentifies]. Sert au fil d'Ariane (retour au passage) et à la plage nuit par
+    /// défaut du filtre heure.
+    default ContextePassage contexteDuPassage() {
+        return null;
+    }
+
+    /// `true` si la source cible **un seul passage** : les colonnes de contexte (passage / carré / point /
+    /// date) y sont constantes, donc masquées par la vue. Dérivé de [#contexteDuPassage()].
+    default boolean cibleUnPassageUnique() {
+        return contexteDuPassage() != null;
+    }
+
     /// Observations d'**un passage** (parcours de validation Tadarida). Porte le [ContextePassage]
     /// (carré, point, numéro) pour revenir au passage. Seule source du workflow Tadarida (import/`_Vu`).
     record ParPassage(ContextePassage contexte) implements SourceObservations {
         public ParPassage {
             Objects.requireNonNull(contexte, "contexte");
+        }
+
+        @Override
+        public String titre() {
+            return "Sons & validation";
+        }
+
+        @Override
+        public boolean permetWorkflowTadarida() {
+            return true;
+        }
+
+        @Override
+        public ContextePassage contexteDuPassage() {
+            return contexte;
         }
     }
 
@@ -37,6 +88,11 @@ public sealed interface SourceObservations {
         public ParPassages {
             idPassages = List.copyOf(Objects.requireNonNull(idPassages, "idPassages"));
             Objects.requireNonNull(libelle, "libelle");
+        }
+
+        @Override
+        public String titre() {
+            return "Écoute : " + libelle;
         }
     }
 
@@ -50,6 +106,11 @@ public sealed interface SourceObservations {
             Objects.requireNonNull(codeEspece, "codeEspece");
             Objects.requireNonNull(libelle, "libelle");
         }
+
+        @Override
+        public String titre() {
+            return "Écoute : " + libelle;
+        }
     }
 
     /// **Corpus de référence** (`is_reference`) d'un utilisateur (ex-bibliothèque). Seule source à
@@ -57,6 +118,16 @@ public sealed interface SourceObservations {
     record References(String idUtilisateur) implements SourceObservations {
         public References {
             Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        }
+
+        @Override
+        public String titre() {
+            return "Sons de référence";
+        }
+
+        @Override
+        public boolean permetExportBibliotheque() {
+            return true;
         }
     }
 
@@ -68,47 +139,15 @@ public sealed interface SourceObservations {
         public NonIdentifies {
             Objects.requireNonNull(contexte, "contexte");
         }
-    }
 
-    /// `true` si le **workflow Tadarida par passage** (import d'un CSV, export `_Vu`) est pertinent :
-    /// uniquement pour [ParPassage] (un lot, une espèce ou les références n'ont pas un unique jeu de
-    /// résultats à importer/exporter).
-    default boolean permetWorkflowTadarida() {
-        return this instanceof ParPassage;
-    }
+        @Override
+        public String titre() {
+            return "Sons non identifiés";
+        }
 
-    /// `true` si l'**export de la bibliothèque** de référence est pertinent : uniquement pour
-    /// [References].
-    default boolean permetExportBibliotheque() {
-        return this instanceof References;
-    }
-
-    /// `true` si la source cible **un seul passage** ([ParPassage] ou [NonIdentifies]) : les colonnes de
-    /// contexte (passage / carré / point / date) y sont constantes, donc masquées par la vue.
-    default boolean cibleUnPassageUnique() {
-        return contexteDuPassage() != null;
-    }
-
-    /// Contexte du **passage ciblé** quand la source en vise un seul ([ParPassage] ou [NonIdentifies]),
-    /// `null` sinon. Sert au fil d'Ariane (retour au passage) et à la plage nuit par défaut du filtre heure.
-    default ContextePassage contexteDuPassage() {
-        return switch (this) {
-            case ParPassage p -> p.contexte();
-            case NonIdentifies n -> n.contexte();
-            default -> null;
-        };
-    }
-
-    /// **Intitulé** de la source, tel qu'affiché dans le fil d'Ariane / le titre de l'écran audio. C'est
-    /// une propriété **sémantique** de la source (ce qu'elle représente), pas du rendu : elle vit donc ici,
-    /// pas dans le controller. Pour une espèce ou un lot, elle reprend le `libelle` porté par la source.
-    default String titre() {
-        return switch (this) {
-            case ParPassage p -> "Sons & validation";
-            case NonIdentifies n -> "Sons non identifiés";
-            case References r -> "Sons de référence";
-            case ParEspece espece -> "Écoute : " + espece.libelle();
-            case ParPassages lot -> "Écoute : " + lot.libelle();
-        };
+        @Override
+        public ContextePassage contexteDuPassage() {
+            return contexte;
+        }
     }
 }
