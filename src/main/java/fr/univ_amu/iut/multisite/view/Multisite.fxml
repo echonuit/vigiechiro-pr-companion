@@ -12,6 +12,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
@@ -44,15 +45,18 @@
        est superposée à la CARTE. -->
   <BorderPane styleClass="barre-filtres">
     <center>
-      <FlowPane hgap="8.0" vgap="6.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
+      <HBox spacing="8.0" alignment="CENTER_LEFT" BorderPane.alignment="CENTER_LEFT">
         <TextField fx:id="champRecherche" promptText="Rechercher (carré, point, date…)" prefWidth="220.0"
                    accessibleText="Rechercher dans les passages"/>
         <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
-        <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"/>
+        <!-- hgrow + maxWidth : les puces occupent la largeur restante et s'alignent horizontalement (sinon le
+             FlowPane se limite à sa largeur préférée et les empile). Tri/Réinitialiser s'ancrent à droite. -->
+        <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
+                  HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
         <ComboBox fx:id="choixTri" accessibleText="Trier les passages"/>
         <Button fx:id="boutonReinitialiser" text="Réinitialiser" onAction="#reinitialiser"/>
-      </FlowPane>
+      </HBox>
     </center>
     <right>
       <MenuButton fx:id="menuActions" text="☰" styleClass="menu-actions" BorderPane.alignment="CENTER">

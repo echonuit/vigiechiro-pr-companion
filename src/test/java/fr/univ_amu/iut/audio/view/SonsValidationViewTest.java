@@ -65,6 +65,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de la **vue audio unifiée** (`SonsValidation.fxml`) ouverte sur la source
 /// `References` : chargement du FXML via Guice (services mockés), câblage table / sélection / détail /
@@ -183,6 +184,23 @@ class SonsValidationViewTest {
         // Le clic rouvre l'analyse en demandant la carte (afficherCarte=true), avec un descripteur des
         // filtres courants (jamais null : la barre décrit au moins une recherche vide).
         verify(ouvrirAnalyse).ouvrir(any(DescripteurFiltre.class), eq(true));
+    }
+
+    @Test
+    @DisplayName("Les puces de filtres s'alignent horizontalement (une seule rangée, pas empilées)")
+    void puces_filtres_alignees_horizontalement(FxRobot robot) {
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        robot.interact(() -> itemParLibelle(menuAjout, "Statut").fire());
+        robot.interact(() -> itemParLibelle(menuAjout, "Groupe").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        assertThat(puces.getChildren()).hasSize(2);
+        // Les deux puces partagent la même ordonnée : côte à côte, et non empilées verticalement (le
+        // FlowPane occupe toute la largeur de la rangée grâce à hgrow, donc n'enveloppe pas dès 400px).
+        double y0 = puces.getChildren().get(0).getBoundsInParent().getMinY();
+        double y1 = puces.getChildren().get(1).getBoundsInParent().getMinY();
+        assertThat(y1).isCloseTo(y0, within(1.0));
     }
 
     @Test

@@ -51,7 +51,10 @@
                    accessibleText="Rechercher dans les observations" prefWidth="240.0"/>
         <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
                     accessibleText="Ajouter un filtre"/>
-        <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"/>
+        <!-- hgrow + maxWidth : le FlowPane des puces occupe toute la largeur restante de la rangée, sinon il
+             se limite à sa largeur préférée (~prefWrapLength) et empile les puces verticalement. -->
+        <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
+                  HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
       </HBox>
     </center>
     <right>
