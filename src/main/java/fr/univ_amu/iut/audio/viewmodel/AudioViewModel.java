@@ -67,8 +67,10 @@ public class AudioViewModel {
     private final FilteredList<LigneObservationAudio> observationsFiltrees = new FilteredList<>(observations);
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
     private final ObjectProperty<LigneObservationAudio> selection = new SimpleObjectProperty<>(this, "selection");
-    private final ReadOnlyBooleanWrapper selectionPresente =
-            new ReadOnlyBooleanWrapper(this, "selectionPresente", false);
+    /// Vrai quand la sélection porte une **observation** (et non une séquence non identifiée) : seule une
+    /// telle ligne est validable/corrigeable/référençable (les boutons de revue s'y lient).
+    private final ReadOnlyBooleanWrapper selectionValidable =
+            new ReadOnlyBooleanWrapper(this, "selectionValidable", false);
     private final ReadOnlyBooleanWrapper selectionReference =
             new ReadOnlyBooleanWrapper(this, "selectionReference", false);
     private final ReadOnlyObjectWrapper<Path> cheminAudioCourant =
@@ -138,10 +140,10 @@ public class AudioViewModel {
     /// pour les autres sources (plusieurs nuits, pas de coucher/lever unique) ou faute de coordonnées, le
     /// filtre retombant alors sur son défaut fixe 21 h → 6 h.
     public Optional<PlageNuit> plageNuitParDefaut() {
-        if (source instanceof SourceObservations.ParPassage parPassage) {
-            return service.plageNuitParDefaut(parPassage.contexte().idPassage());
-        }
-        return Optional.empty();
+        // Sources ciblant un passage unique (ParPassage ou séquences non identifiées) : plage nuit de la
+        // relève ; les autres (lot, espèce, références) retombent sur le défaut fixe du filtre.
+        var contexte = source.contexteDuPassage();
+        return contexte == null ? Optional.empty() : service.plageNuitParDefaut(contexte.idPassage());
     }
 
     /// Valide l'observation **sélectionnée** selon le [#modeRevueProperty()] (R15, R18), puis recharge.
@@ -288,14 +290,14 @@ public class AudioViewModel {
         LigneObservationAudio retrouvee = idObservation == null
                 ? null
                 : observations.stream()
-                        .filter(ligne -> ligne.idObservation() == idObservation)
+                        .filter(ligne -> idObservation.equals(ligne.idObservation()))
                         .findFirst()
                         .orElse(null);
         selection.set(retrouvee);
     }
 
     private void majSelection(LigneObservationAudio courant) {
-        selectionPresente.set(courant != null);
+        selectionValidable.set(courant != null && courant.idObservation() != null);
         selectionReference.set(courant != null && courant.reference());
         detail.set(courant == null ? "" : FormatLigneAudio.detail(courant));
         cheminAudioCourant.set(
@@ -342,9 +344,10 @@ public class AudioViewModel {
         return selection;
     }
 
-    /// `true` dès qu'une observation est sélectionnée (activation des actions de revue).
-    public ReadOnlyBooleanProperty selectionPresenteProperty() {
-        return selectionPresente.getReadOnlyProperty();
+    /// `true` dès qu'une **observation** est sélectionnée (activation des actions de revue) ; `false` pour
+    /// une séquence non identifiée (sans observation), qui n'est pas encore validable.
+    public ReadOnlyBooleanProperty selectionValidableProperty() {
+        return selectionValidable.getReadOnlyProperty();
     }
 
     /// `true` si l'observation sélectionnée est déjà en référence (libellé du bouton bascule : marquer

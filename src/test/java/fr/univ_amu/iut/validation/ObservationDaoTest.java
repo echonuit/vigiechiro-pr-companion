@@ -471,6 +471,34 @@ class ObservationDaoTest {
     }
 
     @Test
+    @DisplayName("#audio : lignesAudioNonIdentifiees projette les séquences sans observation (à revoir, sans taxon)")
+    void lignes_audio_non_identifiees_sequences_sans_observation() {
+        // La séquence du fixture n'a aucune observation : c'est une séquence « non identifiée » à écouter.
+        new SequenceDao(source).majHorodatage(idSequence, LocalDateTime.of(2026, 4, 22, 22, 30, 0));
+
+        assertThat(dao.lignesAudioNonIdentifiees(idPassage)).singleElement().satisfies(ligne -> {
+            assertThat(ligne.idObservation()).as("aucune observation").isNull();
+            assertThat(ligne.idSequence()).isEqualTo(idSequence);
+            assertThat(ligne.taxonTadarida()).isNull();
+            assertThat(ligne.taxonObservateur()).isNull();
+            assertThat(ligne.statut()).isEqualTo(StatutObservation.NON_TOUCHEE);
+            assertThat(ligne.reference()).isFalse();
+            assertThat(ligne.nomFichier()).isEqualTo("a_000.wav");
+            assertThat(ligne.numeroCarre()).isEqualTo("640380");
+            assertThat(ligne.codePoint()).isEqualTo("A1");
+            assertThat(ligne.heureCapture()).isEqualTo(LocalDateTime.of(2026, 4, 22, 22, 30, 0));
+        });
+    }
+
+    @Test
+    @DisplayName("#audio : une séquence identifiée (avec observation Tadarida) sort des non identifiés")
+    void lignes_audio_non_identifiees_exclut_les_sequences_observees() {
+        dao.insert(observationComplete()); // identifie la séquence du fixture
+
+        assertThat(dao.lignesAudioNonIdentifiees(idPassage)).isEmpty();
+    }
+
+    @Test
     @DisplayName("#audio : lignesAudioDesPassages agrège les observations de plusieurs passages")
     void lignes_audio_des_passages() throws SQLException {
         dao.insert(observationValidee("Pippip")); // passage 1 (seedé)

@@ -140,7 +140,9 @@ final class CellulesAudio {
                 super.updateItem(valeur, vide);
                 LigneObservationAudio ligne =
                         getTableRow() == null ? null : getTableRow().getItem();
-                if (vide || ligne == null) {
+                // Ligne vide, absente, ou séquence non identifiée (pas d'observation à commenter) :
+                // cellule non interactive (commenter suppose une observation existante).
+                if (vide || ligne == null || ligne.idObservation() == null) {
                     setGraphic(null);
                     setTooltip(null);
                     setCursor(Cursor.DEFAULT);

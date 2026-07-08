@@ -88,7 +88,9 @@ final class ActionsRevueAudio {
 
     private boolean surSelection(Predicate<LigneObservationAudio> action) {
         LigneObservationAudio courant = selection.get();
-        return courant != null && action.test(courant);
+        // Une séquence non identifiée (sans observation) n'est pas validable/corrigeable en l'état : les
+        // actions de revue ne s'appliquent qu'à une ligne portant une observation (idObservation non nul).
+        return courant != null && courant.idObservation() != null && action.test(courant);
     }
 
     private boolean appliquer(Runnable action) {

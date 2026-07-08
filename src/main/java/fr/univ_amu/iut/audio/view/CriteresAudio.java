@@ -419,6 +419,8 @@ final class CriteresAudio {
     /// (source stable de la liste déroulante du critère Espèce).
     private static List<EspecePresente> especesPresentes(List<LigneObservationAudio> lignes) {
         return lignes.stream()
+                // Une séquence non identifiée n'a aucun taxon retenu : elle ne peuple pas la liste d'espèces.
+                .filter(ligne -> codeRetenu(ligne) != null)
                 .map(ligne -> new EspecePresente(codeRetenu(ligne), libelleEspece(ligne)))
                 .distinct()
                 .sorted(Comparator.comparing(EspecePresente::libelle))
@@ -426,7 +428,8 @@ final class CriteresAudio {
     }
 
     /// Code du **taxon retenu** d'une ligne : celui de l'observateur s'il a tranché, sinon la proposition
-    /// Tadarida (`COALESCE(observateur, tadarida)`, jamais nul car Tadarida est toujours présent).
+    /// Tadarida (`COALESCE(observateur, tadarida)`) ; **`null`** pour une séquence non identifiée (ni
+    /// observateur ni Tadarida).
     private static String codeRetenu(LigneObservationAudio ligne) {
         return ligne.taxonObservateur() != null ? ligne.taxonObservateur() : ligne.taxonTadarida();
     }

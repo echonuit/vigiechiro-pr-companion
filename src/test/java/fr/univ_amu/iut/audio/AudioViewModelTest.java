@@ -123,7 +123,7 @@ class AudioViewModelTest {
             vm.ouvrirSur(source());
             vm.selectionProperty().set(l);
 
-            assertThat(vm.selectionPresenteProperty().get()).isTrue();
+            assertThat(vm.selectionValidableProperty().get()).isTrue();
             assertThat(vm.cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/transformes/a.wav"));
             assertThat(vm.detailProperty().get()).contains("Tadarida : Pippip").contains("À revoir");
         }
@@ -383,7 +383,7 @@ class AudioViewModelTest {
             assertThat(vm.basculerReference()).isTrue();
             verify(service).marquerReference(1L, false);
             assertThat(vm.selectionProperty().get()).isNull();
-            assertThat(vm.selectionPresenteProperty().get()).isFalse();
+            assertThat(vm.selectionValidableProperty().get()).isFalse();
             assertThat(vm.cheminAudioCourantProperty().get()).isNull();
             assertThat(vm.detailProperty().get()).isEmpty();
         }

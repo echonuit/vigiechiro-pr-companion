@@ -25,7 +25,7 @@ public final class FormatLigneAudio {
         // Une seule ligne séparée par « · » : utilise la largeur disponible plutôt que d'empiler
         // verticalement (gain d'espace pour le spectrogramme).
         String detail = "Tadarida : "
-                + o.taxonTadarida()
+                + valeurOuAbsente(o.taxonTadarida())
                 + " ("
                 + proba(o.probTadarida())
                 + ") · Observateur : "
@@ -53,9 +53,10 @@ public final class FormatLigneAudio {
     }
 
     /// Libellé de la **proposition Tadarida** affiché en colonne : le **nom vernaculaire** du taxon
-    /// proposé par Tadarida s'il est connu, sinon le **code** (souche hors référentiel).
+    /// proposé par Tadarida s'il est connu, sinon le **code** (souche hors référentiel), ou **tiret**
+    /// « — » pour une séquence non identifiée (aucune proposition Tadarida).
     public static String tadarida(LigneObservationAudio o) {
-        return o.nomTadarida() != null && !o.nomTadarida().isBlank() ? o.nomTadarida() : o.taxonTadarida();
+        return o.nomTadarida() != null && !o.nomTadarida().isBlank() ? o.nomTadarida() : ouTiret(o.taxonTadarida());
     }
 
     /// Probabilité de détection formatée pour la colonne (« 81 % »), tiret si absente.

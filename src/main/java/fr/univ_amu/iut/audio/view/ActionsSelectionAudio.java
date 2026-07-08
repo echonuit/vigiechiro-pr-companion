@@ -4,6 +4,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.util.List;
+import java.util.Objects;
 import javafx.scene.control.TableView;
 
 /// Aiguille les actions de revue (valider / corriger / basculer référence) selon la **sélection de la
@@ -56,6 +57,11 @@ final class ActionsSelectionAudio {
     }
 
     private static List<Long> ids(List<LigneObservationAudio> lignes) {
-        return lignes.stream().map(LigneObservationAudio::idObservation).toList();
+        // On écarte les séquences non identifiées (sans observation) : une action en lot ne porte que sur
+        // les lignes réellement validables.
+        return lignes.stream()
+                .map(LigneObservationAudio::idObservation)
+                .filter(Objects::nonNull)
+                .toList();
     }
 }

@@ -349,16 +349,16 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         choixTaxon.setItems(viewModel.taxons());
         choixTaxon.setConverter(LibellesAudio.converter(taxon -> taxon == null ? "" : LibellesAudio.taxon(taxon)));
 
-        btnValider.disableProperty().bind(viewModel.selectionPresenteProperty().not());
+        btnValider.disableProperty().bind(viewModel.selectionValidableProperty().not());
         btnCorriger
                 .disableProperty()
                 .bind(viewModel
-                        .selectionPresenteProperty()
+                        .selectionValidableProperty()
                         .not()
                         .or(choixTaxon.valueProperty().isNull()));
         btnReference
                 .disableProperty()
-                .bind(viewModel.selectionPresenteProperty().not());
+                .bind(viewModel.selectionValidableProperty().not());
         // Libellé + icône (étoile dorée) de la bascule selon l'état de l'observation sélectionnée.
         btnReference.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_REFERENCE, CellulesAudio.STYLE_REFERENCE));
         btnReference
@@ -458,7 +458,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// et **items** du menu « ☰ » propres à la source. Le menu ☰ lui-même reste toujours affiché : il porte
     /// désormais le choix des colonnes, pertinent pour toutes les sources.
     private void adapterAffichage(SourceObservations source) {
-        boolean passageUnique = source instanceof SourceObservations.ParPassage;
+        boolean passageUnique = source.cibleUnPassageUnique();
         colPassage.setVisible(!passageUnique);
         colCarre.setVisible(!passageUnique);
         colPoint.setVisible(!passageUnique);
@@ -488,34 +488,22 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// autonome (segment courant seul).
     @Override
     public List<Lieu> emplacement() {
-        if (source instanceof SourceObservations.ParPassage parPassage) {
-            return EmplacementPassage.emplacementEnfant(
-                    parPassage.contexte(), ouvrirSite, ouvrirPassage, libelleEcran());
+        // ParPassage et NonIdentifies ciblent le même passage : même ascendance (site › passage › écran).
+        var contextePassage = source.contexteDuPassage();
+        if (contextePassage != null) {
+            return EmplacementPassage.emplacementEnfant(contextePassage, ouvrirSite, ouvrirPassage, source.titre());
         }
         if (source instanceof SourceObservations.ParEspece) {
             // Accueil › Espèces & observations › Écoute : [espèce] — le segment analyse rouvre l'écran.
-            return List.of(Lieu.vers("Espèces & observations", ouvrirAnalyse::ouvrir), Lieu.courant(libelleEcran()));
+            return List.of(Lieu.vers("Espèces & observations", ouvrirAnalyse::ouvrir), Lieu.courant(source.titre()));
         }
         if (source instanceof SourceObservations.ParPassages) {
             // Accueil › Carte & passages › Écoute : lot — le segment multisite rouvre la vue agrégée.
             return List.of(
                     Lieu.vers("Carte & passages", () -> ouvrirMultisite.ouvrirSurCarre(null)),
-                    Lieu.courant(libelleEcran()));
+                    Lieu.courant(source.titre()));
         }
-        return List.of(Lieu.courant(libelleEcran()));
-    }
-
-    private String libelleEcran() {
-        if (source instanceof SourceObservations.References) {
-            return "Sons de référence";
-        }
-        if (source instanceof SourceObservations.ParEspece espece) {
-            return "Écoute : " + espece.libelle();
-        }
-        if (source instanceof SourceObservations.ParPassages lot) {
-            return "Écoute : " + lot.libelle();
-        }
-        return "Sons & validation";
+        return List.of(Lieu.courant(source.titre()));
     }
 
     /// Texte de la **barre de statut** : total d'observations + avancement de la revue (« N observation(s)

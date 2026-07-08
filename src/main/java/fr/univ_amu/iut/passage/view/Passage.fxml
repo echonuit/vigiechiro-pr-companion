@@ -184,6 +184,18 @@
             </VBox>
           </graphic>
         </Button>
+        <Button fx:id="boutonNonIdentifies" styleClass="carte-action"
+                onAction="#ecouterNonIdentifies" contentDisplay="GRAPHIC_ONLY"
+                accessibleText="Écouter les non identifiés : sons absents du CSV Tadarida, à valider à la main"
+                maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
+          <graphic>
+            <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
+              <FontIcon iconLiteral="fas-question-circle" styleClass="carte-action-icone"/>
+              <Label text="Écouter les non identifiés" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="Sons absents du CSV Tadarida" styleClass="carte-action-sous" wrapText="true"/>
+            </VBox>
+          </graphic>
+        </Button>
       </HBox>
       <Label fx:id="lblIndiceAction" styleClass="section-sous" wrapText="true"/>
     </VBox>

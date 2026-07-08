@@ -49,6 +49,19 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String DEBUT_CTE = "WITH obs AS (";
     private static final String ALIAS_STATUT = " AS statut,";
 
+    /// Alias de colonnes projetés par plusieurs mappers audio (séquence, n° de passage, code du point).
+    private static final String COL_SEQ = "seq";
+    private static final String COL_NUM_PASSAGE = "num_passage";
+    private static final String COL_POINT_CODE = "point_code";
+
+    /// Jointures communes `listening_sequence (ls) → recording_session → passage → point → site` : le
+    /// **contexte d'un relevé**, partagé par toutes les projections transverses (observations, espèces,
+    /// séquences non identifiées). L'alias `ls` doit être introduit par le fragment appelant.
+    private static final String JOIN_SESSION_AU_SITE = " JOIN recording_session rs ON ls.session_id = rs.id"
+            + " JOIN passage p ON rs.passage_id = p.id"
+            + " JOIN listening_point lp ON p.point_id = lp.id"
+            + " JOIN monitoring_site ms ON lp.site_id = ms.id";
+
     private static final String SQL_INSERT = "INSERT INTO observation"
             + " (sequence_id, start_time_s, end_time_s, median_freq_khz, taxon_tadarida,"
             + " prob_tadarida, taxon_other_tadarida, taxon_observer, prob_observer, user_comment,"
@@ -131,10 +144,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " JOIN taxon t ON t.code = COALESCE(o.taxon_observer, o.taxon_tadarida)"
             + " LEFT JOIN taxonomic_group g ON g.id = t.group_id"
             + " JOIN listening_sequence ls ON o.sequence_id = ls.id"
-            + " JOIN recording_session rs ON ls.session_id = rs.id"
-            + " JOIN passage p ON rs.passage_id = p.id"
-            + " JOIN listening_point lp ON p.point_id = lp.id"
-            + " JOIN monitoring_site ms ON lp.site_id = ms.id"
+            + JOIN_SESSION_AU_SITE
             + " WHERE ms.user_id = ? AND t.code NOT IN ('noise', 'piaf')"
             + " ORDER BY p.year DESC, p.passage_number DESC, t.vernacular_name_fr";
 
@@ -181,12 +191,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
 
     /// Chaîne de jointures `observation → … → monitoring_site` (le contexte d'un relevé), partagée par
     /// toutes les projections transverses.
-    private static final String DE_OBSERVATION_AU_SITE = " FROM observation o"
-            + " JOIN listening_sequence ls ON o.sequence_id = ls.id"
-            + " JOIN recording_session rs ON ls.session_id = rs.id"
-            + " JOIN passage p ON rs.passage_id = p.id"
-            + " JOIN listening_point lp ON p.point_id = lp.id"
-            + " JOIN monitoring_site ms ON lp.site_id = ms.id";
+    private static final String DE_OBSERVATION_AU_SITE =
+            " FROM observation o" + " JOIN listening_sequence ls ON o.sequence_id = ls.id" + JOIN_SESSION_AU_SITE;
 
     /// Périmètre commun : observations **de l'utilisateur** (`?`), pseudo-taxons bruit/oiseau exclus.
     private static final String FILTRE_UTILISATEUR_HORS_PSEUDO =
@@ -247,13 +253,13 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
 
     private static final RowMapper<ObservationEspece> MAPPER_OBSERVATION_ESPECE = rs -> new ObservationEspece(
             rs.getLong("id"),
-            rs.getLong("seq"),
+            rs.getLong(COL_SEQ),
             rs.getLong(COL_PASSAGE_ID),
-            rs.getInt("num_passage"),
+            rs.getInt(COL_NUM_PASSAGE),
             rs.getInt(COL_ANNEE),
             rs.getString(COL_DATE_ENR),
             rs.getString(COL_CARRE),
-            rs.getString("point_code"),
+            rs.getString(COL_POINT_CODE),
             rs.getString(COL_NOM_SITE),
             rs.getString("tadarida"),
             (Double) rs.getObject(COL_PROB_TADARIDA),
@@ -298,12 +304,12 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
 
     private static final RowMapper<LigneObservationAudio> MAPPER_LIGNE_AUDIO = rs -> new LigneObservationAudio(
             rs.getLong("id"),
-            rs.getLong("seq"),
+            rs.getLong(COL_SEQ),
             rs.getLong(COL_PASSAGE_ID),
-            rs.getInt("num_passage"),
+            rs.getInt(COL_NUM_PASSAGE),
             rs.getString(COL_DATE_ENR),
             rs.getString(COL_CARRE),
-            rs.getString("point_code"),
+            rs.getString(COL_POINT_CODE),
             rs.getString(COL_NOM_SITE),
             rs.getString("tadarida"),
             (Double) rs.getObject(COL_PROB_TADARIDA),
@@ -356,6 +362,58 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     public List<LigneObservationAudio> lignesAudioReferences(String idUtilisateur) {
         return projeter(
                 SELECT_AUDIO + "user_id = ? AND obs.is_reference = 1" + ORDRE_AUDIO, MAPPER_LIGNE_AUDIO, idUtilisateur);
+    }
+
+    /// Jointures `listening_sequence → … → monitoring_site` : le **contexte** d'une séquence (passage /
+    /// carré / point) **sans passer par une observation**. Pivot des séquences non identifiées, dont la
+    /// liste part des enregistrements (et non des observations, absentes par définition).
+    private static final String DE_SEQUENCE_AU_SITE = " FROM listening_sequence ls" + JOIN_SESSION_AU_SITE;
+
+    /// Séquences d'un passage **sans aucune observation** (présentes sur disque, absentes du CSV Tadarida),
+    /// projetées comme des lignes audio « à revoir » **sans taxon** : écoutables (via `idSequence`), mais
+    /// non rattachées à une observation. Ordre chronologique (horodatage puis nom de fichier).
+    private static final String SQL_LIGNES_NON_IDENTIFIEES = "SELECT ls.id AS seq,"
+            + " p.id AS passage_id, p.passage_number AS num_passage, p.recording_date AS date_enr,"
+            + " ms.square_number AS carre, ms.friendly_name AS nom_site, lp.code AS point_code,"
+            + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at"
+            + DE_SEQUENCE_AU_SITE
+            + " WHERE rs.passage_id = ?"
+            + "   AND NOT EXISTS (SELECT 1 FROM observation o WHERE o.sequence_id = ls.id)"
+            + " ORDER BY ls.recorded_at, ls.file_name";
+
+    /// Projette une séquence non identifiée en [LigneObservationAudio] : **pas d'observation**
+    /// (`idObservation` nul), aucun taxon/probabilité/fréquence Tadarida, statut **à revoir**
+    /// ([StatutObservation#NON_TOUCHEE]). Seuls l'`idSequence`, le contexte du passage et l'horodatage
+    /// sont renseignés — assez pour situer et écouter la séquence.
+    private static final RowMapper<LigneObservationAudio> MAPPER_LIGNE_NON_IDENTIFIEE = rs -> new LigneObservationAudio(
+            null, // idObservation : séquence sans observation
+            rs.getLong(COL_SEQ),
+            rs.getLong(COL_PASSAGE_ID),
+            rs.getInt(COL_NUM_PASSAGE),
+            rs.getString(COL_DATE_ENR),
+            rs.getString(COL_CARRE),
+            rs.getString(COL_POINT_CODE),
+            rs.getString(COL_NOM_SITE),
+            null, // taxonTadarida
+            null, // probTadarida
+            null, // taxonObservateur
+            null, // probObservateur
+            StatutObservation.NON_TOUCHEE,
+            false, // reference
+            null, // commentaire
+            null, // frequenceKHz
+            null, // nomEspece
+            null, // nomTadarida
+            null, // groupe
+            rs.getString("nom_fichier"),
+            null, // debutS
+            null, // finS
+            heureCaptureDe(rs.getString("recorded_at")));
+
+    /// Source **Non identifiés** : les séquences d'un passage **sans observation Tadarida** (à écouter, en
+    /// vue d'une validation manuelle). L'écoute ne dépend pas d'une observation, seulement de la séquence.
+    public List<LigneObservationAudio> lignesAudioNonIdentifiees(Long idPassage) {
+        return projeter(SQL_LIGNES_NON_IDENTIFIEES, MAPPER_LIGNE_NON_IDENTIFIEE, idPassage);
     }
 
     @Override

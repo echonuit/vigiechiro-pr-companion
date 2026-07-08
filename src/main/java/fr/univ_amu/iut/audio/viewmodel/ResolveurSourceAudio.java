@@ -33,6 +33,8 @@ final class ResolveurSourceAudio {
             case SourceObservations.ParEspece s ->
                 service.lignesAudioDeLEspece(s.idUtilisateur(), s.codeEspece(), statutDe(s.statut()));
             case SourceObservations.References s -> service.lignesAudioReferences(s.idUtilisateur());
+            case SourceObservations.NonIdentifies s ->
+                service.lignesAudioNonIdentifiees(s.contexte().idPassage());
         };
     }
 
@@ -47,8 +49,12 @@ final class ResolveurSourceAudio {
         return source instanceof SourceObservations.ParPassage s ? s.contexte().idPassage() : null;
     }
 
-    /// Message d'état affiché quand l'ensemble est vide (nuance « pas d'import » pour un passage).
+    /// Message d'état affiché quand l'ensemble est vide (nuance selon la source).
     static String messageVide(SourceObservations source) {
+        if (source instanceof SourceObservations.NonIdentifies) {
+            return "Aucun enregistrement non identifié : toutes les séquences de ce passage ont une"
+                    + " identification Tadarida.";
+        }
         return source instanceof SourceObservations.ParPassage
                 ? "Aucun résultat Tadarida importé pour ce passage."
                 : "Aucune observation à écouter pour cette source.";

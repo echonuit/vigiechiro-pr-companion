@@ -11,7 +11,10 @@ import java.time.LocalDateTime;
 /// les autres records restent inchangés. L'espèce retenue suit la convention habituelle
 /// (`COALESCE(taxon_observer, taxon_tadarida)`) ; le `statut` est dérivé en SQL comme ailleurs.
 ///
-/// @param idObservation clé de l'observation (cible de valider/corriger/marquer-référence)
+/// @param idObservation clé de l'observation (cible de valider/corriger/marquer-référence), ou `null`
+///     pour une **séquence non identifiée** : un enregistrement présent sur disque (donc écoutable) mais
+///     sans ligne dans `observation` (aucune identification Tadarida). L'`idSequence` reste, lui, toujours
+///     présent : l'écoute ne dépend pas d'une observation.
 /// @param idSequence séquence d'écoute associée (cible de l'écoute audio)
 /// @param idPassage passage d'où vient l'observation (situer la ligne, « ouvrir le passage »)
 /// @param numeroPassage n° de passage dans l'année
@@ -19,7 +22,8 @@ import java.time.LocalDateTime;
 /// @param numeroCarre n° de carré du site du passage
 /// @param codePoint code du point d'écoute du passage
 /// @param nomSite nom convivial du site, ou `null`
-/// @param taxonTadarida proposition automatique Tadarida (code, jamais nul)
+/// @param taxonTadarida proposition automatique Tadarida (code), ou `null` pour une séquence non
+///     identifiée (aucune proposition Tadarida)
 /// @param probTadarida probabilité de la proposition Tadarida, ou `null`
 /// @param taxonObservateur taxon saisi par l'observateur, ou `null` (non touchée)
 /// @param probObservateur probabilité saisie par l'observateur, ou `null`
@@ -45,7 +49,7 @@ import java.time.LocalDateTime;
 ///     minuit** (00:15 est *après* 22:00 dans une même nuit) ; le filtre par plage horaire raisonne, lui,
 ///     sur l'heure du jour (`heureCapture.toLocalTime()`)
 public record LigneObservationAudio(
-        long idObservation,
+        Long idObservation,
         long idSequence,
         long idPassage,
         int numeroPassage,

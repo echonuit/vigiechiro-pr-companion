@@ -48,7 +48,10 @@ final class MetriquesAcoustiquesAudio {
         // DEUX propriétés (et on relit les deux à chaque fois) pour ne rater aucune grandeur tardive.
         Runnable capter = () -> {
             LigneObservationAudio observation = selection.getValue();
+            // Pas d'observation (séquence non identifiée) : rien à mémoriser (le cache est indexé par
+            // observation). L'écoute reste possible, mais les grandeurs Tadarida ne s'y rattachent pas.
             if (observation != null
+                    && observation.idObservation() != null
                     && cache.memoriser(
                             observation.idObservation(), audioView.getFmeHz(), audioView.getFrequenceTerminaleHz())) {
                 table.refresh(); // peuple les cellules FME / fréquence terminale de la ligne
@@ -79,14 +82,15 @@ final class MetriquesAcoustiquesAudio {
         return true;
     }
 
-    /// FME de l'observation formatée en **kHz** (« 52 kHz »), ou « — » si pas encore calculée / indéterminée.
-    String fmeColonne(long idObservation) {
+    /// FME de l'observation formatée en **kHz** (« 52 kHz »), ou « — » si pas encore calculée / indéterminée,
+    /// ou si la ligne n'a pas d'observation (`idObservation` nul : séquence non identifiée).
+    String fmeColonne(Long idObservation) {
         Mesures mesures = parObservation.get(idObservation);
         return mesures == null ? "—" : kiloHertz(mesures.fmeHz());
     }
 
-    /// Fréquence terminale de l'observation formatée en **kHz**, ou « — » si pas encore calculée.
-    String frequenceTerminaleColonne(long idObservation) {
+    /// Fréquence terminale de l'observation formatée en **kHz**, ou « — » si pas encore calculée / absente.
+    String frequenceTerminaleColonne(Long idObservation) {
         Mesures mesures = parObservation.get(idObservation);
         return mesures == null ? "—" : kiloHertz(mesures.frequenceTerminaleHz());
     }
