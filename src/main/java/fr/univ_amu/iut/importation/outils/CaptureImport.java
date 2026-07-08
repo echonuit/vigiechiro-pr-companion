@@ -31,6 +31,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -159,6 +160,13 @@ public final class CaptureImport {
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-incoherence.png"));
 
+        // État « plusieurs nuits » (#…) : une carte laissée tourner plusieurs nuits (3 dates) → la table
+        // des nuits s'affiche, une ligne par nuit (inclure, date, fichiers, état, n° de passage proposé,
+        // auto-numéroté). Le rattachement (site/point) reste sélectionné, donc les n° 1/2/3 apparaissent.
+        vm.inspection().dossierSourceProperty().set(creerDossierMultiNuits());
+        vm.inspecter();
+        rendre(scene, sortie.resolve("apercu-import-multi-nuits.png"));
+
         // État « import terminé AVEC rapport » (#155) : import résilient — la liste des fichiers rejetés
         // (illisible, format invalide) et leur raison s'affiche sous le message de succès.
         vm.inspection().dossierSourceProperty().set(dossierSd);
@@ -243,19 +251,54 @@ public final class CaptureImport {
                 "PaRecPR1648011_20260430_204326.wav");
     }
 
+    private static final String NOM_JOURNAL = "LogPR1925492.txt";
+    private static final String NOM_RELEVE = "PaRecPR1925492_THLog.csv";
+    private static final String ENTETE_RELEVE = "Date\tHour\n";
+    private static final String CONTENU_WAV = "wav";
+
+    /// Journal daté de la **première nuit** (03/07) de l'échantillon multi-nuits : sa date tombe dans les
+    /// nuits des fichiers (03/04/05-07), pour que l'inspection ne lève **pas** l'avertissement de
+    /// non-correspondance journal/enregistrements (le cas normal d'une carte laissée tourner plusieurs
+    /// nuits, où le journal couvre bien ces nuits).
+    private static final String LOG_MULTI =
+            "03/07/26 - 20:25:00 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
+                    + " CPU 600000000, T4.1\n"
+                    + "03/07/26 - 20:25:01 PR1925492 Sonde temperature/hygrometrie presente, lecture toutes"
+                    + " les 600s\n"
+                    + "03/07/26 - 20:25:01 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
+                    + " 8-120kHz\n";
+
     /// Fabrique un dossier d'échantillon **déterministe** (sous `java.io.tmpdir/<nom>`) : journal
-    /// `LogPR` + relevé climatique de la série 1925492, plus deux WAV nommés `wavA`/`wavB`. Chemin
-    /// fixe (et non un dossier temporaire aléatoire) car il est affiché dans le champ « Dossier
-    /// source », donc une racine stable garde les PNG reproductibles. Réécrit à chaque appel
-    /// (idempotent). Helper unique : factorise les libellés communs (PMD `AvoidDuplicateLiterals`).
-    private static Path creerDossier(String nom, String wavA, String wavB) throws IOException {
+    /// `LogPR` (contenu `log`) + relevé climatique de la série 1925492, plus les WAV nommés. Chemin fixe
+    /// (et non un dossier temporaire aléatoire) car il est affiché dans le champ « Dossier source », donc
+    /// une racine stable garde les PNG reproductibles. Réécrit à chaque appel (idempotent). Factorise les
+    /// libellés communs (PMD `AvoidDuplicateLiterals`).
+    private static Path creerDossierAvecWav(String nom, String log, List<String> wavs) throws IOException {
         Path sd = Path.of(System.getProperty("java.io.tmpdir"), nom);
         Files.createDirectories(sd);
-        Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
-        Files.writeString(sd.resolve(wavA), "wav1");
-        Files.writeString(sd.resolve(wavB), "wav2");
+        Files.writeString(sd.resolve(NOM_JOURNAL), log, StandardCharsets.UTF_8);
+        Files.writeString(sd.resolve(NOM_RELEVE), ENTETE_RELEVE, StandardCharsets.UTF_8);
+        for (String wav : wavs) {
+            Files.writeString(sd.resolve(wav), CONTENU_WAV);
+        }
         return sd;
+    }
+
+    /// Variante à **deux** WAV (une seule nuit), pour les échantillons standard / mélange / incohérence.
+    private static Path creerDossier(String nom, String wavA, String wavB) throws IOException {
+        return creerDossierAvecWav(nom, LOG, List.of(wavA, wavB));
+    }
+
+    /// Dossier d'exemple **multi-nuits** (chemin déterministe) : trois soirées distinctes (2 WAV chacune)
+    /// du même enregistreur, avec un journal daté de la première nuit → l'inspection détecte 3 nuits et
+    /// affiche la table des nuits, sans avertissement de non-correspondance.
+    private static Path creerDossierMultiNuits() throws IOException {
+        List<String> wavs = new ArrayList<>();
+        for (String jour : List.of("20260703", "20260704", "20260705")) {
+            wavs.add("PaRecPR1925492_" + jour + "_203922.wav");
+            wavs.add("PaRecPR1925492_" + jour + "_204326.wav");
+        }
+        return creerDossierAvecWav("vigiechiro-sd-multi-nuits", LOG_MULTI, wavs);
     }
 
     public static Injector creerInjecteur() {

@@ -86,6 +86,21 @@ class AnalyseCoherenceTest {
     }
 
     @Test
+    @DisplayName("Carte multi-nuits (WAV sur plus d'une nuit) : pas d'incohérence de date (cas géré)")
+    void multi_nuits_date_non_incoherente() {
+        AnalyseCoherence c = AnalyseCoherence.depuis(
+                journal("1925492", LocalDate.of(2026, 7, 3)), // journal daté de la 1re nuit
+                null,
+                List.of(
+                        Path.of("PaRecPR1925492_20260703_203000.wav"),
+                        Path.of("PaRecPR1925492_20260704_203000.wav"),
+                        Path.of("PaRecPR1925492_20260705_203000.wav")));
+
+        assertThat(c.dateIncoherente()).isFalse();
+        assertThat(c.incoherent()).isFalse();
+    }
+
+    @Test
     @DisplayName("Aucun WAV exploitable : rien à comparer, pas d'incohérence")
     void sans_fichier_neutre() {
         AnalyseCoherence c = AnalyseCoherence.depuis(journal("1925492", NUIT), null, List.of());

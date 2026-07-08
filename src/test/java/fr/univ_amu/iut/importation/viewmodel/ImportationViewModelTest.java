@@ -686,6 +686,31 @@ class ImportationViewModelTest {
     }
 
     @Test
+    @DisplayName("Multi-nuits : les n° sont proposés même si le rattachement est complété AVANT l'inspection")
+    void multi_nuits_numerotation_si_rattachement_avant_inspection() throws IOException {
+        Path multi = carteMultiNuits();
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
+        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+
+        // Rattachement complété AVANT que la carte multi-nuits ne soit inspectée : `plusieursNuits` passe à
+        // `true` après le `setAll` de la table, donc la numérotation doit se déclencher sur ce changement.
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+        viewModel.inspection().dossierSourceProperty().set(multi);
+        viewModel.inspecter();
+
+        assertThat(viewModel.inspection().nuits())
+                .extracting(NuitVM::numeroPassagePropose)
+                .containsExactly(4, 5, 6);
+        assertThat(viewModel.peutImporter().get()).isTrue();
+    }
+
+    @Test
     @DisplayName("Multi-nuits : décocher une nuit la met à 0 et renumérote les incluses consécutivement")
     void multi_nuits_exclure_renumerote() throws IOException {
         Path multi = carteMultiNuits();

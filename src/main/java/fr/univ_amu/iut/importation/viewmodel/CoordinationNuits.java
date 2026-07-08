@@ -50,6 +50,10 @@ public final class CoordinationNuits {
         // repeuplée (nouvelle inspection) et quand l'utilisateur (dé)coche une nuit.
         rattachement.pointSelectionneProperty().addListener((obs, ancien, nouveau) -> renumeroter());
         rattachement.anneeProperty().addListener((obs, ancien, nouveau) -> renumeroter());
+        // `plusieursNuits` passe à `true` **après** le `setAll` de la table (donc après le déclenchement du
+        // listener de liste ci-dessous) : sans cet abonnement, une carte multi-nuits inspectée alors que le
+        // rattachement est déjà complet garderait des n° à « — » jusqu'à ce qu'on retouche le rattachement.
+        inspection.plusieursNuitsProperty().addListener((obs, ancien, nouveau) -> renumeroter());
         inspection.nuits().addListener((ListChangeListener<NuitVM>) changement -> {
             while (changement.next()) {
                 for (NuitVM ajoutee : changement.getAddedSubList()) {

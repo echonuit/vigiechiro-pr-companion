@@ -78,6 +78,8 @@ donnera un **passage distinct** (au même point, avec des **numéros de passage 
 
 Une **table des nuits** apparaît alors, une ligne par nuit :
 
+![Plusieurs nuits détectées : la table liste chaque nuit (inclure, date, nombre de fichiers, état, n° de passage proposé) ; chacune deviendra un passage distinct.](../assets/captures/apercu-import-multi-nuits.png)
+
 - **Importer** : case à cocher (cochée par défaut). Décochez une nuit pour ne pas l'importer ; les
   numéros de passage proposés se **renumérotent** automatiquement pour rester consécutifs.
 - **Nuit du** : date du soir de la nuit (date du futur passage).

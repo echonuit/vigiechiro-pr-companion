@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model;
 
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +18,10 @@ import java.util.regex.Pattern;
 /// - **série incohérente** : le n° de série annoncé par le journal et/ou par le nom du relevé
 ///   `PaRecPR<série>_THLog.csv` ne figure pas parmi les séries portées par les WAV ;
 /// - **date incohérente** : la date du journal ne tombe pas dans la nuit des WAV (une nuit s'étale
-///   au plus de `dateJournal` (soir) à `dateJournal + 1` (matin)).
+///   au plus de `dateJournal` (soir) à `dateJournal + 1` (matin)). **Exception multi-nuits** : si les
+///   WAV s'étalent sur **plus d'une nuit** (carte laissée tourner plusieurs nuits, cas géré par le
+///   découpage par nuit), la fenêtre mono-nuit du journal ne s'applique plus et la date n'est pas
+///   jugée incohérente (le journal décrit légitimement la première d'une série de nuits).
 ///
 /// C'est un **avertissement** à l'inspection (jamais un blocage). Objet de transport pur (aucune
 /// dépendance JavaFX) ; les sources illisibles ou absentes sont simplement neutres.
@@ -111,6 +115,12 @@ public final class AnalyseCoherence {
     /// passeraient à la faveur du seul `J+1`. Neutre si la date du journal ou les dates des WAV manquent.
     public boolean dateIncoherente() {
         if (dateJournal == null || nuitsFichiers.isEmpty()) {
+            return false;
+        }
+        // Carte **multi-nuits** : les WAV s'étalent sur plus d'une nuit (plus d'un jour d'écart entre la
+        // première et la dernière date). C'est désormais un cas **géré** (un passage par nuit) et non une
+        // anomalie : la fenêtre mono-nuit `[J, J+1]` du journal ne s'y applique pas → pas d'incohérence.
+        if (ChronoUnit.DAYS.between(nuitsFichiers.first(), nuitsFichiers.last()) > 1) {
             return false;
         }
         LocalDate matin = dateJournal.plusDays(1);
