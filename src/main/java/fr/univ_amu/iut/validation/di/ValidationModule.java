@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.IndicateurAccueil;
+import fr.univ_amu.iut.commun.view.OuvrirNonIdentifies;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -20,6 +21,7 @@ import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
+import fr.univ_amu.iut.validation.view.NavigationNonIdentifies;
 import fr.univ_amu.iut.validation.view.NavigationValidation;
 import fr.univ_amu.iut.validation.viewmodel.IndicateurObservations;
 
@@ -43,6 +45,8 @@ public class ValidationModule extends AbstractModule {
     @Override
     protected void configure() {
         bind(OuvrirValidation.class).to(NavigationValidation.class);
+        // Ouvre les séquences non identifiées d'un passage dans la vue audio (écoute → validation manuelle).
+        bind(OuvrirNonIdentifies.class).to(NavigationNonIdentifies.class);
         // Port socle de comptage des validations menacées : injecté par `passage` (suppression) et
         // `importation` (écrasement) pour leurs confirmations destructives.
         bind(CompteurValidations.class).to(ServiceValidation.class);

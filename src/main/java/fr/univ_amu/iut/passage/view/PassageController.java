@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
+import fr.univ_amu.iut.commun.view.OuvrirNonIdentifies;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
@@ -64,6 +65,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private final OuvrirVerification ouvrirVerification;
     private final OuvrirDiagnostic ouvrirDiagnostic;
     private final OuvrirValidation ouvrirValidation;
+    private final OuvrirNonIdentifies ouvrirNonIdentifies;
     private final OuvrirLot ouvrirLot;
     private final NavigationPassage navigation;
     private final OuvrirSite ouvrirSite;
@@ -162,6 +164,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             OuvrirVerification ouvrirVerification,
             OuvrirDiagnostic ouvrirDiagnostic,
             OuvrirValidation ouvrirValidation,
+            OuvrirNonIdentifies ouvrirNonIdentifies,
             OuvrirLot ouvrirLot,
             NavigationPassage navigation,
             OuvrirSite ouvrirSite,
@@ -171,6 +174,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
         this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
         this.ouvrirValidation = Objects.requireNonNull(ouvrirValidation, "ouvrirValidation");
+        this.ouvrirNonIdentifies = Objects.requireNonNull(ouvrirNonIdentifies, "ouvrirNonIdentifies");
         this.ouvrirLot = Objects.requireNonNull(ouvrirLot, "ouvrirLot");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
@@ -330,6 +334,14 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private void validerTadarida() {
         ouvrirValidation.ouvrir(contextePassage());
+    }
+
+    /// « Écouter les non identifiés » : ouvre la vue audio sur les séquences de ce passage **sans
+    /// observation Tadarida** (présentes sur disque mais absentes du CSV), via le contrat socle
+    /// [OuvrirNonIdentifies], pour les réécouter et les valider à la main.
+    @FXML
+    private void ecouterNonIdentifies() {
+        ouvrirNonIdentifies.ouvrir(contextePassage());
     }
 
     /// « Préparer le dépôt » : ouvre M-Lot sur ce passage via le contrat socle [OuvrirLot]
