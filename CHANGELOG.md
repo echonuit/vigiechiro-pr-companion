@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.135.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.135.0...v1.135.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **audio:** centrer verticalement l'éditeur du filtre « Heure » ([19f6296](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/19f62960479b4c94137165938148012c4235eabf))
+
 # [1.135.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.134.2...v1.135.0) (2026-07-08)
 
 
