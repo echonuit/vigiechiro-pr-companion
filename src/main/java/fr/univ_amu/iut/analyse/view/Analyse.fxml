@@ -24,7 +24,7 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.analyse.view.AnalyseController"
-      stylesheets="@../../commun/view/palette.css, @analyse.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @analyse.css"
       styleClass="ecran-analyse"
       spacing="10.0">
 

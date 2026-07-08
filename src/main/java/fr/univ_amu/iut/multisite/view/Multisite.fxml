@@ -26,7 +26,7 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.multisite.view.MultisiteController"
-      stylesheets="@../../commun/view/palette.css, @multisite.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @multisite.css"
       styleClass="ecran-multisite"
       spacing="10.0">
 

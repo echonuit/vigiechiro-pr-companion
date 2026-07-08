@@ -11,11 +11,6 @@
   -fx-padding: 8 14;
 }
 
-.sous-titre-page {
-  -fx-font-size: 13px;
-  -fx-text-fill: #6a737d;
-}
-
 .barre-filtres {
   -fx-background-color: #ffffff;
   -fx-border-color: #e1e4e8;

@@ -11,17 +11,6 @@
   -fx-padding: 18 18 10 18;
 }
 
-.titre-page {
-  -fx-font-size: 20px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #2c3e50;
-}
-
-.sous-titre-page {
-  -fx-font-size: 13px;
-  -fx-text-fill: #6a737d;
-}
-
 /* Fil d'Ariane (#32) : breadcrumb d'affichage + lien de retour cliquable vers M-Passage. */
 .fil-ariane {
   -fx-font-size: 12px;
@@ -109,17 +98,6 @@
   -fx-font-size: 15px;
   -fx-font-weight: bold;
   -fx-text-fill: #2c3e50;
-}
-
-.section-titre {
-  -fx-font-size: 14px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #2c3e50;
-}
-
-.section-sous {
-  -fx-font-size: 11px;
-  -fx-text-fill: #6a737d;
 }
 
 .barre-progression {

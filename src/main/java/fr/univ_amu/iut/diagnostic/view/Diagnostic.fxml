@@ -16,7 +16,7 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.diagnostic.view.DiagnosticController"
-      stylesheets="@../../commun/view/palette.css, @diagnostic.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @diagnostic.css"
       styleClass="ecran-diagnostic"
       spacing="14.0">
 

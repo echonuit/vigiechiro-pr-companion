@@ -22,7 +22,7 @@
       xmlns:fx="http://javafx.com/fxml"
       fx:id="racineImport"
       fx:controller="fr.univ_amu.iut.importation.view.ImportationController"
-      stylesheets="@../../commun/view/palette.css, @importation.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @importation.css"
       styleClass="ecran-import"
       spacing="18.0">
 

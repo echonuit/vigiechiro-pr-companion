@@ -21,7 +21,7 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:id="racine"
             fx:controller="fr.univ_amu.iut.passage.view.PassageController"
-            stylesheets="@../../commun/view/palette.css, @passage.css"
+            stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @passage.css"
             styleClass="ecran-passage">
 
   <top>

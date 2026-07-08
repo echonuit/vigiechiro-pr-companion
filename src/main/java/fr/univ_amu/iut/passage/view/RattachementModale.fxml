@@ -17,7 +17,7 @@
       xmlns:fx="http://javafx.com/fxml"
       fx:id="racine"
       fx:controller="fr.univ_amu.iut.passage.view.RattachementModaleController"
-      stylesheets="@../../commun/view/palette.css, @passage.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @passage.css"
       styleClass="modale-rattachement"
       prefWidth="520.0"
       spacing="12.0">

@@ -31,4 +31,10 @@
     -couleur-fond: #f5f6f8;
     -couleur-texte: #2c3e50;
     -couleur-texte-clair: #ffffff;
+    /* Texte discret : sous-titres, libellés secondaires. */
+    -couleur-texte-discret: #6a737d;
+    /* Statut sémantique (jusqu'ici en littéral dans les feuilles des features). */
+    -couleur-avertissement: #b9770e;
+    -couleur-danger: #a93226;
+    -couleur-neutre: #6a737d;
 }

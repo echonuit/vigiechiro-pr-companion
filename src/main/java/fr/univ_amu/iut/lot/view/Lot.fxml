@@ -21,7 +21,7 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.lot.view.LotController"
-      stylesheets="@../../commun/view/palette.css, @lot.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @lot.css"
       styleClass="ecran-lot"
       spacing="14.0">
 

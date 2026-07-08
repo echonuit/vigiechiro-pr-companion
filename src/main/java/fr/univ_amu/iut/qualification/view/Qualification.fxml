@@ -28,7 +28,7 @@
             xmlns:fx="http://javafx.com/fxml"
             fx:id="racine"
             fx:controller="fr.univ_amu.iut.qualification.view.QualificationController"
-            stylesheets="@../../commun/view/palette.css, @qualification.css"
+            stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @qualification.css"
             styleClass="ecran-qualification">
 
   <top>

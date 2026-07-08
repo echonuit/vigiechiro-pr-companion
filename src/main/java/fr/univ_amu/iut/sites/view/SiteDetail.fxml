@@ -19,7 +19,7 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.sites.view.SiteDetailController"
-      stylesheets="@../../commun/view/palette.css, @sites.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @sites.css"
       styleClass="ecran-detail"
       spacing="14.0">
 
