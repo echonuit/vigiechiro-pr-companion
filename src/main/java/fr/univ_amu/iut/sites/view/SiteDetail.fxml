@@ -70,12 +70,12 @@
   </HBox>
 
   <HBox alignment="CENTER_LEFT" spacing="12.0">
-    <Label text="📍 Points d'écoute" styleClass="titre-section" HBox.hgrow="ALWAYS"/>
+    <Label text="📍 Points d'écoute" styleClass="section-titre" HBox.hgrow="ALWAYS"/>
     <Button text="+ Ajouter un point" styleClass="bouton-primaire" onAction="#ajouterPoint"/>
   </HBox>
   <FlowPane fx:id="cartesPoints" styleClass="cartes-points" hgap="12.0" vgap="12.0"/>
 
-  <Label text="📅 Passages enregistrés sur ce site" styleClass="titre-section"/>
+  <Label text="📅 Passages enregistrés sur ce site" styleClass="section-titre"/>
   <TableView fx:id="tablePassages" prefHeight="320.0" VBox.vgrow="ALWAYS">
     <columns>
       <TableColumn fx:id="colDate" text="Date" prefWidth="110.0"/>

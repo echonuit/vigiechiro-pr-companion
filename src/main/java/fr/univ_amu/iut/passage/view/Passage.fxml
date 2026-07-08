@@ -61,7 +61,7 @@
 
       <!-- Stepper de statut workflow -->
       <VBox spacing="4.0">
-        <Label text="Statut du workflow" styleClass="section-sous"/>
+        <Label text="Statut du workflow" styleClass="section-titre"/>
         <HBox fx:id="stepper" spacing="8.0" styleClass="stepper"/>
       </VBox>
 
@@ -73,7 +73,7 @@
     <VBox spacing="16.0" styleClass="hub-contenu">
 
       <!-- Résumé de la nuit -->
-      <Label text="Résumé de la nuit" styleClass="section-sous"/>
+      <Label text="Résumé de la nuit" styleClass="section-titre"/>
       <HBox spacing="14.0" styleClass="stats">
         <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
           <Label text="VOLUME BRUTS" styleClass="stat-label"/>
@@ -94,7 +94,7 @@
       </HBox>
 
       <!-- Actions : avancer dans le workflow (le retour et le fil d'Ariane sont portés par le chrome) -->
-      <Label text="Actions" styleClass="section-sous"/>
+      <Label text="Actions" styleClass="section-titre"/>
       <HBox spacing="16.0" fillHeight="true" styleClass="cartes-actions">
         <Button fx:id="boutonVerifier" styleClass="carte-action"
                 onAction="#verifier" contentDisplay="GRAPHIC_ONLY"
