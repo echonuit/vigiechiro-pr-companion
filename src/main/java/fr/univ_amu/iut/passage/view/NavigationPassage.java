@@ -57,9 +57,10 @@ public class NavigationPassage implements OuvrirPassage {
         navigateur.afficherAccueil();
     }
 
-    /// Ouvre la modale **« Modifier le rattachement »** (E2.S8) dans une fenêtre modale appartenant à
-    /// `parent`. Le carré et le code point (inchangés) sont fournis par M-Passage. Après une
-    /// modification réussie, `apresSucces` est exécuté (rafraîchir l'écran appelant).
+    /// Ouvre la modale **« Modifier le passage »** (E2.S8) dans une fenêtre modale appartenant à
+    /// `parent` : rattachement (année + n°) **et** conditions de dépôt (météo, matériel du micro). Le
+    /// carré et le code point (inchangés) sont fournis par M-Passage. Après une modification réussie,
+    /// `apresSucces` est exécuté (rafraîchir l'écran appelant).
     public void ouvrirModaleRattachement(
             Window parent, Long idPassage, String carre, String codePoint, Runnable apresSucces) {
         FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("RattachementModale.fxml"));
@@ -71,7 +72,7 @@ public class NavigationPassage implements OuvrirPassage {
             Stage modale = new Stage();
             modale.initOwner(parent);
             modale.initModality(Modality.WINDOW_MODAL);
-            modale.setTitle("Modifier le rattachement");
+            modale.setTitle("Modifier le passage");
             modale.setScene(new Scene(vue));
             modale.show();
         } catch (IOException echec) {

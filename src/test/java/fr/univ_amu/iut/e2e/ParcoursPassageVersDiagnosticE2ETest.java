@@ -105,18 +105,21 @@ class ParcoursPassageVersDiagnosticE2ETest {
     }
 
     @Test
-    @DisplayName("#106 : la température saisie en M-Passage est persistée et réaffichée en M-Diagnostic")
+    @DisplayName(
+            "#106 : la température saisie dans la modale « Modifier le passage » est persistée et réaffichée en M-Diagnostic")
     void temperature_saisie_en_passage_visible_en_diagnostic(FxRobot robot) {
-        // 1) Entrer sur M-Passage et saisir la température de début de nuit, puis enregistrer.
+        // 1) Entrer sur M-Passage, ouvrir la modale « Modifier le passage », y saisir la température de
+        //    début de nuit, puis Appliquer (enregistre le relevé dans passage.weather_data et ferme).
         robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
+        robot.interact(robot.lookup("#boutonRattachement").queryAs(Button.class)::fire);
         robot.clickOn("#champTemperature").write("8,5");
-        robot.clickOn("#boutonMeteo"); // enregistre le relevé météo dans passage.weather_data
+        robot.clickOn("Appliquer");
 
         // 2) Ouvrir M-Diagnostic : la température persistée est relue de la base et affichée.
         robot.interact(robot.lookup("#boutonDiagnostic").queryAs(Button.class)::fire);
 
         assertThat(robot.lookup("#lblTemperature").queryAs(Label.class).getText())
-                .as("température persistée puis relue cross-écran (M-Passage → base → M-Diagnostic)")
+                .as("température persistée puis relue cross-écran (modale → base → M-Diagnostic)")
                 .contains("8,5 °C");
     }
 

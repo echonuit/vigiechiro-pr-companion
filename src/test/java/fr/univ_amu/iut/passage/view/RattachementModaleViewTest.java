@@ -12,13 +12,17 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.MaterielMicro;
+import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,9 +31,10 @@ import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// Test d'intégration TestFX de la modale **« Modifier le rattachement »** : chargement du FXML via
+/// Test d'intégration TestFX de la modale **« Modifier le passage »** : chargement du FXML via
 /// Guice (avec un [ServicePassage] mocké), `demarrer` sur un passage, vérification du câblage
-/// (Spinners pré-remplis en bidirectionnel + récapitulatif réactif). Pas de base de données.
+/// (Spinners pré-remplis en bidirectionnel + récapitulatif réactif, et champs des conditions de dépôt
+/// météo/micro dont le type de micro en liste fermée). Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
 class RattachementModaleViewTest {
 
@@ -104,5 +109,24 @@ class RattachementModaleViewTest {
 
         robot.interact(() -> numero.getValueFactory().setValue(100000));
         assertThat(numero.getValue()).isEqualTo(100000);
+    }
+
+    @Test
+    @DisplayName("Les conditions de dépôt sont câblées : champs météo présents et type de micro en liste fermée")
+    void champs_conditions_cables(FxRobot robot) {
+        // Météo : les champs de saisie sont présents dans la modale.
+        assertThat(robot.lookup("#champTemperature").queryAs(TextField.class)).isNotNull();
+        assertThat(robot.lookup("#champVent").queryAs(TextField.class)).isNotNull();
+
+        // Position : liste sol/canopée + entrée « non renseigné » (null) en tête.
+        @SuppressWarnings("unchecked")
+        ComboBox<PositionMicro> position = robot.lookup("#champPosition").queryAs(ComboBox.class);
+        assertThat(position.getItems()).containsExactly(null, PositionMicro.SOL, PositionMicro.CANOPEE);
+
+        // Type de micro : liste fermée VigieChiro + entrée vide « (non renseigné) » en tête.
+        @SuppressWarnings("unchecked")
+        ComboBox<String> typeMicro = robot.lookup("#champTypeMicro").queryAs(ComboBox.class);
+        assertThat(typeMicro.getItems()).hasSize(MaterielMicro.TYPES_VIGIECHIRO.size() + 1);
+        assertThat(typeMicro.getItems()).contains("SMX-U1", "SPU avec coque de protection");
     }
 }

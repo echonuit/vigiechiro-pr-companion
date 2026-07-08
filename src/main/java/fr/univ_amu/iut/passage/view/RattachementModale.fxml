@@ -1,17 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
-  Modale « Modifier le rattachement » (E2.S8), ouverte depuis M-Passage dans un Stage modal. Les
-  deux Spinner (année, n° de passage) sont liés en bidirectionnel au RattachementViewModel ; le
-  récapitulatif des conséquences et le message d'erreur en sont pilotés. « Appliquer » délègue au
-  ViewModel ; en cas de succès la modale se ferme et rafraîchit l'écran appelant.
+  Modale « Modifier le passage » (E2.S8), ouverte depuis M-Passage dans un Stage modal. Regroupe en une
+  fenêtre : le rattachement (année + n° de passage, deux Spinner liés au RattachementViewModel) et les
+  conditions de dépôt VigieChiro (relevé météo, matériel du micro). « Appliquer » enregistre le tout
+  d'un bloc ; en cas de succès la modale se ferme et rafraîchit l'écran appelant. « Annuler » ne
+  persiste rien.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -19,13 +24,15 @@
       fx:controller="fr.univ_amu.iut.passage.view.RattachementModaleController"
       stylesheets="@../../commun/view/palette.css, @passage.css"
       styleClass="modale-rattachement"
-      prefWidth="520.0"
+      prefWidth="560.0"
       spacing="12.0">
 
-  <Label text="✏ Modifier le rattachement" styleClass="titre-page"/>
+  <Label text="✏ Modifier le passage" styleClass="titre-page"/>
+
+  <!-- Rattachement : année + n° de passage (le site et le point ne changent pas). -->
+  <Label text="Rattachement" styleClass="section-sous"/>
   <Label text="Corrige l'année et/ou le n° de passage. Le site et le point ne changent pas."
          styleClass="section-sous" wrapText="true"/>
-
   <HBox spacing="24.0">
     <VBox spacing="4.0">
       <Label text="Année" styleClass="bandeau-label"/>
@@ -37,13 +44,63 @@
     </VBox>
   </HBox>
 
+  <Separator/>
+
+  <!-- Conditions météo (optionnel) : grandeurs éditables (vide pour effacer). -->
+  <Label text="Conditions météo (optionnel)" styleClass="section-sous"/>
+  <GridPane hgap="10.0" vgap="8.0">
+    <Label text="Température début :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <TextField fx:id="champTemperature" promptText="ex. 8,5" prefWidth="90.0"
+               GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Label text="°C" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+
+    <Label text="Température fin :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <TextField fx:id="champTemperatureFin" promptText="ex. 5,0" prefWidth="90.0"
+               GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <Label text="°C" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+    <Label text="Vent :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <TextField fx:id="champVent" promptText="ex. 12" prefWidth="90.0"
+               GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+    <Label text="km/h" GridPane.rowIndex="2" GridPane.columnIndex="2"/>
+
+    <Label text="Couverture nuageuse :" GridPane.rowIndex="3" GridPane.columnIndex="0"/>
+    <TextField fx:id="champCouverture" promptText="ex. 40" prefWidth="90.0"
+               GridPane.rowIndex="3" GridPane.columnIndex="1"/>
+    <Label text="\%" GridPane.rowIndex="3" GridPane.columnIndex="2"/>
+  </GridPane>
+  <HBox alignment="CENTER_LEFT">
+    <Button fx:id="boutonRecupererMeteo" text="Récupérer la météo"
+            styleClass="action-secondaire" onAction="#recupererMeteo"/>
+  </HBox>
+
+  <Separator/>
+
+  <!-- Matériel du micro (optionnel, dépôt VigieChiro) : position + type en listes fermées. -->
+  <Label text="Matériel du micro (optionnel)" styleClass="section-sous"/>
+  <GridPane hgap="10.0" vgap="8.0">
+    <Label text="Position :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="champPosition" prefWidth="220.0"
+              GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+
+    <Label text="Hauteur :" GridPane.rowIndex="1" GridPane.columnIndex="0"/>
+    <TextField fx:id="champHauteur" promptText="ex. 4" prefWidth="90.0"
+               GridPane.rowIndex="1" GridPane.columnIndex="1"/>
+    <Label text="m" GridPane.rowIndex="1" GridPane.columnIndex="2"/>
+
+    <Label text="Type de micro :" GridPane.rowIndex="2" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="champTypeMicro" prefWidth="220.0"
+              GridPane.rowIndex="2" GridPane.columnIndex="1"/>
+  </GridPane>
+
+  <Separator/>
+
   <Label fx:id="labelRecap" styleClass="recap-rattachement" wrapText="true"/>
   <Label fx:id="messageErreur" styleClass="message-erreur" wrapText="true"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>
     <Button text="Annuler" styleClass="action-secondaire" onAction="#annuler"/>
-    <Button text="Appliquer" styleClass="action-primaire" onAction="#valider"/>
+    <Button text="Appliquer" styleClass="action-primaire" onAction="#appliquer"/>
   </HBox>
 </VBox>
-

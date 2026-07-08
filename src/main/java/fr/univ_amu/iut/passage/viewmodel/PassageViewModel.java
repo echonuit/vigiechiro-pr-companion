@@ -55,10 +55,6 @@ public class PassageViewModel {
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
-    /// Saisie des **conditions de dépôt** (relevé météo + matériel du micro), extraite dans son propre
-    /// ViewModel pour garder cet écran focalisé sur l'identité et le workflow du passage.
-    private final SaisiePassageConditions conditions;
-
     /// Identifiant du passage affiché, mémorisé pour les actions (ex. suppression).
     private Long idPassage;
 
@@ -69,12 +65,6 @@ public class PassageViewModel {
     public PassageViewModel(ServicePassage service, ServicePurgeOriginaux purge) {
         this.service = Objects.requireNonNull(service, "service");
         this.purge = Objects.requireNonNull(purge, "purge");
-        this.conditions = new SaisiePassageConditions(service, message);
-    }
-
-    /// Sous-ViewModel de saisie des conditions de dépôt (météo + matériel), lié aux champs de M-Passage.
-    public SaisiePassageConditions conditions() {
-        return conditions;
     }
 
     /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
@@ -144,7 +134,6 @@ public class PassageViewModel {
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
         actionRecommandee.set(prochaineAction(detail.statut()));
-        conditions.charger(idPassage, detail.meteo());
     }
 
     /// Déduit la prochaine action recommandée du statut (progression linéaire du workflow) : la carte
@@ -176,7 +165,6 @@ public class PassageViewModel {
         annulationDepotDisponible.set(false);
         purgeDisponible.set(false);
         actionRecommandee.set(ActionRecommandee.AUCUNE);
-        conditions.reinitialiser();
     }
 
     private static List<EtapeWorkflow> construireEtapes(StatutWorkflow courant) {

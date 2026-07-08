@@ -1,8 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -12,9 +10,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
-import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -26,7 +22,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /// Tests unitaires de [PassageViewModel] (fiche d'identité + stepper de statut + stats). Le
-/// [ServicePassage] est mocké : aucune base de données.
+/// [ServicePassage] est mocké : aucune base de données. Les conditions de dépôt (météo + matériel du
+/// micro) ne sont plus portées par cet écran : elles sont testées dans [RattachementViewModelTest]
+/// (modale « Modifier le passage »).
 @ExtendWith(MockitoExtension.class)
 class PassageViewModelTest {
 
@@ -62,146 +60,6 @@ class PassageViewModelTest {
                 30,
                 150.0,
                 MeteoReleve.VIDE);
-    }
-
-    private static DetailPassage detailAvec(MeteoReleve meteo) {
-        return new DetailPassage(
-                2,
-                2026,
-                "2026-06-22",
-                "20:25:00",
-                "07:47:00",
-                "1925492",
-                StatutWorkflow.TRANSFORME,
-                Verdict.OK,
-                null,
-                4096L,
-                1024L,
-                30,
-                150.0,
-                meteo);
-    }
-
-    @Test
-    @DisplayName("#106 étendu : ouvrirSur pré-remplit les champs météo depuis le relevé du passage")
-    void meteo_affichee() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(new MeteoReleve(8.5, 4.0, 12.0, 40.0)));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("8.5");
-        assertThat(viewModel.conditions().temperatureFinSaisieProperty().get()).isEqualTo("4.0");
-        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo("12.0");
-        assertThat(viewModel.conditions().couvertureNuageuseSaisieProperty().get())
-                .isEqualTo("40.0");
-    }
-
-    @Test
-    @DisplayName("#106 étendu : relevé météo absent → champs de saisie vides")
-    void meteo_absente() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
-        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("#106 étendu : enregistrerMeteo valide délègue le relevé au service, sans message")
-    void enregistrer_meteo_valide() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        viewModel.conditions().temperatureSaisieProperty().set("9,0");
-        viewModel.conditions().ventSaisieProperty().set("12");
-
-        viewModel.conditions().enregistrerMeteo();
-
-        verify(service).definirMeteo(ID_PASSAGE, new MeteoReleve(9.0, null, 12.0, null));
-        assertThat(viewModel.messageProperty().get()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("#106 étendu : une saisie météo invalide publie un message, sans appeler le service")
-    void enregistrer_meteo_invalide() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        viewModel.conditions().temperatureSaisieProperty().set("froid");
-
-        viewModel.conditions().enregistrerMeteo();
-
-        assertThat(viewModel.messageProperty().get()).contains("invalide");
-        verify(service, never()).definirMeteo(any(), any());
-    }
-
-    @Test
-    @DisplayName("dépôt : ouvrirSur pré-remplit les champs matériel depuis le passage")
-    void materiel_affiche() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        when(service.materiel(ID_PASSAGE)).thenReturn(new MaterielMicro(ID_PASSAGE, PositionMicro.CANOPEE, 4.0, "SM4"));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.conditions().positionSaisieProperty().get()).isEqualTo(PositionMicro.CANOPEE);
-        assertThat(viewModel.conditions().hauteurSaisieProperty().get()).isEqualTo("4.0");
-        assertThat(viewModel.conditions().typeMicroSaisieProperty().get()).isEqualTo("SM4");
-    }
-
-    @Test
-    @DisplayName("dépôt : enregistrerMateriel valide délègue le matériel au service, sans message")
-    void enregistrer_materiel_valide() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        viewModel.conditions().positionSaisieProperty().set(PositionMicro.SOL);
-        viewModel.conditions().hauteurSaisieProperty().set("2,5");
-        viewModel.conditions().typeMicroSaisieProperty().set(" interne ");
-
-        viewModel.conditions().enregistrerMateriel();
-
-        verify(service).definirMateriel(new MaterielMicro(ID_PASSAGE, PositionMicro.SOL, 2.5, "interne"));
-        assertThat(viewModel.messageProperty().get()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("dépôt : une hauteur de fixation invalide publie un message, sans appeler le service")
-    void enregistrer_materiel_hauteur_invalide() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        viewModel.conditions().hauteurSaisieProperty().set("haut");
-
-        viewModel.conditions().enregistrerMateriel();
-
-        assertThat(viewModel.messageProperty().get()).contains("invalide");
-        verify(service, never()).definirMateriel(any());
-    }
-
-    @Test
-    @DisplayName("#547 : recupererMeteo délègue au service (relevé remonté tel quel)")
-    void recuperer_meteo_delegue_au_service() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        when(service.recupererMeteo(ID_PASSAGE)).thenReturn(Optional.of(new MeteoReleve(9.0, 3.0, 12.0, 40.0)));
-
-        assertThat(viewModel.conditions().recupererMeteo()).contains(new MeteoReleve(9.0, 3.0, 12.0, 40.0));
-    }
-
-    @Test
-    @DisplayName("#547 : un relevé récupéré pré-remplit les champs météo + message de confirmation")
-    void appliquer_meteo_recuperee_prefill() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        viewModel.conditions().appliquerMeteoRecuperee(Optional.of(new MeteoReleve(9.0, 3.0, 12.0, 40.0)));
-
-        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("9.0");
-        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo("12.0");
-        assertThat(viewModel.messageProperty().get()).contains("pré-remplie");
-    }
-
-    @Test
-    @DisplayName("#547 : météo indisponible → message d'aide, champs inchangés")
-    void appliquer_meteo_recuperee_absente() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailAvec(MeteoReleve.VIDE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        viewModel.conditions().appliquerMeteoRecuperee(Optional.empty());
-
-        assertThat(viewModel.messageProperty().get()).contains("indisponible");
-        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
     }
 
     @Test

@@ -1,22 +1,37 @@
 package fr.univ_amu.iut.passage.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.passage.model.MaterielMicro;
+import fr.univ_amu.iut.passage.model.MeteoReleve;
+import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
 import java.util.Objects;
+import java.util.Optional;
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 
-/// Controller de la **modale « Modifier le rattachement »** (`RattachementModale.fxml`, E2.S8).
+/// Controller de la **modale « Modifier le passage »** (`RattachementModale.fxml`, E2.S8).
 ///
-/// Lie les deux `Spinner` (année, n° de passage) en bidirectionnel au [RattachementViewModel], et
-/// reflète son récapitulatif réactif et son message d'erreur. La modale se ferme elle-même via sa
-/// fenêtre ; après une modification réussie, elle exécute le `Runnable` fourni par l'appelant
-/// (typiquement le rafraîchissement de M-Passage).
+/// Rassemble en une seule fenêtre l'édition du **rattachement** (année, n° de passage : deux `Spinner`
+/// liés en bidirectionnel au [RattachementViewModel]) **et** des **conditions de dépôt** VigieChiro
+/// (relevé météo, matériel du micro) : ces métadonnées, autrefois posées sur l'écran M-Passage, se
+/// saisissent au moment où l'on modifie le passage. Le type de micro est une **liste fermée**
+/// ([MaterielMicro#TYPES_VIGIECHIRO]).
+///
+/// « Appliquer » enregistre le tout d'un bloc via [RattachementViewModel#appliquer] ; en cas de succès
+/// la modale se ferme et exécute le `Runnable` fourni par l'appelant (rafraîchissement de M-Passage).
+/// « Annuler » ferme sans rien persister. « Récupérer la météo » (réseau) pré-remplit les champs
+/// hors du fil JavaFX.
 public class RattachementModaleController {
 
     private final RattachementViewModel viewModel;
@@ -39,6 +54,30 @@ public class RattachementModaleController {
 
     @FXML
     private Label messageErreur;
+
+    @FXML
+    private TextField champTemperature;
+
+    @FXML
+    private TextField champTemperatureFin;
+
+    @FXML
+    private TextField champVent;
+
+    @FXML
+    private TextField champCouverture;
+
+    @FXML
+    private Button boutonRecupererMeteo;
+
+    @FXML
+    private ComboBox<PositionMicro> champPosition;
+
+    @FXML
+    private TextField champHauteur;
+
+    @FXML
+    private ComboBox<String> champTypeMicro;
 
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel) {
@@ -70,6 +109,53 @@ public class RattachementModaleController {
         var erreurPresente = viewModel.messageErreurProperty().isNotEmpty();
         messageErreur.visibleProperty().bind(erreurPresente);
         messageErreur.managedProperty().bind(erreurPresente);
+
+        lierConditions();
+    }
+
+    /// Lie les champs des conditions de dépôt (météo + matériel du micro) au sous-ViewModel
+    /// [RattachementViewModel#conditions] : saisie bidirectionnelle des grandeurs (vide = effacer). La
+    /// position et le type de micro sont des **listes fermées** (une entrée « non renseigné » en tête).
+    private void lierConditions() {
+        var conditions = viewModel.conditions();
+        champTemperature.textProperty().bindBidirectional(conditions.temperatureSaisieProperty());
+        champTemperatureFin.textProperty().bindBidirectional(conditions.temperatureFinSaisieProperty());
+        champVent.textProperty().bindBidirectional(conditions.ventSaisieProperty());
+        champCouverture.textProperty().bindBidirectional(conditions.couvertureNuageuseSaisieProperty());
+
+        // Position : liste sol/canopée + entrée vide « non renseigné » ; converter → libellé lisible.
+        champPosition.getItems().setAll(null, PositionMicro.SOL, PositionMicro.CANOPEE);
+        champPosition.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(PositionMicro position) {
+                return position == null ? "" : position.libelle();
+            }
+
+            @Override
+            public PositionMicro fromString(String texte) {
+                return null;
+            }
+        });
+        champPosition.valueProperty().bindBidirectional(conditions.positionSaisieProperty());
+
+        champHauteur.textProperty().bindBidirectional(conditions.hauteurSaisieProperty());
+
+        // Type de micro : liste fermée VigieChiro + entrée vide « (non renseigné) » en tête. Une valeur
+        // héritée absente de la liste reste affichée telle quelle (pas de perte à l'ouverture).
+        champTypeMicro.getItems().add("");
+        champTypeMicro.getItems().addAll(MaterielMicro.TYPES_VIGIECHIRO);
+        champTypeMicro.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(String type) {
+                return type == null || type.isBlank() ? "(non renseigné)" : type;
+            }
+
+            @Override
+            public String fromString(String texte) {
+                return texte;
+            }
+        });
+        champTypeMicro.valueProperty().bindBidirectional(conditions.typeMicroSaisieProperty());
     }
 
     /// Prépare la modale sur le passage `idPassage` (carré/point fournis par M-Passage) et mémorise
@@ -80,11 +166,27 @@ public class RattachementModaleController {
     }
 
     @FXML
-    private void valider() {
-        if (viewModel.valider()) {
+    private void appliquer() {
+        if (viewModel.appliquer()) {
             apresSucces.run();
             fermer();
         }
+    }
+
+    /// « Récupérer la météo » (#547) : l'appel Open-Meteo est **réseau**, donc lancé en **tâche de fond**
+    /// (thread virtuel) pour ne pas geler l'IHM ; le bouton est désactivé le temps de l'appel, et le
+    /// pré-remplissage des champs (ou le message d'indisponibilité) revient sur le fil JavaFX via
+    /// [Platform#runLater].
+    @FXML
+    private void recupererMeteo() {
+        boutonRecupererMeteo.setDisable(true);
+        Thread.ofVirtual().name("recuperation-meteo").start(() -> {
+            Optional<MeteoReleve> releve = viewModel.conditions().recupererMeteo();
+            Platform.runLater(() -> {
+                viewModel.conditions().appliquerMeteoRecuperee(releve);
+                boutonRecupererMeteo.setDisable(false);
+            });
+        });
     }
 
     @FXML

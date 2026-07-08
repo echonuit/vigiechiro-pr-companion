@@ -25,6 +25,11 @@ public class RattachementViewModel {
     private final ReadOnlyStringWrapper recap = new ReadOnlyStringWrapper(this, "recap", "");
     private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
 
+    /// Conditions de dépôt (météo + matériel du micro) éditées **dans la même modale** : la saisie de
+    /// ces métadonnées VigieChiro se fait au moment où l'on modifie le passage, plutôt que sur l'écran
+    /// M-Passage. Partage la ligne de message d'erreur de la modale.
+    private final SaisiePassageConditions conditions;
+
     private Long idPassage;
     private String carre;
     private String codePoint;
@@ -34,8 +39,14 @@ public class RattachementViewModel {
 
     public RattachementViewModel(ServicePassage service) {
         this.service = Objects.requireNonNull(service, "service");
+        this.conditions = new SaisiePassageConditions(service, messageErreur);
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
+    }
+
+    /// Sous-ViewModel des conditions de dépôt (météo + micro), lié aux champs de la modale.
+    public SaisiePassageConditions conditions() {
+        return conditions;
     }
 
     /// Initialise la modale sur le passage `idPassage` (carré et code point fournis par la
@@ -48,6 +59,7 @@ public class RattachementViewModel {
         anneeActuelle = detail.annee();
         numeroActuel = detail.numeroPassage();
         nombreSequences = detail.nombreSequences();
+        conditions.charger(idPassage, detail.meteo());
         messageErreur.set("");
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
@@ -78,6 +90,17 @@ public class RattachementViewModel {
             messageErreur.set(echec.getMessage());
             return false;
         }
+    }
+
+    /// Applique **d'un bloc** le rattachement (année + n°) et les conditions de dépôt (météo + micro)
+    /// saisis dans la modale. Enregistre d'abord les conditions (une saisie non numérique laisse la
+    /// modale ouverte sans rien renommer sur le disque), puis délègue au rattachement [#valider] (qui,
+    /// lui, renomme les séquences). Renvoie `true` si **tout** a réussi (la vue peut fermer la modale).
+    public boolean appliquer() {
+        if (!conditions.enregistrerMeteo() || !conditions.enregistrerMateriel()) {
+            return false;
+        }
+        return valider();
     }
 
     private void majRecap() {

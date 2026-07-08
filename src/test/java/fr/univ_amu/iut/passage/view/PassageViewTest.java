@@ -222,7 +222,7 @@ class PassageViewTest {
     }
 
     @Test
-    @DisplayName("Le bouton « Modifier rattachement » est présent et actif dans l'en-tête")
+    @DisplayName("Le bouton « Modifier le passage » est présent et actif dans l'en-tête")
     void bouton_rattachement_present(FxRobot robot) {
         Button rattachement = robot.lookup("#boutonRattachement").queryAs(Button.class);
 

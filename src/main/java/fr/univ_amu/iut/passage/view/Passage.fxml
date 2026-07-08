@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -30,7 +28,7 @@
         <Label fx:id="lblTitre" styleClass="titre-page" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
         <Button fx:id="boutonVoirCarte" text="🗺 Voir sur la carte"
                 styleClass="action-secondaire" onAction="#voirSurCarte"/>
-        <Button fx:id="boutonRattachement" text="✏ Modifier rattachement"
+        <Button fx:id="boutonRattachement" text="✏ Modifier le passage"
                 styleClass="action-secondaire" onAction="#modifierRattachement"/>
         <Button fx:id="boutonAnnulerDepot" text="↩ Annuler le dépôt"
                 styleClass="action-secondaire" onAction="#annulerDepot"/>
@@ -93,44 +91,6 @@
           <Label text="SÉQUENCES" styleClass="stat-label"/>
           <Label fx:id="lblNbSequences" styleClass="stat-valeur"/>
         </VBox>
-      </HBox>
-
-      <!-- Conditions météo (#106 étendu) : grandeurs optionnelles, éditables (vide pour effacer). -->
-      <Label text="Conditions météo (optionnel)" styleClass="section-sous"/>
-      <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Label text="Température début :"/>
-        <TextField fx:id="champTemperature" promptText="ex. 8,5" prefWidth="80.0"/>
-        <Label text="°C"/>
-        <Label text="fin :"/>
-        <TextField fx:id="champTemperatureFin" promptText="ex. 5,0" prefWidth="80.0"/>
-        <Label text="°C"/>
-      </HBox>
-      <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Label text="Vent :"/>
-        <TextField fx:id="champVent" promptText="ex. 12" prefWidth="80.0"/>
-        <Label text="km/h"/>
-        <Label text="Couverture nuageuse :"/>
-        <TextField fx:id="champCouverture" promptText="ex. 40" prefWidth="80.0"/>
-        <Label text="\%"/>
-      </HBox>
-      <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Button fx:id="boutonRecupererMeteo" text="Récupérer la météo" onAction="#recupererMeteo"/>
-        <Button fx:id="boutonMeteo" text="Enregistrer" onAction="#enregistrerMeteo"/>
-      </HBox>
-
-      <!-- Matériel du micro déployé (dépôt VigieChiro) : grandeurs optionnelles. -->
-      <Label text="Matériel du micro (optionnel)" styleClass="section-sous"/>
-      <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Label text="Position :"/>
-        <ComboBox fx:id="champPosition" prefWidth="130.0"/>
-        <Label text="Hauteur :"/>
-        <TextField fx:id="champHauteur" promptText="ex. 4" prefWidth="70.0"/>
-        <Label text="m"/>
-        <Label text="Type de micro :"/>
-        <TextField fx:id="champTypeMicro" promptText="ex. SM4 externe" prefWidth="150.0"/>
-      </HBox>
-      <HBox spacing="10.0" alignment="CENTER_LEFT">
-        <Button fx:id="boutonMateriel" text="Enregistrer" onAction="#enregistrerMateriel"/>
       </HBox>
 
       <!-- Actions : avancer dans le workflow (le retour et le fil d'Ariane sont portés par le chrome) -->

@@ -52,15 +52,10 @@ public class SaisiePassageConditions {
         appliquerMateriel(service.materiel(idPassage));
     }
 
-    /// Vide tous les champs (écran réinitialisé).
-    void reinitialiser() {
-        appliquerMeteo(MeteoReleve.VIDE);
-        appliquerMateriel(null);
-    }
-
     /// Enregistre le **relevé météo** saisi (grandeur vide = effacer ; saisie non numérique = message
-    /// d'erreur, sans modification), puis renormalise les champs.
-    public void enregistrerMeteo() {
+    /// d'erreur, sans modification), puis renormalise les champs. Renvoie `true` si l'enregistrement a
+    /// réussi, `false` si une valeur était invalide (permet à un « Appliquer » groupé de rester ouvert).
+    public boolean enregistrerMeteo() {
         try {
             MeteoReleve releve = new MeteoReleve(
                     MeteoPassage.lireSaisie(temperatureSaisie.get()),
@@ -70,14 +65,17 @@ public class SaisiePassageConditions {
             service.definirMeteo(idPassage, releve);
             appliquerMeteo(releve);
             message.set("");
+            return true;
         } catch (NumberFormatException invalide) {
             message.set("Valeur météo invalide : saisissez des nombres, ou laissez vide.");
+            return false;
         }
     }
 
     /// Enregistre le **matériel du micro** saisi (grandeur vide = effacer ; hauteur non numérique =
-    /// message d'erreur, sans modification), puis renormalise les champs.
-    public void enregistrerMateriel() {
+    /// message d'erreur, sans modification), puis renormalise les champs. Renvoie `true` si
+    /// l'enregistrement a réussi, `false` si la hauteur était invalide.
+    public boolean enregistrerMateriel() {
         try {
             MaterielMicro materiel = new MaterielMicro(
                     idPassage,
@@ -87,8 +85,10 @@ public class SaisiePassageConditions {
             service.definirMateriel(materiel);
             appliquerMateriel(materiel);
             message.set("");
+            return true;
         } catch (NumberFormatException invalide) {
             message.set("Hauteur invalide : saisissez un nombre (m), ou laissez vide.");
+            return false;
         }
     }
 
@@ -105,7 +105,7 @@ public class SaisiePassageConditions {
     public void appliquerMeteoRecuperee(Optional<MeteoReleve> releve) {
         if (releve.isPresent()) {
             appliquerMeteo(releve.get());
-            message.set("Météo pré-remplie : vérifiez puis enregistrez.");
+            message.set("Météo pré-remplie : vérifiez puis appliquez.");
         } else {
             message.set("Météo indisponible (hors-ligne, pas de GPS ou données manquantes) : saisissez à la main.");
         }

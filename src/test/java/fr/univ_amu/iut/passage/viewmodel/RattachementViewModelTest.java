@@ -13,9 +13,13 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.MaterielMicro;
+import fr.univ_amu.iut.passage.model.MeteoReleve;
+import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +60,24 @@ class RattachementViewModelTest {
                 nombreSequences,
                 0.0,
                 null);
+    }
+
+    private static DetailPassage detailMeteo(MeteoReleve meteo) {
+        return new DetailPassage(
+                1,
+                2026,
+                "2026-06-20",
+                "21:00:00",
+                "05:00:00",
+                "1925492",
+                StatutWorkflow.TRANSFORME,
+                Verdict.OK,
+                null,
+                0L,
+                0L,
+                30,
+                0.0,
+                meteo);
     }
 
     @Test
@@ -141,5 +163,161 @@ class RattachementViewModelTest {
 
         assertThat(ok).isFalse();
         assertThat(viewModel.messageErreurProperty().get()).contains("Déplacement");
+    }
+
+    // --- Conditions de dépôt (météo + matériel du micro), désormais éditées dans cette modale ---
+
+    @Test
+    @DisplayName("#106 étendu : ouvrirSur pré-remplit les champs météo depuis le relevé du passage")
+    void meteo_affichee() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(new MeteoReleve(8.5, 4.0, 12.0, 40.0)));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("8.5");
+        assertThat(viewModel.conditions().temperatureFinSaisieProperty().get()).isEqualTo("4.0");
+        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo("12.0");
+        assertThat(viewModel.conditions().couvertureNuageuseSaisieProperty().get())
+                .isEqualTo("40.0");
+    }
+
+    @Test
+    @DisplayName("#106 étendu : relevé météo absent → champs de saisie vides")
+    void meteo_absente() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
+        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#106 étendu : enregistrerMeteo valide délègue le relevé au service, sans message")
+    void enregistrer_meteo_valide() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.conditions().temperatureSaisieProperty().set("9,0");
+        viewModel.conditions().ventSaisieProperty().set("12");
+
+        assertThat(viewModel.conditions().enregistrerMeteo()).isTrue();
+
+        verify(service).definirMeteo(ID, new MeteoReleve(9.0, null, 12.0, null));
+        assertThat(viewModel.messageErreurProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#106 étendu : une saisie météo invalide publie un message, sans appeler le service")
+    void enregistrer_meteo_invalide() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.conditions().temperatureSaisieProperty().set("froid");
+
+        assertThat(viewModel.conditions().enregistrerMeteo()).isFalse();
+
+        assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        verify(service, never()).definirMeteo(any(), any());
+    }
+
+    @Test
+    @DisplayName("dépôt : ouvrirSur pré-remplit les champs matériel depuis le passage")
+    void materiel_affiche() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        when(service.materiel(ID)).thenReturn(new MaterielMicro(ID, PositionMicro.CANOPEE, 4.0, "SMX-U1"));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        assertThat(viewModel.conditions().positionSaisieProperty().get()).isEqualTo(PositionMicro.CANOPEE);
+        assertThat(viewModel.conditions().hauteurSaisieProperty().get()).isEqualTo("4.0");
+        assertThat(viewModel.conditions().typeMicroSaisieProperty().get()).isEqualTo("SMX-U1");
+    }
+
+    @Test
+    @DisplayName("dépôt : enregistrerMateriel valide délègue le matériel au service, sans message")
+    void enregistrer_materiel_valide() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.conditions().positionSaisieProperty().set(PositionMicro.SOL);
+        viewModel.conditions().hauteurSaisieProperty().set("2,5");
+        viewModel.conditions().typeMicroSaisieProperty().set(" Micro interne ");
+
+        assertThat(viewModel.conditions().enregistrerMateriel()).isTrue();
+
+        verify(service).definirMateriel(new MaterielMicro(ID, PositionMicro.SOL, 2.5, "Micro interne"));
+        assertThat(viewModel.messageErreurProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("dépôt : une hauteur de fixation invalide publie un message, sans appeler le service")
+    void enregistrer_materiel_hauteur_invalide() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.conditions().hauteurSaisieProperty().set("haut");
+
+        assertThat(viewModel.conditions().enregistrerMateriel()).isFalse();
+
+        assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        verify(service, never()).definirMateriel(any());
+    }
+
+    @Test
+    @DisplayName("#547 : recupererMeteo délègue au service (relevé remonté tel quel)")
+    void recuperer_meteo_delegue_au_service() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        when(service.recupererMeteo(ID)).thenReturn(Optional.of(new MeteoReleve(9.0, 3.0, 12.0, 40.0)));
+
+        assertThat(viewModel.conditions().recupererMeteo()).contains(new MeteoReleve(9.0, 3.0, 12.0, 40.0));
+    }
+
+    @Test
+    @DisplayName("#547 : un relevé récupéré pré-remplit les champs météo + message de confirmation")
+    void appliquer_meteo_recuperee_prefill() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+
+        viewModel.conditions().appliquerMeteoRecuperee(Optional.of(new MeteoReleve(9.0, 3.0, 12.0, 40.0)));
+
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("9.0");
+        assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo("12.0");
+        assertThat(viewModel.messageErreurProperty().get()).contains("pré-remplie");
+    }
+
+    @Test
+    @DisplayName("#547 : météo indisponible → message d'aide, champs inchangés")
+    void appliquer_meteo_recuperee_absente() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+
+        viewModel.conditions().appliquerMeteoRecuperee(Optional.empty());
+
+        assertThat(viewModel.messageErreurProperty().get()).contains("indisponible");
+        assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("appliquer enregistre d'un bloc le rattachement, la météo et le matériel du micro")
+    void appliquer_enregistre_tout() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.numeroPassageProperty().set(2);
+        viewModel.conditions().temperatureSaisieProperty().set("9,0");
+        viewModel.conditions().positionSaisieProperty().set(PositionMicro.SOL);
+
+        boolean ok = viewModel.appliquer();
+
+        assertThat(ok).isTrue();
+        verify(service).definirMeteo(ID, new MeteoReleve(9.0, null, null, null));
+        verify(service).definirMateriel(new MaterielMicro(ID, PositionMicro.SOL, null, null));
+        verify(service).modifierRattachement(ID, new Prefixe("040962", 2026, 2, "A1"));
+    }
+
+    @Test
+    @DisplayName("appliquer avec une météo invalide n'enregistre rien et ne renomme pas les séquences")
+    void appliquer_meteo_invalide_ne_renomme_pas() {
+        when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.numeroPassageProperty().set(2);
+        viewModel.conditions().temperatureSaisieProperty().set("froid");
+
+        boolean ok = viewModel.appliquer();
+
+        assertThat(ok).isFalse();
+        assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        verify(service, never()).modifierRattachement(any(), any());
     }
 }
