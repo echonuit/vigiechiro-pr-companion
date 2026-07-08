@@ -57,7 +57,7 @@ L'inspection signale les anomalies **avant** l'import, pour éviter d'importer u
 Un **mélange** dans le dossier (plusieurs enregistreurs aux séries différentes) déclenche un
 avertissement, sans bloquer l'import :
 
-![Cas « mélange » : un avertissement signale que le dossier contient plusieurs enregistreurs ou plusieurs nuits.](../assets/captures/apercu-import-melange.png)
+![Cas « mélange » : un avertissement signale que le dossier contient plusieurs enregistreurs (séries différentes).](../assets/captures/apercu-import-melange.png)
 
 Une **incohérence** entre le journal du capteur et les enregistrements (série ou date qui ne
 correspondent pas) est signalée plus fermement :

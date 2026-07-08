@@ -7,29 +7,31 @@ import fr.univ_amu.iut.importation.model.AnalyseMelange;
 /// l'assistant : la mise en phrase (présentation) est une responsabilité à part, mais reste dans la
 /// couche `viewmodel` (le `model` ne porte pas de texte d'IHM, à l'image de `messageErreur` ou
 /// `resumeJournal`, construits côté VM).
+///
+/// L'avertissement ne vise plus que le mélange de **plusieurs enregistreurs** (séries différentes sur
+/// une même carte), qui reste **non géré** (un import correspond à un seul enregistreur). Le cas
+/// **plusieurs nuits** d'un même enregistreur n'est **plus** un avertissement : il est pris en charge
+/// par le **découpage par nuit** (un passage par nuit), signalé par la table des nuits de l'assistant.
 final class AvertissementMelange {
 
     private AvertissementMelange() {}
 
-    /// Construit l'avertissement à afficher, ou une chaîne **vide** si le dossier paraît homogène (une
-    /// nuit, un enregistreur). Le message est informatif : il n'empêche pas l'import.
+    /// Construit l'avertissement à afficher, ou une chaîne **vide** si le dossier ne mélange pas
+    /// plusieurs enregistreurs (dossier d'un seul enregistreur, même sur plusieurs nuits : cas géré). Le
+    /// message est informatif : il n'empêche pas l'import.
     static String rediger(AnalyseMelange melange) {
-        if (!melange.melange()) {
+        if (!melange.plusieursEnregistreurs()) {
             return "";
         }
-        StringBuilder message = new StringBuilder("⚠ Ce dossier semble mélanger ");
-        if (melange.plusieursEnregistreurs()) {
-            message.append("plusieurs enregistreurs (séries ")
-                    .append(String.join(", ", melange.series()))
-                    .append(")");
-            if (melange.plusieursNuits()) {
-                message.append(" et ");
-            }
-        }
+        StringBuilder message = new StringBuilder("⚠ Ce dossier mélange plusieurs enregistreurs (séries ")
+                .append(String.join(", ", melange.series()))
+                .append(")");
         if (melange.plusieursNuits()) {
-            message.append("plusieurs nuits (").append(melange.nuits().size()).append(" dates d'acquisition)");
+            message.append(", sur plusieurs nuits (")
+                    .append(melange.nuits().size())
+                    .append(" dates)");
         }
-        return message.append(" : vérifiez qu'il correspond bien à une seule nuit avant d'importer.")
+        return message.append(" : un import correspond à un seul enregistreur, vérifiez la source avant d'importer.")
                 .toString();
     }
 }
