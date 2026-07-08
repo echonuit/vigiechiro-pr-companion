@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -136,10 +137,44 @@ public class LotController implements EmplacementNavigation {
                 .disableProperty()
                 .bind(Bindings.isEmpty(viewModel.archives()).or(viewModel.generationEnCoursProperty()));
 
+        // Emphase de l'étape actionnable (#689) : parmi les trois actions applicatives du dépôt
+        // (Préparer → Générer → Marquer déposé, l'étape ③ « Téléverser » étant manuelle), celle qui est
+        // actionnable porte .bouton-primaire, les autres .bouton-secondaire — au plus une à la fois.
+        // Recalculée à chaque évolution de l'état (peut*) ou des archives. « Ouvrir le dossier » reste
+        // toujours secondaire (rôle fixé en FXML).
+        InvalidationListener majRoles = observable -> majRolesEtapes();
+        viewModel.peutPreparerProperty().addListener(majRoles);
+        viewModel.peutGenererArchivesProperty().addListener(majRoles);
+        viewModel.peutDeposerProperty().addListener(majRoles);
+        viewModel.deposeProperty().addListener(majRoles);
+        viewModel.archives().addListener((ListChangeListener<String>) changement -> majRolesEtapes());
+        majRolesEtapes();
+
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
         lblMessage.visibleProperty().bind(messagePresent);
         lblMessage.managedProperty().bind(messagePresent);
+    }
+
+    /// Met en avant l'action **actionnable** du dépôt (#689) : `.bouton-primaire` sur l'unique étape
+    /// courante parmi Préparer / Générer / Marquer déposé, `.bouton-secondaire` sur les autres. L'étape ③
+    /// « Téléverser » est manuelle (« Ouvrir le dossier », toujours secondaire) : une fois les archives
+    /// générées, c'est « Marquer déposé » qui devient primaire. Plus aucun primaire une fois le passage
+    /// déposé. Le gating du VM garantit qu'au plus une des trois est actionnable à la fois.
+    private void majRolesEtapes() {
+        boolean archivesGenerees = !viewModel.archives().isEmpty();
+        boolean deposeFait = viewModel.deposeProperty().get();
+        appliquerRolePrimaire(btnPreparer, viewModel.peutPreparerProperty().get());
+        appliquerRolePrimaire(
+                btnGenererArchives, viewModel.peutGenererArchivesProperty().get() && !archivesGenerees && !deposeFait);
+        appliquerRolePrimaire(btnDeposer, viewModel.peutDeposerProperty().get() && archivesGenerees);
+    }
+
+    /// Bascule le rôle du `bouton` entre `.bouton-primaire` (mis en avant) et `.bouton-secondaire`, sans
+    /// dupliquer de classe si la méthode est rappelée. Les valeurs posées en FXML servent d'état initial.
+    private static void appliquerRolePrimaire(Button bouton, boolean primaire) {
+        bouton.getStyleClass().removeAll("bouton-primaire", "bouton-secondaire");
+        bouton.getStyleClass().add(primaire ? "bouton-primaire" : "bouton-secondaire");
     }
 
     /// Reconstruit le stepper du dépôt (#251) depuis [LotViewModel#etapes()] : une puce par étape,

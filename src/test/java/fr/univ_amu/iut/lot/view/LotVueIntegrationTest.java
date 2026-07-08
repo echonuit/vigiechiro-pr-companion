@@ -329,6 +329,47 @@ class LotVueIntegrationTest {
         assertThat(indicateur.isManaged()).isFalse();
     }
 
+    @Test
+    @DisplayName("#689 : le primaire suit l'étape actionnable (Préparer → Générer → Marquer déposé)")
+    void emphase_primaire_suit_l_etape_actionnable(FxRobot robot) {
+        Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
+        Button generer = robot.lookup("#btnGenererArchives").queryAs(Button.class);
+        Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
+
+        // Étape ① Vérifié (conforme) : « Préparer » est l'action mise en avant.
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.VERIFIE, "/ws/session-42", 2, 8192L, List.of(), null));
+        assertThat(preparer.getStyleClass()).contains("bouton-primaire").doesNotContain("bouton-secondaire");
+        assertThat(generer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+        assertThat(deposer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+
+        // Étape ② Prêt à déposer, avant génération : « Générer les archives » prend le relais.
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+        assertThat(generer.getStyleClass()).contains("bouton-primaire").doesNotContain("bouton-secondaire");
+        assertThat(preparer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+        assertThat(deposer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+
+        // Étape ④ après génération (l'étape ③ « Téléverser » est manuelle) : « Marquer déposé » devient primaire.
+        when(service.genererArchivesDepot(anyLong()))
+                .thenReturn(List.of(
+                        new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
+        robot.interact(() -> viewModel.genererArchives());
+        assertThat(deposer.getStyleClass()).contains("bouton-primaire").doesNotContain("bouton-secondaire");
+        assertThat(preparer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+        assertThat(generer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+    }
+
+    @Test
+    @DisplayName("#689 : une fois le passage déposé, aucune action n'est mise en avant")
+    void emphase_aucun_primaire_une_fois_depose(FxRobot robot) {
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOSE, "/ws/session-42", 2, 8192L, List.of(), "2026-06-18"));
+        Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
+        Button generer = robot.lookup("#btnGenererArchives").queryAs(Button.class);
+        Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
+        assertThat(preparer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+        assertThat(generer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+        assertThat(deposer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
+    }
+
     /// Libellé de l'étape stylée « courante » du stepper, ou `null` si aucune (tout franchi).
     private static String etapeCourante(HBox stepper) {
         return stepper.getChildren().stream()
