@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.137.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.136.0...v1.137.0) (2026-07-08)
+
+
+### Features
+
+* valider à la main les enregistrements « non identifiés » (PR 2/2) ([#680](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/680)) ([10882d1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/10882d1a3e73656aeeda5d3ae69ca64ca3424cbb))
+
 # [1.136.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.135.4...v1.136.0) (2026-07-08)
 
 
