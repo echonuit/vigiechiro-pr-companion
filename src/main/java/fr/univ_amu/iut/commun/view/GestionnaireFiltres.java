@@ -124,6 +124,10 @@ public final class GestionnaireFiltres<T> {
         actifs.put(critere.nom(), editeur);
         puces.getChildren().add(construirePuce(critere, editeur));
         reconstruireMenu();
+        // Notifier **après** l'enregistrement de la puce dans `actifs` : l'application initiale du critère
+        // (dans `editeur(...)` ci-dessus) déclenche `auChangement` avant que `decrire()` ne voie la puce, donc
+        // ne suffit pas à détecter l'ajout. Ce second appel garantit un descripteur à jour.
+        auChangement.run();
     }
 
     private HBox construirePuce(CritereFiltre<T> critere, Node editeur) {

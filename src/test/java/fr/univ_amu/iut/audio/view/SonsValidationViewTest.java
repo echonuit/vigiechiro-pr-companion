@@ -131,7 +131,7 @@ class SonsValidationViewTest {
         ouvrirAnalyse = mock(OuvrirAnalyse.class);
         // Une vue déjà enregistrée pour cet écran : elle doit apparaître comme onglet (nom seul lu à l'init).
         when(depotVues.findByFeature("audio"))
-                .thenReturn(List.of(new VueSauvegardee(1L, "audio", "À revoir", "{\"criteres\":[]}")));
+                .thenReturn(List.of(new VueSauvegardee(1L, "audio", "À revoir", "{\"texte\":\"\",\"criteres\":[]}")));
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
@@ -611,6 +611,33 @@ class SonsValidationViewTest {
                         .queryAs(Button.class)
                         .getText())
                 .isEqualTo("+ Vue");
+    }
+
+    @Test
+    @DisplayName("#681 : sur une vue active, modifier les filtres fait apparaître le bouton 💾")
+    void modifier_les_filtres_d_une_vue_active_affiche_le_bouton_enregistrer(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+        // Activer la vue « À revoir » (clic sur son libellé) : ses filtres sont rejoués, aucune divergence.
+        Label nomVue = robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class).stream()
+                .filter(label -> "À revoir".equals(label.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(() -> nomVue.getOnMouseClicked().handle(null));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(robot.from(onglets).lookup(".onglet-vue-action").queryAllAs(Button.class))
+                .extracting(Button::getText)
+                .as("pas de 💾 juste après activation")
+                .doesNotContain("💾");
+
+        // Ajouter un filtre « Statut » : les filtres divergent de la vue → le 💾 doit apparaître.
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        robot.interact(() -> itemParLibelle(menuAjout, "Statut").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.from(onglets).lookup(".onglet-vue-action").queryAllAs(Button.class))
+                .extracting(Button::getText)
+                .as("filtres divergents → bouton Enregistrer présent")
+                .contains("💾");
     }
 
     private static TableColumn<?, ?> colonne(FxRobot robot, String entete) {
