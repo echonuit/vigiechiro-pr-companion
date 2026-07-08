@@ -507,19 +507,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     }
 
     private String libelleEcran() {
-        if (source instanceof SourceObservations.References) {
-            return "Sons de référence";
-        }
-        if (source instanceof SourceObservations.NonIdentifies) {
-            return "Sons non identifiés";
-        }
-        if (source instanceof SourceObservations.ParEspece espece) {
-            return "Écoute : " + espece.libelle();
-        }
-        if (source instanceof SourceObservations.ParPassages lot) {
-            return "Écoute : " + lot.libelle();
-        }
-        return "Sons & validation";
+        return switch (source) {
+            case SourceObservations.References r -> "Sons de référence";
+            case SourceObservations.NonIdentifies n -> "Sons non identifiés";
+            case SourceObservations.ParEspece espece -> "Écoute : " + espece.libelle();
+            case SourceObservations.ParPassages lot -> "Écoute : " + lot.libelle();
+            case SourceObservations.ParPassage p -> "Sons & validation";
+        };
     }
 
     /// Texte de la **barre de statut** : total d'observations + avancement de la revue (« N observation(s)
