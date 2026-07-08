@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.139.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.139.0...v1.139.1) (2026-07-08)
+
+
+### Bug Fixes
+
+* **vues:** icônes d'onglet en FontIcon Ikonli (l'emoji 💾 ne se rendait pas) ([#700](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/700)) ([2cf8317](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/2cf83178129524fd69d63f9b677d898dfef9a9e0))
+
 # [1.139.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.138.0...v1.139.0) (2026-07-08)
 
 
