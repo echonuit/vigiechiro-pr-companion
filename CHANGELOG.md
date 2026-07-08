@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.135.4](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.135.3...v1.135.4) (2026-07-08)
+
+
+### Bug Fixes
+
+* **import:** recadrer le bandeau « mélange » pour le cas multi-nuits ([#677](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/677)) ([4117b11](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/4117b111eebbc6ac28d002c1970674a5a5f4cede))
+
 ## [1.135.3](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.135.2...v1.135.3) (2026-07-08)
 
 
