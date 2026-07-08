@@ -69,7 +69,7 @@
   </GridPane>
   <HBox alignment="CENTER_LEFT">
     <Button fx:id="boutonRecupererMeteo" text="Récupérer la météo"
-            styleClass="action-secondaire" onAction="#recupererMeteo"/>
+            styleClass="bouton-secondaire" onAction="#recupererMeteo"/>
   </HBox>
 
   <Separator/>
@@ -98,7 +98,7 @@
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>
-    <Button text="Annuler" styleClass="action-secondaire" onAction="#annuler"/>
-    <Button text="Appliquer" styleClass="action-primaire" onAction="#appliquer"/>
+    <Button text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
+    <Button text="Appliquer" styleClass="bouton-primaire" onAction="#appliquer"/>
   </HBox>
 </VBox>

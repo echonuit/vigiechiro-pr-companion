@@ -51,7 +51,7 @@
     <!-- Checklist vivante (#254) : une ligne ✓ / ✗ / ⚠ par contrôle, construite par le controller. -->
     <VBox fx:id="checklist" spacing="3.0"/>
     <Button fx:id="btnPreparer" text="📦 Vérifier et préparer le lot"
-            styleClass="action-primaire" onAction="#preparer"/>
+            styleClass="bouton-primaire" onAction="#preparer"/>
   </VBox>
 
   <!-- Étape 2 - Générer les archives ZIP (le payload réellement déposé) -->
@@ -62,7 +62,7 @@
            styleClass="section-sous" wrapText="true"/>
     <HBox spacing="8.0" alignment="CENTER_LEFT">
       <Button fx:id="btnGenererArchives" text="🗜 Générer les archives de dépôt"
-              styleClass="action-secondaire" onAction="#genererArchives"/>
+              styleClass="bouton-secondaire" onAction="#genererArchives"/>
       <ProgressIndicator fx:id="indicateurGeneration" prefWidth="22.0" prefHeight="22.0"
                          visible="false" managed="false"/>
     </HBox>
@@ -76,7 +76,7 @@
            styleClass="section-sous" wrapText="true"/>
     <Label fx:id="lblCheminDepot" styleClass="chemin" wrapText="true"/>
     <Button fx:id="btnOuvrirDepot" text="📂 Ouvrir le dossier"
-            styleClass="action-secondaire" onAction="#ouvrirDossierDepot"/>
+            styleClass="bouton-secondaire" onAction="#ouvrirDossierDepot"/>
   </VBox>
 
   <!-- Étape 4 - Marquer déposé -->
@@ -85,7 +85,7 @@
     <Label text="Une fois le téléversement effectué sur Vigie-Chiro, enregistrez le dépôt."
            styleClass="section-sous" wrapText="true"/>
     <Button fx:id="btnDeposer" text="✅ Marquer déposé"
-            styleClass="action-secondaire" onAction="#deposer"/>
+            styleClass="bouton-secondaire" onAction="#deposer"/>
   </VBox>
 
   <Label fx:id="lblMessage" styleClass="message-lot" wrapText="true"/>
