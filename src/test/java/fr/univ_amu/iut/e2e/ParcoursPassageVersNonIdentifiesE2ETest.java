@@ -19,6 +19,9 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.StatutObservation;
+import fr.univ_amu.iut.validation.model.Taxon;
+import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +31,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -115,12 +119,57 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
                     .isNull();
         });
 
-        // 3) Une séquence non identifiée n'est pas validable en l'état : « Valider » reste désactivé même
-        // après sélection (la validation manuelle sera ajoutée dans un second temps).
+        // 3) « Valider » (retenir la proposition Tadarida) reste désactivé : il n'y a pas de proposition
+        // Tadarida sur une séquence non identifiée. La validation se fait par « Corriger » (cf. test suivant).
         robot.interact(() -> table.getSelectionModel().select(0));
         assertThat(robot.lookup("#btnValider").queryAs(Button.class).isDisabled())
-                .as("séquence non identifiée non validable en l'état")
+                .as("rien à « retenir » : pas de proposition Tadarida")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("Non identifiés : valider une séquence à la main crée une observation (corrigée) qui persiste")
+    void valider_manuellement_une_sequence(FxRobot robot) {
+        robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
+        robot.interact(robot.lookup("#boutonNonIdentifies").queryAs(Button.class)::fire);
+
+        @SuppressWarnings("unchecked")
+        TableView<LigneObservationAudio> table = (TableView<LigneObservationAudio>)
+                (TableView<?>) robot.lookup("#tableObservations").queryAs(TableView.class);
+        long idSequence = table.getItems().get(0).idSequence();
+
+        // Sélectionner la 1re séquence, choisir un taxon, puis « Corriger » = la valider à la main.
+        robot.interact(() -> table.getSelectionModel().select(0));
+        @SuppressWarnings("unchecked")
+        ComboBox<Taxon> choixTaxon =
+                (ComboBox<Taxon>) (ComboBox<?>) robot.lookup("#choixTaxon").queryAs(ComboBox.class);
+        Taxon pippip = choixTaxon.getItems().stream()
+                .filter(t -> "Pippip".equals(t.code()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(() -> choixTaxon.setValue(pippip));
+
+        Button corriger = robot.lookup("#btnCorriger").queryAs(Button.class);
+        assertThat(corriger.isDisabled())
+                .as("Corriger actif : une ligne est sélectionnée et un taxon choisi")
+                .isFalse();
+        robot.interact(corriger::fire);
+
+        // La séquence RESTE dans la liste, désormais validée à la main (observation, corrigée, taxon retenu).
+        LigneObservationAudio ligne = table.getItems().stream()
+                .filter(l -> l.idSequence() == idSequence)
+                .findFirst()
+                .orElseThrow();
+        assertThat(ligne.idObservation())
+                .as("une observation manuelle a été créée")
+                .isNotNull();
+        assertThat(ligne.taxonObservateur()).isEqualTo("Pippip");
+        assertThat(ligne.statut()).isEqualTo(StatutObservation.CORRIGEE);
+
+        // Persistance : l'observation manuelle est bien en base.
+        assertThat(injector.getInstance(ObservationDao.class).observationManuelleDeLaSequence(idSequence))
+                .as("observation manuelle persistée pour la séquence")
+                .isPresent();
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {

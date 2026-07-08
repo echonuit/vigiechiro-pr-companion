@@ -10,6 +10,7 @@ import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.Taxon;
+import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -67,10 +68,19 @@ public class AudioViewModel {
     private final FilteredList<LigneObservationAudio> observationsFiltrees = new FilteredList<>(observations);
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
     private final ObjectProperty<LigneObservationAudio> selection = new SimpleObjectProperty<>(this, "selection");
-    /// Vrai quand la sélection porte une **observation** (et non une séquence non identifiée) : seule une
-    /// telle ligne est validable/corrigeable/référençable (les boutons de revue s'y lient).
-    private final ReadOnlyBooleanWrapper selectionValidable =
-            new ReadOnlyBooleanWrapper(this, "selectionValidable", false);
+    /// Vrai dès qu'une **ligne** est sélectionnée (observation ou séquence non identifiée). Pilote le bouton
+    /// **Corriger** : on peut toujours affecter un taxon à la sélection (correction d'une observation, ou
+    /// validation manuelle d'une séquence non identifiée).
+    private final ReadOnlyBooleanWrapper selectionPresente =
+            new ReadOnlyBooleanWrapper(this, "selectionPresente", false);
+    /// Vrai quand la sélection porte une **observation** (id non nul, y compris une observation manuelle).
+    /// Pilote le bouton **Référence** (on ne peut archiver que ce qui est déjà une observation).
+    private final ReadOnlyBooleanWrapper selectionAvecObservation =
+            new ReadOnlyBooleanWrapper(this, "selectionAvecObservation", false);
+    /// Vrai quand la sélection porte une **proposition Tadarida** (observation avec `taxon_tadarida`).
+    /// Pilote le bouton **Valider** (« retenir la proposition Tadarida » n'a de sens que s'il y en a une).
+    private final ReadOnlyBooleanWrapper selectionAvecTadarida =
+            new ReadOnlyBooleanWrapper(this, "selectionAvecTadarida", false);
     private final ReadOnlyBooleanWrapper selectionReference =
             new ReadOnlyBooleanWrapper(this, "selectionReference", false);
     private final ReadOnlyObjectWrapper<Path> cheminAudioCourant =
@@ -104,12 +114,17 @@ public class AudioViewModel {
                 observations.isEmpty(), observationsFiltrees.isEmpty(), ResolveurSourceAudio.messageVide(source));
     });
 
-    public AudioViewModel(ServiceValidation service, RevueEnLot revueEnLot, ServiceBibliotheque bibliotheque) {
+    public AudioViewModel(
+            ServiceValidation service,
+            ValidationManuelle validationManuelle,
+            RevueEnLot revueEnLot,
+            ServiceBibliotheque bibliotheque) {
         this.service = Objects.requireNonNull(service, "service");
         this.resolveur = new ResolveurSourceAudio(service);
         this.exporteur = new ExporteurAudio(service, bibliotheque);
         this.actions = new ActionsRevueAudio(
                 service,
+                Objects.requireNonNull(validationManuelle, "validationManuelle"),
                 Objects.requireNonNull(revueEnLot, "revueEnLot"),
                 selection::get,
                 modeRevue::get,
@@ -135,15 +150,10 @@ public class AudioViewModel {
         }
     }
 
-    /// Plage **nuit** par défaut à proposer au filtre « Heure » (#549) : pour une source **`ParPassage`**,
-    /// le coucher/lever du soleil de la nuit de la relève (via l'éphéméride, au GPS du point) ; **vide**
-    /// pour les autres sources (plusieurs nuits, pas de coucher/lever unique) ou faute de coordonnées, le
-    /// filtre retombant alors sur son défaut fixe 21 h → 6 h.
+    /// Plage **nuit** par défaut à proposer au filtre « Heure » (#549) : déléguée à [ResolveurSourceAudio]
+    /// (dépiautage de la source), vide si la source ne cible pas un passage unique.
     public Optional<PlageNuit> plageNuitParDefaut() {
-        // Sources ciblant un passage unique (ParPassage ou séquences non identifiées) : plage nuit de la
-        // relève ; les autres (lot, espèce, références) retombent sur le défaut fixe du filtre.
-        var contexte = source.contexteDuPassage();
-        return contexte == null ? Optional.empty() : service.plageNuitParDefaut(contexte.idPassage());
+        return resolveur.plageNuit(source);
     }
 
     /// Valide l'observation **sélectionnée** selon le [#modeRevueProperty()] (R15, R18), puis recharge.
@@ -268,42 +278,42 @@ public class AudioViewModel {
         return resultat.reussi();
     }
 
-    /// Recharge les lignes de la source courante en préservant la sélection (par identifiant
-    /// d'observation), puis met à jour compteurs et indice d'état vide.
+    /// Recharge les lignes de la source courante en **préservant la sélection**, puis met à jour compteurs
+    /// et indice d'état vide.
     private void charger() {
-        Long observationSelectionnee =
-                selection.get() == null ? null : selection.get().idObservation();
+        LigneObservationAudio selectionnee = selection.get();
         List<LigneObservationAudio> lignes = resolveur.lignes(source);
         observations.setAll(lignes);
-        reselectionner(observationSelectionnee);
+        reselectionner(selectionnee);
         // Ré-applique les filtres actifs ; le callback recompte ET met à jour l'indice d'état vide (source
         // vide vs filtres qui masquent tout) sur le sous-ensemble affiché.
         filtres.appliquer();
     }
 
-    /// Repositionne la sélection après un rechargement : sur la ligne de même identifiant si elle existe
-    /// encore, **sinon `null`**. Indispensable car une action peut faire **disparaître** la ligne
-    /// sélectionnée de la source (ex. retirer `is_reference` sur la source `References`) : garder
-    /// l'ancienne sélection laisserait détail / audio / bouton de référence alimentés par une ligne
-    /// absente de la liste.
-    private void reselectionner(Long idObservation) {
-        LigneObservationAudio retrouvee = idObservation == null
+    /// Repositionne la sélection après un rechargement : sur la **même ligne** si elle existe encore,
+    /// **sinon `null`**. Indispensable car une action peut faire **disparaître** la ligne sélectionnée de la
+    /// source (ex. retirer `is_reference` sur `References`) : garder l'ancienne sélection laisserait détail /
+    /// audio / boutons alimentés par une ligne absente de la liste.
+    private void reselectionner(LigneObservationAudio avant) {
+        LigneObservationAudio retrouvee = avant == null
                 ? null
                 : observations.stream()
-                        .filter(ligne -> idObservation.equals(ligne.idObservation()))
+                        .filter(avant::estLaMemeLigneQue)
                         .findFirst()
                         .orElse(null);
         selection.set(retrouvee);
     }
 
     private void majSelection(LigneObservationAudio courant) {
-        selectionValidable.set(courant != null && courant.idObservation() != null);
-        selectionReference.set(courant != null && courant.reference());
-        detail.set(courant == null ? "" : FormatLigneAudio.detail(courant));
+        boolean present = courant != null;
+        boolean avecObservation = present && courant.idObservation() != null;
+        selectionPresente.set(present);
+        selectionAvecObservation.set(avecObservation);
+        selectionAvecTadarida.set(avecObservation && courant.taxonTadarida() != null);
+        selectionReference.set(present && courant.reference());
+        detail.set(present ? FormatLigneAudio.detail(courant) : "");
         cheminAudioCourant.set(
-                courant == null
-                        ? null
-                        : service.cheminAudio(courant.idSequence()).orElse(null));
+                present ? service.cheminAudio(courant.idSequence()).orElse(null) : null);
     }
 
     private void reinitialiser() {
@@ -344,10 +354,22 @@ public class AudioViewModel {
         return selection;
     }
 
-    /// `true` dès qu'une **observation** est sélectionnée (activation des actions de revue) ; `false` pour
-    /// une séquence non identifiée (sans observation), qui n'est pas encore validable.
-    public ReadOnlyBooleanProperty selectionValidableProperty() {
-        return selectionValidable.getReadOnlyProperty();
+    /// `true` dès qu'une **ligne** est sélectionnée (bouton Corriger : affecter un taxon, correction ou
+    /// validation manuelle).
+    public ReadOnlyBooleanProperty selectionPresenteProperty() {
+        return selectionPresente.getReadOnlyProperty();
+    }
+
+    /// `true` si la sélection porte une **observation** (bouton Référence) ; `false` pour une séquence non
+    /// identifiée pas encore validée.
+    public ReadOnlyBooleanProperty selectionAvecObservationProperty() {
+        return selectionAvecObservation.getReadOnlyProperty();
+    }
+
+    /// `true` si la sélection porte une **proposition Tadarida** (bouton Valider) ; `false` pour une
+    /// observation manuelle ou une séquence non identifiée (rien à « retenir »).
+    public ReadOnlyBooleanProperty selectionAvecTadaridaProperty() {
+        return selectionAvecTadarida.getReadOnlyProperty();
     }
 
     /// `true` si l'observation sélectionnée est déjà en référence (libellé du bouton bascule : marquer

@@ -17,6 +17,7 @@ import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
+import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -76,6 +77,12 @@ public class ValidationModule extends AbstractModule {
     @Singleton
     ObservationDao fournirObservationDao(SourceDeDonnees source) {
         return new ObservationDao(source);
+    }
+
+    @Provides
+    @Singleton
+    ValidationManuelle fournirValidationManuelle(ObservationDao observationDao, TaxonDao taxonDao) {
+        return new ValidationManuelle(observationDao, taxonDao);
     }
 
     @Provides

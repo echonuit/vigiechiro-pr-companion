@@ -5,6 +5,7 @@ import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.Taxon;
+import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import java.util.List;
 import java.util.function.IntSupplier;
 import java.util.function.Predicate;
@@ -18,6 +19,7 @@ import java.util.function.Supplier;
 final class ActionsRevueAudio {
 
     private final ServiceValidation service;
+    private final ValidationManuelle validationManuelle;
     private final RevueEnLot revueEnLot;
     private final Supplier<LigneObservationAudio> selection;
     private final Supplier<ModeRevue> mode;
@@ -26,12 +28,14 @@ final class ActionsRevueAudio {
 
     ActionsRevueAudio(
             ServiceValidation service,
+            ValidationManuelle validationManuelle,
             RevueEnLot revueEnLot,
             Supplier<LigneObservationAudio> selection,
             Supplier<ModeRevue> mode,
             Runnable recharger,
             MessagesAudio messages) {
         this.service = service;
+        this.validationManuelle = validationManuelle;
         this.revueEnLot = revueEnLot;
         this.selection = selection;
         this.mode = mode;
@@ -49,14 +53,21 @@ final class ActionsRevueAudio {
         if (taxon == null) {
             return false;
         }
-        return surSelection(courant -> {
-            if (taxon.code().equals(courant.taxonTadarida())) {
-                messages.info("Pour retenir la proposition Tadarida, utilisez « Valider » : corriger attend"
-                        + " un autre taxon.");
-                return false;
-            }
-            return appliquer(() -> service.corriger(courant.idObservation(), taxon.code(), null));
-        });
+        LigneObservationAudio courant = selection.get();
+        if (courant == null) {
+            return false;
+        }
+        // Séquence non identifiée (sans observation) : « corriger » = la valider à la main, ce qui crée une
+        // observation manuelle portant le taxon choisi (sans proposition Tadarida).
+        if (courant.idObservation() == null) {
+            return appliquer(() -> validationManuelle.valider(courant.idSequence(), taxon.code()));
+        }
+        if (taxon.code().equals(courant.taxonTadarida())) {
+            messages.info("Pour retenir la proposition Tadarida, utilisez « Valider » : corriger attend"
+                    + " un autre taxon.");
+            return false;
+        }
+        return appliquer(() -> service.corriger(courant.idObservation(), taxon.code(), null));
     }
 
     boolean basculerReference() {

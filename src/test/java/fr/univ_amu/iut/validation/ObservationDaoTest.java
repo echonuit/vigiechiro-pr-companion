@@ -498,6 +498,62 @@ class ObservationDaoTest {
         assertThat(dao.lignesAudioNonIdentifiees(idPassage)).isEmpty();
     }
 
+    /// Observation **manuelle** de la séquence du fixture : taxon observateur `observateur`, **sans**
+    /// proposition ni jeu de résultats Tadarida (autorisé depuis la migration V13).
+    private Observation observationManuelle(String observateur) {
+        return new Observation(
+                null,
+                idSequence,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                observateur,
+                null,
+                null,
+                false,
+                ModeValidation.MANUEL,
+                null);
+    }
+
+    @Test
+    @DisplayName("#V13 : une observation manuelle (sans taxon ni jeu de résultats Tadarida) est persistée")
+    void observation_manuelle_sans_tadarida_ni_results() {
+        Observation relu =
+                dao.findById(dao.insert(observationManuelle("Pippip")).id()).orElseThrow();
+
+        assertThat(relu.taxonTadarida()).isNull();
+        assertThat(relu.idResultats()).isNull();
+        assertThat(relu.taxonObservateur()).isEqualTo("Pippip");
+        assertThat(relu.modeValidation()).isEqualTo(ModeValidation.MANUEL);
+    }
+
+    @Test
+    @DisplayName("#audio : après validation manuelle, la séquence RESTE dans les non identifiés (corrigée + taxon)")
+    void lignes_audio_non_identifiees_montre_l_observation_manuelle() {
+        long idObs = dao.insert(observationManuelle("Pippip")).id();
+
+        assertThat(dao.lignesAudioNonIdentifiees(idPassage)).singleElement().satisfies(ligne -> {
+            assertThat(ligne.idSequence()).isEqualTo(idSequence);
+            assertThat(ligne.idObservation()).isEqualTo(idObs);
+            assertThat(ligne.taxonTadarida()).isNull();
+            assertThat(ligne.taxonObservateur()).isEqualTo("Pippip");
+            assertThat(ligne.statut()).isEqualTo(StatutObservation.CORRIGEE);
+        });
+    }
+
+    @Test
+    @DisplayName("#audio : observationManuelleDeLaSequence renvoie la manuelle, jamais une observation Tadarida")
+    void observation_manuelle_de_la_sequence_ignore_la_tadarida() {
+        dao.insert(observationComplete()); // observation Tadarida (results_id non nul)
+        long idManuelle = dao.insert(observationManuelle("Pippip")).id();
+
+        assertThat(dao.observationManuelleDeLaSequence(idSequence).orElseThrow().id())
+                .isEqualTo(idManuelle);
+    }
+
     @Test
     @DisplayName("#audio : lignesAudioDesPassages agrège les observations de plusieurs passages")
     void lignes_audio_des_passages() throws SQLException {

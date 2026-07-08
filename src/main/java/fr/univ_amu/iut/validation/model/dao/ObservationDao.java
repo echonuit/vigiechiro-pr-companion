@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /// DAO de l'entité [Observation] (table `observation`, clé auto-incrémentée).
 ///
@@ -53,6 +54,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String COL_SEQ = "seq";
     private static final String COL_NUM_PASSAGE = "num_passage";
     private static final String COL_POINT_CODE = "point_code";
+    private static final String COL_OBSERVER = "observer";
+    private static final String COL_IS_REFERENCE = "is_reference";
 
     /// Jointures communes `listening_sequence (ls) → recording_session → passage → point → site` : le
     /// **contexte d'un relevé**, partagé par toutes les projections transverses (observations, espèces,
@@ -85,9 +88,9 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("taxon_observer"),
             (Double) rs.getObject(COL_PROB_OBSERVER),
             rs.getString("user_comment"),
-            rs.getInt("is_reference") != 0,
+            rs.getInt(COL_IS_REFERENCE) != 0,
             ModeValidation.parLibelle(rs.getString("validation_mode")),
-            rs.getLong("results_id"));
+            longNullable(rs, "results_id")); // nullable : une observation manuelle n'a pas de jeu Tadarida
 
     public ObservationDao(SourceDeDonnees source) {
         super(source);
@@ -263,7 +266,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString(COL_NOM_SITE),
             rs.getString("tadarida"),
             (Double) rs.getObject(COL_PROB_TADARIDA),
-            rs.getString("observer"),
+            rs.getString(COL_OBSERVER),
             (Double) rs.getObject(COL_PROB_OBSERVER),
             StatutObservation.valueOf(rs.getString(COL_STATUT)));
 
@@ -313,10 +316,10 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString(COL_NOM_SITE),
             rs.getString("tadarida"),
             (Double) rs.getObject(COL_PROB_TADARIDA),
-            rs.getString("observer"),
+            rs.getString(COL_OBSERVER),
             (Double) rs.getObject(COL_PROB_OBSERVER),
             StatutObservation.valueOf(rs.getString(COL_STATUT)),
-            rs.getInt("is_reference") != 0,
+            rs.getInt(COL_IS_REFERENCE) != 0,
             rs.getString("commentaire"),
             entierNullable(rs, "frequence"),
             rs.getString("nom_espece"),
@@ -369,24 +372,34 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     /// liste part des enregistrements (et non des observations, absentes par définition).
     private static final String DE_SEQUENCE_AU_SITE = " FROM listening_sequence ls" + JOIN_SESSION_AU_SITE;
 
-    /// Séquences d'un passage **sans aucune observation** (présentes sur disque, absentes du CSV Tadarida),
-    /// projetées comme des lignes audio « à revoir » **sans taxon** : écoutables (via `idSequence`), mais
-    /// non rattachées à une observation. Ordre chronologique (horodatage puis nom de fichier).
-    private static final String SQL_LIGNES_NON_IDENTIFIEES = "SELECT ls.id AS seq,"
+    /// Séquences d'un passage **sans observation Tadarida** (présentes sur disque, absentes du CSV),
+    /// projetées comme des lignes audio « à revoir » : écoutables (via `idSequence`). Une éventuelle
+    /// **observation manuelle** (`results_id IS NULL`, créée en validant à la main) est rattachée par un
+    /// `LEFT JOIN` — la séquence **reste** dans la liste après validation, marquée « corrigée » avec le
+    /// taxon saisi. Le `NOT EXISTS` n'écarte que les séquences **identifiées par Tadarida**
+    /// (`results_id IS NOT NULL`). Ordre chronologique (horodatage puis nom de fichier).
+    private static final String SQL_LIGNES_NON_IDENTIFIEES = "SELECT ls.id AS seq, om.id AS id,"
+            + " om.taxon_observer AS observer, om.prob_observer AS prob_observer,"
+            + " om.user_comment AS commentaire, om.is_reference AS is_reference,"
+            + " CASE WHEN om.taxon_observer IS NULL THEN 'NON_TOUCHEE' ELSE 'CORRIGEE' END AS statut,"
+            + " te.vernacular_name_fr AS nom_espece,"
             + " p.id AS passage_id, p.passage_number AS num_passage, p.recording_date AS date_enr,"
             + " ms.square_number AS carre, ms.friendly_name AS nom_site, lp.code AS point_code,"
             + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at"
             + DE_SEQUENCE_AU_SITE
+            + " LEFT JOIN observation om ON om.sequence_id = ls.id AND om.results_id IS NULL"
+            + " LEFT JOIN taxon te ON te.code = om.taxon_observer"
             + " WHERE rs.passage_id = ?"
-            + "   AND NOT EXISTS (SELECT 1 FROM observation o WHERE o.sequence_id = ls.id)"
+            + "   AND NOT EXISTS (SELECT 1 FROM observation o WHERE o.sequence_id = ls.id"
+            + "                   AND o.results_id IS NOT NULL)"
             + " ORDER BY ls.recorded_at, ls.file_name";
 
-    /// Projette une séquence non identifiée en [LigneObservationAudio] : **pas d'observation**
-    /// (`idObservation` nul), aucun taxon/probabilité/fréquence Tadarida, statut **à revoir**
-    /// ([StatutObservation#NON_TOUCHEE]). Seuls l'`idSequence`, le contexte du passage et l'horodatage
-    /// sont renseignés — assez pour situer et écouter la séquence.
+    /// Projette une séquence non identifiée en [LigneObservationAudio]. Sans validation manuelle :
+    /// `idObservation` nul, aucun taxon, statut **à revoir**. Après validation manuelle : l'`id` et le
+    /// `taxon_observer` de l'**observation manuelle** (jointe) sont portés, statut **corrigée**. Aucun champ
+    /// Tadarida (proposition/probabilité/fréquence) : ces séquences n'en ont pas.
     private static final RowMapper<LigneObservationAudio> MAPPER_LIGNE_NON_IDENTIFIEE = rs -> new LigneObservationAudio(
-            null, // idObservation : séquence sans observation
+            longNullable(rs, "id"), // id de l'observation manuelle, ou null si pas encore validée
             rs.getLong(COL_SEQ),
             rs.getLong(COL_PASSAGE_ID),
             rs.getInt(COL_NUM_PASSAGE),
@@ -394,15 +407,15 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString(COL_CARRE),
             rs.getString(COL_POINT_CODE),
             rs.getString(COL_NOM_SITE),
-            null, // taxonTadarida
+            null, // taxonTadarida (aucune proposition Tadarida)
             null, // probTadarida
-            null, // taxonObservateur
-            null, // probObservateur
-            StatutObservation.NON_TOUCHEE,
-            false, // reference
-            null, // commentaire
+            rs.getString(COL_OBSERVER), // taxonObservateur (saisi en validation manuelle)
+            (Double) rs.getObject(COL_PROB_OBSERVER),
+            StatutObservation.valueOf(rs.getString(COL_STATUT)),
+            rs.getInt(COL_IS_REFERENCE) != 0,
+            rs.getString("commentaire"),
             null, // frequenceKHz
-            null, // nomEspece
+            rs.getString("nom_espece"), // vernaculaire du taxon retenu (observateur)
             null, // nomTadarida
             null, // groupe
             rs.getString("nom_fichier"),
@@ -410,10 +423,23 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             null, // finS
             heureCaptureDe(rs.getString("recorded_at")));
 
-    /// Source **Non identifiés** : les séquences d'un passage **sans observation Tadarida** (à écouter, en
-    /// vue d'une validation manuelle). L'écoute ne dépend pas d'une observation, seulement de la séquence.
+    /// Source **Non identifiés** : les séquences d'un passage **sans observation Tadarida** (à écouter et
+    /// valider à la main). L'écoute ne dépend pas d'une observation, seulement de la séquence ; une
+    /// validation manuelle y rattache une observation (visible ici après coup).
     public List<LigneObservationAudio> lignesAudioNonIdentifiees(Long idPassage) {
         return projeter(SQL_LIGNES_NON_IDENTIFIEES, MAPPER_LIGNE_NON_IDENTIFIEE, idPassage);
+    }
+
+    /// L'**observation manuelle** d'une séquence (celle sans jeu de résultats Tadarida, `results_id IS
+    /// NULL`), ou vide s'il n'y en a pas encore. Sert à la validation manuelle : mettre à jour l'existante
+    /// plutôt qu'en créer une seconde. (Au plus une par séquence, garantie par le service.)
+    public Optional<Observation> observationManuelleDeLaSequence(long idSequence) {
+        return query(
+                        "SELECT * FROM observation WHERE sequence_id = ? AND results_id IS NULL ORDER BY id",
+                        MAPPER,
+                        idSequence)
+                .stream()
+                .findFirst();
     }
 
     @Override
@@ -542,6 +568,14 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     /// Lit un `INTEGER` nullable : `null` si la colonne vaut SQL NULL, sinon sa valeur.
     private static Integer entierNullable(ResultSet rs, String colonne) throws SQLException {
         int valeur = rs.getInt(colonne);
+        return rs.wasNull() ? null : valeur;
+    }
+
+    /// Lit une colonne `INTEGER` **nullable** en `Long` : `getLong` + [ResultSet#wasNull()], robuste quel
+    /// que soit le type boxé rendu par le pilote (SQLite renvoie parfois `Integer` via `getObject`, d'où
+    /// l'échec d'un cast direct `(Long)`).
+    private static Long longNullable(ResultSet rs, String colonne) throws SQLException {
+        long valeur = rs.getLong(colonne);
         return rs.wasNull() ? null : valeur;
     }
 

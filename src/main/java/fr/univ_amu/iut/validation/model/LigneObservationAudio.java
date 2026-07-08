@@ -71,4 +71,14 @@ public record LigneObservationAudio(
         String nomFichier,
         Double debutS,
         Double finS,
-        LocalDateTime heureCapture) {}
+        LocalDateTime heureCapture) {
+
+    /// Ces deux projections désignent-elles la **même ligne** ? Une observation se réidentifie par son
+    /// `idObservation` (unique, même si une séquence porte plusieurs cris) ; une **séquence non identifiée**
+    /// (id nul, puis id non nul après validation manuelle) se réidentifie par son `idSequence`. Sert à
+    /// **préserver la sélection** au rechargement de la vue audio, y compris au moment où on valide une
+    /// séquence à la main.
+    public boolean estLaMemeLigneQue(LigneObservationAudio autre) {
+        return idObservation != null ? idObservation.equals(autre.idObservation()) : idSequence == autre.idSequence();
+    }
+}

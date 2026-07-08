@@ -38,7 +38,13 @@ séquences non classées) **n'apparaissent pas dans la validation**. La carte **
 ouvre la vue [Sons & validation](validation.md) sur **ces séquences‑là** : celles qui existent sur le
 disque mais **sans identification Tadarida**. Vous pouvez les **écouter** pour vérifier par vous‑même s'il
 s'y cache une chauve‑souris que l'algorithme aurait manquée. Leur colonne d'espèce affiche « — » (aucune
-proposition), et la validation manuelle de ces séquences sera proposée dans une prochaine version.
+proposition).
+
+**Valider à la main.** Si vous reconnaissez une espèce, sélectionnez la séquence, choisissez le taxon dans
+la liste puis cliquez sur **Corriger** : une observation est créée pour cette séquence, qui passe alors au
+statut **Corrigée** avec votre taxon. La séquence **reste** dans la liste (vous voyez ce qui a déjà été
+traité) et l'observation rejoint le reste de vos données. Le bouton **Valider** — qui « retient la
+proposition Tadarida » — reste inactif ici, faute de proposition à retenir.
 
 ## Annuler le dépôt
 

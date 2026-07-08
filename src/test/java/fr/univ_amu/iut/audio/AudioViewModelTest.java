@@ -23,6 +23,7 @@ import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
+import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -44,6 +45,9 @@ class AudioViewModelTest {
     ServiceValidation service;
 
     @Mock
+    ValidationManuelle validationManuelle;
+
+    @Mock
     RevueEnLot revueEnLot;
 
     @Mock
@@ -53,7 +57,7 @@ class AudioViewModelTest {
             new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Mon site"));
 
     private AudioViewModel vm() {
-        return new AudioViewModel(service, revueEnLot, bibliotheque);
+        return new AudioViewModel(service, validationManuelle, revueEnLot, bibliotheque);
     }
 
     private static LigneObservationAudio ligne(
@@ -123,7 +127,7 @@ class AudioViewModelTest {
             vm.ouvrirSur(source());
             vm.selectionProperty().set(l);
 
-            assertThat(vm.selectionValidableProperty().get()).isTrue();
+            assertThat(vm.selectionAvecObservationProperty().get()).isTrue();
             assertThat(vm.cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/transformes/a.wav"));
             assertThat(vm.detailProperty().get()).contains("Tadarida : Pippip").contains("À revoir");
         }
@@ -383,7 +387,7 @@ class AudioViewModelTest {
             assertThat(vm.basculerReference()).isTrue();
             verify(service).marquerReference(1L, false);
             assertThat(vm.selectionProperty().get()).isNull();
-            assertThat(vm.selectionValidableProperty().get()).isFalse();
+            assertThat(vm.selectionAvecObservationProperty().get()).isFalse();
             assertThat(vm.cheminAudioCourantProperty().get()).isNull();
             assertThat(vm.detailProperty().get()).isEmpty();
         }

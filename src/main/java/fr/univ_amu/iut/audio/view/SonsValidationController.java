@@ -349,16 +349,22 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         choixTaxon.setItems(viewModel.taxons());
         choixTaxon.setConverter(LibellesAudio.converter(taxon -> taxon == null ? "" : LibellesAudio.taxon(taxon)));
 
-        btnValider.disableProperty().bind(viewModel.selectionValidableProperty().not());
+        // Valider = retenir la proposition Tadarida : seulement s'il y en a une.
+        btnValider
+                .disableProperty()
+                .bind(viewModel.selectionAvecTadaridaProperty().not());
+        // Corriger = affecter un taxon : sur toute ligne sélectionnée (correction d'une observation OU
+        // validation manuelle d'une séquence non identifiée), dès qu'un taxon est choisi.
         btnCorriger
                 .disableProperty()
                 .bind(viewModel
-                        .selectionValidableProperty()
+                        .selectionPresenteProperty()
                         .not()
                         .or(choixTaxon.valueProperty().isNull()));
+        // Référence = archiver : seulement ce qui est déjà une observation.
         btnReference
                 .disableProperty()
-                .bind(viewModel.selectionValidableProperty().not());
+                .bind(viewModel.selectionAvecObservationProperty().not());
         // Libellé + icône (étoile dorée) de la bascule selon l'état de l'observation sélectionnée.
         btnReference.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_REFERENCE, CellulesAudio.STYLE_REFERENCE));
         btnReference

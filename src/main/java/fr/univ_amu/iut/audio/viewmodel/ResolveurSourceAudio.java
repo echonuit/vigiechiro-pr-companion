@@ -1,11 +1,14 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Résout une [SourceObservations] (descripteur de provenance) en données concrètes via
 /// [ServiceValidation] : la liste des [LigneObservationAudio] à écouter, l'identifiant du jeu de
@@ -36,6 +39,14 @@ final class ResolveurSourceAudio {
             case SourceObservations.NonIdentifies s ->
                 service.lignesAudioNonIdentifiees(s.contexte().idPassage());
         };
+    }
+
+    /// Plage **nuit** par défaut du filtre « Heure » (#549) : pour une source ciblant **un passage unique**
+    /// ([ParPassage] ou [NonIdentifies]), le coucher/lever de la nuit de la relève ; **vide** sinon (plusieurs
+    /// nuits, ou pas de contexte), le filtre retombant alors sur son défaut fixe 21 h → 6 h.
+    Optional<PlageNuit> plageNuit(SourceObservations source) {
+        ContextePassage contexte = source.contexteDuPassage();
+        return contexte == null ? Optional.empty() : service.plageNuitParDefaut(contexte.idPassage());
     }
 
     /// Identifiant du jeu de résultats Tadarida, connu seulement pour `ParPassage` (`null` sinon).

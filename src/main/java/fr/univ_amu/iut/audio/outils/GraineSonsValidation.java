@@ -42,6 +42,7 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
+import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.io.IOException;
@@ -113,8 +114,11 @@ final class GraineSonsValidation {
                 new AbstractModule() {
                     @Provides
                     AudioViewModel viewModel(
-                            ServiceValidation validation, RevueEnLot revueEnLot, ServiceBibliotheque bibliotheque) {
-                        return new AudioViewModel(validation, revueEnLot, bibliotheque);
+                            ServiceValidation validation,
+                            ValidationManuelle validationManuelle,
+                            RevueEnLot revueEnLot,
+                            ServiceBibliotheque bibliotheque) {
+                        return new AudioViewModel(validation, validationManuelle, revueEnLot, bibliotheque);
                     }
 
                     // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est

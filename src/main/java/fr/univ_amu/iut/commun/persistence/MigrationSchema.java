@@ -38,7 +38,8 @@ public class MigrationSchema {
         "V09__horodatage_capture_sequence.sql",
         "V10__materiel_micro_passage.sql",
         "V11__saved_filter_view.sql",
-        "V12__reglages.sql"
+        "V12__reglages.sql",
+        "V13__observation_manuelle.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

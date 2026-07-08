@@ -31,6 +31,7 @@ import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
+import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -136,7 +137,7 @@ class SonsValidationViewTest {
                 new AbstractModule() {
                     @Provides
                     AudioViewModel viewModel() {
-                        return new AudioViewModel(service, revueEnLot, bibliotheque);
+                        return new AudioViewModel(service, mock(ValidationManuelle.class), revueEnLot, bibliotheque);
                     }
 
                     @Provides
