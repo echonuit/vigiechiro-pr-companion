@@ -15,6 +15,7 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -339,7 +340,11 @@ final class CriteresAudio {
                 a.valueProperty()
                         .addListener((obs, avant, apres) -> applique.accept(dansPlage(de.getValue(), a.getValue())));
                 applique.accept(dansPlage(de.getValue(), a.getValue())); // application initiale (nuit)
-                return new HBox(6.0, new Label("de"), de, new Label("à"), a);
+                HBox editeur = new HBox(6.0, new Label("de"), de, new Label("à"), a);
+                // Sans alignement, les libellés « de »/« à » (courts) se collent en haut de la rangée alors
+                // que les listes déroulantes sont plus hautes : on les recentre verticalement.
+                editeur.setAlignment(Pos.CENTER_LEFT);
+                return editeur;
             }
 
             @Override

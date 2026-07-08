@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Optional;
 import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -56,6 +57,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.PickResult;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -201,6 +203,22 @@ class SonsValidationViewTest {
         double y0 = puces.getChildren().get(0).getBoundsInParent().getMinY();
         double y1 = puces.getChildren().get(1).getBoundsInParent().getMinY();
         assertThat(y1).isCloseTo(y0, within(1.0));
+    }
+
+    @Test
+    @DisplayName("Le filtre « Heure » centre verticalement son éditeur (« de »/« à » alignés avec les listes)")
+    void filtre_heure_editeur_centre_verticalement(FxRobot robot) {
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        robot.interact(() -> itemParLibelle(menuAjout, "Heure").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        HBox puce = (HBox) puces.getChildren().get(0);
+        // Structure de la puce : [Label « Heure », éditeur (« de » / liste / « à » / liste), bouton ✕].
+        HBox editeur = (HBox) puce.getChildren().get(1);
+        assertThat(editeur.getAlignment())
+                .as("les libellés « de »/« à » doivent être centrés avec les listes, pas collés en haut")
+                .isEqualTo(Pos.CENTER_LEFT);
     }
 
     @Test
