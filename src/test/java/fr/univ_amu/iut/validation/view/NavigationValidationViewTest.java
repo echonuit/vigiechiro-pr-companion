@@ -28,9 +28,9 @@ import org.testfx.framework.junit5.Start;
 /// Test d'intégration TestFX de la **façade** [NavigationValidation] : sur le vrai injecteur
 /// ([RacineInjecteur]) + chrome, on appelle `ouvrir(idPassage)`. Depuis la vue audio unifiée, la façade
 /// **délègue à `OuvrirAudio`** (source `ParPassage`) : on vérifie que l'écran « Sons & validation » se
-/// charge via Guice + le `Navigateur` du socle. Le passage est absent : aucun résultat n'est importé, le
-/// ViewModel affiche l'état vide (« Aucun résultat Tadarida importé pour ce passage »), ce qui exerce
-/// toute la chaîne sans seeding complet.
+/// charge via Guice + le `Navigateur` du socle. Le passage est absent : ni observation ni séquence, le
+/// ViewModel affiche l'état vide (« Aucun son à écouter pour ce passage… »), ce qui exerce toute la chaîne
+/// sans seeding complet.
 @ExtendWith(ApplicationExtension.class)
 class NavigationValidationViewTest {
 
@@ -63,7 +63,7 @@ class NavigationValidationViewTest {
         Label etatVide = robot.lookup("#lblVide").queryAs(Label.class);
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
 
-        assertThat(etatVide.getText()).contains("Aucun résultat Tadarida importé");
+        assertThat(etatVide.getText()).contains("Aucun son à écouter pour ce passage");
         assertThat(table.getItems()).isEmpty();
     }
 }

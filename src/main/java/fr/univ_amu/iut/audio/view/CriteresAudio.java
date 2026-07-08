@@ -29,7 +29,8 @@ import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de la table audio (patron « à la Notion »). Chaque critère est
 /// une entrée du menu « + Filtre » qui s'ajoute comme puce : **Statut**, **Groupe** taxonomique,
-/// **Espèce** (taxon), **Références**, **Proba** (seuil de probabilité Tadarida) et **Heure** (plage horaire).
+/// **Espèce** (taxon), **Références**, **Non identifiés** (sans proposition Tadarida), **Proba** (seuil de
+/// probabilité Tadarida) et **Heure** (plage horaire).
 final class CriteresAudio {
 
     /// Groupe des chauves-souris (`taxonomic_group.name`, cf. #507) : sélection par défaut du critère
@@ -50,7 +51,9 @@ final class CriteresAudio {
     ///   n'écarte rien (indispensable pour ne pas masquer des séquences déjà validées, ni casser la source
     ///   « non identifiés » qui n'a pas de statut « à revoir » après validation manuelle) ;
     /// - **« À valider »** (statut À revoir, le cœur de la revue) ;
-    /// - **« Chiroptères »** (groupe Chiroptères, #471).
+    /// - **« Chiroptères »** (groupe Chiroptères, #471) ;
+    /// - **« Sons non identifiés »** (séquences sans proposition Tadarida : présentes sur disque mais absentes
+    ///   du CSV, à valider à la main — cf. [#nonIdentifie()]).
     ///
     /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
     /// que rejouer la vue laisse un état « non modifié ».
@@ -59,7 +62,8 @@ final class CriteresAudio {
                 vueParDefaut("Tout"),
                 vueParDefaut(
                         "À valider", new DescripteurCritere("statut", List.of(StatutObservation.NON_TOUCHEE.name()))),
-                vueParDefaut("Chiroptères", new DescripteurCritere("groupe", List.of(GROUPE_CHIROPTERES))));
+                vueParDefaut("Chiroptères", new DescripteurCritere("groupe", List.of(GROUPE_CHIROPTERES))),
+                vueParDefaut("Sons non identifiés", new DescripteurCritere("non_identifie", List.of())));
     }
 
     /// Une vue par défaut : `id` **nul** (jamais persistée → lecture seule) et descripteur des critères donnés
@@ -273,6 +277,31 @@ final class CriteresAudio {
             @Override
             public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
                 applique.accept(LigneObservationAudio::reference); // filtre actif dès l'ajout de la puce
+                return null; // booléen : pas d'éditeur, la présence de la puce suffit
+            }
+        };
+    }
+
+    /// Critère **Non identifiés** : garde les séquences **sans proposition Tadarida** (`taxonTadarida == null`)
+    /// — présentes sur disque mais absentes du CSV Tadarida, à valider à la main. C'est le **complément exact**
+    /// des observations Tadarida (dont la proposition n'est jamais nulle), y compris une fois validées à la main
+    /// (elles n'acquièrent pas de proposition Tadarida). Critère **sans éditeur** (booléen) : la présence de la
+    /// puce active le filtre. Porte la vue par défaut « Sons non identifiés » ([#vuesParDefaut()]).
+    static CritereFiltre<LigneObservationAudio> nonIdentifie() {
+        return new CritereFiltre<LigneObservationAudio>() {
+            @Override
+            public String nom() {
+                return "non_identifie";
+            }
+
+            @Override
+            public String libelle() {
+                return "Non identifiés";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
+                applique.accept(ligne -> ligne.taxonTadarida() == null); // filtre actif dès l'ajout de la puce
                 return null; // booléen : pas d'éditeur, la présence de la puce suffit
             }
         };

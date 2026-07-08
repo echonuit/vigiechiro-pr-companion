@@ -644,6 +644,31 @@ class SonsValidationViewTest {
         return bouton.getAccessibleText() != null && bouton.getAccessibleText().startsWith("Enregistrer");
     }
 
+    @Test
+    @DisplayName("Vue par défaut « Sons non identifiés » : pose la puce et écarte les observations Tadarida")
+    void vue_sons_non_identifies_filtre_sur_absence_de_tadarida(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+        // L'onglet par défaut « Sons non identifiés » est présent parmi les vues.
+        Label onglet = robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class).stream()
+                .filter(label -> "Sons non identifiés".equals(label.getText()))
+                .findFirst()
+                .orElseThrow();
+
+        // Les références de test ont toutes une proposition Tadarida : activer la vue (filtre taxonTadarida ==
+        // null) doit vider la table et poser la puce « Non identifiés ».
+        robot.interact(() -> onglet.getOnMouseClicked().handle(null));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.lookup("#tableObservations").queryAs(TableView.class).getItems())
+                .as("le filtre non identifiés écarte les observations Tadarida")
+                .isEmpty();
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        assertThat(robot.from(puces).lookup(".puce-filtre .label").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .as("la puce du filtre « Non identifiés » est posée")
+                .contains("Non identifiés");
+    }
+
     private static TableColumn<?, ?> colonne(FxRobot robot, String entete) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         return table.getColumns().stream()

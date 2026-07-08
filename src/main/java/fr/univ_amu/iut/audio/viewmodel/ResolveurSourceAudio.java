@@ -9,6 +9,7 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /// Résout une [SourceObservations] (descripteur de provenance) en données concrètes via
 /// [ServiceValidation] : la liste des [LigneObservationAudio] à écouter, l'identifiant du jeu de
@@ -30,8 +31,7 @@ final class ResolveurSourceAudio {
     /// Lignes audio de l'ensemble décrit par `source`.
     List<LigneObservationAudio> lignes(SourceObservations source) {
         return switch (source) {
-            case SourceObservations.ParPassage s ->
-                service.lignesAudioDuPassage(s.contexte().idPassage());
+            case SourceObservations.ParPassage s -> lignesDuPassage(s.contexte().idPassage());
             case SourceObservations.ParPassages s -> service.lignesAudioDesPassages(s.idPassages());
             case SourceObservations.ParEspece s ->
                 service.lignesAudioDeLEspece(s.idUtilisateur(), s.codeEspece(), statutDe(s.statut()));
@@ -39,6 +39,19 @@ final class ResolveurSourceAudio {
             case SourceObservations.NonIdentifies s ->
                 service.lignesAudioNonIdentifiees(s.contexte().idPassage());
         };
+    }
+
+    /// Lignes d'**un passage** pour la vue fusionnée : les **observations Tadarida** (`taxonTadarida != null`)
+    /// réunies aux **séquences non identifiées** (sans proposition Tadarida). La restriction `taxonTadarida
+    /// != null` sur les observations évite un **doublon** : une séquence validée à la main possède une
+    /// observation (donc listée par `lignesAudioDuPassage`) **mais reste** dans `lignesAudioNonIdentifiees`
+    /// (elle n'a jamais eu de proposition Tadarida). Les deux ensembles se partitionnent ainsi exactement sur
+    /// la nullité de `taxonTadarida` — le prédicat même de la vue « Sons non identifiés ».
+    private List<LigneObservationAudio> lignesDuPassage(Long idPassage) {
+        Stream<LigneObservationAudio> tadarida =
+                service.lignesAudioDuPassage(idPassage).stream().filter(ligne -> ligne.taxonTadarida() != null);
+        Stream<LigneObservationAudio> nonIdentifiees = service.lignesAudioNonIdentifiees(idPassage).stream();
+        return Stream.concat(tadarida, nonIdentifiees).toList();
     }
 
     /// Plage **nuit** par défaut du filtre « Heure » (#549) : pour une source ciblant **un passage unique**
@@ -67,7 +80,7 @@ final class ResolveurSourceAudio {
                     + " identification Tadarida.";
         }
         return source instanceof SourceObservations.ParPassage
-                ? "Aucun résultat Tadarida importé pour ce passage."
+                ? "Aucun son à écouter pour ce passage (ni observation Tadarida, ni séquence non identifiée)."
                 : "Aucune observation à écouter pour cette source.";
     }
 
