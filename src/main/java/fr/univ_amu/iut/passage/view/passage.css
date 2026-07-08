@@ -88,39 +88,6 @@
   -fx-text-fill: #2c3e50;
 }
 
-.action-primaire {
-  -fx-background-color: -couleur-primaire;
-  -fx-text-fill: white;
-  -fx-font-weight: bold;
-  -fx-padding: 9 18 9 18;
-  -fx-background-radius: 4;
-}
-
-.action-secondaire {
-  -fx-background-color: white;
-  -fx-text-fill: #2c3e50;
-  -fx-border-color: #6a737d;
-  -fx-border-radius: 3;
-  -fx-background-radius: 3;
-  -fx-padding: 8 14 8 14;
-}
-
-/* Bouton header « Supprimer » : contour rouge sur fond blanc (action destructrice). */
-.bouton-danger {
-  -fx-background-color: white;
-  -fx-text-fill: #a93226;
-  -fx-font-weight: bold;
-  -fx-border-color: #a93226;
-  -fx-border-radius: 4;
-  -fx-background-radius: 4;
-  -fx-padding: 7 14 7 14;
-  -fx-cursor: hand;
-}
-
-.bouton-danger:disabled {
-  -fx-opacity: 0.45;
-}
-
 /* Modale « Modifier le rattachement » (E2.S8). */
 .modale-rattachement {
   -fx-background-color: white;
