@@ -10,7 +10,7 @@
 <!--
   M-Passage - écran pivot d'un passage (détail), en « hub à plat » : bandeau d'identité, stepper de
   statut workflow, résumé de la nuit (stats) et un jeu de cartes d'actions « avancer » (Vérifier,
-  Diagnostic, Préparer le dépôt, Validation Tadarida). Le retour et le fil d'Ariane sont portés par le
+  Diagnostic, Préparer le dépôt, Sons & validation). Le retour et le fil d'Ariane sont portés par le
   chrome (commun) : pas de fil interne ni d'onglets-lanceurs ici. Les cartes ouvrent M-Qualification,
   M-Diagnostic, M-Lot et M-Vision-Tadarida via les contrats socle (Ouvrir*). Pur câblage : tout est
   lié au PassageViewModel par PassageController.
@@ -134,13 +134,13 @@
         </Button>
         <Button fx:id="boutonValidation" styleClass="carte-action"
                 onAction="#validerTadarida" contentDisplay="GRAPHIC_ONLY"
-                accessibleText="Validation Tadarida : valider les identifications"
+                accessibleText="Sons et validation : écouter et valider les sons du passage"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
               <FontIcon iconLiteral="fas-check-circle" styleClass="carte-action-icone"/>
-              <Label text="Validation Tadarida" styleClass="carte-action-titre" wrapText="true"/>
-              <Label text="Valider les identifications" styleClass="carte-action-sous" wrapText="true"/>
+              <Label text="Sons &amp; validation" styleClass="carte-action-titre" wrapText="true"/>
+              <Label text="Écouter et valider les sons du passage" styleClass="carte-action-sous" wrapText="true"/>
             </VBox>
           </graphic>
         </Button>

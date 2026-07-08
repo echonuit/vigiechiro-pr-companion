@@ -132,7 +132,7 @@ CSV sur l'écran : pratique quand la fenêtre de sélection de fichier du systè
 l'import, un bandeau confirme le nombre d'observations chargées ; en cas de problème (séquence introuvable,
 fichier illisible…), un bandeau rouge explique ce qui s'est passé.
 
-![Validation Tadarida : la table des observations « À revoir » juste après l'import d'un CSV, avec le bandeau récapitulatif.](../assets/captures/apercu-validation-tadarida.png)
+![Sons & validation : la table des observations « À revoir » juste après l'import d'un CSV, avec le bandeau récapitulatif.](../assets/captures/apercu-validation-tadarida.png)
 
 L'import est **tolérant** : les observations dont le son n'est pas disponible sont ignorées (le bandeau en
 indique le nombre), et les taxons que Tadarida propose hors de la liste de référence sont conservés tels

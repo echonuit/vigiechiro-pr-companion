@@ -188,7 +188,7 @@ class PassageViewTest {
     }
 
     @Test
-    @DisplayName("La carte « Validation Tadarida » est désactivée tant que le passage n'est pas déposé")
+    @DisplayName("La carte « Sons & validation » est désactivée tant que le passage n'est pas déposé")
     void validation_verrouillee_tant_que_non_depose(FxRobot robot) {
         // Le passage de la fixture est « Vérifié » (≠ Déposé) → carte de validation verrouillée.
         Button validation = robot.lookup("#boutonValidation").queryAs(Button.class);

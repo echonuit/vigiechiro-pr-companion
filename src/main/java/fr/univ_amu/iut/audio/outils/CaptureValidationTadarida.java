@@ -64,7 +64,7 @@ import javafx.scene.control.TableView;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture la **vue audio unifiée** sur le workflow **« Validation Tadarida »** (source `ParPassage`) en
+/// Capture la **vue audio unifiée « Sons & validation »** d'un passage (source `ParPassage`) en
 /// PNG (`apercu-validation-tadarida.png`) : l'écran tel qu'il apparaît **juste après l'import d'un CSV
 /// Tadarida** sur un passage. La table liste les observations « À revoir » (colonnes de contexte masquées
 /// car la source est un unique passage), le panneau d'écoute affiche un **spectrogramme** réel (cris FM de

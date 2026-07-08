@@ -16,29 +16,28 @@ De haut en bas :
 - **Statut du workflow** : une frise qui situe la nuit dans sa progression
   (Importé, Transformé, Vérifié, Prêt à déposer, Déposé).
 - **Résumé de la nuit** : volumes (bruts et transformés), durée audible, nombre de séquences.
-- **Cartes d'actions** : Vérifier l'enregistrement, Diagnostic matériel, Préparer le dépôt,
-  Validation Tadarida et Écouter les non identifiés. Une seule carte est mise en avant : la
-  **prochaine action recommandée**.
+- **Cartes d'actions** : Vérifier l'enregistrement, Diagnostic matériel, Préparer le dépôt et
+  Sons & validation. Une seule carte est mise en avant : la **prochaine action recommandée**.
 
 ## Le déverrouillage de la validation
 
-La carte **Validation Tadarida** est **grisée** tant que la nuit n'est pas déposée (voir la capture
+La carte **Sons & validation** est **grisée** tant que la nuit n'est pas déposée (voir la capture
 ci-dessus, au statut « Vérifié »). Une fois la nuit **déposée**, elle se déverrouille :
 
-![Le même écran au statut « Déposé » : la carte « Validation Tadarida » est devenue accessible.](../assets/captures/apercu-passage-depose.png)
+![Le même écran au statut « Déposé » : la carte « Sons & validation » est devenue accessible.](../assets/captures/apercu-passage-depose.png)
 
 !!! info "Pourquoi cet ordre ?"
     Vigie-Chiro ne renvoie les résultats Tadarida que 24 à 48 h après le dépôt : la validation des
     espèces vient donc nécessairement **après** le dépôt. Voir le [parcours métier](../parcours/index.md).
 
-## Écouter les non identifiés
+## Les sons non identifiés
 
 Tadarida ne retient qu'une partie des enregistrements d'une nuit : les autres (bruit, sons trop faibles,
-séquences non classées) **n'apparaissent pas dans la validation**. La carte **Écouter les non identifiés**
-ouvre la vue [Sons & validation](validation.md) sur **ces séquences‑là** : celles qui existent sur le
-disque mais **sans identification Tadarida**. Vous pouvez les **écouter** pour vérifier par vous‑même s'il
-s'y cache une chauve‑souris que l'algorithme aurait manquée. Leur colonne d'espèce affiche « — » (aucune
-proposition).
+séquences non classées) existent sur le disque mais **sans identification Tadarida**. L'écran
+[Sons & validation](validation.md) d'un passage les affiche désormais **avec** les observations Tadarida ;
+une vue dédiée **Sons non identifiés** (onglet au-dessus de la table) permet de n'afficher que
+**ces séquences‑là**. Vous pouvez les **écouter** pour vérifier par vous‑même s'il s'y cache une
+chauve‑souris que l'algorithme aurait manquée. Leur colonne d'espèce affiche « — » (aucune proposition).
 
 **Valider à la main.** Si vous reconnaissez une espèce, sélectionnez la séquence, choisissez le taxon dans
 la liste puis cliquez sur **Corriger** : une observation est créée pour cette séquence, qui passe alors au

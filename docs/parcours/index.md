@@ -22,18 +22,18 @@ Pour une nuit donnée, l'écran **Passage** est le point de pilotage : il affich
 nuit, un résumé, et des cartes « avancer » vers l'étape suivante (une seule est mise en avant : la
 prochaine action recommandée).
 
-![Le pivot Passage au statut « Vérifié » : la carte « Préparer le dépôt » est recommandée, et « Validation Tadarida » reste grisée tant que la nuit n'est pas déposée.](../assets/captures/apercu-passage.png)
+![Le pivot Passage au statut « Vérifié » : la carte « Préparer le dépôt » est recommandée, et « Sons & validation » reste grisée tant que la nuit n'est pas déposée.](../assets/captures/apercu-passage.png)
 
 Le statut progresse ainsi :
 
 <div style="text-align:center; margin:1.2rem 0">
   <img src="../assets/illustrations/workflow-statut.svg" style="max-width:100%; width:820px"
-       alt="Statut d'un passage : Importé, Transformé, Vérifié, Prêt à déposer, Déposé ; une fois déposé, la Validation Tadarida se déverrouille.">
+       alt="Statut d'un passage : Importé, Transformé, Vérifié, Prêt à déposer, Déposé ; une fois déposé, la Sons & validation se déverrouille.">
 </div>
 
-Une fois la nuit **déposée**, la carte « Validation Tadarida » se déverrouille :
+Une fois la nuit **déposée**, la carte « Sons & validation » se déverrouille :
 
-![Le même pivot au statut « Déposé » : la carte « Validation Tadarida » est désormais accessible.](../assets/captures/apercu-passage-depose.png)
+![Le même pivot au statut « Déposé » : la carte « Sons & validation » est désormais accessible.](../assets/captures/apercu-passage-depose.png)
 
 !!! warning "Le dépôt précède la validation"
     La **validation des espèces** (Tadarida) n'est accessible qu'une fois le **lot déposé** :

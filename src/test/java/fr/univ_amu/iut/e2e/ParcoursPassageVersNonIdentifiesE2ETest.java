@@ -49,7 +49,7 @@ import org.testfx.framework.junit5.Start;
 ///
 /// On importe une nuit synthétique **sans importer de CSV Tadarida** : le passage a donc des séquences
 /// d'écoute (`listening_sequence`) mais **aucune observation**. L'écran audio du passage (ouvert via le
-/// contrat socle `OuvrirValidation`, comme la carte « Validation Tadarida » de M-Passage) ne liste donc que
+/// contrat socle `OuvrirValidation`, comme la carte « Sons & validation » de M-Passage) ne liste donc que
 /// ces séquences non identifiées. On vérifie qu'elles **apparaissent** (sans taxon), qu'elles ne sont **pas
 /// validables en l'état** (« Valider » reste désactivé : pas de proposition Tadarida à retenir), puis qu'on
 /// peut les **valider à la main** (« Corriger ») — ce qui crée une observation corrigée qui **persiste** et
@@ -99,7 +99,7 @@ class ParcoursPassageVersNonIdentifiesE2ETest {
     }
 
     /// Ouvre l'écran « Sons & validation » du passage (source `ParPassage`) via le contrat socle, comme la
-    /// carte « Validation Tadarida » de M-Passage, et renvoie sa table d'observations.
+    /// carte « Sons & validation » de M-Passage, et renvoie sa table d'observations.
     @SuppressWarnings("unchecked")
     private TableView<LigneObservationAudio> ouvrirSonsEtValidation(FxRobot robot) {
         robot.interact(() -> injector.getInstance(OuvrirValidation.class).ouvrir(contextePassage));

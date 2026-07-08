@@ -194,7 +194,7 @@ class PassageVueIntegrationTest {
         assertThat(bouton(vue, "#boutonDepot").isDisabled()).isTrue();
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isFalse();
-        // Déposé → la mise en avant est passée à la Validation Tadarida.
+        // Déposé → la mise en avant est passée à la carte « Sons & validation ».
         assertThat(estRecommandee(bouton(vue, "#boutonValidation"))).isTrue();
         assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();
 
