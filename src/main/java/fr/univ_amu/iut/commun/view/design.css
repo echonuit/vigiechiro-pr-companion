@@ -247,3 +247,80 @@
     -fx-padding: 2 8 2 8;
     -fx-alignment: center-left;
 }
+
+/*
+ * Badges de statut (#691) : pastilles de statut / verdict / fraîcheur, dont la couleur est DÉRIVÉE de la
+ * donnée (la vue pose la classe sémantique). Migrés de sites.css et tokenisés (palette.css) pour une
+ * palette pastel unique dans toute l'application. Le libellé porte le texte ; la classe porte la couleur.
+ */
+.badge {
+    -fx-padding: 3 10 3 10;
+    -fx-background-radius: 11;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+/* Fraîcheur du dernier passage (M-Sites). */
+.badge-frais {
+    -fx-background-color: -badge-succes-fond;
+    -fx-text-fill: -badge-succes-texte;
+}
+
+.badge-tiede {
+    -fx-background-color: -badge-avertissement-fond;
+    -fx-text-fill: -badge-avertissement-texte;
+}
+
+.badge-froid {
+    -fx-background-color: -badge-neutre-fond;
+    -fx-text-fill: -couleur-texte;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 11;
+}
+
+/* Statut workflow d'un passage. */
+.badge-statut-importe {
+    -fx-background-color: -badge-neutre-fond;
+    -fx-text-fill: -badge-neutre-texte;
+}
+
+.badge-statut-transforme {
+    -fx-background-color: -badge-avertissement-fond;
+    -fx-text-fill: -badge-avertissement-texte;
+}
+
+.badge-statut-verifie {
+    -fx-background-color: -badge-danger-fond;
+    -fx-text-fill: -badge-danger-texte;
+}
+
+.badge-statut-pret_a_deposer {
+    -fx-background-color: -badge-neutre-fond;
+    -fx-text-fill: -badge-neutre-texte;
+}
+
+.badge-statut-depose {
+    -fx-background-color: -badge-info-fond;
+    -fx-text-fill: -badge-info-texte;
+}
+
+/* Verdict d'un passage. */
+.badge-verdict-ok {
+    -fx-background-color: -badge-succes-fond;
+    -fx-text-fill: -badge-succes-texte;
+}
+
+.badge-verdict-douteux {
+    -fx-background-color: -badge-avertissement-fond;
+    -fx-text-fill: -badge-avertissement-texte;
+}
+
+.badge-verdict-a_jeter {
+    -fx-background-color: -badge-danger-fond;
+    -fx-text-fill: -badge-danger-texte;
+}
+
+.badge-verdict-a_verifier {
+    -fx-background-color: transparent;
+    -fx-text-fill: -badge-neutre-texte;
+}

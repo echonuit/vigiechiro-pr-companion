@@ -37,4 +37,20 @@
     -couleur-avertissement: #b9770e;
     -couleur-danger: #a93226;
     -couleur-neutre: #6a737d;
+
+    /*
+     * Badges de statut (#691) : paires fond pastel / texte pour les pastilles de statut et de verdict.
+     * Consolide les palettes pastel jusqu'ici recopiées et divergentes entre les features (sites,
+     * qualification, passage). Cinq familles sémantiques ; « info » réutilise l'indigo primaire.
+     */
+    -badge-succes-fond: #d4edda;
+    -badge-succes-texte: #1e6f3f;
+    -badge-avertissement-fond: #fff3cd;
+    -badge-avertissement-texte: #7e5109;
+    -badge-danger-fond: #fde7e7;
+    -badge-danger-texte: #a93226;
+    -badge-neutre-fond: #f6f8fa;
+    -badge-neutre-texte: #6a737d;
+    -badge-info-fond: #c5cae9;
+    -badge-info-texte: #303f9f;
 }
