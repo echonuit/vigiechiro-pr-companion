@@ -50,6 +50,19 @@ public final class FormatAnalyse {
         };
     }
 
+    /// Classe CSS du badge de statut de revue d'une observation (familles sémantiques génériques de
+    /// design.css) : validée = succès, corrigée = info, non touchée = neutre.
+    public static String classeStatut(StatutObservation statut) {
+        if (statut == null) {
+            return "badge-neutre";
+        }
+        return switch (statut) {
+            case NON_TOUCHEE -> "badge-neutre";
+            case VALIDEE -> "badge-succes";
+            case CORRIGEE -> "badge-info";
+        };
+    }
+
     /// Valeur telle quelle, ou tiret cadratin `—` si elle est nulle ou vide.
     public static String ouTiret(String valeur) {
         return valeur == null || valeur.isBlank() ? "—" : valeur;

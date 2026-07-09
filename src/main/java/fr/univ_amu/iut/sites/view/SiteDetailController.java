@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -16,7 +17,6 @@ import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
@@ -30,7 +30,6 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -265,8 +264,8 @@ public class SiteDetailController implements RafraichirAuRetour {
         colVerdict.setCellValueFactory(cd -> valeur(cd.getValue().verdictLibelle()));
         colEnregistreur.setCellValueFactory(cd -> valeur(cd.getValue().enregistreur()));
         colDepose.setCellValueFactory(cd -> valeur(cd.getValue().deposeLe()));
-        colStatut.setCellFactory(colonne -> celluleBadge(LignePassage::statutClasseCss));
-        colVerdict.setCellFactory(colonne -> celluleBadge(LignePassage::verdictClasseCss));
+        colStatut.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::statutClasseCss));
+        colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::verdictClasseCss));
     }
 
     private void reconstruirePoints() {
@@ -354,26 +353,6 @@ public class SiteDetailController implements RafraichirAuRetour {
         if (confirmer("Supprimer le point « " + carte.point().code() + " » ?")) {
             viewModel.supprimerPoint(carte.point());
         }
-    }
-
-    private TableCell<LignePassage, String> celluleBadge(Function<LignePassage, String> classeCss) {
-        return new TableCell<>() {
-            @Override
-            protected void updateItem(String valeur, boolean vide) {
-                super.updateItem(valeur, vide);
-                getStyleClass().removeIf(classe -> classe.startsWith("badge"));
-                if (vide
-                        || valeur == null
-                        || getTableRow() == null
-                        || getTableRow().getItem() == null) {
-                    setText(null);
-                } else {
-                    setText(valeur);
-                    getStyleClass()
-                            .addAll("badge", classeCss.apply(getTableRow().getItem()));
-                }
-            }
-        };
     }
 
     /// Boîte de dialogue d'édition de la fiche, **pré-remplie** avec les valeurs courantes (carré,

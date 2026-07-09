@@ -2,6 +2,7 @@ package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -446,6 +447,9 @@ public class MultisiteController implements RafraichirAuRetour {
                 c -> new ReadOnlyStringWrapper(c.getValue().statut().libelle()));
         colVerdict.setCellValueFactory(c -> new ReadOnlyStringWrapper(
                 c.getValue().verdict() == null ? "" : c.getValue().verdict().libelle()));
+        // Statut / verdict en badges (#691), comme la table de la fiche site.
+        colStatut.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.statut())));
+        colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.verdict())));
     }
 
     private void ouvrirPassageDeLaLigne(LignePassage ligne) {

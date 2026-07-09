@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
@@ -457,6 +458,8 @@ public class AnalyseController implements RafraichirAuRetour {
                 c.getValue().taxonObservateur(), c.getValue().probObservateur())));
         colObsStatut.setCellValueFactory(
                 c -> texte(FormatAnalyse.libelleStatut(c.getValue().statut())));
+        // Statut de revue en badge (#691), cohérent avec les autres tables de données.
+        colObsStatut.setCellFactory(colonne -> ColonneBadge.cellule(obs -> FormatAnalyse.classeStatut(obs.statut())));
     }
 
     /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).
