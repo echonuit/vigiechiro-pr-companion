@@ -19,11 +19,11 @@
       styleClass="ecran-sites"
       spacing="16.0">
 
-  <HBox styleClass="entete-page" alignment="CENTER_LEFT" spacing="12.0">
-    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-      <Label text="Mes sites de suivi" styleClass="titre-page"/>
-      <Label fx:id="sousTitre" styleClass="sous-titre-page"/>
-    </VBox>
+  <!--
+    En-tête réduit à son slot d'actions (#693) : le titre « Mes sites de suivi » est redondant avec le
+    fil d'Ariane et le résumé (« N sites déclarés… ») est déporté en barre de statut par le controller.
+  -->
+  <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
     <Button text="+ Nouveau site" styleClass="bouton-primaire" onAction="#nouveauSite"/>
   </HBox>
 

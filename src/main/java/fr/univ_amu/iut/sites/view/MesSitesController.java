@@ -3,11 +3,16 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
 import java.util.Objects;
 import java.util.Optional;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -27,12 +32,16 @@ import javafx.scene.layout.VBox;
 
 /// Controller de l'écran d'accueil **M-Sites** (`MesSites.fxml`).
 ///
-/// Rôle de pur câblage (patron CM4) : il lie le sous-titre et l'état vide aux propriétés du
-/// [SitesViewModel], et reconstruit la liste de cartes à chaque changement de la liste observable.
-/// Les cartes sont bâties en code (et non en FXML) car leur nombre est dynamique ; chaque carte
-/// est cliquable et délègue l'ouverture du détail à [NavigationSites]. Aucun accès base de données
-/// ici : tout passe par le ViewModel (règle ArchUnit `view_sans_jdbc`).
-public class MesSitesController {
+/// Rôle de pur câblage (patron CM4) : il lie l'état vide aux propriétés du [SitesViewModel] et
+/// reconstruit la liste de cartes à chaque changement de la liste observable. Les cartes sont bâties en
+/// code (et non en FXML) car leur nombre est dynamique ; chaque carte est cliquable et délègue
+/// l'ouverture du détail à [NavigationSites]. Aucun accès base de données ici : tout passe par le
+/// ViewModel (règle ArchUnit `view_sans_jdbc`).
+///
+/// Implémente [ResumeStatut] (#693) : le résumé de l'écran (« N sites déclarés · N passages ») est
+/// affiché dans la **barre de statut** plutôt qu'en sous-titre, le titre étant redondant avec le fil
+/// d'Ariane.
+public class MesSitesController implements ResumeStatut {
 
     private static final String STYLE_STAT_NOMBRE = "carte-stat-nombre";
     private static final String STYLE_STAT_LIBELLE = "carte-stat-libelle";
@@ -41,8 +50,10 @@ public class MesSitesController {
     private final SitesViewModel viewModel;
     private final NavigationSites navigation;
 
-    @FXML
-    private Label sousTitre;
+    /// Résumé de l'écran (« N sites déclarés · N passages »), déporté en zone centre de la barre de
+    /// statut (#693) au lieu d'un sous-titre.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     @FXML
     private ScrollPane zoneListe;
@@ -59,9 +70,16 @@ public class MesSitesController {
         this.navigation = Objects.requireNonNull(navigation, "navigation");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
-        sousTitre.textProperty().bind(viewModel.sousTitreProperty());
+        // Le résumé de l'écran occupe la zone centre de la barre de statut (#693), plus de sous-titre.
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> ZonesStatut.centre(viewModel.sousTitreProperty().get()), viewModel.sousTitreProperty()));
         zoneListe.visibleProperty().bind(viewModel.videProperty().not());
         zoneListe.managedProperty().bind(viewModel.videProperty().not());
         etatVide.visibleProperty().bind(viewModel.videProperty());

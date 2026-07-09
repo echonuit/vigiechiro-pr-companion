@@ -91,12 +91,13 @@ class SitesVueIntegrationTest {
     // ----- Écran d'accueil M-Sites -------------------------------------------------------------
 
     @Test
-    @DisplayName("Le label #sousTitre de l'accueil reflète le récapitulatif du ViewModel")
-    void sousTitre_reflete_le_recapitulatif(FxRobot robot) {
-        Label sousTitre = robot.lookup("#sousTitre").queryAs(Label.class);
+    @DisplayName("Le résumé de l'accueil est déporté en zone centre de la barre de statut (#693)")
+    void resume_accueil_en_barre_de_statut(FxRobot robot) {
+        // Le titre/sous-titre d'en-tête ont été retirés (#693) ; le résumé occupe la barre de statut.
+        Label piedCentre = robot.lookup("#piedCentre").queryAs(Label.class);
 
         // Deux sites seedés, zéro passage : le ViewModel compose « 2 sites déclarés · … ».
-        assertThat(sousTitre.getText()).contains("2 sites déclarés");
+        assertThat(piedCentre.getText()).contains("2 sites déclarés");
     }
 
     @Test
