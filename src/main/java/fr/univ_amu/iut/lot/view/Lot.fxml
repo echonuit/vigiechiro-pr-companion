@@ -69,7 +69,8 @@
     </HBox>
     <Label fx:id="lblProgressionGeneration" styleClass="section-sous"
            visible="false" managed="false"/>
-    <ListView fx:id="listeArchives" prefHeight="100.0"/>
+    <!-- Hauteur plancher (jamais écrasée) ; le controller ajuste la hauteur au nombre d'archives (#…). -->
+    <ListView fx:id="listeArchives" minHeight="90.0" prefHeight="100.0"/>
   </VBox>
 
   <!-- Étape 3 - Téléverser ces archives (action manuelle, hors application) -->
@@ -91,12 +92,12 @@
             styleClass="bouton-secondaire" onAction="#deposer"/>
   </VBox>
 
-  <!-- Nettoyage optionnel - libérer l'espace disque après dépôt (#…) : actif seulement une fois le
-       passage déposé et s'il reste des archives ZIP dans depot/. Les archives sont sur Vigie-Chiro et
-       restent régénérables. -->
+  <!-- Nettoyage optionnel - libérer l'espace disque (#…) : actif dès qu'il existe des archives ZIP dans
+       depot/. Les copies locales sont régénérables à l'identique (une fois téléversées, on peut les
+       supprimer sans risque). -->
   <VBox spacing="4.0" styleClass="carte-section">
     <Label text="Libérer l'espace disque" styleClass="section-titre"/>
-    <Label text="Une fois le dépôt confirmé, les archives ZIP locales (dans depot/) ne sont plus nécessaires : elles sont sur Vigie-Chiro et restent régénérables. Vous pouvez les supprimer pour libérer de l'espace."
+    <Label text="Après les avoir téléversées, vous pouvez supprimer les archives ZIP locales (dans depot/) pour libérer de l'espace : elles restent régénérables à l'identique via « Générer les archives »."
            styleClass="section-sous" wrapText="true"/>
     <Button fx:id="btnSupprimerArchives" text="🗑 Supprimer les archives de dépôt"
             styleClass="bouton-secondaire" onAction="#supprimerArchives"/>

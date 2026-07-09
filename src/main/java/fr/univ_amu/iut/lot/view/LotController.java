@@ -49,6 +49,14 @@ import javafx.scene.layout.VBox;
 /// déporté en barre de statut (le titre « Préparer le dépôt » étant redondant avec le fil d'Ariane).
 public class LotController implements EmplacementNavigation, ResumeStatut {
 
+    /// Hauteur (px) d'une ligne de la liste des archives, et marges min/max de lignes visibles : la liste
+    /// s'ajuste à son contenu (#…) plutôt qu'une hauteur figée qui la laissait quasi invisible.
+    private static final double HAUTEUR_LIGNE_ARCHIVE = 26.0;
+
+    private static final double MARGE_LISTE_ARCHIVES = 8.0;
+    private static final int LIGNES_ARCHIVES_MIN = 3;
+    private static final int LIGNES_ARCHIVES_MAX = 8;
+
     private final LotViewModel viewModel;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
@@ -163,6 +171,19 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         lblProgressionGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
         lblProgressionGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
         listeArchives.setItems(viewModel.archives());
+        // La liste s'ajuste au nombre d'archives (≥ 3 lignes visibles, jusqu'à 8 puis défilement) : une
+        // hauteur figée la laissait quasi invisible à la réouverture d'un passage déjà généré (#…).
+        listeArchives
+                .prefHeightProperty()
+                .bind(Bindings.createDoubleBinding(
+                        () -> Math.min(
+                                                LIGNES_ARCHIVES_MAX,
+                                                Math.max(
+                                                        LIGNES_ARCHIVES_MIN,
+                                                        viewModel.archives().size()))
+                                        * HAUTEUR_LIGNE_ARCHIVE
+                                + MARGE_LISTE_ARCHIVES,
+                        viewModel.archives()));
 
         // Étape ③ : « Ouvrir le dossier » seulement quand les archives sont réellement prêtes (#259), pas
         // dès qu'un chemin existe : les ZIP sont écrits sous leur nom final pendant la génération, ouvrir

@@ -125,8 +125,8 @@ class PassageViewModelTest {
     }
 
     @Test
-    @DisplayName("Le dépôt est disponible en phase Vérifié / Prêt à déposer, pas avant ni après")
-    void depot_disponible_en_phase_de_depot() {
+    @DisplayName("Le dépôt est accessible dès Vérifié et le reste une fois déposé (retour possible), pas avant")
+    void depot_disponible_de_verifie_a_depose() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
         assertThat(viewModel.depotDisponibleProperty().get()).isTrue();
@@ -137,11 +137,13 @@ class PassageViewModelTest {
 
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.TRANSFORME));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.depotDisponibleProperty().get()).isFalse(); // trop tôt
+        assertThat(viewModel.depotDisponibleProperty().get()).isFalse(); // trop tôt (pas encore vérifié)
 
+        // #… : même une fois DÉPOSÉ, on peut revenir sur M-Lot (consulter/supprimer les archives) sans
+        // avoir à annuler le dépôt.
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        assertThat(viewModel.depotDisponibleProperty().get()).isFalse(); // déjà déposé
+        assertThat(viewModel.depotDisponibleProperty().get()).isTrue();
     }
 
     @Test

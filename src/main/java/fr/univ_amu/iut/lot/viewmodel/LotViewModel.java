@@ -10,6 +10,9 @@ import fr.univ_amu.iut.lot.model.ServiceLot;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -45,16 +48,17 @@ public class LotViewModel {
     private final ReadOnlyBooleanWrapper peutGenererArchives =
             new ReadOnlyBooleanWrapper(this, "peutGenererArchives", false);
 
-    /// Suppression des archives possible (#…) : vraie une fois le passage **déposé** et s'il reste des
-    /// archives ZIP sur disque (nettoyage post-dépôt pour libérer l'espace, archives régénérables).
-    private final ReadOnlyBooleanWrapper peutSupprimerArchives =
-            new ReadOnlyBooleanWrapper(this, "peutSupprimerArchives", false);
-
     /// Génération des archives en cours (#251) : posée pendant le travail hors fil JavaFX pour afficher
     /// un état « en cours » et désactiver le bouton (l'opération peut être longue sur une grosse nuit).
     private final ReadOnlyBooleanWrapper generationEnCours =
             new ReadOnlyBooleanWrapper(this, "generationEnCours", false);
     private final ObservableList<String> archives = FXCollections.observableArrayList();
+
+    /// Suppression des archives possible (#…) : **liaison vivante** sur [#archives] — vraie dès qu'il
+    /// existe des archives (régénérables), et recalculée automatiquement quand la liste change (génération,
+    /// réhydratation au chargement, suppression). Un simple `set()` dans `appliquer` restait périmé après
+    /// une génération en session, laissant le bouton inactif à tort.
+    private final BooleanBinding peutSupprimerArchives = Bindings.isNotEmpty(archives);
     private final ReadOnlyStringWrapper titreArchives = new ReadOnlyStringWrapper(this, "titreArchives", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
@@ -222,9 +226,7 @@ public class LotViewModel {
         // déposer ou déjà déposé.
         peutGenererArchives.set(
                 etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE);
-        // Suppression des archives (#…) : seulement une fois le passage DÉPOSÉ et s'il reste des archives
-        // sur disque (déjà téléversées, régénérables).
-        peutSupprimerArchives.set(etat.statut() == StatutWorkflow.DEPOSE && !archives.isEmpty());
+        // (peutSupprimerArchives est une liaison vivante sur `archives` : rien à poser ici.)
         majEtapes(etat.statut());
         message.set(FormatsLot.messageEtat(etat));
     }
@@ -247,9 +249,8 @@ public class LotViewModel {
         peutDeposer.set(false);
         depose.set(false);
         peutGenererArchives.set(false);
-        peutSupprimerArchives.set(false);
         generationEnCours.set(false);
-        archives.clear();
+        archives.clear(); // suffit à repasser peutSupprimerArchives (liaison vivante) à false
         message.set("");
     }
 
@@ -307,10 +308,10 @@ public class LotViewModel {
         return peutGenererArchives.getReadOnlyProperty();
     }
 
-    /// `true` si les archives de dépôt peuvent être supprimées : passage **déposé** et archives ZIP encore
-    /// présentes dans `depot/` (nettoyage post-dépôt pour libérer l'espace).
-    public ReadOnlyBooleanProperty peutSupprimerArchivesProperty() {
-        return peutSupprimerArchives.getReadOnlyProperty();
+    /// `true` dès qu'il existe des archives ZIP à supprimer (liaison vivante sur la liste des archives), pour
+    /// libérer l'espace disque — les archives restant régénérables à l'identique.
+    public BooleanExpression peutSupprimerArchivesProperty() {
+        return peutSupprimerArchives;
     }
 
     /// `true` pendant la génération des archives (#251) : la vue affiche un état « en cours » et

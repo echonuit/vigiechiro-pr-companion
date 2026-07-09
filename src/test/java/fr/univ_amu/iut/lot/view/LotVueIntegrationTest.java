@@ -31,6 +31,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -244,17 +245,37 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#… : « Supprimer les archives » est désactivé tant que le passage n'est pas déposé")
-    void supprimer_archives_desactive_avant_depot(FxRobot robot) {
-        // État initial de start() = Vérifié → suppression indisponible.
+    @DisplayName("#… : « Supprimer les archives » est désactivé quand il n'y a aucune archive sur disque")
+    void supprimer_archives_desactive_sans_archives(FxRobot robot) {
+        // État initial de start() = Vérifié, aucune archive sur disque → suppression indisponible.
         Button supprimer = robot.lookup("#btnSupprimerArchives").queryAs(Button.class);
 
         assertThat(supprimer.isDisabled()).isTrue();
     }
 
     @Test
-    @DisplayName("#… : en Déposé avec archives, « Supprimer les archives » est actif et déclenche la suppression")
-    void supprimer_archives_actif_en_depose_et_declenche(FxRobot robot) {
+    @DisplayName("#… : à la réouverture d'un passage déjà généré, la table se recharge et « Supprimer » s'active")
+    void archives_rechargees_a_la_reouverture_et_suppression_active(FxRobot robot) {
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(
+                        new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2),
+                        new ArchiveDepot(Path.of("/ws/session-42/depot/Car-2.zip"), 2, 4096L, 3)));
+        // Passage « Prêt à déposer » (pas encore déposé) avec des archives déjà présentes sur disque.
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        // La table de l'étape 2 est réhydratée depuis le disque (plus vide après navigation).
+        ListView<?> liste = robot.lookup("#listeArchives").queryAs(ListView.class);
+        assertThat(liste.getItems()).hasSize(2);
+        // « Ouvrir le dossier » et « Supprimer les archives » sont actifs dès que des archives existent.
+        assertThat(robot.lookup("#btnOuvrirDepot").queryAs(Button.class).isDisabled())
+                .isFalse();
+        assertThat(robot.lookup("#btnSupprimerArchives").queryAs(Button.class).isDisabled())
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#… : en Déposé avec archives, « Supprimer les archives » déclenche la suppression (confirmée)")
+    void supprimer_archives_declenche_la_suppression(FxRobot robot) {
         when(service.archivesDepot("/ws/session-42"))
                 .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2)));
         // Confirmateur injecté (pas de dialogue natif bloquant sous TestFX).

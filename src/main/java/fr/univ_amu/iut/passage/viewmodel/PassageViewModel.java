@@ -128,8 +128,9 @@ public class PassageViewModel {
         etapes.setAll(construireEtapes(detail.statut()));
         verificationDisponible.set(detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal());
         validationVerrouillee.set(detail.statut() != StatutWorkflow.DEPOSE);
-        depotDisponible.set(
-                detail.statut() == StatutWorkflow.VERIFIE || detail.statut() == StatutWorkflow.PRET_A_DEPOSER);
+        // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
+        // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
+        depotDisponible.set(detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
         annulationDepotDisponible.set(detail.statut() == StatutWorkflow.DEPOSE);
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
