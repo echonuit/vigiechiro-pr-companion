@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.151.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.151.1...v1.151.2) (2026-07-09)
+
+
+### Bug Fixes
+
+* **qualification:** appliquer l'expansion ×10 à la vue audio (axe des fréquences réel) ([#768](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/768)) ([5cd4dd1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/5cd4dd1a5c06a2206a7e544742a9ef0aa03d020e)), closes [#762](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/762)
+
 ## [1.151.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.151.0...v1.151.1) (2026-07-09)
 
 
