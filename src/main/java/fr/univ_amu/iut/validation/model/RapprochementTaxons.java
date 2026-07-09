@@ -7,16 +7,19 @@ import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
-/// Rapproche le référentiel **taxons** local avec VigieChiro (#728, axe 1) : appelle
-/// `GET /taxons/liste` et relie chaque taxon local à son `objectid` par égalité `code == libelle_court`
-/// (nos taxons portent le code Tadarida, qui est le `libelle_court` de la plateforme).
+/// Synchronise le référentiel **taxons** local avec VigieChiro (#728 puis #717, axe 2) à la connexion,
+/// en deux temps depuis `GET /taxons/liste` :
+/// 1. **Fusion conservatrice** du référentiel officiel dans la table `taxon` ([TaxonDao#fusionnerReferentielOfficiel])
+///    : ajoute les taxons officiels absents du seed et complète les noms latins manquants, sans jamais
+///    écraser les noms curés (le seed V05 reste le repli hors-ligne, seule source des noms français) ;
+/// 2. **Rapprochement** `code -> objectid` de tous les taxons officiels dans `vigiechiro_link`
+///    (prérequis des corrections et du dépôt).
 ///
 /// Contribué au `Multibinder<RapprochementVigieChiro>` par `ValidationModule` ; invoqué à la connexion
 /// par `connexion`. Ne dépend que du [TaxonDao] de sa feature et du [LienVigieChiroDao] du socle : le
@@ -36,21 +39,27 @@ public class RapprochementTaxons implements RapprochementVigieChiro {
     @Override
     public void synchroniser(ClientVigieChiro client) {
         try {
-            Set<String> codesLocaux =
-                    taxonDao.findAll().stream().map(Taxon::code).collect(Collectors.toSet());
-            Map<String, String> correspondances = new LinkedHashMap<>();
-            for (TaxonVigieChiro taxon : client.taxons()) {
-                if (codesLocaux.contains(taxon.libelleCourt())) {
-                    correspondances.put(taxon.libelleCourt(), taxon.id());
-                }
+            List<TaxonVigieChiro> officiels = client.taxons();
+            // Liste vide = non connecté / API indisponible : on ne touche ni la table ni les liens (un
+            // incident réseau transitoire ne doit pas altérer un référentiel déjà acquis).
+            if (officiels.isEmpty()) {
+                return;
             }
-            // Liste vide = non connecté / API indisponible : on ne purge pas les correspondances déjà
-            // acquises (un incident réseau transitoire ne doit pas effacer un mapping valide).
-            if (!correspondances.isEmpty()) {
-                liens.remplacer(LienVigieChiro.ENTITE_TAXON, correspondances);
+            // 1. Fusion conservatrice du référentiel officiel dans la table `taxon`.
+            Map<String, String> codeVersNomLatin = new LinkedHashMap<>();
+            for (TaxonVigieChiro taxon : officiels) {
+                codeVersNomLatin.put(taxon.libelleCourt(), taxon.libelleLong());
             }
+            taxonDao.fusionnerReferentielOfficiel(codeVersNomLatin);
+            // 2. Rapprochement code -> objectid de tous les taxons officiels (tous présents localement après
+            //    la fusion). remplacer() reflète l'état courant et purge les correspondances obsolètes.
+            Map<String, String> liensParCode = new LinkedHashMap<>();
+            for (TaxonVigieChiro taxon : officiels) {
+                liensParCode.put(taxon.libelleCourt(), taxon.id());
+            }
+            liens.remplacer(LienVigieChiro.ENTITE_TAXON, liensParCode);
         } catch (RuntimeException echec) {
-            LOG.log(Level.FINE, echec, () -> "Rapprochement des taxons VigieChiro ignoré (best-effort)");
+            LOG.log(Level.FINE, echec, () -> "Synchronisation des taxons VigieChiro ignorée (best-effort)");
         }
     }
 }

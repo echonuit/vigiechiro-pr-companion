@@ -22,9 +22,10 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Rapprochement des taxons (#728), API et DAO taxon **mockés**, DAO de liens réel (base jetable) : on
-/// vérifie que seuls les taxons **présents localement** sont reliés (par `code == libelle_court`), et que
-/// l'absence de réponse (hors-ligne) **ne purge pas** les correspondances déjà acquises.
+/// Synchronisation des taxons (#717, axe 2), **API mockée**, DAO taxon et DAO de liens **réels** (base
+/// migrée jetable) : on vérifie qu'à la connexion la table `taxon` est enrichie du référentiel officiel
+/// et que tous les taxons officiels sont reliés à leur `objectid` ; et qu'une réponse vide (hors-ligne)
+/// ne touche ni la table ni les liens.
 @ExtendWith(MockitoExtension.class)
 class RapprochementTaxonsTest {
 
@@ -34,9 +35,7 @@ class RapprochementTaxonsTest {
     @Mock
     private ClientVigieChiro client;
 
-    @Mock
     private TaxonDao taxonDao;
-
     private LienVigieChiroDao liens;
     private RapprochementTaxons rapprochement;
 
@@ -44,40 +43,37 @@ class RapprochementTaxonsTest {
     void preparer() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
+        taxonDao = new TaxonDao(source);
         liens = new LienVigieChiroDao(source);
         rapprochement = new RapprochementTaxons(taxonDao, liens);
     }
 
-    private static Taxon taxon(String code) {
-        return new Taxon(code, null, null, 1L);
-    }
-
     @Test
-    @DisplayName("relie uniquement les taxons locaux, par code == libelle_court")
-    void relie_les_taxons_locaux() {
-        when(taxonDao.findAll()).thenReturn(List.of(taxon("Pippip"), taxon("Barbar"), taxon("Inconnu")));
+    @DisplayName("enrichit la table du référentiel officiel et relie chaque taxon à son objectid")
+    void synchronise_table_et_liens() {
+        // Codes volontairement hors seed (Zzz…) pour isoler l'effet de la synchro.
         when(client.taxons())
                 .thenReturn(List.of(
-                        new TaxonVigieChiro("5a1", "Pippip", "Pipistrellus pipistrellus"),
-                        new TaxonVigieChiro("5a2", "Barbar", "Barbastella barbastellus"),
-                        new TaxonVigieChiro("5a9", "Rhirhi", "Rhinolophus"))); // pas dans nos taxons locaux
+                        new TaxonVigieChiro("obj1", "Zzz001", "Latinus unus"),
+                        new TaxonVigieChiro("obj2", "Zzz002", "Latinus duo")));
 
         rapprochement.synchroniser(client);
 
-        // Pippip/Barbar reliés ; Rhirhi (non local) et Inconnu (absent côté plateforme) écartés.
+        assertThat(taxonDao.findById("Zzz001").orElseThrow().nomLatin()).isEqualTo("Latinus unus");
+        assertThat(taxonDao.findById("Zzz002")).isPresent();
         assertThat(liens.tous(LienVigieChiro.ENTITE_TAXON))
-                .containsOnly(Map.entry("Pippip", "5a1"), Map.entry("Barbar", "5a2"));
+                .containsOnly(Map.entry("Zzz001", "obj1"), Map.entry("Zzz002", "obj2"));
     }
 
     @Test
-    @DisplayName("hors-ligne (aucun taxon renvoyé) : ne purge pas les correspondances existantes")
-    void hors_ligne_ne_purge_pas() {
-        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Pippip", "5a1"));
-        when(taxonDao.findAll()).thenReturn(List.of(taxon("Pippip")));
+    @DisplayName("hors-ligne (aucun taxon renvoyé) : ni ajout en table, ni purge des liens existants")
+    void hors_ligne_ne_touche_rien() {
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Zzz001", "obj1"));
         when(client.taxons()).thenReturn(List.of());
 
         rapprochement.synchroniser(client);
 
-        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_TAXON, "Pippip")).contains("5a1");
+        assertThat(taxonDao.findById("Zzz001")).isEmpty();
+        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_TAXON, "Zzz001")).contains("obj1");
     }
 }
