@@ -3,11 +3,13 @@ package fr.univ_amu.iut.sites.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -42,6 +44,7 @@ class SitesViewModelTest {
     private PassageDao passageDao;
     private PointDao pointDao;
     private EnregistreurDao enregistreurDao;
+    private LienVigieChiroDao liens;
     private SitesViewModel viewModel;
 
     @BeforeEach
@@ -54,9 +57,10 @@ class SitesViewModelTest {
         passageDao = new PassageDao(source);
         enregistreurDao = new EnregistreurDao(source);
         enregistreurDao.insert(new Enregistreur("1925492", "V1.01", null));
+        liens = new LienVigieChiroDao(source);
         HorlogeFigee horloge = new HorlogeFigee(JOUR_FIXE);
         service = new ServiceSites(siteDao, pointDao, passageDao, horloge);
-        viewModel = new SitesViewModel(service, passageDao, horloge, ID_USER);
+        viewModel = new SitesViewModel(service, passageDao, horloge, liens, ID_USER);
     }
 
     @Test
@@ -66,6 +70,27 @@ class SitesViewModelTest {
 
         assertThat(viewModel.cartes()).isEmpty();
         assertThat(viewModel.videProperty().get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Un site relié à VigieChiro porte le flag « enregistré sur la plateforme », les autres non")
+    void carte_signale_l_enregistrement_plateforme() {
+        Site relie = service.creerSite("640380", "Relié", Protocole.STANDARD, null, ID_USER);
+        service.creerSite("810123", "Local seul", Protocole.STANDARD, null, ID_USER);
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(relie.id()), "obj-vc-1"));
+
+        viewModel.rafraichir();
+
+        assertThat(viewModel.cartes())
+                .filteredOn(carte -> carte.site().numeroCarre().equals("640380"))
+                .singleElement()
+                .extracting(CarteSite::enregistreSurPlateforme)
+                .isEqualTo(true);
+        assertThat(viewModel.cartes())
+                .filteredOn(carte -> carte.site().numeroCarre().equals("810123"))
+                .singleElement()
+                .extracting(CarteSite::enregistreSurPlateforme)
+                .isEqualTo(false);
     }
 
     @Test

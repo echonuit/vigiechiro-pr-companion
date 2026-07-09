@@ -141,9 +141,20 @@ public class MesSitesController implements ResumeStatut {
         nom.getStyleClass().add("carte-sous-titre");
         Label badge = new Label(carte.libelleFraicheur());
         badge.getStyleClass().addAll("badge", carte.fraicheur().classeBadge());
-        VBox colonne = colonne(numero, nom, badge);
+        VBox colonne = colonne(numero, nom, rangeeBadges(carte, badge));
         HBox.setHgrow(colonne, Priority.ALWAYS);
         return colonne;
+    }
+
+    /// Rangée de badges de la carte : la fraîcheur, suivie (si le site est relié à VigieChiro) d'un
+    /// badge « Enregistré sur VigieChiro » (#718). Un seul badge → renvoyé tel quel, sans conteneur.
+    private static Node rangeeBadges(CarteSite carte, Label fraicheur) {
+        if (!carte.enregistreSurPlateforme()) {
+            return fraicheur;
+        }
+        Label plateforme = new Label("Enregistré sur VigieChiro");
+        plateforme.getStyleClass().addAll("badge", "badge-info");
+        return new HBox(8.0, fraicheur, plateforme);
     }
 
     private VBox colonneStatsPoints(CarteSite carte) {

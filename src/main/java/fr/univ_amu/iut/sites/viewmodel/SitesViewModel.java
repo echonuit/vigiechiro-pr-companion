@@ -1,7 +1,9 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -11,6 +13,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -37,16 +40,23 @@ public class SitesViewModel {
     private final ServiceSites service;
     private final PassageDao passageDao;
     private final Horloge horloge;
+    private final LienVigieChiroDao liens;
     private final String idUtilisateur;
 
     private final ObservableList<CarteSite> cartes = FXCollections.observableArrayList();
     private final ReadOnlyStringWrapper sousTitre = new ReadOnlyStringWrapper(this, "sousTitre", "");
     private final ReadOnlyBooleanWrapper vide = new ReadOnlyBooleanWrapper(this, "vide", true);
 
-    public SitesViewModel(ServiceSites service, PassageDao passageDao, Horloge horloge, String idUtilisateur) {
+    public SitesViewModel(
+            ServiceSites service,
+            PassageDao passageDao,
+            Horloge horloge,
+            LienVigieChiroDao liens,
+            String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.liens = Objects.requireNonNull(liens, "liens");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
     }
 
@@ -69,10 +79,14 @@ public class SitesViewModel {
     public void rafraichir() {
         LocalDate aujourdhui = horloge.aujourdhui();
         int annee = aujourdhui.getYear();
+        // Correspondances site -> objectid VigieChiro (#728), lues une fois pour tout le lot : un site
+        // présent est « enregistré sur la plateforme ».
+        Map<String, String> sitesEnregistres = liens.tous(LienVigieChiro.ENTITE_SITE);
         List<CarteSite> recomposees = new ArrayList<>();
         int totalPassagesAnnee = 0;
         for (Site site : service.listerSites(idUtilisateur)) {
-            CarteSite carte = construireCarte(site, aujourdhui, annee);
+            boolean enregistre = sitesEnregistres.containsKey(String.valueOf(site.id()));
+            CarteSite carte = construireCarte(site, aujourdhui, annee, enregistre);
             totalPassagesAnnee += carte.passagesDeLAnnee();
             recomposees.add(carte);
         }
@@ -91,7 +105,7 @@ public class SitesViewModel {
         return cree;
     }
 
-    private CarteSite construireCarte(Site site, LocalDate aujourdhui, int annee) {
+    private CarteSite construireCarte(Site site, LocalDate aujourdhui, int annee, boolean enregistre) {
         List<PointDEcoute> points = service.listerPoints(site.id());
         List<Passage> passages = passagesDuSite(points);
         int passagesAnnee =
@@ -110,7 +124,8 @@ public class SitesViewModel {
                 annee,
                 aVerifier,
                 fraicheur,
-                libelleFraicheur(dernier, aujourdhui));
+                libelleFraicheur(dernier, aujourdhui),
+                enregistre);
     }
 
     private List<Passage> passagesDuSite(List<PointDEcoute> points) {
