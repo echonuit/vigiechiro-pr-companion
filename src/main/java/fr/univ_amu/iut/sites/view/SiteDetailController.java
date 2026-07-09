@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
@@ -161,6 +162,8 @@ public class SiteDetailController implements RafraichirAuRetour {
 
     @FXML
     private void initialize() {
+        // Densite et habillage de table uniformes (#690).
+        TableDonnees.uniformiser(tablePassages);
         titre.textProperty().bind(viewModel.titreProperty());
         sousTitre.textProperty().bind(viewModel.sousTitreProperty());
         valNumeroCarre.textProperty().bind(viewModel.numeroCarreProperty());

@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -284,6 +285,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private void initialize() {
+        // Densite et habillage de table uniformes (#690).
+        TableDonnees.uniformiser(tableObservations);
         configurerColonnes();
 
         // Rendre les en-têtes cliquables réellement triants : la table est alimentée par une FilteredList

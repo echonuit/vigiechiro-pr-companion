@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
@@ -207,6 +208,10 @@ public class AnalyseController implements RafraichirAuRetour {
 
     @FXML
     private void initialize() {
+        // Densite et habillage de table uniformes (#690).
+        TableDonnees.uniformiser(tableEspeces);
+        TableDonnees.uniformiser(tableCarres);
+        TableDonnees.uniformiser(tableObservations);
         configurerColonnes();
         tableEspeces.setItems(viewModel.especes());
         tableCarres.setItems(viewModel.carres());

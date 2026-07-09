@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -179,6 +180,8 @@ public class MultisiteController implements RafraichirAuRetour {
 
     @FXML
     private void initialize() {
+        // Densite et habillage de table uniformes (#690).
+        TableDonnees.uniformiser(tableLignes);
         configurerColonnes();
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
         // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne

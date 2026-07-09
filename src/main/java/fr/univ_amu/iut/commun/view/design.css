@@ -217,3 +217,33 @@
     -fx-text-fill: -couleur-primaire-sombre;
     -fx-font-size: 0.9em;
 }
+
+/*
+ * Table de données (#690) : habillage uniforme des tableaux des écrans de données. La classe est posée
+ * par le configurateur commun/view/TableDonnees ; les règles ci-dessous fixent la densité (hauteur de
+ * ligne unique) et le style : en-tête clair et discret, cellules resserrées.
+ */
+.table-donnees .table-row-cell {
+    -fx-cell-size: 28px;
+}
+
+.table-donnees .column-header-background {
+    -fx-background-color: #f6f8fa;
+}
+
+.table-donnees .column-header,
+.table-donnees .column-header-background .filler {
+    -fx-background-color: transparent;
+}
+
+.table-donnees .column-header .label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+    -fx-padding: 4 8 4 8;
+    -fx-alignment: center-left;
+}
+
+.table-donnees .table-cell {
+    -fx-padding: 2 8 2 8;
+    -fx-alignment: center-left;
+}
