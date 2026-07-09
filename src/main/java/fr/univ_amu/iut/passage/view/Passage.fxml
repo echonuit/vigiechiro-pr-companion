@@ -24,8 +24,9 @@
 
   <top>
     <VBox spacing="12.0" styleClass="entete">
-      <HBox alignment="CENTER_LEFT" spacing="12.0">
-        <Label fx:id="lblTitre" styleClass="titre-page" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+      <!-- En-tête réduit à ses actions (#693) : le contexte (carré / point / N°) est déporté en zone
+           gauche de la barre de statut ; le bandeau d'identité ci-dessous reste. -->
+      <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
         <Button fx:id="boutonVoirCarte" text="🗺 Voir sur la carte"
                 styleClass="bouton-secondaire" onAction="#voirSurCarte"/>
         <Button fx:id="boutonRattachement" text="✏ Modifier le passage"

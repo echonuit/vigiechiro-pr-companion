@@ -66,6 +66,7 @@ class PassageVueIntegrationTest {
     private final AtomicReference<Long> diagnosticOuvert = new AtomicReference<>();
     private final AtomicReference<Long> validationOuverte = new AtomicReference<>();
     private final AtomicReference<Long> depotOuvert = new AtomicReference<>();
+    private PassageController controleur;
 
     @Start
     void start(Stage stage) {
@@ -80,9 +81,11 @@ class PassageVueIntegrationTest {
     @Test
     @DisplayName("En-tête : titre lié au VM + boutons rattachement/supprimer présents et actifs")
     void entete_reflete_le_vm(FxRobot robot) {
-        Label titre = robot.lookup("#lblTitre").queryAs(Label.class);
-
-        assertThat(titre.getText()).contains("640380").contains("A1").contains("N° 2");
+        // Le contexte (carré / point / N°) est déporté en zone gauche de la barre de statut (#693).
+        assertThat(controleur.zonesStatutProperty().get().gauche())
+                .contains("640380")
+                .contains("A1")
+                .contains("N° 2");
         assertThat(robot.lookup("#boutonRattachement").queryButton().isDisabled())
                 .isFalse();
         // Passage vérifié (≠ déposé) : la suppression reste possible.
@@ -304,7 +307,7 @@ class PassageVueIntegrationTest {
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
-            PassageController controleur = loader.getController();
+            controleur = loader.getController();
             controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
             return vue;
         } catch (IOException echec) {

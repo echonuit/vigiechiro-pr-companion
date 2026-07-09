@@ -51,6 +51,7 @@ class PassageViewTest {
     private final AtomicReference<Long> validationOuverte = new AtomicReference<>();
     private final AtomicReference<Long> depotOuvert = new AtomicReference<>();
     private final AtomicReference<String> carteFocalisee = new AtomicReference<>();
+    private PassageController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -122,7 +123,7 @@ class PassageViewTest {
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        PassageController controleur = loader.getController();
+        controleur = loader.getController();
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
         stage.setScene(new Scene(vue, 1100, 700));
         stage.show();
@@ -131,10 +132,13 @@ class PassageViewTest {
     @Test
     @DisplayName("Le bandeau affiche l'identité du passage (carré, point, statut)")
     void affiche_l_identite(FxRobot robot) {
-        Label titre = robot.lookup("#lblTitre").queryAs(Label.class);
         Label statut = robot.lookup("#lblStatut").queryAs(Label.class);
 
-        assertThat(titre.getText()).contains("640380").contains("A1").contains("N° 2");
+        // Le contexte (carré / point / N°) est déporté en zone gauche de la barre de statut (#693).
+        assertThat(controleur.zonesStatutProperty().get().gauche())
+                .contains("640380")
+                .contains("A1")
+                .contains("N° 2");
         assertThat(statut.getText()).isEqualTo("Vérifié");
     }
 

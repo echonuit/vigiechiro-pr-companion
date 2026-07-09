@@ -15,8 +15,10 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.passage.viewmodel.ActionRecommandee;
 import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -25,6 +27,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXML;
@@ -48,7 +52,7 @@ import javafx.scene.layout.HBox;
 /// [OuvrirVerification], [OuvrirDiagnostic], [OuvrirLot] et [OuvrirValidation] (sans dépendre des
 /// features `qualification`, `diagnostic`, `lot` ni `validation`). Aucun accès base de données ni
 /// logique métier ici (règle ArchUnit `view_sans_jdbc`).
-public class PassageController implements EmplacementNavigation, RafraichirAuRetour {
+public class PassageController implements EmplacementNavigation, RafraichirAuRetour, ResumeStatut {
 
     /// Pseudo-classe CSS portant le liseré « prochaine action recommandée » sur la carte concernée.
     private static final PseudoClass RECOMMANDEE = PseudoClass.getPseudoClass("recommandee");
@@ -65,11 +69,13 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Long idPassage;
     private ContexteSite contexte;
 
-    @FXML
-    private BorderPane racine;
+    /// Contexte du passage (carré / point / numéro), déporté en zone gauche de la barre de statut (#693)
+    /// au lieu d'un titre d'en-tête redondant avec le fil d'Ariane.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     @FXML
-    private Label lblTitre;
+    private BorderPane racine;
 
     @FXML
     private Label lblPlageHoraire;
@@ -141,9 +147,17 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
-        lblTitre.textProperty().bind(viewModel.titreContexteProperty());
+        // Contexte du passage (carré / point / numéro) déporté en zone gauche de la barre de statut (#693).
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> new ZonesStatut(viewModel.titreContexteProperty().get(), "", ""),
+                viewModel.titreContexteProperty()));
         lblPlageHoraire.textProperty().bind(viewModel.plageHoraireProperty());
         lblEnregistreur.textProperty().bind(viewModel.enregistreurProperty());
         lblStatut
