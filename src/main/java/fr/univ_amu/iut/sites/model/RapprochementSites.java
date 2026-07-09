@@ -1,84 +1,118 @@
 package fr.univ_amu.iut.sites.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/// Rapproche les **sites** locaux avec ceux de l'observateur sur VigieChiro (#728, axe 1) : appelle
-/// `GET /moi/sites` et relie chaque site local à son `objectid`.
+/// **Importe et relie** les sites de l'observateur VigieChiro à la connexion (#728/#718).
 ///
-/// Le rapprochement est **best-effort par le titre** (la plateforme n'expose pas directement le numéro
-/// de carré) : un site local correspond au premier site VigieChiro dont le `titre` contient son numéro
-/// de carré, ou dont le `titre` égale (à la casse près) son nom convivial. Faute de site VigieChiro sur
-/// le compte de test, l'heuristique n'a pu être validée en réel ; elle est couverte par tests unitaires.
+/// Les sites d'un observateur viennent de `GET /moi/participations` (cf. [ClientVigieChiro#mesSites()]) :
+/// un observateur *participe* à des sites régionaux dont il n'est pas propriétaire. Chaque site distant
+/// porte son **numéro de carré** (extrait du titre) et ses **points** (localités). Pour chacun :
+/// - si un site local **de même carré** existe → on le **relie** à son `objectid` ;
+/// - sinon on le **crée** (site + points, via [ServiceSites]) puis on le relie.
 ///
-/// Contribué au `Multibinder<RapprochementVigieChiro>` par `SitesModule`. Ne dépend que du [SiteDao] de
-/// sa feature et du [LienVigieChiroDao] du socle ; le client est reçu **en argument**.
+/// Un site atteint par une participation est **verrouillé** (dépôt possible) → le lien porte
+/// `verrouille=true` (badge « Verrouillé » sur M-Sites). Idempotent : la déduplication par carré évite
+/// tout doublon aux connexions suivantes. **Best-effort** : l'échec d'un site (ou d'un point) est logué
+/// et ignoré, sans compromettre les autres ni la connexion.
+///
+/// Contribué au `Multibinder<RapprochementVigieChiro>` par `SitesModule` ; le client est reçu **en
+/// argument** (aucune dépendance vers la feature `connexion`).
 public class RapprochementSites implements RapprochementVigieChiro {
 
     private static final Logger LOG = Logger.getLogger(RapprochementSites.class.getName());
 
     private final SiteDao siteDao;
+    private final ServiceSites serviceSites;
     private final LienVigieChiroDao liens;
+    private final String idUtilisateur;
 
-    public RapprochementSites(SiteDao siteDao, LienVigieChiroDao liens) {
+    public RapprochementSites(
+            SiteDao siteDao, ServiceSites serviceSites, LienVigieChiroDao liens, String idUtilisateur) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
+        this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
         this.liens = Objects.requireNonNull(liens, "liens");
+        this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
     }
 
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
             List<SiteVigieChiro> distants = client.mesSites();
-            List<LienVigieChiro> correspondances = new ArrayList<>();
-            for (Site local : siteDao.findAll()) {
-                correspondant(local, distants)
-                        .ifPresent(distant -> correspondances.add(new LienVigieChiro(
-                                LienVigieChiro.ENTITE_SITE,
-                                String.valueOf(local.id()),
-                                distant.id(),
-                                distant.verrouille())));
+            // Liste vide = non connecté / API indisponible : on ne touche à rien (ni création, ni purge).
+            if (distants.isEmpty()) {
+                return Optional.empty();
             }
-            // Aucune correspondance = non connecté, aucun site distant, ou aucun titre rapproché : on ne
-            // purge pas les liens déjà acquis (prudence face à une heuristique de titre imparfaite).
+            Map<String, Site> localesParCarre = new HashMap<>();
+            for (Site local : siteDao.findByUtilisateur(idUtilisateur)) {
+                localesParCarre.put(local.numeroCarre(), local);
+            }
+            List<LienVigieChiro> correspondances = new ArrayList<>();
+            for (SiteVigieChiro distant : distants) {
+                importerOuLier(distant, localesParCarre).ifPresent(correspondances::add);
+            }
             if (correspondances.isEmpty()) {
                 return Optional.empty();
             }
             liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
             return Optional.of(new RapportSynchro("sites", correspondances.size()));
         } catch (RuntimeException echec) {
-            LOG.log(Level.FINE, echec, () -> "Rapprochement des sites VigieChiro ignoré (best-effort)");
+            LOG.log(Level.FINE, echec, () -> "Import des sites VigieChiro ignoré (best-effort)");
             return Optional.empty();
         }
     }
 
-    /// Premier site VigieChiro correspondant au site `local` parmi `distants`, ou vide.
-    static Optional<SiteVigieChiro> correspondant(Site local, List<SiteVigieChiro> distants) {
-        return distants.stream().filter(distant -> correspond(local, distant)).findFirst();
+    /// Relie le site distant à son pendant local (créé si absent), et renvoie le lien. Un site distant
+    /// sans carré exploitable, ou dont la création échoue, est ignoré (best-effort par site).
+    private Optional<LienVigieChiro> importerOuLier(SiteVigieChiro distant, Map<String, Site> localesParCarre) {
+        String carre = distant.numeroCarre();
+        if (carre == null) {
+            return Optional.empty();
+        }
+        try {
+            Site local = localesParCarre.get(carre);
+            if (local == null) {
+                local = creerDepuis(distant);
+                localesParCarre.put(carre, local);
+            }
+            return Optional.of(new LienVigieChiro(
+                    LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()), distant.id(), distant.verrouille()));
+        } catch (RuntimeException echecSite) {
+            LOG.log(Level.FINE, echecSite, () -> "Import du site VigieChiro (carré " + carre + ") ignoré");
+            return Optional.empty();
+        }
     }
 
-    /// Vrai si le `titre` du site distant contient le numéro de carré du site local, ou égale (à la
-    /// casse près) son nom convivial.
-    static boolean correspond(Site local, SiteVigieChiro distant) {
-        String titre = distant.titre() == null ? "" : distant.titre().strip();
-        if (titre.isEmpty()) {
-            return false;
+    /// Crée le site local (carré + titre en nom) et ses points d'écoute depuis les localités du site
+    /// distant. Un point au code/GPS invalide est ignoré, sans faire échouer le site.
+    private Site creerDepuis(SiteVigieChiro distant) {
+        Site site =
+                serviceSites.creerSite(distant.numeroCarre(), distant.titre(), Protocole.STANDARD, null, idUtilisateur);
+        for (PointVigieChiro point : distant.points()) {
+            try {
+                serviceSites.ajouterPoint(site.id(), point.code(), point.latitude(), point.longitude(), null);
+            } catch (RuntimeException pointInvalide) {
+                LOG.log(
+                        Level.FINE,
+                        pointInvalide,
+                        () -> "Point " + point.code() + " ignoré (carré " + distant.numeroCarre() + ")");
+            }
         }
-        String carre = local.numeroCarre() == null ? "" : local.numeroCarre().strip();
-        if (!carre.isEmpty() && titre.contains(carre)) {
-            return true;
-        }
-        String nom = local.nomConvivial();
-        return nom != null && !nom.isBlank() && titre.equalsIgnoreCase(nom.strip());
+        return site;
     }
 }

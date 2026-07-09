@@ -4,16 +4,23 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
+import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,11 +32,13 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Rapprochement des sites (#728), API et DAO site **mockés**, DAO de liens réel (base jetable) : on
-/// vérifie l'heuristique de titre ([RapprochementSites#correspond] : carré contenu dans le titre, ou nom
-/// convivial égal au titre), le bout-à-bout de synchronisation, et l'absence de purge hors-ligne.
+/// Import + rapprochement des sites (#718), API **mockée**, DAO et [ServiceSites] **réels** (base
+/// jetable). On vérifie la création d'un site absent (carré + points + lien verrouillé), le
+/// rattachement d'un site déjà présent (sans doublon, idempotent) et la garde hors-ligne.
 @ExtendWith(MockitoExtension.class)
 class RapprochementSitesTest {
+
+    private static final String ID_USER = "u-1";
 
     @TempDir
     Path dossier;
@@ -37,9 +46,9 @@ class RapprochementSitesTest {
     @Mock
     private ClientVigieChiro client;
 
-    @Mock
     private SiteDao siteDao;
-
+    private PointDao pointDao;
+    private ServiceSites service;
     private LienVigieChiroDao liens;
     private RapprochementSites rapprochement;
 
@@ -47,57 +56,63 @@ class RapprochementSitesTest {
     void preparer() {
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
+        new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
+        siteDao = new SiteDao(source);
+        pointDao = new PointDao(source);
+        PassageDao passageDao = new PassageDao(source);
+        service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 6, 1)));
         liens = new LienVigieChiroDao(source);
-        rapprochement = new RapprochementSites(siteDao, liens);
+        rapprochement = new RapprochementSites(siteDao, service, liens, ID_USER);
     }
 
-    private static Site site(Long id, String carre, String nom) {
-        return new Site(id, carre, nom, Protocole.STANDARD, null, "2026-06-01", "u1");
-    }
-
-    @Test
-    @DisplayName("correspond : titre contenant le carré, ou nom convivial égal au titre (casse ignorée)")
-    void correspond_par_carre_ou_nom() {
-        assertThat(RapprochementSites.correspond(
-                        site(1L, "810123", "Jardin"), new SiteVigieChiro("x", "Carre 810123", true)))
-                .isTrue();
-        assertThat(RapprochementSites.correspond(
-                        site(1L, "810123", "Mon Jardin"), new SiteVigieChiro("x", "mon jardin", false)))
-                .isTrue();
-        assertThat(RapprochementSites.correspond(
-                        site(1L, "810123", "Jardin"), new SiteVigieChiro("x", "Autre 999999", false)))
-                .isFalse();
-        assertThat(RapprochementSites.correspond(site(1L, "810123", null), new SiteVigieChiro("x", null, false)))
-                .isFalse();
+    private static SiteVigieChiro siteDistant(String id, String carre, List<PointVigieChiro> points) {
+        return new SiteVigieChiro(id, "Vigiechiro - Point Fixe-" + carre, true, carre, points);
     }
 
     @Test
-    @DisplayName("relie chaque site local au premier site VigieChiro correspondant, par son id technique")
-    void relie_les_sites_locaux() {
-        when(siteDao.findAll()).thenReturn(List.of(site(11L, "810123", "Jardin"), site(22L, "999999", "Colline")));
+    @DisplayName("site absent : créé (carré + points), relié à son objectid, marqué verrouillé")
+    void importe_un_site_absent() {
         when(client.mesSites())
-                .thenReturn(List.of(
-                        new SiteVigieChiro("s1", "STOC 810123 (parcelle A)", true),
-                        new SiteVigieChiro("s2", "Colline", false),
-                        new SiteVigieChiro("s3", "Site sans correspondance", false)));
+                .thenReturn(List.of(siteDistant(
+                        "s1",
+                        "130711",
+                        List.of(new PointVigieChiro("Z1", 43.52, 5.46), new PointVigieChiro("Z41", 43.51, 5.45)))));
 
         Optional<RapportSynchro> rapport = rapprochement.synchroniser(client);
 
-        assertThat(rapport).contains(new RapportSynchro("sites", 2));
-        assertThat(liens.tous(LienVigieChiro.ENTITE_SITE)).containsOnly(Map.entry("11", "s1"), Map.entry("22", "s2"));
-        // s1 est verrouillé (dépôt possible), pas s2 : seul le site 11 est marqué verrouillé.
-        assertThat(liens.verrouilles(LienVigieChiro.ENTITE_SITE)).containsExactly("11");
+        assertThat(rapport).contains(new RapportSynchro("sites", 1));
+        List<Site> locaux = siteDao.findByUtilisateur(ID_USER);
+        assertThat(locaux).singleElement().extracting(Site::numeroCarre).isEqualTo("130711");
+        Site cree = locaux.getFirst();
+        assertThat(pointDao.findBySite(cree.id()))
+                .extracting(PointDEcoute::code)
+                .containsExactly("Z1", "Z41");
+        assertThat(liens.tous(LienVigieChiro.ENTITE_SITE)).containsOnly(Map.entry(String.valueOf(cree.id()), "s1"));
+        assertThat(liens.verrouilles(LienVigieChiro.ENTITE_SITE)).containsExactly(String.valueOf(cree.id()));
     }
 
     @Test
-    @DisplayName("hors-ligne (aucun site renvoyé) : rapport vide, ne purge pas les correspondances")
-    void hors_ligne_ne_purge_pas() {
-        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, "11", "s1"));
-        when(siteDao.findAll()).thenReturn(List.of(site(11L, "810123", "Jardin")));
+    @DisplayName("site déjà présent (même carré) : relié sans re-création ; rejouer reste idempotent")
+    void relie_un_site_existant_sans_doublon() {
+        Site existant = service.creerSite("999999", "Mon carré", Protocole.STANDARD, null, ID_USER);
+        when(client.mesSites()).thenReturn(List.of(siteDistant("s2", "999999", List.of())));
+
+        rapprochement.synchroniser(client);
+        rapprochement.synchroniser(client); // rejeu : doit rester idempotent
+
+        assertThat(siteDao.findByUtilisateur(ID_USER))
+                .extracting(Site::numeroCarre)
+                .containsExactly("999999");
+        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(existant.id())))
+                .contains("s2");
+    }
+
+    @Test
+    @DisplayName("hors-ligne (aucun site distant) : rien créé, rapport vide")
+    void hors_ligne_ne_cree_rien() {
         when(client.mesSites()).thenReturn(List.of());
 
         assertThat(rapprochement.synchroniser(client)).isEmpty();
-
-        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "11")).contains("s1");
+        assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
     }
 }

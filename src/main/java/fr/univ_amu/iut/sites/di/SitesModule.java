@@ -87,8 +87,12 @@ public class SitesModule extends AbstractModule {
     /// [SiteDao] de la feature et du [LienVigieChiroDao] du socle : aucune dépendance vers `connexion`.
     @Provides
     @Singleton
-    RapprochementSites fournirRapprochementSites(SiteDao siteDao, LienVigieChiroDao liens) {
-        return new RapprochementSites(siteDao, liens);
+    RapprochementSites fournirRapprochementSites(
+            SiteDao siteDao,
+            ServiceSites serviceSites,
+            LienVigieChiroDao liens,
+            @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new RapprochementSites(siteDao, serviceSites, liens, idUtilisateur);
     }
 
     /// Service métier de référence. Reçoit ses DAO (dont [PassageDao], fourni par
