@@ -375,3 +375,70 @@
     -fx-spacing: 8;
     -fx-padding: 0 0 4 0;
 }
+
+/*
+ * Bandeau d'infos-clés (#694) : bande horizontale de paires libellé / valeur (identité d'un site,
+ * rappel d'un passage…). Fusionne les briques jusqu'ici parallèles `.bandeau` (passage, qualification)
+ * et `.bandeau-infos` + `.info-*` (fiche site) en un composant unique. Chaque cellule est une VBox
+ * `bandeau-cellule` (libellé discret au-dessus, valeur en gras dessous). Ne pas confondre avec
+ * `.bandeau-statut` (feedback de sévérité pleine largeur).
+ */
+.bandeau-infos {
+    -fx-background-color: #f6f8fa;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 10 2 10 2;
+}
+
+.bandeau-cellule {
+    -fx-padding: 0 16 0 16;
+    -fx-spacing: 4;
+}
+
+.bandeau-label {
+    -fx-font-size: 10px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+.bandeau-valeur {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+}
+
+/*
+ * Carte de section (#694) : bloc blanc bordé regroupant une section de contenu (une étape d'assistant,
+ * un panneau). Fusionne les briques parallèles `.section-carte` (import) et `.panneau-lot` (lot). Le
+ * `spacing` interne reste porté par chaque VBox en FXML (il varie selon le contenu).
+ */
+.carte-section {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 16;
+}
+
+/*
+ * Carte de statistique (#694) : métrique encadrée « libellé discret + valeur en gras » (récapitulatif
+ * d'un passage). Migrée de `.stat-carte` (passage).
+ */
+.carte-stat {
+    -fx-padding: 10 16 10 16;
+    -fx-background-color: #f6f8fa;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+}
+
+.carte-stat-libelle {
+    -fx-font-size: 10px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+.carte-stat-valeur {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+}

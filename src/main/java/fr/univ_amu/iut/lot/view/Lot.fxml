@@ -30,7 +30,7 @@
     statut du workflow est déporté en barre de statut par le controller (ResumeStatut).
   -->
 
-  <VBox spacing="4.0" styleClass="panneau-lot">
+  <VBox spacing="4.0" styleClass="carte-section">
     <Label text="📊 Récapitulatif du lot" styleClass="section-titre"/>
     <Label fx:id="lblRecap" styleClass="section-sous"/>
   </VBox>
@@ -41,7 +41,7 @@
   <Separator/>
 
   <!-- Étape 1 - Vérifier et préparer le lot -->
-  <VBox spacing="4.0" styleClass="panneau-lot">
+  <VBox spacing="4.0" styleClass="carte-section">
     <Label text="1. Vérifier et préparer le lot" styleClass="section-titre"/>
     <Label text="Avant le dépôt, l'application vérifie que la nuit est complète et conforme."
            styleClass="section-sous" wrapText="true"/>
@@ -55,7 +55,7 @@
   </VBox>
 
   <!-- Étape 2 - Générer les archives ZIP (le payload réellement déposé) -->
-  <VBox spacing="4.0" styleClass="panneau-lot">
+  <VBox spacing="4.0" styleClass="carte-section">
     <Label text="2. Générer les archives de dépôt" styleClass="section-titre"/>
     <Label fx:id="lblTitreArchives" styleClass="section-sous"/>
     <Label text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser, écrites dans le sous-dossier « depot/ » de la session."
@@ -70,7 +70,7 @@
   </VBox>
 
   <!-- Étape 3 - Téléverser ces archives (action manuelle, hors application) -->
-  <VBox spacing="4.0" styleClass="panneau-lot">
+  <VBox spacing="4.0" styleClass="carte-section">
     <Label text="3. Téléverser ces archives sur Vigie-Chiro" styleClass="section-titre"/>
     <Label text="Action manuelle (hors application) : téléversez les archives ZIP ci-dessus sur Vigie-Chiro. Elles se trouvent dans :"
            styleClass="section-sous" wrapText="true"/>
@@ -80,7 +80,7 @@
   </VBox>
 
   <!-- Étape 4 - Marquer déposé -->
-  <VBox spacing="4.0" styleClass="panneau-lot">
+  <VBox spacing="4.0" styleClass="carte-section">
     <Label text="4. Marquer le passage déposé" styleClass="section-titre"/>
     <Label text="Une fois le téléversement effectué sur Vigie-Chiro, enregistrez le dépôt."
            styleClass="section-sous" wrapText="true"/>

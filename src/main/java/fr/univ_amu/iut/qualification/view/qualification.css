@@ -28,25 +28,7 @@
   -fx-underline: true;
 }
 
-/* ---- Bandeau de rappel du passage ---- */
-.bandeau {
-  -fx-padding: 10 14 10 14;
-  -fx-background-color: #f6f8fa;
-  -fx-border-color: #d0d7de;
-  -fx-border-radius: 4;
-  -fx-background-radius: 4;
-}
-
-.bandeau-label {
-  -fx-font-size: 10px;
-  -fx-text-fill: #6a737d;
-}
-
-.bandeau-valeur {
-  -fx-font-size: 13px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #2c3e50;
-}
+/* Bandeau de rappel du passage : composant partagé bandeau-infos (design.css, #694). */
 
 /* ---- Pré-check (R13, consultatif) ---- */
 .precheck-intro {

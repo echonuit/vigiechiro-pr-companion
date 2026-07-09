@@ -11,25 +11,7 @@
   -fx-padding: 18;
 }
 
-/* ---- Bandeau d'identité ---- */
-.bandeau {
-  -fx-padding: 10 14 10 14;
-  -fx-background-color: #f6f8fa;
-  -fx-border-color: #d0d7de;
-  -fx-border-radius: 4;
-  -fx-background-radius: 4;
-}
-
-.bandeau-label {
-  -fx-font-size: 10px;
-  -fx-text-fill: #6a737d;
-}
-
-.bandeau-valeur {
-  -fx-font-size: 14px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #2c3e50;
-}
+/* Bandeau d'identité : composant partagé bandeau-infos (design.css, #694). */
 
 /* ---- Stepper de statut workflow ---- */
 .stepper {
@@ -69,24 +51,7 @@
   -fx-padding: 0 18 18 18;
 }
 
-.stat-carte {
-  -fx-padding: 10 16 10 16;
-  -fx-background-color: #f6f8fa;
-  -fx-border-color: #d0d7de;
-  -fx-border-radius: 4;
-  -fx-background-radius: 4;
-}
-
-.stat-label {
-  -fx-font-size: 10px;
-  -fx-text-fill: #6a737d;
-}
-
-.stat-valeur {
-  -fx-font-size: 18px;
-  -fx-font-weight: bold;
-  -fx-text-fill: #2c3e50;
-}
+/* Résumé de la nuit : composant partagé carte-stat (design.css, #694). */
 
 /* Modale « Modifier le rattachement » (E2.S8). */
 .modale-rattachement {

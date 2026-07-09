@@ -43,8 +43,8 @@ import javafx.scene.layout.VBox;
 /// d'Ariane.
 public class MesSitesController implements ResumeStatut {
 
-    private static final String STYLE_STAT_NOMBRE = "carte-stat-nombre";
-    private static final String STYLE_STAT_LIBELLE = "carte-stat-libelle";
+    private static final String STYLE_STAT_NOMBRE = "carte-site-nombre";
+    private static final String STYLE_STAT_LIBELLE = "carte-site-libelle";
     private static final String STYLE_CARTE_DETAIL = "carte-detail";
 
     private final SitesViewModel viewModel;

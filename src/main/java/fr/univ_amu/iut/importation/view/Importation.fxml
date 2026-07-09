@@ -35,7 +35,7 @@
          text="L'application prépare les séquences d'écoute à partir de la carte SD, sans jamais modifier vos fichiers d'origine."/>
 
   <!-- 1. Dossier source -->
-  <VBox styleClass="section-carte" spacing="6.0">
+  <VBox styleClass="carte-section" spacing="6.0">
     <Label text="1. Dossier source" styleClass="section-titre"/>
     <Label text="Le dossier de votre carte SD, une copie sur disque, ou une archive .zip. Vous pouvez aussi glisser-déposer un dossier ou un .zip n'importe où sur cet écran."
            styleClass="section-sous" wrapText="true"/>
@@ -50,7 +50,7 @@
   </VBox>
 
   <!-- 2. Inspection -->
-  <VBox fx:id="sectionInspection" styleClass="section-carte" spacing="6.0">
+  <VBox fx:id="sectionInspection" styleClass="carte-section" spacing="6.0">
     <Label text="2. Inspection du dossier" styleClass="section-titre"/>
     <Label text="Lecture seule : aucun fichier n'est modifié pour l'instant."
            styleClass="section-sous"/>
@@ -78,7 +78,7 @@
   </VBox>
 
   <!-- 3. Rattachement -->
-  <VBox styleClass="section-carte" spacing="10.0">
+  <VBox styleClass="carte-section" spacing="10.0">
     <Label text="3. Rattachement de la nuit" styleClass="section-titre"/>
     <Label text="À quel site / point / passage du protocole cette nuit appartient-elle ?"
            styleClass="section-sous"/>
@@ -124,7 +124,7 @@
   </VBox>
 
   <!-- Option d'espace disque (#…) : conserver ou non une copie des originaux dans « bruts/ ». -->
-  <VBox styleClass="section-carte" spacing="4.0">
+  <VBox styleClass="carte-section" spacing="4.0">
     <CheckBox fx:id="caseConserverOriginaux" text="Conserver les originaux sur le disque"/>
     <Label styleClass="section-sous" wrapText="true"
            text="Décochez pour économiser l'espace disque : les enregistrements sont transformés directement depuis la carte SD, sans en copier une archive dans le dossier « bruts ». Les séquences d'écoute et le journal sont produits normalement ; seuls les fichiers d'origine ne sont pas conservés."/>

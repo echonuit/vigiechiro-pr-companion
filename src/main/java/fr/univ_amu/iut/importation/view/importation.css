@@ -13,16 +13,7 @@
     -fx-background-color: #ffffff;
 }
 
-/* ----- Sections numérotées ----- */
-
-.section-carte {
-    -fx-background-color: #ffffff;
-    -fx-border-color: #d0d7de;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
-    -fx-padding: 16;
-    -fx-spacing: 10;
-}
+/* ----- Sections numérotées : composant partagé carte-section (design.css, #694). ----- */
 
 /* ----- Champs ----- */
 .field-label {

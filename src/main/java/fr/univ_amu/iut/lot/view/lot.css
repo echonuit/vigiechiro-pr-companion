@@ -7,13 +7,7 @@
   -fx-padding: 18;
 }
 
-.panneau-lot {
-  -fx-background-color: #ffffff;
-  -fx-border-color: #e1e4e8;
-  -fx-border-radius: 4;
-  -fx-background-radius: 4;
-  -fx-padding: 10;
-}
+/* Panneaux d'étape : composant partagé carte-section (design.css, #694). */
 
 .chemin {
   -fx-font-family: monospace;

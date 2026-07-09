@@ -44,29 +44,29 @@
   </HBox>
 
   <HBox styleClass="bandeau-infos" spacing="0.0">
-    <VBox styleClass="info-cellule" HBox.hgrow="ALWAYS">
-      <Label text="N° DE CARRÉ" styleClass="info-label"/>
-      <Label fx:id="valNumeroCarre" styleClass="info-value"/>
+    <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
+      <Label text="N° DE CARRÉ" styleClass="bandeau-label"/>
+      <Label fx:id="valNumeroCarre" styleClass="bandeau-valeur"/>
     </VBox>
-    <VBox styleClass="info-cellule" HBox.hgrow="ALWAYS">
-      <Label text="DÉPARTEMENT" styleClass="info-label"/>
-      <Label fx:id="valDepartement" styleClass="info-value"/>
+    <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
+      <Label text="DÉPARTEMENT" styleClass="bandeau-label"/>
+      <Label fx:id="valDepartement" styleClass="bandeau-valeur"/>
     </VBox>
-    <VBox styleClass="info-cellule" HBox.hgrow="ALWAYS">
-      <Label text="PROTOCOLE" styleClass="info-label"/>
-      <Label fx:id="valProtocole" styleClass="info-value"/>
+    <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
+      <Label text="PROTOCOLE" styleClass="bandeau-label"/>
+      <Label fx:id="valProtocole" styleClass="bandeau-valeur"/>
     </VBox>
-    <VBox styleClass="info-cellule" HBox.hgrow="ALWAYS">
-      <Label text="CRÉÉ LE" styleClass="info-label"/>
-      <Label fx:id="valDateCreation" styleClass="info-value"/>
+    <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
+      <Label text="CRÉÉ LE" styleClass="bandeau-label"/>
+      <Label fx:id="valDateCreation" styleClass="bandeau-valeur"/>
     </VBox>
-    <VBox styleClass="info-cellule" HBox.hgrow="ALWAYS">
-      <Label text="DERNIÈRE NUIT IMPORTÉE" styleClass="info-label"/>
-      <Label fx:id="valDerniereNuit" styleClass="info-value"/>
+    <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
+      <Label text="DERNIÈRE NUIT IMPORTÉE" styleClass="bandeau-label"/>
+      <Label fx:id="valDerniereNuit" styleClass="bandeau-valeur"/>
     </VBox>
-    <VBox styleClass="info-cellule" HBox.hgrow="ALWAYS">
-      <Label text="PASSAGES (ANNÉE)" styleClass="info-label"/>
-      <Label fx:id="valPassages" styleClass="info-value"/>
+    <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
+      <Label text="PASSAGES (ANNÉE)" styleClass="bandeau-label"/>
+      <Label fx:id="valPassages" styleClass="bandeau-valeur"/>
     </VBox>
   </HBox>
 

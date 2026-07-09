@@ -41,25 +41,25 @@
       <Label styleClass="sous-titre-page" wrapText="true"
              text="Écoutez quelques séquences réparties sur la nuit pour vous assurer que l'enregistrement est exploitable."/>
 
-      <!-- Bandeau de rappel du passage -->
-      <HBox spacing="28.0" styleClass="bandeau">
-        <VBox spacing="2.0">
+      <!-- Bandeau de rappel du passage (composant partagé bandeau-infos, #694) -->
+      <HBox spacing="0.0" styleClass="bandeau-infos">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="PASSAGE" styleClass="bandeau-label"/>
           <Label fx:id="lblTitreContexte" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="DATE / PLAGE" styleClass="bandeau-label"/>
           <Label fx:id="lblPlageHoraire" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="VOLUMÉTRIE" styleClass="bandeau-label"/>
           <Label fx:id="lblVolumetrie" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="VERDICT ACTUEL" styleClass="bandeau-label"/>
           <Label fx:id="lblVerdictActuel" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="STATUT" styleClass="bandeau-label"/>
           <Label fx:id="lblStatut" styleClass="bandeau-valeur"/>
         </VBox>

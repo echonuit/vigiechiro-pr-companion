@@ -89,13 +89,13 @@
     -fx-cursor: hand;
 }
 
-.carte-stat-nombre {
+.carte-site-nombre {
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-text-fill: -couleur-primaire;
 }
 
-.carte-stat-libelle {
+.carte-site-libelle {
     -fx-font-size: 11px;
     -fx-text-fill: #6a737d;
 }
@@ -145,29 +145,7 @@
     -fx-font-size: 13px;
 }
 
-.bandeau-infos {
-    -fx-background-color: #f6f8fa;
-    -fx-border-color: #d0d7de;
-    -fx-border-radius: 4;
-    -fx-background-radius: 4;
-    -fx-padding: 12 0 12 0;
-}
-
-.info-cellule {
-    -fx-padding: 0 16 0 16;
-    -fx-spacing: 4;
-}
-
-.info-label {
-    -fx-font-size: 10px;
-    -fx-text-fill: #6a737d;
-}
-
-.info-value {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #2c3e50;
-}
+/* Bandeau d'infos-clés : composant partagé bandeau-infos / bandeau-cellule (design.css, #694). */
 
 /* ----- Cartes de points d'écoute ----- */
 .carte-point {

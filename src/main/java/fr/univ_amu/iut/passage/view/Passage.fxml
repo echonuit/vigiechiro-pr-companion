@@ -40,21 +40,21 @@
                 onAction="#supprimer"/>
       </HBox>
 
-      <!-- Bandeau d'identité du passage -->
-      <HBox spacing="28.0" styleClass="bandeau">
-        <VBox spacing="2.0">
+      <!-- Bandeau d'identité du passage (composant partagé bandeau-infos, #694) -->
+      <HBox spacing="0.0" styleClass="bandeau-infos">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="DATE / PLAGE" styleClass="bandeau-label"/>
           <Label fx:id="lblPlageHoraire" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="ENREGISTREUR" styleClass="bandeau-label"/>
           <Label fx:id="lblEnregistreur" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="STATUT" styleClass="bandeau-label"/>
           <Label fx:id="lblStatut" styleClass="bandeau-valeur"/>
         </VBox>
-        <VBox spacing="2.0">
+        <VBox spacing="2.0" styleClass="bandeau-cellule">
           <Label text="VERDICT" styleClass="bandeau-label"/>
           <Label fx:id="lblVerdict" styleClass="bandeau-valeur"/>
         </VBox>
@@ -76,21 +76,21 @@
       <!-- Résumé de la nuit -->
       <Label text="Résumé de la nuit" styleClass="section-titre"/>
       <HBox spacing="14.0" styleClass="stats">
-        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
-          <Label text="VOLUME BRUTS" styleClass="stat-label"/>
-          <Label fx:id="lblVolBruts" styleClass="stat-valeur"/>
+        <VBox spacing="2.0" styleClass="carte-stat" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="VOLUME BRUTS" styleClass="carte-stat-libelle"/>
+          <Label fx:id="lblVolBruts" styleClass="carte-stat-valeur"/>
         </VBox>
-        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
-          <Label text="VOLUME TRANSFORMÉ" styleClass="stat-label"/>
-          <Label fx:id="lblVolTransformes" styleClass="stat-valeur"/>
+        <VBox spacing="2.0" styleClass="carte-stat" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="VOLUME TRANSFORMÉ" styleClass="carte-stat-libelle"/>
+          <Label fx:id="lblVolTransformes" styleClass="carte-stat-valeur"/>
         </VBox>
-        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
-          <Label text="DURÉE AUDIBLE" styleClass="stat-label"/>
-          <Label fx:id="lblDureeAudible" styleClass="stat-valeur"/>
+        <VBox spacing="2.0" styleClass="carte-stat" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="DURÉE AUDIBLE" styleClass="carte-stat-libelle"/>
+          <Label fx:id="lblDureeAudible" styleClass="carte-stat-valeur"/>
         </VBox>
-        <VBox spacing="2.0" styleClass="stat-carte" maxWidth="Infinity" HBox.hgrow="ALWAYS">
-          <Label text="SÉQUENCES" styleClass="stat-label"/>
-          <Label fx:id="lblNbSequences" styleClass="stat-valeur"/>
+        <VBox spacing="2.0" styleClass="carte-stat" maxWidth="Infinity" HBox.hgrow="ALWAYS">
+          <Label text="SÉQUENCES" styleClass="carte-stat-libelle"/>
+          <Label fx:id="lblNbSequences" styleClass="carte-stat-valeur"/>
         </VBox>
       </HBox>
 
