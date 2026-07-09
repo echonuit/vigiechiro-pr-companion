@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -162,7 +164,7 @@ class LotViewModelTest {
     @DisplayName("#110 : sur un lot prêt, genererArchives publie les archives produites et un message")
     void generer_archives_publie_la_liste() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
-        when(service.genererArchivesDepot(ID_PASSAGE))
+        when(service.genererArchivesDepot(eq(ID_PASSAGE), any()))
                 .thenReturn(List.of(
                         new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
         viewModel.ouvrirSur(ID_PASSAGE);
@@ -183,7 +185,7 @@ class LotViewModelTest {
     void generation_hors_thread_gere_l_etat_en_cours() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
         var archive = new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2);
-        when(service.genererArchivesDepot(ID_PASSAGE)).thenReturn(List.of(archive));
+        when(service.genererArchivesDepot(eq(ID_PASSAGE), any())).thenReturn(List.of(archive));
         viewModel.ouvrirSur(ID_PASSAGE);
 
         // Étape posée sur le fil JavaFX avant le calcul hors-thread.
@@ -192,7 +194,7 @@ class LotViewModelTest {
         assertThat(viewModel.messageProperty().get()).contains("en cours");
 
         // Calcul hors-thread (aucune mutation observable), puis application sur le fil JavaFX.
-        var produites = viewModel.calculerArchivesDepot();
+        var produites = viewModel.calculerArchivesDepot(progression -> {});
         viewModel.appliquerGeneration(produites);
 
         assertThat(viewModel.generationEnCoursProperty().get()).isFalse();
@@ -217,7 +219,7 @@ class LotViewModelTest {
     @DisplayName("#110 : genererArchives restitue l'erreur métier dans le message, liste vide")
     void generer_archives_en_erreur() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
-        when(service.genererArchivesDepot(ID_PASSAGE))
+        when(service.genererArchivesDepot(eq(ID_PASSAGE), any()))
                 .thenThrow(new RegleMetierException("Aucune séquence à déposer."));
         viewModel.ouvrirSur(ID_PASSAGE);
 
@@ -268,7 +270,7 @@ class LotViewModelTest {
     @DisplayName("#251 : générer les archives fait avancer l'étape courante à ③ Téléverser")
     void generer_archives_avance_l_etape_a_televerser() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
-        when(service.genererArchivesDepot(ID_PASSAGE))
+        when(service.genererArchivesDepot(eq(ID_PASSAGE), any()))
                 .thenReturn(List.of(
                         new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
         viewModel.ouvrirSur(ID_PASSAGE);

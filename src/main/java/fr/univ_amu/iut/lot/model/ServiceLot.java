@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -16,6 +17,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 /// Service métier de la feature `lot` : prépare et trace le dépôt d'un passage sur
 /// Vigie-Chiro (parcours P4, épopée E4). Suit le patron du service de référence
@@ -157,7 +159,17 @@ public class ServiceLot {
     /// @return les archives produites, par numéro croissant
     /// @throws RegleMetierException si le passage/session est introuvable ou si aucune séquence n'est à déposer
     public List<ArchiveDepot> genererArchivesDepot(Long idPassage) {
+        return genererArchivesDepot(idPassage, progression -> {});
+    }
+
+    /// Variante avec **suivi de progression** (#769) : `progres` est notifié au fil de la compression des
+    /// séquences (« Compression X/N », fraction 0→1), pour une barre déterminée + une estimation de durée
+    /// côté IHM. Mêmes contrôles (statut, session, séquences) et contrat que la variante sans callback.
+    ///
+    /// @param progres callback de progression (appelé sur le fil d'exécution ; l'IHM relaie au fil JavaFX)
+    public List<ArchiveDepot> genererArchivesDepot(Long idPassage, Consumer<Progression> progres) {
         Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(progres, "progres");
         Passage passage = chargerPassage(idPassage);
         // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
         // On n'archive donc que des passages Prêt à déposer ou déjà Déposé : l'API ne court-circuite pas
@@ -184,7 +196,7 @@ public class ServiceLot {
                 .map(s -> Path.of(s.cheminFichier()))
                 .map(p -> p.isAbsolute() ? p : racineSession.resolve(p))
                 .toList();
-        return compacteur.compacter(fichiers, prefixe, racineSession.resolve("depot"));
+        return compacteur.compacter(fichiers, prefixe, racineSession.resolve("depot"), progres);
     }
 
     private Passage chargerPassage(Long idPassage) {

@@ -147,6 +147,29 @@ class CompacteurDepotTest {
         assertThat(toutesLesEntrees(archives)).containsExactlyInAnyOrder("a.wav", "b.wav");
     }
 
+    @Test
+    @DisplayName("#769 : la génération émet un point de progression par fichier (fraction croissante jusqu'à 1)")
+    void emet_une_progression_par_fichier() throws IOException {
+        Path src = Files.createDirectories(dossier.resolve("src"));
+        List<Path> fichiers = new ArrayList<>();
+        for (int i = 0; i < 5; i++) {
+            fichiers.add(Files.write(src.resolve("seq_" + i + ".wav"), octets(1000, (byte) i)));
+        }
+        List<Double> fractions = new ArrayList<>();
+        List<String> libelles = new ArrayList<>();
+        new CompacteurDepot().compacter(fichiers, PREFIXE, dossier.resolve("depot"), p -> {
+            fractions.add(p.fraction());
+            libelles.add(p.libelle());
+        });
+
+        // Un point par fichier, fraction croissante jusqu'à 1.0, libellé « Compression X/N · fichier ».
+        assertThat(fractions).hasSize(5);
+        assertThat(fractions).isSorted();
+        assertThat(fractions.get(4)).isEqualTo(1.0);
+        assertThat(libelles.get(0)).isEqualTo("Compression 1/5 · seq_0.wav");
+        assertThat(libelles.get(4)).contains("5/5");
+    }
+
     private static byte[] octets(int taille, byte valeur) {
         byte[] b = new byte[taille];
         Arrays.fill(b, valeur); // compressible : DEFLATE réduit fortement

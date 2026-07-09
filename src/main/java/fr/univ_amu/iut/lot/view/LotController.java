@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.lot.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
@@ -18,6 +19,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -28,7 +30,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -83,7 +85,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private Button btnGenererArchives;
 
     @FXML
-    private ProgressIndicator indicateurGeneration;
+    private ProgressBar barreGeneration;
+
+    @FXML
+    private Label lblProgressionGeneration;
 
     @FXML
     private ListView<String> listeArchives;
@@ -138,9 +143,14 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnGenererArchives
                 .disableProperty()
                 .bind(viewModel.peutGenererArchivesProperty().not().or(viewModel.generationEnCoursProperty()));
-        // Indicateur d'activité (#251) : visible uniquement pendant la génération hors-thread.
-        indicateurGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
-        indicateurGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
+        // Progression déterminée (#769) : barre + libellé « Compression X/N · ETA », visibles seulement
+        // pendant la génération hors-thread. La fraction et le libellé suivent le ProgressionLot du VM.
+        barreGeneration.progressProperty().bind(viewModel.progression().fractionProperty());
+        barreGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
+        barreGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
+        lblProgressionGeneration.textProperty().bind(viewModel.progression().messageProperty());
+        lblProgressionGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
+        lblProgressionGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
         listeArchives.setItems(viewModel.archives());
 
         // Étape ③ : « Ouvrir le dossier » seulement quand les archives sont réellement prêtes (#259), pas
@@ -259,9 +269,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private void genererArchives() {
         viewModel.marquerGenerationEnCours();
+        // Callback de progression (#769) : le service l'appelle hors-thread, on relaie chaque point au fil
+        // JavaFX pour mettre à jour la barre + l'estimation de durée.
+        Consumer<Progression> progres =
+                point -> Platform.runLater(() -> viewModel.progression().appliquer(point));
         Thread.ofVirtual().name("archives-depot-vigiechiro").start(() -> {
             try {
-                var produites = viewModel.calculerArchivesDepot();
+                var produites = viewModel.calculerArchivesDepot(progres);
                 Platform.runLater(() -> viewModel.appliquerGeneration(produites));
             } catch (RuntimeException echec) {
                 Platform.runLater(() -> viewModel.echecGeneration(echec.getMessage()));

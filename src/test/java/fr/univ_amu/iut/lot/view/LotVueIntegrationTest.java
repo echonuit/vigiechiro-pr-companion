@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.lot.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -288,7 +289,7 @@ class LotVueIntegrationTest {
     @DisplayName("#259 : après une génération réussie, « Ouvrir le dossier » s'active et ouvre depot/")
     void ouvrir_dossier_depot_apres_generation(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
-        when(service.genererArchivesDepot(anyLong()))
+        when(service.genererArchivesDepot(anyLong(), any()))
                 .thenReturn(List.of(
                         new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
         robot.interact(() -> viewModel.genererArchives());
@@ -320,13 +321,27 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#251 : l'indicateur de génération est présent mais masqué au repos")
-    void indicateur_generation_present_et_masque_au_repos(FxRobot robot) {
-        var indicateur = robot.lookup("#indicateurGeneration").queryAs(javafx.scene.control.ProgressIndicator.class);
-        assertThat(indicateur).isNotNull();
-        // Aucune génération en cours → l'indicateur n'est ni visible ni géré par le layout.
-        assertThat(indicateur.isVisible()).isFalse();
-        assertThat(indicateur.isManaged()).isFalse();
+    @DisplayName("#769 : la barre de progression est présente mais masquée au repos")
+    void barre_generation_presente_et_masquee_au_repos(FxRobot robot) {
+        var barre = robot.lookup("#barreGeneration").queryAs(javafx.scene.control.ProgressBar.class);
+        assertThat(barre).isNotNull();
+        // Aucune génération en cours → la barre n'est ni visible ni gérée par le layout.
+        assertThat(barre.isVisible()).isFalse();
+        assertThat(barre.isManaged()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#769 : pendant la génération, la barre et le libellé de progression apparaissent")
+    void barre_generation_visible_pendant_generation(FxRobot robot) {
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+        var barre = robot.lookup("#barreGeneration").queryAs(javafx.scene.control.ProgressBar.class);
+        var libelle = robot.lookup("#lblProgressionGeneration").queryAs(Label.class);
+
+        robot.interact(() -> viewModel.marquerGenerationEnCours());
+
+        assertThat(barre.isVisible()).isTrue();
+        assertThat(libelle.isVisible()).isTrue();
+        assertThat(libelle.getText()).contains("Préparation");
     }
 
     @Test
@@ -349,7 +364,7 @@ class LotVueIntegrationTest {
         assertThat(deposer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
 
         // Étape ④ après génération (l'étape ③ « Téléverser » est manuelle) : « Marquer déposé » devient primaire.
-        when(service.genererArchivesDepot(anyLong()))
+        when(service.genererArchivesDepot(anyLong(), any()))
                 .thenReturn(List.of(
                         new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
         robot.interact(() -> viewModel.genererArchives());

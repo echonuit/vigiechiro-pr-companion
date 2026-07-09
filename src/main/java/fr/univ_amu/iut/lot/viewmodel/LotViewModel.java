@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
@@ -8,6 +9,7 @@ import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -51,6 +53,10 @@ public class LotViewModel {
     private final ReadOnlyStringWrapper titreArchives = new ReadOnlyStringWrapper(this, "titreArchives", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
+    /// Progression déterminée de la génération des archives (#769) : fraction + libellé « Compression X/N »
+    /// avec estimation du temps restant. Alimentée par le callback du service (relayé au fil JavaFX).
+    private final ProgressionLot progression = new ProgressionLot();
+
     public LotViewModel(ServiceLot service) {
         this.service = Objects.requireNonNull(service, "service");
         // Titre reflétant le **plafond configuré** (#110) : en Mo base 1000 (cohérent avec la contrainte
@@ -88,9 +94,9 @@ public class LotViewModel {
     }
 
     /// Génère les **archives ZIP de dépôt** (#110) de façon **synchrone** (tests + CLI) : enchaîne
-    /// [#marquerGenerationEnCours()], [#calculerArchivesDepot()] et [#appliquerGeneration] /
-    /// [#echecGeneration]. La vue préfère le découpage ci-dessous pour exécuter le calcul **hors fil
-    /// JavaFX** (l'opération peut être longue sur une grosse nuit) sans figer l'IHM.
+    /// [#marquerGenerationEnCours()], [#calculerArchivesDepot(Consumer)] et [#appliquerGeneration] /
+    /// [#echecGeneration]. La progression n'est pas suivie ici (callback inerte) ; la vue préfère le
+    /// découpage avec suivi pour exécuter le calcul **hors fil JavaFX** sans figer l'IHM.
     ///
     /// @return `true` si au moins une archive a été générée
     public boolean genererArchives() {
@@ -99,7 +105,7 @@ public class LotViewModel {
         }
         marquerGenerationEnCours();
         try {
-            appliquerGeneration(calculerArchivesDepot());
+            appliquerGeneration(calculerArchivesDepot(progression -> {}));
             return true;
         } catch (RuntimeException echec) {
             echecGeneration(echec.getMessage());
@@ -108,20 +114,23 @@ public class LotViewModel {
     }
 
     /// Passe à l'état « génération en cours » (#251) et l'annonce : **à appeler sur le fil JavaFX**, juste
-    /// avant de lancer [#calculerArchivesDepot()] sur un fil d'arrière-plan.
+    /// avant de lancer [#calculerArchivesDepot(Consumer)] sur un fil d'arrière-plan. Amorce aussi le suivi
+    /// de progression (#769 : barre + estimation de durée) en posant la référence temporelle de l'ETA.
     public void marquerGenerationEnCours() {
         generationEnCours.set(true);
         message.set("Génération des archives de dépôt en cours…");
+        progression.demarrer("Préparation des archives…");
     }
 
     /// Calcule les archives ZIP de dépôt (appel service, potentiellement **long**). **Aucune** mutation de
-    /// propriété observable ici : sûr à exécuter **hors fil JavaFX**. Le résultat est appliqué ensuite par
-    /// [#appliquerGeneration] (sur le fil JavaFX). Sans passage ouvert, renvoie une liste vide.
-    public List<ArchiveDepot> calculerArchivesDepot() {
+    /// propriété observable ici : sûr à exécuter **hors fil JavaFX**. `progres` remonte l'avancement
+    /// (#769) ; il DOIT relayer les mutations vers le fil JavaFX (`Platform.runLater`). Le résultat est
+    /// appliqué ensuite par [#appliquerGeneration] (sur le fil JavaFX). Sans passage ouvert, liste vide.
+    public List<ArchiveDepot> calculerArchivesDepot(Consumer<Progression> progres) {
         if (idPassage == null) {
             return List.of();
         }
-        return service.genererArchivesDepot(idPassage);
+        return service.genererArchivesDepot(idPassage, progres);
     }
 
     /// Applique le résultat d'une génération réussie (#251) : **à appeler sur le fil JavaFX**. Publie la
@@ -133,6 +142,7 @@ public class LotViewModel {
         }
         message.set(produites.size() + " archive(s) de dépôt générée(s) dans le sous-dossier « depot/ ».");
         generationEnCours.set(false);
+        progression.reinitialiser();
     }
 
     /// Restitue l'échec d'une génération (#251) : **à appeler sur le fil JavaFX**. Affiche le message et
@@ -140,6 +150,13 @@ public class LotViewModel {
     public void echecGeneration(String messageErreur) {
         message.set(messageErreur);
         generationEnCours.set(false);
+        progression.reinitialiser();
+    }
+
+    /// Suivi de progression de la génération des archives (#769) : fraction pour la barre déterminée +
+    /// libellé « Compression X/N » avec estimation du temps restant, à lier dans la vue.
+    public ProgressionLot progression() {
+        return progression;
     }
 
     private static String archiveLisible(ArchiveDepot archive) {

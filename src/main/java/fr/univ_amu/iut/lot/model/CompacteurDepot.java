@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.model;
 
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -11,6 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -79,13 +82,28 @@ public final class CompacteurDepot {
     ///
     /// @throws RegleMetierException si un fichier dépasse à lui seul le plafond (indécoupable)
     public List<ArchiveDepot> compacter(List<Path> fichiers, String prefixe, Path dossierSortie) {
+        return compacter(fichiers, prefixe, dossierSortie, progression -> {});
+    }
+
+    /// Variante avec **suivi de progression** (#769) : `progres` est notifié après chaque fichier compressé
+    /// (« Compression X/N · fichier », fraction globale 0→1), pour qu'une barre déterminée + une estimation
+    /// de durée s'affichent côté IHM. Appelé sur le fil d'exécution de la génération — la couche IHM relaie
+    /// au fil JavaFX. Même contrat (plafond, atomicité, garde-fou disque) que la variante sans callback.
+    ///
+    /// @throws RegleMetierException si un fichier dépasse à lui seul le plafond, ou si l'espace disque est
+    ///     insuffisant pour les archives estimées (garde-fou #769, avant toute écriture)
+    public List<ArchiveDepot> compacter(
+            List<Path> fichiers, String prefixe, Path dossierSortie, Consumer<Progression> progres) {
         Objects.requireNonNull(fichiers, "fichiers");
         Objects.requireNonNull(prefixe, "prefixe");
         Objects.requireNonNull(dossierSortie, "dossierSortie");
+        Objects.requireNonNull(progres, "progres");
         long budget = tailleMaxOctets - RESERVE_FIN_ARCHIVE;
         try {
             Files.createDirectories(dossierSortie);
             verifierEspaceDisque(fichiers, dossierSortie);
+            int total = fichiers.size();
+            AtomicInteger faits = new AtomicInteger(0);
             List<ArchiveDepot> archives = new ArrayList<>();
             List<Path> lotCourant = new ArrayList<>();
             long coutCourant = 0;
@@ -101,7 +119,8 @@ public final class CompacteurDepot {
                             + " o : impossible de l'inclure dans une archive de dépôt.");
                 }
                 if (!lotCourant.isEmpty() && coutCourant + cout > budget) {
-                    archives.add(ecrireArchive(lotCourant, prefixe, dossierSortie, archives.size() + 1));
+                    archives.add(ecrireArchive(
+                            lotCourant, prefixe, dossierSortie, archives.size() + 1, progres, total, faits));
                     lotCourant = new ArrayList<>();
                     coutCourant = 0;
                 }
@@ -109,7 +128,8 @@ public final class CompacteurDepot {
                 coutCourant += cout;
             }
             if (!lotCourant.isEmpty()) {
-                archives.add(ecrireArchive(lotCourant, prefixe, dossierSortie, archives.size() + 1));
+                archives.add(
+                        ecrireArchive(lotCourant, prefixe, dossierSortie, archives.size() + 1, progres, total, faits));
             }
             return archives;
         } catch (IOException e) {
@@ -155,7 +175,14 @@ public final class CompacteurDepot {
         return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
     }
 
-    private ArchiveDepot ecrireArchive(List<Path> fichiers, String prefixe, Path dossierSortie, int numero)
+    private ArchiveDepot ecrireArchive(
+            List<Path> fichiers,
+            String prefixe,
+            Path dossierSortie,
+            int numero,
+            Consumer<Progression> progres,
+            int total,
+            AtomicInteger faits)
             throws IOException {
         Path archive = dossierSortie.resolve(prefixe + "-" + numero + ".zip");
         try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(archive)))) {
@@ -163,6 +190,9 @@ public final class CompacteurDepot {
                 zos.putNextEntry(new ZipEntry(fichier.getFileName().toString()));
                 Files.copy(fichier, zos); // recopie en flux : mémoire bornée (#104)
                 zos.closeEntry();
+                int n = faits.incrementAndGet();
+                progres.accept(new Progression(
+                        "Compression " + n + "/" + total + " · " + fichier.getFileName(), n / (double) total));
             }
         }
         long tailleReelle = Files.size(archive);
