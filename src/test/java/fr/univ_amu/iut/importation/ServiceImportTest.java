@@ -157,6 +157,9 @@ class ServiceImportTest {
 
         Long idSession = resultat.session().id();
         assertThat(sessionDao.trouverParPassage(resultat.passage().id())).isPresent();
+        assertThat(resultat.session().volumeOriginauxOctets())
+                .as("mode conservation : le volume des bruts archivés est persisté")
+                .isPositive();
         assertThat(originalDao.findBySession(idSession)).hasSize(2);
         assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
         assertThat(originalDao.findBySession(idSession))
@@ -209,6 +212,12 @@ class ServiceImportTest {
         // Sortie identique au mode conservation : même nombre d'originaux et de séquences.
         assertThat(resultat.nombreOriginaux()).isEqualTo(2);
         assertThat(resultat.nombreSequences()).isEqualTo(2);
+
+        // Rien n'est conservé dans le workspace : le volume bruts persisté est nul, sinon M-Passage
+        // afficherait le volume de la source (carte SD) et proposerait une purge fantôme.
+        assertThat(resultat.session().volumeOriginauxOctets())
+                .as("mode sans copie : aucun original conservé, volume bruts persisté = 0")
+                .isZero();
 
         Long idSession = resultat.session().id();
         assertThat(originalDao.findBySession(idSession)).hasSize(2).allSatisfy(o -> {

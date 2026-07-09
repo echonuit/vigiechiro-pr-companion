@@ -138,8 +138,12 @@ final class MoteurImport {
             //      directe de la source avec nom R6 calculé (mode sans copie). Cf. PreparationOriginaux.
             sources = preparation.preparer(
                     conserverOriginaux, originauxNuit, dossierBruts, prefixe, totalEtapes, progres, jeton);
-            volumeOriginaux =
-                    volumeTotal(sources.stream().map(SourceOriginal::chemin).toList());
+            // Volume des originaux CONSERVÉS dans le workspace : en mode sans copie, rien n'est stocké
+            // localement → 0, sinon M-Passage afficherait le volume de la source (carte SD) comme des
+            // bruts purgeables alors qu'aucun bruts/ n'existe.
+            volumeOriginaux = conserverOriginaux
+                    ? volumeTotal(sources.stream().map(SourceOriginal::chemin).toList())
+                    : 0L;
 
             // Journal + relevé à la racine de la session, indépendamment du choix de conservation (petits
             // fichiers nécessaires à l'aval) ; cette écriture crée aussi le dossier de session en mode
