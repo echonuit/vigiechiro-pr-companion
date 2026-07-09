@@ -53,6 +53,12 @@ import javafx.scene.layout.VBox;
 /// (règle ArchUnit `view_sans_jdbc`).
 public class QualificationController implements GardeQuitter, EmplacementNavigation {
 
+    /// Facteur d'expansion temporelle ×10 du protocole Vigie-Chiro : les séquences transformées sont les
+    /// originaux ralentis ×10 (cf. `TransformationAudio` côté import). Posé sur l'[AudioView] pour que ses
+    /// axes affichent les grandeurs **réelles** (fréquences × 10), et non celles du fichier ralenti. Même
+    /// valeur que la vue « Sons & validation » (`ConfigurationAudioView`).
+    private static final double FACTEUR_EXPANSION_TEMPS = 10;
+
     private final QualificationViewModel verdictVm;
     private final SelectionEcouteViewModel selectionVm;
     private final OuvrirPassage ouvrirPassage;
@@ -237,6 +243,10 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // Normalisation du niveau à l'écoute (#109) : les cris ont des amplitudes très variables ;
         // audio-view égalise le rendu (gain seulement, fichier R9 inchangé). Activée par défaut.
         audioView.setNormalisation(true);
+        // Expansion temporelle ×10 du protocole Vigie-Chiro : les séquences sont les originaux ralentis ×10,
+        // l'axe des fréquences doit donc afficher les valeurs RÉELLES (× 10) et non celles du fichier ralenti.
+        // Sans ce réglage, l'axe plafonnait à ~19 kHz au lieu des ~192 kHz réels (fréquences ÷10).
+        audioView.setTimeExpansionFactor(FACTEUR_EXPANSION_TEMPS);
         // Vue audio (composant fourni) : la source suit la séquence courante ; le marquage écouté (R10)
         // se déclenche au début de la lecture ; le clip est libéré quand la vue quitte la scène.
         audioView.audioFileProperty().bind(selectionVm.cheminSequenceCouranteProperty());

@@ -167,13 +167,26 @@ class QualificationViewTest {
         TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
         AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
 
-        // La normalisation est activée par la vue pour égaliser le niveau d'écoute (#109).
+        // La normalisation est activée par la vue pour égaliser le niveau d'écoute (#109), et l'expansion
+        // temporelle ×10 est posée pour que les axes affichent les grandeurs réelles.
         assertThat(audio.isNormalisation()).isTrue();
+        assertThat(audio.getTimeExpansionFactor()).isEqualTo(10.0);
 
         robot.interact(() -> table.getSelectionModel().select(0));
 
         assertThat(audio.getAudioFile()).isNotNull();
         assertThat(audio.getAudioFile().toString()).endsWith("seq0.wav");
+    }
+
+    @Test
+    @DisplayName("Non-régression : la vue audio applique l'expansion temporelle ×10 (axe des fréquences réel)")
+    void vue_audio_applique_l_expansion_temporelle_x10(FxRobot robot) {
+        AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
+
+        // Les séquences transformées sont les originaux ralentis ×10 : l'AudioView doit ré-étirer ses axes
+        // pour afficher les fréquences RÉELLES (× 10). Sans ce réglage, l'axe plafonnait à ~19 kHz au lieu
+        // des ~192 kHz réels (fréquences ÷10 sur l'écran « Vérifier l'enregistrement »).
+        assertThat(audio.getTimeExpansionFactor()).isEqualTo(10.0);
     }
 
     @Test
