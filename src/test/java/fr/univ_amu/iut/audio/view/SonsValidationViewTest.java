@@ -187,6 +187,19 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#160 : le filtre « Douteux » (puce) écarte les observations non douteuses")
+    void filtre_douteux_ecarte_les_non_douteux(FxRobot robot) {
+        MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+        robot.interact(() -> itemParLibelle(menuAjout, "Douteux").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Les références de test ne sont pas douteuses → la puce « Douteux » vide la table.
+        assertThat(robot.lookup("#tableObservations").queryAs(TableView.class).getItems())
+                .as("aucune observation douteuse dans les données de test")
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("La table liste les références ; le résumé de statut compte + l'avancement (sans bandeau de titre)")
     void affiche_table_et_resume(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);

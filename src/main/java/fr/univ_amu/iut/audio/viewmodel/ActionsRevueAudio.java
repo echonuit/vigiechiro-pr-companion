@@ -104,6 +104,11 @@ final class ActionsRevueAudio {
                 () -> revueEnLot.marquerReference(ids, reference));
     }
 
+    int marquerDouteuxLot(List<Long> ids, boolean douteux) {
+        return appliquerLot(
+                douteux ? "marquée(s) douteuse(s)" : "démarquée(s)", () -> revueEnLot.marquerDouteux(ids, douteux));
+    }
+
     // --- Rouages ---
 
     private boolean surSelection(Predicate<LigneObservationAudio> action) {

@@ -212,6 +212,13 @@ public class AudioViewModel {
         return actions.marquerReferenceLot(ids, reference);
     }
 
+    /// **Marque ou retire** en lot (`douteux`, #160) le drapeau douteux des observations `ids` (#479).
+    ///
+    /// @return le nombre traité
+    public int basculerDouteuxLot(List<Long> ids, boolean douteux) {
+        return actions.marquerDouteuxLot(ids, douteux);
+    }
+
     /// Importe un CSV Tadarida (R23) pour le passage courant, puis recharge. Réservé à la source
     /// `ParPassage`. Si un jeu de résultats existe déjà : l'import est **refusé** sauf si `remplacer` est
     /// vrai — auquel cas le jeu existant (et ses observations, cascade) est **supprimé** avant d'importer

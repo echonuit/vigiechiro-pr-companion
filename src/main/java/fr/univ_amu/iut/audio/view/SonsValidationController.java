@@ -336,6 +336,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         CriteresAudio.groupe(viewModel::observationsFiltrees),
                         CriteresAudio.taxon(viewModel::observationsFiltrees),
                         CriteresAudio.references(),
+                        CriteresAudio.douteux(),
                         CriteresAudio.nonIdentifie(),
                         CriteresAudio.probabilite(),
                         CriteresAudio.heure(viewModel::plageNuitParDefaut)),

@@ -282,6 +282,30 @@ final class CriteresAudio {
         };
     }
 
+    /// Critère **Douteux seulement** (booléen, #160) : ne garde que les observations marquées « douteuses /
+    /// à repasser » (`is_doubtful`). Critère **sans éditeur** — la présence de la puce active le filtre, son
+    /// retrait le désactive. Pendant du critère [#references()] ; l'indicateur visuel reste le bouton de la
+    /// barre d'actions.
+    static CritereFiltre<LigneObservationAudio> douteux() {
+        return new CritereFiltre<LigneObservationAudio>() {
+            @Override
+            public String nom() {
+                return "douteux";
+            }
+
+            @Override
+            public String libelle() {
+                return "Douteux";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LigneObservationAudio>> applique) {
+                applique.accept(LigneObservationAudio::douteux); // filtre actif dès l'ajout de la puce
+                return null; // booléen : pas d'éditeur, la présence de la puce suffit
+            }
+        };
+    }
+
     /// Critère **Non identifiés** : garde les séquences **sans proposition Tadarida** (`taxonTadarida == null`)
     /// — présentes sur disque mais absentes du CSV Tadarida, à valider à la main. C'est le **complément exact**
     /// des observations Tadarida (dont la proposition n'est jamais nulle), y compris une fois validées à la main

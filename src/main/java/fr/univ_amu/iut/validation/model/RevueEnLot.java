@@ -55,6 +55,11 @@ public class RevueEnLot {
         return ecrire(ids, o -> o.avecReference(reference));
     }
 
+    /// **Marque ou retire** en lot le drapeau **douteux** (#160) des observations. Renvoie le nombre traité.
+    public int marquerDouteux(List<Long> ids, boolean douteux) {
+        return ecrire(ids, o -> o.avecDouteux(douteux));
+    }
+
     /// Charge (auto-commit), transforme (pur) puis écrit en **une transaction** ([ObservationDao#updateTout]).
     private int ecrire(List<Long> ids, UnaryOperator<Observation> transformation) {
         List<Observation> mises =

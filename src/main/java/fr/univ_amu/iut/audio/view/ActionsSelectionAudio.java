@@ -52,10 +52,18 @@ final class ActionsSelectionAudio {
         viewModel.basculerReferenceLot(ids(selection), marquer);
     }
 
-    /// Bascule le drapeau **douteux** (#160) de la ligne sélectionnée. (Le marquage **en lot** sur une
-    /// sélection multiple, pendant de [#basculerReference()], viendra avec le filtre dédié.)
+    /// Bascule le drapeau **douteux** (#160) : **une** ligne → bascule unitaire ; **plusieurs** → bascule en
+    /// lot homogène (pendant de [#basculerReference()]).
     void basculerDouteux() {
-        viewModel.basculerDouteux();
+        List<LigneObservationAudio> selection = selection();
+        if (selection.size() <= 1) {
+            viewModel.basculerDouteux();
+            return;
+        }
+        // Bascule homogène pour un lot mixte : dès qu'une ligne n'est pas douteuse, on **marque** tout le lot ;
+        // sinon (toutes douteuses) on **retire** tout — plus prévisible qu'un toggle par ligne.
+        boolean marquer = selection.stream().anyMatch(ligne -> !ligne.douteux());
+        viewModel.basculerDouteuxLot(ids(selection), marquer);
     }
 
     private List<LigneObservationAudio> selection() {

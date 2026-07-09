@@ -138,6 +138,20 @@ class RevueEnLotTest {
     }
 
     @Test
+    @DisplayName("marquerDouteux marque puis retire le drapeau douteux d'un lot (#160)")
+    void marquer_douteux_lot() {
+        long a = inserer("Pippip");
+        long b = inserer("Nyclei");
+
+        assertThat(revueEnLot.marquerDouteux(List.of(a, b), true)).isEqualTo(2);
+        assertThat(observationDao.findById(a).orElseThrow().douteux()).isTrue();
+        assertThat(observationDao.findById(b).orElseThrow().douteux()).isTrue();
+
+        revueEnLot.marquerDouteux(List.of(a), false);
+        assertThat(observationDao.findById(a).orElseThrow().douteux()).isFalse();
+    }
+
+    @Test
     @DisplayName("corrigerLot retient un taxon sur tout le lot ; un taxon inconnu est refusé sans rien écrire")
     void corriger_lot_et_taxon_inconnu() {
         long a = inserer("noise");
