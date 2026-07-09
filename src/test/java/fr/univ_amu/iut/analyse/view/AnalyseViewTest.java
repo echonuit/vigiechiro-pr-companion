@@ -136,6 +136,28 @@ class AnalyseViewTest {
     }
 
     @Test
+    @DisplayName("La vue par défaut « À valider » est un onglet qui filtre : l'unique observation Validée disparaît")
+    void vue_par_defaut_a_valider_filtre_le_tableau(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+        // Les 4 onglets par défaut sont rendus, dans l'ordre, avant la vue utilisateur « Validées 2026 ».
+        assertThat(robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .containsSequence("Tout", "À valider", "Validées", "Chiroptères");
+
+        Label aValider = robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class).stream()
+                .filter(label -> "À valider".equals(label.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(() -> aValider.getOnMouseClicked().handle(null));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // La seule observation seedée est Validée : la vue « À valider » (statut À revoir) l'écarte → 0 espèce.
+        assertThat(robot.lookup("#tableEspeces").queryAs(TableView.class).getItems())
+                .as("« À valider » n'affiche aucune observation Validée")
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("Par défaut : la table par espèce est affichée et peuplée ; le résumé compte les espèces")
     void affiche_inventaire_par_espece_par_defaut(FxRobot robot) {
         TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);

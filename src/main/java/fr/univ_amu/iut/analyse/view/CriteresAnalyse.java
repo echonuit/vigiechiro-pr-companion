@@ -1,7 +1,11 @@
 package fr.univ_amu.iut.analyse.view;
 
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
+import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.DescripteurFiltreJson;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
@@ -25,7 +29,36 @@ import javafx.util.StringConverter;
 /// par défaut, comme avant la barre à puces).
 final class CriteresAnalyse {
 
+    /// Clé **stable** du critère Statut, partagée par le critère et les vues par défaut (évite un littéral
+    /// dupliqué).
+    private static final String STATUT = "statut";
+
     private CriteresAnalyse() {}
+
+    /// Vues **par défaut** (lecture seule) de l'inventaire analyse, rendues comme onglets avant les vues de
+    /// l'utilisateur (#623), sur le modèle de `CriteresAudio` :
+    /// - **« Tout »** (aucun filtre) : active au chargement, n'écarte rien ;
+    /// - **« À valider »** (statut À revoir, le cœur de la revue) ;
+    /// - **« Validées »** (statut Validée : ce qui est déjà traité) ;
+    /// - **« Chiroptères »** (groupe Chiroptères, #471).
+    ///
+    /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
+    /// que rejouer la vue laisse un état « non modifié ».
+    static List<VueSauvegardee> vuesParDefaut() {
+        return List.of(
+                vueParDefaut("Tout"),
+                vueParDefaut(
+                        "À valider", new DescripteurCritere(STATUT, List.of(StatutObservation.NON_TOUCHEE.name()))),
+                vueParDefaut("Validées", new DescripteurCritere(STATUT, List.of(StatutObservation.VALIDEE.name()))),
+                vueParDefaut("Chiroptères", new DescripteurCritere("groupe", List.of("Chiroptères"))));
+    }
+
+    /// Une vue par défaut : `id` **nul** (jamais persistée → lecture seule) et descripteur des critères donnés
+    /// (aucun critère = vue « Tout », sans filtre).
+    private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
+        String descripteur = DescripteurFiltreJson.serialiser(new DescripteurFiltre("", List.of(criteres)));
+        return new VueSauvegardee(null, "analyse", nom, descripteur);
+    }
 
     /// Critère **Statut de revue** : éditeur = liste déroulante (Non touchée / Validée / Corrigée…) dans la
     /// puce, **sans présélection** (aucun filtre tant qu'un statut n'est pas choisi).
@@ -33,7 +66,7 @@ final class CriteresAnalyse {
         return new CritereFiltre<ObservationAnalyse>() {
             @Override
             public String nom() {
-                return "statut";
+                return STATUT;
             }
 
             @Override

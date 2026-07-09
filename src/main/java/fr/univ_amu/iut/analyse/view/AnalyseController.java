@@ -226,8 +226,9 @@ public class AnalyseController implements RafraichirAuRetour {
                 viewModel.filtres(),
                 List.of(CriteresAnalyse.statut(), CriteresAnalyse.groupe(viewModel::groupesDisponibles)),
                 CriteresAnalyse.rechercheTexte());
-        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres.
-        GestionnaireVues.avecDialogue(barreOnglets, gestionnaireFiltres, depotVues, FEATURE);
+        // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur.
+        GestionnaireVues.avecDialogue(
+                barreOnglets, gestionnaireFiltres, depotVues, FEATURE, CriteresAnalyse.vuesParDefaut());
 
         // Message d'export.
         var exportPresent = viewModel.messageProperty().isNotEmpty();

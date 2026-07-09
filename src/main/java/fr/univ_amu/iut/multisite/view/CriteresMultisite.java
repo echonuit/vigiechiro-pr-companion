@@ -3,7 +3,11 @@ package fr.univ_amu.iut.multisite.view;
 import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
+import fr.univ_amu.iut.commun.view.DescripteurCritere;
+import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.DescripteurFiltreJson;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.List;
@@ -26,7 +30,35 @@ import javafx.util.StringConverter;
 /// présélection : ajouter une puce n'écarte rien tant qu'une valeur n'est pas saisie.
 final class CriteresMultisite {
 
+    /// Clé **stable** du critère Statut, partagée par le critère et les vues par défaut (évite un littéral
+    /// dupliqué).
+    private static final String STATUT = "statut";
+
     private CriteresMultisite() {}
+
+    /// Vues **par défaut** (lecture seule) du tableau des passages, rendues comme onglets avant les vues de
+    /// l'utilisateur (#623), sur le modèle de `CriteresAudio` :
+    /// - **« Tout »** (aucun filtre) : active au chargement, n'écarte rien ;
+    /// - **« Déposés »** (statut Déposé : nuits déjà envoyées) ;
+    /// - **« À vérifier »** (verdict À vérifier : passages à contrôler) ;
+    /// - **« Vérifiés »** (statut Vérifié).
+    ///
+    /// Chaque descripteur est sérialisé exactement comme [GestionnaireFiltres#decrire()] le produirait, pour
+    /// que rejouer la vue laisse un état « non modifié ».
+    static List<VueSauvegardee> vuesParDefaut() {
+        return List.of(
+                vueParDefaut("Tout"),
+                vueParDefaut("Déposés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.DEPOSE.name()))),
+                vueParDefaut("À vérifier", new DescripteurCritere("verdict", List.of(Verdict.A_VERIFIER.name()))),
+                vueParDefaut("Vérifiés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.VERIFIE.name()))));
+    }
+
+    /// Une vue par défaut : `id` **nul** (jamais persistée → lecture seule) et descripteur des critères donnés
+    /// (aucun critère = vue « Tout », sans filtre).
+    private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
+        String descripteur = DescripteurFiltreJson.serialiser(new DescripteurFiltre("", List.of(criteres)));
+        return new VueSauvegardee(null, "multisite", nom, descripteur);
+    }
 
     /// Critère **Carré** : champ texte du n° de carré (ex. `640380`). Éditable au clavier **et** posé par la
     /// carte (clic d'un carré, via [fr.univ_amu.iut.commun.view.GestionnaireFiltres#poser(String, List)]).
@@ -69,7 +101,7 @@ final class CriteresMultisite {
         return new CritereFiltre<LignePassage>() {
             @Override
             public String nom() {
-                return "statut";
+                return STATUT;
             }
 
             @Override

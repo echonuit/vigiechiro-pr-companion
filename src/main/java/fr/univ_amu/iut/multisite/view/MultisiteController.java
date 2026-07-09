@@ -212,8 +212,9 @@ public class MultisiteController implements RafraichirAuRetour {
                         CriteresMultisite.verdict(),
                         CriteresMultisite.annee()),
                 CriteresMultisite.rechercheTexte());
-        // Onglets de vues mémorisées (#623) : enregistrent/rejouent l'état de la barre de filtres.
-        GestionnaireVues.avecDialogue(barreOnglets, gestionnaireFiltres, depotVues, FEATURE);
+        // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur.
+        GestionnaireVues.avecDialogue(
+                barreOnglets, gestionnaireFiltres, depotVues, FEATURE, CriteresMultisite.vuesParDefaut());
 
         choixTri.getItems().setAll(TriMultisite.values());
         choixTri.setConverter(Convertisseurs.parLibelle(tri -> tri == null ? "" : tri.libelle()));

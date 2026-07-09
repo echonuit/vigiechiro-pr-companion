@@ -140,6 +140,31 @@ class MultisiteViewTest {
     }
 
     @Test
+    @DisplayName("La vue par défaut « Vérifiés » est un onglet qui filtre le tableau sur le statut Vérifié")
+    void vue_par_defaut_verifies_filtre_le_tableau(FxRobot robot) {
+        FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
+        // Les 4 onglets par défaut sont rendus (avant les vues de l'utilisateur).
+        assertThat(robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class))
+                .extracting(Label::getText)
+                .containsExactly("Tout", "Déposés", "À vérifier", "Vérifiés");
+
+        Label verifies = robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class).stream()
+                .filter(label -> "Vérifiés".equals(label.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(() -> verifies.getOnMouseClicked().handle(null));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        @SuppressWarnings("unchecked")
+        TableView<LignePassage> table = (TableView<LignePassage>)
+                (TableView<?>) robot.lookup("#tableLignes").queryTableView();
+        assertThat(table.getItems())
+                .as("la vue « Vérifiés » ne laisse que les passages au statut Vérifié")
+                .extracting(LignePassage::statut)
+                .containsOnly(StatutWorkflow.VERIFIE);
+    }
+
+    @Test
     @DisplayName("L'export (item du menu ☰) est actif dès qu'il y a des passages à exporter")
     void export_actif_quand_non_vide(FxRobot robot) {
         // #370 : Exporter est un item du menu « ☰ ». On inspecte son état désactivé directement.
