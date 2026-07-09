@@ -9,6 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -41,7 +42,12 @@ public final class CompacteurDepot {
     /// plus une marge) : retranchée du plafond pour le calcul de remplissage.
     private static final long RESERVE_FIN_ARCHIVE = 128;
 
+    /// Marge de sécurité (100 Mo) exigée **en plus** du volume estimé lors du contrôle d'espace disque :
+    /// couvre les métadonnées du système de fichiers et une éventuelle sous-estimation.
+    private static final long MARGE_SECURITE_OCTETS = 100L * 1000 * 1000;
+
     private final long tailleMaxOctets;
+    private final EspaceDisque espaceDisque;
 
     public CompacteurDepot() {
         this(TAILLE_MAX_DEFAUT_OCTETS);
@@ -49,10 +55,18 @@ public final class CompacteurDepot {
 
     /// @param tailleMaxOctets plafond de taille par archive (configurable : réglage applicatif / tests)
     public CompacteurDepot(long tailleMaxOctets) {
+        this(tailleMaxOctets, EspaceDisque.reel());
+    }
+
+    /// @param tailleMaxOctets plafond de taille par archive (configurable : réglage applicatif / tests)
+    /// @param espaceDisque source de l'espace disque disponible dans le dossier cible (injectable pour les
+    ///     tests ; par défaut l'espace réel du système de fichiers, cf. [EspaceDisque#reel()])
+    public CompacteurDepot(long tailleMaxOctets, EspaceDisque espaceDisque) {
         if (tailleMaxOctets <= 0) {
             throw new IllegalArgumentException("Le plafond de taille d'archive doit être positif.");
         }
         this.tailleMaxOctets = tailleMaxOctets;
+        this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
     }
 
     /// Plafond de taille appliqué à chaque archive, en octets (exposé pour l'affichage du réglage).
@@ -71,6 +85,7 @@ public final class CompacteurDepot {
         long budget = tailleMaxOctets - RESERVE_FIN_ARCHIVE;
         try {
             Files.createDirectories(dossierSortie);
+            verifierEspaceDisque(fichiers, dossierSortie);
             List<ArchiveDepot> archives = new ArrayList<>();
             List<Path> lotCourant = new ArrayList<>();
             long coutCourant = 0;
@@ -113,6 +128,33 @@ public final class CompacteurDepot {
         return donnees + entetesZip;
     }
 
+    /// Pré-contrôle d'espace disque **avant toute écriture** (#769) : on refuse tôt et proprement si le
+    /// disque de destination n'a pas la place d'accueillir les archives, plutôt que d'échouer à
+    /// mi-génération en laissant des archives partielles. Le volume requis est **majoré** (somme des coûts
+    /// d'archive — DEFLATE ne grossit pas les WAV — plus [#MARGE_SECURITE_OCTETS]), donc conservateur.
+    ///
+    /// @throws RegleMetierException si l'espace disponible est inférieur au volume requis estimé
+    private void verifierEspaceDisque(List<Path> fichiers, Path dossierSortie) throws IOException {
+        long requis = MARGE_SECURITE_OCTETS;
+        for (Path fichier : fichiers) {
+            requis += coutMaximalDansArchive(fichier);
+        }
+        long disponible = espaceDisque.disponibleOctets(dossierSortie);
+        if (disponible < requis) {
+            throw new RegleMetierException("Espace disque insuffisant pour générer les archives de dépôt :"
+                    + " besoin d'environ "
+                    + enGigaoctets(requis)
+                    + " Go, seulement "
+                    + enGigaoctets(disponible)
+                    + " Go disponibles sur le disque de destination. Libérez de l'espace puis relancez la génération.");
+        }
+    }
+
+    /// Formate un nombre d'octets en gigaoctets (base 1000, une décimale) pour les messages utilisateur.
+    private static String enGigaoctets(long octets) {
+        return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
+    }
+
     private ArchiveDepot ecrireArchive(List<Path> fichiers, String prefixe, Path dossierSortie, int numero)
             throws IOException {
         Path archive = dossierSortie.resolve(prefixe + "-" + numero + ".zip");
@@ -139,6 +181,21 @@ public final class CompacteurDepot {
                     + " o au-delà du plafond de "
                     + tailleMaxOctets
                     + " o (estimation de remplissage prise en défaut).");
+        }
+    }
+
+    /// Source de l'**espace disque disponible** (en octets) dans un dossier cible, isolée en interface pour
+    /// rendre le garde-fou de [#compacter] **testable** : les tests injectent une valeur basse (disque
+    /// presque plein) sans dépendre de l'état réel de la machine. Par défaut [#reel()].
+    @FunctionalInterface
+    public interface EspaceDisque {
+
+        /// Octets disponibles sur le système de fichiers hébergeant `dossier` (qui doit exister).
+        long disponibleOctets(Path dossier) throws IOException;
+
+        /// Espace réellement disponible sur le système de fichiers du dossier cible.
+        static EspaceDisque reel() {
+            return dossier -> Files.getFileStore(dossier).getUsableSpace();
         }
     }
 }

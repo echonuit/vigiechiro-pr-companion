@@ -114,6 +114,39 @@ class CompacteurDepotTest {
                 .hasMessageContaining("plafond");
     }
 
+    @Test
+    @DisplayName("#769 : espace disque insuffisant → refus AVANT écriture, aucune archive laissée")
+    void espace_disque_insuffisant_refuse_avant_ecriture() throws IOException {
+        Path f1 = Files.write(dossier.resolve("a.wav"), octets(50_000, (byte) 1));
+        Path f2 = Files.write(dossier.resolve("b.wav"), octets(50_000, (byte) 2));
+        Path sortie = dossier.resolve("depot");
+        // Disque simulé presque plein (10 o) : bien en dessous du volume estimé + marge de sécurité.
+        CompacteurDepot compacteur = new CompacteurDepot(CompacteurDepot.TAILLE_MAX_DEFAUT_OCTETS, d -> 10L);
+
+        assertThatThrownBy(() -> compacteur.compacter(List.of(f1, f2), PREFIXE, sortie))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Espace disque insuffisant");
+        // Refus AVANT toute écriture : le dossier de sortie a été créé mais reste vide (pas de .zip partiel).
+        try (var flux = Files.list(sortie)) {
+            assertThat(flux).isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("#769 : espace disque suffisant → la génération se déroule normalement")
+    void espace_disque_suffisant_genere_les_archives() throws IOException {
+        Path f1 = Files.write(dossier.resolve("a.wav"), octets(10, (byte) 1));
+        Path f2 = Files.write(dossier.resolve("b.wav"), octets(10, (byte) 2));
+        CompacteurDepot compacteur = new CompacteurDepot(CompacteurDepot.TAILLE_MAX_DEFAUT_OCTETS, d -> Long.MAX_VALUE);
+
+        List<ArchiveDepot> archives = compacteur.compacter(List.of(f1, f2), PREFIXE, dossier.resolve("depot"));
+
+        assertThat(archives)
+                .singleElement()
+                .satisfies(a -> assertThat(a.nombreFichiers()).isEqualTo(2));
+        assertThat(toutesLesEntrees(archives)).containsExactlyInAnyOrder("a.wav", "b.wav");
+    }
+
     private static byte[] octets(int taille, byte valeur) {
         byte[] b = new byte[taille];
         Arrays.fill(b, valeur); // compressible : DEFLATE réduit fortement
