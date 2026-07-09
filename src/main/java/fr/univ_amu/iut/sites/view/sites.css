@@ -14,7 +14,7 @@
 .ecran-sites,
 .ecran-detail {
     -fx-padding: 24;
-    -fx-background-color: #ffffff;
+    -fx-background-color: -couleur-fond;
 }
 
 .entete-page {

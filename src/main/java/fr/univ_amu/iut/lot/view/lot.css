@@ -3,7 +3,7 @@
  */
 
 .ecran-lot {
-  -fx-background-color: #fafbfc;
+  -fx-background-color: -couleur-fond;
   -fx-padding: 18;
 }
 

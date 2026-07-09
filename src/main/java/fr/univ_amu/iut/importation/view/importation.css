@@ -10,7 +10,7 @@
 
 .ecran-import {
     -fx-padding: 24;
-    -fx-background-color: #ffffff;
+    -fx-background-color: -couleur-fond;
 }
 
 /* ----- Sections numérotées : composant partagé carte-section (design.css, #694). ----- */

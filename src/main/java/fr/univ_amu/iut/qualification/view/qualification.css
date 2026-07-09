@@ -4,7 +4,7 @@
  */
 
 .ecran-qualification {
-  -fx-background-color: #fafbfc;
+  -fx-background-color: -couleur-fond;
 }
 
 .entete {

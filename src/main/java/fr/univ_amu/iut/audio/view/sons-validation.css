@@ -5,7 +5,7 @@
  */
 
 .ecran-audio {
-  -fx-background-color: #fafbfc;
+  -fx-background-color: -couleur-fond;
   /* Padding resserré (surtout vertical) : moins d'espace perdu au-dessus de la barre de filtres et en
      bas avant la barre de statut, au bénéfice de la table et du spectrogramme. */
   -fx-padding: 8 14;
