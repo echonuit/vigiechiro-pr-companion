@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -15,6 +16,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -79,19 +81,20 @@ class RapprochementSitesTest {
                         new SiteVigieChiro("s2", "Colline", false),
                         new SiteVigieChiro("s3", "Site sans correspondance", false)));
 
-        rapprochement.synchroniser(client);
+        Optional<RapportSynchro> rapport = rapprochement.synchroniser(client);
 
+        assertThat(rapport).contains(new RapportSynchro("sites", 2));
         assertThat(liens.tous(LienVigieChiro.ENTITE_SITE)).containsOnly(Map.entry("11", "s1"), Map.entry("22", "s2"));
     }
 
     @Test
-    @DisplayName("hors-ligne (aucun site renvoyé) : ne purge pas les correspondances existantes")
+    @DisplayName("hors-ligne (aucun site renvoyé) : rapport vide, ne purge pas les correspondances")
     void hors_ligne_ne_purge_pas() {
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, "11", "s1"));
         when(siteDao.findAll()).thenReturn(List.of(site(11L, "810123", "Jardin")));
         when(client.mesSites()).thenReturn(List.of());
 
-        rapprochement.synchroniser(client);
+        assertThat(rapprochement.synchroniser(client)).isEmpty();
 
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "11")).contains("s1");
     }

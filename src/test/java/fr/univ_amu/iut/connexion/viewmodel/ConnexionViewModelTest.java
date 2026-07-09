@@ -7,6 +7,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -49,14 +50,16 @@ class ConnexionViewModelTest {
     }
 
     @Test
-    @DisplayName("connecter avec un token valide : identité persistée, état « connecté »")
+    @DisplayName("connecter avec un token valide : identité persistée, état « connecté », résumé de synchro")
     void connecter_valide() {
         when(client.moi()).thenReturn(Optional.of(PROFIL));
+        when(rapprocheur.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("taxons", 385)));
 
         assertThat(viewModel.connecter("TOK123")).contains(PROFIL);
 
         assertThat(stockage.profil()).as("persisté").contains(PROFIL);
         verify(rapprocheur).synchroniser(client);
+        assertThat(viewModel.resumeSynchro()).isEqualTo("385 taxons");
         viewModel.rafraichir();
         assertThat(viewModel.connecteProperty().get()).isTrue();
         assertThat(viewModel.identiteProperty().get()).contains("Sébastien").contains("Observateur");

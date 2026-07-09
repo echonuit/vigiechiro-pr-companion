@@ -4,6 +4,8 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -22,6 +24,11 @@ public class ConnexionViewModel {
     private final StockageConnexion stockage;
     private final ClientVigieChiro client;
     private final Set<RapprochementVigieChiro> rapprocheurs;
+
+    /// Résumé humain de la dernière synchronisation (ex. « 385 taxons, 3 sites »), vide si aucune.
+    /// Écrit hors du fil JavaFX par [#amorcerRapprochements], lu ensuite par le controller ; `volatile`
+    /// pour la visibilité inter-threads.
+    private volatile String resumeSynchro = "";
 
     private final ReadOnlyStringWrapper identite = new ReadOnlyStringWrapper(this, "identite", "");
     private final ReadOnlyBooleanWrapper connecte = new ReadOnlyBooleanWrapper(this, "connecte", false);
@@ -48,6 +55,7 @@ public class ConnexionViewModel {
             return Optional.empty();
         }
         String propre = token.trim();
+        resumeSynchro = "";
         stockage.enregistrer(propre, null);
         Optional<ProfilVigieChiro> profil = client.moi();
         if (profil.isPresent()) {
@@ -60,12 +68,23 @@ public class ConnexionViewModel {
     }
 
     /// Amorce les correspondances locales ↔ VigieChiro (taxons, sites) juste après une connexion réussie
-    /// (#728). Chaque rapprocheur est **best-effort** (il avale ses propres erreurs) : un échec ne
-    /// compromet pas la connexion. Déjà hors du fil JavaFX (appelé depuis [#connecter]).
+    /// (#728) et mémorise un résumé de ce qui a été synchronisé (#717). Chaque rapprocheur est
+    /// **best-effort** (il avale ses propres erreurs) : un échec ne compromet pas la connexion. Déjà hors
+    /// du fil JavaFX (appelé depuis [#connecter]).
     private void amorcerRapprochements() {
+        List<String> parties = new ArrayList<>();
         for (RapprochementVigieChiro rapprocheur : rapprocheurs) {
-            rapprocheur.synchroniser(client);
+            rapprocheur
+                    .synchroniser(client)
+                    .ifPresent(rapport -> parties.add(rapport.nombre() + " " + rapport.libelle()));
         }
+        resumeSynchro = String.join(", ", parties);
+    }
+
+    /// Résumé de la dernière synchronisation déclenchée par [#connecter] (ex. « 385 taxons, 3 sites »),
+    /// ou chaîne vide si rien n'a été synchronisé. À lire après un `connecter` réussi.
+    public String resumeSynchro() {
+        return resumeSynchro;
     }
 
     /// Efface la connexion locale. À suivre d'un [#rafraichir].

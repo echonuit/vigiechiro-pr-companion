@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.TaxonVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,8 +59,9 @@ class RapprochementTaxonsTest {
                         new TaxonVigieChiro("obj1", "Zzz001", "Latinus unus"),
                         new TaxonVigieChiro("obj2", "Zzz002", "Latinus duo")));
 
-        rapprochement.synchroniser(client);
+        Optional<RapportSynchro> rapport = rapprochement.synchroniser(client);
 
+        assertThat(rapport).contains(new RapportSynchro("taxons", 2));
         assertThat(taxonDao.findById("Zzz001").orElseThrow().nomLatin()).isEqualTo("Latinus unus");
         assertThat(taxonDao.findById("Zzz002")).isPresent();
         assertThat(liens.tous(LienVigieChiro.ENTITE_TAXON))
@@ -66,12 +69,12 @@ class RapprochementTaxonsTest {
     }
 
     @Test
-    @DisplayName("hors-ligne (aucun taxon renvoyé) : ni ajout en table, ni purge des liens existants")
+    @DisplayName("hors-ligne (aucun taxon renvoyé) : rapport vide, ni ajout en table, ni purge des liens")
     void hors_ligne_ne_touche_rien() {
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Zzz001", "obj1"));
         when(client.taxons()).thenReturn(List.of());
 
-        rapprochement.synchroniser(client);
+        assertThat(rapprochement.synchroniser(client)).isEmpty();
 
         assertThat(taxonDao.findById("Zzz001")).isEmpty();
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_TAXON, "Zzz001")).contains("obj1");

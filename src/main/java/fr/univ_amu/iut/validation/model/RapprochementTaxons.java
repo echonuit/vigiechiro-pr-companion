@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.TaxonVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -10,6 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -37,13 +39,13 @@ public class RapprochementTaxons implements RapprochementVigieChiro {
     }
 
     @Override
-    public void synchroniser(ClientVigieChiro client) {
+    public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
             List<TaxonVigieChiro> officiels = client.taxons();
             // Liste vide = non connecté / API indisponible : on ne touche ni la table ni les liens (un
             // incident réseau transitoire ne doit pas altérer un référentiel déjà acquis).
             if (officiels.isEmpty()) {
-                return;
+                return Optional.empty();
             }
             // 1. Fusion conservatrice du référentiel officiel dans la table `taxon`.
             Map<String, String> codeVersNomLatin = new LinkedHashMap<>();
@@ -58,8 +60,10 @@ public class RapprochementTaxons implements RapprochementVigieChiro {
                 liensParCode.put(taxon.libelleCourt(), taxon.id());
             }
             liens.remplacer(LienVigieChiro.ENTITE_TAXON, liensParCode);
+            return Optional.of(new RapportSynchro("taxons", officiels.size()));
         } catch (RuntimeException echec) {
             LOG.log(Level.FINE, echec, () -> "Synchronisation des taxons VigieChiro ignorée (best-effort)");
+            return Optional.empty();
         }
     }
 }

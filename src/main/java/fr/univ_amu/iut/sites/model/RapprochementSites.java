@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -37,7 +38,7 @@ public class RapprochementSites implements RapprochementVigieChiro {
     }
 
     @Override
-    public void synchroniser(ClientVigieChiro client) {
+    public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
             List<SiteVigieChiro> distants = client.mesSites();
             Map<String, String> correspondances = new LinkedHashMap<>();
@@ -47,11 +48,14 @@ public class RapprochementSites implements RapprochementVigieChiro {
             }
             // Aucune correspondance = non connecté, aucun site distant, ou aucun titre rapproché : on ne
             // purge pas les liens déjà acquis (prudence face à une heuristique de titre imparfaite).
-            if (!correspondances.isEmpty()) {
-                liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
+            if (correspondances.isEmpty()) {
+                return Optional.empty();
             }
+            liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
+            return Optional.of(new RapportSynchro("sites", correspondances.size()));
         } catch (RuntimeException echec) {
             LOG.log(Level.FINE, echec, () -> "Rapprochement des sites VigieChiro ignoré (best-effort)");
+            return Optional.empty();
         }
     }
 

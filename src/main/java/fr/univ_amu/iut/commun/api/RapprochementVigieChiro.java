@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.api;
 
+import java.util.Optional;
+
 /// Point d'extension de **rapprochement** d'un référentiel local avec VigieChiro (#728, axe 1).
 ///
 /// Chaque feature qui possède des entités correspondant à des objets de la plateforme (les taxons
@@ -21,5 +23,9 @@ public interface RapprochementVigieChiro {
 
     /// Récupère les objets VigieChiro via `client` et met à jour les correspondances locales. À
     /// appeler **hors du fil JavaFX** (réseau + écritures base).
-    void synchroniser(ClientVigieChiro client);
+    ///
+    /// @return un [RapportSynchro] si une synchronisation a effectivement eu lieu, ou
+    ///     [Optional#empty()] si rien n'a été fait (hors-ligne, échec best-effort, ou aucune donnée) :
+    ///     l'appelant peut ainsi afficher un résumé « référentiel à jour : N … » sans deviner.
+    Optional<RapportSynchro> synchroniser(ClientVigieChiro client);
 }
