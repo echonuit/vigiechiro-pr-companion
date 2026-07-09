@@ -9,6 +9,7 @@ import fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationFiltres;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationLot;
 import fr.univ_amu.iut.audio.outils.CaptureValidationTadarida;
+import fr.univ_amu.iut.connexion.outils.CaptureConnexion;
 import fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic;
 import fr.univ_amu.iut.importation.outils.CaptureImport;
 import fr.univ_amu.iut.lot.outils.CaptureLot;
@@ -85,7 +86,8 @@ class CablageInjecteursCaptureTest {
                         CaptureSonsValidationColonnes::creerInjecteur),
                 Arguments.of("CaptureSonsValidationLot", (Supplier<Injector>) CaptureSonsValidationLot::creerInjecteur),
                 Arguments.of(
-                        "CaptureValidationTadarida", (Supplier<Injector>) CaptureValidationTadarida::creerInjecteur));
+                        "CaptureValidationTadarida", (Supplier<Injector>) CaptureValidationTadarida::creerInjecteur),
+                Arguments.of("CaptureConnexion", (Supplier<Injector>) CaptureConnexion::creerInjecteur));
     }
 
     @ParameterizedTest(name = "{0}")
