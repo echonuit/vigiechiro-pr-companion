@@ -146,15 +146,22 @@ public class MesSitesController implements ResumeStatut {
         return colonne;
     }
 
-    /// Rangée de badges de la carte : la fraîcheur, suivie (si le site est relié à VigieChiro) d'un
-    /// badge « Enregistré sur VigieChiro » (#718). Un seul badge → renvoyé tel quel, sans conteneur.
+    /// Rangée de badges de la carte : la fraîcheur, suivie (selon le statut plateforme du site, #718)
+    /// d'un badge « Enregistré » (bleu) ou « Verrouillé » (vert, dépôt possible). Statut absent → la
+    /// fraîcheur seule, sans conteneur.
     private static Node rangeeBadges(CarteSite carte, Label fraicheur) {
-        if (!carte.enregistreSurPlateforme()) {
-            return fraicheur;
-        }
-        Label plateforme = new Label("Enregistré sur VigieChiro");
-        plateforme.getStyleClass().addAll("badge", "badge-info");
-        return new HBox(8.0, fraicheur, plateforme);
+        return switch (carte.statutPlateforme()) {
+            case ABSENT -> fraicheur;
+            case ENREGISTRE -> new HBox(8.0, fraicheur, badgePlateforme("Enregistré sur VigieChiro", "badge-info"));
+            case VERROUILLE -> new HBox(8.0, fraicheur, badgePlateforme("Verrouillé sur VigieChiro", "badge-succes"));
+        };
+    }
+
+    /// Badge de statut plateforme (texte + famille de couleur sémantique du design system).
+    private static Label badgePlateforme(String texte, String classeSemantique) {
+        Label badge = new Label(texte);
+        badge.getStyleClass().addAll("badge", classeSemantique);
+        return badge;
     }
 
     private VBox colonneStatsPoints(CarteSite carte) {

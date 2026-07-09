@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -79,14 +80,15 @@ public class SitesViewModel {
     public void rafraichir() {
         LocalDate aujourdhui = horloge.aujourdhui();
         int annee = aujourdhui.getYear();
-        // Correspondances site -> objectid VigieChiro (#728), lues une fois pour tout le lot : un site
-        // présent est « enregistré sur la plateforme ».
+        // Statut plateforme de chaque site (#728/#718), lu une fois pour tout le lot : présent dans les
+        // correspondances = « enregistré » ; correspondance verrouillée = « verrouillé » (dépôt possible).
         Map<String, String> sitesEnregistres = liens.tous(LienVigieChiro.ENTITE_SITE);
+        Set<String> sitesVerrouilles = liens.verrouilles(LienVigieChiro.ENTITE_SITE);
         List<CarteSite> recomposees = new ArrayList<>();
         int totalPassagesAnnee = 0;
         for (Site site : service.listerSites(idUtilisateur)) {
-            boolean enregistre = sitesEnregistres.containsKey(String.valueOf(site.id()));
-            CarteSite carte = construireCarte(site, aujourdhui, annee, enregistre);
+            StatutPlateforme statut = statutPlateforme(String.valueOf(site.id()), sitesEnregistres, sitesVerrouilles);
+            CarteSite carte = construireCarte(site, aujourdhui, annee, statut);
             totalPassagesAnnee += carte.passagesDeLAnnee();
             recomposees.add(carte);
         }
@@ -105,7 +107,20 @@ public class SitesViewModel {
         return cree;
     }
 
-    private CarteSite construireCarte(Site site, LocalDate aujourdhui, int annee, boolean enregistre) {
+    /// Statut plateforme d'un site (verrouillé > enregistré > absent), à partir des correspondances et
+    /// des correspondances verrouillées lues en amont.
+    private static StatutPlateforme statutPlateforme(
+            String refLocale, Map<String, String> enregistres, Set<String> verrouilles) {
+        if (verrouilles.contains(refLocale)) {
+            return StatutPlateforme.VERROUILLE;
+        }
+        if (enregistres.containsKey(refLocale)) {
+            return StatutPlateforme.ENREGISTRE;
+        }
+        return StatutPlateforme.ABSENT;
+    }
+
+    private CarteSite construireCarte(Site site, LocalDate aujourdhui, int annee, StatutPlateforme statut) {
         List<PointDEcoute> points = service.listerPoints(site.id());
         List<Passage> passages = passagesDuSite(points);
         int passagesAnnee =
@@ -125,7 +140,7 @@ public class SitesViewModel {
                 aVerifier,
                 fraicheur,
                 libelleFraicheur(dernier, aujourdhui),
-                enregistre);
+                statut);
     }
 
     private List<Passage> passagesDuSite(List<PointDEcoute> points) {

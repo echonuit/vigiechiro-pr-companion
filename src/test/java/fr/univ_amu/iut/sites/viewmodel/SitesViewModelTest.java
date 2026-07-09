@@ -73,24 +73,27 @@ class SitesViewModelTest {
     }
 
     @Test
-    @DisplayName("Un site relié à VigieChiro porte le flag « enregistré sur la plateforme », les autres non")
-    void carte_signale_l_enregistrement_plateforme() {
-        Site relie = service.creerSite("640380", "Relié", Protocole.STANDARD, null, ID_USER);
+    @DisplayName("La carte reflète le statut plateforme : absent / enregistré / verrouillé")
+    void carte_reflete_le_statut_plateforme() {
+        Site enregistre = service.creerSite("640380", "Enregistré", Protocole.STANDARD, null, ID_USER);
+        Site verrouille = service.creerSite("111111", "Verrouillé", Protocole.STANDARD, null, ID_USER);
         service.creerSite("810123", "Local seul", Protocole.STANDARD, null, ID_USER);
-        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(relie.id()), "obj-vc-1"));
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(enregistre.id()), "obj-1", false));
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(verrouille.id()), "obj-2", true));
 
         viewModel.rafraichir();
 
-        assertThat(viewModel.cartes())
-                .filteredOn(carte -> carte.site().numeroCarre().equals("640380"))
-                .singleElement()
-                .extracting(CarteSite::enregistreSurPlateforme)
-                .isEqualTo(true);
-        assertThat(viewModel.cartes())
-                .filteredOn(carte -> carte.site().numeroCarre().equals("810123"))
-                .singleElement()
-                .extracting(CarteSite::enregistreSurPlateforme)
-                .isEqualTo(false);
+        assertThat(statutDe("640380")).isEqualTo(StatutPlateforme.ENREGISTRE);
+        assertThat(statutDe("111111")).isEqualTo(StatutPlateforme.VERROUILLE);
+        assertThat(statutDe("810123")).isEqualTo(StatutPlateforme.ABSENT);
+    }
+
+    private StatutPlateforme statutDe(String numeroCarre) {
+        return viewModel.cartes().stream()
+                .filter(carte -> carte.site().numeroCarre().equals(numeroCarre))
+                .map(CarteSite::statutPlateforme)
+                .findFirst()
+                .orElseThrow();
     }
 
     @Test

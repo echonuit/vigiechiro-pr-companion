@@ -20,8 +20,8 @@ import fr.univ_amu.iut.sites.model.Site;
 /// @param passagesAVerifier nombre de passages encore à vérifier (verdict absent)
 /// @param fraicheur niveau de fraîcheur dérivé du dernier passage
 /// @param libelleFraicheur libellé affiché dans le badge (ex. `Dernier passage : il y a 2 j`)
-/// @param enregistreSurPlateforme `true` si le site est relié à un site VigieChiro (une correspondance
-///     existe dans `vigiechiro_link`), pour afficher un badge « Enregistré sur VigieChiro » (#718)
+/// @param statutPlateforme état vis-à-vis de VigieChiro (absent / enregistré / verrouillé), pour le
+///     badge de statut plateforme (#718)
 public record CarteSite(
         Site site,
         int nombrePoints,
@@ -31,7 +31,7 @@ public record CarteSite(
         int passagesAVerifier,
         Fraicheur fraicheur,
         String libelleFraicheur,
-        boolean enregistreSurPlateforme) {
+        StatutPlateforme statutPlateforme) {
 
     /// `true` s'il reste au moins un passage à vérifier (pilote l'indicateur `⚠`).
     public boolean aDesPassagesAVerifier() {
