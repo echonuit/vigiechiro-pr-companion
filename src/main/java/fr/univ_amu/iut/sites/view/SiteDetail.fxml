@@ -23,11 +23,12 @@
       styleClass="ecran-detail"
       spacing="14.0">
 
-  <HBox alignment="CENTER_LEFT" spacing="12.0">
-    <VBox spacing="2.0" HBox.hgrow="ALWAYS">
-      <Label fx:id="titre" styleClass="titre-page"/>
-      <Label fx:id="sousTitre" styleClass="sous-titre-page"/>
-    </VBox>
+  <!--
+    En-tête réduit à ses actions (#693) : le titre (nom du site) et le sous-titre (commune, protocole)
+    sont déportés en barre de statut par le controller (zones gauche/centre). Le fil d'Ariane porte déjà
+    le carré ; les actions restent en tête d'écran.
+  -->
+  <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
     <Button fx:id="boutonImporterNuit" text="📥 Importer une nuit" styleClass="bouton-primaire"
             onAction="#importerNuit"/>
     <Button fx:id="boutonVoirCarte" text="🗺 Voir sur la carte" styleClass="bouton-secondaire"

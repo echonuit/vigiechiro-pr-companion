@@ -120,13 +120,14 @@ class SitesVueIntegrationTest {
     void carte_ouvre_le_bandeau_du_detail(FxRobot robot) {
         ouvrirDetail(robot, CARTE_ETANG);
 
-        Label titre = robot.lookup("#titre").queryAs(Label.class);
+        Label piedGauche = robot.lookup("#piedGauche").queryAs(Label.class);
         Label valNumeroCarre = robot.lookup("#valNumeroCarre").queryAs(Label.class);
         Label valDepartement = robot.lookup("#valDepartement").queryAs(Label.class);
         Label valProtocole = robot.lookup("#valProtocole").queryAs(Label.class);
         FlowPane cartesPoints = robot.lookup("#cartesPoints").queryAs(FlowPane.class);
 
-        assertThat(titre.getText()).isEqualTo("Carré 640380 — Étang de la Tuilière");
+        // Le titre (nom du site) est déporté en zone gauche de la barre de statut (#693).
+        assertThat(piedGauche.getText()).isEqualTo("Carré 640380 — Étang de la Tuilière");
         assertThat(valNumeroCarre.getText()).isEqualTo("640380");
         assertThat(valDepartement.getText()).isEqualTo("64");
         assertThat(valProtocole.getText()).isEqualTo(Protocole.STANDARD.libelle());

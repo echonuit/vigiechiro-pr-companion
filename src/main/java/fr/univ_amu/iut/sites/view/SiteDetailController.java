@@ -8,8 +8,10 @@ import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
@@ -18,6 +20,8 @@ import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
@@ -58,7 +62,11 @@ import javafx.util.StringConverter;
 /// Implémente [RafraichirAuRetour] : quand on revient sur la fiche après avoir ouvert un passage et
 /// l'avoir fait avancer (vérification, dépôt, validation), le tableau des passages est rechargé pour
 /// refléter le nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant).
-public class SiteDetailController implements RafraichirAuRetour {
+///
+/// Implémente aussi [ResumeStatut] (#693) : le titre (nom du site) et le sous-titre (commune, protocole),
+/// jusqu'ici en en-tête, sont déportés en barre de statut (zones gauche = contexte, centre = résumé) ; le
+/// gros titre était partiellement redondant avec le fil d'Ariane, et les actions restent en tête d'écran.
+public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     /// Classe de style des lignes secondaires d'une carte de point (description, compteur, distance).
     private static final String STYLE_DESC = "carte-point-desc";
@@ -69,11 +77,10 @@ public class SiteDetailController implements RafraichirAuRetour {
     private final OuvrirImportation ouvrirImportation;
     private final OuvrirMultisite ouvrirMultisite;
 
-    @FXML
-    private Label titre;
-
-    @FXML
-    private Label sousTitre;
+    /// Contexte du site (nom en zone gauche, commune/protocole en zone centre) déporté en barre de statut
+    /// (#693) au lieu d'un en-tête titre/sous-titre.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     @FXML
     private Label valNumeroCarre;
@@ -159,12 +166,24 @@ public class SiteDetailController implements RafraichirAuRetour {
         }
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
         // Densite et habillage de table uniformes (#690).
         TableDonnees.uniformiser(tablePassages);
-        titre.textProperty().bind(viewModel.titreProperty());
-        sousTitre.textProperty().bind(viewModel.sousTitreProperty());
+        // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
+        // contexte à gauche, résumé au centre.
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> new ZonesStatut(
+                        viewModel.titreProperty().get(),
+                        viewModel.sousTitreProperty().get(),
+                        ""),
+                viewModel.titreProperty(),
+                viewModel.sousTitreProperty()));
         valNumeroCarre.textProperty().bind(viewModel.numeroCarreProperty());
         valDepartement.textProperty().bind(viewModel.departementProperty());
         valProtocole.textProperty().bind(viewModel.protocoleProperty());

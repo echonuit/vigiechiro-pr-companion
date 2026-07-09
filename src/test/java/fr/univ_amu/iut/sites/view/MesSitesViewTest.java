@@ -93,8 +93,10 @@ class MesSitesViewTest {
 
         robot.interact(() -> carte.getOnMouseClicked().handle(clicGauche()));
 
-        Label titreDetail = robot.lookup(".titre-page").queryAs(Label.class);
-        assertThat(titreDetail.getText()).isEqualTo("Carré 640380 — Étang de la Tuilière");
+        // Le titre du détail est déporté en barre de statut (#693) : on confirme l'ouverture du bon
+        // site par le bandeau d'identité (numéro de carré) plutôt que par un titre d'en-tête.
+        Label numeroCarre = robot.lookup("#valNumeroCarre").queryAs(Label.class);
+        assertThat(numeroCarre.getText()).isEqualTo("640380");
     }
 
     private static HBox trouverCarte(FxRobot robot, String titre) {
