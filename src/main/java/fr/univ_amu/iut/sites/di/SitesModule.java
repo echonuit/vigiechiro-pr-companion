@@ -126,8 +126,9 @@ public class SitesModule extends AbstractModule {
             ServiceSites service,
             PassageDao passageDao,
             Horloge horloge,
+            LienVigieChiroDao liens,
             @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new SitesViewModel(service, passageDao, horloge, idUtilisateur);
+        return new SitesViewModel(service, passageDao, horloge, liens, idUtilisateur);
     }
 
     @Provides
