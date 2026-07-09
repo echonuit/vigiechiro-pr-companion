@@ -101,7 +101,8 @@ class DiagnosticVueIntegrationTest {
     @DisplayName("Tous les contrôles attendus de Diagnostic.fxml sont présents (lookup des fx:id)")
     void tous_les_controles_attendus_sont_presents(FxRobot robot) {
         // Un écran placeholder (sans fx:id) ferait échouer ces lookups : c'est la garde structurelle.
-        assertThat(robot.lookup("#lblEnregistreur").tryQuery()).isPresent();
+        // L'enregistreur est déporté en barre de statut (#693) : vérifié via les zones, plus de label.
+        assertThat(controleur.zonesStatutProperty().get().centre()).isNotEmpty();
         assertThat(robot.lookup("#lblResumeClimat").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblReleveAbsent").tryQuery()).isPresent();
         assertThat(robot.lookup("#grapheClimat").tryQuery()).isPresent();
@@ -115,14 +116,14 @@ class DiagnosticVueIntegrationTest {
     @Test
     @DisplayName("À l'ouverture, labels, graphe et listes reflètent le ViewModel")
     void etat_initial_reflete_le_viewmodel(FxRobot robot) {
-        Label enregistreur = robot.lookup("#lblEnregistreur").queryAs(Label.class);
         Label resume = robot.lookup("#lblResumeClimat").queryAs(Label.class);
         Label temperature = robot.lookup("#lblTemperature").queryAs(Label.class);
         LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
 
-        assertThat(enregistreur.getText()).isEqualTo("PR 1925492");
+        // Enregistreur déporté en barre de statut (#693).
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("PR 1925492");
         assertThat(resume.getText()).isEqualTo("2 mesures T°/hygrométrie");
         assertThat(temperature.getText())
                 .as("#106 : température affichée en M-Diagnostic")
@@ -186,15 +187,14 @@ class DiagnosticVueIntegrationTest {
         robot.interact(() -> controleur.ouvrirSur(ctx(999L)));
 
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
-        Label enregistreur = robot.lookup("#lblEnregistreur").queryAs(Label.class);
         Label gps = robot.lookup("#lblGps").queryAs(Label.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
 
         assertThat(message.isVisible()).isTrue();
         assertThat(message.getText()).contains("introuvable");
-        // Réinitialisation : enregistreur vidé, listes vides, note GPS masquée (aucun diagnostic chargé).
-        assertThat(enregistreur.getText()).isEmpty();
+        // Réinitialisation : enregistreur (déporté en barre de statut, #693) vidé, listes vides, GPS masqué.
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEmpty();
         assertThat(anomalies.getItems()).isEmpty();
         assertThat(evenements.getItems()).isEmpty();
         assertThat(gps.isVisible()).isFalse();

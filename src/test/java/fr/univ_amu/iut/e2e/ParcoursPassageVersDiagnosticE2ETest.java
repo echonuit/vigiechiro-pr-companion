@@ -101,7 +101,8 @@ class ParcoursPassageVersDiagnosticE2ETest {
         robot.interact(diagnostic::fire);
 
         assertThat(navigation.getVueCourante()).isEqualTo("diagnostic");
-        assertThat(robot.lookup("#lblEnregistreur").queryAs(Label.class)).isNotNull();
+        // En-tête retiré (#693) : on vérifie un contrôle interne de l'écran diagnostic à la place.
+        assertThat(robot.lookup("#lblResumeClimat").tryQuery()).isPresent();
     }
 
     @Test

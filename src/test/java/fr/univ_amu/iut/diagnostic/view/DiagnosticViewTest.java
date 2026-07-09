@@ -27,7 +27,6 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -42,6 +41,8 @@ import org.testfx.framework.junit5.Start;
 /// séries T°/hygrométrie, listes d'anomalies/évènements, enregistreur). Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
 class DiagnosticViewTest {
+
+    private DiagnosticController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -71,7 +72,7 @@ class DiagnosticViewTest {
         FXMLLoader loader = new FXMLLoader(DiagnosticController.class.getResource("Diagnostic.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        DiagnosticController controleur = loader.getController();
+        controleur = loader.getController();
         controleur.ouvrirSur(new ContextePassage(42L, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")));
         stage.setScene(new Scene(vue, 1000, 760));
         stage.show();
@@ -83,13 +84,13 @@ class DiagnosticViewTest {
         LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
-        Label enregistreur = robot.lookup("#lblEnregistreur").queryAs(Label.class);
 
         assertThat(graphe.getData()).hasSize(2);
         assertThat(graphe.getData().get(0).getData()).hasSize(2); // température
         assertThat(graphe.getData().get(1).getData()).hasSize(2); // humidité
         assertThat(anomalies.getItems()).hasSize(1);
         assertThat(evenements.getItems()).hasSize(1);
-        assertThat(enregistreur.getText()).isEqualTo("PR 1925492");
+        // L'enregistreur est déporté en barre de statut (#693) au lieu d'un label d'en-tête.
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("PR 1925492");
     }
 }

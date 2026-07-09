@@ -6,7 +6,9 @@ import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
 import java.time.LocalDateTime;
@@ -14,6 +16,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
@@ -27,7 +31,10 @@ import javafx.scene.control.ListView;
 /// (reconstruit depuis la série du VM), listes d'anomalies et d'évènements (R19), signalement
 /// d'absence de relevé (R20) et disponibilité GPS. Aucun accès base de données ni logique métier
 /// ici (règle ArchUnit `view_sans_jdbc`).
-public class DiagnosticController implements EmplacementNavigation {
+///
+/// Implémente [ResumeStatut] (#693) : l'enregistreur diagnostiqué, jusqu'ici en sous-titre d'en-tête,
+/// est déporté en barre de statut (le titre « Diagnostic matériel » étant redondant avec le fil d'Ariane).
+public class DiagnosticController implements EmplacementNavigation, ResumeStatut {
 
     //   Le graphe T°/hygrométrie se reconstruit depuis viewModel.mesures().
     private static final DateTimeFormatter MOMENT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
@@ -39,8 +46,9 @@ public class DiagnosticController implements EmplacementNavigation {
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
-    @FXML
-    private Label lblEnregistreur;
+    /// Enregistreur diagnostiqué, déporté en zone centre de la barre de statut (#693) au lieu d'un sous-titre.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     @FXML
     private Label lblReleveAbsent;
@@ -79,9 +87,16 @@ public class DiagnosticController implements EmplacementNavigation {
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
-        lblEnregistreur.textProperty().bind(viewModel.enregistreurProperty());
+        // L'enregistreur diagnostiqué est déporté en zone centre de la barre de statut (#693).
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> ZonesStatut.centre(viewModel.enregistreurProperty().get()), viewModel.enregistreurProperty()));
         lblResumeClimat.textProperty().bind(viewModel.resumeClimatProperty());
         lblTemperature
                 .textProperty()

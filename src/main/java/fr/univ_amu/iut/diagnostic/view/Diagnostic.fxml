@@ -20,10 +20,10 @@
       styleClass="ecran-diagnostic"
       spacing="14.0">
 
-  <VBox spacing="2.0">
-    <Label text="🔧 Diagnostic matériel" styleClass="titre-page"/>
-    <Label fx:id="lblEnregistreur" styleClass="sous-titre-page"/>
-  </VBox>
+  <!--
+    En-tête retiré (#693) : le titre « Diagnostic matériel » est redondant avec le fil d'Ariane, et
+    l'enregistreur diagnostiqué est déporté en barre de statut par le controller (ResumeStatut).
+  -->
 
   <Label fx:id="lblReleveAbsent" styleClass="alerte-r20" wrapText="true"
          text="⚠ Relevé climatique absent : la température et l'hygrométrie ne sont pas disponibles pour cette nuit."/>
