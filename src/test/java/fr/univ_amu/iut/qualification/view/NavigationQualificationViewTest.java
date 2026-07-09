@@ -60,8 +60,9 @@ class NavigationQualificationViewTest {
     @Test
     @DisplayName("ouvrir(idPassage) charge et affiche l'écran de qualification via Guice")
     void ouvrir_affiche_l_ecran(FxRobot robot) {
-        Label titre = robot.lookup(".titre-page").queryAs(Label.class);
+        // Titre retiré (#693) : l'écran de qualification s'identifie par sa ligne de guidance.
+        Label guidance = robot.lookup(".sous-titre-page").queryAs(Label.class);
 
-        assertThat(titre.getText()).contains("Vérifier l'enregistrement");
+        assertThat(guidance.getText()).contains("Écoutez quelques séquences");
     }
 }

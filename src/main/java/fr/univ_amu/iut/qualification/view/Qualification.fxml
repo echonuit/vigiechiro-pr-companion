@@ -34,11 +34,12 @@
   <top>
     <VBox spacing="12.0" styleClass="entete">
       <!-- Fil d'Ariane et retour : portés par le chrome (commun), via EmplacementNavigation. -->
-      <VBox spacing="2.0">
-        <Label text="🎧 Vérifier l'enregistrement par échantillonnage" styleClass="titre-page"/>
-        <Label styleClass="sous-titre-page" wrapText="true"
-               text="Écoutez quelques séquences réparties sur la nuit pour vous assurer que l'enregistrement est exploitable."/>
-      </VBox>
+      <!--
+        Titre « Vérifier l'enregistrement par échantillonnage » retiré (#693) : redondant avec le fil
+        d'Ariane. La ligne de guidance de l'écran est conservée (elle explique la démarche).
+      -->
+      <Label styleClass="sous-titre-page" wrapText="true"
+             text="Écoutez quelques séquences réparties sur la nuit pour vous assurer que l'enregistrement est exploitable."/>
 
       <!-- Bandeau de rappel du passage -->
       <HBox spacing="28.0" styleClass="bandeau">
