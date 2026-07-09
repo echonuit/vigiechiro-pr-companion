@@ -51,11 +51,12 @@ class ClientVigieChiroTest {
     }
 
     @Test
-    @DisplayName("taxons / mesSites sans token → listes vides, sans toucher le réseau")
+    @DisplayName("taxons / mesSites / donnees sans token → listes vides, sans toucher le réseau")
     void listes_sans_token_sont_vides() {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
 
         assertThat(client.taxons()).isEmpty();
         assertThat(client.mesSites()).isEmpty();
+        assertThat(client.donnees("6a49")).isEmpty();
     }
 }

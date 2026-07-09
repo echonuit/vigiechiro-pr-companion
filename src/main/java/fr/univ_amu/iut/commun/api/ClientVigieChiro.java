@@ -7,6 +7,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
@@ -27,6 +28,9 @@ public final class ClientVigieChiro {
 
     private static final String URL_DEFAUT = "https://vigiechiro.herokuapp.com/api/v1";
     private static final Duration DELAI = Duration.ofSeconds(10);
+    /// Garde-fou de pagination (`GET …/donnees`) : une participation a des milliers de fichiers, jamais
+    /// des centaines de milliers ; on plafonne le nombre de pages pour éviter toute boucle.
+    private static final int PAGES_MAX = 500;
 
     private final String baseUrl;
     private final FournisseurToken fournisseurToken;
@@ -65,6 +69,27 @@ public final class ClientVigieChiro {
         return get("/moi/participations")
                 .map(ReponsesVigieChiro::sitesDepuisParticipations)
                 .orElseGet(List::of);
+    }
+
+    /// Résultats Tadarida d'une participation (`GET /participations/#id/donnees`, #719, axe 4.2) : les
+    /// fichiers et leurs observations, **toutes pages confondues**. Liste vide si non connecté /
+    /// indisponible. La réponse Eve est paginée ; on parcourt les pages (grande taille demandée) jusqu'à
+    /// une page vide.
+    public List<DonneeVigieChiro> donnees(String participationId) {
+        List<DonneeVigieChiro> tout = new ArrayList<>();
+        for (int page = 1; page <= PAGES_MAX; page++) {
+            Optional<String> corps =
+                    get("/participations/" + participationId + "/donnees?max_results=1000&page=" + page);
+            if (corps.isEmpty()) {
+                break; // non connecté / erreur : on renvoie ce qui a déjà été récupéré
+            }
+            List<DonneeVigieChiro> lot = DonneesVigieChiro.donnees(corps.get());
+            if (lot.isEmpty()) {
+                break; // page vide = fin de la pagination
+            }
+            tout.addAll(lot);
+        }
+        return tout;
     }
 
     /// **GET authentifié** sur `chemin` (relatif à la base) : renvoie le corps de la réponse si `200`,

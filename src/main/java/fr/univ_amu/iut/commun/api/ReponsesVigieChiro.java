@@ -129,7 +129,8 @@ final class ReponsesVigieChiro {
 
     /// Éléments d'une réponse de liste Eve : le tableau `_items` (réponses paginées) ou le corps
     /// lui-même s'il est déjà un tableau JSON. Corps illisible / forme inattendue → tableau vide.
-    private static JsonArray items(String corps) {
+    /// Package-visible : partagé par les autres lecteurs du paquet (ex. [DonneesVigieChiro]).
+    static JsonArray items(String corps) {
         try {
             JsonElement racine = JsonParser.parseString(corps);
             if (racine.isJsonArray()) {
@@ -147,7 +148,9 @@ final class ReponsesVigieChiro {
         return new JsonArray();
     }
 
-    private static String texte(JsonObject objet, String cle) {
+    /// Valeur texte de la clé `cle`, ou `null` si absente / nulle. Package-visible : partagée par les
+    /// autres lecteurs du paquet (ex. [DonneesVigieChiro]).
+    static String texte(JsonObject objet, String cle) {
         JsonElement element = objet.get(cle);
         return element == null || element.isJsonNull() ? null : element.getAsString();
     }
