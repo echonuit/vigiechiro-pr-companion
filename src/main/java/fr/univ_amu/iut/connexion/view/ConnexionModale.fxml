@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.TextField?>
@@ -8,10 +9,10 @@
 <?import javafx.scene.layout.VBox?>
 
 <!--
-  Modale « Connexion VigieChiro » (#727/#741), ouverte depuis la carte d'accueil du même nom dans un
-  Stage modal applicatif. Guide en trois étapes : ouvrir VigieChiro, installer le marque-page qui copie
-  le token, puis coller le token (vérifié via GET /moi). « Se déconnecter » efface la connexion locale.
-  Câblée au ConnexionViewModel par ConnexionModaleController.
+  Modale « Connexion VigieChiro » (#727/#741), ouverte depuis l'entrée « Connexion VigieChiro » du menu
+  ☰ du chrome, dans un Stage modal applicatif. Guide en trois étapes : ouvrir VigieChiro, installer le
+  marque-page qui copie le token, puis coller le token (vérifié via GET /moi). « Se déconnecter » efface
+  la connexion locale. Câblée au ConnexionViewModel par ConnexionModaleController.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -19,7 +20,12 @@
       fx:controller="fr.univ_amu.iut.connexion.view.ConnexionModaleController"
       stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
       prefWidth="560.0"
-      spacing="14.0">
+      spacing="16.0">
+
+  <!-- Marges de la modale (le Stage n'en fournit aucune) : sans elles le contenu colle aux bords. -->
+  <padding>
+    <Insets top="24.0" right="28.0" bottom="22.0" left="28.0"/>
+  </padding>
 
   <Label text="Connexion VigieChiro" styleClass="titre-page"/>
   <Label text="Reliez l'application à votre compte VigieChiro en trois étapes (aucun fichier à installer)."
