@@ -1,9 +1,5 @@
 package fr.univ_amu.iut.commun.api;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -11,7 +7,6 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
@@ -22,7 +17,8 @@ import java.util.Optional;
 ///
 /// Calqué sur [fr.univ_amu.iut.passage.model.MeteoOpenMeteo] : `java.net.http`, timeout court et
 /// **dégradation propre** — absence de token, réponse non-`200` ou panne réseau sont converties en
-/// [Optional#empty()] ; aucune exception ne remonte à l'IHM.
+/// [Optional#empty()] ; aucune exception ne remonte à l'IHM. Le **transport** vit ici ; la **lecture**
+/// des réponses JSON est déléguée à [ReponsesVigieChiro] (fonctions pures, testables sans réseau).
 ///
 /// **Authentification** : le token (fourni par [FournisseurToken]) est envoyé en **HTTP Basic**, token
 /// en nom d'utilisateur et mot de passe vide, soit `Authorization: Basic base64("<token>:")`
@@ -31,8 +27,6 @@ public final class ClientVigieChiro {
 
     private static final String URL_DEFAUT = "https://vigiechiro.herokuapp.com/api/v1";
     private static final Duration DELAI = Duration.ofSeconds(10);
-    /// Clé de l'identifiant MongoDB, commune à tous les documents Eve (`_id`).
-    private static final String CLE_ID = "_id";
 
     private final String baseUrl;
     private final FournisseurToken fournisseurToken;
@@ -51,22 +45,26 @@ public final class ClientVigieChiro {
 
     /// Profil de l'utilisateur connecté (`GET /moi`), ou vide si non connecté / indisponible.
     public Optional<ProfilVigieChiro> moi() {
-        return get("/moi").flatMap(ClientVigieChiro::lireProfil);
+        return get("/moi").flatMap(ReponsesVigieChiro::profil);
     }
 
     /// Référentiel officiel des taxons (`GET /taxons/liste`, résumé non paginé : `_id` + libellés).
     /// Liste vide si non connecté / indisponible (dégradation propre).
     public List<TaxonVigieChiro> taxons() {
-        return get("/taxons/liste").map(ClientVigieChiro::lireTaxons).orElseGet(List::of);
+        return get("/taxons/liste").map(ReponsesVigieChiro::taxons).orElseGet(List::of);
     }
 
-    /// Sites de l'observateur connecté (`GET /moi/sites`). Liste vide si non connecté / indisponible.
+    /// Sites rattachés à l'observateur, **dérivés de ses participations** (`GET /moi/participations`).
+    /// Liste vide si non connecté / indisponible.
     ///
-    /// La réponse Eve est paginée : on ne lit que la **première page** (`_items`). Un observateur a en
-    /// pratique une poignée de sites (bien en deçà de la taille de page par défaut) ; on ne pagine donc
-    /// pas ici.
+    /// On ne passe **pas** par `/moi/sites` : celui-ci filtre sur le *propriétaire* du site et renvoie
+    /// vide pour un simple participant à un site régional (cf. #718). Chaque participation embarque son
+    /// `site` ; on les déduplique par `_id`. La réponse Eve est paginée : on ne lit que la **première
+    /// page** (`_items`), suffisante pour la poignée de participations d'un observateur.
     public List<SiteVigieChiro> mesSites() {
-        return get("/moi/sites").map(ClientVigieChiro::lireSites).orElseGet(List::of);
+        return get("/moi/participations")
+                .map(ReponsesVigieChiro::sitesDepuisParticipations)
+                .orElseGet(List::of);
     }
 
     /// **GET authentifié** sur `chemin` (relatif à la base) : renvoie le corps de la réponse si `200`,
@@ -101,90 +99,5 @@ public final class ClientVigieChiro {
     private static String basic(String token) {
         String encode = Base64.getEncoder().encodeToString((token + ":").getBytes(StandardCharsets.UTF_8));
         return "Basic " + encode;
-    }
-
-    /// Lit un [ProfilVigieChiro] depuis le corps JSON de `GET /moi`. Tolérant : JSON illisible ou sans
-    /// `_id` donne vide. Package-visible : testable sur une réponse figée, sans réseau.
-    static Optional<ProfilVigieChiro> lireProfil(String corps) {
-        try {
-            JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
-            String id = texte(objet, CLE_ID);
-            if (id == null) {
-                return Optional.empty();
-            }
-            return Optional.of(new ProfilVigieChiro(id, texte(objet, "pseudo"), texte(objet, "role")));
-        } catch (RuntimeException illisible) {
-            return Optional.empty();
-        }
-    }
-
-    /// Lit la liste des taxons depuis le corps JSON de `GET /taxons/liste`. Tolérant : éléments sans
-    /// `_id` ou sans `libelle_court` ignorés, corps illisible → liste vide. Package-visible : testable
-    /// sur une réponse figée, sans réseau.
-    static List<TaxonVigieChiro> lireTaxons(String corps) {
-        List<TaxonVigieChiro> taxons = new ArrayList<>();
-        for (JsonElement element : items(corps)) {
-            if (!element.isJsonObject()) {
-                continue;
-            }
-            JsonObject objet = element.getAsJsonObject();
-            String id = texte(objet, CLE_ID);
-            String court = texte(objet, "libelle_court");
-            if (id != null && court != null) {
-                taxons.add(new TaxonVigieChiro(id, court, texte(objet, "libelle_long")));
-            }
-        }
-        return taxons;
-    }
-
-    /// Lit la liste des sites depuis le corps JSON de `GET /moi/sites`. Tolérant : éléments sans `_id`
-    /// ignorés, corps illisible → liste vide. Package-visible : testable sur une réponse figée.
-    static List<SiteVigieChiro> lireSites(String corps) {
-        List<SiteVigieChiro> sites = new ArrayList<>();
-        for (JsonElement element : items(corps)) {
-            if (!element.isJsonObject()) {
-                continue;
-            }
-            JsonObject objet = element.getAsJsonObject();
-            String id = texte(objet, CLE_ID);
-            if (id != null) {
-                sites.add(new SiteVigieChiro(id, texte(objet, "titre"), booleen(objet, "verrouille")));
-            }
-        }
-        return sites;
-    }
-
-    /// Éléments d'une réponse de liste Eve : le tableau `_items` (réponses paginées) ou le corps
-    /// lui-même s'il est déjà un tableau JSON. Corps illisible / forme inattendue → tableau vide.
-    private static JsonArray items(String corps) {
-        try {
-            JsonElement racine = JsonParser.parseString(corps);
-            if (racine.isJsonArray()) {
-                return racine.getAsJsonArray();
-            }
-            if (racine.isJsonObject()) {
-                JsonElement items = racine.getAsJsonObject().get("_items");
-                if (items != null && items.isJsonArray()) {
-                    return items.getAsJsonArray();
-                }
-            }
-        } catch (RuntimeException illisible) {
-            // corps non-JSON : on retombe sur un tableau vide (dégradation propre).
-        }
-        return new JsonArray();
-    }
-
-    private static String texte(JsonObject objet, String cle) {
-        JsonElement element = objet.get(cle);
-        return element == null || element.isJsonNull() ? null : element.getAsString();
-    }
-
-    private static boolean booleen(JsonObject objet, String cle) {
-        JsonElement element = objet.get(cle);
-        try {
-            return element != null && !element.isJsonNull() && element.getAsBoolean();
-        } catch (RuntimeException pasUnBooleen) {
-            return false;
-        }
     }
 }
