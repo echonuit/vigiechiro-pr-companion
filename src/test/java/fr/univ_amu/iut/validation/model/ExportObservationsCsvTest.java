@@ -22,6 +22,7 @@ class ExportObservationsCsvTest {
 
         assertThat(csv).startsWith("\uFEFF");
         assertThat(csv).contains("Carré;Point;Site;Passage;Date;Fichier;Taxon Tadarida;Proba Tadarida");
+        assertThat(csv).contains("Statut;Référence;Douteux;Fréquence médiane (kHz)");
         assertThat(csv).endsWith("\r\n");
     }
 
@@ -39,6 +40,7 @@ class ExportObservationsCsvTest {
                 "Chiroptères",
                 StatutObservation.CORRIGEE,
                 true,
+                true,
                 "Cri social net",
                 45,
                 0.5,
@@ -46,7 +48,7 @@ class ExportObservationsCsvTest {
 
         assertThat(csv)
                 .contains("640380;A1;Étang;2;2026-06-22;seqA_000.wav;Pippip;0,74;Nyclei;Pipistrelle commune"
-                        + ";Chiroptères;Corrigée;oui;45;0,50;3,80;Cri social net");
+                        + ";Chiroptères;Corrigée;oui;oui;45;0,50;3,80;Cri social net");
     }
 
     @Test
@@ -63,14 +65,15 @@ class ExportObservationsCsvTest {
                 null,
                 StatutObservation.NON_TOUCHEE,
                 false,
+                false,
                 "clic ; puis silence",
                 null,
                 null,
                 null)));
 
         assertThat(csv).contains("\"clic ; puis silence\"");
-        // Champs nuls → vides ; statut « À revoir » ; référence « non ».
-        assertThat(csv).contains(";À revoir;non;");
+        // Champs nuls → vides ; statut « À revoir » ; référence « non » ; douteux « non ».
+        assertThat(csv).contains(";À revoir;non;non;");
     }
 
     @Test
@@ -86,6 +89,7 @@ class ExportObservationsCsvTest {
                 null,
                 null,
                 StatutObservation.VALIDEE,
+                false,
                 false,
                 null,
                 45,
@@ -112,6 +116,7 @@ class ExportObservationsCsvTest {
             String groupe,
             StatutObservation statut,
             boolean reference,
+            boolean douteux,
             String commentaire,
             Integer frequenceKHz,
             Double debutS,
@@ -140,6 +145,6 @@ class ExportObservationsCsvTest {
                 debutS,
                 finS,
                 null,
-                false);
+                douteux);
     }
 }
