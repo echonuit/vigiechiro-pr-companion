@@ -25,10 +25,10 @@
       styleClass="ecran-lot"
       spacing="14.0">
 
-  <VBox spacing="2.0">
-    <Label text="📦 Préparer le dépôt" styleClass="titre-page"/>
-    <Label fx:id="lblStatut" styleClass="sous-titre-page"/>
-  </VBox>
+  <!--
+    En-tête retiré (#693) : le titre « Préparer le dépôt » est redondant avec le fil d'Ariane, et le
+    statut du workflow est déporté en barre de statut par le controller (ResumeStatut).
+  -->
 
   <VBox spacing="4.0" styleClass="panneau-lot">
     <Label text="📊 Récapitulatif du lot" styleClass="section-titre"/>

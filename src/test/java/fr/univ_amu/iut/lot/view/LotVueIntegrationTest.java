@@ -137,7 +137,6 @@ class LotVueIntegrationTest {
                                 ok("Journal du capteur")),
                         null));
 
-        Label statut = robot.lookup("#lblStatut").queryAs(Label.class);
         Label recap = robot.lookup("#lblRecap").queryAs(Label.class);
         Label chemin = robot.lookup("#lblCheminDepot").queryAs(Label.class);
         VBox checklist = robot.lookup("#checklist").queryAs(VBox.class);
@@ -145,7 +144,8 @@ class LotVueIntegrationTest {
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
 
-        assertThat(statut.getText()).isEqualTo("Vérifié");
+        // Statut déporté en barre de statut (#693).
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Vérifié");
         assertThat(recap.getText()).isEqualTo("2 séquences · 8 Ko");
         // #251 : la cible du téléversement est le sous-dossier depot/ (archives ZIP), pas la session.
         assertThat(chemin.getText()).isEqualTo("/ws/session-42/depot");
@@ -230,12 +230,12 @@ class LotVueIntegrationTest {
     void statut_depose_affiche_message_et_desactive_actions(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOSE, "/ws/session-42", 2, 8192L, List.of(), "2026-06-18"));
 
-        Label statut = robot.lookup("#lblStatut").queryAs(Label.class);
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
 
-        assertThat(statut.getText()).isEqualTo("Déposé");
+        // Statut déporté en barre de statut (#693).
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Déposé");
         assertThat(message.isVisible()).isTrue();
         assertThat(message.getText()).contains("déposé");
         assertThat(preparer.isDisabled()).isTrue();

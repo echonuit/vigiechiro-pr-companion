@@ -7,7 +7,9 @@ import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.StatutControle;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
@@ -19,6 +21,8 @@ import java.util.Objects;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -30,12 +34,14 @@ import javafx.scene.layout.VBox;
 
 /// Controller de l'écran **M-Lot** (`Lot.fxml`).
 ///
-/// Pur câblage (patron CM4) : lie le statut, le récapitulatif, le dossier à téléverser, les alertes
-/// de cohérence (R14) et les deux actions du dépôt au [LotViewModel]. « Préparer le lot » et
-/// « Marquer déposé » ne sont actifs que dans l'état workflow adéquat ; la zone d'alertes
-/// n'apparaît qu'en présence d'alertes bloquantes. Aucun accès base de données ni logique métier ici
-/// (règle ArchUnit `view_sans_jdbc`).
-public class LotController implements EmplacementNavigation {
+/// Pur câblage (patron CM4) : lie le récapitulatif, le dossier à téléverser, les alertes de cohérence
+/// (R14) et les deux actions du dépôt au [LotViewModel]. « Préparer le lot » et « Marquer déposé » ne
+/// sont actifs que dans l'état workflow adéquat ; la zone d'alertes n'apparaît qu'en présence d'alertes
+/// bloquantes. Aucun accès base de données ni logique métier ici (règle ArchUnit `view_sans_jdbc`).
+///
+/// Implémente [ResumeStatut] (#693) : le statut du workflow, jusqu'ici en sous-titre d'en-tête, est
+/// déporté en barre de statut (le titre « Préparer le dépôt » étant redondant avec le fil d'Ariane).
+public class LotController implements EmplacementNavigation, ResumeStatut {
 
     private final LotViewModel viewModel;
     private final OuvrirSite ouvrirSite;
@@ -48,8 +54,9 @@ public class LotController implements EmplacementNavigation {
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
-    @FXML
-    private Label lblStatut;
+    /// Statut du workflow, déporté en zone centre de la barre de statut (#693) au lieu d'un sous-titre.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     @FXML
     private Label lblRecap;
@@ -96,9 +103,16 @@ public class LotController implements EmplacementNavigation {
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
-        lblStatut.textProperty().bind(viewModel.statutProperty());
+        // Statut du workflow déporté en zone centre de la barre de statut (#693), plus de sous-titre.
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> ZonesStatut.centre(viewModel.statutProperty().get()), viewModel.statutProperty()));
         lblRecap.textProperty().bind(viewModel.recapProperty());
         // Étape ③ : la cible du téléversement est le sous-dossier depot/ (archives ZIP), pas la session.
         lblCheminDepot.textProperty().bind(viewModel.cheminDepotProperty());
