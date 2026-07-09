@@ -69,8 +69,8 @@ import javafx.scene.Scene;
 /// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation) — étape ② « Générer les
 ///   archives » active ;
 /// - `apercu-lot-generation.png` : **génération en cours** — indicateur d'activité, bouton désactivé ;
-/// - `apercu-lot-archives.png` : **archives générées** — liste des ZIP, « Ouvrir le dossier » actif,
-///   étape ③ « Téléverser » courante ;
+/// - `apercu-lot-archives.png` : **archives générées** — liste des ZIP (redimensionnée à son contenu),
+///   « Ouvrir le dossier » et « Supprimer les archives » actifs, étape ③ « Téléverser » courante ;
 /// - `apercu-lot-depose.png` : passage **Déposé** — état final, toutes les étapes franchies ;
 /// - `apercu-lot-alertes.png` : passage **Vérifié incohérent** (séquences/journal manquants) — la
 ///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé.
@@ -201,9 +201,10 @@ public final class CaptureLot {
         // Capture hors-chrome : le fil d'Ariane n'est pas rendu ; le contexte n'a donc pas à être réel.
         controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, CODE_POINT, null)));
         pilote.accept(vm);
-        // Hauteur généreuse : le flux ordonné à 4 étapes (#251) est haut ; à l'écran il défile dans le
-        // chrome, mais la capture hors-chrome doit tout rendre sans écraser la zone d'alertes (R14).
-        ApercuFx.enregistrerPng(new Scene(vue, 980, 880), fichier);
+        // Hauteur généreuse : le flux ordonné à 4 étapes (#251) + la carte « Libérer l'espace disque » (#…)
+        // sont hauts ; à l'écran ça défile dans le chrome, mais la capture hors-chrome doit tout rendre
+        // (dont le bouton « Supprimer les archives ») sans écraser la zone d'alertes (R14).
+        ApercuFx.enregistrerPng(new Scene(vue, 980, 1040), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 

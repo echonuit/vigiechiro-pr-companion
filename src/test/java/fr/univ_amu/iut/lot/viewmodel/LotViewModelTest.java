@@ -54,9 +54,22 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("#… : avant le dépôt (Prêt à déposer), la suppression des archives reste désactivée")
-    void pas_de_suppression_avant_depot() {
+    @DisplayName("#… : dès que des archives existent (même « Prêt à déposer »), la suppression est possible")
+    void peut_supprimer_des_archives_meme_avant_depot() {
         when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/x-1.zip"), 1, 2048L, 2)));
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.peutSupprimerArchivesProperty().get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#… : sans archives sur disque, la suppression est désactivée")
+    void pas_de_suppression_sans_archives() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.archivesDepot("/ws/session-42")).thenReturn(List.of());
 
         viewModel.ouvrirSur(ID_PASSAGE);
 

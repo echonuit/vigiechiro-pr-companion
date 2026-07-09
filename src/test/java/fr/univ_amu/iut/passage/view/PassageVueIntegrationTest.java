@@ -190,14 +190,16 @@ class PassageVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("DÉPOSÉ : Dépôt désactivé, Validation déverrouillée et ouvrant M-Vision-Tadarida")
+    @DisplayName(
+            "DÉPOSÉ : Dépôt encore accessible (retour possible), Validation déverrouillée et ouvrant M-Vision-Tadarida")
     void etats_actions_depose(FxRobot robot) {
         Parent vue = chargerSurFx(robot, StatutWorkflow.DEPOSE, 1);
 
-        assertThat(bouton(vue, "#boutonDepot").isDisabled()).isTrue();
+        // #… : le dépôt reste accessible même une fois déposé, pour revenir consulter/supprimer les archives.
+        assertThat(bouton(vue, "#boutonDepot").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isFalse();
-        // Déposé → la mise en avant est passée à la carte « Sons & validation ».
+        // Déposé → la mise en avant est passée à la carte « Sons & validation » (le dépôt n'est plus recommandé).
         assertThat(estRecommandee(bouton(vue, "#boutonValidation"))).isTrue();
         assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();
 
