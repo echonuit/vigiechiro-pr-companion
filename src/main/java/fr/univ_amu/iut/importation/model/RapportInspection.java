@@ -18,9 +18,6 @@ import java.util.Optional;
 /// @param cheminReleveClimatique chemin du `*_THLog.csv`, ou `null` si la sonde manque (R20)
 /// @param originaux enregistrements originaux WAV détectés, triés par nom de fichier
 /// @param etatNommage état de nommage des originaux : bruts, déjà préfixés, ou aucun (R6)
-/// @param frequenceEnTeteHz fréquence d'échantillonnage lue dans l'en-tête d'un original représentatif
-///     (le premier lisible), ou `null` si aucun original lisible. Sert à repérer, à l'aperçu, un
-///     enregistrement **déjà ralenti** (cf. [DetectionRalenti]) au regard de la fréquence du journal.
 /// @param cyclesJournal cycles d'acquisition (réveil→veille) extraits du journal, un par nuit ; vide si
 ///     pas de journal. Sert à qualifier la **complétude** des nuits détectées (cf. [#partitionNuits()]).
 public record RapportInspection(
@@ -30,7 +27,6 @@ public record RapportInspection(
         Path cheminReleveClimatique,
         List<Path> originaux,
         EtatNommage etatNommage,
-        Integer frequenceEnTeteHz,
         List<CycleAcquisition> cyclesJournal) {
 
     public RapportInspection {

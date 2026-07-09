@@ -32,17 +32,13 @@ record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int bitsParE
     private static final int TAILLE_ENTETE = 44;
     private static final short FORMAT_PCM = 1;
 
-    /// Étiquettes de chunks RIFF (extraites en constantes : réutilisées par lire / lireFrequenceHz /
-    /// ecrire, sans quoi PMD signale des littéraux dupliqués).
+    /// Étiquettes de chunks RIFF (extraites en constantes : réutilisées par lire / ecrire, sans quoi PMD
+    /// signale des littéraux dupliqués).
     private static final String TAG_RIFF = "RIFF";
 
     private static final String TAG_WAVE = "WAVE";
 
     private static final String TAG_FMT = "fmt ";
-
-    /// Nombre d'octets de tête lus par [#lireFrequenceHz(Path)] : le chunk `fmt ` est en pratique au
-    /// tout début du fichier ; 4 Kio couvrent largement d'éventuels chunks intercalés (`LIST`, `fact`).
-    private static final int PREFIXE_ENTETE = 4096;
 
     /// Placeholder « taille de données inconnue » (0xFFFFFFFF) écrit par certains enregistreurs en flux :
     /// signifie « jusqu'à la fin du fichier », à ne pas confondre avec une troncature (#156).
@@ -122,33 +118,6 @@ record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int bitsParE
         }
         byte[] pcm = Arrays.copyOfRange(o, dataDebut, dataDebut + dataLongueur);
         return new FichierWav(canaux, frequence, bits, pcm);
-    }
-
-    /// Lit **seulement** la fréquence d'échantillonnage de l'en-tête, sans charger le PCM. Utile à
-    /// l'inspection (aperçu) où l'on veut juste repérer un fichier déjà ralenti sans payer la lecture
-    /// complète de gros WAV. Balaie les premiers octets à la recherche du chunk `"fmt "`.
-    ///
-    /// @throws IOException si l'en-tête RIFF/WAVE ou le chunk `fmt ` est absent des premiers octets
-    static int lireFrequenceHz(Path fichier) throws IOException {
-        byte[] o;
-        try (var canal = Files.newByteChannel(fichier)) {
-            ByteBuffer tampon = ByteBuffer.allocate(PREFIXE_ENTETE);
-            canal.read(tampon);
-            o = Arrays.copyOf(tampon.array(), tampon.position());
-        }
-        if (o.length < 12 || !tag(o, 0, TAG_RIFF) || !tag(o, 8, TAG_WAVE)) {
-            throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
-        }
-        int pos = 12;
-        while (pos + 8 <= o.length) {
-            long taille = lireUint32(o, pos + 4);
-            int corps = pos + 8;
-            if (tag(o, pos, TAG_FMT) && corps + 8 <= o.length) {
-                return (int) lireUint32(o, corps + 4);
-            }
-            pos = corps + (int) taille + (taille % 2 == 1 ? 1 : 0);
-        }
-        throw new IOException("Chunk fmt introuvable dans l'en-tête : " + fichier);
     }
 
     /// Écrit un WAV canonique (en-tête 44 octets) avec la fréquence et le format donnés, en copiant

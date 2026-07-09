@@ -440,39 +440,12 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR111_20260422_200000.wav"), Path.of("PaRecPR222_20260422_200000.wav")),
                         EtatNommage.BRUT,
-                        null,
                         List.of()));
         viewModel.inspection().dossierSourceProperty().set(sd);
 
         viewModel.inspecter();
 
         assertThat(viewModel.inspection().avertissementMelangeProperty().get()).contains("plusieurs enregistreurs");
-    }
-
-    @Test
-    @DisplayName("Garde-fou : inspecter des originaux déjà ralentis lève l'avertissement à l'aperçu")
-    void inspecter_detecte_les_fichiers_ralentis() {
-        // Fréquence d'en-tête 38400 Hz, bien sous le seuil d'un ultrason brut (mode dégradé, pas de log).
-        when(serviceImport.inspecter(sd))
-                .thenReturn(new RapportInspection(
-                        sd,
-                        null,
-                        null,
-                        null,
-                        List.of(Path.of("PaRecPR1925492_20260422_200000.wav")),
-                        EtatNommage.BRUT,
-                        38400,
-                        List.of()));
-        viewModel.inspection().dossierSourceProperty().set(sd);
-
-        viewModel.inspecter();
-
-        assertThat(viewModel
-                        .inspection()
-                        .avertissementFichiersRalentisProperty()
-                        .get())
-                .contains("38400")
-                .contains("rejetés");
     }
 
     @Test
@@ -499,7 +472,6 @@ class ImportationViewModelTest {
                         null,
                         List.of(Path.of("PaRecPR1648011_20260422_203000.wav")), // série ≠ journal
                         EtatNommage.BRUT,
-                        null,
                         List.of()));
         viewModel.inspection().dossierSourceProperty().set(sd);
 

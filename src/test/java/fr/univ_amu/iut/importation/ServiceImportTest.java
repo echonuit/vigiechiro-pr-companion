@@ -65,13 +65,13 @@ import org.junit.jupiter.api.io.TempDir;
 /// jetable (`@TempDir` + [MigrationSchema]) et de vrais moteurs/DAO (pas de mock). On vérifie
 /// l'agrégat persisté, l'atomicité (O7), l'unicité (R5) et la protection de la source (R9).
 ///
-/// Les WAV source sont synthétiques (petite fréquence) : le moteur lit la fréquence du fichier,
-/// indépendante de celle annoncée dans le journal.
+/// Les WAV source sont synthétiques ; c'est la **fréquence d'acquisition du journal** (`Fe384kHz`) qui
+/// pilote la transformation, pas l'en-tête WAV (cf. `FrequenceAcquisition`).
 class ServiceImportTest {
 
     private static final String ID_USER = "u-1";
-    // Vrai rythme d'un brut ultrason (384 kHz), cohérent avec le log Fe384kHz : sans quoi le garde-fou
-    // « déjà ralenti » (en-tête < Fe du log) rejetterait ces fixtures.
+    // En-tête des fixtures « directes » : égal à la Fe du log (384 kHz). Un vrai brut PR aurait l'en-tête à
+    // Fe/10 (cf. nuit_pr_deja_expansee_importe_sans_rejet), mais l'arithmétique se pilote sur le log.
     private static final int FREQUENCE_WAV = 384_000; // Hz, multiple de 10, = Fe du log
     private static final int TRAMES = 576_000; // 1,5 s à 384 kHz -> ceil(1,5 / 5) = 1 séquence par original
     private static final String SERIE = "1925492";
@@ -161,6 +161,35 @@ class ServiceImportTest {
         assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
         assertThat(originalDao.findBySession(idSession))
                 .allSatisfy(o -> assertThat(o.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_WAV));
+    }
+
+    @Test
+    @DisplayName("Réalité PR : des bruts déjà expansés ×10 (en-tête Fe/10) s'importent sans rejet ni double expansion")
+    void nuit_pr_deja_expansee_importe_sans_rejet() throws IOException {
+        // L'enregistreur PR écrit ses bruts avec un en-tête à 38400 Hz (= Fe/10) alors que le log déclare
+        // Fe384kHz. Ces fichiers doivent s'importer SANS avertissement (plus de garde-fou « déjà ralenti »)
+        // et NE PAS être ré-expansés.
+        Path carte = racine.resolve("sd-pr");
+        Files.createDirectories(carte);
+        Files.writeString(carte.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        ecrireWav(carte.resolve("PaRecPR1925492_20260422_203922.wav"), 38_400);
+
+        ResultatImport resultat = service.importer(carte, idPoint, prefixe);
+
+        assertThat(resultat.passage().statutWorkflow()).isEqualTo(StatutWorkflow.TRANSFORME);
+        assertThat(resultat.nombreOriginaux()).isEqualTo(1);
+        assertThat(resultat.nombreSequences()).isEqualTo(1); // 576000 / 384000 = 1,5 s réelle < 5 s
+
+        Long idSession = resultat.session().id();
+        // La vraie fréquence d'acquisition (384 kHz du log) est persistée, PAS l'en-tête 38400 Hz.
+        assertThat(originalDao.findBySession(idSession))
+                .singleElement()
+                .satisfies(o -> assertThat(o.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_WAV));
+        // La séquence est écrite à Fe/10 = 38400 Hz : 576000 trames / 38400 = 15 s. Une double expansion
+        // (sortie à 3840 Hz) donnerait 150 s : la durée persistée est le témoin qu'on n'a pas ré-expansé.
+        assertThat(sequenceDao.findBySession(idSession))
+                .singleElement()
+                .satisfies(s -> assertThat(s.dureeSecondes()).isEqualTo(15.0));
     }
 
     @Test
@@ -862,6 +891,12 @@ class ServiceImportTest {
     }
 
     private static void ecrireWav(Path fichier) throws IOException {
+        ecrireWav(fichier, FREQUENCE_WAV);
+    }
+
+    /// Écrit un WAV mono 16 bits de `TRAMES` trames avec `frequenceEnTeteHz` dans l'en-tête. Un brut PR
+    /// « déjà expansé ×10 » porte l'en-tête à Fe/10 (ex. 38400) alors que le log déclare Fe (384000).
+    private static void ecrireWav(Path fichier, int frequenceEnTeteHz) throws IOException {
         byte[] pcm = new byte[TRAMES * 2];
         for (int i = 0; i < TRAMES; i++) {
             short e = (short) (((i * 41) % 1000) - 500);
@@ -876,8 +911,8 @@ class ServiceImportTest {
         buf.putInt(16);
         buf.putShort((short) 1);
         buf.putShort((short) 1);
-        buf.putInt(FREQUENCE_WAV);
-        buf.putInt(FREQUENCE_WAV * 2);
+        buf.putInt(frequenceEnTeteHz);
+        buf.putInt(frequenceEnTeteHz * 2);
         buf.putShort((short) 2);
         buf.putShort((short) 16);
         buf.put("data".getBytes(StandardCharsets.US_ASCII));

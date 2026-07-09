@@ -65,9 +65,6 @@
     <!-- Avertissement « nuit déjà importée » (#147) : un passage existe déjà pour cet enregistreur/date. -->
     <Label fx:id="labelNuitExistante" styleClass="insp-incoherence" wrapText="true"
            visible="false" managed="false"/>
-    <!-- Garde-fou « enregistrements déjà ralentis » : source déjà expansée ×10 → rejetée à l'import. -->
-    <Label fx:id="labelFichiersRalentis" styleClass="insp-incoherence" wrapText="true"
-           visible="false" managed="false"/>
     <!-- Découpage par nuit (#…) : une carte laissée tourner plusieurs nuits produit une ligne par nuit
          (chacune deviendra un passage). Visible seulement s'il y a plus d'une nuit. Décochez celles à
          exclure (ex. une nuit tronquée). -->

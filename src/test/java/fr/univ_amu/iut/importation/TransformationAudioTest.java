@@ -5,7 +5,6 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.Empreintes;
-import fr.univ_amu.iut.importation.model.OriginalDejaRalentiException;
 import fr.univ_amu.iut.importation.model.OriginalIllisibleException;
 import fr.univ_amu.iut.importation.model.SequenceProduite;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
@@ -172,36 +171,50 @@ class TransformationAudioTest {
     }
 
     @Test
-    @DisplayName("R10 : une fréquence source non multiple de 10 est un défaut de format SOURCE récupérable")
-    void frequence_non_multiple_de_dix_refusee() throws IOException {
-        Path mauvais = dossier.resolve("mauvais.wav");
-        ecrireWav(mauvais, CANAUX, 384003, BITS, pcmDeterministe(100));
-
-        // Défaut de format de la SOURCE (#155) : récupérable → l'original est rejeté (et consigné au
-        // rapport par l'appelant), pas une erreur fatale d'écriture du workspace.
-        assertThatThrownBy(() -> transformation.transformer(mauvais, dossier.resolve("ko"), prefixe, FREQUENCE_SOURCE))
+    @DisplayName("R10 : une fréquence d'acquisition non multiple de 10 est un défaut récupérable")
+    void frequence_non_multiple_de_dix_refusee() {
+        // Le log annonce une acquisition non divisible par 10 : défaut récupérable (#155) → l'original est
+        // rejeté (et consigné au rapport par l'appelant), pas une erreur fatale d'écriture du workspace.
+        assertThatThrownBy(() -> transformation.transformer(originalWav, dossier.resolve("ko"), prefixe, 384003))
                 .isInstanceOf(OriginalIllisibleException.class)
                 .hasMessageContaining("384003");
     }
 
     @Test
-    @DisplayName("Garde-fou : un original déjà ralenti (en-tête < Fe du log) est rejeté (récupérable)")
-    void original_deja_ralenti_avec_log_est_rejete() {
-        // En-tête 2000 Hz alors que le log annonce une acquisition à 20000 Hz → source déjà ralentie
-        // (elle serait ré-expansée ×10). Rejet récupérable, pas une transformation.
-        assertThatThrownBy(() -> transformation.transformer(originalWav, dossier.resolve("ko"), prefixe, 20000))
-                .isInstanceOf(OriginalDejaRalentiException.class)
-                .hasMessageContaining("2000")
-                .hasMessageContaining("20000");
+    @DisplayName("Réalité PR : un brut déjà expansé ×10 (en-tête = Fe/10 du log) s'importe sans double expansion")
+    void brut_pr_deja_expanse_importe_sans_double_expansion() {
+        // En-tête 2000 Hz mais le log déclare une acquisition à 20000 Hz : l'enregistreur a DÉJÀ appliqué
+        // l'expansion ×10 (en-tête = Fe/10). On ne ré-expanse donc pas : la sortie reste à 2000 Hz (= l'en-tête,
+        // sans double expansion), et le découpage suit 5 s RÉELLES au rythme d'acquisition (20000 Hz).
+        TransformationOriginal resultat =
+                transformation.transformer(originalWav, dossier.resolve("transformes"), prefixe, 20000);
+
+        assertThat(resultat.frequenceSourceHz())
+                .as("fréquence d'acquisition = celle du log")
+                .isEqualTo(20000);
+        assertThat(resultat.frequenceSortieHz())
+                .as("sortie = Fe/10 = en-tête : aucune double expansion")
+                .isEqualTo(2000);
+        // 24000 trames à 20000 Hz réels = 1,2 s réelle → ceil(1,2 / 5) = 1 séquence, écrite à 2000 Hz.
+        assertThat(resultat.sequences()).hasSize(1);
+        assertThat(resultat.sequences().get(0).frequenceSortieHz()).isEqualTo(2000);
     }
 
     @Test
-    @DisplayName("Garde-fou sans log : un en-tête sous le seuil d'un ultrason brut est rejeté")
-    void original_deja_ralenti_sans_log_est_rejete() {
-        // Pas de journal (mode dégradé) : 2000 Hz est bien en dessous du seuil d'un ultrason brut → rejet.
-        assertThatThrownBy(() -> transformation.transformer(originalWav, dossier.resolve("ko"), prefixe, null))
-                .isInstanceOf(OriginalDejaRalentiException.class)
-                .hasMessageContaining("2000");
+    @DisplayName("Sans log : un en-tête bas est traité comme déjà expansé ×10 (repli PR), sans double expansion")
+    void sans_log_entete_bas_traite_comme_deja_expanse() {
+        // Pas de journal (mode dégradé) : un en-tête (2000 Hz) sous le seuil d'un ultrason brut est
+        // interprété comme déjà expansé (Fe/10). On ne ré-expanse pas : sortie = en-tête (2000 Hz),
+        // acquisition déduite = en-tête × 10 = 20000 Hz.
+        TransformationOriginal resultat =
+                transformation.transformer(originalWav, dossier.resolve("transformes"), prefixe, null);
+
+        assertThat(resultat.frequenceSourceHz())
+                .as("acquisition déduite = en-tête × 10")
+                .isEqualTo(20000);
+        assertThat(resultat.frequenceSortieHz())
+                .as("sortie = en-tête : pas de double expansion")
+                .isEqualTo(2000);
     }
 
     // --- Helpers (autonomes, pas de helper partagé entre fichiers de test) --------------------

@@ -13,23 +13,26 @@ import java.util.Objects;
 /// **fidèlement** la chaîne Vigie-Chiro/Tadarida, condition pour que l'`observations.csv` (produit par
 /// Tadarida sur les mêmes tranches) se raccroche à l'audio produit par l'application.
 ///
-/// ## Vue d'ensemble : découper à 5 s réelles, PUIS expanser ×10
+/// ## Vue d'ensemble : découper à 5 s réelles, à la cible d'expansion ×10
 ///
-/// L'ordre est essentiel. Un enregistrement brut est un ultrason mono 16 bits échantillonné très vite
-/// (ex. 384 000 Hz), donc inaudible. La chaîne :
+/// Un enregistrement brut est un ultrason mono 16 bits acquis très vite (`Fe`, ex. 384 000 Hz), donc
+/// inaudible ; l'écoute Vigie-Chiro se fait **expansé ×10** (`Fe/10`, ex. 38 400 Hz). Point clé :
+/// **c'est la vraie fréquence d'acquisition `Fe` (issue du log) qui pilote l'arithmétique, pas
+/// l'en-tête WAV** — l'enregistreur PR écrit ses bruts **déjà expansés** (en-tête = `Fe/10`), tandis
+/// qu'une source « directe » les porte à `Fe` (cf. [FrequenceAcquisition]). La chaîne :
 ///
-/// 1. **Découpe** le brut en **tranches de 5 s au rythme SOURCE** (5 s *réelles*) : chaque tranche porte
-///    `5 × frequenceSource` trames (la dernière peut être plus courte).
-/// 2. **Expanse ×10** chaque tranche en **réinterprétant** son rythme d'échantillonnage
-///    (`frequenceSortie = frequenceSource / 10`, ex. 38 400 Hz) : **aucun échantillon n'est recalculé**,
-///    les mêmes octets PCM sont conservés. Une tranche de 5 s réelles devient donc **50 s à l'écoute**,
-///    et audible (c'est l'« expansion de temps » du protocole).
+/// 1. **Découpe** le brut en **tranches de 5 s réelles** : chaque tranche porte `5 × Fe` trames (la
+///    dernière peut être plus courte), quel que soit ce que dit l'en-tête.
+/// 2. **Écrit** chaque tranche à `frequenceSortie = Fe / 10` (ex. 38 400 Hz), **sans recalculer aucun
+///    échantillon** : les mêmes octets PCM sont conservés. Une source directe est ainsi réétiquetée
+///    ×10 ; un brut PR déjà expansé est simplement réécrit à sa fréquence (aucune ré-expansion). Une
+///    tranche de 5 s réelles s'écoute donc en **50 s**.
 ///
-/// ⚠️ **Piège corrigé (#…)** : découper *après* expansion et au rythme de **sortie** donnerait des
-/// tranches de **0,5 s réelles** (10× trop courtes), désalignées des temps de l'`observations.csv` (qui
-/// sont en secondes réelles dans une tranche de 5 s). On découpe donc bien au rythme **source**.
+/// ⚠️ **Piège évité** : découper au rythme de l'**en-tête** d'un brut PR déjà expansé donnerait des
+/// tranches **10× trop courtes** (0,5 s réelle), désalignées des temps de l'`observations.csv` (en
+/// secondes réelles dans une tranche de 5 s). On découpe au rythme d'**acquisition** `Fe`.
 ///
-/// Pour une durée source `D` (secondes) : `nbSequences = ceil(D / 5)`.
+/// Pour une durée d'acquisition `D` (secondes) : `nbSequences = ceil(D / 5)`.
 ///
 /// ## Nommage HORODATÉ des tranches (R8, convention Tadarida)
 ///
@@ -47,8 +50,8 @@ import java.util.Objects;
 /// transformation réécrit des fichiers identiques au bit près.
 public class TransformationAudio {
 
-    /// Durée d'une séquence d'écoute, en secondes **réelles** (au rythme source) : une tranche = 5 s de
-    /// l'enregistrement d'origine, soit 50 s à l'écoute une fois expansée ×10 (R10).
+    /// Durée d'une séquence d'écoute, en secondes **réelles** (au rythme d'acquisition) : une tranche = 5 s
+    /// de l'enregistrement d'origine, soit 50 s à l'écoute une fois expansée ×10 (R10).
     public static final int DUREE_SEQUENCE_SECONDES = 5;
 
     /// Facteur d'expansion temporelle du protocole Vigie-Chiro (R10).
@@ -72,16 +75,17 @@ public class TransformationAudio {
     /// d'après le nom R6 **calculé**, de sorte que la sortie soit identique au mode conservation (même
     /// clé de jointure Tadarida). Cf. [SourceOriginal].
     ///
-    /// @param originalWav chemin du WAV **lu** (mono 16 bits, ex. 384 kHz) — `bruts/` ou carte SD
+    /// @param originalWav chemin du WAV **lu** (mono 16 bits ; en-tête `Fe/10` pour un brut PR, `Fe` pour
+    ///     une source directe) — `bruts/` ou carte SD
     /// @param nomR6 nom logique R6 servant au nommage R8 des séquences et au `nomOriginal` du résultat
     /// @param dossierSortie dossier `transformes/` où écrire les séquences (créé si absent)
     /// @param prefixe préfixe de la session (sert au nommage R8 des séquences)
     /// @param frequenceAcquisitionLogHz fréquence d'acquisition déclarée par le log de l'enregistreur
-    ///     (`Fe…kHz`), ou `null` si aucun journal (mode dégradé). Sert à **rejeter** une source déjà
-    ///     ralentie (cf. [DetectionRalenti]) au lieu de la ré-expanser (double expansion).
+    ///     (`Fe…kHz`), ou `null` si aucun journal (mode dégradé). **Pilote** la fréquence de sortie et le
+    ///     découpage à 5 s réelles ; à défaut, elle est déduite de l'en-tête (cf. [FrequenceAcquisition]).
     /// @return le détail de la transformation (métadonnées de l'original + séquences produites)
-    /// @throws OriginalDejaRalentiException si la source est déjà ralentie (rejet récupérable #155)
-    /// @throws IllegalArgumentException si la fréquence source n'est pas un multiple de 10
+    /// @throws OriginalIllisibleException si la source est illisible/de format invalide, ou si la fréquence
+    ///     d'acquisition n'est pas un multiple de 10 (rejet récupérable #155)
     public TransformationOriginal transformer(
             Path originalWav, String nomR6, Path dossierSortie, Prefixe prefixe, Integer frequenceAcquisitionLogHz) {
         Objects.requireNonNull(originalWav, "originalWav");
@@ -91,37 +95,32 @@ public class TransformationAudio {
 
         // Lecture + format de la SOURCE : un échec ici est **récupérable** (#155) → l'original est rejeté.
         FichierWav source = lireSource(originalWav);
-        int frequenceSource = source.frequenceEchantillonnageHz();
-        // Garde-fou double expansion : une source déjà ralentie (en-tête trop bas au regard du log, ou
-        // sous le seuil d'un ultrason brut) est REJETÉE — la ré-expanser donnerait des fréquences 10×
-        // trop basses. Rejet récupérable (#155) : le fichier est consigné et l'import continue.
-        if (DetectionRalenti.estDejaRalenti(frequenceSource, frequenceAcquisitionLogHz)) {
-            throw new OriginalDejaRalentiException("Enregistrement déjà ralenti (en-tête "
-                    + frequenceSource
-                    + " Hz"
-                    + (frequenceAcquisitionLogHz != null
-                            ? " vs acquisition " + frequenceAcquisitionLogHz + " Hz du log"
-                            : ", sous le seuil d'un ultrason brut")
-                    + ") : ce n'est pas un enregistrement brut, il ne peut pas être importé tel quel : "
-                    + originalWav.getFileName());
-        }
-        if (frequenceSource % FACTEUR_EXPANSION != 0) {
-            throw new OriginalIllisibleException("Fréquence source "
-                    + frequenceSource
+        // C'est la **vraie fréquence d'acquisition** qui pilote toute l'arithmétique, PAS l'en-tête WAV :
+        // l'enregistreur PR écrit ses bruts déjà expansés ×10 (en-tête = Fe/10). Le log fait foi ; à défaut,
+        // on la déduit de l'en-tête (cf. FrequenceAcquisition). L'en-tête ne sert plus qu'au format brut
+        // (canaux, bits, octets par trame) et à la copie verbatim du PCM.
+        int frequenceAcquisition =
+                FrequenceAcquisition.reelle(source.frequenceEchantillonnageHz(), frequenceAcquisitionLogHz);
+        if (frequenceAcquisition % FACTEUR_EXPANSION != 0) {
+            throw new OriginalIllisibleException("Fréquence d'acquisition "
+                    + frequenceAcquisition
                     + " Hz non divisible par "
                     + FACTEUR_EXPANSION
                     + " : "
                     + originalWav.getFileName());
         }
-        int frequenceSortie = frequenceSource / FACTEUR_EXPANSION;
+        int frequenceSortie = frequenceAcquisition / FACTEUR_EXPANSION;
         int octetsParTrame = source.octetsParTrame();
-        // Découpage à 5 s **réelles** = au rythme SOURCE (et non de sortie). Chaque séquence porte donc les
-        // octets de 5 s de l'enregistrement d'origine, qui, rejoués à `frequenceSortie` (÷10), durent 50 s à
-        // l'écoute. C'est le découpage du pipeline Vigie-Chiro/Tadarida (segment _000 = 5 s réelles) : les
-        // temps du CSV Tadarida sont en secondes réelles DANS cette séquence de 5 s. (L'ancien calcul avec
-        // `frequenceSortie` donnait des séquences de 0,5 s réelles, désalignées des temps Tadarida.)
-        int octetsParSequence = DUREE_SEQUENCE_SECONDES * frequenceSource * octetsParTrame;
         byte[] pcm = source.donneesPcm();
+        long tramesTotal = (long) pcm.length / octetsParTrame;
+        double dureeAcquisitionSecondes = tramesTotal / (double) frequenceAcquisition;
+        // Découpage à 5 s **réelles** = au rythme d'ACQUISITION (ni de sortie, ni de l'en-tête). Chaque
+        // séquence porte les octets de 5 s de l'enregistrement d'origine, qui, rejoués à `frequenceSortie`
+        // (Fe/10), durent 50 s à l'écoute. C'est le découpage du pipeline Vigie-Chiro/Tadarida (segment
+        // _000 = 5 s réelles) : les temps du CSV Tadarida sont en secondes réelles DANS cette séquence de
+        // 5 s. (Découper au rythme de l'en-tête d'un brut PR déjà expansé donnerait des séquences 10× trop
+        // courtes, désalignées des temps Tadarida.)
+        int octetsParSequence = DUREE_SEQUENCE_SECONDES * frequenceAcquisition * octetsParTrame;
         String nomOriginal = nomR6;
         String sha256 = empreinteSource(originalWav);
 
@@ -152,7 +151,7 @@ public class TransformationAudio {
 
                 long tramesSequence = (long) longueur / octetsParTrame;
                 double dureeSortie = tramesSequence / (double) frequenceSortie;
-                double offsetSource = ((long) offset / octetsParTrame) / (double) frequenceSource;
+                double offsetSource = ((long) offset / octetsParTrame) / (double) frequenceAcquisition;
                 sequences.add(new SequenceProduite(
                         index,
                         nomSequence,
@@ -166,9 +165,9 @@ public class TransformationAudio {
             return new TransformationOriginal(
                     nomOriginal,
                     originalWav,
-                    frequenceSource,
+                    frequenceAcquisition,
                     frequenceSortie,
-                    source.dureeSecondes(),
+                    dureeAcquisitionSecondes,
                     sha256,
                     sequences);
         } catch (IOException e) {

@@ -92,9 +92,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     private Label labelNuitExistante;
 
     @FXML
-    private Label labelFichiersRalentis;
-
-    @FXML
     private ComboBox<Site> comboSites;
 
     @FXML
@@ -293,12 +290,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         labelNuitExistante.textProperty().bind(inspection.avertissementNuitExistanteProperty());
         var nuitExistante = inspection.avertissementNuitExistanteProperty().isNotEmpty();
         lierVisibiliteGeree(labelNuitExistante, nuitExistante);
-
-        // Garde-fou « enregistrements déjà ralentis » : même patron, visible seulement s'il y a un message.
-        labelFichiersRalentis.textProperty().bind(inspection.avertissementFichiersRalentisProperty());
-        var fichiersRalentis =
-                inspection.avertissementFichiersRalentisProperty().isNotEmpty();
-        lierVisibiliteGeree(labelFichiersRalentis, fichiersRalentis);
 
         // Table des nuits (#…) : construite par programme ([TableNuits]) et insérée dans sa zone, visible
         // seulement quand la carte contient plusieurs nuits.

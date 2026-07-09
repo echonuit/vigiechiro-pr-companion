@@ -131,10 +131,9 @@ final class DecoupageParallele {
                 TransformationOriginal t = transformation.transformer(
                         original, source.nomR6(), dossierSortieOriginal, prefixe, frequenceAcquisitionLogHz);
                 resultat = new ResultatDecoupage(original, t, null);
-            } catch (OriginalIllisibleException | OriginalDejaRalentiException rejet) {
-                // Résilience (#155) : une erreur de lecture/format SOURCE OU un enregistrement déjà ralenti
-                // (garde-fou double expansion) est consigné en rejet et l'import continue. Une erreur
-                // d'écriture workspace (UncheckedIOException) reste fatale et se propage.
+            } catch (OriginalIllisibleException rejet) {
+                // Résilience (#155) : une erreur de lecture/format SOURCE est consignée en rejet et l'import
+                // continue. Une erreur d'écriture workspace (UncheckedIOException) reste fatale et se propage.
                 resultat = new ResultatDecoupage(original, null, raison(rejet));
             }
             synchronized (verrouProgression) {
