@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -69,20 +70,10 @@ public class AudioViewModel {
     private final ObservableList<Taxon> taxons = FXCollections.observableArrayList();
     private final ObjectProperty<LigneObservationAudio> selection = new SimpleObjectProperty<>(this, "selection");
     /// Vrai dès qu'une **ligne** est sélectionnée (observation ou séquence non identifiée). Pilote le bouton
-    /// **Corriger** : on peut toujours affecter un taxon à la sélection (correction d'une observation, ou
-    /// validation manuelle d'une séquence non identifiée).
-    private final ReadOnlyBooleanWrapper selectionPresente =
-            new ReadOnlyBooleanWrapper(this, "selectionPresente", false);
-    /// Vrai quand la sélection porte une **observation** (id non nul, y compris une observation manuelle).
-    /// Pilote le bouton **Référence** (on ne peut archiver que ce qui est déjà une observation).
-    private final ReadOnlyBooleanWrapper selectionAvecObservation =
-            new ReadOnlyBooleanWrapper(this, "selectionAvecObservation", false);
-    /// Vrai quand la sélection porte une **proposition Tadarida** (observation avec `taxon_tadarida`).
-    /// Pilote le bouton **Valider** (« retenir la proposition Tadarida » n'a de sens que s'il y en a une).
-    private final ReadOnlyBooleanWrapper selectionAvecTadarida =
-            new ReadOnlyBooleanWrapper(this, "selectionAvecTadarida", false);
-    private final ReadOnlyBooleanWrapper selectionReference =
-            new ReadOnlyBooleanWrapper(this, "selectionReference", false);
+    /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),
+    /// extrait dans [EtatSelectionAudio] pour la cohésion (seuil PMD GodClass) : pilote l'activation et les
+    /// libellés des boutons de la barre d'actions.
+    private final EtatSelectionAudio etatSelection = new EtatSelectionAudio();
     private final ReadOnlyObjectWrapper<Path> cheminAudioCourant =
             new ReadOnlyObjectWrapper<>(this, "cheminAudioCourant");
 
@@ -117,6 +108,7 @@ public class AudioViewModel {
     public AudioViewModel(
             ServiceValidation service,
             ValidationManuelle validationManuelle,
+            MarquageDouteux marquageDouteux,
             RevueEnLot revueEnLot,
             ServiceBibliotheque bibliotheque) {
         this.service = Objects.requireNonNull(service, "service");
@@ -125,6 +117,7 @@ public class AudioViewModel {
         this.actions = new ActionsRevueAudio(
                 service,
                 Objects.requireNonNull(validationManuelle, "validationManuelle"),
+                Objects.requireNonNull(marquageDouteux, "marquageDouteux"),
                 Objects.requireNonNull(revueEnLot, "revueEnLot"),
                 selection::get,
                 modeRevue::get,
@@ -180,6 +173,14 @@ public class AudioViewModel {
     /// @return `true` si la bascule a été appliquée
     public boolean basculerReference() {
         return actions.basculerReference();
+    }
+
+    /// Bascule le drapeau **douteux** (#160) de l'observation **sélectionnée** puis recharge. Sans sélection
+    /// (ou sur une séquence sans observation), l'appel est sans effet utile.
+    ///
+    /// @return `true` si la bascule a été appliquée
+    public boolean basculerDouteux() {
+        return actions.basculerDouteux();
     }
 
     /// Enregistre (ou efface) le **commentaire** de l'observation d'identifiant `idObservation`, puis
@@ -306,11 +307,7 @@ public class AudioViewModel {
 
     private void majSelection(LigneObservationAudio courant) {
         boolean present = courant != null;
-        boolean avecObservation = present && courant.idObservation() != null;
-        selectionPresente.set(present);
-        selectionAvecObservation.set(avecObservation);
-        selectionAvecTadarida.set(avecObservation && courant.taxonTadarida() != null);
-        selectionReference.set(present && courant.reference());
+        etatSelection.maj(courant);
         detail.set(present ? FormatLigneAudio.detail(courant) : "");
         cheminAudioCourant.set(
                 present ? service.cheminAudio(courant.idSequence()).orElse(null) : null);
@@ -354,28 +351,11 @@ public class AudioViewModel {
         return selection;
     }
 
-    /// `true` dès qu'une **ligne** est sélectionnée (bouton Corriger : affecter un taxon, correction ou
-    /// validation manuelle).
-    public ReadOnlyBooleanProperty selectionPresenteProperty() {
-        return selectionPresente.getReadOnlyProperty();
-    }
-
-    /// `true` si la sélection porte une **observation** (bouton Référence) ; `false` pour une séquence non
-    /// identifiée pas encore validée.
-    public ReadOnlyBooleanProperty selectionAvecObservationProperty() {
-        return selectionAvecObservation.getReadOnlyProperty();
-    }
-
-    /// `true` si la sélection porte une **proposition Tadarida** (bouton Valider) ; `false` pour une
-    /// observation manuelle ou une séquence non identifiée (rien à « retenir »).
-    public ReadOnlyBooleanProperty selectionAvecTadaridaProperty() {
-        return selectionAvecTadarida.getReadOnlyProperty();
-    }
-
-    /// `true` si l'observation sélectionnée est déjà en référence (libellé du bouton bascule : marquer
-    /// vs retirer).
-    public ReadOnlyBooleanProperty selectionReferenceProperty() {
-        return selectionReference.getReadOnlyProperty();
+    /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),
+    /// où la barre d'actions branche l'activation et les libellés de ses boutons. Extrait dans
+    /// [EtatSelectionAudio] pour la cohésion (seuil PMD GodClass).
+    public EtatSelectionAudio etatSelection() {
+        return etatSelection;
     }
 
     /// Taxons connus en base, pour le sélecteur de correction (R16).

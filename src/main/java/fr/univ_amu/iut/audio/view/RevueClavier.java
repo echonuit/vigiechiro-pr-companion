@@ -11,6 +11,7 @@ import javafx.scene.input.KeyEvent;
 ///
 /// - `Entrée` : valider l'observation sélectionnée.
 /// - `R` : basculer l'archivage en référence.
+/// - `D` : basculer le drapeau **douteux** (« à repasser », #160) de l'observation sélectionnée.
 /// - `N` : aller à la **prochaine « À revoir »** (statut non touché), en **bouclant** en fin de liste.
 /// - `↑` / `↓` : navigation native du [TableView] (observation précédente / suivante), qui déclenche
 ///   l'écoute automatique via la sélection — rien à recâbler ici.
@@ -29,7 +30,8 @@ final class RevueClavier {
             TableView<LigneObservationAudio> table, AudioViewModel viewModel, ActionsSelectionAudio actions) {
         table.setOnKeyPressed(evenement -> traiter(evenement, table, viewModel, actions));
         table.setAccessibleHelp("Revue au clavier : Entrée valide la sélection, R bascule l'archivage en"
-                + " référence, N va à la prochaine « À revoir » ; les flèches haut et bas naviguent.");
+                + " référence, D bascule le drapeau douteux, N va à la prochaine « À revoir » ; les flèches"
+                + " haut et bas naviguent.");
     }
 
     private static void traiter(
@@ -44,6 +46,10 @@ final class RevueClavier {
             }
             case R -> {
                 actions.basculerReference();
+                evenement.consume();
+            }
+            case D -> {
+                actions.basculerDouteux();
                 evenement.consume();
             }
             case N -> {

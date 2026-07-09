@@ -145,7 +145,8 @@ class CliExportVuTest {
                 "vue",
                 false,
                 ModeValidation.MANUEL,
-                resultats.id()));
+                resultats.id(),
+                false));
         observationDao.insert(new Observation(
                 null,
                 sequence.id(),
@@ -160,7 +161,8 @@ class CliExportVuTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                resultats.id()));
+                resultats.id(),
+                false));
     }
 
     @AfterEach

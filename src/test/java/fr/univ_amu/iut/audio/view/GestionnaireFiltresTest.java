@@ -470,7 +470,8 @@ class GestionnaireFiltresTest {
                 fichier,
                 0.2,
                 0.4,
-                null);
+                null,
+                false);
     }
 
     /// Observation **corrigée** : Tadarida a proposé `taxonTadarida`, l'observateur a retenu le taxon
@@ -501,7 +502,8 @@ class GestionnaireFiltresTest {
                 fichier,
                 0.2,
                 0.4,
-                null);
+                null,
+                false);
     }
 
     /// Observation portant une **probabilité Tadarida** donnée (ou `null` = sans proba), pour le critère Proba.
@@ -529,7 +531,8 @@ class GestionnaireFiltresTest {
                 "f" + id + ".wav",
                 0.2,
                 0.4,
-                null);
+                null,
+                false);
     }
 
     /// Observation **archivée en référence** (`is_reference` = true), pour le critère Références.
@@ -557,7 +560,8 @@ class GestionnaireFiltresTest {
                 fichier,
                 0.2,
                 0.4,
-                null);
+                null,
+                false);
     }
 
     /// Observation portant un **instant de capture** donné (ou `null` = sans heure), pour le critère Heure.
@@ -585,6 +589,7 @@ class GestionnaireFiltresTest {
                 "f" + id + ".wav",
                 0.2,
                 0.4,
-                heure);
+                heure,
+                false);
     }
 }

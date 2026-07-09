@@ -9,6 +9,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
@@ -39,8 +40,9 @@ public class AudioModule extends AbstractModule {
     AudioViewModel fournirAudioViewModel(
             ServiceValidation validation,
             ValidationManuelle validationManuelle,
+            MarquageDouteux marquageDouteux,
             RevueEnLot revueEnLot,
             ServiceBibliotheque bibliotheque) {
-        return new AudioViewModel(validation, validationManuelle, revueEnLot, bibliotheque);
+        return new AudioViewModel(validation, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
     }
 }

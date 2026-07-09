@@ -40,6 +40,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.di.ValidationModule;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
@@ -151,9 +152,11 @@ public final class CaptureValidationTadarida {
                     AudioViewModel viewModel(
                             ServiceValidation validation,
                             ValidationManuelle validationManuelle,
+                            MarquageDouteux marquageDouteux,
                             RevueEnLot revueEnLot,
                             ServiceBibliotheque bibliotheque) {
-                        return new AudioViewModel(validation, validationManuelle, revueEnLot, bibliotheque);
+                        return new AudioViewModel(
+                                validation, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
                     }
 
                     // OuvrirSite requis par le fil d'Ariane du controller (SitesModule non inclus) : no-op.

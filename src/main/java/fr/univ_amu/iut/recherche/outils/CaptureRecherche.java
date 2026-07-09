@@ -226,7 +226,8 @@ public final class CaptureRecherche {
                     null,
                     false,
                     ModeValidation.MANUEL,
-                    idResultats));
+                    idResultats,
+                    false));
         }
     }
 }

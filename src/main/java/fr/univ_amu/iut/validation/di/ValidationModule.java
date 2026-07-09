@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -79,6 +80,12 @@ public class ValidationModule extends AbstractModule {
     @Singleton
     ValidationManuelle fournirValidationManuelle(ObservationDao observationDao, TaxonDao taxonDao) {
         return new ValidationManuelle(observationDao, taxonDao);
+    }
+
+    @Provides
+    @Singleton
+    MarquageDouteux fournirMarquageDouteux(ObservationDao observationDao) {
+        return new MarquageDouteux(observationDao);
     }
 
     @Provides

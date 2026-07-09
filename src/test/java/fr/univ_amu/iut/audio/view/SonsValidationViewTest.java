@@ -28,6 +28,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
@@ -112,7 +113,8 @@ class SonsValidationViewTest {
                 0.32,
                 // Heure de capture : 22:00 + n° de séquence (seq 10 → 22:10, seq 11 → 22:11), pour vérifier
                 // l'affichage de la colonne « Heure ».
-                LocalDateTime.of(2026, 4, 22, 22, 0).plusMinutes(seq));
+                LocalDateTime.of(2026, 4, 22, 22, 0).plusMinutes(seq),
+                false);
     }
 
     @Start
@@ -138,7 +140,12 @@ class SonsValidationViewTest {
                 new AbstractModule() {
                     @Provides
                     AudioViewModel viewModel() {
-                        return new AudioViewModel(service, mock(ValidationManuelle.class), revueEnLot, bibliotheque);
+                        return new AudioViewModel(
+                                service,
+                                mock(ValidationManuelle.class),
+                                mock(MarquageDouteux.class),
+                                revueEnLot,
+                                bibliotheque);
                     }
 
                     @Provides
@@ -161,6 +168,22 @@ class SonsValidationViewTest {
         controleur.ouvrirSur(new SourceObservations.References("u-1"));
         stage.setScene(new Scene(vue, 1000, 700));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#160 : le bouton « douteux » est actif sur une observation, libellé « Marquer douteux »")
+    void bouton_douteux_actif_sur_observation(FxRobot robot) {
+        Button btnDouteux = robot.lookup("#btnDouteux").queryAs(Button.class);
+        robot.interact(() -> robot.lookup("#tableObservations")
+                .queryAs(TableView.class)
+                .getSelectionModel()
+                .select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(btnDouteux.isDisabled())
+                .as("actif dès qu'une observation (idObservation non nul) est sélectionnée")
+                .isFalse();
+        assertThat(btnDouteux.getText()).isEqualTo("Marquer douteux");
     }
 
     @Test

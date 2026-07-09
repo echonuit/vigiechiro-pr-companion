@@ -80,6 +80,7 @@ class FiltresAudioTest {
                 "f" + id + ".wav",
                 0.2,
                 0.4,
-                null);
+                null,
+                false);
     }
 }

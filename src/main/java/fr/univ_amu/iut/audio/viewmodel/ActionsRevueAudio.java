@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -20,6 +21,7 @@ final class ActionsRevueAudio {
 
     private final ServiceValidation service;
     private final ValidationManuelle validationManuelle;
+    private final MarquageDouteux marquageDouteux;
     private final RevueEnLot revueEnLot;
     private final Supplier<LigneObservationAudio> selection;
     private final Supplier<ModeRevue> mode;
@@ -29,6 +31,7 @@ final class ActionsRevueAudio {
     ActionsRevueAudio(
             ServiceValidation service,
             ValidationManuelle validationManuelle,
+            MarquageDouteux marquageDouteux,
             RevueEnLot revueEnLot,
             Supplier<LigneObservationAudio> selection,
             Supplier<ModeRevue> mode,
@@ -36,6 +39,7 @@ final class ActionsRevueAudio {
             MessagesAudio messages) {
         this.service = service;
         this.validationManuelle = validationManuelle;
+        this.marquageDouteux = marquageDouteux;
         this.revueEnLot = revueEnLot;
         this.selection = selection;
         this.mode = mode;
@@ -73,6 +77,11 @@ final class ActionsRevueAudio {
     boolean basculerReference() {
         return surSelection(
                 courant -> appliquer(() -> service.marquerReference(courant.idObservation(), !courant.reference())));
+    }
+
+    boolean basculerDouteux() {
+        return surSelection(
+                courant -> appliquer(() -> marquageDouteux.marquer(courant.idObservation(), !courant.douteux())));
     }
 
     boolean commenter(long idObservation, String texte) {

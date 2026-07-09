@@ -50,7 +50,8 @@ class FormatLigneAudioTest {
                 "PaRec_20260620_000.wav",
                 0.20,
                 0.32,
-                null);
+                null,
+                false);
     }
 
     @Test

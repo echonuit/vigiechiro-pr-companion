@@ -52,6 +52,12 @@ final class ActionsSelectionAudio {
         viewModel.basculerReferenceLot(ids(selection), marquer);
     }
 
+    /// Bascule le drapeau **douteux** (#160) de la ligne sélectionnée. (Le marquage **en lot** sur une
+    /// sélection multiple, pendant de [#basculerReference()], viendra avec le filtre dédié.)
+    void basculerDouteux() {
+        viewModel.basculerDouteux();
+    }
+
     private List<LigneObservationAudio> selection() {
         return table.getSelectionModel().getSelectedItems();
     }

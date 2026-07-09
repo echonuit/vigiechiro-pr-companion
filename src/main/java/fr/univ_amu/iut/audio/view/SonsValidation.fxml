@@ -123,6 +123,7 @@
         <ComboBox fx:id="choixTaxon" promptText="Choisir un taxon…"/>
         <Button fx:id="btnCorriger" text="✎ Corriger" onAction="#corriger"/>
         <Region HBox.hgrow="ALWAYS"/>
+        <Button fx:id="btnDouteux" onAction="#basculerDouteux"/>
         <Button fx:id="btnReference" onAction="#basculerReference"/>
       </HBox>
     </VBox>

@@ -48,6 +48,8 @@ import java.time.LocalDateTime;
 ///     porte l'instant complet (et non l'heure seule) pour un **tri chronologique correct à cheval sur
 ///     minuit** (00:15 est *après* 22:00 dans une même nuit) ; le filtre par plage horaire raisonne, lui,
 ///     sur l'heure du jour (`heureCapture.toLocalTime()`)
+/// @param douteux `true` si l'observation est marquée « douteuse / à repasser » (`is_doubtful`, #160) ; par
+///     souci de compatibilité, ce drapeau est le **dernier** composant du record
 public record LigneObservationAudio(
         Long idObservation,
         long idSequence,
@@ -71,7 +73,8 @@ public record LigneObservationAudio(
         String nomFichier,
         Double debutS,
         Double finS,
-        LocalDateTime heureCapture) {
+        LocalDateTime heureCapture,
+        boolean douteux) {
 
     /// Ces deux projections désignent-elles la **même ligne** ? Une observation se réidentifie par son
     /// `idObservation` (unique, même si une séquence porte plusieurs cris) ; une **séquence non identifiée**

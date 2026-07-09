@@ -56,6 +56,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String COL_POINT_CODE = "point_code";
     private static final String COL_OBSERVER = "observer";
     private static final String COL_IS_REFERENCE = "is_reference";
+    private static final String COL_IS_DOUBTFUL = "is_doubtful";
 
     /// Jointures communes `listening_sequence (ls) → recording_session → passage → point → site` : le
     /// **contexte d'un relevé**, partagé par toutes les projections transverses (observations, espèces,
@@ -68,13 +69,13 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     private static final String SQL_INSERT = "INSERT INTO observation"
             + " (sequence_id, start_time_s, end_time_s, median_freq_khz, taxon_tadarida,"
             + " prob_tadarida, taxon_other_tadarida, taxon_observer, prob_observer, user_comment,"
-            + " is_reference, validation_mode, results_id)"
-            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + " is_reference, validation_mode, results_id, is_doubtful)"
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String SQL_UPDATE = "UPDATE observation SET sequence_id = ?, start_time_s = ?,"
             + " end_time_s = ?, median_freq_khz = ?, taxon_tadarida = ?, prob_tadarida = ?,"
             + " taxon_other_tadarida = ?, taxon_observer = ?, prob_observer = ?, user_comment = ?,"
-            + " is_reference = ?, validation_mode = ?, results_id = ? WHERE id = ?";
+            + " is_reference = ?, validation_mode = ?, results_id = ?, is_doubtful = ? WHERE id = ?";
 
     private static final RowMapper<Observation> MAPPER = rs -> new Observation(
             rs.getLong("id"),
@@ -90,7 +91,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("user_comment"),
             rs.getInt(COL_IS_REFERENCE) != 0,
             ModeValidation.parLibelle(rs.getString("validation_mode")),
-            longNullable(rs, "results_id")); // nullable : une observation manuelle n'a pas de jeu Tadarida
+            longNullable(rs, "results_id"), // nullable : une observation manuelle n'a pas de jeu Tadarida
+            rs.getInt(COL_IS_DOUBTFUL) != 0);
 
     public ObservationDao(SourceDeDonnees source) {
         super(source);
@@ -284,7 +286,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " ms.square_number AS carre, ms.friendly_name AS nom_site, lp.code AS point_code,"
             + " ms.user_id AS user_id, o.taxon_tadarida AS tadarida, o.prob_tadarida AS prob_tadarida,"
             + " o.taxon_observer AS observer, o.prob_observer AS prob_observer,"
-            + " o.is_reference AS is_reference, o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
+            + " o.is_reference AS is_reference, o.is_doubtful AS is_doubtful,"
+            + " o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
             + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida,"
             + " g.name AS groupe,"
             + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at,"
@@ -328,7 +331,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("nom_fichier"),
             (Double) rs.getObject("debut_s"),
             (Double) rs.getObject("fin_s"),
-            heureCaptureDe(rs.getString("recorded_at")));
+            heureCaptureDe(rs.getString("recorded_at")),
+            rs.getInt(COL_IS_DOUBTFUL) != 0);
 
     /// Source **Passage** : toutes les observations d'un passage (pseudo-taxons compris : on revoit tout).
     public List<LigneObservationAudio> lignesAudioDuPassage(Long idPassage) {
@@ -380,7 +384,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
     /// (`results_id IS NOT NULL`). Ordre chronologique (horodatage puis nom de fichier).
     private static final String SQL_LIGNES_NON_IDENTIFIEES = "SELECT ls.id AS seq, om.id AS id,"
             + " om.taxon_observer AS observer, om.prob_observer AS prob_observer,"
-            + " om.user_comment AS commentaire, om.is_reference AS is_reference,"
+            + " om.user_comment AS commentaire, om.is_reference AS is_reference, om.is_doubtful AS is_doubtful,"
             + " CASE WHEN om.taxon_observer IS NULL THEN 'NON_TOUCHEE' ELSE 'CORRIGEE' END AS statut,"
             + " te.vernacular_name_fr AS nom_espece,"
             + " p.id AS passage_id, p.passage_number AS num_passage, p.recording_date AS date_enr,"
@@ -421,7 +425,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getString("nom_fichier"),
             null, // debutS
             null, // finS
-            heureCaptureDe(rs.getString("recorded_at")));
+            heureCaptureDe(rs.getString("recorded_at")),
+            rs.getInt(COL_IS_DOUBTFUL) != 0); // om NULL (pas d'obs manuelle) → getInt = 0 → pas douteux
 
     /// Source **Non identifiés** : les séquences d'un passage **sans observation Tadarida** (à écouter et
     /// valider à la main). L'écoute ne dépend pas d'une observation, seulement de la séquence ; une
@@ -459,7 +464,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
                 observation.commentaire(),
                 observation.reference(),
                 observation.modeValidation(),
-                observation.idResultats());
+                observation.idResultats(),
+                observation.douteux());
     }
 
     /// Variante transactionnelle : insère le lot sur la `connexion` fournie, sans gérer le
@@ -550,7 +556,8 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             observation.commentaire(),
             observation.reference() ? 1 : 0,
             observation.modeValidation().libelle(),
-            observation.idResultats()
+            observation.idResultats(),
+            observation.douteux() ? 1 : 0
         };
     }
 

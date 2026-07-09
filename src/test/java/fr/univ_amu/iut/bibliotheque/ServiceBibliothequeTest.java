@@ -212,7 +212,8 @@ class ServiceBibliothequeTest {
                 commentaire,
                 true,
                 ModeValidation.MANUEL,
-                idResultats);
+                idResultats,
+                false);
     }
 
     private Observation nonReference(long idSequence, String tadarida) {
@@ -230,7 +231,8 @@ class ServiceBibliothequeTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
     }
 
     /// Supprime une séquence sans déclencher la cascade vers l'observation (désactive temporairement

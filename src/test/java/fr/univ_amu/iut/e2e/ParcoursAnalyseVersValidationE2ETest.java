@@ -151,7 +151,8 @@ class ParcoursAnalyseVersValidationE2ETest {
                 null,
                 false,
                 ModeValidation.MANUEL,
-                idResultats);
+                idResultats,
+                false);
         return injector.getInstance(ObservationDao.class).insert(validee).id();
     }
 

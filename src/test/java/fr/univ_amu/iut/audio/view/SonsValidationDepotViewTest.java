@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -65,7 +66,11 @@ class SonsValidationDepotViewTest {
                     @Provides
                     AudioViewModel viewModel() {
                         return new AudioViewModel(
-                                service, mock(ValidationManuelle.class), mock(RevueEnLot.class), bibliotheque);
+                                service,
+                                mock(ValidationManuelle.class),
+                                mock(MarquageDouteux.class),
+                                mock(RevueEnLot.class),
+                                bibliotheque);
                     }
 
                     @Provides

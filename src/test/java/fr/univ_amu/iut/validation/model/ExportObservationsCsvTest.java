@@ -139,6 +139,7 @@ class ExportObservationsCsvTest {
                 "seqA_000.wav",
                 debutS,
                 finS,
-                null);
+                null,
+                false);
     }
 }

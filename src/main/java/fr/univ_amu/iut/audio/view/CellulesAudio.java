@@ -21,11 +21,14 @@ final class CellulesAudio {
     /// Icônes FontAwesome 5 (Ikonli) des indicateurs, réutilisées pour l'en-tête et la cellule.
     static final String ICONE_REFERENCE = "fas-star";
     static final String ICONE_COMMENTAIRE = "fas-comment-dots";
+    /// Icône du drapeau **douteux** (#160) : point d'interrogation, pour le bouton de bascule de la barre.
+    static final String ICONE_DOUTEUX = "fas-question-circle";
 
     /// Classes CSS colorant les icônes (`-fx-icon-color` dans `sons-validation.css`) : étoile dorée,
-    /// commentaire bleu.
+    /// commentaire bleu, doute orange.
     static final String STYLE_REFERENCE = "icone-reference";
     static final String STYLE_COMMENTAIRE = "icone-commentaire";
+    static final String STYLE_DOUTEUX = "icone-douteux";
 
     private CellulesAudio() {}
 

@@ -38,6 +38,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.di.ValidationModule;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
@@ -116,9 +117,11 @@ final class GraineSonsValidation {
                     AudioViewModel viewModel(
                             ServiceValidation validation,
                             ValidationManuelle validationManuelle,
+                            MarquageDouteux marquageDouteux,
                             RevueEnLot revueEnLot,
                             ServiceBibliotheque bibliotheque) {
-                        return new AudioViewModel(validation, validationManuelle, revueEnLot, bibliotheque);
+                        return new AudioViewModel(
+                                validation, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
                     }
 
                     // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est
@@ -287,7 +290,8 @@ final class GraineSonsValidation {
                 commentaire,
                 true,
                 ModeValidation.MANUEL,
-                idResultats);
+                idResultats,
+                false);
     }
 
     /// Insère en SQL brut un site et son point d'écoute (cibles de clé étrangère du passage), sans les DAO

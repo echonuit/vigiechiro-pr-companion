@@ -358,7 +358,8 @@ public class ServiceValidation implements CompteurValidations {
                 ancienne.commentaire(),
                 ancienne.reference(),
                 ancienne.modeValidation(),
-                neuve.idResultats());
+                neuve.idResultats(),
+                ancienne.douteux());
     }
 
     /// Codes Tadarida hors référentiel parmi `lignes` : taxon principal (stocké tel quel → FK obligatoire)
@@ -400,7 +401,8 @@ public class ServiceValidation implements CompteurValidations {
                     null,
                     false,
                     ligne.modeValidation(),
-                    idResultats));
+                    idResultats,
+                    false));
         }
         return aInserer;
     }

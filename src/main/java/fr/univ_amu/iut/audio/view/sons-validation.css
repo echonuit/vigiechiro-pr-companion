@@ -111,6 +111,12 @@
   -fx-icon-size: 14px;
 }
 
+/* Drapeau « douteux » (#160) : point d'interrogation orange (attention, à repasser). */
+.icone-douteux {
+  -fx-icon-color: #e67e22;
+  -fx-icon-size: 15px;
+}
+
 /* Éditeur de commentaire en popup (#477) : petite carte ancrée à la case commentaire, ouverte au clic. */
 .popup-commentaire {
   -fx-background-color: white;

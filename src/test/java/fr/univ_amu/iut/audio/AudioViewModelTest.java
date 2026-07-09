@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
+import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
@@ -48,6 +49,9 @@ class AudioViewModelTest {
     ValidationManuelle validationManuelle;
 
     @Mock
+    MarquageDouteux marquageDouteux;
+
+    @Mock
     RevueEnLot revueEnLot;
 
     @Mock
@@ -57,7 +61,7 @@ class AudioViewModelTest {
             new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Mon site"));
 
     private AudioViewModel vm() {
-        return new AudioViewModel(service, validationManuelle, revueEnLot, bibliotheque);
+        return new AudioViewModel(service, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
     }
 
     private static LigneObservationAudio ligne(
@@ -85,7 +89,8 @@ class AudioViewModelTest {
                 "PaRec_" + idSeq + "_000.wav",
                 0.20,
                 0.32,
-                null);
+                null,
+                false);
     }
 
     @Nested
@@ -127,7 +132,7 @@ class AudioViewModelTest {
             vm.ouvrirSur(source());
             vm.selectionProperty().set(l);
 
-            assertThat(vm.selectionAvecObservationProperty().get()).isTrue();
+            assertThat(vm.etatSelection().avecObservationProperty().get()).isTrue();
             assertThat(vm.cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/transformes/a.wav"));
             assertThat(vm.detailProperty().get()).contains("Tadarida : Pippip").contains("À revoir");
         }
@@ -387,7 +392,7 @@ class AudioViewModelTest {
             assertThat(vm.basculerReference()).isTrue();
             verify(service).marquerReference(1L, false);
             assertThat(vm.selectionProperty().get()).isNull();
-            assertThat(vm.selectionAvecObservationProperty().get()).isFalse();
+            assertThat(vm.etatSelection().avecObservationProperty().get()).isFalse();
             assertThat(vm.cheminAudioCourantProperty().get()).isNull();
             assertThat(vm.detailProperty().get()).isEmpty();
         }

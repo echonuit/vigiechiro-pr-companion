@@ -71,6 +71,7 @@ class ResolveurSourceAudioTest {
                 "f" + idSequence + ".wav",
                 0.2,
                 0.4,
-                null);
+                null,
+                false);
     }
 }

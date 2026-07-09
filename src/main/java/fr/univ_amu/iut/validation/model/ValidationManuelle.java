@@ -57,7 +57,8 @@ public class ValidationManuelle {
                 null, // commentaire
                 false, // reference
                 ModeValidation.MANUEL,
-                null); // idResultats : aucun jeu Tadarida
+                null, // idResultats : aucun jeu Tadarida
+                false); // douteux : une séquence tout juste validée n'est pas marquée douteuse
         return observationDao.insert(manuelle);
     }
 }

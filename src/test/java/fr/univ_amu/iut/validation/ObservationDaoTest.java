@@ -103,7 +103,8 @@ class ObservationDaoTest {
                 "signal net",
                 true,
                 ModeValidation.MANUEL,
-                idResultats);
+                idResultats,
+                false);
     }
 
     @Test
@@ -126,6 +127,30 @@ class ObservationDaoTest {
     }
 
     @Test
+    @DisplayName("#160 : le drapeau douteux est persisté, relu et projeté dans la vue audio (is_doubtful)")
+    void douteux_persiste_relu_et_projete() {
+        Observation inseree = dao.insert(observationComplete()); // douteux = false par défaut
+        assertThat(dao.findById(inseree.id()).orElseThrow().douteux())
+                .as("non douteux à l'insertion")
+                .isFalse();
+
+        dao.update(inseree.avecDouteux(true));
+        assertThat(dao.findById(inseree.id()).orElseThrow().douteux())
+                .as("marqué douteux → persisté")
+                .isTrue();
+        // La projection audio (LigneObservationAudio) reflète aussi le drapeau (colonne is_doubtful).
+        assertThat(dao.lignesAudioDuPassage(idPassage))
+                .filteredOn(ligne -> inseree.id().equals(ligne.idObservation()))
+                .singleElement()
+                .satisfies(ligne -> assertThat(ligne.douteux()).isTrue());
+
+        dao.update(inseree.avecDouteux(false));
+        assertThat(dao.findById(inseree.id()).orElseThrow().douteux())
+                .as("drapeau retiré → persisté")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("Les taxons optionnels et les métriques absentes sont persistés comme null")
     void taxons_optionnels_et_metriques_absentes_sont_nulles() {
         Observation minimale = new Observation(
@@ -142,7 +167,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
 
         Observation relu = dao.findById(dao.insert(minimale).id()).orElseThrow();
 
@@ -175,7 +201,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
 
         assertThatThrownBy(() -> dao.insert(orphelin))
                 .as("FK taxon_tadarida doit refuser un code absent")
@@ -199,7 +226,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
 
         assertThatThrownBy(() -> dao.insert(orphelin))
                 .as("FK taxon_other_tadarida doit refuser un code absent")
@@ -223,7 +251,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
 
         assertThatThrownBy(() -> dao.insert(orphelin))
                 .as("FK taxon_observer doit refuser un code absent")
@@ -247,7 +276,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
 
         assertThatThrownBy(() -> dao.insert(orphelin))
                 .as("FK sequence_id doit refuser une séquence absente")
@@ -515,7 +545,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.MANUEL,
-                null);
+                null,
+                false);
     }
 
     @Test
@@ -573,7 +604,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                second[2])); // passage 2
+                second[2],
+                false)); // passage 2
 
         List<LigneObservationAudio> lignes = dao.lignesAudioDesPassages(List.of(idPassage, second[0]));
 
@@ -654,7 +686,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                second[2]));
+                second[2],
+                false));
 
         List<LigneObservationAudio> lignes = dao.lignesAudioDesPassages(List.of(idPassage, second[0]));
 
@@ -690,7 +723,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.MANUEL,
-                idResultats2));
+                idResultats2,
+                false));
 
         List<ObservationEspece> detail = dao.observationsDeLEspece("u-1", "Pippip", null);
 
@@ -765,7 +799,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.MANUEL,
-                idResultats);
+                idResultats,
+                false);
     }
 
     private Observation observation(String codeTadarida, String codeObservateur) {
@@ -783,7 +818,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
     }
 
     private Observation avecTaxon(String codeTadarida) {
@@ -801,7 +837,8 @@ class ObservationDaoTest {
                 null,
                 false,
                 ModeValidation.NON_VALIDE,
-                idResultats);
+                idResultats,
+                false);
     }
 
     private static long insererCle(Connection cx, String sql, Object... params) throws SQLException {

@@ -206,6 +206,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private Button btnReference;
 
     @FXML
+    private Button btnDouteux;
+
+    @FXML
     private HBox bandeauRetour;
 
     @FXML
@@ -362,26 +365,38 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Valider = retenir la proposition Tadarida : seulement s'il y en a une.
         btnValider
                 .disableProperty()
-                .bind(viewModel.selectionAvecTadaridaProperty().not());
+                .bind(viewModel.etatSelection().avecTadaridaProperty().not());
         // Corriger = affecter un taxon : sur toute ligne sélectionnée (correction d'une observation OU
         // validation manuelle d'une séquence non identifiée), dès qu'un taxon est choisi.
         btnCorriger
                 .disableProperty()
                 .bind(viewModel
-                        .selectionPresenteProperty()
+                        .etatSelection()
+                        .presenteProperty()
                         .not()
                         .or(choixTaxon.valueProperty().isNull()));
         // Référence = archiver : seulement ce qui est déjà une observation.
         btnReference
                 .disableProperty()
-                .bind(viewModel.selectionAvecObservationProperty().not());
+                .bind(viewModel.etatSelection().avecObservationProperty().not());
         // Libellé + icône (étoile dorée) de la bascule selon l'état de l'observation sélectionnée.
         btnReference.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_REFERENCE, CellulesAudio.STYLE_REFERENCE));
         btnReference
                 .textProperty()
-                .bind(Bindings.when(viewModel.selectionReferenceProperty())
+                .bind(Bindings.when(viewModel.etatSelection().referenceProperty())
                         .then("Retirer la référence")
                         .otherwise("Marquer référence"));
+        // Douteux (#160) = « à repasser » : seulement sur une observation (idObservation non nul), comme la
+        // référence. Libellé + icône selon l'état de l'observation sélectionnée.
+        btnDouteux
+                .disableProperty()
+                .bind(viewModel.etatSelection().avecObservationProperty().not());
+        btnDouteux.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_DOUTEUX, CellulesAudio.STYLE_DOUTEUX));
+        btnDouteux
+                .textProperty()
+                .bind(Bindings.when(viewModel.etatSelection().douteuxProperty())
+                        .then("Retirer le doute")
+                        .otherwise("Marquer douteux"));
 
         // Workflow Tadarida (source ParPassage) : toujours actif ; « Importer » tant qu'aucun résultat,
         // « Réimporter » (remplacement après confirmation) une fois un jeu chargé.
@@ -554,6 +569,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private void basculerReference() {
         actionsSelection.basculerReference();
+    }
+
+    @FXML
+    private void basculerDouteux() {
+        actionsSelection.basculerDouteux();
     }
 
     /// « 🗺 Voir sur la carte » (#476) : rouvre l'analyse « Espèces & observations » directement sur la

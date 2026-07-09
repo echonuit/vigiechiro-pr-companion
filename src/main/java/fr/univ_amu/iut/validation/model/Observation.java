@@ -31,6 +31,8 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 /// @param reference marquée comme référence dans la bibliothèque de sons (défaut `false`)
 /// @param modeValidation mode de validation (R24 : manuel / auto / non validé)
 /// @param idResultats résultats d'identification agrégateurs (FK → `identification_results.id`)
+/// @param douteux marquée « douteuse / à repasser » par l'observateur (#160, défaut `false`) ; ajouté en
+///     **dernier** composant pour préserver l'arité historique du record
 public record Observation(
         Long id,
         Long idSequence,
@@ -45,10 +47,11 @@ public record Observation(
         String commentaire,
         boolean reference,
         ModeValidation modeValidation,
-        Long idResultats) {
+        Long idResultats,
+        boolean douteux) {
 
     /// Copie de cette observation avec un **commentaire** différent (tous les autres champs inchangés) :
-    /// évite de réénumérer les 14 composants du record à chaque mise à jour mono-champ côté service. Le
+    /// évite de réénumérer les composants du record à chaque mise à jour mono-champ côté service. Le
     /// texte est **normalisé** : un commentaire vide ou uniquement composé d'espaces est ramené à `null`
     /// (« pas de commentaire »), sinon il est enregistré sans espaces de bordure.
     public Observation avecCommentaire(String texte) {
@@ -67,7 +70,8 @@ public record Observation(
                 commentaire,
                 reference,
                 modeValidation,
-                idResultats);
+                idResultats,
+                douteux);
     }
 
     /// Copie de cette observation avec l'archivage en **référence** modifié (tous les autres champs
@@ -87,7 +91,29 @@ public record Observation(
                 commentaire,
                 reference,
                 modeValidation,
-                idResultats);
+                idResultats,
+                douteux);
+    }
+
+    /// Copie de cette observation avec le drapeau **douteux** (#160) modifié (tous les autres champs
+    /// inchangés). Pendant de [#avecReference(boolean)] : un seul champ modifié sur le record immuable.
+    public Observation avecDouteux(boolean douteux) {
+        return new Observation(
+                id,
+                idSequence,
+                debutS,
+                finS,
+                frequenceMedianeKHz,
+                taxonTadarida,
+                probTadarida,
+                taxonAutreTadarida,
+                taxonObservateur,
+                probObservateur,
+                commentaire,
+                reference,
+                modeValidation,
+                idResultats,
+                douteux);
     }
 
     /// Copie de cette observation avec le **triplet observateur** (taxon retenu, probabilité, mode de
@@ -108,6 +134,7 @@ public record Observation(
                 commentaire,
                 reference,
                 mode,
-                idResultats);
+                idResultats,
+                douteux);
     }
 }
