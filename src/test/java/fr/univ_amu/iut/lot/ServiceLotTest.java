@@ -220,6 +220,66 @@ class ServiceLotTest {
     }
 
     @Test
+    @DisplayName("#… : sur un passage déposé, supprimerArchivesDepot efface les .zip et renvoie l'espace libéré")
+    void supprimer_archives_depot_libere_l_espace() throws IOException {
+        Passage passage = creerPassage(Verdict.OK);
+        creerSessionCoherente(passage.id());
+        service.preparerLot(passage.id());
+        Path transformes = Files.createDirectories(
+                dossier.resolve(PREFIXE.nomDossierSession()).resolve("transformes"));
+        for (int i = 0; i < 2; i++) {
+            Files.write(transformes.resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, i)), new byte[1024]);
+        }
+        List<ArchiveDepot> archives = service.genererArchivesDepot(passage.id());
+        service.marquerDepose(passage.id()); // → Déposé (préalable à la suppression)
+        Path depot = dossier.resolve(PREFIXE.nomDossierSession()).resolve("depot");
+        assertThat(archives.get(0).chemin()).exists();
+
+        long liberes = service.supprimerArchivesDepot(passage.id());
+
+        assertThat(liberes).isPositive();
+        assertThat(archives.get(0).chemin()).doesNotExist();
+        try (var flux = Files.list(depot)) {
+            assertThat(flux.filter(p -> p.toString().endsWith(".zip"))).isEmpty();
+        }
+    }
+
+    @Test
+    @DisplayName("#… : supprimerArchivesDepot refuse un passage non encore déposé")
+    void supprimer_archives_refuse_si_non_depose() {
+        Passage passage = creerPassage(Verdict.OK);
+        creerSessionCoherente(passage.id());
+        service.preparerLot(passage.id()); // Prêt à déposer, pas encore déposé
+
+        assertThatThrownBy(() -> service.supprimerArchivesDepot(passage.id()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("déposé");
+    }
+
+    @Test
+    @DisplayName("#… : archivesDepot liste les .zip présents sur disque (vide si aucun)")
+    void archives_depot_liste_les_zip_du_disque() throws IOException {
+        Passage passage = creerPassage(Verdict.OK);
+        creerSessionCoherente(passage.id());
+        String cheminDossier = dossier.resolve(PREFIXE.nomDossierSession()).toString();
+        assertThat(service.archivesDepot(cheminDossier)).isEmpty();
+
+        service.preparerLot(passage.id());
+        Path transformes = Files.createDirectories(
+                dossier.resolve(PREFIXE.nomDossierSession()).resolve("transformes"));
+        for (int i = 0; i < 2; i++) {
+            Files.write(transformes.resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, i)), new byte[1024]);
+        }
+        service.genererArchivesDepot(passage.id());
+
+        assertThat(service.archivesDepot(cheminDossier)).singleElement().satisfies(a -> {
+            assertThat(a.chemin().getFileName().toString()).endsWith(".zip");
+            assertThat(a.nombreFichiers()).isEqualTo(2);
+            assertThat(a.tailleOctets()).isPositive();
+        });
+    }
+
+    @Test
     @DisplayName("R14 : preparerLot refuse un passage « À jeter » (RegleMetierException)")
     void preparer_lot_a_jeter_refuse() {
         Passage passage = creerPassage(Verdict.A_JETER);

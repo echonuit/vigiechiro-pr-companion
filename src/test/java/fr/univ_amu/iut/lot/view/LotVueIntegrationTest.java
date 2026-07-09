@@ -244,6 +244,31 @@ class LotVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#… : « Supprimer les archives » est désactivé tant que le passage n'est pas déposé")
+    void supprimer_archives_desactive_avant_depot(FxRobot robot) {
+        // État initial de start() = Vérifié → suppression indisponible.
+        Button supprimer = robot.lookup("#btnSupprimerArchives").queryAs(Button.class);
+
+        assertThat(supprimer.isDisabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#… : en Déposé avec archives, « Supprimer les archives » est actif et déclenche la suppression")
+    void supprimer_archives_actif_en_depose_et_declenche(FxRobot robot) {
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2)));
+        // Confirmateur injecté (pas de dialogue natif bloquant sous TestFX).
+        robot.interact(() -> controleur.definirConfirmateur(message -> true));
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOSE, "/ws/session-42", 2, 8192L, List.of(), "2026-06-18"));
+        Button supprimer = robot.lookup("#btnSupprimerArchives").queryAs(Button.class);
+        assertThat(supprimer.isDisabled()).isFalse();
+
+        robot.interact(supprimer::fire);
+
+        verify(service).supprimerArchivesDepot(ID_PASSAGE);
+    }
+
+    @Test
     @DisplayName("#251 : stepper ordonné à 4 étapes, l'étape courante suit le statut du dépôt")
     void stepper_ordonne_quatre_etapes_etape_courante_selon_statut(FxRobot robot) {
         HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);

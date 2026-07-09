@@ -45,6 +45,11 @@ public class LotViewModel {
     private final ReadOnlyBooleanWrapper peutGenererArchives =
             new ReadOnlyBooleanWrapper(this, "peutGenererArchives", false);
 
+    /// Suppression des archives possible (#…) : vraie une fois le passage **déposé** et s'il reste des
+    /// archives ZIP sur disque (nettoyage post-dépôt pour libérer l'espace, archives régénérables).
+    private final ReadOnlyBooleanWrapper peutSupprimerArchives =
+            new ReadOnlyBooleanWrapper(this, "peutSupprimerArchives", false);
+
     /// Génération des archives en cours (#251) : posée pendant le travail hors fil JavaFX pour afficher
     /// un état « en cours » et désactiver le bouton (l'opération peut être longue sur une grosse nuit).
     private final ReadOnlyBooleanWrapper generationEnCours =
@@ -93,6 +98,27 @@ public class LotViewModel {
         return appliquerAction(() -> service.marquerDepose(idPassage));
     }
 
+    /// Supprime les **archives ZIP de dépôt** (`depot/*.zip`) une fois le passage déposé, pour libérer
+    /// l'espace disque (elles sont sur Vigie-Chiro et régénérables). Recharge l'état ensuite : le bouton se
+    /// désactive de lui-même (plus d'archives sur disque). Annonce l'espace libéré.
+    ///
+    /// @return `true` si la suppression a réussi
+    public boolean supprimerArchives() {
+        if (idPassage == null) {
+            return false;
+        }
+        try {
+            long liberes = service.supprimerArchivesDepot(idPassage);
+            archives.clear();
+            appliquer(service.consulterLot(idPassage));
+            message.set("Archives de dépôt supprimées (" + Formats.octetsLisibles(liberes) + " libérés).");
+            return true;
+        } catch (RuntimeException echec) {
+            message.set(echec.getMessage());
+            return false;
+        }
+    }
+
     /// Génère les **archives ZIP de dépôt** (#110) de façon **synchrone** (tests + CLI) : enchaîne
     /// [#marquerGenerationEnCours()], [#calculerArchivesDepot(Consumer)] et [#appliquerGeneration] /
     /// [#echecGeneration]. La progression n'est pas suivie ici (callback inerte) ; la vue préfère le
@@ -136,7 +162,7 @@ public class LotViewModel {
     /// Applique le résultat d'une génération réussie (#251) : **à appeler sur le fil JavaFX**. Publie la
     /// liste, fait avancer le stepper de ② « Générer » vers ③ « Téléverser », et lève l'état « en cours ».
     public void appliquerGeneration(List<ArchiveDepot> produites) {
-        archives.setAll(produites.stream().map(LotViewModel::archiveLisible).toList());
+        archives.setAll(produites.stream().map(FormatsLot::archiveLisible).toList());
         if (statutCourant != null) {
             majEtapes(statutCourant);
         }
@@ -157,14 +183,6 @@ public class LotViewModel {
     /// libellé « Compression X/N » avec estimation du temps restant, à lier dans la vue.
     public ProgressionLot progression() {
         return progression;
-    }
-
-    private static String archiveLisible(ArchiveDepot archive) {
-        return archive.chemin().getFileName()
-                + " · "
-                + archive.nombreFichiers()
-                + " fichiers · "
-                + Formats.octetsLisibles(archive.tailleOctets());
     }
 
     private boolean appliquerAction(Runnable action) {
@@ -189,8 +207,14 @@ public class LotViewModel {
         // Cible réelle du téléversement (#251) : le sous-dossier « depot/ » de la session, où vivent les
         // archives ZIP, et non le dossier de session entier.
         cheminDepot.set(dossier.isEmpty() ? "" : dossier + "/depot");
-        recap.set(recapLisible(etat));
+        recap.set(FormatsLot.recapLisible(etat));
         controles.setAll(etat.controles());
+        // Réhydrate la liste des archives depuis le DISQUE (#…) : à la réouverture d'un passage déjà généré,
+        // on réaffiche les archives présentes dans depot/ (et on réactive « Ouvrir le dossier » / « Supprimer »),
+        // là où l'ancienne liste, seulement peuplée en session, restait vide après navigation.
+        archives.setAll(service.archivesDepot(etat.cheminDossier()).stream()
+                .map(FormatsLot::archiveLisible)
+                .toList());
         peutPreparer.set(etat.statut() == StatutWorkflow.VERIFIE && !etat.aDesEchecs());
         peutDeposer.set(etat.statut() == StatutWorkflow.PRET_A_DEPOSER);
         depose.set(etat.statut() == StatutWorkflow.DEPOSE);
@@ -198,36 +222,17 @@ public class LotViewModel {
         // déposer ou déjà déposé.
         peutGenererArchives.set(
                 etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE);
+        // Suppression des archives (#…) : seulement une fois le passage DÉPOSÉ et s'il reste des archives
+        // sur disque (déjà téléversées, régénérables).
+        peutSupprimerArchives.set(etat.statut() == StatutWorkflow.DEPOSE && !archives.isEmpty());
         majEtapes(etat.statut());
-        message.set(messageEtat(etat));
+        message.set(FormatsLot.messageEtat(etat));
     }
 
     /// Recompose le stepper du dépôt (#251) depuis [EtapesDepot], selon le statut et la génération
     /// d'archives. Appelé à chaque (re)chargement d'état et après une génération.
     private void majEtapes(StatutWorkflow statut) {
         etapes.setAll(EtapesDepot.calculer(statut, !archives.isEmpty()));
-    }
-
-    private static String recapLisible(EtatLot etat) {
-        String volume = etat.volumeSequencesOctets() == null
-                ? "volume inconnu"
-                : Formats.octetsLisibles(etat.volumeSequencesOctets());
-        return etat.nombreSequences() + " séquences · " + volume;
-    }
-
-    private static String messageEtat(EtatLot etat) {
-        if (etat.statut() == StatutWorkflow.DEPOSE) {
-            return "Passage déposé le " + etat.deposeLe() + ".";
-        }
-        if (etat.aDesEchecs()) {
-            return "Cohérence : corrigez les contrôles en échec avant de préparer le lot.";
-        }
-        if (etat.statut() == StatutWorkflow.PRET_A_DEPOSER) {
-            // Retour explicite de l'étape ① (#251) : ce que « Préparer » a accompli (lot validé + verrouillé).
-            return "✓ Lot préparé : " + etat.nombreSequences()
-                    + " séquence(s) validée(s) et verrouillée(s), prêtes à l'archivage.";
-        }
-        return "";
     }
 
     private void reinitialiser() {
@@ -242,6 +247,7 @@ public class LotViewModel {
         peutDeposer.set(false);
         depose.set(false);
         peutGenererArchives.set(false);
+        peutSupprimerArchives.set(false);
         generationEnCours.set(false);
         archives.clear();
         message.set("");
@@ -299,6 +305,12 @@ public class LotViewModel {
     /// `true` si les archives de dépôt peuvent être générées (lot préparé : Prêt à déposer ou Déposé).
     public ReadOnlyBooleanProperty peutGenererArchivesProperty() {
         return peutGenererArchives.getReadOnlyProperty();
+    }
+
+    /// `true` si les archives de dépôt peuvent être supprimées : passage **déposé** et archives ZIP encore
+    /// présentes dans `depot/` (nettoyage post-dépôt pour libérer l'espace).
+    public ReadOnlyBooleanProperty peutSupprimerArchivesProperty() {
+        return peutSupprimerArchives.getReadOnlyProperty();
     }
 
     /// `true` pendant la génération des archives (#251) : la vue affiche un état « en cours » et

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -27,7 +28,10 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
@@ -59,6 +63,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// Statut du workflow, déporté en zone centre de la barre de statut (#693) au lieu d'un sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
+
+    /// Confirmation d'une action destructive (suppression des archives). **Injectable** (patron #214) :
+    /// par défaut un dialogue natif, remplacé en test par un prédicat pour éviter un `showAndWait` bloquant.
+    private Predicate<String> confirmateur = this::confirmerParDialogue;
 
     @FXML
     private Label lblRecap;
@@ -95,6 +103,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private Button btnOuvrirDepot;
+
+    @FXML
+    private Button btnSupprimerArchives;
 
     @FXML
     private Label lblMessage;
@@ -160,6 +171,12 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnOuvrirDepot
                 .disableProperty()
                 .bind(Bindings.isEmpty(viewModel.archives()).or(viewModel.generationEnCoursProperty()));
+
+        // Nettoyage post-dépôt (#…) : « Supprimer les archives » actif seulement une fois le passage déposé
+        // et s'il reste des archives ZIP sur disque (le VM lit le disque à chaque chargement d'état).
+        btnSupprimerArchives
+                .disableProperty()
+                .bind(viewModel.peutSupprimerArchivesProperty().not());
 
         // Emphase de l'étape actionnable (#689) : parmi les trois actions applicatives du dépôt
         // (Préparer → Générer → Marquer déposé, l'étape ③ « Téléverser » étant manuelle), celle qui est
@@ -291,5 +308,30 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         if (chemin != null && !chemin.isBlank()) {
             ouvreurDeLien.ouvrir(Path.of(chemin).toUri().toString());
         }
+    }
+
+    /// Supprime les archives ZIP de dépôt (#…) **après confirmation**, une fois le passage déposé, pour
+    /// libérer l'espace disque (régénérables au besoin). La confirmation passe par [#confirmateur]
+    /// (injectable), et le bouton n'est actif que dans l'état adéquat.
+    @FXML
+    private void supprimerArchives() {
+        if (confirmateur.test("Supprimer définitivement les archives ZIP de dépôt du dossier « depot/ » ?\n\n"
+                + "Elles ont déjà été téléversées sur Vigie-Chiro et pourront être régénérées si besoin.")) {
+            viewModel.supprimerArchives();
+        }
+    }
+
+    /// Dialogue natif de confirmation (OK / Annuler). Isolé pour être remplacé en test via
+    /// [#definirConfirmateur(Predicate)] — un `showAndWait` bloquerait sinon un test TestFX.
+    private boolean confirmerParDialogue(String message) {
+        Alert alerte = new Alert(AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
+        alerte.setTitle("Supprimer les archives de dépôt ?");
+        alerte.setHeaderText(null);
+        return alerte.showAndWait().filter(ButtonType.OK::equals).isPresent();
+    }
+
+    /// Remplace le confirmateur (tests) pour éviter le dialogue natif bloquant sous TestFX.
+    void definirConfirmateur(Predicate<String> confirmateur) {
+        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
     }
 }

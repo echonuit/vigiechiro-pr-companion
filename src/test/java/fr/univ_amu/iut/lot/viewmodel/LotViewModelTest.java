@@ -39,6 +39,48 @@ class LotViewModelTest {
         viewModel = new LotViewModel(service);
     }
 
+    @Test
+    @DisplayName("#… : en Déposé, peutSupprimerArchives suit la présence d'archives sur disque")
+    void peut_supprimer_en_depose_selon_volume() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.DEPOSE, List.of(), "2026-06-22"));
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/x-1.zip"), 1, 2048L, 2)), List.of());
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.peutSupprimerArchivesProperty().get()).isTrue();
+
+        viewModel.ouvrirSur(ID_PASSAGE); // plus d'archives sur disque
+        assertThat(viewModel.peutSupprimerArchivesProperty().get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#… : avant le dépôt (Prêt à déposer), la suppression des archives reste désactivée")
+    void pas_de_suppression_avant_depot() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.peutSupprimerArchivesProperty().get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#… : supprimerArchives appelle le service, recharge l'état et annonce l'espace libéré")
+    void supprimer_archives_appelle_le_service_et_recharge() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.DEPOSE, List.of(), "2026-06-22"));
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/x-1.zip"), 1, 2048L, 2)), List.of());
+        when(service.supprimerArchivesDepot(ID_PASSAGE)).thenReturn(2048L);
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.peutSupprimerArchivesProperty().get()).isTrue();
+
+        assertThat(viewModel.supprimerArchives()).isTrue();
+
+        verify(service).supprimerArchivesDepot(ID_PASSAGE);
+        assertThat(viewModel.messageProperty().get()).contains("libérés");
+        // Après recharge (plus d'archives), le bouton se désactive de lui-même.
+        assertThat(viewModel.peutSupprimerArchivesProperty().get()).isFalse();
+    }
+
     private static EtatLot etat(StatutWorkflow statut, List<ControleCoherence> controles, String deposeLe) {
         return new EtatLot(statut, "/ws/session-42", 2, 8192L, controles, deposeLe);
     }

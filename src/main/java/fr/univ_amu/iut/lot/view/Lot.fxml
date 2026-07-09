@@ -91,5 +91,16 @@
             styleClass="bouton-secondaire" onAction="#deposer"/>
   </VBox>
 
+  <!-- Nettoyage optionnel - libérer l'espace disque après dépôt (#…) : actif seulement une fois le
+       passage déposé et s'il reste des archives ZIP dans depot/. Les archives sont sur Vigie-Chiro et
+       restent régénérables. -->
+  <VBox spacing="4.0" styleClass="carte-section">
+    <Label text="Libérer l'espace disque" styleClass="section-titre"/>
+    <Label text="Une fois le dépôt confirmé, les archives ZIP locales (dans depot/) ne sont plus nécessaires : elles sont sur Vigie-Chiro et restent régénérables. Vous pouvez les supprimer pour libérer de l'espace."
+           styleClass="section-sous" wrapText="true"/>
+    <Button fx:id="btnSupprimerArchives" text="🗑 Supprimer les archives de dépôt"
+            styleClass="bouton-secondaire" onAction="#supprimerArchives"/>
+  </VBox>
+
   <Label fx:id="lblMessage" styleClass="message-lot" wrapText="true"/>
 </VBox>
