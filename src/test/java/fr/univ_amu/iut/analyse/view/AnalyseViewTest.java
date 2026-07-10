@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -28,6 +29,7 @@ import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -249,6 +251,23 @@ class AnalyseViewTest {
             assertThat(espece.codeEspece()).isEqualTo("Pippip");
             assertThat(espece.statut()).as("aucun filtre de statut actif").isNull();
         });
+    }
+
+    @Test
+    @DisplayName("#788 : double-clic sur une observation ouvre l'écoute, pas le passage")
+    void double_clic_observation_ouvre_l_ecoute(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        robot.interact(() -> especes.getSelectionModel().select(0)); // charge une observation
+
+        // Double-clic sur la ligne d'observation : destination naturelle en analyse par espèce = l'écoute
+        // (comme le bouton « Écouter »), et surtout PAS le passage. On type le nœud en Node pour lever
+        // l'ambiguïté entre les surcharges doubleClickOn(Matcher) et doubleClickOn(Predicate).
+        Node ligneObservation =
+                robot.lookup("#tableObservations").lookup(".table-row-cell").query();
+        robot.doubleClickOn(ligneObservation);
+
+        verify(ouvrirAudio).ouvrir(any(SourceObservations.class), eq(7L));
+        verify(ouvrirPassage, never()).ouvrir(any(), any());
     }
 
     @Test
