@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -337,10 +338,17 @@ public class ServiceImport {
         boolean sansJournal = rapport.journalOptionnel().isEmpty();
         JournalParse journal = rapport.journalOptionnel().orElseGet(() -> JournalDeRepli.depuis(rapport.originaux()));
 
-        // Import mono-nuit historique : une seule nuit = tous les originaux, datée du journal.
+        // Import mono-nuit : une seule nuit = tous les originaux. La date de la nuit vient des horodatages
+        // RÉELS des WAV (date de soirée, bascule à midi), calculée par `partitionNuits()` — déjà la source de
+        // vérité de l'import multi-nuits. On NE date PLUS d'après le journal : le LogPR est circulaire et sa
+        // 1re ligne est celle du DÉPLOIEMENT (nuit 1), si bien qu'un dossier de passe ultérieure héritait à
+        // tort de la nuit 1 (collision de date constatée au dépôt). Repli sur `journal.dateDebut()` seulement
+        // si aucune nuit horodatée n'a pu être déduite (WAV sans horodatage exploitable).
+        List<NuitDetectee> nuits = rapport.partitionNuits();
+        LocalDate dateNuit = nuits.size() == 1 ? nuits.getFirst().dateNuit() : journal.dateDebut();
         ContexteImport ctx = new ContexteImport(
                 rapport, journal, sansJournal, dossierSource, idPoint, conserverOriginaux, ecraser, jeton);
-        return moteur.importerUneNuit(ctx, prefixe, rapport.originaux(), journal.dateDebut(), progres);
+        return moteur.importerUneNuit(ctx, prefixe, rapport.originaux(), dateNuit, progres);
     }
 
     /// Rejette (NPE) tout paramètre commun manquant d'un import, factorisé pour éviter la duplication : les
