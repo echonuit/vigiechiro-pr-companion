@@ -111,6 +111,7 @@ class DepotVigieChiroTest {
                 .containsEntry("micro0_type", "ICS")
                 .containsEntry("micro0_position", "CANOPEE")
                 .containsEntry("micro0_hauteur", "4")
+                .containsEntry("detecteur_enregistreur_type", "PassiveRecorder")
                 .containsEntry("detecteur_enregistreur_numserie", "1997632");
     }
 

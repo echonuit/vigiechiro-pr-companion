@@ -46,6 +46,11 @@ import java.util.Optional;
 /// et **son site est rattaché à VigieChiro** (lien `vigiechiro_link`, établi à la connexion/synchro).
 public final class DepotVigieChiro {
 
+    /// Type de détecteur/enregistreur déclaré à VigieChiro (clé `configuration.detecteur_enregistreur_type`
+    /// du schéma canonique). L'app cible les **Passive Recorders** (format de log `PaRecPR…`) ; à paramétrer
+    /// si d'autres modèles d'enregistreur apparaissent.
+    private static final String TYPE_DETECTEUR = "PassiveRecorder";
+
     private final PassageDao passageDao;
     private final PointDao pointDao;
     private final MaterielMicroDao materielDao;
@@ -159,6 +164,8 @@ public final class DepotVigieChiro {
         MaterielMicro micro = materielDao.pour(passage.id());
         Map<String, String> config = new LinkedHashMap<>();
         if (passage.idEnregistreur() != null) {
+            // Type + n° de série vont de pair côté schéma canonique.
+            config.put("detecteur_enregistreur_type", TYPE_DETECTEUR);
             config.put("detecteur_enregistreur_numserie", passage.idEnregistreur());
         }
         if (micro.typeMicro() != null) {
