@@ -2,11 +2,13 @@ package fr.univ_amu.iut.connexion.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
@@ -15,6 +17,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -73,6 +76,14 @@ public class ConnexionModaleController {
     @FXML
     private Button boutonDeconnecter;
 
+    /// Enveloppes (non désactivées) des boutons : portent le tooltip d'explication du blocage, qu'un
+    /// Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
+    @FXML
+    private StackPane enveloppeConnecter;
+
+    @FXML
+    private StackPane enveloppeDeconnecter;
+
     @Inject
     public ConnexionModaleController(ConnexionViewModel viewModel, OuvreurDeLien ouvreurDeLien) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -89,6 +100,20 @@ public class ConnexionModaleController {
         champToken.disableProperty().bind(viewModel.connecteProperty().or(verificationEnCours));
         boutonConnecter.disableProperty().bind(viewModel.connecteProperty().or(verificationEnCours));
         boutonDeconnecter.disableProperty().bind(viewModel.connecteProperty().not());
+        // Tooltips d'explication du grisage (#789), posés sur les enveloppes (un Button désactivé n'en
+        // affiche pas). Le texte suit l'état : cause du blocage ou description de l'action disponible.
+        IndicateurBlocage.expliquer(
+                enveloppeConnecter,
+                Bindings.when(viewModel.connecteProperty())
+                        .then("Vous êtes déjà connecté à VigieChiro : déconnectez-vous d'abord pour changer de jeton.")
+                        .otherwise(Bindings.when(verificationEnCours)
+                                .then("Vérification du jeton en cours…")
+                                .otherwise("Se connecter à VigieChiro avec le jeton collé ci-dessus.")));
+        IndicateurBlocage.expliquer(
+                enveloppeDeconnecter,
+                Bindings.when(viewModel.connecteProperty())
+                        .then("Se déconnecter de VigieChiro (efface le jeton mémorisé sur ce poste).")
+                        .otherwise("Aucune connexion active à interrompre."));
         viewModel.rafraichir();
         majBadgeIdentite(viewModel.connecteProperty().get());
     }

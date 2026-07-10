@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -61,7 +62,10 @@
            styleClass="section-sous" wrapText="true"/>
     <HBox spacing="10.0" alignment="CENTER_LEFT">
       <TextField fx:id="champToken" promptText="collez votre token ici" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-      <Button fx:id="boutonConnecter" text="Se connecter" styleClass="action-primaire" onAction="#connecter"/>
+      <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
+      <StackPane fx:id="enveloppeConnecter">
+        <Button fx:id="boutonConnecter" text="Se connecter" styleClass="action-primaire" onAction="#connecter"/>
+      </StackPane>
     </HBox>
   </VBox>
 
@@ -71,8 +75,10 @@
          maxWidth="Infinity" visible="false" managed="false"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
-    <Button fx:id="boutonDeconnecter" text="Se déconnecter"
-            styleClass="action-secondaire" onAction="#deconnecter"/>
+    <StackPane fx:id="enveloppeDeconnecter">
+      <Button fx:id="boutonDeconnecter" text="Se déconnecter"
+              styleClass="action-secondaire" onAction="#deconnecter"/>
+    </StackPane>
     <Region HBox.hgrow="ALWAYS"/>
     <Button text="Fermer" styleClass="action-secondaire" onAction="#fermer"/>
   </HBox>
