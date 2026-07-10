@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -27,6 +28,7 @@ import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
+import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -62,6 +64,7 @@ class AnalyseViewTest {
     private OuvrirAudio ouvrirAudio;
     private DepotVues depotVues;
     private AnalyseController controleur;
+    private final List<String> urlsFiche = new ArrayList<>();
 
     @Start
     void start(Stage stage) throws Exception {
@@ -111,6 +114,12 @@ class AnalyseViewTest {
             @Provides
             DepotVues depotVues() {
                 return depot;
+            }
+
+            // « Fiche de l'espèce » (#848) : navigateur factice qui enregistre l'URL ouverte.
+            @Provides
+            OuvreurDeLien ouvreurDeLien() {
+                return urlsFiche::add;
             }
         });
         FXMLLoader loader = new FXMLLoader(AnalyseController.class.getResource("Analyse.fxml"));
@@ -227,6 +236,24 @@ class AnalyseViewTest {
         assertThat(contexte.getValue().numeroCarre()).isEqualTo("640380");
         assertThat(contexte.getValue().codePoint()).isEqualTo("A1");
         assertThat(contexte.getValue().nomSite()).isEqualTo("Étang");
+    }
+
+    @Test
+    @DisplayName("#848 : le menu contextuel « Fiche de l'espèce » ouvre la fiche PNA de l'espèce sélectionnée")
+    void fiche_espece_ouvre_la_fiche_de_l_espece_selectionnee(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        // Première espèce = Pipistrelle commune (code « Pippip »), un chiroptère à fiche PNA.
+        robot.interact(() -> especes.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        MenuItem fiche = especes.getContextMenu().getItems().get(0);
+        assertThat(fiche.isDisable()).isFalse();
+        assertThat(fiche.getText()).isEqualTo("Fiche de l'espèce (Pipistrelle commune)");
+
+        robot.interact(fiche::fire);
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
     }
 
     @Test
