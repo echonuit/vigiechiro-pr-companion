@@ -6,6 +6,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
@@ -48,7 +49,6 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
 
 /// Controller de la **vue audio unifiée** (`SonsValidation.fxml`, #audio).
 ///
@@ -65,6 +65,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private static final String FEATURE = "audio";
 
     private final AudioViewModel viewModel;
+    private final ImportVigieChiroViewModel importVigieChiro;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAnalyse ouvrirAnalyse;
@@ -115,6 +116,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private MenuItem itemImporter;
+
+    @FXML
+    private MenuItem itemImporterVigieChiro;
+
+    @FXML
+    private Label lblImportVigieChiro;
 
     @FXML
     private CheckMenuItem itemInclureMode;
@@ -235,6 +242,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @Inject
     public SonsValidationController(
             AudioViewModel viewModel,
+            ImportVigieChiroViewModel importVigieChiro,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             OuvrirAnalyse ouvrirAnalyse,
@@ -242,6 +250,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             MemoireRevueAudio memoire,
             DepotVues depotVues) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.importVigieChiro = Objects.requireNonNull(importVigieChiro, "importVigieChiro");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAnalyse = Objects.requireNonNull(ouvrirAnalyse, "ouvrirAnalyse");
@@ -400,6 +409,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 .bind(Bindings.when(viewModel.resultatsDisponiblesProperty())
                         .then("🔁 Réimporter un CSV Tadarida…")
                         .otherwise("📥 Importer un CSV Tadarida…"));
+        // Import VigieChiro (axe 4.2) : câblage (libellé Importer/Réimporter, désactivation, restitution)
+        // délégué à ImportVigieChiroUI. Sa visibilité (workflow + connexion) est gérée dans adapterAffichage.
+        ImportVigieChiroUI.cabler(itemImporterVigieChiro, lblImportVigieChiro, importVigieChiro, viewModel);
         itemExporterVu
                 .disableProperty()
                 .bind(viewModel.resultatsDisponiblesProperty().not());
@@ -502,6 +514,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         boolean workflow = source.permetWorkflowTadarida();
         itemImporter.setVisible(workflow);
+        // Import VigieChiro : workflow Tadarida **et** application connectée (indisponible en capture).
+        itemImporterVigieChiro.setVisible(workflow && importVigieChiro.disponible());
         itemInclureMode.setVisible(workflow);
         itemExporterVu.setVisible(workflow);
         itemExporterBiblio.setVisible(source.permetExportBibliotheque());
@@ -600,37 +614,31 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         }
     }
 
+    /// Importe les résultats Tadarida depuis **VigieChiro** (axe 4.2) pour le passage courant. Délègue à
+    /// [ImportVigieChiroUI] (confirmation + récupération réseau hors fil JavaFX + rafraîchissement).
+    @FXML
+    private void importerDepuisVigieChiro() {
+        ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source);
+    }
+
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.
     @FXML
     private void exporterVu() {
-        File fichier = ChoixFichierCsv.selecteur("Exporter le fichier _Vu (réinjectable)", "resultats_Vu.csv")
-                .showSaveDialog(fenetre());
-        if (fichier != null) {
-            viewModel.exporterVu(fichier.toPath());
-        }
+        ExportsAudioUI.exporterVu(viewModel, fenetre());
     }
 
     /// « Exporter les observations (CSV) » (#149) : sélecteur de fichier natif puis délégation au VM, qui
     /// écrit le **sous-ensemble affiché** (filtres appliqués).
     @FXML
     private void exporterObservations() {
-        File fichier = ChoixFichierCsv.selecteur("Exporter les observations affichées (CSV)", "observations.csv")
-                .showSaveDialog(fenetre());
-        if (fichier != null) {
-            viewModel.exporterObservations(fichier.toPath());
-        }
+        ExportsAudioUI.exporterObservations(viewModel, fenetre());
     }
 
     /// « Exporter la bibliothèque » : sélecteur de dossier natif puis délégation au VM (copie des sons de
     /// référence + récapitulatif CSV).
     @FXML
     private void exporterBibliotheque() {
-        DirectoryChooser selecteur = new DirectoryChooser();
-        selecteur.setTitle("Exporter la bibliothèque de sons de référence");
-        File dossier = selecteur.showDialog(fenetre());
-        if (dossier != null) {
-            viewModel.exporterBibliotheque(dossier.toPath());
-        }
+        ExportsAudioUI.exporterBibliotheque(viewModel, fenetre());
     }
 
     private javafx.stage.Window fenetre() {

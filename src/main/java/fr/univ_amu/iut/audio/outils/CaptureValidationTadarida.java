@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.di.CommunModule;
@@ -55,6 +56,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -157,6 +159,13 @@ public final class CaptureValidationTadarida {
                             ServiceBibliotheque bibliotheque) {
                         return new AudioViewModel(
                                 validation, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
+                    }
+
+                    // Import VigieChiro indisponible en capture (aucune connexion) : VM à dépôt vide.
+                    @Provides
+                    @Singleton
+                    ImportVigieChiroViewModel importVigieChiro() {
+                        return new ImportVigieChiroViewModel(Optional.empty());
                     }
 
                     // OuvrirSite requis par le fil d'Ariane du controller (SitesModule non inclus) : no-op.
