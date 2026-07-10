@@ -50,6 +50,8 @@ public class PassageViewModel {
     private final ReadOnlyBooleanWrapper depotDisponible = new ReadOnlyBooleanWrapper(this, "depotDisponible", false);
     private final ReadOnlyBooleanWrapper annulationDepotDisponible =
             new ReadOnlyBooleanWrapper(this, "annulationDepotDisponible", false);
+    private final ReadOnlyBooleanWrapper suppressionPossible =
+            new ReadOnlyBooleanWrapper(this, "suppressionPossible", false);
     private final ReadOnlyBooleanWrapper purgeDisponible = new ReadOnlyBooleanWrapper(this, "purgeDisponible", false);
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
@@ -132,6 +134,10 @@ public class PassageViewModel {
         // pouvoir y revenir pour consulter les archives ou les supprimer, sans avoir à annuler le dépôt.
         depotDisponible.set(detail.statut().ordinal() >= StatutWorkflow.VERIFIE.ordinal());
         annulationDepotDisponible.set(detail.statut() == StatutWorkflow.DEPOSE);
+        // Suppression bloquée sur un passage déposé (le service la refuse) : on grise le bouton en amont au
+        // lieu de laisser l'utilisateur découvrir le refus après la confirmation. Il faut d'abord annuler
+        // le dépôt.
+        suppressionPossible.set(detail.statut() != StatutWorkflow.DEPOSE);
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
         actionRecommandee.set(prochaineAction(detail.statut()));
@@ -164,6 +170,7 @@ public class PassageViewModel {
         validationVerrouillee.set(true);
         depotDisponible.set(false);
         annulationDepotDisponible.set(false);
+        suppressionPossible.set(false);
         purgeDisponible.set(false);
         actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
@@ -258,6 +265,13 @@ public class PassageViewModel {
     /// passage à « Prêt à déposer » sans toucher aux validations Tadarida déjà saisies.
     public ReadOnlyBooleanProperty annulationDepotDisponibleProperty() {
         return annulationDepotDisponible.getReadOnlyProperty();
+    }
+
+    /// `true` quand le passage peut être supprimé (tout statut **sauf** Déposé). Un passage déposé doit
+    /// d'abord voir son dépôt annulé ; le bouton « Supprimer » est grisé en conséquence, avec un tooltip
+    /// d'explication (cf. [fr.univ_amu.iut.commun.view.IndicateurBlocage]).
+    public ReadOnlyBooleanProperty suppressionPossibleProperty() {
+        return suppressionPossible.getReadOnlyProperty();
     }
 
     /// `true` quand des **originaux** sont encore stockés (volume bruts > 0) : la purge est alors proposée
