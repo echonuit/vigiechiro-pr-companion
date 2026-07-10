@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.TableDonnees;
+import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -21,6 +22,7 @@ import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -39,6 +41,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
@@ -403,9 +406,13 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         dialogue.setHeaderText("Fiche du carré " + site.numeroCarre() + ".");
         ButtonType valider = new ButtonType("Enregistrer", ButtonType.OK.getButtonData());
         dialogue.getDialogPane().getButtonTypes().addAll(valider, ButtonType.CANCEL);
+        ValidationFormulaire.appliquerStyles(dialogue.getDialogPane());
 
         TextField champCarre = new TextField(site.numeroCarre());
         champCarre.setPromptText("640380");
+        // Filtre de saisie : uniquement des chiffres, au plus 6 (format du carré Vigie-Chiro).
+        champCarre.setTextFormatter(
+                new TextFormatter<>(modif -> modif.getControlNewText().matches("\\d{0,6}") ? modif : null));
         TextField champNom = new TextField(ouVide(site.nomConvivial()));
         champNom.setPromptText("Étang de la Tuilière (optionnel)");
         ComboBox<Protocole> champProtocole = new ComboBox<>();
@@ -425,10 +432,21 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         TextField champCommentaire = new TextField(ouVide(site.commentaire()));
         champCommentaire.setPromptText("Commentaire (optionnel)");
 
+        // Validation « en direct » (#790) : « Enregistrer » reste désactivé tant que le n° de carré n'a
+        // pas ses 6 chiffres, et le champ rougit dès qu'il est saisi mais incomplet (au lieu d'une Alert
+        // après coup). Le carré est pré-rempli et valide à l'ouverture.
+        BooleanBinding carreValide =
+                Bindings.createBooleanBinding(() -> champCarre.getText().matches("\\d{6}"), champCarre.textProperty());
+        BooleanBinding carreInvalideEtSaisi = Bindings.createBooleanBinding(
+                () -> !champCarre.getText().isEmpty() && !champCarre.getText().matches("\\d{6}"),
+                champCarre.textProperty());
+        ValidationFormulaire.gaterBouton(dialogue.getDialogPane(), valider, carreValide);
+        ValidationFormulaire.marquerInvalide(champCarre, carreInvalideEtSaisi);
+
         GridPane grille = new GridPane();
         grille.setHgap(8);
         grille.setVgap(8);
-        grille.addRow(0, new Label("N° de carré"), champCarre);
+        grille.addRow(0, new Label("N° de carré *"), champCarre);
         grille.addRow(1, new Label("Nom convivial"), champNom);
         grille.addRow(2, new Label("Protocole"), champProtocole);
         grille.addRow(3, new Label("Commentaire"), champCommentaire);
