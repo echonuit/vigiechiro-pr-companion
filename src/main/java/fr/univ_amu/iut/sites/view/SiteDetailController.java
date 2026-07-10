@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -193,16 +194,14 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         boutonSupprimer
                 .disableProperty()
                 .bind(viewModel.suppressionPossibleProperty().not());
-        // Un Tooltip ne s'affiche pas sur un Button désactivé : on l'installe sur l'enveloppe (qui
-        // reçoit le survol) et on lie son texte à l'état pour expliquer le blocage (règle métier R…).
-        Tooltip infoSupprimer = new Tooltip();
-        infoSupprimer
-                .textProperty()
-                .bind(Bindings.when(viewModel.suppressionPossibleProperty())
+        // Tooltip d'explication du blocage, posé sur l'enveloppe (un Button désactivé n'en affiche pas) et
+        // lié à l'état, via le composant partagé (#789, généralise ce patron d'origine).
+        IndicateurBlocage.expliquer(
+                enveloppeSupprimer,
+                Bindings.when(viewModel.suppressionPossibleProperty())
                         .then("Supprimer ce site et ses points d'écoute.")
                         .otherwise("Suppression impossible : ce site porte des passages."
                                 + " Supprimez d'abord les passages rattachés."));
-        Tooltip.install(enveloppeSupprimer, infoSupprimer);
         boutonModifier.setTooltip(new Tooltip("Modifier la fiche du site (carré, nom, protocole…)."));
         configurerColonnes();
         tablePassages.setItems(viewModel.passages());
@@ -359,7 +358,18 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
                 fenetre(), viewModel.siteCourant(), carte.point(), viewModel::rafraichir));
         Hyperlink supprimer = new Hyperlink("🗑 Supprimer");
         supprimer.setOnAction(evenement -> supprimerPoint(carte));
-        HBox actions = new HBox(editer, supprimer);
+        // Gating destructif (#789) : un point qui porte des passages n'est pas supprimable (le service le
+        // refuse). On grise le lien et on l'enrobe d'une enveloppe porteuse du tooltip d'explication, au lieu
+        // de laisser l'utilisateur découvrir le refus après le clic. La carte est reconstruite à chaque
+        // rafraîchissement, donc l'état de blocage est figé ici (texte fixe).
+        supprimer.setDisable(carte.aDesPassages());
+        Node actionSupprimer = IndicateurBlocage.enrober(
+                supprimer,
+                carte.aDesPassages()
+                        ? "Suppression impossible : ce point porte des passages."
+                                + " Supprimez d'abord les passages rattachés."
+                        : "Supprimer ce point d'écoute.");
+        HBox actions = new HBox(editer, actionSupprimer);
         actions.getStyleClass().add("carte-point-actions");
         return actions;
     }

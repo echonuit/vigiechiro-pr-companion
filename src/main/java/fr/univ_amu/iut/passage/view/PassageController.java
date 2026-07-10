@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
@@ -39,6 +40,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 
 /// Controller de l'écran pivot **M-Passage** (`Passage.fxml`), en « hub à plat » : bandeau d'identité,
 /// stepper de statut, résumé de la nuit (stats) et cartes d'actions « avancer ». Le retour et le fil
@@ -123,6 +125,14 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Button boutonPurger;
 
     @FXML
+    private Button boutonSupprimer;
+
+    /// Enveloppe (non désactivée) du bouton « Supprimer » : porte le tooltip expliquant le blocage sur un
+    /// passage déposé (un Button désactivé n'affiche pas de tooltip). Cf. [IndicateurBlocage].
+    @FXML
+    private StackPane enveloppeSupprimer;
+
+    @FXML
     private Label lblIndiceAction;
 
     @Inject
@@ -188,6 +198,18 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                 .bind(viewModel.verificationDisponibleProperty().not());
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
+        // Suppression gatée en amont (#789) : un passage déposé n'est pas supprimable (le service le refuse).
+        // Plutôt que de laisser l'utilisateur découvrir le refus APRÈS la confirmation, on grise le bouton et
+        // on explique le blocage par un tooltip posé sur l'enveloppe (un Button désactivé n'en affiche pas).
+        boutonSupprimer
+                .disableProperty()
+                .bind(viewModel.suppressionPossibleProperty().not());
+        IndicateurBlocage.expliquer(
+                enveloppeSupprimer,
+                Bindings.when(viewModel.suppressionPossibleProperty())
+                        .then("Supprimer définitivement ce passage et toute sa nuit (séquences, relevés).")
+                        .otherwise("Suppression impossible : ce passage est déposé sur VigieChiro."
+                                + " Annulez d'abord le dépôt."));
         // « Annuler le dépôt » n'a de sens que sur un passage déposé : le bouton n'apparaît (et n'occupe
         // de place) que dans ce cas, au lieu de rester grisé en permanence dans la barre d'actions.
         boutonAnnulerDepot.visibleProperty().bind(viewModel.annulationDepotDisponibleProperty());

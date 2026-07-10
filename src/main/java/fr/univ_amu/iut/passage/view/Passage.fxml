@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
@@ -36,8 +37,13 @@
         <Button fx:id="boutonPurger" text="🧹 Purger les originaux"
                 styleClass="bouton-secondaire" onAction="#purgerOriginaux"
                 visible="false" managed="false"/>
-        <Button fx:id="boutonSupprimer" text="🗑 Supprimer" styleClass="bouton-danger"
-                onAction="#supprimer"/>
+        <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe sur ce
+             StackPane (qui, lui, reçoit le survol) pour expliquer pourquoi la suppression est bloquée
+             sur un passage déposé (#789). -->
+        <StackPane fx:id="enveloppeSupprimer">
+          <Button fx:id="boutonSupprimer" text="🗑 Supprimer" styleClass="bouton-danger"
+                  onAction="#supprimer"/>
+        </StackPane>
       </HBox>
 
       <!-- Bandeau d'identité du passage (composant partagé bandeau-infos, #694) -->
