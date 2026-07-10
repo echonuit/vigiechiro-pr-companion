@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
@@ -235,8 +236,20 @@ public class MultisiteController implements RafraichirAuRetour {
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
         itemExporter.disableProperty().bind(viewModel.nonVideProperty().not());
+        // Un MenuItem désactivé n'accueille pas de tooltip : on surface la cause du grisage dans son
+        // libellé (#789), visible seulement quand il est grisé (aucune ligne dans le tableau filtré).
+        itemExporter
+                .textProperty()
+                .bind(Bindings.when(viewModel.nonVideProperty())
+                        .then("📤 Exporter…")
+                        .otherwise("📤 Exporter… (aucune ligne à exporter)"));
         // Écoute : le lot suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
         itemEcouterLot.disableProperty().bind(viewModel.nonVideProperty().not());
+        itemEcouterLot
+                .textProperty()
+                .bind(Bindings.when(viewModel.nonVideProperty())
+                        .then("🎧 Écouter le lot filtré")
+                        .otherwise("🎧 Écouter le lot filtré (aucune ligne)"));
         itemEcouterPassage
                 .disableProperty()
                 .bind(tableLignes.getSelectionModel().selectedItemProperty().isNull());
