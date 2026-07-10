@@ -171,8 +171,20 @@ public class ServiceLot {
     ///
     /// @param progres callback de progression (appelé sur le fil d'exécution ; l'IHM relaie au fil JavaFX)
     public List<ArchiveDepot> genererArchivesDepot(Long idPassage, Consumer<Progression> progres) {
+        return genererArchivesDepot(idPassage, progres, SuiviArchives.inerte());
+    }
+
+    /// Variante avec **suivi par archive** (#820) en plus de la progression globale : `suivi` reçoit le
+    /// cycle de vie de chaque ZIP (plan établi, démarrée, progresse, terminée, échec) pour afficher une
+    /// ligne + une barre par archive. Mêmes contrôles (statut, session, séquences) et contrat que les
+    /// autres variantes.
+    ///
+    /// @param progres callback de progression globale (appelé hors-fil ; l'IHM relaie au fil JavaFX)
+    /// @param suivi callback de cycle de vie par archive (appelé hors-fil et dans le désordre ; l'IHM relaie)
+    public List<ArchiveDepot> genererArchivesDepot(Long idPassage, Consumer<Progression> progres, SuiviArchives suivi) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(suivi, "suivi");
         Passage passage = chargerPassage(idPassage);
         // Le lot doit avoir été **préparé** (preparerLot a déjà validé R14 + cohérence et posé le statut).
         // On n'archive donc que des passages Prêt à déposer ou déjà Déposé : l'API ne court-circuite pas
@@ -196,7 +208,7 @@ public class ServiceLot {
                 .map(s -> Path.of(s.cheminFichier()))
                 .map(p -> p.isAbsolute() ? p : racineSession.resolve(p))
                 .toList();
-        return compacteur.compacter(fichiers, prefixe, repertoireDepot.dossier(session.cheminRacine()), progres);
+        return compacteur.compacter(fichiers, prefixe, repertoireDepot.dossier(session.cheminRacine()), progres, suivi);
     }
 
     /// Espace disque **disponible** (octets) sur le système de fichiers de la session, pour anticiper (avant

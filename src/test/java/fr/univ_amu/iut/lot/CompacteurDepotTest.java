@@ -5,13 +5,20 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.ArchivePlanifiee;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
+import fr.univ_amu.iut.lot.model.SuiviArchives;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.zip.ZipFile;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -227,6 +234,85 @@ class CompacteurDepotTest {
         assertThat(fractions.get(4)).isEqualTo(1.0);
         assertThat(libelles.get(0)).isEqualTo("Compression 1/5 · seq_0.wav");
         assertThat(libelles.get(4)).contains("5/5");
+    }
+
+    @Test
+    @DisplayName("#820 : la génération notifie le suivi par archive — plan établi, démarrages, progression, fins")
+    void notifie_le_suivi_par_archive() throws IOException {
+        // 7 fichiers de 30 Ko, plafond 100 Ko → 3 archives (3 + 3 + 1), comme la scission de référence.
+        Path src = Files.createDirectories(dossier.resolve("src"));
+        List<Path> fichiers = new ArrayList<>();
+        for (int i = 0; i < 7; i++) {
+            fichiers.add(Files.write(src.resolve("seq_" + i + ".wav"), octets(30_000, (byte) i)));
+        }
+        SuiviEnregistreur suivi = new SuiviEnregistreur();
+
+        List<ArchiveDepot> archives =
+                new CompacteurDepot(100_000).compacter(fichiers, PREFIXE, dossier.resolve("depot"), p -> {}, suivi);
+
+        // Plan établi avant écriture : une entrée par archive, numéros 1..N, répartition 3 + 3 + 1.
+        assertThat(suivi.plan).extracting(ArchivePlanifiee::numero).containsExactly(1, 2, 3);
+        assertThat(suivi.plan).extracting(ArchivePlanifiee::nombreFichiers).containsExactly(3, 3, 1);
+        // Chaque archive démarrée une fois et terminée une fois (ordre d'achèvement indifférent).
+        assertThat(suivi.demarrees).containsExactlyInAnyOrder(1, 2, 3);
+        assertThat(suivi.terminees).extracting(ArchiveDepot::numero).containsExactlyInAnyOrder(1, 2, 3);
+        // Un événement de progression par fichier compressé.
+        assertThat(suivi.progressions.get()).isEqualTo(7);
+        // Aucun échec, cohérent avec le retour.
+        assertThat(suivi.echecs).isEmpty();
+        assertThat(archives).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("#820 : l'échec de compression d'une archive notifie archiveEchouee (ligne « échec »)")
+    void notifie_l_echec_d_une_archive() throws IOException {
+        // Un « fichier » qui est en réalité un dossier : Files.size passe (planification), mais la recopie
+        // en flux vers le ZIP échoue → l'archive échoue en cours d'écriture.
+        Path src = Files.createDirectories(dossier.resolve("src"));
+        Path faux = Files.createDirectory(src.resolve("seq_dossier.wav"));
+        SuiviEnregistreur suivi = new SuiviEnregistreur();
+
+        assertThatThrownBy(() -> new CompacteurDepot()
+                        .compacter(List.of(faux), PREFIXE, dossier.resolve("depot"), p -> {}, suivi))
+                .isInstanceOf(RuntimeException.class);
+
+        assertThat(suivi.echecs).containsKey(1);
+        assertThat(suivi.terminees).isEmpty();
+    }
+
+    /// Suivi enregistreur **thread-safe** : la compression étant parallèle, les événements arrivent depuis
+    /// plusieurs fils et dans le désordre.
+    private static final class SuiviEnregistreur implements SuiviArchives {
+        final List<ArchivePlanifiee> plan = new CopyOnWriteArrayList<>();
+        final Set<Integer> demarrees = ConcurrentHashMap.newKeySet();
+        final List<ArchiveDepot> terminees = new CopyOnWriteArrayList<>();
+        final Map<Integer, String> echecs = new ConcurrentHashMap<>();
+        final AtomicInteger progressions = new AtomicInteger();
+
+        @Override
+        public void planEtabli(List<ArchivePlanifiee> p) {
+            plan.addAll(p);
+        }
+
+        @Override
+        public void archiveDemarree(int numero) {
+            demarrees.add(numero);
+        }
+
+        @Override
+        public void archiveProgresse(int numero, int faits, int total) {
+            progressions.incrementAndGet();
+        }
+
+        @Override
+        public void archiveTerminee(ArchiveDepot archive) {
+            terminees.add(archive);
+        }
+
+        @Override
+        public void archiveEchouee(int numero, String raison) {
+            echecs.put(numero, raison == null ? "" : raison);
+        }
     }
 
     private static byte[] octets(int taille, byte valeur) {

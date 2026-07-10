@@ -5,7 +5,6 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -29,12 +28,12 @@ import java.util.zip.ZipOutputStream;
 /// - **nommage** : chaque archive porte le **préfixe R6** du passage suivi d'un **numéro croissant**
 ///   (`<préfixe>-1.zip`, `<préfixe>-2.zip`, …).
 ///
-/// **Garantie « archive ≤ plafond ».** La répartition gloutonne ne se fonde **pas** sur la seule taille
-/// source : DEFLATE peut très légèrement *grossir* des données peu compressibles (blocs « stored » +
-/// overhead) et le format ZIP ajoute des en-têtes (local + répertoire central + descripteur). On
-/// majore donc le coût réel de chaque entrée ([#coutMaximalDansArchive]) et on garde une marge pour le
-/// répertoire de fin (EOCD) ; en dernier recours, la taille réelle de l'archive est **vérifiée après
-/// écriture** ([#verifierTaille]) — défense en profondeur si l'estimation était prise en défaut.
+/// **Garantie « archive ≤ plafond ».** La répartition gloutonne (déléguée à [PlanificateurArchives]) ne se
+/// fonde **pas** sur la seule taille source : DEFLATE peut très légèrement *grossir* des données peu
+/// compressibles (blocs « stored » + overhead) et le format ZIP ajoute des en-têtes (local + répertoire
+/// central + descripteur). Le coût réel de chaque entrée est donc majoré, avec une marge pour le répertoire
+/// de fin (EOCD) ; en dernier recours, la taille réelle de l'archive est **vérifiée après écriture**
+/// ([#verifierTaille]) — défense en profondeur si l'estimation était prise en défaut.
 ///
 /// **Mémoire bornée** (#104) : chaque fichier est recopié **en flux** dans l'archive ([Files#copy]
 /// vers le [ZipOutputStream]), jamais chargé entièrement en mémoire.
@@ -44,10 +43,6 @@ public final class CompacteurDepot {
     /// prudence — c'est la borne basse d'une éventuelle interprétation « 700 Mio » côté plateforme, donc
     /// on reste conforme dans tous les cas. Surchargeable via le constructeur (réglage applicatif #110).
     public static final long TAILLE_MAX_DEFAUT_OCTETS = 700L * 1000 * 1000;
-
-    /// Réserve forfaitaire pour le répertoire de fin d'archive (End Of Central Directory, 22 o fixes,
-    /// plus une marge) : retranchée du plafond pour le calcul de remplissage.
-    private static final long RESERVE_FIN_ARCHIVE = 128;
 
     /// Marge de sécurité (100 Mo) exigée **en plus** du volume estimé lors du contrôle d'espace disque :
     /// couvre les métadonnées du système de fichiers et une éventuelle sous-estimation.
@@ -63,6 +58,7 @@ public final class CompacteurDepot {
 
     private final long tailleMaxOctets;
     private final EspaceDisque espaceDisque;
+    private final PlanificateurArchives planificateur;
 
     public CompacteurDepot() {
         this(TAILLE_MAX_DEFAUT_OCTETS);
@@ -82,6 +78,7 @@ public final class CompacteurDepot {
         }
         this.tailleMaxOctets = tailleMaxOctets;
         this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
+        this.planificateur = new PlanificateurArchives(tailleMaxOctets);
     }
 
     /// Plafond de taille appliqué à chaque archive, en octets (exposé pour l'affichage du réglage).
@@ -106,60 +103,43 @@ public final class CompacteurDepot {
     ///     insuffisant pour les archives estimées (garde-fou #769, avant toute écriture)
     public List<ArchiveDepot> compacter(
             List<Path> fichiers, String prefixe, Path dossierSortie, Consumer<Progression> progres) {
+        return compacter(fichiers, prefixe, dossierSortie, progres, SuiviArchives.inerte());
+    }
+
+    /// Variante avec **suivi de progression global** ET **suivi par archive** (#820) : en plus de la barre
+    /// globale (`progres`), `suivi` reçoit le cycle de vie de chaque ZIP (plan établi, démarrée, progresse,
+    /// terminée, échec) pour afficher une ligne + une barre par archive. Comme la compression est parallèle
+    /// (#814), les événements de `suivi` arrivent **dans le désordre** (ciblés par numéro) et depuis
+    /// plusieurs fils : la couche IHM relaie au fil JavaFX. Même contrat que les autres variantes.
+    ///
+    /// @throws RegleMetierException si un fichier dépasse à lui seul le plafond, ou si l'espace disque est
+    ///     insuffisant pour les archives estimées (garde-fou #769, avant toute écriture)
+    public List<ArchiveDepot> compacter(
+            List<Path> fichiers,
+            String prefixe,
+            Path dossierSortie,
+            Consumer<Progression> progres,
+            SuiviArchives suivi) {
         Objects.requireNonNull(fichiers, "fichiers");
         Objects.requireNonNull(prefixe, "prefixe");
         Objects.requireNonNull(dossierSortie, "dossierSortie");
         Objects.requireNonNull(progres, "progres");
-        long budget = tailleMaxOctets - RESERVE_FIN_ARCHIVE;
+        Objects.requireNonNull(suivi, "suivi");
         try {
             Files.createDirectories(dossierSortie);
             verifierEspaceDisque(fichiers, dossierSortie);
             // Deux phases (#814) : on **planifie d'abord** tous les lots (partition par taille source
-            // majorée, garantie « archive ≤ plafond »), puis on **compresse les archives en parallèle**.
-            // Chaque archive étant indépendante, on exploite tous les cœurs au lieu de compresser une
-            // archive à la fois : la génération d'une nuit passe de ~dizaines de minutes à quelques minutes.
-            List<List<Path>> lots = planifierLots(fichiers, budget);
+            // majorée, garantie « archive ≤ plafond », déléguée à PlanificateurArchives), puis on
+            // **compresse les archives en parallèle**. Chaque archive étant indépendante, on exploite tous
+            // les cœurs : la génération d'une nuit passe de ~dizaines de minutes à quelques minutes.
+            List<List<Path>> lots = planificateur.partitionner(fichiers);
+            suivi.planEtabli(planificateur.decrire(lots)); // pré-remplit la table de lignes « en attente » (#820)
             int total = fichiers.size();
             AtomicInteger faits = new AtomicInteger(0);
-            return compresserEnParallele(lots, prefixe, dossierSortie, progres, total, faits);
+            return compresserEnParallele(lots, prefixe, dossierSortie, progres, suivi, total, faits);
         } catch (IOException e) {
             throw new UncheckedIOException("Génération des archives de dépôt impossible dans " + dossierSortie, e);
         }
-    }
-
-    /// Établit le **plan d'archives** : partitionne `fichiers` en lots dont le coût majoré (cf.
-    /// [#coutMaximalDansArchive]) tient sous `budget`, **sans rien écrire**. Séparer la planification de
-    /// l'écriture permet de compresser les archives en parallèle (#814) : le plan garantit déjà « archive ≤
-    /// plafond », les lots sont donc indépendants. Répartition gloutonne, ordre des fichiers préservé.
-    ///
-    /// @throws RegleMetierException si un fichier dépasse à lui seul le plafond (indécoupable)
-    private List<List<Path>> planifierLots(List<Path> fichiers, long budget) throws IOException {
-        List<List<Path>> lots = new ArrayList<>();
-        List<Path> lotCourant = new ArrayList<>();
-        long coutCourant = 0;
-        for (Path fichier : fichiers) {
-            long cout = coutMaximalDansArchive(fichier);
-            if (cout > budget) {
-                throw new RegleMetierException("Le fichier "
-                        + fichier.getFileName()
-                        + " ("
-                        + Files.size(fichier)
-                        + " o) dépasse à lui seul le plafond de "
-                        + tailleMaxOctets
-                        + " o : impossible de l'inclure dans une archive de dépôt.");
-            }
-            if (!lotCourant.isEmpty() && coutCourant + cout > budget) {
-                lots.add(lotCourant);
-                lotCourant = new ArrayList<>();
-                coutCourant = 0;
-            }
-            lotCourant.add(fichier);
-            coutCourant += cout;
-        }
-        if (!lotCourant.isEmpty()) {
-            lots.add(lotCourant);
-        }
-        return lots;
     }
 
     /// Compresse les `lots` planifiés **en parallèle** (au plus un fil par cœur) : chaque archive étant
@@ -172,6 +152,7 @@ public final class CompacteurDepot {
             String prefixe,
             Path dossierSortie,
             Consumer<Progression> progres,
+            SuiviArchives suivi,
             int total,
             AtomicInteger faits)
             throws IOException {
@@ -183,7 +164,7 @@ public final class CompacteurDepot {
                 int numero = i + 1;
                 List<Path> lot = lots.get(i);
                 enCours.add(executor.submit(
-                        () -> ecrireArchive(lot, prefixe, dossierSortie, numero, progres, total, faits)));
+                        () -> ecrireArchive(lot, prefixe, dossierSortie, numero, progres, suivi, total, faits)));
             }
             List<ArchiveDepot> archives = new ArrayList<>(lots.size());
             for (Future<ArchiveDepot> future : enCours) {
@@ -216,17 +197,6 @@ public final class CompacteurDepot {
         }
     }
 
-    /// Majorant du nombre d'octets qu'une entrée occupera dans l'archive : données (DEFLATE n'expanse
-    /// quasiment jamais, on garde +0,1 % + 64 o de marge), en-tête local, descripteur de données et
-    /// entrée du répertoire central (chacun proportionnel à la longueur du nom UTF-8).
-    private long coutMaximalDansArchive(Path fichier) throws IOException {
-        long taille = Files.size(fichier);
-        int nomOctets = fichier.getFileName().toString().getBytes(StandardCharsets.UTF_8).length;
-        long donnees = taille + taille / 1000 + 64; // marge large sur l'expansion DEFLATE
-        long entetesZip = (30L + nomOctets) + 16L + (46L + nomOctets); // local + descripteur + central
-        return donnees + entetesZip;
-    }
-
     /// Pré-contrôle d'espace disque **avant toute écriture** (#769) : on refuse tôt et proprement si le
     /// disque de destination n'a manifestement pas la place, plutôt que d'échouer à mi-génération en
     /// laissant des archives partielles. Le volume requis est **estimé compression comprise**
@@ -235,11 +205,7 @@ public final class CompacteurDepot {
     ///
     /// @throws RegleMetierException si l'espace disponible est inférieur au volume requis estimé
     private void verifierEspaceDisque(List<Path> fichiers, Path dossierSortie) throws IOException {
-        long volumeSource = 0L;
-        for (Path fichier : fichiers) {
-            volumeSource += Files.size(fichier);
-        }
-        long requis = estimationTailleDepot(volumeSource);
+        long requis = estimationTailleDepot(planificateur.volumeSource(fichiers));
         long disponible = espaceDisque.disponibleOctets(dossierSortie);
         if (disponible < requis) {
             throw new RegleMetierException("Espace disque insuffisant pour générer les archives de dépôt :"
@@ -269,23 +235,35 @@ public final class CompacteurDepot {
             Path dossierSortie,
             int numero,
             Consumer<Progression> progres,
+            SuiviArchives suivi,
             int total,
             AtomicInteger faits)
             throws IOException {
         Path archive = dossierSortie.resolve(prefixe + "-" + numero + ".zip");
-        try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(archive)))) {
-            for (Path fichier : fichiers) {
-                zos.putNextEntry(new ZipEntry(fichier.getFileName().toString()));
-                Files.copy(fichier, zos); // recopie en flux : mémoire bornée (#104)
-                zos.closeEntry();
-                int n = faits.incrementAndGet();
-                progres.accept(new Progression(
-                        "Compression " + n + "/" + total + " · " + fichier.getFileName(), n / (double) total));
+        int dansArchive = fichiers.size();
+        try {
+            suivi.archiveDemarree(numero); // la ligne passe « en cours » (#820)
+            try (ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(archive)))) {
+                int faitsArchive = 0;
+                for (Path fichier : fichiers) {
+                    zos.putNextEntry(new ZipEntry(fichier.getFileName().toString()));
+                    Files.copy(fichier, zos); // recopie en flux : mémoire bornée (#104)
+                    zos.closeEntry();
+                    int n = faits.incrementAndGet();
+                    progres.accept(new Progression(
+                            "Compression " + n + "/" + total + " · " + fichier.getFileName(), n / (double) total));
+                    suivi.archiveProgresse(numero, ++faitsArchive, dansArchive); // barre de CETTE archive (#820)
+                }
             }
+            long tailleReelle = Files.size(archive);
+            verifierTaille(archive, tailleReelle);
+            ArchiveDepot produite = new ArchiveDepot(archive, numero, tailleReelle, dansArchive);
+            suivi.archiveTerminee(produite); // la ligne passe « terminée » + taille réelle (#820)
+            return produite;
+        } catch (IOException | RuntimeException e) {
+            suivi.archiveEchouee(numero, e.getMessage()); // la ligne passe « échec » (#820)
+            throw e;
         }
-        long tailleReelle = Files.size(archive);
-        verifierTaille(archive, tailleReelle);
-        return new ArchiveDepot(archive, numero, tailleReelle, fichiers.size());
     }
 
     /// Défense en profondeur : si malgré la majoration une archive dépassait le plafond, on échoue
