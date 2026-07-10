@@ -122,10 +122,16 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private TableView<LigneArchive> tableArchives;
 
     @FXML
+    private StackPane enveloppeTeleverser;
+
+    @FXML
     private Button btnTeleverser;
 
     @FXML
     private Label lblDepotMessage;
+
+    @FXML
+    private StackPane enveloppeOuvrirDepot;
 
     @FXML
     private Button btnOuvrirDepot;
@@ -197,9 +203,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
         // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
         // sans `connexion`). Actif une fois le lot préparé, hors génération et hors téléversement en cours.
-        // Un libellé restitue l'avancement puis le bilan (ou l'erreur).
-        btnTeleverser.setVisible(depotViewModel.disponible());
-        btnTeleverser.setManaged(depotViewModel.disponible());
+        // Un libellé restitue l'avancement puis le bilan (ou l'erreur). La visibilité porte sur l'ENVELOPPE
+        // (et non le bouton), pour que l'infobulle du grisage (#789) et le bouton disparaissent ensemble.
+        enveloppeTeleverser.setVisible(depotViewModel.disponible());
+        enveloppeTeleverser.setManaged(depotViewModel.disponible());
         btnTeleverser
                 .disableProperty()
                 .bind(viewModel
@@ -207,6 +214,16 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                         .not()
                         .or(depotViewModel.enCoursProperty())
                         .or(viewModel.generationEnCoursProperty()));
+        // Explique le grisage (#789) au survol de l'enveloppe : cas « déjà déposé » distingué des autres.
+        IndicateurBlocage.expliquer(
+                enveloppeTeleverser,
+                Bindings.when(viewModel.deposeProperty())
+                        .then("Passage déjà déposé sur VigieChiro : le téléversement est terminé.")
+                        .otherwise(Bindings.when(btnTeleverser.disableProperty())
+                                .then("Téléversement possible une fois le lot préparé (statut « Prêt à"
+                                        + " déposer »), génération et envoi précédent terminés.")
+                                .otherwise(
+                                        "Téléverser la nuit sur VigieChiro (marque ensuite le passage" + " déposé).")));
         lblDepotMessage.textProperty().bind(depotViewModel.messageProperty());
         lblDepotMessage.visibleProperty().bind(depotViewModel.messageProperty().isNotEmpty());
         lblDepotMessage.managedProperty().bind(depotViewModel.messageProperty().isNotEmpty());
@@ -251,6 +268,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnOuvrirDepot
                 .disableProperty()
                 .bind(Bindings.isEmpty(viewModel.suiviLignes().lignes()).or(viewModel.generationEnCoursProperty()));
+        // Explique le grisage (#789) : pas d'archives à ouvrir tant qu'elles ne sont pas générées.
+        IndicateurBlocage.expliquer(
+                enveloppeOuvrirDepot,
+                Bindings.when(btnOuvrirDepot.disableProperty())
+                        .then("Aucune archive de dépôt à ouvrir : générez d'abord les archives (ou patientez"
+                                + " la fin de la génération en cours).")
+                        .otherwise("Ouvrir le sous-dossier « depot/ » pour un dépôt manuel des archives ZIP."));
 
         // Nettoyage post-dépôt (#…) : « Supprimer les archives » actif seulement une fois le passage déposé
         // et s'il reste des archives ZIP sur disque (le VM lit le disque à chaque chargement d'état).
