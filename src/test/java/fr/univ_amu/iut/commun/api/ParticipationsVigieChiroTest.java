@@ -65,4 +65,45 @@ class ParticipationsVigieChiroTest {
                         "6a49", "Z41", "2026-07-03T19:00:00+00:00", "Vigiechiro - Point Fixe-130711"));
         assertThat(ParticipationsVigieChiro.participations("nope")).isEmpty();
     }
+
+    @Test
+    @DisplayName("detail : _id + _etag + dates + météo + configuration + état traitement (schéma canonique)")
+    void detail_participation() {
+        String corps = "{\"_id\":\"6a49\",\"_etag\":\"etag123\",\"point\":\"Z41\","
+                + "\"date_debut\":\"2026-07-03T19:00:00+00:00\",\"date_fin\":\"2026-07-04T04:00:00+00:00\","
+                + "\"meteo\":{\"vent\":\"FAIBLE\",\"couverture\":\"0-25\"},"
+                + "\"configuration\":{\"detecteur_enregistreur_type\":\"PassiveRecorder\","
+                + "\"micro0_type\":\"ICS\",\"micro0_hauteur\":\"4\"},"
+                + "\"traitement\":{\"etat\":\"FINI\"}}";
+
+        ParticipationDetail detail = ParticipationsVigieChiro.detail(corps).orElseThrow();
+
+        assertThat(detail.id()).isEqualTo("6a49");
+        assertThat(detail.etag()).isEqualTo("etag123");
+        assertThat(detail.point()).isEqualTo("Z41");
+        assertThat(detail.dateDebut()).isEqualTo("2026-07-03T19:00:00+00:00");
+        assertThat(detail.dateFin()).isEqualTo("2026-07-04T04:00:00+00:00");
+        assertThat(detail.meteo().vent()).isEqualTo("FAIBLE");
+        assertThat(detail.meteo().couverture()).isEqualTo("0-25");
+        assertThat(detail.configuration())
+                .containsEntry("detecteur_enregistreur_type", "PassiveRecorder")
+                .containsEntry("micro0_type", "ICS")
+                .containsEntry("micro0_hauteur", "4");
+        assertThat(detail.etatTraitement()).isEqualTo("FINI");
+    }
+
+    @Test
+    @DisplayName("detail : météo/config/traitement absents → null/vide ; sans _id ou illisible → Optional vide")
+    void detail_participation_minimale_et_tolerante() {
+        // Participation fraîchement créée : ni météo, ni configuration, ni traitement, ni _etag lisible.
+        ParticipationDetail minimal = ParticipationsVigieChiro.detail("{\"_id\":\"x\",\"point\":\"Z1\"}")
+                .orElseThrow();
+        assertThat(minimal.meteo()).isNull();
+        assertThat(minimal.configuration()).isEmpty();
+        assertThat(minimal.etatTraitement()).isNull();
+        assertThat(minimal.etag()).isNull();
+
+        assertThat(ParticipationsVigieChiro.detail("{\"point\":\"Z1\"}")).isEmpty(); // sans _id
+        assertThat(ParticipationsVigieChiro.detail("pas du json")).isEmpty();
+    }
 }

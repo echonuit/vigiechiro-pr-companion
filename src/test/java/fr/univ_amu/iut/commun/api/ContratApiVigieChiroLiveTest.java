@@ -113,4 +113,18 @@ class ContratApiVigieChiroLiveTest {
                 .as("point (code localité) non nul")
                 .isNotNull();
     }
+
+    @Test
+    @DisplayName("Dérive client : ClientVigieChiro.participation(id) lit le détail réel (_etag présent)")
+    void client_lit_le_detail_participation() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+        String id = client.mesParticipations().getFirst().id();
+
+        ParticipationDetail detail = client.participation(id).orElseThrow();
+
+        assertThat(detail.etag())
+                .as("_etag présent (requis en If-Match pour un futur PATCH)")
+                .isNotNull();
+        assertThat(detail.point()).as("point (code localité) non nul").isNotNull();
+    }
 }

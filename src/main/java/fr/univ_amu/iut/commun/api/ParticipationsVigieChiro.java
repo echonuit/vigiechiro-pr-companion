@@ -3,10 +3,12 @@ package fr.univ_amu.iut.commun.api;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -73,6 +75,61 @@ final class ParticipationsVigieChiro {
                     siteTitre));
         }
         return participations;
+    }
+
+    /// Vue **détaillée** d'une participation depuis `GET /participations/#id` (axe 4) : `_id` + `_etag`
+    /// (pour un PATCH `If-Match`) + dates + météo + configuration + état du traitement Tadarida. Vide si le
+    /// corps est illisible ou sans `_id`. Tolérant.
+    static Optional<ParticipationDetail> detail(String corps) {
+        try {
+            JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
+            String id = ReponsesVigieChiro.texte(objet, CLE_ID);
+            if (id == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new ParticipationDetail(
+                    id,
+                    ReponsesVigieChiro.texte(objet, "_etag"),
+                    ReponsesVigieChiro.texte(objet, "point"),
+                    ReponsesVigieChiro.texte(objet, "date_debut"),
+                    ReponsesVigieChiro.texte(objet, "date_fin"),
+                    meteo(objet),
+                    configuration(objet),
+                    etatTraitement(objet)));
+        } catch (RuntimeException illisible) {
+            return Optional.empty();
+        }
+    }
+
+    /// Bloc météo (`meteo.vent` / `meteo.couverture`), ou `null` si le sous-objet est absent.
+    private static MeteoDepot meteo(JsonObject participation) {
+        JsonElement brut = participation.get("meteo");
+        if (brut == null || !brut.isJsonObject()) {
+            return null;
+        }
+        JsonObject meteo = brut.getAsJsonObject();
+        return new MeteoDepot(ReponsesVigieChiro.texte(meteo, "vent"), ReponsesVigieChiro.texte(meteo, "couverture"));
+    }
+
+    /// Dictionnaire `configuration` (clés → valeurs texte), jamais `null` (vide si absent). Les valeurs
+    /// non primitives sont ignorées (tolérant).
+    private static Map<String, String> configuration(JsonObject participation) {
+        Map<String, String> config = new LinkedHashMap<>();
+        JsonElement brut = participation.get("configuration");
+        if (brut != null && brut.isJsonObject()) {
+            for (Map.Entry<String, JsonElement> entree : brut.getAsJsonObject().entrySet()) {
+                if (entree.getValue().isJsonPrimitive()) {
+                    config.put(entree.getKey(), entree.getValue().getAsString());
+                }
+            }
+        }
+        return config;
+    }
+
+    /// État du traitement Tadarida (`traitement.etat`, ex. `FINI`), ou `null`.
+    private static String etatTraitement(JsonObject participation) {
+        JsonElement brut = participation.get("traitement");
+        return brut != null && brut.isJsonObject() ? ReponsesVigieChiro.texte(brut.getAsJsonObject(), "etat") : null;
     }
 
     /// Numéro de carré (6 chiffres isolés) extrait du titre du site, ou `null` s'il n'y en a pas.

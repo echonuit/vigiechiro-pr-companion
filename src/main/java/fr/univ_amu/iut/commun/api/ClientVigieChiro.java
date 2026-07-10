@@ -82,6 +82,13 @@ public final class ClientVigieChiro {
                 .orElseGet(List::of);
     }
 
+    /// Participation **détaillée** (`GET /participations/#id`, axe 4) : `_etag` (pour un `PATCH` `If-Match`
+    /// concurrent-sûr), dates, météo, configuration matérielle et état du traitement Tadarida. Vide si non
+    /// connecté, indisponible, ou participation inconnue.
+    public Optional<ParticipationDetail> participation(String id) {
+        return get("/participations/" + id).flatMap(ParticipationsVigieChiro::detail);
+    }
+
     /// Résultats Tadarida d'une participation (`GET /participations/#id/donnees`, #719, axe 4.2) : les
     /// fichiers et leurs observations, **toutes pages confondues**. Liste vide si non connecté /
     /// indisponible. La réponse Eve est paginée ; on parcourt les pages (grande taille demandée) jusqu'à
