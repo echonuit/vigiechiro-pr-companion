@@ -77,13 +77,16 @@
     <ListView fx:id="listeArchives" minHeight="90.0" prefHeight="100.0"/>
   </VBox>
 
-  <!-- Étape 3 - Téléverser ces archives (action manuelle, hors application) -->
+  <!-- Étape 3 - Téléverser sur Vigie-Chiro (automatisé #142, avec repli manuel par le dossier depot/) -->
   <VBox spacing="4.0" styleClass="carte-section">
-    <Label text="3. Téléverser ces archives sur Vigie-Chiro" styleClass="section-titre"/>
-    <Label text="Action manuelle (hors application) : téléversez les archives ZIP ci-dessus sur Vigie-Chiro. Elles se trouvent dans :"
+    <Label text="3. Téléverser sur Vigie-Chiro" styleClass="section-titre"/>
+    <Label text="Téléversez la nuit directement sur Vigie-Chiro (les séquences transformées, au format attendu par la plateforme). En cas de besoin, un dépôt manuel des archives ZIP reste possible depuis le dossier :"
            styleClass="section-sous" wrapText="true"/>
     <Label fx:id="lblCheminDepot" styleClass="chemin" wrapText="true"/>
-    <Button fx:id="btnOuvrirDepot" text="📂 Ouvrir le dossier"
+    <Button fx:id="btnTeleverser" text="☁ Téléverser sur Vigie-Chiro"
+            styleClass="bouton-primaire" onAction="#televerserVigieChiro"/>
+    <Label fx:id="lblDepotMessage" styleClass="section-sous" wrapText="true"/>
+    <Button fx:id="btnOuvrirDepot" text="📂 Ouvrir le dossier (dépôt manuel)"
             styleClass="bouton-secondaire" onAction="#ouvrirDossierDepot"/>
   </VBox>
 

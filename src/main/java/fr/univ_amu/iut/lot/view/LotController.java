@@ -11,8 +11,10 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
+import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.StatutControle;
+import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import java.nio.file.Path;
@@ -58,6 +60,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private static final int LIGNES_ARCHIVES_MAX = 8;
 
     private final LotViewModel viewModel;
+    private final DepotViewModel depotViewModel;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
 
@@ -113,6 +116,12 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private ListView<String> listeArchives;
 
     @FXML
+    private Button btnTeleverser;
+
+    @FXML
+    private Label lblDepotMessage;
+
+    @FXML
     private Button btnOuvrirDepot;
 
     @FXML
@@ -123,8 +132,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @Inject
     public LotController(
-            LotViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage, OuvreurDeLien ouvreurDeLien) {
+            LotViewModel viewModel,
+            DepotViewModel depotViewModel,
+            OuvrirSite ouvrirSite,
+            OuvrirPassage ouvrirPassage,
+            OuvreurDeLien ouvreurDeLien) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.depotViewModel = Objects.requireNonNull(depotViewModel, "depotViewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
@@ -158,6 +172,22 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnDeposer
                 .disableProperty()
                 .bind(viewModel.peutDeposerProperty().not().or(viewModel.generationEnCoursProperty()));
+
+        // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
+        // sans `connexion`). Actif une fois le lot préparé, hors génération et hors téléversement en cours.
+        // Un libellé restitue l'avancement puis le bilan (ou l'erreur).
+        btnTeleverser.setVisible(depotViewModel.disponible());
+        btnTeleverser.setManaged(depotViewModel.disponible());
+        btnTeleverser
+                .disableProperty()
+                .bind(viewModel
+                        .peutDeposerProperty()
+                        .not()
+                        .or(depotViewModel.enCoursProperty())
+                        .or(viewModel.generationEnCoursProperty()));
+        lblDepotMessage.textProperty().bind(depotViewModel.messageProperty());
+        lblDepotMessage.visibleProperty().bind(depotViewModel.messageProperty().isNotEmpty());
+        lblDepotMessage.managedProperty().bind(depotViewModel.messageProperty().isNotEmpty());
 
         // Archives de dépôt (#110) : titre = plafond configuré ; bouton actif une fois le lot préparé et
         // hors génération en cours ; la liste reflète les ZIP produits.
@@ -333,6 +363,27 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 Platform.runLater(() -> viewModel.appliquerGeneration(produites));
             } catch (RuntimeException echec) {
                 Platform.runLater(() -> viewModel.echecGeneration(echec.getMessage()));
+            }
+        });
+    }
+
+    /// Téléverse la nuit sur VigieChiro **hors fil JavaFX** (#142), étape ③ automatisée : même patron que la
+    /// génération d'archives (état « en cours » posé au fil JavaFX, dépôt sur un fil virtuel, résultat via
+    /// `Platform.runLater`). En cas de succès, marque aussi le passage « déposé ». L'IHM restitue
+    /// l'avancement puis le bilan (ou l'erreur) via le libellé de l'étape.
+    @FXML
+    private void televerserVigieChiro() {
+        Long idPassage = contexte.idPassage();
+        depotViewModel.marquerEnCours();
+        Thread.ofVirtual().name("depot-vigiechiro").start(() -> {
+            try {
+                BilanDepot bilan = depotViewModel.televerser(idPassage);
+                Platform.runLater(() -> {
+                    depotViewModel.appliquerBilan(bilan);
+                    viewModel.deposer();
+                });
+            } catch (RuntimeException echec) {
+                Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
             }
         });
     }

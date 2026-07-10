@@ -77,4 +77,26 @@ class DepotViewModelTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("indisponible");
     }
+
+    @Test
+    @DisplayName("cycle d'état IHM : en cours → bilan complet / partiel / échec")
+    void cycle_etat_ihm() {
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+        assertThat(vm.enCoursProperty().get()).isFalse();
+
+        vm.marquerEnCours();
+        assertThat(vm.enCoursProperty().get()).isTrue();
+        assertThat(vm.messageProperty().get()).contains("en cours");
+
+        vm.appliquerBilan(new BilanDepot("p", 5, List.of()));
+        assertThat(vm.enCoursProperty().get()).isFalse();
+        assertThat(vm.messageProperty().get()).contains("5 fichier");
+
+        vm.appliquerBilan(new BilanDepot("p", 3, List.of("x.wav")));
+        assertThat(vm.messageProperty().get()).contains("échec");
+
+        vm.echec("Token expiré");
+        assertThat(vm.enCoursProperty().get()).isFalse();
+        assertThat(vm.messageProperty().get()).isEqualTo("Token expiré");
+    }
 }

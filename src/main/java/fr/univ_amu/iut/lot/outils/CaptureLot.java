@@ -27,6 +27,7 @@ import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.view.LotController;
+import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -192,6 +193,7 @@ public final class CaptureLot {
         loader.setControllerFactory(type -> type == LotController.class
                 ? new LotController(
                         vm,
+                        injecteur.getInstance(DepotViewModel.class),
                         injecteur.getInstance(OuvrirSite.class),
                         injecteur.getInstance(OuvrirPassage.class),
                         injecteur.getInstance(OuvreurDeLien.class))

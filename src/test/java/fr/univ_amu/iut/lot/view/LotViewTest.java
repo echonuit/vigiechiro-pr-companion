@@ -15,10 +15,13 @@ import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import java.util.List;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -46,11 +49,18 @@ class LotViewTest {
         service = mock(ServiceLot.class);
         when(service.consulterLot(anyLong()))
                 .thenReturn(new EtatLot(StatutWorkflow.VERIFIE, "/ws/session-42", 2, 8192L, List.of(), null));
+        // Dépôt présent (mock) → le bouton « Téléverser sur Vigie-Chiro » est visible (#142).
+        DepotVigieChiro depot = mock(DepotVigieChiro.class);
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
                     @Provides
                     LotViewModel viewModel() {
                         return new LotViewModel(service);
+                    }
+
+                    @Provides
+                    DepotViewModel depotViewModel() {
+                        return new DepotViewModel(service, Optional.of(depot));
                     }
 
                     @Provides
@@ -89,5 +99,14 @@ class LotViewTest {
     void preparer_delegue_au_service(FxRobot robot) {
         robot.clickOn("#btnPreparer");
         verify(service).preparerLot(42L);
+    }
+
+    @Test
+    @DisplayName("#142 : le bouton « Téléverser sur Vigie-Chiro » est présent et visible (dépôt disponible)")
+    void bouton_televerser_present(FxRobot robot) {
+        Button televerser = robot.lookup("#btnTeleverser").queryAs(Button.class);
+
+        assertThat(televerser.isVisible()).isTrue();
+        assertThat(televerser.getText()).contains("Téléverser sur Vigie-Chiro");
     }
 }

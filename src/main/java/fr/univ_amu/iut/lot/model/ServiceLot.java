@@ -38,9 +38,10 @@ import java.util.function.Consumer;
 /// feature `passage`) : on ne réécrit pas la progression linéaire et on garantit qu'un dépôt
 /// suit bien une préparation (pas de saut d'étape ni de retour arrière).
 ///
-/// **Aucun accès réseau** : l'application ne dialogue jamais avec le portail Vigie-Chiro,
-/// le dépôt est manuel (le service se contente de préparer le dossier et de tracer la date
-/// déclarée).
+/// **Aucun accès réseau ici** : ce service se contente de préparer le dossier, de lister les séquences à
+/// déposer ([#sequencesADeposer(Long)]) et de tracer la date de dépôt. Le téléversement effectif vers
+/// Vigie-Chiro (#142) est porté par `DepotVigieChiro` (feature `lot`, appelé via `DepotViewModel`) ; un
+/// dépôt manuel des archives reste possible en repli.
 public class ServiceLot {
 
     /// Nom du paramètre `idPassage` pour les messages `requireNonNull` (factorisé, évite le littéral dupliqué).

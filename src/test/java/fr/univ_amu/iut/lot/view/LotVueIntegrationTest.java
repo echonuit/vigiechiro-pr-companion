@@ -22,10 +22,12 @@ import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.StatutControle;
+import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -86,6 +88,11 @@ class LotVueIntegrationTest {
                             viewModel = new LotViewModel(service);
                         }
                         return viewModel;
+                    }
+
+                    @Provides
+                    DepotViewModel depotViewModel() {
+                        return new DepotViewModel(service, Optional.empty());
                     }
 
                     @Provides

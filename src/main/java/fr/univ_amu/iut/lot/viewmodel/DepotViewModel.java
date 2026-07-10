@@ -8,6 +8,10 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 
 /// ViewModel du **téléversement d'une nuit sur VigieChiro** (#142), distinct de [LotViewModel] : le dépôt
 /// est un concern à part (et [LotViewModel] est déjà volumineux). Coordonne la résolution des séquences
@@ -20,6 +24,14 @@ public class DepotViewModel {
 
     private final ServiceLot service;
     private final Optional<DepotVigieChiro> depot;
+
+    /// Téléversement en cours (posé pendant le travail hors fil JavaFX) : l'IHM désactive le bouton et
+    /// affiche un état d'activité pendant l'upload, qui peut être long sur une grosse nuit (milliers de
+    /// fichiers).
+    private final ReadOnlyBooleanWrapper enCours = new ReadOnlyBooleanWrapper(this, "enCours", false);
+
+    /// Message de restitution du dernier dépôt (succès résumé ou erreur), pour l'IHM.
+    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
     public DepotViewModel(ServiceLot service, Optional<DepotVigieChiro> depot) {
         this.service = Objects.requireNonNull(service, "service");
@@ -48,5 +60,33 @@ public class DepotViewModel {
             throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage.");
         }
         return depotVigieChiro.deposer(idPassage, fichiers);
+    }
+
+    /// Signale le **début** du téléversement (au fil JavaFX, avant de lancer [#televerser] en arrière-plan).
+    public void marquerEnCours() {
+        message.set("Téléversement en cours… (cela peut prendre quelques minutes sur une grosse nuit).");
+        enCours.set(true);
+    }
+
+    /// Restitue un dépôt **réussi** (au fil JavaFX, après [#televerser]) : résumé participation + fichiers
+    /// déposés, et le détail des échecs éventuels (dépôt partiel relançable).
+    public void appliquerBilan(BilanDepot bilan) {
+        enCours.set(false);
+        String resume = "Nuit déposée sur VigieChiro : " + bilan.deposees() + " fichier(s) téléversé(s).";
+        message.set(bilan.estComplet() ? resume : resume + " " + bilan.echecs().size() + " en échec (à relancer).");
+    }
+
+    /// Restitue un **échec** de dépôt (au fil JavaFX) : message d'erreur métier / réseau.
+    public void echec(String erreur) {
+        enCours.set(false);
+        message.set(erreur);
+    }
+
+    public ReadOnlyBooleanProperty enCoursProperty() {
+        return enCours.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty messageProperty() {
+        return message.getReadOnlyProperty();
     }
 }
