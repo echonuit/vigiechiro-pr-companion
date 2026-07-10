@@ -7,6 +7,7 @@ import com.google.inject.Provides;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.di.CommunModule;
@@ -57,6 +58,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -122,6 +124,12 @@ final class GraineSonsValidation {
                             ServiceBibliotheque bibliotheque) {
                         return new AudioViewModel(
                                 validation, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
+                    }
+
+                    // Import VigieChiro indisponible en capture (aucune connexion) : VM à dépôt vide.
+                    @Provides
+                    ImportVigieChiroViewModel importVigieChiro() {
+                        return new ImportVigieChiroViewModel(Optional.empty());
                     }
 
                     // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est

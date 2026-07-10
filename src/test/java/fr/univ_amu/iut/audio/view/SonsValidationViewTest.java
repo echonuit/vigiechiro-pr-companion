@@ -18,6 +18,7 @@ import com.google.inject.Provides;
 import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -151,6 +152,11 @@ class SonsValidationViewTest {
                     @Provides
                     DepotVues depotVues() {
                         return depotVues;
+                    }
+
+                    @Provides
+                    ImportVigieChiroViewModel importVigieChiro() {
+                        return new ImportVigieChiroViewModel(Optional.empty());
                     }
                 },
                 // Le socle de navigation est neutre par défaut ; on remplace OuvrirAnalyse par un mock pour

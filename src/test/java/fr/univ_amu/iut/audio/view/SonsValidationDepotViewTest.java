@@ -10,6 +10,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
@@ -17,6 +18,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
+import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
@@ -31,6 +33,8 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -77,6 +81,13 @@ class SonsValidationDepotViewTest {
                     DepotVues depotVues() {
                         return mock(DepotVues.class); // findByFeature -> liste vide par défaut (Mockito)
                     }
+
+                    // Import VigieChiro **disponible** (mock) : l'item « Importer depuis VigieChiro » apparaît
+                    // dans le menu ☰ pour cette source ParPassage (workflow Tadarida).
+                    @Provides
+                    ImportVigieChiroViewModel importVigieChiro() {
+                        return new ImportVigieChiroViewModel(Optional.of(mock(ImportVigieChiro.class)));
+                    }
                 },
                 new NavigationDeTestModule());
         FXMLLoader loader = new FXMLLoader(SonsValidationController.class.getResource("SonsValidation.fxml"));
@@ -102,5 +113,18 @@ class SonsValidationDepotViewTest {
         assertThat(bandeau.isVisible()).isTrue();
         assertThat(message.getText()).contains("Import réussi");
         assertThat(bandeau.getStyleClass()).contains("retour-succes");
+    }
+
+    @Test
+    @DisplayName("#719 : l'item « Importer depuis VigieChiro » est présent et visible (passage, connecté)")
+    void item_import_vigiechiro_present(FxRobot robot) {
+        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        MenuItem item = menu.getItems().stream()
+                .filter(i -> "itemImporterVigieChiro".equals(i.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        assertThat(item.isVisible()).isTrue();
+        assertThat(item.getText()).contains("VigieChiro");
     }
 }
