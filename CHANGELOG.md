@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.156.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.155.0...v1.156.0) (2026-07-10)
+
+
+### Features
+
+* **api:** écritures VigieChiro pour le dépôt d'une nuit (participation + fichiers) ([#811](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/811)) ([db4db24](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/db4db248b8340eceddf47aa2ea73672f2f39bf25)), closes [#142](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/142)
+
 # [1.155.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.154.0...v1.155.0) (2026-07-10)
 
 
