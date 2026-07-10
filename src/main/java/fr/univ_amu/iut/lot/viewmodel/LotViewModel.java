@@ -7,6 +7,7 @@ import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SuiviArchives;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
@@ -61,13 +62,17 @@ public class LotViewModel {
     /// un état « en cours » et désactiver le bouton (l'opération peut être longue sur une grosse nuit).
     private final ReadOnlyBooleanWrapper generationEnCours =
             new ReadOnlyBooleanWrapper(this, "generationEnCours", false);
-    private final ObservableList<String> archives = FXCollections.observableArrayList();
+    /// Lignes de la table de dépôt (#820) : une [LigneArchive] par ZIP, avec son état et sa barre de
+    /// progression. Remplace l'ancienne liste de libellés : **source unique** pour l'affichage, les tests
+    /// d'existence (bouton supprimer, ouvrir le dossier, rôles) et le suivi par archive (pré-remplie au plan,
+    /// mise à jour au fil de la compression parallèle, réhydratée du disque à la réouverture).
+    private final SuiviLignesArchives suiviLignes = new SuiviLignesArchives();
 
-    /// Suppression des archives possible (#…) : **liaison vivante** sur [#archives] — vraie dès qu'il
-    /// existe des archives (régénérables), et recalculée automatiquement quand la liste change (génération,
-    /// réhydratation au chargement, suppression). Un simple `set()` dans `appliquer` restait périmé après
-    /// une génération en session, laissant le bouton inactif à tort.
-    private final BooleanBinding peutSupprimerArchives = Bindings.isNotEmpty(archives);
+    /// Suppression des archives possible (#…) : **liaison vivante** sur les lignes — vraie dès qu'il existe
+    /// des archives (régénérables), recalculée quand la liste change (génération, réhydratation, suppression).
+    /// Un simple `set()` dans `appliquer` restait périmé après une génération en session, laissant le bouton
+    /// inactif à tort.
+    private final BooleanBinding peutSupprimerArchives = Bindings.isNotEmpty(suiviLignes.lignes());
     private final ReadOnlyStringWrapper titreArchives = new ReadOnlyStringWrapper(this, "titreArchives", "");
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
@@ -122,7 +127,7 @@ public class LotViewModel {
         }
         try {
             long liberes = service.supprimerArchivesDepot(idPassage);
-            archives.clear();
+            suiviLignes.reinitialiser();
             appliquer(service.consulterLot(idPassage));
             message.set("Archives de dépôt supprimées (" + Formats.octetsLisibles(liberes) + " libérés).");
             return true;
@@ -133,9 +138,10 @@ public class LotViewModel {
     }
 
     /// Génère les **archives ZIP de dépôt** (#110) de façon **synchrone** (tests + CLI) : enchaîne
-    /// [#marquerGenerationEnCours()], [#calculerArchivesDepot(Consumer)] et [#appliquerGeneration] /
-    /// [#echecGeneration]. La progression n'est pas suivie ici (callback inerte) ; la vue préfère le
-    /// découpage avec suivi pour exécuter le calcul **hors fil JavaFX** sans figer l'IHM.
+    /// [#marquerGenerationEnCours()], [#calculerArchivesDepot(Consumer, SuiviArchives)] et
+    /// [#appliquerGeneration] / [#echecGeneration]. Ni la progression ni le suivi par archive ne sont
+    /// observés ici (callbacks inertes) ; la vue préfère la variante suivie pour exécuter le calcul **hors
+    /// fil JavaFX** sans figer l'IHM.
     ///
     /// @return `true` si au moins une archive a été générée
     public boolean genererArchives() {
@@ -144,7 +150,7 @@ public class LotViewModel {
         }
         marquerGenerationEnCours();
         try {
-            appliquerGeneration(calculerArchivesDepot(progression -> {}));
+            appliquerGeneration(calculerArchivesDepot(progression -> {}, SuiviArchives.inerte()));
             return true;
         } catch (RuntimeException echec) {
             echecGeneration(echec.getMessage());
@@ -153,29 +159,35 @@ public class LotViewModel {
     }
 
     /// Passe à l'état « génération en cours » (#251) et l'annonce : **à appeler sur le fil JavaFX**, juste
-    /// avant de lancer [#calculerArchivesDepot(Consumer)] sur un fil d'arrière-plan. Amorce aussi le suivi
-    /// de progression (#769 : barre + estimation de durée) en posant la référence temporelle de l'ETA.
+    /// avant de lancer [#calculerArchivesDepot(Consumer, SuiviArchives)] sur un fil d'arrière-plan. Amorce
+    /// aussi le suivi de progression (#769 : barre + estimation de durée) en posant la référence temporelle
+    /// de l'ETA, et vide la table (#820) que le plan re-remplira de lignes « en attente ».
     public void marquerGenerationEnCours() {
         generationEnCours.set(true);
         message.set("Génération des archives de dépôt en cours…");
         progression.demarrer("Préparation des archives…");
+        suiviLignes.reinitialiser();
     }
 
     /// Calcule les archives ZIP de dépôt (appel service, potentiellement **long**). **Aucune** mutation de
-    /// propriété observable ici : sûr à exécuter **hors fil JavaFX**. `progres` remonte l'avancement
-    /// (#769) ; il DOIT relayer les mutations vers le fil JavaFX (`Platform.runLater`). Le résultat est
+    /// propriété observable ici : sûr à exécuter **hors fil JavaFX**. `progres` remonte l'avancement global
+    /// (#769) et `suivi` le cycle de vie par archive (#820, animation de la table) ; tous deux DOIVENT
+    /// relayer leurs mutations au fil JavaFX (`Platform.runLater`, cf. le controller). Le résultat est
     /// appliqué ensuite par [#appliquerGeneration] (sur le fil JavaFX). Sans passage ouvert, liste vide.
-    public List<ArchiveDepot> calculerArchivesDepot(Consumer<Progression> progres) {
+    public List<ArchiveDepot> calculerArchivesDepot(Consumer<Progression> progres, SuiviArchives suivi) {
         if (idPassage == null) {
             return List.of();
         }
-        return service.genererArchivesDepot(idPassage, progres);
+        return service.genererArchivesDepot(idPassage, progres, suivi);
     }
 
     /// Applique le résultat d'une génération réussie (#251) : **à appeler sur le fil JavaFX**. Publie la
     /// liste, fait avancer le stepper de ② « Générer » vers ③ « Téléverser », et lève l'état « en cours ».
     public void appliquerGeneration(List<ArchiveDepot> produites) {
-        archives.setAll(produites.stream().map(FormatsLot::archiveLisible).toList());
+        // Harmonise la table à l'état final « terminée » : en génération synchrone (sans suivi) elle la
+        // peuple ; en génération suivie (#820), les lignes étaient déjà passées « terminée » au fil des
+        // événements, on repose simplement le même état final.
+        suiviLignes.afficherTerminees(produites);
         if (statutCourant != null) {
             majEtapes(statutCourant);
         }
@@ -222,12 +234,10 @@ public class LotViewModel {
         cheminDepot.set(dossier.isEmpty() ? "" : dossier + "/depot");
         recap.set(FormatsLot.recapLisible(etat));
         controles.setAll(etat.controles());
-        // Réhydrate la liste des archives depuis le DISQUE (#…) : à la réouverture d'un passage déjà généré,
-        // on réaffiche les archives présentes dans depot/ (et on réactive « Ouvrir le dossier » / « Supprimer »),
-        // là où l'ancienne liste, seulement peuplée en session, restait vide après navigation.
-        archives.setAll(service.archivesDepot(etat.cheminDossier()).stream()
-                .map(FormatsLot::archiveLisible)
-                .toList());
+        // Réhydrate la table des archives depuis le DISQUE (#…) : à la réouverture d'un passage déjà généré,
+        // on réaffiche les archives présentes dans depot/ (lignes « terminées » : réactive « Ouvrir le
+        // dossier » / « Supprimer »), là où l'ancienne liste, seulement peuplée en session, restait vide.
+        suiviLignes.afficherTerminees(service.archivesDepot(etat.cheminDossier()));
         peutPreparer.set(etat.statut() == StatutWorkflow.VERIFIE && !etat.aDesEchecs());
         peutDeposer.set(etat.statut() == StatutWorkflow.PRET_A_DEPOSER);
         depose.set(etat.statut() == StatutWorkflow.DEPOSE);
@@ -235,7 +245,7 @@ public class LotViewModel {
         // déposer ou déjà déposé.
         peutGenererArchives.set(
                 etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE);
-        // (peutSupprimerArchives est une liaison vivante sur `archives` : rien à poser ici.)
+        // (peutSupprimerArchives est une liaison vivante sur les lignes : rien à poser ici.)
         majEspaceDisque(etat);
         majEtapes(etat.statut());
         message.set(FormatsLot.messageEtat(etat));
@@ -259,7 +269,7 @@ public class LotViewModel {
     /// Recompose le stepper du dépôt (#251) depuis [EtapesDepot], selon le statut et la génération
     /// d'archives. Appelé à chaque (re)chargement d'état et après une génération.
     private void majEtapes(StatutWorkflow statut) {
-        etapes.setAll(EtapesDepot.calculer(statut, !archives.isEmpty()));
+        etapes.setAll(EtapesDepot.calculer(statut, !suiviLignes.lignes().isEmpty()));
     }
 
     private void reinitialiser() {
@@ -277,7 +287,7 @@ public class LotViewModel {
         espaceDepotSuffisant.set(true);
         raisonEspaceInsuffisant.set("");
         generationEnCours.set(false);
-        archives.clear(); // suffit à repasser peutSupprimerArchives (liaison vivante) à false
+        suiviLignes.reinitialiser(); // repasse peutSupprimerArchives (liaison vivante) à false
         message.set("");
     }
 
@@ -359,9 +369,11 @@ public class LotViewModel {
         return generationEnCours.getReadOnlyProperty();
     }
 
-    /// Récapitulatifs lisibles des archives ZIP de dépôt produites (#110), vide tant qu'aucune génération.
-    public ObservableList<String> archives() {
-        return archives;
+    /// Suivi **par archive** de dépôt (#820) : ses [SuiviLignesArchives#lignes()] (une [LigneArchive] par
+    /// ZIP, avec état + barre) alimentent la table ; le controller y relaie aussi le cycle de vie de la
+    /// génération (via `Platform.runLater`). Vide tant qu'aucune archive n'existe (session ou disque).
+    public SuiviLignesArchives suiviLignes() {
+        return suiviLignes;
     }
 
     /// Titre de la section archives, intégrant le **plafond configuré** (ex. « …(≤ 700 Mo) », #110).

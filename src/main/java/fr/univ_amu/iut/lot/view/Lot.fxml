@@ -2,8 +2,8 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -73,8 +73,9 @@
          génération est désactivée faute de place (proactif, sans attendre le clic). -->
     <Label fx:id="lblEspaceInsuffisant" styleClass="bandeau-statut, badge-danger" wrapText="true"
            visible="false" managed="false"/>
-    <!-- Hauteur plancher (jamais écrasée) ; le controller ajuste la hauteur au nombre d'archives (#…). -->
-    <ListView fx:id="listeArchives" minHeight="90.0" prefHeight="100.0"/>
+    <!-- Table de suivi (#820) : une ligne + une barre par archive ZIP (en attente / en cours / terminée).
+         Colonnes et cellule d'état construites par le controller (TableSuiviArchives). -->
+    <TableView fx:id="tableArchives" minHeight="120.0" prefHeight="160.0"/>
   </VBox>
 
   <!-- Étape 3 - Téléverser sur Vigie-Chiro (automatisé #142, avec repli manuel par le dossier depot/) -->

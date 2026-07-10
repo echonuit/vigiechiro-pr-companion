@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.ArchivePlanifiee;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
@@ -33,7 +34,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -271,13 +272,43 @@ class LotVueIntegrationTest {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
 
         // La table de l'étape 2 est réhydratée depuis le disque (plus vide après navigation).
-        ListView<?> liste = robot.lookup("#listeArchives").queryAs(ListView.class);
-        assertThat(liste.getItems()).hasSize(2);
+        TableView<?> table = robot.lookup("#tableArchives").queryAs(TableView.class);
+        assertThat(table.getItems()).hasSize(2);
         // « Ouvrir le dossier » et « Supprimer les archives » sont actifs dès que des archives existent.
         assertThat(robot.lookup("#btnOuvrirDepot").queryAs(Button.class).isDisabled())
                 .isFalse();
         assertThat(robot.lookup("#btnSupprimerArchives").queryAs(Button.class).isDisabled())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#820 : la table rend les 4 états d'archive — attente, barre « en cours », terminée, échec")
+    void table_rend_l_etat_de_chaque_archive(FxRobot robot) {
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 4, 8192L, List.of(), null));
+
+        // Injecte un plan de 4 archives puis fait évoluer les états sur le fil JavaFX, comme le ferait le
+        // relais de suivi pendant une compression parallèle : 1 en cours, 2 en attente, 3 terminée, 4 échec.
+        robot.interact(() -> {
+            var suivi = viewModel.suiviLignes();
+            suivi.planifier(List.of(
+                    new ArchivePlanifiee(1, 2, 1_000L),
+                    new ArchivePlanifiee(2, 3, 2_000L),
+                    new ArchivePlanifiee(3, 2, 1_500L),
+                    new ArchivePlanifiee(4, 1, 800L)));
+            suivi.demarrer(1);
+            suivi.progresser(1, 1, 2);
+            suivi.terminer(new ArchiveDepot(Path.of("/ws/session-42/depot/Car-3.zip"), 3, 1_400L, 2));
+            suivi.echouer(4, "disque plein");
+        });
+
+        TableView<?> table = robot.lookup("#tableArchives").queryAs(TableView.class);
+        assertThat(table.getItems()).hasSize(4);
+        // Chaque état pose sa classe sur la ligne ; « en cours » affiche une barre de progression vive.
+        assertThat(robot.lookup(".ligne-archive.etat-attente").tryQuery()).isPresent();
+        assertThat(robot.lookup(".ligne-archive.etat-cours").tryQuery()).isPresent();
+        assertThat(robot.lookup(".ligne-archive.etat-terminee").tryQuery()).isPresent();
+        assertThat(robot.lookup(".ligne-archive.etat-echec").tryQuery()).isPresent();
+        assertThat(robot.lookup(".progress-bar").tryQuery()).isPresent();
     }
 
     @Test
@@ -356,7 +387,7 @@ class LotVueIntegrationTest {
     @DisplayName("#259 : après une génération réussie, « Ouvrir le dossier » s'active et ouvre depot/")
     void ouvrir_dossier_depot_apres_generation(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
-        when(service.genererArchivesDepot(anyLong(), any()))
+        when(service.genererArchivesDepot(anyLong(), any(), any()))
                 .thenReturn(List.of(
                         new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
         robot.interact(() -> viewModel.genererArchives());
@@ -431,7 +462,7 @@ class LotVueIntegrationTest {
         assertThat(deposer.getStyleClass()).contains("bouton-secondaire").doesNotContain("bouton-primaire");
 
         // Étape ④ après génération (l'étape ③ « Téléverser » est manuelle) : « Marquer déposé » devient primaire.
-        when(service.genererArchivesDepot(anyLong(), any()))
+        when(service.genererArchivesDepot(anyLong(), any(), any()))
                 .thenReturn(List.of(
                         new ArchiveDepot(Path.of("/ws/session-42/depot/Car040962-2026-Pass1-A1-1.zip"), 1, 2048L, 2)));
         robot.interact(() -> viewModel.genererArchives());

@@ -75,3 +75,39 @@
   -fx-background-color: #eef2f5;
   -fx-text-fill: #6a737d;
 }
+
+/* ---- Table de suivi du dépôt (#820) : une ligne + une barre par archive ZIP ---- */
+/*
+ * La couleur de la LIGNE (fond + icône + libellé) suit l'état posé par TableSuiviArchives :
+ * gris « en attente », indigo « en cours » (barre vive), vert « terminée », rouge « échec ».
+ * Rôles sémantiques repris de palette.css.
+ */
+.ligne-archive.etat-attente .libelle-etat-archive,
+.ligne-archive.etat-attente .icone-etat-archive {
+  -fx-text-fill: -couleur-texte-discret;
+  -fx-icon-color: -couleur-texte-discret;
+}
+
+.ligne-archive.etat-cours {
+  -fx-background-color: -couleur-primaire-voile;
+}
+
+.ligne-archive.etat-cours .progress-bar {
+  -fx-accent: -couleur-primaire;
+}
+
+.ligne-archive.etat-terminee .libelle-etat-archive,
+.ligne-archive.etat-terminee .icone-etat-archive {
+  -fx-text-fill: -couleur-succes;
+  -fx-icon-color: -couleur-succes;
+}
+
+.ligne-archive.etat-echec {
+  -fx-background-color: -badge-danger-fond;
+}
+
+.ligne-archive.etat-echec .libelle-etat-archive,
+.ligne-archive.etat-echec .icone-etat-archive {
+  -fx-text-fill: -couleur-danger;
+  -fx-icon-color: -couleur-danger;
+}

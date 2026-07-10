@@ -2,7 +2,6 @@ package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
-import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import java.util.Locale;
 
@@ -23,15 +22,6 @@ final class FormatsLot {
 
     private static String enGigaoctets(long octets) {
         return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
-    }
-
-    /// Ligne lisible d'une archive de dépôt : « nom · N fichiers · taille ».
-    static String archiveLisible(ArchiveDepot archive) {
-        return archive.chemin().getFileName()
-                + " · "
-                + archive.nombreFichiers()
-                + " fichiers · "
-                + Formats.octetsLisibles(archive.tailleOctets());
     }
 
     /// Récapitulatif du lot : « N séquences · volume ».

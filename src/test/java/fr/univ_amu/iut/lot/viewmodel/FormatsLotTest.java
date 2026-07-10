@@ -3,24 +3,13 @@ package fr.univ_amu.iut.lot.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
-import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Formatage textuel de l'écran M-Lot (extrait de [LotViewModel]) : lignes d'archive, récapitulatif,
-/// message d'état.
+/// Formatage textuel de l'écran M-Lot (extrait de [LotViewModel]) : récapitulatif et message d'état.
 class FormatsLotTest {
-
-    @Test
-    @DisplayName("archiveLisible : « nom · N fichiers · taille »")
-    void archive_lisible() {
-        assertThat(FormatsLot.archiveLisible(new ArchiveDepot(Path.of("/ws/depot/Car-1.zip"), 1, 2048L, 3)))
-                .contains("Car-1.zip")
-                .contains("3 fichiers");
-    }
 
     @Test
     @DisplayName("recapLisible : « N séquences · volume », ou « volume inconnu » si le volume manque")

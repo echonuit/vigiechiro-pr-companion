@@ -37,6 +37,18 @@ public final class SuiviLignesArchives {
         }
     }
 
+    /// Remplace les lignes par des archives **déjà écrites** (état « terminée », taille réelle) : sert à la
+    /// réhydratation du disque à la réouverture d'un passage, et à la finalisation d'une génération
+    /// synchrone (sans suivi événementiel).
+    public void afficherTerminees(List<ArchiveDepot> archives) {
+        lignes.clear();
+        for (ArchiveDepot a : archives) {
+            LigneArchive ligne = new LigneArchive(a.numero(), a.nombreFichiers(), a.tailleOctets());
+            ligne.terminer(a.tailleOctets());
+            lignes.add(ligne);
+        }
+    }
+
     /// L'archive `numero` commence : sa ligne passe « en cours ».
     public void demarrer(int numero) {
         ligne(numero).ifPresent(LigneArchive::demarrer);

@@ -11,11 +11,15 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
+import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.ArchivePlanifiee;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
 import fr.univ_amu.iut.lot.model.StatutControle;
+import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
+import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import java.nio.file.Path;
 import java.util.List;
@@ -35,8 +39,8 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 
@@ -50,14 +54,6 @@ import javafx.scene.layout.VBox;
 /// Implémente [ResumeStatut] (#693) : le statut du workflow, jusqu'ici en sous-titre d'en-tête, est
 /// déporté en barre de statut (le titre « Préparer le dépôt » étant redondant avec le fil d'Ariane).
 public class LotController implements EmplacementNavigation, ResumeStatut {
-
-    /// Hauteur (px) d'une ligne de la liste des archives, et marges min/max de lignes visibles : la liste
-    /// s'ajuste à son contenu (#…) plutôt qu'une hauteur figée qui la laissait quasi invisible.
-    private static final double HAUTEUR_LIGNE_ARCHIVE = 26.0;
-
-    private static final double MARGE_LISTE_ARCHIVES = 8.0;
-    private static final int LIGNES_ARCHIVES_MIN = 3;
-    private static final int LIGNES_ARCHIVES_MAX = 8;
 
     private final LotViewModel viewModel;
     private final DepotViewModel depotViewModel;
@@ -113,7 +109,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private Label lblEspaceInsuffisant;
 
     @FXML
-    private ListView<String> listeArchives;
+    private TableView<LigneArchive> tableArchives;
 
     @FXML
     private Button btnTeleverser;
@@ -216,20 +212,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         lblProgressionGeneration.textProperty().bind(viewModel.progression().messageProperty());
         lblProgressionGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
         lblProgressionGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
-        listeArchives.setItems(viewModel.archives());
-        // La liste s'ajuste au nombre d'archives (≥ 3 lignes visibles, jusqu'à 8 puis défilement) : une
-        // hauteur figée la laissait quasi invisible à la réouverture d'un passage déjà généré (#…).
-        listeArchives
-                .prefHeightProperty()
-                .bind(Bindings.createDoubleBinding(
-                        () -> Math.min(
-                                                LIGNES_ARCHIVES_MAX,
-                                                Math.max(
-                                                        LIGNES_ARCHIVES_MIN,
-                                                        viewModel.archives().size()))
-                                        * HAUTEUR_LIGNE_ARCHIVE
-                                + MARGE_LISTE_ARCHIVES,
-                        viewModel.archives()));
+        // Table de suivi (#820) : colonnes #/Fichiers/Taille/Progression + cellule état/barre + rangées
+        // colorées selon l'état, alimentée par les lignes du VM (pré-remplies au plan, animées au fil de la
+        // compression parallèle, réhydratées du disque à la réouverture d'un passage déjà généré).
+        TableSuiviArchives.configurer(tableArchives);
+        tableArchives.setItems(viewModel.suiviLignes().lignes());
 
         // Étape ③ : « Ouvrir le dossier » seulement quand les archives sont réellement prêtes (#259), pas
         // dès qu'un chemin existe : les ZIP sont écrits sous leur nom final pendant la génération, ouvrir
@@ -237,7 +224,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // réussie (liste non vide) et hors génération en cours.
         btnOuvrirDepot
                 .disableProperty()
-                .bind(Bindings.isEmpty(viewModel.archives()).or(viewModel.generationEnCoursProperty()));
+                .bind(Bindings.isEmpty(viewModel.suiviLignes().lignes()).or(viewModel.generationEnCoursProperty()));
 
         // Nettoyage post-dépôt (#…) : « Supprimer les archives » actif seulement une fois le passage déposé
         // et s'il reste des archives ZIP sur disque (le VM lit le disque à chaque chargement d'état).
@@ -255,7 +242,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         viewModel.peutGenererArchivesProperty().addListener(majRoles);
         viewModel.peutDeposerProperty().addListener(majRoles);
         viewModel.deposeProperty().addListener(majRoles);
-        viewModel.archives().addListener((ListChangeListener<String>) changement -> majRolesEtapes());
+        viewModel.suiviLignes().lignes().addListener((ListChangeListener<LigneArchive>) changement -> majRolesEtapes());
         majRolesEtapes();
 
         lblMessage.textProperty().bind(viewModel.messageProperty());
@@ -270,7 +257,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// générées, c'est « Marquer déposé » qui devient primaire. Plus aucun primaire une fois le passage
     /// déposé. Le gating du VM garantit qu'au plus une des trois est actionnable à la fois.
     private void majRolesEtapes() {
-        boolean archivesGenerees = !viewModel.archives().isEmpty();
+        boolean archivesGenerees = !viewModel.suiviLignes().lignes().isEmpty();
         boolean deposeFait = viewModel.deposeProperty().get();
         appliquerRolePrimaire(btnPreparer, viewModel.peutPreparerProperty().get());
         appliquerRolePrimaire(
@@ -354,12 +341,14 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private void genererArchives() {
         viewModel.marquerGenerationEnCours();
         // Callback de progression (#769) : le service l'appelle hors-thread, on relaie chaque point au fil
-        // JavaFX pour mettre à jour la barre + l'estimation de durée.
+        // JavaFX pour mettre à jour la barre globale + l'estimation de durée.
         Consumer<Progression> progres =
                 point -> Platform.runLater(() -> viewModel.progression().appliquer(point));
+        // Suivi par archive (#820) : anime la table ligne par ligne (plan → en cours → terminée / échec).
+        SuiviArchives suivi = relaisSuiviTable();
         Thread.ofVirtual().name("archives-depot-vigiechiro").start(() -> {
             try {
-                var produites = viewModel.calculerArchivesDepot(progres);
+                var produites = viewModel.calculerArchivesDepot(progres, suivi);
                 Platform.runLater(() -> viewModel.appliquerGeneration(produites));
             } catch (RuntimeException echec) {
                 Platform.runLater(() -> viewModel.echecGeneration(echec.getMessage()));
@@ -386,6 +375,38 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
             }
         });
+    }
+
+    /// Relais du suivi par archive (#820) vers la table : chaque événement, émis **hors fil JavaFX** et dans
+    /// le désordre (compression parallèle #814), est rejoué sur le fil JavaFX via `Platform.runLater` pour
+    /// muter les lignes observables du VM ([LotViewModel#suiviLignes()]).
+    private SuiviArchives relaisSuiviTable() {
+        return new SuiviArchives() {
+            @Override
+            public void planEtabli(List<ArchivePlanifiee> plan) {
+                Platform.runLater(() -> viewModel.suiviLignes().planifier(plan));
+            }
+
+            @Override
+            public void archiveDemarree(int numero) {
+                Platform.runLater(() -> viewModel.suiviLignes().demarrer(numero));
+            }
+
+            @Override
+            public void archiveProgresse(int numero, int faits, int total) {
+                Platform.runLater(() -> viewModel.suiviLignes().progresser(numero, faits, total));
+            }
+
+            @Override
+            public void archiveTerminee(ArchiveDepot archive) {
+                Platform.runLater(() -> viewModel.suiviLignes().terminer(archive));
+            }
+
+            @Override
+            public void archiveEchouee(int numero, String raison) {
+                Platform.runLater(() -> viewModel.suiviLignes().echouer(numero, raison));
+            }
+        };
     }
 
     /// Ouvre le sous-dossier `depot/` dans le gestionnaire de fichiers du système (#251), pour aider au
