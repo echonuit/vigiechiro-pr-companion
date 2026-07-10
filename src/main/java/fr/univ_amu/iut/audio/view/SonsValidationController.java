@@ -46,6 +46,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 
@@ -208,6 +209,20 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private Button btnDouteux;
 
+    /// Enveloppes (non désactivées) des boutons d'action : portent le tooltip expliquant le blocage
+    /// (un Button désactivé n'en affiche pas). Câblées par [ActionsRevueAudio] (#789).
+    @FXML
+    private StackPane enveloppeValider;
+
+    @FXML
+    private StackPane enveloppeCorriger;
+
+    @FXML
+    private StackPane enveloppeReference;
+
+    @FXML
+    private StackPane enveloppeDouteux;
+
     @FXML
     private HBox bandeauRetour;
 
@@ -363,41 +378,20 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         choixTaxon.setItems(viewModel.taxons());
         choixTaxon.setConverter(LibellesAudio.converter(taxon -> taxon == null ? "" : LibellesAudio.taxon(taxon)));
 
-        // Valider = retenir la proposition Tadarida : seulement s'il y en a une.
-        btnValider
-                .disableProperty()
-                .bind(viewModel.etatSelection().avecTadaridaProperty().not());
-        // Corriger = affecter un taxon : sur toute ligne sélectionnée (correction d'une observation OU
-        // validation manuelle d'une séquence non identifiée), dès qu'un taxon est choisi.
-        btnCorriger
-                .disableProperty()
-                .bind(viewModel
-                        .etatSelection()
-                        .presenteProperty()
-                        .not()
-                        .or(choixTaxon.valueProperty().isNull()));
-        // Référence = archiver : seulement ce qui est déjà une observation.
-        btnReference
-                .disableProperty()
-                .bind(viewModel.etatSelection().avecObservationProperty().not());
-        // Libellé + icône (étoile dorée) de la bascule selon l'état de l'observation sélectionnée.
-        btnReference.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_REFERENCE, CellulesAudio.STYLE_REFERENCE));
-        btnReference
-                .textProperty()
-                .bind(Bindings.when(viewModel.etatSelection().referenceProperty())
-                        .then("Retirer la référence")
-                        .otherwise("Marquer référence"));
-        // Douteux (#160) = « à repasser » : seulement sur une observation (idObservation non nul), comme la
-        // référence. Libellé + icône selon l'état de l'observation sélectionnée.
-        btnDouteux
-                .disableProperty()
-                .bind(viewModel.etatSelection().avecObservationProperty().not());
-        btnDouteux.setGraphic(CellulesAudio.icone(CellulesAudio.ICONE_DOUTEUX, CellulesAudio.STYLE_DOUTEUX));
-        btnDouteux
-                .textProperty()
-                .bind(Bindings.when(viewModel.etatSelection().douteuxProperty())
-                        .then("Retirer le doute")
-                        .otherwise("Marquer douteux"));
+        // Câblage de la barre d'actions (Valider / Corriger / Référence / Douteux) : désactivation selon la
+        // sélection, icônes/libellés des bascules et tooltips d'explication du blocage (#789). Extrait dans
+        // ActionsRevueAudio (unité cohésive) pour garder ce contrôleur sous le seuil de God Class.
+        ActionsRevueAudio.configurer(
+                viewModel,
+                choixTaxon,
+                btnValider,
+                enveloppeValider,
+                btnCorriger,
+                enveloppeCorriger,
+                btnReference,
+                enveloppeReference,
+                btnDouteux,
+                enveloppeDouteux);
 
         // Workflow Tadarida (source ParPassage) : toujours actif ; « Importer » tant qu'aucun résultat,
         // « Réimporter » (remplacement après confirmation) une fois un jeu chargé.
@@ -411,6 +405,15 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 .bind(viewModel.resultatsDisponiblesProperty().not());
         // Export des observations affichées : possible dès qu'il y a au moins une ligne (toutes sources).
         itemExporterObservations.disableProperty().bind(Bindings.isEmpty(viewModel.observationsFiltrees()));
+        // Un MenuItem désactivé n'accueille pas de tooltip : pour cet item toujours visible, on surface la
+        // cause du grisage dans son libellé (#789), qui n'apparaît que lorsqu'il est effectivement grisé
+        // (aucune observation à exporter). L'item « Exporter _Vu » est, lui, masqué hors workflow Tadarida
+        // (le menu montre alors « Importer un CSV Tadarida »), donc pas de libellé dynamique dessus.
+        itemExporterObservations
+                .textProperty()
+                .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
+                        .then("📤 Exporter les observations (CSV)… (aucune observation à exporter)")
+                        .otherwise("📤 Exporter les observations (CSV)…"));
         // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24), coché par défaut.
         itemInclureMode.selectedProperty().bindBidirectional(viewModel.inclureModeProperty());
 

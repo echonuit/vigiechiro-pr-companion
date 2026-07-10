@@ -116,15 +116,25 @@
       <!-- Détail de l'observation retiré du panneau (redondant avec la table) : il sera rendu dans la
            barre de statut lors de la structuration en 3 zones (#495). Le VM garde detailProperty prête. -->
       <AudioView fx:id="audioView" VBox.vgrow="ALWAYS" minHeight="150.0"/>
+      <!-- Chaque bouton d'action est enrobé d'un StackPane : un Button désactivé n'affiche pas de Tooltip,
+           on pose donc l'explication du blocage sur l'enveloppe qui, elle, reçoit le survol (#789). -->
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">
         <ComboBox fx:id="choixMode"/>
-        <Button fx:id="btnValider" text="✔ Valider" onAction="#valider"/>
+        <StackPane fx:id="enveloppeValider">
+          <Button fx:id="btnValider" text="✔ Valider" onAction="#valider"/>
+        </StackPane>
         <Region prefWidth="12.0"/>
         <ComboBox fx:id="choixTaxon" promptText="Choisir un taxon…"/>
-        <Button fx:id="btnCorriger" text="✎ Corriger" onAction="#corriger"/>
+        <StackPane fx:id="enveloppeCorriger">
+          <Button fx:id="btnCorriger" text="✎ Corriger" onAction="#corriger"/>
+        </StackPane>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="btnDouteux" onAction="#basculerDouteux"/>
-        <Button fx:id="btnReference" onAction="#basculerReference"/>
+        <StackPane fx:id="enveloppeDouteux">
+          <Button fx:id="btnDouteux" onAction="#basculerDouteux"/>
+        </StackPane>
+        <StackPane fx:id="enveloppeReference">
+          <Button fx:id="btnReference" onAction="#basculerReference"/>
+        </StackPane>
       </HBox>
     </VBox>
 
