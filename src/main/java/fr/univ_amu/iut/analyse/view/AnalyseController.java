@@ -209,10 +209,11 @@ public class AnalyseController implements RafraichirAuRetour {
 
     @FXML
     private void initialize() {
-        // Densite et habillage de table uniformes (#690).
+        // Densité/habillage de table uniformes (#690). La table des observations est navigable (double-clic
+        // → écoute, #792) ; les tables espèces/carrés ne servent qu'à la sélection.
         TableDonnees.uniformiser(tableEspeces);
         TableDonnees.uniformiser(tableCarres);
-        TableDonnees.uniformiser(tableObservations);
+        TableDonnees.uniformiserNavigable(tableObservations);
         configurerColonnes();
         tableEspeces.setItems(viewModel.especes());
         tableCarres.setItems(viewModel.carres());
@@ -311,14 +312,15 @@ public class AnalyseController implements RafraichirAuRetour {
         boutonOuvrirPassage.disableProperty().bind(selection.isNull());
         boutonEcouter.disableProperty().bind(selection.isNull());
 
-        // Double-clic sur une observation → ouvre son passage.
+        // Double-clic sur une observation → ouvre l'écoute (comme le bouton « Écouter »), destination
+        // naturelle en analyse par espèce ; « Ouvrir le passage » reste une action explicite du panneau.
         tableObservations.setRowFactory(tableau -> {
             TableRow<ObservationEspece> ligne = new TableRow<>();
             ligne.setOnMouseClicked(evenement -> {
                 if (evenement.getButton() == MouseButton.PRIMARY
                         && evenement.getClickCount() == 2
                         && !ligne.isEmpty()) {
-                    ouvrirPassageDe(ligne.getItem());
+                    ecouter(ligne.getItem());
                 }
             });
             return ligne;
@@ -419,7 +421,12 @@ public class AnalyseController implements RafraichirAuRetour {
     /// socle [OuvrirAudio]. Au retour, [#rafraichirAuRetour()] met l'inventaire à jour.
     @FXML
     private void ecouterValider() {
-        ObservationEspece observation = tableObservations.getSelectionModel().getSelectedItem();
+        ecouter(tableObservations.getSelectionModel().getSelectedItem());
+    }
+
+    /// Ouvre la vue audio sur `observation` (écoute + valider/corriger/référence). Partagé par le bouton
+    /// « Écouter » et le double-clic sur une ligne. Sans effet si `observation` est nulle.
+    private void ecouter(ObservationEspece observation) {
         if (observation != null) {
             // L'espèce de la source est l'espèce sélectionnée (détenue par le ViewModel) : le détail, donc
             // l'observation cliquée, n'existe que pour une espèce sélectionnée.

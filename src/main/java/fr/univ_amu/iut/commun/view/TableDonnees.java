@@ -22,8 +22,21 @@ public final class TableDonnees {
     /// Applique l'habillage partagé des tables de données (classe `table-donnees`) à `table`.
     /// Idempotent : la classe n'est pas ajoutée deux fois.
     public static void uniformiser(TableView<?> table) {
-        if (!table.getStyleClass().contains("table-donnees")) {
-            table.getStyleClass().add("table-donnees");
+        ajouter(table, "table-donnees");
+    }
+
+    /// Comme [#uniformiser], en marquant en plus la table comme **navigable** (#792) : ses lignes
+    /// remplies ouvrent quelque chose au double-clic. La classe `table-navigable` porte, dans `design.css`,
+    /// le curseur main et l'effet de survol qui rendent cette interaction découvrable. À réserver aux
+    /// tables dont une ligne s'ouvre vraiment (accompagner d'une astuce dans la vue).
+    public static void uniformiserNavigable(TableView<?> table) {
+        uniformiser(table);
+        ajouter(table, "table-navigable");
+    }
+
+    private static void ajouter(TableView<?> table, String classe) {
+        if (!table.getStyleClass().contains(classe)) {
+            table.getStyleClass().add(classe);
         }
     }
 }

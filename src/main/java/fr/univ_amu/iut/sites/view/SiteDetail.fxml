@@ -91,5 +91,6 @@
       <Label text="Aucun passage enregistré sur ce site pour le moment."/>
     </placeholder>
   </TableView>
+  <Label text="Astuce : double-cliquez une ligne pour ouvrir le passage." styleClass="section-sous"/>
   <Region/>
 </VBox>

@@ -173,8 +173,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private void initialize() {
-        // Densite et habillage de table uniformes (#690).
-        TableDonnees.uniformiser(tablePassages);
+        // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
+        TableDonnees.uniformiserNavigable(tablePassages);
         // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
         // contexte à gauche, résumé au centre.
         zonesStatut.bind(Bindings.createObjectBinding(
