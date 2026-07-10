@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import javafx.animation.TranslateTransition;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
@@ -114,6 +115,10 @@ final class CartesAccueil {
         // activable à Entrée/Espace, comme un bouton (opérabilité ISO 25010). On soulève aussi la
         // carte au focus pour que l'utilisateur au clavier ait le même retour visuel qu'à la souris.
         carte.setFocusTraversable(true);
+        // Un lecteur d'écran doit l'annoncer comme un bouton (pas un conteneur générique) et lire son
+        // intitulé : rôle + texte accessibles (#799).
+        carte.setAccessibleRole(AccessibleRole.BUTTON);
+        carte.setAccessibleText(activite.titre() + " : " + activite.description());
         carte.focusedProperty().addListener((obs, ancien, aLeFocus) -> {
             if (aLeFocus) {
                 monter.run();
