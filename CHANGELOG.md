@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.165.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.164.2...v1.165.0) (2026-07-10)
+
+
+### Features
+
+* **lot:** declarer detecteur_enregistreur_type dans la config de participation (0d) ([#881](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/881)) ([61cf954](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/61cf954f585c26f8955234445cc9bfbdf1287198))
+
 ## [1.164.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.164.1...v1.164.2) (2026-07-10)
 
 
