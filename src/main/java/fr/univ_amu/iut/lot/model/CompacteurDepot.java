@@ -12,6 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.zip.ZipEntry;
@@ -110,38 +114,105 @@ public final class CompacteurDepot {
         try {
             Files.createDirectories(dossierSortie);
             verifierEspaceDisque(fichiers, dossierSortie);
+            // Deux phases (#814) : on **planifie d'abord** tous les lots (partition par taille source
+            // majorée, garantie « archive ≤ plafond »), puis on **compresse les archives en parallèle**.
+            // Chaque archive étant indépendante, on exploite tous les cœurs au lieu de compresser une
+            // archive à la fois : la génération d'une nuit passe de ~dizaines de minutes à quelques minutes.
+            List<List<Path>> lots = planifierLots(fichiers, budget);
             int total = fichiers.size();
             AtomicInteger faits = new AtomicInteger(0);
-            List<ArchiveDepot> archives = new ArrayList<>();
-            List<Path> lotCourant = new ArrayList<>();
-            long coutCourant = 0;
-            for (Path fichier : fichiers) {
-                long cout = coutMaximalDansArchive(fichier);
-                if (cout > budget) {
-                    throw new RegleMetierException("Le fichier "
-                            + fichier.getFileName()
-                            + " ("
-                            + Files.size(fichier)
-                            + " o) dépasse à lui seul le plafond de "
-                            + tailleMaxOctets
-                            + " o : impossible de l'inclure dans une archive de dépôt.");
-                }
-                if (!lotCourant.isEmpty() && coutCourant + cout > budget) {
-                    archives.add(ecrireArchive(
-                            lotCourant, prefixe, dossierSortie, archives.size() + 1, progres, total, faits));
-                    lotCourant = new ArrayList<>();
-                    coutCourant = 0;
-                }
-                lotCourant.add(fichier);
-                coutCourant += cout;
-            }
-            if (!lotCourant.isEmpty()) {
-                archives.add(
-                        ecrireArchive(lotCourant, prefixe, dossierSortie, archives.size() + 1, progres, total, faits));
-            }
-            return archives;
+            return compresserEnParallele(lots, prefixe, dossierSortie, progres, total, faits);
         } catch (IOException e) {
             throw new UncheckedIOException("Génération des archives de dépôt impossible dans " + dossierSortie, e);
+        }
+    }
+
+    /// Établit le **plan d'archives** : partitionne `fichiers` en lots dont le coût majoré (cf.
+    /// [#coutMaximalDansArchive]) tient sous `budget`, **sans rien écrire**. Séparer la planification de
+    /// l'écriture permet de compresser les archives en parallèle (#814) : le plan garantit déjà « archive ≤
+    /// plafond », les lots sont donc indépendants. Répartition gloutonne, ordre des fichiers préservé.
+    ///
+    /// @throws RegleMetierException si un fichier dépasse à lui seul le plafond (indécoupable)
+    private List<List<Path>> planifierLots(List<Path> fichiers, long budget) throws IOException {
+        List<List<Path>> lots = new ArrayList<>();
+        List<Path> lotCourant = new ArrayList<>();
+        long coutCourant = 0;
+        for (Path fichier : fichiers) {
+            long cout = coutMaximalDansArchive(fichier);
+            if (cout > budget) {
+                throw new RegleMetierException("Le fichier "
+                        + fichier.getFileName()
+                        + " ("
+                        + Files.size(fichier)
+                        + " o) dépasse à lui seul le plafond de "
+                        + tailleMaxOctets
+                        + " o : impossible de l'inclure dans une archive de dépôt.");
+            }
+            if (!lotCourant.isEmpty() && coutCourant + cout > budget) {
+                lots.add(lotCourant);
+                lotCourant = new ArrayList<>();
+                coutCourant = 0;
+            }
+            lotCourant.add(fichier);
+            coutCourant += cout;
+        }
+        if (!lotCourant.isEmpty()) {
+            lots.add(lotCourant);
+        }
+        return lots;
+    }
+
+    /// Compresse les `lots` planifiés **en parallèle** (au plus un fil par cœur) : chaque archive étant
+    /// indépendante, on écrit `<préfixe>-N.zip` sur plusieurs fils, la progression étant agrégée via le
+    /// compteur atomique partagé `faits`. Les archives sont renvoyées **dans l'ordre des lots** (numéros
+    /// 1..N croissants), quel que soit l'ordre d'achèvement. Un échec sur une archive interrompt la
+    /// génération (cause remontée fidèlement).
+    private List<ArchiveDepot> compresserEnParallele(
+            List<List<Path>> lots,
+            String prefixe,
+            Path dossierSortie,
+            Consumer<Progression> progres,
+            int total,
+            AtomicInteger faits)
+            throws IOException {
+        int parallelisme =
+                Math.max(1, Math.min(lots.size(), Runtime.getRuntime().availableProcessors()));
+        try (ExecutorService executor = Executors.newFixedThreadPool(parallelisme)) {
+            List<Future<ArchiveDepot>> enCours = new ArrayList<>(lots.size());
+            for (int i = 0; i < lots.size(); i++) {
+                int numero = i + 1;
+                List<Path> lot = lots.get(i);
+                enCours.add(executor.submit(
+                        () -> ecrireArchive(lot, prefixe, dossierSortie, numero, progres, total, faits)));
+            }
+            List<ArchiveDepot> archives = new ArrayList<>(lots.size());
+            for (Future<ArchiveDepot> future : enCours) {
+                archives.add(recupererArchive(future));
+            }
+            return archives;
+        }
+    }
+
+    /// Récupère le résultat d'une archive compressée hors-fil en **remontant fidèlement** la cause d'un
+    /// échec (règle métier, plafond dépassé, I/O) plutôt que l'[ExecutionException] d'emballage.
+    private ArchiveDepot recupererArchive(Future<ArchiveDepot> future) throws IOException {
+        try {
+            return future.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new UncheckedIOException(new IOException("Génération des archives de dépôt interrompue.", e));
+        } catch (ExecutionException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException io) {
+                throw io;
+            }
+            if (cause instanceof RuntimeException re) {
+                throw re;
+            }
+            if (cause instanceof Error err) {
+                throw err;
+            }
+            throw new UncheckedIOException(new IOException("Génération d'une archive de dépôt échouée.", cause));
         }
     }
 

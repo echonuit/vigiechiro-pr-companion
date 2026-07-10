@@ -61,4 +61,21 @@ class ProgressionLotTest {
         assertThat(progression.fractionProperty().get()).isEqualTo(0.0);
         assertThat(progression.messageProperty().get()).isEmpty();
     }
+
+    @Test
+    @DisplayName(
+            "#814 : compression parallèle — la fraction reste monotone (un point en retard ne fait pas reculer la barre)")
+    void fraction_monotone_malgre_points_desordonnes() {
+        ProgressionLot progression = new ProgressionLot();
+        progression.demarrer("Préparation…");
+
+        progression.appliquer(new Progression("Compression 12/20", 0.6));
+        assertThat(progression.fractionProperty().get()).isEqualTo(0.6);
+
+        // Point d'une autre archive, arrivé APRÈS mais correspondant à un avancement inférieur : la barre
+        // ne doit pas reculer (elle reste à 0.6), même si le libellé suit le dernier fichier compressé.
+        progression.appliquer(new Progression("Compression 9/20", 0.45));
+        assertThat(progression.fractionProperty().get()).isEqualTo(0.6);
+        assertThat(progression.messageProperty().get()).contains("Compression 9/20");
+    }
 }

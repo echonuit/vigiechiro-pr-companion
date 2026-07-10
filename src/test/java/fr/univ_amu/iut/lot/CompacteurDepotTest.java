@@ -62,6 +62,39 @@ class CompacteurDepotTest {
     }
 
     @Test
+    @DisplayName(
+            "#814 : compression PARALLÈLE de nombreux lots — numéros 1..N ordonnés, tous les fichiers présents une fois")
+    void compresse_en_parallele_en_conservant_l_ordre() throws IOException {
+        // 40 fichiers de 30 Ko, plafond 100 Ko → 3 par archive → 14 archives : plus de lots que de cœurs,
+        // ce qui exerce réellement le parallélisme. L'ordre de RENVOI doit rester 1..N indépendamment de
+        // l'ordre d'ACHÈVEMENT des fils.
+        Path src = Files.createDirectories(dossier.resolve("src"));
+        List<Path> fichiers = new ArrayList<>();
+        for (int i = 0; i < 40; i++) {
+            fichiers.add(Files.write(src.resolve(String.format("seq_%02d.wav", i)), octets(30_000, (byte) i)));
+        }
+        Path sortie = dossier.resolve("depot");
+        long plafond = 100_000;
+
+        List<ArchiveDepot> archives = new CompacteurDepot(plafond).compacter(fichiers, PREFIXE, sortie);
+
+        // Numéros contigus 1..N dans l'ordre, quel que soit l'ordre d'achèvement des fils.
+        List<Integer> numerosAttendus = new ArrayList<>();
+        for (int n = 1; n <= archives.size(); n++) {
+            numerosAttendus.add(n);
+        }
+        assertThat(archives).extracting(ArchiveDepot::numero).containsExactlyElementsOf(numerosAttendus);
+        // Chaque archive reste sous le plafond.
+        for (ArchiveDepot archive : archives) {
+            assertThat(Files.size(archive.chemin())).isLessThanOrEqualTo(plafond);
+        }
+        // Tous les fichiers présents, exactement une fois, à travers les archives.
+        assertThat(toutesLesEntrees(archives))
+                .containsExactlyInAnyOrderElementsOf(
+                        fichiers.stream().map(p -> p.getFileName().toString()).toList());
+    }
+
+    @Test
     @DisplayName("#110 : données INCOMPRESSIBLES — chaque archive ZIP réelle reste ≤ plafond (en-têtes + DEFLATE)")
     void garantit_le_plafond_sur_donnees_incompressibles() throws IOException {
         // 5 fichiers de 33 300 o, plafond 100 000 o : un découpage naïf (somme des tailles) en mettrait 3

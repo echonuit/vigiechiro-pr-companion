@@ -30,10 +30,15 @@ public final class ProgressionLot {
 
     /// Applique un point de progression : met à jour la fraction et le libellé d'étape (complété de
     /// l'ETA). À appeler sur le fil JavaFX (le callback du service s'exécute hors-thread).
+    ///
+    /// La compression étant **parallèle** (#814), les points de plusieurs archives peuvent arriver dans le
+    /// désordre ; on garde donc la fraction **monotone** ([Math#max]) pour que la barre n'avance jamais à
+    /// reculons (l'ETA se fonde sur cet avancement consolidé).
     public void appliquer(Progression point) {
         long ecoule = debutNanos == 0L ? 0L : System.nanoTime() - debutNanos;
-        fraction.set(point.fraction());
-        message.set(avecTempsRestant(point.libelle(), point.fraction(), ecoule));
+        double avancement = Math.max(fraction.get(), point.fraction());
+        fraction.set(avancement);
+        message.set(avecTempsRestant(point.libelle(), avancement, ecoule));
     }
 
     /// Remet le suivi à zéro (fin ou erreur) : fraction à 0 et libellé vide.
