@@ -6,6 +6,7 @@
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -50,8 +51,11 @@
     <Label text="Contrôles de cohérence :" styleClass="controle-intro"/>
     <!-- Checklist vivante (#254) : une ligne ✓ / ✗ / ⚠ par contrôle, construite par le controller. -->
     <VBox fx:id="checklist" spacing="3.0"/>
-    <Button fx:id="btnPreparer" text="📦 Vérifier et préparer le lot"
-            styleClass="bouton-primaire" onAction="#preparer"/>
+    <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
+    <StackPane fx:id="enveloppePreparer" alignment="CENTER_LEFT">
+      <Button fx:id="btnPreparer" text="📦 Vérifier et préparer le lot"
+              styleClass="bouton-primaire" onAction="#preparer"/>
+    </StackPane>
   </VBox>
 
   <!-- Étape 2 - Générer les archives ZIP (le payload réellement déposé) -->
@@ -96,8 +100,10 @@
     <Label text="4. Marquer le passage déposé" styleClass="section-titre"/>
     <Label text="Une fois le téléversement effectué sur Vigie-Chiro, enregistrez le dépôt."
            styleClass="section-sous" wrapText="true"/>
-    <Button fx:id="btnDeposer" text="✅ Marquer déposé"
-            styleClass="bouton-secondaire" onAction="#deposer"/>
+    <StackPane fx:id="enveloppeDeposer" alignment="CENTER_LEFT">
+      <Button fx:id="btnDeposer" text="✅ Marquer déposé"
+              styleClass="bouton-secondaire" onAction="#deposer"/>
+    </StackPane>
   </VBox>
 
   <!-- Nettoyage optionnel - libérer l'espace disque (#…) : actif dès qu'il existe des archives ZIP dans

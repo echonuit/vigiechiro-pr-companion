@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -42,6 +43,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /// Controller de l'écran **M-Lot** (`Lot.fxml`).
@@ -92,6 +94,14 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private Button btnDeposer;
+
+    /// Enveloppes (non désactivées) des boutons d'étape : portent le tooltip d'explication du blocage,
+    /// qu'un Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
+    @FXML
+    private StackPane enveloppePreparer;
+
+    @FXML
+    private StackPane enveloppeDeposer;
 
     @FXML
     private Label lblTitreArchives;
@@ -163,11 +173,27 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         majChecklist();
 
         btnPreparer.disableProperty().bind(viewModel.peutPreparerProperty().not());
+        // Explique le grisage (#789) sur l'enveloppe (un Button désactivé n'affiche pas de tooltip). La
+        // préparation exige un passage vérifié ET tous les contrôles de cohérence au vert.
+        IndicateurBlocage.expliquer(
+                enveloppePreparer,
+                Bindings.when(viewModel.peutPreparerProperty())
+                        .then("Figer les séquences et préparer le lot à déposer.")
+                        .otherwise("Préparation impossible : le passage doit être vérifié et tous les contrôles"
+                                + " de cohérence au vert."));
         // « Marquer déposé » : pas pendant une génération en cours, sinon on marquerait le passage déposé
         // avant la fin de l'écriture des archives (#259).
         btnDeposer
                 .disableProperty()
                 .bind(viewModel.peutDeposerProperty().not().or(viewModel.generationEnCoursProperty()));
+        IndicateurBlocage.expliquer(
+                enveloppeDeposer,
+                Bindings.when(viewModel
+                                .peutDeposerProperty()
+                                .and(viewModel.generationEnCoursProperty().not()))
+                        .then("Marquer le passage comme déposé sur VigieChiro.")
+                        .otherwise("À faire une fois le lot préparé, les archives générées et téléversées"
+                                + " sur VigieChiro."));
 
         // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
         // sans `connexion`). Actif une fois le lot préparé, hors génération et hors téléversement en cours.
