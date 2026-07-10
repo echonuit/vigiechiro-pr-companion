@@ -25,6 +25,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -38,6 +39,7 @@ import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import java.io.File;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.event.Event;
@@ -86,6 +88,7 @@ class SonsValidationViewTest {
     private DepotVues depotVues;
     private OuvrirAnalyse ouvrirAnalyse;
     private SonsValidationController controleur;
+    private final List<String> urlsFiche = new ArrayList<>();
 
     private static LigneObservationAudio ligne(
             long id, long seq, String tadarida, String observateur, String nomEspece, String nomTadarida) {
@@ -157,6 +160,12 @@ class SonsValidationViewTest {
                     @Provides
                     ImportVigieChiroViewModel importVigieChiro() {
                         return new ImportVigieChiroViewModel(Optional.empty());
+                    }
+
+                    // « Fiche de l'espèce » (#847) : navigateur factice qui enregistre l'URL ouverte.
+                    @Provides
+                    OuvreurDeLien ouvreurDeLien() {
+                        return urlsFiche::add;
                     }
                 },
                 // Le socle de navigation est neutre par défaut ; on remplace OuvrirAnalyse par un mock pour
@@ -234,6 +243,27 @@ class SonsValidationViewTest {
         // Le clic rouvre l'analyse en demandant la carte (afficherCarte=true), avec un descripteur des
         // filtres courants (jamais null : la barre décrit au moins une recherche vide).
         verify(ouvrirAnalyse).ouvrir(any(DescripteurFiltre.class), eq(true));
+    }
+
+    @Test
+    @DisplayName("#847 : « Fiche de l'espèce » ouvre la fiche PNA de la proposition Tadarida sélectionnée")
+    void fiche_espece_ouvre_la_fiche_de_la_proposition_tadarida(FxRobot robot) {
+        // Première ligne = proposition Tadarida « Pippip » (Pipistrelle commune), un chiroptère à fiche PNA.
+        robot.interact(() -> robot.lookup("#tableObservations")
+                .queryAs(TableView.class)
+                .getSelectionModel()
+                .select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        MenuButton menuActions = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        MenuItem fiche = itemParLibelle(menuActions, "Fiche de l'espèce (Pipistrelle commune)");
+        assertThat(fiche.isDisable()).isFalse();
+
+        robot.interact(fiche::fire);
+
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
     }
 
     @Test

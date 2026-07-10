@@ -8,6 +8,8 @@ import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
+import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -72,6 +74,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private final OuvrirMultisite ouvrirMultisite;
     private final DepotVues depotVues;
 
+    /// Action réutilisable « Fiche de l'espèce » (#846) : configure l'item du menu ☰ selon la ligne
+    /// sélectionnée et ouvre la fiche dans le navigateur.
+    private final ActionFicheEspece actionFicheEspece;
+
     /// Mémoire de session (tri, #484) : conserve l'état de la table entre deux ouvertures de la vue.
     private final MemoireRevueAudio memoire;
 
@@ -113,6 +119,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private MenuItem itemVoirCarte;
+
+    @FXML
+    private MenuItem itemFicheEspece;
 
     @FXML
     private MenuItem itemImporter;
@@ -248,7 +257,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             OuvrirAnalyse ouvrirAnalyse,
             OuvrirMultisite ouvrirMultisite,
             MemoireRevueAudio memoire,
-            DepotVues depotVues) {
+            DepotVues depotVues,
+            ActionFicheEspece actionFicheEspece) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.importVigieChiro = Objects.requireNonNull(importVigieChiro, "importVigieChiro");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
@@ -257,6 +267,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
+        this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
     }
 
     /// Câble chaque colonne à son champ de la ligne (valeur affichée), ses cellules personnalisées (fichier
@@ -329,11 +340,14 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Revue au clavier (#478) : Entrée = valider, R = référence, N = prochaine « À revoir » ; ↑/↓ =
         // navigation native. Entrée/R passent par actionsSelection (unitaire si 1 ligne, lot si plusieurs).
         RevueClavier.installer(tableObservations, viewModel, actionsSelection);
-        tableObservations
-                .getSelectionModel()
-                .selectedItemProperty()
-                .addListener((obs, ancienne, nouvelle) ->
-                        viewModel.selectionProperty().set(nouvelle));
+        tableObservations.getSelectionModel().selectedItemProperty().addListener((obs, ancienne, nouvelle) -> {
+            viewModel.selectionProperty().set(nouvelle);
+            // « Fiche de l'espèce » (#847) : cible la proposition Tadarida de la ligne sélectionnée.
+            actionFicheEspece.configurer(itemFicheEspece, especeDe(nouvelle));
+        });
+        // État initial de l'item « Fiche de l'espèce » avant toute sélection (désactivé, libellé explicatif).
+        actionFicheEspece.configurer(
+                itemFicheEspece, especeDe(tableObservations.getSelectionModel().getSelectedItem()));
         // Resynchronisation **VM → table** : après un Valider/Corriger, charger() reconstruit la liste avec
         // de nouvelles instances de record (statut/taxon changés), ce qui vide la surbrillance de la table
         // alors que le VM restaure la sélection par identifiant. On réaligne la ligne surlignée sur la
@@ -592,6 +606,16 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private void basculerDouteux() {
         actionsSelection.basculerDouteux();
+    }
+
+    /// L'espèce ciblée par « Fiche de l'espèce » : la **proposition Tadarida** de la ligne (code + nom
+    /// vernaculaire). Le nom latin n'est pas porté par la projection audio ; il reste `null`, ce qui
+    /// suffit aux chiroptères (fiche PNA par code) et grise l'item pour les taxons hors PNA sans latin
+    /// (oiseaux…). `null` (aucune ligne sélectionnée) → espèce vide, item désactivé.
+    private static EspeceIdentifiee especeDe(LigneObservationAudio ligne) {
+        return ligne == null
+                ? new EspeceIdentifiee(null, null, null)
+                : new EspeceIdentifiee(ligne.taxonTadarida(), null, ligne.nomTadarida());
     }
 
     /// « 🗺 Voir sur la carte » (#476) : rouvre l'analyse « Espèces & observations » directement sur la

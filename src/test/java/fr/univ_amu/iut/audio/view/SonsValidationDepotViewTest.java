@@ -14,6 +14,7 @@ import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -87,6 +88,12 @@ class SonsValidationDepotViewTest {
                     @Provides
                     ImportVigieChiroViewModel importVigieChiro() {
                         return new ImportVigieChiroViewModel(Optional.of(mock(ImportVigieChiro.class)));
+                    }
+
+                    // « Fiche de l'espèce » (#847) : navigateur no-op, la fiche n'est pas exercée ici.
+                    @Provides
+                    OuvreurDeLien ouvreurDeLien() {
+                        return url -> {};
                     }
                 },
                 new NavigationDeTestModule());

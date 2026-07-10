@@ -34,20 +34,32 @@ public final class ActionFicheEspece {
         this.ouvreur = Objects.requireNonNull(ouvreur, "ouvreur");
     }
 
-    /// Fabrique l'item de menu contextuel pour `espece`. Fiche disponible : libellé enrichi du nom
-    /// vernaculaire, ouverture du lien au clic. Sinon : item désactivé, libellé explicatif, clic inerte.
+    /// Fabrique un nouvel item de menu pour `espece` (cf. [#configurer] pour l'état posé). Pratique quand
+    /// l'item est construit en code ; pour un item déclaré en FXML et réutilisé au fil de la sélection,
+    /// préférer [#configurer].
     public MenuItem creerItem(EspeceIdentifiee espece) {
         MenuItem item = new MenuItem();
+        configurer(item, espece);
+        return item;
+    }
+
+    /// Pose l'état de `item` pour `espece`, **en place** (item déclaré en FXML, reconfiguré à chaque
+    /// changement de sélection). Fiche disponible : item actif, libellé enrichi du nom vernaculaire,
+    /// ouverture du lien au clic. Sinon : item désactivé, libellé explicatif, action retirée (clic
+    /// inerte). Réversible : reconfigurer d'un taxon avec fiche vers un taxon sans fiche (et inversement)
+    /// rétablit correctement le libellé, l'état grisé et l'action.
+    public void configurer(MenuItem item, EspeceIdentifiee espece) {
         Optional<String> lien = constructeur.lienFiche(espece);
         if (lien.isEmpty()) {
             item.setText(LIBELLE + SUFFIXE_SANS_FICHE);
             item.setDisable(true);
-            return item;
+            item.setOnAction(null);
+            return;
         }
         item.setText(libelle(espece));
+        item.setDisable(false);
         String url = lien.get();
         item.setOnAction(evenement -> ouvreur.ouvrir(url));
-        return item;
     }
 
     private static String libelle(EspeceIdentifiee espece) {

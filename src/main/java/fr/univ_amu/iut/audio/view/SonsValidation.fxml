@@ -61,6 +61,7 @@
       <MenuButton fx:id="menuActions" text="☰" styleClass="menu-actions" BorderPane.alignment="CENTER">
         <items>
           <MenuItem fx:id="itemVoirCarte" text="🗺 Voir sur la carte" onAction="#voirSurCarte"/>
+          <MenuItem fx:id="itemFicheEspece" text="Fiche de l'espèce"/>
           <SeparatorMenuItem/>
           <MenuItem fx:id="itemImporter" text="📥 Importer un CSV Tadarida…" onAction="#importer"/>
           <MenuItem fx:id="itemImporterVigieChiro" text="☁ Importer depuis VigieChiro…" onAction="#importerDepuisVigieChiro"/>

@@ -59,4 +59,26 @@ class ActionFicheEspeceTest {
         item.fire();
         assertThat(urlsOuvertes).isEmpty();
     }
+
+    @Test
+    @DisplayName("configurer réutilise un item en place, réversible entre fiche disponible et absente")
+    void configurer_reutilise_l_item_en_place() {
+        MenuItem item = new MenuItem();
+
+        // Sans fiche : désactivé, libellé explicatif, action retirée.
+        action.configurer(item, new EspeceIdentifiee("noise", null, null));
+        assertThat(item.isDisable()).isTrue();
+        assertThat(item.getText()).isEqualTo("Fiche de l'espèce (aucune fiche disponible)");
+        item.fire();
+        assertThat(urlsOuvertes).isEmpty();
+
+        // Reconfiguré vers un chiroptère : réactivé, libellé enrichi, clic ouvrant la fiche.
+        action.configurer(item, new EspeceIdentifiee("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune"));
+        assertThat(item.isDisable()).isFalse();
+        assertThat(item.getText()).isEqualTo("Fiche de l'espèce (Pipistrelle commune)");
+        item.fire();
+        assertThat(urlsOuvertes)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
+    }
 }
