@@ -40,7 +40,12 @@
       <HBox styleClass="barre-navigation" alignment="CENTER_LEFT" spacing="14.0">
         <Label fx:id="titreApplication" styleClass="titre-application"
                text="VigieChiro PR Companion"/>
-        <Button fx:id="boutonRetour" styleClass="bouton-retour" text="← Retour" onAction="#revenir"/>
+        <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip ; on le pose sur ce StackPane (qui
+             reçoit le survol) pour expliquer le grisage du retour pendant un import (#789). L'enveloppe
+             suit la visibilité du bouton (présent hors accueil). -->
+        <StackPane fx:id="enveloppeRetour">
+          <Button fx:id="boutonRetour" styleClass="bouton-retour" text="← Retour" onAction="#revenir"/>
+        </StackPane>
         <HBox fx:id="filAriane" styleClass="fil-ariane" alignment="CENTER_LEFT" spacing="4.0"
               HBox.hgrow="ALWAYS"/>
         <TextField fx:id="champRecherche" styleClass="champ-recherche" promptText="🔍 Rechercher (Ctrl+F)"
