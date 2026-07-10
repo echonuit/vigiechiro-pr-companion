@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
+import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -78,9 +79,10 @@ public final class DepotVigieChiro {
                         + " VigieChiro et synchronisez vos sites avant de déposer."));
 
         ParticipationADeposer participation = construireParticipation(passage, point);
-        String participationId = client.creerParticipation(objectidSite, participation)
-                .orElseThrow(() -> new RegleMetierException("Création de la participation refusée par VigieChiro"
-                        + " (token expiré, ou site non verrouillé côté plateforme)."));
+        ResultatParticipation creation = client.creerParticipation(objectidSite, participation);
+        String participationId = creation.id()
+                .orElseThrow(() -> new RegleMetierException(
+                        "Création de la participation refusée par VigieChiro : " + creation.echec()));
 
         // Mémorise le lien passage → participation (axe 4.2) dès la participation créée, avant l'upload : même
         // un dépôt partiel doit permettre de réimporter les résultats Tadarida de cette participation.
@@ -117,13 +119,7 @@ public final class DepotVigieChiro {
 
     private ParticipationADeposer construireParticipation(Passage passage, PointDEcoute point) {
         return new ParticipationADeposer(
-                passage.numeroPassage(),
-                point.code(),
-                debutIso(passage),
-                finIso(passage),
-                meteo(passage),
-                configuration(passage),
-                null);
+                point.code(), debutIso(passage), finIso(passage), meteo(passage), configuration(passage), null);
     }
 
     /// Bloc météo VigieChiro depuis les données du passage (#702), ou `null` si aucune donnée exploitable.

@@ -67,7 +67,8 @@ class ClientVigieChiroTest {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
 
         assertThat(client.post("/fichiers", "{}")).isEmpty();
-        assertThat(client.creerParticipation("site1", participationMinimale())).isEmpty();
+        assertThat(client.creerParticipation("site1", participationMinimale()).id())
+                .isEmpty();
         assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav")).isEmpty();
         assertThat(client.finaliserFichier("f1")).isFalse();
     }
@@ -77,7 +78,8 @@ class ClientVigieChiroTest {
     void ecritures_hors_ligne() {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
 
-        assertThat(client.creerParticipation("site1", participationMinimale())).isEmpty();
+        assertThat(client.creerParticipation("site1", participationMinimale()).id())
+                .isEmpty();
         assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav")).isEmpty();
         assertThat(client.finaliserFichier("f1")).isFalse();
     }
@@ -92,6 +94,6 @@ class ClientVigieChiroTest {
     }
 
     private static ParticipationADeposer participationMinimale() {
-        return new ParticipationADeposer(1, "Z41", "2026-07-03T19:00:00Z", "2026-07-04T04:00:00Z", null, null, null);
+        return new ParticipationADeposer("Z41", "2026-07-03T19:00:00Z", "2026-07-04T04:00:00Z", null, null, null);
     }
 }

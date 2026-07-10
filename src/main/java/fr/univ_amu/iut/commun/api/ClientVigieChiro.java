@@ -107,12 +107,24 @@ public final class ClientVigieChiro {
     // Écritures (dépôt d'une nuit, #142) : création de participation + upload de fichiers vers S3
     // ---------------------------------------------------------------------------------------------
 
-    /// Crée une **participation** sur un site (`POST /sites/#id/participations`, #142) : renvoie l'`_id` de
-    /// la participation créée, ou vide si non connecté / refus / réseau. Prérequis métier : le site doit
-    /// être **verrouillé** côté VigieChiro (l'observateur y est rattaché).
-    public Optional<String> creerParticipation(String siteId, ParticipationADeposer participation) {
-        return post("/sites/" + siteId + "/participations", RequetesVigieChiro.participation(participation))
-                .flatMap(ReponsesVigieChiro::idCree);
+    /// Crée une **participation** sur un site (`POST /sites/#id/participations`, #142) : renvoie l'`_id` créé,
+    /// ou un [ResultatParticipation] portant le **détail de l'échec** (statut HTTP + corps de la réponse
+    /// VigieChiro) pour un message exploitable — le dépôt étant une écriture, un refus doit être **expliqué**,
+    /// pas silencieusement vide. Prérequis métier : site **verrouillé** côté VigieChiro.
+    public ResultatParticipation creerParticipation(String siteId, ParticipationADeposer participation) {
+        Optional<ReponseHttp> reponse =
+                postDetaille("/sites/" + siteId + "/participations", RequetesVigieChiro.participation(participation));
+        if (reponse.isEmpty()) {
+            return ResultatParticipation.echouee("VigieChiro injoignable (non connecté, ou réseau indisponible).");
+        }
+        ReponseHttp r = reponse.get();
+        if (!estSucces(r.statut())) {
+            return ResultatParticipation.echouee("HTTP " + r.statut() + " — " + r.corps());
+        }
+        return ReponsesVigieChiro.idCree(r.corps())
+                .map(ResultatParticipation::reussie)
+                .orElseGet(
+                        () -> ResultatParticipation.echouee("réponse acceptée mais sans identifiant : " + r.corps()));
     }
 
     /// Déclare un **fichier** à téléverser (`POST /fichiers`, étape 1/3) : renvoie son `_id` et l'URL S3
@@ -150,6 +162,15 @@ public final class ClientVigieChiro {
     /// **POST authentifié** d'un corps JSON sur `chemin` : renvoie le corps de la réponse si 2xx, vide
     /// sinon (pas de token, refus, autre statut, réseau indisponible). Pendant en écriture de [#get].
     Optional<String> post(String chemin, String corpsJson) {
+        return postDetaille(chemin, corpsJson)
+                .filter(reponse -> estSucces(reponse.statut()))
+                .map(ReponseHttp::corps);
+    }
+
+    /// Variante **détaillée** de [#post] : renvoie la réponse HTTP complète (statut + corps), y compris en
+    /// cas de refus (non-2xx), pour construire un message d'erreur exploitable (ex. la création de
+    /// participation). Vide **seulement** si non connecté / réseau indisponible.
+    Optional<ReponseHttp> postDetaille(String chemin, String corpsJson) {
         Optional<String> entete = enteteAuthorization();
         if (entete.isEmpty()) {
             return Optional.empty();
@@ -163,7 +184,7 @@ public final class ClientVigieChiro {
                     .POST(HttpRequest.BodyPublishers.ofString(corpsJson, StandardCharsets.UTF_8))
                     .build();
             HttpResponse<String> reponse = client.send(requete, HttpResponse.BodyHandlers.ofString());
-            return estSucces(reponse.statusCode()) ? Optional.of(reponse.body()) : Optional.empty();
+            return Optional.of(new ReponseHttp(reponse.statusCode(), reponse.body()));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
             return Optional.empty();
@@ -176,6 +197,9 @@ public final class ClientVigieChiro {
     private static boolean estSucces(int statut) {
         return statut >= 200 && statut < 300;
     }
+
+    /// Réponse HTTP brute (statut + corps) d'une écriture, pour remonter le détail d'un refus.
+    record ReponseHttp(int statut, String corps) {}
 
     /// **GET authentifié** sur `chemin` (relatif à la base) : renvoie le corps de la réponse si `200`,
     /// vide dans tous les autres cas (pas de token, `401`, autre non-`200`, réseau indisponible).

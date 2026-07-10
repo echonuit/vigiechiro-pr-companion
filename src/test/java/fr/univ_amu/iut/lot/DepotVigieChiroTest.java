@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
+import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -79,7 +80,7 @@ class DepotVigieChiroTest {
         Path a = fichier(dossier, "Car130711-2026-Pass1-Z41_000.wav");
         Path b = fichier(dossier, "Car130711-2026-Pass1-Z41_001.wav");
         armerPassageComplet();
-        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(Optional.of("part-1"));
+        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatParticipation.reussie("part-1"));
         when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
@@ -96,7 +97,6 @@ class DepotVigieChiroTest {
         verify(client).creerParticipation(eq(OBJECTID_SITE), participationCaptor.capture());
         ParticipationADeposer envoyee = participationCaptor.getValue();
         assertThat(envoyee.point()).isEqualTo("Z41");
-        assertThat(envoyee.numero()).isEqualTo(1);
         assertThat(envoyee.dateDebut()).isEqualTo("2026-07-03T21:00:00");
         assertThat(envoyee.dateFin()).isEqualTo("2026-07-04T05:00:00"); // fin < début → lendemain
         assertThat(envoyee.meteo().vent()).isEqualTo("FAIBLE");
@@ -114,7 +114,7 @@ class DepotVigieChiroTest {
         Path ok = fichier(dossier, "ok.wav");
         Path ko = fichier(dossier, "ko.wav");
         armerPassageComplet();
-        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(Optional.of("part-1"));
+        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatParticipation.reussie("part-1"));
         when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier("ko.wav")).thenReturn(Optional.empty()); // déclaration refusée
         when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
@@ -141,14 +141,16 @@ class DepotVigieChiroTest {
     }
 
     @Test
-    @DisplayName("création de participation refusée par VigieChiro → refus dur, aucun upload")
+    @DisplayName("création de participation refusée par VigieChiro → refus dur avec le détail de l'API, aucun upload")
     void participation_refusee() {
         armerPassageComplet();
-        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(Optional.empty());
+        when(client.creerParticipation(eq(OBJECTID_SITE), any()))
+                .thenReturn(ResultatParticipation.echouee("HTTP 422 — {\"_errors\":{\"numero\":\"invalid field\"}}"));
 
         assertThatThrownBy(() -> depot.deposer(42L, List.of()))
                 .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("refusée");
+                .hasMessageContaining("refusée")
+                .hasMessageContaining("422"); // le vrai détail de l'API est remonté, pas un message générique
         verify(client, never()).creerFichier(anyString());
     }
 
