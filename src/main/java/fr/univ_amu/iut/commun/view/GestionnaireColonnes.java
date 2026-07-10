@@ -22,10 +22,12 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.ClipboardContent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Popup;
 
@@ -142,8 +144,13 @@ public final class GestionnaireColonnes {
 
         private final TableView<?> table;
         private final CheckBox visible = new CheckBox();
+        /// Enveloppe du CheckBox : un CheckBox désactivé n'affiche pas de tooltip, on l'installe donc sur ce
+        /// StackPane (qui reçoit le survol) pour expliquer le grisage d'une colonne verrouillée (#789).
+        private final StackPane enveloppeVisible = new StackPane(visible);
+        private final Tooltip infoVerrou =
+                new Tooltip("Colonne toujours affichée : sa visibilité est verrouillée (colonne d'identité).");
         private final Label poignee = new Label("⋮⋮");
-        private final HBox contenu = new HBox(8, poignee, visible);
+        private final HBox contenu = new HBox(8, poignee, enveloppeVisible);
         private BooleanProperty lieeA;
 
         CelluleColonne(TableView<?> table) {
@@ -163,6 +170,12 @@ public final class GestionnaireColonnes {
             }
             visible.setText(colonne.libelle());
             visible.setDisable(colonne.visibiliteVerrouillee());
+            // Explique le grisage d'une colonne verrouillée (#789). Cellule recyclée : on repart d'un état
+            // propre (uninstall sans effet si absent) puis on (ré)installe le tooltip seulement si verrouillée.
+            Tooltip.uninstall(enveloppeVisible, infoVerrou);
+            if (colonne.visibiliteVerrouillee()) {
+                Tooltip.install(enveloppeVisible, infoVerrou);
+            }
             lieeA = colonne.colonne().visibleProperty();
             visible.selectedProperty().bindBidirectional(lieeA);
             setGraphic(contenu);
