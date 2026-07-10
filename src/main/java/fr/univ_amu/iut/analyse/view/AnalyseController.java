@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -174,6 +175,14 @@ public class AnalyseController implements RafraichirAuRetour {
     @FXML
     private Button boutonEcouter;
 
+    /// Enveloppes (non désactivées) des actions du détail : portent le tooltip d'explication du blocage,
+    /// qu'un Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
+    @FXML
+    private StackPane enveloppeEcouter;
+
+    @FXML
+    private StackPane enveloppeOuvrirPassage;
+
     @FXML
     private TableView<ObservationEspece> tableObservations;
 
@@ -311,6 +320,17 @@ public class AnalyseController implements RafraichirAuRetour {
         var selection = tableObservations.getSelectionModel().selectedItemProperty();
         boutonOuvrirPassage.disableProperty().bind(selection.isNull());
         boutonEcouter.disableProperty().bind(selection.isNull());
+        // Explique le grisage (#789) sur les enveloppes (un Button désactivé n'affiche pas de tooltip).
+        IndicateurBlocage.expliquer(
+                enveloppeEcouter,
+                Bindings.when(selection.isNull())
+                        .then("Sélectionnez une observation dans le tableau pour l'écouter et la valider.")
+                        .otherwise("Écouter l'observation sélectionnée et la valider."));
+        IndicateurBlocage.expliquer(
+                enveloppeOuvrirPassage,
+                Bindings.when(selection.isNull())
+                        .then("Sélectionnez une observation dans le tableau pour ouvrir son passage.")
+                        .otherwise("Ouvrir le passage de l'observation sélectionnée."));
 
         // Double-clic sur une observation → ouvre l'écoute (comme le bouton « Écouter »), destination
         // naturelle en analyse par espèce ; « Ouvrir le passage » reste une action explicite du panneau.

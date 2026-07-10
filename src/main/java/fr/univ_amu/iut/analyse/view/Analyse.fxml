@@ -87,8 +87,13 @@
       <HBox alignment="CENTER_LEFT" spacing="10.0">
         <Label fx:id="lblDetailTitre" styleClass="analyse-detail-titre"/>
         <Region HBox.hgrow="ALWAYS"/>
-        <Button fx:id="boutonEcouter" text="🎧 Écouter / valider" onAction="#ecouterValider"/>
-        <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage →" onAction="#ouvrirPassage"/>
+        <!-- Enveloppes : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
+        <StackPane fx:id="enveloppeEcouter">
+          <Button fx:id="boutonEcouter" text="🎧 Écouter / valider" onAction="#ecouterValider"/>
+        </StackPane>
+        <StackPane fx:id="enveloppeOuvrirPassage">
+          <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage →" onAction="#ouvrirPassage"/>
+        </StackPane>
       </HBox>
       <StackPane VBox.vgrow="ALWAYS">
         <TableView fx:id="tableObservations">
