@@ -167,6 +167,26 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("Bug date : mono-nuit → la date vient de la soirée des WAV, pas de la 1re ligne du LogPR")
+    void import_mono_nuit_date_vient_des_wav_pas_du_deploiement() throws IOException {
+        // Le LogPR démarre au DÉPLOIEMENT (22/04/26, sa 1re ligne), mais les WAV importés sont d'une nuit
+        // ULTÉRIEURE (24/04). Auparavant, l'import mono-nuit datait le passage d'après le journal (22/04) :
+        // un dossier de passe ultérieure héritait donc à tort de la 1re nuit (collision constatée au dépôt).
+        // Désormais la date vient de la soirée réelle des WAV (24/04), comme l'import multi-nuits.
+        Path nuitTardive = racine.resolve("sd-nuit-tardive");
+        Files.createDirectories(nuitTardive);
+        Files.writeString(nuitTardive.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        ecrireWav(nuitTardive.resolve("PaRecPR1925492_20260424_203922.wav"));
+        ecrireWav(nuitTardive.resolve("PaRecPR1925492_20260424_204326.wav"));
+
+        ResultatImport resultat = service.importer(nuitTardive, idPoint, prefixe);
+
+        assertThat(resultat.passage().dateEnregistrement())
+                .as("date de soirée des WAV (24/04), pas la 1re ligne du LogPR (22/04, déploiement)")
+                .isEqualTo("2026-04-24");
+    }
+
+    @Test
     @DisplayName("Réalité PR : des bruts déjà expansés ×10 (en-tête Fe/10) s'importent sans rejet ni double expansion")
     void nuit_pr_deja_expansee_importe_sans_rejet() throws IOException {
         // L'enregistreur PR écrit ses bruts avec un en-tête à 38400 Hz (= Fe/10) alors que le log déclare
