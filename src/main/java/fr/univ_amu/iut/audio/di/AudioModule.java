@@ -3,16 +3,20 @@ package fr.univ_amu.iut.audio.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.audio.view.AccueilSonsReference;
 import fr.univ_amu.iut.audio.view.NavigationAudio;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
+import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
+import java.util.Optional;
 
 /// Module Guice de la feature `audio` (vue audio unifiée « Sons & validation »).
 ///
@@ -32,6 +36,10 @@ public class AudioModule extends AbstractModule {
     protected void configure() {
         bind(OuvrirAudio.class).to(NavigationAudio.class);
         Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(AccueilSonsReference.class);
+        // Import VigieChiro (axe 4.2) en liaison **optionnelle** : déclaré à vide ici pour que les injecteurs
+        // partiels de capture (sans `connexion`, donc sans client HTTP) résolvent `Optional<ImportVigieChiro>`
+        // à vide. La liaison réelle est posée par `ImportVigieChiroModule` (injecteur applicatif complet).
+        OptionalBinder.newOptionalBinder(binder(), ImportVigieChiro.class);
     }
 
     // ViewModel non-singleton (cf. analyse / multisite) : un VM frais par chargement d'écran, pour éviter
@@ -44,5 +52,13 @@ public class AudioModule extends AbstractModule {
             RevueEnLot revueEnLot,
             ServiceBibliotheque bibliotheque) {
         return new AudioViewModel(validation, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
+    }
+
+    /// ViewModel dédié de l'**import VigieChiro** (axe 4.2), séparé de [AudioViewModel] (concern distinct, et
+    /// pour ne pas alourdir ce VM déjà volumineux). `importVigieChiro` est vide dans les injecteurs partiels
+    /// de capture, présent dans l'application complète (cf. `ImportVigieChiroModule`).
+    @Provides
+    ImportVigieChiroViewModel fournirImportVigieChiroViewModel(Optional<ImportVigieChiro> importVigieChiro) {
+        return new ImportVigieChiroViewModel(importVigieChiro);
     }
 }

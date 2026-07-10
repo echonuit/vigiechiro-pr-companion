@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import fr.univ_amu.iut.analyse.di.AnalyseModule;
 import fr.univ_amu.iut.audio.di.AudioModule;
+import fr.univ_amu.iut.audio.di.ImportVigieChiroModule;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.connexion.di.ConnexionModule;
 import fr.univ_amu.iut.diagnostic.di.DiagnosticModule;
@@ -63,6 +64,7 @@ public final class RacineInjecteur {
                 new RechercheModule(),
                 new AnalyseModule(),
                 new AudioModule(),
+                new ImportVigieChiroModule(),
                 new ConnexionModule());
     }
 }
