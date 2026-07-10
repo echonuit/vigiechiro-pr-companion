@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -46,6 +47,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.DirectoryChooser;
 
@@ -207,6 +209,20 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private Button btnDouteux;
+
+    /// Enveloppes (non désactivées) des boutons d'action : portent le tooltip expliquant le blocage
+    /// (un Button désactivé n'en affiche pas), via [IndicateurBlocage] (#789).
+    @FXML
+    private StackPane enveloppeValider;
+
+    @FXML
+    private StackPane enveloppeCorriger;
+
+    @FXML
+    private StackPane enveloppeReference;
+
+    @FXML
+    private StackPane enveloppeDouteux;
 
     @FXML
     private HBox bandeauRetour;
@@ -399,6 +415,33 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         .then("Retirer le doute")
                         .otherwise("Marquer douteux"));
 
+        // Tooltips d'explication du blocage (#789), posés sur les enveloppes (un Button désactivé n'affiche
+        // pas de tooltip). Le texte suit l'état : ce que fait l'action quand elle est possible, la cause du
+        // blocage et le remède sinon.
+        IndicateurBlocage.expliquer(
+                enveloppeValider,
+                Bindings.when(viewModel.etatSelection().avecTadaridaProperty())
+                        .then("Retenir la proposition Tadarida (taxon proposé) pour la ligne sélectionnée.")
+                        .otherwise("Sélectionnez une ligne qui porte une proposition Tadarida pour la valider."));
+        IndicateurBlocage.expliquer(
+                enveloppeCorriger,
+                Bindings.when(viewModel
+                                .etatSelection()
+                                .presenteProperty()
+                                .and(choixTaxon.valueProperty().isNotNull()))
+                        .then("Affecter le taxon choisi à la ligne sélectionnée.")
+                        .otherwise("Sélectionnez une ligne puis choisissez un taxon dans la liste pour corriger."));
+        IndicateurBlocage.expliquer(
+                enveloppeReference,
+                Bindings.when(viewModel.etatSelection().avecObservationProperty())
+                        .then("Archiver cette observation comme son de référence (ou retirer la référence).")
+                        .otherwise("Réservé à une observation validée : validez ou corrigez d'abord la ligne."));
+        IndicateurBlocage.expliquer(
+                enveloppeDouteux,
+                Bindings.when(viewModel.etatSelection().avecObservationProperty())
+                        .then("Marquer l'observation « à repasser » (douteuse), ou retirer le doute.")
+                        .otherwise("Réservé à une observation validée : validez ou corrigez d'abord la ligne."));
+
         // Workflow Tadarida (source ParPassage) : toujours actif ; « Importer » tant qu'aucun résultat,
         // « Réimporter » (remplacement après confirmation) une fois un jeu chargé.
         itemImporter
@@ -411,6 +454,15 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 .bind(viewModel.resultatsDisponiblesProperty().not());
         // Export des observations affichées : possible dès qu'il y a au moins une ligne (toutes sources).
         itemExporterObservations.disableProperty().bind(Bindings.isEmpty(viewModel.observationsFiltrees()));
+        // Un MenuItem désactivé n'accueille pas de tooltip : pour cet item toujours visible, on surface la
+        // cause du grisage dans son libellé (#789), qui n'apparaît que lorsqu'il est effectivement grisé
+        // (aucune observation à exporter). L'item « Exporter _Vu » est, lui, masqué hors workflow Tadarida
+        // (le menu montre alors « Importer un CSV Tadarida »), donc pas de libellé dynamique dessus.
+        itemExporterObservations
+                .textProperty()
+                .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
+                        .then("📤 Exporter les observations (CSV)… (aucune observation à exporter)")
+                        .otherwise("📤 Exporter les observations (CSV)…"));
         // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24), coché par défaut.
         itemInclureMode.selectedProperty().bindBidirectional(viewModel.inclureModeProperty());
 
