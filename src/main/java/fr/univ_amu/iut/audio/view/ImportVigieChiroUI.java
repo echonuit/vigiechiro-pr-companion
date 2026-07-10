@@ -2,13 +2,19 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
+import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanImport;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 
@@ -33,10 +39,10 @@ final class ImportVigieChiroUI {
         message.managedProperty().bind(importVigieChiro.messageProperty().isNotEmpty());
     }
 
-    /// Lance l'import des résultats VigieChiro du passage de `source`, **hors fil JavaFX** : confirmation FX
-    /// si un jeu existe déjà, puis récupération réseau + import sur un fil virtuel, application du bilan et
-    /// **rafraîchissement** de la liste via `Platform.runLater`. Sans passage (source non ciblée), ne fait
-    /// rien.
+    /// Lance l'import des résultats VigieChiro du passage de `source`. Deux cas : si le passage est déjà
+    /// **rattaché** à une participation (dépôt-app antérieur), on importe directement ; sinon on récupère les
+    /// participations du compte et on demande **à laquelle rattacher** ce passage (nuit créée à la main),
+    /// avant d'importer. Sans passage (source non ciblée), ne fait rien.
     static void lancer(
             ImportVigieChiroViewModel importVigieChiro, AudioViewModel viewModel, SourceObservations source) {
         ContextePassage contexte = source.contexteDuPassage();
@@ -44,10 +50,60 @@ final class ImportVigieChiroUI {
             return;
         }
         Long idPassage = contexte.idPassage();
+        if (importVigieChiro.rattache(idPassage)) {
+            importerRattache(importVigieChiro, viewModel, source, idPassage);
+        } else {
+            rattacherPuisImporter(importVigieChiro, viewModel, source, idPassage);
+        }
+    }
+
+    /// Passage déjà rattaché : confirmation FX si un jeu existe déjà, puis import hors fil.
+    private static void importerRattache(
+            ImportVigieChiroViewModel importVigieChiro,
+            AudioViewModel viewModel,
+            SourceObservations source,
+            Long idPassage) {
         boolean remplacer = viewModel.resultatsDisponiblesProperty().get();
         if (remplacer && !confirmerRemplacement()) {
             return;
         }
+        importerHorsFil(importVigieChiro, viewModel, source, idPassage, remplacer);
+    }
+
+    /// Passage non rattaché : récupère les participations **hors fil**, demande laquelle rattacher (au fil
+    /// JavaFX), stocke le lien, puis importe. Liste vide → message ; annulation → efface l'état « en cours ».
+    private static void rattacherPuisImporter(
+            ImportVigieChiroViewModel importVigieChiro,
+            AudioViewModel viewModel,
+            SourceObservations source,
+            Long idPassage) {
+        importVigieChiro.marquerEnCours();
+        Thread.ofVirtual().name("participations-vigiechiro").start(() -> {
+            List<ParticipationVigieChiro> participations = importVigieChiro.participations();
+            Platform.runLater(() -> {
+                if (participations.isEmpty()) {
+                    importVigieChiro.echec("Aucune participation VigieChiro sur votre compte :"
+                            + " déposez d'abord cette nuit sur la plateforme.");
+                    return;
+                }
+                Optional<ParticipationVigieChiro> choix = choisirParticipation(participations);
+                if (choix.isEmpty()) {
+                    importVigieChiro.echec(""); // annulé : on efface l'état « en cours »
+                    return;
+                }
+                importVigieChiro.rattacher(idPassage, choix.orElseThrow().id());
+                importerHorsFil(importVigieChiro, viewModel, source, idPassage, false);
+            });
+        });
+    }
+
+    /// Récupère les résultats + importe **hors fil JavaFX**, applique le bilan et recharge la liste.
+    private static void importerHorsFil(
+            ImportVigieChiroViewModel importVigieChiro,
+            AudioViewModel viewModel,
+            SourceObservations source,
+            Long idPassage,
+            boolean remplacer) {
         importVigieChiro.marquerEnCours();
         Thread.ofVirtual().name("import-vigiechiro").start(() -> {
             try {
@@ -60,6 +116,33 @@ final class ImportVigieChiroUI {
                 Platform.runLater(() -> importVigieChiro.echec(echec.getMessage()));
             }
         });
+    }
+
+    /// Boîte de choix de la participation à rattacher (libellé : localité · date · site). Renvoie le choix
+    /// ou vide si l'utilisateur annule.
+    private static Optional<ParticipationVigieChiro> choisirParticipation(
+            List<ParticipationVigieChiro> participations) {
+        Map<String, ParticipationVigieChiro> parLibelle = new LinkedHashMap<>();
+        for (ParticipationVigieChiro participation : participations) {
+            parLibelle.put(libelle(participation), participation);
+        }
+        String premier = parLibelle.keySet().iterator().next();
+        ChoiceDialog<String> dialogue = new ChoiceDialog<>(premier, parLibelle.keySet());
+        dialogue.setHeaderText("Ce passage n'est pas encore rattaché à une participation VigieChiro.");
+        dialogue.setContentText("Rattacher à :");
+        return dialogue.showAndWait().map(parLibelle::get);
+    }
+
+    /// Libellé lisible d'une participation pour le choix : `localité · date · titre du site`.
+    private static String libelle(ParticipationVigieChiro participation) {
+        StringBuilder libelle = new StringBuilder(participation.point() != null ? participation.point() : "?");
+        if (participation.dateDebut() != null) {
+            libelle.append(" · ").append(participation.dateDebut());
+        }
+        if (participation.siteTitre() != null) {
+            libelle.append(" · ").append(participation.siteTitre());
+        }
+        return libelle.toString();
     }
 
     /// Confirme le **remplacement** d'un jeu de résultats existant avant un réimport (un seul jeu par
