@@ -249,6 +249,19 @@
 }
 
 /*
+ * Table navigable (#792) : ses lignes remplies s'ouvrent au double-clic. Curseur main + fond au survol
+ * rendent cette interaction découvrable (une astuce dans la vue la nomme). Classe posée par
+ * TableDonnees.uniformiserNavigable ; réservée aux tables dont une ligne s'ouvre vraiment.
+ */
+.table-navigable .table-row-cell:filled {
+    -fx-cursor: hand;
+}
+
+.table-navigable .table-row-cell:filled:hover {
+    -fx-background-color: -couleur-primaire-voile;
+}
+
+/*
  * Badges de statut (#691) : pastilles de statut / verdict / fraîcheur, dont la couleur est DÉRIVÉE de la
  * donnée (la vue pose la classe sémantique). Migrés de sites.css et tokenisés (palette.css) pour une
  * palette pastel unique dans toute l'application. Le libellé porte le texte ; la classe porte la couleur.
