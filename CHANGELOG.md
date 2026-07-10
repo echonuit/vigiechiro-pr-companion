@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.164.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.164.1...v1.164.2) (2026-07-10)
+
+
+### Bug Fixes
+
+* **import:** dater le passage mono-nuit d.apres la soiree des WAV (bug A) ([#877](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/877)) ([73b9dd7](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/73b9dd7f4ad34ff3458bee8a682c8e37c9b0b0c3))
+
 ## [1.164.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.164.0...v1.164.1) (2026-07-10)
 
 
