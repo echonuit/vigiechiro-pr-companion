@@ -7,6 +7,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
@@ -56,6 +57,13 @@ public class PassageModule extends AbstractModule {
         // complète installe SitesModule, dont le `setBinding` fournit l'implémentation réelle. Les
         // injecteurs partiels (captures, tests de module) restent construisibles grâce à ce défaut.
         OptionalBinder.newOptionalBinder(binder(), CoordonneesPoint.class)
+                .setDefault()
+                .toInstance(idPoint -> Optional.empty());
+
+        // Port socle ReferentielPoint (axe 4) : cette feature CONSOMME l'identité VigieChiro d'un point
+        // (code de localité + id du site, pour créer/mettre à jour une participation) sans dépendre de
+        // `sites`. Même montage que CoordonneesPoint : défaut no-op ici, implémentation réelle par SitesModule.
+        OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
                 .setDefault()
                 .toInstance(idPoint -> Optional.empty());
     }
