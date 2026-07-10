@@ -70,8 +70,15 @@ public final class ClientVigieChiro {
     /// `site` ; on les déduplique par `_id`. La réponse Eve est paginée : on ne lit que la **première
     /// page** (`_items`), suffisante pour la poignée de participations d'un observateur.
     public List<SiteVigieChiro> mesSites() {
+        return get("/moi/participations").map(ParticipationsVigieChiro::sites).orElseGet(List::of);
+    }
+
+    /// **Participations** de l'observateur (`GET /moi/participations`, axe 4.2) : id + localité + date +
+    /// site, pour rattacher à la main un passage à une participation existante (import de résultats sans
+    /// dépôt-app préalable). Liste vide si non connecté / indisponible. Première page (`_items`).
+    public List<ParticipationVigieChiro> mesParticipations() {
         return get("/moi/participations")
-                .map(ReponsesVigieChiro::sitesDepuisParticipations)
+                .map(ParticipationsVigieChiro::participations)
                 .orElseGet(List::of);
     }
 

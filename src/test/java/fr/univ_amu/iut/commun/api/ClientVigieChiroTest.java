@@ -57,6 +57,7 @@ class ClientVigieChiroTest {
 
         assertThat(client.taxons()).isEmpty();
         assertThat(client.mesSites()).isEmpty();
+        assertThat(client.mesParticipations()).isEmpty();
         assertThat(client.donnees("6a49")).isEmpty();
     }
 

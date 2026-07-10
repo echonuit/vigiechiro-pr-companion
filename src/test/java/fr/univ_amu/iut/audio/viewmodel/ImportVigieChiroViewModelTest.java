@@ -2,11 +2,14 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -56,6 +59,22 @@ class ImportVigieChiroViewModelTest {
         assertThatThrownBy(() -> vm.importer(ID_PASSAGE, false))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("indisponible");
+    }
+
+    @Test
+    @DisplayName("participations() / rattacher() délèguent (liste vide / no-op si indisponible)")
+    void participations_et_rattachement() {
+        List<ParticipationVigieChiro> parts = List.of(new ParticipationVigieChiro("6a49", "Z41", "2026-07-03", "S"));
+        when(importateur.participationsDisponibles()).thenReturn(parts);
+
+        ImportVigieChiroViewModel present = new ImportVigieChiroViewModel(Optional.of(importateur));
+        assertThat(present.participations()).isSameAs(parts);
+        present.rattacher(ID_PASSAGE, "6a49");
+        verify(importateur).rattacher(ID_PASSAGE, "6a49");
+
+        ImportVigieChiroViewModel absent = new ImportVigieChiroViewModel(Optional.empty());
+        assertThat(absent.participations()).isEmpty();
+        absent.rattacher(ID_PASSAGE, "6a49"); // sans effet, ne lève pas
     }
 
     @Test

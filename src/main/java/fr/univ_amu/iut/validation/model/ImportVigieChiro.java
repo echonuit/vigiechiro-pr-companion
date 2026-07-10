@@ -2,6 +2,7 @@ package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
+import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -32,6 +33,20 @@ public class ImportVigieChiro {
     /// `true` si le passage est **rattaché** à une participation VigieChiro (donc importable sans saisie).
     public boolean estRattache(Long idPassage) {
         return participation(idPassage).isPresent();
+    }
+
+    /// **Participations** de l'observateur (`GET /moi/participations`), pour rattacher à la main un passage
+    /// à une participation existante (nuit non déposée par l'app). Liste vide si non connecté / indisponible.
+    public List<ParticipationVigieChiro> participationsDisponibles() {
+        return client.mesParticipations();
+    }
+
+    /// **Rattache** le passage à une participation VigieChiro (stocke le lien `ENTITE_PASSAGE`) : l'import
+    /// de ses résultats devient alors possible. Idempotent (upsert : un seul lien par passage).
+    public void rattacher(Long idPassage, String participationId) {
+        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(participationId, "participationId");
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), participationId));
     }
 
     /// Importe les résultats Tadarida de la participation rattachée au passage. **Bloquant** (récupère les

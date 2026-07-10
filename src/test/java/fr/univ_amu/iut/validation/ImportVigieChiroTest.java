@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.ObservationVigieChiro;
+import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -93,6 +94,18 @@ class ImportVigieChiroTest {
                 .hasMessageContaining("Aucun résultat");
         verify(service, never())
                 .importerDepuisVigieChiro(eq(ID_PASSAGE), org.mockito.ArgumentMatchers.any(), eq(false));
+    }
+
+    @Test
+    @DisplayName("participationsDisponibles délègue au client ; rattacher stocke le lien participation")
+    void participations_et_rattachement() {
+        List<ParticipationVigieChiro> parts = List.of(new ParticipationVigieChiro("6a49", "Z41", "2026-07-03", "Site"));
+        when(client.mesParticipations()).thenReturn(parts);
+
+        assertThat(importateur.participationsDisponibles()).isSameAs(parts);
+
+        importateur.rattacher(ID_PASSAGE, PARTICIPATION);
+        verify(liens).upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, "42", PARTICIPATION));
     }
 
     private static ObservationVigieChiro observation() {

@@ -2,7 +2,6 @@ package fr.univ_amu.iut.commun.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -73,34 +72,6 @@ class ReponsesVigieChiroTest {
     }
 
     @Test
-    @DisplayName("sitesDepuisParticipations : site verrouillé, carré extrait du titre, points [lat,lon]")
-    void sites_depuis_participations() {
-        // Forme réelle (extrait de GET /moi/participations : site embarqué + localités).
-        String corps = "{\"_items\":[{\"_id\":\"p1\",\"site\":{"
-                + "\"_id\":\"5eb12120cbe7410011f0a97f\",\"titre\":\"Vigiechiro - Point Fixe-130711\","
-                + "\"localites\":["
-                + "{\"nom\":\"Z1\",\"geometries\":{\"type\":\"GeometryCollection\",\"geometries\":"
-                + "[{\"type\":\"Point\",\"coordinates\":[43.5221,5.4658]}]}},"
-                + "{\"nom\":\"Z41\",\"geometries\":{\"type\":\"GeometryCollection\",\"geometries\":"
-                + "[{\"type\":\"Point\",\"coordinates\":[43.5145,5.4513]}]}}]}}]}";
-
-        List<SiteVigieChiro> sites = ReponsesVigieChiro.sitesDepuisParticipations(corps);
-
-        assertThat(sites).hasSize(1);
-        SiteVigieChiro site = sites.getFirst();
-        assertThat(site.id()).isEqualTo("5eb12120cbe7410011f0a97f");
-        assertThat(site.titre()).isEqualTo("Vigiechiro - Point Fixe-130711");
-        assertThat(site.verrouille())
-                .as("une participation existe -> site verrouillé")
-                .isTrue();
-        assertThat(site.numeroCarre()).isEqualTo("130711");
-        // Ordre [lat, lon] : coordinates[0] = latitude (43.5 = Aix), [1] = longitude.
-        assertThat(site.points())
-                .containsExactly(
-                        new PointVigieChiro("Z1", 43.5221, 5.4658), new PointVigieChiro("Z41", 43.5145, 5.4513));
-    }
-
-    @Test
     @DisplayName("idCree : _id d'un document créé (POST participation) ; illisible ou sans _id → vide")
     void id_cree() {
         assertThat(ReponsesVigieChiro.idCree("{\"_id\":\"6a49\",\"_status\":\"OK\"}"))
@@ -118,19 +89,5 @@ class ReponsesVigieChiroTest {
                 .contains(new FichierSigne("f1", "https://s3.amazonaws.com/bucket/f1?sig=abc"));
         assertThat(ReponsesVigieChiro.fichierSigne("{\"_id\":\"f1\"}")).isEmpty(); // pas d'URL
         assertThat(ReponsesVigieChiro.fichierSigne("nope")).isEmpty();
-    }
-
-    @Test
-    @DisplayName("sitesDepuisParticipations : dédup par site, participation sans site ignorée, illisible → vide")
-    void sites_depuis_participations_tolerant() {
-        String memeSiteDeuxFois = "{\"_items\":["
-                + "{\"_id\":\"p1\",\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\"}},"
-                + "{\"_id\":\"p2\",\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\"}},"
-                + "{\"_id\":\"p3\"}]}"; // p3 sans site -> ignorée
-
-        assertThat(ReponsesVigieChiro.sitesDepuisParticipations(memeSiteDeuxFois))
-                .extracting(SiteVigieChiro::id)
-                .containsExactly("s1");
-        assertThat(ReponsesVigieChiro.sitesDepuisParticipations("nope")).isEmpty();
     }
 }
