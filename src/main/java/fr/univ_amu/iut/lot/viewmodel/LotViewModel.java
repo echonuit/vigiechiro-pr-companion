@@ -48,6 +48,15 @@ public class LotViewModel {
     private final ReadOnlyBooleanWrapper peutGenererArchives =
             new ReadOnlyBooleanWrapper(this, "peutGenererArchives", false);
 
+    /// Espace disque estimé **suffisant** pour générer les archives (#…) : anticipé au chargement
+    /// (estimation compression comprise vs espace disponible). `true` par défaut / si indéterminé (on ne
+    /// bloque pas). Faux → bouton « Générer » désactivé + [#raisonEspaceInsuffisant] expliquée.
+    private final ReadOnlyBooleanWrapper espaceDepotSuffisant =
+            new ReadOnlyBooleanWrapper(this, "espaceDepotSuffisant", true);
+
+    private final ReadOnlyStringWrapper raisonEspaceInsuffisant =
+            new ReadOnlyStringWrapper(this, "raisonEspaceInsuffisant", "");
+
     /// Génération des archives en cours (#251) : posée pendant le travail hors fil JavaFX pour afficher
     /// un état « en cours » et désactiver le bouton (l'opération peut être longue sur une grosse nuit).
     private final ReadOnlyBooleanWrapper generationEnCours =
@@ -227,8 +236,24 @@ public class LotViewModel {
         peutGenererArchives.set(
                 etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE);
         // (peutSupprimerArchives est une liaison vivante sur `archives` : rien à poser ici.)
+        majEspaceDisque(etat);
         majEtapes(etat.statut());
         message.set(FormatsLot.messageEtat(etat));
+    }
+
+    /// Anticipe l'espace disque (#…) **au chargement** : compare la taille estimée des archives (compression
+    /// comprise, via le service) à l'espace disponible, pour désactiver « Générer » et l'expliquer AVANT le
+    /// clic. Indéterminé (génération non pertinente, volume/chemin inconnu, disque illisible) → on ne bloque
+    /// pas (`suffisant`).
+    private void majEspaceDisque(EtatLot etat) {
+        boolean generationPertinente =
+                etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE;
+        Long volume = etat.volumeSequencesOctets();
+        long disponible = service.espaceDisqueDisponible(etat.cheminDossier());
+        long requis = volume == null ? 0L : service.estimationTailleDepotOctets(volume);
+        boolean insuffisant = generationPertinente && volume != null && disponible > 0 && disponible < requis;
+        espaceDepotSuffisant.set(!insuffisant);
+        raisonEspaceInsuffisant.set(insuffisant ? FormatsLot.messageEspaceInsuffisant(requis, disponible) : "");
     }
 
     /// Recompose le stepper du dépôt (#251) depuis [EtapesDepot], selon le statut et la génération
@@ -249,6 +274,8 @@ public class LotViewModel {
         peutDeposer.set(false);
         depose.set(false);
         peutGenererArchives.set(false);
+        espaceDepotSuffisant.set(true);
+        raisonEspaceInsuffisant.set("");
         generationEnCours.set(false);
         archives.clear(); // suffit à repasser peutSupprimerArchives (liaison vivante) à false
         message.set("");
@@ -306,6 +333,18 @@ public class LotViewModel {
     /// `true` si les archives de dépôt peuvent être générées (lot préparé : Prêt à déposer ou Déposé).
     public ReadOnlyBooleanProperty peutGenererArchivesProperty() {
         return peutGenererArchives.getReadOnlyProperty();
+    }
+
+    /// `true` si l'espace disque estimé suffit pour générer les archives (#…) ; faux → « Générer » désactivé
+    /// et [#raisonEspaceInsuffisantProperty] explique pourquoi.
+    public ReadOnlyBooleanProperty espaceDepotSuffisantProperty() {
+        return espaceDepotSuffisant.getReadOnlyProperty();
+    }
+
+    /// Explication (non vide) quand l'espace disque est jugé insuffisant pour la génération, affichée en
+    /// alerte près du bouton « Générer ». Vide si l'espace suffit ou est indéterminé.
+    public ReadOnlyStringProperty raisonEspaceInsuffisantProperty() {
+        return raisonEspaceInsuffisant.getReadOnlyProperty();
     }
 
     /// `true` dès qu'il existe des archives ZIP à supprimer (liaison vivante sur la liste des archives), pour

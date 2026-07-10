@@ -107,6 +107,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private Label lblProgressionGeneration;
 
     @FXML
+    private Label lblEspaceInsuffisant;
+
+    @FXML
     private ListView<String> listeArchives;
 
     @FXML
@@ -161,7 +164,20 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         lblTitreArchives.textProperty().bind(viewModel.titreArchivesProperty());
         btnGenererArchives
                 .disableProperty()
-                .bind(viewModel.peutGenererArchivesProperty().not().or(viewModel.generationEnCoursProperty()));
+                .bind(viewModel
+                        .peutGenererArchivesProperty()
+                        .not()
+                        .or(viewModel.generationEnCoursProperty())
+                        .or(viewModel.espaceDepotSuffisantProperty().not()));
+        // Alerte espace disque (#…) : bandeau rouge affiché sous le bouton quand la place manque, pour
+        // expliquer AVANT le clic pourquoi « Générer » est désactivé (pas seulement un message discret après).
+        lblEspaceInsuffisant.textProperty().bind(viewModel.raisonEspaceInsuffisantProperty());
+        lblEspaceInsuffisant
+                .visibleProperty()
+                .bind(viewModel.raisonEspaceInsuffisantProperty().isNotEmpty());
+        lblEspaceInsuffisant
+                .managedProperty()
+                .bind(viewModel.raisonEspaceInsuffisantProperty().isNotEmpty());
         // Progression déterminée (#769) : barre + libellé « Compression X/N · ETA », visibles seulement
         // pendant la génération hors-thread. La fraction et le libellé suivent le ProgressionLot du VM.
         barreGeneration.progressProperty().bind(viewModel.progression().fractionProperty());

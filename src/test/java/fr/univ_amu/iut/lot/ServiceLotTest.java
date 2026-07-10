@@ -280,6 +280,15 @@ class ServiceLotTest {
     }
 
     @Test
+    @DisplayName("#… : espaceDisqueDisponible > 0 pour un dossier réel, 0 si chemin nul ; estimation = ratio + marge")
+    void espace_disque_et_estimation() {
+        assertThat(service.espaceDisqueDisponible(null)).isZero();
+        assertThat(service.espaceDisqueDisponible(dossier.toString())).isPositive();
+        assertThat(service.estimationTailleDepotOctets(10_000_000_000L))
+                .isEqualTo(CompacteurDepot.estimationTailleDepot(10_000_000_000L));
+    }
+
+    @Test
     @DisplayName("R14 : preparerLot refuse un passage « À jeter » (RegleMetierException)")
     void preparer_lot_a_jeter_refuse() {
         Passage passage = creerPassage(Verdict.A_JETER);

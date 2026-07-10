@@ -94,6 +94,35 @@ class LotViewModelTest {
         assertThat(viewModel.peutSupprimerArchivesProperty().get()).isFalse();
     }
 
+    @Test
+    @DisplayName("#… : espace disque insuffisant → génération bloquée + raison expliquée (compression comprise)")
+    void espace_insuffisant_bloque_et_explique() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(5_000_000_000L); // 5 Go dispo
+        when(service.estimationTailleDepotOctets(8192L)).thenReturn(9_000_000_000L); // 9 Go estimés
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.espaceDepotSuffisantProperty().get()).isFalse();
+        assertThat(viewModel.raisonEspaceInsuffisantProperty().get())
+                .contains("insuffisant")
+                .contains("9")
+                .contains("5");
+    }
+
+    @Test
+    @DisplayName("#… : espace disque suffisant → génération possible, aucune alerte")
+    void espace_suffisant_pas_d_alerte() {
+        when(service.consulterLot(ID_PASSAGE)).thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(20_000_000_000L);
+        when(service.estimationTailleDepotOctets(8192L)).thenReturn(9_000_000_000L);
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.espaceDepotSuffisantProperty().get()).isTrue();
+        assertThat(viewModel.raisonEspaceInsuffisantProperty().get()).isEmpty();
+    }
+
     private static EtatLot etat(StatutWorkflow statut, List<ControleCoherence> controles, String deposeLe) {
         return new EtatLot(statut, "/ws/session-42", 2, 8192L, controles, deposeLe);
     }

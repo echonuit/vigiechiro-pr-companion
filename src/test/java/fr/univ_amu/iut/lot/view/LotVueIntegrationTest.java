@@ -290,6 +290,20 @@ class LotVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#… : espace disque insuffisant → « Générer les archives » désactivé + alerte visible sous le bouton")
+    void espace_insuffisant_desactive_generer_et_affiche_alerte(FxRobot robot) {
+        when(service.espaceDisqueDisponible("/ws/session-42")).thenReturn(5_000_000_000L); // 5 Go dispo
+        when(service.estimationTailleDepotOctets(anyLong())).thenReturn(9_000_000_000L); // 9 Go estimés
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        assertThat(robot.lookup("#btnGenererArchives").queryButton().isDisabled())
+                .isTrue();
+        Label alerte = robot.lookup("#lblEspaceInsuffisant").queryAs(Label.class);
+        assertThat(alerte.isVisible()).isTrue();
+        assertThat(alerte.getText()).contains("insuffisant");
+    }
+
+    @Test
     @DisplayName("#251 : stepper ordonné à 4 étapes, l'étape courante suit le statut du dépôt")
     void stepper_ordonne_quatre_etapes_etape_courante_selon_statut(FxRobot robot) {
         HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);

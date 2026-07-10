@@ -148,6 +148,32 @@ class CompacteurDepotTest {
     }
 
     @Test
+    @DisplayName("#… : estimationTailleDepot = volume source × ratio de compression + marge")
+    void estimation_taille_depot() {
+        assertThat(CompacteurDepot.estimationTailleDepot(10_000_000_000L))
+                .isEqualTo((long) (10_000_000_000L * CompacteurDepot.RATIO_COMPRESSION_ESTIME) + 100_000_000L);
+    }
+
+    @Test
+    @DisplayName("#… : le garde-fou disque utilise l'estimation COMPRESSÉE (ne bloque pas sur la taille source)")
+    void garde_fou_disque_compression_aware() throws IOException {
+        Path f1 = Files.write(dossier.resolve("a.wav"), octets(100_000, (byte) 1));
+        Path f2 = Files.write(dossier.resolve("b.wav"), octets(100_000, (byte) 2));
+        long requis = CompacteurDepot.estimationTailleDepot(200_000L); // ~120 Ko + marge, bien < 200 Ko source
+
+        // Espace pile au niveau du requis compressé → génération OK (l'ancien seuil sur la taille source
+        // brute aurait bloqué à tort).
+        assertThat(new CompacteurDepot(CompacteurDepot.TAILLE_MAX_DEFAUT_OCTETS, d -> requis)
+                        .compacter(List.of(f1, f2), PREFIXE, dossier.resolve("depot")))
+                .hasSize(1);
+        // Juste en dessous → refus explicite.
+        assertThatThrownBy(() -> new CompacteurDepot(CompacteurDepot.TAILLE_MAX_DEFAUT_OCTETS, d -> requis - 1)
+                        .compacter(List.of(f1, f2), PREFIXE, dossier.resolve("depot2")))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("insuffisant");
+    }
+
+    @Test
     @DisplayName("#769 : la génération émet un point de progression par fichier (fraction croissante jusqu'à 1)")
     void emet_une_progression_par_fichier() throws IOException {
         Path src = Files.createDirectories(dossier.resolve("src"));

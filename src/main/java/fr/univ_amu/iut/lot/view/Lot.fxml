@@ -69,6 +69,10 @@
     </HBox>
     <Label fx:id="lblProgressionGeneration" styleClass="section-sous"
            visible="false" managed="false"/>
+    <!-- Alerte espace disque (#…) : bandeau rouge pleine largeur juste sous le bouton, affiché quand la
+         génération est désactivée faute de place (proactif, sans attendre le clic). -->
+    <Label fx:id="lblEspaceInsuffisant" styleClass="bandeau-statut, badge-danger" wrapText="true"
+           visible="false" managed="false"/>
     <!-- Hauteur plancher (jamais écrasée) ; le controller ajuste la hauteur au nombre d'archives (#…). -->
     <ListView fx:id="listeArchives" minHeight="90.0" prefHeight="100.0"/>
   </VBox>

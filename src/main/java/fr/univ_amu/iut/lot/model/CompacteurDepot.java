@@ -49,6 +49,14 @@ public final class CompacteurDepot {
     /// couvre les métadonnées du système de fichiers et une éventuelle sous-estimation.
     private static final long MARGE_SECURITE_OCTETS = 100L * 1000 * 1000;
 
+    /// Ratio d'estimation de la taille des archives par rapport aux WAV source : le PCM des séquences se
+    /// **compresse bien** en DEFLATE (~50 % observé, ex. une nuit de 13 Go → ~6 Go d'archives). On retient
+    /// **60 %** par prudence (marge au-dessus du ratio observé) pour estimer l'espace disque nécessaire, au
+    /// lieu de la taille source brute qui **surestimait ~2×** et bloquait à tort des générations qui
+    /// tenaient. Estimation seulement (le pire cas incompressible reste rattrapé par le contrôle de taille
+    /// par archive) ; un échec en cours d'écriture reste géré (session nettoyée).
+    public static final double RATIO_COMPRESSION_ESTIME = 0.6;
+
     private final long tailleMaxOctets;
     private final EspaceDisque espaceDisque;
 
@@ -149,16 +157,18 @@ public final class CompacteurDepot {
     }
 
     /// Pré-contrôle d'espace disque **avant toute écriture** (#769) : on refuse tôt et proprement si le
-    /// disque de destination n'a pas la place d'accueillir les archives, plutôt que d'échouer à
-    /// mi-génération en laissant des archives partielles. Le volume requis est **majoré** (somme des coûts
-    /// d'archive — DEFLATE ne grossit pas les WAV — plus [#MARGE_SECURITE_OCTETS]), donc conservateur.
+    /// disque de destination n'a manifestement pas la place, plutôt que d'échouer à mi-génération en
+    /// laissant des archives partielles. Le volume requis est **estimé compression comprise**
+    /// ([#estimationTailleDepot] : les WAV compressent ~50 %), pour ne pas bloquer à tort une génération qui
+    /// tiendrait.
     ///
     /// @throws RegleMetierException si l'espace disponible est inférieur au volume requis estimé
     private void verifierEspaceDisque(List<Path> fichiers, Path dossierSortie) throws IOException {
-        long requis = MARGE_SECURITE_OCTETS;
+        long volumeSource = 0L;
         for (Path fichier : fichiers) {
-            requis += coutMaximalDansArchive(fichier);
+            volumeSource += Files.size(fichier);
         }
+        long requis = estimationTailleDepot(volumeSource);
         long disponible = espaceDisque.disponibleOctets(dossierSortie);
         if (disponible < requis) {
             throw new RegleMetierException("Espace disque insuffisant pour générer les archives de dépôt :"
@@ -168,6 +178,13 @@ public final class CompacteurDepot {
                     + enGigaoctets(disponible)
                     + " Go disponibles sur le disque de destination. Libérez de l'espace puis relancez la génération.");
         }
+    }
+
+    /// Estimation de l'espace disque nécessaire pour les archives d'un volume source `volumeSourceOctets`
+    /// de séquences WAV : `volume × [#RATIO_COMPRESSION_ESTIME] + [#MARGE_SECURITE_OCTETS]`. Exposée pour
+    /// que l'IHM anticipe (bouton/alerte) avec **le même calcul** que le garde-fou avant écriture (#…).
+    public static long estimationTailleDepot(long volumeSourceOctets) {
+        return (long) (volumeSourceOctets * RATIO_COMPRESSION_ESTIME) + MARGE_SECURITE_OCTETS;
     }
 
     /// Formate un nombre d'octets en gigaoctets (base 1000, une décimale) pour les messages utilisateur.

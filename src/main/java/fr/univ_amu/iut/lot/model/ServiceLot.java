@@ -13,16 +13,11 @@ import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
-import java.util.zip.ZipFile;
 
 /// Service métier de la feature `lot` : prépare et trace le dépôt d'un passage sur
 /// Vigie-Chiro (parcours P4, épopée E4). Suit le patron du service de référence
@@ -48,14 +43,11 @@ import java.util.zip.ZipFile;
 /// déclarée).
 public class ServiceLot {
 
-    /// Sous-dossier de la session où sont écrites les archives ZIP de dépôt (R22).
-    private static final String SOUS_DOSSIER_DEPOT = "depot";
-
-    /// Extension des archives de dépôt (le dossier `depot/` ne contient que celles-ci).
-    private static final String EXTENSION_ZIP = ".zip";
-
     /// Nom du paramètre `idPassage` pour les messages `requireNonNull` (factorisé, évite le littéral dupliqué).
     private static final String PARAM_ID_PASSAGE = "idPassage";
+
+    /// Opérations disque sur le dossier `depot/` (listing, suppression, espace) : extrait pour la cohésion.
+    private final RepertoireDepot repertoireDepot = new RepertoireDepot();
 
     private final PassageDao passageDao;
     private final SessionDao sessionDao;
@@ -204,35 +196,31 @@ public class ServiceLot {
                 .map(s -> Path.of(s.cheminFichier()))
                 .map(p -> p.isAbsolute() ? p : racineSession.resolve(p))
                 .toList();
-        return compacteur.compacter(fichiers, prefixe, racineSession.resolve(SOUS_DOSSIER_DEPOT), progres);
+        return compacteur.compacter(fichiers, prefixe, repertoireDepot.dossier(session.cheminRacine()), progres);
+    }
+
+    /// Espace disque **disponible** (octets) sur le système de fichiers de la session, pour anticiper (avant
+    /// génération) si les archives tiendront. `0` si inconnu/inaccessible (l'IHM ne bloque alors pas).
+    public long espaceDisqueDisponible(String cheminDossier) {
+        return repertoireDepot.espaceDisponible(cheminDossier);
+    }
+
+    /// Estimation **compression comprise** de la taille des archives pour un volume de séquences source
+    /// (délègue à [CompacteurDepot#estimationTailleDepot], même calcul que le garde-fou avant écriture) :
+    /// l'IHM s'en sert pour anticiper l'espace requis (bouton/alerte).
+    public long estimationTailleDepotOctets(long volumeSourceOctets) {
+        return CompacteurDepot.estimationTailleDepot(volumeSourceOctets);
     }
 
     /// Archives ZIP de dépôt (`depot/*.zip`) **présentes sur disque** pour un dossier de session (liste vide
-    /// si le dossier `depot/` est absent). Permet à l'IHM de **réafficher** les archives déjà générées à la
-    /// réouverture de l'écran (et d'activer « Ouvrir le dossier » / « Supprimer »). **Lecture disque pure**
-    /// à partir du chemin de session déjà connu de l'appelant (cf. [EtatLot#cheminDossier()]).
+    /// si absent) : permet de **réafficher** les archives déjà générées à la réouverture de l'écran.
     public List<ArchiveDepot> archivesDepot(String cheminDossier) {
-        if (cheminDossier == null) {
-            return List.of();
-        }
-        Path depot = Path.of(cheminDossier).resolve(SOUS_DOSSIER_DEPOT);
-        if (!Files.isDirectory(depot)) {
-            return List.of();
-        }
-        try (Stream<Path> fichiers = Files.list(depot)) {
-            return fichiers.filter(ServiceLot::estArchiveZip)
-                    .sorted()
-                    .map(ServiceLot::decrireArchive)
-                    .toList();
-        } catch (IOException e) {
-            throw new UncheckedIOException("Lecture du dossier de dépôt impossible : " + depot, e);
-        }
+        return repertoireDepot.lister(cheminDossier);
     }
 
-    /// Supprime les **archives ZIP de dépôt** (`depot/*.zip`) du passage, une fois le dépôt confirmé
-    /// (téléversement effectué), pour **libérer l'espace disque**. Les archives restent régénérables à
-    /// l'identique ([#genererArchivesDepot]). N'agit **que** sur un passage déjà **déposé** ; ne modifie
-    /// pas le statut (aucune transition workflow).
+    /// Supprime les **archives ZIP de dépôt** (`depot/*.zip`) du passage, une fois le dépôt confirmé, pour
+    /// **libérer l'espace disque** (les archives restent régénérables). N'agit **que** sur un passage déjà
+    /// **déposé** ; ne modifie pas le statut.
     ///
     /// @return le nombre d'octets libérés
     /// @throws RegleMetierException si le passage/session est introuvable, ou si le passage n'est pas déposé
@@ -243,20 +231,7 @@ public class ServiceLot {
             throw new RegleMetierException(
                     "Les archives de dépôt ne peuvent être supprimées qu'après avoir marqué le passage déposé.");
         }
-        Path depot = Path.of(chargerSession(idPassage).cheminRacine()).resolve(SOUS_DOSSIER_DEPOT);
-        if (!Files.isDirectory(depot)) {
-            return 0L;
-        }
-        try (Stream<Path> fichiers = Files.list(depot)) {
-            long liberes = 0L;
-            for (Path archive : fichiers.filter(ServiceLot::estArchiveZip).toList()) {
-                liberes += tailleSilencieuse(archive);
-                Files.deleteIfExists(archive);
-            }
-            return liberes;
-        } catch (IOException e) {
-            throw new UncheckedIOException("Suppression des archives de dépôt impossible : " + depot, e);
-        }
+        return repertoireDepot.supprimer(chargerSession(idPassage).cheminRacine());
     }
 
     /// Charge la session d'un passage, ou lève une [RegleMetierException] explicite (message factorisé).
@@ -265,45 +240,6 @@ public class ServiceLot {
                 .trouverParPassage(idPassage)
                 .orElseThrow(() -> new RegleMetierException(
                         "Session d'enregistrement introuvable pour le passage " + idPassage + "."));
-    }
-
-    /// Décrit une archive ZIP présente sur disque : chemin, numéro (extrait du nom `…-N.zip`), taille et
-    /// nombre d'entrées (ouverture légère du ZIP pour l'affichage à la réouverture).
-    private static ArchiveDepot decrireArchive(Path zip) {
-        int nombreFichiers;
-        try (ZipFile archive = new ZipFile(zip.toFile())) {
-            nombreFichiers = archive.size();
-        } catch (IOException e) {
-            nombreFichiers = 0;
-        }
-        return new ArchiveDepot(zip, numeroDepuisNom(zip), tailleSilencieuse(zip), nombreFichiers);
-    }
-
-    /// Numéro d'archive extrait du nom `<préfixe>-N.zip` (le préfixe R6 contient des tirets → dernier
-    /// segment) ; `0` si le nom n'est pas conforme.
-    private static int numeroDepuisNom(Path zip) {
-        String nom = zip.getFileName().toString();
-        int tiret = nom.lastIndexOf('-');
-        if (tiret < 0 || !nom.endsWith(EXTENSION_ZIP)) {
-            return 0;
-        }
-        try {
-            return Integer.parseInt(nom.substring(tiret + 1, nom.length() - EXTENSION_ZIP.length()));
-        } catch (NumberFormatException e) {
-            return 0;
-        }
-    }
-
-    private static boolean estArchiveZip(Path fichier) {
-        return fichier.getFileName().toString().endsWith(EXTENSION_ZIP);
-    }
-
-    private static long tailleSilencieuse(Path fichier) {
-        try {
-            return Files.size(fichier);
-        } catch (IOException e) {
-            return 0L;
-        }
     }
 
     private Passage chargerPassage(Long idPassage) {

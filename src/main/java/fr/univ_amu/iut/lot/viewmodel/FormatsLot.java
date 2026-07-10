@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.EtatLot;
+import java.util.Locale;
 
 /// Formatage **textuel** pur des éléments de l'écran M-Lot (récapitulatif, message d'état, ligne
 /// d'archive), extrait de [LotViewModel] pour l'alléger (cohésion / seuil GodClass). Sans état ni
@@ -11,6 +12,18 @@ import fr.univ_amu.iut.lot.model.EtatLot;
 final class FormatsLot {
 
     private FormatsLot() {}
+
+    /// Alerte « espace disque insuffisant » (gigaoctets base 1000) affichée AVANT génération (#…) : volume
+    /// estimé des archives (compression comprise) vs espace disponible.
+    static String messageEspaceInsuffisant(long requisOctets, long disponibleOctets) {
+        return "⚠ Espace disque insuffisant : environ " + enGigaoctets(requisOctets)
+                + " Go estimés pour les archives, seulement " + enGigaoctets(disponibleOctets)
+                + " Go disponibles. Libérez de l'espace avant de générer.";
+    }
+
+    private static String enGigaoctets(long octets) {
+        return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
+    }
 
     /// Ligne lisible d'une archive de dépôt : « nom · N fichiers · taille ».
     static String archiveLisible(ArchiveDepot archive) {
