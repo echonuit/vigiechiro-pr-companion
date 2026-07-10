@@ -46,6 +46,9 @@
         <mockito.version>5.23.0</mockito.version>
         <approvaltests.version>31.0.0</approvaltests.version>
         <archunit.version>1.4.2</archunit.version>
+        <!-- Suite de contrat API « vivante » (profil -Papi-live, hors CI) : REST-assured tape l'API
+             VigieChiro réelle et valide les réponses contre les JSON Schema de src/test/resources. -->
+        <restassured.version>5.5.1</restassured.version>
 
         <!-- Persistance + injection de dépendances (cf. TP5 / TP4). -->
         <guice.version>7.0.0</guice.version>
@@ -70,6 +73,12 @@
 
         <!-- Seuil de couverture bloquant : false par défaut, true sous -Pquality-gate. -->
         <jacoco.haltOnFailure>false</jacoco.haltOnFailure>
+
+        <!-- Sélection des tags JUnit 5 par Surefire, pilotée par propriété (override fiable en profil).
+             Par défaut : on N'inclut aucun tag précis (tout tourne) SAUF `api-live`, exclu du build/CI.
+             Le profil -Papi-live inverse ces deux propriétés pour ne lancer QUE la suite de contrat. -->
+        <surefire.groups></surefire.groups>
+        <surefire.excludedGroups>api-live</surefire.excludedGroups>
     </properties>
 
     <dependencies>
@@ -191,6 +200,22 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- REST-assured : suite de contrat API vivante (@Tag("api-live"), profil -Papi-live, JAMAIS en
+             CI ni dans le build par défaut, cf. surefire excludedGroups). Assertions fluides sur le JSON
+             brut de l'API réelle + validation contre les JSON Schema partagés (json-schema-validator). -->
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>rest-assured</artifactId>
+            <version>${restassured.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.rest-assured</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>${restassured.version}</version>
+            <scope>test</scope>
+        </dependency>
+
         <!-- Icônes FontAwesome5 via Ikonli (FontIcon en FXML). ikonli-javafx tire ikonli-core. -->
         <dependency>
             <groupId>org.kordamp.ikonli</groupId>
@@ -305,6 +330,11 @@
                 <configuration>
                     <!-- TestFX requires classpath mode (not module path) -->
                     <useModulePath>false</useModulePath>
+                    <!-- La suite de contrat API (@Tag("api-live")) tape l'API VigieChiro réelle : JAMAIS
+                         dans le build/CI par défaut (surefire.excludedGroups=api-live). On la lance à la
+                         main via le profil -Papi-live, qui inverse ces deux propriétés. -->
+                    <groups>${surefire.groups}</groups>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                     <!-- Headless Platform JavaFX 26 (Gluon) : plateforme Glass logicielle, sans
                          natif ni serveur d'affichage. Aucune fenêtre TestFX/JavaFX n'apparaît à
                          l'écran, localement comme en CI, et plus besoin de xvfb. Le robot Glass
@@ -676,6 +706,41 @@
                         <artifactId>maven-pmd-plugin</artifactId>
                         <configuration>
                             <failOnViolation>true</failOnViolation>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!-- Profil api-live : lance UNIQUEMENT la suite de contrat API (@Tag("api-live")), qui tape
+             l'API VigieChiro réelle. Hors CI, à la main :
+               ./mvnw -Papi-live test -Dvigiechiro.token=XXXX                     (lecture seule, sûr)
+               ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true  (+ probes d'écriture)
+             Sans token, les tests se SKIPPENT proprement (Assumptions). Le token/baseUrl/write sont
+             transmis au JVM de test via systemPropertyVariables (valeurs par défaut ci-dessous). -->
+        <profile>
+            <id>api-live</id>
+            <properties>
+                <!-- Inverse la sélection : ne lance QUE @Tag("api-live"), sans exclusion. -->
+                <surefire.groups>api-live</surefire.groups>
+                <surefire.excludedGroups></surefire.excludedGroups>
+                <vigiechiro.token></vigiechiro.token>
+                <vigiechiro.baseUrl>https://vigiechiro.herokuapp.com/api/v1</vigiechiro.baseUrl>
+                <vigiechiro.write>false</vigiechiro.write>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- Transmet token/baseUrl/write au JVM de test (la sélection des tags est
+                                 pilotée par les propriétés surefire.groups/excludedGroups ci-dessus). -->
+                            <systemPropertyVariables>
+                                <vigiechiro.token>${vigiechiro.token}</vigiechiro.token>
+                                <vigiechiro.baseUrl>${vigiechiro.baseUrl}</vigiechiro.baseUrl>
+                                <vigiechiro.write>${vigiechiro.write}</vigiechiro.write>
+                            </systemPropertyVariables>
                         </configuration>
                     </plugin>
                 </plugins>

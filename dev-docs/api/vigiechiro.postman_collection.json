@@ -1,0 +1,118 @@
+{
+  "info": {
+    "name": "VigieChiro API — contrat & exploration",
+    "description": "Catalogue de requêtes de l'API VigieChiro (Python-Eve) pour l'EXPLORATION manuelle (Postman) et un SMOKE run headless (Newman). Complément de la suite REST-assured `ContratApiVigieChiroLiveTest` (@Tag api-live), qui reste la référence du contrat PROFOND (validation contre les JSON Schema partagés de src/test/resources/vigiechiro/). Ici on ne fait que des vérifications légères (statut, présence des champs coeur, format de date, domaines météo) pour ne PAS dupliquer le schéma.\n\nAuth : Basic base64(\"<token>:\"), token en username, mot de passe vide. Le token 14 j se récupère via le marque-page localStorage['auth-session-token'].\n\nSmoke headless :\n  newman run dev-docs/api/vigiechiro.postman_collection.json --env-var token=XXXX\n  (rapport HTML : --reporters cli,htmlextra)",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{token}}", "type": "string" },
+      { "key": "password", "value": "", "type": "string" }
+    ]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "https://vigiechiro.herokuapp.com/api/v1" },
+    { "key": "token", "value": "" },
+    { "key": "participationId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "GET /moi — profil de l'observateur connecté",
+      "request": { "method": "GET", "url": "{{baseUrl}}/moi" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200 (token valide)', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /moi/participations — collection Eve",
+      "request": { "method": "GET", "url": "{{baseUrl}}/moi/participations" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const b = pm.response.json();",
+              "pm.test('_items est une collection non vide', () => pm.expect(b._items).to.be.an('array').that.is.not.empty);",
+              "const p = b._items[0];",
+              "pm.test('champs coeur (_id, point, _etag)', () => {",
+              "  pm.expect(p).to.have.property('_id');",
+              "  pm.expect(p).to.have.property('point');",
+              "  pm.expect(p).to.have.property('_etag');",
+              "});",
+              "pm.test('date_debut en ISO +00:00', () => pm.expect(p.date_debut).to.match(/\\+00:00$/));",
+              "if (p.meteo && p.meteo.vent) {",
+              "  pm.test('meteo.vent dans le domaine', () => pm.expect(['NUL','FAIBLE','MOYEN','FORT']).to.include(p.meteo.vent));",
+              "}",
+              "pm.collectionVariables.set('participationId', p._id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /participations/:id — participation détaillée",
+      "request": { "method": "GET", "url": "{{baseUrl}}/participations/{{participationId}}" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "const p = pm.response.json();",
+              "pm.test('_etag présent (requis pour un futur PATCH If-Match)', () => pm.expect(p).to.have.property('_etag'));",
+              "if (p.configuration && p.configuration.micro0_type) {",
+              "  pm.test('configuration.micro0_type est une chaîne', () => pm.expect(p.configuration.micro0_type).to.be.a('string'));",
+              "}",
+              "if (p.traitement && p.traitement.etat) {",
+              "  pm.test('traitement.etat est une chaîne (signal Tadarida)', () => pm.expect(p.traitement.etat).to.be.a('string'));",
+              "}"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /participations/:id/donnees — résultats Tadarida (paginé)",
+      "request": { "method": "GET", "url": "{{baseUrl}}/participations/{{participationId}}/donnees" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));",
+              "pm.test('collection _items', () => pm.expect(pm.response.json()).to.have.property('_items'));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "GET /taxons/liste — référentiel taxons",
+      "request": { "method": "GET", "url": "{{baseUrl}}/taxons/liste" },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('200', () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

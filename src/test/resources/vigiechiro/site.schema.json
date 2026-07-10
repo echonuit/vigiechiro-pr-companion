@@ -1,0 +1,40 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "title": "VigieChiro — site (monitoring_site)",
+  "description": "Contrat OBSERVÉ de l'objet `site` de l'API VigieChiro, relevé le 2026-07-10. Un `point d'écoute` local correspond à une entrée de `localites` (nom + géométrie Point). `_etag` requis pour un futur PATCH des localités (push point→site, spike-gated). additionalProperties=true.",
+  "type": "object",
+  "required": ["_id", "_etag", "titre", "localites"],
+  "properties": {
+    "_id": { "type": "string" },
+    "_etag": { "type": "string" },
+    "_created": { "type": "string" },
+    "_updated": { "type": "string" },
+    "titre": { "type": "string", "description": "ex. Vigiechiro - Point Fixe-130711" },
+    "protocole": { "type": "string" },
+    "grille_stoc": { "type": "string" },
+    "observateur": { "type": ["string", "null"] },
+    "localites": {
+      "type": "array",
+      "description": "les points d'écoute du site",
+      "items": {
+        "type": "object",
+        "required": ["nom", "geometries"],
+        "properties": {
+          "nom": { "type": "string", "description": "code du point, ex. Z41" },
+          "representatif": { "type": "boolean" },
+          "geometries": {
+            "type": "object",
+            "description": "GeometryCollection contenant un Point [lat, lon]",
+            "properties": {
+              "type": { "type": "string" },
+              "geometries": { "type": "array" }
+            },
+            "additionalProperties": true
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": true
+}
