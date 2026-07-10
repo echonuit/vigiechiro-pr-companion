@@ -90,6 +90,9 @@ class DepotVigieChiroTest {
         assertThat(bilan.deposees()).isEqualTo(2);
         assertThat(bilan.estComplet()).isTrue();
 
+        // Lien passage → participation mémorisé (axe 4.2) pour retrouver la participation à l'import.
+        verify(liens).upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, "42", "part-1"));
+
         verify(client).creerParticipation(eq(OBJECTID_SITE), participationCaptor.capture());
         ParticipationADeposer envoyee = participationCaptor.getValue();
         assertThat(envoyee.point()).isEqualTo("Z41");

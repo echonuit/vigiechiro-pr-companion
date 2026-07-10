@@ -21,6 +21,11 @@ public record LienVigieChiro(String entite, String refLocale, String objectid, B
     /// Discriminant d'un rapprochement de **site** (clé locale = `monitoring_site.id` en texte).
     public static final String ENTITE_SITE = "site";
 
+    /// Discriminant d'un rapprochement de **passage** (clé locale = `passage.id` en texte, `objectid` =
+    /// `_id` de la participation VigieChiro). Posé au dépôt (#142) pour retrouver la participation d'un
+    /// passage lors de l'import de ses résultats Tadarida (axe 4.2). `verrouille` non pertinent (`null`).
+    public static final String ENTITE_PASSAGE = "passage";
+
     /// Correspondance sans état de verrouillage (`verrouille` = `null`) : cas des taxons et des liens
     /// posés avant l'axe 3. Laisse le code existant (constructeur à 3 arguments) inchangé.
     public LienVigieChiro(String entite, String refLocale, String objectid) {

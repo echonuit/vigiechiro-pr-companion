@@ -82,6 +82,10 @@ public final class DepotVigieChiro {
                 .orElseThrow(() -> new RegleMetierException("Création de la participation refusée par VigieChiro"
                         + " (token expiré, ou site non verrouillé côté plateforme)."));
 
+        // Mémorise le lien passage → participation (axe 4.2) dès la participation créée, avant l'upload : même
+        // un dépôt partiel doit permettre de réimporter les résultats Tadarida de cette participation.
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), participationId));
+
         List<String> echecs = new ArrayList<>();
         int deposees = 0;
         for (Path fichier : fichiers) {
