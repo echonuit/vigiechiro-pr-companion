@@ -16,7 +16,6 @@ class RequetesVigieChiroTest {
     @DisplayName("participation : snake_case, meteo + configuration imbriqués, numero/commentaire présents")
     void participation_complete() {
         ParticipationADeposer participation = new ParticipationADeposer(
-                1,
                 "Z41",
                 "2026-07-03T19:00:00Z",
                 "2026-07-04T04:00:00Z",
@@ -27,7 +26,8 @@ class RequetesVigieChiroTest {
         JsonObject corps = JsonParser.parseString(RequetesVigieChiro.participation(participation))
                 .getAsJsonObject();
 
-        assertThat(corps.get("numero").getAsInt()).isEqualTo(1);
+        // Pas de champ `numero` : l'API Eve le refuse (422). Vérifié explicitement plus bas.
+        assertThat(corps.has("numero")).isFalse();
         assertThat(corps.get("point").getAsString()).isEqualTo("Z41");
         assertThat(corps.get("date_debut").getAsString()).isEqualTo("2026-07-03T19:00:00Z");
         assertThat(corps.get("date_fin").getAsString()).isEqualTo("2026-07-04T04:00:00Z");
@@ -40,15 +40,14 @@ class RequetesVigieChiroTest {
     }
 
     @Test
-    @DisplayName("participation : champs null (numero, commentaire, meteo) omis du corps")
+    @DisplayName("participation : champs null (commentaire, meteo, configuration) omis du corps")
     void participation_champs_null_omis() {
-        ParticipationADeposer participation = new ParticipationADeposer(
-                null, "Z41", "2026-07-03T19:00:00Z", "2026-07-04T04:00:00Z", null, null, null);
+        ParticipationADeposer participation =
+                new ParticipationADeposer("Z41", "2026-07-03T19:00:00Z", "2026-07-04T04:00:00Z", null, null, null);
 
         JsonObject corps = JsonParser.parseString(RequetesVigieChiro.participation(participation))
                 .getAsJsonObject();
 
-        assertThat(corps.has("numero")).isFalse();
         assertThat(corps.has("commentaire")).isFalse();
         assertThat(corps.has("meteo")).isFalse();
         assertThat(corps.has("configuration")).isFalse();

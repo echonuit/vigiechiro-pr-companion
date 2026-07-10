@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
+import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -20,7 +21,11 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -78,9 +83,10 @@ public final class DepotVigieChiro {
                         + " VigieChiro et synchronisez vos sites avant de déposer."));
 
         ParticipationADeposer participation = construireParticipation(passage, point);
-        String participationId = client.creerParticipation(objectidSite, participation)
-                .orElseThrow(() -> new RegleMetierException("Création de la participation refusée par VigieChiro"
-                        + " (token expiré, ou site non verrouillé côté plateforme)."));
+        ResultatParticipation creation = client.creerParticipation(objectidSite, participation);
+        String participationId = creation.id()
+                .orElseThrow(() -> new RegleMetierException(
+                        "Création de la participation refusée par VigieChiro : " + creation.echec()));
 
         // Mémorise le lien passage → participation (axe 4.2) dès la participation créée, avant l'upload : même
         // un dépôt partiel doit permettre de réimporter les résultats Tadarida de cette participation.
@@ -117,13 +123,7 @@ public final class DepotVigieChiro {
 
     private ParticipationADeposer construireParticipation(Passage passage, PointDEcoute point) {
         return new ParticipationADeposer(
-                passage.numeroPassage(),
-                point.code(),
-                debutIso(passage),
-                finIso(passage),
-                meteo(passage),
-                configuration(passage),
-                null);
+                point.code(), debutVc(passage), finVc(passage), meteo(passage), configuration(passage), null);
     }
 
     /// Bloc météo VigieChiro depuis les données du passage (#702), ou `null` si aucune donnée exploitable.
@@ -173,27 +173,38 @@ public final class DepotVigieChiro {
         return config.isEmpty() ? null : config;
     }
 
-    /// Début de la nuit en ISO 8601 (`date + T + heureDebut`), ou `null` si l'un manque.
-    private static String debutIso(Passage passage) {
-        return iso(passage.dateEnregistrement(), passage.heureDebut());
+    /// Début de la nuit au **format datetime attendu par VigieChiro** (RFC 1123 en UTC), ou `null` si date
+    /// ou heure de début manquante.
+    private static String debutVc(Passage passage) {
+        if (passage.dateEnregistrement() == null || passage.heureDebut() == null) {
+            return null;
+        }
+        return rfc1123Utc(LocalDate.parse(passage.dateEnregistrement()), LocalTime.parse(passage.heureDebut()));
     }
 
-    /// Fin de la nuit en ISO 8601. La nuit **franchit minuit** quand l'heure de fin ne suit pas l'heure de
-    /// début : dans ce cas la date de fin est le lendemain. `null` si date ou heure de fin manquante.
-    private static String finIso(Passage passage) {
+    /// Fin de la nuit (RFC 1123 en UTC). La nuit **franchit minuit** quand l'heure de fin ne suit pas l'heure
+    /// de début : la date de fin est alors le lendemain. `null` si date ou heure de fin manquante.
+    private static String finVc(Passage passage) {
         if (passage.dateEnregistrement() == null || passage.heureFin() == null) {
             return null;
         }
         LocalDate jour = LocalDate.parse(passage.dateEnregistrement());
-        if (passage.heureDebut() != null
-                && !LocalTime.parse(passage.heureFin()).isAfter(LocalTime.parse(passage.heureDebut()))) {
+        LocalTime fin = LocalTime.parse(passage.heureFin());
+        if (passage.heureDebut() != null && !fin.isAfter(LocalTime.parse(passage.heureDebut()))) {
             jour = jour.plusDays(1);
         }
-        return jour + "T" + passage.heureFin();
+        return rfc1123Utc(jour, fin);
     }
 
-    private static String iso(String date, String heure) {
-        return date == null || heure == null ? null : date + "T" + heure;
+    /// Formate un instant **local** (heures du passage, fuseau système de l'observateur) au format datetime
+    /// de l'API Eve : **RFC 1123 en UTC** (ex. `Fri, 04 Jul 2026 19:00:00 GMT`). Eve **refuse l'ISO 8601** en
+    /// entrée (`422 must be of datetime type`, vérifié en réel) ; et le portail stocke en UTC (`19:00 UTC`
+    /// pour un départ `21:00` local), d'où la conversion.
+    private static String rfc1123Utc(LocalDate jour, LocalTime heure) {
+        return LocalDateTime.of(jour, heure)
+                .atZone(ZoneId.systemDefault())
+                .withZoneSameInstant(ZoneOffset.UTC)
+                .format(DateTimeFormatter.RFC_1123_DATE_TIME);
     }
 
     /// Hauteur du micro en texte, sans décimale superflue (`4.0` → `4`).
