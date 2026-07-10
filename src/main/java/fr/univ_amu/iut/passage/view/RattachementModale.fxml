@@ -99,6 +99,6 @@
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>
     <Button text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
-    <Button text="Appliquer" styleClass="bouton-primaire" onAction="#appliquer"/>
+    <Button fx:id="boutonAppliquer" text="Appliquer" styleClass="bouton-primaire" onAction="#appliquer"/>
   </HBox>
 </VBox>

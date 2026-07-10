@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
@@ -11,6 +12,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -51,6 +54,9 @@ public class RattachementModaleController {
 
     @FXML
     private Spinner<Integer> spinnerNumero;
+
+    @FXML
+    private Button boutonAppliquer;
 
     @FXML
     private Label labelRecap;
@@ -112,6 +118,19 @@ public class RattachementModaleController {
         var erreurPresente = viewModel.messageErreurProperty().isNotEmpty();
         messageErreur.visibleProperty().bind(erreurPresente);
         messageErreur.managedProperty().bind(erreurPresente);
+
+        // Validation « en direct » (#790) : « Appliquer » reste désactivé tant que l'année n'a pas 4
+        // chiffres et le n° de passage au moins 1 ; chaque spinner rougit sur une valeur hors domaine. Le
+        // service reste l'autorité finale (le message inline reste affiché en cas d'échec métier).
+        BooleanBinding anneeValide = Bindings.createBooleanBinding(
+                () -> viewModel.anneeProperty().get() >= 1000
+                        && viewModel.anneeProperty().get() <= 9999,
+                viewModel.anneeProperty());
+        BooleanBinding numeroValide = Bindings.createBooleanBinding(
+                () -> viewModel.numeroPassageProperty().get() >= 1, viewModel.numeroPassageProperty());
+        boutonAppliquer.disableProperty().bind(anneeValide.and(numeroValide).not());
+        ValidationFormulaire.marquerInvalide(spinnerAnnee, anneeValide.not());
+        ValidationFormulaire.marquerInvalide(spinnerNumero, numeroValide.not());
 
         lierConditions();
     }
