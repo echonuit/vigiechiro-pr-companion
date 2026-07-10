@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.animation.FadeTransition;
-import javafx.animation.TranslateTransition;
+import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -31,13 +31,9 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Text;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -75,6 +71,11 @@ public class MainController {
 
     @FXML
     private Button boutonRetour;
+
+    /// Enveloppe du ← Retour : porte le tooltip expliquant le grisage (un Button désactivé n'en affiche
+    /// pas) et suit la visibilité du bouton. Cf. [IndicateurBlocage] (#789).
+    @FXML
+    private StackPane enveloppeRetour;
 
     @FXML
     private HBox filAriane;
@@ -174,6 +175,15 @@ public class MainController {
         // ← Retour (historique) : grisé pendant une opération longue (import en cours, #54) qu'on ne
         // doit pas quitter. Sa visibilité (présent hors accueil) est gérée par rafraichirNavigation().
         boutonRetour.disableProperty().bind(navigation.navigationVerrouilleeProperty());
+        // Explique le grisage (#789) sur l'enveloppe (un Button désactivé n'affiche pas de tooltip), qui
+        // suit la visibilité du bouton pour disparaître avec lui (accueil) sans laisser d'espace vide.
+        IndicateurBlocage.expliquer(
+                enveloppeRetour,
+                Bindings.when(navigation.navigationVerrouilleeProperty())
+                        .then("Navigation bloquée le temps de l'import en cours. Revenez une fois l'import terminé.")
+                        .otherwise("Revenir à l'écran précédent."));
+        enveloppeRetour.visibleProperty().bind(boutonRetour.visibleProperty());
+        enveloppeRetour.managedProperty().bind(boutonRetour.managedProperty());
 
         peuplerCartes();
         peuplerIndicateurs();
@@ -363,7 +373,7 @@ public class MainController {
         cartes.setPrefWrapLength(416.0);
         activitesDuPrisme.stream()
                 .sorted(Comparator.comparingInt(ActiviteAccueil::ordre))
-                .map(this::construireCarte)
+                .map(CartesAccueil::carte)
                 .forEach(cartes.getChildren()::add);
 
         VBox section = new VBox(entete, cartes);
@@ -391,112 +401,8 @@ public class MainController {
         bandeauIndicateurs.getChildren().clear();
         if (aDesDonnees) {
             compteurs.stream()
-                    .map(c -> construirePastille(c.indicateur(), c.valeur()))
+                    .map(c -> CartesAccueil.pastille(c.indicateur(), c.valeur()))
                     .forEach(bandeauIndicateurs.getChildren()::add);
         }
-    }
-
-    /// Bâtit une pastille de compteur : icône colorée de la feature + valeur + libellé, posée sur le
-    /// hero nocturne. Un compteur **à zéro** est atténué (classe `indicateur-vide`) pour que l'œil
-    /// se porte sur les rubriques réellement renseignées.
-    private Node construirePastille(IndicateurAccueil indicateur, long valeur) {
-        boolean vide = valeur == 0;
-
-        FontIcon icone = new FontIcon(indicateur.iconeLiteral());
-        icone.setIconSize(22);
-        // Sur le hero sombre, l'accent plein de la feature serait ton sur ton (le bleu « Sites »
-        // surtout). On éclaircit la teinte vers le blanc pour qu'elle ressorte tout en gardant son
-        // identité ; un compteur à zéro reste en blanc atténué.
-        icone.setIconColor(
-                vide
-                        ? Color.web("#ffffff", 0.55)
-                        : Color.web(indicateur.couleur()).interpolate(Color.WHITE, 0.45));
-
-        Label valeurLabel = new Label(Long.toString(valeur));
-        valeurLabel.getStyleClass().add("indicateur-valeur");
-        Label libelle = new Label(indicateur.libelle());
-        libelle.getStyleClass().add("indicateur-libelle");
-        VBox texte = new VBox(valeurLabel, libelle);
-        texte.getStyleClass().add("indicateur-texte");
-
-        HBox pastille = new HBox(icone, texte);
-        pastille.getStyleClass().add("indicateur");
-        if (vide) {
-            pastille.getStyleClass().add("indicateur-vide");
-        }
-        return pastille;
-    }
-
-    private Node construireCarte(ActiviteAccueil activite) {
-        String couleur = activite.couleur();
-
-        // Icône blanche dans une pastille ronde teintée à la couleur de la feature.
-        FontIcon icone = new FontIcon(activite.iconeLiteral());
-        icone.setIconSize(22);
-        icone.setIconColor(Color.WHITE);
-        StackPane chip = new StackPane(icone);
-        chip.getStyleClass().add("carte-chip");
-        chip.setStyle("-fx-background-color: " + couleur + ";");
-
-        Label titre = new Label(activite.titre());
-        titre.getStyleClass().add("carte-activite-titre");
-        titre.setStyle("-fx-text-fill: " + couleur + ";");
-        // Description en nœud `Text` (et non `Label`) : `wrappingWidth` enroule de façon fiable, là
-        // où le `wrapText` d'un `Label` posé dans une VBox de largeur fixe se contente d'une ligne
-        // tronquée (« … ») selon le calcul de hauteur préférée.
-        Text description = new Text(activite.description());
-        description.getStyleClass().add("carte-activite-desc");
-        description.setWrappingWidth(164);
-
-        // Chevron d'invite, masqué au repos et révélé au survol/focus (cf. base.css).
-        FontIcon chevron = new FontIcon("fas-chevron-right");
-        chevron.setIconSize(13);
-        chevron.setIconColor(Color.web(couleur));
-        chevron.getStyleClass().add("carte-chevron");
-        HBox pied = new HBox(chevron);
-        pied.getStyleClass().add("carte-pied");
-
-        // Espace extensible : il pousse le chevron en bas de carte sans rogner la hauteur de la
-        // description (un Vgrow posé sur le pied lui-même affamerait la description, qui tronquerait
-        // alors sa seconde ligne).
-        Region espace = new Region();
-        VBox.setVgrow(espace, Priority.ALWAYS);
-
-        VBox carte = new VBox(chip, titre, description, espace, pied);
-        carte.getStyleClass().add("carte-activite");
-        carte.setOnMouseClicked(evenement -> activite.ouvrir());
-
-        // Survol/focus : léger soulèvement de la carte (effet « lift » réactif).
-        TranslateTransition lift = new TranslateTransition(Duration.millis(120), carte);
-        Runnable monter = () -> {
-            lift.stop();
-            lift.setToY(-4);
-            lift.play();
-        };
-        Runnable redescendre = () -> {
-            lift.stop();
-            lift.setToY(0);
-            lift.play();
-        };
-        carte.setOnMouseEntered(evenement -> monter.run());
-        carte.setOnMouseExited(evenement -> redescendre.run());
-
-        // Accessibilité clavier : la carte (VBox, pas un Control) doit être atteignable au Tab et
-        // activable à Entrée/Espace, comme un bouton (opérabilité ISO 25010). On soulève aussi la
-        // carte au focus pour que l'utilisateur au clavier ait le même retour visuel qu'à la souris.
-        carte.setFocusTraversable(true);
-        carte.focusedProperty().addListener((obs, ancien, aLeFocus) -> {
-            if (aLeFocus) {
-                monter.run();
-            } else {
-                redescendre.run();
-            }
-        });
-        carte.setOnKeyPressed(evenement -> {
-            if (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE) {
-                activite.ouvrir();
-            }
-        });
-        return carte;
     }
 }
