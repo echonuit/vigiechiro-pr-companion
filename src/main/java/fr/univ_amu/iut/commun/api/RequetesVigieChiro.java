@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.api;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
 import java.util.Map;
 
 /// Construction des **corps JSON des écritures** VigieChiro (#142) : pendant en écriture de
@@ -21,6 +22,16 @@ final class RequetesVigieChiro {
     /// Corps de `POST /sites/#id/participations` (création de participation).
     static String participation(ParticipationADeposer participation) {
         return GSON.toJson(participation);
+    }
+
+    /// Corps d'une **mise à jour partielle** de participation (`PATCH /participations/#id`) : on n'émet que
+    /// les métadonnées **synchronisables** (dates, météo, configuration ; champs `null` omis) et on **retire
+    /// `point`** — la localité identifie la participation, elle ne se modifie pas depuis l'app. La
+    /// concurrence est gérée côté client par l'en-tête `If-Match` (l'`_etag`), pas par le corps.
+    static String miseAJourParticipation(ParticipationADeposer participation) {
+        JsonObject corps = GSON.toJsonTree(participation).getAsJsonObject();
+        corps.remove("point");
+        return GSON.toJson(corps);
     }
 
     /// Corps de `POST /fichiers` (déclaration d'un fichier, upload simple). Le **mime n'est pas envoyé** :

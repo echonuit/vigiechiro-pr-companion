@@ -55,6 +55,32 @@ class RequetesVigieChiroTest {
     }
 
     @Test
+    @DisplayName("miseAJourParticipation : omet `point`, garde dates/météo/configuration, champs null omis")
+    void mise_a_jour_omet_point() {
+        ParticipationADeposer maj = new ParticipationADeposer(
+                "Z41",
+                "2026-07-03T19:00:00Z",
+                "2026-07-04T04:00:00Z",
+                new MeteoDepot("FAIBLE", "0-25"),
+                Map.of("micro0_type", "ICS"),
+                null);
+
+        JsonObject corps = JsonParser.parseString(RequetesVigieChiro.miseAJourParticipation(maj))
+                .getAsJsonObject();
+
+        // `point` retiré : la localité identifie la participation, non modifiable via l'app.
+        assertThat(corps.has("point")).isFalse();
+        // Métadonnées synchronisables conservées.
+        assertThat(corps.get("date_debut").getAsString()).isEqualTo("2026-07-03T19:00:00Z");
+        assertThat(corps.get("date_fin").getAsString()).isEqualTo("2026-07-04T04:00:00Z");
+        assertThat(corps.getAsJsonObject("meteo").get("vent").getAsString()).isEqualTo("FAIBLE");
+        assertThat(corps.getAsJsonObject("configuration").get("micro0_type").getAsString())
+                .isEqualTo("ICS");
+        // Champ null (commentaire) omis.
+        assertThat(corps.has("commentaire")).isFalse();
+    }
+
+    @Test
     @DisplayName("fichier : titre + multipart:false, sans mime (déduit de l'extension par l'API)")
     void fichier_upload_simple() {
         JsonObject corps = JsonParser.parseString(RequetesVigieChiro.fichier("Car130711-2026-Pass1-Z41_000.wav"))
