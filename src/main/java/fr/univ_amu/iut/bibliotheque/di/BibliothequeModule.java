@@ -3,6 +3,8 @@ package fr.univ_amu.iut.bibliotheque.di;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -21,6 +23,12 @@ import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 /// inter-feature sont reçus en lecture seule (sens autorisé `bibliotheque → validation` et `bibliotheque →
 /// passage`, graphe acyclique). Installé dans `RacineInjecteur`.
 public class BibliothequeModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("bibliotheque", "Bibliothèque de sons", Categorie.COEUR);
+    }
 
     @Provides
     @Singleton

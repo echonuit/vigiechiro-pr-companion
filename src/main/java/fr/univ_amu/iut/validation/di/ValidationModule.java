@@ -4,6 +4,8 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -41,6 +43,12 @@ import fr.univ_amu.iut.validation.viewmodel.IndicateurObservations;
 /// sens des dépendances (`validation → passage`) reste acyclique (contrôlé par
 /// `ArchitectureTest`).
 public class ValidationModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("validation", "Validation des observations", Categorie.COEUR);
+    }
 
     /// Fournit le contrat de navigation socle [OuvrirValidation] : M-Passage l'injecte pour ouvrir la
     /// validation Tadarida sans dépendre de la vue de cette feature (graphe de slices acyclique).

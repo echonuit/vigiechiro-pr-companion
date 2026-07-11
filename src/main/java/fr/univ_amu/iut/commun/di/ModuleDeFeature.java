@@ -27,6 +27,11 @@ import fr.univ_amu.iut.commun.view.OngletReglages;
 /// raccourcir les contributions les plus fréquentes, pas à tout envelopper.
 public abstract class ModuleDeFeature extends AbstractModule {
 
+    /// Décrit l'**identité** de la feature (id stable, libellé, [Categorie]) : clé du système de
+    /// feature-flags (#1057), qui remplace le filtrage par nom de classe simple. Chaque module de
+    /// feature la déclare ; le socle s'en sert pour la découverte, l'affichage et la désactivation.
+    public abstract Fonctionnalite fonctionnalite();
+
     /// Contribue une **carte d'activité** à l'accueil (cf. [ActiviteAccueil]).
     protected final void activite(Class<? extends ActiviteAccueil> impl) {
         Multibinder.newSetBinder(binder(), ActiviteAccueil.class).addBinding().to(impl);

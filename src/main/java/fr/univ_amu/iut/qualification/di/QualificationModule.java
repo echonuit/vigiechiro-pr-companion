@@ -2,6 +2,8 @@ package fr.univ_amu.iut.qualification.di;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
@@ -35,6 +37,14 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 /// sens des dépendances (`qualification → passage`, `qualification → sites`) reste acyclique
 /// (contrôlé par `ArchitectureTest`).
 public class QualificationModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` pour l'instant (feuille couplée au runtime via son contrat
+    /// `Ouvrir…` : la désactiver casserait l'écran consommateur) ; passera `OPTIONNELLE` une fois ce
+    /// contrat neutralisé (P3, #1064).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("qualification", "Qualification des passages", Categorie.COEUR);
+    }
 
     /// Fournit le contrat de navigation socle [OuvrirVerification] : l'écran M-Passage l'injecte
     /// pour ouvrir M-Qualification sans dépendre de cette feature (évite le cycle

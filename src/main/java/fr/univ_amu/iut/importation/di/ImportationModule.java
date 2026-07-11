@@ -3,6 +3,8 @@ package fr.univ_amu.iut.importation.di;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -46,6 +48,14 @@ import java.util.Optional;
 /// [ServiceImport] est donc résoluble par l'injecteur applicatif. Le câblage en isolation reste
 /// validé par `ImportationModuleTest` (injecteur local socle + passage + importation).
 public class ImportationModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` pour l'instant (feuille couplée au runtime via son contrat
+    /// `Ouvrir…` : la désactiver casserait l'écran consommateur) ; passera `OPTIONNELLE` une fois ce
+    /// contrat neutralisé (P3, #1064).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("importation", "Importation Tadarida", Categorie.COEUR);
+    }
 
     /// L'import est une **action contextuelle** (la nuit d'un site précis) : pas de carte d'accueil. Le
     /// point d'entrée est la fiche d'un site, qui ouvre l'import pré-rattaché via le contrat socle

@@ -6,6 +6,8 @@ import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -20,6 +22,12 @@ import java.util.Set;
 /// - l'entrée « Connexion » du menu ☰ via une contribution [ActionMenu] (#931), sans que `commun`
 ///   connaisse la feature.
 public class ConnexionModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("connexion", "Connexion VigieChiro", Categorie.COEUR);
+    }
 
     @Override
     protected void configure() {

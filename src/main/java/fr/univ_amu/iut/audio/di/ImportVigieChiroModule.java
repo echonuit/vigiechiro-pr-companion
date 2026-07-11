@@ -7,6 +7,8 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
@@ -25,6 +27,13 @@ import fr.univ_amu.iut.validation.model.ServiceValidation;
 public class ImportVigieChiroModule extends ModuleDeFeature {
 
     private static final String QUALIFIANT = "vigiechiro";
+
+    /// Identité de la feature. `OPTIONNELLE` : déjà pleinement optionnelle (`OptionalBinder` vide,
+    /// ne binde aucun contrat `Ouvrir…`) donc désactivable en sécurité : feature de référence.
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("import-vigiechiro", "Import depuis VigieChiro", Categorie.OPTIONNELLE);
+    }
 
     @Override
     protected void configure() {

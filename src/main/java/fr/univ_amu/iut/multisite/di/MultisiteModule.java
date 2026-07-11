@@ -3,6 +3,8 @@ package fr.univ_amu.iut.multisite.di;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -23,6 +25,12 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 /// d'injection : DAO et service restent de simples objets réutilisables (objectif réutilisation
 /// O6). C'est ce module qui sait les assembler.
 public class MultisiteModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("multisite", "Vue multi-sites", Categorie.COEUR);
+    }
 
     /// Enregistre la carte d'accueil de la feature dans le point d'extension du socle (le
     /// `MainController` la découvre via `Set<ActiviteAccueil>` sans que `commun` dépende de
