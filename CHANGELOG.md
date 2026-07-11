@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.166.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.166.0...v1.166.1) (2026-07-11)
+
+
+### Bug Fixes
+
+* main rouge (God Class SonsValidationController 203>200) → extraire ColonnesAudio ([#893](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/893)) ([9d0d9f4](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/9d0d9f4f6206543fd8854bb424a759f09942eb24)), closes [#839](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/839) [#888](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/888)
+
 # [1.166.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.165.0...v1.166.0) (2026-07-10)
 
 
