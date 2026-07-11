@@ -36,5 +36,11 @@ quand le tableau vous convient.
     (l'inventaire en haut ou le détail des observations en bas) ; le menu ☰ règle, lui, l'**inventaire
     affiché** (par espèce ou par carré selon le regroupement choisi).
 
-Les réglages de colonnes valent pour la **session en cours** : à la réouverture de l'écran, le tableau
-repart de son affichage par défaut.
+## Vos réglages sont mémorisés
+
+L'application **retient** l'ordre et la visibilité des colonnes que vous choisissez : à la réouverture
+de l'écran, le tableau se rouvre **tel que vous l'aviez laissé** (réglage propre à chaque écran).
+
+Et si vous utilisez les **vues enregistrées** (les onglets « à la Notion » au-dessus des tableaux de
+Carte & passages, Sons & validation et Espèces & observations), chaque vue mémorise **aussi** sa
+disposition de colonnes : basculer d'une vue à l'autre rejoue à la fois ses filtres **et** ses colonnes.
