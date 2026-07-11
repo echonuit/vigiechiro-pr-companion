@@ -356,7 +356,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // par défaut en lecture seule (« Tout », « À valider », « Chiroptères ») : au chargement, « Tout » (sans
         // filtre) est active, d'où toujours un contexte modifiable, sans masquer d'observations.
         GestionnaireVues.avecDialogue(
-                barreOnglets, gestionnaireFiltres, depotVues, FEATURE, CriteresAudio.vuesParDefaut());
+                barreOnglets,
+                gestionnaireFiltres,
+                depotVues,
+                FEATURE,
+                CriteresAudio.vuesParDefaut(),
+                GestionnaireColonnes.adaptateurMonoTable("principale", tableObservations, this::colonnesTableAudio));
 
         zonesStatut.bind(Bindings.createObjectBinding(this::zonesStatutCourantes, viewModel.comptageProperty()));
 
@@ -432,27 +437,31 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Gestion des colonnes (afficher/masquer + réordonner par glisser) : menu contextuel (clic droit)
         // et item « Colonnes… » du ☰ ouvrent le même panneau. La proposition Tadarida, colonne d'identité,
         // reste toujours affichée (visibilité verrouillée) mais peut être déplacée comme les autres.
-        GestionnaireColonnes.installer(
-                tableObservations,
-                menuActions,
-                List.of(
-                        new GestionnaireColonnes.Colonne(colTadarida, "Proposition Tadarida", true),
-                        new GestionnaireColonnes.Colonne(colProba, "Proba.", false),
-                        new GestionnaireColonnes.Colonne(colFrequence, "Fréquence", false),
-                        new GestionnaireColonnes.Colonne(colFme, "FME", false),
-                        new GestionnaireColonnes.Colonne(colFreqTerminale, "Fréq. terminale", false),
-                        new GestionnaireColonnes.Colonne(colDebut, "Début", false),
-                        new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
-                        new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
-                        new GestionnaireColonnes.Colonne(colFichier, "Fichier", false),
-                        new GestionnaireColonnes.Colonne(colPassage, "Passage", false),
-                        new GestionnaireColonnes.Colonne(colCarre, "Carré", false),
-                        new GestionnaireColonnes.Colonne(colPoint, "Point", false),
-                        new GestionnaireColonnes.Colonne(colDate, "Date", false),
-                        new GestionnaireColonnes.Colonne(colHeure, "Heure", false),
-                        new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
-                        new GestionnaireColonnes.Colonne(colReference, "Référence", false),
-                        new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false)));
+        GestionnaireColonnes.installer(tableObservations, menuActions, colonnesTableAudio());
+    }
+
+    /// Colonnes de la table audio proposées au sélecteur (#916), partagées entre le câblage `installer` et la
+    /// capture dans les vues mémorisées (#994). « Proposition Tadarida », colonne d'identité, reste toujours
+    /// affichée (verrouillée) mais déplaçable.
+    private List<GestionnaireColonnes.Colonne> colonnesTableAudio() {
+        return List.of(
+                new GestionnaireColonnes.Colonne(colTadarida, "Proposition Tadarida", true),
+                new GestionnaireColonnes.Colonne(colProba, "Proba.", false),
+                new GestionnaireColonnes.Colonne(colFrequence, "Fréquence", false),
+                new GestionnaireColonnes.Colonne(colFme, "FME", false),
+                new GestionnaireColonnes.Colonne(colFreqTerminale, "Fréq. terminale", false),
+                new GestionnaireColonnes.Colonne(colDebut, "Début", false),
+                new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
+                new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
+                new GestionnaireColonnes.Colonne(colFichier, "Fichier", false),
+                new GestionnaireColonnes.Colonne(colPassage, "Passage", false),
+                new GestionnaireColonnes.Colonne(colCarre, "Carré", false),
+                new GestionnaireColonnes.Colonne(colPoint, "Point", false),
+                new GestionnaireColonnes.Colonne(colDate, "Date", false),
+                new GestionnaireColonnes.Colonne(colHeure, "Heure", false),
+                new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
+                new GestionnaireColonnes.Colonne(colReference, "Référence", false),
+                new GestionnaireColonnes.Colonne(colCommentaire, "Commentaire", false));
     }
 
     /// Importe le **premier** fichier glissé-déposé sur l'écran (workflow Tadarida). Délègue à
