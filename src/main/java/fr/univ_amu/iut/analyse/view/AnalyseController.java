@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
+import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -35,8 +37,10 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -66,6 +70,13 @@ public class AnalyseController implements RafraichirAuRetour {
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
     private final DepotVues depotVues;
+
+    /// Action réutilisable « Fiche de l'espèce » (#846) : configure l'item du menu contextuel de la table
+    /// des espèces selon la ligne sélectionnée et ouvre la fiche dans le navigateur.
+    private final ActionFicheEspece actionFicheEspece;
+
+    /// Item « Fiche de l'espèce » du menu contextuel de [#tableEspeces], reconfiguré à chaque sélection.
+    private MenuItem itemFicheEspece;
 
     /// État de la bascule Tableau ⇄ Carte (vue, pas de domaine) ; la carte elle-même est gérée par
     /// [CarteRepartition], installée **paresseusement** au premier affichage (`null` tant qu'on reste en
@@ -209,11 +220,16 @@ public class AnalyseController implements RafraichirAuRetour {
 
     @Inject
     public AnalyseController(
-            AnalyseViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirAudio ouvrirAudio, DepotVues depotVues) {
+            AnalyseViewModel viewModel,
+            OuvrirPassage ouvrirPassage,
+            OuvrirAudio ouvrirAudio,
+            DepotVues depotVues,
+            ActionFicheEspece actionFicheEspece) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
+        this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
     }
 
     @FXML
@@ -226,6 +242,22 @@ public class AnalyseController implements RafraichirAuRetour {
         configurerColonnes();
         tableEspeces.setItems(viewModel.especes());
         tableCarres.setItems(viewModel.carres());
+
+        // Menu contextuel « Fiche de l'espèce » (#848) sur la table des espèces : ouvre la fiche de
+        // l'espèce sélectionnée dans le navigateur, reconfiguré à chaque changement de sélection (plus
+        // bas). Un clic droit sélectionne d'abord la ligne visée pour que le menu porte bien sur elle.
+        itemFicheEspece = new MenuItem();
+        tableEspeces.setContextMenu(new ContextMenu(itemFicheEspece));
+        tableEspeces.setRowFactory(tableau -> {
+            TableRow<EspeceAgregee> ligne = new TableRow<>();
+            ligne.setOnMousePressed(evenement -> {
+                if (evenement.getButton() == MouseButton.SECONDARY && !ligne.isEmpty()) {
+                    tableEspeces.getSelectionModel().select(ligne.getIndex());
+                }
+            });
+            return ligne;
+        });
+        actionFicheEspece.configurer(itemFicheEspece, especeDe(null));
 
         // Sélecteur de regroupement (pivot espèce ↔ lieu).
         choixRegroupement.getItems().setAll(Regroupement.values());
@@ -303,11 +335,12 @@ public class AnalyseController implements RafraichirAuRetour {
         viewModel.regroupementProperty().addListener((obs, ancien, regroupement) -> afficherDetail(regroupement));
         afficherDetail(viewModel.regroupementProperty().get());
 
-        // La ligne sélectionnée de l'inventaire pilote le détail (null en Par carré → détail vidé).
-        tableEspeces
-                .getSelectionModel()
-                .selectedItemProperty()
-                .addListener((obs, ancien, espece) -> viewModel.selectionnerEspece(espece, statutCourant()));
+        // La ligne sélectionnée de l'inventaire pilote le détail (null en Par carré → détail vidé) et la
+        // cible du menu contextuel « Fiche de l'espèce » (#848).
+        tableEspeces.getSelectionModel().selectedItemProperty().addListener((obs, ancien, espece) -> {
+            viewModel.selectionnerEspece(espece, statutCourant());
+            actionFicheEspece.configurer(itemFicheEspece, especeDe(espece));
+        });
 
         lblDetailTitre.textProperty().bind(viewModel.detailTitreProperty());
 
@@ -345,6 +378,15 @@ public class AnalyseController implements RafraichirAuRetour {
             });
             return ligne;
         });
+    }
+
+    /// L'espèce ciblée par « Fiche de l'espèce » : code, nom latin et nom vernaculaire de la ligne
+    /// d'inventaire. La projection portant le nom latin, le repli GBIF s'applique aussi aux taxons hors
+    /// PNA (oiseaux, orthoptères…). `null` (aucune ligne sélectionnée) → espèce vide, item désactivé.
+    private static EspeceIdentifiee especeDe(EspeceAgregee espece) {
+        return espece == null
+                ? new EspeceIdentifiee(null, null, null)
+                : new EspeceIdentifiee(espece.code(), espece.nomLatin(), espece.nomVernaculaireFr());
     }
 
     /// Affiche le panneau détail (et restaure la position du séparateur) en regroupement **Par espèce**,
