@@ -1,0 +1,109 @@
+package fr.univ_amu.iut.commun.di;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Module;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.module.ModuleDescriptor;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+/// Auto-découverte des modules de feature (#933). Garde-fous du `ServiceLoader<`[ModuleDeFeature]`>` :
+/// **toutes** les features sont découvertes (l'oubli d'une entrée `META-INF/services` est le piège
+/// n°1), les deux listes (classpath `META-INF/services` et module-path `module-info provides`) sont
+/// **synchronisées**, et une feature peut être **désactivée**.
+class DecouverteModulesTest {
+
+    /// Les 16 modules de feature attendus (le socle CommunModule/PersistenceModule n'en fait pas
+    /// partie : il est installé explicitement, jamais découvert).
+    private static final Set<String> FEATURES_ATTENDUES = Set.of(
+            "AnalyseModule",
+            "AudioModule",
+            "ImportVigieChiroModule",
+            "BibliothequeModule",
+            "ConnexionModule",
+            "DiagnosticModule",
+            "ImportationModule",
+            "DepotVigieChiroModule",
+            "LotModule",
+            "MultisiteModule",
+            "PassageModule",
+            "SynchronisationParticipationModule",
+            "QualificationModule",
+            "RechercheModule",
+            "SitesModule",
+            "ValidationModule");
+
+    @AfterEach
+    void nettoyer() {
+        System.clearProperty("vigiechiro.features.desactivees");
+        System.clearProperty("vigiechiro.workspace");
+    }
+
+    @Test
+    @DisplayName("ServiceLoader découvre exactement les 16 modules de feature")
+    void serviceloader_decouvre_toutes_les_features() {
+        Set<String> decouverts = ServiceLoader.load(ModuleDeFeature.class).stream()
+                .map(provider -> provider.type().getSimpleName())
+                .collect(Collectors.toSet());
+
+        assertThat(decouverts).containsExactlyInAnyOrderElementsOf(FEATURES_ATTENDUES);
+    }
+
+    @Test
+    @DisplayName("META-INF/services (classpath) et module-info `provides` (module-path) sont synchronisés")
+    void les_deux_declarations_sont_synchronisees() throws IOException {
+        ModuleDescriptor descriptor;
+        try (InputStream flux = Files.newInputStream(Path.of("target", "classes", "module-info.class"))) {
+            descriptor = ModuleDescriptor.read(flux);
+        }
+        Set<String> viaModuleInfo = descriptor.provides().stream()
+                .filter(provides -> provides.service().equals(ModuleDeFeature.class.getName()))
+                .flatMap(provides -> provides.providers().stream())
+                .collect(Collectors.toSet());
+
+        Set<String> viaServiceLoader = ServiceLoader.load(ModuleDeFeature.class).stream()
+                .map(provider -> provider.type().getName())
+                .collect(Collectors.toSet());
+
+        assertThat(viaModuleInfo)
+                .as("module-info `provides ModuleDeFeature with ...` doit lister exactement les mêmes"
+                        + " modules que META-INF/services")
+                .isEqualTo(viaServiceLoader);
+    }
+
+    @Test
+    @DisplayName("le socle est explicite et une feature peut être désactivée par propriété système")
+    void socle_explicite_et_feature_desactivable(@TempDir Path tmp) {
+        System.setProperty("vigiechiro.workspace", tmp.toString());
+        System.setProperty("vigiechiro.features.desactivees", "DiagnosticModule");
+
+        List<String> noms = RacineInjecteur.modules().stream()
+                .map(module -> module.getClass().getSimpleName())
+                .toList();
+
+        // Socle toujours présent, en tête, jamais découvert.
+        assertThat(noms).startsWith("CommunModule", "PersistenceModule");
+        // La feature désactivée est absente, les autres restent.
+        assertThat(noms).doesNotContain("DiagnosticModule").contains("SitesModule", "ConnexionModule");
+    }
+
+    @Test
+    @DisplayName("sans filtre, modules() = socle (2) + toutes les features (16)")
+    void modules_assemble_socle_et_toutes_les_features(@TempDir Path tmp) {
+        System.setProperty("vigiechiro.workspace", tmp.toString());
+
+        List<Module> modules = RacineInjecteur.modules();
+
+        assertThat(modules).hasSize(2 + FEATURES_ATTENDUES.size());
+    }
+}

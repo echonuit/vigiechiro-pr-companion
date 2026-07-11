@@ -51,4 +51,30 @@ open module vigiechiro {
     // Paquet de base exporté. `open module` ouvre déjà tous les paquets à la réflexion (FXML, Guice),
     // donc les paquets `view` des features n'ont pas besoin d'export explicite.
     exports fr.univ_amu.iut;
+
+    // Auto-découverte des modules de feature (#933) : `RacineInjecteur` charge les `ModuleDeFeature`
+    // via `ServiceLoader`. Sur le MODULE-PATH (dev `javafx:run`), c'est ce `provides`/`uses` qui fait
+    // foi ; sur le CLASSPATH (tests surefire, fat-jar/Launcher), c'est `META-INF/services`. Les deux
+    // listes DOIVENT rester synchronisées (garde-fou : `DecouverteModulesTest` les compare). Le socle
+    // (`CommunModule` / `PersistenceModule`) n'est PAS listé : il reste installé explicitement par
+    // `RacineInjecteur`.
+    uses fr.univ_amu.iut.commun.di.ModuleDeFeature;
+
+    provides fr.univ_amu.iut.commun.di.ModuleDeFeature with
+            fr.univ_amu.iut.analyse.di.AnalyseModule,
+            fr.univ_amu.iut.audio.di.AudioModule,
+            fr.univ_amu.iut.audio.di.ImportVigieChiroModule,
+            fr.univ_amu.iut.bibliotheque.di.BibliothequeModule,
+            fr.univ_amu.iut.connexion.di.ConnexionModule,
+            fr.univ_amu.iut.diagnostic.di.DiagnosticModule,
+            fr.univ_amu.iut.importation.di.ImportationModule,
+            fr.univ_amu.iut.lot.di.DepotVigieChiroModule,
+            fr.univ_amu.iut.lot.di.LotModule,
+            fr.univ_amu.iut.multisite.di.MultisiteModule,
+            fr.univ_amu.iut.passage.di.PassageModule,
+            fr.univ_amu.iut.passage.di.SynchronisationParticipationModule,
+            fr.univ_amu.iut.qualification.di.QualificationModule,
+            fr.univ_amu.iut.recherche.di.RechercheModule,
+            fr.univ_amu.iut.sites.di.SitesModule,
+            fr.univ_amu.iut.validation.di.ValidationModule;
 }
