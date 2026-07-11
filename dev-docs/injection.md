@@ -93,6 +93,27 @@ Certaines valeurs partagées sont fournies par **binding nommé**. Exemple :
 `@Named("idUtilisateurCourant")` (application mono-utilisateur : le premier utilisateur en base).
 Un VM/service la reçoit par `@Inject ... @Named("idUtilisateurCourant") String idUtilisateur`.
 
+## Défaut d'injection surchargeable (`@ImplementedBy`)
+
+Un contrat du socle peut porter une **implémentation par défaut** via `@ImplementedBy(Defaut.class)`
+posé sur l'interface : l'injecteur l'utilise **tant qu'aucun module ne lie explicitement** ce contrat.
+La racine de composition **surcharge** ce défaut pour la production, tandis que les tests isolés
+récupèrent le défaut **sans configuration**. Le motif garde les tests **déterministes et sans réseau** :
+le défaut est neutre, l'application branche la variante réelle.
+
+Exemple, la fonctionnalité « Fiche de l'espèce » (#844) :
+
+| Contrat (`commun`) | Défaut `@ImplementedBy` (tests) | Surcharge production (`CommunModule`) |
+|---|---|---|
+| `SourceUniverselle` | `LienGbif` | `SourceUniversellePreferee` (préférence GBIF / Wikipédia) |
+| `ResolveurFiche` | `ResolveurFicheIdentite` (aucun réseau) | `ResolveurFicheGbif` (résout la clé via l'API GBIF) |
+| `ExecuteurFiche` | `ExecuteurFicheSynchrone` (déterministe) | `ExecuteurFicheAsynchrone` (hors fil JavaFX + `Platform.runLater`) |
+
+Une **surcharge explicite** (`bind(...).to(...)` ou `@Provides`) l'emporte toujours sur le défaut. Les
+tests E2E l'exploitent via `Modules.override(RacineInjecteur.modules()).with(...)` pour injecter un faux
+ciblé (ex. un `OuvreurDeLien` qui enregistre l'URL au lieu d'ouvrir un navigateur), sans dupliquer la
+liste des modules.
+
 ---
 
 Pour assembler une feature complète de bout en bout, voir
