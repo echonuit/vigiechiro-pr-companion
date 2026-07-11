@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -113,5 +114,17 @@ class SiteDetailVoirCarteViewTest {
         assertThat(carrePourPlacer.get())
                 .as("ouvre la carte sur le carré du site, pour y placer le point")
                 .isEqualTo("640380");
+    }
+
+    @Test
+    @DisplayName("#801 : les actions d'en-tête « Importer une nuit » et « Voir sur la carte » ont une infobulle")
+    void actions_entete_ont_une_infobulle(FxRobot robot) {
+        Button importer = robot.lookup("#boutonImporterNuit").queryAs(Button.class);
+        Button voirCarte = robot.lookup("#boutonVoirCarte").queryAs(Button.class);
+
+        assertThat(importer.getTooltip()).isNotNull();
+        assertThat(importer.getTooltip().getText()).contains("pré-rattaché");
+        assertThat(voirCarte.getTooltip()).isNotNull();
+        assertThat(voirCarte.getTooltip().getText()).contains("carré");
     }
 }

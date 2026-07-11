@@ -5,6 +5,7 @@
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -31,9 +32,13 @@
   -->
   <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
     <Button fx:id="boutonImporterNuit" text="📥 Importer une nuit" styleClass="bouton-primaire"
-            onAction="#importerNuit"/>
+            onAction="#importerNuit">
+      <tooltip><Tooltip text="Ouvre l'assistant d'import avec ce site déjà pré-rattaché."/></tooltip>
+    </Button>
     <Button fx:id="boutonVoirCarte" text="🗺 Voir sur la carte" styleClass="bouton-secondaire"
-            onAction="#voirSurCarte"/>
+            onAction="#voirSurCarte">
+      <tooltip><Tooltip text="Ouvre la carte multi-sites centrée sur ce carré."/></tooltip>
+    </Button>
     <Button fx:id="boutonModifier" text="✏ Modifier" styleClass="bouton-secondaire"
             onAction="#modifierSite"/>
     <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe donc sur ce

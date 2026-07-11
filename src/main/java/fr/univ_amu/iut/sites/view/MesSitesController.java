@@ -27,6 +27,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
@@ -166,15 +167,30 @@ public class MesSitesController implements ResumeStatut {
     private static Node rangeeBadges(CarteSite carte, Label fraicheur) {
         return switch (carte.statutPlateforme()) {
             case ABSENT -> fraicheur;
-            case ENREGISTRE -> new HBox(8.0, fraicheur, badgePlateforme("Enregistré sur VigieChiro", "badge-info"));
-            case VERROUILLE -> new HBox(8.0, fraicheur, badgePlateforme("Verrouillé sur VigieChiro", "badge-succes"));
+            case ENREGISTRE ->
+                new HBox(
+                        8.0,
+                        fraicheur,
+                        badgePlateforme(
+                                "Enregistré sur VigieChiro", "badge-info", "Ce carré est enregistré sur VigieChiro."));
+            case VERROUILLE ->
+                new HBox(
+                        8.0,
+                        fraicheur,
+                        badgePlateforme(
+                                "Verrouillé sur VigieChiro",
+                                "badge-succes",
+                                "Carré figé côté VigieChiro : le dépôt de vos données y est désormais possible."));
         };
     }
 
-    /// Badge de statut plateforme (texte + famille de couleur sémantique du design system).
-    private static Label badgePlateforme(String texte, String classeSemantique) {
+    /// Badge de statut plateforme (texte + famille de couleur sémantique) doté d'une infobulle explicitant
+    /// l'état : « Verrouillé » désigne un cas **favorable** (dépôt possible), contre-intuitif au seul
+    /// libellé (#801).
+    private static Label badgePlateforme(String texte, String classeSemantique, String infobulle) {
         Label badge = new Label(texte);
         badge.getStyleClass().addAll("badge", classeSemantique);
+        Tooltip.install(badge, new Tooltip(infobulle));
         return badge;
     }
 

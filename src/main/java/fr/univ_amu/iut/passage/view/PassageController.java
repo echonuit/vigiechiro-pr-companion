@@ -333,7 +333,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             viewModel.supprimer();
             navigation.ouvrirAccueil();
         } catch (RegleMetierException refus) {
-            alerteErreur(refus.getMessage());
+            alerteErreur("Suppression impossible", refus.getMessage());
         }
     }
 
@@ -364,7 +364,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             viewModel.annulerDepot();
             viewModel.ouvrirSur(idPassage, contexte);
         } catch (RegleMetierException refus) {
-            alerteErreur(refus.getMessage());
+            alerteErreur("Annulation impossible", refus.getMessage());
         }
     }
 
@@ -383,7 +383,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             viewModel.purgerOriginaux();
             viewModel.ouvrirSur(idPassage, contexte);
         } catch (RuntimeException echec) {
-            alerteErreur(echec.getMessage());
+            alerteErreur("Purge impossible", echec.getMessage());
         }
     }
 
@@ -431,9 +431,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         return alerte.showAndWait().filter(bouton -> bouton == ButtonType.OK).isPresent();
     }
 
-    private void alerteErreur(String message) {
+    private void alerteErreur(String entete, String message) {
         Alert alerte = new Alert(AlertType.WARNING, message, ButtonType.OK);
-        alerte.setHeaderText("Suppression impossible");
+        alerte.setHeaderText(entete);
         alerte.showAndWait();
     }
 }
