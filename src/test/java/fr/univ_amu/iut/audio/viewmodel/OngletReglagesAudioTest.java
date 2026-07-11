@@ -12,25 +12,26 @@ import org.junit.jupiter.api.Test;
 class OngletReglagesAudioTest {
 
     @Test
-    @DisplayName("l'onglet Audio déclare lecture-auto (défaut vrai) et boucle (défaut faux)")
-    void declare_les_deux_preferences_de_lecture() {
+    @DisplayName("l'onglet Audio déclare les 4 préférences (lecture auto/boucle, daltonien, inclure-mode)")
+    void declare_les_preferences_audio() {
         OngletReglagesAudio onglet = new OngletReglagesAudio();
 
         assertThat(onglet.idFeature()).isEqualTo("audio");
         assertThat(onglet.reglages())
                 .extracting(DescripteurReglage::cle)
-                .containsExactly(OngletReglagesAudio.CLE_LECTURE_AUTO, OngletReglagesAudio.CLE_BOUCLE);
+                .containsExactly(
+                        OngletReglagesAudio.CLE_LECTURE_AUTO,
+                        OngletReglagesAudio.CLE_BOUCLE,
+                        OngletReglagesAudio.CLE_DALTONIEN,
+                        OngletReglagesAudio.CLE_INCLURE_MODE);
 
         assertThat(onglet.reglages())
-                .allSatisfy(descripteur -> assertThat(descripteur).isInstanceOf(DescripteurReglage.Booleen.class));
-
-        DescripteurReglage.Booleen lectureAuto =
-                (DescripteurReglage.Booleen) onglet.reglages().get(0);
-        DescripteurReglage.Booleen boucle =
-                (DescripteurReglage.Booleen) onglet.reglages().get(1);
-        assertThat(lectureAuto.defaut())
-                .isEqualTo(OngletReglagesAudio.DEFAUT_LECTURE_AUTO)
-                .isTrue();
-        assertThat(boucle.defaut()).isEqualTo(OngletReglagesAudio.DEFAUT_BOUCLE).isFalse();
+                .allSatisfy(descripteur -> assertThat(descripteur).isInstanceOf(DescripteurReglage.Booleen.class))
+                .extracting(descripteur -> ((DescripteurReglage.Booleen) descripteur).defaut())
+                .containsExactly(
+                        OngletReglagesAudio.DEFAUT_LECTURE_AUTO,
+                        OngletReglagesAudio.DEFAUT_BOUCLE,
+                        OngletReglagesAudio.DEFAUT_DALTONIEN,
+                        OngletReglagesAudio.DEFAUT_INCLURE_MODE);
     }
 }
