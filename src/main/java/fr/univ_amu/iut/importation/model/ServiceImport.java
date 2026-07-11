@@ -8,10 +8,12 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -62,6 +64,11 @@ public class ServiceImport {
     private final CompteurValidations compteurValidations;
     private final ServiceSauvegarde serviceSauvegarde;
 
+    /// Passerelle de synchronisation VigieChiro (axe 4), **optionnelle** : présente seulement dans l'app
+    /// complète (avec la connexion). Sert à créer la participation **dès l'import** (best-effort) ; absente
+    /// des injecteurs partiels / tests → la création est simplement omise.
+    private final Optional<SynchronisationParticipation> synchronisation;
+
     /// Cœur d'exécution (copie/transformation/persistance par nuit), extrait pour garder le service en
     /// façade (verrou, inspection, requêtes). Partagé par l'import mono-nuit et multi-nuits.
     private final MoteurImport moteur;
@@ -81,12 +88,14 @@ public class ServiceImport {
             Workspace workspace,
             Horloge horloge,
             CompteurValidations compteurValidations,
-            ServiceSauvegarde serviceSauvegarde) {
+            ServiceSauvegarde serviceSauvegarde,
+            Optional<SynchronisationParticipation> synchronisation) {
         this.inspecteur = Objects.requireNonNull(inspecteur, "inspecteur");
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
         this.serviceSauvegarde = Objects.requireNonNull(serviceSauvegarde, "serviceSauvegarde");
+        this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
         PreparationOriginaux preparation = new PreparationOriginaux(copie, renommeur);
         DecoupageParallele decoupage = new DecoupageParallele(transformation, PARALLELISME_DECOUPAGE);
         FabriqueEntitesImport fabriqueEntites = new FabriqueEntitesImport(horloge);
@@ -173,14 +182,16 @@ public class ServiceImport {
             throw new RegleMetierException("Un import est déjà en cours : attendez sa fin avant d'en lancer un autre.");
         }
         try {
-            if (ecraser) {
-                Path dossierSession = workspace.dossierSession(prefixe.nomDossierSession());
-                return RemplacementSession.autourDe(
-                        dossierSession,
-                        () -> executerImportProtege(
-                                dossierSource, idPoint, prefixe, progres, jeton, true, conserverOriginaux));
-            }
-            return executerImportProtege(dossierSource, idPoint, prefixe, progres, jeton, false, conserverOriginaux);
+            ResultatImport resultat = ecraser
+                    ? RemplacementSession.autourDe(
+                            workspace.dossierSession(prefixe.nomDossierSession()),
+                            () -> executerImportProtege(
+                                    dossierSource, idPoint, prefixe, progres, jeton, true, conserverOriginaux))
+                    : executerImportProtege(dossierSource, idPoint, prefixe, progres, jeton, false, conserverOriginaux);
+            // La nuit est persistée (transaction O7 committée) : on crée sa participation VigieChiro au plus
+            // tôt (best-effort), pour que le dépôt la réutilise ensuite (pas de doublon).
+            creerParticipationSiPossible(resultat.passage().id());
+            return resultat;
         } finally {
             importEnCours.set(false);
         }
@@ -305,7 +316,11 @@ public class ServiceImport {
                     rapport.journalOptionnel().orElseGet(() -> JournalDeRepli.depuis(rapport.originaux()));
             ContexteImport ctx = new ContexteImport(
                     rapport, journal, sansJournal, dossierSource, idPoint, conserverOriginaux, false, jeton);
-            return moteur.importerNuits(ctx, prefixeBase, nuits, progres);
+            ResultatImportMultiNuits resultat = moteur.importerNuits(ctx, prefixeBase, nuits, progres);
+            // Une participation VigieChiro par nuit persistée (best-effort), réutilisée au dépôt.
+            resultat.parNuit()
+                    .forEach(nuit -> creerParticipationSiPossible(nuit.passage().id()));
+            return resultat;
         } finally {
             importEnCours.set(false);
         }
@@ -356,6 +371,21 @@ public class ServiceImport {
         ContexteImport ctx = new ContexteImport(
                 rapport, journal, sansJournal, dossierSource, idPoint, conserverOriginaux, ecraser, jeton);
         return moteur.importerUneNuit(ctx, prefixe, rapport.originaux(), dateNuit, progres);
+    }
+
+    /// Crée la participation VigieChiro du passage fraîchement importé, **au mieux** : si l'observateur est
+    /// connecté et le site rattaché/verrouillé, la participation est créée tôt (le dépôt la réutilise alors,
+    /// sans doublon). Hors connexion (aucun token → création silencieusement refusée côté client) ou site non
+    /// rattaché ([RegleMetierException] avalée), l'import **reste un succès** : la participation sera créée en
+    /// repli au dépôt. Best-effort et silencieux ; la passerelle est absente des injecteurs sans connexion.
+    private void creerParticipationSiPossible(Long idPassage) {
+        synchronisation.ifPresent(sync -> {
+            try {
+                sync.creerPour(idPassage);
+            } catch (RegleMetierException horsPortee) {
+                // Site non rattaché / point manquant : non bloquant pour l'import (repli au dépôt).
+            }
+        });
     }
 
     /// Rejette (NPE) tout paramètre commun manquant d'un import, factorisé pour éviter la duplication : les

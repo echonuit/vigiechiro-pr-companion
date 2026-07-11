@@ -23,7 +23,9 @@ import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.importation.view.NavigationImportation;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import java.util.Optional;
 
 /// Module Guice de la feature `importation` : fournit les moteurs du parcours d'import P2
 /// (inspection du journal, copie protégée, renommage, transformation audio), le DAO transactionnel
@@ -101,7 +103,8 @@ public class ImportationModule extends AbstractModule {
             Workspace workspace,
             Horloge horloge,
             CompteurValidations compteurValidations,
-            ServiceSauvegarde serviceSauvegarde) {
+            ServiceSauvegarde serviceSauvegarde,
+            Optional<SynchronisationParticipation> synchronisation) {
         return new ServiceImport(
                 inspecteur,
                 copie,
@@ -112,7 +115,8 @@ public class ImportationModule extends AbstractModule {
                 workspace,
                 horloge,
                 compteurValidations,
-                serviceSauvegarde);
+                serviceSauvegarde,
+                synchronisation);
     }
 
     /// ViewModel de l'assistant M-Import. **Non-singleton** (un VM frais par chargement FXML : un

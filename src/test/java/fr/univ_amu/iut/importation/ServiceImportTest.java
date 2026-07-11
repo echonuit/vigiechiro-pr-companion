@@ -3,6 +3,8 @@ package fr.univ_amu.iut.importation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -35,6 +37,7 @@ import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -56,6 +59,7 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -136,7 +140,8 @@ class ServiceImportTest {
                 workspace,
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.empty());
 
         sd = preparerCarteSD(racine.resolve("sd"));
     }
@@ -187,6 +192,30 @@ class ServiceImportTest {
         assertThat(resultat.passage().dateEnregistrement())
                 .as("date de soirée des WAV (24/04), pas la 1re ligne du LogPR (22/04, déploiement)")
                 .isEqualTo("2026-04-24");
+    }
+
+    @Test
+    @DisplayName("Phase 1d-B : la participation VigieChiro est créée à l'import (best-effort) pour le passage")
+    void participation_creee_a_l_import() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        ServiceImport avecSync = new ServiceImport(
+                new InspecteurDossier(new AnalyseurLogPR()),
+                new CopieProtegee(),
+                new Renommeur(),
+                new TransformationAudio(),
+                new AgregatImportDao(source),
+                new UniteDeTravail(source),
+                new Workspace(racine.resolve("ws")),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.of(sync));
+
+        ResultatImport resultat = avecSync.importer(sd, idPoint, prefixe);
+
+        // Le passage fraîchement importé se voit créer sa participation VigieChiro au plus tôt (best-effort) ;
+        // le dépôt la réutilisera ensuite (pas de doublon).
+        verify(sync).creerPour(resultat.passage().id());
     }
 
     @Test
@@ -365,7 +394,8 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.empty());
 
         ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
 
@@ -410,7 +440,8 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 0,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.empty());
 
         ResultatImport resultat = reprise.importer(sd, idPoint, prefixe);
 
@@ -708,7 +739,8 @@ class ServiceImportTest {
                 new Workspace(racine.resolve("ws")),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 idPassage -> 3,
-                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))));
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.empty());
 
         // Quadruplet déjà pris → le passage est résolu et interrogé (3) ; n° libre → aucun passage (0).
         assertThat(avecCompteur.apercuEcrasement(idPoint, 2026, 2).validations())
