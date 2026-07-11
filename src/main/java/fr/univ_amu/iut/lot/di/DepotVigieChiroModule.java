@@ -8,8 +8,13 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
+import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 
 /// Liaison **réelle** du dépôt VigieChiro (#142) : pose la valeur de l'`OptionalBinder<DepotVigieChiro>`
 /// déclaré (à vide) par [LotModule]. Ce module n'est chargé que dans l'**injecteur applicatif complet**
@@ -33,11 +38,25 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
                 .to(Key.get(DepotVigieChiro.class, Names.named(QUALIFIANT)));
     }
 
+    /// DAO du suivi de dépôt par unité (#981) : plan et avancement persistés du dépôt reprenable (#982).
+    /// Fourni ici (et non dans `LotModule`) car il exige `SourceDeDonnees`, absente des injecteurs
+    /// partiels de capture qui assemblent la feature `lot` sans persistance réelle.
+    @Provides
+    @Singleton
+    DepotUniteDao fournirDepotUniteDao(SourceDeDonnees source) {
+        return new DepotUniteDao(source);
+    }
+
     @Provides
     @Singleton
     @Named(QUALIFIANT)
     DepotVigieChiro fournirDepotVigieChiro(
-            @Named(QUALIFIANT) SynchronisationParticipation participations, ClientVigieChiro client) {
-        return new DepotVigieChiro(participations, client);
+            @Named(QUALIFIANT) SynchronisationParticipation participations,
+            ClientVigieChiro client,
+            DepotUniteDao depotUnites,
+            PassageDao passageDao,
+            MoteurWorkflowPassage moteurWorkflow,
+            Horloge horloge) {
+        return new DepotVigieChiro(participations, client, depotUnites, passageDao, moteurWorkflow, horloge);
     }
 }

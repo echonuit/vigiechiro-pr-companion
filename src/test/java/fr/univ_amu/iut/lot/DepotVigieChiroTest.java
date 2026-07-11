@@ -5,107 +5,216 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Utilisateur;
+import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.StatutDepotUnite;
+import fr.univ_amu.iut.lot.model.SuiviDepot;
+import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
+import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.PointDEcoute;
+import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
 
-/// **Dépôt d'une nuit** ([DepotVigieChiro], #142) refondu en *upload seul* : la participation est déléguée à
-/// [SynchronisationParticipation] (réutilisée si le passage y est déjà lié, créée en repli sinon). On teste
-/// la réutilisation, le repli lazy, le dépôt partiel et les refus — sur passerelle + client mockés (aucun
-/// réseau). Le contenu de la participation (dates/météo/config) est testé côté `passage`
-/// (CorrespondanceParticipationTest / SynchronisationParticipationTest).
-@ExtendWith(MockitoExtension.class)
+/// **Dépôt d'une nuit** ([DepotVigieChiro]) **reprenable par unité** (#982) : participation réutilisée ou
+/// créée en repli ([SynchronisationParticipation] mockée), plan `depot_unite` **réel** (SQLite jetable,
+/// #981), statuts honnêtes (#980 : « Dépôt en cours » à l'entame, « Déposé » seulement quand tout est en
+/// ligne), reprise (les unités déjà déposées ne sont pas re-téléversées), upload **en flux** (le client
+/// mocké reçoit le `Path`, jamais un tableau d'octets), annulation coopérative.
 class DepotVigieChiroTest {
 
-    @Mock
-    SynchronisationParticipation participations;
+    private static final long ID_INEXISTANT = 999L;
 
-    @Mock
-    ClientVigieChiro client;
+    @TempDir
+    Path racine;
 
+    private SynchronisationParticipation participations;
+    private ClientVigieChiro client;
+    private DepotUniteDao depotUnites;
+    private PassageDao passageDao;
     private DepotVigieChiro depot;
+    private Long idPassage;
 
     @BeforeEach
-    void préparer() {
-        depot = new DepotVigieChiro(participations, client);
+    void preparer() {
+        participations = mock(SynchronisationParticipation.class);
+        client = mock(ClientVigieChiro.class);
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
+        new MigrationSchema(source).migrer();
+        new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
+        Site site = new SiteDao(source)
+                .insert(new Site(null, "640380", "Étang", Protocole.STANDARD, null, "2026-05-31", "u-1"));
+        Long idPoint = new PointDao(source)
+                .insert(new PointDEcoute(null, "Z1", 43.5, 5.4, null, site.id()))
+                .id();
+        new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
+        passageDao = new PassageDao(source);
+        idPassage = passageDao
+                .insert(new Passage(
+                        null,
+                        1,
+                        2026,
+                        "2026-04-22",
+                        "20:25:00",
+                        "07:47:00",
+                        null,
+                        StatutWorkflow.PRET_A_DEPOSER,
+                        null,
+                        null,
+                        null,
+                        null,
+                        idPoint,
+                        "1925492"))
+                .id();
+        depotUnites = new DepotUniteDao(source);
+        depot = new DepotVigieChiro(
+                participations,
+                client,
+                depotUnites,
+                passageDao,
+                new MoteurWorkflowPassage(),
+                new HorlogeFigee(LocalDate.of(2026, 7, 11)));
     }
 
     @Test
-    @DisplayName("participation déjà liée → RÉUTILISÉE (pas de recréation), fichiers déposés")
-    void depot_reutilise_la_participation_liee(@TempDir Path dossier) throws IOException {
-        Path a = fichier(dossier, "Car130711-2026-Pass1-Z41_000.wav");
-        Path b = fichier(dossier, "Car130711-2026-Pass1-Z41_001.wav");
-        when(participations.participationDe(42L)).thenReturn(Optional.of("part-1"));
+    @DisplayName("dépôt complet : plan persisté, unités « depose » avec id distant, passage « Déposé »")
+    void depot_complet_bascule_depose(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "Car-1.zip");
+        Path b = fichier(dossier, "seq_000.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         armerUploadOk();
 
-        BilanDepot bilan = depot.deposer(42L, List.of(a, b));
+        BilanDepot bilan = depot.deposer(idPassage, List.of(a, b));
 
         assertThat(bilan.participationId()).isEqualTo("part-1");
         assertThat(bilan.deposees()).isEqualTo(2);
         assertThat(bilan.estComplet()).isTrue();
+        assertThat(depotUnites.parPassage(idPassage)).allSatisfy(unite -> {
+            assertThat(unite.statut()).isEqualTo(StatutDepotUnite.DEPOSE);
+            assertThat(unite.fichierIdDistant()).isEqualTo("f");
+        });
+        assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
+        assertThat(passage().deposeLe()).isNotNull();
         verify(participations, never()).creerPour(anyLong());
     }
 
     @Test
-    @DisplayName("aucune participation liée → CRÉÉE en repli (lazy), puis fichiers déposés")
-    void depot_cree_la_participation_en_repli(@TempDir Path dossier) throws IOException {
-        Path a = fichier(dossier, "a.wav");
-        when(participations.participationDe(42L)).thenReturn(Optional.empty());
-        when(participations.creerPour(42L)).thenReturn(ResultatParticipation.reussie("part-1"));
+    @DisplayName("#982 : upload EN FLUX — le client reçoit le Path du fichier, pas ses octets en mémoire")
+    void upload_en_flux(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "Car-1.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         armerUploadOk();
 
-        BilanDepot bilan = depot.deposer(42L, List.of(a));
+        depot.deposer(idPassage, List.of(a));
 
-        assertThat(bilan.participationId()).isEqualTo("part-1");
-        assertThat(bilan.deposees()).isEqualTo(1);
+        verify(client).televerserVersS3(anyString(), eq(a), eq("application/zip"));
+        verify(client, never()).televerserVersS3(anyString(), any(byte[].class), anyString());
     }
 
     @Test
-    @DisplayName("dépôt partiel : un fichier en échec est listé, les autres comptés, sans interrompre")
-    void depot_partiel(@TempDir Path dossier) throws IOException {
+    @DisplayName("bug corrigé : un dépôt PARTIEL laisse « Dépôt en cours » (jamais « Déposé »), échec consigné")
+    void depot_partiel_ne_bascule_pas_depose(@TempDir Path dossier) throws IOException {
         Path ok = fichier(dossier, "ok.wav");
         Path ko = fichier(dossier, "ko.wav");
-        when(participations.participationDe(42L)).thenReturn(Optional.of("part-1"));
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier("ko.wav")).thenReturn(Optional.empty()); // déclaration refusée
-        when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString())).thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
 
-        BilanDepot bilan = depot.deposer(42L, List.of(ok, ko));
+        BilanDepot bilan = depot.deposer(idPassage, List.of(ok, ko));
 
         assertThat(bilan.deposees()).isEqualTo(1);
         assertThat(bilan.echecs()).containsExactly("ko.wav");
-        assertThat(bilan.estComplet()).isFalse();
+        assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOT_EN_COURS);
+        DepotUnite enEchec = depotUnites.restantes(idPassage).getFirst();
+        assertThat(enEchec.statut()).isEqualTo(StatutDepotUnite.ECHEC);
+        assertThat(enEchec.messageErreur()).contains("déclaration");
+    }
+
+    @Test
+    @DisplayName("reprise : une 2e tentative ne re-téléverse que les unités restantes, puis « Déposé »")
+    void reprise_ne_redepose_que_les_restantes(@TempDir Path dossier) throws IOException {
+        Path ok = fichier(dossier, "ok.wav");
+        Path ko = fichier(dossier, "ko.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.creerFichier("ko.wav")).thenReturn(Optional.empty());
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString())).thenReturn(true);
+        when(client.finaliserFichier(anyString())).thenReturn(true);
+        depot.deposer(idPassage, List.of(ok, ko)); // 1re tentative : ko.wav en échec
+
+        when(client.creerFichier("ko.wav")).thenReturn(Optional.of(new FichierSigne("f2", "https://s3/y")));
+        BilanDepot reprise = depot.deposer(idPassage, List.of(ok, ko));
+
+        // Seule l'unité en échec a été re-téléversée : ok.wav n'a été déclaré qu'une seule fois en tout.
+        verify(client, times(1)).creerFichier("ok.wav");
+        assertThat(reprise.deposees()).isEqualTo(1);
+        assertThat(reprise.estComplet()).isTrue();
+        assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
+        assertThat(depotUnites.toutesDeposees(idPassage)).isTrue();
+    }
+
+    @Test
+    @DisplayName("annulation coopérative : le dépôt s'arrête entre deux unités, passage « Dépôt en cours »")
+    void annulation_cooperative(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "a.wav");
+        Path b = fichier(dossier, "b.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+
+        // Annule après la 1re unité : premier passage du garde « annule » accepté, les suivants refusés.
+        int[] consultations = {0};
+        BilanDepot bilan = depot.deposer(idPassage, List.of(a, b), () -> consultations[0]++ > 0, SuiviDepot.inerte());
+
+        assertThat(bilan.deposees()).isEqualTo(1);
+        assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOT_EN_COURS);
+        assertThat(depotUnites.restantes(idPassage)).hasSize(1);
     }
 
     @Test
     @DisplayName("création refusée par VigieChiro (repli) → refus dur avec le détail de l'API, aucun upload")
     void participation_refusee() {
-        when(participations.participationDe(42L)).thenReturn(Optional.empty());
-        when(participations.creerPour(42L))
+        when(participations.participationDe(idPassage)).thenReturn(Optional.empty());
+        when(participations.creerPour(idPassage))
                 .thenReturn(ResultatParticipation.echouee("HTTP 422 — {\"_errors\":{\"numero\":\"invalid field\"}}"));
 
-        assertThatThrownBy(() -> depot.deposer(42L, List.of()))
+        assertThatThrownBy(() -> depot.deposer(idPassage, List.of()))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("refusée")
                 .hasMessageContaining("422"); // le vrai détail de l'API est remonté, pas un message générique
@@ -115,18 +224,38 @@ class DepotVigieChiroTest {
     @Test
     @DisplayName("site non rattaché (repli) → l'exception de la passerelle se propage, aucun upload")
     void site_non_rattache_propage() {
-        when(participations.participationDe(42L)).thenReturn(Optional.empty());
-        when(participations.creerPour(42L)).thenThrow(new RegleMetierException("Site non rattaché à VigieChiro"));
+        when(participations.participationDe(idPassage)).thenReturn(Optional.empty());
+        when(participations.creerPour(idPassage)).thenThrow(new RegleMetierException("Site non rattaché à VigieChiro"));
 
-        assertThatThrownBy(() -> depot.deposer(42L, List.of()))
+        assertThatThrownBy(() -> depot.deposer(idPassage, List.of()))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("non rattaché");
         verify(client, never()).creerFichier(anyString());
     }
 
+    @Test
+    @DisplayName("passage introuvable → refus métier explicite (avant tout téléversement)")
+    void passage_introuvable(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "a.wav");
+        when(participations.participationDe(ID_INEXISTANT)).thenReturn(Optional.of("part-1"));
+
+        assertThatThrownBy(() -> depot.deposer(ID_INEXISTANT, List.of(a)))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("introuvable");
+        verify(client, never()).creerFichier(anyString());
+    }
+
+    private StatutWorkflow statutPassage() {
+        return passage().statutWorkflow();
+    }
+
+    private Passage passage() {
+        return passageDao.findById(idPassage).orElseThrow();
+    }
+
     private void armerUploadOk() {
         when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
-        when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString())).thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
     }
 

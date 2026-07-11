@@ -6,6 +6,7 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -32,6 +33,9 @@ public final class ClientVigieChiro {
     private static final Duration DELAI_UPLOAD = Duration.ofSeconds(120);
     /// Type de média JSON des échanges avec le backend Eve (`Accept` et `Content-Type`).
     private static final String TYPE_JSON = "application/json";
+
+    /// En-tête HTTP du type de média du corps envoyé (JSON des écritures, mime signé des `PUT` S3).
+    private static final String ENTETE_CONTENT_TYPE = "Content-Type";
 
     /// Préfixe de chemin de l'API des participations (`GET .../donnees`, `GET .../#id`, `PATCH .../#id`).
     private static final String CHEMIN_PARTICIPATIONS = "/participations/";
@@ -169,8 +173,29 @@ public final class ClientVigieChiro {
         try {
             HttpRequest requete = HttpRequest.newBuilder(URI.create(urlSignee))
                     .timeout(DELAI_UPLOAD)
-                    .header("Content-Type", mime)
+                    .header(ENTETE_CONTENT_TYPE, mime)
                     .PUT(HttpRequest.BodyPublishers.ofByteArray(octets))
+                    .build();
+            HttpResponse<Void> reponse = client.send(requete, HttpResponse.BodyHandlers.discarding());
+            return estSucces(reponse.statusCode());
+        } catch (InterruptedException interrompu) {
+            Thread.currentThread().interrupt();
+            return false;
+        } catch (RuntimeException | IOException indisponible) {
+            return false;
+        }
+    }
+
+    /// Variante **en flux** de [#televerserVersS3(String, byte[], String)] (#982) : le corps du `PUT` est
+    /// **streamé depuis le disque** (`BodyPublishers.ofFile`) au lieu d'être chargé en mémoire — une
+    /// archive ZIP de dépôt peut peser ~700 Mo. Mêmes garanties : `true` si 2xx, `false` sinon (fichier
+    /// illisible compris).
+    public boolean televerserVersS3(String urlSignee, Path fichier, String mime) {
+        try {
+            HttpRequest requete = HttpRequest.newBuilder(URI.create(urlSignee))
+                    .timeout(DELAI_UPLOAD)
+                    .header(ENTETE_CONTENT_TYPE, mime)
+                    .PUT(HttpRequest.BodyPublishers.ofFile(fichier))
                     .build();
             HttpResponse<Void> reponse = client.send(requete, HttpResponse.BodyHandlers.discarding());
             return estSucces(reponse.statusCode());
@@ -216,7 +241,7 @@ public final class ClientVigieChiro {
                     .timeout(DELAI)
                     .header("Authorization", entete.get())
                     .header("Accept", TYPE_JSON)
-                    .header("Content-Type", TYPE_JSON)
+                    .header(ENTETE_CONTENT_TYPE, TYPE_JSON)
                     .method(methode, HttpRequest.BodyPublishers.ofString(corpsJson, StandardCharsets.UTF_8));
             if (etag != null) {
                 requete.header("If-Match", etag);

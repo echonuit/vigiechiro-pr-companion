@@ -445,8 +445,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     /// Téléverse la nuit sur VigieChiro **hors fil JavaFX** (#142), étape ③ automatisée : même patron que la
     /// génération d'archives (état « en cours » posé au fil JavaFX, dépôt sur un fil virtuel, résultat via
-    /// `Platform.runLater`). En cas de succès, marque aussi le passage « déposé ». L'IHM restitue
-    /// l'avancement puis le bilan (ou l'erreur) via le libellé de l'étape.
+    /// `Platform.runLater`). Les statuts (« Dépôt en cours » / « Déposé ») sont posés par le moteur
+    /// reprenable (#982). L'IHM restitue l'avancement puis le bilan (ou l'erreur) via le libellé de l'étape.
     @FXML
     private void televerserVigieChiro() {
         Long idPassage = contexte.idPassage();
@@ -456,7 +456,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 BilanDepot bilan = depotViewModel.televerser(idPassage);
                 Platform.runLater(() -> {
                     depotViewModel.appliquerBilan(bilan);
-                    viewModel.deposer();
+                    // Statut honnête (#982) : le moteur de dépôt a déjà posé « Dépôt en cours » ou
+                    // « Déposé » (jamais « Déposé » sur un dépôt partiel — l'ancien appel inconditionnel
+                    // à deposer() était le bug). On recharge l'état pour refléter le statut réel.
+                    viewModel.ouvrirSur(idPassage);
                 });
             } catch (RuntimeException echec) {
                 Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
