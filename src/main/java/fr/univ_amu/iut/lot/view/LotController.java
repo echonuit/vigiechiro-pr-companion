@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -41,6 +42,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
@@ -126,6 +128,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private TableView<LigneArchive> tableArchives;
+
+    @FXML
+    private MenuButton menuOutils;
 
     @FXML
     private StackPane enveloppeTeleverser;
@@ -287,7 +292,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Table de suivi (#820) : colonnes #/Fichiers/Taille/Progression + cellule état/barre + rangées
         // colorées selon l'état, alimentée par les lignes du VM (pré-remplies au plan, animées au fil de la
         // compression parallèle, réhydratées du disque à la réouverture d'un passage déjà généré).
-        TableSuiviArchives.configurer(tableArchives);
+        // Sélecteur de colonnes (#918, EPIC #914) : clic droit + ☰ « outils » offrent « Colonnes… » sur la
+        // table de suivi comme sur les autres vues tabulaires. `#` (identité) et « Progression » (l'état) sont
+        // verrouillées ; « Fichiers » et « Taille » masquables.
+        GestionnaireColonnes.installer(tableArchives, menuOutils, TableSuiviArchives.configurer(tableArchives));
         tableArchives.setItems(viewModel.suiviLignes().lignes());
 
         // Étape ③ : « Ouvrir le dossier » seulement quand les archives sont réellement prêtes (#259), pas
