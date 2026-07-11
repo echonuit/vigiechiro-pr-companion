@@ -89,3 +89,9 @@ ci-summary.json
 # ========== Documentation (MkDocs) ==========
 # Sortie de build du site, régénérée par mkdocs / la CI
 site/
+
+# ========== Agents IA (instructions locales, non versionnées) ==========
+# CLAUDE.md contient les consignes agent (cf. CONTRIBUTING.md + dev-docs pour la
+# version versionnée destinée aux humains). Reste local, propre à chaque poste.
+CLAUDE.md
+.claude/
