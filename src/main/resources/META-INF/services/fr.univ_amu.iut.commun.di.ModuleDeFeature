@@ -1,0 +1,21 @@
+# Modules de feature auto-découverts par RacineInjecteur (ServiceLoader<ModuleDeFeature>, #933).
+# Chemin CLASSPATH (tests via surefire useModulePath=false, et app packagée en fat-jar/Launcher).
+# Le pendant MODULE-PATH (javafx:run) est `provides ... with ...` dans module-info.java : les deux
+# listes DOIVENT rester synchronisées (garde-fou : DecouverteModulesTest les compare).
+# Le socle (CommunModule, PersistenceModule) reste explicite dans RacineInjecteur, jamais découvert.
+fr.univ_amu.iut.analyse.di.AnalyseModule
+fr.univ_amu.iut.audio.di.AudioModule
+fr.univ_amu.iut.audio.di.ImportVigieChiroModule
+fr.univ_amu.iut.bibliotheque.di.BibliothequeModule
+fr.univ_amu.iut.connexion.di.ConnexionModule
+fr.univ_amu.iut.diagnostic.di.DiagnosticModule
+fr.univ_amu.iut.importation.di.ImportationModule
+fr.univ_amu.iut.lot.di.DepotVigieChiroModule
+fr.univ_amu.iut.lot.di.LotModule
+fr.univ_amu.iut.multisite.di.MultisiteModule
+fr.univ_amu.iut.passage.di.PassageModule
+fr.univ_amu.iut.passage.di.SynchronisationParticipationModule
+fr.univ_amu.iut.qualification.di.QualificationModule
+fr.univ_amu.iut.recherche.di.RechercheModule
+fr.univ_amu.iut.sites.di.SitesModule
+fr.univ_amu.iut.validation.di.ValidationModule
