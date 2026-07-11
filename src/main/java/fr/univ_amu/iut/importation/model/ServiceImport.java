@@ -54,10 +54,11 @@ import java.util.function.Consumer;
 /// mêmes fichiers sans dommage ; la base reste la source de vérité.
 public class ServiceImport {
 
-    /// Plafond de découpages audio **simultanés** (#12) : les threads virtuels sont bornés au nombre de
-    /// cœurs disponibles, car chaque `transformer` charge un WAV complet en mémoire. Limite le pic
-    /// mémoire (≈ ce nombre de PCM en vol) sans brider le débit CPU. Lu une fois au chargement.
-    private static final int PARALLELISME_DECOUPAGE = Runtime.getRuntime().availableProcessors();
+    /// Plafond de traitements de fichiers **simultanés** (#12 découpage, #948 copie protégée) : les
+    /// threads virtuels sont bornés au nombre de cœurs disponibles. Côté découpage, chaque `transformer`
+    /// charge un WAV complet en mémoire (pic ≈ ce nombre de PCM en vol) ; côté copie, cela évite de
+    /// saturer le support source (SD) de lectures simultanées. Lu une fois au chargement.
+    private static final int PARALLELISME_FICHIERS = Runtime.getRuntime().availableProcessors();
 
     private final InspecteurDossier inspecteur;
     private final AgregatImportDao agregatDao;
@@ -97,8 +98,8 @@ public class ServiceImport {
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
         this.serviceSauvegarde = Objects.requireNonNull(serviceSauvegarde, "serviceSauvegarde");
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
-        PreparationOriginaux preparation = new PreparationOriginaux(copie, renommeur);
-        DecoupageParallele decoupage = new DecoupageParallele(transformation, PARALLELISME_DECOUPAGE);
+        PreparationOriginaux preparation = new PreparationOriginaux(copie, renommeur, PARALLELISME_FICHIERS);
+        DecoupageParallele decoupage = new DecoupageParallele(transformation, PARALLELISME_FICHIERS);
         FabriqueEntitesImport fabriqueEntites = new FabriqueEntitesImport(horloge);
         this.moteur =
                 new MoteurImport(copie, preparation, decoupage, fabriqueEntites, agregatDao, uniteDeTravail, workspace);

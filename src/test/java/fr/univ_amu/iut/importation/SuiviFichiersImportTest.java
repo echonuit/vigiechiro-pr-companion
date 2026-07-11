@@ -110,13 +110,38 @@ class SuiviFichiersImportTest {
         assertThat(suivi.plans).hasSize(1);
         assertThat(suivi.plans.getFirst())
                 .containsExactly("PaRecPR1925492_20260422_203922.wav", "PaRecPR1925492_20260422_204326.wav");
-        // La copie est séquentielle : démarrages et fins dans l'ordre du plan.
-        assertThat(suivi.copiesDemarrees).containsExactly(1, 2);
-        assertThat(suivi.copiesTerminees).containsExactly(1, 2);
-        // La transformation est parallèle (#12) : chaque fichier démarre et finit, ordre indifférent.
+        // Copie (#948) et transformation (#12) sont parallèles : chaque fichier démarre et finit une
+        // fois, ordre d'arrivée indifférent (le ciblage se fait par numéro de plan).
+        assertThat(suivi.copiesDemarrees).containsExactlyInAnyOrder(1, 2);
+        assertThat(suivi.copiesTerminees).containsExactlyInAnyOrder(1, 2);
         assertThat(suivi.transformationsDemarrees).containsExactlyInAnyOrder(1, 2);
         assertThat(suivi.termines).containsExactlyInAnyOrder(1, 2);
         assertThat(suivi.rejets).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#948 : la copie parallèle traite tous les fichiers d'une grosse nuit, sans perte ni doublon")
+    void copie_parallele_traite_tous_les_fichiers() throws IOException {
+        Path sd = racine.resolve("sd-grosse-nuit");
+        Files.createDirectories(sd);
+        Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
+        List<Integer> attendus = new ArrayList<>();
+        for (int i = 0; i < 8; i++) {
+            ecrireWav(sd.resolve("PaRecPR1925492_20260422_20%02d00.wav".formatted(10 + i)));
+            attendus.add(i + 1);
+        }
+
+        SuiviEnregistre suivi = new SuiviEnregistre();
+        var resultat = service.importer(sd, idPoint, prefixe, progression -> {}, JetonAnnulation.neutre(), true, suivi);
+
+        // Chaque fichier est copié puis transformé exactement une fois (numéros 1..8, ordre libre),
+        // et l'agrégat persisté est complet : la parallélisation ne perd ni ne duplique rien.
+        assertThat(suivi.copiesDemarrees).containsExactlyInAnyOrderElementsOf(attendus);
+        assertThat(suivi.copiesTerminees).containsExactlyInAnyOrderElementsOf(attendus);
+        assertThat(suivi.termines).containsExactlyInAnyOrderElementsOf(attendus);
+        assertThat(suivi.rejets).isEmpty();
+        assertThat(resultat.nombreOriginaux()).isEqualTo(8);
+        assertThat(resultat.nombreSequences()).isEqualTo(8); // 1 séquence par original (1,5 s < 5 s)
     }
 
     @Test
