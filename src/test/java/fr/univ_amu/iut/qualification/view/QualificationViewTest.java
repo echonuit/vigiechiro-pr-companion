@@ -41,6 +41,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de l'écran **M-Qualification** : chargement du FXML par Guice avec un
 /// [ServiceQualification] mocké, ouverture sur un passage, et vérification du **câblage de la vue**
@@ -55,6 +56,9 @@ class QualificationViewTest {
 
     private static final long ID_PASSAGE = 42L;
     private static final long ID_SELECTION = 7L;
+
+    private QualificationController controleur;
+    private SelectionEcouteViewModel selectionVm;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -86,7 +90,8 @@ class QualificationViewTest {
 
             @Provides
             SelectionEcouteViewModel selection() {
-                return new SelectionEcouteViewModel(service);
+                selectionVm = new SelectionEcouteViewModel(service);
+                return selectionVm;
             }
 
             @Provides
@@ -108,7 +113,7 @@ class QualificationViewTest {
         FXMLLoader loader = new FXMLLoader(QualificationController.class.getResource("Qualification.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        QualificationController controleur = loader.getController();
+        controleur = loader.getController();
         controleur.ouvrirSur(
                 new ContextePassage(ID_PASSAGE, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")));
         stage.setScene(new Scene(vue, 1100, 760));
@@ -123,6 +128,33 @@ class QualificationViewTest {
             lignes.add(new SequenceEnSelection(sequence, i, false));
         }
         return lignes;
+    }
+
+    @Test
+    @DisplayName("#798 : « Régénérer » demande confirmation quand une progression d'écoute serait perdue")
+    void regenerer_confirme_avant_de_perdre_la_progression(FxRobot robot) {
+        // Progression d'écoute > 0 : une séquence marquée écoutée (sans quoi il n'y a rien à perdre).
+        robot.interact(() -> {
+            selectionVm.selectionner(selectionVm.lignes().get(0));
+            selectionVm.marquerCouranteEcoutee();
+        });
+        double progressionAvant = selectionVm.progressionProperty().get();
+        assertThat(progressionAvant).isGreaterThan(0);
+
+        List<String> demandes = new ArrayList<>();
+        controleur.setConfirmateur(message -> {
+            demandes.add(message);
+            return false; // l'utilisateur refuse
+        });
+
+        robot.clickOn("#boutonRegenerer");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(demandes).as("la régénération directe demande confirmation").hasSize(1);
+        assertThat(demandes.get(0)).contains("progression");
+        assertThat(selectionVm.progressionProperty().get())
+                .as("refus → la sélection n'est pas régénérée (progression conservée)")
+                .isEqualTo(progressionAvant);
     }
 
     @Test

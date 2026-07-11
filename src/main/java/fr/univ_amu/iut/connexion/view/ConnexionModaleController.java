@@ -2,11 +2,13 @@ package fr.univ_amu.iut.connexion.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
@@ -58,6 +60,9 @@ public class ConnexionModaleController {
     /// le binding sur l'état connecté.
     private final BooleanProperty verificationEnCours = new SimpleBooleanProperty(false);
 
+    /// Confirmateur injectable (#798) : par défaut un `Alert` de confirmation ; stub déterministe en test.
+    private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
+
     @FXML
     private VBox racine;
 
@@ -88,6 +93,11 @@ public class ConnexionModaleController {
     public ConnexionModaleController(ConnexionViewModel viewModel, OuvreurDeLien ouvreurDeLien) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
+    }
+
+    /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
+    void setConfirmateur(Predicate<String> confirmateur) {
+        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
     }
 
     @FXML
@@ -168,6 +178,12 @@ public class ConnexionModaleController {
 
     @FXML
     private void deconnecter() {
+        // Confirmation (#798) : la déconnexion efface le jeton VigieChiro enregistré sur ce poste (il faudra
+        // en recoller un pour se reconnecter).
+        if (!confirmateur.test("Se déconnecter effacera le jeton VigieChiro enregistré sur ce poste."
+                + " Vous devrez en recoller un pour vous reconnecter. Se déconnecter ?")) {
+            return;
+        }
         viewModel.deconnecter();
         viewModel.rafraichir();
         champToken.clear();

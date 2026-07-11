@@ -16,6 +16,8 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Affordance de la modale de connexion (#717) **à l'état connecté** : un profil est pré-stocké avant le
 /// chargement, si bien que la modale s'ouvre déjà connectée. On vérifie que la saisie du token est
@@ -39,6 +42,8 @@ import org.testfx.framework.junit5.Start;
 class ConnexionModaleConnecteeViewTest {
 
     private static final ProfilVigieChiro PROFIL = new ProfilVigieChiro("6a1b", "Sébastien", "Observateur");
+
+    private ConnexionModaleController controleur;
 
     @Start
     void start(Stage stage) throws Exception {
@@ -62,8 +67,30 @@ class ConnexionModaleConnecteeViewTest {
         FXMLLoader loader = new FXMLLoader(ConnexionModaleController.class.getResource("ConnexionModale.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
+        controleur = loader.getController();
         stage.setScene(new Scene(vue));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#798 : « Se déconnecter » confirme avant d'effacer le jeton local")
+    void deconnexion_confirme_avant_effacement(FxRobot robot) {
+        List<String> demandes = new ArrayList<>();
+        controleur.setConfirmateur(message -> {
+            demandes.add(message);
+            return false; // l'utilisateur refuse
+        });
+
+        robot.clickOn("#boutonDeconnecter");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(demandes).as("la déconnexion demande confirmation").hasSize(1);
+        assertThat(demandes.get(0)).contains("jeton");
+        // Refus → toujours connecté : badge d'identité au vert et saisie du token verrouillée.
+        assertThat(robot.lookup("#labelIdentite").queryAs(Label.class).getStyleClass())
+                .contains("badge-succes");
+        assertThat(robot.lookup("#champToken").queryAs(TextField.class).isDisabled())
+                .isTrue();
     }
 
     @Test

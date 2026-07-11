@@ -166,16 +166,26 @@ public class RattachementViewModel {
         return synchronisation.isPresent();
     }
 
-    private void majRecap() {
+    /// `true` si appliquer le rattachement courant **renommera effectivement** les séquences sur le disque
+    /// (le préfixe de session change). `false` si rien ne change : l'action n'a alors aucun effet disque
+    /// irréversible. La vue s'en sert pour ne demander une confirmation que dans ce cas (#798).
+    public boolean entraineRenommage() {
         if (carre == null) {
-            recap.set("");
-            return;
+            return false;
         }
         String avant = new Prefixe(carre, anneeActuelle, numeroActuel, codePoint).nomDossierSession();
         String apres = new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint).nomDossierSession();
-        if (avant.equals(apres)) {
+        return !avant.equals(apres);
+    }
+
+    private void majRecap() {
+        if (carre == null) {
+            recap.set("");
+        } else if (!entraineRenommage()) {
             recap.set("Aucun changement de rattachement.");
         } else {
+            String avant = new Prefixe(carre, anneeActuelle, numeroActuel, codePoint).nomDossierSession();
+            String apres = new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint).nomDossierSession();
             recap.set("Rattachement : "
                     + avant
                     + " → "

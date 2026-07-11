@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
@@ -11,6 +12,7 @@ import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -43,6 +45,9 @@ public class RattachementModaleController {
 
     private final RattachementViewModel viewModel;
     private Runnable apresSucces = () -> {};
+
+    /// Confirmateur injectable (#798) : par défaut un `Alert` de confirmation ; stub déterministe en test.
+    private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
 
     private ObjectProperty<Integer> anneeObjet;
     private ObjectProperty<Integer> numeroObjet;
@@ -98,6 +103,11 @@ public class RattachementModaleController {
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+    }
+
+    /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
+    void setConfirmateur(Predicate<String> confirmateur) {
+        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
     }
 
     @FXML
@@ -217,6 +227,12 @@ public class RattachementModaleController {
 
     @FXML
     private void appliquer() {
+        // Confirmation (#798) avant le renommage irréversible des séquences sur le disque. Inutile si le
+        // rattachement ne change pas (aucun effet disque) : on reprend le récap vivant comme message.
+        if (viewModel.entraineRenommage()
+                && !confirmateur.test(viewModel.recapProperty().get() + "\n\nAppliquer ce rattachement ?")) {
+            return;
+        }
         if (viewModel.appliquer()) {
             pousserVersVigieChiro();
             apresSucces.run();

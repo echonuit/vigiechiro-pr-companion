@@ -5,6 +5,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
@@ -24,6 +25,7 @@ import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.function.Predicate;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -70,6 +72,10 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
+
+    /// Confirmateur injectable (#798) : par défaut un `Alert` de confirmation ; remplacé dans les tests par
+    /// un stub déterministe (sans dialogue natif).
+    private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
 
     @FXML
     private BorderPane racine;
@@ -171,6 +177,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// qu'un Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
     @FXML
     private StackPane enveloppeEnregistrer;
+
+    /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
+    void setConfirmateur(Predicate<String> confirmateur) {
+        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+    }
 
     @Inject
     public QualificationController(
@@ -366,6 +377,13 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     @FXML
     private void regenerer() {
+        // Régénération directe (#798) : comme la modale « Personnaliser… », prévenir avant d'effacer une
+        // progression d'écoute déjà entamée. Rien à perdre si aucune séquence n'a été écoutée → pas de nag.
+        if (selectionVm.progressionProperty().get() > 0
+                && !confirmateur.test("⚠ Régénérer efface la progression d'écoute (le verdict est conservé)."
+                        + " Régénérer quand même ?")) {
+            return;
+        }
         selectionVm.regenerer();
     }
 

@@ -18,6 +18,10 @@ import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -32,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de la modale **« Modifier le passage »** : chargement du FXML via
 /// Guice (avec un [ServicePassage] mocké), `demarrer` sur un passage, vérification du câblage
@@ -39,6 +44,10 @@ import org.testfx.framework.junit5.Start;
 /// météo/micro dont le type de micro en liste fermée). Pas de base de données.
 @ExtendWith(ApplicationExtension.class)
 class RattachementModaleViewTest {
+
+    private RattachementModaleController controleur;
+    private RattachementViewModel viewModel;
+    private final AtomicBoolean succesAppele = new AtomicBoolean(false);
 
     @Start
     void start(Stage stage) throws Exception {
@@ -62,16 +71,40 @@ class RattachementModaleViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             RattachementViewModel viewModel() {
-                return new RattachementViewModel(service, java.util.Optional.empty());
+                viewModel = new RattachementViewModel(service, Optional.empty());
+                return viewModel;
             }
         });
         FXMLLoader loader = new FXMLLoader(RattachementModaleController.class.getResource("RattachementModale.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
-        RattachementModaleController controleur = loader.getController();
-        controleur.demarrer(7L, "040962", "A1", () -> {});
+        controleur = loader.getController();
+        controleur.demarrer(7L, "040962", "A1", () -> succesAppele.set(true));
         stage.setScene(new Scene(vue));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#798 : « Appliquer » confirme avant un renommage irréversible des séquences")
+    void appliquer_confirme_avant_renommage(FxRobot robot) {
+        // Changer le n° de passage → le rattachement change → les séquences seraient renommées sur le disque.
+        robot.interact(() -> viewModel.numeroPassageProperty().set(9));
+        assertThat(viewModel.entraineRenommage()).isTrue();
+
+        List<String> demandes = new ArrayList<>();
+        controleur.setConfirmateur(message -> {
+            demandes.add(message);
+            return false; // l'utilisateur refuse
+        });
+
+        robot.clickOn("#boutonAppliquer");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(demandes).as("un renommage effectif demande confirmation").hasSize(1);
+        assertThat(demandes.get(0)).contains("renommé");
+        assertThat(succesAppele)
+                .as("refus → rien n'est appliqué (l'action de succès n'est pas déclenchée)")
+                .isFalse();
     }
 
     @Test
