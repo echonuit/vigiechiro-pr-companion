@@ -7,6 +7,7 @@ import com.google.inject.Key;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -22,10 +23,12 @@ import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -103,6 +106,27 @@ class MainViewTest {
         assertThat(navigation.vueCouranteProperty().get()).isEqualTo("accueil");
         assertThat(retour.isVisible()).isFalse();
         assertThat(robot.lookup("#cartesActivites").tryQuery()).isPresent();
+    }
+
+    @Test
+    @DisplayName("#849 : basculer « Fiches espèces sur Wikipédia » mémorise la préférence de source")
+    void bascule_source_fiches_memorise_la_preference(FxRobot robot) {
+        PreferenceSourceEspece preference = injector.getInstance(PreferenceSourceEspece.class);
+        assertThat(preference.prefereWikipedia()).as("défaut : GBIF").isFalse();
+
+        MenuButton menu = robot.lookup("#menuOutils").queryAs(MenuButton.class);
+        CheckMenuItem item = menu.getItems().stream()
+                .filter(CheckMenuItem.class::isInstance)
+                .map(CheckMenuItem.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertThat(item.isSelected()).as("case décochée au départ (GBIF)").isFalse();
+
+        robot.interact(() -> item.setSelected(true));
+
+        assertThat(preference.prefereWikipedia())
+                .as("le choix Wikipédia est persisté")
+                .isTrue();
     }
 
     @Test

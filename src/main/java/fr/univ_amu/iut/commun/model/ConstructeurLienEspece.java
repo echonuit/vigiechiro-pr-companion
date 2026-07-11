@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.model;
 
+import com.google.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -40,7 +41,9 @@ public final class ConstructeurLienEspece {
         this(new LienGbif());
     }
 
-    /// Variante avec source universelle explicite (repli GBIF ou Wikipédia FR, #849 ; tests).
+    /// Variante avec source universelle explicite (repli GBIF ou Wikipédia FR, #849 ; tests). En
+    /// production, l'injection fournit la [SourceUniversellePreferee] (choix GBIF/Wikipédia persisté).
+    @Inject
     public ConstructeurLienEspece(SourceUniverselle sourceUniverselle) {
         this.sourceUniverselle = Objects.requireNonNull(sourceUniverselle, "sourceUniverselle");
         this.slugsPna = chargerSlugsPna();

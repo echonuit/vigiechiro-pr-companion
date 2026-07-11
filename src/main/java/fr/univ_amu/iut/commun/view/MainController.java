@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
@@ -18,6 +19,7 @@ import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -58,6 +60,7 @@ public class MainController {
     private final OuvrirConnexion ouvrirConnexion;
     private final ServiceSauvegarde serviceSauvegarde;
     private final ServicePurgeOriginaux servicePurge;
+    private final PreferenceSourceEspece preferenceSourceEspece;
 
     /// Câblage du menu « ☰ » (sauvegarde/restauration, purge, connexion VigieChiro), initialisé dans
     /// `initialize()` quand les `@FXML` du menu sont disponibles.
@@ -114,6 +117,10 @@ public class MainController {
     @FXML
     private MenuItem itemConnexion;
 
+    /// Préférence « fiches espèces sur Wikipédia (sinon GBIF) » du menu ☰ (#849), câblée par [MenuOutils].
+    @FXML
+    private CheckMenuItem itemSourceWikipedia;
+
     @FXML
     private VBox panneauResultats;
 
@@ -139,7 +146,8 @@ public class MainController {
             OuvrirPassage ouvrirPassage,
             OuvrirConnexion ouvrirConnexion,
             ServiceSauvegarde serviceSauvegarde,
-            ServicePurgeOriginaux servicePurge) {
+            ServicePurgeOriginaux servicePurge,
+            PreferenceSourceEspece preferenceSourceEspece) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
@@ -150,6 +158,7 @@ public class MainController {
         this.ouvrirConnexion = ouvrirConnexion;
         this.serviceSauvegarde = serviceSauvegarde;
         this.servicePurge = servicePurge;
+        this.preferenceSourceEspece = preferenceSourceEspece;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -166,9 +175,11 @@ public class MainController {
         menuOutilsActions = new MenuOutils(
                 menuOutils,
                 itemConnexion,
+                itemSourceWikipedia,
                 serviceSauvegarde,
                 servicePurge,
                 ouvrirConnexion,
+                preferenceSourceEspece,
                 this::fenetre,
                 navigateur::afficherAccueil);
 

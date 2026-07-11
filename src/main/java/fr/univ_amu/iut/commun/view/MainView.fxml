@@ -2,6 +2,7 @@
 
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckMenuItem?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.MenuButton?>
@@ -61,6 +62,10 @@
             <MenuItem text="↩ Restaurer une sauvegarde…" onAction="#restaurerBase"/>
             <SeparatorMenuItem/>
             <MenuItem text="🧹 Purger les originaux importés…" onAction="#purgerOriginaux"/>
+            <SeparatorMenuItem/>
+            <!-- Préférence source des fiches espèces (#849) : coché = Wikipédia FR, décoché = GBIF (défaut).
+                 Ne concerne que le repli hors chiroptères ; l'état est piloté par MainController. -->
+            <CheckMenuItem fx:id="itemSourceWikipedia" text="Fiches espèces sur Wikipédia (sinon GBIF)"/>
             <SeparatorMenuItem/>
             <!-- Connexion VigieChiro (#741) : libellé rafraîchi par MainController à l'ouverture du menu
                  pour refléter l'état de connexion. -->

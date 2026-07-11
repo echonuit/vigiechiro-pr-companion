@@ -6,6 +6,9 @@ import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
+import fr.univ_amu.iut.commun.model.SourceUniverselle;
+import fr.univ_amu.iut.commun.model.SourceUniversellePreferee;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -42,6 +45,18 @@ public class CommunModule extends AbstractModule {
         OptionalBinder.newOptionalBinder(binder(), OuvrirConnexion.class)
                 .setDefault()
                 .to(OuvrirConnexionAucun.class);
+        // Préférence « source des fiches espèces » (#849) : singleton pour que le menu ☰ (qui la modifie)
+        // et le constructeur de liens (qui la lit) partagent le même service persistant.
+        bind(PreferenceSourceEspece.class).in(Singleton.class);
+    }
+
+    /// Source universelle des fiches espèces (repli hors PNA), pilotée par la préférence utilisateur
+    /// (#849) : GBIF par défaut, Wikipédia FR au choix, relue à chaque lien (effet immédiat). Alimente le
+    /// `ConstructeurLienEspece` par injection.
+    @Provides
+    @Singleton
+    SourceUniverselle fournirSourceUniverselle(PreferenceSourceEspece preference) {
+        return new SourceUniversellePreferee(preference::prefereWikipedia);
     }
 
     @Provides
