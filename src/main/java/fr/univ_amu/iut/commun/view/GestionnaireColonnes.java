@@ -177,6 +177,20 @@ public final class GestionnaireColonnes {
         appliquerOrdre(table, ordre);
     }
 
+    /// Raccourci [#installer] **puis** [#persister] pour une table mono-sélecteur (#994) : câble clic droit +
+    /// ☰ et rend la disposition persistante par écran, en une seule ligne côté contrôleur.
+    public static void installerEtPersister(
+            TableView<?> table,
+            MenuButton menu,
+            List<Colonne> colonnes,
+            DepotDispositionColonnes depot,
+            String feature,
+            String cle,
+            MenuItem... itemsClicDroit) {
+        installer(table, menu, colonnes, itemsClicDroit);
+        persister(table, colonnes, depot, feature, cle);
+    }
+
     /// Rend la disposition des `colonnes` de `table` **persistante par écran** (#994, couche « défaut par
     /// écran ») : restaure au branchement la dernière disposition mémorisée pour `(feature, cle)`, puis la
     /// **ré-enregistre** à chaque changement d'**ordre** ou de **visibilité**. À appeler **une fois**, après
