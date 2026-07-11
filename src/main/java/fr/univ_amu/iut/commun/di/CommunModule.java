@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
+import fr.univ_amu.iut.commun.api.ClientGbif;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
@@ -12,11 +13,15 @@ import fr.univ_amu.iut.commun.model.SourceUniversellePreferee;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurFiche;
+import fr.univ_amu.iut.commun.view.ExecuteurFicheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.commun.view.OuvrirConnexion;
 import fr.univ_amu.iut.commun.view.OuvrirConnexionAucun;
+import fr.univ_amu.iut.commun.view.ResolveurFiche;
+import fr.univ_amu.iut.commun.view.ResolveurFicheGbif;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.nio.file.Path;
 
@@ -48,6 +53,18 @@ public class CommunModule extends AbstractModule {
         // Préférence « source des fiches espèces » (#849) : singleton pour que le menu ☰ (qui la modifie)
         // et le constructeur de liens (qui la lit) partagent le même service persistant.
         bind(PreferenceSourceEspece.class).in(Singleton.class);
+        // Fiche espèce (#922) : en production, résolution GBIF (recherche → fiche) hors du fil JavaFX.
+        // Surchargent les défauts @ImplementedBy (identité + synchrone) réservés aux tests.
+        bind(ExecuteurFiche.class).to(ExecuteurFicheAsynchrone.class).in(Singleton.class);
+    }
+
+    /// Résolveur de fiche espèce (#922) : convertit l'URL de recherche GBIF en URL de fiche en résolvant
+    /// la clé d'usage via l'API GBIF. Singleton (réutilise le client HTTP). Les liens PNA/Wikipédia, déjà
+    /// directs, passent inchangés.
+    @Provides
+    @Singleton
+    ResolveurFiche fournirResolveurFiche() {
+        return new ResolveurFicheGbif(new ClientGbif()::cleUsage);
     }
 
     /// Source universelle des fiches espèces (repli hors PNA), pilotée par la préférence utilisateur
