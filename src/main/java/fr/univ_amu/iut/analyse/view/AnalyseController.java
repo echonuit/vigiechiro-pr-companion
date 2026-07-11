@@ -15,8 +15,10 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
@@ -31,6 +33,8 @@ import java.util.function.Function;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
@@ -61,7 +65,12 @@ import javafx.util.StringConverter;
 /// Implémente [RafraichirAuRetour] : l'écran reste vivant dans l'historique du [Navigateur] ; quand on y
 /// revient après avoir modifié des observations ailleurs (validation d'un passage…), l'inventaire est
 /// rechargé pour ne pas afficher des compteurs périmés.
-public class AnalyseController implements RafraichirAuRetour {
+public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
+
+    /// Zones de la barre de statut (#1023) : agrégat top-level → **centre** = résumé de l'inventaire,
+    /// **droite** = état d'export quand un export a été produit ; la gauche reste au défaut du chrome.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     /// Clé de la feature pour les vues mémorisées (`saved_filter_view.feature`) : isole les vues de cet écran.
     private static final String FEATURE = "analyse";
@@ -243,6 +252,11 @@ public class AnalyseController implements RafraichirAuRetour {
         this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
         // Densité/habillage de table uniformes (#690). La table des observations est navigable (double-clic
@@ -320,6 +334,14 @@ public class AnalyseController implements RafraichirAuRetour {
         configurerCarte();
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
+        // Barre de statut (#1023) : centre = résumé de l'inventaire ; droite = état d'export (message
+        // présent seulement après une génération d'export). Agrégat top-level → gauche au défaut.
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> ZonesStatut.centreEtDroite(
+                        viewModel.resumeProperty().get(),
+                        viewModel.messageProperty().get()),
+                viewModel.resumeProperty(),
+                viewModel.messageProperty()));
 
         // Message d'état vide : ni espèce ni carré (aucune observation exploitable).
         var vide = Bindings.createBooleanBinding(

@@ -179,6 +179,9 @@ class AnalyseViewTest {
         assertThat(carres.isVisible()).isFalse();
         assertThat(especes.getItems()).hasSize(1);
         assertThat(robot.lookup("#lblResume").queryAs(Label.class).getText()).contains("espèce");
+        // Barre de statut (#1023) : le résumé occupe la zone centre (agrégat top-level → gauche au défaut).
+        assertThat(controleur.zonesStatutProperty().get().centre()).contains("espèce");
+        assertThat(controleur.zonesStatutProperty().get().gauche()).isEmpty();
     }
 
     @Test

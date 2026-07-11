@@ -54,6 +54,7 @@ import org.testfx.util.WaitForAsyncUtils;
 class MultisiteViewTest {
 
     private ServiceMultisite service;
+    private MultisiteController controleur;
     private ServiceSites serviceSites;
     private OuvrirPassage ouvrirPassage;
     private OuvrirAudio ouvrirAudio;
@@ -98,6 +99,7 @@ class MultisiteViewTest {
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
+        controleur = loader.getController();
         stage.setScene(new Scene(vue, 1100, 680));
         stage.show();
     }
@@ -110,6 +112,9 @@ class MultisiteViewTest {
 
         assertThat(table.getItems()).hasSize(2);
         assertThat(resume.getText()).contains("2 passage");
+        // Barre de statut (#1023) : le résumé occupe la zone centre (agrégat top-level → gauche au défaut).
+        assertThat(controleur.zonesStatutProperty().get().centre()).contains("2 passage");
+        assertThat(controleur.zonesStatutProperty().get().gauche()).isEmpty();
     }
 
     @Test

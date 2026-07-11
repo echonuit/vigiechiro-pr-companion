@@ -10,10 +10,12 @@ import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
@@ -25,6 +27,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
@@ -61,7 +65,12 @@ import javafx.stage.FileChooser;
 /// Implémente [RafraichirAuRetour] : quand on revient sur l'agrégat après avoir ouvert un passage et
 /// l'avoir fait avancer (vérification, dépôt, validation), le tableau est rechargé pour refléter le
 /// nouveau statut/verdict (sinon il afficherait un état périmé, l'écran restant vivant dans la pile).
-public class MultisiteController implements RafraichirAuRetour {
+public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
+
+    /// Zones de la barre de statut (#1023) : cet agrégat top-level ne renseigne que le **centre** (résumé
+    /// « N sites… ») ; la gauche (identité) reste au défaut du chrome.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     /// Clé de la feature pour les vues mémorisées (`saved_filter_view.feature`).
     private static final String FEATURE = "multisite";
@@ -188,6 +197,11 @@ public class MultisiteController implements RafraichirAuRetour {
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     @FXML
     private void initialize() {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
@@ -254,6 +268,10 @@ public class MultisiteController implements RafraichirAuRetour {
                         (obs, ancien, nouveau) -> tableLignes.getSortOrder().clear());
 
         lblResume.textProperty().bind(viewModel.resumeProperty());
+        // Barre de statut (#1023) : le résumé « N sites… » occupe la zone centre (agrégat top-level, pas
+        // d'identité propre → la gauche reste au défaut du chrome).
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> ZonesStatut.centre(viewModel.resumeProperty().get()), viewModel.resumeProperty()));
         itemExporter.disableProperty().bind(viewModel.nonVideProperty().not());
         // Un MenuItem désactivé n'accueille pas de tooltip : on surface la cause du grisage dans son
         // libellé (#789), visible seulement quand il est grisé (aucune ligne dans le tableau filtré).
