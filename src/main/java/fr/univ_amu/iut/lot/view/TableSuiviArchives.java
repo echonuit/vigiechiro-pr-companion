@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.lot.view;
 
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.TableSuivi;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
+import java.util.List;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.TableColumn;
@@ -16,9 +18,23 @@ final class TableSuiviArchives {
 
     private TableSuiviArchives() {}
 
-    /// Pose colonnes, cellules et rangées colorées sur `table` (l'alimentation en items reste au controller).
-    static void configurer(TableView<LigneArchive> table) {
-        TableSuivi.configurer(table, "Aucune archive de dépôt pour l'instant.", colFichiers(), colTaille());
+    /// Pose colonnes, cellules et rangées colorées sur `table` (l'alimentation en items reste au controller),
+    /// puis **décrit** les colonnes pour le sélecteur (#918) : l'identité `#` et « Progression » (l'état, cœur
+    /// de la table de suivi) sont verrouillées ; « Fichiers » et « Taille » sont masquables. `#` et
+    /// « Progression » sont posées par le socle [TableSuivi] (première et dernière colonnes), on les relit donc
+    /// sur la table plutôt que de les reconstruire.
+    static List<GestionnaireColonnes.Colonne> configurer(TableView<LigneArchive> table) {
+        TableColumn<LigneArchive, Integer> fichiers = colFichiers();
+        TableColumn<LigneArchive, String> taille = colTaille();
+        TableSuivi.configurer(table, "Aucune archive de dépôt pour l'instant.", fichiers, taille);
+        TableColumn<?, ?> numero = table.getColumns().get(0);
+        TableColumn<?, ?> progression =
+                table.getColumns().get(table.getColumns().size() - 1);
+        return List.of(
+                new GestionnaireColonnes.Colonne(numero, "#", true),
+                new GestionnaireColonnes.Colonne(fichiers, "Fichiers", false),
+                new GestionnaireColonnes.Colonne(taille, "Taille", false),
+                new GestionnaireColonnes.Colonne(progression, "Progression", true));
     }
 
     private static TableColumn<LigneArchive, Integer> colFichiers() {

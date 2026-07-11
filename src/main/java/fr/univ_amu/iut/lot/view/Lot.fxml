@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.Separator?>
@@ -60,7 +61,10 @@
 
   <!-- Étape 2 - Générer les archives ZIP (le payload réellement déposé) -->
   <VBox spacing="4.0" styleClass="carte-section">
-    <Label text="2. Générer les archives de dépôt" styleClass="section-titre"/>
+    <HBox alignment="CENTER_LEFT" spacing="8.0">
+      <Label text="2. Générer les archives de dépôt" styleClass="section-titre" HBox.hgrow="ALWAYS"/>
+      <MenuButton fx:id="menuOutils" text="☰" styleClass="menu-actions" accessibleText="Outils : colonnes"/>
+    </HBox>
     <Label fx:id="lblTitreArchives" styleClass="section-sous"/>
     <Label text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser, écrites dans le sous-dossier « depot/ » de la session."
            styleClass="section-sous" wrapText="true"/>
