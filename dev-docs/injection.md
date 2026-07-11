@@ -6,25 +6,40 @@ Toutes les dépendances sont câblées par **Guice 7** : services, DAO, ViewMode
 ## La racine de composition
 
 [`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
-est le **seul** endroit qui connaît la liste des modules : le socle (`CommunModule` +
-`PersistenceModule`) et les **10 modules de feature**. Chaque feature publie ses DAO/services via son
-propre module ; la racine se contente de les **installer**.
+assemble le graphe : le **socle** (`CommunModule` + `PersistenceModule`), installé **explicitement**,
+et les **modules de feature**, **auto-découverts** via `ServiceLoader<`[`ModuleDeFeature`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/ModuleDeFeature.java)`>`.
 
 ```java
-public static Injector creer() {
-    return Guice.createInjector(
-        new CommunModule(), new PersistenceModule(),
-        new SitesModule(), new PassageModule(), new QualificationModule(),
-        new ValidationModule(), new MultisiteModule(), new ImportationModule(),
-        new LotModule(), new DiagnosticModule(), new BibliothequeModule(),
-        new RechercheModule());
+public static List<Module> modules() {
+    List<Module> modules = new ArrayList<>();
+    modules.add(new CommunModule());          // socle : toujours explicite
+    modules.add(new PersistenceModule());
+    ServiceLoader.load(ModuleDeFeature.class)  // features : découvertes
+            .stream().map(ServiceLoader.Provider::get)
+            .filter(m -> !desactivees.contains(m.getClass().getSimpleName()))
+            .sorted(Comparator.comparing(m -> m.getClass().getName())) // ordre déterministe
+            .forEach(modules::add);
+    return List.copyOf(modules);
 }
 ```
 
-!!! note "Pourquoi `commun.di` dépend des features"
+**Ajouter une feature ne touche donc plus la racine** : il suffit d'un `XxxModule extends
+ModuleDeFeature` **déclaré comme service**. Deux déclarations, gardées synchronisées par
+`DecouverteModulesTest` (qui lit le `module-info.class` pour les comparer) :
+
+- **classpath** (tests surefire `useModulePath=false`, fat-jar/Launcher) :
+  `src/main/resources/META-INF/services/fr.univ_amu.iut.commun.di.ModuleDeFeature` ;
+- **module-path** (`javafx:run`) : `uses` + `provides … with …` dans `module-info.java`.
+
+L'ordre d'installation n'a **aucun effet fonctionnel** (les `Set` des points d'extension sont retriés
+par `ordre()` côté chrome, `OptionalBinder.setBinding` l'emporte quel que soit l'ordre) ; le tri par
+nom de classe garantit seulement la **reproductibilité**. Une feature se désactive via
+`-Dvigiechiro.features.desactivees=DiagnosticModule`.
+
+!!! note "Pourquoi `commun.di` peut dépendre des features"
     Une racine de composition **connaît tout le monde** : c'est son rôle. Le test ArchUnit
-    `features_sans_cycle` **exclut** explicitement `commun/di/` de la détection de cycles (sinon
-    `commun ↔ sites` apparaîtrait comme un faux cycle).
+    `features_sans_cycle` **exclut** explicitement `commun/di/` de la détection de cycles. Depuis
+    l'auto-découverte, `RacineInjecteur` n'importe d'ailleurs plus aucun module de feature.
 
 !!! info "La CLI utilise un injecteur enfant"
     La feature `cli` ne s'installe pas dans la racine : elle crée un **injecteur enfant**
@@ -33,33 +48,42 @@ public static Injector creer() {
 
 ## Ce que publie un module de feature
 
-Un module hérite d'`AbstractModule`. Sur le patron de
+Un module de feature hérite de [`ModuleDeFeature`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/ModuleDeFeature.java)
+(lui-même un `AbstractModule`), qui ajoute un petit **DSL de contribution** masquant le boilerplate des
+`Multibinder`. Sur le patron de
 [`PassageModule`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/di/PassageModule.java) :
 
 ```java
-public class PassageModule extends AbstractModule {
+public class PassageModule extends ModuleDeFeature {
     @Override protected void configure() {
-        // contrat de navigation socle -> implémentation de cette feature
-        bind(OuvrirPassage.class).to(NavigationPassage.class);
-        // contribution à l'accueil (multibinding)
-        Multibinder.newSetBinder(binder(), IndicateurAccueil.class)
-                   .addBinding().to(IndicateurPassages.class);
+        bind(OuvrirPassage.class).to(NavigationPassage.class); // contrat socle -> impl feature
+        indicateur(IndicateurPassages.class);                  // contribution à l'accueil (DSL)
     }
     @Provides @Singleton PassageDao passageDao(SourceDeDonnees s) { return new PassageDao(s); }
     // ... autres @Provides ...
 }
 ```
 
-Trois mécanismes à retenir :
+Mécanismes à retenir :
 
 - **`@Provides @Singleton`** assemble les DAO à partir de la `SourceDeDonnees` (singleton du socle).
   Les DAO eux-mêmes restent **sans annotation d'injection** : la couche `model.dao` ignore Guice
   (objectif réutilisation O6).
 - **`bind(Contrat).to(Impl)`** branche un **contrat de navigation** `Ouvrir*` du socle sur
   l'implémentation de la feature (cf. [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre)).
-- **`Multibinder`** laisse une feature **contribuer** à un ensemble que le socle agrège : les
-  `ActiviteAccueil` (cartes de l'accueil) et les `IndicateurAccueil` (compteurs du tableau de bord).
-  Le `MainController` injecte le `Set<ActiviteAccueil>` complet sans connaître les features.
+- **Le DSL de `ModuleDeFeature`** (`activite(...)`, `indicateur(...)`, `ongletReglages(...)`,
+  `actionMenu(...)`) laisse une feature **contribuer** aux quatre points d'extension que le socle
+  agrège **sans connaître les contributeurs** :
+
+  | Helper | Point d'extension | Le socle en fait… |
+  |---|---|---|
+  | `activite(X)` | `ActiviteAccueil` | une carte sur l'accueil |
+  | `indicateur(X)` | `IndicateurAccueil` | un compteur du tableau de bord |
+  | `ongletReglages(X)` | `OngletReglages` | un onglet de l'écran Réglages |
+  | `actionMenu(X)` | `ActionMenu` | une entrée du menu ☰ |
+
+  Chaque helper encapsule un `Multibinder.newSetBinder(binder(), …).addBinding().to(X)`. Les points
+  non couverts (ex. `RapprochementVigieChiro`, un `OptionalBinder`) restent exprimés directement.
 
 ## Des controllers FXML injectés
 

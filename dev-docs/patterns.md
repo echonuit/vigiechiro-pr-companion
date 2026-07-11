@@ -191,11 +191,14 @@ bord pour d'autres). Si le `MainController` connaissait chacune, ajouter une con
 **La solution.** Le socle déclare un `Set<T>` que **les features intéressées alimentent** (multibinding
 Guice), sans que le socle connaisse les contributeurs. Il injecte l'ensemble et l'agrège.
 
-**Dans VigieChiro.** Une feature qui le souhaite publie une `ActiviteAccueil` (carte) via
-`Multibinder...addBinding().to(...)`, et/ou un `IndicateurAccueil` (compteur). C'est **ciblé** : les
-cartes viennent de `sites`, `importation`, `multisite` et `bibliotheque` ; les compteurs de `sites`,
-`passage` et `validation`. Le `MainController` injecte le `Set<ActiviteAccueil>` complet et bâtit les
-cartes.
+**Dans VigieChiro.** Quatre points d'extension suivent ce patron, chacun avec un helper du DSL
+[`ModuleDeFeature`](injection.md#ce-que-publie-un-module-de-feature) : `ActiviteAccueil` (carte
+d'accueil, `activite(...)`), `IndicateurAccueil` (compteur, `indicateur(...)`), `OngletReglages`
+(onglet de l'écran Réglages, `ongletReglages(...)`) et `ActionMenu` (entrée du menu ☰, `actionMenu(...)`).
+Le contrat est **agnostique de JavaFX** (dans `commun/view`), la feature ne fournit que des données
+(un descripteur, un libellé…), et c'est le socle (`MainController`, `EcranReglagesController`,
+`ConstructeurMenuOutils`) qui construit les widgets. Exemple : une bascule de menu déclare une
+`BooleanProperty` liée à `ReglagesReactifs` ; le socle en fait une `CheckMenuItem`.
 
 ```mermaid
 classDiagram
@@ -212,6 +215,12 @@ classDiagram
 
 **Principes.** **OCP** par excellence : le chrome est **fermé à la modification** mais **ouvert à
 l'extension** (une nouvelle carte = un nouveau binding, zéro ligne touchée dans le socle).
+
+**Feature = plugin.** Le patron va jusqu'au bout : les modules de feature sont eux-mêmes
+**auto-découverts** par `RacineInjecteur` (`ServiceLoader<ModuleDeFeature>`, cf.
+[Injection](injection.md#la-racine-de-composition)). Une feature complète (DAO, services, carte,
+compteur, réglages, entrée de menu) s'ajoute donc **sans toucher une seule ligne du socle ni de la
+racine de composition** — juste un `XxxModule extends ModuleDeFeature` déclaré comme service.
 
 ---
 
