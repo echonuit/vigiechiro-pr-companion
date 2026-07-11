@@ -17,6 +17,7 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -128,6 +129,9 @@ public class MesSitesController implements ResumeStatut {
         // Accessibilité clavier : la carte (HBox, pas un Control) doit être atteignable au Tab et
         // activable à Entrée/Espace, comme un bouton (opérabilité ISO 25010).
         boite.setFocusTraversable(true);
+        // Un lecteur d'écran doit l'annoncer comme un bouton et lire l'identité du site (#799).
+        boite.setAccessibleRole(AccessibleRole.BUTTON);
+        boite.setAccessibleText("Site carré " + carte.site().numeroCarre() + ", ouvrir le détail");
         boite.setOnKeyPressed(evenement -> {
             if (evenement.getCode() == KeyCode.ENTER || evenement.getCode() == KeyCode.SPACE) {
                 navigation.ouvrirDetail(carte.site());
