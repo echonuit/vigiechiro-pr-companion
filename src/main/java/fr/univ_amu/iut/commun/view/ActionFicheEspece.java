@@ -11,10 +11,11 @@ import javafx.scene.control.MenuItem;
 /// dans le navigateur système, la fiche d'information d'une espèce identifiée. Réemployée à l'identique
 /// par les vues espèces (Sons & validation #847, Analyse #848).
 ///
-/// Combine le socle logique [ConstructeurLienEspece] (résolution de l'URL, sans réseau) et
-/// [OuvreurDeLien] (ouverture externe, déjà en place pour « voir sur la carte »). Ne connaît que
-/// `commun` : les contrôleurs lui fournissent l'[EspeceIdentifiee] extraite de leur propre modèle de
-/// ligne, sans coupler leurs features entre elles.
+/// Combine le socle logique [ConstructeurLienEspece] (URL de fiche, sans réseau) et [OuvreurDeLien]
+/// (ouverture externe, déjà en place pour « voir sur la carte »). Au clic, l'URL passe par une dernière
+/// étape de **résolution** ([ResolveurFiche] : GBIF recherche → fiche, #922) exécutée hors du fil JavaFX
+/// puis rouverte sur ce fil ([ExecuteurFiche]). Ne connaît que `commun` : les contrôleurs lui fournissent
+/// l'[EspeceIdentifiee] extraite de leur propre modèle de ligne, sans coupler leurs features entre elles.
 ///
 /// Quand aucune fiche n'est constructible (pseudo-taxons `noise`/`piaf`, couple sans binôme), l'item est
 /// **désactivé** et son **libellé** en explique la cause : un [MenuItem] désactivé n'accueille pas de
@@ -27,11 +28,19 @@ public final class ActionFicheEspece {
 
     private final ConstructeurLienEspece constructeur;
     private final OuvreurDeLien ouvreur;
+    private final ResolveurFiche resolveur;
+    private final ExecuteurFiche executeur;
 
     @Inject
-    public ActionFicheEspece(ConstructeurLienEspece constructeur, OuvreurDeLien ouvreur) {
+    public ActionFicheEspece(
+            ConstructeurLienEspece constructeur,
+            OuvreurDeLien ouvreur,
+            ResolveurFiche resolveur,
+            ExecuteurFiche executeur) {
         this.constructeur = Objects.requireNonNull(constructeur, "constructeur");
         this.ouvreur = Objects.requireNonNull(ouvreur, "ouvreur");
+        this.resolveur = Objects.requireNonNull(resolveur, "resolveur");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     /// Fabrique un nouvel item de menu pour `espece` (cf. [#configurer] pour l'état posé). Pratique quand
@@ -59,7 +68,8 @@ public final class ActionFicheEspece {
         item.setText(libelle(espece));
         item.setDisable(false);
         String url = lien.get();
-        item.setOnAction(evenement -> ouvreur.ouvrir(url));
+        // Au clic : résolution éventuelle (GBIF recherche → fiche) hors du fil JavaFX, puis ouverture.
+        item.setOnAction(evenement -> executeur.resoudrePuisOuvrir(() -> resolveur.resoudre(url), ouvreur::ouvrir));
     }
 
     private static String libelle(EspeceIdentifiee espece) {

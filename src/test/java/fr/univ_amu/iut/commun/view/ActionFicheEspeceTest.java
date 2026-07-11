@@ -19,7 +19,12 @@ import org.testfx.framework.junit5.ApplicationExtension;
 class ActionFicheEspeceTest {
 
     private final List<String> urlsOuvertes = new ArrayList<>();
-    private final ActionFicheEspece action = new ActionFicheEspece(new ConstructeurLienEspece(), urlsOuvertes::add);
+    // Résolveur identité + exécuteur synchrone : le clic ouvre immédiatement l'URL, sans réseau (#922).
+    private final ActionFicheEspece action = new ActionFicheEspece(
+            new ConstructeurLienEspece(),
+            urlsOuvertes::add,
+            new ResolveurFicheIdentite(),
+            new ExecuteurFicheSynchrone());
 
     @Test
     @DisplayName("Chiroptère connu : item actif, libellé enrichi, clic ouvre la fiche PNA")
