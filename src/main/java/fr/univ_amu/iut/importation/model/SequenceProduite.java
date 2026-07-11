@@ -10,8 +10,8 @@ import java.nio.file.Path;
 /// @param nomFichier nom de fichier de la séquence (nom de l'original + suffixe `_NNN`, R8)
 /// @param chemin chemin du fichier écrit dans `transformes/` (R22)
 /// @param frequenceSortieHz fréquence d'échantillonnage de sortie (source / 10), ex. 38400
-/// @param dureeSecondes durée audible de la séquence au nouveau rythme (≈ 5 s, la dernière peut
-/// être plus courte)
+/// @param dureeSecondes durée **réelle** de la séquence, au rythme d'acquisition (≈ 5 s, la dernière peut
+/// être plus courte) ; rejouée au rythme de sortie (Fe/10), elle dure ×10 à l'écoute (#1051)
 /// @param offsetSourceSecondes position de la séquence dans le signal source, **avant** le ×10
 /// @param octets taille du fichier écrit, en octets
 public record SequenceProduite(

@@ -16,7 +16,8 @@ import java.time.LocalDateTime;
 /// @param idEnregistrementOriginal identifiant de l'original source (FK → `original_recording.id`)
 /// @param indexSource index (≥ 0) de la séquence dans l'original (optionnel)
 /// @param offsetSourceSecondes offset temporel dans le source en secondes (dérivé, optionnel)
-/// @param dureeSecondes durée en secondes (optionnel, typiquement 5 s)
+/// @param dureeSecondes durée **réelle** en secondes, au rythme d'acquisition (optionnel, ≈ 5 s) ;
+///     rejouée au rythme de sortie (Fe/10), la séquence dure ×10 à l'écoute (#1051)
 /// @param cheminFichier chemin sur disque, sous-dossier `transformes/` (R22)
 /// @param dansSelection `true` si la séquence fait partie de la sélection d'écoute
 /// @param idSession identifiant de la session contenante (FK → `recording_session.id`)

@@ -117,6 +117,18 @@ l'`observations.csv`, produit sur les mêmes séquences, se raccroche à l'audio
     (10× trop courtes), désalignées des temps de l'`observations.csv` — qui sont en **secondes réelles
     dans une séquence de 5 s**. On découpe donc bien à 5 s **au rythme source**.
 
+!!! note "Unité des durées : secondes **réelles**"
+    Les colonnes `duration_s` (`original_recording` **et** `listening_sequence`) et `source_offset_s`
+    sont en **secondes réelles d'acquisition** (≈ 5 s pour une séquence). La durée d'**écoute** du WAV
+    expansé vaut ×10 (≈ 50 s) : c'est `audio-view` qui l'obtient en rejouant au rythme de sortie, on ne
+    la stocke pas. De même, les bornes `observation.debut_s`/`fin_s` (temps Tadarida) sont en secondes
+    réelles dans la séquence de 5 s.
+
+    **Réparation `V20__duree_reelle_sequences.sql` (#1051)** : `listening_sequence.duration_s` était
+    persisté **×10** (division par la fréquence de sortie au lieu de la fréquence d'acquisition dans
+    `TransformationAudio`). Le fix code écrit désormais la durée réelle ; la migration V20 divise par 10
+    les valeurs existantes (`WHERE duration_s IS NOT NULL`, `original_recording` intact).
+
 **Nommage horodaté (clé de jointure).** Chaque séquence porte l'**heure réelle de son début** :
 l'horodatage de l'original (`_AAAAMMJJ_HHMMSS`) **décalé** de `index × 5 s`, suivi d'un `_000`
 systématique — et non un index `_000`, `_001`… Exemple : `…_20260422_225849.wav` →
