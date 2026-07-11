@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.180.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.179.0...v1.180.0) (2026-07-11)
+
+
+### Features
+
+* **lot:** moteur de dépôt reprenable par unité + upload en flux (3c) ([#1011](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1011)) ([0729c1d](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/0729c1df7970f1df6b09df3dea039a9923595928)), closes [#982](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/982) [#981](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/981) [#980](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/980) [SuiviArchives/#947](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/947) [#983](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/983)
+
 # [1.179.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.178.2...v1.179.0) (2026-07-11)
 
 
