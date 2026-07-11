@@ -86,7 +86,7 @@ chore(deps): bump assertj 3.27.7
 - **petits commits** logiques (un par préoccupation), message axé sur le **pourquoi** ;
 - toujours **créer** un nouveau commit plutôt qu'amender.
 
-Le **type** du commit pilote la version publiée (cf. §6) : `feat:` → mineure, `fix:` → patch,
+Le **type** du commit pilote la version publiée (cf. §7) : `feat:` → mineure, `fix:` → patch,
 `BREAKING CHANGE:` → majeure. Les autres types (`docs`, `chore`, `test`, `refactor`...) ne déclenchent
 pas de release.
 
@@ -118,7 +118,34 @@ gh pr create --fill
 
 ---
 
-## 5. Intégration continue
+## 5. Cycle de vie d'un chantier
+
+Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
+_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 8 passes.
+
+**À l'ouverture** : cartographier l'existant (réutiliser les patterns en place plutôt que réinventer),
+rédiger un plan, découper en **issues reliées à un EPIC**.
+
+**À la clôture** (dans l'ordre) :
+
+1. **Audit d'intégration** : vérifier que les évolutions de `main` survenues pendant le chantier n'ont
+   rien laissé à rajouter (rebase, nouveaux points d'accroche à câbler, régressions).
+2. **Doc développeur** (site `dev-docs/`) à jour.
+3. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
+4. **Brief SAÉ** : répercuter dans le brief de la SAÉ 2.01 (dépôt `IUTInfoAix-S201/brief`) les
+   évolutions qui changent ce qui est **attendu** ou **fourni** aux étudiants.
+5. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**.
+6. **Harmonisation** : abstraire pour réduire **complexité** et **duplication** (Extract Class,
+   patterns partagés).
+7. **Nouveaux chantiers** identifiés + **issues** créées.
+8. **Bilan** : ce qui a été livré, dette restante, décisions.
+
+> 📖 Raison d'être et mode opératoire de chaque passe, avec le **modèle de clôture** à coller dans
+> l'EPIC : [doc dev · Cycle de vie d'un chantier](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/cycle-de-chantier/).
+
+---
+
+## 6. Intégration continue
 
 Deux workflows se déclenchent à chaque push :
 
@@ -142,7 +169,7 @@ Les autres workflows : `capture-vues.yml` (régénère les aperçus de la doc), 
 
 ---
 
-## 6. Publier une version
+## 7. Publier une version
 
 Les **releases sont automatiques**, pilotées par les Conventional Commits (cf. §3). Sur la branche
 `main`, à chaque ensemble de commits mergé :
@@ -167,7 +194,7 @@ Construire un installeur **en local** (pour tester le packaging) :
 
 ---
 
-## 7. Dépendances
+## 8. Dépendances
 
 Les mises à jour sont gérées par **Dependabot** ([.github/dependabot.yml](.github/dependabot.yml)),
 mensuellement, pour `maven` et `github-actions`. **JavaFX (`org.openjfx:*`) est volontairement
@@ -176,7 +203,7 @@ communautaire) et se décident à la main.
 
 ---
 
-## 8. En cas de doute
+## 9. En cas de doute
 
 - Un comportement du dépôt vous surprend ? Consultez d'abord les commentaires des fichiers cités
   ci-dessus : ils documentent les décisions (souvent le « pourquoi »).

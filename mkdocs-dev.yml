@@ -60,6 +60,7 @@ nav:
   - Modèle de données et domaine: modele-de-donnees.md
   - Injection (Guice): injection.md
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
+  - Cycle de vie d'un chantier: cycle-de-chantier.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md

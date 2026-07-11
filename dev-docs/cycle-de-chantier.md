@@ -1,0 +1,119 @@
+# Cycle de vie d'un chantier
+
+Un **chantier** est un lot de travail d'ampleur **EPIC** : une évolution qui ne tient pas dans une
+seule PR et se découpe en plusieurs (ex. l'EPIC « Réglages auto-découverts → feature = plugin »). Là
+où [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) décrit une **PR** et
+[CONTRIBUTING.md](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md)
+le **flux de contribution**, cette page décrit le niveau au-dessus : comment on **ouvre** et on
+**clôt** un chantier entier.
+
+Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
+**clôture en 8 passes** garantit que l'évolution est intégrée, documentée, testée, harmonisée, et que
+la suite est cadrée.
+
+!!! note "Où est la règle courte ?"
+    La version concise pour les contributeurs vit dans la section « Cycle de vie d'un chantier » de
+    [CONTRIBUTING.md](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/CONTRIBUTING.md).
+    Cette page en est la version approfondie : la **raison d'être** et le **mode opératoire** de
+    chaque passe.
+
+## À l'ouverture : l'analyse de départ
+
+Avant d'écrire du code :
+
+1. **Cartographier l'existant.** Repérer les **patterns déjà en place** qui répondent (au moins en
+   partie) au besoin, pour les **réutiliser** plutôt que réinventer. La plupart des extensions du
+   socle se calquent sur un pattern existant (`Multibinder<ActiviteAccueil>`, contrats `Ouvrir*`,
+   patron DAO, `Capture*`…). Voir [Patterns et principes](patterns.md).
+2. **Rédiger un plan** : découpage, contraintes d'architecture ([Architecture](architecture.md) et les
+   règles ArchUnit de [Tests et qualité](tests-et-qualite.md)), risques, ordre des paliers.
+3. **Découper en issues** reliées à un **EPIC** (une issue « parapluie » avec la task-list des
+   sous-issues). Chaque sous-issue porte son palier et ses dépendances.
+
+## À la clôture : les 8 passes
+
+Elles s'exécutent **dans l'ordre** : l'audit d'intégration peut révéler du travail à faire avant de
+documenter, l'harmonisation peut faire émerger de nouveaux chantiers, et le bilan vient en dernier.
+
+### 1. Audit d'intégration
+
+`main` a **évolué pendant** le chantier (autres PR mergées, nouvelles features, nouvelles
+conventions). Cette passe vérifie que rien n'a été laissé de côté avant de finaliser :
+
+- **rebaser** la ou les branches restantes sur `main` et résoudre les divergences ;
+- chercher les **nouveaux points d'accroche** apparus entre-temps qu'il faudrait câbler (une nouvelle
+  feature devrait-elle contribuer au mécanisme qu'on vient d'introduire ?) ;
+- traquer les **régressions** et les **conventions apparues** depuis l'ouverture (ex. un nouveau
+  contrat socle, un nouveau seuil qualité).
+
+!!! tip "Signal concret"
+    Un `git log --oneline main` depuis le SHA d'ouverture du chantier (souvent tracé dans l'EPIC) met
+    en évidence ce qui a bougé et mérite un regard.
+
+### 2. Passe de doc développeur
+
+Mettre à jour le **site dev** (`dev-docs/`, publié sous `…/dev/`) pour que l'architecture décrite
+colle au code livré : [Architecture](architecture.md), [Patterns et principes](patterns.md),
+[Injection (Guice)](injection.md), [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) si le
+chantier a introduit un **nouveau pattern d'extension** que les futures features devront suivre.
+
+### 3. Passe de doc utilisateur
+
+Documenter le chantier pour les **utilisateurs** dans le site produit (`docs/`), avec **autant de
+captures que nécessaire**. Les aperçus sont régénérés en CI : ajouter/mettre à jour les classes
+`Capture*` et le manifeste, cf. [Captures d'écran](captures.md). Une fonctionnalité visible sans
+capture est une fonctionnalité à moitié livrée.
+
+### 4. Passe de brief SAÉ
+
+L'application est le **companion** de la SAÉ 2.01 : le **brief** (dépôt
+[`IUTInfoAix-S201/brief`](https://github.com/IUTInfoAix-S201/brief), sujet distribué aux étudiants)
+décrit ce qu'ils construisent et utilisent. Quand un chantier change **ce qui est attendu ou fourni**
+(un parcours, une capture du sujet, une contrainte, une feature de référence), répercuter l'évolution
+dans le brief pour que le sujet reste aligné avec le socle réellement livré. Un brief qui décrit une
+version périmée de l'app induit les étudiants en erreur.
+
+### 5. Passe de tests
+
+Vérifier que **chaque usage** introduit est couvert :
+
+- **tests d'intégration** TestFX (headless) sur les vues et leurs bindings ;
+- **tests E2E** (`fr.univ_amu.iut.e2e.*`) sur les parcours complets IHM → ViewModel → service →
+  base.
+
+Pièges et conventions dans [Tests et qualité](tests-et-qualite.md). Les frontières d'architecture
+sont couvertes automatiquement par `ArchitectureTest`.
+
+### 6. Passe d'harmonisation
+
+Prendre du recul sur l'ensemble du chantier et chercher les concepts à **abstraire** pour réduire
+**complexité** et **duplication** : code répété entre features → **contrat/pattern partagé** dans
+`commun` ; classe devenue trop grosse → **Extract Class** (le PMD `GodClass` du portail qualité est le
+garde-fou, cf. [Tests et qualité](tests-et-qualite.md)). C'est le moment de transformer trois copies
+d'un même geste en un mécanisme d'extension.
+
+### 7. Passe d'identification des nouveaux chantiers
+
+Un chantier en révèle d'autres (dette assumée, palier différé, idée née en chemin). Les **cadrer** et
+**créer les issues** correspondantes (reliées à un nouvel EPIC si elles forment un ensemble), pour ne
+pas perdre le contexte encore frais.
+
+### 8. Phase de bilan
+
+Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
+pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
+règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`.
+
+## Modèle de clôture (à coller dans l'EPIC)
+
+```markdown
+## Clôture de chantier
+- [ ] 1. Audit d'intégration (rebase sur `main`, points d'accroche, régressions)
+- [ ] 2. Doc développeur (dev-docs) à jour
+- [ ] 3. Doc utilisateur (docs/) + captures
+- [ ] 4. Brief SAÉ (IUTInfoAix-S201/brief) répercuté si attendus/fournis changent
+- [ ] 5. Tests d'intégration + E2E couvrant chaque usage
+- [ ] 6. Harmonisation (abstractions, duplication, GodClass)
+- [ ] 7. Nouveaux chantiers identifiés + issues créées
+- [ ] 8. Bilan (livré / dette / décisions)
+```
