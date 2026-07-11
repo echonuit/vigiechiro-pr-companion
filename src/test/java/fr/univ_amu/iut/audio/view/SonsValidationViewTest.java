@@ -21,12 +21,18 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
+import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
@@ -70,6 +76,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
@@ -80,7 +87,7 @@ import org.testfx.util.WaitForAsyncUtils;
 /// `References` : chargement du FXML via Guice (services mockés), câblage table / sélection / détail /
 /// écoute, bascule de référence, et adaptation à la source (menu « Exporter la bibliothèque » visible,
 /// actions de passage masquées ; colonnes de contexte visibles car la source n'est pas un seul passage).
-/// Pas de base de données.
+/// Services métier mockés ; seule une base `app_setting` jetable sert aux préférences de lecture (#1006).
 @ExtendWith(ApplicationExtension.class)
 class SonsValidationViewTest {
 
@@ -90,6 +97,11 @@ class SonsValidationViewTest {
     private OuvrirAnalyse ouvrirAnalyse;
     private SonsValidationController controleur;
     private final List<String> urlsFiche = new ArrayList<>();
+
+    /// Base jetable pour les seules **préférences** (`app_setting`) : les options de lecture du menu ☰
+    /// (#1006) passent par `ReglagesReactifs`, qui lit/écrit ce réglage. Le reste de la vue reste mocké.
+    @TempDir
+    Path dossierReglages;
 
     private static LigneObservationAudio ligne(
             long id, long seq, String tadarida, String observateur, String nomEspece, String nomTadarida) {
@@ -168,6 +180,15 @@ class SonsValidationViewTest {
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {
                         return urlsFiche::add;
+                    }
+
+                    // Réglages réactifs (#1006) : les options de lecture (auto-lecture / boucle) du menu ☰ y
+                    // sont liées. Base app_setting jetable et migrée, sinon la lecture du réglage échoue.
+                    @Provides
+                    ReglagesReactifs reglagesReactifs() {
+                        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossierReglages));
+                        new MigrationSchema(source).migrer();
+                        return new ReglagesReactifs(new Reglages(new ReglagesDao(source)));
                     }
                 },
                 // Le socle de navigation est neutre par défaut ; on remplace OuvrirAnalyse par un mock pour
