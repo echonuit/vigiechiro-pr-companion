@@ -88,6 +88,13 @@ public class MaFeatureController {
     chaque table par `installerClicDroit(table, colonnes, …)` et fait pointer le ☰ vers la table active
     via `GestionnaireColonnes.ouvrir(...)`.
 
+    **Persistance (#994)** : pour retenir la disposition **par écran** (ordre + visibilité restaurés à la
+    réouverture), remplacez `installer` par `installerEtPersister(table, menu, colonnes, depotColonnes,
+    feature, cle, …)` (le controller injecte `DepotDispositionColonnes`). Pour que les **vues mémorisées**
+    (#623) capturent aussi les colonnes, passez un `AdaptateurColonnes` à `GestionnaireVues` :
+    `GestionnaireColonnes.adaptateurMonoTable(cle, table, colonnes)` pour une table, ou un adaptateur à
+    plusieurs entrées de map pour une vue multi-tables.
+
 ## 5. Le module Guice (`di/`) + l'auto-découverte
 
 Un module qui publie service/VM, **hérité de `ModuleDeFeature`** (le DSL du socle) :
