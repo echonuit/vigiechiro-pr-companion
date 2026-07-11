@@ -101,6 +101,9 @@ Un module qui publie service/VM, **hérité de `ModuleDeFeature`** (le DSL du so
 
 ```java
 public class MaFeatureModule extends ModuleDeFeature {
+    @Override public Fonctionnalite fonctionnalite() {                 // identité + feature-flag (obligatoire)
+        return new Fonctionnalite("mafeature", "Ma fonctionnalité", Categorie.OPTIONNELLE);
+    }
     @Override protected void configure() {
         activite(ActiviteMaFeature.class);   // carte d'accueil (optionnel)
         // indicateur(...), ongletReglages(...), actionMenu(...) au besoin
@@ -149,6 +152,34 @@ Pour qu'un **autre** écran ouvre le vôtre **sans dépendre de votre `view`**, 
     Si votre écran affiche des données qu'un écran ouvert par-dessus peut changer, implémentez
     [`RafraichirAuRetour`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/RafraichirAuRetour.java)
     sur le controller : le `Navigateur` le recharge au retour.
+
+### Développer une feature derrière un flag
+
+Le champ `Categorie` de `fonctionnalite()` pilote la **désactivabilité** de la feature (cf.
+[Injection › Feature-flags](injection.md#feature-flags)) :
+
+- **`OPTIONNELLE`** : feature autonome, **active par défaut**, que l'utilisateur peut couper depuis
+  l'onglet « Fonctionnalités » des Réglages.
+- **`EXPERIMENTALE`** : feature **inactive par défaut**. C'est le mode **trunk-based** : on merge une
+  feature en cours de dev sur `main` **sans l'exposer**, puis on l'active à la demande
+  (`-Dvigiechiro.features.<id>=on` en dev/CI, ou l'interrupteur des Réglages) jusqu'à ce qu'elle passe
+  `OPTIONNELLE`.
+- **`COEUR`** : le **défaut sûr** pour une feature dont un autre écran dépend (voir l'avertissement).
+
+!!! warning "Une feuille n'est désactivable que si son contrat `Ouvrir*` est neutralisé"
+    Si un **autre** écran ouvre le vôtre via un `Ouvrir*` injecté **non optionnel**, couper votre
+    feature casserait cet écran : elle doit rester `COEUR`. Pour la rendre **réellement désactivable**,
+    neutralisez son contrat chez le consommateur :
+
+    1. déclarez le contrat en **`OptionalBinder`** avec un **défaut inerte** (`newOptionalBinder(binder(),
+       OuvrirMaFeature.class).setDefault().toInstance(id -> {})`), votre module faisant
+       `.setBinding().to(NavigationMaFeature.class)` ;
+    2. côté écran appelant, injectez `Optional<OuvrirMaFeature>` et **masquez le point d'entrée**
+       (bouton/onglet) quand il est absent ;
+    3. passez la `Categorie` à `OPTIONNELLE`/`EXPERIMENTALE` et ajoutez le cas au test « désactiver la
+       feature laisse l'injecteur constructible » (`DecouverteModulesTest`).
+
+    `import-vigiechiro` est la **feature de référence** (déjà pleinement optionnelle).
 
 ## 7. Ajouter un aperçu (capture d'écran)
 

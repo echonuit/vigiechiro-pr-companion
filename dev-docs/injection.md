@@ -14,9 +14,10 @@ public static List<Module> modules() {
     List<Module> modules = new ArrayList<>();
     modules.add(new CommunModule());          // socle : toujours explicite
     modules.add(new PersistenceModule());
+    Predicate<ModuleDeFeature> actif = Fonctionnalites.filtreActives(); // feature-flags
     ServiceLoader.load(ModuleDeFeature.class)  // features : découvertes
             .stream().map(ServiceLoader.Provider::get)
-            .filter(m -> !desactivees.contains(m.getClass().getSimpleName()))
+            .filter(actif)                      // features désactivées écartées
             .sorted(Comparator.comparing(m -> m.getClass().getName())) // ordre déterministe
             .forEach(modules::add);
     return List.copyOf(modules);
@@ -33,8 +34,8 @@ ModuleDeFeature` **déclaré comme service**. Deux déclarations, gardées synch
 
 L'ordre d'installation n'a **aucun effet fonctionnel** (les `Set` des points d'extension sont retriés
 par `ordre()` côté chrome, `OptionalBinder.setBinding` l'emporte quel que soit l'ordre) ; le tri par
-nom de classe garantit seulement la **reproductibilité**. Une feature se désactive via
-`-Dvigiechiro.features.desactivees=DiagnosticModule`.
+nom de classe garantit seulement la **reproductibilité**. Une feature peut être **désactivée**
+(feature-flag) : voir [Feature-flags](#feature-flags) ci-dessous.
 
 !!! note "Pourquoi `commun.di` peut dépendre des features"
     Une racine de composition **connaît tout le monde** : c'est son rôle. Le test ArchUnit
@@ -45,6 +46,42 @@ nom de classe garantit seulement la **reproductibilité**. Une feature se désac
     La feature `cli` ne s'installe pas dans la racine : elle crée un **injecteur enfant**
     (`RacineInjecteur.creer().createChildInjector(new CliModule())`). L'enfant hérite de tout le
     graphe et y ajoute ses aides : voir [Interface en ligne de commande (CLI)](cli.md).
+
+## Feature-flags
+
+Chaque `ModuleDeFeature` déclare son **identité** via `fonctionnalite()` :
+[`Fonctionnalite`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalite.java)`(id, libellé, `[`Categorie`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/Categorie.java)`)`.
+La **catégorie** décide de la **désactivabilité** :
+
+| Catégorie | Désactivable ? | Défaut | Pour… |
+|---|---|---|---|
+| `COEUR` | non (garde-fou) | active | feature socle, ou **feuille load-bearing** (une autre feature/écran en dépend) |
+| `OPTIONNELLE` | oui | active | feature autonome, activée par défaut |
+| `EXPERIMENTALE` | oui | **inactive** | feature en cours de dev, mergée derrière un flag OFF |
+
+Le registre [`Fonctionnalites`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/Fonctionnalites.java)
+résout l'état actif de chaque feature, consulté par `RacineInjecteur.modules()` **à la composition**
+(donc **au démarrage** : changer un flag prend effet au prochain lancement). Précédence, de la plus
+forte à la plus faible :
+
+1. **propriété système** `-Dvigiechiro.features.<id>=on|off` (override CI/dev) ;
+2. **alias rétro-compatible** `-Dvigiechiro.features.desactivees=<NomClasseSimple>,…` ;
+3. **flag persisté** `feature.<id>.active` dans `app_setting`, lu en **pré-bootstrap** (avant
+   l'injecteur, sans créer de base, tolérant à une base absente) et posé par l'onglet
+   **« Fonctionnalités »** de l'écran Réglages ;
+4. **défaut** de la catégorie.
+
+!!! warning "Garde-fou : une feature COEUR ne se désactive pas"
+    Le registre **ignore** toute tentative de couper une feature `COEUR` (par flag ou alias) : la
+    retirer casserait l'injecteur (dépendance EAGER) ou un écran (contrat `Ouvrir*` consommé).
+    `DecouverteModulesTest` vérifie que désactiver toute feuille **exposée** laisse l'injecteur
+    constructible.
+
+Aujourd'hui seule `import-vigiechiro` est `OPTIONNELLE` : elle ne binde aucun `Ouvrir*` et son unique
+consommateur passe par un `OptionalBinder` vide, donc la couper ne casse rien. Les autres feuilles
+(`qualification`, `lot`, `diagnostic`, `importation`, `analyse`, `recherche`) restent `COEUR` **tant
+que** leur contrat `Ouvrir*` n'est pas **neutralisé** chez leur consommateur (cf.
+[Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
 
 ## Ce que publie un module de feature
 
