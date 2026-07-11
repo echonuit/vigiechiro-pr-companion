@@ -36,6 +36,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -271,6 +272,34 @@ class AnalyseViewTest {
         MenuButton outils = robot.lookup("#menuOutils").queryAs(MenuButton.class);
         assertThat(outils.getItems())
                 .anySatisfy(item -> assertThat(item.getText()).isEqualTo("Colonnes…"));
+    }
+
+    @Test
+    @DisplayName("EPIC #914 : les tables carrés et observations offrent aussi « Colonnes… » au clic droit")
+    void colonnes_sur_les_tables_carres_et_observations(FxRobot robot) {
+        TableView<?> carres = robot.lookup("#tableCarres").queryAs(TableView.class);
+        TableView<?> observations = robot.lookup("#tableObservations").queryAs(TableView.class);
+
+        assertThat(carres.getContextMenu())
+                .as("clic droit câblé sur l'inventaire par carré")
+                .isNotNull();
+        assertThat(dernierTexte(carres.getContextMenu())).isEqualTo("Colonnes…");
+        assertThat(observations.getContextMenu())
+                .as("clic droit câblé sur les observations")
+                .isNotNull();
+        assertThat(dernierTexte(observations.getContextMenu())).isEqualTo("Colonnes…");
+
+        // Un seul ☰ pour la vue : il ne porte qu'**une** entrée « Colonnes… » (celle de la table maître
+        // visible), pas une par table.
+        MenuButton outils = robot.lookup("#menuOutils").queryAs(MenuButton.class);
+        assertThat(outils.getItems())
+                .filteredOn(item -> "Colonnes…".equals(item.getText()))
+                .hasSize(1);
+    }
+
+    private static String dernierTexte(ContextMenu menu) {
+        var items = menu.getItems();
+        return items.get(items.size() - 1).getText();
     }
 
     @Test

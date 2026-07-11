@@ -166,4 +166,25 @@ class GestionnaireColonnesTest {
         assertThat(items.get(1)).isInstanceOf(SeparatorMenuItem.class);
         assertThat(items.get(2).getText()).isEqualTo("Colonnes…");
     }
+
+    @Test
+    @DisplayName("installerClicDroit : câble le seul clic droit (action + « Colonnes… »), sans toucher de ☰")
+    void installerClicDroit_cable_le_clic_droit_seul(FxRobot robot) {
+        AtomicReference<TableView<String>> refTable = new AtomicReference<>();
+        MenuItem action = new MenuItem("Action");
+        robot.interact(() -> {
+            TableView<String> table = tableAvec("A", "B");
+            GestionnaireColonnes.installerClicDroit(
+                    table,
+                    List.of(new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", false)),
+                    action);
+            refTable.set(table);
+        });
+
+        var items = refTable.get().getContextMenu().getItems();
+        assertThat(items).hasSize(3);
+        assertThat(items.get(0)).as("l'action de la vue vient en tête").isSameAs(action);
+        assertThat(items.get(1)).isInstanceOf(SeparatorMenuItem.class);
+        assertThat(items.get(2).getText()).isEqualTo("Colonnes…");
+    }
 }

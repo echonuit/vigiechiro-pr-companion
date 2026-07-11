@@ -65,15 +65,22 @@ public final class GestionnaireColonnes {
     /// instance distincte (un [MenuItem] n'appartient qu'à un seul menu) ancrée sur son propre point.
     public static void installer(
             TableView<?> table, MenuButton menu, List<Colonne> colonnes, MenuItem... itemsClicDroit) {
+        installerClicDroit(table, colonnes, itemsClicDroit);
+        menu.getItems().add(new SeparatorMenuItem());
+        menu.getItems().add(itemColonnes(table, colonnes, menu));
+    }
+
+    /// Câble **uniquement** le menu contextuel (clic droit) de `table` : `itemsClicDroit` (actions propres à
+    /// la vue, ex. « Fiche de l'espèce »), un séparateur, puis « Colonnes… ». À utiliser quand une vue a
+    /// **plusieurs** tables mais un seul ☰ (ex. Analyse : inventaire espèces/carrés + observations) : chaque
+    /// table reçoit son clic droit, et le ☰ pilote la table voulue en appelant directement [#ouvrir].
+    public static void installerClicDroit(TableView<?> table, List<Colonne> colonnes, MenuItem... itemsClicDroit) {
         List<MenuItem> itemsContexte = new ArrayList<>(Arrays.asList(itemsClicDroit));
         if (!itemsContexte.isEmpty()) {
             itemsContexte.add(new SeparatorMenuItem());
         }
         itemsContexte.add(itemColonnes(table, colonnes, table));
         table.setContextMenu(new ContextMenu(itemsContexte.toArray(new MenuItem[0])));
-
-        menu.getItems().add(new SeparatorMenuItem());
-        menu.getItems().add(itemColonnes(table, colonnes, menu));
     }
 
     /// Un item « Colonnes… » qui ouvre le panneau ancré sous `ancre` (la table pour le clic droit, le ☰

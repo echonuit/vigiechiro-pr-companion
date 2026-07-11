@@ -41,6 +41,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
@@ -247,12 +248,17 @@ public class AnalyseController implements RafraichirAuRetour {
         tableEspeces.setItems(viewModel.especes());
         tableCarres.setItems(viewModel.carres());
 
-        // Menu contextuel de la table des espèces (#916) : « Fiche de l'espèce » (#848, reconfiguré à
-        // chaque sélection plus bas) PUIS « Colonnes… » (choix/réordonnancement), composés par
-        // GestionnaireColonnes ; « Colonnes… » est aussi offert dans le ☰ « outils ». Un clic droit
-        // sélectionne d'abord la ligne visée pour que la fiche porte bien sur elle.
+        // Sélecteur de colonnes sur les **trois** tables de l'analyse (EPIC #914). L'écran n'a qu'un seul ☰,
+        // mais deux tables maître (espèces/carrés, exclusives) + une table détail (observations) : chaque
+        // table porte donc son propre clic droit « Colonnes… » (celui des espèces y ajoute « Fiche de
+        // l'espèce », #848/#916, reconfiguré à chaque sélection plus bas), et le ☰ « outils » pilote la table
+        // maître **visible** via itemColonnesMaitre(). Un clic droit sélectionne d'abord la ligne visée pour
+        // que la fiche porte bien sur elle.
         itemFicheEspece = new MenuItem();
-        GestionnaireColonnes.installer(tableEspeces, menuOutils, colonnesEspeces(), itemFicheEspece);
+        GestionnaireColonnes.installerClicDroit(tableEspeces, colonnesEspeces(), itemFicheEspece);
+        GestionnaireColonnes.installerClicDroit(tableCarres, colonnesCarres());
+        GestionnaireColonnes.installerClicDroit(tableObservations, colonnesObservations());
+        menuOutils.getItems().addAll(new SeparatorMenuItem(), itemColonnesMaitre());
         tableEspeces.setRowFactory(tableau -> {
             TableRow<EspeceAgregee> ligne = new TableRow<>();
             ligne.setOnMousePressed(evenement -> {
@@ -396,6 +402,44 @@ public class AnalyseController implements RafraichirAuRetour {
                 new GestionnaireColonnes.Colonne(colCarres, "Carrés", false),
                 new GestionnaireColonnes.Colonne(colPoints, "Points", false),
                 new GestionnaireColonnes.Colonne(colPeriode, "Période", false));
+    }
+
+    /// Colonnes de l'inventaire par carré proposées au sélecteur (EPIC #914). « Carré » est l'**identité** :
+    /// toujours affichée (verrouillée) mais déplaçable ; les autres sont masquables.
+    private List<GestionnaireColonnes.Colonne> colonnesCarres() {
+        return List.of(
+                new GestionnaireColonnes.Colonne(colCarre, "Carré", true),
+                new GestionnaireColonnes.Colonne(colSite, "Site", false),
+                new GestionnaireColonnes.Colonne(colRichesse, "Richesse (espèces)", false),
+                new GestionnaireColonnes.Colonne(colDetectionsCarre, "Détections", false),
+                new GestionnaireColonnes.Colonne(colPeriodeCarre, "Période", false));
+    }
+
+    /// Colonnes du détail des observations proposées au sélecteur (EPIC #914). « Passage » est l'**identité**.
+    private List<GestionnaireColonnes.Colonne> colonnesObservations() {
+        return List.of(
+                new GestionnaireColonnes.Colonne(colObsPassage, "Passage", true),
+                new GestionnaireColonnes.Colonne(colObsCarre, "Carré", false),
+                new GestionnaireColonnes.Colonne(colObsRichesse, "Espèces du carré", false),
+                new GestionnaireColonnes.Colonne(colObsPoint, "Point", false),
+                new GestionnaireColonnes.Colonne(colObsTadarida, "Proposition Tadarida", false),
+                new GestionnaireColonnes.Colonne(colObsObservateur, "Votre taxon", false),
+                new GestionnaireColonnes.Colonne(colObsStatut, "Statut", false));
+    }
+
+    /// Item « Colonnes… » du ☰ « outils » : ouvre le sélecteur sur la table **maître visible** — inventaire
+    /// par espèce ou par carré selon le regroupement courant (les deux partagent le même emplacement). Le
+    /// détail (observations) se règle, lui, par clic droit sur sa table.
+    private MenuItem itemColonnesMaitre() {
+        MenuItem item = new MenuItem("Colonnes…");
+        item.setOnAction(e -> {
+            if (viewModel.regroupementProperty().get() == Regroupement.PAR_ESPECE) {
+                GestionnaireColonnes.ouvrir(tableEspeces, colonnesEspeces(), menuOutils);
+            } else {
+                GestionnaireColonnes.ouvrir(tableCarres, colonnesCarres(), menuOutils);
+            }
+        });
+        return item;
     }
 
     /// L'espèce ciblée par « Fiche de l'espèce » : code, nom latin et nom vernaculaire de la ligne
