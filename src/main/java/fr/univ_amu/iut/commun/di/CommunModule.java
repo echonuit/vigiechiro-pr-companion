@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.di;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.api.ClientGbif;
 import fr.univ_amu.iut.commun.model.DepotVues;
@@ -16,6 +17,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
 import fr.univ_amu.iut.commun.view.ExecuteurFicheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OngletReglages;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.commun.view.OuvrirConnexion;
@@ -56,6 +58,10 @@ public class CommunModule extends AbstractModule {
         // Fiche espèce (#922) : en production, résolution GBIF (recherche → fiche) hors du fil JavaFX.
         // Surchargent les défauts @ImplementedBy (identité + synchrone) réservés aux tests.
         bind(ExecuteurFiche.class).to(ExecuteurFicheAsynchrone.class).in(Singleton.class);
+        // Point d'extension « onglets de réglages » (#927) : déclaré même vide pour que
+        // `Set<OngletReglages>` soit toujours injectable (par l'écran Réglages et le menu ☰). Chaque
+        // feature y ajoutera son onglet via son propre module (P1.3), sans retoucher le socle.
+        Multibinder.newSetBinder(binder(), OngletReglages.class);
     }
 
     /// Résolveur de fiche espèce (#922) : convertit l'URL de recherche GBIF en URL de fiche en résolvant

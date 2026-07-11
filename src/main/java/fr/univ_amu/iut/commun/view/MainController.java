@@ -1,11 +1,8 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.ResultatRecherche;
-import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
-import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.List;
@@ -56,10 +53,7 @@ public class MainController {
     private final RechercheGlobale recherche;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
-    private final OuvrirConnexion ouvrirConnexion;
-    private final ServiceSauvegarde serviceSauvegarde;
-    private final ServicePurgeOriginaux servicePurge;
-    private final PreferenceSourceEspece preferenceSourceEspece;
+    private final DependancesMenu menu;
 
     /// Câblage du menu « ☰ » (sauvegarde/restauration, purge, connexion VigieChiro), initialisé dans
     /// `initialize()` quand les `@FXML` du menu sont disponibles.
@@ -120,6 +114,10 @@ public class MainController {
     @FXML
     private CheckMenuItem itemSourceWikipedia;
 
+    /// Entrée « Réglages » du menu ☰ (#927) : ouvre l'écran à onglets ; grisée s'il n'y a rien à régler.
+    @FXML
+    private MenuItem itemReglages;
+
     @FXML
     private VBox panneauResultats;
 
@@ -143,10 +141,7 @@ public class MainController {
             RechercheGlobale recherche,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
-            OuvrirConnexion ouvrirConnexion,
-            ServiceSauvegarde serviceSauvegarde,
-            ServicePurgeOriginaux servicePurge,
-            PreferenceSourceEspece preferenceSourceEspece) {
+            DependancesMenu menu) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
@@ -154,10 +149,7 @@ public class MainController {
         this.recherche = recherche;
         this.ouvrirSite = ouvrirSite;
         this.ouvrirPassage = ouvrirPassage;
-        this.ouvrirConnexion = ouvrirConnexion;
-        this.serviceSauvegarde = serviceSauvegarde;
-        this.servicePurge = servicePurge;
-        this.preferenceSourceEspece = preferenceSourceEspece;
+        this.menu = menu;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -175,12 +167,17 @@ public class MainController {
                 menuOutils,
                 itemConnexion,
                 itemSourceWikipedia,
-                serviceSauvegarde,
-                servicePurge,
-                ouvrirConnexion,
-                preferenceSourceEspece,
+                menu.sauvegarde(),
+                menu.purge(),
+                menu.connexion(),
+                menu.sourceEspece(),
                 this::fenetre,
                 navigateur::afficherAccueil);
+
+        // Réglages (#927) : ouvre l'écran à onglets auto-remplis. Grisé tant qu'aucune feature ne
+        // contribue de réglage affichable, pour ne pas mener à un écran vide (affordance, cf. #789).
+        itemReglages.setDisable(!menu.reglages().aDesReglages());
+        itemReglages.setOnAction(evenement -> menu.reglages().ouvrir());
 
         // ← Retour (historique) : reste actif même pendant une opération critique — l'utilisateur est
         // averti à la sortie (cf. Navigateur#peutQuitter, #906) plutôt que bloqué en silence. Sa visibilité

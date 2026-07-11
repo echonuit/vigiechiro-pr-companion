@@ -67,6 +67,10 @@
                  Ne concerne que le repli hors chiroptères ; l'état est piloté par MainController. -->
             <CheckMenuItem fx:id="itemSourceWikipedia" text="Fiches espèces sur Wikipédia (sinon GBIF)"/>
             <SeparatorMenuItem/>
+            <!-- Réglages (#927) : écran à onglets auto-remplis. Câblé (action + grisage si aucun
+                 réglage) par MainController ; grisé tant qu'aucune feature ne contribue d'onglet. -->
+            <MenuItem fx:id="itemReglages" text="⚙ Réglages…"/>
+            <SeparatorMenuItem/>
             <!-- Connexion VigieChiro (#741) : libellé rafraîchi par MainController à l'ouverture du menu
                  pour refléter l'état de connexion. -->
             <MenuItem fx:id="itemConnexion" text="🔌 Se connecter à VigieChiro…" onAction="#ouvrirModaleConnexion"/>

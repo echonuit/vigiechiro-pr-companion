@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Écran « Réglages » du socle (#927). Le TabPane est peuplé en code par EcranReglagesController à
+  partir des OngletReglages contribués par les features (Set<OngletReglages>), à la façon des cartes
+  d'accueil : le socle bâtit un onglet par contribution, sans dépendre d'aucune feature.
+-->
+<BorderPane xmlns="http://javafx.com/javafx"
+            xmlns:fx="http://javafx.com/fxml"
+            fx:controller="fr.univ_amu.iut.commun.view.EcranReglagesController"
+            stylesheets="@palette.css, @base.css"
+            styleClass="ecran-reglages">
+  <top>
+    <VBox styleClass="ecran-reglages-entete">
+      <Label styleClass="ecran-reglages-titre" text="⚙ Réglages"/>
+      <Label styleClass="ecran-reglages-sous-titre"
+             text="Préférences de l'application, regroupées par domaine."/>
+    </VBox>
+  </top>
+  <center>
+    <TabPane fx:id="onglets" styleClass="onglets-reglages" tabClosingPolicy="UNAVAILABLE"/>
+  </center>
+</BorderPane>
