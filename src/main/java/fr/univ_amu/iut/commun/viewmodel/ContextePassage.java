@@ -20,4 +20,11 @@ public record ContextePassage(Long idPassage, int numeroPassage, ContexteSite si
         Objects.requireNonNull(idPassage, "idPassage");
         Objects.requireNonNull(site, "site");
     }
+
+    /// Identité **compacte** du passage pour la **zone gauche** de la barre de statut (#1016) :
+    /// « Carré 640380 · A1 · N° 3 ». Le segment « · N° X » est omis quand le numéro est inconnu (`0`).
+    public String identiteStatut() {
+        String base = "Carré " + site.numeroCarre() + " · " + site.codePoint();
+        return numeroPassage > 0 ? base + " · N° " + numeroPassage : base;
+    }
 }

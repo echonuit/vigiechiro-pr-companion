@@ -45,6 +45,18 @@ public record ZonesStatut(String gauche, String centre, String droite) {
         return new ZonesStatut("", centre, droite);
     }
 
+    /// Première chaîne **non vide** parmi `candidats` (par priorité décroissante), ou `""` si toutes sont
+    /// vides. Compose la **zone droite** « état vivant » d'un écran, où une seule information s'affiche à la
+    /// fois : typiquement progression d'une tâche en cours &gt; alerte &gt; compteur / bilan au repos (#1016).
+    public static String premierNonVide(String... candidats) {
+        for (String candidat : candidats) {
+            if (candidat != null && !candidat.isBlank()) {
+                return candidat;
+            }
+        }
+        return "";
+    }
+
     /// Superpose `dessus` sur `dessous`, **zone par zone** : une zone non vide de `dessus` l'emporte,
     /// sinon celle de `dessous` est conservée. Permet à un écran de ne renseigner que certaines zones,
     /// les autres gardant le défaut du chrome (notamment l'identité en zone gauche).

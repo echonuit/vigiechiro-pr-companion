@@ -36,6 +36,22 @@ class ZonesStatutTest {
     }
 
     @Test
+    @DisplayName("premierNonVide : renvoie la 1re chaîne non blanche par priorité, sinon vide")
+    void premier_non_vide_par_priorite() {
+        // Progression > alerte > bilan : la progression en cours l'emporte.
+        assertThat(ZonesStatut.premierNonVide("Compression 3/21", "Espace faible", "21 archives"))
+                .isEqualTo("Compression 3/21");
+        // Rien en cours : l'alerte l'emporte sur le bilan au repos.
+        assertThat(ZonesStatut.premierNonVide("", "Espace faible", "21 archives"))
+                .isEqualTo("Espace faible");
+        // Au repos : le bilan.
+        assertThat(ZonesStatut.premierNonVide(null, "  ", "21 archives")).isEqualTo("21 archives");
+        // Toutes vides (ou nulles) → chaîne vide.
+        assertThat(ZonesStatut.premierNonVide(null, "", "\t")).isEmpty();
+        assertThat(ZonesStatut.premierNonVide()).isEmpty();
+    }
+
+    @Test
     @DisplayName("superposer : une zone non vide de l'écran l'emporte, une zone vide garde le défaut")
     void superposer_zone_par_zone() {
         ZonesStatut defaut = new ZonesStatut("Identité", "", "");
