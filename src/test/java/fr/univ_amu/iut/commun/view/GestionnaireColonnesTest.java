@@ -7,6 +7,9 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.Scene;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.layout.StackPane;
@@ -116,5 +119,51 @@ class GestionnaireColonnesTest {
         assertThat(colB.get().isVisible())
                 .as("décocher masque la colonne (liaison bidirectionnelle)")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("installer : clic droit = « Colonnes… » ; le ☰ reçoit un séparateur puis « Colonnes… »")
+    void installer_pose_les_deux_entrees(FxRobot robot) {
+        AtomicReference<TableView<String>> refTable = new AtomicReference<>();
+        MenuButton menu = new MenuButton("☰");
+        robot.interact(() -> {
+            TableView<String> table = tableAvec("A", "B");
+            GestionnaireColonnes.installer(
+                    table,
+                    menu,
+                    List.of(
+                            new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", true),
+                            new GestionnaireColonnes.Colonne(table.getColumns().get(1), "B", false)));
+            refTable.set(table);
+        });
+
+        assertThat(refTable.get().getContextMenu().getItems())
+                .extracting(MenuItem::getText)
+                .containsExactly("Colonnes…");
+        assertThat(menu.getItems()).hasSize(2);
+        assertThat(menu.getItems().get(0)).isInstanceOf(SeparatorMenuItem.class);
+        assertThat(menu.getItems().get(1).getText()).isEqualTo("Colonnes…");
+    }
+
+    @Test
+    @DisplayName("installer composable : les items de clic droit précèdent un séparateur puis « Colonnes… »")
+    void installer_compose_le_clic_droit(FxRobot robot) {
+        AtomicReference<TableView<String>> refTable = new AtomicReference<>();
+        MenuItem fiche = new MenuItem("Fiche de l'espèce");
+        robot.interact(() -> {
+            TableView<String> table = tableAvec("A", "B");
+            GestionnaireColonnes.installer(
+                    table,
+                    new MenuButton("☰"),
+                    List.of(new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", false)),
+                    fiche);
+            refTable.set(table);
+        });
+
+        var items = refTable.get().getContextMenu().getItems();
+        assertThat(items).hasSize(3);
+        assertThat(items.get(0)).as("l'action de la vue vient en tête").isSameAs(fiche);
+        assertThat(items.get(1)).isInstanceOf(SeparatorMenuItem.class);
+        assertThat(items.get(2).getText()).isEqualTo("Colonnes…");
     }
 }

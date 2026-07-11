@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -39,6 +40,10 @@ import javafx.stage.Popup;
 /// Deux points d'entrée sont câblés par [#installer] : un **menu contextuel** (clic droit sur la table) et
 /// un item **« Colonnes… »** dans un [MenuButton] (☰) ; les deux ouvrent le **même** panneau, construit à
 /// la demande sur l'ordre courant des colonnes (pas de double état à synchroniser).
+///
+/// Le menu contextuel est **composable** : une vue dont le clic droit porte déjà une action (ex. « Fiche
+/// de l'espèce ») passe ses items à [#installer], qui les place **avant** « Colonnes… » plutôt que de les
+/// écraser.
 public final class GestionnaireColonnes {
 
     private GestionnaireColonnes() {}
@@ -51,14 +56,32 @@ public final class GestionnaireColonnes {
     /// Câble le menu contextuel (clic droit) de `table` et ajoute un item « Colonnes… » au menu `menu`
     /// (☰) ; les deux ouvrent le panneau de gestion des `colonnes`.
     public static void installer(TableView<?> table, MenuButton menu, List<Colonne> colonnes) {
-        MenuItem itemContextuel = new MenuItem("Colonnes…");
-        itemContextuel.setOnAction(e -> ouvrir(table, colonnes, table));
-        table.setContextMenu(new ContextMenu(itemContextuel));
+        installer(table, menu, colonnes, new MenuItem[0]);
+    }
 
-        MenuItem itemMenu = new MenuItem("Colonnes…");
-        itemMenu.setOnAction(e -> ouvrir(table, colonnes, menu));
+    /// Variante **composable** : `itemsClicDroit` (ex. « Fiche de l'espèce ») ouvrent le menu contextuel de
+    /// la table, suivis d'un séparateur puis de « Colonnes… » — sans écraser l'action de clic droit propre à
+    /// la vue. Le ☰ reçoit, lui, un séparateur puis « Colonnes… ». Chaque item « Colonnes… » est une
+    /// instance distincte (un [MenuItem] n'appartient qu'à un seul menu) ancrée sur son propre point.
+    public static void installer(
+            TableView<?> table, MenuButton menu, List<Colonne> colonnes, MenuItem... itemsClicDroit) {
+        List<MenuItem> itemsContexte = new ArrayList<>(Arrays.asList(itemsClicDroit));
+        if (!itemsContexte.isEmpty()) {
+            itemsContexte.add(new SeparatorMenuItem());
+        }
+        itemsContexte.add(itemColonnes(table, colonnes, table));
+        table.setContextMenu(new ContextMenu(itemsContexte.toArray(new MenuItem[0])));
+
         menu.getItems().add(new SeparatorMenuItem());
-        menu.getItems().add(itemMenu);
+        menu.getItems().add(itemColonnes(table, colonnes, menu));
+    }
+
+    /// Un item « Colonnes… » qui ouvre le panneau ancré sous `ancre` (la table pour le clic droit, le ☰
+    /// pour le menu).
+    private static MenuItem itemColonnes(TableView<?> table, List<Colonne> colonnes, Node ancre) {
+        MenuItem item = new MenuItem("Colonnes…");
+        item.setOnAction(e -> ouvrir(table, colonnes, ancre));
+        return item;
     }
 
     /// Affiche le panneau de gestion des colonnes dans une fenêtre flottante ancrée sous `ancre`. Un bouton
