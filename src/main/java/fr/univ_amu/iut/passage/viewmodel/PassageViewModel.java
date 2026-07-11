@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.viewmodel;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
+import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -109,15 +110,10 @@ public class PassageViewModel {
     }
 
     private void appliquer(DetailPassage detail, ContexteSite contexte) {
-        titreContexte.set("Carré "
-                + contexte.numeroCarre()
-                + " / "
-                + contexte.codePoint()
-                + " / N° "
-                + detail.numeroPassage()
-                + " ("
-                + detail.annee()
-                + ")");
+        // Identité pour la zone gauche de la barre de statut : format unifié « Carré X · Point · N° Z »
+        // (socle #1020, harmonisation #1088), au lieu d'un format « / » propre à cet écran. L'année reste
+        // visible via la date d'enregistrement (plage horaire).
+        titreContexte.set(new ContextePassage(idPassage, detail.numeroPassage(), contexte).identiteStatut());
         numeroPassage = detail.numeroPassage();
         plageHoraire.set(detail.dateEnregistrement() + "  " + detail.heureDebut() + " → " + detail.heureFin());
         enregistreur.set("PR " + detail.idEnregistreur());

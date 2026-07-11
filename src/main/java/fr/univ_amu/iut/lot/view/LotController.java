@@ -500,11 +500,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     }
 
     private String contexteGauche() {
-        if (contexte == null) {
-            return "";
-        }
-        return "Carré " + contexte.site().numeroCarre() + " · "
-                + contexte.site().codePoint() + " · N° " + contexte.numeroPassage();
+        return contexte == null ? "" : contexte.identiteStatut();
     }
 
     private String centreStatutRecap() {

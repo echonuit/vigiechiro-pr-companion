@@ -69,11 +69,14 @@ class PassageViewModelTest {
 
         viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
 
+        // Identité unifiée « Carré X · Point · N° Z » (socle #1020, harmonisation #1088) : séparateur
+        // « · » et plus de suffixe d'année (l'année reste visible via la plage horaire).
         assertThat(viewModel.titreContexteProperty().get())
                 .contains("640380")
                 .contains("A1")
                 .contains("N° 2")
-                .contains("2026");
+                .contains("·")
+                .doesNotContain("/");
         // Numéro de passage exposé pour le libellé du fil d'Ariane (« Détails du passage N° 2 »).
         assertThat(viewModel.getNumeroPassage()).isEqualTo(2);
         assertThat(viewModel.plageHoraireProperty().get()).contains("20:25:00").contains("07:47:00");
