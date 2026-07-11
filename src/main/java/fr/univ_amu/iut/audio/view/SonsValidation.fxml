@@ -130,7 +130,7 @@
       <!-- Chaque bouton d'action est enrobé d'un StackPane : un Button désactivé n'affiche pas de Tooltip,
            on pose donc l'explication du blocage sur l'enveloppe qui, elle, reçoit le survol (#789). -->
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">
-        <ComboBox fx:id="choixMode"/>
+        <ComboBox fx:id="choixMode" accessibleText="Mode de revue" promptText="Mode de revue"/>
         <StackPane fx:id="enveloppeValider">
           <Button fx:id="btnValider" text="✔ Valider" onAction="#valider"/>
         </StackPane>

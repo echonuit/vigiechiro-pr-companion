@@ -39,7 +39,7 @@
        actifs, puis les actions carte/export. Le regroupement n'est PAS un filtre : il change l'agrégation,
        pas le sous-ensemble affiché, d'où sa place à part (contrôle fixe). -->
   <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
-    <ComboBox fx:id="choixRegroupement"/>
+    <ComboBox fx:id="choixRegroupement" accessibleText="Regrouper par espèce ou par carré"/>
     <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)"
                accessibleText="Rechercher dans l'inventaire" prefWidth="200.0"/>
     <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"

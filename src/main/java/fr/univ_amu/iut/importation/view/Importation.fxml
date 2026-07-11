@@ -85,11 +85,11 @@
     <HBox spacing="14.0" alignment="BOTTOM_LEFT">
       <VBox spacing="4.0" HBox.hgrow="ALWAYS">
         <Label text="Site de suivi" styleClass="field-label"/>
-        <ComboBox fx:id="comboSites" maxWidth="Infinity"/>
+        <ComboBox fx:id="comboSites" maxWidth="Infinity" promptText="Choisissez un site"/>
       </VBox>
       <VBox spacing="4.0">
         <Label text="Point d'écoute" styleClass="field-label"/>
-        <ComboBox fx:id="comboPoints" prefWidth="150.0"/>
+        <ComboBox fx:id="comboPoints" prefWidth="150.0" promptText="Choisissez d'abord un site"/>
       </VBox>
       <VBox spacing="4.0">
         <Label text="Année" styleClass="field-label"/>

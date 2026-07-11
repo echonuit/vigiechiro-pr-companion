@@ -50,6 +50,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
@@ -361,6 +362,13 @@ class SonsValidationViewTest {
         // (donc plus d'occurrences que le seul en-tête).
         assertThat(robot.lookup(".icone-reference").queryAll()).hasSizeGreaterThan(1);
         assertThat(robot.lookup(".icone-commentaire").queryAll()).hasSizeGreaterThan(1);
+    }
+
+    @Test
+    @DisplayName("#800 : le combo « mode de revue » (sans étiquette visible) expose un libellé accessible")
+    void combo_mode_a_un_libelle_accessible(FxRobot robot) {
+        assertThat(robot.lookup("#choixMode").queryAs(ComboBox.class).getAccessibleText())
+                .isEqualTo("Mode de revue");
     }
 
     @Test

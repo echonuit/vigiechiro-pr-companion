@@ -118,6 +118,22 @@ class ImportationViewTest {
     }
 
     @Test
+    @DisplayName("#800 : le combo Point est désactivé tant qu'aucun site n'est choisi, puis activé")
+    void combo_point_desactive_sans_site(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        ComboBox<Site> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);
+        ComboBox<?> comboPoints = robot.lookup("#comboPoints").queryAs(ComboBox.class);
+
+        // Désactivation guidée : sans site choisi, choisir le point n'a pas de sens → combo grisé.
+        assertThat(comboPoints.isDisabled()).isTrue();
+
+        robot.interact(() -> comboSites.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(comboPoints.isDisabled()).isFalse();
+    }
+
+    @Test
     @DisplayName("La combo des sites affiche un libellé lisible (et non le toString brut du record)")
     void combo_site_libelle_lisible(FxRobot robot) {
         @SuppressWarnings("unchecked")

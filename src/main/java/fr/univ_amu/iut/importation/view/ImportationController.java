@@ -354,7 +354,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         boutonParcourir.disableProperty().bind(traitement);
         boutonZip.disableProperty().bind(traitement);
         comboSites.disableProperty().bind(traitement);
-        comboPoints.disableProperty().bind(traitement);
+        // Désactivation guidée (#800) : choisir le point n'a de sens qu'une fois le site choisi (les points
+        // dépendent du site). Le promptText « Choisissez d'abord un site » explique alors le grisage.
+        comboPoints
+                .disableProperty()
+                .bind(traitement.or(comboSites.valueProperty().isNull()));
         champAnnee.disableProperty().bind(traitement);
         champPassage.disableProperty().bind(traitement);
         // Pré-contrôle R5 (#108) : la zone n'apparaît qu'en cas de doublon de n° de passage (avertissement

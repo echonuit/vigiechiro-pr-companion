@@ -400,4 +400,11 @@ class AnalyseViewTest {
                 .as("seul le critère partagé est rejoué, le critère propre à l'audio est ignoré")
                 .hasSize(1);
     }
+
+    @Test
+    @DisplayName("#800 : le combo de regroupement (sans étiquette visible) expose un libellé accessible")
+    void combo_regroupement_a_un_libelle_accessible(FxRobot robot) {
+        assertThat(robot.lookup("#choixRegroupement").queryAs(ComboBox.class).getAccessibleText())
+                .isEqualTo("Regrouper par espèce ou par carré");
+    }
 }
