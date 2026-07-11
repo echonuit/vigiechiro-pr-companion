@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.171.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.170.1...v1.171.0) (2026-07-11)
+
+
+### Features
+
+* **passage:** « Synchroniser depuis VigieChiro » dans la modale (tirer) — Phase 2b ([#937](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/937)) ([e50ae8e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/e50ae8ef7ff0dd438de48e519e22c0ad0aeba2e3))
+
 ## [1.170.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.170.0...v1.170.1) (2026-07-11)
 
 
