@@ -3,12 +3,15 @@ package fr.univ_amu.iut.commun.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import javafx.fxml.FXML;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.layout.StackPane;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran « Réglages » (#927) : peuple le `TabPane` d'un **onglet par feature
@@ -35,11 +38,28 @@ public class EcranReglagesController {
 
     @FXML
     private void initialize() {
-        contributions.stream()
+        List<Tab> tabs = contributions.stream()
                 .filter(EcranReglagesController::estAffichable)
                 .sorted(Comparator.comparingInt(OngletReglages::ordre))
                 .map(this::construireOnglet)
-                .forEach(onglets.getTabs()::add);
+                .toList();
+        // État vide : aucune feature ne contribue encore de réglage. En production l'entrée de menu est
+        // grisée (on n'arrive pas ici), mais on montre un message plutôt qu'un bandeau d'onglets nu.
+        if (tabs.isEmpty()) {
+            onglets.getTabs().add(ongletVide());
+        } else {
+            onglets.getTabs().setAll(tabs);
+        }
+    }
+
+    private static Tab ongletVide() {
+        Label message = new Label("Aucun réglage disponible pour le moment.");
+        message.getStyleClass().add("reglages-vide-message");
+        StackPane centre = new StackPane(message);
+        centre.getStyleClass().add("reglages-vide");
+        Tab tab = new Tab("Réglages", centre);
+        tab.setClosable(false);
+        return tab;
     }
 
     /// Un onglet n'est affiché que s'il a **quelque chose à montrer** : au moins un réglage déclaratif,
