@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.184.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.183.0...v1.184.0) (2026-07-11)
+
+
+### Features
+
+* **lot:** barre de statut 3 zones pour M-Lot (3f) ([#1031](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1031)) ([3ff63b7](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/3ff63b785ae77d8fce46fa93c5cdfd83d78a74eb)), closes [#823](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/823) [#495](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/495) [#982](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/982) [#983](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/983) [#769](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/769) [#805](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/805) [#941](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/941)
+
 # [1.183.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.182.0...v1.183.0) (2026-07-11)
 
 
