@@ -579,13 +579,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     }
 
     /// L'espèce ciblée par « Fiche de l'espèce » : la **proposition Tadarida** de la ligne (code + nom
-    /// vernaculaire). Le nom latin n'est pas porté par la projection audio ; il reste `null`, ce qui
-    /// suffit aux chiroptères (fiche PNA par code) et grise l'item pour les taxons hors PNA sans latin
-    /// (oiseaux…). `null` (aucune ligne sélectionnée) → espèce vide, item désactivé.
+    /// latin + nom vernaculaire). Le nom latin (#897) permet le repli GBIF/Wikipédia pour les taxons hors
+    /// PNA (oiseaux, orthoptères…) ; les chiroptères passent, eux, par la fiche PNA (résolue par le code).
+    /// `null` (aucune ligne sélectionnée) → espèce vide, item désactivé.
     private static EspeceIdentifiee especeDe(LigneObservationAudio ligne) {
         return ligne == null
                 ? new EspeceIdentifiee(null, null, null)
-                : new EspeceIdentifiee(ligne.taxonTadarida(), null, ligne.nomTadarida());
+                : new EspeceIdentifiee(ligne.taxonTadarida(), ligne.latinTadarida(), ligne.nomTadarida());
     }
 
     /// « 🗺 Voir sur la carte » (#476) : rouvre l'analyse « Espèces & observations » directement sur la

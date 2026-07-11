@@ -85,6 +85,7 @@ class AudioViewModelTest {
                 45,
                 null,
                 null,
+                null,
                 "Chiroptères",
                 "PaRec_" + idSeq + "_000.wav",
                 0.20,

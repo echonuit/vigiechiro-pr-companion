@@ -67,6 +67,7 @@ class ResolveurSourceAudioTest {
                 45,
                 null,
                 taxonTadarida,
+                null,
                 taxonTadarida == null ? null : "Chiroptères",
                 "f" + idSequence + ".wav",
                 0.2,

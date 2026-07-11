@@ -456,6 +456,9 @@ class ObservationDaoTest {
         // Bornes du cri (timeline transformée) portées par la projection : servent à la durée et au repérage.
         assertThat(reference.debutS()).isEqualTo(0.5);
         assertThat(reference.finS()).isEqualTo(3.2);
+        // Nom latin de la proposition Tadarida porté par la projection (#897, LEFT JOIN taxon tt) : sert de
+        // clé à la source universelle (GBIF/Wikipédia) pour la fiche des taxons hors PNA.
+        assertThat(reference.latinTadarida()).isEqualTo("Pipistrellus pipistrellus");
     }
 
     @Test

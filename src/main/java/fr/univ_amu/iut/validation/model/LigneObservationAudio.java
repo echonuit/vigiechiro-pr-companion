@@ -35,6 +35,8 @@ import java.time.LocalDateTime;
 ///     `null` si le taxon n'a pas de nom vernaculaire (souche hors référentiel) — la vue affiche alors le code
 /// @param nomTadarida nom vernaculaire FR de la **proposition Tadarida** (`taxon_tadarida`), ou `null`
 ///     (souche hors référentiel) — la vue affiche alors le code
+/// @param latinTadarida nom **latin** de la proposition Tadarida (`taxon_tadarida.latin_name`), ou `null` —
+///     sert de clé à la source universelle (GBIF/Wikipédia) pour la fiche des taxons hors PNA (oiseaux…)
 /// @param groupe nom du **groupe taxonomique parent** de l'espèce retenue (`taxonomic_group.name`, ex.
 ///     « Chiroptères », « Oiseaux », « Orthoptères et cigales »), ou `null` si le taxon n'a pas de groupe —
 ///     permet de filtrer la liste par grand groupe (chauves-souris, oiseaux…) sans lister chaque espèce
@@ -69,6 +71,7 @@ public record LigneObservationAudio(
         Integer frequenceKHz,
         String nomEspece,
         String nomTadarida,
+        String latinTadarida,
         String groupe,
         String nomFichier,
         Double debutS,

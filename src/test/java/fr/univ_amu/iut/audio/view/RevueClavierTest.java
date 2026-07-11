@@ -17,7 +17,7 @@ class RevueClavierTest {
     private static LigneObservationAudio ligne(long id, StatutObservation statut) {
         return new LigneObservationAudio(
                 id, id, 1L, 1, null, null, null, null, "Pippip", null, null, null, statut, false, null, null, null,
-                null, null, null, null, null, null, false);
+                null, null, null, null, null, null, null, false);
     }
 
     @Test

@@ -69,6 +69,7 @@ class EtatSelectionAudioTest {
                 45,
                 null,
                 taxonTadarida,
+                null,
                 "Chiroptères",
                 "f.wav",
                 0.2,

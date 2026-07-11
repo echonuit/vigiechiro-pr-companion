@@ -289,6 +289,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " o.is_reference AS is_reference, o.is_doubtful AS is_doubtful,"
             + " o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
             + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida,"
+            + " tt.latin_name AS latin_tadarida,"
             + " g.name AS groupe,"
             + " ls.file_name AS nom_fichier, ls.recorded_at AS recorded_at,"
             + " o.start_time_s AS debut_s, o.end_time_s AS fin_s"
@@ -327,6 +328,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             entierNullable(rs, "frequence"),
             rs.getString("nom_espece"),
             rs.getString("nom_tadarida"),
+            rs.getString("latin_tadarida"),
             rs.getString(COL_GROUPE),
             rs.getString("nom_fichier"),
             (Double) rs.getObject("debut_s"),
@@ -421,6 +423,7 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             null, // frequenceKHz
             rs.getString("nom_espece"), // vernaculaire du taxon retenu (observateur)
             null, // nomTadarida
+            null, // latinTadarida
             null, // groupe
             rs.getString("nom_fichier"),
             null, // debutS

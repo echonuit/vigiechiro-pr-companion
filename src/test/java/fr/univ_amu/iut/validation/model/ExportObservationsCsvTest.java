@@ -140,6 +140,7 @@ class ExportObservationsCsvTest {
                 frequenceKHz,
                 nomEspece,
                 "Pipistrelle commune",
+                null,
                 groupe,
                 "seqA_000.wav",
                 debutS,

@@ -46,6 +46,7 @@ class FormatLigneAudioTest {
                 45,
                 nomEspece,
                 "Pipistrelle commune",
+                "Pipistrellus pipistrellus",
                 "Chiroptères",
                 "PaRec_20260620_000.wav",
                 0.20,
