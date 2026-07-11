@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.multisite.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -69,6 +70,7 @@ public class MultisiteController implements RafraichirAuRetour {
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
     private final DepotVues depotVues;
+    private final DepotDispositionColonnes depotColonnes;
 
     @FXML
     private Label lblResume;
@@ -174,11 +176,16 @@ public class MultisiteController implements RafraichirAuRetour {
 
     @Inject
     public MultisiteController(
-            MultisiteViewModel viewModel, OuvrirPassage ouvrirPassage, OuvrirAudio ouvrirAudio, DepotVues depotVues) {
+            MultisiteViewModel viewModel,
+            OuvrirPassage ouvrirPassage,
+            OuvrirAudio ouvrirAudio,
+            DepotVues depotVues,
+            DepotDispositionColonnes depotColonnes) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
+        this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
     }
 
     @FXML
@@ -186,8 +193,11 @@ public class MultisiteController implements RafraichirAuRetour {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tableLignes);
         configurerColonnes();
-        // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant).
-        GestionnaireColonnes.installer(tableLignes, menuActions, colonnesLignes());
+        // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
+        // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
+        var colonnes = colonnesLignes();
+        GestionnaireColonnes.installer(tableLignes, menuActions, colonnes);
+        GestionnaireColonnes.persister(tableLignes, colonnes, depotColonnes, FEATURE, "principale");
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
         // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne
         // persiste à travers les rafraîchissements de filtres.

@@ -2,6 +2,8 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
+import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.Scene;
@@ -276,6 +278,42 @@ class GestionnaireColonnesTest {
         });
 
         assertThat(ref.get().getColumns()).extracting(TableColumn::getText).containsExactly("C", "A", "B");
+    }
+
+    @Test
+    @DisplayName("persister : restaure la disposition mémorisée, puis ré-enregistre à chaque changement")
+    void persister_restaure_puis_sauvegarde(FxRobot robot) {
+        DepotDispositionColonnes depot = new DispositionColonnesEnMemoire();
+        depot.enregistrer(
+                "ecran",
+                "principale",
+                DescripteurColonnesJson.serialiser(new DescripteurColonnes(List.of(
+                        new DescripteurColonnes.EtatColonne("C", true),
+                        new DescripteurColonnes.EtatColonne("A", true),
+                        new DescripteurColonnes.EtatColonne("B", false)))));
+        AtomicReference<TableView<String>> ref = new AtomicReference<>();
+        robot.interact(() -> {
+            TableView<String> table = tableAvec("A", "B", "C");
+            List<GestionnaireColonnes.Colonne> colonnes = List.of(
+                    new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", true),
+                    new GestionnaireColonnes.Colonne(table.getColumns().get(1), "B", false),
+                    new GestionnaireColonnes.Colonne(table.getColumns().get(2), "C", false));
+            GestionnaireColonnes.persister(table, colonnes, depot, "ecran", "principale");
+            ref.set(table);
+        });
+
+        // Restaurée au branchement : ordre C, A, B et « B » masquée.
+        assertThat(ref.get().getColumns()).extracting(TableColumn::getText).containsExactly("C", "A", "B");
+        assertThat(ref.get().getColumns().get(2).isVisible()).isFalse();
+
+        // Un changement (masquer « C ») est ré-enregistré : le dépôt reflète l'état courant.
+        robot.interact(() -> ref.get().getColumns().get(0).setVisible(false));
+        DescripteurColonnes memorise = DescripteurColonnesJson.interpreter(
+                depot.charger("ecran", "principale").orElseThrow());
+        assertThat(memorise.colonnes())
+                .filteredOn(e -> e.libelle().equals("C"))
+                .singleElement()
+                .satisfies(e -> assertThat(e.visible()).isFalse());
     }
 
     @Test

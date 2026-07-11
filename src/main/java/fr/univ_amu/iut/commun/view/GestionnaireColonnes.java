@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -8,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javafx.beans.InvalidationListener;
 import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -173,6 +175,23 @@ public final class GestionnaireColonnes {
             }
         }
         appliquerOrdre(table, ordre);
+    }
+
+    /// Rend la disposition des `colonnes` de `table` **persistante par écran** (#994, couche « défaut par
+    /// écran ») : restaure au branchement la dernière disposition mémorisée pour `(feature, cle)`, puis la
+    /// **ré-enregistre** à chaque changement d'**ordre** ou de **visibilité**. À appeler **une fois**, après
+    /// [#installer] : les écouteurs sont posés **après** la restauration initiale, qui ne déclenche donc pas
+    /// d'enregistrement superflu. Indépendant des vues nommées (#623), qui portent leur propre disposition.
+    public static void persister(
+            TableView<?> table, List<Colonne> colonnes, DepotDispositionColonnes depot, String feature, String cle) {
+        depot.charger(feature, cle)
+                .ifPresent(json -> restaurer(table, colonnes, DescripteurColonnesJson.interpreter(json)));
+        InvalidationListener sauvegarde = observable ->
+                depot.enregistrer(feature, cle, DescripteurColonnesJson.serialiser(decrire(table, colonnes)));
+        table.getColumns().addListener(sauvegarde);
+        for (Colonne colonne : colonnes) {
+            colonne.colonne().visibleProperty().addListener(sauvegarde);
+        }
     }
 
     /// Fabrique un [AdaptateurColonnes] **mono-table** (#994) : la vue mémorisée décrit/rejoue les colonnes de

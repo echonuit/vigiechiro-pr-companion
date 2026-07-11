@@ -44,7 +44,8 @@ public class MigrationSchema {
         "V15__vigiechiro_link.sql",
         "V16__groupe_referentiel_vigiechiro.sql",
         "V17__vigiechiro_link_verrouille.sql",
-        "V18__depot_unite.sql"
+        "V18__depot_unite.sql",
+        "V19__column_layout.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

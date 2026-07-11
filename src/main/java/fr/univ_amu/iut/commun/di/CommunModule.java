@@ -5,12 +5,14 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.commun.api.ClientGbif;
+import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
 import fr.univ_amu.iut.commun.model.SourceUniverselle;
 import fr.univ_amu.iut.commun.model.SourceUniversellePreferee;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.DispositionColonnesDao;
 import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ActionMenu;
@@ -112,6 +114,16 @@ public class CommunModule extends AbstractModule {
     @Singleton
     DepotVues fournirDepotVues(SourceDeDonnees source) {
         return new VueSauvegardeeDao(source);
+    }
+
+    /// Dépôt de la **disposition des colonnes par écran** (#994) : le socle `commun.view.GestionnaireColonnes`
+    /// y passe (via l'interface [DepotDispositionColonnes]) pour retenir/restaurer l'ordre + la visibilité des
+    /// colonnes entre deux ouvertures. Bindé ici au **DAO SQLite** ; le défaut `@ImplementedBy` en mémoire ne
+    /// sert que les contextes sans base (tests de vue isolés).
+    @Provides
+    @Singleton
+    DepotDispositionColonnes fournirDepotDispositionColonnes(SourceDeDonnees source) {
+        return new DispositionColonnesDao(source);
     }
 
     /// Horloge applicative : l'horloge système en production. Transverse (les règles de dates R3/R4
