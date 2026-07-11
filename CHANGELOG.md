@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.177.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.176.3...v1.177.0) (2026-07-11)
+
+
+### Features
+
+* **passage:** statut « Dépôt en cours » dans le workflow (3a) ([#989](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/989)) ([7792a9c](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/7792a9c8b681ccca3990fd9cd53d251a5f3395b4)), closes [#980](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/980) [#982](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/982) [#982](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/982) [#981](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/981) [#980](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/980)
+
 ## [1.176.3](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.176.2...v1.176.3) (2026-07-11)
 
 
