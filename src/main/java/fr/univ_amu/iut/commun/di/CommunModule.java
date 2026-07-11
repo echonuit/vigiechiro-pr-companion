@@ -21,16 +21,19 @@ import fr.univ_amu.iut.commun.view.ActionPurger;
 import fr.univ_amu.iut.commun.view.ActionRestaurer;
 import fr.univ_amu.iut.commun.view.ActionSauvegarder;
 import fr.univ_amu.iut.commun.view.ActionSourceEspece;
+import fr.univ_amu.iut.commun.view.DescripteurReglage;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
 import fr.univ_amu.iut.commun.view.ExecuteurFicheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OngletReglages;
+import fr.univ_amu.iut.commun.view.OngletReglagesFonctionnalites;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.commun.view.ResolveurFiche;
 import fr.univ_amu.iut.commun.view.ResolveurFicheGbif;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.OngletReglagesGeneral;
+import java.util.List;
 
 /// Module Guice du socle : fournit le [Workspace], la [SourceDeDonnees] et le socle IHM
 /// (singletons).
@@ -63,6 +66,11 @@ public class CommunModule extends AbstractModule {
         // Le socle contribue lui-même l'onglet « Général » (#928 : source des fiches espèces, puis
         // thème/daltonien).
         Multibinder.newSetBinder(binder(), OngletReglages.class).addBinding().to(OngletReglagesGeneral.class);
+        // Onglet « Fonctionnalités » (#1057) : un interrupteur par feature désactivable, calculé depuis le
+        // registre des fonctionnalités. Les features COEUR (socle) n'y figurent pas.
+        Multibinder.newSetBinder(binder(), OngletReglages.class)
+                .addBinding()
+                .toInstance(new OngletReglagesFonctionnalites(descripteursFonctionnalites()));
         // Point d'extension « entrées du menu ☰ » (#930) : le MenuButton est bâti par le socle depuis
         // `Set<ActionMenu>`. Le socle contribue les entrées transverses (sauvegarde / restauration /
         // purge / source des fiches / réglages) ; les features en ajoutent via leur module (ex.
@@ -73,6 +81,22 @@ public class CommunModule extends AbstractModule {
         actions.addBinding().to(ActionPurger.class);
         actions.addBinding().to(ActionSourceEspece.class);
         actions.addBinding().to(ActionOuvrirReglages.class);
+    }
+
+    /// Descripteurs de l'onglet « Fonctionnalités » : un booléen `feature.<id>.active` par feature
+    /// **désactivable** (OPTIONNELLE / EXPERIMENTALE), défaut = état par défaut de sa [Categorie]. Les
+    /// features EXPERIMENTALE sont suffixées « (expérimental) ».
+    private static List<DescripteurReglage> descripteursFonctionnalites() {
+        return Fonctionnalites.toutes().stream()
+                .filter(fonctionnalite -> fonctionnalite.categorie().desactivable())
+                .<DescripteurReglage>map(fonctionnalite -> new DescripteurReglage.Booleen(
+                        Fonctionnalites.PREFIXE_CLE + fonctionnalite.id() + Fonctionnalites.SUFFIXE_CLE,
+                        fonctionnalite.categorie() == Categorie.EXPERIMENTALE
+                                ? fonctionnalite.libelle() + " (expérimental)"
+                                : fonctionnalite.libelle(),
+                        "Effet au prochain démarrage de l'application.",
+                        fonctionnalite.categorie().activeParDefaut()))
+                .toList();
     }
 
     /// Résolveur de fiche espèce (#922) : convertit l'URL de recherche GBIF en URL de fiche en résolvant
