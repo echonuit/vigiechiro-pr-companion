@@ -166,6 +166,11 @@ class ImportationClicImporterTest {
                 .as("le récap de succès doit être affiché après l'import")
                 .isTrue();
         assertThat(statut.getText()).contains("Import terminé");
+        // Barre de statut (#1024) : le statut du wizard est aussi porté par la zone centre ; l'agrégat
+        // racine (sans contexte passage) laisse la gauche au défaut du chrome.
+        var zones = controleur.zonesStatutProperty().get();
+        assertThat(zones.centre()).isEqualTo(statut.getText());
+        assertThat(zones.gauche()).isEmpty();
     }
 
     @Test

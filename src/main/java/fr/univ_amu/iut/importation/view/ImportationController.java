@@ -5,8 +5,9 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.AnnulationImportException;
-import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -27,6 +28,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
@@ -54,7 +57,13 @@ import javafx.util.converter.NumberStringConverter;
 /// rattachement / action) aux propriétés de l'[ImportationViewModel]. Aucun accès base de données
 /// ni logique métier ici (règle ArchUnit `view_sans_jdbc`) : « Parcourir » délègue à
 /// [ImportationViewModel#inspecter()] ; « Importer » lance le travail lourd hors du fil JavaFX.
-public class ImportationController implements GardeQuitter, AuDepartEcran {
+public class ImportationController implements GardeQuitter, AuDepartEcran, ResumeStatut {
+
+    /// Zones de la barre de statut (#1024) : l'assistant (wizard racine, sans contexte passage) ne
+    /// renseigne que le **centre** (statut du wizard) et la **droite** (progression + ETA d'un traitement
+    /// en cours) ; la gauche reste au défaut du chrome.
+    private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
+            new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
     private final ImportationViewModel viewModel;
 
@@ -192,6 +201,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         this.conservation = Objects.requireNonNull(conservation, "conservation");
     }
 
+    @Override
+    public ReadOnlyObjectProperty<ZonesStatut> zonesStatutProperty() {
+        return zonesStatut.getReadOnlyProperty();
+    }
+
     /// Remplace le confirmateur (#214), pour les tests (évite la boîte de dialogue native).
     void setConfirmateur(Predicate<String> confirmateur) {
         confirmations.definirConfirmateur(confirmateur);
@@ -286,7 +300,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
                 .textProperty()
                 .bind(Bindings.createStringBinding(
                         () -> "État du nommage : "
-                                + libelleNommage(
+                                + FormatsImport.libelleNommage(
                                         inspection.etatNommageProperty().get()),
                         inspection.etatNommageProperty()));
         // Avertissement « mélange » (#33) : visible seulement s'il y a un message.
@@ -316,7 +330,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     /// discordance (#111), liés au sous-VM de rattachement.
     private void lierRattachement(RattachementImportViewModel rattachement) {
         comboSites.setItems(rattachement.sites());
-        comboSites.setConverter(Convertisseurs.depuis(this::libelleSite));
+        comboSites.setConverter(Convertisseurs.depuis(FormatsImport::libelleSite));
         comboSites.valueProperty().bindBidirectional(rattachement.siteSelectionneProperty());
         comboPoints.setItems(rattachement.points());
         comboPoints.setConverter(Convertisseurs.depuis(PointDEcoute::code));
@@ -392,10 +406,25 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         labelStatut
                 .textProperty()
                 .bind(Bindings.createStringBinding(
-                        this::libelleStatut,
+                        () -> FormatsImport.libelle(
+                                viewModel.etatProperty().get(),
+                                viewModel.resultatProperty().get(),
+                                viewModel.resultatNuitsProperty().get()),
                         viewModel.etatProperty(),
                         viewModel.resultatProperty(),
                         viewModel.resultatNuitsProperty()));
+        // Barre de statut (#1024) : statut du wizard au centre, progression + ETA à droite pendant un
+        // traitement. Recomposée sur les mêmes sources que le statut, plus le message de progression.
+        zonesStatut.bind(Bindings.createObjectBinding(
+                () -> FormatsImport.zones(
+                        viewModel.etatProperty().get(),
+                        viewModel.resultatProperty().get(),
+                        viewModel.resultatNuitsProperty().get(),
+                        viewModel.progression().messageProperty().get()),
+                viewModel.etatProperty(),
+                viewModel.resultatProperty(),
+                viewModel.resultatNuitsProperty(),
+                viewModel.progression().messageProperty()));
 
         // Rapport d'import (#155) : la liste des fichiers rejetés n'apparaît que s'il y en a.
         listeRejets.setItems(viewModel.rejetsImport());
@@ -592,31 +621,5 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     @FXML
     private void utiliserNumeroLibre() {
         viewModel.controleNumero().utiliserProchainNumeroLibre();
-    }
-
-    private String libelleSite(Site site) {
-        return site.nomConvivial() == null
-                ? "Carré " + site.numeroCarre()
-                : "Carré " + site.numeroCarre() + " — " + site.nomConvivial();
-    }
-
-    private static String libelleNommage(EtatNommage etat) {
-        if (etat == null) {
-            return "—";
-        }
-        return switch (etat) {
-            case BRUT -> "fichiers bruts (seront renommés)";
-            case PREFIXE -> "fichiers déjà préfixés";
-            case VIDE -> "aucun fichier";
-        };
-    }
-
-    /// Statut affiché sous le bouton « Importer » : issue de l'import (annulé / mono-nuit / multi-nuits),
-    /// mise en phrase par [RecapImport] à partir de l'état et du (des) résultat(s) courant(s).
-    private String libelleStatut() {
-        return RecapImport.libelle(
-                viewModel.etatProperty().get(),
-                viewModel.resultatProperty().get(),
-                viewModel.resultatNuitsProperty().get());
     }
 }
