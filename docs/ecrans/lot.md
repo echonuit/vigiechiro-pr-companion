@@ -29,6 +29,9 @@ sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une
 
 ![Génération des archives en cours : indicateur d'activité, actions désactivées.](../assets/captures/apercu-lot-generation.png)
 
+Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu ☰
+« outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+
 ## ③ Téléverser ces archives sur Vigie-Chiro
 
 ![Archives générées : la liste des ZIP s'affiche et « Ouvrir le dossier » s'active.](../assets/captures/apercu-lot-archives.png)

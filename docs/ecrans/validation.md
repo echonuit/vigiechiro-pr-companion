@@ -61,15 +61,11 @@ barre, enregistre les filtres **courants** sous un nouveau nom ; sur chaque ongl
 
 ## Choisir et organiser les colonnes
 
-La table s'adapte à votre façon de travailler :
+Comme tous les tableaux de l'application, celui-ci se **trie**, se **réorganise** et laisse **choisir ses
+colonnes** (clic droit ou menu ☰ « outils ») : le fonctionnement commun est décrit dans
+[Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
-- **Trier** : cliquez sur un **en-tête de colonne** (un second clic inverse le sens). Vous pouvez trier par
-  date, par fréquence, par espèce…
-- **Choisir les colonnes affichées** : un **sélecteur de colonnes** (menu ☰) coche celles à montrer et
-  masque le reste, pour ne garder que l'information utile à votre revue.
-- **Réordonner** : **glissez** un en-tête pour déplacer sa colonne, comme dans un tableur ou Notion.
-
-Outre l'espèce, le statut et la proposition Tadarida, la table peut afficher : le **nom de fichier** de la
+Ici, outre l'espèce, le statut et la proposition Tadarida, la table peut afficher : le **nom de fichier** de la
 séquence, la **date d'enregistrement**, l'**heure de capture**, la **fréquence médiane**, un **indicateur
 de commentaire**, et les mesures d'identification **FME** (fréquence de moindre énergie) et **fréquence
 terminale**, calculées sur le cri sélectionné.

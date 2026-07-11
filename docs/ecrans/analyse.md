@@ -26,6 +26,10 @@ Une table récapitule vos espèces. Un sélecteur **Regrouper** propose deux ang
 L'espèce retenue pour chaque observation est le **taxon validé** par l'observateur s'il existe, sinon la
 **proposition Tadarida** ; les pseudo-taxons « bruit » et « oiseau » sont exclus.
 
+Les tableaux de cet écran (l'inventaire et le détail des observations) se **trient**, se **réorganisent**
+et laissent **choisir leurs colonnes** (clic droit sur le tableau ou menu ☰ « outils ») :
+voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+
 ## Le détail : les observations d'une espèce
 
 L'écran est en **maître-détail**. En sélectionnant une espèce dans l'inventaire (mode *Par espèce*), le

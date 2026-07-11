@@ -32,6 +32,9 @@ création, dernière nuit importée, nombre de passages), ses **points d'écoute
 
 ![Le détail d'un site : bandeau d'identité, points d'écoute et tableau des passages.](../assets/captures/apercu-sites-detail.png)
 
+Le tableau des passages se **trie**, se **réorganise** et laisse **choisir ses colonnes** (clic droit ou
+menu ☰ « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+
 Le bouton **Modifier** (bandeau d'identité) ouvre une fenêtre pour **éditer la fiche du site** :
 numéro de carré, nom, protocole et commentaire. Pratique pour corriger une saisie ou compléter le
 site après coup, sans repasser par sa création.

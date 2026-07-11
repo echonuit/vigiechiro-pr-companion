@@ -51,6 +51,7 @@ theme:
 nav:
   - Accueil: index.md
   - Prise en main: prise-en-main.md
+  - Personnaliser les tableaux: personnaliser-les-tableaux.md
   - Parcours métier: parcours/index.md
   - Référence par écran:
       - ecrans/index.md
