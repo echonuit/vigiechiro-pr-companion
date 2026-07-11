@@ -9,9 +9,11 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.importation.viewmodel.LigneFichierImport;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.io.IOException;
@@ -28,6 +30,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -163,6 +166,41 @@ class ImportationClicImporterTest {
                 .as("le récap de succès doit être affiché après l'import")
                 .isTrue();
         assertThat(statut.getText()).contains("Import terminé");
+    }
+
+    @Test
+    @DisplayName("#947 : la table de suivi par fichier se remplit pendant l'import et finit toute « terminée »")
+    void table_de_suivi_par_fichier_se_remplit(FxRobot robot) {
+        robot.interact(() -> {
+            viewModel.inspection().dossierSourceProperty().set(sd);
+            viewModel.inspecter();
+            viewModel
+                    .rattachement()
+                    .siteSelectionneProperty()
+                    .set(viewModel.rattachement().sites().get(0));
+            viewModel
+                    .rattachement()
+                    .pointSelectionneProperty()
+                    .set(viewModel.rattachement().points().get(0));
+        });
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.interact(() -> robot.lookup("#boutonImporter").queryButton().fire());
+        assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Les événements par fichier (relayés au fil JavaFX pendant l'import) ont rempli la table : une
+        // ligne par original de la carte, toutes terminées (barre au bout), sans étape résiduelle.
+        TableView<?> table = robot.lookup("#tableFichiers").queryAs(TableView.class);
+        assertThat(table.getItems()).hasSize(2);
+        assertThat(viewModel.suiviFichiers().lignes())
+                .extracting(LigneFichierImport::nomFichier)
+                .allSatisfy(nom -> assertThat(nom).endsWith(".wav"));
+        assertThat(viewModel.suiviFichiers().lignes()).allSatisfy(ligne -> {
+            assertThat(ligne.etatProperty().get()).isEqualTo(EtatUnite.TERMINEE);
+            assertThat(ligne.fractionProperty().get()).isEqualTo(1.0);
+            assertThat(ligne.etapeProperty().get()).isEmpty();
+        });
     }
 
     @Test

@@ -29,6 +29,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -143,6 +144,7 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#caseConserverOriginaux").queryAs(CheckBox.class))
                 .isNotNull(); // conservation
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
+        assertThat(robot.lookup("#tableFichiers").queryAs(TableView.class)).isNotNull(); // #947 (suivi fichiers)
         assertThat(robot.lookup("#boutonAnnuler").queryAs(Button.class)).isNotNull(); // #146 (annulation)
         assertThat(robot.lookup("#zoneRejets").queryAs(VBox.class)).isNotNull(); // #155 (rapport d'import)
         assertThat(robot.lookup("#listeRejets").queryAs(ListView.class)).isNotNull(); // #155

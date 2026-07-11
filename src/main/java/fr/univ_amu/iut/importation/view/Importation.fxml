@@ -6,6 +6,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.TableView?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -147,6 +148,10 @@
       <Button fx:id="boutonAnnuler" text="✖ Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
     </HBox>
     <Label fx:id="labelProgression" styleClass="insp-detail"/>
+    <!-- Table de suivi par fichier (#947) : une ligne par original (copie -> transformation -> terminé /
+         rejeté), en complément de la barre globale. Masquée tant qu'aucun plan n'est établi (donc pendant
+         la décompression d'un .zip, qui ne suit pas les fichiers). -->
+    <TableView fx:id="tableFichiers" prefHeight="190.0" visible="false" managed="false"/>
   </VBox>
   <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>
   <!-- Rapport d'import (#155) : fichiers rejetés (nom — raison), visible seulement s'il y en a. -->

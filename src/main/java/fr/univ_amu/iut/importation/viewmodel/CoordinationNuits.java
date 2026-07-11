@@ -5,6 +5,7 @@ import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel.DemandeImportNuits;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import java.nio.file.Path;
@@ -154,6 +155,14 @@ public final class CoordinationNuits {
     /// `Property`** : sûr sur un fil d'arrière-plan.
     public ResultatImportMultiNuits executer(
             DemandeImportNuits demande, Consumer<Progression> progres, JetonAnnulation jeton) {
+        return executer(demande, progres, jeton, SuiviFichiers.inerte());
+    }
+
+    /// Variante **multi-nuits** avec suivi par fichier (#947) : le plan est replanifié à chaque nuit, en
+    /// phase avec la progression agrégée « Nuit i/N · … ». **Ne lit aucune `Property`** : sûr sur un fil
+    /// d'arrière-plan.
+    public ResultatImportMultiNuits executer(
+            DemandeImportNuits demande, Consumer<Progression> progres, JetonAnnulation jeton, SuiviFichiers suivi) {
         return serviceImport.importerNuits(
                 demande.dossier(),
                 demande.idPoint(),
@@ -161,6 +170,7 @@ public final class CoordinationNuits {
                 demande.nuits(),
                 demande.conserverOriginaux(),
                 progres,
-                jeton);
+                jeton,
+                suivi);
     }
 }

@@ -11,9 +11,11 @@ import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
+import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.InspectionImportViewModel;
+import fr.univ_amu.iut.importation.viewmodel.LigneFichierImport;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.importation.viewmodel.RattachementImportViewModel;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -37,6 +39,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
@@ -147,6 +150,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
 
     @FXML
     private Label labelProgression;
+
+    @FXML
+    private TableView<LigneFichierImport> tableFichiers;
 
     @FXML
     private Label labelMessage;
@@ -339,6 +345,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         lierVisibiliteGeree(zoneProgression, traitement);
         barreProgression.progressProperty().bind(viewModel.progression().fractionProperty());
         labelProgression.textProperty().bind(viewModel.progression().messageProperty());
+        // Table de suivi par fichier (#947) : visible seulement quand un plan de nuit est établi (liaison
+        // vivante sur la liste, pas un drapeau figé) — donc masquée pendant la décompression d'un .zip.
+        TableSuiviFichiers.configurer(tableFichiers);
+        tableFichiers.setItems(viewModel.suiviFichiers().lignes());
+        lierVisibiliteGeree(
+                tableFichiers, Bindings.isNotEmpty(viewModel.suiviFichiers().lignes()));
         boutonImporter.disableProperty().bind(viewModel.peutImporter().not().or(traitement));
         // Explique le grisage (#789) sur l'enveloppe (un Button désactivé n'affiche pas de tooltip). Le
         // grisage pendant l'import est déjà signalé par la zone de progression ; on nomme surtout les
@@ -449,7 +461,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
     @FunctionalInterface
     private interface ExecuteurImport {
         ResultatImport executer(
-                ImportationViewModel.DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton);
+                ImportationViewModel.DemandeImport demande,
+                Consumer<Progression> progres,
+                JetonAnnulation jeton,
+                SuiviFichiers suivi);
     }
 
     /// « Importer cette nuit » : exécute le travail lourd sur un **virtual thread** (Java 25) pour ne
@@ -474,7 +489,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         if (viewModel.inspection().plusieursNuits()) {
             lancerImportNuitsHorsThread();
         } else {
-            lancerImportHorsThread(viewModel::executerImport);
+            lancerImportHorsThread(viewModel.execution()::executer);
         }
     }
 
@@ -506,8 +521,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         // Progression (#33) : le service notifie hors-thread ; on relaie chaque point au fil JavaFX.
         Consumer<Progression> progres =
                 p -> Platform.runLater(() -> viewModel.progression().appliquer(p));
+        SuiviFichiers suivi = new RelaisSuiviFichiers(viewModel.suiviFichiers());
         surVirtualThread("import-vigiechiro", () -> {
-            ResultatImport resultatImport = executeur.executer(demande, progres, jeton);
+            ResultatImport resultatImport = executeur.executer(demande, progres, jeton, suivi);
             Platform.runLater(() -> viewModel.marquerTermine(resultatImport));
         });
     }
@@ -527,8 +543,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran {
         jetonCourant = jeton;
         Consumer<Progression> progres =
                 p -> Platform.runLater(() -> viewModel.progression().appliquer(p));
+        SuiviFichiers suivi = new RelaisSuiviFichiers(viewModel.suiviFichiers());
         surVirtualThread("import-nuits-vigiechiro", () -> {
-            ResultatImportMultiNuits resultat = viewModel.coordinationNuits().executer(demande, progres, jeton);
+            ResultatImportMultiNuits resultat = viewModel.coordinationNuits().executer(demande, progres, jeton, suivi);
             Platform.runLater(() -> viewModel.marquerTermineNuits(resultat));
         });
     }

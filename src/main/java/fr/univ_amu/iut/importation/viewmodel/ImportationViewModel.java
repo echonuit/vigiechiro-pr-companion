@@ -43,7 +43,7 @@ import javafx.collections.ObservableList;
 /// exposée à la vue (dossier, inspection, rattachement…) **délègue** aux sous-VM (vue inchangée).
 ///
 /// [#importer()] est **synchrone** ; la vue lance plutôt l'import sur un fil d'arrière-plan
-/// ([#executerImport(DemandeImport, java.util.function.Consumer)]) pour ne pas figer l'IHM, et relaie
+/// ([ExecutionImport]) pour ne pas figer l'IHM, et relaie
 /// la **progression déterminée** (#33) au fil JavaFX via [#appliquerProgression]. Seul `javafx.beans` /
 /// `javafx.collections` est importé ici, jamais `javafx.scene` (règle `viewmodel_sans_javafx_ui`).
 public class ImportationViewModel {
@@ -91,6 +91,12 @@ public class ImportationViewModel {
     /// [#progression()].
     private final ProgressionOperation progressionOperation = new ProgressionOperation();
 
+    /// Table de suivi **par fichier** de l'import en cours (#947) : une [LigneFichierImport] par original
+    /// de la nuit, avec son état (copie → transformation → terminé / rejeté). La vue lie sa `TableView` à
+    /// [SuiviLignesFichiers#lignes()] via [#suiviFichiers()] ; le service la nourrit hors-thread via le
+    /// relais du controller (`Platform.runLater`).
+    private final SuiviLignesFichiers suiviFichiers = new SuiviLignesFichiers();
+
     /// Pré-contrôle R5 proactif (#108) extrait dans un collaborateur dédié ([ControleNumeroPassage]) :
     /// signale qu'un n° de passage est déjà pris (bloque [#peutImporter()]) et propose le prochain libre.
     /// Recalculé à chaque changement de point / année / n° de passage du rattachement.
@@ -101,6 +107,10 @@ public class ImportationViewModel {
     /// Il s'abonne lui-même au rattachement et à la table des nuits ; l'orchestrateur compose sa validité
     /// dans `peutImporter`.
     private final CoordinationNuits coordinationNuits;
+
+    /// Exécution hors-thread de l'import mono-nuit, extraite dans un collaborateur dédié
+    /// ([ExecutionImport]) : préoccupation sans lecture de `Property`, exposée via [#execution()].
+    private final ExecutionImport execution;
 
     /// Dossier temporaire d'extraction d'un `.zip` choisi comme source (#139), à supprimer après import
     /// (succès ou échec) ou au changement de source ; `null` quand la source est un dossier déjà
@@ -129,6 +139,7 @@ public class ImportationViewModel {
         // Coordination multi-nuits (#…) : s'abonne au rattachement et à la table des nuits pour
         // auto-numéroter les nuits incluses et exposer la validité de cette numérotation.
         this.coordinationNuits = new CoordinationNuits(serviceImport, inspection, rattachement);
+        this.execution = new ExecutionImport(serviceImport);
 
         // Changer de dossier source invalide l'inspection précédente : un nouveau dossier doit être
         // ré-inspecté (sinon le bouton Importer resterait actif et l'aperçu garderait l'ancien exemple).
@@ -227,6 +238,13 @@ public class ImportationViewModel {
         return progressionOperation;
     }
 
+    /// Suivi **par fichier** de l'import en cours (#947) : ses [SuiviLignesFichiers#lignes()] (une
+    /// [LigneFichierImport] par original) alimentent la table de M-Import, en complément de la barre
+    /// globale. Réinitialisé au lancement de chaque import ([#marquerEnCours()]).
+    public SuiviLignesFichiers suiviFichiers() {
+        return suiviFichiers;
+    }
+
     /// Recharge les sites de l'utilisateur courant (à l'ouverture de l'écran ou après création d'un
     /// site).
     public void chargerSites() {
@@ -266,7 +284,7 @@ public class ImportationViewModel {
         }
         marquerEnCours();
         try {
-            marquerTermine(executerImport(preparerImport()));
+            marquerTermine(execution.executer(preparerImport()));
         } catch (RuntimeException echec) {
             marquerEchec(echec.getMessage());
         }
@@ -277,6 +295,7 @@ public class ImportationViewModel {
     public void marquerEnCours() {
         messageExecution.set("");
         progressionOperation.demarrer("Préparation…");
+        suiviFichiers.reinitialiser(); // la table par fichier (#947) repart vide, le plan la remplira
         etat.set(EtatImport.EN_COURS);
         // Verrou de navigation (#54) : on ne doit pas quitter l'assistant tant que l'import tourne,
         // sinon son résultat (marquerTermine/marquerEchec) serait perdu en détachant la vue.
@@ -346,7 +365,7 @@ public class ImportationViewModel {
     }
 
     /// Capture (sur le fil JavaFX) les entrées du rattachement courant dans un instantané immuable,
-    /// pour les passer à [#executerImport(DemandeImport)] sans relire de `Property` hors-thread.
+    /// pour les passer à [ExecutionImport#executer(DemandeImport)] sans relire de `Property` hors-thread.
     /// Précondition : rattachement complet ([#peutImporter()] vrai), garanti par l'appelant.
     public DemandeImport preparerImport() {
         // Mémorise le choix « conserver les originaux » au moment de lancer l'import (survit aux sessions).
@@ -358,29 +377,11 @@ public class ImportationViewModel {
                 conservation.valeur());
     }
 
-    /// Exécute le travail lourd de l'import (copie + renommage + transformation) via
-    /// [ServiceImport#importer], à partir d'un instantané. **Ne lit aucune `Property` et ne mute
-    /// rien** : sûr sur un fil d'arrière-plan.
-    ///
-    /// @return le résultat de l'import
-    /// @throws RuntimeException si l'import échoue (refus métier R5, journal manquant…)
-    public ResultatImport executerImport(DemandeImport demande) {
-        return executerImport(demande, progres -> {});
-    }
-
-    /// Variante avec **suivi de progression** (#33) : `progres` est notifié sur le fil d'exécution de
-    /// l'import ; la vue le relaie au fil JavaFX (via [#appliquerProgression]). **Ne mute aucune
-    /// `Property`** ici : sûr sur un fil d'arrière-plan.
-    public ResultatImport executerImport(DemandeImport demande, Consumer<Progression> progres) {
-        return executerImport(demande, progres, JetonAnnulation.neutre());
-    }
-
-    /// Variante **annulable** (#146) : `jeton` permet d'interrompre l'import en cours. Une annulation
-    /// remonte une [fr.univ_amu.iut.importation.model.AnnulationImportException] (RuntimeException) que la
-    /// vue traite via [#marquerAnnule()]. **Ne mute aucune `Property`** ici : sûr sur un fil d'arrière-plan.
-    public ResultatImport executerImport(DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton) {
-        return serviceImport.importer(
-                demande.dossier(), demande.idPoint(), demande.prefixe(), progres, jeton, demande.conserverOriginaux());
+    /// Exécution du travail lourd de l'import mono-nuit (#33/#146/#947), extraite dans un collaborateur
+    /// dédié ([ExecutionImport]) : la vue s'en sert hors-thread (`execution().executer(...)`), sans
+    /// lecture de `Property`.
+    public ExecutionImport execution() {
+        return execution;
     }
 
     /// Instantané immuable des entrées d'un import, capturé sur le fil JavaFX par preparerImport.

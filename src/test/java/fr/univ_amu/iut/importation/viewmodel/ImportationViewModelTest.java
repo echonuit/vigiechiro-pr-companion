@@ -330,7 +330,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean()))
+        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean(), any()))
                 .thenReturn(new ResultatImport(null, null, "1925492", 2, 6, List.of()));
         prepareRattachement(site, point);
 
@@ -362,7 +362,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
-        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean()))
+        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean(), any()))
                 .thenThrow(new RegleMetierException("R5 : un passage existe déjà pour ce point."));
         prepareRattachement(site, point);
 
@@ -411,14 +411,14 @@ class ImportationViewModelTest {
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
         ResultatImport attendu = new ResultatImport(null, null, "1925492", 2, 6, List.of());
-        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean()))
+        when(serviceImport.importer(eq(sd), eq(10L), any(Prefixe.class), any(), any(), anyBoolean(), any()))
                 .thenReturn(attendu);
         prepareRattachement(site, point);
 
         viewModel.marquerEnCours();
         assertThat(viewModel.etatProperty().get()).isEqualTo(EtatImport.EN_COURS);
 
-        ResultatImport obtenu = viewModel.executerImport(viewModel.preparerImport());
+        ResultatImport obtenu = viewModel.execution().executer(viewModel.preparerImport());
         assertThat(obtenu).isSameAs(attendu);
         assertThat(viewModel.etatProperty().get())
                 .as("executerImport ne mute aucun état")

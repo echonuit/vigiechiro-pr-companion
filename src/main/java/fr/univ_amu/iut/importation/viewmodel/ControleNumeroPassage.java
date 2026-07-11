@@ -5,6 +5,7 @@ import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel.DemandeImport;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import java.util.Objects;
@@ -104,8 +105,21 @@ public final class ControleNumeroPassage {
     /// confirmation côté IHM. **Ne mute aucune Property** : sûr sur un fil d'arrière-plan.
     public ResultatImport ecraserEtImporter(
             DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton) {
+        return ecraserEtImporter(demande, progres, jeton, SuiviFichiers.inerte());
+    }
+
+    /// Variante **écrasement** avec suivi par fichier (#947), notifié hors-thread comme la progression.
+    /// **Ne mute aucune Property** : sûr sur un fil d'arrière-plan.
+    public ResultatImport ecraserEtImporter(
+            DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton, SuiviFichiers suivi) {
         return serviceImport.ecraserEtImporter(
-                demande.dossier(), demande.idPoint(), demande.prefixe(), progres, jeton, demande.conserverOriginaux());
+                demande.dossier(),
+                demande.idPoint(),
+                demande.prefixe(),
+                progres,
+                jeton,
+                demande.conserverOriginaux(),
+                suivi);
     }
 
     /// Message à présenter quand l'import est bloqué (`peutImporter` faux) : l'avertissement de doublon
