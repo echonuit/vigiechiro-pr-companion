@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
@@ -64,6 +65,11 @@ public class SitesModule extends AbstractModule {
         OptionalBinder.newOptionalBinder(binder(), CoordonneesPoint.class)
                 .setBinding()
                 .to(CoordonneesPointSites.class);
+        // Port socle ReferentielPoint (axe 4) : `sites` fournit l'identité VigieChiro d'un point (code +
+        // id du site) à `passage`/`lot` via le même montage d'inversion.
+        OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
+                .setBinding()
+                .to(InfosPointSites.class);
         // Rapprochement des sites locaux avec VigieChiro (#728), invoqué à la connexion.
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()

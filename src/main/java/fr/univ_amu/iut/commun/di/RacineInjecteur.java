@@ -14,6 +14,7 @@ import fr.univ_amu.iut.lot.di.DepotVigieChiroModule;
 import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.multisite.di.MultisiteModule;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.di.SynchronisationParticipationModule;
 import fr.univ_amu.iut.qualification.di.QualificationModule;
 import fr.univ_amu.iut.recherche.di.RechercheModule;
 import fr.univ_amu.iut.sites.di.SitesModule;
@@ -53,6 +54,7 @@ public final class RacineInjecteur {
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),
+                new SynchronisationParticipationModule(),
                 new QualificationModule(),
                 new ValidationModule(),
                 new MultisiteModule(),

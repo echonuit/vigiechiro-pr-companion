@@ -7,6 +7,7 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
@@ -17,6 +18,7 @@ import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -58,6 +60,18 @@ public class PassageModule extends AbstractModule {
         OptionalBinder.newOptionalBinder(binder(), CoordonneesPoint.class)
                 .setDefault()
                 .toInstance(idPoint -> Optional.empty());
+
+        // Port socle ReferentielPoint (axe 4) : cette feature CONSOMME l'identité VigieChiro d'un point
+        // (code de localité + id du site, pour créer/mettre à jour une participation) sans dépendre de
+        // `sites`. Même montage que CoordonneesPoint : défaut no-op ici, implémentation réelle par SitesModule.
+        OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
+                .setDefault()
+                .toInstance(idPoint -> Optional.empty());
+
+        // Passerelle SynchronisationParticipation (axe 4) : OptionalBinder VIDE (ni défaut ni binding). Le
+        // module réel SynchronisationParticipationModule (chargé par RacineInjecteur avec la connexion) pose
+        // le binding ; hors connexion, l'Optional reste vide (patron de DepotVigieChiro).
+        OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class);
     }
 
     @Provides

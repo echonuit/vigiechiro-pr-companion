@@ -70,6 +70,9 @@ class ClientVigieChiroTest {
         assertThat(client.post("/fichiers", "{}")).isEmpty();
         assertThat(client.creerParticipation("site1", participationMinimale()).id())
                 .isEmpty();
+        assertThat(client.modifierParticipation("p1", "etag1", participationMinimale())
+                        .id())
+                .isEmpty();
         assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav")).isEmpty();
         assertThat(client.finaliserFichier("f1")).isFalse();
     }
@@ -80,6 +83,9 @@ class ClientVigieChiroTest {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.creerParticipation("site1", participationMinimale()).id())
+                .isEmpty();
+        assertThat(client.modifierParticipation("p1", "etag1", participationMinimale())
+                        .id())
                 .isEmpty();
         assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav")).isEmpty();
         assertThat(client.finaliserFichier("f1")).isFalse();

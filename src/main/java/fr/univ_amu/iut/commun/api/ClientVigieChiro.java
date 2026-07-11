@@ -32,6 +32,9 @@ public final class ClientVigieChiro {
     private static final Duration DELAI_UPLOAD = Duration.ofSeconds(120);
     /// Type de média JSON des échanges avec le backend Eve (`Accept` et `Content-Type`).
     private static final String TYPE_JSON = "application/json";
+
+    /// Préfixe de chemin de l'API des participations (`GET .../donnees`, `GET .../#id`, `PATCH .../#id`).
+    private static final String CHEMIN_PARTICIPATIONS = "/participations/";
     /// Garde-fou de pagination (`GET …/donnees`) : une participation a des milliers de fichiers, jamais
     /// des centaines de milliers ; on plafonne le nombre de pages pour éviter toute boucle.
     private static final int PAGES_MAX = 500;
@@ -86,7 +89,7 @@ public final class ClientVigieChiro {
     /// concurrent-sûr), dates, météo, configuration matérielle et état du traitement Tadarida. Vide si non
     /// connecté, indisponible, ou participation inconnue.
     public Optional<ParticipationDetail> participation(String id) {
-        return get("/participations/" + id).flatMap(ParticipationsVigieChiro::detail);
+        return get(CHEMIN_PARTICIPATIONS + id).flatMap(ParticipationsVigieChiro::detail);
     }
 
     /// Résultats Tadarida d'une participation (`GET /participations/#id/donnees`, #719, axe 4.2) : les
@@ -97,7 +100,7 @@ public final class ClientVigieChiro {
         List<DonneeVigieChiro> tout = new ArrayList<>();
         for (int page = 1; page <= PAGES_MAX; page++) {
             Optional<String> corps =
-                    get("/participations/" + participationId + "/donnees?max_results=1000&page=" + page);
+                    get(CHEMIN_PARTICIPATIONS + participationId + "/donnees?max_results=1000&page=" + page);
             if (corps.isEmpty()) {
                 break; // non connecté / erreur : on renvoie ce qui a déjà été récupéré
             }
@@ -132,6 +135,24 @@ public final class ClientVigieChiro {
                 .map(ResultatParticipation::reussie)
                 .orElseGet(
                         () -> ResultatParticipation.echouee("réponse acceptée mais sans identifiant : " + r.corps()));
+    }
+
+    /// **Met à jour** une participation existante (`PATCH /participations/#id`, axe 4) : n'émet que les
+    /// métadonnées synchronisables (dates, météo, configuration ; cf. [RequetesVigieChiro#miseAJourParticipation]),
+    /// avec l'en-tête `If-Match: <etag>` exigé par Eve (concurrence optimiste). L'`etag` frais se lit via
+    /// [#participation]. Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) — un
+    /// refus doit être expliqué. Prérequis : `etag` courant (sinon `412 Precondition Failed`).
+    public ResultatParticipation modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
+        Optional<ReponseHttp> reponse =
+                ecrire("PATCH", CHEMIN_PARTICIPATIONS + id, RequetesVigieChiro.miseAJourParticipation(miseAJour), etag);
+        if (reponse.isEmpty()) {
+            return ResultatParticipation.echouee("VigieChiro injoignable (non connecté, ou réseau indisponible).");
+        }
+        ReponseHttp r = reponse.get();
+        if (!estSucces(r.statut())) {
+            return ResultatParticipation.echouee("HTTP " + r.statut() + " — " + r.corps());
+        }
+        return ResultatParticipation.reussie(id);
     }
 
     /// Déclare un **fichier** à téléverser (`POST /fichiers`, étape 1/3) : renvoie son `_id` et l'URL S3
@@ -178,19 +199,29 @@ public final class ClientVigieChiro {
     /// cas de refus (non-2xx), pour construire un message d'erreur exploitable (ex. la création de
     /// participation). Vide **seulement** si non connecté / réseau indisponible.
     Optional<ReponseHttp> postDetaille(String chemin, String corpsJson) {
+        return ecrire("POST", chemin, corpsJson, null);
+    }
+
+    /// Écriture authentifiée (`POST` / `PATCH`) d'un corps JSON sur `chemin`, renvoyant la réponse HTTP
+    /// complète (statut + corps). Si `etag` est non-`null`, ajoute l'en-tête `If-Match` (concurrence
+    /// optimiste exigée par Eve pour les mises à jour). Vide **seulement** si non connecté / réseau
+    /// indisponible ; un refus (non-2xx) revient avec son statut et son corps.
+    private Optional<ReponseHttp> ecrire(String methode, String chemin, String corpsJson, String etag) {
         Optional<String> entete = enteteAuthorization();
         if (entete.isEmpty()) {
             return Optional.empty();
         }
         try {
-            HttpRequest requete = HttpRequest.newBuilder(URI.create(baseUrl + chemin))
+            HttpRequest.Builder requete = HttpRequest.newBuilder(URI.create(baseUrl + chemin))
                     .timeout(DELAI)
                     .header("Authorization", entete.get())
                     .header("Accept", TYPE_JSON)
                     .header("Content-Type", TYPE_JSON)
-                    .POST(HttpRequest.BodyPublishers.ofString(corpsJson, StandardCharsets.UTF_8))
-                    .build();
-            HttpResponse<String> reponse = client.send(requete, HttpResponse.BodyHandlers.ofString());
+                    .method(methode, HttpRequest.BodyPublishers.ofString(corpsJson, StandardCharsets.UTF_8));
+            if (etag != null) {
+                requete.header("If-Match", etag);
+            }
+            HttpResponse<String> reponse = client.send(requete.build(), HttpResponse.BodyHandlers.ofString());
             return Optional.of(new ReponseHttp(reponse.statusCode(), reponse.body()));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();

@@ -1,0 +1,43 @@
+package fr.univ_amu.iut.passage.di;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.Key;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.model.ReferentielPoint;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
+
+/// Liaison **réelle** de la passerelle [SynchronisationParticipation] (patron de `DepotVigieChiroModule`) :
+/// chargée seulement dans `RacineInjecteur` (app complète, `ConnexionModule` présent), elle fournit l'instance
+/// qualifiée `@Named("vigiechiro")` et la pose sur l'`OptionalBinder` déclaré vide par `PassageModule`. Le
+/// qualificateur évite l'auto-référence (`RecursiveBinding`). Hors connexion, l'`Optional` reste vide.
+public class SynchronisationParticipationModule extends AbstractModule {
+
+    private static final String QUALIFIANT = "vigiechiro";
+
+    @Override
+    protected void configure() {
+        OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class)
+                .setBinding()
+                .to(Key.get(SynchronisationParticipation.class, Names.named(QUALIFIANT)));
+    }
+
+    @Provides
+    @Singleton
+    @Named(QUALIFIANT)
+    SynchronisationParticipation fournirSynchronisationParticipation(
+            ClientVigieChiro client,
+            LienVigieChiroDao liens,
+            PassageDao passageDao,
+            MaterielMicroDao materielDao,
+            ReferentielPoint referentielPoint) {
+        return new SynchronisationParticipation(client, liens, passageDao, materielDao, referentielPoint);
+    }
+}
