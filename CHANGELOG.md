@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.168.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.167.0...v1.168.0) (2026-07-11)
+
+
+### Features
+
+* **navigation:** avertir avant de fermer/quitter pendant une tâche longue ([#906](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/906)) ([b9ef1db](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/b9ef1db80431414bca440b7d7faec33550b746f4)), closes [#786](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/786)
+
 # [1.167.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.166.1...v1.167.0) (2026-07-11)
 
 
