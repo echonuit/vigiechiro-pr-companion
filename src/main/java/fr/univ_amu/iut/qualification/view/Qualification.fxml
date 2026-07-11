@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
@@ -90,6 +91,7 @@
                   onAction="#personnaliser"/>
           <Button fx:id="boutonRegenerer" text="↺ Régénérer" styleClass="bouton-secondaire"
                   onAction="#regenerer"/>
+          <MenuButton fx:id="menuOutils" text="☰" styleClass="menu-actions" accessibleText="Outils : colonnes"/>
         </HBox>
 
         <VBox spacing="4.0">

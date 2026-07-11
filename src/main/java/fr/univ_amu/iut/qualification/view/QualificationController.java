@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -32,6 +33,7 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
@@ -107,6 +109,10 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     @FXML
     private Label lblProgression;
+
+    /// Menu ☰ « outils » (#920) : porte l'entrée « Colonnes… » (le clic droit de la table la porte aussi).
+    @FXML
+    private MenuButton menuOutils;
 
     @FXML
     private TableView<SequenceEnSelection> tableSequences;
@@ -195,6 +201,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private void initialize() {
         // Densite et habillage de table uniformes (#690).
         TableDonnees.uniformiser(tableSequences);
+        // Sélecteur de colonnes (#920) : clic droit + ☰ « outils ».
+        GestionnaireColonnes.installer(tableSequences, menuOutils, colonnesSequences());
         // Bandeau : identité de la nuit (VM sélection) + statut/verdict persistés (VM verdict).
         lblTitreContexte.textProperty().bind(selectionVm.titreContexteProperty());
         lblPlageHoraire.textProperty().bind(selectionVm.plageHoraireProperty());
@@ -359,6 +367,16 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private void regenerer() {
         selectionVm.regenerer();
+    }
+
+    /// Colonnes de la sélection d'écoute proposées au sélecteur (#920). « Fichier » est l'identité
+    /// (verrouillée) ; les autres sont masquables.
+    private List<GestionnaireColonnes.Colonne> colonnesSequences() {
+        return List.of(
+                new GestionnaireColonnes.Colonne(colPosition, "N°", false),
+                new GestionnaireColonnes.Colonne(colFichier, "Fichier", true),
+                new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
+                new GestionnaireColonnes.Colonne(colEcoute, "Écouté", false));
     }
 
     /// Ouvre la modale de personnalisation de la sélection (R12) : choix de la méthode et de la
