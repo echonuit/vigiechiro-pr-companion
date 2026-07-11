@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.170.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.169.0...v1.170.0) (2026-07-11)
+
+
+### Features
+
+* **passage:** pousser meteo/micro vers la participation a la validation (bug B) — Phase 2a ([#934](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/934)) ([433f23e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/433f23ec580c2f536a45e7b0e77200854cf37e54))
+
 # [1.169.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.168.0...v1.169.0) (2026-07-11)
 
 
