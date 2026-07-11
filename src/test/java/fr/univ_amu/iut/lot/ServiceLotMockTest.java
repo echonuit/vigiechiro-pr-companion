@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
+import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -72,7 +74,8 @@ class ServiceLotMockTest {
                 verification,
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                new CompacteurDepot());
+                new CompacteurDepot(),
+                mock(DepotUniteDao.class));
         when(passageDao.findById(1L)).thenReturn(Optional.of(passageAJeter(1L)));
 
         assertThatThrownBy(() -> service.preparerLot(1L))

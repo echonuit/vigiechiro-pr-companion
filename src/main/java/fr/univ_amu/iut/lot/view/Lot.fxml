@@ -108,6 +108,10 @@
       </StackPane>
     </HBox>
     <Label fx:id="lblDepotMessage" styleClass="section-sous" wrapText="true"/>
+    <!-- Table de dépôt (#983) : une ligne par unité téléversée (état persisté depot_unite #981),
+         réhydratée à l'ouverture et vivante pendant un dépôt. Masquée tant qu'aucun dépôt automatique
+         n'a été entamé. -->
+    <TableView fx:id="tableDepot" prefHeight="170.0" visible="false" managed="false"/>
   </VBox>
 
   <!-- Étape 4 - Marquer déposé -->

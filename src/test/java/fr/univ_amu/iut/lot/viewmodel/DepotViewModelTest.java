@@ -9,8 +9,11 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.BilanDepot;
+import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.StatutDepotUnite;
+import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -47,13 +50,46 @@ class DepotViewModelTest {
         List<Path> sequences =
                 List.of(Path.of("/ws/session-42/transformes/a.wav"), Path.of("/ws/session-42/transformes/b.wav"));
         when(service.sequencesADeposer(ID_PASSAGE)).thenReturn(sequences);
-        when(depot.deposer(eq(ID_PASSAGE), any())).thenReturn(new BilanDepot("part-1", 2, List.of()));
+        when(depot.deposer(eq(ID_PASSAGE), any(), any(), any())).thenReturn(new BilanDepot("part-1", 2, List.of()));
 
         BilanDepot bilan = new DepotViewModel(service, Optional.of(depot)).televerser(ID_PASSAGE);
 
         assertThat(bilan.participationId()).isEqualTo("part-1");
         assertThat(bilan.deposees()).isEqualTo(2);
-        verify(depot).deposer(ID_PASSAGE, sequences);
+        verify(depot).deposer(eq(ID_PASSAGE), eq(sequences), any(), any());
+    }
+
+    @Test
+    @DisplayName("#983 : rehydrater() reflète l'état persisté des unités dans la table de dépôt")
+    void rehydrater_refile_l_etat_persiste() {
+        when(service.unitesDepot(ID_PASSAGE))
+                .thenReturn(List.of(
+                        new DepotUnite(
+                                1L,
+                                ID_PASSAGE,
+                                "Car-1.zip",
+                                TypeDepotUnite.ZIP,
+                                StatutDepotUnite.DEPOSE,
+                                "obj-1",
+                                null,
+                                "2026-07-11T14:00:00"),
+                        new DepotUnite(
+                                2L,
+                                ID_PASSAGE,
+                                "Car-2.zip",
+                                TypeDepotUnite.ZIP,
+                                StatutDepotUnite.ECHEC,
+                                null,
+                                "HTTP 503",
+                                "2026-07-11T14:00:00")));
+        DepotViewModel vm = new DepotViewModel(service, Optional.empty());
+
+        vm.rehydrater(ID_PASSAGE);
+
+        assertThat(vm.suiviLignes().lignes()).hasSize(2);
+        assertThat(vm.suiviLignes().resteAReprendreProperty().get())
+                .as("un échec persiste : l'action devient « Retenter les échecs »")
+                .isTrue();
     }
 
     @Test

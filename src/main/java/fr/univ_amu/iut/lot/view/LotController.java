@@ -23,6 +23,7 @@ import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
+import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import java.nio.file.Path;
 import java.util.List;
@@ -142,6 +143,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private Label lblDepotMessage;
 
     @FXML
+    private TableView<LigneDepot> tableDepot;
+
+    @FXML
     private StackPane enveloppeOuvrirDepot;
 
     @FXML
@@ -258,9 +262,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                                         + " déposer »), génération et envoi précédent terminés.")
                                 .otherwise(
                                         "Téléverser la nuit sur VigieChiro (marque ensuite le passage" + " déposé).")));
-        lblDepotMessage.textProperty().bind(depotViewModel.messageProperty());
-        lblDepotMessage.visibleProperty().bind(depotViewModel.messageProperty().isNotEmpty());
-        lblDepotMessage.managedProperty().bind(depotViewModel.messageProperty().isNotEmpty());
+        lierTableDepot();
 
         // Archives de dépôt (#110) : titre = plafond configuré ; bouton actif une fois le lot préparé et
         // hors génération en cours ; la liste reflète les ZIP produits.
@@ -402,6 +404,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     public void ouvrirSur(ContextePassage passage) {
         this.contexte = passage;
         viewModel.ouvrirSur(passage.idPassage());
+        // Réhydrate la table de dépôt (#983) depuis l'état persisté : un dépôt interrompu réaffiche ses
+        // unités (déposées/échecs) et propose la reprise.
+        depotViewModel.rehydrater(passage.idPassage());
     }
 
     /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Préparer le
@@ -453,7 +458,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         depotViewModel.marquerEnCours();
         Thread.ofVirtual().name("depot-vigiechiro").start(() -> {
             try {
-                BilanDepot bilan = depotViewModel.televerser(idPassage);
+                BilanDepot bilan =
+                        depotViewModel.televerser(idPassage, new RelaisSuiviDepot(depotViewModel.suiviLignes()));
                 Platform.runLater(() -> {
                     depotViewModel.appliquerBilan(bilan);
                     // Statut honnête (#982) : le moteur de dépôt a déjà posé « Dépôt en cours » ou
@@ -465,6 +471,25 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
             }
         });
+    }
+
+    /// Câble la table de dépôt (#983) : lignes persistées (`depot_unite` #981) + événements du moteur
+    /// reprenable (#982). Visible seulement quand un dépôt a été entamé (liaison vivante sur la liste).
+    /// Quand il reste des unités non déposées, l'action devient une reprise : « Retenter les échecs ».
+    private void lierTableDepot() {
+        lblDepotMessage.textProperty().bind(depotViewModel.messageProperty());
+        lblDepotMessage.visibleProperty().bind(depotViewModel.messageProperty().isNotEmpty());
+        lblDepotMessage.managedProperty().bind(depotViewModel.messageProperty().isNotEmpty());
+        TableSuiviDepot.configurer(tableDepot);
+        tableDepot.setItems(depotViewModel.suiviLignes().lignes());
+        var depotEntame = Bindings.isNotEmpty(depotViewModel.suiviLignes().lignes());
+        tableDepot.visibleProperty().bind(depotEntame);
+        tableDepot.managedProperty().bind(depotEntame);
+        btnTeleverser
+                .textProperty()
+                .bind(Bindings.when(depotViewModel.suiviLignes().resteAReprendreProperty())
+                        .then("↻ Retenter les échecs")
+                        .otherwise("☁ Téléverser sur Vigie-Chiro"));
     }
 
     /// Relais du suivi par archive (#820) vers la table : chaque événement, émis **hors fil JavaFX** et dans

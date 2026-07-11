@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.lot.view.LotController;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
@@ -172,6 +173,13 @@ public final class CaptureLot {
                     @Provides
                     Horloge horlogeFigee() {
                         return new HorlogeFigee(LocalDateTime.of(2026, 6, 21, 8, 0));
+                    }
+
+                    /// ServiceLot exige le DAO de suivi de dépôt (#981) ; son binding applicatif vit dans
+                    /// DepotVigieChiroModule (non chargé ici, capture sans connexion).
+                    @Provides
+                    DepotUniteDao depotUniteDao(SourceDeDonnees source) {
+                        return new DepotUniteDao(source);
                     }
                 }),
                 new PersistenceModule(),

@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SuiviDepot;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -33,6 +34,10 @@ public class DepotViewModel {
     /// Message de restitution du dernier dépôt (succès résumé ou erreur), pour l'IHM.
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
+    /// Table de dépôt (#983) : une [LigneDepot] par unité suivie (`depot_unite`, #981), réhydratée à
+    /// l'ouverture ([#rehydrater]) et mise à jour en direct pendant un dépôt (relais du controller).
+    private final SuiviLignesDepot suiviLignes = new SuiviLignesDepot();
+
     public DepotViewModel(ServiceLot service, Optional<DepotVigieChiro> depot) {
         this.service = Objects.requireNonNull(service, "service");
         this.depot = Objects.requireNonNull(depot, "depot");
@@ -52,14 +57,34 @@ public class DepotViewModel {
     /// @param idPassage passage (nuit) à déposer
     /// @return le bilan du dépôt (participation créée, fichiers déposés / en échec)
     public BilanDepot televerser(Long idPassage) {
+        return televerser(idPassage, SuiviDepot.inerte());
+    }
+
+    /// Variante avec **suivi par unité** (#983) : `suivi` est notifié hors-thread au fil du dépôt
+    /// reprenable (#982) ; la vue relaie au fil JavaFX vers [#suiviLignes()].
+    public BilanDepot televerser(Long idPassage, SuiviDepot suivi) {
         Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(suivi, "suivi");
         DepotVigieChiro depotVigieChiro =
                 depot.orElseThrow(() -> new RegleMetierException("Dépôt VigieChiro indisponible dans ce contexte."));
         List<Path> fichiers = service.sequencesADeposer(idPassage);
         if (fichiers.isEmpty()) {
             throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage.");
         }
-        return depotVigieChiro.deposer(idPassage, fichiers);
+        return depotVigieChiro.deposer(idPassage, fichiers, () -> false, suivi);
+    }
+
+    /// Réhydrate la table de dépôt depuis l'état persisté (`depot_unite`, #981) : à appeler sur le fil
+    /// JavaFX à l'ouverture de l'écran. Table vide si aucun dépôt automatique n'a été entamé.
+    public void rehydrater(Long idPassage) {
+        Objects.requireNonNull(idPassage, "idPassage");
+        suiviLignes.planifier(service.unitesDepot(idPassage));
+    }
+
+    /// Table de dépôt observable (#983) : lignes à lier à la `TableView`, drapeau « reste à reprendre »
+    /// pour basculer le bouton en « Retenter les échecs ».
+    public SuiviLignesDepot suiviLignes() {
+        return suiviLignes;
     }
 
     /// Signale le **début** du téléversement (au fil JavaFX, avant de lancer [#televerser] en arrière-plan).

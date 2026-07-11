@@ -20,9 +20,12 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ArchivePlanifiee;
 import fr.univ_amu.iut.lot.model.ControleCoherence;
+import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.EtatLot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.StatutControle;
+import fr.univ_amu.iut.lot.model.StatutDepotUnite;
+import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
 import java.nio.file.Path;
@@ -278,6 +281,43 @@ class LotVueIntegrationTest {
         assertThat(robot.lookup("#btnOuvrirDepot").queryAs(Button.class).isDisabled())
                 .isFalse();
         assertThat(robot.lookup("#btnSupprimerArchives").queryAs(Button.class).isDisabled())
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#983 : la table de dépôt se réhydrate depuis depot_unite et propose « Retenter les échecs »")
+    void table_de_depot_rehydratee_et_reprise(FxRobot robot) {
+        when(service.unitesDepot(ID_PASSAGE))
+                .thenReturn(List.of(
+                        new DepotUnite(
+                                1L,
+                                ID_PASSAGE,
+                                "Car-1.zip",
+                                TypeDepotUnite.ZIP,
+                                StatutDepotUnite.DEPOSE,
+                                "obj-1",
+                                null,
+                                "2026-07-11T14:00:00"),
+                        new DepotUnite(
+                                2L,
+                                ID_PASSAGE,
+                                "Car-2.zip",
+                                TypeDepotUnite.ZIP,
+                                StatutDepotUnite.ECHEC,
+                                null,
+                                "HTTP 503",
+                                "2026-07-11T14:00:00")));
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOT_EN_COURS, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        // La table réapparaît avec l'état persisté (déposée + échec), sans dépôt en cours dans la session.
+        TableView<?> table = robot.lookup("#tableDepot").queryAs(TableView.class);
+        assertThat(table.isVisible()).isTrue();
+        assertThat(table.getItems()).hasSize(2);
+        // Il reste une unité non déposée : l'action bascule en reprise, active depuis « Dépôt en cours ».
+        Button televerser = robot.lookup("#btnTeleverser").queryAs(Button.class);
+        assertThat(televerser.getText()).contains("Retenter");
+        assertThat(televerser.isDisabled())
+                .as("la reprise doit être possible depuis « Dépôt en cours » (#980)")
                 .isFalse();
     }
 

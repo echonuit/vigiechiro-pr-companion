@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
@@ -61,6 +62,7 @@ public class ServiceLot {
     /// réglage applicatif (alimenté par [fr.univ_amu.iut.lot.di.LotModule] depuis une propriété système),
     /// pas une valeur codée en dur dans le chemin métier.
     private final CompacteurDepot compacteur;
+    private final DepotUniteDao depotUnites;
 
     public ServiceLot(
             PassageDao passageDao,
@@ -69,7 +71,8 @@ public class ServiceLot {
             VerificationCoherence verification,
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge,
-            CompacteurDepot compacteur) {
+            CompacteurDepot compacteur,
+            DepotUniteDao depotUnites) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
@@ -77,6 +80,14 @@ public class ServiceLot {
         this.moteurWorkflow = Objects.requireNonNull(moteurWorkflow, "moteurWorkflow");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.compacteur = Objects.requireNonNull(compacteur, "compacteur");
+        this.depotUnites = Objects.requireNonNull(depotUnites, "depotUnites");
+    }
+
+    /// Suivi de dépôt **persisté** du passage (#981), dans l'ordre du plan : réhydrate la table de
+    /// dépôt de M-Lot à la réouverture (#983). Vide si aucun dépôt automatique n'a été entamé.
+    public List<DepotUnite> unitesDepot(Long idPassage) {
+        Objects.requireNonNull(idPassage, "idPassage");
+        return depotUnites.parPassage(idPassage);
     }
 
     /// Plafond de taille (octets) appliqué à chaque archive de dépôt (#110), pour l'affichage du réglage.

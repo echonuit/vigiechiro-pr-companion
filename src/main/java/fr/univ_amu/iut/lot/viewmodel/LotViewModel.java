@@ -240,12 +240,16 @@ public class LotViewModel {
         // dossier » / « Supprimer »), là où l'ancienne liste, seulement peuplée en session, restait vide.
         suiviLignes.afficherTerminees(service.archivesDepot(etat.cheminDossier()));
         peutPreparer.set(etat.statut() == StatutWorkflow.VERIFIE && !etat.aDesEchecs());
-        peutDeposer.set(etat.statut() == StatutWorkflow.PRET_A_DEPOSER);
+        // « Dépôt en cours » (#980) reste déposable : c'est la REPRISE d'un dépôt interrompu (#982), le
+        // moteur ne re-téléverse que les unités manquantes.
+        peutDeposer.set(
+                etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOT_EN_COURS);
         depose.set(etat.statut() == StatutWorkflow.DEPOSE);
         // Les archives de dépôt (#110) se génèrent dès que le lot est prêt (séquences figées) : Prêt à
         // déposer ou déjà déposé.
-        peutGenererArchives.set(
-                etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOSE);
+        peutGenererArchives.set(etat.statut() == StatutWorkflow.PRET_A_DEPOSER
+                || etat.statut() == StatutWorkflow.DEPOT_EN_COURS
+                || etat.statut() == StatutWorkflow.DEPOSE);
         // (peutSupprimerArchives est une liaison vivante sur les lignes : rien à poser ici.)
         majEspaceDisque(etat);
         majEtapes(etat.statut());
