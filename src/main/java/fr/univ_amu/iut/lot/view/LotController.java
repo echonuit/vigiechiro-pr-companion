@@ -22,6 +22,7 @@ import fr.univ_amu.iut.lot.model.StatutControle;
 import fr.univ_amu.iut.lot.model.SuiviArchives;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
+import fr.univ_amu.iut.lot.viewmodel.FormatsLot;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
 import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
@@ -85,9 +86,6 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// Confirmation d'une action destructive (suppression des archives). **Injectable** (patron #214) :
     /// par défaut un dialogue natif, remplacé en test par un prédicat pour éviter un `showAndWait` bloquant.
     private Predicate<String> confirmateur = this::confirmerParDialogue;
-
-    @FXML
-    private Label lblRecap;
 
     @FXML
     private HBox stepper;
@@ -202,9 +200,20 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         majOperationCritique();
 
         // Statut du workflow déporté en zone centre de la barre de statut (#693), plus de sous-titre.
+        // Barre de statut 3 zones (#823) : gauche = contexte du passage, centre = statut + récap, droite =
+        // état vivant (par priorité : dépôt en cours > génération > espace insuffisant > bilan archives).
         zonesStatut.bind(Bindings.createObjectBinding(
-                () -> ZonesStatut.centre(viewModel.statutProperty().get()), viewModel.statutProperty()));
-        lblRecap.textProperty().bind(viewModel.recapProperty());
+                this::calculerZonesStatut,
+                viewModel.statutProperty(),
+                viewModel.recapProperty(),
+                viewModel.generationEnCoursProperty(),
+                viewModel.progression().messageProperty(),
+                viewModel.espaceDepotSuffisantProperty(),
+                viewModel.raisonEspaceInsuffisantProperty(),
+                viewModel.suiviLignes().lignes(),
+                depotViewModel.enCoursProperty(),
+                depotViewModel.suiviLignes().deposeesProperty(),
+                depotViewModel.suiviLignes().totalProperty()));
         // Étape ③ : la cible du téléversement est le sous-dossier depot/ (archives ZIP), pas la session.
         lblCheminDepot.textProperty().bind(viewModel.cheminDepotProperty());
 
@@ -471,6 +480,50 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
             }
         });
+    }
+
+    /// Compose les trois zones de la barre de statut (#823). Le contexte (zone gauche) n'est pas
+    /// observable : il est posé par [#ouvrirSur] avant le rechargement du ViewModel, dont les propriétés
+    /// (statut…) déclenchent le recalcul.
+    private ZonesStatut calculerZonesStatut() {
+        return new ZonesStatut(contexteGauche(), centreStatutRecap(), droiteEtatVivant());
+    }
+
+    private String contexteGauche() {
+        if (contexte == null) {
+            return "";
+        }
+        return "Carré " + contexte.site().numeroCarre() + " · "
+                + contexte.site().codePoint() + " · N° " + contexte.numeroPassage();
+    }
+
+    private String centreStatutRecap() {
+        String statut = viewModel.statutProperty().get();
+        String recap = viewModel.recapProperty().get();
+        if (recap == null || recap.isBlank()) {
+            return statut;
+        }
+        return statut == null || statut.isBlank() ? recap : statut + " · " + recap;
+    }
+
+    /// Zone droite = **état vivant**, une seule information à la fois, par priorité décroissante :
+    /// progression du dépôt (#982), progression de génération (#769, ETA comprise), espace insuffisant,
+    /// bilan des archives présentes au repos (#805).
+    private String droiteEtatVivant() {
+        if (depotViewModel.enCoursProperty().get()) {
+            int total = depotViewModel.suiviLignes().totalProperty().get();
+            return total == 0
+                    ? "Dépôt en préparation…"
+                    : "Dépôt " + depotViewModel.suiviLignes().deposeesProperty().get() + "/" + total
+                            + " fichier(s) téléversé(s)";
+        }
+        if (viewModel.generationEnCoursProperty().get()) {
+            return viewModel.progression().messageProperty().get();
+        }
+        if (!viewModel.espaceDepotSuffisantProperty().get()) {
+            return viewModel.raisonEspaceInsuffisantProperty().get();
+        }
+        return FormatsLot.bilanArchives(viewModel.suiviLignes().lignes());
     }
 
     /// Câble la table de dépôt (#983) : lignes persistées (`depot_unite` #981) + événements du moteur

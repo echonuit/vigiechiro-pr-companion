@@ -8,7 +8,7 @@ import java.util.Locale;
 /// Formatage **textuel** pur des éléments de l'écran M-Lot (récapitulatif, message d'état, ligne
 /// d'archive), extrait de [LotViewModel] pour l'alléger (cohésion / seuil GodClass). Sans état ni
 /// dépendance JavaFX : directement testable.
-final class FormatsLot {
+public final class FormatsLot {
 
     private FormatsLot() {}
 
@@ -30,6 +30,19 @@ final class FormatsLot {
                 ? "volume inconnu"
                 : Formats.octetsLisibles(etat.volumeSequencesOctets());
         return etat.nombreSequences() + " séquences · " + volume;
+    }
+
+    /// Bilan des archives **présentes** sur disque (zone droite de la barre de statut au repos, #823) :
+    /// « N archive(s) · volume dans depot/ », ou vide sans archive. Volume = somme des tailles des lignes
+    /// de la table de génération (réhydratée au chargement, #805).
+    public static String bilanArchives(java.util.List<LigneArchive> archives) {
+        if (archives.isEmpty()) {
+            return "";
+        }
+        long octets = archives.stream()
+                .mapToLong(ligne -> ligne.tailleOctetsProperty().get())
+                .sum();
+        return archives.size() + " archive(s) · " + Formats.octetsLisibles(octets) + " dans depot/";
     }
 
     /// Message d'état contextuel du dépôt (déposé, dépôt entamé, cohérence à corriger, lot préparé, ou vide).

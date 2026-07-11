@@ -32,11 +32,6 @@
     statut du workflow est déporté en barre de statut par le controller (ResumeStatut).
   -->
 
-  <VBox spacing="4.0" styleClass="carte-section">
-    <Label text="📊 Récapitulatif du lot" styleClass="section-titre"/>
-    <Label fx:id="lblRecap" styleClass="section-sous"/>
-  </VBox>
-
   <!-- Stepper du dépôt (#251) : ① Préparer · ② Générer les archives · ③ Téléverser · ④ Marquer déposé. -->
   <HBox fx:id="stepper" styleClass="stepper" spacing="8.0"/>
 

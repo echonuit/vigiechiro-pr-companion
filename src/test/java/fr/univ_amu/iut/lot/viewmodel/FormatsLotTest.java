@@ -32,6 +32,21 @@ class FormatsLotTest {
     }
 
     @Test
+    @DisplayName("#823 : bilanArchives résume nombre + volume, vide sans archive")
+    void bilan_archives() {
+        SuiviLignesArchives suivi = new SuiviLignesArchives();
+        assertThat(FormatsLot.bilanArchives(suivi.lignes())).isEmpty();
+
+        suivi.afficherTerminees(List.of(
+                new fr.univ_amu.iut.lot.model.ArchiveDepot(java.nio.file.Path.of("/d/Car-1.zip"), 1, 2048L, 2),
+                new fr.univ_amu.iut.lot.model.ArchiveDepot(java.nio.file.Path.of("/d/Car-2.zip"), 2, 4096L, 3)));
+
+        assertThat(FormatsLot.bilanArchives(suivi.lignes()))
+                .startsWith("2 archive(s) · ")
+                .endsWith(" dans depot/");
+    }
+
+    @Test
     @DisplayName("#980 : messageEtat signale un dépôt entamé mais incomplet (reprise possible)")
     void message_etat_depot_en_cours() {
         assertThat(FormatsLot.messageEtat(new EtatLot(StatutWorkflow.DEPOT_EN_COURS, "/ws", 5, 8192L, List.of(), null)))
