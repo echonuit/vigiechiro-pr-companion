@@ -240,11 +240,12 @@ class ServiceImportTest {
         assertThat(originalDao.findBySession(idSession))
                 .singleElement()
                 .satisfies(o -> assertThat(o.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_WAV));
-        // La séquence est écrite à Fe/10 = 38400 Hz : 576000 trames / 38400 = 15 s. Une double expansion
-        // (sortie à 3840 Hz) donnerait 150 s : la durée persistée est le témoin qu'on n'a pas ré-expansé.
+        // La durée persistée est **réelle** : 576000 trames / 384000 Hz (fréquence d'ACQUISITION, lue au
+        // log) = 1,5 s (#1051). Une double expansion se lirait 15 s (÷ Fe/10 = 38400) : la durée réelle est
+        // le témoin qu'on n'a pas ré-expansé un brut déjà expansé.
         assertThat(sequenceDao.findBySession(idSession))
                 .singleElement()
-                .satisfies(s -> assertThat(s.dureeSecondes()).isEqualTo(15.0));
+                .satisfies(s -> assertThat(s.dureeSecondes()).isEqualTo(1.5));
     }
 
     @Test

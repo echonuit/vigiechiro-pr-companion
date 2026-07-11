@@ -15,7 +15,9 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -24,6 +26,7 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.AfterEach;
@@ -143,6 +146,18 @@ class ParcoursImporterNuitE2ETest {
         assertThat(passagePersiste.idPoint()).isEqualTo(point.id());
         assertThat(passagePersiste.annee()).isEqualTo(ANNEE);
         assertThat(passagePersiste.numeroPassage()).isEqualTo(1);
+
+        // #1051 — chaîne import → persistance : la durée persistée est **réelle** (une séquence dure au plus
+        // 5 s au rythme d'acquisition), et non expansée ×10 (~50 s à l'écoute). Comble le gap de couverture
+        // import → base sur cette colonne.
+        List<SequenceDEcoute> sequences = new SequenceDao(source).findAll();
+        assertThat(sequences).hasSize(resultat.nombreSequences());
+        assertThat(sequences)
+                .allSatisfy(s -> assertThat(s.dureeSecondes())
+                        .as("durée réelle de %s", s.nomFichier())
+                        .isNotNull()
+                        .isGreaterThan(0.0)
+                        .isLessThanOrEqualTo(5.0 + 1e-6));
     }
 
     @Test

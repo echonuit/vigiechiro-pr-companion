@@ -42,9 +42,10 @@ import java.time.LocalDateTime;
 ///     permet de filtrer la liste par grand groupe (chauves-souris, oiseaux…) sans lister chaque espèce
 /// @param nomFichier nom de fichier de la séquence d'écoute (`listening_sequence.file_name`), pour relier
 ///     la ligne à l'enregistrement écouté
-/// @param debutS début du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null`
-/// @param finS fin du cri dans la séquence en secondes (timeline **transformée** ×10), ou `null` — la durée
-///     **réelle** du cri se déduit de `(finS − debutS)` divisé par le facteur d'expansion (cf. formatage)
+/// @param debutS début du cri dans la séquence, en secondes **réelles** (issu du CSV Tadarida, dont les
+///     temps sont en secondes réelles dans la tranche de 5 s), ou `null`
+/// @param finS fin du cri dans la séquence, en secondes **réelles**, ou `null` — la durée du cri vaut
+///     directement `(finS − debutS)`, sans division (cf. `FormatLigneAudioTest`)
 /// @param heureCapture **instant réel** de capture (date + heure) de la séquence, issu de son horodatage
 ///     persisté (`listening_sequence.recorded_at`, #530), ou `null` si la séquence n'est pas horodatée. On
 ///     porte l'instant complet (et non l'heure seule) pour un **tri chronologique correct à cheval sur

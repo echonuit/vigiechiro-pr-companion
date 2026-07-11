@@ -91,22 +91,23 @@ class TransformationAudioTest {
     }
 
     @Test
-    @DisplayName("R10 : 2 séquences pleines (5 s réelles = 50 s d'écoute) + une dernière plus courte (20 s)")
+    @DisplayName("#1051 : la durée persistée est RÉELLE : 2 séquences pleines de 5 s + une dernière de 2 s")
     void duree_de_chaque_sequence() {
         List<SequenceProduite> sequences = transformation
                 .transformer(originalWav, dossier.resolve("transformes"), prefixe, FREQUENCE_SOURCE)
                 .sequences();
 
-        // Séquence pleine = 5 s source = 10 000 trames ; à l'écoute (÷10) 10 000 / 200 Hz = 50 s.
+        // Séquence pleine = 5 s source = 10 000 trames ; durée RÉELLE = 10 000 / 2000 Hz = 5 s (l'écoute du
+        // WAV expansé vaut ×10 = 50 s, mais on ne la persiste pas).
         for (int i = 0; i < 2; i++) {
             assertThat(sequences.get(i).dureeSecondes())
                     .as("séquence pleine n°%d", i)
-                    .isEqualTo(50.0, org.assertj.core.api.Assertions.within(1e-9));
+                    .isEqualTo(5.0, org.assertj.core.api.Assertions.within(1e-9));
         }
-        // 24000 trames - 2 × 10000 = 4000 trames -> à l'écoute 4000 / 200 Hz = 20 s.
+        // 24000 trames - 2 × 10000 = 4000 trames -> durée réelle 4000 / 2000 Hz = 2 s.
         assertThat(sequences.get(2).dureeSecondes())
                 .as("dernière séquence plus courte")
-                .isEqualTo(20.0, org.assertj.core.api.Assertions.within(1e-9));
+                .isEqualTo(2.0, org.assertj.core.api.Assertions.within(1e-9));
     }
 
     @Test

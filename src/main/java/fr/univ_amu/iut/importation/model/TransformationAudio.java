@@ -150,14 +150,17 @@ public class TransformationAudio {
                         longueur);
 
                 long tramesSequence = (long) longueur / octetsParTrame;
-                double dureeSortie = tramesSequence / (double) frequenceSortie;
+                // Durée **réelle** de la séquence : au rythme d'ACQUISITION, comme l'offset (L.154) et le
+                // découpage (L.116/122). C'est la durée d'enregistrement (≈5 s) qu'on persiste ; rejouée à
+                // `frequenceSortie` (Fe/10), la séquence dure ×10 (≈50 s) à l'écoute (#1051).
+                double dureeReelleSecondes = tramesSequence / (double) frequenceAcquisition;
                 double offsetSource = ((long) offset / octetsParTrame) / (double) frequenceAcquisition;
                 sequences.add(new SequenceProduite(
                         index,
                         nomSequence,
                         cheminSequence,
                         frequenceSortie,
-                        dureeSortie,
+                        dureeReelleSecondes,
                         offsetSource,
                         Files.size(cheminSequence)));
                 index++;

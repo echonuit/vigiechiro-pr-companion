@@ -1,0 +1,14 @@
+-- V20 - Duree reelle des sequences d'ecoute (#1051, EPIC #1054).
+--
+-- Bug : listening_sequence.duration_s stockait la duree EXPANSEE x10 (~50 s pour une tranche de 5 s
+-- reelles), a cause d'une asymetrie dans TransformationAudio (division par la frequence de SORTIE = Fe/10
+-- au lieu de la frequence d'ACQUISITION). Les autres colonnes de duree (original_recording.duration_s,
+-- source_offset_s) etaient, elles, deja en secondes reelles.
+--
+-- Correction des donnees existantes : on divise par 10 les durees deja ecrites (les nouveaux imports
+-- ecrivent desormais la duree reelle, cf. TransformationAudio). Ne PAS toucher original_recording (deja
+-- reel). Les NULL sont preserves. Sur : l'import est le seul ecrivain de cette colonne en production, et
+-- Flyway garantit une application unique.
+--
+-- (Numero V20 et non V19 : V19 est occupe par column_layout, #994.)
+UPDATE listening_sequence SET duration_s = duration_s / 10.0 WHERE duration_s IS NOT NULL;
