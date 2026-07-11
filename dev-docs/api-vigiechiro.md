@@ -123,6 +123,31 @@ cf. [Patterns](patterns.md)).
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
   le pull (`RapprochementSites`, à la connexion) reste la seule direction de synchronisation des sites.
 
+### Méthodes autorisées et récupération (exploration du 2026-07-11, lecture seule)
+
+Sondé via `OPTIONS` (en-tête `Allow`) avec un token d'observateur — **aucune suppression testée**.
+
+| Ressource | `Allow` observé | Réalité |
+|---|---|---|
+| `/participations/{id}` | `GET, PATCH, DELETE…` | PATCH **fonctionne** (sync modale) ; **DELETE annoncé** — une participation est supprimable par son propriétaire (non testé, destructif ; `If-Match` requis, convention Eve) |
+| `/sites/{id}` | `GET, PATCH, DELETE…` | PATCH réel → **403** : `Allow` reflète le **schéma Eve**, pas l'autorisation par rôle. Écriture/suppression réservées (MNHN/propriétaire) |
+| `/moi/participations` | `GET` seul | lecture seule, **paginée** (`_meta.total` fiable) |
+| `/fichiers` (collection) | `POST, GET…` | `GET` réel → **403** : on peut créer des fichiers, pas les relire |
+| `/participations/{id}/donnees` | `GET, POST` | GET = résultats Tadarida (import) ; POST vraisemblablement réservé au pipeline serveur |
+
+**Ce qui est récupérable depuis la plateforme** (restauration possible, cf. issue dédiée) :
+
+- **toutes ses participations** (pagination `_meta` — attention : `mesSites()`/`mesParticipations()` ne
+  lisent aujourd'hui que la **première page**) ;
+- pour chacune : son **site complet embarqué** (`localites` = les points) et son `point` (code
+  localité) → sites/points reconstruisibles **sans aucune donnée locale** ;
+- ses **observations** (`donnees` : titre du fichier + observations Tadarida) → rejouables dans
+  l'application (import « depuis VigieChiro » existant).
+
+**Ce qui ne l'est pas** : les **WAV téléversés** — aucun lien de téléchargement dans les `donnees`,
+collection `/fichiers` interdite en lecture. Les enregistrements audio d'origine n'existent que
+localement : la sauvegarde du workspace reste indispensable.
+
 !!! note "Faire évoluer le contrat"
     Quand notre compréhension change (nouveau champ, nouvel endpoint), on met à jour **le JSON Schema**
     (source de vérité) puis, si besoin, les assertions REST-assured et la collection Postman. Un échec de la
