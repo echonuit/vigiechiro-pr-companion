@@ -8,6 +8,8 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
@@ -30,6 +32,12 @@ import java.util.Optional;
 /// référence ») dans le `Multibinder<ActiviteAccueil>` du socle : elle ouvre la vue audio sur la source
 /// `References` (elle remplace l'ancienne carte « Bibliothèque de sons »).
 public class AudioModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("audio", "Sons et validation", Categorie.COEUR);
+    }
 
     @Override
     protected void configure() {

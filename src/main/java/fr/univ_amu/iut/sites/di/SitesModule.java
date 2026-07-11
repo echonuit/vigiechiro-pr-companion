@@ -6,6 +6,8 @@ import com.google.inject.multibindings.Multibinder;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -43,6 +45,12 @@ import java.util.UUID;
 /// patron du socle (constructeur `@Inject` instancié par la `controllerFactory` Guice du
 /// `FXMLLoader`), exactement comme `MainController`.
 public class SitesModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("sites", "Sites et points", Categorie.COEUR);
+    }
 
     /// Enregistre la carte d'accueil de la feature dans le point d'extension du socle. Le
     /// `MainController` la découvre via `Set<ActiviteAccueil>` sans que `commun` dépende de `sites`.

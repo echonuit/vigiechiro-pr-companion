@@ -106,4 +106,20 @@ class DecouverteModulesTest {
 
         assertThat(modules).hasSize(2 + FEATURES_ATTENDUES.size());
     }
+
+    @Test
+    @DisplayName("chaque module de feature déclare une Fonctionnalite à id unique et non vide")
+    void chaque_module_declare_une_fonctionnalite() {
+        List<Fonctionnalite> fonctionnalites = ServiceLoader.load(ModuleDeFeature.class).stream()
+                .map(provider -> provider.get().fonctionnalite())
+                .toList();
+
+        assertThat(fonctionnalites).hasSize(FEATURES_ATTENDUES.size());
+        assertThat(fonctionnalites).allSatisfy(f -> {
+            assertThat(f.id()).isNotBlank();
+            assertThat(f.libelle()).isNotBlank();
+            assertThat(f.categorie()).isNotNull();
+        });
+        assertThat(fonctionnalites).extracting(Fonctionnalite::id).doesNotHaveDuplicates();
+    }
 }

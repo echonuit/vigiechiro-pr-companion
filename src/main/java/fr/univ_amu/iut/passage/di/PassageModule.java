@@ -3,6 +3,8 @@ package fr.univ_amu.iut.passage.di;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -43,6 +45,12 @@ import java.util.Optional;
 /// **Non installé** dans `RacineInjecteur` à ce stade : l'intégration des features dans la racine
 /// de composition est faite en phase 3.
 public class PassageModule extends ModuleDeFeature {
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("passage", "Passages", Categorie.COEUR);
+    }
 
     /// Fournit le contrat de navigation socle [OuvrirPassage] : `sites` (M-Site-detail) l'injecte
     /// pour ouvrir M-Passage sans dépendre du `view` de cette feature.

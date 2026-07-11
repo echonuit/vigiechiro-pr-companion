@@ -7,6 +7,8 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.di.Categorie;
+import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -30,6 +32,12 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 public class DepotVigieChiroModule extends ModuleDeFeature {
 
     private static final String QUALIFIANT = "vigiechiro";
+
+    /// Identité de la feature. `COEUR` : socle non désactivable (dépendue par d'autres features).
+    @Override
+    public Fonctionnalite fonctionnalite() {
+        return new Fonctionnalite("depot-vigiechiro", "Dépôt VigieChiro", Categorie.COEUR);
+    }
 
     @Override
     protected void configure() {
