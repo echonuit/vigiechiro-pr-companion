@@ -203,6 +203,13 @@ public class ServiceImport {
         return agregatDao.prochainNumeroPassageLibre(idPoint, annee);
     }
 
+    /// Premier **bloc de `taille` n° de passage consécutifs libres** pour ce point et cette année : n° de
+    /// départ N tel que N..N+taille-1 soient tous libres. Sert à proposer une base d'auto-numérotation en
+    /// import **multi-nuits** (n° consécutifs) qui **comble les trous** sans collision (#…).
+    public int prochainBlocPassagesLibre(Long idPoint, int annee, int taille) {
+        return agregatDao.prochainBlocPassagesLibre(idPoint, annee, taille);
+    }
+
     /// Détection de **nuit déjà importée** (#147) **exposée à l'IHM** : passages déjà en base pour le
     /// même enregistreur (`numeroSerie`) à la même date (`dateNuit`, au format ISO `AAAA-MM-JJ`), quel
     /// que soit leur rattachement. Permet d'avertir à l'inspection qu'on s'apprête à réimporter une nuit

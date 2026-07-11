@@ -89,8 +89,18 @@ public class AgregatImportDao {
     /// Plus petit n° de passage **libre** (≥ 1) pour ce point et cette année : le **premier entier non
     /// utilisé**, en comblant les trous (p. ex. avec les passages 1 et 3, propose 2 ; sans trou, équivaut
     /// à `MAX + 1`). Sert à **proposer** un n° non utilisé lorsque l'utilisateur tombe sur un doublon R5
-    /// au rattachement (#108).
+    /// au rattachement (#108). Cas particulier de [#prochainBlocPassagesLibre] avec `taille = 1`.
     public int prochainNumeroPassageLibre(Long idPoint, int annee) {
+        return prochainBlocPassagesLibre(idPoint, annee, 1);
+    }
+
+    /// Plus petit n° de **départ** `N` (≥ 1) tel que `N, N+1, …, N+taille-1` soient **tous libres** pour ce
+    /// point et cette année : le premier **bloc de `taille` n° consécutifs** non utilisés. Comble les trous
+    /// tout en respectant la **consécutivité** exigée par l'import multi-nuits (p. ex. avec 1, 3, 5, 7 et
+    /// `taille = 3`, propose **8** — les trous 2/4/6 étant isolés). `taille ≤ 1` équivaut au prochain n°
+    /// libre simple.
+    public int prochainBlocPassagesLibre(Long idPoint, int annee, int taille) {
+        int besoin = Math.max(1, taille);
         String sql = "SELECT passage_number FROM passage WHERE point_id = ? AND year = ?";
         Set<Integer> utilises = new HashSet<>();
         try (Connection cx = source.getConnection();
@@ -105,11 +115,17 @@ public class AgregatImportDao {
         } catch (SQLException e) {
             throw new DataAccessException("Échec du calcul du prochain n° de passage libre : " + sql, e);
         }
-        int numero = 1;
-        while (utilises.contains(numero)) {
-            numero++;
+        // Fenêtre glissante : on avance jusqu'au premier `debut` dont [debut, debut+besoin[ est tout libre,
+        // en sautant directement après le n° occupé rencontré (les trous plus petits que `besoin` restent
+        // isolés).
+        int debut = 1;
+        for (int i = 0; i < besoin; i++) {
+            if (utilises.contains(debut + i)) {
+                debut = debut + i + 1;
+                i = -1; // recommence la fenêtre depuis le nouveau `debut`
+            }
         }
-        return numero;
+        return debut;
     }
 
     /// Passages **déjà en base** pour la même nuit (même enregistreur + même date d'enregistrement),

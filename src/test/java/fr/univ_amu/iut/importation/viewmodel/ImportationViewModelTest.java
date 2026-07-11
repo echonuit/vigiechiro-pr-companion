@@ -641,7 +641,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
 
@@ -665,7 +665,10 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        // Point sélectionné AVANT l'inspection : la proposition du n° de base est d'abord calculée pour une
+        // seule « nuit » (taille 1, table pas encore peuplée) puis pour les 3 nuits — d'où `anyInt()`.
+        when(serviceImport.prochainBlocPassagesLibre(eq(10L), eq(2026), anyInt()))
+                .thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
 
@@ -690,7 +693,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
         viewModel.inspection().dossierSourceProperty().set(multi);
@@ -714,7 +717,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
         viewModel.inspection().dossierSourceProperty().set(multi);
@@ -736,7 +739,7 @@ class ImportationViewModelTest {
         Site site = site(1L, "640380");
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(5);
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 1)).thenReturn(5);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
 
@@ -751,6 +754,34 @@ class ImportationViewModelTest {
     }
 
     @Test
+    @DisplayName(
+            "Multi-nuits : la proposition évite les trous — 1,3,5,7 existants + 3 nuits → 8,9,10 (bloc consécutif)")
+    void multi_nuits_bloc_consecutif_evite_les_trous() throws IOException {
+        Path multi = carteMultiNuits();
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
+        // Passages 1, 3, 5, 7 déjà pris → premier bloc de 3 n° consécutifs libres = 8 (les trous 2/4/6 sont
+        // isolés). Les n° 8, 9, 10 proposés sont libres.
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(8);
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+
+        viewModel.inspection().dossierSourceProperty().set(multi);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+
+        // Le n° de base est pré-rempli à 8 et la table propose 8, 9, 10 — import valide (pas de collision).
+        assertThat(viewModel.rattachement().numeroPassageProperty().get()).isEqualTo(8);
+        assertThat(viewModel.inspection().nuits())
+                .extracting(NuitVM::numeroPassagePropose)
+                .containsExactly(8, 9, 10);
+        assertThat(viewModel.peutImporter().get()).isTrue();
+    }
+
+    @Test
     @DisplayName("Multi-nuits : peutImporter est faux si aucune nuit n'est incluse")
     void multi_nuits_aucune_incluse_bloque() throws IOException {
         Path multi = carteMultiNuits();
@@ -758,7 +789,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
         viewModel.inspection().dossierSourceProperty().set(multi);
@@ -780,7 +811,7 @@ class ImportationViewModelTest {
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
-        when(serviceImport.prochainNumeroPassageLibre(10L, 2026)).thenReturn(4);
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
         when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
                 .thenReturn(false);
         viewModel.inspection().dossierSourceProperty().set(multi);
