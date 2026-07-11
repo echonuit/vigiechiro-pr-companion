@@ -3,36 +3,22 @@ package fr.univ_amu.iut.lot;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
-import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
-import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
-import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
-import fr.univ_amu.iut.passage.model.MaterielMicro;
-import fr.univ_amu.iut.passage.model.Passage;
-import fr.univ_amu.iut.passage.model.PositionMicro;
-import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,79 +26,58 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// Orchestration du **dépôt d'une nuit** ([DepotVigieChiro], #142) : construction de la participation
-/// (localité, fenêtre nuit franchissant minuit, météo #702, configuration micro #697) et upload des
-/// fichiers, sur DAO + client mockés (aucun réseau ni base réels).
+/// **Dépôt d'une nuit** ([DepotVigieChiro], #142) refondu en *upload seul* : la participation est déléguée à
+/// [SynchronisationParticipation] (réutilisée si le passage y est déjà lié, créée en repli sinon). On teste
+/// la réutilisation, le repli lazy, le dépôt partiel et les refus — sur passerelle + client mockés (aucun
+/// réseau). Le contenu de la participation (dates/météo/config) est testé côté `passage`
+/// (CorrespondanceParticipationTest / SynchronisationParticipationTest).
 @ExtendWith(MockitoExtension.class)
 class DepotVigieChiroTest {
 
-    private static final String OBJECTID_SITE = "5eb12120cbe7410011f0a97f";
-
     @Mock
-    PassageDao passageDao;
-
-    @Mock
-    PointDao pointDao;
-
-    @Mock
-    MaterielMicroDao materielDao;
-
-    @Mock
-    LienVigieChiroDao liens;
+    SynchronisationParticipation participations;
 
     @Mock
     ClientVigieChiro client;
-
-    @Captor
-    ArgumentCaptor<ParticipationADeposer> participationCaptor;
 
     private DepotVigieChiro depot;
 
     @BeforeEach
     void préparer() {
-        depot = new DepotVigieChiro(passageDao, pointDao, materielDao, liens, client);
+        depot = new DepotVigieChiro(participations, client);
     }
 
     @Test
-    @DisplayName("dépôt complet : participation (localité, nuit +1j, météo, config micro) + fichiers déposés")
-    void depot_complet(@TempDir Path dossier) throws IOException {
+    @DisplayName("participation déjà liée → RÉUTILISÉE (pas de recréation), fichiers déposés")
+    void depot_reutilise_la_participation_liee(@TempDir Path dossier) throws IOException {
         Path a = fichier(dossier, "Car130711-2026-Pass1-Z41_000.wav");
         Path b = fichier(dossier, "Car130711-2026-Pass1-Z41_001.wav");
-        armerPassageComplet();
-        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatParticipation.reussie("part-1"));
-        when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
-        when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
-        when(client.finaliserFichier(anyString())).thenReturn(true);
+        when(participations.participationDe(42L)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
 
         BilanDepot bilan = depot.deposer(42L, List.of(a, b));
 
         assertThat(bilan.participationId()).isEqualTo("part-1");
         assertThat(bilan.deposees()).isEqualTo(2);
         assertThat(bilan.estComplet()).isTrue();
+        verify(participations, never()).creerPour(anyLong());
+    }
 
-        // Lien passage → participation mémorisé (axe 4.2) pour retrouver la participation à l'import.
-        verify(liens).upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, "42", "part-1"));
+    @Test
+    @DisplayName("aucune participation liée → CRÉÉE en repli (lazy), puis fichiers déposés")
+    void depot_cree_la_participation_en_repli(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "a.wav");
+        when(participations.participationDe(42L)).thenReturn(Optional.empty());
+        when(participations.creerPour(42L)).thenReturn(ResultatParticipation.reussie("part-1"));
+        armerUploadOk();
 
-        verify(client).creerParticipation(eq(OBJECTID_SITE), participationCaptor.capture());
-        ParticipationADeposer envoyee = participationCaptor.getValue();
-        assertThat(envoyee.point()).isEqualTo("Z41");
-        // Dates au format **RFC 1123 en UTC** (exigé par Eve, pas l'ISO 8601). On revérifie l'instant en
-        // reconvertissant vers le fuseau local : le test reste déterministe quel que soit le fuseau machine.
-        assertThat(instantLocal(envoyee.dateDebut())).isEqualTo(LocalDateTime.of(2026, 7, 3, 21, 0));
-        assertThat(instantLocal(envoyee.dateFin())).isEqualTo(LocalDateTime.of(2026, 7, 4, 5, 0)); // franchit minuit
-        assertThat(envoyee.meteo().vent()).isEqualTo("FAIBLE");
-        assertThat(envoyee.meteo().couverture()).isEqualTo("25-50");
-        assertThat(envoyee.configuration())
-                .containsEntry("micro0_type", "ICS")
-                .containsEntry("micro0_position", "CANOPEE")
-                .containsEntry("micro0_hauteur", "4")
-                .containsEntry("detecteur_enregistreur_type", "PassiveRecorder")
-                .containsEntry("detecteur_enregistreur_numserie", "1997632");
+        BilanDepot bilan = depot.deposer(42L, List.of(a));
+
+        assertThat(bilan.participationId()).isEqualTo("part-1");
+        assertThat(bilan.deposees()).isEqualTo(1);
     }
 
     @Test
@@ -120,8 +85,7 @@ class DepotVigieChiroTest {
     void depot_partiel(@TempDir Path dossier) throws IOException {
         Path ok = fichier(dossier, "ok.wav");
         Path ko = fichier(dossier, "ko.wav");
-        armerPassageComplet();
-        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatParticipation.reussie("part-1"));
+        when(participations.participationDe(42L)).thenReturn(Optional.of("part-1"));
         when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier("ko.wav")).thenReturn(Optional.empty()); // déclaration refusée
         when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
@@ -135,23 +99,10 @@ class DepotVigieChiroTest {
     }
 
     @Test
-    @DisplayName("site non rattaché à VigieChiro → refus dur, aucune participation créée")
-    void site_non_rattache() {
-        when(passageDao.findById(42L)).thenReturn(Optional.of(passage()));
-        when(pointDao.findById(7L)).thenReturn(Optional.of(point()));
-        when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.empty());
-
-        assertThatThrownBy(() -> depot.deposer(42L, List.of()))
-                .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("non rattaché");
-        verify(client, never()).creerParticipation(anyString(), any());
-    }
-
-    @Test
-    @DisplayName("création de participation refusée par VigieChiro → refus dur avec le détail de l'API, aucun upload")
+    @DisplayName("création refusée par VigieChiro (repli) → refus dur avec le détail de l'API, aucun upload")
     void participation_refusee() {
-        armerPassageComplet();
-        when(client.creerParticipation(eq(OBJECTID_SITE), any()))
+        when(participations.participationDe(42L)).thenReturn(Optional.empty());
+        when(participations.creerPour(42L))
                 .thenReturn(ResultatParticipation.echouee("HTTP 422 — {\"_errors\":{\"numero\":\"invalid field\"}}"));
 
         assertThatThrownBy(() -> depot.deposer(42L, List.of()))
@@ -161,44 +112,22 @@ class DepotVigieChiroTest {
         verify(client, never()).creerFichier(anyString());
     }
 
-    // --- fixtures ---------------------------------------------------------------------------------
+    @Test
+    @DisplayName("site non rattaché (repli) → l'exception de la passerelle se propage, aucun upload")
+    void site_non_rattache_propage() {
+        when(participations.participationDe(42L)).thenReturn(Optional.empty());
+        when(participations.creerPour(42L)).thenThrow(new RegleMetierException("Site non rattaché à VigieChiro"));
 
-    private void armerPassageComplet() {
-        when(passageDao.findById(42L)).thenReturn(Optional.of(passage()));
-        when(pointDao.findById(7L)).thenReturn(Optional.of(point()));
-        when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.of(OBJECTID_SITE));
-        when(materielDao.pour(42L)).thenReturn(new MaterielMicro(42L, PositionMicro.CANOPEE, 4.0, "ICS"));
+        assertThatThrownBy(() -> depot.deposer(42L, List.of()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("non rattaché");
+        verify(client, never()).creerFichier(anyString());
     }
 
-    private static Passage passage() {
-        // Nuit du 3→4 juillet : début 21:00, fin 05:00 (franchit minuit) ; météo vent FAIBLE / couv 25-50.
-        return new Passage(
-                42L,
-                1,
-                2026,
-                "2026-07-03",
-                "21:00:00",
-                "05:00:00",
-                null,
-                StatutWorkflow.TRANSFORME,
-                null,
-                null,
-                "{\"vent\":\"FAIBLE\",\"couvertureNuageuse\":\"DE_25_A_50\"}",
-                null,
-                7L,
-                "1997632");
-    }
-
-    private static PointDEcoute point() {
-        return new PointDEcoute(7L, "Z41", 43.5145, 5.4513, null, 7L);
-    }
-
-    /// Reconvertit une date RFC 1123 (UTC) envoyée à VigieChiro vers l'heure locale, pour vérifier l'instant
-    /// sans dépendre du fuseau de la machine de test.
-    private static LocalDateTime instantLocal(String rfc1123) {
-        return ZonedDateTime.parse(rfc1123, DateTimeFormatter.RFC_1123_DATE_TIME)
-                .withZoneSameInstant(ZoneId.systemDefault())
-                .toLocalDateTime();
+    private void armerUploadOk() {
+        when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.televerserVersS3(anyString(), any(), anyString())).thenReturn(true);
+        when(client.finaliserFichier(anyString())).thenReturn(true);
     }
 
     private static Path fichier(Path dossier, String nom) throws IOException {

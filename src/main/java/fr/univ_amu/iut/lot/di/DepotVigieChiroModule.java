@@ -8,11 +8,8 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
-import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 
 /// Liaison **réelle** du dépôt VigieChiro (#142) : pose la valeur de l'`OptionalBinder<DepotVigieChiro>`
 /// déclaré (à vide) par [LotModule]. Ce module n'est chargé que dans l'**injecteur applicatif complet**
@@ -40,11 +37,7 @@ public class DepotVigieChiroModule extends AbstractModule {
     @Singleton
     @Named(QUALIFIANT)
     DepotVigieChiro fournirDepotVigieChiro(
-            PassageDao passageDao,
-            PointDao pointDao,
-            MaterielMicroDao materielDao,
-            LienVigieChiroDao liens,
-            ClientVigieChiro client) {
-        return new DepotVigieChiro(passageDao, pointDao, materielDao, liens, client);
+            @Named(QUALIFIANT) SynchronisationParticipation participations, ClientVigieChiro client) {
+        return new DepotVigieChiro(participations, client);
     }
 }
