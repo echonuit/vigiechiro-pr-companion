@@ -257,6 +257,23 @@ class AnalyseViewTest {
     }
 
     @Test
+    @DisplayName("#916 : le clic droit compose « Fiche de l'espèce » + « Colonnes… » ; le ☰ porte « Colonnes… »")
+    void colonnes_coexistent_avec_la_fiche(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        robot.interact(() -> especes.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        var itemsClicDroit = especes.getContextMenu().getItems();
+        assertThat(itemsClicDroit).hasSize(3);
+        assertThat(itemsClicDroit.get(0).getText()).as("la fiche vient en tête").startsWith("Fiche de l'espèce");
+        assertThat(itemsClicDroit.get(2).getText()).isEqualTo("Colonnes…");
+
+        MenuButton outils = robot.lookup("#menuOutils").queryAs(MenuButton.class);
+        assertThat(outils.getItems())
+                .anySatisfy(item -> assertThat(item.getText()).isEqualTo("Colonnes…"));
+    }
+
+    @Test
     @DisplayName("« Écouter / valider » ouvre la vue audio sur l'espèce, ciblée sur l'observation")
     void ecouter_valider_ouvre_la_vue_audio_sur_l_espece(FxRobot robot) {
         @SuppressWarnings("unchecked")
