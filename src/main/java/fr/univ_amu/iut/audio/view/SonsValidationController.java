@@ -3,9 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
-import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
-import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
@@ -34,7 +32,6 @@ import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -270,55 +267,28 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
     }
 
-    /// Câble chaque colonne à son champ de la ligne (valeur affichée), ses cellules personnalisées (fichier
-    /// et commentaire : infobulle) et ses comparateurs de tri **numériques / par ordre de revue** là où
-    /// l'affichage est une chaîne formatée (sans quoi « 100 % » précèderait « 83 % » et « N°10 » « N°2 »).
-    /// Les colonnes purement texte (taxon, carré, point, date ISO) gardent le tri texte par défaut.
+    /// Câble les colonnes de la table (valeur, cellules, comparateurs de tri). Le détail vit dans
+    /// [ColonnesAudio] (unité cohésive extraite pour garder ce contrôleur sous le seuil de God Class) ; on
+    /// lui passe les colonnes injectées par le FXML, regroupées.
     private void configurerColonnes() {
-        colTadarida.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.tadarida(c.getValue())));
-        colProba.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                FormatLigneAudio.probabilite(c.getValue().probTadarida())));
-        colFrequence.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                FormatLigneAudio.frequenceColonne(c.getValue().frequenceKHz())));
-        colDebut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                FormatLigneAudio.positionColonne(c.getValue().debutS())));
-        colDuree.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.dureeColonne(
-                c.getValue().debutS(), c.getValue().finS())));
-        colObservateur.setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.votreTaxon(c.getValue())));
-        colFichier.setCellValueFactory(c ->
-                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().nomFichier())));
-        // Le nom de fichier transformé est long (préfixe de campagne + suffixe de segment) : la cellule
-        // l'élide, une infobulle en donne la valeur complète au survol.
-        colFichier.setCellFactory(colonne -> CellulesAudio.avecInfobulle());
-        colPassage.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper("N°" + c.getValue().numeroPassage()));
-        colCarre.setCellValueFactory(c ->
-                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().numeroCarre())));
-        colPoint.setCellValueFactory(c ->
-                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().codePoint())));
-        colDate.setCellValueFactory(c ->
-                new ReadOnlyStringWrapper(FormatLigneAudio.ouTiret(c.getValue().dateEnregistrement())));
-        // « Heure » : valeur = l'INSTANT complet (tri chronologique naturel de LocalDateTime, correct à cheval
-        // sur minuit) ; affichage « HH:mm » via une cellule dédiée. Pas de comparateur de chaîne.
-        CellulesAudio.configurerColonneHeure(colHeure);
-        colStatut.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                FormatLigneAudio.libelleStatut(c.getValue().statut())));
-
-        // Colonnes dont l'affichage est une chaîne à préfixe/suffixe numérique : même comparateur numérique
-        // (sinon « 100 % » précèderait « 83 % » et « N°10 » « N°2 »). Le statut a son propre ordre de revue ;
-        // « Heure » utilise le tri naturel de LocalDateTime (chronologique).
-        List.of(colProba, colFrequence, colDebut, colPassage)
-                .forEach(colonne -> colonne.setComparator(ComparateursAudio.comparateurNumerique()));
-        // Durée : unité adaptative ms/s → comparateur dédié (le tri numérique naïf mêlerait « 120 ms » et
-        // « 2,1 s »).
-        colDuree.setComparator(ComparateursAudio.comparateurDuree());
-        colStatut.setComparator(ComparateursAudio.comparateurStatut());
-
-        // Indicateurs référence / commentaire : en-tête et cellule rendus par une **icône Ikonli colorée**
-        // (les emojis ⭐/💬 ne s'affichaient pas dans toutes les polices). En-tête sans texte (icône seule),
-        // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et **non triables** (trier
-        // une icône n'a pas de sens et donnait une colonne « vide » triable déroutante).
-        CellulesAudio.configurerIndicateurs(colReference, colCommentaire, viewModel::commenter);
+        ColonnesAudio.configurer(
+                new ColonnesAudio.Colonnes(
+                        colTadarida,
+                        colProba,
+                        colFrequence,
+                        colDebut,
+                        colDuree,
+                        colObservateur,
+                        colFichier,
+                        colPassage,
+                        colCarre,
+                        colPoint,
+                        colDate,
+                        colHeure,
+                        colStatut,
+                        colReference,
+                        colCommentaire),
+                viewModel::commenter);
     }
 
     @FXML
