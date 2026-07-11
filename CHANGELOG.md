@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.185.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.184.0...v1.185.0) (2026-07-11)
+
+
+### Features
+
+* **reglages:** onglet Audio — daltonien + export inclure-mode persistés ([#1006](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1006)) ([#1036](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1036)) ([46f97c1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/46f97c169a2436af5ce015a4ca14a3a099c75b17))
+
 # [1.184.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.183.0...v1.184.0) (2026-07-11)
 
 
