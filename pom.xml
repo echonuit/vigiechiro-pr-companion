@@ -79,6 +79,13 @@
              Le profil -Papi-live inverse ces deux propriétés pour ne lancer QUE la suite de contrat. -->
         <surefire.groups></surefire.groups>
         <surefire.excludedGroups>api-live</surefire.excludedGroups>
+
+        <!-- Forks Surefire parallèles : une JVM par cœur (1C). Le toolkit JavaFX est un
+             singleton PAR JVM : la parallélisation intra-JVM est impossible pour les tests
+             TestFX, mais chaque fork démarre sa propre Headless Platform. Les tests sont
+             isolés par @TempDir (aucune base SQLite ni port partagés). Revenir en séquentiel
+             au besoin : ./mvnw test -Dsurefire.forkCount=1. -->
+        <surefire.forkCount>1C</surefire.forkCount>
     </properties>
 
     <dependencies>
@@ -330,6 +337,11 @@
                 <configuration>
                     <!-- TestFX requires classpath mode (not module path) -->
                     <useModulePath>false</useModulePath>
+                    <!-- Répartit les CLASSES de test sur plusieurs JVM (cf. propriété
+                         surefire.forkCount). JaCoCo agrège les forks dans le même jacoco.exec
+                         (mode append de l'agent). -->
+                    <forkCount>${surefire.forkCount}</forkCount>
+                    <reuseForks>true</reuseForks>
                     <!-- La suite de contrat API (@Tag("api-live")) tape l'API VigieChiro réelle : JAMAIS
                          dans le build/CI par défaut (surefire.excludedGroups=api-live). On la lance à la
                          main via le profil -Papi-live, qui inverse ces deux propriétés. -->
