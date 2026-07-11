@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -14,6 +15,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -38,7 +40,15 @@ class PassageControllerEmplacementTest {
 
     private PassageController controller(PassageViewModel vm, OuvrirSite ouvrirSite) {
         return new PassageController(
-                vm, idp -> {}, idp -> {}, idp -> {}, idp -> {}, navigation, ouvrirSite, numeroCarre -> {}, idp -> 0);
+                vm,
+                idp -> {},
+                Optional.<OuvrirDiagnostic>of(idp -> {}),
+                idp -> {},
+                idp -> {},
+                navigation,
+                ouvrirSite,
+                numeroCarre -> {},
+                idp -> 0);
     }
 
     @Test

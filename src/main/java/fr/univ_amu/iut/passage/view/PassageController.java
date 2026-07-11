@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -61,7 +62,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
 
     private final PassageViewModel viewModel;
     private final OuvrirVerification ouvrirVerification;
-    private final OuvrirDiagnostic ouvrirDiagnostic;
+    private final Optional<OuvrirDiagnostic> ouvrirDiagnostic;
     private final OuvrirValidation ouvrirValidation;
     private final OuvrirLot ouvrirLot;
     private final NavigationPassage navigation;
@@ -113,6 +114,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Button boutonVerifier;
 
     @FXML
+    private Button boutonDiagnostic;
+
+    @FXML
     private Button boutonValidation;
 
     @FXML
@@ -139,7 +143,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     public PassageController(
             PassageViewModel viewModel,
             OuvrirVerification ouvrirVerification,
-            OuvrirDiagnostic ouvrirDiagnostic,
+            Optional<OuvrirDiagnostic> ouvrirDiagnostic,
             OuvrirValidation ouvrirValidation,
             OuvrirLot ouvrirLot,
             NavigationPassage navigation,
@@ -211,6 +215,11 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boutonVerifier
                 .disableProperty()
                 .bind(viewModel.verificationDisponibleProperty().not());
+        // « Diagnostic » n'apparaît que si la feature `diagnostic` est activée (feature-flag #1087) : quand
+        // elle est coupée, le contrat est absent et la carte est retirée plutôt que laissée sans effet.
+        boolean diagnosticActif = ouvrirDiagnostic.isPresent();
+        boutonDiagnostic.setVisible(diagnosticActif);
+        boutonDiagnostic.setManaged(diagnosticActif);
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
         // Suppression gatée en amont (#789) : un passage déposé n'est pas supprimable (le service le refuse).
@@ -305,11 +314,11 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     }
 
     /// « Diagnostic matériel » : ouvre M-Diagnostic sur ce passage via le contrat socle
-    /// [OuvrirDiagnostic] (implémenté par la feature `diagnostic`). Toujours disponible : le
-    /// relevé climatique et le journal existent dès l'import de la nuit.
+    /// [OuvrirDiagnostic] (implémenté par la feature `diagnostic`, **désactivable** : la carte n'apparaît
+    /// que si la feature est activée, cf. #1087).
     @FXML
     private void diagnostiquer() {
-        ouvrirDiagnostic.ouvrir(contextePassage());
+        ouvrirDiagnostic.ifPresent(ouvrir -> ouvrir.ouvrir(contextePassage()));
     }
 
     /// « Sons & validation » : ouvre l'écran audio du passage (M-Vision-Tadarida) via le contrat socle

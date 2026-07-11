@@ -9,6 +9,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -259,6 +260,13 @@ class PassageVueIntegrationTest {
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
         when(service.detailPassage(anyLong())).thenReturn(detail(statut, numero));
         Injector injector = Guice.createInjector(new AbstractModule() {
+            @Override
+            protected void configure() {
+                OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
+                        .setBinding()
+                        .toInstance(passage -> diagnosticOuvert.set(passage.idPassage()));
+            }
+
             @Provides
             PassageViewModel viewModel() {
                 return new PassageViewModel(service, purge);
@@ -267,11 +275,6 @@ class PassageVueIntegrationTest {
             @Provides
             OuvrirVerification ouvrirVerification() {
                 return passage -> verificationOuverte.set(passage.idPassage());
-            }
-
-            @Provides
-            OuvrirDiagnostic ouvrirDiagnostic() {
-                return passage -> diagnosticOuvert.set(passage.idPassage());
             }
 
             @Provides

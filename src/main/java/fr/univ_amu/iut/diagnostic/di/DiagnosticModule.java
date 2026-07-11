@@ -2,6 +2,7 @@ package fr.univ_amu.iut.diagnostic.di;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -29,19 +30,20 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 /// dépendre du `view` de cette feature.
 public class DiagnosticModule extends ModuleDeFeature {
 
-    /// Identité de la feature. `COEUR` pour l'instant (feuille couplée au runtime via son contrat
-    /// `Ouvrir…` : la désactiver casserait l'écran consommateur) ; passera `OPTIONNELLE` une fois ce
-    /// contrat neutralisé (P3, #1064).
+    /// Identité de la feature. `OPTIONNELLE` (désactivable) : son contrat `OuvrirDiagnostic` est neutralisé
+    /// chez son consommateur (PassageController l'injecte en `Optional` et masque la carte si absent).
     @Override
     public Fonctionnalite fonctionnalite() {
-        return new Fonctionnalite("diagnostic", "Diagnostic du capteur", Categorie.COEUR);
+        return new Fonctionnalite("diagnostic", "Diagnostic du capteur", Categorie.OPTIONNELLE);
     }
 
     /// Fournit le contrat de navigation socle [OuvrirDiagnostic] : M-Passage l'injecte pour ouvrir
     /// l'écran de diagnostic sans dépendre de cette feature (évite le cycle `passage ↔ diagnostic`).
     @Override
     protected void configure() {
-        bind(OuvrirDiagnostic.class).to(NavigationDiagnostic.class);
+        OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
+                .setBinding()
+                .to(NavigationDiagnostic.class);
     }
 
     /// ViewModel de M-Diagnostic. **Non-singleton** (un VM frais par chargement FXML).

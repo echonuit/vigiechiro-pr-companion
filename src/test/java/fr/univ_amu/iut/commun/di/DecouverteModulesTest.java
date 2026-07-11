@@ -54,6 +54,7 @@ class DecouverteModulesTest {
         System.clearProperty("vigiechiro.features.desactivees");
         System.clearProperty("vigiechiro.features.diagnostic");
         System.clearProperty("vigiechiro.features.import-vigiechiro");
+        System.clearProperty("vigiechiro.features.passage");
         System.clearProperty("vigiechiro.workspace");
     }
 
@@ -135,13 +136,27 @@ class DecouverteModulesTest {
     @DisplayName("garde-fou : une feature COEUR ne peut pas être désactivée, même par propriété système")
     void garde_fou_coeur_non_desactivable(@TempDir Path tmp) {
         System.setProperty("vigiechiro.workspace", tmp.toString());
-        System.setProperty("vigiechiro.features.diagnostic", "off");
+        System.setProperty("vigiechiro.features.passage", "off");
 
         List<String> noms = RacineInjecteur.modules().stream()
                 .map(module -> module.getClass().getSimpleName())
                 .toList();
 
-        assertThat(noms).contains("DiagnosticModule");
+        assertThat(noms).contains("PassageModule");
+    }
+
+    @Test
+    @DisplayName("la feuille diagnostic (désormais OPTIONNELLE) est désactivable et l'injecteur se construit")
+    void feuille_diagnostic_desactivable(@TempDir Path tmp) {
+        System.setProperty("vigiechiro.workspace", tmp.toString());
+        System.setProperty("vigiechiro.features.diagnostic", "off");
+
+        List<String> noms = RacineInjecteur.modules().stream()
+                .map(module -> module.getClass().getSimpleName())
+                .toList();
+        assertThat(noms).doesNotContain("DiagnosticModule");
+
+        assertThatCode(RacineInjecteur::creer).doesNotThrowAnyException();
     }
 
     @Test

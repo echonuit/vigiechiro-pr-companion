@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -40,6 +41,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -143,7 +145,7 @@ public final class CapturePassage {
                 ? new PassageController(
                         passageVm,
                         idp -> {},
-                        idp -> {},
+                        Optional.<OuvrirDiagnostic>of(idp -> {}),
                         idp -> {},
                         idp -> {},
                         injecteur.getInstance(NavigationPassage.class),
