@@ -88,19 +88,34 @@ public class MaFeatureController {
     chaque table par `installerClicDroit(table, colonnes, …)` et fait pointer le ☰ vers la table active
     via `GestionnaireColonnes.ouvrir(...)`.
 
-## 5. Le module Guice (`di/`) + la racine
+## 5. Le module Guice (`di/`) + l'auto-découverte
 
-Un module qui publie service/VM, puis on l'ajoute à la **racine de composition** :
+Un module qui publie service/VM, **hérité de `ModuleDeFeature`** (le DSL du socle) :
 
 ```java
-public class MaFeatureModule extends AbstractModule {
+public class MaFeatureModule extends ModuleDeFeature {
+    @Override protected void configure() {
+        activite(ActiviteMaFeature.class);   // carte d'accueil (optionnel)
+        // indicateur(...), ongletReglages(...), actionMenu(...) au besoin
+    }
     @Provides MaFeatureViewModel vm(ServiceMaFeature s) { return new MaFeatureViewModel(s); }
 }
 ```
 
-Enregistrez `new MaFeatureModule()` dans
-[`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di)
-(et dans le harnais de tests qui compose un injecteur partiel, le cas échéant).
+**On ne touche PAS `RacineInjecteur`** : les modules de feature sont **auto-découverts**
+(`ServiceLoader<ModuleDeFeature>`, cf. [Injection](injection.md#la-racine-de-composition)). Déclarez
+`MaFeatureModule` comme service dans les **deux** listes (gardées synchronisées par
+`DecouverteModulesTest`) :
+
+- `src/main/resources/META-INF/services/fr.univ_amu.iut.commun.di.ModuleDeFeature` (une ligne : le FQN
+  du module) — chemin **classpath** (tests, fat-jar) ;
+- `module-info.java` : ajoutez le module au `provides fr.univ_amu.iut.commun.di.ModuleDeFeature with …`
+  — chemin **module-path** (`javafx:run`).
+
+!!! tip "Contribuer aux points d'extension"
+    Une feature peut aussi ajouter un **compteur** d'accueil (`indicateur(...)`), un **onglet de
+    réglages** (`ongletReglages(...)`, cf. `OngletReglages` + `DescripteurReglage`) et une **entrée de
+    menu ☰** (`actionMenu(...)`, cf. `ActionMenu`) — toujours sans toucher le socle.
 
 ## 6. Brancher la navigation (inversion de dépendance)
 

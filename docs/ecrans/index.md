@@ -15,6 +15,7 @@ référence explique *en détail* ce que chaque écran propose.
 | [Validation](validation.md) | Relire les observations Tadarida (espèces) |
 | [Multisite](multisite.md) | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
 | [Diagnostic](diagnostic.md) | Diagnostic d'une nuit (climat, anomalies) |
+| [Réglages](reglages.md) | Préférences de l'application, par domaine (menu ☰) |
 
 L'écran **Qualification** propose en plus des [raccourcis clavier](../raccourcis-clavier.md) dédiés
 (verdict, écoute, navigation) pour traiter les séquences rapidement.
