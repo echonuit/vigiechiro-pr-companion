@@ -5,6 +5,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
+import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
@@ -423,7 +424,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
                         .then("📤 Exporter les observations (CSV)… (aucune observation à exporter)")
                         .otherwise("📤 Exporter les observations (CSV)…"));
-        // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24), coché par défaut.
+        // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24). Persisté (#1006) : le VM
+        // (recréé à chaque chargement) suit le réglage partagé avec l'onglet « Audio », puis la case du ☰
+        // suit le VM. Ordre important pour l'initialisation depuis la valeur persistée.
+        viewModel
+                .inclureModeProperty()
+                .bindBidirectional(reactifs.proprieteBooleen(
+                        OngletReglagesAudio.CLE_INCLURE_MODE, OngletReglagesAudio.DEFAUT_INCLURE_MODE));
         itemInclureMode.selectedProperty().bindBidirectional(viewModel.inclureModeProperty());
 
         // État vide : placeholder gris superposé à la table, réservé au seul « aucune observation… ».

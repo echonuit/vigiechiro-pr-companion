@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.nedjar.vigiechiro.audio.AudioView;
+import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
+import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import java.nio.file.Path;
 import javafx.beans.value.ObservableValue;
 
@@ -18,12 +20,18 @@ final class ConfigurationAudioView {
 
     private ConfigurationAudioView() {}
 
-    /// Applique la configuration ci-dessus à `audioView`, la source suivant `cheminAudio`.
-    static void installer(AudioView audioView, ObservableValue<? extends Path> cheminAudio) {
+    /// Applique la configuration ci-dessus à `audioView`, la source suivant `cheminAudio`. Le mode
+    /// **daltonien** du spectrogramme suit le réglage persistant (#1006), donc l'onglet « Audio » de
+    /// l'écran Réglages : effet immédiat.
+    static void installer(AudioView audioView, ObservableValue<? extends Path> cheminAudio, ReglagesReactifs reactifs) {
         audioView.setNormalisation(true);
         audioView.setWaveNormalisation(true);
         audioView.setSpectrogramNormalisation(true);
         audioView.setTimeExpansionFactor(RepereCriAudio.FACTEUR_EXPANSION_TEMPS);
+        audioView
+                .colorblindFriendlyProperty()
+                .bind(reactifs.proprieteBooleen(
+                        OngletReglagesAudio.CLE_DALTONIEN, OngletReglagesAudio.DEFAUT_DALTONIEN));
         audioView.audioFileProperty().bind(cheminAudio);
         audioView.sceneProperty().addListener((obs, avant, scene) -> {
             if (scene == null) {
