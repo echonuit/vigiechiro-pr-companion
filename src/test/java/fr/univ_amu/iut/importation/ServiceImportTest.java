@@ -33,10 +33,13 @@ import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
+import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.MicroDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -596,6 +599,39 @@ class ServiceImportTest {
         // Rattachement incomplet : aucun signalement (pas d'exception SQL brute).
         assertThat(service.numeroPassageDejaUtilise(null, 2026, 2)).isFalse();
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 0)).isFalse();
+    }
+
+    @Test
+    @DisplayName(
+            "#… : prochainBlocPassagesLibre — 1,3,5,7 pris → premier bloc de N consécutifs libres, sans casser la consécutivité")
+    void prochain_bloc_consecutif_libre_evite_les_trous() {
+        PassageDao passageDao = new PassageDao(source);
+        enregistreurDao.insert(new Enregistreur("9999999", "V1.01", null));
+        for (int numero : new int[] {1, 3, 5, 7}) {
+            passageDao.insert(new Passage(
+                    null,
+                    numero,
+                    2026,
+                    "2026-04-22",
+                    "20:25:00",
+                    "07:47:00",
+                    null,
+                    StatutWorkflow.TRANSFORME,
+                    null,
+                    null,
+                    null,
+                    null,
+                    idPoint,
+                    "9999999"));
+        }
+
+        // Bloc de 1 : comble le premier trou (2). Bloc de 2 ou 3 : les trous 2/4/6 sont isolés → 8.
+        assertThat(service.prochainBlocPassagesLibre(idPoint, 2026, 1)).isEqualTo(2);
+        assertThat(service.prochainNumeroPassageLibre(idPoint, 2026)).isEqualTo(2); // équivaut à bloc(1)
+        assertThat(service.prochainBlocPassagesLibre(idPoint, 2026, 2)).isEqualTo(8);
+        assertThat(service.prochainBlocPassagesLibre(idPoint, 2026, 3)).isEqualTo(8);
+        // Sans passage : le bloc démarre à 1 quelle que soit la taille.
+        assertThat(service.prochainBlocPassagesLibre(idPoint, 2025, 3)).isEqualTo(1);
     }
 
     @Test
