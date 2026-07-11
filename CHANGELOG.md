@@ -2,6 +2,17 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.0.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.190.0...v2.0.0) (2026-07-11)
+
+
+* refactor([#1052](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1052))! : « durée enregistrée » remplace « durée audible » ([#1089](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1089)) ([a0d66fc](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/a0d66fc69feb7ceaf48f7457c20aed6f99c76998)), closes [#1051](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1051) [#1051](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1051)
+
+
+### BREAKING CHANGES
+
+* la sortie JSON de la commande CLI statut-passage renomme la clé
+dureeAudibleSecondes en dureeEnregistreeSecondes. Sa sémantique change de toute façon
+
 # [1.190.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.189.0...v1.190.0) (2026-07-11)
 
 
