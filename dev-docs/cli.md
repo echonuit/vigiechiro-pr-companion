@@ -56,7 +56,8 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `importer-tadarida` | `--passage <id> --csv <fichier> [--remplacer]` | P6 | `ServiceValidation.importer` / `reimporter` |
 | `qualifier` | `--passage <id> --verdict <ok\|douteux\|a-jeter> [--commentaire ..]` | R13 | `ServicePassage.poserVerdict` |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
-| `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` |
+| `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
+| `deposer-vigiechiro` | `--passage <id> [--token <jeton>]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982) |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
 | `exporter-observations` | `--passage <id> --sortie <fichier>` | #149 | `ServiceValidation.lignesAudioDuPassage` + `ExportObservationsCsv` |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
@@ -101,6 +102,12 @@ défaut est `<Documents>/VigieChiro-Companion`.
 | `0` | succès |
 | `1` | échec d'exécution (règle métier refusée, accès aux données, E/S) |
 | `2` | mauvaise invocation (commande inconnue, argument requis manquant ou mal formé) |
+
+`deposer-vigiechiro` étend la convention : `0` **seulement si le dépôt est complet** ; `1` si des
+fichiers restent à reprendre (relancer la même commande ne re-téléverse que les manquants). Le jeton
+vient de `--token`, sinon de la variable d'environnement `VIGIECHIRO_TOKEN`, sinon de la **connexion
+enregistrée** dans l'application (préférer la variable d'environnement : `--token` laisse le jeton dans
+l'historique du shell).
 
 `executer(...)` **ne fait pas** `System.exit` (il *renvoie* le code) : c'est ce qui le rend testable.
 Seul `main()` traduit le code en `System.exit`. La base est **migrée au démarrage** (idempotent) avant

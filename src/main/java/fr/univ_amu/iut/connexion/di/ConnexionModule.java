@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.view.ActionConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
+import java.util.Optional;
 import java.util.Set;
 
 /// Module Guice de la feature `connexion` (#727/#741). Câble :
@@ -31,8 +32,7 @@ public class ConnexionModule extends ModuleDeFeature {
 
     @Override
     protected void configure() {
-        // Le stockage local EST la source du token pour tout le socle réseau (commun.api).
-        bind(FournisseurToken.class).to(StockageConnexion.class);
+        // (FournisseurToken est fourni plus bas : jeton ponctuel prioritaire, sinon stockage local.)
         // Entrée « Se connecter à VigieChiro… » du menu ☰ (#741/#931) : contribuée au point d'extension
         // du socle (`Multibinder<ActionMenu>`), sans que le socle connaisse la connexion. Remplace
         // l'ancien contrat `OuvrirConnexion` + défaut inerte, qui n'existaient que pour cette entrée.
@@ -49,8 +49,27 @@ public class ConnexionModule extends ModuleDeFeature {
         return new StockageConnexion(workspace, horloge);
     }
 
-    /// Client de l'API VigieChiro, alimenté par le token stocké. Singleton : partagé par les futures
-    /// features consommatrices (référentiel taxons, sites, dépôt…).
+    /// Source du token pour tout le socle réseau (`commun.api`) : un **jeton ponctuel** (propriété
+    /// système `vigiechiro.token`, sinon variable d'environnement `VIGIECHIRO_TOKEN`) l'emporte sur la
+    /// **connexion enregistrée** ([StockageConnexion]). Le jeton ponctuel sert à la CLI (#1043,
+    /// `deposer-vigiechiro --token …`) et aux outils, sans persister quoi que ce soit ; la propriété
+    /// porte le même nom que celle de la suite de contrat (`-Dvigiechiro.token`).
+    @Provides
+    @Singleton
+    FournisseurToken fournirFournisseurToken(StockageConnexion stockage) {
+        return () -> jetonPonctuel().or(stockage::token);
+    }
+
+    /// Jeton fourni **hors connexion enregistrée**, consulté à chaque requête (surchargeable en cours
+    /// d'exécution) : propriété système d'abord, variable d'environnement ensuite ; vide sinon.
+    static Optional<String> jetonPonctuel() {
+        return Optional.ofNullable(System.getProperty("vigiechiro.token"))
+                .filter(jeton -> !jeton.isBlank())
+                .or(() -> Optional.ofNullable(System.getenv("VIGIECHIRO_TOKEN")).filter(jeton -> !jeton.isBlank()));
+    }
+
+    /// Client de l'API VigieChiro, alimenté par le token stocké (ou ponctuel). Singleton : partagé par
+    /// les features consommatrices (référentiel taxons, sites, dépôt…).
     @Provides
     @Singleton
     ClientVigieChiro fournirClient(FournisseurToken fournisseurToken) {

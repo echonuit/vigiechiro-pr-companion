@@ -38,6 +38,7 @@ import picocli.CommandLine.Spec;
             Qualifier.class,
             ExporterLot.class,
             Deposer.class,
+            DeposerVigieChiro.class,
             ExporterVu.class,
             ExporterObservations.class
         })
