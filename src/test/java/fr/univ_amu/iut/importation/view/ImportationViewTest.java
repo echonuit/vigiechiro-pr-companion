@@ -98,6 +98,18 @@ class ImportationViewTest {
     }
 
     @Test
+    @DisplayName("#801 : le bouton « Écraser et réimporter » porte la classe destructive canonique")
+    void bouton_ecraser_est_style_danger(FxRobot robot) {
+        // Régression : la classe « action-danger » n'existait dans aucune feuille CSS ; le bouton le plus
+        // dangereux retombait sur le style par défaut. La classe destructive du dépôt est « bouton-danger ».
+        Button ecraser = robot.lookup("#boutonEcraser").queryAs(Button.class);
+
+        assertThat(ecraser.getStyleClass())
+                .as("classe destructive canonique (design.css) et non 'action-danger' inexistante")
+                .contains("bouton-danger");
+    }
+
+    @Test
     @DisplayName("La combo des sites est alimentée par les sites de l'utilisateur (chargerSites)")
     void combo_sites_alimentee(FxRobot robot) {
         ComboBox<?> comboSites = robot.lookup("#comboSites").queryAs(ComboBox.class);

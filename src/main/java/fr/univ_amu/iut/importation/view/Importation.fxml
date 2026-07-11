@@ -118,7 +118,7 @@
           visible="false" managed="false">
       <Label fx:id="labelPassageExistant" styleClass="insp-incoherence" wrapText="true" HBox.hgrow="ALWAYS"/>
       <Button fx:id="boutonNumeroLibre" text="Utiliser ce n°" onAction="#utiliserNumeroLibre"/>
-      <Button fx:id="boutonEcraser" text="🗑 Écraser et réimporter" styleClass="action-danger"
+      <Button fx:id="boutonEcraser" text="🗑 Écraser et réimporter" styleClass="bouton-danger"
               onAction="#ecraserEtReimporter"/>
     </HBox>
   </VBox>

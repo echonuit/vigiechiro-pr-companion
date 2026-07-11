@@ -74,6 +74,12 @@ public final class GestionnaireColonnes {
         fermer.setOnAction(e -> popup.hide());
         panneau.getChildren().add(fermer);
         popup.getContent().add(panneau);
+        // Le Popup a sa propre scène et n'hérite pas des feuilles de l'écran : on y joint palette + design
+        // pour que les classes d'affordance du panneau (poignee-colonne, ligne-colonne) prennent effet (#801).
+        panneau.getStylesheets()
+                .addAll(
+                        GestionnaireColonnes.class.getResource("palette.css").toExternalForm(),
+                        GestionnaireColonnes.class.getResource("design.css").toExternalForm());
         Bounds ecran = ancre.localToScreen(ancre.getBoundsInLocal());
         popup.show(ancre, ecran.getMinX(), ecran.getMaxY());
     }

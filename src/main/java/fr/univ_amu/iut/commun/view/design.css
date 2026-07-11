@@ -474,3 +474,28 @@
     -fx-border-width: 1.5;
     -fx-border-radius: 3;
 }
+
+/*
+ * Découvrabilité des éléments cliquables/saisissables partagés (audit #786, #801). Sans indice, une
+ * cible interactive passe pour un simple décor. Le remplissage et le contour des carrés de la carte
+ * étant posés en Java, seuls le curseur et l'effet (non définis côté code) sont pilotables en CSS.
+ */
+
+/* Carré de carte cliquable (filtre en multisite, surbrillance en analyse) : curseur main + halo au survol. */
+.carte-carre {
+    -fx-cursor: hand;
+}
+
+.carte-carre:hover {
+    -fx-effect: dropshadow(gaussian, -couleur-primaire, 6, 0.4, 0, 0);
+}
+
+/* Poignée « ⋮⋮ » de réordonnancement des colonnes (panneau flottant) : curseur de déplacement + survol de
+   ligne. Le panneau est un Popup : la feuille lui est jointe explicitement (cf. GestionnaireColonnes.ouvrir). */
+.poignee-colonne {
+    -fx-cursor: move;
+}
+
+.ligne-colonne:hover {
+    -fx-background-color: -couleur-primaire-voile;
+}
