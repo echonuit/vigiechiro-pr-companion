@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.view;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -33,6 +34,11 @@ public final class GestionnaireVues<T> {
     private final DepotVues depot;
     private final String feature;
     private final Function<String, Optional<String>> saisieNom;
+
+    /// Pont **optionnel** vers le(s) sélecteur(s) de colonnes de la vue (#994) : quand il est fourni,
+    /// enregistrer une vue capture **aussi** la disposition des colonnes, et la rejouer la restaure. `null`
+    /// pour une vue sans colonnes gérées (le comportement se réduit alors aux filtres, comme avant #994).
+    private final AdaptateurColonnes adaptateurColonnes;
 
     /// Vues **par défaut** de l'écran (fournies par la vue hôte) : rendues **en premier**, en **lecture seule**
     /// (pas de renommer/supprimer). Repérées par un `id` `null` (jamais persistées). Sur une vue par défaut,
@@ -78,11 +84,25 @@ public final class GestionnaireVues<T> {
             String feature,
             List<VueSauvegardee> vuesParDefaut,
             Function<String, Optional<String>> saisieNom) {
+        this(onglets, filtres, depot, feature, vuesParDefaut, null, saisieNom);
+    }
+
+    /// Variante **avec sélecteur de colonnes** (#994) : `adaptateurColonnes` (peut être `null`) permet aux
+    /// vues d'enregistrer et de rejouer aussi la disposition des colonnes, en plus des filtres.
+    public GestionnaireVues(
+            Pane onglets,
+            GestionnaireFiltres<T> filtres,
+            DepotVues depot,
+            String feature,
+            List<VueSauvegardee> vuesParDefaut,
+            AdaptateurColonnes adaptateurColonnes,
+            Function<String, Optional<String>> saisieNom) {
         this.onglets = Objects.requireNonNull(onglets, "onglets");
         this.filtres = Objects.requireNonNull(filtres, "filtres");
         this.depot = Objects.requireNonNull(depot, "depot");
         this.feature = Objects.requireNonNull(feature, "feature");
         this.vuesParDefaut = List.copyOf(vuesParDefaut);
+        this.adaptateurColonnes = adaptateurColonnes;
         this.saisieNom = Objects.requireNonNull(saisieNom, "saisieNom");
         this.filtres.surChangement(this::auChangementFiltres);
         rafraichir();
@@ -96,12 +116,25 @@ public final class GestionnaireVues<T> {
         if (enApplication) {
             return;
         }
-        boolean neo = active != null
-                && !DescripteurFiltreJson.serialiser(filtres.decrire()).equals(active.descripteurJson());
+        boolean neo = active != null && !filtres.decrire().equals(filtresDe(active));
         if (neo != modifiee) {
             modifiee = neo;
             rafraichir();
         }
+    }
+
+    /// L'état courant **complet** de la vue tel qu'il sera stocké : filtres + disposition des colonnes (une
+    /// map vide si aucun [AdaptateurColonnes] n'est fourni).
+    private DescripteurVue vueCourante() {
+        Map<String, DescripteurColonnes> colonnes =
+                adaptateurColonnes == null ? Map.of() : adaptateurColonnes.decrire();
+        return new DescripteurVue(filtres.decrire(), colonnes);
+    }
+
+    /// Les **filtres** enregistrés dans `vue`, extraits du descripteur composite (format hérité #623 toléré).
+    /// L'activité de la barre (badge « modifié », vue active au chargement) reste **pilotée par les filtres**.
+    private static DescripteurFiltre filtresDe(VueSauvegardee vue) {
+        return DescripteurVueJson.interpreter(vue.descripteurJson()).filtres();
     }
 
     /// Construit la barre d'onglets avec la **boîte de saisie standard** du nom de vue : un [TextInputDialog]
@@ -128,6 +161,25 @@ public final class GestionnaireVues<T> {
             List<VueSauvegardee> vuesParDefaut) {
         return new GestionnaireVues<>(
                 onglets, filtres, depot, feature, vuesParDefaut, defaut -> demanderNom(onglets, defaut));
+    }
+
+    /// Variante avec **vues par défaut** et **sélecteur de colonnes** (#994) : les vues enregistrent et
+    /// rejouent aussi la disposition des colonnes via `adaptateurColonnes`.
+    public static <T> GestionnaireVues<T> avecDialogue(
+            Pane onglets,
+            GestionnaireFiltres<T> filtres,
+            DepotVues depot,
+            String feature,
+            List<VueSauvegardee> vuesParDefaut,
+            AdaptateurColonnes adaptateurColonnes) {
+        return new GestionnaireVues<>(
+                onglets,
+                filtres,
+                depot,
+                feature,
+                vuesParDefaut,
+                adaptateurColonnes,
+                defaut -> demanderNom(onglets, defaut));
     }
 
     /// Boîte de saisie standard du nom d'une vue (création ou renommage) : renvoie le nom nettoyé, ou vide
@@ -158,7 +210,7 @@ public final class GestionnaireVues<T> {
             return null;
         }
         VueSauvegardee vue = depot.insert(
-                new VueSauvegardee(null, feature, nom.trim(), DescripteurFiltreJson.serialiser(filtres.decrire())));
+                new VueSauvegardee(null, feature, nom.trim(), DescripteurVueJson.serialiser(vueCourante())));
         active = vue;
         modifiee = false; // la nouvelle vue capture exactement les filtres courants
         rafraichir();
@@ -168,9 +220,13 @@ public final class GestionnaireVues<T> {
     /// Rejoue la combinaison de filtres de `vue` (la restaure sur la barre de filtres) et l'active. La garde
     /// [#enApplication] empêche que la restauration elle-même ne marque aussitôt la vue « modifiée ».
     public void appliquer(VueSauvegardee vue) {
+        DescripteurVue descripteur = DescripteurVueJson.interpreter(vue.descripteurJson());
         enApplication = true;
-        filtres.restaurer(DescripteurFiltreJson.interpreter(vue.descripteurJson()));
+        filtres.restaurer(descripteur.filtres());
         enApplication = false;
+        if (adaptateurColonnes != null && !descripteur.colonnes().isEmpty()) {
+            adaptateurColonnes.restaurer(descripteur.colonnes());
+        }
         active = vue;
         modifiee = false;
         rafraichir();
@@ -180,9 +236,9 @@ public final class GestionnaireVues<T> {
     /// courants** (sans les changer) ; à défaut, applique la **première vue par défaut** s'il en existe. Garantit
     /// une vue active dès l'ouverture (plus besoin de sélectionner un onglet avant de modifier).
     private void activerAuChargement() {
-        String courant = DescripteurFiltreJson.serialiser(filtres.decrire());
+        DescripteurFiltre courant = filtres.decrire();
         Optional<VueSauvegardee> correspondante = toutesLesVues().stream()
-                .filter(vue -> courant.equals(vue.descripteurJson()))
+                .filter(vue -> courant.equals(filtresDe(vue)))
                 .findFirst();
         if (correspondante.isPresent()) {
             active = correspondante.get();
@@ -216,8 +272,8 @@ public final class GestionnaireVues<T> {
         if (active == null) {
             return;
         }
-        VueSauvegardee misAJour = new VueSauvegardee(
-                active.id(), feature, active.nom(), DescripteurFiltreJson.serialiser(filtres.decrire()));
+        VueSauvegardee misAJour =
+                new VueSauvegardee(active.id(), feature, active.nom(), DescripteurVueJson.serialiser(vueCourante()));
         depot.update(misAJour);
         active = misAJour;
         modifiee = false;

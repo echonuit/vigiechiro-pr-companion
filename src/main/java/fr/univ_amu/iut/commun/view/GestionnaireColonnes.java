@@ -175,6 +175,34 @@ public final class GestionnaireColonnes {
         appliquerOrdre(table, ordre);
     }
 
+    /// Fabrique un [AdaptateurColonnes] **mono-table** (#994) : la vue mémorisée décrit/rejoue les colonnes de
+    /// `table` sous la clé `cle`. `colonnes` est un **fournisseur** (rebâti à la demande) pour que la liste
+    /// reste cohérente avec le câblage `installer`, sans dépendre de l'ordre d'initialisation. Les vues à
+    /// plusieurs tables (ex. analyse) composent plusieurs entrées à la main plutôt que d'utiliser ce raccourci.
+    public static AdaptateurColonnes adaptateurMonoTable(String cle, TableView<?> table, List<Colonne> colonnes) {
+        return adaptateurMonoTable(cle, table, () -> colonnes);
+    }
+
+    /// Variante à **fournisseur** de la liste (rebâtie à la demande) : cf. [#adaptateurMonoTable(String,
+    /// TableView, List)].
+    public static AdaptateurColonnes adaptateurMonoTable(
+            String cle, TableView<?> table, java.util.function.Supplier<List<Colonne>> colonnes) {
+        return new AdaptateurColonnes() {
+            @Override
+            public Map<String, DescripteurColonnes> decrire() {
+                return Map.of(cle, GestionnaireColonnes.decrire(table, colonnes.get()));
+            }
+
+            @Override
+            public void restaurer(Map<String, DescripteurColonnes> dispositions) {
+                DescripteurColonnes disposition = dispositions.get(cle);
+                if (disposition != null) {
+                    GestionnaireColonnes.restaurer(table, colonnes.get(), disposition);
+                }
+            }
+        };
+    }
+
     /// Construit le contenu du panneau (titre + liste réordonnable), sur l'**ordre courant** des colonnes
     /// dans la table. Public (et non plus seulement `ouvert` par [#ouvrir]) pour être **rendu sans fenêtre
     /// flottante** : par les tests et par les outils de capture d'écran (le `Popup` n'est pas capturé par le

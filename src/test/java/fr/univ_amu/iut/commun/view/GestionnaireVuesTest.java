@@ -10,7 +10,9 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import java.nio.file.Files;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -119,6 +121,46 @@ class GestionnaireVuesTest {
             assertThat(vue.descripteurJson()).contains("\"texte\":\"app\"");
         });
         assertThat(ongletsVues()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#994 : enregistrer capture la disposition des colonnes ; rejouer la vue la restaure")
+    void vue_capture_et_restaure_les_colonnes(FxRobot robot) {
+        Map<String, DescripteurColonnes> disposition = Map.of(
+                "principale",
+                new DescripteurColonnes(List.of(
+                        new DescripteurColonnes.EtatColonne("Carré", true),
+                        new DescripteurColonnes.EtatColonne("Date", false))));
+        AtomicReference<Map<String, DescripteurColonnes>> restaure = new AtomicReference<>();
+        AdaptateurColonnes adaptateur = new AdaptateurColonnes() {
+            @Override
+            public Map<String, DescripteurColonnes> decrire() {
+                return disposition;
+            }
+
+            @Override
+            public void restaurer(Map<String, DescripteurColonnes> dispositions) {
+                restaure.set(dispositions);
+            }
+        };
+        saisieNom = defaut -> Optional.of("Ma vue");
+        robot.interact(() -> {
+            recherche.setText("app");
+            gestion = new GestionnaireVues<>(
+                    onglets, filtres, dao, FEATURE, List.of(), adaptateur, defaut -> saisieNom.apply(defaut));
+        });
+
+        // « + Vue » : la vue enregistrée porte les filtres ET les colonnes courantes.
+        robot.interact(((Button) onglets.getChildren().getLast())::fire);
+
+        VueSauvegardee vue = dao.findByFeature(FEATURE).getFirst();
+        DescripteurVue descripteur = DescripteurVueJson.interpreter(vue.descripteurJson());
+        assertThat(descripteur.filtres().texte()).isEqualTo("app");
+        assertThat(descripteur.colonnes()).isEqualTo(disposition);
+
+        // Rejouer la vue passe la disposition à l'adaptateur (qui, en vrai, la réapplique à la table).
+        robot.interact(() -> gestion.appliquer(vue));
+        assertThat(restaure.get()).isEqualTo(disposition);
     }
 
     @Test
