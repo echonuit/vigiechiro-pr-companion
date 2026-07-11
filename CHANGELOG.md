@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [1.172.3](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.172.2...v1.172.3) (2026-07-11)
+
+
+### Bug Fixes
+
+* **a11y:** guider les ComboBox sans étiquette ni désactivation ([#800](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/800)) ([#960](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/960)) ([0817d77](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/0817d77e35152e676430488c186c03bdf16ff947))
+
 ## [1.172.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.172.1...v1.172.2) (2026-07-11)
 
 
