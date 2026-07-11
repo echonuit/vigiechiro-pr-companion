@@ -11,9 +11,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/// Lecture typée booléenne du service [Reglages], au-dessus d'un [ReglagesDao] réel sur base
-/// jetable. On couvre le retour au **défaut** (réglage jamais écrit), l'aller-retour `true`/`false`,
-/// et la tolérance de lecture (toute valeur ≠ `"true"` vaut `false`).
+/// Lecture/écriture typée du service [Reglages], au-dessus d'un [ReglagesDao] réel sur base jetable.
+/// On couvre, pour chaque type (booléen, texte, entier, énumération), le retour au **défaut**
+/// (réglage jamais écrit), l'aller-retour, et la **tolérance** de lecture (valeur stockée illisible
+/// -> défaut, sans exception).
 class ReglagesTest {
 
     private static final String CLE = "import.conserver-originaux";
@@ -55,5 +56,53 @@ class ReglagesTest {
         dao.ecrire(CLE, "peut-être");
 
         assertThat(reglages.lireBooleen(CLE, true)).isFalse();
+    }
+
+    @Test
+    @DisplayName("aller-retour d'un texte, défaut si jamais écrit")
+    void aller_retour_texte() {
+        assertThat(reglages.lireTexte(CLE, "defaut")).isEqualTo("defaut");
+
+        reglages.ecrireTexte(CLE, "wikipedia");
+        assertThat(reglages.lireTexte(CLE, "defaut")).isEqualTo("wikipedia");
+    }
+
+    @Test
+    @DisplayName("aller-retour d'un entier, défaut si jamais écrit")
+    void aller_retour_entier() {
+        assertThat(reglages.lireEntier(CLE, 42)).isEqualTo(42);
+
+        reglages.ecrireEntier(CLE, 7);
+        assertThat(reglages.lireEntier(CLE, 42)).isEqualTo(7);
+    }
+
+    @Test
+    @DisplayName("un entier illisible retombe sur le défaut, sans exception")
+    void entier_illisible_retombe_sur_le_defaut() {
+        dao.ecrire(CLE, "pas un nombre");
+
+        assertThat(reglages.lireEntier(CLE, 42)).isEqualTo(42);
+    }
+
+    @Test
+    @DisplayName("aller-retour d'une énumération, défaut si jamais écrit")
+    void aller_retour_enum() {
+        assertThat(reglages.lireEnum(Couleur.class, CLE, Couleur.ROUGE)).isEqualTo(Couleur.ROUGE);
+
+        reglages.ecrireEnum(CLE, Couleur.VERT);
+        assertThat(reglages.lireEnum(Couleur.class, CLE, Couleur.ROUGE)).isEqualTo(Couleur.VERT);
+    }
+
+    @Test
+    @DisplayName("une constante d'énum inconnue retombe sur le défaut, sans exception")
+    void enum_inconnue_retombe_sur_le_defaut() {
+        dao.ecrire(CLE, "BLEU");
+
+        assertThat(reglages.lireEnum(Couleur.class, CLE, Couleur.ROUGE)).isEqualTo(Couleur.ROUGE);
+    }
+
+    private enum Couleur {
+        ROUGE,
+        VERT
     }
 }
