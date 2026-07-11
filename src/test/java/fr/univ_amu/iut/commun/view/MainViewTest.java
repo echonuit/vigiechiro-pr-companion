@@ -29,6 +29,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Labeled;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -127,6 +128,23 @@ class MainViewTest {
         assertThat(preference.prefereWikipedia())
                 .as("le choix Wikipédia est persisté")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("#927 : le menu ☰ → « Réglages » ouvre l'écran de réglages dans la zone centrale")
+    void menu_reglages_ouvre_l_ecran(FxRobot robot) {
+        MenuButton menu = robot.lookup("#menuOutils").queryAs(MenuButton.class);
+        MenuItem reglages = menu.getItems().stream()
+                .filter(item -> item.getText() != null && item.getText().contains("Réglages"))
+                .findFirst()
+                .orElseThrow();
+
+        robot.interact(reglages::fire);
+
+        // La zone centrale affiche désormais l'écran Réglages (son TabPane d'onglets).
+        assertThat(navigateur.getVueCentrale().lookup(".onglets-reglages"))
+                .as("l'écran Réglages est affiché")
+                .isNotNull();
     }
 
     @Test
