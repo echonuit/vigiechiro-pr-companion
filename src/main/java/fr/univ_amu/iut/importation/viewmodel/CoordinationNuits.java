@@ -15,6 +15,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyStringProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 
 /// Coordination de l'import **multi-nuits** côté ViewModel (#…), extraite de [ImportationViewModel]
@@ -42,6 +44,7 @@ public final class CoordinationNuits {
     /// Non pertinente hors multi-nuits (`true`).
     private final ReadOnlyBooleanWrapper numerotationValide =
             new ReadOnlyBooleanWrapper(this, "numerotationValide", true);
+    private final ReadOnlyStringWrapper avertissement = new ReadOnlyStringWrapper(this, "avertissement", "");
 
     CoordinationNuits(
             ServiceImport serviceImport,
@@ -104,6 +107,13 @@ public final class CoordinationNuits {
         return numerotationValide.getReadOnlyProperty();
     }
 
+    /// Motif de blocage (#801) à afficher sous la table des nuits quand la numérotation multi-nuits est
+    /// invalide (« aucune nuit incluse » ou « n° déjà pris »), sur le modèle de l'avertissement mono-nuit.
+    /// Vide quand tout va bien.
+    public ReadOnlyStringProperty avertissementProperty() {
+        return avertissement.getReadOnlyProperty();
+    }
+
     /// Recalcule les **n° de passage proposés** : la nuit **incluse** (ordre des dates) part du **n° de
     /// passage saisi dans le formulaire** (source unique #…) et les suivantes reçoivent des n° **consécutifs**
     /// ; les nuits exclues repassent à 0. Met à jour la validité (≥ 1 nuit incluse **et** tous les n° proposés
@@ -111,11 +121,14 @@ public final class CoordinationNuits {
     private void renumeroter() {
         if (!inspection.plusieursNuits()) {
             numerotationValide.set(true); // non pertinent : le pré-contrôle mono-nuit (#108) fait foi
+            avertissement.set("");
             return;
         }
         if (!rattachement.estComplet()) {
             inspection.nuits().forEach(nuit -> nuit.definirNumeroPassagePropose(0));
             numerotationValide.set(false);
+            // Le rattachement incomplet est déjà signalé par sa propre section : pas de doublon ici.
+            avertissement.set("");
             return;
         }
         Long idPoint = rattachement.idPointSelectionne();
@@ -134,6 +147,13 @@ public final class CoordinationNuits {
             } else {
                 nuit.definirNumeroPassagePropose(0);
             }
+        }
+        if (incluses < 1) {
+            avertissement.set("Incluez au moins une nuit à importer.");
+        } else if (!tousLibres) {
+            avertissement.set("Un ou plusieurs numéros de passage proposés sont déjà utilisés.");
+        } else {
+            avertissement.set("");
         }
         numerotationValide.set(incluses >= 1 && tousLibres);
     }

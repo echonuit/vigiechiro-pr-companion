@@ -17,7 +17,6 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
-import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.viewmodel.EtatVerdict;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
@@ -27,7 +26,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Predicate;
 import javafx.beans.binding.Bindings;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -234,9 +232,9 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                         () -> libelleStatut(verdictVm.statutProperty().get()), verdictVm.statutProperty()));
 
         // Pré-check 3 feux (R13, consultatif et jamais bloquant).
-        lierFeu(feuCouverture, "Couverture horaire", verdictVm.feuCouvertureProperty());
-        lierFeu(feuNombre, "Nombre de fichiers", verdictVm.feuNombreProperty());
-        lierFeu(feuRenommage, "Cohérence du renommage", verdictVm.feuRenommageProperty());
+        Feux.lier(feuCouverture, "Couverture horaire", verdictVm.feuCouvertureProperty());
+        Feux.lier(feuNombre, "Nombre de fichiers", verdictVm.feuNombreProperty());
+        Feux.lier(feuRenommage, "Cohérence du renommage", verdictVm.feuRenommageProperty());
         lblAnomalie.visibleProperty().bind(verdictVm.preCheckAnomalieProperty());
         lblAnomalie.managedProperty().bind(verdictVm.preCheckAnomalieProperty());
 
@@ -493,19 +491,6 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         bouton.getStyleClass().remove("verdict-choisi");
         if (choisi) {
             bouton.getStyleClass().add("verdict-choisi");
-        }
-    }
-
-    private static void lierFeu(Label feu, String libelle, ReadOnlyObjectProperty<PreCheckNuit.Feu> couleur) {
-        feu.setText(libelle);
-        appliquerFeu(feu, couleur.get());
-        couleur.addListener((obs, ancien, nouveau) -> appliquerFeu(feu, nouveau));
-    }
-
-    private static void appliquerFeu(Label feu, PreCheckNuit.Feu valeur) {
-        feu.getStyleClass().removeAll("feu-vert", "feu-orange", "feu-rouge");
-        if (valeur != null) {
-            feu.getStyleClass().add("feu-" + valeur.name().toLowerCase(Locale.ROOT));
         }
     }
 

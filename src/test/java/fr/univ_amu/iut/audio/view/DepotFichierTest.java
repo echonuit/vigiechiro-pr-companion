@@ -8,6 +8,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.event.Event;
+import javafx.event.EventType;
 import javafx.scene.Scene;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
@@ -45,19 +46,12 @@ class DepotFichierTest {
     }
 
     private DragEvent depot(Dragboard presse) {
+        return evenement(DragEvent.DRAG_DROPPED, presse);
+    }
+
+    private DragEvent evenement(EventType<DragEvent> type, Dragboard presse) {
         return new DragEvent(
-                null,
-                cible,
-                DragEvent.DRAG_DROPPED,
-                presse,
-                0,
-                0,
-                0,
-                0,
-                TransferMode.COPY,
-                null,
-                null,
-                new PickResult(cible, 0, 0));
+                null, cible, type, presse, 0, 0, 0, 0, TransferMode.COPY, null, null, new PickResult(cible, 0, 0));
     }
 
     @Test
@@ -108,5 +102,30 @@ class DepotFichierTest {
 
         assertThat(recus).isEmpty();
         assertThat(drop.isDropCompleted()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#801 : le survol d'un fichier acceptable surligne la cible, la sortie retire la surbrillance")
+    void survol_actif_surligne_la_cible(FxRobot robot) {
+        DepotFichier.installer(cible, () -> true, fichiers -> true);
+
+        robot.interact(
+                () -> Event.fireEvent(cible, evenement(DragEvent.DRAG_ENTERED, dragboardAvec(new File("a.csv")))));
+        assertThat(cible.getStyleClass()).as("retour visuel au survol").contains("depot-survol");
+
+        robot.interact(
+                () -> Event.fireEvent(cible, evenement(DragEvent.DRAG_EXITED, dragboardAvec(new File("a.csv")))));
+        assertThat(cible.getStyleClass()).as("surbrillance retirée à la sortie").doesNotContain("depot-survol");
+    }
+
+    @Test
+    @DisplayName("#801 : hors activation (source non workflow), le survol ne surligne pas")
+    void survol_inactif_ne_surligne_pas(FxRobot robot) {
+        DepotFichier.installer(cible, () -> false, fichiers -> true);
+
+        robot.interact(
+                () -> Event.fireEvent(cible, evenement(DragEvent.DRAG_ENTERED, dragboardAvec(new File("a.csv")))));
+
+        assertThat(cible.getStyleClass()).doesNotContain("depot-survol");
     }
 }

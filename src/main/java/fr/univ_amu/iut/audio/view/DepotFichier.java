@@ -17,6 +17,8 @@ import javafx.scene.input.TransferMode;
 /// n'expose qu'un consommateur de fichiers, sans connaître la mécanique `DragEvent` / `Dragboard`.
 final class DepotFichier {
 
+    private static final String CLASSE_SURVOL = "depot-survol";
+
     private DepotFichier() {}
 
     /// Câble le glisser-déposer sur `cible`. Le survol n'accepte la copie que si `actif` est vrai et que
@@ -30,7 +32,26 @@ final class DepotFichier {
             }
             evenement.consume();
         });
-        cible.setOnDragDropped(evenement -> terminer(evenement, actif, surDepot));
+        // Retour visuel au survol (#801) : jusqu'ici seul le curseur système changeait, le dépôt d'un CSV
+        // restait invisible. On surligne la cible (classe `depot-survol`) quand un fichier acceptable la
+        // survole, et on retire la surbrillance à la sortie comme au dépôt.
+        cible.setOnDragEntered(evenement -> {
+            Dragboard presse = evenement.getDragboard();
+            if (actif.getAsBoolean()
+                    && presse.hasFiles()
+                    && !cible.getStyleClass().contains(CLASSE_SURVOL)) {
+                cible.getStyleClass().add(CLASSE_SURVOL);
+            }
+            evenement.consume();
+        });
+        cible.setOnDragExited(evenement -> {
+            cible.getStyleClass().remove(CLASSE_SURVOL);
+            evenement.consume();
+        });
+        cible.setOnDragDropped(evenement -> {
+            cible.getStyleClass().remove(CLASSE_SURVOL);
+            terminer(evenement, actif, surDepot);
+        });
     }
 
     private static void terminer(DragEvent evenement, BooleanSupplier actif, Predicate<List<File>> surDepot) {

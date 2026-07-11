@@ -138,3 +138,13 @@
   -fx-background-radius: 6;
   -fx-cursor: hand;
 }
+
+/* Écran survolé par un fichier glissé acceptable (#801) : bordure en surbrillance signalant que déposer
+   un CSV Tadarida ici est possible (auparavant le survol ne donnait aucun retour visuel). */
+.depot-survol {
+  -fx-border-color: -couleur-primaire;
+  -fx-border-width: 2;
+  -fx-border-style: segments(6, 4);
+  -fx-border-insets: 2;
+  -fx-border-radius: 6;
+}

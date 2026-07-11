@@ -173,6 +173,13 @@ class QualificationVueIntegrationTest {
         assertThat(feuCouverture.getText()).contains("Couverture");
         assertThat(feuNombre.getText()).contains("Nombre");
         assertThat(feuRenommage.getText()).contains("renommage");
+        // #801 : différenciateur NON chromatique (pictogramme distinct par état) + infobulle explicative,
+        // pour ne pas encoder l'état par la seule couleur.
+        assertThat(feuCouverture.getText()).startsWith("✖");
+        assertThat(feuNombre.getText()).startsWith("⚠");
+        assertThat(feuRenommage.getText()).startsWith("✓");
+        assertThat(feuCouverture.getTooltip()).isNotNull();
+        assertThat(feuCouverture.getTooltip().getText()).contains("anomalie");
     }
 
     @Test
