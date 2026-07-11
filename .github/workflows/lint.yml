@@ -1,4 +1,6 @@
-# Portail qualité : formatage + complétude des captures + PMD/JaCoCo bloquants.
+# Portail qualité statique : formatage + complétude des captures + PMD bloquant.
+# Aucun test ici : la suite complète (et le seuil de couverture JaCoCo bloquant)
+# vit dans maven.yml, pour ne pas exécuter les tests deux fois par PR.
 # `solution` est conservée pendant la transition (avant la consolidation en `main`).
 name: Quality gate
 
@@ -51,7 +53,9 @@ jobs:
           chmod +x .github/assets/check-capture-mains.sh
           ./.github/assets/check-capture-mains.sh
 
-      - name: Portail qualité (PMD + couverture, bloquant)
-        # AppTest (TestFX) tourne en headless via la Headless Platform JavaFX 26
-        # (glass.platform=Headless) : aucun display X11 requis.
-        run: ./mvnw -B -Pquality-gate verify
+      - name: Portail qualité (PMD, bloquant)
+        # Analyse statique seule : PMD n'a besoin que des classes compilées (résolution de
+        # types), pas des tests. Ne PAS remplacer par `-Pquality-gate verify -DskipTests` :
+        # sans jacoco.exec, jacoco:check passe silencieusement au vert au lieu de bloquer.
+        # Le seuil de couverture bloquant est appliqué dans maven.yml, là où les tests tournent.
+        run: ./mvnw -B -Pquality-gate compile pmd:check
