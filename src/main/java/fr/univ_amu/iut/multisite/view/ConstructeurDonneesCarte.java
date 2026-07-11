@@ -207,6 +207,7 @@ final class ConstructeurDonneesCarte {
             case TRANSFORME -> Color.web("#5c6bc0");
             case VERIFIE -> Color.web("#3f51b5");
             case PRET_A_DEPOSER -> Color.web("#00838f");
+            case DEPOT_EN_COURS -> Color.web("#148f77"); // entre « prêt » (cyan) et « déposé » (vert)
             case DEPOSE -> Color.web("#1e8449");
         };
     }

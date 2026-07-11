@@ -149,7 +149,9 @@ public class PassageViewModel {
         return switch (statut) {
             case IMPORTE -> ActionRecommandee.AUCUNE;
             case TRANSFORME -> ActionRecommandee.VERIFIER;
-            case VERIFIE, PRET_A_DEPOSER -> ActionRecommandee.DEPOSER;
+            // « Dépôt en cours » (#980) : un dépôt interrompu se reprend depuis M-Lot → même mise en
+            // avant que « déposer » (la carte Lot porte la reprise).
+            case VERIFIE, PRET_A_DEPOSER, DEPOT_EN_COURS -> ActionRecommandee.DEPOSER;
             case DEPOSE -> ActionRecommandee.VALIDER;
         };
     }
@@ -175,13 +177,20 @@ public class PassageViewModel {
         actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
 
+    /// Étapes du stepper : les 5 statuts **jalons** du workflow. Le statut technique « Dépôt en cours »
+    /// (#980) n'est pas un jalon : tant que le dépôt automatique n'est pas terminé, le jalon courant
+    /// reste « Prêt à déposer » (le détail du dépôt — unités téléversées, reprise — vit dans M-Lot).
     private static List<EtapeWorkflow> construireEtapes(StatutWorkflow courant) {
+        StatutWorkflow jalon = courant == StatutWorkflow.DEPOT_EN_COURS ? StatutWorkflow.PRET_A_DEPOSER : courant;
         List<EtapeWorkflow> liste = new ArrayList<>();
         for (StatutWorkflow etape : StatutWorkflow.values()) {
+            if (etape == StatutWorkflow.DEPOT_EN_COURS) {
+                continue;
+            }
             EtatEtape etat;
-            if (etape.ordinal() < courant.ordinal()) {
+            if (etape.ordinal() < jalon.ordinal()) {
                 etat = EtatEtape.FRANCHIE;
-            } else if (etape == courant) {
+            } else if (etape == jalon) {
                 etat = EtatEtape.COURANTE;
             } else {
                 etat = EtatEtape.A_VENIR;

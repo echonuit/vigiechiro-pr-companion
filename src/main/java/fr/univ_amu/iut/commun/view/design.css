@@ -319,6 +319,12 @@
     -fx-text-fill: -badge-neutre-texte;
 }
 
+.badge-statut-depot_en_cours {
+    /* Dépôt automatique entamé mais incomplet (#980) : « en cours » indigo, comme les tables de suivi. */
+    -fx-background-color: -couleur-primaire-voile;
+    -fx-text-fill: -couleur-primaire;
+}
+
 .badge-statut-depose {
     -fx-background-color: -badge-info-fond;
     -fx-text-fill: -badge-info-texte;

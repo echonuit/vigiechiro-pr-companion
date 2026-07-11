@@ -8,10 +8,17 @@ import java.util.Optional;
 /// Moteur (pur) des transitions de [StatutWorkflow] d'un [Passage].
 ///
 /// Le workflow d'un passage est **linéaire** (C5) :
-/// `Importé → Transformé → Vérifié → Prêt à déposer → Déposé`. Une seule transition est autorisée
-/// depuis un statut donné : son **successeur immédiat**. On interdit ainsi de sauter une étape
-/// (ex. importer puis déposer directement) ou de revenir en arrière (ex. re-transformer un passage
-/// déjà déposé).
+/// `Importé → Transformé → Vérifié → Prêt à déposer → Dépôt en cours → Déposé`. Depuis l'arrivée du
+/// statut technique [StatutWorkflow#DEPOT_EN_COURS] (#980), deux **exceptions** au « successeur
+/// immédiat uniquement » complètent le graphe :
+///
+/// - `Prêt à déposer → Déposé` : le **marquage manuel** (téléversement fait sur le site web) saute le
+///   statut technique, réservé au dépôt automatique ;
+/// - `Dépôt en cours → Dépôt en cours` : une **reprise** (« Retenter les échecs ») repart du même
+///   statut sans le quitter.
+///
+/// On interdit toujours de sauter une autre étape (ex. importer puis déposer directement) ou de
+/// revenir en arrière (ex. re-transformer un passage déjà déposé).
 ///
 /// Cette logique est isolée dans une classe dédiée (et non dans [StatutWorkflow], qui vit en
 /// `commun.model` et reste un simple énum de libellés) pour deux raisons :
@@ -32,6 +39,7 @@ public final class MoteurWorkflowPassage {
             StatutWorkflow.TRANSFORME,
             StatutWorkflow.VERIFIE,
             StatutWorkflow.PRET_A_DEPOSER,
+            StatutWorkflow.DEPOT_EN_COURS,
             StatutWorkflow.DEPOSE);
 
     /// Successeur immédiat d'un statut, ou [Optional#empty()] si `actuel` est le statut terminal
@@ -44,16 +52,24 @@ public final class MoteurWorkflowPassage {
         return Optional.of(ORDRE.get(index + 1));
     }
 
-    /// `true` si l'on peut passer de `actuel` à `cible`, c'est-à-dire si `cible` est exactement le
-    /// successeur immédiat de `actuel`.
+    /// `true` si l'on peut passer de `actuel` à `cible` : le **successeur immédiat**, ou l'une des deux
+    /// exceptions du dépôt (#980) — marquage manuel `Prêt à déposer → Déposé`, reprise
+    /// `Dépôt en cours → Dépôt en cours`.
     public boolean estTransitionAutorisee(StatutWorkflow actuel, StatutWorkflow cible) {
+        if (actuel == StatutWorkflow.PRET_A_DEPOSER && cible == StatutWorkflow.DEPOSE) {
+            return true; // marquage manuel : le statut technique « Dépôt en cours » est sauté
+        }
+        if (actuel == StatutWorkflow.DEPOT_EN_COURS && cible == StatutWorkflow.DEPOT_EN_COURS) {
+            return true; // reprise d'un dépôt interrompu : on repart du même statut
+        }
         return suivant(actuel).map(attendu -> attendu == cible).orElse(false);
     }
 
     /// Exige que la transition `actuel → cible` soit autorisée.
     ///
-    /// @throws RegleMetierException si la transition n'est pas le passage à l'étape suivante (saut
-    /// d'étape, retour en arrière, ou statut déjà terminal)
+    /// @throws RegleMetierException si la transition n'est ni le passage à l'étape suivante, ni une
+    /// exception du dépôt (marquage manuel, reprise) — saut d'étape, retour en arrière, ou statut
+    /// déjà terminal
     public void exigerTransitionAutorisee(StatutWorkflow actuel, StatutWorkflow cible) {
         if (!estTransitionAutorisee(actuel, cible)) {
             throw new RegleMetierException("Transition de workflow interdite : « "

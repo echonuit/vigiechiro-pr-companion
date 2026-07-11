@@ -105,6 +105,19 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("#980 : « Dépôt en cours » n'est pas un jalon du stepper — le jalon courant reste « Prêt à déposer »")
+    void stepper_ignore_le_statut_technique_de_depot() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOT_EN_COURS));
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.etapes()).hasSize(5);
+        assertThat(viewModel.etapes().get(3))
+                .isEqualTo(new EtapeWorkflow(StatutWorkflow.PRET_A_DEPOSER, EtatEtape.COURANTE));
+        assertThat(viewModel.etapes().get(4)).isEqualTo(new EtapeWorkflow(StatutWorkflow.DEPOSE, EtatEtape.A_VENIR));
+    }
+
+    @Test
     @DisplayName("La vérification est indisponible tant que la nuit n'est pas transformée")
     void verification_indisponible_avant_transformation() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.IMPORTE));

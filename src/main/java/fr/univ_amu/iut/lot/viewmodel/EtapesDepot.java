@@ -33,10 +33,15 @@ final class EtapesDepot {
 
     /// Rang (1..4) de l'étape courante, ou 5 quand tout est accompli (passage déposé). L'étape ③
     /// « Téléverser » (manuelle) ne devient courante qu'une fois des archives générées ; sinon on en est
-    /// encore à ② « Générer les archives ». Une alerte bloquante (R14) à l'étape ① est signalée à part.
+    /// encore à ② « Générer les archives ». Un dépôt automatique **en cours ou interrompu** (#980) reste
+    /// à l'étape ③ (le téléversement n'est pas terminé, reprenable). Une alerte bloquante (R14) à
+    /// l'étape ① est signalée à part.
     private static int rangCourant(StatutWorkflow statut, boolean archivesGenerees) {
         if (statut == StatutWorkflow.DEPOSE) {
             return 5;
+        }
+        if (statut == StatutWorkflow.DEPOT_EN_COURS) {
+            return 3;
         }
         if (statut == StatutWorkflow.PRET_A_DEPOSER) {
             return archivesGenerees ? 3 : 2;
