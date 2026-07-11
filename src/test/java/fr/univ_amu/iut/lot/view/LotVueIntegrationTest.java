@@ -150,7 +150,6 @@ class LotVueIntegrationTest {
                                 ok("Journal du capteur")),
                         null));
 
-        Label recap = robot.lookup("#lblRecap").queryAs(Label.class);
         Label chemin = robot.lookup("#lblCheminDepot").queryAs(Label.class);
         VBox checklist = robot.lookup("#checklist").queryAs(VBox.class);
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
@@ -158,8 +157,7 @@ class LotVueIntegrationTest {
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
 
         // Statut déporté en barre de statut (#693).
-        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Vérifié");
-        assertThat(recap.getText()).isEqualTo("2 séquences · 8 Ko");
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Vérifié · 2 séquences · 8 Ko");
         // #251 : la cible du téléversement est le sous-dossier depot/ (archives ZIP), pas la session.
         assertThat(chemin.getText()).isEqualTo("/ws/session-42/depot");
         // #254 : la checklist reste affichée même quand tout est satisfait (chaque ligne en ✓).
@@ -208,9 +206,7 @@ class LotVueIntegrationTest {
         // fixture de départ « 2 séquences · 8 Ko ».
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.VERIFIE, "/ws/session-42", 5, 3_145_728L, List.of(), null));
 
-        Label recap = robot.lookup("#lblRecap").queryAs(Label.class);
-
-        assertThat(recap.getText()).isEqualTo("5 séquences · 3 Mo");
+        assertThat(controleur.zonesStatutProperty().get().centre()).endsWith("5 séquences · 3 Mo");
     }
 
     @Test
@@ -218,9 +214,7 @@ class LotVueIntegrationTest {
     void recap_volume_inconnu_sans_erreur(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.VERIFIE, "/ws/session-42", 5, null, List.of(), null));
 
-        Label recap = robot.lookup("#lblRecap").queryAs(Label.class);
-
-        assertThat(recap.getText()).isEqualTo("5 séquences · volume inconnu");
+        assertThat(controleur.zonesStatutProperty().get().centre()).endsWith("5 séquences · volume inconnu");
     }
 
     @Test
@@ -248,7 +242,7 @@ class LotVueIntegrationTest {
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
 
         // Statut déporté en barre de statut (#693).
-        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Déposé");
+        assertThat(controleur.zonesStatutProperty().get().centre()).startsWith("Déposé");
         assertThat(message.isVisible()).isTrue();
         assertThat(message.getText()).contains("déposé");
         assertThat(preparer.isDisabled()).isTrue();
@@ -282,6 +276,21 @@ class LotVueIntegrationTest {
                 .isFalse();
         assertThat(robot.lookup("#btnSupprimerArchives").queryAs(Button.class).isDisabled())
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#823 : barre de statut 3 zones — contexte à gauche, statut · récap au centre, bilan à droite")
+    void barre_de_statut_trois_zones(FxRobot robot) {
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(
+                        new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2),
+                        new ArchiveDepot(Path.of("/ws/session-42/depot/Car-2.zip"), 2, 4096L, 3)));
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 5, 8192L, List.of(), null));
+
+        var zones = controleur.zonesStatutProperty().get();
+        assertThat(zones.gauche()).isEqualTo("Carré 640380 · A1 · N° 2");
+        assertThat(zones.centre()).startsWith("Prêt à déposer").contains("5 séquences");
+        assertThat(zones.droite()).contains("2 archive(s)").contains("dans depot/");
     }
 
     @Test

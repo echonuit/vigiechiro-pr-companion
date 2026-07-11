@@ -81,14 +81,12 @@ class LotViewTest {
     @Test
     @DisplayName("Affiche statut/récap/dossier ; préparer actif, déposer désactivé (Vérifié)")
     void affiche_etat_verifie(FxRobot robot) {
-        Label recap = robot.lookup("#lblRecap").queryAs(Label.class);
         Label chemin = robot.lookup("#lblCheminDepot").queryAs(Label.class);
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
 
         // Le statut est déporté en barre de statut (#693) : plus de label d'en-tête, il vit dans les zones.
-        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Vérifié");
-        assertThat(recap.getText()).isEqualTo("2 séquences · 8 Ko");
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("Vérifié · 2 séquences · 8 Ko");
         assertThat(chemin.getText()).isEqualTo("/ws/session-42/depot");
         assertThat(preparer.isDisabled()).isFalse();
         assertThat(deposer.isDisabled()).isTrue();

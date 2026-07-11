@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 
 /// Table de dépôt VigieChiro (#983) côté ViewModel : spécialise le socle [SuiviLignes] pour refléter
 /// l'état **persisté** des unités (`depot_unite`, #981 — réhydratation à la réouverture) et les
@@ -23,6 +25,11 @@ import javafx.beans.property.ReadOnlyBooleanWrapper;
 public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
 
     private final ReadOnlyBooleanWrapper resteAReprendre = new ReadOnlyBooleanWrapper(this, "resteAReprendre", false);
+
+    /// Compteurs du dépôt courant, pour la barre de statut (#823) : unités déposées / total du plan.
+    private final ReadOnlyIntegerWrapper deposees = new ReadOnlyIntegerWrapper(this, "deposees", 0);
+
+    private final ReadOnlyIntegerWrapper total = new ReadOnlyIntegerWrapper(this, "total", 0);
 
     /// Pose (ou re-pose) la table depuis l'état **persisté** des unités : chaque statut de `depot_unite`
     /// est traduit en état de ligne (à déposer → en attente ; en cours interrompu → en attente, il sera
@@ -84,9 +91,22 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
                 .findFirst();
     }
 
+    /// Unités déposées du plan courant (barre de statut #823).
+    public ReadOnlyIntegerProperty deposeesProperty() {
+        return deposees.getReadOnlyProperty();
+    }
+
+    /// Taille du plan courant (barre de statut #823) ; `0` sans dépôt entamé.
+    public ReadOnlyIntegerProperty totalProperty() {
+        return total.getReadOnlyProperty();
+    }
+
     private void recalculerReste() {
-        boolean reste = !lignes().isEmpty()
-                && lignes().stream().anyMatch(ligne -> ligne.etatProperty().get() != EtatUnite.TERMINEE);
-        resteAReprendre.set(reste);
+        long terminees = lignes().stream()
+                .filter(ligne -> ligne.etatProperty().get() == EtatUnite.TERMINEE)
+                .count();
+        deposees.set((int) terminees);
+        total.set(lignes().size());
+        resteAReprendre.set(!lignes().isEmpty() && terminees < lignes().size());
     }
 }
