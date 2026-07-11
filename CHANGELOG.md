@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [1.181.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.180.0...v1.181.0) (2026-07-11)
+
+
+### Features
+
+* **lot:** table de dépôt réhydratée + « Retenter les échecs » (3d) ([#1027](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1027)) ([9b83b54](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/9b83b5499b42ef5bab1935dbb17232b2b860999a)), closes [#983](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/983) [#946](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/946) [#820](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/820) [#947](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/947) [#981](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/981) [#982](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/982) [#980](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/980)
+
 # [1.180.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v1.179.0...v1.180.0) (2026-07-11)
 
 
