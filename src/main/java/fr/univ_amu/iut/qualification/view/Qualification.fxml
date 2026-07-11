@@ -164,7 +164,11 @@
         <Label styleClass="section-sous" wrapText="true"
                text="Raccourcis clavier : O vérifié · D douteux · J à jeter · Espace écouter · Entrée enregistrer"/>
 
-        <HBox alignment="CENTER_RIGHT">
+        <HBox alignment="CENTER_RIGHT" spacing="10.0">
+          <!-- Confirmation de succès locale (#797) : visible une fois le verdict persisté (état ENREGISTRE),
+               masquée dès qu'une modification recrée un brouillon. Complète le grisage du bouton. -->
+          <Label fx:id="lblSucces" styleClass="badge, badge-succes" text="✓ Verdict enregistré"
+                 managed="false" visible="false"/>
           <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
           <StackPane fx:id="enveloppeEnregistrer">
             <Button fx:id="boutonEnregistrer" text="💾 Enregistrer le verdict"

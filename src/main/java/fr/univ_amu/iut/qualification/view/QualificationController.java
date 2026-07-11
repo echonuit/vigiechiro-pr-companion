@@ -153,6 +153,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private Label lblMessage;
 
+    /// Confirmation de succès locale (#797) : « ✓ Verdict enregistré », visible tant que le verdict à
+    /// l'écran correspond à l'état persisté (ENREGISTRE).
+    @FXML
+    private Label lblSucces;
+
     @FXML
     private Button boutonEnregistrer;
 
@@ -292,6 +297,12 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         lblMessage.textProperty().bind(verdictVm.messageProperty());
         lblMessage.visibleProperty().bind(verdictVm.messageProperty().isNotEmpty());
         lblMessage.managedProperty().bind(verdictVm.messageProperty().isNotEmpty());
+
+        // Confirmation de succès locale (#797) : le badge « ✓ Verdict enregistré » apparaît une fois le
+        // verdict persisté et disparaît dès qu'une modification recrée un brouillon.
+        var verdictEnregistre = verdictVm.etatVerdictProperty().isEqualTo(EtatVerdict.ENREGISTRE);
+        lblSucces.visibleProperty().bind(verdictEnregistre);
+        lblSucces.managedProperty().bind(verdictEnregistre);
 
         boutonEnregistrer.disableProperty().bind(verdictVm.peutEnregistrer().not());
         // Explique le grisage (#789) sur l'enveloppe (un Button désactivé n'affiche pas de tooltip) : tant

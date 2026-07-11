@@ -59,8 +59,15 @@ public class QualificationViewModel {
 
     public QualificationViewModel(ServiceQualification service) {
         this.service = Objects.requireNonNull(service, "service");
+        // Enregistrable seulement si un verdict réel est choisi ET qu'il constitue un brouillon non encore
+        // persisté (#797) : une fois enregistré, le bouton se grise pour ne pas inviter à un double-clic
+        // redondant ; toute modification du verdict/commentaire ré-arme le brouillon (redevenirBrouillon…).
         peutEnregistrer = Bindings.createBooleanBinding(
-                () -> verdictChoisi.get() != null && verdictChoisi.get() != Verdict.A_VERIFIER, verdictChoisi);
+                () -> verdictChoisi.get() != null
+                        && verdictChoisi.get() != Verdict.A_VERIFIER
+                        && etatVerdict.get() == EtatVerdict.BROUILLON,
+                verdictChoisi,
+                etatVerdict);
         // Ré-armer la garde de saisie : verdict et commentaire restent éditables après un
         // enregistrement. Toute modification recrée donc un brouillon non persisté (le verdict/
         // commentaire à l'écran ne correspond plus à l'état enregistré) ; sans ce ré-armement, quitter
