@@ -2,6 +2,7 @@
 
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.FlowPane?>
@@ -41,6 +42,7 @@
       <Button fx:id="boutonSupprimer" text="🗑 Supprimer" styleClass="bouton-danger"
               onAction="#supprimerSite"/>
     </StackPane>
+    <MenuButton fx:id="menuOutils" text="☰" styleClass="menu-actions" accessibleText="Outils : colonnes"/>
   </HBox>
 
   <HBox styleClass="bandeau-infos" spacing="0.0">

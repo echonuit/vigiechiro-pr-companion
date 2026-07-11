@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
@@ -37,6 +39,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
@@ -124,6 +127,10 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private TableView<LignePassage> tablePassages;
 
+    /// Menu ☰ « outils » (#921) : porte l'entrée « Colonnes… » (le clic droit de la table la porte aussi).
+    @FXML
+    private MenuButton menuOutils;
+
     @FXML
     private TableColumn<LignePassage, String> colDate;
 
@@ -184,6 +191,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     private void initialize() {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tablePassages);
+        // Sélecteur de colonnes (#921) : clic droit + ☰ « outils ».
+        GestionnaireColonnes.installer(tablePassages, menuOutils, colonnesPassages());
         // Repli d'état vide des points d'écoute (#791) : le label prend la place du FlowPane (sans
         // placeholder) tant qu'aucune carte de point n'y est ajoutée. La liaison suit la liste vivante.
         var aucunPoint = Bindings.isEmpty(cartesPoints.getChildren());
@@ -285,6 +294,18 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         } catch (RegleMetierException refus) {
             alerteErreur(refus.getMessage());
         }
+    }
+
+    /// Colonnes des passages du site proposées au sélecteur (#921). « Date » est l'identité (verrouillée).
+    private List<GestionnaireColonnes.Colonne> colonnesPassages() {
+        return List.of(
+                new GestionnaireColonnes.Colonne(colDate, "Date", true),
+                new GestionnaireColonnes.Colonne(colPoint, "Point", false),
+                new GestionnaireColonnes.Colonne(colNumero, "N° passage", false),
+                new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
+                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false),
+                new GestionnaireColonnes.Colonne(colEnregistreur, "Enregistreur", false),
+                new GestionnaireColonnes.Colonne(colDepose, "Déposé le", false));
     }
 
     private void configurerColonnes() {

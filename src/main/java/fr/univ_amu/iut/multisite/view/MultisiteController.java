@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
@@ -185,6 +186,8 @@ public class MultisiteController implements RafraichirAuRetour {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tableLignes);
         configurerColonnes();
+        // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant).
+        GestionnaireColonnes.installer(tableLignes, menuActions, colonnesLignes());
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
         // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne
         // persiste à travers les rafraîchissements de filtres.
@@ -443,6 +446,18 @@ public class MultisiteController implements RafraichirAuRetour {
     /// Bouton « 💾 » Enregistrer les positions (overlay de la carte, délégué à [EditionPositionsCarte]).
     private void enregistrerPositions() {
         edition.enregistrer();
+    }
+
+    /// Colonnes du lot multi-sites proposées au sélecteur (#919). « Carré » est l'identité (verrouillée).
+    private List<GestionnaireColonnes.Colonne> colonnesLignes() {
+        return List.of(
+                new GestionnaireColonnes.Colonne(colCarre, "Carré", true),
+                new GestionnaireColonnes.Colonne(colPoint, "Point", false),
+                new GestionnaireColonnes.Colonne(colAnnee, "Année", false),
+                new GestionnaireColonnes.Colonne(colNumero, "N° passage", false),
+                new GestionnaireColonnes.Colonne(colDate, "Date", false),
+                new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
+                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false));
     }
 
     private void configurerColonnes() {
