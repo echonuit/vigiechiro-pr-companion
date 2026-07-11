@@ -52,10 +52,16 @@ final class CellulesAudio {
             TableColumn<LigneObservationAudio, String> colonne,
             String id,
             String iconeLiteral,
+            String libelle,
             Supplier<TableCell<LigneObservationAudio, String>> fournisseurCellule) {
         String classeCss = ICONE_REFERENCE.equals(iconeLiteral) ? STYLE_REFERENCE : STYLE_COMMENTAIRE;
+        // En-tête réduit à une icône : sans libellé accessible ni infobulle, un lecteur d'écran n'annonce
+        // que le glyphe et le survol n'explique rien (#794).
+        FontIcon enTete = icone(iconeLiteral, classeCss);
+        enTete.setAccessibleText(libelle);
+        Tooltip.install(enTete, new Tooltip(libelle));
         colonne.setText("");
-        colonne.setGraphic(icone(iconeLiteral, classeCss));
+        colonne.setGraphic(enTete);
         colonne.setId(id);
         colonne.setSortable(false);
         colonne.setCellFactory(c -> fournisseurCellule.get());
@@ -67,9 +73,13 @@ final class CellulesAudio {
             TableColumn<LigneObservationAudio, String> colReference,
             TableColumn<LigneObservationAudio, String> colCommentaire,
             BiConsumer<Long, String> enregistrerCommentaire) {
-        configurerColonne(colReference, "colReference", ICONE_REFERENCE, CellulesAudio::reference);
+        configurerColonne(colReference, "colReference", ICONE_REFERENCE, "Référence", CellulesAudio::reference);
         configurerColonne(
-                colCommentaire, "colCommentaire", ICONE_COMMENTAIRE, () -> commentaire(enregistrerCommentaire));
+                colCommentaire,
+                "colCommentaire",
+                ICONE_COMMENTAIRE,
+                "Commentaire",
+                () -> commentaire(enregistrerCommentaire));
     }
 
     /// Cellule texte qui **élide** un contenu long et en expose la valeur complète via une infobulle au

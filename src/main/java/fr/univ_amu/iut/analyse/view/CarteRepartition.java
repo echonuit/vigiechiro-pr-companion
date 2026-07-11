@@ -13,6 +13,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
@@ -59,6 +60,8 @@ final class CarteRepartition {
         Button recadrer = new Button("⤢");
         recadrer.getStyleClass().add("carte-recadrer");
         recadrer.setAccessibleText("Recadrer la carte");
+        // Infobulle visible au survol, à parité avec le même bouton en multisite (#794).
+        recadrer.setTooltip(new Tooltip("Recadrer la carte"));
         recadrer.setOnAction(evenement -> carte.recadrer());
         StackPane.setAlignment(recadrer, Pos.TOP_RIGHT);
         StackPane.setMargin(recadrer, new Insets(8));

@@ -353,6 +353,10 @@ class SonsValidationViewTest {
         assertThat(ref.getGraphic()).isInstanceOf(FontIcon.class);
         assertThat(ref.getGraphic().getStyleClass()).contains("icone-reference");
         assertThat(commentaire.getGraphic().getStyleClass()).contains("icone-commentaire");
+        // #794 : l'en-tête icône seule expose un libellé accessible (sinon un lecteur d'écran n'annonce
+        // que le glyphe).
+        assertThat(ref.getGraphic().getAccessibleText()).isEqualTo("Référence");
+        assertThat(commentaire.getGraphic().getAccessibleText()).isEqualTo("Commentaire");
         // Les deux lignes de la fixture sont en référence et commentées → icônes aussi en cellule
         // (donc plus d'occurrences que le seul en-tête).
         assertThat(robot.lookup(".icone-reference").queryAll()).hasSizeGreaterThan(1);
