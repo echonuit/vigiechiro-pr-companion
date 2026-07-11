@@ -68,7 +68,12 @@ final class SelecteurColonnesAnalyse {
         GestionnaireColonnes.installerClicDroit(tableObservations, colonnesObservations);
         MenuItem itemColonnes = new MenuItem("Colonnes…");
         itemColonnes.setOnAction(e -> ouvrirMaitre());
-        menuOutils.getItems().addAll(new SeparatorMenuItem(), itemColonnes);
+        // Séparateur seulement si le ☰ porte déjà des actions (#995) : ici il est dédié aux colonnes, donc pas
+        // de trait parasite en tête.
+        if (!menuOutils.getItems().isEmpty()) {
+            menuOutils.getItems().add(new SeparatorMenuItem());
+        }
+        menuOutils.getItems().add(itemColonnes);
     }
 
     /// Rend la disposition des trois tables **persistante par écran** (#994, couche « défaut par écran ») :

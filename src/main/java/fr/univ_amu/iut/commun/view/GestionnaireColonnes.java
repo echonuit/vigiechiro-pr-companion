@@ -80,12 +80,17 @@ public final class GestionnaireColonnes {
 
     /// Variante **composable** : `itemsClicDroit` (ex. « Fiche de l'espèce ») ouvrent le menu contextuel de
     /// la table, suivis d'un séparateur puis de « Colonnes… » — sans écraser l'action de clic droit propre à
-    /// la vue. Le ☰ reçoit, lui, un séparateur puis « Colonnes… ». Chaque item « Colonnes… » est une
-    /// instance distincte (un [MenuItem] n'appartient qu'à un seul menu) ancrée sur son propre point.
+    /// la vue. Le ☰ reçoit « Colonnes… », **précédé d'un séparateur seulement s'il porte déjà des actions**
+    /// (pas de trait parasite sur un ☰ dédié aux colonnes, #995). Chaque item « Colonnes… » est une instance
+    /// distincte (un [MenuItem] n'appartient qu'à un seul menu) ancrée sur son propre point.
     public static void installer(
             TableView<?> table, MenuButton menu, List<Colonne> colonnes, MenuItem... itemsClicDroit) {
         installerClicDroit(table, colonnes, itemsClicDroit);
-        menu.getItems().add(new SeparatorMenuItem());
+        // Séparateur seulement si le ☰ porte déjà des actions (#995) : sur un menu par ailleurs vide (écrans
+        // dont le ☰ ne sert qu'aux colonnes), un séparateur en tête apparaîtrait comme un trait parasite.
+        if (!menu.getItems().isEmpty()) {
+            menu.getItems().add(new SeparatorMenuItem());
+        }
         menu.getItems().add(itemColonnes(table, colonnes, menu));
     }
 

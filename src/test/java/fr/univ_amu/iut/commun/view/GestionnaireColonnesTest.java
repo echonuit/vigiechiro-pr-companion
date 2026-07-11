@@ -124,7 +124,7 @@ class GestionnaireColonnesTest {
     }
 
     @Test
-    @DisplayName("installer : clic droit = « Colonnes… » ; le ☰ reçoit un séparateur puis « Colonnes… »")
+    @DisplayName("installer : clic droit = « Colonnes… » ; sur un ☰ vide, « Colonnes… » seul (sans séparateur)")
     void installer_pose_les_deux_entrees(FxRobot robot) {
         AtomicReference<TableView<String>> refTable = new AtomicReference<>();
         MenuButton menu = new MenuButton("☰");
@@ -142,9 +142,28 @@ class GestionnaireColonnesTest {
         assertThat(refTable.get().getContextMenu().getItems())
                 .extracting(MenuItem::getText)
                 .containsExactly("Colonnes…");
-        assertThat(menu.getItems()).hasSize(2);
-        assertThat(menu.getItems().get(0)).isInstanceOf(SeparatorMenuItem.class);
-        assertThat(menu.getItems().get(1).getText()).isEqualTo("Colonnes…");
+        // ☰ vide au départ : pas de séparateur parasite en tête (#995), juste « Colonnes… ».
+        assertThat(menu.getItems()).extracting(MenuItem::getText).containsExactly("Colonnes…");
+    }
+
+    @Test
+    @DisplayName("installer : sur un ☰ portant déjà une action, « Colonnes… » est précédé d'un séparateur")
+    void installer_separe_les_colonnes_des_actions_existantes(FxRobot robot) {
+        MenuButton menu = new MenuButton("☰");
+        MenuItem actionExistante = new MenuItem("Exporter…");
+        menu.getItems().add(actionExistante);
+        robot.interact(() -> {
+            TableView<String> table = tableAvec("A", "B");
+            GestionnaireColonnes.installer(
+                    table,
+                    menu,
+                    List.of(new GestionnaireColonnes.Colonne(table.getColumns().get(0), "A", false)));
+        });
+
+        assertThat(menu.getItems()).hasSize(3);
+        assertThat(menu.getItems().get(0)).isSameAs(actionExistante);
+        assertThat(menu.getItems().get(1)).isInstanceOf(SeparatorMenuItem.class);
+        assertThat(menu.getItems().get(2).getText()).isEqualTo("Colonnes…");
     }
 
     @Test
