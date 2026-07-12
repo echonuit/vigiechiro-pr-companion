@@ -534,14 +534,25 @@ public class ServicePassage {
     /// Le carré et le code point (inchangés) sont fournis par l'appelant via `nouveau` (le `model` ne
     /// dépend pas de `sites`) ; l'ancien préfixe est reconstruit depuis l'année/n° courants.
     ///
+    /// Un passage **déposé** (ou en cours de dépôt) n'est plus renommable : son nom est l'identité de
+    /// ses fichiers côté serveur (renommer après dépôt divergerait de la plateforme). Il faut d'abord
+    /// [#annulerDepot].
+    ///
     /// @param nouveau préfixe cible (même carré/point, nouvelle année et/ou n° de passage)
-    /// @throws RegleMetierException si le passage est introuvable ou si le nouveau quadruplet existe
+    /// @throws RegleMetierException si le passage est introuvable, déjà déposé, ou si le nouveau
+    ///     quadruplet existe déjà
     public void modifierRattachement(Long idPassage, Prefixe nouveau) {
         Objects.requireNonNull(idPassage, ID_PASSAGE);
         Objects.requireNonNull(nouveau, "nouveau");
         Passage passage = passageDao
                 .findById(idPassage)
                 .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
+        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE
+                || passage.statutWorkflow() == StatutWorkflow.DEPOT_EN_COURS) {
+            throw new RegleMetierException(
+                    "Renommage refusé : un passage déposé (ou en cours de dépôt) ne peut plus être renommé."
+                            + " Annulez d'abord le dépôt.");
+        }
         Prefixe ancien = new Prefixe(nouveau.carre(), passage.annee(), passage.numeroPassage(), nouveau.codePoint());
         if (ancien.equals(nouveau)) {
             return; // ni l'année ni le n° de passage n'ont changé : rien à faire

@@ -531,6 +531,57 @@ class ServicePassageTest {
         assertThat(passageDao.findById(id).orElseThrow().numeroPassage()).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("Modifier le rattachement refuse un passage déposé (nom = identité serveur)")
+    void modifier_rattachement_refuse_un_passage_depose() {
+        Passage depose = passageDao.insert(new Passage(
+                null,
+                1,
+                2026,
+                "2026-06-20",
+                "21:30:00",
+                "05:15:00",
+                null,
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                null,
+                null,
+                "2026-06-21T08:00",
+                idPoint,
+                SERIE));
+
+        assertThatThrownBy(() -> service.modifierRattachement(depose.id(), new Prefixe("040962", 2026, 2, "A1")))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Renommage refusé");
+        assertThat(passageDao.findById(depose.id()).orElseThrow().numeroPassage())
+                .as("n° de passage inchangé après refus")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("Modifier le rattachement refuse un passage en cours de dépôt")
+    void modifier_rattachement_refuse_un_passage_depot_en_cours() {
+        Passage enCours = passageDao.insert(new Passage(
+                null,
+                1,
+                2026,
+                "2026-06-20",
+                "21:30:00",
+                "05:15:00",
+                null,
+                StatutWorkflow.DEPOT_EN_COURS,
+                Verdict.OK,
+                null,
+                null,
+                null,
+                idPoint,
+                SERIE));
+
+        assertThatThrownBy(() -> service.modifierRattachement(enCours.id(), new Prefixe("040962", 2026, 2, "A1")))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Renommage refusé");
+    }
+
     /// Seede une nuit (dossier + fichiers préfixés sur disque, lignes passage/session/original/
     /// séquence en base) pour le carré 040962 / point A1, et renvoie l'identifiant du passage.
     private long seederNuit(int annee, int numero) throws IOException {
