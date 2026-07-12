@@ -8,9 +8,10 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -39,6 +40,10 @@ public final class ClientVigieChiro {
 
     /// Préfixe de chemin de l'API des participations (`GET .../donnees`, `GET .../#id`, `PATCH .../#id`).
     private static final String CHEMIN_PARTICIPATIONS = "/participations/";
+    /// Chemin des participations de l'observateur courant (source des sites et des participations).
+    private static final String CHEMIN_MOI_PARTICIPATIONS = "/moi/participations";
+    /// Suffixe de requête pour la pagination Eve (grande taille de page + n° de page).
+    private static final String REQUETE_PAGINATION = "?max_results=1000&page=";
     /// Garde-fou de pagination (`GET …/donnees`) : une participation a des milliers de fichiers, jamais
     /// des centaines de milliers ; on plafonne le nombre de pages pour éviter toute boucle.
     private static final int PAGES_MAX = 500;
@@ -74,19 +79,28 @@ public final class ClientVigieChiro {
     ///
     /// On ne passe **pas** par `/moi/sites` : celui-ci filtre sur le *propriétaire* du site et renvoie
     /// vide pour un simple participant à un site régional (cf. #718). Chaque participation embarque son
-    /// `site` ; on les déduplique par `_id`. La réponse Eve est paginée : on ne lit que la **première
-    /// page** (`_items`), suffisante pour la poignée de participations d'un observateur.
+    /// `site` ; on les déduplique par `_id`, **toutes pages confondues** (#1150) : la réponse Eve est
+    /// paginée, et un observateur peut dépasser une page de participations.
     public List<SiteVigieChiro> mesSites() {
-        return get("/moi/participations").map(ParticipationsVigieChiro::sites).orElseGet(List::of);
+        Map<String, SiteVigieChiro> parId = new LinkedHashMap<>();
+        for (SiteVigieChiro site :
+                PaginationEve.parcourir(PAGES_MAX, this::pageParticipations, ParticipationsVigieChiro::sites)) {
+            parId.putIfAbsent(site.id(), site);
+        }
+        return List.copyOf(parId.values());
     }
 
     /// **Participations** de l'observateur (`GET /moi/participations`, axe 4.2) : id + localité + date +
     /// site, pour rattacher à la main un passage à une participation existante (import de résultats sans
-    /// dépôt-app préalable). Liste vide si non connecté / indisponible. Première page (`_items`).
+    /// dépôt-app préalable). Liste vide si non connecté / indisponible. **Toutes pages** (#1150).
     public List<ParticipationVigieChiro> mesParticipations() {
-        return get("/moi/participations")
-                .map(ParticipationsVigieChiro::participations)
-                .orElseGet(List::of);
+        return PaginationEve.parcourir(PAGES_MAX, this::pageParticipations, ParticipationsVigieChiro::participations);
+    }
+
+    /// Corps JSON de la page `page` de `GET /moi/participations` : source commune des sites et des
+    /// participations, parcourue **toutes pages confondues** via [PaginationEve] (#1150).
+    private Optional<String> pageParticipations(int page) {
+        return get(CHEMIN_MOI_PARTICIPATIONS + REQUETE_PAGINATION + page);
     }
 
     /// Participation **détaillée** (`GET /participations/#id`, axe 4) : `_etag` (pour un `PATCH` `If-Match`
@@ -101,20 +115,10 @@ public final class ClientVigieChiro {
     /// indisponible. La réponse Eve est paginée ; on parcourt les pages (grande taille demandée) jusqu'à
     /// une page vide.
     public List<DonneeVigieChiro> donnees(String participationId) {
-        List<DonneeVigieChiro> tout = new ArrayList<>();
-        for (int page = 1; page <= PAGES_MAX; page++) {
-            Optional<String> corps =
-                    get(CHEMIN_PARTICIPATIONS + participationId + "/donnees?max_results=1000&page=" + page);
-            if (corps.isEmpty()) {
-                break; // non connecté / erreur : on renvoie ce qui a déjà été récupéré
-            }
-            List<DonneeVigieChiro> lot = DonneesVigieChiro.donnees(corps.get());
-            if (lot.isEmpty()) {
-                break; // page vide = fin de la pagination
-            }
-            tout.addAll(lot);
-        }
-        return tout;
+        return PaginationEve.parcourir(
+                PAGES_MAX,
+                page -> get(CHEMIN_PARTICIPATIONS + participationId + "/donnees" + REQUETE_PAGINATION + page),
+                DonneesVigieChiro::donnees);
     }
 
     /// **Journal de traitement** d’une participation (#1132) : le serveur y trace l’ingestion —
