@@ -7,8 +7,8 @@ publication.
 
 | Workflow | Déclencheur | Rôle | Bloque la PR ? |
 |---|---|---|---|
-| [maven.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) | push `main` + PR | « Java CI » : `./mvnw -B verify` (compilation + tous les tests, ArchUnit inclus) | **Oui** |
-| [lint.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » : `./mvnw -Pquality-gate verify` (PMD bloquant + seuils de couverture + Spotless) | **Oui** |
+| [maven.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) | push `main` + PR | « Java CI » : `./mvnw -B verify -Djacoco.haltOnFailure=true` (compilation + tous les tests dont ArchUnit + **seuils de couverture JaCoCo bloquants**) | **Oui** |
+| [lint.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
 | [docs.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
 | [capture-vues.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
 | [release.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | push `main` | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true) | — |
@@ -22,11 +22,17 @@ publication.
 
 Le profil Maven `quality-gate` rend **bloquants** des contrôles tolérants par défaut :
 
-- **PMD** : `failOnViolation=true` (sinon simple rapport) ;
-- **JaCoCo** : le seuil de couverture devient bloquant.
+- **PMD** : `failOnViolation=true` (sinon simple rapport), exécuté par `lint.yml` (`compile pmd:check`) ;
+- **JaCoCo** : le seuil de couverture devient bloquant, exécuté par `maven.yml`
+  (`verify -Djacoco.haltOnFailure=true`, **85 % de lignes**).
 
-Localement : `./mvnw -Pquality-gate verify` reproduit exactement la gate `lint.yml`. **Spotless**
-(Palantir Java Format) formate via un *hook* pre-commit et est vérifié en CI.
+Ces deux contrôles sont **répartis sur deux workflows** : `lint.yml` porte le **statique** (Spotless +
+captures + PMD), `maven.yml` porte les **tests + couverture**. Localement :
+
+- `./mvnw -Pquality-gate compile pmd:check` reproduit la gate PMD de `lint.yml` ;
+- `./mvnw -Pquality-gate verify` reproduit le build complet **avec** la couverture bloquante (comme `maven.yml`).
+
+**Spotless** (Palantir Java Format) formate via un *hook* pre-commit et est vérifié par `lint.yml` (`spotless:check`).
 
 ## La release (semantic-release + jpackage)
 

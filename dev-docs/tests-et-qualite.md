@@ -80,9 +80,9 @@ Outils : **JUnit 5 + AssertJ + Mockito** ; **ApprovalTests** pour les sorties ve
 
 | Workflow | Commande | Bloquant ? |
 |---|---|---|
-| « Java CI » ([maven.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)) | `./mvnw -B verify` | **Oui** |
+| « Java CI » ([maven.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml)) — tests **+ couverture** | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
 | « Quality gate » ([lint.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml)) — formatage | `./mvnw -B spotless:check` | **Oui** |
-| « Quality gate » — portail | `./mvnw -B -Pquality-gate verify` | **Oui** |
+| « Quality gate » — portail PMD | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
 
 `lint.yml` vérifie aussi la **complétude des captures** (cf. [Captures](captures.md)). Une PR doit
 passer **les deux** workflows (cf. [CI/CD et release](ci-cd-release.md)).
