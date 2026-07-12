@@ -147,6 +147,9 @@ class DepotVigieChiroTest {
 
         verify(client).televerserVersS3(anyString(), eq(a), eq("application/zip"), any());
         verify(client, never()).televerserVersS3(anyString(), any(byte[].class), anyString());
+        // #984 : le fichier est déclaré AVEC son lien de participation (sinon orphelin côté serveur → le
+        // compute « extrait 0 fichier »).
+        verify(client).creerFichier(eq("Car-1.zip"), eq("part-1"));
     }
 
     @Test
@@ -175,7 +178,8 @@ class DepotVigieChiroTest {
     @DisplayName("#984 : l'avancement du PUT est remonté au suivi par unité (uniteProgresse)")
     void progression_upload_remontee_au_suivi(@TempDir Path dossier) throws IOException {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.creerFichier(anyString(), anyString()))
+                .thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.finaliserFichier(anyString())).thenReturn(true);
         // Le client mocké invoque le callback de progression comme le ferait un vrai PUT streamé.
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
@@ -229,8 +233,9 @@ class DepotVigieChiroTest {
         Path ok = fichier(dossier, "ok.wav");
         Path ko = fichier(dossier, "ko.wav");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
-        when(client.creerFichier("ko.wav")).thenReturn(Optional.empty()); // déclaration refusée
+        when(client.creerFichier(eq("ok.wav"), anyString()))
+                .thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(Optional.empty()); // déclaration refusée
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
@@ -251,18 +256,20 @@ class DepotVigieChiroTest {
         Path ok = fichier(dossier, "ok.wav");
         Path ko = fichier(dossier, "ko.wav");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
-        when(client.creerFichier("ko.wav")).thenReturn(Optional.empty());
+        when(client.creerFichier(eq("ok.wav"), anyString()))
+                .thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(Optional.empty());
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
         depot.deposer(idPassage, List.of(ok, ko)); // 1re tentative : ko.wav en échec
 
-        when(client.creerFichier("ko.wav")).thenReturn(Optional.of(new FichierSigne("f2", "https://s3/y")));
+        when(client.creerFichier(eq("ko.wav"), anyString()))
+                .thenReturn(Optional.of(new FichierSigne("f2", "https://s3/y")));
         BilanDepot reprise = depot.deposer(idPassage, List.of(ok, ko));
 
         // Seule l'unité en échec a été re-téléversée : ok.wav n'a été déclaré qu'une seule fois en tout.
-        verify(client, times(1)).creerFichier("ok.wav");
+        verify(client, times(1)).creerFichier(eq("ok.wav"), anyString());
         assertThat(reprise.deposees()).isEqualTo(1);
         assertThat(reprise.estComplet()).isTrue();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
@@ -283,7 +290,7 @@ class DepotVigieChiroTest {
         assertThat(bilan.deposees()).isZero();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOT_EN_COURS);
         assertThat(depotUnites.restantes(idPassage)).hasSize(2);
-        verify(client, never()).creerFichier(anyString());
+        verify(client, never()).creerFichier(anyString(), anyString());
     }
 
     @Test
@@ -316,7 +323,7 @@ class DepotVigieChiroTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("refusée")
                 .hasMessageContaining("422"); // le vrai détail de l'API est remonté, pas un message générique
-        verify(client, never()).creerFichier(anyString());
+        verify(client, never()).creerFichier(anyString(), anyString());
     }
 
     @Test
@@ -328,7 +335,7 @@ class DepotVigieChiroTest {
         assertThatThrownBy(() -> depot.deposer(idPassage, List.of()))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("non rattaché");
-        verify(client, never()).creerFichier(anyString());
+        verify(client, never()).creerFichier(anyString(), anyString());
     }
 
     @Test
@@ -340,7 +347,7 @@ class DepotVigieChiroTest {
         assertThatThrownBy(() -> depot.deposer(ID_INEXISTANT, List.of(a)))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("introuvable");
-        verify(client, never()).creerFichier(anyString());
+        verify(client, never()).creerFichier(anyString(), anyString());
     }
 
     @Test
@@ -355,7 +362,7 @@ class DepotVigieChiroTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("ne correspond pas")
                 .hasMessageContaining("2026-04-23"); // l'écart précis est remonté, pas un message générique
-        verify(client, never()).creerFichier(anyString());
+        verify(client, never()).creerFichier(anyString(), anyString());
         assertThat(depotUnites.parPassage(idPassage)).isEmpty();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.PRET_A_DEPOSER);
     }
@@ -371,8 +378,8 @@ class DepotVigieChiroTest {
 
         BilanDepot bilan = depot.deposer(idPassage, List.of(dejaEnLigne, restant));
 
-        verify(client, never()).creerFichier("seq_000.wav");
-        verify(client).creerFichier("seq_001.wav");
+        verify(client, never()).creerFichier(eq("seq_000.wav"), anyString());
+        verify(client).creerFichier(eq("seq_001.wav"), anyString());
         assertThat(bilan.deposees()).isEqualTo(1); // « cette fois-ci » : la réconciliation n'en fait pas partie
         assertThat(depotUnites.toutesDeposees(idPassage)).isTrue();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
@@ -389,7 +396,7 @@ class DepotVigieChiroTest {
 
         assertThat(bilan.deposees()).isZero();
         assertThat(bilan.estComplet()).isTrue();
-        verify(client, never()).creerFichier(anyString());
+        verify(client, never()).creerFichier(anyString(), anyString());
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOSE);
     }
 
@@ -403,7 +410,7 @@ class DepotVigieChiroTest {
 
         depot.deposer(idPassage, List.of(archive));
 
-        verify(client).creerFichier("Car-1.zip"); // téléversée malgré le titre homonyme côté serveur
+        verify(client).creerFichier(eq("Car-1.zip"), anyString()); // téléversée malgré le titre homonyme côté serveur
     }
 
     private StatutWorkflow statutPassage() {
@@ -415,7 +422,8 @@ class DepotVigieChiroTest {
     }
 
     private void armerUploadOk() {
-        when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.creerFichier(anyString(), anyString()))
+                .thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);

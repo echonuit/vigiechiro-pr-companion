@@ -81,13 +81,16 @@ class RequetesVigieChiroTest {
     }
 
     @Test
-    @DisplayName("fichier : titre + multipart:false, sans mime (déduit de l'extension par l'API)")
+    @DisplayName("fichier : titre + multipart:false + lien_participation, sans mime (déduit par l'API)")
     void fichier_upload_simple() {
-        JsonObject corps = JsonParser.parseString(RequetesVigieChiro.fichier("Car130711-2026-Pass1-Z41_000.wav"))
+        JsonObject corps = JsonParser.parseString(
+                        RequetesVigieChiro.fichier("Car130711-2026-Pass1-Z41_000.wav", "part-42"))
                 .getAsJsonObject();
 
         assertThat(corps.get("titre").getAsString()).isEqualTo("Car130711-2026-Pass1-Z41_000.wav");
         assertThat(corps.get("multipart").getAsBoolean()).isFalse();
+        // #984 : sans ce lien, le fichier monte sur S3 mais reste ORPHELIN (compute « extrait 0 fichier »).
+        assertThat(corps.get("lien_participation").getAsString()).isEqualTo("part-42");
         assertThat(corps.has("mime")).isFalse();
     }
 

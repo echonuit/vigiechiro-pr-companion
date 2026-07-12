@@ -36,8 +36,12 @@ final class RequetesVigieChiro {
 
     /// Corps de `POST /fichiers` (déclaration d'un fichier, upload simple). Le **mime n'est pas envoyé** :
     /// l'API le déduit de l'extension du titre ; il est fourni ensuite au `PUT` S3 (`Content-Type`).
-    static String fichier(String titre) {
-        return GSON.toJson(Map.of("titre", titre, "multipart", false));
+    ///
+    /// `lien_participation` est **indispensable** (#984) : sans lui, le fichier monte bien sur S3 mais reste
+    /// **orphelin** (rattaché à aucune participation), et le traitement serveur (`compute`) « n'extrait 0
+    /// fichier ». C'est le champ que pose le front web à chaque déclaration.
+    static String fichier(String titre, String lienParticipation) {
+        return GSON.toJson(Map.of("titre", titre, "multipart", false, "lien_participation", lienParticipation));
     }
 
     /// Corps de finalisation `POST /fichiers/#id` : aucun champ requis (accusé de fin d'upload).

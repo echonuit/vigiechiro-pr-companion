@@ -152,7 +152,7 @@ class ContratApiVigieChiroLiveTest {
         supposerEcritureAutorisee();
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
 
-        Optional<FichierSigne> signe = client.creerFichier("Car000000-2026-Pass1-Z0-probe.zip");
+        Optional<FichierSigne> signe = client.creerFichier("Car000000-2026-Pass1-Z0-probe.zip", "probe");
         assertThat(signe)
                 .as("déclaration d'un .zip : refusée = verdict immédiat (les .zip ne sont pas des titres"
                         + " valides), le dépôt reste en WAV")

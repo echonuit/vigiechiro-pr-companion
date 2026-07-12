@@ -137,7 +137,8 @@ public final class DepotVigieChiro {
         int parallelisme = Math.max(1, Math.min(NB_UPLOADS_PARALLELES, restantes.size()));
         try (ExecutorService executeur = Executors.newFixedThreadPool(parallelisme)) {
             for (DepotUnite unite : restantes) {
-                executeur.submit(() -> deposerUneUnite(unite, fichiersParIdentifiant, annule, suivi, deposees, echecs));
+                executeur.submit(() -> deposerUneUnite(
+                        unite, fichiersParIdentifiant, participationId, annule, suivi, deposees, echecs));
             }
         } // close() attend la fin de toutes les tâches soumises (ExecutorService AutoCloseable, Java 19+).
 
@@ -155,6 +156,7 @@ public final class DepotVigieChiro {
     private void deposerUneUnite(
             DepotUnite unite,
             Map<String, Path> fichiersParIdentifiant,
+            String participationId,
             BooleanSupplier annule,
             SuiviDepot suivi,
             AtomicInteger deposees,
@@ -163,7 +165,7 @@ public final class DepotVigieChiro {
             return;
         }
         try {
-            if (televerserUne(unite, fichiersParIdentifiant.get(unite.identifiantUnite()), suivi)) {
+            if (televerserUne(unite, fichiersParIdentifiant.get(unite.identifiantUnite()), participationId, suivi)) {
                 deposees.incrementAndGet();
             } else {
                 echecs.add(unite.identifiantUnite());
@@ -175,12 +177,13 @@ public final class DepotVigieChiro {
 
     /// Téléverse une unité en persistant son avancement au fil de l'eau : `en_cours` avant l'envoi,
     /// `depose` (avec l'id distant) ou `echec` (avec la raison) après. `false` en cas d'échec.
-    private boolean televerserUne(DepotUnite unite, Path fichier, SuiviDepot suivi) {
+    private boolean televerserUne(DepotUnite unite, Path fichier, String participationId, SuiviDepot suivi) {
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.EN_COURS, unite.fichierIdDistant(), null, maintenant());
         suivi.uniteDemarree(unite.identifiantUnite());
         Televersement resultat = fichier == null
                 ? Televersement.echec("fichier introuvable sur le disque (archives à régénérer ?)")
-                : televerser(fichier, fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction));
+                : televerser(
+                        fichier, participationId, fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction));
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
@@ -266,9 +269,9 @@ public final class DepotVigieChiro {
 
     /// Téléverse un fichier en trois temps (déclaration → `PUT` S3 **en flux** → finalisation) et renvoie
     /// l'issue : l'id distant du fichier créé, ou la raison de l'échec de l'étape fautive.
-    private Televersement televerser(Path fichier, DoubleConsumer progression) {
+    private Televersement televerser(Path fichier, String participationId, DoubleConsumer progression) {
         String titre = fichier.getFileName().toString();
-        Optional<FichierSigne> signe = client.creerFichier(titre);
+        Optional<FichierSigne> signe = client.creerFichier(titre, participationId);
         if (signe.isEmpty()) {
             return Televersement.echec("déclaration du fichier refusée par VigieChiro");
         }

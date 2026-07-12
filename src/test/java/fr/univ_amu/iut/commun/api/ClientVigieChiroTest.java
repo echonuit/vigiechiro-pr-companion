@@ -73,7 +73,8 @@ class ClientVigieChiroTest {
         assertThat(client.modifierParticipation("p1", "etag1", participationMinimale())
                         .id())
                 .isEmpty();
-        assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav")).isEmpty();
+        assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav", "p1"))
+                .isEmpty();
         assertThat(client.finaliserFichier("f1")).isFalse();
     }
 
@@ -87,7 +88,8 @@ class ClientVigieChiroTest {
         assertThat(client.modifierParticipation("p1", "etag1", participationMinimale())
                         .id())
                 .isEmpty();
-        assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav")).isEmpty();
+        assertThat(client.creerFichier("Car130711-2026-Pass1-Z41_000.wav", "p1"))
+                .isEmpty();
         assertThat(client.finaliserFichier("f1")).isFalse();
     }
 

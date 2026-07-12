@@ -180,8 +180,9 @@ public final class ClientVigieChiro {
     /// Déclare un **fichier** à téléverser (`POST /fichiers`, étape 1/3) : renvoie son `_id` et l'URL S3
     /// pré-signée ([FichierSigne]), ou vide. Le mime n'est pas transmis (déduit de l'extension du titre) ;
     /// le titre doit respecter la convention de nommage VigieChiro (`Car…-Pass…`).
-    public Optional<FichierSigne> creerFichier(String titre) {
-        return post("/fichiers", RequetesVigieChiro.fichier(titre)).flatMap(ReponsesVigieChiro::fichierSigne);
+    public Optional<FichierSigne> creerFichier(String titre, String participationId) {
+        return post("/fichiers", RequetesVigieChiro.fichier(titre, participationId))
+                .flatMap(ReponsesVigieChiro::fichierSigne);
     }
 
     /// **PUT** des octets vers l'**URL S3 pré-signée** (étape 2/3) : hors API VigieChiro (aucun en-tête
