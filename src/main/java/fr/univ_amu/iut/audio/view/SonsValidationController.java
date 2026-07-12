@@ -6,13 +6,12 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
-import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
-import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -71,8 +70,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private final OuvrirPassage ouvrirPassage;
     private final Optional<OuvrirAnalyse> ouvrirAnalyse;
     private final OuvrirMultisite ouvrirMultisite;
-    private final DepotVues depotVues;
-    private final DepotDispositionColonnes depotColonnes;
+    private final AppuisAudio appuis;
+    private IndicateurOccupation occupation;
 
     /// Action réutilisable « Fiche de l'espèce » (#846) : configure l'item du menu ☰ selon la ligne
     /// sélectionnée et ouvre la fiche dans le navigateur.
@@ -93,6 +92,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// (identité). Remplace l'ancien bandeau de titre (redondant avec le fil d'Ariane).
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
+
+    @FXML
+    private StackPane hoteOccupation;
 
     @FXML
     private VBox racine;
@@ -264,8 +266,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             Optional<OuvrirAnalyse> ouvrirAnalyse,
             OuvrirMultisite ouvrirMultisite,
             MemoireRevueAudio memoire,
-            DepotVues depotVues,
-            DepotDispositionColonnes depotColonnes,
+            AppuisAudio appuis,
             ActionsMenuAudio actionsMenu,
             ReglagesReactifs reactifs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -275,8 +276,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         this.ouvrirAnalyse = Objects.requireNonNull(ouvrirAnalyse, "ouvrirAnalyse");
         this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
         this.memoire = Objects.requireNonNull(memoire, "memoire");
-        this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
-        this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
+        this.appuis = Objects.requireNonNull(appuis, "appuis");
         this.actionsMenu = Objects.requireNonNull(actionsMenu, "actionsMenu");
         this.reactifs = Objects.requireNonNull(reactifs, "reactifs");
     }
@@ -302,7 +302,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                         colStatut,
                         colReference,
                         colCommentaire),
-                viewModel::commenter);
+                viewModel.actions()::commenter);
     }
 
     @FXML
@@ -375,7 +375,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         GestionnaireVues.avecDialogue(
                 barreOnglets,
                 gestionnaireFiltres,
-                depotVues,
+                appuis.depotVues(),
                 FEATURE,
                 CriteresAudio.vuesParDefaut(),
                 GestionnaireColonnes.adaptateurMonoTable("principale", tableObservations, this::colonnesTableAudio));
@@ -462,7 +462,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // et item « Colonnes… » du ☰ ouvrent le même panneau. La proposition Tadarida, colonne d'identité,
         // reste toujours affichée (visibilité verrouillée) mais peut être déplacée comme les autres.
         GestionnaireColonnes.installerEtPersister(
-                tableObservations, menuActions, colonnesTableAudio(), depotColonnes, FEATURE, "principale");
+                tableObservations, menuActions, colonnesTableAudio(), appuis.depotColonnes(), FEATURE, "principale");
+
+        occupation = new IndicateurOccupation(hoteOccupation, appuis.executeur());
     }
 
     /// Colonnes de la table audio proposées au sélecteur (#916), partagées entre le câblage `installer` et la
@@ -512,11 +514,19 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     public void ouvrirSur(SourceObservations source, Long idObservationCible) {
         this.source = Objects.requireNonNull(source, "source");
         adapterAffichage(source);
-        viewModel.ouvrirSur(source);
-        if (idObservationCible != null) {
-            gestionnaireFiltres.reinitialiser();
-            selectionnerObservation(idObservationCible);
-        }
+        // Chargement des sons **hors du fil JavaFX** (#1214) : résolution de la source en arrière-plan
+        // sous l'overlay, puis application (ou erreur, filet #795) sur le fil JavaFX, enfin le ciblage.
+        occupation.occuper(
+                "Chargement des sons…",
+                () -> viewModel.chargerOuverture(source),
+                donnees -> {
+                    viewModel.appliquerOuverture(source, donnees);
+                    if (idObservationCible != null) {
+                        gestionnaireFiltres.reinitialiser();
+                        selectionnerObservation(idObservationCible);
+                    }
+                },
+                erreur -> viewModel.signalerErreur(source, erreur));
     }
 
     /// Adapte l'affichage à la source : colonnes de contexte masquées si la source est un unique passage,

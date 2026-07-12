@@ -17,7 +17,7 @@ import java.util.function.Supplier;
 /// GodClass). Chaque action délègue au service ([ServiceValidation] pour l'unitaire, [RevueEnLot] pour les
 /// lots atomiques), **recharge** la source et publie un **retour** via [MessagesAudio] ; les erreurs métier
 /// sont restituées dans le bandeau sans lever.
-final class ActionsRevueAudio {
+public final class ActionsRevueAudio {
 
     private final ServiceValidation service;
     private final ValidationManuelle validationManuelle;
@@ -84,27 +84,27 @@ final class ActionsRevueAudio {
                 courant -> appliquer(() -> marquageDouteux.marquer(courant.idObservation(), !courant.douteux())));
     }
 
-    boolean commenter(long idObservation, String texte) {
+    public boolean commenter(long idObservation, String texte) {
         return appliquer(() -> service.commenter(idObservation, texte));
     }
 
     // --- Actions en lot (sur une liste d'identifiants), atomiques (#479) ---
 
-    int validerLot(List<Long> ids) {
+    public int validerLot(List<Long> ids) {
         return appliquerLot("validée(s)", () -> revueEnLot.valider(ids));
     }
 
-    int corrigerLot(List<Long> ids, Taxon taxon) {
+    public int corrigerLot(List<Long> ids, Taxon taxon) {
         return appliquerLot("corrigée(s)", () -> revueEnLot.corriger(ids, taxon.code()));
     }
 
-    int marquerReferenceLot(List<Long> ids, boolean reference) {
+    public int marquerReferenceLot(List<Long> ids, boolean reference) {
         return appliquerLot(
                 reference ? "marquée(s) référence" : "retirée(s) des références",
                 () -> revueEnLot.marquerReference(ids, reference));
     }
 
-    int marquerDouteuxLot(List<Long> ids, boolean douteux) {
+    public int marquerDouteuxLot(List<Long> ids, boolean douteux) {
         return appliquerLot(
                 douteux ? "marquée(s) douteuse(s)" : "démarquée(s)", () -> revueEnLot.marquerDouteux(ids, douteux));
     }

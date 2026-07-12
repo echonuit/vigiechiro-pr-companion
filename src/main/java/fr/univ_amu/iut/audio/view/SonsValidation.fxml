@@ -28,11 +28,13 @@
   CSV / export _Vu d'un passage, export bibliothèque des références) vivent dans le menu « ☰ ».
   Pur câblage : table, sélection, audio, revue et actions sont liés au AudioViewModel par le controller.
 -->
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:id="racine"
-      fx:controller="fr.univ_amu.iut.audio.view.SonsValidationController"
-      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @sons-validation.css"
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.audio.view.SonsValidationController"
+           stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @sons-validation.css"
+           fx:id="hoteOccupation">
+  <!-- Hôte d'occupation (#1214) : voile « … en cours » pendant le chargement des sons d'un passage. -->
+  <VBox fx:id="racine"
       styleClass="ecran-audio"
       spacing="6.0">
 
@@ -156,3 +158,4 @@
 
   </SplitPane>
 </VBox>
+</StackPane>

@@ -129,18 +129,51 @@ public class AudioViewModel {
     /// Ouvre la vue audio sur l'ensemble décrit par `source`. Une erreur de chargement est restituée
     /// dans [#retourProperty()] (bandeau d'erreur) sans lever, l'écran restant vide. Un ensemble vide
     /// n'est pas une erreur : la liste est vide et l'indice d'état vide ([#messageProperty()]) l'explique.
+    /// Collaborateur des **actions de revue** (validation, correction, référence, douteux, commentaire),
+    /// unitaires et **en lot** (#479). Exposé pour que la barre d'actions (`ActionsSelectionAudio`) et les
+    /// colonnes éditables l'invoquent directement, sans multiplier les délégations sur ce ViewModel.
+    public ActionsRevueAudio actions() {
+        return actions;
+    }
+
     public void ouvrirSur(SourceObservations source) {
-        this.source = Objects.requireNonNull(source, "source");
-        reinitialiser();
+        Objects.requireNonNull(source, "source");
         try {
-            taxons.setAll(service.taxonsDisponibles());
-            idResultats = resolveur.idResultats(source);
-            resultatsDisponibles.set(idResultats != null);
-            charger();
+            appliquerOuverture(source, chargerOuverture(source));
         } catch (RuntimeException echec) {
-            reinitialiser();
-            messages.erreur(echec.getMessage());
+            signalerErreur(source, echec);
         }
+    }
+
+    /// Données d'ouverture chargées **hors du fil JavaFX** (#1214) : référentiel des taxons, id des
+    /// résultats et lignes d'observation de la source. Lecture seule (aucune mutation observable).
+    public record DonneesOuverture(List<Taxon> taxons, Long idResultats, List<LigneObservationAudio> lignes) {}
+
+    /// **Lecture seule** des données d'ouverture (taxons + résolution de la source). Sûre **hors du fil
+    /// JavaFX** (#1214, déport via `IndicateurOccupation`).
+    public DonneesOuverture chargerOuverture(SourceObservations source) {
+        return new DonneesOuverture(
+                service.taxonsDisponibles(), resolveur.idResultats(source), resolveur.lignes(source));
+    }
+
+    /// Applique les données d'ouverture (taxons, résultats, table). **Mutations observables** : sur le
+    /// fil JavaFX. Un ensemble vide n'est pas une erreur (l'indice d'état vide l'explique).
+    public void appliquerOuverture(SourceObservations source, DonneesOuverture donnees) {
+        this.source = source;
+        reinitialiser();
+        taxons.setAll(donnees.taxons());
+        idResultats = donnees.idResultats();
+        resultatsDisponibles.set(idResultats != null);
+        observations.setAll(donnees.lignes());
+        filtres.appliquer();
+    }
+
+    /// Route l'échec d'un chargement vers le bandeau d'erreur de l'écran (filet #795), sans lever.
+    public void signalerErreur(SourceObservations source, Throwable erreur) {
+        this.source = source;
+        reinitialiser();
+        String detail = erreur.getMessage();
+        messages.erreur(detail != null && !detail.isBlank() ? detail : "Chargement des sons impossible.");
     }
 
     /// Plage **nuit** par défaut à proposer au filtre « Heure » (#549) : déléguée à [ResolveurSourceAudio]
@@ -181,42 +214,6 @@ public class AudioViewModel {
     /// @return `true` si la bascule a été appliquée
     public boolean basculerDouteux() {
         return actions.basculerDouteux();
-    }
-
-    /// Enregistre (ou efface) le **commentaire** de l'observation d'identifiant `idObservation`, puis
-    /// recharge. Par identifiant (et non la sélection) pour servir l'**édition inline** de la case commentaire.
-    ///
-    /// @return `true` si l'enregistrement a réussi
-    public boolean commenter(long idObservation, String texte) {
-        return actions.commenter(idObservation, texte);
-    }
-
-    /// Valide **en lot** les observations `ids` (mode Activité, sans propagation), en une transaction (#479).
-    ///
-    /// @return le nombre validé
-    public int validerLot(List<Long> ids) {
-        return actions.validerLot(ids);
-    }
-
-    /// Corrige **en lot** les observations `ids` vers `taxon`, en une transaction (#479).
-    ///
-    /// @return le nombre corrigé
-    public int corrigerLot(List<Long> ids, Taxon taxon) {
-        return actions.corrigerLot(ids, taxon);
-    }
-
-    /// **Marque ou retire** en lot (`reference`) les observations `ids` du corpus de référence (#479).
-    ///
-    /// @return le nombre traité
-    public int basculerReferenceLot(List<Long> ids, boolean reference) {
-        return actions.marquerReferenceLot(ids, reference);
-    }
-
-    /// **Marque ou retire** en lot (`douteux`, #160) le drapeau douteux des observations `ids` (#479).
-    ///
-    /// @return le nombre traité
-    public int basculerDouteuxLot(List<Long> ids, boolean douteux) {
-        return actions.marquerDouteuxLot(ids, douteux);
     }
 
     /// Importe un CSV Tadarida (R23) pour le passage courant, puis recharge. Réservé à la source

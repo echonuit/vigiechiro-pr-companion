@@ -27,7 +27,7 @@ final class ActionsSelectionAudio {
         if (selection.size() <= 1) {
             viewModel.valider();
         } else {
-            viewModel.validerLot(ids(selection));
+            viewModel.actions().validerLot(ids(selection));
         }
     }
 
@@ -36,7 +36,7 @@ final class ActionsSelectionAudio {
         if (selection.size() <= 1) {
             viewModel.corriger(taxon);
         } else {
-            viewModel.corrigerLot(ids(selection), taxon);
+            viewModel.actions().corrigerLot(ids(selection), taxon);
         }
     }
 
@@ -49,7 +49,7 @@ final class ActionsSelectionAudio {
         // Bascule homogène pour un lot mixte : dès qu'une ligne n'est pas en référence, on **marque** tout
         // le lot ; sinon (toutes en référence) on **retire** tout — plus prévisible qu'un toggle par ligne.
         boolean marquer = selection.stream().anyMatch(ligne -> !ligne.reference());
-        viewModel.basculerReferenceLot(ids(selection), marquer);
+        viewModel.actions().marquerReferenceLot(ids(selection), marquer);
     }
 
     /// Bascule le drapeau **douteux** (#160) : **une** ligne → bascule unitaire ; **plusieurs** → bascule en
@@ -63,7 +63,7 @@ final class ActionsSelectionAudio {
         // Bascule homogène pour un lot mixte : dès qu'une ligne n'est pas douteuse, on **marque** tout le lot ;
         // sinon (toutes douteuses) on **retire** tout — plus prévisible qu'un toggle par ligne.
         boolean marquer = selection.stream().anyMatch(ligne -> !ligne.douteux());
-        viewModel.basculerDouteuxLot(ids(selection), marquer);
+        viewModel.actions().marquerDouteuxLot(ids(selection), marquer);
     }
 
     private List<LigneObservationAudio> selection() {

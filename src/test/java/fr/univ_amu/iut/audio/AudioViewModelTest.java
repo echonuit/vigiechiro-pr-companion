@@ -103,6 +103,32 @@ class AudioViewModelTest {
         }
 
         @Test
+        @DisplayName(
+                "#1214 : chargerOuverture lit sans muter ; appliquerOuverture publie ; signalerErreur route l'erreur")
+        void charger_appliquer_signaler_separes() {
+            when(service.taxonsDisponibles()).thenReturn(List.of(new Taxon("Pippip", "Pipistrellus", null, 1L)));
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.of(100L));
+            when(service.lignesAudioDuPassage(7L))
+                    .thenReturn(List.of(ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
+            AudioViewModel vm = vm();
+
+            var donnees = vm.chargerOuverture(source());
+            assertThat(donnees.lignes()).hasSize(1);
+            assertThat(vm.observationsFiltrees())
+                    .as("chargerOuverture ne mute pas l'état observable")
+                    .isEmpty();
+
+            vm.appliquerOuverture(source(), donnees);
+            assertThat(vm.observationsFiltrees()).hasSize(1);
+            assertThat(vm.taxons()).hasSize(1);
+            assertThat(vm.resultatsDisponiblesProperty().get()).isTrue();
+
+            vm.signalerErreur(source(), new IllegalStateException("base indisponible"));
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+            assertThat(vm.retourProperty().get().texte()).contains("base indisponible");
+        }
+
+        @Test
         @DisplayName("ouvrirSur charge les lignes du passage, les taxons, et active le workflow Tadarida")
         void ouvrir_charge_passage() {
             when(service.taxonsDisponibles()).thenReturn(List.of(new Taxon("Pippip", "Pipistrellus", null, 1L)));
@@ -186,7 +212,7 @@ class AudioViewModelTest {
             vm.ouvrirSur(source());
             // Volontairement AUCUNE sélection : l'édition inline commente la ligne de la cellule, pas la sélection.
 
-            assertThat(vm.commenter(1L, "beau cri")).isTrue();
+            assertThat(vm.actions().commenter(1L, "beau cri")).isTrue();
             verify(service).commenter(1L, "beau cri");
             // Rechargement post-action : la source est relue une 2e fois (1re à l'ouverture).
             verify(service, times(2)).lignesAudioDuPassage(7L);
@@ -493,7 +519,7 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.References("u-1"));
 
-            assertThat(vm.validerLot(List.of(1L, 2L))).isEqualTo(2);
+            assertThat(vm.actions().validerLot(List.of(1L, 2L))).isEqualTo(2);
             verify(revueEnLot).valider(List.of(1L, 2L));
             // Rechargement post-lot (2e lecture) + retour de succès « N validée(s) ».
             verify(service, times(2)).lignesAudioReferences("u-1");
@@ -511,7 +537,7 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.References("u-1"));
 
-            assertThat(vm.basculerReferenceLot(List.of(3L, 4L), true)).isEqualTo(2);
+            assertThat(vm.actions().marquerReferenceLot(List.of(3L, 4L), true)).isEqualTo(2);
             verify(revueEnLot).marquerReference(List.of(3L, 4L), true);
         }
     }

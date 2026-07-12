@@ -819,4 +819,15 @@ class SonsValidationViewTest {
 
         assertThat(item.isVisible()).isFalse();
     }
+
+    @Test
+    @DisplayName("#1214 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
+    void overlay_occupation_masque_apres_chargement(FxRobot robot) {
+        Node voile = robot.lookup(".occupation-voile").query();
+
+        assertThat(voile).as("overlay d'occupation superposé à l'écran").isNotNull();
+        assertThat(voile.isVisible())
+                .as("chargement terminé (exécuteur synchrone) : overlay masqué")
+                .isFalse();
+    }
 }
