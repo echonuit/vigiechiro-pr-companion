@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.3.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.2.0...v2.3.0) (2026-07-12)
+
+
+### Features
+
+* **lot:** annuler un dépôt VigieChiro en cours ([#1044](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1044)) ([#1105](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1105)) ([c49f3b5](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/c49f3b5a0719b090c3314479eefba1f51835f45a)), closes [#982](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/982) [#906](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/906)
+
 # [2.2.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.1.0...v2.2.0) (2026-07-12)
 
 
