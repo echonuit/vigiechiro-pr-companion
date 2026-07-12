@@ -358,6 +358,46 @@ alimenté depuis des fils d'arrière-plan, parfois dans le désordre (travail pa
 d'événements (+ `inerte()`), la ligne et le pilote spécialisés, le relais fil JavaFX — jamais une
 table ad hoc.
 
+## Écrans de données : densité, badge, filtres (socle design partagé)
+
+**Le problème.** Les onze écrans sont nés à des moments différents, sans référentiel de design commun :
+tables plus ou moins denses, statuts tantôt en texte coloré tantôt en pastille, chaque feature
+recopiant son CSS. Le chantier #686 a unifié la **famille « écrans de données »** (audio, multisite,
+analyse, fiche site, qualification) sur un socle `commun/view`.
+
+**La solution.** Trois briques réutilisables, plus une feuille de style chargée par tous les écrans :
+
+- `commun.view.TableDonnees` : `uniformiser(table)` (et `uniformiserNavigable` pour une table qui
+  répond au clavier) applique la classe CSS `table-donnees` (hauteur de ligne, padding, en-tête
+  uniques). **Un appel unique** dans le contrôleur garantit la densité partagée ;
+- `commun.view.ColonneBadge` : `cellule(Function<S, String> classe)` fabrique une cellule **pastille**
+  dont la couleur est **dérivée de la donnée de la ligne** (jamais stockée). Les surcharges
+  `classe(StatutWorkflow)` / `classe(Verdict)` couvrent les types de `commun.model` ;
+- `commun.view.design.css` : jetons sémantiques (`-badge-succes/avertissement/danger/info/neutre-*`) et
+  classes `.badge-*`, **chargée par tous les FXML** (plus de CSS de statut recopié par feature).
+
+**Le piège d'architecture (mapping feature → classe CSS).** `ColonneBadge` vit dans `commun`, qui **ne
+doit dépendre d'aucune feature** (règle `ArchitectureTest.features_sans_cycle`). Le socle ne connaît donc
+que les enums de `commun.model`. Pour un statut **propre à une feature** (`Fraicheur` côté sites,
+`StatutObservation` côté validation…), le mapping statut → classe CSS reste **côté feature**, et l'on
+passe cette fonction au générique `cellule(Function)` :
+
+```java
+// sites : la vue mappe son enum
+colStatut.setCellFactory(c -> ColonneBadge.cellule(LignePassage::statutClasseCss));
+// audio : FormatLigneAudio.classeBadgeStatut(StatutObservation) -> "badge-observation-…"
+col.statut().setCellFactory(c ->
+    ColonneBadge.cellule(ligne -> FormatLigneAudio.classeBadgeStatut(ligne.statut())));
+```
+
+Les classes CSS correspondantes (`.badge-observation-*`, `.badge-frais/tiede/froid`) vivent quand même
+dans `design.css` : ce ne sont que des **chaînes**, aucune dépendance de code de `commun` vers la feature.
+
+**La règle.** Une nouvelle table de données réutilise `TableDonnees.uniformiser` + `ColonneBadge` ;
+jamais une densité ni une pastille ad hoc. Un statut de `commun.model` passe par `ColonneBadge.classe` ;
+un statut de feature reçoit un `classeBadge`/`classeCss` **côté feature** (jamais une surcharge dans
+`commun`, sous peine de cycle).
+
 ## Unit of Work (`UniteDeTravail`)
 
 **Le problème.** Par défaut, chaque écriture DAO s'auto-commit. Mais « créer un passage **et** sa

@@ -9,7 +9,8 @@ espèce) et **Carte & passages** (un passage ou le lot filtré).
 ![Sons & validation : table des observations, écoute pleine largeur et barre d'actions.](../assets/captures/apercu-sons-validation.png)
 
 Quelle que soit la source, l'écran présente la **table des observations** (espèce retenue, proposition
-Tadarida, statut À revoir / Validée / Corrigée, mesures d'identification…) que vous pouvez **filtrer**,
+Tadarida, statut À revoir / Validée / Corrigée affiché en **pastille colorée** comme sur les autres
+écrans de données, mesures d'identification…) que vous pouvez **filtrer**,
 **trier** et dont vous **choisissez les colonnes**, ainsi qu'un **panneau d'écoute pleine largeur**
 (sonogramme + spectrogramme) pour la ligne sélectionnée, où vous **repérez et rejouez le cri** dans la
 séquence. Les **colonnes de contexte** (passage, carré, point) s'affichent quand la source couvre plusieurs
