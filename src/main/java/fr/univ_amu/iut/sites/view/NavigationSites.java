@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -111,7 +112,7 @@ public class NavigationSites implements OuvrirSite {
     }
 
     private FXMLLoader charger(String fxml) {
-        FXMLLoader loader = new FXMLLoader(NavigationSites.class.getResource(fxml));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationSites.class, fxml);
         loader.setControllerFactory(injector::getInstance);
         return loader;
     }

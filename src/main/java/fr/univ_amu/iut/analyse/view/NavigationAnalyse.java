@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
@@ -33,7 +34,7 @@ public class NavigationAnalyse implements OuvrirAnalyse {
     /// `filtres` transportés (le cas échéant) et bascule sur la carte si `afficherCarte`. Les filtres sont
     /// appliqués **après** publication de la vue, une fois ses contrôles attachés à la scène.
     public void ouvrir(DescripteurFiltre filtres, boolean afficherCarte) {
-        FXMLLoader loader = new FXMLLoader(NavigationAnalyse.class.getResource("Analyse.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationAnalyse.class, "Analyse.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

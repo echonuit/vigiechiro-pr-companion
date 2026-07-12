@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audit.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -29,7 +30,7 @@ public class NavigationAudit {
     /// Affiche l'écran **« Audit de cohérence »** dans la zone centrale du chrome (entrée depuis la carte
     /// d'accueil : `ouvrirRacine` réinitialise l'historique).
     public void ouvrir() {
-        FXMLLoader loader = new FXMLLoader(NavigationAudit.class.getResource("Audit.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationAudit.class, "Audit.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

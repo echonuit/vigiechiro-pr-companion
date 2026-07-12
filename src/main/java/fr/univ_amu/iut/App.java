@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
@@ -63,7 +64,7 @@ public class App extends Application {
         // l'ouvreur reste inactif (cf. OuvreurDeLienSysteme).
         injector.getInstance(OuvreurDeLienSysteme.class).initialiser(getHostServices());
 
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("commun/view/MainView.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(getClass(), "commun/view/MainView.fxml");
         loader.setControllerFactory(injector::getInstance);
         Parent root = loader.load();
 

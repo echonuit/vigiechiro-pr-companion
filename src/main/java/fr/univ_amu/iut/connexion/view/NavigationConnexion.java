@@ -3,6 +3,7 @@ package fr.univ_amu.iut.connexion.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -34,7 +35,7 @@ public final class NavigationConnexion {
 
     /// Ouvre la modale de connexion (non bloquante).
     public void ouvrir() {
-        FXMLLoader loader = new FXMLLoader(NavigationConnexion.class.getResource("ConnexionModale.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationConnexion.class, "ConnexionModale.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

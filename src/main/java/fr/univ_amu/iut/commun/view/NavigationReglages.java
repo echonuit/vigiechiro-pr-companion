@@ -38,7 +38,7 @@ public class NavigationReglages {
 
     /// Charge `EcranReglages.fxml` (controllers injectés par Guice) et l'empile dans la zone centrale.
     public void ouvrir() {
-        FXMLLoader loader = new FXMLLoader(NavigationReglages.class.getResource("EcranReglages.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationReglages.class, "EcranReglages.fxml");
         loader.setControllerFactory(injector::getInstance);
         Parent vue;
         try {

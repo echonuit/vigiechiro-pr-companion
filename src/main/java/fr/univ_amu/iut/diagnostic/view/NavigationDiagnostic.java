@@ -3,6 +3,7 @@ package fr.univ_amu.iut.diagnostic.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -35,7 +36,7 @@ public class NavigationDiagnostic implements OuvrirDiagnostic {
     /// alimente le fil d'Ariane).
     @Override
     public void ouvrir(ContextePassage passage) {
-        FXMLLoader loader = new FXMLLoader(NavigationDiagnostic.class.getResource("Diagnostic.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationDiagnostic.class, "Diagnostic.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

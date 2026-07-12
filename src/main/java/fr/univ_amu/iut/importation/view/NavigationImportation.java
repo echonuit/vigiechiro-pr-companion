@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import java.io.IOException;
@@ -46,7 +47,7 @@ public class NavigationImportation implements OuvrirImportation {
     }
 
     private void afficher(Long idSitePreselectionne, boolean racine) {
-        FXMLLoader loader = new FXMLLoader(NavigationImportation.class.getResource("Importation.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationImportation.class, "Importation.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
