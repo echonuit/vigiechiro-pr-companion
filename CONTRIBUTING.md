@@ -121,7 +121,7 @@ gh pr create --fill
 ## 5. Cycle de vie d'un chantier
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
-_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 8 passes.
+_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 9 passes.
 
 **À l'ouverture** : cartographier l'existant (réutiliser les patterns en place plutôt que réinventer),
 rédiger un plan, découper en **issues reliées à un EPIC**.
@@ -130,15 +130,18 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
 
 1. **Audit d'intégration** : vérifier que les évolutions de `main` survenues pendant le chantier n'ont
    rien laissé à rajouter (rebase, nouveaux points d'accroche à câbler, régressions).
-2. **Doc développeur** (site `dev-docs/`) à jour.
-3. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
-4. **Brief SAÉ** : répercuter dans le brief de la SAÉ 2.01 (dépôt `IUTInfoAix-S201/brief`) les
+2. **Cohérence CLI ↔ UI** : quand le chantier ajoute/change une **capacité métier**, la **CLI**
+   (`fr.univ_amu.iut.cli`) doit exposer l'équivalent (même comportement) ; aligner si petit, sinon
+   ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
+3. **Doc développeur** (site `dev-docs/`) à jour.
+4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
+5. **Brief SAÉ** : répercuter dans le brief de la SAÉ 2.01 (dépôt `IUTInfoAix-S201/brief`) les
    évolutions qui changent ce qui est **attendu** ou **fourni** aux étudiants.
-5. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**.
-6. **Harmonisation** : abstraire pour réduire **complexité** et **duplication** (Extract Class,
+6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**.
+7. **Harmonisation** : abstraire pour réduire **complexité** et **duplication** (Extract Class,
    patterns partagés).
-7. **Nouveaux chantiers** identifiés + **issues** créées.
-8. **Bilan** : ce qui a été livré, dette restante, décisions.
+8. **Nouveaux chantiers** identifiés + **issues** créées.
+9. **Bilan** : ce qui a été livré, dette restante, décisions.
 
 > 📖 Raison d'être et mode opératoire de chaque passe, avec le **modèle de clôture** à coller dans
 > l'EPIC : [doc dev · Cycle de vie d'un chantier](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/cycle-de-chantier/).
