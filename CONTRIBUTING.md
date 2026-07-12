@@ -154,14 +154,15 @@ Deux workflows se déclenchent à chaque push :
 
 | Workflow | Rôle | Bloquant ? |
 |---|---|---|
-| [`maven.yml`](.github/workflows/maven.yml) | Build + tests headless (`./mvnw verify`). | **Oui** |
-| [`lint.yml`](.github/workflows/lint.yml) | **`spotless:check`** (formatage) + complétude des captures + **`-Pquality-gate verify`** (PMD + seuils JaCoCo bloquants). | **Oui** |
+| [`maven.yml`](.github/workflows/maven.yml) | Build + tests headless **+ couverture** (`./mvnw verify -Djacoco.haltOnFailure=true`, seuils JaCoCo bloquants). | **Oui** |
+| [`lint.yml`](.github/workflows/lint.yml) | Statique : **`spotless:check`** (formatage) + complétude des captures + **`-Pquality-gate compile pmd:check`** (PMD bloquant). | **Oui** |
 
-Reproduire le portail qualité **en local** :
+Reproduire les contrôles **en local** (la CI les répartit sur les deux workflows) :
 
 ```bash
-./mvnw -Pquality-gate verify       # PMD + couverture bloquants
-./mvnw spotless:check              # formatage
+./mvnw -Pquality-gate compile pmd:check         # PMD bloquant (lint.yml)
+./mvnw -B verify -Djacoco.haltOnFailure=true    # tests + couverture bloquante (maven.yml)
+./mvnw spotless:check                           # formatage (lint.yml)
 ```
 
 Les autres workflows : `capture-vues.yml` (régénère les aperçus de la doc), `docs.yml`

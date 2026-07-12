@@ -97,9 +97,9 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 
 | Workflow | Commande | Bloquant ? |
 |---|---|---|
-| Build + tests (`maven.yml`) | `./mvnw -B verify` | **Oui** |
+| Build + tests + couverture (`maven.yml`) | `./mvnw -B verify -Djacoco.haltOnFailure=true` | **Oui** |
 | Formatage (`lint.yml`) | `./mvnw -B spotless:check` | **Oui** |
-| Portail qualité (`lint.yml`) | `./mvnw -B -Pquality-gate verify` | **Oui** |
+| Portail qualité PMD (`lint.yml`) | `./mvnw -B -Pquality-gate compile pmd:check` | **Oui** |
 
 `lint.yml` vérifie aussi la **complétude des captures de référence**
 ([`check-captures.sh`](.github/assets/check-captures.sh)). Une PR doit passer **les deux** workflows.
@@ -109,7 +109,9 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 ## 5. Couverture et mutation
 
 - **JaCoCo** mesure la couverture à chaque `verify`. Sous `-Pquality-gate`, les seuils deviennent
-  **bloquants** : **85 % de lignes** et **70 % de branches** au niveau `BUNDLE`. Les outils
+  **bloquants** : **85 % de lignes** et **70 % de branches** au niveau `BUNDLE`. En CI, ce seuil est
+  rendu bloquant par **`maven.yml`** (`verify -Djacoco.haltOnFailure=true`), pas par `lint.yml` qui ne
+  fait que le statique (Spotless, captures, PMD). Les outils
   (`**/outils/**` : capture d'écran, bancs de mesure) sont **exclus** du calcul (ils sont validés
   par exécution, pas par tests unitaires).
 - **PIT** (profil `-Pmutation`) évalue la **qualité** des tests par mutation. Lent : à lancer à la

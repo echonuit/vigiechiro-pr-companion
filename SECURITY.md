@@ -25,6 +25,10 @@ Le périmètre supporté est la **branche par défaut** du dépôt (dernière ve
 
 - **Aucun secret n'est versionné** : pas de clé d'API, de jeton, ni de mot de passe dans le dépôt.
   N'en committez jamais (y compris dans un fichier de test, une capture d'écran ou une base SQLite).
+- **Token de session VigieChiro** : depuis l'intégration API, l'application enregistre un **token de
+  session** (fourni par la plateforme, péremption ~14 jours) dans **`connexion.json`** à la racine du
+  workspace. Ce fichier est **local**, **ignoré par git** et restreint au propriétaire (POSIX `600`) ;
+  le token ne quitte jamais le poste. Il n'est donc **pas** un secret *versionné*.
 - Les workflows GitHub Actions s'exécutent au **moindre privilège** : `maven.yml` déclare
   `permissions: contents: read`. N'élargissez les permissions que lorsqu'un workflow en a réellement
   besoin (par exemple `contents: write` pour `capture-vues.yml`, qui doit pousser les aperçus).
@@ -52,8 +56,10 @@ de points d'écoute d'**espèces protégées** ne doit pas être diffusée publi
 
 - **Pas d'injection SQL** : les DAO utilisent des `PreparedStatement` (requêtes paramétrées), jamais
   de concaténation de chaînes dans le SQL.
-- **Pas d'authentification réseau** : l'application est **locale** (base SQLite fichier). Elle ne
-  s'expose sur aucun port et ne stocke aucun identifiant.
+- **Surface réseau minimale** : l'application est **locale** (pas de serveur entrant, aucun port
+  ouvert). Elle appelle en revanche l'**API VigieChiro** (lecture des sites / participations /
+  résultats et dépôt d'une nuit), authentifiée par le **token de session** stocké localement (cf. §2).
+  Aucun autre identifiant n'est conservé.
 - **Composant `audio-view`** : consommé depuis **Maven Central** (non réimplémenté). Comme toute
   dépendance, il fait partie de la chaîne d'approvisionnement (cf. §5).
 
