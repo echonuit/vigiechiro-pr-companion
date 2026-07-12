@@ -42,3 +42,16 @@ jobs:
         # 70 % branches, cf. pom.xml) : les tests ne s'exécutant plus que dans ce job,
         # le gate de couverture doit vivre ici et non dans lint.yml.
         run: ./mvnw -B verify -Djacoco.haltOnFailure=true --file pom.xml
+
+      - name: Smoke-test du fat-jar (démarrage depuis le jar packagé)
+        # Le profil `installer` (jpackage) empaquette ce fat-jar shadé. Les tests unitaires
+        # tournent sur le classpath Maven, jamais sur le jar assemblé : ce smoke-test lance le
+        # CLI DEPUIS le jar shadé (même jar, entrée headless) pour prouver que l'assemblage
+        # démarre (Guice + picocli + services fusionnés + natif SQLite), sans ClassNotFound ni
+        # module-info cassé. Détecte les régressions de shade que la compilation ne voit pas.
+        run: |
+          set -euo pipefail
+          jar=$(ls target/vigiechiro-*.jar | grep -v original | head -1)
+          echo "Fat-jar : $jar"
+          java --enable-native-access=ALL-UNNAMED -cp "$jar" fr.univ_amu.iut.cli.Cli --help | tee sortie-smoke.txt
+          grep -q "Usage: vigiechiro" sortie-smoke.txt
