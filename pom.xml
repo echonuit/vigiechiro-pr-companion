@@ -498,9 +498,10 @@
                 </executions>
             </plugin>
 
-            <!-- JaCoCo : couverture de tests. report + check NON bloquants pour
-                 l'instant (aucun seuil ne casse le build sur un code partiel). On
-                 durcira les seuils quand le coeur métier sera implémenté. -->
+            <!-- JaCoCo : couverture de tests. Le `check` porte des seuils (85 % lignes /
+                 70 % branches au niveau BUNDLE) rendus BLOQUANTS en CI par maven.yml
+                 (`-Djacoco.haltOnFailure=true`). En build local nu ils restent tolérants
+                 (haltOnFailure=false par défaut, cf. propriété plus bas) : la CI fait foi. -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
