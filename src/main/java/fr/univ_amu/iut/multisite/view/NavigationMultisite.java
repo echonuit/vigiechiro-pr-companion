@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import java.io.IOException;
@@ -56,7 +57,7 @@ public class NavigationMultisite implements OuvrirMultisite {
 
     /// Charge `Multisite.fxml`, le publie dans la zone centrale et renvoie son controller.
     private MultisiteController publier() {
-        FXMLLoader loader = new FXMLLoader(NavigationMultisite.class.getResource("Multisite.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationMultisite.class, "Multisite.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

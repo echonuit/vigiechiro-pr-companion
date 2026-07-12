@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -43,7 +44,7 @@ public class NavigationAudio implements OuvrirAudio {
 
     @Override
     public void ouvrir(SourceObservations source, Long idObservationCible) {
-        FXMLLoader loader = new FXMLLoader(NavigationAudio.class.getResource("SonsValidation.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationAudio.class, "SonsValidation.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

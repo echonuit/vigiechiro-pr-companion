@@ -3,6 +3,7 @@ package fr.univ_amu.iut.lot.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -35,7 +36,7 @@ public class NavigationLot implements OuvrirLot {
     /// alimente le fil d'Ariane).
     @Override
     public void ouvrir(ContextePassage passage) {
-        FXMLLoader loader = new FXMLLoader(NavigationLot.class.getResource("Lot.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationLot.class, "Lot.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();

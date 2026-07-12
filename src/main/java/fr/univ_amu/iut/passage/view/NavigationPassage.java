@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.view;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
+import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -39,7 +40,7 @@ public class NavigationPassage implements OuvrirPassage {
     /// Affiche le détail du passage `idPassage` (avec son contexte site) dans la zone centrale.
     @Override
     public void ouvrir(Long idPassage, ContexteSite contexte) {
-        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("Passage.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationPassage.class, "Passage.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
@@ -63,7 +64,7 @@ public class NavigationPassage implements OuvrirPassage {
     /// `apresSucces` est exécuté (rafraîchir l'écran appelant).
     public void ouvrirModaleRattachement(
             Window parent, Long idPassage, String carre, String codePoint, Runnable apresSucces) {
-        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("RattachementModale.fxml"));
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationPassage.class, "RattachementModale.fxml");
         loader.setControllerFactory(injector::getInstance);
         try {
             Parent vue = loader.load();
