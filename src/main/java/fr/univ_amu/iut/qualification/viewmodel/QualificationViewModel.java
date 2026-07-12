@@ -81,18 +81,42 @@ public class QualificationViewModel {
     /// chargement du FXML. Une erreur (passage introuvable) est restituée dans [#messageProperty()]
     /// sans lever.
     public void ouvrirSur(Long idPassage) {
+        try {
+            appliquer(idPassage, charger(idPassage));
+        } catch (RuntimeException echec) {
+            signalerErreur(idPassage, echec);
+        }
+    }
+
+    /// Données de vérification chargées **hors du fil JavaFX** (#1210) : pré-check + contexte (statut,
+    /// verdict). Lecture seule (aucune mutation observable).
+    public record DonneesVerdict(PreCheckNuit.Diagnostic precheck, ContexteVerification contexte) {}
+
+    /// **Lecture seule** du pré-check et du contexte du passage. Sûre **hors du fil JavaFX**.
+    public DonneesVerdict charger(Long idPassage) {
+        return new DonneesVerdict(service.precheck(idPassage), service.chargerContexte(idPassage));
+    }
+
+    /// Applique les données chargées (3 feux, statut, verdict). **Mutations observables** : sur le fil
+    /// JavaFX.
+    public void appliquer(Long idPassage, DonneesVerdict donnees) {
         this.idPassage = idPassage;
         reinitialiser();
-        try {
-            appliquerPrecheck(service.precheck(idPassage));
-            ContexteVerification contexte = service.chargerContexte(idPassage);
-            statut.set(contexte.statut());
-            verdictActuel.set(contexte.verdict() == null ? Verdict.A_VERIFIER : contexte.verdict());
-            message.set("");
-        } catch (RuntimeException echec) {
-            reinitialiser();
-            message.set(echec.getMessage());
-        }
+        appliquerPrecheck(donnees.precheck());
+        statut.set(donnees.contexte().statut());
+        verdictActuel.set(
+                donnees.contexte().verdict() == null
+                        ? Verdict.A_VERIFIER
+                        : donnees.contexte().verdict());
+        message.set("");
+    }
+
+    /// Route l'échec d'un chargement (passage introuvable…) vers le message de l'écran (filet #795).
+    public void signalerErreur(Long idPassage, Throwable erreur) {
+        this.idPassage = idPassage;
+        reinitialiser();
+        String detail = erreur.getMessage();
+        message.set(detail != null && !detail.isBlank() ? detail : "Ouverture de la vérification impossible.");
     }
 
     /// Remet l'écran à un état vierge avant chaque (ré)ouverture et après un échec : feux, bandeau et

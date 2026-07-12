@@ -60,6 +60,27 @@ class QualificationViewModelTest {
     }
 
     @Test
+    @DisplayName("#1210 : charger lit sans muter ; appliquer amorce les feux ; signalerErreur route le message")
+    void charger_appliquer_signaler_separes() {
+        when(service.precheck(ID_PASSAGE)).thenReturn(new PreCheckNuit.Diagnostic(Feu.VERT, Feu.ORANGE, Feu.ROUGE));
+        stubContexte();
+
+        var donnees = viewModel.charger(ID_PASSAGE);
+        assertThat(viewModel.statutProperty().get())
+                .as("charger ne mute pas l'état observable")
+                .isNull();
+
+        viewModel.appliquer(ID_PASSAGE, donnees);
+        assertThat(viewModel.feuCouvertureProperty().get()).isEqualTo(Feu.VERT);
+        assertThat(viewModel.statutProperty().get()).isEqualTo(StatutWorkflow.TRANSFORME);
+
+        viewModel.signalerErreur(ID_PASSAGE, new IllegalStateException("passage introuvable"));
+        assertThat(viewModel.messageProperty().get()).isEqualTo("passage introuvable");
+        viewModel.signalerErreur(ID_PASSAGE, new IllegalStateException());
+        assertThat(viewModel.messageProperty().get()).contains("impossible");
+    }
+
+    @Test
     @DisplayName("ouvrirSur mappe le pré-check en 3 feux et amorce le bandeau verdict")
     void ouvrir_mappe_le_precheck() {
         when(service.precheck(ID_PASSAGE)).thenReturn(new PreCheckNuit.Diagnostic(Feu.VERT, Feu.ORANGE, Feu.ROUGE));
