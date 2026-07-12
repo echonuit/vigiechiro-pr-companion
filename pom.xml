@@ -271,6 +271,7 @@
         </resources>
 
         <plugins>
+            <!-- ========== Compilation & ressources (FXML/CSS co-localisés dans src/main/java) ========== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
@@ -302,6 +303,7 @@
                 </executions>
             </plugin>
 
+            <!-- ========== Exécution (exec:java) & packaging du fat-jar (shade) ========== -->
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>exec-maven-plugin</artifactId>
@@ -373,6 +375,7 @@
             <!-- Expose le chemin des jars de dépendances comme propriétés
                  (${groupId:artifactId:type}), pour passer byte-buddy-agent en -javaagent à Surefire
                  (agent Mockito explicite, cf. argLine ci-dessous). Lié à la phase `initialize`. -->
+            <!-- ========== Tests : agent Mockito (chemin exposé) + Surefire headless (TestFX) ========== -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -436,6 +439,7 @@
 
             <!-- Spotless : formatage Palantir Java Format. Pas de binding Maven : appliqué via
                  ./mvnw spotless:apply (hook pre-commit) et vérifié en CI par spotless:check (lint.yml). -->
+            <!-- ========== Qualité : format (Spotless), hook pre-commit, PMD, couverture (JaCoCo) ========== -->
             <plugin>
                 <groupId>com.diffplug.spotless</groupId>
                 <artifactId>spotless-maven-plugin</artifactId>
@@ -575,6 +579,7 @@
                 </executions>
             </plugin>
 
+            <!-- ========== Lancement de l'application (./mvnw javafx:run) ========== -->
             <plugin>
                 <groupId>org.openjfx</groupId>
                 <artifactId>javafx-maven-plugin</artifactId>
@@ -598,6 +603,9 @@
     </build>
 
     <profiles>
+        <!-- ========== Profils (hors build par défaut) : installer / jpackage-mac (installeurs natifs
+             jpackage), mutation (tests PIT), quality-gate (PMD + JaCoCo bloquants), api-live (contrat
+             REST-assured contre l'API réelle, hors CI) ========== -->
         <!-- Profil installer : construit un installeur natif (jpackage) à partir du fat-jar shade.
              jlink modulaire est IMPOSSIBLE ici : Guice 7 et sa grappe transitive (Guava, aopalliance,
              jsr305...) sont des modules AUTOMATIQUES, refusés par jlink (sqlite-jdbc, lui, est un vrai
