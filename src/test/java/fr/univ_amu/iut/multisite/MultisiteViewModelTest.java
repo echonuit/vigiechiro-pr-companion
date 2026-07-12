@@ -43,6 +43,26 @@ class MultisiteViewModelTest {
     @Mock
     private ServiceSites serviceSites;
 
+    @Test
+    @DisplayName("#1209 : charger lit sans muter ; appliquer publie tableau + carte ; signalerErreur route le message")
+    void charger_appliquer_signaler_separes() {
+        when(service.listerPassages(ID)).thenReturn(List.of(ligne("640380", "A1", 2026, 1)));
+        when(service.agregerPourCarte(ID)).thenReturn(List.of());
+        MultisiteViewModel vm = new MultisiteViewModel(service, serviceSites, ID);
+
+        var donnees = vm.charger();
+        assertThat(donnees.passages()).hasSize(1);
+        assertThat(vm.lignes()).as("charger ne mute pas l'état observable").isEmpty();
+
+        vm.appliquer(donnees);
+        assertThat(vm.lignes()).hasSize(1);
+
+        vm.signalerErreur(new IllegalStateException("base indisponible"));
+        assertThat(vm.messageProperty().get()).isEqualTo("base indisponible");
+        vm.signalerErreur(new IllegalStateException());
+        assertThat(vm.messageProperty().get()).contains("impossible");
+    }
+
     private static LignePassage ligne(String carre, String point, int annee, int numero) {
         return ligne(carre, point, annee, numero, StatutWorkflow.DEPOSE);
     }

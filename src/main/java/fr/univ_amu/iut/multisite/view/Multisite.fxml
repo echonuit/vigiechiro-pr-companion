@@ -24,12 +24,13 @@
   double-clic d'ouverture d'un passage (contrat socle OuvrirPassage) et l'export CSV sont liés au
   MultisiteViewModel par le controller.
 -->
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.multisite.view.MultisiteController"
-      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @multisite.css"
-      styleClass="ecran-multisite"
-      spacing="10.0">
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.multisite.view.MultisiteController"
+           stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @multisite.css"
+           fx:id="hoteOccupation">
+  <!-- Hôte d'occupation (#1209) : voile « … en cours » pendant le chargement des passages + carte. -->
+  <VBox styleClass="ecran-multisite" spacing="10.0">
 
   <!-- #341 : pas de titre de page (le fil d'Ariane du chrome indique déjà « … › Vue multi-sites »).
        On ne garde qu'une ligne fine de résumé pour récupérer de la hauteur, critique sur petit écran. -->
@@ -118,4 +119,5 @@
   </BorderPane>
 
   <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
-</VBox>
+  </VBox>
+</StackPane>

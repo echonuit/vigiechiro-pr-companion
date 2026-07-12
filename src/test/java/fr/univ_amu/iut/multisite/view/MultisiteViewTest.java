@@ -25,6 +25,7 @@ import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -271,5 +272,16 @@ class MultisiteViewTest {
             assertThat(passage.contexte().site().numeroCarre()).isEqualTo("640380");
             assertThat(passage.contexte().site().codePoint()).isEqualTo("A1");
         });
+    }
+
+    @Test
+    @DisplayName("#1209 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
+    void overlay_occupation_masque_apres_chargement(FxRobot robot) {
+        Node voile = robot.lookup(".occupation-voile").query();
+
+        assertThat(voile).as("overlay d'occupation superposé à l'écran").isNotNull();
+        assertThat(voile.isVisible())
+                .as("chargement terminé (exécuteur synchrone) : overlay masqué")
+                .isFalse();
     }
 }

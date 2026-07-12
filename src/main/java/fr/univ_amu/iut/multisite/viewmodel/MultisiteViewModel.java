@@ -84,6 +84,31 @@ public class MultisiteViewModel {
         filtres.appliquer();
     }
 
+    /// Données de l'écran chargées **hors du fil JavaFX** (#1209) : passages du tableau + agrégat des
+    /// carrés de la carte, les deux requêtes base réunies pour une seule occupation.
+    public record DonneesMultisite(List<LignePassage> passages, List<CarreAgrege> carte) {}
+
+    /// **Lecture seule** des données de l'écran (deux requêtes base). Sans effet sur l'état observable :
+    /// sûre à exécuter **hors du fil JavaFX** (#1209, déport via `IndicateurOccupation`).
+    public DonneesMultisite charger() {
+        return new DonneesMultisite(service.listerPassages(idUtilisateur), service.agregerPourCarte(idUtilisateur));
+    }
+
+    /// Applique des données chargées : recompose le tableau (avec filtres) et l'agrégat de la carte.
+    /// **Mutations observables** : à exécuter **sur le fil JavaFX**.
+    public void appliquer(DonneesMultisite donnees) {
+        tousLesPassages.setAll(donnees.passages());
+        filtres.appliquer();
+        carresCarte.setAll(donnees.carte());
+    }
+
+    /// Route l'échec d'un chargement vers le message de l'écran (filet #795), à la place d'une exception
+    /// non capturée remontant du fil de fond.
+    public void signalerErreur(Throwable erreur) {
+        String detail = erreur.getMessage();
+        message.set(detail != null && !detail.isBlank() ? detail : "Chargement des passages impossible.");
+    }
+
     /// Callback du socle (`apresApplication`) : ré-ordonne le sous-ensemble filtré selon le tri
     /// nommé, le publie dans [#lignes], et met à jour le résumé et l'indice d'état vide.
     private void publierLignes() {
