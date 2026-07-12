@@ -58,10 +58,12 @@ public class DepotViewModel {
         return depot.isPresent();
     }
 
-    /// Téléverse les **séquences transformées** du passage sur VigieChiro : crée la participation puis envoie
-    /// les fichiers. **Bloquant** (réseau) : à appeler **hors du fil JavaFX** (le controller l'enveloppe dans
-    /// un fil virtuel, comme la génération d'archives). Lève une [RegleMetierException] si le dépôt est
-    /// indisponible dans ce contexte, ou s'il n'y a aucune séquence à déposer.
+    /// Téléverse le passage sur VigieChiro : crée la participation puis envoie les **archives ZIP** par
+    /// défaut (#984, une archive = une unité, comme le web), ou les **séquences WAV** en repli si le disque
+    /// ne permet pas de créer les archives. **Bloquant** (réseau) : à appeler **hors du fil JavaFX** (le
+    /// controller l'enveloppe dans un fil virtuel, comme la génération d'archives). Lève une
+    /// [RegleMetierException] si le dépôt est indisponible, si rien n'est déposable, ou si les archives ne
+    /// sont pas encore générées alors que le disque le permet (invitation à lancer l'étape 2).
     ///
     /// @param idPassage passage (nuit) à déposer
     /// @return le bilan du dépôt (participation créée, fichiers déposés / en échec)
@@ -76,10 +78,9 @@ public class DepotViewModel {
         Objects.requireNonNull(suivi, "suivi");
         DepotVigieChiro depotVigieChiro =
                 depot.orElseThrow(() -> new RegleMetierException("Dépôt VigieChiro indisponible dans ce contexte."));
-        List<Path> fichiers = service.sequencesADeposer(idPassage);
-        if (fichiers.isEmpty()) {
-            throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage.");
-        }
+        // Dépôt ZIP par défaut (#984), comme le web : une archive = une unité. Repli WAV seulement si le
+        // disque ne permet pas de créer les archives ; sinon invitation à générer d'abord (étape 2).
+        List<Path> fichiers = service.fichiersDepotParDefaut(idPassage);
         return depotVigieChiro.deposer(idPassage, fichiers, annulation::get, suivi);
     }
 

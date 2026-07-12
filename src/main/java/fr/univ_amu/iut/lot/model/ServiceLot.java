@@ -112,6 +112,47 @@ public class ServiceLot {
                 .orElseGet(List::of);
     }
 
+    /// Fichiers à déposer **par défaut depuis l'IHM** (#984) : privilégie les **archives ZIP** déjà
+    /// générées (comme le dépôt web : une archive = une unité), et ne se rabat sur les **séquences WAV**
+    /// que si l'espace disque **ne permet pas** de créer les archives. Si aucune archive n'existe encore
+    /// mais que le disque le permet, **refuse** en invitant à générer d'abord (étape 2) : le dépôt ZIP
+    /// reste privilégié et la génération est une étape explicite, jamais implicite.
+    ///
+    /// @throws RegleMetierException si rien n'est déposable, ou si les archives sont absentes alors que le
+    ///     disque permettrait de les générer (invitation à lancer l'étape 2)
+    public List<Path> fichiersDepotParDefaut(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        EtatLot lot = consulterLot(idPassage);
+        List<Path> archives = lot.cheminDossier() == null
+                ? List.of()
+                : archivesDepot(lot.cheminDossier()).stream()
+                        .map(ArchiveDepot::chemin)
+                        .toList();
+        if (!archives.isEmpty()) {
+            return archives;
+        }
+        List<Path> sequences = sequencesADeposer(idPassage);
+        if (sequences.isEmpty()) {
+            throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage.");
+        }
+        if (disquePermetArchives(lot)) {
+            throw new RegleMetierException("Générez d'abord les archives de dépôt (étape 2) : le dépôt ZIP"
+                    + " est privilégié et l'espace disque le permet.");
+        }
+        return sequences; // repli WAV : l'espace disque ne permet pas de créer les archives ZIP
+    }
+
+    /// `true` si l'espace disque du dossier de session permet de générer les archives ZIP (estimation
+    /// compression comprise ≤ disponible). Faux si session / volume / disque inconnus (impossible de créer
+    /// des archives → repli WAV assumé).
+    private boolean disquePermetArchives(EtatLot lot) {
+        if (lot.cheminDossier() == null || lot.volumeSequencesOctets() == null) {
+            return false;
+        }
+        long disponible = espaceDisqueDisponible(lot.cheminDossier());
+        return disponible > 0 && estimationTailleDepotOctets(lot.volumeSequencesOctets()) <= disponible;
+    }
+
     /// Consulte l'état de dépôt d'un passage **sans le transitionner** (lecture pour l'IHM M-Lot) :
     /// statut courant, dossier de session à téléverser (R22), nombre et volume des séquences, et les
     /// alertes de cohérence bloquantes (R14) qui empêcheraient la préparation. N'écrit rien.

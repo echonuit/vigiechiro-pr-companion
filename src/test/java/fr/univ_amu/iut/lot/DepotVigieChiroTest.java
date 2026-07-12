@@ -148,6 +148,28 @@ class DepotVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#984 : dépôt ZIP pur → réconciliation par titre sautée (aucun GET /donnees, source du stall)")
+    void depot_zip_saute_la_reconciliation(@TempDir Path dossier) throws IOException {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+
+        depot.deposer(idPassage, List.of(fichier(dossier, "Car-1.zip"), fichier(dossier, "Car-2.zip")));
+
+        verify(client, never()).donnees(anyString());
+    }
+
+    @Test
+    @DisplayName("#984 : dès qu'une unité WAV est présente, la réconciliation par titre s'exécute (GET /donnees)")
+    void depot_wav_declenche_la_reconciliation(@TempDir Path dossier) throws IOException {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+
+        depot.deposer(idPassage, List.of(fichier(dossier, "seq_000.wav")));
+
+        verify(client).donnees("part-1");
+    }
+
+    @Test
     @DisplayName("bug corrigé : un dépôt PARTIEL laisse « Dépôt en cours » (jamais « Déposé »), échec consigné")
     void depot_partiel_ne_bascule_pas_depose(@TempDir Path dossier) throws IOException {
         Path ok = fichier(dossier, "ok.wav");

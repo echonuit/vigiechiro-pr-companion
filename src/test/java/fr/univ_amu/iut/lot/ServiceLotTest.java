@@ -312,6 +312,58 @@ class ServiceLotTest {
     }
 
     @Test
+    @DisplayName("#984 : fichiersDepotParDefaut privilégie les archives ZIP présentes (dépôt ZIP par défaut)")
+    void fichiers_depot_par_defaut_prefere_les_archives() throws IOException {
+        Passage passage = creerPassage(Verdict.OK);
+        creerSessionCoherente(passage.id());
+        Path depot = Files.createDirectories(
+                dossier.resolve(PREFIXE.nomDossierSession()).resolve("depot"));
+        Files.createFile(depot.resolve(PREFIXE.nomDossierSession() + "-1.zip"));
+
+        List<Path> fichiers = service.fichiersDepotParDefaut(passage.id());
+
+        assertThat(fichiers)
+                .singleElement()
+                .satisfies(p -> assertThat(p.getFileName().toString()).endsWith(".zip"));
+    }
+
+    @Test
+    @DisplayName("#984 : sans archives mais espace disque suffisant → refus invitant à générer d'abord (étape 2)")
+    void fichiers_depot_par_defaut_sans_archives_invite_a_generer() {
+        Passage passage = creerPassage(Verdict.OK);
+        creerSessionCoherente(passage.id()); // séquences présentes (volume connu), aucune archive générée
+
+        assertThatThrownBy(() -> service.fichiersDepotParDefaut(passage.id()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("étape 2");
+    }
+
+    @Test
+    @DisplayName("#984 : repli WAV quand la création d'archives ne peut être garantie (volume inconnu)")
+    void fichiers_depot_par_defaut_repli_wav() {
+        Passage passage = creerPassage(Verdict.OK);
+        // Session sans volume calculé : impossible de garantir que les archives ZIP tiendraient sur le
+        // disque → repli WAV (dépose les séquences déjà présentes, aucun espace supplémentaire requis).
+        Long idSession = sessionDao
+                .insert(new SessionDEnregistrement(
+                        null, dossier.resolve(PREFIXE.nomDossierSession()).toString(), null, null, passage.id()))
+                .id();
+        Long idOriginal = originalDao
+                .insert(new EnregistrementOriginal(
+                        null, NOM_ORIGINAL, "bruts/" + NOM_ORIGINAL, 12.0, 384000, null, idSession))
+                .id();
+        String nom = PREFIXE.nommerSequence(NOM_ORIGINAL, 0);
+        sequenceDao.insert(
+                new SequenceDEcoute(null, nom, idOriginal, 0, 0.0, 5.0, "transformes/" + nom, true, idSession));
+
+        List<Path> fichiers = service.fichiersDepotParDefaut(passage.id());
+
+        assertThat(fichiers)
+                .singleElement()
+                .satisfies(p -> assertThat(p.toString()).startsWith("transformes/"));
+    }
+
+    @Test
     @DisplayName("R14 : preparerLot refuse un passage « À jeter » (RegleMetierException)")
     void preparer_lot_a_jeter_refuse() {
         Passage passage = creerPassage(Verdict.A_JETER);

@@ -208,6 +208,14 @@ public final class DepotVigieChiro {
         if (restantes.isEmpty()) {
             return;
         }
+        // Dépôt ZIP (#984) : une archive n'est pas appariable par titre (contenu inconnu localement), donc
+        // aucune unité ne serait réconciliée. On évite alors le `GET /donnees` paginé — lourd, et surtout
+        // en croissance continue quand le serveur traite un dépôt web parallèle : c'était la source du
+        // blocage « Dépôt 0/N figé ». (La reprise ZIP reste assurée par le plan reprenable + l'idempotence
+        // côté plateforme.)
+        if (restantes.stream().noneMatch(unite -> unite.type() == TypeDepotUnite.WAV)) {
+            return;
+        }
         Set<String> titresTraites = new HashSet<>();
         for (var donnee : client.donnees(participationId)) {
             titresTraites.add(donnee.titre());
