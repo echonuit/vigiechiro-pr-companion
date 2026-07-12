@@ -41,6 +41,16 @@ final class ColonnesAudio {
 
     private ColonnesAudio() {}
 
+    /// Colonnes de **contexte** (passage / carré / point / date) masquées quand la source cible un
+    /// **unique passage** : elles y seraient constantes. La date d'enregistrement est constante au
+    /// sein d'un passage (une nuit), inutile en source unique. Appelée à chaque `ouvrirSur` (#1194).
+    static void adapterAuContexte(Colonnes col, boolean passageUnique) {
+        col.passage().setVisible(!passageUnique);
+        col.carre().setVisible(!passageUnique);
+        col.point().setVisible(!passageUnique);
+        col.date().setVisible(!passageUnique);
+    }
+
     static void configurer(Colonnes col, BiConsumer<Long, String> enregistrerCommentaire) {
         col.tadarida().setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.tadarida(c.getValue())));
         col.proba()

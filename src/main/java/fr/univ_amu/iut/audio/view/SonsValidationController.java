@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
-import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -279,28 +278,34 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         this.reactifs = Objects.requireNonNull(reactifs, "reactifs");
     }
 
+    /// Colonnes injectées par le FXML, regroupées ([ColonnesAudio.Colonnes]) : construites une fois,
+    /// partagées entre le câblage initial et l'adaptation à la source.
+    private ColonnesAudio.Colonnes colonnes;
+
+    /// Items du ☰ pilotés par le workflow / la source, regroupés ([MenuAudio.Items]).
+    private MenuAudio.Items itemsMenu;
+
     /// Câble les colonnes de la table (valeur, cellules, comparateurs de tri). Le détail vit dans
     /// [ColonnesAudio] (unité cohésive extraite pour garder ce contrôleur sous le seuil de God Class) ; on
     /// lui passe les colonnes injectées par le FXML, regroupées.
     private void configurerColonnes() {
-        ColonnesAudio.configurer(
-                new ColonnesAudio.Colonnes(
-                        colTadarida,
-                        colProba,
-                        colFrequence,
-                        colDebut,
-                        colDuree,
-                        colObservateur,
-                        colFichier,
-                        colPassage,
-                        colCarre,
-                        colPoint,
-                        colDate,
-                        colHeure,
-                        colStatut,
-                        colReference,
-                        colCommentaire),
-                viewModel.actions()::commenter);
+        colonnes = new ColonnesAudio.Colonnes(
+                colTadarida,
+                colProba,
+                colFrequence,
+                colDebut,
+                colDuree,
+                colObservateur,
+                colFichier,
+                colPassage,
+                colCarre,
+                colPoint,
+                colDate,
+                colHeure,
+                colStatut,
+                colReference,
+                colCommentaire);
+        ColonnesAudio.configurer(colonnes, viewModel.actions()::commenter);
     }
 
     @FXML
@@ -407,38 +412,18 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 btnDouteux,
                 enveloppeDouteux);
 
-        // Workflow Tadarida (source ParPassage) : toujours actif ; « Importer » tant qu'aucun résultat,
-        // « Réimporter » (remplacement après confirmation) une fois un jeu chargé.
-        itemImporter
-                .textProperty()
-                .bind(Bindings.when(viewModel.resultatsDisponiblesProperty())
-                        .then("🔁 Réimporter un CSV Tadarida…")
-                        .otherwise("📥 Importer un CSV Tadarida…"));
-        // Import VigieChiro (axe 4.2) : câblage (libellé Importer/Réimporter, désactivation, restitution)
-        // délégué à ImportVigieChiroUI. Sa visibilité (workflow + connexion) est gérée dans adapterAffichage.
-        ImportVigieChiroUI.cabler(itemImporterVigieChiro, lblImportVigieChiro, importVigieChiro, viewModel);
-        itemExporterVu
-                .disableProperty()
-                .bind(viewModel.resultatsDisponiblesProperty().not());
-        // Export des observations affichées : possible dès qu'il y a au moins une ligne (toutes sources).
-        itemExporterObservations.disableProperty().bind(Bindings.isEmpty(viewModel.observationsFiltrees()));
-        // Un MenuItem désactivé n'accueille pas de tooltip : pour cet item toujours visible, on surface la
-        // cause du grisage dans son libellé (#789), qui n'apparaît que lorsqu'il est effectivement grisé
-        // (aucune observation à exporter). L'item « Exporter _Vu » est, lui, masqué hors workflow Tadarida
-        // (le menu montre alors « Importer un CSV Tadarida »), donc pas de libellé dynamique dessus.
-        itemExporterObservations
-                .textProperty()
-                .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
-                        .then("📤 Exporter les observations (CSV)… (aucune observation à exporter)")
-                        .otherwise("📤 Exporter les observations (CSV)…"));
-        // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24). Persisté (#1006) : le VM
-        // (recréé à chaque chargement) suit le réglage partagé avec l'onglet « Audio », puis la case du ☰
-        // suit le VM. Ordre important pour l'initialisation depuis la valeur persistée.
-        viewModel
-                .inclureModeProperty()
-                .bindBidirectional(reactifs.proprieteBooleen(
-                        OngletReglagesAudio.CLE_INCLURE_MODE, OngletReglagesAudio.DEFAUT_INCLURE_MODE));
-        itemInclureMode.selectedProperty().bindBidirectional(viewModel.inclureModeProperty());
+        // Items du ☰ pilotés par le workflow / la source : bindings une fois pour toutes dans MenuAudio
+        // (libellés Importer/Réimporter, exports, case validation_mode persistée #1006/R24).
+        itemsMenu = new MenuAudio.Items(
+                itemImporter,
+                itemImporterVigieChiro,
+                lblImportVigieChiro,
+                itemInclureMode,
+                itemExporterVu,
+                itemExporterObservations,
+                itemExporterBiblio,
+                itemOuvrirVigieChiro);
+        MenuAudio.cabler(itemsMenu, viewModel, importVigieChiro, reactifs);
 
         // État vide : placeholder gris superposé à la table, réservé au seul « aucune observation… ».
         var listeVide = Bindings.isEmpty(viewModel.observationsFiltrees());
@@ -527,26 +512,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 erreur -> viewModel.signalerErreur(source, erreur));
     }
 
-    /// Adapte l'affichage à la source : colonnes de contexte masquées si la source est un unique passage,
-    /// et **items** du menu « ☰ » propres à la source. Le menu ☰ lui-même reste toujours affiché : il porte
-    /// désormais le choix des colonnes, pertinent pour toutes les sources.
+    /// Adapte l'affichage à la source : colonnes de contexte masquées si la source est un unique passage
+    /// ([ColonnesAudio#adapterAuContexte]) et items du menu « ☰ » propres à la source ([MenuAudio#adapter]).
     private void adapterAffichage(SourceObservations source) {
-        boolean passageUnique = source.cibleUnPassageUnique();
-        colPassage.setVisible(!passageUnique);
-        colCarre.setVisible(!passageUnique);
-        colPoint.setVisible(!passageUnique);
-        // La date d'enregistrement est constante au sein d'un passage (une nuit) : inutile en source unique.
-        colDate.setVisible(!passageUnique);
-
-        boolean workflow = source.permetWorkflowTadarida();
-        itemImporter.setVisible(workflow);
-        // Import VigieChiro : workflow Tadarida **et** application connectée (indisponible en capture).
-        itemImporterVigieChiro.setVisible(workflow && importVigieChiro.disponible());
-        itemInclureMode.setVisible(workflow);
-        itemExporterVu.setVisible(workflow);
-        itemExporterBiblio.setVisible(source.permetExportBibliotheque());
-        // « Ouvrir les données sur Vigie-Chiro » (#1124) : détail dans ActionDonneesVigieChiro.
-        actionsMenu.donneesVigieChiro().adapter(itemOuvrirVigieChiro, source);
+        ColonnesAudio.adapterAuContexte(colonnes, source.cibleUnPassageUnique());
+        MenuAudio.adapter(itemsMenu, source, importVigieChiro, actionsMenu.donneesVigieChiro());
     }
 
     private void selectionnerObservation(Long idObservation) {
