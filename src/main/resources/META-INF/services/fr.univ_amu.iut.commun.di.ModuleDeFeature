@@ -6,6 +6,7 @@
 fr.univ_amu.iut.analyse.di.AnalyseModule
 fr.univ_amu.iut.audio.di.AudioModule
 fr.univ_amu.iut.audio.di.ImportVigieChiroModule
+fr.univ_amu.iut.audit.di.AuditModule
 fr.univ_amu.iut.bibliotheque.di.BibliothequeModule
 fr.univ_amu.iut.connexion.di.ConnexionModule
 fr.univ_amu.iut.diagnostic.di.DiagnosticModule

@@ -33,6 +33,7 @@ import picocli.CommandLine.Spec;
             ListerSites.class,
             ListerPassages.class,
             StatutPassage.class,
+            Auditer.class,
             Importer.class,
             ImporterTadarida.class,
             Qualifier.class,
