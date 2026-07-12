@@ -18,6 +18,19 @@ référence structurée ; le repo-root garde un mémo
 | `./mvnw spotless:check` / `spotless:apply` | Vérifie / applique le formatage |
 | `./mvnw javafx:run` | Lance l'application |
 
+!!! tip "Quand lancer `clean` ?"
+    Le build Maven est **incrémental** : `./mvnw verify` réutilise `target/`. Après certains
+    changements, une classe périmée peut y subsister et provoquer une erreur **trompeuse** (à la
+    compilation ou au packaging) que `./mvnw clean verify` fait disparaître. Réflexe : en cas
+    d'erreur inexpliquée alors que le code semble correct, **relancer avec `clean`**. Cas typiques :
+
+    - **suppression ou renommage** d'une classe/méthode : l'ancien `.class` reste dans `target/` ;
+    - **changement de dépendances** (`pom.xml`) ;
+    - **rejouer `package` ou `-Pinstaller`** sans `clean` : le fat-jar déjà shadé est re-shadé
+      par-dessus lui-même (des dizaines de warnings « overlapping classes » trompeurs).
+
+    La CI part **toujours** d'un checkout propre : ce piège est purement **local**.
+
 ## IHM testée en *headless* (sans X11 ni xvfb)
 
 Les tests **TestFX** tournent en mémoire grâce à la **Headless Platform** de JavaFX : aucun `xvfb`,
