@@ -26,16 +26,22 @@ données d'exemple ou de test.
 
 ## Secrets et identifiants
 
-- **Aucun secret n'est versionné** : pas de clé d'API, de jeton ni de mot de passe — y compris dans un
-  test, une capture ou une base SQLite.
+- **Aucun secret n'est versionné** : pas de clé d'API, de jeton ni de mot de passe dans le dépôt, y
+  compris dans un test, une capture ou une base SQLite.
+- **Token de session VigieChiro** : depuis l'intégration API (#716), l'app enregistre un **token de
+  session** (fourni par la plateforme, péremption ~14 jours) dans **`connexion.json`** à la racine du
+  workspace. Ce fichier est un **artefact local**, **ignoré par git** (`.gitignore`), jamais versionné.
+  Son durcissement (permissions fichier restrictives, stockage chiffré) est suivi dans #1140.
 - Les workflows GitHub Actions tournent au **moindre privilège** (`maven.yml` : `permissions: contents:
   read`). N'élargir que là où c'est nécessaire (`contents: write` pour `capture-vues.yml`, qui pousse
   les aperçus).
 
 ## Surface applicative
 
-L'application est **locale** : pas de serveur, pas de port ouvert, **aucune authentification réseau**,
-aucun identifiant stocké.
+L'application est **locale** : pas de serveur entrant, pas de port ouvert. Elle appelle en revanche
+l'**API VigieChiro** (lecture des sites/participations/résultats et dépôt d'une nuit) authentifiée par
+le **token de session** stocké localement (cf. « Secrets et identifiants »). Aucun autre identifiant
+n'est conservé.
 
 - **Pas d'injection SQL** : les DAO utilisent des `PreparedStatement` (requêtes paramétrées), jamais de
   concaténation de chaînes dans le SQL (cf. [Persistance](persistance.md)).
