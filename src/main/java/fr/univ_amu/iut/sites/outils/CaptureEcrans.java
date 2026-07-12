@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -205,7 +206,9 @@ public final class CaptureEcrans {
     private static Injector creerInjecteur() {
         return Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(liaison -> {
             liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
-            liaison.bind(OuvrirImportation.class).toInstance(idSite -> {});
+            OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
+                    .setBinding()
+                    .toInstance(idSite -> {});
         }));
     }
 

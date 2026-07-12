@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.di;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
@@ -49,12 +50,11 @@ import java.util.Optional;
 /// validé par `ImportationModuleTest` (injecteur local socle + passage + importation).
 public class ImportationModule extends ModuleDeFeature {
 
-    /// Identité de la feature. `COEUR` pour l'instant (feuille couplée au runtime via son contrat
-    /// `Ouvrir…` : la désactiver casserait l'écran consommateur) ; passera `OPTIONNELLE` une fois ce
-    /// contrat neutralisé (P3, #1064).
+    /// Identité de la feature. `OPTIONNELLE` (désactivable) : son contrat `OuvrirImportation` est neutralisé
+    /// chez son consommateur (SiteDetailController l'injecte en `Optional` et masque le bouton si absent).
     @Override
     public Fonctionnalite fonctionnalite() {
-        return new Fonctionnalite("importation", "Importation Tadarida", Categorie.COEUR);
+        return new Fonctionnalite("importation", "Importation Tadarida", Categorie.OPTIONNELLE);
     }
 
     /// L'import est une **action contextuelle** (la nuit d'un site précis) : pas de carte d'accueil. Le
@@ -63,7 +63,9 @@ public class ImportationModule extends ModuleDeFeature {
     /// `view` de cette feature.
     @Override
     protected void configure() {
-        bind(OuvrirImportation.class).to(NavigationImportation.class);
+        OptionalBinder.newOptionalBinder(binder(), OuvrirImportation.class)
+                .setBinding()
+                .to(NavigationImportation.class);
         // Onglet « Import » de l'écran Réglages (#928) : contribué au point d'extension du socle,
         // sans que le socle connaisse cette feature.
         ongletReglages(OngletReglagesImport.class);

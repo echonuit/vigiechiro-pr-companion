@@ -16,9 +16,7 @@ import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
-import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
-import fr.univ_amu.iut.sites.viewmodel.CartePoint;
 import fr.univ_amu.iut.sites.viewmodel.LignePassage;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.List;
@@ -29,16 +27,13 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TableColumn;
@@ -50,19 +45,17 @@ import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.GridPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import javafx.util.StringConverter;
 
 /// Controller de l'écran de détail **M-Site-detail** (`SiteDetail.fxml`).
 ///
-/// Câble la fiche d'identité (bandeau), les cartes de points et le tableau des passages aux
-/// propriétés du [SiteDetailViewModel]. Les points (nombre variable) sont reconstruits en code à
-/// chaque changement de la liste observable ; le tableau des passages est piloté par les
-/// `cellValueFactory`, avec un badge coloré (couleur **dérivée** du statut/verdict) pour les
-/// colonnes Statut et Verdict.
+/// Câble la fiche d'identité (bandeau) et le tableau des passages aux propriétés du
+/// [SiteDetailViewModel] ; le tableau des passages est piloté par les `cellValueFactory`, avec un
+/// badge coloré (couleur **dérivée** du statut/verdict) pour les colonnes Statut et Verdict. Le rendu
+/// des cartes de points (nombre variable, reconstruites à chaque changement de la liste observable) est
+/// délégué à [CartesPointsSite] (extrait, seuil de cohésion PMD, #1087).
 ///
 /// L'écran délègue toute navigation à [NavigationSites] : retour à l'accueil (fil d'Ariane),
 /// ouverture des modales de point, retour à l'accueil après suppression du site.
@@ -76,13 +69,10 @@ import javafx.util.StringConverter;
 /// gros titre était partiellement redondant avec le fil d'Ariane, et les actions restent en tête d'écran.
 public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
-    /// Classe de style des lignes secondaires d'une carte de point (description, compteur, distance).
-    private static final String STYLE_DESC = "carte-point-desc";
-
     private final SiteDetailViewModel viewModel;
     private final NavigationSites navigation;
     private final OuvrirPassage ouvrirPassage;
-    private final OuvrirImportation ouvrirImportation;
+    private final Optional<OuvrirImportation> ouvrirImportation;
     private final OuvrirMultisite ouvrirMultisite;
     private final DepotDispositionColonnes depotColonnes;
 
@@ -114,6 +104,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private Button boutonSupprimer;
+
+    @FXML
+    private Button boutonImporterNuit;
 
     @FXML
     private StackPane enveloppeSupprimer;
@@ -159,7 +152,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
             SiteDetailViewModel viewModel,
             NavigationSites navigation,
             OuvrirPassage ouvrirPassage,
-            OuvrirImportation ouvrirImportation,
+            Optional<OuvrirImportation> ouvrirImportation,
             OuvrirMultisite ouvrirMultisite,
             DepotDispositionColonnes depotColonnes) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -198,11 +191,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         // Sélecteur de colonnes (#921) : clic droit + ☰ « outils » ; disposition retenue par écran (#994).
         GestionnaireColonnes.installerEtPersister(
                 tablePassages, menuOutils, colonnesPassages(), depotColonnes, "sites", "principale");
-        // Repli d'état vide des points d'écoute (#791) : le label prend la place du FlowPane (sans
-        // placeholder) tant qu'aucune carte de point n'y est ajoutée. La liaison suit la liste vivante.
-        var aucunPoint = Bindings.isEmpty(cartesPoints.getChildren());
-        lblAucunPoint.visibleProperty().bind(aucunPoint);
-        lblAucunPoint.managedProperty().bind(aucunPoint);
         // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
         // contexte à gauche, résumé au centre.
         zonesStatut.bind(Bindings.createObjectBinding(
@@ -230,6 +218,10 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
                         .otherwise("Suppression impossible : ce site porte des passages."
                                 + " Supprimez d'abord les passages rattachés."));
         boutonModifier.setTooltip(new Tooltip("Modifier la fiche du site (carré, nom, protocole…)."));
+        // « Importer une nuit » n'apparaît que si la feature `importation` est activée (feature-flag #1087).
+        boolean importActif = ouvrirImportation.isPresent();
+        boutonImporterNuit.setVisible(importActif);
+        boutonImporterNuit.setManaged(importActif);
         configurerColonnes();
         tablePassages.setItems(viewModel.passages());
         tablePassages.setRowFactory(tableau -> {
@@ -243,8 +235,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
             });
             return ligne;
         });
-        viewModel.points().addListener((ListChangeListener<CartePoint>) changement -> reconstruirePoints());
-        reconstruirePoints();
+        // Cartes de points d'écoute + repli d'état vide (#791) : câblage extrait dans CartesPointsSite
+        // pour alléger ce controller (seuil de cohésion PMD, #1087).
+        CartesPointsSite.installer(cartesPoints, lblAucunPoint, viewModel, navigation, ouvrirMultisite);
     }
 
     /// Contexte d'identité (carré/code/nom) transmis à M-Passage pour éviter une dépendance
@@ -260,9 +253,12 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     }
 
     /// Ouvre l'assistant « Importer une nuit » avec ce site déjà pré-rattaché (raccourci contextuel).
+    /// Désactivable (bouton masqué si absente, #1087) : le contrat socle est neutralisé quand la
+    /// feature `importation` est désactivée.
     @FXML
     private void importerNuit() {
-        ouvrirImportation.ouvrirPourSite(viewModel.siteCourant().id());
+        ouvrirImportation.ifPresent(
+                ouvrir -> ouvrir.ouvrirPourSite(viewModel.siteCourant().id()));
     }
 
     /// « Voir sur la carte » : ouvre la vue multi-sites centrée et surlignée sur le carré de ce site.
@@ -323,104 +319,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         colDepose.setCellValueFactory(cd -> valeur(cd.getValue().deposeLe()));
         colStatut.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::statutClasseCss));
         colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::verdictClasseCss));
-    }
-
-    private void reconstruirePoints() {
-        cartesPoints.getChildren().clear();
-        for (CartePoint carte : viewModel.points()) {
-            cartesPoints.getChildren().add(construireCartePoint(carte));
-        }
-    }
-
-    private VBox construireCartePoint(CartePoint carte) {
-        PointDEcoute point = carte.point();
-        Label code = new Label(point.code());
-        code.getStyleClass().add("carte-point-code");
-        Label description = new Label(libelleDescription(point));
-        description.getStyleClass().add(STYLE_DESC);
-        Node gps = construireBadgeGps(carte);
-        Label passages = new Label(carte.nombrePassages() + " passage(s) rattaché(s)");
-        passages.getStyleClass().add(STYLE_DESC);
-        VBox boite = new VBox(code, description, gps, passages);
-        carte.distanceProche()
-                .ifPresent(distance -> boite.getChildren().add(etiquetteProximite(distance, carte.tropProche())));
-        boite.getChildren().add(actionsPoint(carte));
-        boite.getStyleClass().add("carte-point");
-        return boite;
-    }
-
-    /// Étiquette « à … du point le plus proche » (#154). Passe en **alerte** (⚠, style dédié) quand la
-    /// distance est sous le seuil de proximité, pour signaler des points anormalement rapprochés.
-    private static Label etiquetteProximite(double metres, boolean tropProche) {
-        Label proximite =
-                new Label((tropProche ? "⚠ " : "") + "à " + distanceLisible(metres) + " du point le plus proche");
-        proximite.getStyleClass().add(tropProche ? "carte-point-alerte" : STYLE_DESC);
-        proximite.setWrapText(true);
-        return proximite;
-    }
-
-    /// Distance lisible : mètres arrondis en deçà de 1 km, kilomètres à une décimale au-delà.
-    private static String distanceLisible(double metres) {
-        return metres >= 1000
-                ? String.format(java.util.Locale.FRENCH, "%.1f km", metres / 1000)
-                : String.format(java.util.Locale.FRENCH, "%.0f m", metres);
-    }
-
-    /// Badge GPS de la carte de point : un [Hyperlink] qui, quand les coordonnées sont présentes, ouvre
-    /// **LA carte multi-sites centrée sur ce point** (#154) ; sinon un simple libellé « manquant ». On
-    /// renvoie vers la carte de référence (qui montre déjà le fond OSM et permet de corriger la position
-    /// en mode édition) plutôt que vers un OpenStreetMap externe.
-    private Node construireBadgeGps(CartePoint carte) {
-        PointDEcoute point = carte.point();
-        if (!carte.gpsPresent()) {
-            // Sans GPS : le point est affiché au centre de son carré sur LA carte de référence. Le lien y
-            // mène, mode édition activé, pour le glisser à sa vraie position (comme un point géolocalisé).
-            Hyperlink placer = new Hyperlink("⚠ GPS manquant — placer sur la carte");
-            placer.getStyleClass().add("gps-manquant");
-            placer.setOnAction(evenement -> ouvrirMultisite.ouvrirSurCarrePourPlacer(
-                    viewModel.siteCourant().numeroCarre()));
-            placer.setTooltip(new Tooltip("Ouvrir la carte multi-sites pour placer ce point (mode édition)"));
-            return placer;
-        }
-        Hyperlink lien = new Hyperlink("✓ GPS — voir sur la carte");
-        lien.getStyleClass().add("gps-ok");
-        lien.setOnAction(evenement -> ouvrirMultisite.ouvrirSurPoint(
-                viewModel.siteCourant().numeroCarre(), point.latitude(), point.longitude()));
-        lien.setTooltip(
-                new Tooltip("Voir " + point.latitude() + ", " + point.longitude() + " sur la carte multi-sites"));
-        return lien;
-    }
-
-    private HBox actionsPoint(CartePoint carte) {
-        Hyperlink editer = new Hyperlink("✏ Modifier");
-        editer.setOnAction(evenement -> navigation.ouvrirModaleEditionPoint(
-                fenetre(), viewModel.siteCourant(), carte.point(), viewModel::rafraichir));
-        Hyperlink supprimer = new Hyperlink("🗑 Supprimer");
-        supprimer.setOnAction(evenement -> supprimerPoint(carte));
-        // Gating destructif (#789) : un point qui porte des passages n'est pas supprimable (le service le
-        // refuse). On grise le lien et on l'enrobe d'une enveloppe porteuse du tooltip d'explication, au lieu
-        // de laisser l'utilisateur découvrir le refus après le clic. La carte est reconstruite à chaque
-        // rafraîchissement, donc l'état de blocage est figé ici (texte fixe).
-        supprimer.setDisable(carte.aDesPassages());
-        Node actionSupprimer = IndicateurBlocage.enrober(
-                supprimer,
-                carte.aDesPassages()
-                        ? "Suppression impossible : ce point porte des passages."
-                                + " Supprimez d'abord les passages rattachés."
-                        : "Supprimer ce point d'écoute.");
-        HBox actions = new HBox(editer, actionSupprimer);
-        actions.getStyleClass().add("carte-point-actions");
-        return actions;
-    }
-
-    private void supprimerPoint(CartePoint carte) {
-        if (carte.aDesPassages()) {
-            alerteErreur("Le point « " + carte.point().code() + " » porte des passages : suppression bloquée.");
-            return;
-        }
-        if (confirmer("Supprimer le point « " + carte.point().code() + " » ?")) {
-            viewModel.supprimerPoint(carte.point());
-        }
     }
 
     /// Boîte de dialogue d'édition de la fiche, **pré-remplie** avec les valeurs courantes (carré,
@@ -519,9 +417,5 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     private static ReadOnlyStringWrapper valeur(String texte) {
         return new ReadOnlyStringWrapper(texte);
-    }
-
-    private static String libelleDescription(PointDEcoute point) {
-        return point.description() == null ? "(pas de description)" : point.description();
     }
 }

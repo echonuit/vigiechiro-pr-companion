@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
@@ -75,6 +76,10 @@ public class SitesModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
                 .setBinding()
                 .to(InfosPointSites.class);
+        // Contrat de navigation vers l'assistant d'import : OptionalBinder VIDE (feature `importation`
+        // désactivable, #1087). `ImportationModule` fait `setBinding` quand elle est active ; sinon
+        // l'Optional reste vide et SiteDetailController masque le bouton « Importer une nuit ».
+        OptionalBinder.newOptionalBinder(binder(), OuvrirImportation.class);
         // Rapprochement des sites locaux avec VigieChiro (#728), invoqué à la connexion.
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
