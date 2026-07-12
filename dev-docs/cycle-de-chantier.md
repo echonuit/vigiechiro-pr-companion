@@ -8,8 +8,8 @@ le **flux de contribution**, cette page décrit le niveau au-dessus : comment on
 **clôt** un chantier entier.
 
 Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
-**clôture en 8 passes** garantit que l'évolution est intégrée, documentée, testée, harmonisée, et que
-la suite est cadrée.
+**clôture en 9 passes** garantit que l'évolution est intégrée, cohérente entre les deux surfaces
+(IHM et CLI), documentée, testée, harmonisée, et que la suite est cadrée.
 
 !!! note "Où est la règle courte ?"
     La version concise pour les contributeurs vit dans la section « Cycle de vie d'un chantier » de
@@ -30,10 +30,12 @@ Avant d'écrire du code :
 3. **Découper en issues** reliées à un **EPIC** (une issue « parapluie » avec la task-list des
    sous-issues). Chaque sous-issue porte son palier et ses dépendances.
 
-## À la clôture : les 8 passes
+## À la clôture : les 9 passes
 
 Elles s'exécutent **dans l'ordre** : l'audit d'intégration peut révéler du travail à faire avant de
-documenter, l'harmonisation peut faire émerger de nouveaux chantiers, et le bilan vient en dernier.
+documenter, la cohérence CLI peut révéler une commande à ajouter (qui sera alors documentée et
+testée par les passes suivantes), l'harmonisation peut faire émerger de nouveaux chantiers, et le
+bilan vient en dernier.
 
 ### 1. Audit d'intégration
 
@@ -50,21 +52,45 @@ conventions). Cette passe vérifie que rien n'a été laissé de côté avant de
     Un `git log --oneline main` depuis le SHA d'ouverture du chantier (souvent tracé dans l'EPIC) met
     en évidence ce qui a bougé et mérite un regard.
 
-### 2. Passe de doc développeur
+### 2. Passe de cohérence CLI ↔ UI
+
+L'application expose **deux surfaces** sur le même domaine : l'IHM JavaFX et la **CLI** picocli
+(scriptable, headless, cf. [CLI](cli.md)). Quand un chantier ajoute ou modifie une **capacité
+métier** (une opération, une option, un format d'export, une règle de gestion), la CLI doit exposer
+l'**équivalent** pour que les deux surfaces restent au même niveau : un traitement disponible d'un
+seul côté crée une asymétrie et une dette invisibles.
+
+Cette passe :
+
+- identifie les **capacités métier** introduites ou changées par le chantier (pas les détails de
+  présentation : une pastille de statut, une mise en page n'ont pas d'équivalent CLI) ;
+- vérifie que la CLI offre l'opération correspondante (commande ou option de `fr.univ_amu.iut.cli`)
+  avec le **même comportement** : mêmes règles, mêmes formats, mêmes garde-fous ;
+- en cas d'écart : **aligner tout de suite** si c'est petit (la commande ajoutée sera alors
+  documentée et testée par les passes suivantes), sinon **créer une issue** (passe 8) pour ne pas
+  perdre le contexte ;
+- si le chantier est **purement présentationnel**, le noter explicitement « sans objet côté CLI ».
+
+!!! tip "Signal concret"
+    Un **service de domaine** nouvellement appelé par un ViewModel mais par aucune commande de
+    `fr.univ_amu.iut.cli.commande` signale une capacité présente d'un seul côté. La CLI et l'IHM
+    partagent les mêmes services : la parité se joue au niveau des services exposés, pas du code d'IHM.
+
+### 3. Passe de doc développeur
 
 Mettre à jour le **site dev** (`dev-docs/`, publié sous `…/dev/`) pour que l'architecture décrite
 colle au code livré : [Architecture](architecture.md), [Patterns et principes](patterns.md),
 [Injection (Guice)](injection.md), [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) si le
 chantier a introduit un **nouveau pattern d'extension** que les futures features devront suivre.
 
-### 3. Passe de doc utilisateur
+### 4. Passe de doc utilisateur
 
 Documenter le chantier pour les **utilisateurs** dans le site produit (`docs/`), avec **autant de
 captures que nécessaire**. Les aperçus sont régénérés en CI : ajouter/mettre à jour les classes
 `Capture*` et le manifeste, cf. [Captures d'écran](captures.md). Une fonctionnalité visible sans
 capture est une fonctionnalité à moitié livrée.
 
-### 4. Passe de brief SAÉ
+### 5. Passe de brief SAÉ
 
 L'application est le **companion** de la SAÉ 2.01 : le **brief** (dépôt
 [`IUTInfoAix-S201/brief`](https://github.com/IUTInfoAix-S201/brief), sujet distribué aux étudiants)
@@ -73,7 +99,7 @@ décrit ce qu'ils construisent et utilisent. Quand un chantier change **ce qui e
 dans le brief pour que le sujet reste aligné avec le socle réellement livré. Un brief qui décrit une
 version périmée de l'app induit les étudiants en erreur.
 
-### 5. Passe de tests
+### 6. Passe de tests
 
 Vérifier que **chaque usage** introduit est couvert :
 
@@ -84,7 +110,7 @@ Vérifier que **chaque usage** introduit est couvert :
 Pièges et conventions dans [Tests et qualité](tests-et-qualite.md). Les frontières d'architecture
 sont couvertes automatiquement par `ArchitectureTest`.
 
-### 6. Passe d'harmonisation
+### 7. Passe d'harmonisation
 
 Prendre du recul sur l'ensemble du chantier et chercher les concepts à **abstraire** pour réduire
 **complexité** et **duplication** : code répété entre features → **contrat/pattern partagé** dans
@@ -92,13 +118,13 @@ Prendre du recul sur l'ensemble du chantier et chercher les concepts à **abstra
 garde-fou, cf. [Tests et qualité](tests-et-qualite.md)). C'est le moment de transformer trois copies
 d'un même geste en un mécanisme d'extension.
 
-### 7. Passe d'identification des nouveaux chantiers
+### 8. Passe d'identification des nouveaux chantiers
 
 Un chantier en révèle d'autres (dette assumée, palier différé, idée née en chemin). Les **cadrer** et
 **créer les issues** correspondantes (reliées à un nouvel EPIC si elles forment un ensemble), pour ne
 pas perdre le contexte encore frais.
 
-### 8. Phase de bilan
+### 9. Phase de bilan
 
 Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
 pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
@@ -109,11 +135,12 @@ règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`.
 ```markdown
 ## Clôture de chantier
 - [ ] 1. Audit d'intégration (rebase sur `main`, points d'accroche, régressions)
-- [ ] 2. Doc développeur (dev-docs) à jour
-- [ ] 3. Doc utilisateur (docs/) + captures
-- [ ] 4. Brief SAÉ (IUTInfoAix-S201/brief) répercuté si attendus/fournis changent
-- [ ] 5. Tests d'intégration + E2E couvrant chaque usage
-- [ ] 6. Harmonisation (abstractions, duplication, GodClass)
-- [ ] 7. Nouveaux chantiers identifiés + issues créées
-- [ ] 8. Bilan (livré / dette / décisions)
+- [ ] 2. Cohérence CLI ↔ UI (capacités métier exposées des deux côtés, ou « sans objet »)
+- [ ] 3. Doc développeur (dev-docs) à jour
+- [ ] 4. Doc utilisateur (docs/) + captures
+- [ ] 5. Brief SAÉ (IUTInfoAix-S201/brief) répercuté si attendus/fournis changent
+- [ ] 6. Tests d'intégration + E2E couvrant chaque usage
+- [ ] 7. Harmonisation (abstractions, duplication, GodClass)
+- [ ] 8. Nouveaux chantiers identifiés + issues créées
+- [ ] 9. Bilan (livré / dette / décisions)
 ```
