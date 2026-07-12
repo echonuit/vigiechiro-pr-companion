@@ -26,6 +26,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.function.DoubleConsumer;
 
 /// **Dépôt d'une nuit** (un passage) sur l'API VigieChiro (#142), **reprenable par unité** (#982) :
 /// s'assure d'abord que la **participation existe** (réutilisée via le lien `ENTITE_PASSAGE`, créée en
@@ -157,7 +158,7 @@ public final class DepotVigieChiro {
         suivi.uniteDemarree(unite.identifiantUnite());
         Televersement resultat = fichier == null
                 ? Televersement.echec("fichier introuvable sur le disque (archives à régénérer ?)")
-                : televerser(fichier);
+                : televerser(fichier, fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction));
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
@@ -283,13 +284,13 @@ public final class DepotVigieChiro {
 
     /// Téléverse un fichier en trois temps (déclaration → `PUT` S3 **en flux** → finalisation) et renvoie
     /// l'issue : l'id distant du fichier créé, ou la raison de l'échec de l'étape fautive.
-    private Televersement televerser(Path fichier) {
+    private Televersement televerser(Path fichier, DoubleConsumer progression) {
         String titre = fichier.getFileName().toString();
         Optional<FichierSigne> signe = client.creerFichier(titre);
         if (signe.isEmpty()) {
             return Televersement.echec("déclaration du fichier refusée par VigieChiro");
         }
-        if (!client.televerserVersS3(signe.get().urlSignee(), fichier, mime(titre))) {
+        if (!client.televerserVersS3(signe.get().urlSignee(), fichier, mime(titre), progression)) {
             return Televersement.echec("téléversement S3 refusé (réseau ou fichier illisible)");
         }
         if (!client.finaliserFichier(signe.get().id())) {

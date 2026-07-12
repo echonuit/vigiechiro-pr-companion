@@ -37,4 +37,9 @@ final class RelaisSuiviDepot implements SuiviDepot {
     public void uniteEchouee(String identifiant, String raison) {
         Platform.runLater(() -> cible.echouee(identifiant, raison));
     }
+
+    @Override
+    public void uniteProgresse(String identifiant, double fraction) {
+        Platform.runLater(() -> cible.progresse(identifiant, fraction));
+    }
 }

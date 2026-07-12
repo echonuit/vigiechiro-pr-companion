@@ -24,6 +24,11 @@ public interface SuiviDepot {
     /// Le téléversement de l'unité `identifiant` a échoué (raison persistée et affichable).
     void uniteEchouee(String identifiant, String raison);
 
+    /// Avancement (fraction 0 à 1, #984) du téléversement de l'unité `identifiant`, remontée octet par
+    /// octet pour une barre de progression par archive. No-op par défaut : seuls les suivis IHM
+    /// l'exploitent (les suivis inerte / console l'ignorent).
+    default void uniteProgresse(String identifiant, double fraction) {}
+
     /// Suivi **inerte** (aucun affichage) : valeur par défaut des appels sans IHM et des tests qui
     /// n'observent pas le détail par unité.
     static SuiviDepot inerte() {

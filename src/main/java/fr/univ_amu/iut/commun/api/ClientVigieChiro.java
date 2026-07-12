@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.DoubleConsumer;
 
 /// Client HTTP de l'**API REST VigieChiro** (backend Eve, base `…/api/v1`, cf. #142). Socle réseau
 /// destiné à être réutilisé par les features (identité, sites, taxons, participations, fichiers).
@@ -208,11 +209,17 @@ public final class ClientVigieChiro {
     /// archive ZIP de dépôt peut peser ~700 Mo. Mêmes garanties : `true` si 2xx, `false` sinon (fichier
     /// illisible compris).
     public boolean televerserVersS3(String urlSignee, Path fichier, String mime) {
+        return televerserVersS3(urlSignee, fichier, mime, fraction -> {});
+    }
+
+    /// Comme [#televerserVersS3(String, Path, String)], en **remontant l'avancement** octet par octet
+    /// (#984) à `progression` (fraction 0 à 1) pour alimenter une barre de progression par archive.
+    public boolean televerserVersS3(String urlSignee, Path fichier, String mime, DoubleConsumer progression) {
         try {
             HttpRequest requete = HttpRequest.newBuilder(URI.create(urlSignee))
                     .timeout(DELAI_UPLOAD)
                     .header(ENTETE_CONTENT_TYPE, mime)
-                    .PUT(HttpRequest.BodyPublishers.ofFile(fichier))
+                    .PUT(CorpsFichierAvecProgression.depuis(fichier, progression))
                     .build();
             HttpResponse<Void> reponse = client.send(requete, HttpResponse.BodyHandlers.discarding());
             return estSucces(reponse.statusCode());

@@ -80,6 +80,12 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
         recalculerReste();
     }
 
+    /// Avancement (fraction 0 à 1, #984) du téléversement de l'unité `identifiant` : alimente la barre
+    /// déterminée de sa ligne. N'affecte pas les compteurs (l'unité reste « en cours »).
+    public void progresse(String identifiant, double fraction) {
+        parIdentifiant(identifiant).ifPresent(ligne -> ligne.progresser(fraction));
+    }
+
     /// Vide la table **et** le drapeau de reprise (retour à « Téléverser sur Vigie-Chiro »).
     @Override
     public void reinitialiser() {

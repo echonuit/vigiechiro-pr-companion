@@ -48,6 +48,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.DoubleConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -144,7 +145,7 @@ class DepotVigieChiroTest {
 
         depot.deposer(idPassage, List.of(a));
 
-        verify(client).televerserVersS3(anyString(), eq(a), eq("application/zip"));
+        verify(client).televerserVersS3(anyString(), eq(a), eq("application/zip"), any());
         verify(client, never()).televerserVersS3(anyString(), any(byte[].class), anyString());
     }
 
@@ -171,6 +172,28 @@ class DepotVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#984 : l'avancement du PUT est remonté au suivi par unité (uniteProgresse)")
+    void progression_upload_remontee_au_suivi(@TempDir Path dossier) throws IOException {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
+        when(client.finaliserFichier(anyString())).thenReturn(true);
+        // Le client mocké invoque le callback de progression comme le ferait un vrai PUT streamé.
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+                .thenAnswer(invocation -> {
+                    DoubleConsumer progression = invocation.getArgument(3);
+                    progression.accept(0.5);
+                    progression.accept(1.0);
+                    return true;
+                });
+        SuiviDepot suivi = mock(SuiviDepot.class);
+
+        depot.deposer(idPassage, List.of(fichier(dossier, "Car-1.zip")), () -> false, suivi);
+
+        verify(suivi).uniteProgresse("Car-1.zip", 0.5);
+        verify(suivi).uniteProgresse("Car-1.zip", 1.0);
+    }
+
+    @Test
     @DisplayName("bug corrigé : un dépôt PARTIEL laisse « Dépôt en cours » (jamais « Déposé »), échec consigné")
     void depot_partiel_ne_bascule_pas_depose(@TempDir Path dossier) throws IOException {
         Path ok = fichier(dossier, "ok.wav");
@@ -178,7 +201,8 @@ class DepotVigieChiroTest {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier("ko.wav")).thenReturn(Optional.empty()); // déclaration refusée
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString())).thenReturn(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+                .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
 
         BilanDepot bilan = depot.deposer(idPassage, List.of(ok, ko));
@@ -199,7 +223,8 @@ class DepotVigieChiroTest {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
         when(client.creerFichier("ok.wav")).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier("ko.wav")).thenReturn(Optional.empty());
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString())).thenReturn(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+                .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
         depot.deposer(idPassage, List.of(ok, ko)); // 1re tentative : ko.wav en échec
 
@@ -361,7 +386,8 @@ class DepotVigieChiroTest {
 
     private void armerUploadOk() {
         when(client.creerFichier(anyString())).thenReturn(Optional.of(new FichierSigne("f", "https://s3/x")));
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString())).thenReturn(true);
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+                .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(true);
     }
 

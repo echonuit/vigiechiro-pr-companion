@@ -89,6 +89,21 @@ class SuiviLignesDepotTest {
     }
 
     @Test
+    @DisplayName("#984 : progresse() alimente la barre déterminée de la ligne, sans reculer")
+    void progresse_alimente_la_barre() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+        suivi.planifier(List.of(unite(1L, "a.zip", StatutDepotUnite.A_DEPOSER, null)));
+        suivi.demarree("a.zip");
+
+        suivi.progresse("a.zip", 0.42);
+        assertThat(suivi.lignes().get(0).fractionProperty().get()).isEqualTo(0.42);
+
+        // Monotone : le socle ne recule pas la barre (une fraction inférieure est ignorée).
+        suivi.progresse("a.zip", 0.10);
+        assertThat(suivi.lignes().get(0).fractionProperty().get()).isEqualTo(0.42);
+    }
+
+    @Test
     @DisplayName("resteAReprendre : faux sans plan, vrai avec du reste, faux quand tout est déposé")
     void reste_a_reprendre_suit_les_lignes() {
         SuiviLignesDepot suivi = new SuiviLignesDepot();
