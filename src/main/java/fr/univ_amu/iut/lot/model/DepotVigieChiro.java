@@ -13,6 +13,7 @@ import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -21,6 +22,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
 
 /// **Dépôt d'une nuit** (un passage) sur l'API VigieChiro (#142), **reprenable par unité** (#982) :
@@ -38,6 +42,12 @@ import java.util.function.BooleanSupplier;
 /// peut peser ~700 Mo, on ne la charge plus en mémoire. La politique du choix des fichiers (séquences
 /// vs archives) reste décidée par l'appelant qui passe la liste des [Path].
 public final class DepotVigieChiro {
+
+    /// Nombre de téléversements menés **en parallèle** (#984), calqué sur le front web
+    /// (`max_concurrent_uploads = 5`) : le réseau est le goulot, pas les écritures `depot_unite`
+    /// (minuscules, que le `busy_timeout` SQLite sérialise sans échec). Au-delà, on sature surtout le
+    /// serveur sans gagner.
+    private static final int NB_UPLOADS_PARALLELES = 5;
 
     private final SynchronisationParticipation participations;
     private final ClientVigieChiro client;
@@ -67,9 +77,11 @@ public final class DepotVigieChiro {
     }
 
     /// Dépose la nuit `idPassage` : réutilise ou crée sa participation, synchronise le plan de dépôt,
-    /// bascule « Dépôt en cours », puis (re)téléverse les unités restantes une à une — `annule` est
-    /// consulté **entre deux unités** (annulation coopérative), `suivi` est notifié au fil de l'eau
-    /// (hors fil JavaFX). À la fin, « Déposé » seulement si toutes les unités sont en ligne.
+    /// bascule « Dépôt en cours », puis (re)téléverse les unités restantes **en parallèle** (jusqu'à
+    /// [#NB_UPLOADS_PARALLELES] simultanées, comme le front web) — `annule` est consulté **avant chaque
+    /// unité** (annulation coopérative : les unités non entamées restent reprenables), `suivi` est
+    /// notifié au fil de l'eau (hors fil JavaFX, émissions concurrentes). À la fin, « Déposé » seulement
+    /// si toutes les unités sont en ligne.
     ///
     /// @return le bilan (participation + fichiers déposés **cette fois-ci** / en échec)
     /// @throws RegleMetierException si la création de la participation est refusée
@@ -97,23 +109,45 @@ public final class DepotVigieChiro {
             basculerVers(idPassage, StatutWorkflow.DEPOT_EN_COURS);
         }
 
-        int deposees = 0;
-        List<String> echecs = new ArrayList<>();
-        for (DepotUnite unite : restantes) {
-            if (annule.getAsBoolean()) {
-                break; // annulation coopérative : le passage reste « Dépôt en cours », reprenable
+        AtomicInteger deposees = new AtomicInteger();
+        List<String> echecs = Collections.synchronizedList(new ArrayList<>());
+        int parallelisme = Math.max(1, Math.min(NB_UPLOADS_PARALLELES, restantes.size()));
+        try (ExecutorService executeur = Executors.newFixedThreadPool(parallelisme)) {
+            for (DepotUnite unite : restantes) {
+                executeur.submit(() -> deposerUneUnite(unite, fichiersParIdentifiant, annule, suivi, deposees, echecs));
             }
-            if (televerserUne(unite, fichiersParIdentifiant.get(unite.identifiantUnite()), suivi)) {
-                deposees++;
-            } else {
-                echecs.add(unite.identifiantUnite());
-            }
-        }
+        } // close() attend la fin de toutes les tâches soumises (ExecutorService AutoCloseable, Java 19+).
 
         if (depotUnites.toutesDeposees(idPassage)) {
             basculerVers(idPassage, StatutWorkflow.DEPOSE);
         }
-        return new BilanDepot(participationId, deposees, echecs);
+        return new BilanDepot(participationId, deposees.get(), List.copyOf(echecs));
+    }
+
+    /// Traite une unité dans un worker du dépôt parallèle (#984) : respecte l'annulation coopérative
+    /// (unité laissée « à déposer », donc reprenable), délègue à [#televerserUne], puis consigne le
+    /// résultat dans les accumulateurs **partagés et thread-safe**. Toute exception inattendue (écriture
+    /// DB, I/O) est convertie en échec pour ne pas faire tomber le lot entier — le plan reprenable
+    /// reprendra l'unité au prochain essai.
+    private void deposerUneUnite(
+            DepotUnite unite,
+            Map<String, Path> fichiersParIdentifiant,
+            BooleanSupplier annule,
+            SuiviDepot suivi,
+            AtomicInteger deposees,
+            List<String> echecs) {
+        if (annule.getAsBoolean()) {
+            return;
+        }
+        try {
+            if (televerserUne(unite, fichiersParIdentifiant.get(unite.identifiantUnite()), suivi)) {
+                deposees.incrementAndGet();
+            } else {
+                echecs.add(unite.identifiantUnite());
+            }
+        } catch (RuntimeException erreur) {
+            echecs.add(unite.identifiantUnite());
+        }
     }
 
     /// Téléverse une unité en persistant son avancement au fil de l'eau : `en_cours` avant l'envoi,

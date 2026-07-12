@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -214,20 +215,39 @@ class DepotVigieChiroTest {
     }
 
     @Test
-    @DisplayName("annulation coopérative : le dépôt s'arrête entre deux unités, passage « Dépôt en cours »")
+    @DisplayName("#984 : annulation coopérative → aucune unité non entamée n'est téléversée, « Dépôt en cours »")
     void annulation_cooperative(@TempDir Path dossier) throws IOException {
         Path a = fichier(dossier, "a.wav");
         Path b = fichier(dossier, "b.wav");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        armerUploadOk();
 
-        // Annule après la 1re unité : premier passage du garde « annule » accepté, les suivants refusés.
-        int[] consultations = {0};
-        BilanDepot bilan = depot.deposer(idPassage, List.of(a, b), () -> consultations[0]++ > 0, SuiviDepot.inerte());
+        // En parallèle, chaque worker consulte le garde AVANT de démarrer son upload. Annulation déjà
+        // demandée → aucune unité n'est entamée, le passage reste « Dépôt en cours » (reprenable).
+        BilanDepot bilan = depot.deposer(idPassage, List.of(a, b), () -> true, SuiviDepot.inerte());
 
-        assertThat(bilan.deposees()).isEqualTo(1);
+        assertThat(bilan.deposees()).isZero();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOT_EN_COURS);
-        assertThat(depotUnites.restantes(idPassage)).hasSize(1);
+        assertThat(depotUnites.restantes(idPassage)).hasSize(2);
+        verify(client, never()).creerFichier(anyString());
+    }
+
+    @Test
+    @DisplayName("#984 : dépôt parallèle de plusieurs unités → toutes déposées (écritures depot_unite concurrentes)")
+    void depot_parallele_toutes_deposees(@TempDir Path dossier) throws IOException {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+        List<Path> fichiers = new ArrayList<>();
+        for (int i = 0; i < 12; i++) {
+            fichiers.add(fichier(dossier, "Car-" + i + ".zip"));
+        }
+
+        BilanDepot bilan = depot.deposer(idPassage, fichiers);
+
+        assertThat(bilan.deposees()).isEqualTo(12);
+        assertThat(bilan.estComplet()).isTrue();
+        assertThat(depotUnites.parPassage(idPassage))
+                .hasSize(12)
+                .allSatisfy(unite -> assertThat(unite.statut()).isEqualTo(StatutDepotUnite.DEPOSE));
     }
 
     @Test

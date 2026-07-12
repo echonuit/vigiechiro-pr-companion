@@ -19,7 +19,17 @@ import org.sqlite.SQLiteDataSource;
 /// n'applique les clés étrangères que si on le demande explicitement (objectif qualité intégrité
 /// O7). On le fait à deux niveaux par sécurité : via [SQLiteConfig#enforceForeignKeys(boolean)] et
 /// via un `PRAGMA` explicite à l'ouverture.
+///
+/// Chaque connexion pose aussi un `busy_timeout` (#984) : le dépôt VigieChiro téléverse désormais en
+/// parallèle, plusieurs threads écrivant `depot_unite` sur le même fichier SQLite (un seul writer à la
+/// fois en mode journal par défaut). Sans ce délai, un writer concurrent échouerait immédiatement sur
+/// `SQLITE_BUSY` ; avec, il réessaie le temps que le verrou se libère.
 public class SourceDeDonnees {
+
+    /// Délai d'attente d'un verrou d'écriture avant `SQLITE_BUSY`. 10 s couvrent largement les
+    /// écritures `depot_unite` du dépôt parallèle (statuts en_cours / depose / echec), minuscules et
+    /// qui se sérialisent en pratique instantanément.
+    private static final int DELAI_VERROU_MS = 10_000;
 
     private final Workspace workspace;
     private final SQLiteDataSource dataSource;
@@ -31,6 +41,7 @@ public class SourceDeDonnees {
         this.workspace = workspace;
         SQLiteConfig config = new SQLiteConfig();
         config.enforceForeignKeys(true);
+        config.setBusyTimeout(DELAI_VERROU_MS);
         SQLiteDataSource source = new SQLiteDataSource(config);
         source.setUrl("jdbc:sqlite:" + workspace.cheminBaseDeDonnees());
         this.dataSource = source;
@@ -45,6 +56,7 @@ public class SourceDeDonnees {
             Connection connexion = dataSource.getConnection();
             try (Statement st = connexion.createStatement()) {
                 st.execute("PRAGMA foreign_keys = ON");
+                st.execute("PRAGMA busy_timeout = " + DELAI_VERROU_MS);
             }
             return connexion;
         } catch (SQLException | IOException e) {
