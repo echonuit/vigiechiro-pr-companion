@@ -102,8 +102,10 @@ public class LotViewModel {
         }
     }
 
-    /// Prépare le lot (R14 + cohérence) : Vérifié → Prêt à déposer, puis recharge. Sans passage
-    /// ouvert, l'appel est ignoré. Une erreur métier est restituée dans [#messageProperty()].
+    /// Vérifie et prépare le lot (R14 + cohérence) : Vérifié → Prêt à déposer, puis recharge. Sert aussi à
+    /// **relancer la vérification** : le bouton reste actionnable tant qu'un contrôle bloque (cf.
+    /// [ActionsLotPossibles]) ; en cas de succès, l'état est rechargé (la checklist repasse au vert) ; en cas
+    /// de blocage, la raison est restituée dans [#messageProperty()]. Sans passage ouvert, l'appel est ignoré.
     ///
     /// @return `true` si la préparation a réussi
     public boolean preparer() {
@@ -239,17 +241,14 @@ public class LotViewModel {
         // on réaffiche les archives présentes dans depot/ (lignes « terminées » : réactive « Ouvrir le
         // dossier » / « Supprimer »), là où l'ancienne liste, seulement peuplée en session, restait vide.
         suiviLignes.afficherTerminees(service.archivesDepot(etat.cheminDossier()));
-        peutPreparer.set(etat.statut() == StatutWorkflow.VERIFIE && !etat.aDesEchecs());
-        // « Dépôt en cours » (#980) reste déposable : c'est la REPRISE d'un dépôt interrompu (#982), le
-        // moteur ne re-téléverse que les unités manquantes.
-        peutDeposer.set(
-                etat.statut() == StatutWorkflow.PRET_A_DEPOSER || etat.statut() == StatutWorkflow.DEPOT_EN_COURS);
-        depose.set(etat.statut() == StatutWorkflow.DEPOSE);
-        // Les archives de dépôt (#110) se génèrent dès que le lot est prêt (séquences figées) : Prêt à
-        // déposer ou déjà déposé.
-        peutGenererArchives.set(etat.statut() == StatutWorkflow.PRET_A_DEPOSER
-                || etat.statut() == StatutWorkflow.DEPOT_EN_COURS
-                || etat.statut() == StatutWorkflow.DEPOSE);
+        // Actions dérivées du statut ET de la cohérence recalculée : un contrôle bloquant (ex. préfixe non
+        // réconcilié) neutralise la suite et laisse la vérification re-lançable, même sous « Prêt à déposer »
+        // régressé. Règle isolée dans ActionsLotPossibles (« Dépôt en cours » reste déposable, #980/#982).
+        ActionsLotPossibles actions = ActionsLotPossibles.depuis(etat);
+        peutPreparer.set(actions.preparer());
+        peutDeposer.set(actions.deposer());
+        depose.set(actions.depose());
+        peutGenererArchives.set(actions.genererArchives());
         // (peutSupprimerArchives est une liaison vivante sur les lignes : rien à poser ici.)
         majEspaceDisque(etat);
         majEtapes(etat.statut());

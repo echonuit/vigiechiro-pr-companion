@@ -169,8 +169,8 @@ class LotVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("#254 : un contrôle en échec → checklist montre ✓ et ✗, préparer désactivé")
-    void controle_en_echec_checklist_et_preparer_desactive(FxRobot robot) {
+    @DisplayName("#254 : un contrôle en échec → checklist ✓/✗, re-vérification possible, suite neutralisée")
+    void controle_en_echec_checklist_reverifiable_suite_neutralisee(FxRobot robot) {
         reouvrirAvec(
                 robot,
                 new EtatLot(
@@ -187,14 +187,17 @@ class LotVueIntegrationTest {
         VBox checklist = robot.lookup("#checklist").queryAs(VBox.class);
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
+        Button genererArchives = robot.lookup("#btnGenererArchives").queryAs(Button.class);
 
         var textes = textesChecklist(checklist);
         assertThat(textes).hasSize(3);
         assertThat(textes.get(0)).startsWith("✓").contains("Verdict de vérification");
         assertThat(textes).anyMatch(t -> t.startsWith("✗") && t.contains("Transformation incomplète"));
         assertThat(textes).anyMatch(t -> t.startsWith("✗") && t.contains("Préfixe de fichier non conforme"));
-        // Tant que la cohérence n'est pas corrigée, la préparation est interdite (R14).
-        assertThat(preparer.isDisabled()).isTrue();
+        // Un contrôle bloque : « Vérifier et préparer » reste actionnable pour RELANCER la vérification, mais la
+        // suite (génération des archives) est NEUTRALISÉE tant que la cohérence n'est pas rétablie.
+        assertThat(preparer.isDisabled()).isFalse();
+        assertThat(genererArchives.isDisabled()).isTrue();
         assertThat(message.isVisible()).isTrue();
         assertThat(message.getText()).contains("Cohérence");
     }
