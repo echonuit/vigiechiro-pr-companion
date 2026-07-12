@@ -236,6 +236,14 @@ public final class ClientVigieChiro {
         return post("/fichiers/" + fichierId, RequetesVigieChiro.finalisation()).isPresent();
     }
 
+    /// Lance le **traitement Tadarida** d'une participation (`POST /participations/#id/compute`, #984) :
+    /// équivalent du bouton « Lancer la participation » du web, il déclenche côté serveur le pipeline sur
+    /// les fichiers **déjà déposés**. `true` si accepté, `false` sinon.
+    public boolean lancerTraitement(String participationId) {
+        return post(CHEMIN_PARTICIPATIONS + participationId + "/compute", RequetesVigieChiro.traitement())
+                .isPresent();
+    }
+
     /// **POST authentifié** d'un corps JSON sur `chemin` : renvoie le corps de la réponse si 2xx, vide
     /// sinon (pas de token, refus, autre statut, réseau indisponible). Pendant en écriture de [#get].
     Optional<String> post(String chemin, String corpsJson) {

@@ -248,7 +248,18 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // avant la fin de l'écriture des archives (#259).
         btnDeposer
                 .disableProperty()
-                .bind(viewModel.peutDeposerProperty().not().or(viewModel.generationEnCoursProperty()));
+                .bind(viewModel
+                        .peutDeposerProperty()
+                        .not()
+                        .or(viewModel.generationEnCoursProperty())
+                        .or(depotViewModel.enCoursProperty()));
+        // #984 : l'étape ④ bascule « Marquer déposé » → « Lancer la participation » (compute) dès qu'une
+        // participation est liée au passage (dépôt via l'API effectué).
+        btnDeposer
+                .textProperty()
+                .bind(Bindings.when(depotViewModel.participationLieeProperty())
+                        .then("🚀 Lancer la participation")
+                        .otherwise("✅ Marquer déposé"));
         IndicateurBlocage.expliquer(
                 enveloppeDeposer,
                 Bindings.when(viewModel
@@ -443,7 +454,28 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private void deposer() {
-        viewModel.deposer();
+        // #984 : quand une participation est liée (dépôt via l'API effectué), le bouton lance le
+        // traitement serveur (compute) au lieu de marquer déposé — déjà fait par le dépôt API.
+        if (depotViewModel.participationLieeProperty().get()) {
+            lancerParticipation();
+        } else {
+            viewModel.deposer();
+        }
+    }
+
+    /// Lance le traitement serveur (compute, #984) **hors fil JavaFX** : équivalent « Lancer la
+    /// participation » du web, une fois la nuit déposée. Même patron que le dépôt (fil virtuel + résultat
+    /// via `Platform.runLater`).
+    private void lancerParticipation() {
+        Long idPassage = contexte.idPassage();
+        Thread.ofVirtual().name("compute-vigiechiro").start(() -> {
+            try {
+                boolean accepte = depotViewModel.lancerTraitement(idPassage);
+                Platform.runLater(() -> depotViewModel.restituerLancement(accepte));
+            } catch (RuntimeException echec) {
+                Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
+            }
+        });
     }
 
     /// Lance la génération des archives **hors fil JavaFX** (#251) : l'opération peut être longue sur une

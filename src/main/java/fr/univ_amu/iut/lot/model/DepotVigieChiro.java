@@ -14,14 +14,12 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -50,12 +48,15 @@ public final class DepotVigieChiro {
     /// serveur sans gagner.
     private static final int NB_UPLOADS_PARALLELES = 5;
 
+    private static final String PARAM_ID_PASSAGE = "idPassage";
+
     private final SynchronisationParticipation participations;
     private final ClientVigieChiro client;
     private final DepotUniteDao depotUnites;
     private final PassageDao passageDao;
     private final MoteurWorkflowPassage moteurWorkflow;
     private final Horloge horloge;
+    private final ReconciliationDepot reconciliation;
 
     public DepotVigieChiro(
             SynchronisationParticipation participations,
@@ -70,11 +71,32 @@ public final class DepotVigieChiro {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteurWorkflow = Objects.requireNonNull(moteurWorkflow, "moteurWorkflow");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.reconciliation = new ReconciliationDepot(client, depotUnites, horloge);
     }
 
     /// Variante sans annulation ni suivi de [#deposer(Long, List, BooleanSupplier, SuiviDepot)].
     public BilanDepot deposer(Long idPassage, List<Path> fichiers) {
         return deposer(idPassage, fichiers, () -> false, SuiviDepot.inerte());
+    }
+
+    /// Lance le **traitement serveur** (compute, #984) de la participation liée au passage `idPassage` :
+    /// équivalent du bouton « Lancer la participation » du web, à déclencher une fois les fichiers
+    /// déposés. `true` si le serveur a accepté. Lève une [RegleMetierException] si aucune participation
+    /// n'est liée au passage (rien à traiter : déposer d'abord).
+    public boolean lancerTraitement(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        String participationId = participations
+                .participationDe(idPassage)
+                .orElseThrow(() -> new RegleMetierException(
+                        "Aucune participation VigieChiro liée à ce passage : déposez d'abord la nuit."));
+        return client.lancerTraitement(participationId);
+    }
+
+    /// `true` si une participation VigieChiro est **liée** au passage (dépôt via l'API effectué), donc
+    /// susceptible d'être lancée (compute). Simple lecture du lien local, sans réseau.
+    public boolean participationLiee(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        return participations.participationDe(idPassage).isPresent();
     }
 
     /// Dépose la nuit `idPassage` : réutilise ou crée sa participation, synchronise le plan de dépôt,
@@ -87,7 +109,7 @@ public final class DepotVigieChiro {
     /// @return le bilan (participation + fichiers déposés **cette fois-ci** / en échec)
     /// @throws RegleMetierException si la création de la participation est refusée
     public BilanDepot deposer(Long idPassage, List<Path> fichiers, BooleanSupplier annule, SuiviDepot suivi) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Objects.requireNonNull(fichiers, "fichiers");
         Objects.requireNonNull(annule, "annule");
         Objects.requireNonNull(suivi, "suivi");
@@ -103,7 +125,7 @@ public final class DepotVigieChiro {
         Map<String, Path> fichiersParIdentifiant = parIdentifiant(fichiers);
         depotUnites.synchroniserPlan(idPassage, plan(idPassage, fichiersParIdentifiant));
         suivi.planEtabli(depotUnites.parPassage(idPassage));
-        reconcilierAvecServeur(idPassage, participationId, suivi);
+        reconciliation.reconcilier(idPassage, participationId, suivi);
 
         List<DepotUnite> restantes = depotUnites.restantes(idPassage);
         if (!restantes.isEmpty()) {
@@ -231,46 +253,6 @@ public final class DepotVigieChiro {
                     + ". Vérifiez le rattachement (modale « Modifier le passage », synchronisation) avant de"
                     + " déposer.");
         }
-    }
-
-    /// Réconciliation serveur (#1046) : marque `depose` les unités WAV dont le contenu est **déjà
-    /// traité** côté plateforme (titre de `donnees` = nom de fichier **sans extension**), pour ne jamais
-    /// les re-téléverser. Limites (documentées) : `donnees` n'existe qu'après traitement — un fichier
-    /// téléversé mais pas encore traité reste invisible et sera re-téléversé (idempotent côté
-    /// plateforme) ; une archive ZIP n'est pas appariable par titre (contenu inconnu localement).
-    private void reconcilierAvecServeur(Long idPassage, String participationId, SuiviDepot suivi) {
-        List<DepotUnite> restantes = depotUnites.restantes(idPassage);
-        if (restantes.isEmpty()) {
-            return;
-        }
-        // Dépôt ZIP (#984) : une archive n'est pas appariable par titre (contenu inconnu localement), donc
-        // aucune unité ne serait réconciliée. On évite alors le `GET /donnees` paginé — lourd, et surtout
-        // en croissance continue quand le serveur traite un dépôt web parallèle : c'était la source du
-        // blocage « Dépôt 0/N figé ». (La reprise ZIP reste assurée par le plan reprenable + l'idempotence
-        // côté plateforme.)
-        if (restantes.stream().noneMatch(unite -> unite.type() == TypeDepotUnite.WAV)) {
-            return;
-        }
-        Set<String> titresTraites = new HashSet<>();
-        for (var donnee : client.donnees(participationId)) {
-            titresTraites.add(donnee.titre());
-        }
-        if (titresTraites.isEmpty()) {
-            return;
-        }
-        for (DepotUnite unite : restantes) {
-            if (unite.type() == TypeDepotUnite.WAV && titresTraites.contains(sansExtension(unite.identifiantUnite()))) {
-                depotUnites.mettreAJour(
-                        unite.id(), StatutDepotUnite.DEPOSE, unite.fichierIdDistant(), null, maintenant());
-                suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
-            }
-        }
-    }
-
-    /// Nom de fichier sans son extension (les titres de `donnees` sont les noms de WAV sans `.wav`).
-    private static String sansExtension(String nom) {
-        int point = nom.lastIndexOf('.');
-        return point <= 0 ? nom : nom.substring(0, point);
     }
 
     /// Crée la participation (repli lazy quand elle n'a pas été créée à l'import) et renvoie son id, ou lève

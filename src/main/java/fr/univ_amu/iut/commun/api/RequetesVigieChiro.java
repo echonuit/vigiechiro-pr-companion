@@ -42,6 +42,15 @@ final class RequetesVigieChiro {
 
     /// Corps de finalisation `POST /fichiers/#id` : aucun champ requis (accusé de fin d'upload).
     static String finalisation() {
-        return "{}";
+        return CORPS_VIDE;
     }
+
+    /// Corps de `POST /participations/#id/compute` (lancement du traitement, #984) : aucun champ requis,
+    /// le serveur déclenche le pipeline sur les fichiers déjà déposés.
+    static String traitement() {
+        return CORPS_VIDE;
+    }
+
+    /// Corps JSON vide partagé par les écritures « accusé » sans champ (finalisation, lancement).
+    private static final String CORPS_VIDE = "{}";
 }
