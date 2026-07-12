@@ -13,8 +13,11 @@ ce domaine propose. Aujourd'hui :
   prochaines fiches ouvertes.
 - **Import** : **conserver les originaux importés** (copie des WAV bruts avant transformation).
 - **Fonctionnalités** : **activer ou désactiver** les fonctionnalités optionnelles de l'application
-  (aujourd'hui l'**import depuis VigieChiro**). Contrairement aux autres réglages, ces bascules
-  prennent effet **au prochain démarrage** de l'application (un bandeau le rappelle sur l'onglet).
+  (l'**import depuis VigieChiro**, le **diagnostic** du capteur, la **préparation du dépôt**, la
+  **vérification**, l'**importation Tadarida**, l'**analyse** « Espèces & observations » et la
+  **recherche globale**). Désactiver une fonctionnalité retire son point d'entrée de l'interface.
+  Contrairement aux autres réglages, ces bascules prennent effet **au prochain démarrage** de
+  l'application (un bandeau le rappelle sur l'onglet).
 
 Une modification est **enregistrée immédiatement** et **conservée d'une session à l'autre**. Seul
 l'**effet** des bascules de l'onglet « Fonctionnalités » s'applique au **prochain démarrage**.

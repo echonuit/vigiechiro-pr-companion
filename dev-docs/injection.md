@@ -77,11 +77,13 @@ forte à la plus faible :
     `DecouverteModulesTest` vérifie que désactiver toute feuille **exposée** laisse l'injecteur
     constructible.
 
-Aujourd'hui seule `import-vigiechiro` est `OPTIONNELLE` : elle ne binde aucun `Ouvrir*` et son unique
-consommateur passe par un `OptionalBinder` vide, donc la couper ne casse rien. Les autres feuilles
-(`qualification`, `lot`, `diagnostic`, `importation`, `analyse`, `recherche`) restent `COEUR` **tant
-que** leur contrat `Ouvrir*` n'est pas **neutralisé** chez leur consommateur (cf.
-[Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
+Sont `OPTIONNELLE` (désactivables) : `import-vigiechiro` (aucun `Ouvrir*`, `OptionalBinder` vide dès
+l'origine) **et** les 6 feuilles autrefois couplées au runtime dont le contrat `Ouvrir*` a été
+**neutralisé** (`OptionalBinder` vide côté consommateur + `setBinding` côté feuille, le consommateur
+masquant son point d'entrée si absent) : `diagnostic`, `lot`, `qualification`, `importation`, `analyse`,
+`recherche` (#1087). Le reste demeure `COEUR` : `sites`, `passage`, `validation`, `audio`,
+`bibliotheque`, `multisite`, `connexion`, `synchronisation-participation`, `depot-vigiechiro`
+(dépendances EAGER ; cf. [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
 
 ## Ce que publie un module de feature
 
