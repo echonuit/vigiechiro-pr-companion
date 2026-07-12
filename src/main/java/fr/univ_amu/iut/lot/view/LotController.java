@@ -248,11 +248,17 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // avant la fin de l'écriture des archives (#259).
         btnDeposer
                 .disableProperty()
-                .bind(viewModel
-                        .peutDeposerProperty()
-                        .not()
-                        .or(viewModel.generationEnCoursProperty())
-                        .or(depotViewModel.enCoursProperty()));
+                .bind(Bindings.when(depotViewModel.participationLieeProperty())
+                        // Mode « Lancer la participation » (#984) : cliquable dès qu'une participation est
+                        // liée, quel que soit le statut de dépôt (même « Dépôt en cours » après une
+                        // annulation ou un dépôt partiel) — sauf pendant une opération en cours.
+                        .then(depotViewModel.enCoursProperty().or(viewModel.generationEnCoursProperty()))
+                        // Mode « Marquer déposé » : garde d'origine (« Prêt à déposer », hors génération/dépôt).
+                        .otherwise(viewModel
+                                .peutDeposerProperty()
+                                .not()
+                                .or(viewModel.generationEnCoursProperty())
+                                .or(depotViewModel.enCoursProperty())));
         // #984 : l'étape ④ bascule « Marquer déposé » → « Lancer la participation » (compute) dès qu'une
         // participation est liée au passage (dépôt via l'API effectué).
         btnDeposer
