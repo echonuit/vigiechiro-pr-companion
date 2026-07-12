@@ -3,11 +3,9 @@ package fr.univ_amu.iut.audio.view;
 import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
-import fr.univ_amu.iut.audio.viewmodel.ComptageAudio;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
-import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
@@ -561,49 +559,15 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         }
     }
 
-    /// Emplacement dans le fil d'Ariane, **piloté par la source** : pour `ParPassage`, on reconstruit les
-    /// ancêtres site/passage (retour au passage via les contrats socle, comme l'ancienne validation) ;
-    /// pour `References` (et, à terme, les autres sources atteintes depuis un écran parent) l'écran est
-    /// autonome (segment courant seul).
+    /// Emplacement dans le fil d'Ariane, **piloté par la source**. Détail dans [ChromeAudio].
     @Override
     public List<Lieu> emplacement() {
-        // ParPassage cible un passage : ascendance site › passage › écran (retour au passage).
-        var contextePassage = source.contexteDuPassage();
-        if (contextePassage != null) {
-            return EmplacementPassage.emplacementEnfant(contextePassage, ouvrirSite, ouvrirPassage, source.titre());
-        }
-        if (source instanceof SourceObservations.ParEspece) {
-            // Accueil › Espèces & observations › Écoute : [espèce] — le segment analyse rouvre l'écran, sauf
-            // si la feature `analyse` est désactivable et coupée (#1087) : le segment ne fait alors rien.
-            return List.of(
-                    Lieu.vers("Espèces & observations", () -> ouvrirAnalyse.ifPresent(OuvrirAnalyse::ouvrir)),
-                    Lieu.courant(source.titre()));
-        }
-        if (source instanceof SourceObservations.ParPassages) {
-            // Accueil › Carte & passages › Écoute : lot — le segment multisite rouvre la vue agrégée.
-            return List.of(
-                    Lieu.vers("Carte & passages", () -> ouvrirMultisite.ouvrirSurCarre(null)),
-                    Lieu.courant(source.titre()));
-        }
-        return List.of(Lieu.courant(source.titre()));
+        return ChromeAudio.emplacement(source, ouvrirSite, ouvrirPassage, ouvrirAnalyse, ouvrirMultisite);
     }
 
-    /// Zones de la **barre de statut** : le total d'observations en **centre**, l'avancement de la revue à
-    /// **droite** (« N observation(s) » · « X / N revues »). La gauche reste au défaut du chrome (identité).
-    /// Sans le nom d'écran (déjà porté par le fil d'Ariane).
+    /// Zones de la **barre de statut**, dérivées de la source et du comptage. Détail dans [ChromeAudio].
     private ZonesStatut zonesStatutCourantes() {
-        if (source == null) {
-            return ZonesStatut.VIDE;
-        }
-        // Zone gauche = identité (#1025) : le passage ciblé (Carré · point · N°) s'il y en a un, sinon
-        // l'intitulé de la source (Références, Sons non identifiés…), pour aligner cet écran modèle sur la
-        // convention des autres (gauche = contexte).
-        var passage = source.contexteDuPassage();
-        String gauche = passage != null ? passage.identiteStatut() : source.titre();
-        ComptageAudio comptage = viewModel.comptageProperty().get();
-        String centre = comptage.total() == 0 ? "Aucune observation" : comptage.total() + " observation(s)";
-        String droite = comptage.total() == 0 ? "" : comptage.progression();
-        return new ZonesStatut(gauche, centre, droite);
+        return ChromeAudio.zonesStatut(source, viewModel.comptageProperty().get());
     }
 
     @Override
