@@ -1,12 +1,18 @@
 package fr.univ_amu.iut.connexion.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDate;
+import java.util.Set;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -73,5 +79,19 @@ class StockageConnexionTest {
         assertThat(stockage.profil()).isEmpty();
 
         stockage.effacer(); // idempotent
+    }
+
+    @Test
+    @DisplayName("le fichier de connexion est restreint au propriétaire (POSIX 600)")
+    void permissions_restreintes() throws IOException {
+        assumeTrue(
+                FileSystems.getDefault().supportedFileAttributeViews().contains("posix"),
+                "système de fichiers non POSIX : permissions non applicables");
+        StockageConnexion stockage = stockage(JOUR);
+
+        stockage.enregistrer("TOK123", PROFIL);
+
+        Set<PosixFilePermission> perms = Files.getPosixFilePermissions(workspace.resolve("connexion.json"));
+        assertThat(perms).containsExactlyInAnyOrder(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
     }
 }

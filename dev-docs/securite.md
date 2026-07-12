@@ -31,7 +31,10 @@ données d'exemple ou de test.
 - **Token de session VigieChiro** : depuis l'intégration API (#716), l'app enregistre un **token de
   session** (fourni par la plateforme, péremption ~14 jours) dans **`connexion.json`** à la racine du
   workspace. Ce fichier est un **artefact local**, **ignoré par git** (`.gitignore`), jamais versionné.
-  Son durcissement (permissions fichier restrictives, stockage chiffré) est suivi dans #1140.
+  À l'écriture, le fichier est **restreint au propriétaire** (POSIX `600`) sur les systèmes qui le
+  supportent, pour qu'un autre compte de la machine ne puisse pas lire le token (sans objet sous
+  Windows, où le fichier reste protégé par les ACL du profil). Un durcissement supplémentaire
+  (chiffrement au repos / keychain OS) reste suivi dans #1140.
 - Les workflows GitHub Actions tournent au **moindre privilège** (`maven.yml` : `permissions: contents:
   read`). N'élargir que là où c'est nécessaire (`contents: write` pour `capture-vues.yml`, qui pousse
   les aperçus).

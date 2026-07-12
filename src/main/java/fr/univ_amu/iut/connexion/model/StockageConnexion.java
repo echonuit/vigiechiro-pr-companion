@@ -9,9 +9,12 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /// Stockage local de la **connexion VigieChiro** (#727) : le token (fourni à
 /// [ClientVigieChiro][fr.univ_amu.iut.commun.api.ClientVigieChiro]
@@ -29,6 +32,11 @@ public final class StockageConnexion implements FournisseurToken {
 
     private static final String FICHIER = "connexion.json";
     private static final Gson GSON = new Gson();
+
+    /// Permissions POSIX du fichier de connexion : lecture/écriture pour le seul propriétaire (`600`).
+    /// Le token ne doit pas être lisible par les autres comptes de la machine.
+    private static final Set<PosixFilePermission> PERMS_PRIVEES =
+            Set.of(PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
 
     private final Path fichier;
     private final Horloge horloge;
@@ -67,8 +75,20 @@ public final class StockageConnexion implements FournisseurToken {
         try {
             Files.createDirectories(fichier.getParent());
             Files.writeString(fichier, GSON.toJson(session));
+            restreindrePermissions();
         } catch (IOException echec) {
             throw new UncheckedIOException("Impossible d'enregistrer la connexion : " + fichier, echec);
+        }
+    }
+
+    /// Restreint le fichier de connexion au seul propriétaire (POSIX `600`) après écriture : le token est
+    /// un secret, il ne doit pas être lisible par les autres comptes de la machine. **Sans objet** sur un
+    /// système de fichiers non POSIX (Windows), où [PosixFileAttributeView] est absente : le fichier reste
+    /// alors protégé par les ACL du profil utilisateur.
+    private void restreindrePermissions() throws IOException {
+        PosixFileAttributeView vue = Files.getFileAttributeView(fichier, PosixFileAttributeView.class);
+        if (vue != null) {
+            vue.setPermissions(PERMS_PRIVEES);
         }
     }
 
