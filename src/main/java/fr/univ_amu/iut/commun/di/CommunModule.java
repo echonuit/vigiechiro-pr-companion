@@ -26,6 +26,8 @@ import fr.univ_amu.iut.commun.view.ActionSourceEspece;
 import fr.univ_amu.iut.commun.view.DescripteurReglage;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
 import fr.univ_amu.iut.commun.view.ExecuteurFicheAsynchrone;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OngletReglages;
 import fr.univ_amu.iut.commun.view.OngletReglagesFonctionnalites;
@@ -63,6 +65,7 @@ public class CommunModule extends AbstractModule {
         // Fiche espèce (#922) : en production, résolution GBIF (recherche → fiche) hors du fil JavaFX.
         // Surchargent les défauts @ImplementedBy (identité + synchrone) réservés aux tests.
         bind(ExecuteurFiche.class).to(ExecuteurFicheAsynchrone.class).in(Singleton.class);
+        bind(ExecuteurTache.class).to(ExecuteurTacheAsynchrone.class).in(Singleton.class);
         // Point d'extension « onglets de réglages » (#927) : `Set<OngletReglages>` est toujours
         // injectable (écran Réglages + menu ☰), chaque feature y ajoutant son onglet via son module.
         // Le socle contribue lui-même l'onglet « Général » (#928 : source des fiches espèces, puis

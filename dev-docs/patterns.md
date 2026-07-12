@@ -358,6 +358,27 @@ alimenté depuis des fils d'arrière-plan, parfois dans le désordre (travail pa
 d'événements (+ `inerte()`), la ligne et le pilote spécialisés, le relais fil JavaFX — jamais une
 table ad hoc.
 
+## Occupation d'un écran pendant un traitement long (socle `commun`)
+
+**Le problème.** Un traitement lourd (agrégats, inspection de dossier, appel réseau) exécuté
+**synchrone sur le fil JavaFX** fige l'IHM sans feedback ; un `setCursor(WAIT)` n'y suffit pas, fil
+bloqué. Le patron correct (thread virtuel → travail → `Platform.runLater`) était recopié écran par
+écran, avec le piège récurrent des mutations hors fil JavaFX (« clic figé »).
+
+**La solution.** Deux briques de `commun.view`, à composer :
+
+- `ExecuteurTache` (interface `@ImplementedBy` synchrone) : `executer(Supplier travail, Consumer
+  succès, Consumer échec)` exécute le travail **hors du fil JavaFX** puis applique résultat/erreur
+  **sur** le fil JavaFX. `ExecuteurTacheAsynchrone` (thread virtuel + `runLater`) en production ;
+  `ExecuteurTacheSynchrone` (défaut) rend les tests déterministes. Sœur d'`ExecuteurFiche`.
+- `IndicateurOccupation` : superpose sur un `StackPane` hôte un voile + roue + libellé « … en
+  cours » (`enCoursProperty`, styles `.occupation-*` dans `design.css`), et pilote un `ExecuteurTache`
+  via `occuper(libellé, travail, succès, échec)`. Le voile capte les clics le temps du traitement.
+
+**La règle.** Toute opération longue d'un écran passe par `IndicateurOccupation` (l'échec est routé
+vers le filet d'erreurs de l'écran, #795) — jamais un `Thread.ofVirtual()` + `runLater` recopié à la
+main. Le déport écran par écran est suivi dans l'EPIC #793.
+
 ## Écrans de données : densité, badge, filtres (socle design partagé)
 
 **Le problème.** Les onze écrans sont nés à des moments différents, sans référentiel de design commun :

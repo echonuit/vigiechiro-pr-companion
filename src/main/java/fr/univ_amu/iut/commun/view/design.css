@@ -590,3 +590,27 @@
   -fx-background-color: #eef2f5;
   -fx-text-fill: #6a737d;
 }
+
+
+/* Overlay d occupation reutilisable (#1014) : voile semi-transparent + carte roue/libelle, superpose
+   sur un ecran pendant un traitement long hors fil JavaFX. */
+.occupation-voile {
+  -fx-background-color: rgba(255, 255, 255, 0.72);
+}
+
+.occupation-carte {
+  -fx-spacing: 12;
+  -fx-padding: 22 28;
+  -fx-background-color: white;
+  -fx-background-radius: 10;
+  -fx-border-color: -couleur-primaire-fond;
+  -fx-border-radius: 10;
+  -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 16, 0, 0, 4);
+  -fx-max-width: -fx-use-computed-size;
+  -fx-max-height: -fx-use-computed-size;
+}
+
+.occupation-libelle {
+  -fx-font-size: 13px;
+  -fx-text-fill: -couleur-primaire-sombre;
+}
