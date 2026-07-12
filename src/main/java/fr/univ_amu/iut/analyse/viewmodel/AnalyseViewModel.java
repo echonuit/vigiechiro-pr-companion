@@ -85,7 +85,19 @@ public class AnalyseViewModel {
     /// (Re)charge les observations enrichies de l'utilisateur, met à jour la liste des taxons parents, puis
     /// **agrège** selon les filtres et le regroupement courants. À appeler à l'ouverture de l'écran.
     public void rafraichir() {
-        toutesObservations.setAll(service.observationsAnalyse(idUtilisateur));
+        appliquer(chargerObservations());
+    }
+
+    /// **Lecture seule** des observations de l'utilisateur (requête base). Sans effet sur l'état
+    /// observable : sûre à exécuter **hors du fil JavaFX** (#1208, déport via `IndicateurOccupation`).
+    public List<ObservationAnalyse> chargerObservations() {
+        return service.observationsAnalyse(idUtilisateur);
+    }
+
+    /// Applique des observations chargées : recompose la liste, les groupes disponibles, repart d'un
+    /// détail vide et réagrège. **Mutations observables** : à exécuter **sur le fil JavaFX**.
+    public void appliquer(List<ObservationAnalyse> observations) {
+        toutesObservations.setAll(observations);
         groupesDisponibles.setAll(toutesObservations.stream()
                 .map(ObservationAnalyse::groupe)
                 .filter(Objects::nonNull)
@@ -94,6 +106,13 @@ public class AnalyseViewModel {
                 .toList());
         selectionnerEspece(null, null); // rechargement : on repart d'un détail vide (le statut est indifférent)
         agreger();
+    }
+
+    /// Route l'échec d'un chargement vers le message de l'écran (filet #795), à la place d'une exception
+    /// non capturée remontant du fil de fond.
+    public void signalerErreur(Throwable erreur) {
+        String detail = erreur.getMessage();
+        message.set(detail != null && !detail.isBlank() ? detail : "Chargement des observations impossible.");
     }
 
     /// Agrège les observations **filtrées** vers les tables (selon le regroupement), la carte et le résumé.

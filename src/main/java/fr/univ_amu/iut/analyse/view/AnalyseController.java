@@ -9,9 +9,11 @@ import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -25,12 +27,9 @@ import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.io.File;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
-import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -84,6 +83,8 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// Action réutilisable « Fiche de l'espèce » (#846) : configure l'item du menu contextuel de la table
     /// des espèces selon la ligne sélectionnée et ouvre la fiche dans le navigateur.
     private final ActionFicheEspece actionFicheEspece;
+    private final ExecuteurTache executeur;
+    private IndicateurOccupation occupation;
 
     /// Item « Fiche de l'espèce » du menu contextuel de [#tableEspeces], reconfiguré à chaque sélection.
     private MenuItem itemFicheEspece;
@@ -100,7 +101,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
     /// Richesse (nombre d'espèces distinctes) par numéro de carré, tenue à jour depuis l'inventaire par
     /// carré, pour afficher la richesse du carré de chaque observation du détail (lien avec la carte).
-    private final Map<String, Integer> richesseParCarre = new HashMap<>();
+    private final RichesseParCarre richesseParCarre = new RichesseParCarre();
 
     @FXML
     private StackPane zoneCarte;
@@ -113,6 +114,9 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private Label lblMessage;
+
+    @FXML
+    private StackPane hoteOccupation;
 
     @FXML
     private ComboBox<Regroupement> choixRegroupement;
@@ -243,13 +247,15 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
             OuvrirAudio ouvrirAudio,
             DepotVues depotVues,
             DepotDispositionColonnes depotColonnes,
-            ActionFicheEspece actionFicheEspece) {
+            ActionFicheEspece actionFicheEspece,
+            ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.actionFicheEspece = Objects.requireNonNull(actionFicheEspece, "actionFicheEspece");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     @Override
@@ -355,21 +361,23 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
         configurerDetail();
 
-        // La colonne « Espèces du carré » du détail lit la richesse depuis l'inventaire par carré : on la
-        // tient à jour quand cet inventaire change (chargement, filtre statut).
-        viewModel.carresCarte().addListener((InvalidationListener) observable -> majRichesseParCarre());
+        // La colonne « Espèces du carré » du détail lit la richesse depuis l'inventaire par carré : le
+        // collaborateur se tient à jour à chaque changement de cet inventaire (chargement, filtre statut).
+        richesseParCarre.brancher(viewModel.carresCarte(), tableObservations);
 
-        viewModel.rafraichir();
+        occupation = new IndicateurOccupation(hoteOccupation, executeur);
+        chargerObservations();
     }
 
-    /// Reconstruit la table de correspondance carré → richesse (nb d'espèces distinctes) depuis l'inventaire
-    /// par carré, et rafraîchit le détail pour que sa colonne « Espèces du carré » se mette à jour.
-    private void majRichesseParCarre() {
-        richesseParCarre.clear();
-        for (CarreEspeces carre : viewModel.carresCarte()) {
-            richesseParCarre.put(carre.numeroCarre(), carre.richesse());
-        }
-        tableObservations.refresh();
+    /// Charge l'inventaire **hors du fil JavaFX** (#1208) : la requête base part en arrière-plan sous
+    /// l'overlay « … en cours », puis l'application des résultats (ou de l'erreur, filet #795) revient
+    /// sur le fil JavaFX. Utilisé au premier affichage et à chaque retour sur l'écran.
+    private void chargerObservations() {
+        occupation.occuper(
+                "Chargement des observations…",
+                viewModel::chargerObservations,
+                viewModel::appliquer,
+                viewModel::signalerErreur);
     }
 
     /// Câble le panneau **détail** (maître-détail) : la sélection d'une espèce dans l'inventaire charge ses
@@ -478,7 +486,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// observations ont pu être validées/corrigées entre-temps, l'inventaire est donc ré-interrogé.
     @Override
     public void rafraichirAuRetour() {
-        viewModel.rafraichir();
+        chargerObservations();
     }
 
     /// Rejoue un descripteur de filtres transporté depuis une autre vue (« Voir sur la carte » depuis
@@ -582,8 +590,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// Libellé du passage d'une observation : date d'enregistrement et n° de passage (`2026-06-22 · n°2`).
     /// Richesse (nb d'espèces distinctes) du carré `numeroCarre`, ou `—` si inconnue de l'inventaire.
     private String richesseDuCarre(String numeroCarre) {
-        Integer richesse = richesseParCarre.get(numeroCarre);
-        return richesse == null ? "—" : richesse.toString();
+        return richesseParCarre.libelle(numeroCarre);
     }
 
     /// Statut de revue actuellement filtré par la barre à puces (`null` si aucune puce « Statut » active),

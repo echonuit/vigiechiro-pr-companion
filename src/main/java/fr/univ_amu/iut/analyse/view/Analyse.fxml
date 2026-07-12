@@ -21,12 +21,14 @@
   des observations de l'espèce sélectionnée, à travers les passages, avec « ouvrir le passage ».
   Pur câblage : le controller lie tables, barre de regroupement/filtre et navigation à l'AnalyseViewModel.
 -->
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.analyse.view.AnalyseController"
-      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @analyse.css"
-      styleClass="ecran-analyse"
-      spacing="10.0">
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.analyse.view.AnalyseController"
+           stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @analyse.css"
+           fx:id="hoteOccupation">
+  <!-- Hôte d'occupation (#1208) : IndicateurOccupation superpose son voile « … en cours » par-dessus
+       ce contenu pendant le chargement des observations, hors du fil JavaFX. -->
+  <VBox styleClass="ecran-analyse" spacing="10.0">
 
   <Label fx:id="lblResume" styleClass="analyse-resume"/>
 
@@ -118,4 +120,5 @@
 
   <Label fx:id="lblExport" styleClass="analyse-message" wrapText="true"/>
   <Label fx:id="lblMessage" styleClass="analyse-vide" wrapText="true"/>
-</VBox>
+  </VBox>
+</StackPane>

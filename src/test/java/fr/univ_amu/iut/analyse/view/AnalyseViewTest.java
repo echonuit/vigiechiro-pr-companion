@@ -456,4 +456,15 @@ class AnalyseViewTest {
         assertThat(robot.lookup("#choixRegroupement").queryAs(ComboBox.class).getAccessibleText())
                 .isEqualTo("Regrouper par espèce ou par carré");
     }
+
+    @Test
+    @DisplayName("#1208 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
+    void overlay_occupation_masque_apres_chargement(FxRobot robot) {
+        Node voile = robot.lookup(".occupation-voile").query();
+
+        assertThat(voile).as("overlay d'occupation superposé à l'écran").isNotNull();
+        assertThat(voile.isVisible())
+                .as("chargement terminé (exécuteur synchrone) : overlay masqué")
+                .isFalse();
+    }
 }

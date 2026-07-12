@@ -91,6 +91,29 @@ class AnalyseViewModelTest {
     }
 
     @Test
+    @DisplayName(
+            "#1208 : chargerObservations lit sans muter l'état ; appliquer agrège ; signalerErreur route le message")
+    void charger_appliquer_signaler_separes() {
+        when(service.observationsAnalyse(ID))
+                .thenReturn(List.of(chiro("Pippip", "Pipistrelle commune", StatutObservation.VALIDEE)));
+        AnalyseViewModel vm = new AnalyseViewModel(service, ID);
+
+        var chargees = vm.chargerObservations();
+        assertThat(chargees).hasSize(1);
+        assertThat(vm.especes())
+                .as("chargerObservations ne mute pas l'état observable")
+                .isEmpty();
+
+        vm.appliquer(chargees);
+        assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip");
+
+        vm.signalerErreur(new IllegalStateException("base indisponible"));
+        assertThat(vm.messageProperty().get()).isEqualTo("base indisponible");
+        vm.signalerErreur(new IllegalStateException());
+        assertThat(vm.messageProperty().get()).contains("impossible");
+    }
+
+    @Test
     @DisplayName("Par espèce (défaut) : rafraichir agrège l'inventaire par espèce et résume")
     void par_espece_agrege_et_resume() {
         when(service.observationsAnalyse(ID))
