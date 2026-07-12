@@ -9,6 +9,7 @@ import fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationFiltres;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationLot;
 import fr.univ_amu.iut.audio.outils.CaptureValidationTadarida;
+import fr.univ_amu.iut.audit.outils.CaptureAudit;
 import fr.univ_amu.iut.connexion.outils.CaptureConnexion;
 import fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic;
 import fr.univ_amu.iut.importation.outils.CaptureImport;
@@ -78,6 +79,7 @@ class CablageInjecteursCaptureTest {
                 Arguments.of("CaptureLot", (Supplier<Injector>) CaptureLot::creerInjecteur),
                 Arguments.of("CaptureMultisite", (Supplier<Injector>) CaptureMultisite::creerInjecteur),
                 Arguments.of("CaptureAnalyse", (Supplier<Injector>) CaptureAnalyse::creerInjecteur),
+                Arguments.of("CaptureAudit", (Supplier<Injector>) CaptureAudit::creerInjecteur),
                 Arguments.of("CaptureDiagnostic", (Supplier<Injector>) CaptureDiagnostic::creerInjecteur),
                 Arguments.of("CaptureSonsValidation", (Supplier<Injector>) CaptureSonsValidation::creerInjecteur),
                 Arguments.of("CaptureSonsValidationFiltres", (Supplier<Injector>)
