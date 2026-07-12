@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.DispositionColonnesEnMemoire;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
@@ -45,7 +46,8 @@ class QualificationControllerGardeTest {
                 selectionVm,
                 (idPassage, contexte) -> {},
                 ouvrirSiteNeutre(),
-                new DispositionColonnesEnMemoire());
+                new DispositionColonnesEnMemoire(),
+                new ExecuteurTacheSynchrone());
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
@@ -64,7 +66,8 @@ class QualificationControllerGardeTest {
                 selectionVm,
                 (idPassage, contexte) -> {},
                 ouvrirSiteNeutre(),
-                new DispositionColonnesEnMemoire());
+                new DispositionColonnesEnMemoire(),
+                new ExecuteurTacheSynchrone());
 
         verdictVm.choisirVerdict(Verdict.OK);
         verdictVm.enregistrer();
@@ -87,7 +90,8 @@ class QualificationControllerGardeTest {
                 selectionVm,
                 (idPassage, contexte) -> {},
                 ouvrirSiteNeutre(),
-                new DispositionColonnesEnMemoire());
+                new DispositionColonnesEnMemoire(),
+                new ExecuteurTacheSynchrone());
 
         verdictVm.choisirVerdict(Verdict.OK);
         verdictVm.enregistrer();

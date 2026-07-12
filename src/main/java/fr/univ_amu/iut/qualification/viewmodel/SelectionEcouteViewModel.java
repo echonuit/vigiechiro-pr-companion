@@ -9,6 +9,7 @@ import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
@@ -71,19 +72,44 @@ public class SelectionEcouteViewModel {
     /// chargement du FXML. Une erreur (passage introuvable, sans séquence) est restituée dans
     /// [#messageProperty()] sans lever.
     public void ouvrirSur(Long idPassage) {
+        try {
+            appliquer(idPassage, charger(idPassage));
+        } catch (RuntimeException echec) {
+            signalerErreur(idPassage, echec);
+        }
+    }
+
+    /// Données de la sélection d'écoute chargées **hors du fil JavaFX** (#1210) : contexte + sélection +
+    /// lignes détaillées. Lecture seule (aucune mutation observable).
+    public record DonneesSelection(
+            ContexteVerification contexte, SelectionDEcoute selection, List<SequenceEnSelection> lignes) {}
+
+    /// **Lecture seule** : contexte, ouverture de la vérification (sélection) et détail des séquences.
+    /// Sûre **hors du fil JavaFX**.
+    public DonneesSelection charger(Long idPassage) {
+        ContexteVerification contexte = service.chargerContexte(idPassage);
+        SelectionDEcoute selection = service.ouvrirVerification(idPassage);
+        return new DonneesSelection(contexte, selection, service.detaillerSelection(selection.id()));
+    }
+
+    /// Applique les données chargées (bandeau de contexte, liste, progression). **Mutations
+    /// observables** : sur le fil JavaFX.
+    public void appliquer(Long idPassage, DonneesSelection donnees) {
         this.idPassage = idPassage;
         reinitialiser();
-        try {
-            appliquerContexte(service.chargerContexte(idPassage));
-            SelectionDEcoute selection = service.ouvrirVerification(idPassage);
-            this.idSelection = selection.id();
-            lignes.setAll(service.detaillerSelection(idSelection));
-            recalculerProgression();
-            message.set("");
-        } catch (RuntimeException echec) {
-            reinitialiser();
-            message.set(echec.getMessage());
-        }
+        appliquerContexte(donnees.contexte());
+        this.idSelection = donnees.selection().id();
+        lignes.setAll(donnees.lignes());
+        recalculerProgression();
+        message.set("");
+    }
+
+    /// Route l'échec d'un chargement vers le message de l'écran (filet #795).
+    public void signalerErreur(Long idPassage, Throwable erreur) {
+        this.idPassage = idPassage;
+        reinitialiser();
+        String detail = erreur.getMessage();
+        message.set(detail != null && !detail.isBlank() ? detail : "Ouverture de la sélection impossible.");
     }
 
     /// Remet la sélection à vide avant chaque (ré)ouverture et après un échec : ni la liste, ni le

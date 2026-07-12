@@ -26,12 +26,14 @@
   spectrogramme), la modale de personnalisation et les raccourcis clavier arrivent dans les
   tranches suivantes : ici, un emplacement réservé tient lieu de zone audio.
 -->
-<BorderPane xmlns="http://javafx.com/javafx"
-            xmlns:fx="http://javafx.com/fxml"
-            fx:id="racine"
-            fx:controller="fr.univ_amu.iut.qualification.view.QualificationController"
-            stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @qualification.css"
-            styleClass="ecran-qualification">
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.qualification.view.QualificationController"
+           stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @qualification.css"
+           fx:id="hoteOccupation">
+  <!-- Hôte d'occupation (#1210) : voile « … en cours » pendant l'ouverture du passage (vérification +
+       sélection d'écoute). -->
+  <BorderPane fx:id="racine" styleClass="ecran-qualification">
 
   <top>
     <VBox spacing="12.0" styleClass="entete">
@@ -187,4 +189,4 @@
     </SplitPane>
   </center>
 </BorderPane>
-
+</StackPane>

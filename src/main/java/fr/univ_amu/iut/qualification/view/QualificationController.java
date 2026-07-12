@@ -9,9 +9,11 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -73,6 +75,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirSite ouvrirSite;
     private final DepotDispositionColonnes depotColonnes;
+    private final ExecuteurTache executeur;
+    private IndicateurOccupation occupation;
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
@@ -85,6 +89,9 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// Confirmateur injectable (#798) : par défaut un `Alert` de confirmation ; remplacé dans les tests par
     /// un stub déterministe (sans dialogue natif).
     private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
+
+    @FXML
+    private StackPane hoteOccupation;
 
     @FXML
     private BorderPane racine;
@@ -203,12 +210,14 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
             SelectionEcouteViewModel selectionVm,
             OuvrirPassage ouvrirPassage,
             OuvrirSite ouvrirSite,
-            DepotDispositionColonnes depotColonnes) {
+            DepotDispositionColonnes depotColonnes,
+            ExecuteurTache executeur) {
         this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
         this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     /// Garde de navigation : un verdict a été **choisi mais pas encore enregistré** (brouillon). Quitter
@@ -231,6 +240,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
 
     @FXML
     private void initialize() {
+        occupation = new IndicateurOccupation(hoteOccupation, executeur);
         // Densite et habillage de table uniformes (#690).
         TableDonnees.uniformiser(tableSequences);
         // Sélecteur de colonnes (#920) : clic droit + ☰ « outils » ; disposition retenue par écran (#994).
@@ -383,9 +393,25 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     /// fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
         this.contexte = passage;
-        verdictVm.ouvrirSur(passage.idPassage());
-        selectionVm.ouvrirSur(passage.idPassage());
+        Long idPassage = passage.idPassage();
+        // Ouverture **hors du fil JavaFX** (#1210) : vérification + sélection d'écoute chargées en
+        // arrière-plan sous l'overlay, puis appliquées (ou l'erreur routée, filet #795) sur le fil FX.
+        occupation.occuper(
+                "Ouverture du passage…",
+                () -> new DonneesQualification(verdictVm.charger(idPassage), selectionVm.charger(idPassage)),
+                donnees -> {
+                    verdictVm.appliquer(idPassage, donnees.verdict());
+                    selectionVm.appliquer(idPassage, donnees.selection());
+                },
+                erreur -> {
+                    verdictVm.signalerErreur(idPassage, erreur);
+                    selectionVm.signalerErreur(idPassage, erreur);
+                });
     }
+
+    /// Données des deux ViewModels de l'écran, chargées ensemble hors du fil JavaFX (#1210).
+    private record DonneesQualification(
+            QualificationViewModel.DonneesVerdict verdict, SelectionEcouteViewModel.DonneesSelection selection) {}
 
     /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Vérifier
     /// l'enregistrement` (rendu par le chrome). Le segment passage rouvre M-Passage ; le retour est

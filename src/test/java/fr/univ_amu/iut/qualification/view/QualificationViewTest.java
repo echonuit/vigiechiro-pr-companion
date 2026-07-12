@@ -30,6 +30,7 @@ import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.util.ArrayList;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -306,5 +307,16 @@ class QualificationViewTest {
         robot.push(KeyCode.J);
 
         assertThat(apercu.isVisible()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#1210 : l'overlay d'occupation est en place, masqué une fois l'ouverture terminée")
+    void overlay_occupation_masque_apres_ouverture(FxRobot robot) {
+        Node voile = robot.lookup(".occupation-voile").query();
+
+        assertThat(voile).as("overlay d'occupation superposé à l'écran").isNotNull();
+        assertThat(voile.isVisible())
+                .as("ouverture terminée (exécuteur synchrone) : overlay masqué")
+                .isFalse();
     }
 }
