@@ -45,6 +45,7 @@
         <junit.jupiter.version>6.1.1</junit.jupiter.version>
         <assertj.version>3.27.7</assertj.version>
         <mockito.version>5.23.0</mockito.version>
+        <slf4j.version>2.0.17</slf4j.version>
         <approvaltests.version>31.0.0</approvaltests.version>
         <archunit.version>1.4.2</archunit.version>
         <!-- Suite de contrat API « vivante » (profil -Papi-live, hors CI) : REST-assured tape l'API
@@ -125,6 +126,15 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-junit-jupiter</artifactId>
             <version>${mockito.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- Backend SLF4J « no-op » côté test : des libs de test tirent slf4j-api sans binding, d'où le
+             « No SLF4J providers were found » répété à chaque fork. slf4j-nop fournit un backend
+             silencieux (logs ignorés, comme le comportement par défaut actuel). Test uniquement. -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-nop</artifactId>
+            <version>${slf4j.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -326,6 +336,9 @@
                                         <exclude>META-INF/*.SF</exclude>
                                         <exclude>META-INF/*.DSA</exclude>
                                         <exclude>META-INF/*.RSA</exclude>
+                                        <!-- Config GraalVM native-image (reflect-config Ikonli…) :
+                                             inutile en JVM classique, et en double entre 3 jars Ikonli. -->
+                                        <exclude>META-INF/native-image/**</exclude>
                                     </excludes>
                                 </filter>
                             </filters>
@@ -397,17 +410,17 @@
                         <java.awt.headless>true</java.awt.headless>
                         <testfx.robot>glass</testfx.robot>
                     </systemPropertyVariables>
+                    <!-- Tests en mode CLASSPATH (useModulePath=false, requis par TestFX) : JavaFX est
+                         chargé dans le module SANS NOM, il n'existe donc aucun module nommé `javafx.graphics`
+                         ou `javafx.base`. Les options `add-reads`/`add-opens`/`add-exports` visant ces
+                         modules (et `enable-native-access=javafx.graphics`) ciblaient des modules
+                         inexistants ici : la JVM les rejetait (« Unknown module: javafx.graphics »), pur
+                         bruit sans effet. Le headless vient de `glass.platform=Headless`, pas de ces
+                         options. On ne garde que ce qui sert réellement en classpath. -->
                     <argLine>
                         @{jacocoArgLine}
                         -javaagent:${net.bytebuddy:byte-buddy-agent:jar}
                         --enable-native-access=ALL-UNNAMED
-                        --enable-native-access=javafx.graphics
-                        --add-reads javafx.graphics=ALL-UNNAMED
-                        --add-opens javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
-                        --add-opens javafx.base/com.sun.javafx.runtime=ALL-UNNAMED
-                        --add-exports javafx.graphics/com.sun.javafx.application=ALL-UNNAMED
-                        --add-exports javafx.graphics/com.sun.javafx.util=ALL-UNNAMED
-                        --add-exports javafx.base/com.sun.javafx.logging=ALL-UNNAMED
                     </argLine>
                 </configuration>
             </plugin>
