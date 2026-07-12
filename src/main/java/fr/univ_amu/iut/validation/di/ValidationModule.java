@@ -24,6 +24,7 @@ import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
 import fr.univ_amu.iut.validation.view.NavigationValidation;
@@ -97,6 +98,12 @@ public class ValidationModule extends ModuleDeFeature {
     @Singleton
     ObservationDao fournirObservationDao(SourceDeDonnees source) {
         return new ObservationDao(source);
+    }
+
+    @Provides
+    @Singleton
+    ProjectionsAnalyseDao fournirProjectionsAnalyseDao(SourceDeDonnees source) {
+        return new ProjectionsAnalyseDao(source);
     }
 
     @Provides

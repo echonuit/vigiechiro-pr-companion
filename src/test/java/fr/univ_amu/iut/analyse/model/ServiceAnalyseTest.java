@@ -8,7 +8,7 @@ import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
-import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -20,7 +20,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-/// [ServiceAnalyse] avec [ObservationDao] mocké : le service **fournit** les observations enrichies (le
+/// [ServiceAnalyse] avec [ProjectionsAnalyseDao] mocké : le service **fournit** les observations enrichies (le
 /// filtrage et l'agrégation vivent désormais dans le ViewModel, #537) et **exporte** l'inventaire en CSV.
 @ExtendWith(MockitoExtension.class)
 class ServiceAnalyseTest {
@@ -28,7 +28,7 @@ class ServiceAnalyseTest {
     private static final String ID = "u-1";
 
     @Mock
-    private ObservationDao observationDao;
+    private ProjectionsAnalyseDao observationDao;
 
     @Test
     @DisplayName("observationsAnalyse délègue au DAO la lecture des observations enrichies")

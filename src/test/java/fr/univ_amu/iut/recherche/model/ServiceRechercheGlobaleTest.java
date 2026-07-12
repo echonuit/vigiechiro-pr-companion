@@ -20,7 +20,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
-import fr.univ_amu.iut.validation.model.ServiceValidation;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import java.util.List;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +35,7 @@ class ServiceRechercheGlobaleTest {
 
     private ServiceSites services;
     private ServiceMultisite multisite;
-    private ServiceValidation validation;
+    private ProjectionsAnalyseDao projections;
     private ServiceRechercheGlobale recherche;
 
     private static EspeceObservee espece(String code, String latin, String vern, long idPassage) {
@@ -54,14 +54,14 @@ class ServiceRechercheGlobaleTest {
     void preparer() {
         services = mock(ServiceSites.class);
         multisite = mock(ServiceMultisite.class);
-        validation = mock(ServiceValidation.class);
+        projections = mock(ProjectionsAnalyseDao.class);
         lenient().when(services.listerSites(anyString())).thenReturn(List.of());
         lenient()
                 .when(services.listerPoints(org.mockito.ArgumentMatchers.anyLong()))
                 .thenReturn(List.of());
         lenient().when(multisite.listerPassages(anyString())).thenReturn(List.of());
-        lenient().when(validation.especesObservees(anyString())).thenReturn(List.of());
-        recherche = new ServiceRechercheGlobale(services, multisite, validation, UTILISATEUR);
+        lenient().when(projections.especesObserveesParUtilisateur(anyString())).thenReturn(List.of());
+        recherche = new ServiceRechercheGlobale(services, multisite, projections, UTILISATEUR);
     }
 
     @Test
@@ -154,7 +154,7 @@ class ServiceRechercheGlobaleTest {
     @Test
     @DisplayName("#323 : trouve une espèce par nom vernaculaire/latin/code, et porte l'idPassage à ouvrir")
     void trouve_espece_par_nom() {
-        when(validation.especesObservees(UTILISATEUR))
+        when(projections.especesObserveesParUtilisateur(UTILISATEUR))
                 .thenReturn(List.of(espece("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune", 42L)));
 
         // par nom vernaculaire (tolérant casse/accents), par nom latin, par code.
@@ -182,7 +182,7 @@ class ServiceRechercheGlobaleTest {
         List<EspeceObservee> beaucoup = IntStream.range(0, ServiceRechercheGlobale.MAX_PAR_TYPE + 5)
                 .mapToObj(i -> espece("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune", (long) i))
                 .toList();
-        when(validation.especesObservees(UTILISATEUR)).thenReturn(beaucoup);
+        when(projections.especesObserveesParUtilisateur(UTILISATEUR)).thenReturn(beaucoup);
 
         long especes = recherche.rechercher("pipistrelle").stream()
                 .filter(r -> r.type() == TypeResultat.ESPECE)

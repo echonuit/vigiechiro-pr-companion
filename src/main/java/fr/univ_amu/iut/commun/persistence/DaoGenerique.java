@@ -5,13 +5,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-/// Base mutualisée des DAO concrets : centralise l'ouverture de connexion, la liaison des
-/// paramètres
-/// [PreparedStatement] et l'itération du [ResultSet].
+/// Base mutualisée des DAO d'**entité** : ajoute à [ProjectionGenerique] (connexion, liaison des
+/// paramètres [PreparedStatement], itération du [ResultSet]) le contrat CRUD [Dao] et les helpers
+/// d'écriture.
 ///
 /// Un DAO concret fournit son nom de table, sa colonne clé et son [RowMapper] ; il hérite
 /// alors gratuitement de [#findAll()], [#findById(Object)] et [#delete(Object)].
@@ -24,12 +23,10 @@ import java.util.Optional;
 ///
 /// @param <T> type d'entité
 /// @param <ID> type de clé primaire
-public abstract class DaoGenerique<T, ID> implements Dao<T, ID> {
-
-    protected final SourceDeDonnees source;
+public abstract class DaoGenerique<T, ID> extends ProjectionGenerique implements Dao<T, ID> {
 
     protected DaoGenerique(SourceDeDonnees source) {
-        this.source = source;
+        super(source);
     }
 
     /// Nom de la table SQL sous-jacente (ex. `"monitoring_site"`).
@@ -71,24 +68,6 @@ public abstract class DaoGenerique<T, ID> implements Dao<T, ID> {
     /// Exécute un `SELECT` et renvoie une entité mappée par ligne.
     protected List<T> query(String sql, RowMapper<T> mapper, Object... parametres) {
         return projeter(sql, mapper, parametres);
-    }
-
-    /// Exécute un `SELECT` et mappe chaque ligne vers un type de **projection** arbitraire `R` (lecture
-    /// transverse ne correspondant pas à l'entité du DAO, p. ex. une agrégation jointe à d'autres tables).
-    protected <R> List<R> projeter(String sql, RowMapper<R> mapper, Object... parametres) {
-        List<R> resultats = new ArrayList<>();
-        try (Connection connexion = source.getConnection();
-                PreparedStatement ps = connexion.prepareStatement(sql)) {
-            lier(ps, parametres);
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    resultats.add(mapper.mapper(rs));
-                }
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Échec de la requête : " + sql, e);
-        }
-        return resultats;
     }
 
     /// Exécute un `SELECT` attendu sur 0 ou 1 ligne.
@@ -157,18 +136,6 @@ public abstract class DaoGenerique<T, ID> implements Dao<T, ID> {
         try (PreparedStatement ps = connexion.prepareStatement(sql)) {
             lier(ps, parametres);
             return ps.executeUpdate();
-        }
-    }
-
-    /// Lie les paramètres positionnels (1-based), en gérant explicitement les valeurs nulles.
-    private static void lier(PreparedStatement ps, Object... parametres) throws SQLException {
-        for (int i = 0; i < parametres.length; i++) {
-            Object valeur = parametres[i];
-            if (valeur == null) {
-                ps.setString(i + 1, null);
-            } else {
-                ps.setObject(i + 1, valeur);
-            }
         }
     }
 }

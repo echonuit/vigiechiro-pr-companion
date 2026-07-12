@@ -12,10 +12,10 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
-import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 
 /// Module Guice de la feature `analyse` (prisme « Espèces & biodiversité »). Enregistre sa carte
-/// d'accueil et fournit son service (assemblé sur la projection de [ObservationDao], feature
+/// d'accueil et fournit son service (assemblé sur la projection de [ProjectionsAnalyseDao], feature
 /// `validation`, fournie par `ValidationModule`) et son ViewModel. Comme les autres modules de feature,
 /// l'assemblage inter-modules est résolu par `RacineInjecteur`.
 public class AnalyseModule extends ModuleDeFeature {
@@ -39,7 +39,7 @@ public class AnalyseModule extends ModuleDeFeature {
 
     @Provides
     @Singleton
-    ServiceAnalyse fournirServiceAnalyse(ObservationDao observationDao) {
+    ServiceAnalyse fournirServiceAnalyse(ProjectionsAnalyseDao observationDao) {
         return new ServiceAnalyse(observationDao);
     }
 

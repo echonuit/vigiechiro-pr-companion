@@ -10,7 +10,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.validation.model.EspeceObservee;
-import fr.univ_amu.iut.validation.model.ServiceValidation;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -21,8 +21,9 @@ import java.util.Objects;
 ///
 /// Service **model** pur (aucune dépendance JavaFX/navigation) : il renvoie des [ResultatRecherche]
 /// porteurs des seules clés d'identité ; c'est la couche `view` qui décidera de l'écran à ouvrir.
-/// Réutilise des **services** existants (et non les DAO directement) pour ne pas redupliquer
-/// l'agrégation des passages, sur le modèle de [ServiceMultisite] vis-à-vis de `sites`/`passage`.
+/// Réutilise les **services** existants quand ils portent une agrégation à ne pas redupliquer
+/// ([ServiceMultisite] pour les passages), et la **projection dédiée** [ProjectionsAnalyseDao]
+/// pour les espèces observées (#1193).
 public class ServiceRechercheGlobale implements RechercheGlobale {
 
     /// Plafond de résultats **par type** : la liste déroulante reste lisible et la recherche rapide.
@@ -34,14 +35,17 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
 
     private final ServiceSites services;
     private final ServiceMultisite multisite;
-    private final ServiceValidation validation;
+    private final ProjectionsAnalyseDao projections;
     private final String idUtilisateur;
 
     public ServiceRechercheGlobale(
-            ServiceSites services, ServiceMultisite multisite, ServiceValidation validation, String idUtilisateur) {
+            ServiceSites services,
+            ServiceMultisite multisite,
+            ProjectionsAnalyseDao projections,
+            String idUtilisateur) {
         this.services = Objects.requireNonNull(services, "services");
         this.multisite = Objects.requireNonNull(multisite, "multisite");
-        this.validation = Objects.requireNonNull(validation, "validation");
+        this.projections = Objects.requireNonNull(projections, "projections");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
     }
 
@@ -67,7 +71,7 @@ public class ServiceRechercheGlobale implements RechercheGlobale {
     /// (espèce, passage) de l'utilisateur avant filtrage/plafond. Suffisant aux volumes actuels.
     private List<ResultatRecherche> chercherEspeces(String aiguille) {
         List<ResultatRecherche> especes = new ArrayList<>();
-        for (EspeceObservee espece : validation.especesObservees(idUtilisateur)) {
+        for (EspeceObservee espece : projections.especesObserveesParUtilisateur(idUtilisateur)) {
             if (especes.size() >= MAX_PAR_TYPE) {
                 break;
             }

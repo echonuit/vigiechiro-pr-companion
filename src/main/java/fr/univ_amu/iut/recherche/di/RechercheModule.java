@@ -13,7 +13,7 @@ import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.recherche.model.ServiceRechercheGlobale;
 import fr.univ_amu.iut.sites.model.ServiceSites;
-import fr.univ_amu.iut.validation.model.ServiceValidation;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 
 /// Module Guice de la feature `recherche` (#144) : fournit l'implémentation de la [RechercheGlobale]
 /// du socle, assemblée à partir des services des features `sites`, `multisite` et `validation` (espèces,
@@ -44,8 +44,8 @@ public class RechercheModule extends ModuleDeFeature {
     RechercheGlobale fournirRechercheGlobale(
             ServiceSites services,
             ServiceMultisite multisite,
-            ServiceValidation validation,
+            ProjectionsAnalyseDao projections,
             @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new ServiceRechercheGlobale(services, multisite, validation, idUtilisateur);
+        return new ServiceRechercheGlobale(services, multisite, projections, idUtilisateur);
     }
 }

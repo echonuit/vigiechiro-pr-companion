@@ -6,7 +6,7 @@ import fr.univ_amu.iut.validation.model.EspeceAgregee;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.ObservationEspece;
 import fr.univ_amu.iut.validation.model.StatutObservation;
-import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,15 +17,15 @@ import java.util.Objects;
 /// transverse** des observations de l'utilisateur, pour répondre à « quelles espèces, où, combien ». Pur
 /// **model** (aucune dépendance IHM/navigation).
 ///
-/// Fournit les **observations enrichies** de [ObservationDao] (feature `validation`) ; le **filtrage**
+/// Fournit les **observations enrichies** de [ProjectionsAnalyseDao] (feature `validation`) ; le **filtrage**
 /// (statut, taxon parent, texte) et l'**agrégation** (par espèce / par carré, via [AgregationAnalyse]) se
 /// font **côté client** dans le ViewModel (#537), sur le socle partagé de filtres. À l'échelle visée
 /// (~4000 observations), tout se fait en mémoire, sans ré-interroger la base à chaque changement de filtre.
 public class ServiceAnalyse {
 
-    private final ObservationDao observationDao;
+    private final ProjectionsAnalyseDao observationDao;
 
-    public ServiceAnalyse(ObservationDao observationDao) {
+    public ServiceAnalyse(ProjectionsAnalyseDao observationDao) {
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
     }
 
