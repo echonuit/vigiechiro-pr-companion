@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 
 /// Une étape du stepper de statut de M-Passage : un statut workflow et son état d'avancement
 /// ([EtatEtape]) relatif au statut courant du passage. Le libellé d'affichage est

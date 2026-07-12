@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.Stepper;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -25,7 +26,6 @@ import fr.univ_amu.iut.passage.viewmodel.EtapeWorkflow;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
@@ -446,12 +446,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     }
 
     private void majStepper() {
-        stepper.getChildren().clear();
-        for (EtapeWorkflow etape : viewModel.etapes()) {
-            Label puce = new Label(etape.statut().libelle());
-            puce.getStyleClass().addAll("etape", "etape-" + etape.etat().name().toLowerCase(Locale.ROOT));
-            stepper.getChildren().add(puce);
-        }
+        Stepper.reconstruire(stepper, viewModel.etapes(), e -> e.statut().libelle(), EtapeWorkflow::etat);
     }
 
     private static String libelleStatut(StatutWorkflow statut) {

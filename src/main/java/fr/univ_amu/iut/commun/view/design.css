@@ -558,3 +558,35 @@
   -fx-text-fill: -couleur-danger;
   -fx-icon-color: -couleur-danger;
 }
+
+/*
+ * Stepper (fil d'étapes) : une puce par étape, colorée selon son état (franchie / courante / à venir).
+ * Rendu par le composant partagé `commun.view.Stepper` ; utilisé par M-Passage (workflow) et M-Lot
+ * (dépôt). Classes autrefois recopiées dans passage.css / lot.css, mutualisées ici.
+ */
+.stepper {
+  -fx-padding: 4 0 4 0;
+}
+
+.etape {
+  -fx-font-size: 12px;
+  -fx-padding: 5 12 5 12;
+  -fx-background-radius: 14;
+  -fx-border-radius: 14;
+}
+
+.etape-franchie {
+  -fx-background-color: #d5f0de;
+  -fx-text-fill: #0e5128;
+}
+
+.etape-courante {
+  -fx-background-color: -couleur-primaire;
+  -fx-text-fill: white;
+  -fx-font-weight: bold;
+}
+
+.etape-a_venir {
+  -fx-background-color: #eef2f5;
+  -fx-text-fill: #6a737d;
+}

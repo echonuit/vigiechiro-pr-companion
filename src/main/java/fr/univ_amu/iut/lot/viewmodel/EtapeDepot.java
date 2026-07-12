@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
+import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
+
 /// Une étape du stepper de dépôt de M-Lot : un libellé court et son état d'avancement ([EtatEtape])
 /// relatif à l'étape courante. Le flux ordonné est : Préparer → Générer les archives → Téléverser →
 /// Marquer déposé.
