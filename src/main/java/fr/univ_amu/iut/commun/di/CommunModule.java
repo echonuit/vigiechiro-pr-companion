@@ -4,11 +4,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.api.ClientGbif;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
+import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.SourceUniverselle;
 import fr.univ_amu.iut.commun.model.SourceUniversellePreferee;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -81,6 +83,9 @@ public class CommunModule extends AbstractModule {
         actions.addBinding().to(ActionPurger.class);
         actions.addBinding().to(ActionSourceEspece.class);
         actions.addBinding().to(ActionOuvrirReglages.class);
+        // Recherche globale du chrome (#144) : OptionalBinder VIDE (feature `recherche` désactivable, #1087).
+        // `RechercheModule` fait `setBinding` quand elle est active ; sinon MainController masque la barre.
+        OptionalBinder.newOptionalBinder(binder(), RechercheGlobale.class);
     }
 
     /// Descripteurs de l'onglet « Fonctionnalités » : un booléen `feature.<id>.active` par feature

@@ -59,6 +59,7 @@ class DecouverteModulesTest {
         System.clearProperty("vigiechiro.features.passage");
         System.clearProperty("vigiechiro.features.lot");
         System.clearProperty("vigiechiro.features.qualification");
+        System.clearProperty("vigiechiro.features.recherche");
         System.clearProperty("vigiechiro.workspace");
     }
 
@@ -229,6 +230,20 @@ class DecouverteModulesTest {
                 .map(module -> module.getClass().getSimpleName())
                 .toList();
         assertThat(noms).doesNotContain("ImportVigieChiroModule");
+
+        assertThatCode(RacineInjecteur::creer).doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("la feuille recherche (désormais OPTIONNELLE) est désactivable et l'injecteur se construit")
+    void feuille_recherche_desactivable(@TempDir Path tmp) {
+        System.setProperty("vigiechiro.workspace", tmp.toString());
+        System.setProperty("vigiechiro.features.recherche", "off");
+
+        List<String> noms = RacineInjecteur.modules().stream()
+                .map(module -> module.getClass().getSimpleName())
+                .toList();
+        assertThat(noms).doesNotContain("RechercheModule");
 
         assertThatCode(RacineInjecteur::creer).doesNotThrowAnyException();
     }

@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javafx.animation.FadeTransition;
@@ -48,7 +49,7 @@ public class MainController {
     private final Navigateur navigateur;
     private final Set<ActiviteAccueil> activites;
     private final Set<IndicateurAccueil> indicateurs;
-    private final RechercheGlobale recherche;
+    private final Optional<RechercheGlobale> recherche;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final Set<ActionMenu> actionsMenu;
@@ -112,7 +113,8 @@ public class MainController {
     /// barre de navigation ni le pied (qui restent dans le chrome, hors de cette zone).
     private final ScrollPane defilementCentral = new ScrollPane();
 
-    /// Recherche globale du chrome (#144), câblée à l'initialisation.
+    /// Recherche globale du chrome (#144), câblée à l'initialisation. Reste `null` si la feature
+    /// `recherche` est désactivée (#1087) : la barre de recherche est alors masquée.
     private RechercheChrome rechercheChrome;
 
     @Inject
@@ -121,7 +123,7 @@ public class MainController {
             Navigateur navigateur,
             Set<ActiviteAccueil> activites,
             Set<IndicateurAccueil> indicateurs,
-            RechercheGlobale recherche,
+            Optional<RechercheGlobale> recherche,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             Set<ActionMenu> actionsMenu) {
@@ -200,9 +202,17 @@ public class MainController {
         navigateur.historique().addListener((ListChangeListener<EtapeNavigation>) changement -> rafraichirNavigation());
         rafraichirNavigation();
 
-        rechercheChrome = new RechercheChrome(
-                champRecherche, panneauResultats, listeResultats, recherche, ouvrirSite, ouvrirPassage);
-        rechercheChrome.configurer();
+        if (recherche.isPresent()) {
+            rechercheChrome = new RechercheChrome(
+                    champRecherche, panneauResultats, listeResultats, recherche.get(), ouvrirSite, ouvrirPassage);
+            rechercheChrome.configurer();
+        } else {
+            // Feature `recherche` désactivée (#1087) : la barre de recherche du chrome disparaît.
+            champRecherche.setVisible(false);
+            champRecherche.setManaged(false);
+            panneauResultats.setVisible(false);
+            panneauResultats.setManaged(false);
+        }
 
         // Raccourcis clavier de navigation, posés dès que la scène est disponible :
         //  - Alt+← : ← Retour (écran précédent réel) ;
@@ -218,9 +228,14 @@ public class MainController {
                                 new KeyCodeCombination(KeyCode.HOME, KeyCombination.ALT_DOWN),
                                 navigateur::afficherAccueil);
                 // Ctrl+F : place le focus dans le champ de recherche globale (#144) et présélectionne
-                // son contenu, pour rechercher de n'importe quel écran.
-                scene.getAccelerators()
-                        .put(new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN), rechercheChrome::activer);
+                // son contenu, pour rechercher de n'importe quel écran. Absent si la feature `recherche`
+                // est désactivée (#1087) : rechercheChrome reste alors `null`.
+                if (rechercheChrome != null) {
+                    scene.getAccelerators()
+                            .put(
+                                    new KeyCodeCombination(KeyCode.F, KeyCombination.CONTROL_DOWN),
+                                    rechercheChrome::activer);
+                }
             }
         });
     }
