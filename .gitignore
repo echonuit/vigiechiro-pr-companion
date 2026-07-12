@@ -95,3 +95,9 @@ site/
 # version versionnée destinée aux humains). Reste local, propre à chaque poste.
 CLAUDE.md
 .claude/
+
+# ========== Données de travail de l'app (JAMAIS versionnées) ==========
+# Base SQLite locale (artefact de travail régénérable) et connexion VigieChiro
+# (contient le token de session, un secret). Restent sur le poste, hors-git.
+vigiechiro.db
+connexion.json
