@@ -152,18 +152,52 @@ class LotViewModelTest {
     }
 
     @Test
-    @DisplayName("ouvrirSur avec un contrôle en échec : préparation impossible, checklist exposée")
-    void ouvrir_avec_controle_echec_bloque_preparer() {
+    @DisplayName("ouvrirSur (Vérifié) avec un contrôle en échec : re-vérifiable, checklist exposée")
+    void ouvrir_avec_controle_echec_reste_reverifiable() {
         when(service.consulterLot(ID_PASSAGE))
                 .thenReturn(etat(StatutWorkflow.VERIFIE, List.of(echec("Transformation incomplète")), null));
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
-        assertThat(viewModel.peutPreparerProperty().get()).isFalse();
+        // On peut RELANCER la vérification (le bouton reste actionnable), mais rien n'avance : la génération
+        // reste indisponible tant qu'un contrôle bloque.
+        assertThat(viewModel.peutPreparerProperty().get()).isTrue();
+        assertThat(viewModel.peutGenererArchivesProperty().get()).isFalse();
         assertThat(viewModel.controles()).hasSize(1);
         assertThat(viewModel.controles().get(0).estBloquant()).isTrue();
         assertThat(viewModel.controles().get(0).detail()).isEqualTo("Transformation incomplète");
         assertThat(viewModel.messageProperty().get()).contains("corrigez");
+    }
+
+    @Test
+    @DisplayName("Contrôle en échec sous « Prêt à déposer » (reliquat) : suite neutralisée, re-vérification possible")
+    void controle_echec_sous_pret_a_deposer_neutralise_la_suite() {
+        // Statut persisté « Prêt à déposer », mais la cohérence recalculée au chargement échoue (ex. préfixe
+        // des originaux non réconcilié après changement de n° de passage) : on ne doit ni générer ni déposer.
+        when(service.consulterLot(ID_PASSAGE))
+                .thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(echec("Préfixe non conforme")), null));
+
+        viewModel.ouvrirSur(ID_PASSAGE);
+
+        assertThat(viewModel.peutGenererArchivesProperty().get()).isFalse();
+        assertThat(viewModel.peutDeposerProperty().get()).isFalse();
+        assertThat(viewModel.peutPreparerProperty().get()).isTrue(); // re-vérification possible
+    }
+
+    @Test
+    @DisplayName("preparer : une re-vérification qui aboutit recharge et fait avancer le lot")
+    void preparer_reverification_qui_aboutit_avance() {
+        // 1er chargement : un contrôle bloque (le bouton reste actionnable). La re-vérification aboutit (le
+        // reliquat s'est résorbé) : consulterLot renvoie alors un état conforme « Prêt à déposer ».
+        when(service.consulterLot(ID_PASSAGE))
+                .thenReturn(etat(StatutWorkflow.VERIFIE, List.of(echec("Préfixe")), null))
+                .thenReturn(etat(StatutWorkflow.PRET_A_DEPOSER, List.of(), null));
+        viewModel.ouvrirSur(ID_PASSAGE);
+        assertThat(viewModel.peutPreparerProperty().get()).isTrue();
+
+        assertThat(viewModel.preparer()).isTrue();
+        assertThat(viewModel.controles()).isEmpty(); // rechargée : plus d'échec
+        assertThat(viewModel.peutGenererArchivesProperty().get()).isTrue();
     }
 
     @Test
