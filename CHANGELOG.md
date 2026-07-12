@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.4.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.4.0...v2.4.1) (2026-07-12)
+
+
+### Bug Fixes
+
+* **securite:** ignorer connexion.json / vigiechiro.db + corriger la doc ([#1153](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1153)) ([4dceb55](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/4dceb55e44ed51275679aa61e20737845c87efa3)), closes [#1140](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1140) [#716](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/716) [#1140](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1140) [#1141](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1141)
+
 # [2.4.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.3.0...v2.4.0) (2026-07-12)
 
 
