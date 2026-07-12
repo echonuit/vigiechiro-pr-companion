@@ -119,12 +119,6 @@ public class ServiceValidation implements CompteurValidations {
         return observationDao.especesObserveesParUtilisateur(idUtilisateur);
     }
 
-    /// Observations **marquées référence** de l'utilisateur (#audio) : la **source « Références »** de la
-    /// vue audio unifiée (corpus de sons de référence, ex-bibliothèque). Façade sur [ObservationDao].
-    public List<Observation> references(String idUtilisateur) {
-        return observationDao.referencesDeLUtilisateur(idUtilisateur);
-    }
-
     // ---------------------------------------------------------------------------------------------
     // Vue audio unifiée (#audio) : projections LigneObservationAudio par source, façades sur le DAO
     // ---------------------------------------------------------------------------------------------

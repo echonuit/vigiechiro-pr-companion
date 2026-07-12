@@ -221,15 +221,6 @@ class ServiceValidationMockTest {
     }
 
     @Test
-    @DisplayName("references : façade qui délègue au DAO la liste des observations de référence")
-    void references_delegue_au_dao() {
-        when(observationDao.referencesDeLUtilisateur("u-1")).thenReturn(List.of(observation("Pippip", null, null)));
-
-        assertThat(service().references("u-1")).hasSize(1);
-        verify(observationDao).referencesDeLUtilisateur("u-1");
-    }
-
-    @Test
     @DisplayName("cheminAudio : résout le WAV transformé (R22) de la séquence (E7.S3)")
     void chemin_audio_resout_le_wav() {
         when(sequenceDao.findById(10L))

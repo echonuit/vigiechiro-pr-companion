@@ -418,18 +418,6 @@ class ObservationDaoTest {
     }
 
     @Test
-    @DisplayName("#audio : referencesDeLUtilisateur ne renvoie que les is_reference de l'utilisateur")
-    void references_de_l_utilisateur() {
-        dao.insert(observationComplete()); // is_reference = true
-        dao.insert(observation("Nyclei", null)); // is_reference = false
-
-        assertThat(dao.referencesDeLUtilisateur("u-1"))
-                .singleElement()
-                .satisfies(observation -> assertThat(observation.reference()).isTrue());
-        assertThat(dao.referencesDeLUtilisateur("autre")).isEmpty();
-    }
-
-    @Test
     @DisplayName("#audio : lignesAudioDuPassage porte le contexte, les champs d'archivage et le statut")
     void lignes_audio_du_passage() {
         dao.insert(observationComplete()); // Pippip validé, is_reference, commentaire « signal net », 45 kHz

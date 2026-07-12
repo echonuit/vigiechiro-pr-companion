@@ -123,16 +123,6 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
         return query("SELECT * FROM observation WHERE sequence_id = ? ORDER BY start_time_s", MAPPER, idSequence);
     }
 
-    /// Observations **marquées référence** (`is_reference`) de l'utilisateur (#audio) : la source
-    /// « Références » de la vue audio unifiée (corpus de sons de référence, ex-bibliothèque). Jointure
-    /// jusqu'au site pour le périmètre utilisateur ; triées par id.
-    public List<Observation> referencesDeLUtilisateur(String idUtilisateur) {
-        return query(
-                "SELECT o.*" + DE_OBSERVATION_AU_SITE + " WHERE ms.user_id = ? AND o.is_reference = 1 ORDER BY o.id",
-                MAPPER,
-                idUtilisateur);
-    }
-
     /// Projection des **espèces observées par l'utilisateur, rattachées à leur passage** (#323). Une ligne
     /// par couple (espèce, passage) — `DISTINCT` car un passage peut contenir plusieurs observations de la
     /// même espèce. L'espèce est le taxon **validé** s'il existe, sinon la proposition Tadarida. Les
