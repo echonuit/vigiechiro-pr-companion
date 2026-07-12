@@ -46,7 +46,8 @@ plateforme sont grisées avec une explication, tout le reste fonctionne normalem
 simplement **☰ → Se connecter à VigieChiro…** et recollez un jeton frais.
 
 !!! tip "En ligne de commande"
-    Les commandes `deposer-vigiechiro` et `verifier-depot-vigiechiro` acceptent un **jeton
-    ponctuel** : option `--token`, ou variable d'environnement `VIGIECHIRO_TOKEN` (préférable :
-    elle ne laisse pas le jeton dans l'historique du shell). À défaut, la connexion enregistrée
-    dans l'application est utilisée.
+    Les commandes VigieChiro (`synchroniser-vigiechiro`, `deposer-vigiechiro`,
+    `verifier-depot-vigiechiro`, `importer-vigiechiro`) acceptent un **jeton ponctuel** : option
+    `--token`, ou variable d'environnement `VIGIECHIRO_TOKEN` (préférable : elle ne laisse pas le
+    jeton dans l'historique du shell). À défaut, la connexion enregistrée dans l'application est
+    utilisée.

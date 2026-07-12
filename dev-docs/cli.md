@@ -57,8 +57,10 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `qualifier` | `--passage <id> --verdict <ok\|douteux\|a-jeter> [--commentaire ..]` | R13 | `ServicePassage.poserVerdict` |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
+| `synchroniser-vigiechiro` | `[--token <jeton>]` | #1181 | rejoue les `RapprochementVigieChiro` (taxons, sites/points) après un `GET /moi` de contrôle ; `0` ssi connecté |
 | `deposer-vigiechiro` | `--passage <id> [--token <jeton>] [--archives]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982 ; `--archives` = les ZIP `depot/` au lieu des WAV, expérimental #984) |
 | `verifier-depot-vigiechiro` | `--passage <id> [--token <jeton>]` | #1132 | `VerificationDepot.verifier` (lecture seule : journal de traitement + titres des `donnees` vs plan `depot_unite` ; `0` ssi tout est retrouvé) |
+| `importer-vigiechiro` | `--passage <id> [--remplacer] [--participation <objectid>] [--token <jeton>]` | #1181 | `ImportVigieChiro.importer` (résultats Tadarida depuis l'API, sans CSV ; `--participation` = rattachement préalable) |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
 | `exporter-observations` | `--passage <id> --sortie <fichier>` | #149 | `ServiceValidation.lignesAudioDuPassage` + `ExportObservationsCsv` |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |
