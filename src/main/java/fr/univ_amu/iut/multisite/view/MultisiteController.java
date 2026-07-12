@@ -4,9 +4,11 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -80,6 +82,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private final OuvrirAudio ouvrirAudio;
     private final DepotVues depotVues;
     private final DepotDispositionColonnes depotColonnes;
+    private final ExecuteurTache executeur;
+    private IndicateurOccupation occupation;
 
     @FXML
     private Label lblResume;
@@ -142,6 +146,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private Label lblMessage;
 
     @FXML
+    private StackPane hoteOccupation;
+
+    @FXML
     private StackPane zoneCarte;
 
     @FXML
@@ -189,12 +196,14 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
             OuvrirPassage ouvrirPassage,
             OuvrirAudio ouvrirAudio,
             DepotVues depotVues,
-            DepotDispositionColonnes depotColonnes) {
+            DepotDispositionColonnes depotColonnes,
+            ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     @Override
@@ -322,8 +331,16 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
         majPoignees();
 
-        viewModel.rafraichir();
-        viewModel.rafraichirCarte();
+        occupation = new IndicateurOccupation(hoteOccupation, executeur);
+        chargerDonnees();
+    }
+
+    /// Charge passages + carte **hors du fil JavaFX** (#1209) : les deux requêtes base partent en
+    /// arrière-plan sous l'overlay « … en cours », puis l'application (ou l'erreur, filet #795) revient
+    /// sur le fil JavaFX. Utilisé au premier affichage et à chaque retour sur l'écran.
+    private void chargerDonnees() {
+        occupation.occuper(
+                "Chargement des passages…", viewModel::charger, viewModel::appliquer, viewModel::signalerErreur);
     }
 
     /// Superpose à la carte ses contrôles : la **légende** (bas-gauche, #152), le bouton **« ⤢ recadrer »**
@@ -432,8 +449,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// statuts/verdicts réels plutôt qu'un état périmé.
     @Override
     public void rafraichirAuRetour() {
-        viewModel.rafraichir();
-        viewModel.rafraichirCarte(); // un passage modifié peut changer le statut dominant d'un point (#152)
+        // Un passage modifié ailleurs peut changer le statut dominant d'un point (#152) : on recharge tout.
+        chargerDonnees();
     }
 
     /// Focalise la carte sur un **carré** (« voir sur la carte » d'un site/passage). Délégué à
