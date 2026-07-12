@@ -105,6 +105,58 @@ class DeposerVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#984 : --archives dépose les ZIP du dossier depot/ au lieu des séquences WAV")
+    void option_archives_depose_les_zip() {
+        when(serviceLot.consulterLot(42L))
+                .thenReturn(new fr.univ_amu.iut.lot.model.EtatLot(
+                        fr.univ_amu.iut.commun.model.StatutWorkflow.PRET_A_DEPOSER,
+                        "/ws/session-42",
+                        4806,
+                        8192L,
+                        List.of(),
+                        null));
+        when(serviceLot.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(
+                        new fr.univ_amu.iut.lot.model.ArchiveDepot(
+                                Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2),
+                        new fr.univ_amu.iut.lot.model.ArchiveDepot(
+                                Path.of("/ws/session-42/depot/Car-2.zip"), 2, 4096L, 3)));
+        when(depot.deposer(eq(42L), any(), any(), any())).thenReturn(new BilanDepot("part-1", 2, List.of()));
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(depot), sortie).execute("--passage", "42", "--archives");
+
+        assertThat(code).isZero();
+        org.mockito.Mockito.verify(depot)
+                .deposer(
+                        eq(42L),
+                        eq(List.of(
+                                Path.of("/ws/session-42/depot/Car-1.zip"), Path.of("/ws/session-42/depot/Car-2.zip"))),
+                        any(),
+                        any());
+        org.mockito.Mockito.verify(serviceLot, org.mockito.Mockito.never()).sequencesADeposer(42L);
+    }
+
+    @Test
+    @DisplayName("#984 : --archives sans archive sur disque → refus explicite, rien n'est tenté")
+    void option_archives_sans_archive_echoue() {
+        when(serviceLot.consulterLot(42L))
+                .thenReturn(new fr.univ_amu.iut.lot.model.EtatLot(
+                        fr.univ_amu.iut.commun.model.StatutWorkflow.PRET_A_DEPOSER,
+                        "/ws/session-42",
+                        4806,
+                        8192L,
+                        List.of(),
+                        null));
+        when(serviceLot.archivesDepot("/ws/session-42")).thenReturn(List.of());
+
+        int code = ligne(Optional.of(depot), new StringWriter()).execute("--passage", "42", "--archives");
+
+        assertThat(code).isNotZero();
+        org.mockito.Mockito.verifyNoInteractions(depot);
+    }
+
+    @Test
     @DisplayName("rendrePlan : mentionne la reprise quand des fichiers sont déjà en ligne")
     void rendre_plan_reprise() {
         assertThat(DeposerVigieChiro.rendrePlan(List.of(

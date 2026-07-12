@@ -57,7 +57,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `qualifier` | `--passage <id> --verdict <ok\|douteux\|a-jeter> [--commentaire ..]` | R13 | `ServicePassage.poserVerdict` |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
-| `deposer-vigiechiro` | `--passage <id> [--token <jeton>]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982) |
+| `deposer-vigiechiro` | `--passage <id> [--token <jeton>] [--archives]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982 ; `--archives` = les ZIP `depot/` au lieu des WAV, expérimental #984) |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
 | `exporter-observations` | `--passage <id> --sortie <fichier>` | #149 | `ServiceValidation.lignesAudioDuPassage` + `ExportObservationsCsv` |
 | `--help` / `-h`, `--version` / `-V`, ou aucun argument | — | — | — |

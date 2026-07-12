@@ -118,8 +118,10 @@ cf. [Patterns](patterns.md)).
 ### Verdicts des probes d'écriture (exécutées le 2026-07-11)
 
 - **ZIP (pilier B, #984)** : la plateforme **accepte** un `.zip` (déclaration, `PUT` S3
-  `application/zip`, finalisation). Reste à confirmer, au prochain dépôt réel, que son contenu est
-  **dézippé et traité** (`donnees()`) avant de basculer le dépôt sur les archives.
+  `application/zip`, finalisation) **et l'ingère** : la participation canonique `6a4961f5…` a été
+  déposée **en zip via le site web** et ses 4806 `donnees` listent les WAV individuellement. Reste à
+  valider que **notre chemin d'upload** (API directe) produit le même résultat : option expérimentale
+  `deposer-vigiechiro --archives` (#1043), essai prévu sur une vraie nuit.
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
   le pull (`RapprochementSites`, à la connexion) reste la seule direction de synchronisation des sites.
 

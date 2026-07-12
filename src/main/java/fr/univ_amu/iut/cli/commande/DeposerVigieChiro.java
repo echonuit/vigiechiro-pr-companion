@@ -51,6 +51,12 @@ public final class DeposerVigieChiro implements Callable<Integer> {
                     + " enregistrée dans l'application).")
     private String token;
 
+    @Option(
+            names = "--archives",
+            description = "Expérimental (#984) : dépose les archives ZIP générées (depot/*.zip) au lieu des"
+                    + " séquences WAV une à une. Générez d'abord les archives (M-Lot, étape 2).")
+    private boolean archives;
+
     @Spec
     private CommandSpec spec;
 
@@ -72,15 +78,28 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             // persister — la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
-        List<Path> fichiers = serviceLot.sequencesADeposer(idPassage);
+        List<Path> fichiers = archives ? cheminsDesArchives() : serviceLot.sequencesADeposer(idPassage);
         if (fichiers.isEmpty()) {
-            throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage"
-                    + " (préparez d'abord le lot : statut « Prêt à déposer »).");
+            throw new RegleMetierException(
+                    archives
+                            ? "Aucune archive de dépôt sur le disque : générez-les d'abord (M-Lot, étape 2)."
+                            : "Aucune séquence transformée à déposer pour ce passage"
+                                    + " (préparez d'abord le lot : statut « Prêt à déposer »).");
         }
         PrintWriter sortie = spec.commandLine().getOut();
         BilanDepot bilan = moteur.deposer(idPassage, fichiers, () -> false, new SuiviConsole(sortie));
         sortie.println(rendreBilan(bilan));
         return bilan.estComplet() ? 0 : 1;
+    }
+
+    /// Archives ZIP du lot présentes sur le disque (`depot/*.zip`), dans l'ordre des numéros. Le moteur
+    /// les traite comme n'importe quelle unité (type ZIP, mime `application/zip`) : plan, reprise et
+    /// suivi identiques au dépôt de séquences.
+    private List<Path> cheminsDesArchives() {
+        String cheminDossier = serviceLot.consulterLot(idPassage).cheminDossier();
+        return serviceLot.archivesDepot(cheminDossier).stream()
+                .map(fr.univ_amu.iut.lot.model.ArchiveDepot::chemin)
+                .toList();
     }
 
     /// Bilan final : participation, fichiers téléversés cette fois-ci, reste éventuel. Fonction pure
