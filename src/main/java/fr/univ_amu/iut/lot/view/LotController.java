@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.Stepper;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -386,12 +387,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// Reconstruit le stepper du dépôt (#251) depuis [LotViewModel#etapes()] : une puce par étape,
     /// stylée selon son état (franchie / courante / à venir), comme le stepper de M-Passage.
     private void majStepper() {
-        stepper.getChildren().clear();
-        for (EtapeDepot etape : viewModel.etapes()) {
-            Label puce = new Label(etape.libelle());
-            puce.getStyleClass().addAll("etape", "etape-" + etape.etat().name().toLowerCase(Locale.ROOT));
-            stepper.getChildren().add(puce);
-        }
+        Stepper.reconstruire(stepper, viewModel.etapes(), EtapeDepot::libelle, EtapeDepot::etat);
     }
 
     /// Reconstruit la **checklist de cohérence** (#254) depuis [LotViewModel#controles()] : une ligne par

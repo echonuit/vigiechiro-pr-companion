@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.ControleCoherence;

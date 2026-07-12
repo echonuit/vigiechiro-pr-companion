@@ -48,34 +48,6 @@
   -fx-text-fill: #b7950b;
 }
 
-/* ---- Stepper du dépôt (#251) : mêmes styles que le stepper de M-Passage ---- */
-.stepper {
-  -fx-padding: 4 0 4 0;
-}
-
-.etape {
-  -fx-font-size: 12px;
-  -fx-padding: 5 12 5 12;
-  -fx-background-radius: 14;
-  -fx-border-radius: 14;
-}
-
-.etape-franchie {
-  -fx-background-color: #d5f0de;
-  -fx-text-fill: #0e5128;
-}
-
-.etape-courante {
-  -fx-background-color: -couleur-primaire;
-  -fx-text-fill: white;
-  -fx-font-weight: bold;
-}
-
-.etape-a_venir {
-  -fx-background-color: #eef2f5;
-  -fx-text-fill: #6a737d;
-}
-
 /*
  * La table de suivi du dépôt (#820) est stylée par le socle partagé : règles `.ligne-suivi.etat-…`
  * dans design.css (déplacées lors de la généralisation du composant, #946).

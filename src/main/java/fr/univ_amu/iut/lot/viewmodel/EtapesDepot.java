@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 import java.util.ArrayList;
 import java.util.List;
 

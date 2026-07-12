@@ -1,6 +1,6 @@
 /*
  * M-Passage - feuille de style de l'écran pivot « Détail d'un passage ».
- * Stepper de statut coloré par état (franchie / courante / à venir).
+ * Le stepper de statut est stylé par le socle partagé (`.stepper` / `.etape*` dans design.css).
  */
 
 .ecran-passage {
@@ -12,34 +12,6 @@
 }
 
 /* Bandeau d'identité : composant partagé bandeau-infos (design.css, #694). */
-
-/* ---- Stepper de statut workflow ---- */
-.stepper {
-  -fx-padding: 4 0 4 0;
-}
-
-.etape {
-  -fx-font-size: 12px;
-  -fx-padding: 5 12 5 12;
-  -fx-background-radius: 14;
-  -fx-border-radius: 14;
-}
-
-.etape-franchie {
-  -fx-background-color: #d5f0de;
-  -fx-text-fill: #0e5128;
-}
-
-.etape-courante {
-  -fx-background-color: -couleur-primaire;
-  -fx-text-fill: white;
-  -fx-font-weight: bold;
-}
-
-.etape-a_venir {
-  -fx-background-color: #eef2f5;
-  -fx-text-fill: #6a737d;
-}
 
 .message-erreur {
   -fx-font-size: 12px;
