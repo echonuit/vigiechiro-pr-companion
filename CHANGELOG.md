@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.8.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.7.0...v2.8.0) (2026-07-12)
+
+
+### Features
+
+* **persistence:** sauvegarde complète base + dossiers de session (issue I, EPIC [#1154](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1154)) ([#1175](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1175)) ([304f231](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/304f231f74fc10274bdc419f1b85ad5574743208)), closes [#1142](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1142)
+
 # [2.7.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.6.0...v2.7.0) (2026-07-12)
 
 
