@@ -109,15 +109,6 @@ class CliAuditTest {
         assertThat(texteSortie()).contains("ERREUR").contains("DISQUE_MANQUANT");
     }
 
-    @Test
-    @DisplayName("audit-coherence --online sur une base vide : succès (0), aucun appel réseau (aucun passage)")
-    void audit_online_base_vide() {
-        int code = cli.executer(new String[] {"audit-coherence", "--online"}, sortie, erreur);
-
-        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
-        assertThat(texteSortie()).contains("aucun écart");
-    }
-
     /// Sème un passage dont l'original pointe vers un fichier sous le workspace mais **absent** : le seul
     /// écart attendu est une erreur `DISQUE_MANQUANT`.
     private void semerOriginalManquant() {

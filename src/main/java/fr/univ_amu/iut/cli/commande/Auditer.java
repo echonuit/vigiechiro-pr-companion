@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
@@ -49,10 +50,13 @@ public final class Auditer implements Callable<Integer> {
     @Spec
     private CommandSpec spec;
 
-    private final ServiceAuditCoherence service;
+    // Provider, non instance directe : picocli instancie les sous-commandes AVANT la migration du schéma ;
+    // résoudre ServiceAuditCoherence ici tirerait AuditPointsServeur → idUtilisateurCourant (requête SQL) sur
+    // une base non migrée. On résout donc paresseusement, à l'exécution de la commande (cf. SynchroniserVigieChiro).
+    private final Provider<ServiceAuditCoherence> service;
 
     @Inject
-    public Auditer(ServiceAuditCoherence service) {
+    public Auditer(Provider<ServiceAuditCoherence> service) {
         this.service = Objects.requireNonNull(service, "service");
     }
 
@@ -68,12 +72,13 @@ public final class Auditer implements Callable<Integer> {
     }
 
     private RapportAudit calculer() {
+        ServiceAuditCoherence audit = service.get();
         if (online) {
-            List<ConstatAudit> tous = new ArrayList<>(service.auditerTout().constats());
-            tous.addAll(service.auditerEnLigne().constats());
+            List<ConstatAudit> tous = new ArrayList<>(audit.auditerTout().constats());
+            tous.addAll(audit.auditerEnLigne().constats());
             return new RapportAudit(tous);
         }
-        return idPassage == null ? service.auditerTout() : service.auditerPassage(idPassage);
+        return idPassage == null ? audit.auditerTout() : audit.auditerPassage(idPassage);
     }
 
     private static String enJson(RapportAudit rapport) {

@@ -20,5 +20,8 @@ public enum CategorieConstat {
     SERVEUR_MANQUANT,
     /// Le journal de traitement du serveur est indisponible (hors connexion, ou traitement non terminé) :
     /// la vérification **en ligne** est partielle.
-    SERVEUR_INJOIGNABLE
+    SERVEUR_INJOIGNABLE,
+    /// Un point d'écoute local diverge de sa localité serveur (inconnu du serveur, ou position
+    /// différente) : constat **en ligne**.
+    POINT_DIVERGENT
 }

@@ -92,7 +92,7 @@ class ServiceAuditCoherenceTest {
         depotDao = new DepotUniteDao(source);
 
         racineSession = dossier.resolve(PREFIXE.nomDossierSession());
-        service = new ServiceAuditCoherence(source, new Workspace(dossier), Optional.empty());
+        service = new ServiceAuditCoherence(source, new Workspace(dossier), Optional.empty(), Optional.empty());
     }
 
     @Test
@@ -102,7 +102,8 @@ class ServiceAuditCoherenceTest {
         VerificationDepot moteur = mock(VerificationDepot.class);
         when(moteur.verifier(idPassage))
                 .thenReturn(new BilanVerification("part-1", true, 3, List.of("a.wav"), List.of("b.zip", "c.zip")));
-        ServiceAuditCoherence enLigne = new ServiceAuditCoherence(source, new Workspace(dossier), Optional.of(moteur));
+        ServiceAuditCoherence enLigne =
+                new ServiceAuditCoherence(source, new Workspace(dossier), Optional.of(moteur), Optional.empty());
 
         List<ConstatAudit> constats = enLigne.auditerEnLigne().constats();
 
@@ -110,6 +111,28 @@ class ServiceAuditCoherenceTest {
                 .extracting(ConstatAudit::categorie)
                 .containsExactly(CategorieConstat.SERVEUR_MANQUANT, CategorieConstat.SERVEUR_MANQUANT);
         assertThat(constats).extracting(ConstatAudit::cible).containsExactly("b.zip", "c.zip");
+    }
+
+    @Test
+    @DisplayName("Audit en ligne : les constats des points serveur (AuditPointsServeur) sont inclus")
+    void audit_en_ligne_inclut_les_points() {
+        AuditPointsServeur points = mock(AuditPointsServeur.class);
+        when(points.auditer())
+                .thenReturn(List.of(new ConstatAudit(
+                        SeveriteConstat.AVERTISSEMENT,
+                        CategorieConstat.POINT_DIVERGENT,
+                        null,
+                        "040962 / A1",
+                        "Position différente du serveur.")));
+        ServiceAuditCoherence avecPoints =
+                new ServiceAuditCoherence(source, new Workspace(dossier), Optional.empty(), Optional.of(points));
+
+        List<ConstatAudit> constats = avecPoints.auditerEnLigne().constats();
+
+        assertThat(constats).singleElement().satisfies(c -> {
+            assertThat(c.categorie()).isEqualTo(CategorieConstat.POINT_DIVERGENT);
+            assertThat(c.cible()).isEqualTo("040962 / A1");
+        });
     }
 
     @Test

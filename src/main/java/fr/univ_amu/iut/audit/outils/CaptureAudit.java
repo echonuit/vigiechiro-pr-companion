@@ -81,7 +81,7 @@ public final class CaptureAudit {
         return Guice.createInjector(new CommunModule(), new PersistenceModule(), new AbstractModule() {
             @Provides
             ServiceAuditCoherence fournirService(SourceDeDonnees source, Workspace workspace) {
-                return new ServiceAuditCoherence(source, workspace, Optional.empty());
+                return new ServiceAuditCoherence(source, workspace, Optional.empty(), Optional.empty());
             }
 
             @Provides
