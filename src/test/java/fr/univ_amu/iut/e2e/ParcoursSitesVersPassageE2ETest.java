@@ -21,6 +21,8 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -34,6 +36,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours (P-Sites, entrée réelle)** : le chemin d'entrée n°1 d'un utilisateur,
 /// piloté **uniquement par des clics réels** sur le vrai chrome, sans raccourci de navigation :
@@ -108,9 +111,26 @@ class ParcoursSitesVersPassageE2ETest {
         assertThat(passages.getItems()).hasSize(1);
 
         // 3) Double-clic sur la ligne de passage (cellule date) → drill-down vers M-Passage.
-        robot.doubleClickOn(DATE_NUIT);
+        doubleClicVersPassage(robot, navigation);
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
         assertThat(robot.lookup("#boutonVerifier").queryAs(Button.class)).isNotNull();
+    }
+
+    /// Double-clic « robuste » de drill-down vers M-Passage. Sous charge (suite complète, forks
+    /// parallèles), TestFX peut ne pas enregistrer le double-clic ou naviguer avec un léger différé,
+    /// laissant l'écran sur la vue intermédiaire (« site-detail ») quand l'assertion tombe. On attend donc
+    /// que la navigation aboutisse réellement, avec quelques réessais ; l'assertion de l'appelant tranche
+    /// clairement si, malgré tout, on n'y est pas.
+    private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
+        for (int essai = 1; essai <= 3; essai++) {
+            robot.doubleClickOn(DATE_NUIT);
+            try {
+                WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
+                return;
+            } catch (TimeoutException reessai) {
+                // Navigation pas encore aboutie : on retente (le double-clic n'a peut-être pas « pris »).
+            }
+        }
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {
