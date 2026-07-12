@@ -52,6 +52,15 @@ sa `colonneCle()` et son `RowMapper`. Seules les écritures dépendant des colon
 (`insert` / `update`) restent à écrire, via les helpers `executerMaj(...)` et
 `insererEtRecupererCle(...)`.
 
+Depuis #1193, la mécanique de **lecture** (connexion, liaison des paramètres, itération du
+`ResultSet` vers un `RowMapper`) vit dans
+[`ProjectionGenerique`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/ProjectionGenerique.java),
+dont hérite `DaoGenerique`. Les **DAO de projection** en lecture seule (`ProjectionsAnalyseDao`,
+`ProjectionsAudioDao` sur la table `observation`) étendent directement cette base : une projection
+transverse ne porte ni table propre ni écriture, le contrat CRUD `Dao` ne s'applique pas à elle.
+Les fragments SQL partagés entre DAO d'une même table (jointures de contexte, statut dérivé,
+alias) sont factorisés dans une classe paquet-privée (`FragmentsSqlObservation`).
+
 ```mermaid
 classDiagram
     class Dao {
