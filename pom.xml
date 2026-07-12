@@ -30,6 +30,7 @@
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.surefire.plugin.version>3.5.6</maven.surefire.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
+        <maven.dependency.plugin.version>3.8.1</maven.dependency.plugin.version>
         <exec.maven.plugin.version>3.6.3</exec.maven.plugin.version>
         <spotless.maven.plugin.version>3.8.0</spotless.maven.plugin.version>
         <palantir.java.format.version>2.91.0</palantir.java.format.version>
@@ -347,6 +348,23 @@
                 </executions>
             </plugin>
 
+            <!-- Expose le chemin des jars de dépendances comme propriétés
+                 (${groupId:artifactId:type}), pour passer byte-buddy-agent en -javaagent à Surefire
+                 (agent Mockito explicite, cf. argLine ci-dessous). Lié à la phase `initialize`. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>${maven.dependency.plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>exposer-chemins-dependances</id>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
@@ -381,6 +399,7 @@
                     </systemPropertyVariables>
                     <argLine>
                         @{jacocoArgLine}
+                        -javaagent:${net.bytebuddy:byte-buddy-agent:jar}
                         --enable-native-access=ALL-UNNAMED
                         --enable-native-access=javafx.graphics
                         --add-reads javafx.graphics=ALL-UNNAMED

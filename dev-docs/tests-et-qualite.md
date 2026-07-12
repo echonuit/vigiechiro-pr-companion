@@ -45,7 +45,19 @@ aucun display. La config vit dans le bloc Surefire du `pom.xml`, **rien à régl
 
 On **ne met pas** `testfx.headless=true` : ce flag réactiverait l'ancien bootstrap Monocle. Le
 headless vient de `glass.platform=Headless`, pas de TestFX. Le `argLine` ajoute les `--add-opens` /
-`--add-exports` requis par JavaFX sous Java 25 + l'agent JaCoCo.
+`--add-exports` requis par JavaFX (accès aux internes `com.sun.javafx.*` pour TestFX) + l'agent JaCoCo
++ l'agent **Mockito** (voir ci-dessous).
+
+!!! note "Préparation à Java 26+"
+    Sous Java 25 tout passe, mais deux signaux annoncent la bascule 26 :
+
+    - **Agent Mockito explicite** *(fait)* : Mockito 5 s'auto-attachait dynamiquement (« A Java agent
+      has been loaded dynamically… will be disallowed by default in a future release »). On passe
+      désormais `byte-buddy-agent` en `-javaagent` via `maven-dependency-plugin:properties`
+      (`${net.bytebuddy:byte-buddy-agent:jar}` dans l'`argLine`) : plus d'auto-attachement, prêt pour
+      le JDK 26.
+    - **`sun.misc.Unsafe`** *(à surveiller)* : le warning vient de **Guava** (transitif), pas du code
+      du projet. Il disparaîtra avec une montée de version de Guava ; rien à faire ici pour l'instant.
 
 !!! danger "Lancer les tests avec le bon JDK"
     Utilisez un **JDK 25 standard** (`25.0.2-open` / Temurin), **pas** un JDK packagé FX (`fx-zulu`) :
