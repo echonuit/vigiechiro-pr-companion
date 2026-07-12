@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.4.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.3.0...v2.4.0) (2026-07-12)
+
+
+### Features
+
+* **cli:** option --archives, dépôt des ZIP au lieu des WAV (expérimental, [#984](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/984)) ([#1115](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1115)) ([198c63c](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/198c63cce17a3e309efa63748a2472e677619591)), closes [#1035](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1035)
+
 # [2.3.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.2.0...v2.3.0) (2026-07-12)
 
 
