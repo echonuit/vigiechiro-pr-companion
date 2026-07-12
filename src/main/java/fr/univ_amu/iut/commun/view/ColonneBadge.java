@@ -2,7 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
-import java.util.Locale;
+import fr.univ_amu.iut.commun.viewmodel.ClasseBadge;
 import java.util.function.Function;
 import javafx.scene.control.TableCell;
 
@@ -39,15 +39,15 @@ public final class ColonneBadge {
         };
     }
 
-    /// Classe CSS du badge de **statut workflow** d'un passage (`badge-statut-…`).
+    /// Classe CSS du badge de **statut workflow** d'un passage (`badge-statut-…`), pour l'usage en cellule
+    /// de table. Délègue à [ClasseBadge] (source unique partagée avec les viewmodels de feature).
     public static String classe(StatutWorkflow statut) {
-        return "badge-statut-" + statut.name().toLowerCase(Locale.ROOT);
+        return ClasseBadge.pour(statut);
     }
 
     /// Classe CSS du badge de **verdict** d'un passage (`badge-verdict-…`) ; « À vérifier » par défaut
-    /// lorsqu'aucun verdict n'est encore saisi.
+    /// lorsqu'aucun verdict n'est encore saisi. Délègue à [ClasseBadge].
     public static String classe(Verdict verdict) {
-        Verdict effectif = verdict == null ? Verdict.A_VERIFIER : verdict;
-        return "badge-verdict-" + effectif.name().toLowerCase(Locale.ROOT);
+        return ClasseBadge.pour(verdict);
     }
 }

@@ -2,8 +2,8 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.viewmodel.ClasseBadge;
 import fr.univ_amu.iut.passage.model.Passage;
-import java.util.Locale;
 
 /// Données de présentation d'une ligne du tableau des passages (écran M-Site-detail).
 ///
@@ -41,16 +41,16 @@ public record LignePassage(
     }
 
     /// Classe CSS du badge de statut, dérivée de l'énum (couleur jamais stockée). Ex.
-    /// `badge-statut-transforme`.
+    /// `badge-statut-transforme`. Délègue à [ClasseBadge] : source unique partagée avec la vue
+    /// (`ColonneBadge`), que ce viewmodel ne peut pas appeler directement (pas de dépendance vers la view).
     public String statutClasseCss() {
-        return "badge-statut-" + statut.name().toLowerCase(Locale.ROOT);
+        return ClasseBadge.pour(statut);
     }
 
     /// Classe CSS du badge de verdict, dérivée de l'énum (`A_VERIFIER` si aucun verdict). Ex.
-    /// `badge-verdict-ok`.
+    /// `badge-verdict-ok`. Délègue à [ClasseBadge].
     public String verdictClasseCss() {
-        Verdict effectif = verdict == null ? Verdict.A_VERIFIER : verdict;
-        return "badge-verdict-" + effectif.name().toLowerCase(Locale.ROOT);
+        return ClasseBadge.pour(verdict);
     }
 
     /// Construit une ligne à partir d'un passage et du code de son point d'écoute.
