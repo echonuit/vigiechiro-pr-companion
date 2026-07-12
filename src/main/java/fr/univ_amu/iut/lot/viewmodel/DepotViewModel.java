@@ -24,6 +24,8 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 /// `DepotVigieChiroModule`). VM agnostique de l'IHM (règle ArchUnit `viewmodel_sans_javafx_ui`).
 public class DepotViewModel {
 
+    private static final String PARAM_ID_PASSAGE = "idPassage";
+
     private final ServiceLot service;
     private final Optional<DepotVigieChiro> depot;
 
@@ -42,6 +44,12 @@ public class DepotViewModel {
 
     /// Message de restitution du dernier dépôt (succès résumé ou erreur), pour l'IHM.
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
+
+    /// `true` quand une participation VigieChiro est **liée** au passage courant (dépôt via l'API
+    /// effectué, #984) : l'IHM bascule alors l'étape ④ de « Marquer déposé » à « Lancer la participation »
+    /// (compute). Posée à la réhydratation et après un dépôt (au fil JavaFX).
+    private final ReadOnlyBooleanWrapper participationLiee =
+            new ReadOnlyBooleanWrapper(this, "participationLiee", false);
 
     /// Table de dépôt (#983) : une [LigneDepot] par unité suivie (`depot_unite`, #981), réhydratée à
     /// l'ouverture ([#rehydrater]) et mise à jour en direct pendant un dépôt (relais du controller).
@@ -74,7 +82,7 @@ public class DepotViewModel {
     /// Variante avec **suivi par unité** (#983) : `suivi` est notifié hors-thread au fil du dépôt
     /// reprenable (#982) ; la vue relaie au fil JavaFX vers [#suiviLignes()].
     public BilanDepot televerser(Long idPassage, SuiviDepot suivi) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Objects.requireNonNull(suivi, "suivi");
         DepotVigieChiro depotVigieChiro =
                 depot.orElseThrow(() -> new RegleMetierException("Dépôt VigieChiro indisponible dans ce contexte."));
@@ -84,11 +92,39 @@ public class DepotViewModel {
         return depotVigieChiro.deposer(idPassage, fichiers, annulation::get, suivi);
     }
 
+    /// Lance le **traitement serveur** (compute, #984) de la participation liée au passage : équivalent
+    /// « Lancer la participation » du web. **Bloquant** (réseau) : à appeler **hors du fil JavaFX**. `true`
+    /// si accepté. Lève une [RegleMetierException] si le dépôt est indisponible ou si aucune participation
+    /// n'est liée (déposer d'abord).
+    public boolean lancerTraitement(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        DepotVigieChiro depotVigieChiro =
+                depot.orElseThrow(() -> new RegleMetierException("Dépôt VigieChiro indisponible dans ce contexte."));
+        return depotVigieChiro.lancerTraitement(idPassage);
+    }
+
+    /// Propriété **« participation liée »** (#984) : `true` quand le passage courant a été déposé via
+    /// l'API (participation créée) — l'IHM bascule l'étape ④ en « Lancer la participation ». `false` hors
+    /// application connectée. Posée par [#rehydrater] (ouverture) et après un dépôt.
+    public ReadOnlyBooleanProperty participationLieeProperty() {
+        return participationLiee.getReadOnlyProperty();
+    }
+
+    /// Restitue le résultat d'un **lancement de traitement** (#984), au fil JavaFX : message de succès ou
+    /// d'échec pour la zone de statut du dépôt.
+    public void restituerLancement(boolean accepte) {
+        message.set(
+                accepte
+                        ? "🚀 Traitement lancé sur VigieChiro : les résultats arriveront après le calcul serveur."
+                        : "Échec du lancement du traitement sur VigieChiro — réessayez.");
+    }
+
     /// Réhydrate la table de dépôt depuis l'état persisté (`depot_unite`, #981) : à appeler sur le fil
     /// JavaFX à l'ouverture de l'écran. Table vide si aucun dépôt automatique n'a été entamé.
     public void rehydrater(Long idPassage) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         suiviLignes.planifier(service.unitesDepot(idPassage));
+        participationLiee.set(depot.map(d -> d.participationLiee(idPassage)).orElse(false));
     }
 
     /// Table de dépôt observable (#983) : lignes à lier à la `TableView`, drapeau « reste à reprendre »
@@ -123,6 +159,8 @@ public class DepotViewModel {
     /// déposés, et le détail des échecs éventuels (dépôt partiel relançable).
     public void appliquerBilan(BilanDepot bilan) {
         enCours.set(false);
+        // Un dépôt a eu lieu : la participation existe → l'étape ④ devient « Lancer la participation ».
+        participationLiee.set(true);
         // Dépôt interrompu à la demande (#1044) : le bilan de la tentative peut être « sans échec » alors
         // qu'il reste des fichiers à téléverser — le message le dit explicitement (compteurs de la table).
         if (annulationDemandee.get()) {

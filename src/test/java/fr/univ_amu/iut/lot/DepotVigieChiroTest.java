@@ -194,6 +194,36 @@ class DepotVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#984 : lancerTraitement délègue le compute au client pour la participation liée")
+    void lancer_traitement_delegue_compute() {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.lancerTraitement("part-1")).thenReturn(true);
+
+        assertThat(depot.lancerTraitement(idPassage)).isTrue();
+        verify(client).lancerTraitement("part-1");
+    }
+
+    @Test
+    @DisplayName("#984 : lancerTraitement refuse un passage sans participation liée (rien à traiter)")
+    void lancer_traitement_sans_participation_refuse() {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> depot.lancerTraitement(idPassage))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("déposez d'abord");
+        verify(client, never()).lancerTraitement(anyString());
+    }
+
+    @Test
+    @DisplayName("#984 : participationLiee reflète le lien local (sans réseau)")
+    void participation_liee_reflete_le_lien() {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"), Optional.empty());
+
+        assertThat(depot.participationLiee(idPassage)).isTrue();
+        assertThat(depot.participationLiee(idPassage)).isFalse();
+    }
+
+    @Test
     @DisplayName("bug corrigé : un dépôt PARTIEL laisse « Dépôt en cours » (jamais « Déposé »), échec consigné")
     void depot_partiel_ne_bascule_pas_depose(@TempDir Path dossier) throws IOException {
         Path ok = fichier(dossier, "ok.wav");

@@ -176,6 +176,47 @@ class DepotViewModelTest {
     }
 
     @Test
+    @DisplayName("#984 : lancerTraitement délègue au moteur ; indisponible → refus")
+    void lancer_traitement_delegue_ou_refuse() {
+        when(depot.lancerTraitement(ID_PASSAGE)).thenReturn(true);
+        assertThat(new DepotViewModel(service, Optional.of(depot)).lancerTraitement(ID_PASSAGE))
+                .isTrue();
+
+        assertThatThrownBy(() -> new DepotViewModel(service, Optional.empty()).lancerTraitement(ID_PASSAGE))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("indisponible");
+    }
+
+    @Test
+    @DisplayName("#984 : participationLiee (propriété) : fausse au départ, vraie après réhydratation liée ou dépôt")
+    void participation_liee_propriete() {
+        when(service.unitesDepot(ID_PASSAGE)).thenReturn(List.of());
+        when(depot.participationLiee(ID_PASSAGE)).thenReturn(true);
+
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+        assertThat(vm.participationLieeProperty().get()).isFalse();
+
+        vm.rehydrater(ID_PASSAGE);
+        assertThat(vm.participationLieeProperty().get()).isTrue();
+
+        DepotViewModel apresDepot = new DepotViewModel(service, Optional.of(depot));
+        apresDepot.appliquerBilan(new BilanDepot("p", 1, List.of()));
+        assertThat(apresDepot.participationLieeProperty().get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#984 : restituerLancement pose un message de succès ou d'échec")
+    void restituer_lancement_message() {
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+
+        vm.restituerLancement(true);
+        assertThat(vm.messageProperty().get()).contains("Traitement lancé");
+
+        vm.restituerLancement(false);
+        assertThat(vm.messageProperty().get()).contains("Échec");
+    }
+
+    @Test
     @DisplayName("cycle d'état IHM : en cours → bilan complet / partiel / échec")
     void cycle_etat_ihm() {
         DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
