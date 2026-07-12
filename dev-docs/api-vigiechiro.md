@@ -96,6 +96,45 @@ Base : `https://vigiechiro.herokuapp.com/api/v1`. Auth : `Authorization: Basic b
 Le `site` porte un tableau `localites` (chacune = un **point d'écoute** : `nom` + géométrie `Point`), plus
 `titre`, `protocole`, `grille_stoc`, `_etag`. Détail dans `src/test/resources/vigiechiro/site.schema.json`.
 
+### Objet `donnee` (résultats Tadarida) et ancrage des corrections
+
+`GET /participations/{id}/donnees` renvoie une collection Eve **paginée** (`_meta.max_results = 20` par
+page ; la participation canonique `6a4961f5…` en a **4806**, soit 241 pages). Chaque **donnée** correspond
+à **un fichier WAV** traité :
+
+```json
+{
+  "_id": "6a4fcaa2842983a29ba25363",
+  "titre": "Car130711-2026-Pass1-Z41-PaRecPR1997632_20260703_220529_000",
+  "publique": true,
+  "observations": [
+    {
+      "frequence_mediane": 153.0, "temps_debut": 0.1, "temps_fin": 5.0,
+      "tadarida_probabilite": 0.9,
+      "tadarida_taxon": { "_id": "5526cd5a…", "libelle_court": "noise", "libelle_long": "bruit" },
+      "tadarida_taxon_autre": [ { "taxon": { "_id": "…", "libelle_court": "Tetvir" }, "probabilite": 0.02 } ]
+    }
+  ],
+  "_etag": "…"
+}
+```
+
+Points vérifiés en réel (reconnaissance #1135, 2026-07-12, lecture seule) :
+
+- la **donnée porte un `_id`** (et un `titre` = nom du WAV **sans extension**) : elle est adressable ;
+- une **observation n'a PAS d'`_id`** : c'est un **sous-document positionnel** de `observations`. Ses champs
+  sont `frequence_mediane`, `temps_debut`, `temps_fin`, `tadarida_probabilite`, `tadarida_taxon` (le **taxon
+  complet embarqué**, pas un simple objectid) et `tadarida_taxon_autre` (liste rangée `{taxon, probabilite}`) ;
+- **aucun champ `observateur_*`** n'est présent tant qu'aucune correction n'a été poussée.
+
+!!! warning "Ancrage d'une correction (#723 / #1139)"
+    Les observations n'ayant pas d'`_id`, une correction se cible par le couple **(`donnee._id`, indice dans
+    `observations`)**, pas par un identifiant d'observation. Le modèle `PATCH /donnees/{id}/observations/
+    {id_observation}` du périmètre initial de #723 est donc à revoir : l'observation n'est pas une ressource
+    REST autonome. À trancher lors de l'ancrage (#1139) : soit un `PATCH` de la **donnée** avec son tableau
+    `observations` mis à jour (`If-Match: _etag`), soit une sous-ressource **positionnelle** si Eve l'expose.
+    Le taxon à envoyer est un **objectid** (cf. mapping code ↔ objectid #717).
+
 ## Cycle de vie d'une participation (EPIC #941)
 
 Le cycle est **naturel** depuis la refonte : la participation est **créée à l'import** (best-effort,
