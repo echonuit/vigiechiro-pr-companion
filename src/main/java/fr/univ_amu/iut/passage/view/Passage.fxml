@@ -35,8 +35,12 @@
           <Button fx:id="boutonOuvrirPortail" text="🌐 Voir la participation"
                   styleClass="bouton-secondaire" onAction="#ouvrirSurVigieChiro"/>
         </StackPane>
-        <Button fx:id="boutonRattachement" text="✏ Modifier le passage"
-                styleClass="bouton-secondaire" onAction="#modifierRattachement"/>
+        <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton
+             (un passage déposé n'est plus renommable). -->
+        <StackPane fx:id="enveloppeRattachement">
+          <Button fx:id="boutonRattachement" text="✏ Modifier le passage"
+                  styleClass="bouton-secondaire" onAction="#modifierRattachement"/>
+        </StackPane>
         <Button fx:id="boutonAnnulerDepot" text="↩ Annuler le dépôt"
                 styleClass="bouton-secondaire" onAction="#annulerDepot"/>
         <Button fx:id="boutonPurger" text="🧹 Purger les originaux"

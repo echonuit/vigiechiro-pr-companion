@@ -54,6 +54,8 @@ public class PassageViewModel {
             new ReadOnlyBooleanWrapper(this, "annulationDepotDisponible", false);
     private final ReadOnlyBooleanWrapper suppressionPossible =
             new ReadOnlyBooleanWrapper(this, "suppressionPossible", false);
+    private final ReadOnlyBooleanWrapper renommagePossible =
+            new ReadOnlyBooleanWrapper(this, "renommagePossible", false);
     private final ReadOnlyBooleanWrapper purgeDisponible = new ReadOnlyBooleanWrapper(this, "purgeDisponible", false);
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
@@ -135,6 +137,10 @@ public class PassageViewModel {
         // lieu de laisser l'utilisateur découvrir le refus après la confirmation. Il faut d'abord annuler
         // le dépôt.
         suppressionPossible.set(detail.statut() != StatutWorkflow.DEPOSE);
+        // Renommage (rattachement) bloqué dès qu'un passage est déposé ou en cours de dépôt : son nom est
+        // l'identité de ses fichiers côté serveur, le service refuse alors le renommage. Gating amont.
+        renommagePossible.set(
+                detail.statut() != StatutWorkflow.DEPOSE && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
         actionRecommandee.set(prochaineAction(detail.statut()));
@@ -170,6 +176,7 @@ public class PassageViewModel {
         depotDisponible.set(false);
         annulationDepotDisponible.set(false);
         suppressionPossible.set(false);
+        renommagePossible.set(false);
         purgeDisponible.set(false);
         actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
@@ -278,6 +285,14 @@ public class PassageViewModel {
     /// d'explication (cf. [fr.univ_amu.iut.commun.view.IndicateurBlocage]).
     public ReadOnlyBooleanProperty suppressionPossibleProperty() {
         return suppressionPossible.getReadOnlyProperty();
+    }
+
+    /// `true` quand le passage peut être renommé (rattachement modifiable) : tout statut **sauf** Déposé
+    /// ou Dépôt en cours. Après dépôt, le nom des fichiers est l'identité côté serveur ; le bouton
+    /// « Modifier le passage » est grisé, avec un tooltip d'explication (cf.
+    /// [fr.univ_amu.iut.commun.view.IndicateurBlocage]).
+    public ReadOnlyBooleanProperty renommagePossibleProperty() {
+        return renommagePossible.getReadOnlyProperty();
     }
 
     /// `true` quand des **originaux** sont encore stockés (volume bruts > 0) : la purge est alors proposée

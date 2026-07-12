@@ -202,6 +202,8 @@ class PassageVueIntegrationTest {
         assertThat(bouton(vue, "#boutonDepot").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isFalse();
+        // Déposé : le renommage (« Modifier le passage ») est bloqué, son nom étant l'identité serveur (#1134).
+        assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isTrue();
         // Déposé → la mise en avant est passée à la carte « Sons & validation » (le dépôt n'est plus recommandé).
         assertThat(estRecommandee(bouton(vue, "#boutonValidation"))).isTrue();
         assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();

@@ -153,6 +153,14 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private StackPane enveloppeSupprimer;
 
     @FXML
+    private Button boutonRattachement;
+
+    /// Enveloppe (non désactivée) du bouton « Modifier le passage » : porte le tooltip expliquant le
+    /// blocage du renommage sur un passage déposé. Cf. [IndicateurBlocage].
+    @FXML
+    private StackPane enveloppeRattachement;
+
+    @FXML
     private Label lblIndiceAction;
 
     @Inject
@@ -272,6 +280,18 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                 Bindings.when(viewModel.suppressionPossibleProperty())
                         .then("Supprimer définitivement ce passage et toute sa nuit (séquences, relevés).")
                         .otherwise("Suppression impossible : ce passage est déposé sur VigieChiro."
+                                + " Annulez d'abord le dépôt."));
+        // Renommage gaté en amont (#789) : un passage déposé (ou en cours de dépôt) n'est plus renommable
+        // (le service le refuse, son nom étant l'identité de ses fichiers côté serveur). On grise « Modifier
+        // le passage » et on explique le blocage par le tooltip de l'enveloppe.
+        boutonRattachement
+                .disableProperty()
+                .bind(viewModel.renommagePossibleProperty().not());
+        IndicateurBlocage.expliquer(
+                enveloppeRattachement,
+                Bindings.when(viewModel.renommagePossibleProperty())
+                        .then("Modifier le rattachement (année, n° de passage) : renomme toute la nuit.")
+                        .otherwise("Modification impossible : ce passage est déposé sur VigieChiro."
                                 + " Annulez d'abord le dépôt."));
         // « Annuler le dépôt » n'a de sens que sur un passage déposé : le bouton n'apparaît (et n'occupe
         // de place) que dans ce cas, au lieu de rester grisé en permanence dans la barre d'actions.

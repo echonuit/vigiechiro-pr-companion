@@ -264,6 +264,28 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("Le renommage est possible sur tout statut sauf Déposé ou Dépôt en cours")
+    void renommage_possible_sauf_si_depose_ou_en_cours() {
+        // Renommer après dépôt divergerait du serveur (le nom des fichiers y est l'identité) : bouton grisé.
+        for (StatutWorkflow statut : new StatutWorkflow[] {StatutWorkflow.DEPOSE, StatutWorkflow.DEPOT_EN_COURS}) {
+            when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(statut));
+            viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+            assertThat(viewModel.renommagePossibleProperty().get())
+                    .as("renommage bloqué au statut %s", statut)
+                    .isFalse();
+        }
+        for (StatutWorkflow statut : new StatutWorkflow[] {
+            StatutWorkflow.IMPORTE, StatutWorkflow.TRANSFORME, StatutWorkflow.VERIFIE, StatutWorkflow.PRET_A_DEPOSER
+        }) {
+            when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(statut));
+            viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+            assertThat(viewModel.renommagePossibleProperty().get())
+                    .as("renommage possible au statut %s", statut)
+                    .isTrue();
+        }
+    }
+
+    @Test
     @DisplayName("annulerDepot délègue au service avec l'identifiant du passage courant")
     void annuler_depot_delegue_au_service() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
