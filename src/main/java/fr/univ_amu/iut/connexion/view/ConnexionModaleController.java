@@ -2,6 +2,7 @@ package fr.univ_amu.iut.connexion.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -34,7 +35,7 @@ import javafx.stage.Stage;
 public class ConnexionModaleController {
 
     /// Page d'accueil de la plateforme (connexion GitHub/Google), ouverte à l'étape 1.
-    private static final String URL_VIGIECHIRO = "https://vigiechiro.herokuapp.com";
+    private static final String URL_VIGIECHIRO = PortailVigieChiro.URL_PORTAIL;
 
     /// Marque-page (bookmarklet) copié à l'étape 2 : lit le token du `localStorage` de VigieChiro et le
     /// place dans le presse-papier (repli `prompt` si l'API clipboard du navigateur est indisponible).

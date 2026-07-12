@@ -45,6 +45,11 @@ Le bouton **Modifier** (bandeau d'identité) ouvre une fenêtre pour **éditer l
 numéro de carré, nom, protocole et commentaire. Pratique pour corriger une saisie ou compléter le
 site après coup, sans repasser par sa création.
 
+Le bouton **Ouvrir sur Vigie-Chiro** ouvre la page de ce site sur le **portail Vigie-Chiro** dans
+votre navigateur : pratique pour vérifier d'un coup d'œil que le rattachement est le bon. Il reste
+grisé tant que le site n'est pas relié au portail (connectez-vous, ou utilisez « Synchroniser depuis
+VigieChiro » sur l'écran Mes sites).
+
 ![La fenêtre d'édition de la fiche site : numéro de carré, nom convivial, protocole et commentaire.](../assets/captures/apercu-sites-modale-edition.png)
 
 - **Points d'écoute** : une carte par point, avec sa description, son **statut GPS** et le nombre de

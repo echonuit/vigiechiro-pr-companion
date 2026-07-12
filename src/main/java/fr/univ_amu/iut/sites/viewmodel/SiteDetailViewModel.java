@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -42,6 +43,7 @@ public class SiteDetailViewModel {
     private final PointDao pointDao;
     private final PassageDao passageDao;
     private final Horloge horloge;
+    private final PortailVigieChiro portail;
 
     private Site site;
 
@@ -53,17 +55,30 @@ public class SiteDetailViewModel {
     private final ReadOnlyStringWrapper dateCreation = wrapper("dateCreation");
     private final ReadOnlyStringWrapper derniereNuit = wrapper("derniereNuit");
     private final ReadOnlyStringWrapper passagesDeLAnnee = wrapper("passagesDeLAnnee");
+    private final ReadOnlyStringWrapper lienPortail = wrapper("lienPortail");
     private final ReadOnlyBooleanWrapper suppressionPossible =
             new ReadOnlyBooleanWrapper(this, "suppressionPossible", true);
 
     private final ObservableList<CartePoint> points = FXCollections.observableArrayList();
     private final ObservableList<LignePassage> passages = FXCollections.observableArrayList();
 
-    public SiteDetailViewModel(ServiceSites service, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+    public SiteDetailViewModel(
+            ServiceSites service,
+            PointDao pointDao,
+            PassageDao passageDao,
+            Horloge horloge,
+            PortailVigieChiro portail) {
         this.service = Objects.requireNonNull(service, "service");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.portail = Objects.requireNonNull(portail, "portail");
+    }
+
+    /// URL de la page du site sur le portail Vigie-Chiro (#1124), vide tant que le site n’est pas
+    /// rattaché (l’action « Ouvrir sur Vigie-Chiro » reste alors désactivée avec explication).
+    public ReadOnlyStringProperty lienPortailProperty() {
+        return lienPortail.getReadOnlyProperty();
     }
 
     /// Charge le site à afficher, puis recompose la fiche, les cartes de points et le tableau.
@@ -85,6 +100,7 @@ public class SiteDetailViewModel {
         mettreAJourTableauPassages(pointsDuSite, passagesDuSite);
         mettreAJourBandeau(passagesDuSite);
         suppressionPossible.set(passagesDuSite.isEmpty());
+        lienPortail.set(portail.pageSite(site.id()).orElse(""));
     }
 
     /// Modifie la fiche du site courant (bouton header `✏ Modifier`) puis recharge l'écran pour

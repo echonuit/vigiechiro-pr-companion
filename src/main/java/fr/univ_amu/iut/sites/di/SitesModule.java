@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -160,8 +161,12 @@ public class SitesModule extends ModuleDeFeature {
 
     @Provides
     SiteDetailViewModel fournirSiteDetailViewModel(
-            ServiceSites service, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
-        return new SiteDetailViewModel(service, pointDao, passageDao, horloge);
+            ServiceSites service,
+            PointDao pointDao,
+            PassageDao passageDao,
+            Horloge horloge,
+            PortailVigieChiro portail) {
+        return new SiteDetailViewModel(service, pointDao, passageDao, horloge, portail);
     }
 
     @Provides

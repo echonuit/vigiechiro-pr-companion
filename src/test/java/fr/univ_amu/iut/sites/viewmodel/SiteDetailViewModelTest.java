@@ -5,12 +5,15 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.within;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -43,6 +46,7 @@ class SiteDetailViewModelTest {
     private PassageDao passageDao;
     private PointDao pointDao;
     private SiteDetailViewModel viewModel;
+    private LienVigieChiroDao liens;
 
     @BeforeEach
     void preparer() {
@@ -55,7 +59,25 @@ class SiteDetailViewModelTest {
         new EnregistreurDao(source).insert(new Enregistreur("1925492", "V1.01", null));
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
         service = new ServiceSites(siteDao, pointDao, passageDao, horloge);
-        viewModel = new SiteDetailViewModel(service, pointDao, passageDao, horloge);
+        liens = new LienVigieChiroDao(source);
+        viewModel = new SiteDetailViewModel(service, pointDao, passageDao, horloge, new PortailVigieChiro(liens));
+    }
+
+    @Test
+    @DisplayName("#1124 : lienPortail vide tant que le site n'est pas rattaché, URL après rattachement")
+    void lien_portail_suit_le_rattachement() {
+        Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+        viewModel.chargerSite(site);
+        assertThat(viewModel.lienPortailProperty().get())
+                .as("site non rattaché")
+                .isEmpty();
+
+        liens.upsert(
+                new LienVigieChiro(LienVigieChiro.ENTITE_SITE, String.valueOf(site.id()), "5eb12120cbe7410011f0a97f"));
+        viewModel.rafraichir();
+
+        assertThat(viewModel.lienPortailProperty().get())
+                .isEqualTo("https://vigiechiro.herokuapp.com/#/sites/5eb12120cbe7410011f0a97f");
     }
 
     @Test

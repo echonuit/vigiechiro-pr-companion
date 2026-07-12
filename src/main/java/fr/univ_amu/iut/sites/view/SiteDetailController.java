@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -75,6 +76,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     private final Optional<OuvrirImportation> ouvrirImportation;
     private final OuvrirMultisite ouvrirMultisite;
     private final DepotDispositionColonnes depotColonnes;
+    private final OuvreurDeLien ouvreurDeLien;
 
     /// Contexte du site (nom en zone gauche, commune/protocole en zone centre) déporté en barre de statut
     /// (#693) au lieu d'un en-tête titre/sous-titre.
@@ -110,6 +112,12 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private StackPane enveloppeSupprimer;
+
+    @FXML
+    private Button boutonOuvrirPortail;
+
+    @FXML
+    private StackPane enveloppeOuvrirPortail;
 
     @FXML
     private FlowPane cartesPoints;
@@ -154,13 +162,15 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
             OuvrirPassage ouvrirPassage,
             Optional<OuvrirImportation> ouvrirImportation,
             OuvrirMultisite ouvrirMultisite,
-            DepotDispositionColonnes depotColonnes) {
+            DepotDispositionColonnes depotColonnes,
+            OuvreurDeLien ouvreurDeLien) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirImportation = Objects.requireNonNull(ouvrirImportation, "ouvrirImportation");
         this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
+        this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
     }
 
     /// Charge le site à afficher (appelée par [NavigationSites] juste après le chargement FXML).
@@ -218,6 +228,17 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
                         .otherwise("Suppression impossible : ce site porte des passages."
                                 + " Supprimez d'abord les passages rattachés."));
         boutonModifier.setTooltip(new Tooltip("Modifier la fiche du site (carré, nom, protocole…)."));
+        // « Ouvrir sur Vigie-Chiro » (#1124) : actif seulement quand le site est rattaché au portail ;
+        // désactivé, il documente ce qui manque (affordance #789) plutôt que de disparaître.
+        boutonOuvrirPortail
+                .disableProperty()
+                .bind(viewModel.lienPortailProperty().isEmpty());
+        IndicateurBlocage.expliquer(
+                enveloppeOuvrirPortail,
+                Bindings.when(viewModel.lienPortailProperty().isNotEmpty())
+                        .then("Ouvre la page de ce site sur le portail Vigie-Chiro (navigateur).")
+                        .otherwise("Ce site n'est pas encore relié à Vigie-Chiro : connectez-vous ou"
+                                + " synchronisez depuis « Mes sites »."));
         // « Importer une nuit » n'apparaît que si la feature `importation` est activée (feature-flag #1087).
         boolean importActif = ouvrirImportation.isPresent();
         boutonImporterNuit.setVisible(importActif);
@@ -273,6 +294,15 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     /// Ouvre la boîte d'édition pré-remplie ; à la validation, applique la modification via le
     /// ViewModel (qui recharge la fiche). Un refus métier (carré déjà pris) ou un format invalide
     /// (R1) est rapporté sans quitter l'écran.
+    /// Ouvre la page du site sur le portail Vigie-Chiro (#1124) — vérification visuelle du rattachement.
+    @FXML
+    private void ouvrirSurVigieChiro() {
+        String lien = viewModel.lienPortailProperty().get();
+        if (lien != null && !lien.isBlank()) {
+            ouvreurDeLien.ouvrir(lien);
+        }
+    }
+
     @FXML
     private void modifierSite() {
         demanderModificationSite(viewModel.siteCourant()).ifPresent(saisie -> {

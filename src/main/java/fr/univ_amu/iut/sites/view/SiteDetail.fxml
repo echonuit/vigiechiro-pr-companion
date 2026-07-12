@@ -39,6 +39,11 @@
             onAction="#voirSurCarte">
       <tooltip><Tooltip text="Ouvre la carte multi-sites centrée sur ce carré."/></tooltip>
     </Button>
+    <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton. -->
+    <StackPane fx:id="enveloppeOuvrirPortail">
+      <Button fx:id="boutonOuvrirPortail" text="🌐 Ouvrir sur Vigie-Chiro" styleClass="bouton-secondaire"
+              onAction="#ouvrirSurVigieChiro"/>
+    </StackPane>
     <Button fx:id="boutonModifier" text="✏ Modifier" styleClass="bouton-secondaire"
             onAction="#modifierSite"/>
     <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe donc sur ce
