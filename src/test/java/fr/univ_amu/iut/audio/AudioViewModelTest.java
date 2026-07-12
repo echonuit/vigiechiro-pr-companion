@@ -117,7 +117,7 @@ class AudioViewModelTest {
         void charger_appliquer_signaler_separes() {
             when(service.taxonsDisponibles()).thenReturn(List.of(new Taxon("Pippip", "Pipistrellus", null, 1L)));
             when(service.resultatsDuPassage(7L)).thenReturn(Optional.of(100L));
-            when(service.lignesAudioDuPassage(7L))
+            when(projections.lignesAudioDuPassage(7L))
                     .thenReturn(List.of(ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
             AudioViewModel vm = vm();
 
