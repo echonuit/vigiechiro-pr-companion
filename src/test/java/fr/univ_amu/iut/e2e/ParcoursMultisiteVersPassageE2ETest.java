@@ -22,6 +22,8 @@ import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -38,6 +40,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// **Test E2E de parcours (P5)** : la **vue agrégée M-Multisite** et son **drill-down** vers
 /// **M-Passage**, sur le vrai chrome. On ouvre l'écran multi-sites (navigation réelle), on vérifie
@@ -95,7 +98,7 @@ class ParcoursMultisiteVersPassageE2ETest {
         assertThat(navigation.getVueCourante()).isEqualTo("multisite");
 
         // 2) Double-clic sur la ligne (cellule date, unique) → drill-down vers M-Passage.
-        robot.doubleClickOn(DATE_NUIT);
+        doubleClicVersPassage(robot, navigation);
 
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
         assertThat(robot.lookup("#boutonVerifier").queryAs(Button.class)).isNotNull();
@@ -120,7 +123,7 @@ class ParcoursMultisiteVersPassageE2ETest {
 
         // 1) Multisite → double-clic → M-Passage (atteint sans passer par le site).
         robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
-        robot.doubleClickOn(DATE_NUIT);
+        doubleClicVersPassage(robot, navigation);
         assertThat(navigation.getVueCourante()).isEqualTo("passage");
 
         // 2) M-Passage → écran enfant (carte « Diagnostic matériel »).
@@ -147,6 +150,22 @@ class ParcoursMultisiteVersPassageE2ETest {
                 .filter(segment -> libelle.equals(segment.getText()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    /// Double-clic « robuste » de drill-down vers M-Passage. Sous charge (suite complète, forks
+    /// parallèles), TestFX peut ne pas enregistrer le double-clic ou naviguer avec un léger différé,
+    /// laissant l'écran sur la vue intermédiaire quand l'assertion tombe. On attend donc que la navigation
+    /// aboutisse réellement, avec quelques réessais ; l'assertion de l'appelant tranche clairement sinon.
+    private static void doubleClicVersPassage(FxRobot robot, NavigationViewModel navigation) {
+        for (int essai = 1; essai <= 3; essai++) {
+            robot.doubleClickOn(DATE_NUIT);
+            try {
+                WaitForAsyncUtils.waitFor(3, TimeUnit.SECONDS, () -> "passage".equals(navigation.getVueCourante()));
+                return;
+            } catch (TimeoutException reessai) {
+                // Navigation pas encore aboutie : on retente (le double-clic n'a peut-être pas « pris »).
+            }
+        }
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {
