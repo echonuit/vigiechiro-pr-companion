@@ -1,0 +1,21 @@
+#!/bin/bash
+# Post-merge hook : nettoie target/ après un git merge ou un git pull (mode merge)
+# qui a modifié du code, pour éviter les classes compilées périmées.
+#
+# Installé automatiquement par git-build-hook-maven-plugin au premier ./mvnw exécuté
+# dans le repo (qui configure core.hooksPath=.githooks).
+#
+# ORIG_HEAD est positionné par git merge sur le HEAD d'avant le merge.
+#
+# Comportement :
+# - Skip si le merge ne touche ni src/ ni pom.xml (changement doc-only)
+# - Sinon lance ./mvnw -q clean (une recompilation suivra de toute façon)
+#
+# Le cas git pull --rebase est couvert par le hook post-rewrite.
+
+git diff --quiet ORIG_HEAD HEAD -- src pom.xml && exit 0
+
+echo "post-merge : sources modifiées par le merge, nettoyage de target/"
+./mvnw -q clean
+
+exit 0

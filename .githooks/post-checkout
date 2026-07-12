@@ -1,0 +1,29 @@
+#!/bin/bash
+# Post-checkout hook : nettoie target/ après un changement de branche pour éviter
+# les classes compilées périmées (l'ancienne branche laisse ses .class dans
+# target/, ce qui fausse tests, PMD et lancements suivants).
+#
+# Installé automatiquement par git-build-hook-maven-plugin au premier ./mvnw exécuté
+# dans le repo (qui configure core.hooksPath=.githooks).
+#
+# Arguments fournis par git :
+# - $1 : ancien HEAD
+# - $2 : nouveau HEAD
+# - $3 : 1 pour un checkout de branche, 0 pour un checkout de fichier
+#
+# Comportement :
+# - Skip si ce n'est pas un vrai changement de branche (checkout de fichier,
+#   HEAD inchangé, checkout initial d'un clone ou d'un worktree add)
+# - Skip si le diff entre les deux HEAD ne touche ni src/ ni pom.xml
+#   (changement doc-only : target/ reste valide, inutile de recompiler)
+# - Sinon lance ./mvnw -q clean (une recompilation suivra de toute façon)
+
+[ "$3" = "1" ] || exit 0
+[ "$1" != "$2" ] || exit 0
+case "$1" in 0000000000000000000000000000000000000000) exit 0 ;; esac
+git diff --quiet "$1" "$2" -- src pom.xml && exit 0
+
+echo "post-checkout : sources modifiées entre les branches, nettoyage de target/"
+./mvnw -q clean
+
+exit 0

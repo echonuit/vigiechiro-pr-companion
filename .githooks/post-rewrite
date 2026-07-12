@@ -1,0 +1,25 @@
+#!/bin/bash
+# Post-rewrite hook : nettoie target/ après un git rebase (donc aussi un
+# git pull --rebase) qui a modifié du code, pour éviter les classes compilées
+# périmées. Complète post-merge, qui ne couvre que le pull en mode merge.
+#
+# Installé automatiquement par git-build-hook-maven-plugin au premier ./mvnw exécuté
+# dans le repo (qui configure core.hooksPath=.githooks).
+#
+# Arguments fournis par git :
+# - $1 : commande à l'origine de la réécriture ("rebase" ou "amend")
+#
+# ORIG_HEAD est positionné par git rebase sur le HEAD d'avant le rebase.
+#
+# Comportement :
+# - Skip si la réécriture vient d'un amend (le working tree n'a pas bougé)
+# - Skip si le diff avant/après rebase ne touche ni src/ ni pom.xml
+# - Sinon lance ./mvnw -q clean (une recompilation suivra de toute façon)
+
+[ "$1" = "rebase" ] || exit 0
+git diff --quiet ORIG_HEAD HEAD -- src pom.xml && exit 0
+
+echo "post-rewrite : sources modifiées par le rebase, nettoyage de target/"
+./mvnw -q clean
+
+exit 0
