@@ -15,5 +15,10 @@ public enum CategorieConstat {
     /// après dépôt) : divergence base / serveur.
     DEPOT_DIVERGENT,
     /// Un passage n'a aucune session d'enregistrement (jamais importé).
-    SESSION_ABSENTE
+    SESSION_ABSENTE,
+    /// Une unité déposée est absente côté serveur (non traitée ou non déposée) : constat **en ligne**.
+    SERVEUR_MANQUANT,
+    /// Le journal de traitement du serveur est indisponible (hors connexion, ou traitement non terminé) :
+    /// la vérification **en ligne** est partielle.
+    SERVEUR_INJOIGNABLE
 }

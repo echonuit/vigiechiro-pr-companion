@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -80,7 +81,7 @@ public final class CaptureAudit {
         return Guice.createInjector(new CommunModule(), new PersistenceModule(), new AbstractModule() {
             @Provides
             ServiceAuditCoherence fournirService(SourceDeDonnees source, Workspace workspace) {
-                return new ServiceAuditCoherence(source, workspace);
+                return new ServiceAuditCoherence(source, workspace, Optional.empty());
             }
 
             @Provides

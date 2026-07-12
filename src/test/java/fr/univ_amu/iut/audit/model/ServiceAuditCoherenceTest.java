@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.audit.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -11,8 +13,10 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.lot.model.BilanVerification;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
+import fr.univ_amu.iut.lot.model.VerificationDepot;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
@@ -36,6 +40,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -55,6 +60,7 @@ class ServiceAuditCoherenceTest {
     Path dossier;
 
     private Path racineSession;
+    private SourceDeDonnees source;
     private ServiceAuditCoherence service;
     private PassageDao passageDao;
     private SessionDao sessionDao;
@@ -67,7 +73,7 @@ class ServiceAuditCoherenceTest {
 
     @BeforeEach
     void preparer() {
-        SourceDeDonnees source = new SourceDeDonnees(new Workspace(dossier));
+        source = new SourceDeDonnees(new Workspace(dossier));
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         SiteDao siteDao = new SiteDao(source);
@@ -86,7 +92,35 @@ class ServiceAuditCoherenceTest {
         depotDao = new DepotUniteDao(source);
 
         racineSession = dossier.resolve(PREFIXE.nomDossierSession());
-        service = new ServiceAuditCoherence(source, new Workspace(dossier));
+        service = new ServiceAuditCoherence(source, new Workspace(dossier), Optional.empty());
+    }
+
+    @Test
+    @DisplayName("Audit en ligne : le bilan VerificationDepot est mappé (manquantes -> SERVEUR_MANQUANT)")
+    void audit_en_ligne_mappe_le_bilan() {
+        Long idPassage = creerPassage(1);
+        VerificationDepot moteur = mock(VerificationDepot.class);
+        when(moteur.verifier(idPassage))
+                .thenReturn(new BilanVerification("part-1", true, 3, List.of("a.wav"), List.of("b.zip", "c.zip")));
+        ServiceAuditCoherence enLigne = new ServiceAuditCoherence(source, new Workspace(dossier), Optional.of(moteur));
+
+        List<ConstatAudit> constats = enLigne.auditerEnLigne().constats();
+
+        assertThat(constats)
+                .extracting(ConstatAudit::categorie)
+                .containsExactly(CategorieConstat.SERVEUR_MANQUANT, CategorieConstat.SERVEUR_MANQUANT);
+        assertThat(constats).extracting(ConstatAudit::cible).containsExactly("b.zip", "c.zip");
+    }
+
+    @Test
+    @DisplayName("Audit en ligne indisponible (Optional vide) : un seul constat INFO SERVEUR_INJOIGNABLE")
+    void audit_en_ligne_indisponible() {
+        List<ConstatAudit> constats = service.auditerEnLigne().constats();
+
+        assertThat(constats).singleElement().satisfies(c -> {
+            assertThat(c.severite()).isEqualTo(SeveriteConstat.INFO);
+            assertThat(c.categorie()).isEqualTo(CategorieConstat.SERVEUR_INJOIGNABLE);
+        });
     }
 
     @Test

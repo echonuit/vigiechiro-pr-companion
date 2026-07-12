@@ -7,6 +7,7 @@ import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.SeveriteConstat;
 import fr.univ_amu.iut.cli.FormatJson;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,17 @@ public final class Auditer implements Callable<Integer> {
     @Option(names = "--json", description = "Émet les constats au format JSON (tableau) plutôt qu'en texte.")
     private boolean json;
 
+    @Option(
+            names = "--online",
+            description = "Ajoute la vérification en ligne : confronte le dépôt au serveur VigieChiro (#1132).")
+    private boolean online;
+
+    @Option(
+            names = "--token",
+            paramLabel = "<token>",
+            description = "Token VigieChiro pour --online (sinon $VIGIECHIRO_TOKEN ou la connexion enregistrée).")
+    private String token;
+
     @Spec
     private CommandSpec spec;
 
@@ -47,9 +59,21 @@ public final class Auditer implements Callable<Integer> {
     @Override
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
-        RapportAudit rapport = idPassage == null ? service.auditerTout() : service.auditerPassage(idPassage);
+        if (online && token != null && !token.isBlank()) {
+            System.setProperty("vigiechiro.token", token);
+        }
+        RapportAudit rapport = calculer();
         sortie.println(json ? enJson(rapport) : enTexte(rapport));
         return rapport.aDesErreurs() ? 1 : 0;
+    }
+
+    private RapportAudit calculer() {
+        if (online) {
+            List<ConstatAudit> tous = new ArrayList<>(service.auditerTout().constats());
+            tous.addAll(service.auditerEnLigne().constats());
+            return new RapportAudit(tous);
+        }
+        return idPassage == null ? service.auditerTout() : service.auditerPassage(idPassage);
     }
 
     private static String enJson(RapportAudit rapport) {

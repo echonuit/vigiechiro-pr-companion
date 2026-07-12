@@ -5,6 +5,8 @@ import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.SeveriteConstat;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -13,9 +15,10 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
-/// ViewModel de l'écran **Audit de cohérence** : lance l'audit **global** ([ServiceAuditCoherence#auditerTout])
-/// et expose ses constats en liste observable plus un résumé lisible. État observable seul (aucune
-/// dépendance à la scène) ; l'écran le rafraîchit à l'ouverture et sur demande.
+/// ViewModel de l'écran **Audit de cohérence** : lance l'audit **global** disque / base
+/// ([ServiceAuditCoherence#auditerTout]) et, à la demande, la vérification **en ligne**
+/// ([ServiceAuditCoherence#auditerEnLigne]). Expose les constats en liste observable + un résumé lisible.
+/// État observable seul (aucune dépendance à la scène) ; l'écran l'applique sur le fil JavaFX.
 public class AuditViewModel {
 
     private final ServiceAuditCoherence service;
@@ -28,22 +31,40 @@ public class AuditViewModel {
         this.service = Objects.requireNonNull(service, "service");
     }
 
-    /// (Re)lance l'audit global et met à jour la liste des constats + le résumé.
+    /// (Re)lance l'audit **disque / base** (hors ligne, rapide) et applique le résultat.
     public void rafraichir() {
-        RapportAudit rapport = service.auditerTout();
+        appliquer(service.auditerTout().constats());
+    }
+
+    /// Calcule l'audit **complet** : disque / base **puis** vérification en ligne. Fait des lectures base et
+    /// des appels réseau : à appeler **hors fil JavaFX** ; le résultat est ensuite posé via [#appliquer].
+    public List<ConstatAudit> calculerAvecEnLigne() {
+        List<ConstatAudit> tous = new ArrayList<>(service.auditerTout().constats());
+        tous.addAll(service.auditerEnLigne().constats());
+        return tous;
+    }
+
+    /// Applique une liste de constats (liste observable + résumé + drapeau sain). À exécuter sur le fil
+    /// JavaFX (mutation de la liste observable).
+    public void appliquer(List<ConstatAudit> nouveaux) {
+        RapportAudit rapport = new RapportAudit(nouveaux);
         constats.setAll(rapport.constats());
         sain.set(rapport.sain());
-        resume.set(
-                rapport.sain()
-                        ? "Cohérence disque / base : aucun écart détecté."
-                        : rapport.constats().size()
-                                + " écart(s) : "
-                                + rapport.nombre(SeveriteConstat.ERREUR)
-                                + " erreur(s), "
-                                + rapport.nombre(SeveriteConstat.AVERTISSEMENT)
-                                + " avertissement(s), "
-                                + rapport.nombre(SeveriteConstat.INFO)
-                                + " info(s).");
+        resume.set(resume(rapport));
+    }
+
+    private static String resume(RapportAudit rapport) {
+        if (rapport.sain()) {
+            return "Cohérence : aucun écart détecté.";
+        }
+        return rapport.constats().size()
+                + " écart(s) : "
+                + rapport.nombre(SeveriteConstat.ERREUR)
+                + " erreur(s), "
+                + rapport.nombre(SeveriteConstat.AVERTISSEMENT)
+                + " avertissement(s), "
+                + rapport.nombre(SeveriteConstat.INFO)
+                + " info(s).";
     }
 
     public ObservableList<ConstatAudit> constats() {

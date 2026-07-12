@@ -1,9 +1,12 @@
 package fr.univ_amu.iut.audit.model;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.lot.model.BilanVerification;
 import fr.univ_amu.iut.lot.model.DepotUnite;
+import fr.univ_amu.iut.lot.model.VerificationDepot;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -33,8 +36,8 @@ import java.util.Set;
 /// Audit de cohérence **disque / base**, en lecture seule. Pour chaque passage, vérifie que les
 /// fichiers persistés existent sur disque, que leurs noms portent le préfixe attendu, et que les
 /// unités déjà déposées correspondent toujours à ce préfixe ; complété par un balayage inverse
-/// (fichiers et dossiers orphelins). Aucun accès réseau : la confrontation au serveur relève d'une
-/// évolution ultérieure (audit en ligne).
+/// (fichiers et dossiers orphelins). Un mode **en ligne** ([#auditerEnLigne]) confronte en plus le dépôt
+/// au serveur via [VerificationDepot] (#1132), dégradé proprement hors connexion (injecté en `Optional`).
 ///
 /// Le service construit ses DAO à partir de la [SourceDeDonnees] (les DAO sont de fins adaptateurs
 /// sans état) : cela garde le constructeur court et le service testable sur une base SQLite jetable.
@@ -55,10 +58,13 @@ public class ServiceAuditCoherence {
     private final SiteDao siteDao;
     private final Workspace workspace;
     private final BalayageDisque balayage;
+    private final Optional<VerificationDepot> verificationDepot;
 
-    public ServiceAuditCoherence(SourceDeDonnees source, Workspace workspace) {
+    public ServiceAuditCoherence(
+            SourceDeDonnees source, Workspace workspace, Optional<VerificationDepot> verificationDepot) {
         Objects.requireNonNull(source, "source");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
+        this.verificationDepot = Objects.requireNonNull(verificationDepot, "verificationDepot");
         this.passageDao = new PassageDao(source);
         this.sessionDao = new SessionDao(source);
         this.originalDao = new EnregistrementOriginalDao(source);
@@ -93,6 +99,53 @@ public class ServiceAuditCoherence {
                 .findById(idPassage)
                 .orElseThrow(() -> new IllegalArgumentException("Passage introuvable : " + idPassage));
         return new RapportAudit(auditerUnPassage(passage, sessionDao.trouverParPassage(idPassage)));
+    }
+
+    /// Audit **en ligne** : confronte, pour chaque passage déposé, le plan de dépôt local au serveur via
+    /// [VerificationDepot] (#1132). Dégrade proprement : si la feature de dépôt est absente (hors connexion),
+    /// un unique constat `INFO` l'indique ; un passage non lié ou sans plan de dépôt local est ignoré (hors
+    /// périmètre). Aucune exception ne remonte : le résultat est toujours un [RapportAudit].
+    public RapportAudit auditerEnLigne() {
+        if (verificationDepot.isEmpty()) {
+            return new RapportAudit(List.of(new ConstatAudit(
+                    SeveriteConstat.INFO,
+                    CategorieConstat.SERVEUR_INJOIGNABLE,
+                    null,
+                    "-",
+                    "Vérification en ligne indisponible : connectez-vous à VigieChiro.")));
+        }
+        VerificationDepot moteur = verificationDepot.get();
+        List<ConstatAudit> constats = new ArrayList<>();
+        for (Passage passage : passageDao.findAll()) {
+            try {
+                constats.addAll(versConstats(passage.id(), moteur.verifier(passage.id())));
+            } catch (RegleMetierException horsPerimetre) {
+                // Passage non lié à une participation ou sans plan de dépôt local : rien à confronter en ligne.
+            }
+        }
+        return new RapportAudit(constats);
+    }
+
+    private static List<ConstatAudit> versConstats(Long idPassage, BilanVerification bilan) {
+        List<ConstatAudit> constats = new ArrayList<>();
+        if (!bilan.journalDisponible()) {
+            constats.add(new ConstatAudit(
+                    SeveriteConstat.INFO,
+                    CategorieConstat.SERVEUR_INJOIGNABLE,
+                    idPassage,
+                    bilan.participationId(),
+                    "Journal serveur indisponible (hors connexion ou traitement non terminé) : vérification"
+                            + " partielle."));
+        }
+        for (String manquante : bilan.manquantes()) {
+            constats.add(new ConstatAudit(
+                    SeveriteConstat.AVERTISSEMENT,
+                    CategorieConstat.SERVEUR_MANQUANT,
+                    idPassage,
+                    manquante,
+                    "Unité absente côté serveur (non traitée ou non déposée)."));
+        }
+        return constats;
     }
 
     private List<ConstatAudit> auditerUnPassage(Passage passage, Optional<SessionDEnregistrement> sessionOpt) {

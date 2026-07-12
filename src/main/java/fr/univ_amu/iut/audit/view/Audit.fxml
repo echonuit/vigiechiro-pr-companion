@@ -22,6 +22,7 @@
   <HBox spacing="10.0" alignment="CENTER_LEFT">
     <Label fx:id="lblResume" styleClass="titre-section" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
     <Button fx:id="boutonRafraichir" text="Relancer l'audit" onAction="#rafraichir"/>
+    <Button fx:id="boutonVerifierEnLigne" text="Vérifier en ligne" onAction="#verifierEnLigne"/>
   </HBox>
 
   <TableView fx:id="tableConstats" VBox.vgrow="ALWAYS">
