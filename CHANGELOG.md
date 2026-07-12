@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.2.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.1.0...v2.2.0) (2026-07-12)
+
+
+### Features
+
+* **design:** badge de statut unifié sur la colonne « Statut » audio ([#686](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/686)) ([#1102](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1102)) ([a3d0e4a](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/a3d0e4aa633a72dfc7ac1e88b35c42e12a76772d)), closes [#691](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/691)
+
 # [2.1.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.0.0...v2.1.0) (2026-07-11)
 
 
