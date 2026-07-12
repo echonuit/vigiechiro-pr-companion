@@ -146,6 +146,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private TableView<LigneDepot> tableDepot;
 
     @FXML
+    private Button btnAnnulerDepot;
+
+    @FXML
     private StackPane enveloppeOuvrirDepot;
 
     @FXML
@@ -547,8 +550,25 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnTeleverser
                 .textProperty()
                 .bind(Bindings.when(depotViewModel.suiviLignes().resteAReprendreProperty())
-                        .then("↻ Retenter les échecs")
+                        .then("↻ Reprendre le dépôt")
                         .otherwise("☁ Téléverser sur Vigie-Chiro"));
+        // Annulation coopérative (#1044) : bouton visible pendant le dépôt seulement ; une fois demandée,
+        // il se fige sur « Annulation… » le temps que le fichier en vol se termine.
+        btnAnnulerDepot.visibleProperty().bind(depotViewModel.enCoursProperty());
+        btnAnnulerDepot.managedProperty().bind(depotViewModel.enCoursProperty());
+        btnAnnulerDepot.disableProperty().bind(depotViewModel.annulationDemandeeProperty());
+        btnAnnulerDepot
+                .textProperty()
+                .bind(Bindings.when(depotViewModel.annulationDemandeeProperty())
+                        .then("Annulation…")
+                        .otherwise("✖ Annuler le dépôt"));
+    }
+
+    /// Demande l'annulation coopérative du dépôt en cours (#1044) : délégué au ViewModel, le moteur
+    /// s'arrête entre deux fichiers.
+    @FXML
+    private void annulerDepotVigieChiro() {
+        depotViewModel.demanderAnnulation();
     }
 
     /// Relais du suivi par archive (#820) vers la table : chaque événement, émis **hors fil JavaFX** et dans

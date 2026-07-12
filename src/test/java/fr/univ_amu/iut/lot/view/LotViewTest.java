@@ -134,4 +134,36 @@ class LotViewTest {
         verify(depot).deposer(eq(42L), any(), any(), any());
         assertThat(message.getText()).contains("1 fichier(s) téléversé(s)");
     }
+
+    @Test
+    @DisplayName("#1044 : « Annuler le dépôt » interrompt le téléversement en cours, message « interrompu »")
+    void clic_annuler_interrompt_le_depot(FxRobot robot) throws Exception {
+        when(service.consulterLot(anyLong()))
+                .thenReturn(new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+        when(service.sequencesADeposer(42L)).thenReturn(List.of(java.nio.file.Path.of("/ws/a.wav")));
+        // Le moteur mocké se comporte comme le vrai : il boucle tant que l'annulation n'est pas demandée.
+        when(depot.deposer(eq(42L), any(), any(), any())).thenAnswer(invocation -> {
+            java.util.function.BooleanSupplier annule = invocation.getArgument(2);
+            WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, annule::getAsBoolean);
+            return new BilanDepot("part-1", 0, List.of());
+        });
+        robot.interact(() -> controleur.ouvrirSur(
+                new ContextePassage(42L, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière"))));
+
+        robot.interact(() -> robot.lookup("#btnTeleverser").queryButton().fire());
+
+        // Le bouton d'annulation apparaît pendant le dépôt ; le clic libère le moteur bloqué.
+        Button annuler = robot.lookup("#btnAnnulerDepot").queryButton();
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, annuler::isVisible);
+        robot.interact(annuler::fire);
+
+        Label message = robot.lookup("#lblDepotMessage").queryAs(Label.class);
+        WaitForAsyncUtils.waitFor(5, TimeUnit.SECONDS, () -> message.getText().contains("interrompu"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(message.getText()).contains("interrompu").contains("Reprendre le dépôt");
+        assertThat(annuler.isVisible())
+                .as("le dépôt est fini : le bouton disparaît")
+                .isFalse();
+    }
 }
