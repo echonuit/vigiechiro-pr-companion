@@ -14,12 +14,16 @@
 # Comportement :
 # - Skip si la réécriture vient d'un amend (le working tree n'a pas bougé)
 # - Skip si le diff avant/après rebase ne touche ni src/ ni pom.xml
-# - Sinon lance ./mvnw -q clean (une recompilation suivra de toute façon)
+# - Sinon lance ./mvnw -q clean, en silence et sans bloquer : si le clean échoue
+#   (typiquement le language server de l'IDE qui recompile dans target/ au même
+#   moment), une seule ligne d'avertissement remplace le mur d'erreurs Maven
 
 [ "$1" = "rebase" ] || exit 0
 git diff --quiet ORIG_HEAD HEAD -- src pom.xml && exit 0
 
 echo "post-rewrite : sources modifiées par le rebase, nettoyage de target/"
-./mvnw -q clean
+if ! ./mvnw -q clean >/dev/null 2>&1; then
+    echo "post-rewrite : nettoyage incomplet (recompilation IDE concurrente ?), relancez ./mvnw clean au besoin"
+fi
 
 exit 0

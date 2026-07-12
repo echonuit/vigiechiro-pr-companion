@@ -16,7 +16,9 @@
 #   HEAD inchangé, checkout initial d'un clone ou d'un worktree add)
 # - Skip si le diff entre les deux HEAD ne touche ni src/ ni pom.xml
 #   (changement doc-only : target/ reste valide, inutile de recompiler)
-# - Sinon lance ./mvnw -q clean (une recompilation suivra de toute façon)
+# - Sinon lance ./mvnw -q clean, en silence et sans bloquer : si le clean échoue
+#   (typiquement le language server de l'IDE qui recompile dans target/ au même
+#   moment), une seule ligne d'avertissement remplace le mur d'erreurs Maven
 
 [ "$3" = "1" ] || exit 0
 [ "$1" != "$2" ] || exit 0
@@ -24,6 +26,8 @@ case "$1" in 0000000000000000000000000000000000000000) exit 0 ;; esac
 git diff --quiet "$1" "$2" -- src pom.xml && exit 0
 
 echo "post-checkout : sources modifiées entre les branches, nettoyage de target/"
-./mvnw -q clean
+if ! ./mvnw -q clean >/dev/null 2>&1; then
+    echo "post-checkout : nettoyage incomplet (recompilation IDE concurrente ?), relancez ./mvnw clean au besoin"
+fi
 
 exit 0
