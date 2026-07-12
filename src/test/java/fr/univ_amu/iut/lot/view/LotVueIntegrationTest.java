@@ -324,7 +324,7 @@ class LotVueIntegrationTest {
         assertThat(table.getItems()).hasSize(2);
         // Il reste une unité non déposée : l'action bascule en reprise, active depuis « Dépôt en cours ».
         Button televerser = robot.lookup("#btnTeleverser").queryAs(Button.class);
-        assertThat(televerser.getText()).contains("Retenter");
+        assertThat(televerser.getText()).contains("Reprendre le dépôt");
         assertThat(televerser.isDisabled())
                 .as("la reprise doit être possible depuis « Dépôt en cours » (#980)")
                 .isFalse();

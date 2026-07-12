@@ -5,6 +5,7 @@
 <?import javafx.scene.control.MenuButton?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.Tooltip?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
@@ -101,6 +102,15 @@
         <Button fx:id="btnOuvrirDepot" text="📂 Ouvrir le dossier (dépôt manuel)"
                 styleClass="bouton-secondaire" onAction="#ouvrirDossierDepot"/>
       </StackPane>
+      <!-- Annulation coopérative du dépôt (#1044) : visible seulement pendant un téléversement. Le
+           fichier en cours se termine d'abord (jamais d'arrêt au milieu d'un fichier) ; « Reprendre le
+           dépôt » ne renverra ensuite que les manquants. -->
+      <Button fx:id="btnAnnulerDepot" styleClass="bouton-secondaire" onAction="#annulerDepotVigieChiro"
+              visible="false" managed="false">
+        <tooltip>
+          <Tooltip text="Termine le fichier en cours puis s'arrête. Le passage reste « Dépôt en cours » : reprendre le dépôt ne renverra que les fichiers manquants."/>
+        </tooltip>
+      </Button>
     </HBox>
     <Label fx:id="lblDepotMessage" styleClass="section-sous" wrapText="true"/>
     <!-- Table de dépôt (#983) : une ligne par unité téléversée (état persisté depot_unite #981),

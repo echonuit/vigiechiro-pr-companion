@@ -60,6 +60,64 @@ class DepotViewModelTest {
     }
 
     @Test
+    @DisplayName("#1044 : demanderAnnulation() bascule le drapeau lu par le moteur ; marquerEnCours() le réarme")
+    void annulation_cooperative_du_vm() {
+        when(service.sequencesADeposer(ID_PASSAGE)).thenReturn(List.of(Path.of("/ws/a.wav")));
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+        // Le moteur (mocké) lit le drapeau comme le vrai : avant demande → false, après → true.
+        when(depot.deposer(eq(ID_PASSAGE), any(), any(), any())).thenAnswer(invocation -> {
+            java.util.function.BooleanSupplier annule = invocation.getArgument(2);
+            assertThat(annule.getAsBoolean()).as("pas encore demandé").isFalse();
+            vm.demanderAnnulation();
+            assertThat(annule.getAsBoolean()).as("demande visible du moteur").isTrue();
+            return new BilanDepot("part-1", 0, List.of());
+        });
+
+        vm.televerser(ID_PASSAGE);
+        assertThat(vm.annulationDemandeeProperty().get()).isTrue();
+
+        // Nouveau lancement : le drapeau est réarmé.
+        vm.marquerEnCours();
+        assertThat(vm.annulationDemandeeProperty().get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1044 : après annulation, le bilan restitue « interrompu » avec les compteurs de la table")
+    void bilan_apres_annulation_est_distinct() {
+        DepotViewModel vm = new DepotViewModel(service, Optional.empty());
+        vm.suiviLignes()
+                .planifier(List.of(
+                        new DepotUnite(
+                                1L,
+                                ID_PASSAGE,
+                                "a.wav",
+                                TypeDepotUnite.WAV,
+                                StatutDepotUnite.DEPOSE,
+                                "obj-1",
+                                null,
+                                "2026-07-12T09:00:00"),
+                        new DepotUnite(
+                                2L,
+                                ID_PASSAGE,
+                                "b.wav",
+                                TypeDepotUnite.WAV,
+                                StatutDepotUnite.A_DEPOSER,
+                                null,
+                                null,
+                                "2026-07-12T09:00:00")));
+        vm.demanderAnnulation();
+
+        // Bilan « sans échec » de la tentative : sans le drapeau, il serait pris pour un dépôt complet.
+        vm.appliquerBilan(new BilanDepot("part-1", 1, List.of()));
+
+        assertThat(vm.messageProperty().get())
+                .contains("interrompu")
+                .contains("1/2")
+                .contains("Reprendre le dépôt");
+        assertThat(vm.enCoursProperty().get()).isFalse();
+    }
+
+    @Test
     @DisplayName("#983 : rehydrater() reflète l'état persisté des unités dans la table de dépôt")
     void rehydrater_refile_l_etat_persiste() {
         when(service.unitesDepot(ID_PASSAGE))
