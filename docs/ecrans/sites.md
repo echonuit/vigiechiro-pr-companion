@@ -16,6 +16,12 @@ proposé sur chaque carte, et **+ Nouveau site** en haut à droite.
 Le badge de fraîcheur passe du **vert** (dernier passage récent) à l'**orange** (plus ancien), au
 **gris** (aucun passage). Un clic sur une carte ouvre le **détail du site**.
 
+Chaque carte porte aussi, quand l'application est [connectée à Vigie-Chiro](../connexion-vigiechiro.md),
+un **badge d'état plateforme** : **« Enregistré sur VigieChiro »** (bleu) quand le carré est relié au
+portail, **« Verrouillé sur VigieChiro »** (vert) quand il est en plus verrouillé par le MNHN -
+c'est l'état **favorable**, celui qui autorise le dépôt des nuits. Pas de badge : le site n'est pas
+encore rattaché (connectez-vous ou synchronisez).
+
 Le bouton **Synchroniser depuis VigieChiro** (en haut à droite) récupère à la demande vos sites et
 points déclarés sur le portail : les sites manquants sont créés localement, ceux déjà présents sont
 simplement reliés - vos données locales ne sont **jamais écrasées**. C'est la même synchronisation

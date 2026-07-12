@@ -147,6 +147,12 @@ d'identification 24 à 48 h plus tard, voir le [parcours](../parcours/index.md))
 d'**importer le fichier CSV** de résultats Tadarida, puis d'**exporter** le fichier `_Vu` réinjectable
 (avec, en option, la trace du mode de validation). Ces actions propres au passage vivent dans le menu « ☰ ».
 
+Plutôt que d'importer le CSV à la main, le menu **☰ → Importer depuis VigieChiro…** récupère les
+résultats **directement depuis la plateforme** (application [connectée](../connexion-vigiechiro.md),
+passage déposé et traité). Si le passage n'est pas encore relié à une participation, l'application
+propose de choisir la bonne dans la liste de vos participations. L'import CSV reste disponible en
+repli - les deux alimentent le même écran.
+
 Le menu **☰ → Ouvrir les données sur Vigie-Chiro** ouvre dans votre navigateur la page des
 **données de la participation** sur le portail : pratique pour comparer ce que la plateforme a
 identifié avec ce que vous voyez ici. L'entrée n'apparaît que quand l'écran cible un passage, et
