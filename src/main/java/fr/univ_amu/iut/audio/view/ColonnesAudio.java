@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.ComparateursAudio;
 import fr.univ_amu.iut.audio.viewmodel.FormatLigneAudio;
+import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -80,6 +81,9 @@ final class ColonnesAudio {
         col.statut()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.libelleStatut(c.getValue().statut())));
+        // Statut de revue affiché en pastille (badge unifié #686, comme multisite/analyse/fiche site) :
+        // couleur dérivée du statut de la ligne, jamais stockée. Le libellé (texte) vient du value factory.
+        col.statut().setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.statut())));
 
         // Colonnes dont l'affichage est une chaîne à préfixe/suffixe numérique : même comparateur numérique
         // (sinon « 100 % » précèderait « 83 % » et « N°10 » « N°2 »). Le statut a son propre ordre de revue.

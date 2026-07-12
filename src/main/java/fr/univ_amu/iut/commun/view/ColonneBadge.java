@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Locale;
 import java.util.function.Function;
 import javafx.scene.control.TableCell;
@@ -49,5 +50,12 @@ public final class ColonneBadge {
     public static String classe(Verdict verdict) {
         Verdict effectif = verdict == null ? Verdict.A_VERIFIER : verdict;
         return "badge-verdict-" + effectif.name().toLowerCase(Locale.ROOT);
+    }
+
+    /// Classe CSS du badge de **statut de revue** d'une observation audio (`badge-observation-…`) : le
+    /// statut de validation d'une séquence (À revoir / Validée / Corrigée), distinct du workflow d'un
+    /// passage. Unifie la colonne « Statut » de l'écran Sons & validation avec les autres tables (#686).
+    public static String classe(StatutObservation statut) {
+        return "badge-observation-" + statut.name().toLowerCase(Locale.ROOT);
     }
 }

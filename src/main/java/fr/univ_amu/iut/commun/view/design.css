@@ -351,6 +351,22 @@
     -fx-text-fill: -badge-neutre-texte;
 }
 
+/* Statut de revue d'une observation audio (Sons & validation, #686). */
+.badge-observation-non_touchee {
+    -fx-background-color: -badge-avertissement-fond;
+    -fx-text-fill: -badge-avertissement-texte;
+}
+
+.badge-observation-validee {
+    -fx-background-color: -badge-succes-fond;
+    -fx-text-fill: -badge-succes-texte;
+}
+
+.badge-observation-corrigee {
+    -fx-background-color: -badge-info-fond;
+    -fx-text-fill: -badge-info-texte;
+}
+
 /*
  * Badges sémantiques génériques : pour les statuts dont l'enum ne vit pas dans le socle (ex. le statut
  * d'observation d'analyse). Une feature mappe son statut vers l'une de ces familles.
