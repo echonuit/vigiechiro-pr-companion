@@ -311,6 +311,23 @@
                             <goal>shade</goal>
                         </goals>
                         <configuration>
+                            <filters>
+                                <!-- Les module-info.class des dépendances n'ont aucun sens dans un
+                                     fat-jar chargé en classpath (pas de module path) et le shade
+                                     avertit qu'il « casse leur encapsulation forte ». On les retire,
+                                     y compris les variantes multi-release (META-INF/versions/N/). -->
+                                <filter>
+                                    <artifact>*:*</artifact>
+                                    <excludes>
+                                        <exclude>module-info.class</exclude>
+                                        <exclude>META-INF/versions/*/module-info.class</exclude>
+                                        <!-- Signatures des jars signés : invalides une fois fusionnées. -->
+                                        <exclude>META-INF/*.SF</exclude>
+                                        <exclude>META-INF/*.DSA</exclude>
+                                        <exclude>META-INF/*.RSA</exclude>
+                                    </excludes>
+                                </filter>
+                            </filters>
                             <transformers>
                                 <!-- Main-Class = Launcher (et non App, qui étend Application) : le
                                      fat-jar est ainsi lançable directement (java -jar) sans l'erreur
