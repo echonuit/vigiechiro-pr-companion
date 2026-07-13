@@ -3,14 +3,13 @@ package fr.univ_amu.iut.audio.view;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import fr.univ_amu.iut.validation.model.BilanImport;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
@@ -42,18 +41,22 @@ final class ImportVigieChiroUI {
     /// Lance l'import des résultats VigieChiro du passage de `source`. Deux cas : si le passage est déjà
     /// **rattaché** à une participation (dépôt-app antérieur), on importe directement ; sinon on récupère les
     /// participations du compte et on demande **à laquelle rattacher** ce passage (nuit créée à la main),
-    /// avant d'importer. Sans passage (source non ciblée), ne fait rien.
+    /// avant d'importer. Sans passage (source non ciblée), ne fait rien. Les appels réseau passent par
+    /// `executeur` (socle #1255 : hors du fil JavaFX en production, synchrone en test).
     static void lancer(
-            ImportVigieChiroViewModel importVigieChiro, AudioViewModel viewModel, SourceObservations source) {
+            ImportVigieChiroViewModel importVigieChiro,
+            AudioViewModel viewModel,
+            SourceObservations source,
+            ExecuteurTache executeur) {
         ContextePassage contexte = source.contexteDuPassage();
         if (contexte == null) {
             return;
         }
         Long idPassage = contexte.idPassage();
         if (importVigieChiro.rattache(idPassage)) {
-            importerRattache(importVigieChiro, viewModel, source, idPassage);
+            importerRattache(importVigieChiro, viewModel, source, idPassage, executeur);
         } else {
-            rattacherPuisImporter(importVigieChiro, viewModel, source, idPassage);
+            rattacherPuisImporter(importVigieChiro, viewModel, source, idPassage, executeur);
         }
     }
 
@@ -62,39 +65,43 @@ final class ImportVigieChiroUI {
             ImportVigieChiroViewModel importVigieChiro,
             AudioViewModel viewModel,
             SourceObservations source,
-            Long idPassage) {
+            Long idPassage,
+            ExecuteurTache executeur) {
         boolean remplacer = viewModel.resultatsDisponiblesProperty().get();
         if (remplacer && !confirmerRemplacement()) {
             return;
         }
-        importerHorsFil(importVigieChiro, viewModel, source, idPassage, remplacer);
+        importerHorsFil(importVigieChiro, viewModel, source, idPassage, remplacer, executeur);
     }
 
     /// Passage non rattaché : récupère les participations **hors fil**, demande laquelle rattacher (au fil
-    /// JavaFX), stocke le lien, puis importe. Liste vide → message ; annulation → efface l'état « en cours ».
+    /// JavaFX), stocke le lien, puis importe. Liste vide → message ; annulation → efface l'état « en cours » ;
+    /// erreur réseau → restituée par le libellé d'import (auparavant elle mourait avec le thread, laissant
+    /// « en cours » affiché pour toujours).
     private static void rattacherPuisImporter(
             ImportVigieChiroViewModel importVigieChiro,
             AudioViewModel viewModel,
             SourceObservations source,
-            Long idPassage) {
+            Long idPassage,
+            ExecuteurTache executeur) {
         importVigieChiro.marquerEnCours();
-        Thread.ofVirtual().name("participations-vigiechiro").start(() -> {
-            List<ParticipationVigieChiro> participations = importVigieChiro.participations();
-            Platform.runLater(() -> {
-                if (participations.isEmpty()) {
-                    importVigieChiro.echec("Aucune participation VigieChiro sur votre compte :"
-                            + " déposez d'abord cette nuit sur la plateforme.");
-                    return;
-                }
-                Optional<ParticipationVigieChiro> choix = choisirParticipation(participations);
-                if (choix.isEmpty()) {
-                    importVigieChiro.echec(""); // annulé : on efface l'état « en cours »
-                    return;
-                }
-                importVigieChiro.rattacher(idPassage, choix.orElseThrow().id());
-                importerHorsFil(importVigieChiro, viewModel, source, idPassage, false);
-            });
-        });
+        executeur.executer(
+                importVigieChiro::participations,
+                participations -> {
+                    if (participations.isEmpty()) {
+                        importVigieChiro.echec("Aucune participation VigieChiro sur votre compte :"
+                                + " déposez d'abord cette nuit sur la plateforme.");
+                        return;
+                    }
+                    Optional<ParticipationVigieChiro> choix = choisirParticipation(participations);
+                    if (choix.isEmpty()) {
+                        importVigieChiro.echec(""); // annulé : on efface l'état « en cours »
+                        return;
+                    }
+                    importVigieChiro.rattacher(idPassage, choix.orElseThrow().id());
+                    importerHorsFil(importVigieChiro, viewModel, source, idPassage, false, executeur);
+                },
+                erreur -> importVigieChiro.echec(erreur.getMessage()));
     }
 
     /// Récupère les résultats + importe **hors fil JavaFX**, applique le bilan et recharge la liste.
@@ -103,19 +110,16 @@ final class ImportVigieChiroUI {
             AudioViewModel viewModel,
             SourceObservations source,
             Long idPassage,
-            boolean remplacer) {
+            boolean remplacer,
+            ExecuteurTache executeur) {
         importVigieChiro.marquerEnCours();
-        Thread.ofVirtual().name("import-vigiechiro").start(() -> {
-            try {
-                BilanImport bilan = importVigieChiro.importer(idPassage, remplacer);
-                Platform.runLater(() -> {
+        executeur.executer(
+                () -> importVigieChiro.importer(idPassage, remplacer),
+                bilan -> {
                     importVigieChiro.appliquerBilan(bilan);
                     viewModel.ouvrirSur(source); // recharge la liste avec les observations importées
-                });
-            } catch (RuntimeException echec) {
-                Platform.runLater(() -> importVigieChiro.echec(echec.getMessage()));
-            }
-        });
+                },
+                erreur -> importVigieChiro.echec(erreur.getMessage()));
     }
 
     /// Boîte de choix de la participation à rattacher (libellé : localité · date · site). Renvoie le choix
