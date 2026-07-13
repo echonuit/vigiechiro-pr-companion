@@ -57,6 +57,8 @@ final class ReconciliationNoms {
             for (SequenceProduite sequence : origine.sequences()) {
                 String nomFinal = premierNomLibre(sequence.nomFichier(), nomsPris);
                 Path cheminFinal = deplacer(sequence.chemin(), dossierFinal.resolve(nomFinal));
+                // Le déplacement ne change pas le contenu : taille et empreinte (#1299) suivent telles
+                // quelles, seuls le nom et le chemin sont réconciliés.
                 tranches.add(new SequenceProduite(
                         sequence.index(),
                         nomFinal,
@@ -64,7 +66,8 @@ final class ReconciliationNoms {
                         sequence.frequenceSortieHz(),
                         sequence.dureeSecondes(),
                         sequence.offsetSourceSecondes(),
-                        sequence.octets()));
+                        sequence.octets(),
+                        sequence.empreinte()));
             }
             reconciliees.put(
                     resultat.original(),
@@ -75,6 +78,7 @@ final class ReconciliationNoms {
                             origine.frequenceSortieHz(),
                             origine.dureeSourceSecondes(),
                             origine.sha256(),
+                            origine.tailleSourceOctets(),
                             tranches));
         }
 
