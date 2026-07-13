@@ -68,6 +68,31 @@ ses données). Socle naturel du DAO et du `RowMapper`.
 
 ---
 
+## État observé (un statut distant n'est pas un statut du domaine)
+
+**Le problème.** Un système distant expose un état (l'avancement d'un calcul, le verrouillage d'un
+site…). La tentation est de l'ajouter à l'énumération de statuts qu'on possède déjà : un seul enum, un
+seul stepper, tout le monde est content. Sauf que cet état **ne nous appartient pas**. Il change sans
+nous prévenir, il n'est pas forcément **monotone**, et le jour où il recule, notre statut ment.
+
+**La solution.** Le garder **distinct** : une énumération à part, alimentée par lecture, jamais par une
+transition locale. Le statut du domaine continue de dire ce que **nous** avons fait ; l'état observé
+dit ce que **l'autre** en a fait. Et comme une lecture réseau coûte cher, on **persiste le dernier
+relevé** avec sa date : l'écran affiche alors un souvenir, en le disant.
+
+**Dans VigieChiro.** `EtatTraitement` (EPIC #1259) suit l'analyse Tadarida côté serveur (`PLANIFIE →
+EN_COURS → FINI/ERREUR/RETRY`) **sans** étendre `StatutWorkflow` : une relance ramène `FINI` à
+`PLANIFIE`, si bien qu'un statut local « Traité » deviendrait faux. `DEPOSE` reste terminal (« ma part
+est faite »). Le dernier relevé est mis en cache (`participation_traitement`), et `SuiviTraitement` est
+le **point de relevé unique** : il interroge **et** mémorise. Même partition que `StatutPlateforme`
+(sites).
+
+**Principes.** SSOT (la source de vérité reste distante : on ne la copie pas, on la **date**),
+**honnêteté de l'IHM** (« dernier état connu le… » plutôt qu'une fraîcheur feinte) et **KISS** (pas de
+sondage : on relit à l'ouverture, à la demande, ou après une action).
+
+---
+
 ## Package-by-feature (tranches verticales)
 
 **Le problème.** Une organisation **par couche** (`controllers/`, `services/`, `dao/`…) éparpille une

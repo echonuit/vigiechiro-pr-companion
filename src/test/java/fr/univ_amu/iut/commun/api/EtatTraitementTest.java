@@ -78,6 +78,30 @@ class EtatTraitementTest {
     }
 
     @Test
+    @DisplayName("motifCourt : la PREMIERE ligne de la trace serveur, ni la pile entiere ni le silence")
+    void motif_court() {
+        Traitement echec = new Traitement(
+                EtatTraitement.ERREUR,
+                null,
+                null,
+                null,
+                "RuntimeError: tadarida a plante\n  at ligne 12\n  at ligne 13",
+                1);
+
+        assertThat(echec.motifCourt()).contains("RuntimeError: tadarida a plante");
+    }
+
+    @Test
+    @DisplayName("motifCourt : vide quand le serveur n a rien a dire (etat sain, trace absente ou blanche)")
+    void motif_court_absent() {
+        assertThat(Traitement.absent().motifCourt()).isEmpty();
+        assertThat(new Traitement(EtatTraitement.FINI, null, null, null, null, null).motifCourt())
+                .isEmpty();
+        assertThat(new Traitement(EtatTraitement.ERREUR, null, null, null, "   \n  ", 1).motifCourt())
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("Traitement.absent : le « rien » substitué au null quand la participation n'a jamais été calculée")
     void traitement_absent() {
         Traitement absent = Traitement.absent();

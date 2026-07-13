@@ -111,13 +111,9 @@ public class ImportVigieChiro {
         };
     }
 
-    /// Première ligne de la trace serveur : de quoi demander de l'aide, sans déverser une pile Python.
+    /// Motif de l'échec, rendu par le [Traitement] lui-même (une seule extraction pour toute l'application).
     private static String motif(Traitement traitement) {
-        String message = traitement.message();
-        if (message == null || message.isBlank()) {
-            return "";
-        }
-        return " Motif : " + message.strip().lines().findFirst().orElse("");
+        return traitement.motifCourt().map(ligne -> " Motif : " + ligne).orElse("");
     }
 
     private Optional<String> participation(Long idPassage) {

@@ -162,6 +162,13 @@ passage déposé et traité). Si le passage n'est pas encore relié à une parti
 propose de choisir la bonne dans la liste de vos participations. L'import CSV reste disponible en
 repli - les deux alimentent le même écran.
 
+Si l'analyse de la plateforme n'est pas terminée, l'import vous dit **pourquoi** il n'y a rien à
+récupérer : l'analyse n'a **jamais été lancée** (lancez-la depuis « Préparer le dépôt », étape ④), elle
+est **planifiée** ou **en cours** (patientez : comptez plusieurs dizaines de minutes), elle a **échoué**
+(le motif est indiqué), ou - cas anormal - elle est **terminée sans renvoyer la moindre observation**,
+et c'est alors le dépôt qu'il faut vérifier. Le suivi de l'analyse est affiché dans
+[Préparer le dépôt](lot.md).
+
 Le menu **☰ → Ouvrir les données sur Vigie-Chiro** ouvre dans votre navigateur la page des
 **données de la participation** sur le portail : pratique pour comparer ce que la plateforme a
 identifié avec ce que vous voyez ici. L'entrée n'apparaît que quand l'écran cible un passage, et

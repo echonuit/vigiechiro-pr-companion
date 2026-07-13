@@ -96,15 +96,9 @@ final class FormatsTraitement {
         return traitement.retry() == null ? "" : " (essai n° " + traitement.retry() + ")";
     }
 
-    /// Trace du serveur, tronquée : c'est une pile Python, pas un message pour l'observateur — mais la
-    /// masquer entièrement le laisserait sans prise pour demander de l'aide.
+    /// Motif de l'échec, rendu par le [Traitement] lui-même (une seule extraction pour toute l'application).
     private static String trace(Traitement traitement) {
-        String message = traitement.message();
-        if (message == null || message.isBlank()) {
-            return "";
-        }
-        String premiere = message.strip().lines().findFirst().orElse("");
-        return premiere.isBlank() ? "" : " Motif : " + premiere;
+        return traitement.motifCourt().map(motif -> " Motif : " + motif).orElse("");
     }
 
     /// Date lisible par un humain, ou la date brute si elle ne se laisse pas lire (on n'invente rien).

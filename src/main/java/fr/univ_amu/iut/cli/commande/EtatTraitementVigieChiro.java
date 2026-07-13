@@ -139,6 +139,8 @@ public final class EtatTraitementVigieChiro implements Callable<Integer> {
         return traitement.retry() == null ? "" : " (essai n°" + traitement.retry() + ")";
     }
 
+    /// Motif de l'échec, rendu par le [Traitement] lui-même. La ligne de commande, elle, peut se permettre
+    /// la trace ENTIÈRE : elle finit dans un terminal ou un journal, pas dans une carte d'écran.
     private static String trace(Traitement traitement) {
         return traitement.message() == null ? "" : "\n" + traitement.message();
     }

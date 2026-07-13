@@ -95,7 +95,10 @@ Base : `https://vigiechiro.herokuapp.com/api/v1`. Auth : `Authorization: Basic b
     - **`meteo`** ne contient **que** `vent` (`NUL|FAIBLE|MOYEN|FORT`) et `couverture`
       (`0-25|25-50|50-75|75-100`) : **pas de températures**.
     - **`_etag`** est requis en en-tête `If-Match` pour tout `PATCH`/`PUT`/`DELETE` (concurrence Eve).
-    - **`traitement.etat`** (`FINI`, …) est un signal léger « résultats Tadarida prêts ».
+    - **`traitement.etat`** : les **cinq** états de l'analyse serveur (`PLANIFIE`, `EN_COURS`, `FINI`,
+      `ERREUR`, `RETRY`), accompagnés de `date_planification` / `date_debut` / `date_fin`, `message`
+      (trace d'erreur) et `retry`. Le bloc est **remplacé** à chaque étape, jamais complété. Cf. § « Le
+      traitement serveur, après le dépôt » (EPIC #1259).
 
 ### Objet `site`
 
@@ -260,10 +263,58 @@ TadaridaD). C'est l'équivalent du bouton « Lancer la participation » (M-Lot) 
 automatique après le dépôt** : les fichiers sont sur S3, mais rien n'est traité tant qu'il n'est pas
 appelé (par l'application ou depuis la page web de la participation).
 
-!!! warning "`DEPOSE` n'est plus l'état terminal"
-    Depuis qu'on sait relire le `traitement.etat` et le journal serveur, le cycle continue **après** le
-    dépôt (`PLANIFIE → EN_COURS → FINI/ERREUR`). La modélisation des états serveur post-dépôt fait
-    l'objet d'un chantier dédié (planifié, cf. `StatutWorkflow`).
+### Le traitement serveur, après le dépôt (EPIC #1259)
+
+**`DEPOSE` n'est pas la fin.** Une fois le compute lancé, la plateforme analyse la nuit ; les
+observations ne sont récupérables qu'à `FINI`. Avant, `GET /donnees` répond **« 200, liste vide »** —
+pas une erreur, un **état**.
+
+**Les cinq états** (`participation.traitement.etat`, `resources/participations.py:73`) :
+
+| État | Sens | Ce que l'application en fait |
+|---|---|---|
+| `PLANIFIE` | en file d'attente (`date_planification`) | patienter |
+| `EN_COURS` | un worker calcule (`date_debut`) | patienter (dizaines de minutes) |
+| `FINI` | terminé (`date_fin`) | **le seul état où les observations existent** |
+| `ERREUR` | échec après épuisement des essais (`message` = trace) | lire le motif |
+| `RETRY` | échec **rattrapé** : le serveur a relancé (`retry`) | patienter |
+
+⚠️ **Le serveur REMPLACE le bloc `traitement` à chaque étape**, il ne le complète pas : dès que le
+calcul démarre, `date_planification` **disparaît**. N'attendez jamais les trois dates ensemble
+(constaté en réel sur la participation canonique : `FINI` sans `date_planification`).
+
+**Un état SERVEUR, distinct du workflow local.** `EtatTraitement` (`commun.api`) n'est **pas** une
+extension de `StatutWorkflow` : il ne nous appartient pas, il n'est **pas monotone** (une relance
+ramène `FINI` à `PLANIFIE`) et nous ne faisons que l'observer. `DEPOSE` reste donc l'état terminal du
+workflow local — même partition que `StatutPlateforme` côté sites.
+
+**Un refus n'est pas un échec.** `POST /compute` répond `400 «Already»` quand un traitement est déjà
+`PLANIFIE`/`EN_COURS` **depuis moins de 24 h** (`participations.py:231-237`). Plutôt que de décrypter
+son message, `TraitementVigieChiro.lancer` **relit l'état** : c'est lui qui fait foi. D'où
+`ResultatLancement` (accepté / déjà lancé / relance bloquée / refusé / injoignable) au lieu d'un
+booléen aveugle.
+
+!!! danger "Relancer un traitement DÉTRUIT les observations"
+    Le serveur **supprime toutes les `donnees` avant de recalculer** (`task_participation.py:726-731`),
+    puis relit les WAV via `get_file_from_s3` — qui **renvoie `None` sans lever** quand le fichier n'a
+    pas de `s3_id` (`fichiers.py:118-121`). Or sur un dépôt en **archives ZIP** (notre mode par défaut
+    depuis #984), les WAV extraits n'ont **jamais** de `s3_id` (#1244) et les ZIP ont été supprimés de
+    S3. Le recalcul rend donc une participation **vide, définitivement**.
+
+    Vérifié en réel : un `compute` sur une participation `FINI` est **accepté (HTTP 200)**. **Seule
+    notre garde locale protège les données** — `DepotVigieChiro.lancerTraitement(id, forcer)` refuse de
+    son propre chef, le bouton de M-Lot se verrouille, et le forçage n'existe qu'en ligne de commande
+    (`lancer-traitement-vigiechiro --forcer`), là où il mérite d'être réfléchi.
+
+**Aucun sondage.** L'application ne surveille jamais la plateforme : elle relit l'état à l'ouverture de
+M-Lot (depuis le **cache** `participation_traitement`, sans réseau), sur demande (« Actualiser ») ou
+après un lancement. Un calcul dure des dizaines de minutes et le site officiel n'en fait pas davantage.
+Le suivi scriptable, lui, passe par la CLI (`etat-traitement-vigiechiro`, codes `0` fini / `3` patiente
+/ `2` échec / `4` jamais lancé), faite pour une boucle `until … ; [ $? -ne 3 ]`.
+
+**Le point de relevé unique** est `commun.model.SuiviTraitement` : il interroge le serveur **et**
+alimente le cache. M-Lot, la modale de M-Passage et la CLI le partagent — il vit dans `commun` parce
+qu'un `passage` qui dépendrait de `lot` fermerait un cycle qu'ArchUnit refuse.
 
 ### Journal de traitement d'une participation (#1132)
 

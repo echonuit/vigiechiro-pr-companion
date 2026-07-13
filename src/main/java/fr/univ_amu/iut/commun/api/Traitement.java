@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.api;
 
+import java.util.Optional;
+
 /// Bloc `traitement` d'une participation : l'**analyse Tadarida côté serveur**, telle que la plateforme la
 /// rapporte (`GET /participations/#id`). Photographie à l'instant de la lecture, jamais une vérité durable
 /// — le serveur peut être en train de travailler pendant qu'on la regarde (EPIC #1259).
@@ -48,6 +50,20 @@ public record Traitement(
     /// (ou que l'état rapporté nous est inconnu).
     public boolean estInconnu() {
         return etat == null;
+    }
+
+    /// **Le motif d'un échec, en une ligne.** Le serveur renvoie une pile Python entière : la donner telle
+    /// quelle à l'observateur ne l'aide pas, la masquer le laisse sans prise pour demander de l'aide. On en
+    /// garde donc la **première ligne**, celle qui nomme l'erreur.
+    ///
+    /// Vide si le serveur n'a rien à dire (états sains, ou trace absente). Rendue ici plutôt que recopiée
+    /// par chaque écran : la carte de M-Lot, la ligne de commande et le diagnostic d'import posaient la
+    /// même question à trois endroits (harmonisation, clôture de l'EPIC #1259).
+    public Optional<String> motifCourt() {
+        if (message == null || message.isBlank()) {
+            return Optional.empty();
+        }
+        return message.strip().lines().findFirst().filter(ligne -> !ligne.isBlank());
     }
 
     /// Les observations sont-elles récupérables ? Faux tant que l'état est inconnu.
