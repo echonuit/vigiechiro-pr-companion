@@ -67,9 +67,9 @@ colonnes** (clic droit ou menu ☰ « outils ») : le fonctionnement commun est 
 [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 Ici, outre l'espèce, le statut et la proposition Tadarida, la table peut afficher : le **nom de fichier** de la
-séquence, la **date d'enregistrement**, l'**heure de capture**, la **fréquence médiane**, un **indicateur
-de commentaire**, et les mesures d'identification **FME** (fréquence de moindre énergie) et **fréquence
-terminale**, calculées sur le cri sélectionné.
+séquence, la **date d'enregistrement**, l'**heure de capture**, la **fréquence médiane**, votre
+**certitude**, un **indicateur de commentaire**, et les mesures d'identification **FME** (fréquence de
+moindre énergie) et **fréquence terminale**, calculées sur le cri sélectionné.
 
 ![La table avec toutes les colonnes affichées, dont la fréquence médiane et les mesures FME / fréquence terminale.](../assets/captures/apercu-sons-validation-colonnes.png)
 
@@ -94,7 +94,14 @@ Pour l'observation sélectionnée, vous pouvez :
 
 - **Valider** : retenir la proposition de Tadarida ;
 - **Corriger** : retenir un autre taxon, choisi dans la liste ;
-- **Marquer / retirer la référence** : ajouter l'observation à votre corpus de sons de référence, ou l'en retirer.
+- **Marquer / retirer la référence** : ajouter l'observation à votre corpus de sons de référence, ou l'en retirer ;
+- **Marquer douteux** : noter « à repasser » une observation écoutée qui vous laisse un doute, pour y
+  revenir plus tard ;
+- **Déclarer votre certitude** : le menu **Certitude** (Sûr / Probable / Possible) enregistre le degré
+  de confiance que **vous** accordez à l'espèce retenue. C'est l'équivalent de la « Confiance
+  observateur » du portail Vigie-Chiro : **vide tant que vous ne l'avez pas déclarée** (elle n'est
+  jamais déduite d'une probabilité), remplaçable à tout moment, effaçable par « Effacer la
+  certitude ». La colonne **Certitude** de la table affiche votre déclaration (un tiret sinon).
 
 Un **mode inventaire** permet de propager une validation aux autres détections de la même espèce.
 
@@ -108,10 +115,12 @@ sur cette observation (l'indicateur de commentaire de la table signale les ligne
 La revue est pensée pour **enchaîner** les observations sans quitter le clavier :
 
 - **↑ / ↓** naviguent d'une ligne à l'autre ;
-- **Entrée** valide, **R** marque / retire la référence, **N** saute à la prochaine observation « À revoir ».
+- **Entrée** valide, **R** marque / retire la référence, **D** bascule le drapeau douteux ;
+- **1 / 2 / 3** déclarent la certitude (Sûr / Probable / Possible) ;
+- **N** saute à la prochaine observation « À revoir ».
 
 Vous pouvez aussi **sélectionner plusieurs lignes** (Ctrl+clic, ou Maj+clic pour une plage) et **valider,
-corriger ou marquer en référence tout le lot d'un coup**. Une action groupée est **tout ou rien** (si elle
+corriger, marquer en référence ou déclarer la certitude de tout le lot d'un coup**. Une action groupée est **tout ou rien** (si elle
 échoue, aucune ligne n'est modifiée) et enregistre la validation en **mode activité** (sans propagation
 inventaire, qui n'aurait pas de sens sur une sélection hétérogène).
 

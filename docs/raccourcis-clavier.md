@@ -1,7 +1,7 @@
 # Raccourcis clavier
 
 VigieChiro se pilote aussi bien au clavier qu'à la souris. Cette page récapitule les raccourcis
-disponibles : ceux qui marchent partout, puis ceux propres à l'écran de qualification.
+disponibles : ceux qui marchent partout, puis ceux propres aux écrans de validation et de qualification.
 
 ## Partout dans l'application
 
@@ -35,6 +35,23 @@ Une espèce apparaît **une fois par passage** où elle a été observée : la s
 !!! tip "Navigation au clavier"
     La touche <kbd>Tab</kbd> déplace le focus d'un élément à l'autre, avec un liseré visible sur
     l'élément actif. <kbd>Maj</kbd> + <kbd>Tab</kbd> revient en arrière.
+
+## Écran Validation (revue des observations)
+
+La revue des observations de « Sons & validation » s'enchaîne sans quitter le clavier, dès que la
+**table** a le focus (les touches respectent la saisie dans les champs de texte).
+
+| Raccourci | Action |
+|---|---|
+| <kbd>↑</kbd> / <kbd>↓</kbd> | Observation précédente / suivante (l'écoute suit la sélection) |
+| <kbd>Entrée</kbd> | Valider la sélection (retenir la proposition Tadarida) |
+| <kbd>R</kbd> | Marquer / retirer la référence |
+| <kbd>D</kbd> | Basculer le drapeau douteux (« à repasser ») |
+| <kbd>1</kbd> / <kbd>2</kbd> / <kbd>3</kbd> | Déclarer la certitude : Sûr / Probable / Possible |
+| <kbd>N</kbd> | Aller à la prochaine observation « À revoir » (en bouclant) |
+
+Avec **plusieurs lignes sélectionnées**, ces touches agissent sur **tout le lot** (action tout ou
+rien).
 
 ## Écran Qualification (écoute et verdict)
 
