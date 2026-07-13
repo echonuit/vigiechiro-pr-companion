@@ -399,6 +399,11 @@ bloqué. Le patron correct (thread virtuel → travail → `Platform.runLater`) 
 - `IndicateurOccupation` : superpose sur un `StackPane` hôte un voile + roue + libellé « … en
   cours » (`enCoursProperty`, styles `.occupation-*` dans `design.css`), et pilote un `ExecuteurTache`
   via `occuper(libellé, travail, succès, échec)`. Le voile capte les clics le temps du traitement.
+- `OccupationChrome` (#1215) : la déclinaison **chrome entier** pour les traitements du menu « ☰ »
+  qui ne concernent aucun écran (sauvegarde / restauration de la base, purge des originaux) : voile
+  sur la racine de la fenêtre, et **opération critique (#906) posée le temps du travail** (fermer
+  l'application en pleine copie déclenche l'avertissement du socle). Installée par le
+  `MainController`, consommée par injection dans les `ActionMenu`.
 
 **Opérations longues « riches » (#1252).** Pour les traitements qui diffusent leur avancement ou
 s'annulent, le socle étend `ExecuteurTache` sans toucher aux écrans déjà migrés :

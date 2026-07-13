@@ -12,11 +12,13 @@ public final class ActionPurger implements ActionMenu {
 
     private final ServicePurgeOriginaux service;
     private final Navigateur navigateur;
+    private final OccupationChrome occupation;
 
     @Inject
-    ActionPurger(ServicePurgeOriginaux service, Navigateur navigateur) {
+    ActionPurger(ServicePurgeOriginaux service, Navigateur navigateur, OccupationChrome occupation) {
         this.service = Objects.requireNonNull(service, "service");
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
+        this.occupation = Objects.requireNonNull(occupation, "occupation");
     }
 
     @Override
@@ -36,6 +38,6 @@ public final class ActionPurger implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        new ActionsPurge(service, () -> proprietaire, navigateur::afficherAccueil).purger();
+        new ActionsPurge(service, occupation, () -> proprietaire, navigateur::afficherAccueil).purger();
     }
 }

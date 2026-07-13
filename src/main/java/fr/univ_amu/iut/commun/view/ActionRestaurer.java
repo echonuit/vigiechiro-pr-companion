@@ -12,11 +12,13 @@ public final class ActionRestaurer implements ActionMenu {
 
     private final ServiceSauvegarde service;
     private final Navigateur navigateur;
+    private final OccupationChrome occupation;
 
     @Inject
-    ActionRestaurer(ServiceSauvegarde service, Navigateur navigateur) {
+    ActionRestaurer(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
         this.service = Objects.requireNonNull(service, "service");
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
+        this.occupation = Objects.requireNonNull(occupation, "occupation");
     }
 
     @Override
@@ -36,6 +38,6 @@ public final class ActionRestaurer implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        new ActionsSauvegarde(service, () -> proprietaire, navigateur::afficherAccueil).restaurer();
+        new ActionsSauvegarde(service, occupation, () -> proprietaire, navigateur::afficherAccueil).restaurer();
     }
 }

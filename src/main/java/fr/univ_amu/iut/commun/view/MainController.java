@@ -53,6 +53,11 @@ public class MainController {
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final Set<ActionMenu> actionsMenu;
+    private final OccupationChrome occupationChrome;
+
+    /// Racine `StackPane` de la fenêtre : hôte du voile d'occupation du chrome (#1215).
+    @FXML
+    private StackPane hoteOccupation;
 
     @FXML
     private BorderPane racine;
@@ -126,7 +131,8 @@ public class MainController {
             Optional<RechercheGlobale> recherche,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
-            Set<ActionMenu> actionsMenu) {
+            Set<ActionMenu> actionsMenu,
+            OccupationChrome occupationChrome) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
@@ -135,6 +141,7 @@ public class MainController {
         this.ouvrirSite = ouvrirSite;
         this.ouvrirPassage = ouvrirPassage;
         this.actionsMenu = actionsMenu;
+        this.occupationChrome = occupationChrome;
     }
 
     /// Appelée par le `FXMLLoader` une fois les `@FXML` injectés. Câble les bindings.
@@ -150,6 +157,10 @@ public class MainController {
         // restauration, purge, préférences, réglages, connexion — sans que ce controller connaisse
         // chaque entrée. `this::fenetre` fournit la fenêtre propriétaire des dialogues au clic.
         ConstructeurMenuOutils.peupler(menuOutils, actionsMenu, this::fenetre);
+
+        // Voile d'occupation du chrome (#1215) : les traitements longs du menu ☰ (sauvegarde,
+        // restauration, purge) voilent toute la fenêtre pendant leur travail hors du fil JavaFX.
+        occupationChrome.installer(hoteOccupation);
 
         // ← Retour (historique) : reste actif même pendant une opération critique — l'utilisateur est
         // averti à la sortie (cf. Navigateur#peutQuitter, #906) plutôt que bloqué en silence. Sa visibilité

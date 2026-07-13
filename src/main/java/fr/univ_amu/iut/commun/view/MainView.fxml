@@ -29,7 +29,10 @@
            fx:controller="fr.univ_amu.iut.commun.view.MainController"
            stylesheets="@palette.css, @base.css"
            styleClass="fenetre-principale"
-           prefWidth="960.0" prefHeight="640.0">
+           prefWidth="960.0" prefHeight="640.0"
+           fx:id="hoteOccupation">
+  <!-- Hôte du voile d'occupation du chrome (#1215) : sauvegarde / restauration / purge, déclenchées
+       depuis le menu ☰, voilent toute la fenêtre le temps du travail (OccupationChrome). -->
 
   <BorderPane fx:id="racine">
 
