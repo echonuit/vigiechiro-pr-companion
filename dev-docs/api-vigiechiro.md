@@ -32,6 +32,11 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
 
     # + probes d'écriture (POST/PATCH/upload, sur une participation « banc d'essai ») :
     ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true
+
+    # + probes des corrections (#1203) : exigent EN PLUS la participation banc d'essai,
+    # car une correction posée ne se retire pas (cf. § Écriture des corrections) :
+    ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
+        -Dvigiechiro.participationEssai=<id-participation>
     ```
 
     Sans `-Dvigiechiro.token`, la suite se **skippe** proprement (aucun échec accidentel).
@@ -128,13 +133,58 @@ Points vérifiés en réel (reconnaissance #1135, 2026-07-12, lecture seule) :
   complet embarqué**, pas un simple objectid) et `tadarida_taxon_autre` (liste rangée `{taxon, probabilite}`) ;
 - **aucun champ `observateur_*`** n'est présent tant qu'aucune correction n'a été poussée.
 
-!!! warning "Ancrage d'une correction (#723 / #1139)"
-    Les observations n'ayant pas d'`_id`, une correction se cible par le couple **(`donnee._id`, indice dans
-    `observations`)**, pas par un identifiant d'observation. Le modèle `PATCH /donnees/{id}/observations/
-    {id_observation}` du périmètre initial de #723 est donc à revoir : l'observation n'est pas une ressource
-    REST autonome. À trancher lors de l'ancrage (#1139) : soit un `PATCH` de la **donnée** avec son tableau
-    `observations` mis à jour (`If-Match: _etag`), soit une sous-ressource **positionnelle** si Eve l'expose.
-    Le taxon à envoyer est un **objectid** (cf. mapping code ↔ objectid #717).
+## Écriture des corrections (spike #1203, prérequis de #723)
+
+Contrat établi le 2026-07-13 par **lecture statique du backend** (`Scille/vigiechiro-api`,
+`resources/donnees.py` + `xin/resource.py`, master du 2026-06-09), confirmé/à confirmer en réel par
+les sondes `#1203` de `ContratApiVigieChiroLiveTest` (lecture sûre + probes d'écriture opt-in).
+L'hypothèse initiale de l'issue (« PATCH de la donnée avec le tableau `observations` réémis, le plus
+probable ») était **fausse** : cette voie est réservée à l'admin. La route positionnelle existe.
+
+**La route** : `PATCH /donnees/{donnee_id}/observations/{index}` : l'**indice dans le tableau
+`observations` est l'identifiant** de l'observation (`404` si hors bornes).
+
+```http
+PATCH /donnees/6a4fcaa2842983a29ba25363/observations/0
+{ "observateur_taxon": "5526cd5a…", "observateur_probabilite": "SUR" }
+```
+
+Règles imposées par le handler (`donnees.py`, `edit_observation`) :
+
+- **rôle `Observateur` + propriétaire de la donnée uniquement** pour `observateur_*` (`403` sinon) ;
+  `validateur_taxon` / `validateur_probabilite` sont réservés Administrateur / Validateur (→ #724) ;
+- **`observateur_probabilite` est une énumération `SUR | PROBABLE | POSSIBLE`**, pas un flottant, et
+  elle est **obligatoire dès que `observateur_taxon` est envoyé** (`422` sinon). Le modèle local
+  stocke un `Double [0,1]` (`Observation.probObservateur`) : la projection vers l'énumération est un
+  **arbitrage produit ouvert** (seuils ? saisie directe de la catégorie ?) à trancher pour #1139/#723 ;
+- **`observateur_taxon` est un objectid** (`relation('taxons')`, cast `ObjectId(...)`). Le mapping
+  code ↔ objectid existe : `vigiechiro_link` / `ENTITE_TAXON` (`RapprochementTaxons`). Un taxon local
+  **hors référentiel** (sans lien) n'est pas poussable : cas normal à afficher, pas une erreur ;
+- tout autre champ dans le corps → `422 unknown field` ;
+- **pas d'`If-Match`** : le handler ne lit pas cet en-tête (la concurrence est gérée en interne par
+  relecture-`$set`). Au passage, le handler `PATCH /participations/{id}` ne le lit pas non plus :
+  notre client l'envoie par convention Eve, sans effet réel ;
+- **pas d'annulation** : la route ne fait que du `$set`. Une correction posée se **remplace** mais ne
+  se **retire** pas : d'où la règle « participation banc d'essai explicite » des probes.
+
+!!! warning "Durabilité : un re-compute efface les corrections"
+    Une **relance du traitement supprime toutes les `donnees`** de la participation avant de recalculer
+    (`task_participation.py:726-731`, consigné par #1260). Les corrections poussées **ne survivent
+    donc pas** à un re-compute : la conception de #723 doit en tenir compte (re-pousser après
+    recalcul, ou verrouiller la relance quand des corrections existent).
+
+Effets de bord et leviers :
+
+- chaque `PATCH` déclenche la régénération du **bilan** de la participation
+  (`participation_generate_bilan.delay_singleton`), sauf paramètre `?no_bilan=<vrai>` : levier de
+  traitement par lot pour #723 (n'omettre le bilan que sur les rafales, jamais sur le dernier envoi) ;
+- l'**ancrage local** (#1139) est le couple (`donnee._id`, indice) : le `_id` de la donnée est
+  désormais exposé au parsing (`DonneeVigieChiro.id`) ; côté lecture, `observateur_probabilite`
+  revenant en **chaîne**, le parseur actuel (`getAsDouble`) la ramène silencieusement à `null` : à
+  reprendre dans #1139 ;
+- routes voisines découvertes : `PUT /donnees/{id}/observations/{index}/messages` (fils de
+  discussion : le spike #724 a déjà sa réponse côté API) et `GET /donnees/{id}/fichiers?wav=true`
+  (fichiers rattachés à une donnée, croise le repli audio #1244).
 
 ## Cycle de vie d'une participation (EPIC #941)
 
