@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Optional;
@@ -39,7 +40,7 @@ class SynchroniserVigieChiroTest {
     @Test
     @DisplayName("connecté : identité affichée, rapprocheurs rejoués, résumé agrégé, code 0")
     void connecte_synchronise_et_resume() {
-        when(client.moi()).thenReturn(Optional.of(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
         Set<RapprochementVigieChiro> rapprocheurs = Set.of(
                 c -> Optional.of(new RapportSynchro("taxons", 385)), c -> Optional.of(new RapportSynchro("sites", 3)));
         StringWriter sortie = new StringWriter();
@@ -57,7 +58,7 @@ class SynchroniserVigieChiroTest {
     @Test
     @DisplayName("rien récupéré (rapprocheurs muets) : message explicite, code 0 quand même")
     void rien_a_synchroniser() {
-        when(client.moi()).thenReturn(Optional.of(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
         StringWriter sortie = new StringWriter();
 
         int code = ligne(Set.of(c -> Optional.empty()), sortie).execute();
@@ -69,7 +70,7 @@ class SynchroniserVigieChiroTest {
     @Test
     @DisplayName("jeton mort ou hors ligne : refus explicite avant toute synchronisation, code non nul")
     void non_connecte_code_non_nul() {
-        when(client.moi()).thenReturn(Optional.empty());
+        when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
         boolean[] appele = {false};
         Set<RapprochementVigieChiro> rapprocheurs = Set.of(c -> {
             appele[0] = true;
@@ -87,7 +88,7 @@ class SynchroniserVigieChiroTest {
     @Test
     @DisplayName("--token : jeton ponctuel posé pour la durée de la commande (propriété système)")
     void token_ponctuel_pose() {
-        when(client.moi()).thenReturn(Optional.of(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
 
         ligne(Set.of(), new StringWriter()).execute("--token", "jeton-x");
 

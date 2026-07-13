@@ -10,6 +10,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -17,7 +18,6 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
@@ -115,7 +115,7 @@ class ConnexionModaleViewTest {
     @Test
     @DisplayName("#1255 : un token valide connecte (socle synchrone en test) et le bandeau passe au succès")
     void connecter_token_valide(FxRobot robot) {
-        when(client.moi()).thenReturn(Optional.of(new ProfilVigieChiro("u1", "chiro", "observateur")));
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u1", "chiro", "observateur")));
 
         robot.clickOn("#champToken").write("jeton-valide");
         robot.clickOn("Se connecter");
@@ -129,7 +129,7 @@ class ConnexionModaleViewTest {
     @Test
     @DisplayName("#1255 : un token refusé par le serveur est restitué dans le bandeau, saisie déverrouillée")
     void connecter_token_invalide(FxRobot robot) {
-        when(client.moi()).thenReturn(Optional.empty());
+        when(client.moi()).thenReturn(ReponseApi.refuse(401, "token invalide"));
 
         robot.clickOn("#champToken").write("jeton-perime");
         robot.clickOn("Se connecter");
@@ -138,6 +138,25 @@ class ConnexionModaleViewTest {
         assertThat(bandeau.getText()).contains("Token invalide ou expiré");
         assertThat(robot.lookup("#champToken").queryAs(TextField.class).isDisabled())
                 .as("la vérification finie, la saisie doit être déverrouillée pour réessayer")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1284 : plateforme injoignable → le bandeau le dit, sans accuser le jeton")
+    void connecter_plateforme_injoignable(FxRobot robot) {
+        // Avant #1284, ce cas affichait « Token invalide ou expiré » : l'observateur jetait un jeton
+        // parfaitement valide parce que le Wi-Fi était coupé.
+        when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+
+        robot.clickOn("#champToken").write("jeton-valide-mais-hors-ligne");
+        robot.clickOn("Se connecter");
+
+        Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
+        assertThat(bandeau.getText())
+                .contains("injoignable")
+                .contains("délai d'attente dépassé")
+                .doesNotContain("Token invalide");
+        assertThat(robot.lookup("#champToken").queryAs(TextField.class).isDisabled())
                 .isFalse();
     }
 

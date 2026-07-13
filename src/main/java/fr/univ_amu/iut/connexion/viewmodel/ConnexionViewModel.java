@@ -3,6 +3,7 @@ package fr.univ_amu.iut.connexion.viewmodel;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.util.ArrayList;
 import java.util.List;
@@ -47,19 +48,22 @@ public class ConnexionViewModel {
         identite.set(profil.map(ConnexionViewModel::libelle).orElse("Non connecté"));
     }
 
-    /// **Vérifie et enregistre** un token (opération réseau : `GET /moi`). Renvoie l'identité si le
-    /// token est valide (et la persiste), sinon efface la connexion et renvoie vide. À lancer hors du
-    /// fil JavaFX ; ne touche à aucune propriété (le controller appelle [#rafraichir] ensuite).
-    public Optional<ProfilVigieChiro> connecter(String token) {
+    /// **Vérifie et enregistre** un token (opération réseau : `GET /moi`). Renvoie l'issue **triée**
+    /// (#1284) : `Succes` (identité persistée), `Refuse` (le serveur a dit non : jeton invalide ou
+    /// expiré) ou `Injoignable` (impossible de vérifier : le jeton n'était peut-être pas en cause).
+    /// Dans tous les cas d'échec la connexion locale est effacée (comportement historique conservé :
+    /// on ne garde pas un jeton non vérifié). À lancer hors du fil JavaFX ; ne touche à aucune
+    /// propriété (le controller appelle [#rafraichir] ensuite).
+    public ReponseApi<ProfilVigieChiro> connecter(String token) {
         if (token == null || token.isBlank()) {
-            return Optional.empty();
+            return ReponseApi.nonConnecte();
         }
         String propre = token.trim();
         resumeSynchro = "";
         stockage.enregistrer(propre, null);
-        Optional<ProfilVigieChiro> profil = client.moi();
-        if (profil.isPresent()) {
-            stockage.enregistrer(propre, profil.get());
+        ReponseApi<ProfilVigieChiro> profil = client.moi();
+        if (profil instanceof ReponseApi.Succes<ProfilVigieChiro>(ProfilVigieChiro identiteVerifiee)) {
+            stockage.enregistrer(propre, identiteVerifiee);
             amorcerRapprochements();
         } else {
             stockage.effacer();

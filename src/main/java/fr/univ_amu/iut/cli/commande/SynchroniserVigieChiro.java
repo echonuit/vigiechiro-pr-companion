@@ -5,6 +5,7 @@ import com.google.inject.Provider;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -66,10 +67,22 @@ public final class SynchroniserVigieChiro implements Callable<Integer> {
         }
         // Même garde que la modale : on vérifie l'identité avant de synchroniser, pour distinguer un
         // « rien à synchroniser » d'un jeton mort (les rapprocheurs, best-effort, seraient muets).
-        ProfilVigieChiro profil = client.moi()
-                .orElseThrow(() -> new RegleMetierException("Connexion VigieChiro impossible : jeton absent,"
-                        + " expiré ou réseau indisponible (--token, variable VIGIECHIRO_TOKEN, ou connexion"
-                        + " enregistrée dans l'application)."));
+        // Depuis #1284, la cause est la vraie : jeton absent, jeton refusé et panne ne se confondent plus.
+        ProfilVigieChiro profil =
+                switch (client.moi()) {
+                    case ReponseApi.Succes<ProfilVigieChiro>(ProfilVigieChiro identite) -> identite;
+                    case ReponseApi.NonConnecte<ProfilVigieChiro> nonConnecte ->
+                        throw new RegleMetierException("Aucun jeton VigieChiro : fournissez --token, la variable"
+                                + " VIGIECHIRO_TOKEN, ou enregistrez une connexion dans l'application.");
+                    case ReponseApi.Injoignable<ProfilVigieChiro>(String cause) ->
+                        throw new RegleMetierException(
+                                "VigieChiro est injoignable (" + cause + ") : vérifiez le réseau et réessayez.");
+                    case ReponseApi.Refuse<ProfilVigieChiro>(int statut, String corps) ->
+                        throw new RegleMetierException(
+                                statut == 401
+                                        ? "Jeton VigieChiro invalide ou expiré : régénérez-en un depuis le site."
+                                        : "VigieChiro a refusé la connexion (HTTP " + statut + ") : " + corps);
+                };
         PrintWriter sortie = spec.commandLine().getOut();
         sortie.println("Connecté : " + profil.pseudo() + ".");
 

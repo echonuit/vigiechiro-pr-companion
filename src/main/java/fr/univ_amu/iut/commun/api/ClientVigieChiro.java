@@ -45,9 +45,11 @@ public final class ClientVigieChiro {
         this.transport = new TransportVigieChiro(baseUrl, fournisseurToken);
     }
 
-    /// Profil de l'utilisateur connecté (`GET /moi`), ou vide si non connecté / indisponible.
-    public Optional<ProfilVigieChiro> moi() {
-        return get("/moi").flatMap(ReponsesVigieChiro::profil);
+    /// Profil de l'utilisateur connecté (`GET /moi`), **trié** (#1284) : un jeton refusé (`401`)
+    /// revient en `Refuse`, une panne en `Injoignable` — la modale de connexion peut enfin cesser
+    /// d'annoncer « jeton invalide » quand c'est le réseau qui est coupé.
+    public ReponseApi<ProfilVigieChiro> moi() {
+        return transport.lire("/moi").lireAvec(ReponsesVigieChiro::profil);
     }
 
     /// Référentiel officiel des taxons (`GET /taxons/liste`, résumé non paginé : `_id` + libellés).

@@ -16,21 +16,21 @@ class ClientVigieChiroTest {
     private static final FournisseurToken TOKEN_ABC = () -> Optional.of("abc");
 
     @Test
-    @DisplayName("get / moi sans token → vide, sans même toucher le réseau")
+    @DisplayName("get / moi sans token → NonConnecte, sans même toucher le réseau")
     void moi_sans_token_est_vide() {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1", SANS_TOKEN);
 
         assertThat(client.get("/moi")).isEmpty();
-        assertThat(client.moi()).isEmpty();
+        assertThat(client.moi()).isInstanceOf(ReponseApi.NonConnecte.class);
     }
 
     @Test
-    @DisplayName("get / moi hors-ligne (URL injoignable) → vide, sans lever")
+    @DisplayName("get / moi hors-ligne (URL injoignable) → Injoignable, sans lever")
     void moi_hors_ligne_est_vide() {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.get("/moi")).isEmpty();
-        assertThat(client.moi()).isEmpty();
+        assertThat(client.moi()).isInstanceOf(ReponseApi.Injoignable.class);
     }
 
     @Test

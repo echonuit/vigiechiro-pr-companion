@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.connexion.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -161,21 +163,10 @@ public class ConnexionModaleController {
         afficherStatut("Vérification en cours…", STATUT_INFO);
         executeur.executer(
                 () -> viewModel.connecter(token),
-                profil -> {
+                reponse -> {
                     verificationEnCours.set(false);
                     viewModel.rafraichir();
-                    if (profil.isPresent()) {
-                        String resume = viewModel.resumeSynchro();
-                        afficherStatut(
-                                resume.isBlank()
-                                        ? "Connexion réussie."
-                                        : "Connexion réussie · référentiel à jour : " + resume + ".",
-                                STATUT_SUCCES);
-                        champToken.clear();
-                    } else {
-                        afficherStatut(
-                                "Token invalide ou expiré : recollez-en un depuis le site VigieChiro.", STATUT_DANGER);
-                    }
+                    restituerVerification(reponse);
                 },
                 erreur -> {
                     verificationEnCours.set(false);
@@ -186,6 +177,36 @@ public class ConnexionModaleController {
                                     + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."),
                             STATUT_DANGER);
                 });
+    }
+
+    /// Restitue l'issue de la vérification du jeton (#1284) : avant, tout échec devenait « Token
+    /// invalide ou expiré » — y compris une simple panne réseau, qui poussait l'observateur à jeter un
+    /// jeton parfaitement valide.
+    private void restituerVerification(ReponseApi<ProfilVigieChiro> reponse) {
+        switch (reponse) {
+            case ReponseApi.Succes<ProfilVigieChiro> succes -> {
+                String resume = viewModel.resumeSynchro();
+                afficherStatut(
+                        resume.isBlank()
+                                ? "Connexion réussie."
+                                : "Connexion réussie · référentiel à jour : " + resume + ".",
+                        STATUT_SUCCES);
+                champToken.clear();
+            }
+            case ReponseApi.NonConnecte<ProfilVigieChiro> nonConnecte ->
+                afficherStatut("Collez d'abord votre token VigieChiro.", STATUT_INFO);
+            case ReponseApi.Injoignable<ProfilVigieChiro>(String cause) ->
+                afficherStatut(
+                        "VigieChiro est injoignable (" + cause + ") : impossible de vérifier le jeton."
+                                + " Vérifiez le réseau et réessayez — le jeton n'est peut-être pas en cause.",
+                        STATUT_DANGER);
+            case ReponseApi.Refuse<ProfilVigieChiro>(int statut, String corps) ->
+                afficherStatut(
+                        statut == 401
+                                ? "Token invalide ou expiré : recollez-en un depuis le site VigieChiro."
+                                : "VigieChiro a refusé la connexion (HTTP " + statut + ") : " + corps,
+                        STATUT_DANGER);
+        }
     }
 
     @FXML

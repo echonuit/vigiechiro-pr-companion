@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
@@ -52,10 +53,10 @@ class ConnexionViewModelTest {
     @Test
     @DisplayName("connecter avec un token valide : identité persistée, état « connecté », résumé de synchro")
     void connecter_valide() {
-        when(client.moi()).thenReturn(Optional.of(PROFIL));
+        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
         when(rapprocheur.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("taxons", 385)));
 
-        assertThat(viewModel.connecter("TOK123")).contains(PROFIL);
+        assertThat(viewModel.connecter("TOK123")).isEqualTo(ReponseApi.succes(PROFIL));
 
         assertThat(stockage.profil()).as("persisté").contains(PROFIL);
         verify(rapprocheur).synchroniser(client);
@@ -68,9 +69,9 @@ class ConnexionViewModelTest {
     @Test
     @DisplayName("connecter avec un token invalide : connexion effacée, état « non connecté »")
     void connecter_invalide() {
-        when(client.moi()).thenReturn(Optional.empty());
+        when(client.moi()).thenReturn(ReponseApi.refuse(401, "token invalide"));
 
-        assertThat(viewModel.connecter("MAUVAIS")).isEmpty();
+        assertThat(viewModel.connecter("MAUVAIS")).isEqualTo(ReponseApi.refuse(401, "token invalide"));
 
         verifyNoInteractions(rapprocheur);
         assertThat(stockage.token()).as("effacé").isEmpty();
@@ -82,7 +83,7 @@ class ConnexionViewModelTest {
     @Test
     @DisplayName("connecter avec un token vide : vide, sans toucher au réseau ni au stockage")
     void connecter_vide() {
-        assertThat(viewModel.connecter("   ")).isEmpty();
+        assertThat(viewModel.connecter("   ")).isInstanceOf(ReponseApi.NonConnecte.class);
 
         verifyNoInteractions(client, rapprocheur);
         assertThat(stockage.token()).isEmpty();
