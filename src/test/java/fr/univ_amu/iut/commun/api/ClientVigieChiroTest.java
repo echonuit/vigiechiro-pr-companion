@@ -6,31 +6,14 @@ import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// **Transport HTTP** du client VigieChiro (#725/#728) : construction de l'en-tête d'authentification
-/// Basic-token et **dégradation propre** (pas de token / réseau indisponible → vide). La lecture des
-/// réponses JSON est testée à part dans `ReponsesVigieChiroTest`. On ne fait aucun appel réseau réel :
-/// une URL injoignable suffit à exercer la dégradation.
+/// Façade des points d'accès VigieChiro (#725/#728) : les endpoints encore « dégradation propre »
+/// rendent vide/false sur toute issue non-succès (la mécanique HTTP et son tri sont testés dans
+/// `TransportVigieChiroTest`, la lecture JSON dans `ReponsesVigieChiroTest`). Aucun appel réseau réel :
+/// une URL injoignable suffit.
 class ClientVigieChiroTest {
 
     private static final FournisseurToken SANS_TOKEN = Optional::empty;
     private static final FournisseurToken TOKEN_ABC = () -> Optional.of("abc");
-
-    @Test
-    @DisplayName("enteteAuthorization : Basic base64(token:) ; token en username, mot de passe vide")
-    void entete_authorization() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1", TOKEN_ABC);
-
-        // base64("abc:") = "YWJjOg=="
-        assertThat(client.enteteAuthorization()).contains("Basic YWJjOg==");
-    }
-
-    @Test
-    @DisplayName("enteteAuthorization : sans token → vide (non connecté)")
-    void entete_sans_token() {
-        ClientVigieChiro client = new ClientVigieChiro("http://localhost:1", SANS_TOKEN);
-
-        assertThat(client.enteteAuthorization()).isEmpty();
-    }
 
     @Test
     @DisplayName("get / moi sans token → vide, sans même toucher le réseau")
@@ -63,13 +46,15 @@ class ClientVigieChiroTest {
     }
 
     @Test
-    @DisplayName("écritures sans token → vide / false, sans toucher le réseau (#142)")
+    @DisplayName("écritures sans token → échec « non connecté » explicite, sans toucher le réseau (#1284)")
     void ecritures_sans_token() {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
 
         assertThat(client.post("/fichiers", "{}")).isEmpty();
         assertThat(client.creerParticipation("site1", participationMinimale()).id())
                 .isEmpty();
+        assertThat(client.creerParticipation("site1", participationMinimale()).echec())
+                .contains("jeton");
         assertThat(client.modifierParticipation("p1", "etag1", participationMinimale())
                         .id())
                 .isEmpty();
@@ -79,12 +64,14 @@ class ClientVigieChiroTest {
     }
 
     @Test
-    @DisplayName("écritures hors-ligne (URL injoignable) → vide / false, sans lever (#142)")
+    @DisplayName("écritures hors-ligne (URL injoignable) → échec « injoignable » explicite, sans lever")
     void ecritures_hors_ligne() {
         ClientVigieChiro client = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
 
         assertThat(client.creerParticipation("site1", participationMinimale()).id())
                 .isEmpty();
+        assertThat(client.creerParticipation("site1", participationMinimale()).echec())
+                .contains("injoignable");
         assertThat(client.modifierParticipation("p1", "etag1", participationMinimale())
                         .id())
                 .isEmpty();
@@ -116,16 +103,17 @@ class ClientVigieChiroTest {
     }
 
     @Test
-    @DisplayName("corrigerObservation (#723) : sans token ou hors ligne → échec EXPLIQUÉ, sans lever")
+    @DisplayName("corrigerObservation (#723) : sans token ou hors ligne → échec EXPLIQUÉ, distinct (#1284)")
     void correction_degrade_proprement() {
         ResultatCorrection sansToken = new ClientVigieChiro("http://localhost:1", SANS_TOKEN)
                 .corrigerObservation("6a4f", 0, "5526", fr.univ_amu.iut.commun.model.CertitudeObservateur.SUR, true);
         ResultatCorrection horsLigne = new ClientVigieChiro("http://localhost:1", TOKEN_ABC)
                 .corrigerObservation("6a4f", 0, "5526", fr.univ_amu.iut.commun.model.CertitudeObservateur.SUR, false);
 
-        // Une écriture refusée est expliquée (jamais un booléen opaque) : le message sert le bilan.
+        // Une écriture refusée est expliquée (jamais un booléen opaque), et depuis #1284 la cause est
+        // la bonne : « aucun jeton » n'est plus déguisé en panne réseau, et réciproquement.
         assertThat(sansToken.estReussie()).isFalse();
-        assertThat(sansToken.echec()).contains("injoignable");
+        assertThat(sansToken.echec()).contains("jeton");
         assertThat(horsLigne.estReussie()).isFalse();
         assertThat(horsLigne.echec()).contains("injoignable");
     }

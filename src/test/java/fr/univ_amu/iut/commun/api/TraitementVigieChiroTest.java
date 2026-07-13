@@ -23,7 +23,7 @@ class TraitementVigieChiroTest {
     @Test
     @DisplayName("le serveur accepte (2xx) → ACCEPTE, sans relire l'état (rien à qualifier)")
     void lancement_accepte() {
-        when(client.postDetaille(eqChemin(), any())).thenReturn(reponse(200, "{}"));
+        when(client.poster(eqChemin(), any())).thenReturn(ReponseApi.succes("{}"));
 
         assertThat(traitement.lancer(PART).issue()).isEqualTo(IssueLancement.ACCEPTE);
     }
@@ -31,7 +31,7 @@ class TraitementVigieChiroTest {
     @Test
     @DisplayName("refus 400 + traitement EN COURS côté serveur → DEJA_LANCE (bénin : il n'y a qu'à attendre)")
     void refus_avec_traitement_en_cours_est_benin() {
-        when(client.postDetaille(eqChemin(), any())).thenReturn(reponse(400, "{\"etat\": \"Already EN_COURS\"}"));
+        when(client.poster(eqChemin(), any())).thenReturn(ReponseApi.refuse(400, "{\"etat\": \"Already EN_COURS\"}"));
         when(client.participation(PART)).thenReturn(Optional.of(detail(EtatTraitement.EN_COURS)));
 
         ResultatLancement resultat = traitement.lancer(PART);
@@ -46,7 +46,7 @@ class TraitementVigieChiroTest {
     void refus_sans_traitement_en_attente_est_un_echec() {
         // Même code HTTP que le cas précédent : seule la relecture de l'état les départage. C'est
         // exactement ce que le booléen d'avant ne savait pas faire.
-        when(client.postDetaille(eqChemin(), any())).thenReturn(reponse(400, "participation invalide"));
+        when(client.poster(eqChemin(), any())).thenReturn(ReponseApi.refuse(400, "participation invalide"));
         when(client.participation(PART)).thenReturn(Optional.of(detail(null)));
 
         ResultatLancement resultat = traitement.lancer(PART);
@@ -56,10 +56,12 @@ class TraitementVigieChiroTest {
     }
 
     @Test
-    @DisplayName("le serveur ne répond pas (hors ligne, non connecté) → INJOIGNABLE, pas « refusé »")
+    @DisplayName("le serveur ne répond pas (hors ligne ou non connecté) → INJOIGNABLE, pas « refusé »")
     void serveur_muet_est_injoignable() {
-        when(client.postDetaille(eqChemin(), any())).thenReturn(Optional.empty());
+        when(client.poster(eqChemin(), any())).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+        assertThat(traitement.lancer(PART).issue()).isEqualTo(IssueLancement.INJOIGNABLE);
 
+        when(client.poster(eqChemin(), any())).thenReturn(ReponseApi.nonConnecte());
         assertThat(traitement.lancer(PART).issue()).isEqualTo(IssueLancement.INJOIGNABLE);
     }
 
@@ -79,10 +81,6 @@ class TraitementVigieChiroTest {
 
     private static String any() {
         return org.mockito.ArgumentMatchers.anyString();
-    }
-
-    private static Optional<ClientVigieChiro.ReponseHttp> reponse(int statut, String corps) {
-        return Optional.of(new ClientVigieChiro.ReponseHttp(statut, corps));
     }
 
     /// Détail distant dont seul le bloc traitement compte ici.

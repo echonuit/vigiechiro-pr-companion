@@ -1,15 +1,14 @@
 package fr.univ_amu.iut.commun.api;
 
 import java.util.Objects;
-import java.util.Optional;
 
 /// **Traitement serveur** d'une participation : le lancer (`POST /participations/#id/compute`) et lire où
 /// il en est (`GET /participations/#id` → bloc `traitement`).
 ///
-/// Collaborateur de [ClientVigieChiro] plutôt que méthodes de plus sur lui : le client est un **transport**
-/// (authentifier, émettre, dégrader proprement), tandis que **décider** de ce qu'un refus veut dire est une
-/// règle métier. La séparation n'est pas cosmétique — c'est ce que PMD constatait en voyant le client
-/// franchir le seuil de la God Class.
+/// Collaborateur de [ClientVigieChiro] plutôt que méthodes de plus sur lui : le client nomme les points
+/// d'accès et le transport émet, tandis que **décider** de ce qu'un refus veut dire est une règle métier.
+/// La séparation n'est pas cosmétique — c'est ce que PMD constatait en voyant le client franchir le seuil
+/// de la God Class.
 public final class TraitementVigieChiro {
 
     private final ClientVigieChiro client;
@@ -25,19 +24,21 @@ public final class TraitementVigieChiro {
     /// n'y a qu'à attendre. Plutôt que de décrypter son message d'erreur, on **relit l'état** : c'est lui
     /// qui fait foi (#1261).
     public ResultatLancement lancer(String participationId) {
-        Optional<ClientVigieChiro.ReponseHttp> reponse =
-                client.postDetaille("/participations/" + participationId + "/compute", RequetesVigieChiro.traitement());
-        if (reponse.isEmpty()) {
-            return ResultatLancement.injoignable();
-        }
-        ClientVigieChiro.ReponseHttp refusOuSucces = reponse.get();
-        if (refusOuSucces.statut() / 100 == 2) {
-            return ResultatLancement.accepte();
-        }
+        ReponseApi<String> reponse =
+                client.poster("/participations/" + participationId + "/compute", RequetesVigieChiro.traitement());
+        return switch (reponse) {
+            case ReponseApi.Succes<String> accepte -> ResultatLancement.accepte();
+            case ReponseApi.NonConnecte<String> nonConnecte -> ResultatLancement.injoignable();
+            case ReponseApi.Injoignable<String> injoignable -> ResultatLancement.injoignable();
+            case ReponseApi.Refuse<String>(int statut, String corps) -> qualifierRefus(participationId, statut, corps);
+        };
+    }
+
+    /// Qualifie un refus en relisant l'état (cf. [#lancer]) : si un traitement est en attente côté
+    /// serveur, le refus est bénin (il travaille déjà) ; sinon il est réel et revient détaillé.
+    private ResultatLancement qualifierRefus(String participationId, int statut, String corps) {
         Traitement etat = etat(participationId);
-        return etat.enAttente()
-                ? ResultatLancement.dejaLance(etat)
-                : ResultatLancement.refuse(refusOuSucces.statut(), refusOuSucces.corps());
+        return etat.enAttente() ? ResultatLancement.dejaLance(etat) : ResultatLancement.refuse(statut, corps);
     }
 
     /// État du traitement de la participation, ou [Traitement#absent()] si elle est injoignable ou n'a
