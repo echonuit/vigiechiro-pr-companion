@@ -88,7 +88,9 @@ class SitesViewModelTest {
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
 
         assertThat(vm.peutSynchroniser()).isTrue();
-        vm.rechargerApresSynchro(vm.synchroniserDepuisVigieChiro());
+        // Parcours du déport #1212 : le travail (pull + relecture) se joue hors du fil JavaFX,
+        // l'application des cartes et du message sur le fil JavaFX.
+        vm.appliquerSynchro(vm.synchroniserEtRecharger());
 
         assertThat(vm.cartes())
                 .as("le rechargement voit le site créé par le pull")
@@ -104,9 +106,19 @@ class SitesViewModelTest {
         SitesViewModel vm =
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
 
-        vm.rechargerApresSynchro(vm.synchroniserDepuisVigieChiro());
+        vm.appliquerSynchro(vm.synchroniserEtRecharger());
 
         assertThat(vm.messageSynchroProperty().get()).contains("Aucun site distant");
+    }
+
+    @Test
+    @DisplayName("#1212 : un échec de la synchronisation est routé vers son message, jamais un silence")
+    void erreur_de_synchro_surfacee() {
+        viewModel.signalerErreurSynchro(new RuntimeException("VigieChiro injoignable"));
+
+        assertThat(viewModel.messageSynchroProperty().get())
+                .contains("a échoué")
+                .contains("VigieChiro injoignable");
     }
 
     @Test

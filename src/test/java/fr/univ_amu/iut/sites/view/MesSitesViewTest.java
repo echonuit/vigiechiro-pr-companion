@@ -2,7 +2,11 @@ package fr.univ_amu.iut.sites.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -10,12 +14,15 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -51,7 +58,17 @@ class MesSitesViewTest {
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-mes-sites");
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        injector = RacineInjecteur.creer();
+        // Composition réelle, mais exécuteur SYNCHRONE (#1212) : le chargement des cartes passe par
+        // l'occupation ; en asynchrone les assertions courraient contre le fil de chargement.
+        injector =
+                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(ExecuteurTache.class)
+                                .to(ExecuteurTacheSynchrone.class)
+                                .in(Singleton.class);
+                    }
+                }));
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(source);
@@ -85,6 +102,17 @@ class MesSitesViewTest {
         assertThat(bouton.isVisible())
                 .as("app complète : la passerelle est liée, le bouton est offert")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("#1212 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
+    void overlay_occupation_masque_apres_chargement(FxRobot robot) {
+        Node voile = robot.lookup(".occupation-voile").query();
+
+        assertThat(voile).as("overlay d'occupation superposé à l'écran").isNotNull();
+        assertThat(voile.isVisible())
+                .as("chargement terminé (exécuteur synchrone) : overlay masqué, cartes affichées")
+                .isFalse();
     }
 
     @Test

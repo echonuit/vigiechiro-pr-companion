@@ -2,7 +2,11 @@ package fr.univ_amu.iut.sites.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Singleton;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.App;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -10,6 +14,8 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.nio.file.Files;
@@ -62,7 +68,16 @@ class SitesVueIntegrationTest {
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-sites-integration");
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        injector = RacineInjecteur.creer();
+        // Composition réelle, mais exécuteur SYNCHRONE (#1212) : même raison que MesSitesViewTest.
+        injector =
+                Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        bind(ExecuteurTache.class)
+                                .to(ExecuteurTacheSynchrone.class)
+                                .in(Singleton.class);
+                    }
+                }));
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(source);

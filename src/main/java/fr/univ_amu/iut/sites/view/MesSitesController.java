@@ -1,9 +1,10 @@
 package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -12,7 +13,6 @@ import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
 import java.util.Objects;
 import java.util.Optional;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -36,6 +36,7 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
 /// Controller de l'écran d'accueil **M-Sites** (`MesSites.fxml`).
@@ -57,11 +58,19 @@ public class MesSitesController implements ResumeStatut {
 
     private final SitesViewModel viewModel;
     private final NavigationSites navigation;
+    private final ExecuteurTache executeur;
 
     /// Résumé de l'écran (« N sites déclarés · N passages »), déporté en zone centre de la barre de
     /// statut (#693) au lieu d'un sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
+
+    /// Voile « … en cours » de l'écran (#1212) : chargement des cartes et synchronisation tournent
+    /// hors du fil JavaFX ([IndicateurOccupation], patron #1014).
+    private IndicateurOccupation occupation;
+
+    @FXML
+    private StackPane hoteOccupation;
 
     @FXML
     private ScrollPane zoneListe;
@@ -82,9 +91,10 @@ public class MesSitesController implements ResumeStatut {
     private Label lblSynchro;
 
     @Inject
-    public MesSitesController(SitesViewModel viewModel, NavigationSites navigation) {
+    public MesSitesController(SitesViewModel viewModel, NavigationSites navigation, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     @Override
@@ -114,22 +124,26 @@ public class MesSitesController implements ResumeStatut {
         lblSynchro.visibleProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         lblSynchro.managedProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         viewModel.cartes().addListener((ListChangeListener<CarteSite>) changement -> reconstruire());
-        viewModel.rafraichir();
+        occupation = new IndicateurOccupation(hoteOccupation, executeur);
+        // Bouton relâché par binding sur l'occupation (#1254) : plus de setDisable posé à la main de
+        // part et d'autre du travail, plus de bouton figé si le travail échoue.
+        btnSyncVigieChiro.disableProperty().bind(occupation.enCoursProperty());
+        // Chargement initial hors du fil JavaFX (#1212) : lectures base sous voile, erreur routée vers
+        // le filet de l'écran (#795), application des cartes sur le fil JavaFX.
+        occupation.occuper(
+                "Chargement de vos sites…", viewModel::charger, viewModel::appliquer, viewModel::signalerErreur);
     }
 
-    /// Action « Synchroniser depuis VigieChiro » (#1045) : pull best-effort hors du fil JavaFX,
-    /// patron de la modale passage (#937 : thread virtuel + bouton désactivé + retour via
-    /// `Platform.runLater`).
+    /// Action « Synchroniser depuis VigieChiro » (#1045, déportée #1212) : pull best-effort puis
+    /// relecture des cartes hors du fil JavaFX, sous le voile d'occupation ; le résultat (cartes +
+    /// message) s'applique sur le fil JavaFX, l'échec rejoint le message de synchronisation.
     @FXML
     private void synchroniserVigieChiro() {
-        btnSyncVigieChiro.setDisable(true);
-        Thread.ofVirtual().name("sync-sites").start(() -> {
-            Optional<RapportSynchro> rapport = viewModel.synchroniserDepuisVigieChiro();
-            Platform.runLater(() -> {
-                viewModel.rechargerApresSynchro(rapport);
-                btnSyncVigieChiro.setDisable(false);
-            });
-        });
+        occupation.occuper(
+                "Synchronisation VigieChiro en cours…",
+                viewModel::synchroniserEtRecharger,
+                viewModel::appliquerSynchro,
+                viewModel::signalerErreurSynchro);
     }
 
     /// Action des boutons « + Nouveau site » (bandeau et état vide).

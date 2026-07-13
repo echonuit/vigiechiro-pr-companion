@@ -82,12 +82,26 @@ public class SitesViewModel {
         return synchronisation.flatMap(SynchronisationSites::synchroniser);
     }
 
-    /// À rappeler **sur le fil JavaFX** après [#synchroniserDepuisVigieChiro()] : recharge les cartes
-    /// (le pull a pu créer des sites) puis pose le message de résultat, jamais un silence (#937).
-    public void rechargerApresSynchro(Optional<RapportSynchro> rapport) {
-        rafraichir();
-        messageSynchro.set(rapport.map(SitesViewModel::messageDe)
+    /// Parcours complet de la synchronisation à la demande (#1045, déporté #1212), à appeler **hors du
+    /// fil JavaFX** : pull best-effort puis relecture des cartes (le pull a pu créer des sites). Le
+    /// résultat s'applique sur le fil JavaFX via [#appliquerSynchro].
+    public SynchroEtChargement synchroniserEtRecharger() {
+        return new SynchroEtChargement(synchroniserDepuisVigieChiro(), charger());
+    }
+
+    /// À rappeler **sur le fil JavaFX** après [#synchroniserEtRecharger()] : applique les cartes
+    /// rechargées puis pose le message de résultat, jamais un silence (#937).
+    public void appliquerSynchro(SynchroEtChargement resultat) {
+        appliquer(resultat.chargement());
+        messageSynchro.set(resultat.rapport()
+                .map(SitesViewModel::messageDe)
                 .orElse("Aucun site distant récupéré (hors connexion, ou aucun site sur VigieChiro)."));
+    }
+
+    /// Route l'échec de la synchronisation vers son message de restitution (fil JavaFX) : jamais un
+    /// silence, ni un bouton resté figé (#795/#1212).
+    public void signalerErreurSynchro(Throwable erreur) {
+        messageSynchro.set("La synchronisation VigieChiro a échoué : " + erreur.getMessage());
     }
 
     /// Message de résultat de la synchronisation à la demande, vide tant qu’aucune n’a eu lieu.
@@ -121,33 +135,61 @@ public class SitesViewModel {
         return messageErreur.getReadOnlyProperty();
     }
 
-    /// Recharge les sites de l'utilisateur courant et recompose toutes les cartes + le sous-titre.
+    /// Recharge les sites de l'utilisateur courant et recompose toutes les cartes + le sous-titre,
+    /// en **synchrone** (fil JavaFX) : réservé aux suites d'actions déjà sur ce fil (création d'un
+    /// site). L'ouverture d'écran et la synchronisation passent par le couple [#charger] /
+    /// [#appliquer], exécuté hors du fil JavaFX (#1212).
     public void rafraichir() {
         try {
-            LocalDate aujourdhui = horloge.aujourdhui();
-            int annee = aujourdhui.getYear();
-            // Statut plateforme de chaque site (#728/#718), lu une fois pour tout le lot : présent dans les
-            // correspondances = « enregistré » ; correspondance verrouillée = « verrouillé » (dépôt possible).
-            Map<String, String> sitesEnregistres = liens.tous(LienVigieChiro.ENTITE_SITE);
-            Set<String> sitesVerrouilles = liens.verrouilles(LienVigieChiro.ENTITE_SITE);
-            List<CarteSite> recomposees = new ArrayList<>();
-            int totalPassagesAnnee = 0;
-            for (Site site : service.listerSites(idUtilisateur)) {
-                StatutPlateforme statut =
-                        statutPlateforme(String.valueOf(site.id()), sitesEnregistres, sitesVerrouilles);
-                CarteSite carte = construireCarte(site, aujourdhui, annee, statut);
-                totalPassagesAnnee += carte.passagesDeLAnnee();
-                recomposees.add(carte);
-            }
-            cartes.setAll(recomposees);
-            vide.set(recomposees.isEmpty());
-            sousTitre.set(composerSousTitre(recomposees.size(), totalPassagesAnnee, annee));
-            messageErreur.set("");
+            appliquer(charger());
         } catch (RuntimeException echec) {
             // Sans ce filet, l'échec remontait non capturé et l'écran restait muet (#795).
-            messageErreur.set("Impossible de charger vos sites : " + echec.getMessage());
+            signalerErreur(echec);
         }
     }
+
+    /// Lit et recompose les cartes de l'utilisateur courant, **hors du fil JavaFX** (lectures base) :
+    /// aucune propriété observable n'est touchée ici. Le résultat s'applique via [#appliquer] ; un
+    /// échec de lecture remonte à l'appelant (routé vers [#signalerErreur] par l'exécuteur).
+    public ChargementCartes charger() {
+        LocalDate aujourdhui = horloge.aujourdhui();
+        int annee = aujourdhui.getYear();
+        // Statut plateforme de chaque site (#728/#718), lu une fois pour tout le lot : présent dans les
+        // correspondances = « enregistré » ; correspondance verrouillée = « verrouillé » (dépôt possible).
+        Map<String, String> sitesEnregistres = liens.tous(LienVigieChiro.ENTITE_SITE);
+        Set<String> sitesVerrouilles = liens.verrouilles(LienVigieChiro.ENTITE_SITE);
+        List<CarteSite> recomposees = new ArrayList<>();
+        int totalPassagesAnnee = 0;
+        for (Site site : service.listerSites(idUtilisateur)) {
+            StatutPlateforme statut = statutPlateforme(String.valueOf(site.id()), sitesEnregistres, sitesVerrouilles);
+            CarteSite carte = construireCarte(site, aujourdhui, annee, statut);
+            totalPassagesAnnee += carte.passagesDeLAnnee();
+            recomposees.add(carte);
+        }
+        return new ChargementCartes(
+                List.copyOf(recomposees), composerSousTitre(recomposees.size(), totalPassagesAnnee, annee));
+    }
+
+    /// Applique un [ChargementCartes] aux propriétés observables, **sur le fil JavaFX**.
+    public void appliquer(ChargementCartes chargement) {
+        cartes.setAll(chargement.cartes());
+        vide.set(chargement.cartes().isEmpty());
+        sousTitre.set(chargement.sousTitre());
+        messageErreur.set("");
+    }
+
+    /// Route un échec de chargement vers le filet d'erreurs de l'écran (#795), **sur le fil JavaFX**.
+    public void signalerErreur(Throwable erreur) {
+        messageErreur.set("Impossible de charger vos sites : " + erreur.getMessage());
+    }
+
+    /// Instantané du rechargement des cartes, calculé hors du fil JavaFX ([#charger]) puis appliqué
+    /// sur le fil JavaFX ([#appliquer]) - le ViewModel reste agnostique de l'IHM (#1212).
+    public record ChargementCartes(List<CarteSite> cartes, String sousTitre) {}
+
+    /// Résultat du parcours « synchroniser puis recharger » ([#synchroniserEtRecharger]) : le rapport
+    /// du pull (vide si rien récupéré) et les cartes rechargées à appliquer.
+    public record SynchroEtChargement(Optional<RapportSynchro> rapport, ChargementCartes chargement) {}
 
     /// Crée un site pour l'utilisateur courant (bouton « + Nouveau site ») puis rafraîchit la liste.
     ///

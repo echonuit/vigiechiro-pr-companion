@@ -96,7 +96,7 @@ class ParcoursSitesVersPassageE2ETest {
 
     @Test
     @DisplayName("Entrée réelle : tableau de bord → Mes sites → détail → double-clic → M-Passage")
-    void accueil_vers_passage_par_clics(FxRobot robot) {
+    void accueil_vers_passage_par_clics(FxRobot robot) throws TimeoutException {
         NavigationViewModel navigation = injector.getInstance(NavigationViewModel.class);
         assertThat(navigation.getVueCourante()).isEqualTo("accueil");
 
@@ -104,7 +104,12 @@ class ParcoursSitesVersPassageE2ETest {
         robot.clickOn("Mes sites");
         assertThat(navigation.getVueCourante()).isEqualTo("sites");
 
-        // 2) Carte du site (« Carré 640380 ») → écran M-Site-detail.
+        // 2) Carte du site (« Carré 640380 ») → écran M-Site-detail. Depuis le déport #1212, les
+        // cartes se chargent hors du fil JavaFX (vrai exécuteur asynchrone ici) : attendre leur rendu.
+        WaitForAsyncUtils.waitFor(
+                5,
+                TimeUnit.SECONDS,
+                () -> robot.lookup("Carré " + CARRE).tryQuery().isPresent());
         robot.clickOn("Carré " + CARRE);
         assertThat(navigation.getVueCourante()).isEqualTo("site-detail");
         TableView<?> passages = robot.lookup("#tablePassages").queryAs(TableView.class);

@@ -4,6 +4,7 @@
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -12,12 +13,14 @@
   les cartes de sites (nombre variable) sont bâties en code par MesSitesController, qui bascule
   aussi entre la liste (zoneListe) et l'état vide (etatVide) selon SitesViewModel.videProperty().
 -->
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.sites.view.MesSitesController"
-      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @sites.css"
-      styleClass="ecran-sites"
-      spacing="16.0">
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.sites.view.MesSitesController"
+           stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @sites.css"
+           fx:id="hoteOccupation">
+  <!-- Hôte d'occupation (#1212) : voile « … en cours » pendant le chargement des cartes et la
+       synchronisation VigieChiro. -->
+  <VBox styleClass="ecran-sites" spacing="16.0">
 
   <!--
     En-tête réduit à son slot d'actions (#693) : le titre « Mes sites de suivi » est redondant avec le
@@ -58,4 +61,5 @@
                    vigiechiro.herokuapp.com, puis saisis ici (n° de carré + codes points)."/>
     </VBox>
   </VBox>
-</VBox>
+  </VBox>
+</StackPane>
