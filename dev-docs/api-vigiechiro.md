@@ -156,9 +156,13 @@ Règles imposées par le handler (`donnees.py`, `edit_observation`) :
 - **rôle `Observateur` + propriétaire de la donnée uniquement** pour `observateur_*` (`403` sinon) ;
   `validateur_taxon` / `validateur_probabilite` sont réservés Administrateur / Validateur (→ #724) ;
 - **`observateur_probabilite` est une énumération `SUR | PROBABLE | POSSIBLE`**, pas un flottant, et
-  elle est **obligatoire dès que `observateur_taxon` est envoyé** (`422` sinon). Le modèle local
-  stocke un `Double [0,1]` (`Observation.probObservateur`) : la projection vers l'énumération est un
-  **arbitrage produit ouvert** (seuils ? saisie directe de la catégorie ?) à trancher pour #1139/#723 ;
+  elle est **obligatoire dès que `observateur_taxon` est envoyé** (`422` sinon). **Arbitrage tranché
+  (2026-07-13)** : deux notions distinctes, **aucune conversion**. Le `Double` local
+  (`Observation.probObservateur`) est la confiance **Tadarida** (recopiée à la validation un-clic,
+  héritage du format `_Vu`) ; l'énumération est la **certitude déclarée manuellement** par
+  l'observateur au moment de sa revue, **vide par défaut**, en miroir du site web (listes « Taxon
+  observateur » + « Confiance observateur » + bouton OK, rien de prérempli). #1139 ajoute le champ
+  local correspondant ; seules les observations avec taxon **et** certitude saisis sont poussables ;
 - **`observateur_taxon` est un objectid** (`relation('taxons')`, cast `ObjectId(...)`). Le mapping
   code ↔ objectid existe : `vigiechiro_link` / `ENTITE_TAXON` (`RapprochementTaxons`). Un taxon local
   **hors référentiel** (sans lien) n'est pas poussable : cas normal à afficher, pas une erreur ;
