@@ -13,7 +13,7 @@ espèces** identifiées. Cette page déroule ce parcours étape par étape.
 |---|---|---|
 | **Importer** | Copier la carte SD, renommer et transformer les enregistrements | Importation |
 | **Vérifier** | Contrôler la qualité (pré-check + écoute) et poser un verdict | Qualification |
-| **Déposer** | Préparer le lot, le téléverser sur Vigie-Chiro, le marquer déposé | Lot |
+| **Déposer** | Préparer le lot, générer les archives, les téléverser sur Vigie-Chiro, lancer la participation | Lot |
 | **Valider** | Relire les espèces identifiées par Tadarida | Validation |
 
 ## L'écran Passage, votre pivot
@@ -73,16 +73,25 @@ efficacement au clavier (voir [Raccourcis clavier](../raccourcis-clavier.md)).
 
 ## Déposer le lot
 
-Sur l'écran **Lot**, le dépôt se fait en trois temps :
+Sur l'écran **Lot**, le dépôt se fait en quatre temps :
 
 ![L'écran de préparation du lot : récapitulatif et étapes du dépôt.](../assets/captures/apercu-lot-preparer.png)
 
-1. **Préparer le lot** : l'application contrôle la cohérence du passage (préfixes, complétude) et
-   ouvre le dossier prêt à déposer dans votre explorateur de fichiers.
-2. **Téléverser** ce dossier **manuellement** sur la plateforme Vigie-Chiro, depuis votre navigateur.
-3. **Marquer déposé** une fois le téléversement terminé : le passage passe au statut « Déposé ».
+1. **Préparer le lot** : l'application contrôle la cohérence du passage (préfixes, complétude).
+2. **Générer les archives** : les séquences sont regroupées en archives ZIP prêtes à partir.
+3. **Téléverser sur Vigie-Chiro** : si l'application est connectée, elle dépose les archives
+   elle-même (plusieurs en parallèle, avec une reprise en cas de coupure). Sinon, repli : « Ouvrir le
+   dossier » et dépôt **manuel** depuis votre navigateur.
+4. **Lancer la participation** : demande à la plateforme de **traiter** ce que vous venez de déposer
+   (décompression puis identification Tadarida). Après un dépôt manuel, ce bouton est un simple
+   **« Marquer déposé »**.
 
 ![À l'étape « Prêt à déposer », le bouton « Marquer déposé » devient actif.](../assets/captures/apercu-lot-deposer.png)
+
+!!! warning "Déposer ≠ faire traiter"
+    Téléverser les fichiers ne déclenche **pas** le calcul : sans « Lancer la participation », la
+    participation reste vide côté plateforme et aucun résultat n'arrivera. Détail sur la page
+    [Lot](../ecrans/lot.md).
 
 ## Valider les espèces
 

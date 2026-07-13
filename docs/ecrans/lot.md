@@ -40,10 +40,16 @@ Une fois les archives produites, deux chemins s'offrent à vous :
 
 - **Téléversement automatique** (application connectée à Vigie-Chiro) : le bouton
   **« Téléverser sur Vigie-Chiro »** dépose la nuit directement — la participation est créée (ou
-  réutilisée si elle l'a été à l'import), puis chaque fichier est téléversé. Une **table de dépôt**
-  suit chaque fichier (en attente → en cours → déposé, ou échec avec la raison au survol), et la
-  **barre de statut** en bas de la fenêtre affiche l'avancement en continu, même quand vous faites
+  réutilisée si elle l'a été à l'import), puis les **archives ZIP** sont téléversées **plusieurs à la
+  fois** (5 en parallèle), ce qui raccourcit nettement le dépôt d'une grosse nuit. Une **table de
+  dépôt** suit chaque archive (en attente → en cours → déposé, ou échec avec la raison au survol) avec
+  une **barre de progression par archive** qui reflète les octets réellement envoyés, et la **barre de
+  statut** en bas de la fenêtre affiche l'avancement d'ensemble en continu, même quand vous faites
   défiler l'écran.
+
+    Si l'espace disque n'a pas permis de générer les archives, l'application se replie automatiquement
+    sur le téléversement des **séquences WAV** une à une (plus long, mais équivalent pour la
+    plateforme).
 - **Téléversement manuel** (repli, sans connexion) : **« Ouvrir le dossier »** ouvre le sous-dossier
   `depot/` dans le gestionnaire de fichiers, et vous déposez les archives sur Vigie-Chiro depuis votre
   navigateur.
@@ -56,14 +62,37 @@ réouverture de l'écran, la table de dépôt réaffiche l'état exact de chaque
 alors « **Retenter les échecs** » : seuls les fichiers manquants sont re-téléversés — jamais ceux déjà
 en ligne. Le passage ne devient « Déposé » que lorsque **tous** les fichiers sont en ligne.
 
-## ④ Marquer le passage déposé
+## ④ Lancer la participation (ou marquer le passage déposé)
 
 ![L'état « Déposé » : toutes les étapes sont franchies.](../assets/captures/apercu-lot-depose.png)
 
-Cette étape ne concerne que le **téléversement manuel** : une fois vos archives déposées depuis le
-navigateur, « Marquer déposé » fait passer le passage au statut « Déposé » (ce qui déverrouille ensuite
-la validation Tadarida) et trace la date du dépôt. Avec le téléversement automatique, ce marquage est
-fait pour vous, à la fin d'un dépôt complet.
+Le bouton de cette dernière étape **change selon votre situation**.
+
+**Vous avez téléversé depuis l'application** (une participation est rattachée à la nuit) : le bouton
+devient **« 🚀 Lancer la participation »**. Il demande à Vigie-Chiro de **traiter** les fichiers que
+vous venez de déposer : la plateforme décompresse les archives, puis lance l'identification Tadarida.
+
+!!! warning "Téléverser ne suffit pas : il faut lancer la participation"
+    Tant que vous ne l'avez pas cliqué, vos fichiers sont bien **sur la plateforme**, mais **aucun
+    traitement n'est lancé** : la participation reste vide sur le site web et aucun résultat
+    n'arrivera. C'est une action volontaire, et le seul moyen de déclencher le calcul depuis
+    l'application (vous pouvez aussi le faire depuis la page de la participation, sur le site).
+
+**Vous avez téléversé depuis le navigateur** (repli manuel) : le bouton reste **« ✅ Marquer
+déposé »**. Il fait passer le passage au statut « Déposé » (ce qui déverrouille la validation
+Tadarida) et trace la date du dépôt — c'est une **écriture locale**, l'application ne peut pas deviner
+seule ce que vous avez déposé à la main.
+
+### Recommencer un dépôt de zéro
+
+Le bouton **« Réinitialiser le dépôt »** (visible dès qu'un dépôt a été entamé) **efface le suivi
+local** : l'application oublie ce qu'elle croit avoir déposé et le passage revient à « Prêt à
+déposer ». Le téléversement suivant repart alors **de zéro**, toutes archives comprises.
+
+Il est utile quand le suivi local ne correspond plus à la réalité de la plateforme — typiquement si
+une nuit apparaît « Déposée » côté application alors que la participation est vide côté site web. Vos
+**archives sur le disque** et le **lien vers la participation** sont conservés : rien n'est perdu, on
+ne remet à zéro que le compteur.
 
 ## La barre de statut : l'état du lot en permanence
 
