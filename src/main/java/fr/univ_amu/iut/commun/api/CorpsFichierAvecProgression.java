@@ -13,7 +13,7 @@ import java.util.function.DoubleConsumer;
 /// une barre de progression par archive. Conserve le `Content-Length` du fichier (le `PUT` S3 présigné
 /// l'exige, contrairement à un envoi en morceaux). L'avancement est **throttlé au pour-cent** (au plus
 /// 101 notifications par fichier) pour ne pas inonder le fil consommateur (chaque notification finit,
-/// via le relais IHM, en un `Platform.runLater`).
+/// via le relais IHM, sur le fil JavaFX fourni par le socle).
 final class CorpsFichierAvecProgression implements HttpRequest.BodyPublisher {
 
     private final HttpRequest.BodyPublisher delegue;

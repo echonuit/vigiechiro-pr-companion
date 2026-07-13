@@ -12,7 +12,8 @@ import java.util.List;
 /// est ignoré sans erreur.
 ///
 /// **Fil JavaFX** : ces méthodes mutent des collections/propriétés observables ; l'appelant (le
-/// controller) les invoque via `Platform.runLater`, comme le callback de progression global.
+/// controller) les invoque sur le fil JavaFX fourni par le socle (`ExecuteurTache#surFilJavaFx()`), comme le
+/// callback de progression global.
 public final class SuiviLignesArchives extends SuiviLignes<LigneArchive> {
 
     /// Pré-remplit la table d'une ligne « en attente » par archive planifiée (dans l'ordre des numéros).

@@ -9,7 +9,8 @@ import java.util.List;
 /// La compression étant **parallèle** (#814), ces méthodes sont appelées depuis plusieurs fils et **dans
 /// le désordre** ; chaque événement cible son archive par son **numéro** (1..N), donc l'ordre d'arrivée
 /// n'importe pas. L'implémentation IHM **doit relayer** ses mutations au fil JavaFX
-/// (`Platform.runLater`), comme le callback de progression global.
+/// (fil JavaFX fourni par le socle, `ExecuteurTache#surFilJavaFx()`), comme le callback de
+/// progression global.
 public interface SuiviArchives {
 
     /// Plan établi **avant toute écriture** : une entrée par archive à produire, pour pré-remplir la table

@@ -101,9 +101,9 @@ machine de référence ; un poste plus modeste sera plus lent — refaire la mes
 
 ## Réactivité IHM (freeze > 200 ms) — procédure semi-manuelle
 
-Dans l'application réelle, l'import s'exécute sur un **thread virtuel** (cf. `ImportationController`),
-et la navigation est **verrouillée** pendant `EN_COURS` (#54) : le fil JavaFX n'est jamais bloqué par
-le travail lourd, seul `Platform.runLater` y relaie la progression.
+Dans l'application réelle, l'import s'exécute **hors du fil JavaFX** (socle `ExecuteurTache`, cf.
+`ImportationController`), et la navigation est **verrouillée** pendant `EN_COURS` (#54) : le fil
+JavaFX n'est jamais bloqué par le travail lourd, seuls les relais du socle y ramènent la progression.
 
 **Vérifier l'absence de freeze** :
 1. lancer l'application (`./mvnw -q javafx:run`), ouvrir **« Importer une nuit »** ;

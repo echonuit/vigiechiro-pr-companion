@@ -7,7 +7,8 @@ import java.util.List;
 /// de la génération d'archives ([SuiviArchives], #820) et de l'import (#947).
 ///
 /// Le dépôt est **séquentiel** (une unité à la fois, réseau) mais émis **hors du fil JavaFX** :
-/// l'implémentation IHM doit relayer ses mutations via `Platform.runLater`. Chaque événement cible son
+/// l'implémentation IHM doit relayer ses mutations sur le fil JavaFX (fourni par le socle,
+/// `ExecuteurTache#surFilJavaFx()`). Chaque événement cible son
 /// unité par son **identifiant** (nom du fichier, unique par passage — la clé de `depot_unite`, #981).
 public interface SuiviDepot {
 

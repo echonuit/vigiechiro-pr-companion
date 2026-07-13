@@ -15,7 +15,8 @@ import java.util.stream.IntStream;
 /// la barre reste à 0 pendant la transformation puis passe à 1.
 ///
 /// **Fil JavaFX** : ces méthodes mutent des collections/propriétés observables ; l'appelant (le
-/// controller) les invoque via `Platform.runLater`, comme le callback de progression global.
+/// controller) les invoque sur le fil JavaFX fourni par le socle (`ExecuteurTache#surFilJavaFx()`), comme le
+/// callback de progression global.
 public final class SuiviLignesFichiers extends SuiviLignes<LigneFichierImport> {
 
     private static final String ETAPE_COPIE = "Copie";

@@ -94,7 +94,7 @@ public class ImportationViewModel {
     /// Table de suivi **par fichier** de l'import en cours (#947) : une [LigneFichierImport] par original
     /// de la nuit, avec son état (copie → transformation → terminé / rejeté). La vue lie sa `TableView` à
     /// [SuiviLignesFichiers#lignes()] via [#suiviFichiers()] ; le service la nourrit hors-thread via le
-    /// relais du controller (`Platform.runLater`).
+    /// relais du controller (fil JavaFX fourni par le socle).
     private final SuiviLignesFichiers suiviFichiers = new SuiviLignesFichiers();
 
     /// Pré-contrôle R5 proactif (#108) extrait dans un collaborateur dédié ([ControleNumeroPassage]) :
@@ -312,7 +312,7 @@ public class ImportationViewModel {
         etat.set(EtatImport.EXTRACTION);
         // Verrou de navigation (#54) : on ne doit pas quitter l'assistant pendant la décompression, sinon
         // le fil d'arrière-plan continuerait d'écrire un gros temporaire et posterait des mutations
-        // Platform.runLater sur une vue détachée. Déverrouillé par reinitialiserExecution (fin ou erreur).
+        // un retour du socle sur une vue détachée. Déverrouillé par reinitialiserExecution (fin ou erreur).
         navigation.setOperationCritique("l'import");
     }
 
@@ -329,7 +329,7 @@ public class ImportationViewModel {
 
     /// Variante de [#extraireSiZip(Path)] qui **notifie l'avancement** de la décompression (#146) via
     /// `surProgression` (un `Progression` « X / N fichiers » par fichier extrait). Le callback est invoqué
-    /// hors du fil JavaFX : l'appelant (la vue) le marshale par `Platform.runLater` vers
+    /// hors du fil JavaFX : l'appelant (la vue) le marshale par le relais du socle vers
     /// [#appliquerProgression].
     public Path extraireSiZip(Path chemin, Consumer<Progression> surProgression) {
         return extraireSiZip(chemin, surProgression, JetonAnnulation.neutre());
@@ -410,7 +410,7 @@ public class ImportationViewModel {
     }
 
     /// Applique un import réussi (résultat exposé, état `TERMINE`). À appeler sur le fil JavaFX
-    /// (depuis `Platform.runLater`).
+    /// (depuis un callback du socle).
     public void marquerTermine(ResultatImport resultatImport) {
         resultat.set(resultatImport);
         messageExecution.set("");
@@ -424,7 +424,7 @@ public class ImportationViewModel {
 
     /// Applique un import **multi-nuits** réussi (#…) : expose le résultat agrégé (un passage par nuit),
     /// pointe [#resultatProperty()] sur la première nuit (compatibilité), agrège les fichiers rejetés de
-    /// **toutes** les nuits, état `TERMINE`. À appeler sur le fil JavaFX (depuis `Platform.runLater`).
+    /// **toutes** les nuits, état `TERMINE`. À appeler sur le fil JavaFX (depuis un callback du socle).
     public void marquerTermineNuits(ResultatImportMultiNuits resultatMultiNuits) {
         resultatNuits.set(resultatMultiNuits);
         resultat.set(resultatMultiNuits.premier()); // compatibilité : le mono-résultat pointe la 1re nuit
@@ -441,7 +441,7 @@ public class ImportationViewModel {
     }
 
     /// Applique un échec d'import : efface le résultat, renseigne le message, état `ECHEC`. À
-    /// appeler sur le fil JavaFX (depuis `Platform.runLater`).
+    /// appeler sur le fil JavaFX (depuis un callback du socle).
     public void marquerEchec(String message) {
         resultat.set(null);
         resultatNuits.set(null);
@@ -454,7 +454,7 @@ public class ImportationViewModel {
     /// Applique une **annulation** (#146) demandée par l'utilisateur (décompression ou import) : état
     /// neutre `ANNULE`, progression effacée, navigation déverrouillée, temporaire du zip nettoyé. Les
     /// fichiers partiels sur disque ont déjà été supprimés par la couche modèle (session d'import ou
-    /// dossier d'extraction). À appeler sur le fil JavaFX (depuis `Platform.runLater`).
+    /// dossier d'extraction). À appeler sur le fil JavaFX (depuis un callback du socle).
     public void marquerAnnule() {
         resultat.set(null);
         resultatNuits.set(null);

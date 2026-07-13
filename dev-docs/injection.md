@@ -171,11 +171,13 @@ Exemple, la fonctionnalité « Fiche de l'espèce » (#844) :
 | `SourceUniverselle` | `LienGbif` | `SourceUniversellePreferee` (préférence GBIF / Wikipédia) |
 | `ResolveurFiche` | `ResolveurFicheIdentite` (aucun réseau) | `ResolveurFicheGbif` (résout la clé via l'API GBIF) |
 | `ExecuteurFiche` | `ExecuteurFicheSynchrone` (déterministe) | `ExecuteurFicheAsynchrone` (hors fil JavaFX + `Platform.runLater`) |
+| `ExecuteurTache` (#793) | `ExecuteurTacheSynchrone` (déterministe) | `ExecuteurTacheAsynchrone` (thread virtuel + `Platform.runLater`) |
 
 Une **surcharge explicite** (`bind(...).to(...)` ou `@Provides`) l'emporte toujours sur le défaut. Les
 tests E2E l'exploitent via `Modules.override(RacineInjecteur.modules()).with(...)` pour injecter un faux
 ciblé (ex. un `OuvreurDeLien` qui enregistre l'URL au lieu d'ouvrir un navigateur), sans dupliquer la
-liste des modules.
+liste des modules. Les **outils de capture** font de même avec `ModuleCaptureCommun` : les exécuteurs
+y sont **synchrones**, sinon l'aperçu montre le voile d'occupation à la place du contenu (#1278).
 
 ---
 

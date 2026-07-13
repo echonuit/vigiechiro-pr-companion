@@ -11,7 +11,8 @@ import java.util.List;
 /// plan), donc l'ordre d'arrivée n'importe pas. En import **multi-nuits**, un nouveau [#planEtabli]
 /// est émis à chaque nuit : la table se replanifie nuit par nuit, en phase avec les libellés
 /// « Nuit i/N · … » de la progression globale. L'implémentation IHM **doit relayer** ses mutations au
-/// fil JavaFX (`Platform.runLater`), comme le callback de progression global.
+/// fil JavaFX (fourni par le socle, `ExecuteurTache#surFilJavaFx()`), comme le callback de
+/// progression global.
 public interface SuiviFichiers {
 
     /// Plan établi **avant toute écriture** de la nuit : le nom de chaque original à traiter, dans

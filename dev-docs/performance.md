@@ -65,14 +65,15 @@ par enregistrement), empreinte ~600-700 Mo.
 ## Réactivité de l'IHM (pas de freeze)
 
 Au-delà des chiffres, la perception d'efficience tient à **l'absence de gel** de l'interface. Dans
-l'application, l'import s'exécute sur un **thread virtuel** (`ImportationController`) et la navigation
-est **verrouillée** pendant l'état `EN_COURS` (#54) : le fil JavaFX n'est jamais bloqué par le travail
-lourd, seul `Platform.runLater` y relaie la progression. Le README du banc donne une procédure
-semi-manuelle pour **détecter tout écart de frame > 200 ms** (un `AnimationTimer` d'instrumentation) et
-une procédure pour vérifier la **stabilité mémoire de nuit en nuit** (heap après GC dans un seul
-processus).
+l'application, l'import s'exécute **hors du fil JavaFX** via le socle `ExecuteurTache` (#793/#1256)
+et la navigation est **verrouillée** pendant l'état `EN_COURS` (#54) : le fil JavaFX n'est jamais
+bloqué par le travail lourd, seuls les relais du socle (`relaisProgression`, `surFilJavaFx()`) y
+ramènent la progression. Le README du banc donne une procédure semi-manuelle pour **détecter tout
+écart de frame > 200 ms** (un `AnimationTimer` d'instrumentation) et une procédure pour vérifier la
+**stabilité mémoire de nuit en nuit** (heap après GC dans un seul processus).
 
 !!! note "Lien avec l'architecture"
-    Cette discipline du fil JavaFX (travail lourd hors fil, `Platform.runLater` pour la progression)
-    est la même que celle décrite côté [Navigation et chrome](navigation.md) et appliquée à toutes les
-    tâches longues : c'est un **invariant** de l'application, pas une optimisation ponctuelle.
+    Cette discipline du fil JavaFX (travail lourd hors fil, retour et progression relayés par le
+    socle `ExecuteurTache`, cf. [Patterns](patterns.md)) est la même que celle décrite côté
+    [Navigation et chrome](navigation.md) et appliquée à toutes les tâches longues : c'est un
+    **invariant** de l'application, pas une optimisation ponctuelle.

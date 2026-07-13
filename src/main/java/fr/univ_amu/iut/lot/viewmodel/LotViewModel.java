@@ -175,7 +175,7 @@ public class LotViewModel {
     /// Calcule les archives ZIP de dépôt (appel service, potentiellement **long**). **Aucune** mutation de
     /// propriété observable ici : sûr à exécuter **hors fil JavaFX**. `progres` remonte l'avancement global
     /// (#769) et `suivi` le cycle de vie par archive (#820, animation de la table) ; tous deux DOIVENT
-    /// relayer leurs mutations au fil JavaFX (`Platform.runLater`, cf. le controller). Le résultat est
+    /// relayer leurs mutations au fil JavaFX (relais du socle, cf. le controller). Le résultat est
     /// appliqué ensuite par [#appliquerGeneration] (sur le fil JavaFX). Sans passage ouvert, liste vide.
     public List<ArchiveDepot> calculerArchivesDepot(Consumer<Progression> progres, SuiviArchives suivi) {
         if (idPassage == null) {
@@ -375,7 +375,7 @@ public class LotViewModel {
 
     /// Suivi **par archive** de dépôt (#820) : ses [SuiviLignesArchives#lignes()] (une [LigneArchive] par
     /// ZIP, avec état + barre) alimentent la table ; le controller y relaie aussi le cycle de vie de la
-    /// génération (via `Platform.runLater`). Vide tant qu'aucune archive n'existe (session ou disque).
+    /// génération (sur le fil JavaFX, via le socle). Vide tant qu'aucune archive n'existe (session ou disque).
     public SuiviLignesArchives suiviLignes() {
         return suiviLignes;
     }

@@ -15,7 +15,8 @@ import javafx.collections.ObservableList;
 /// données propres) en appels au pilote.
 ///
 /// **Fil JavaFX** : ces méthodes mutent des collections/propriétés observables ; l'appelant (le
-/// controller) les invoque via `Platform.runLater`, comme le callback de progression global.
+/// controller) les invoque sur le fil JavaFX fourni par le socle (`ExecuteurTache#surFilJavaFx()`, #1252),
+/// comme le callback de progression global.
 public class SuiviLignes<L extends LigneSuivi> {
 
     private final ObservableList<L> lignes = FXCollections.observableArrayList();

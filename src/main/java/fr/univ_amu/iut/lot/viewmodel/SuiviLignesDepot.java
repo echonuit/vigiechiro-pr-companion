@@ -20,7 +20,8 @@ import javafx.beans.property.ReadOnlyIntegerWrapper;
 /// que le manquant).
 ///
 /// **Fil JavaFX** : ces méthodes mutent des collections/propriétés observables ; l'appelant (le
-/// controller) les invoque via `Platform.runLater`, comme le callback de progression global.
+/// controller) les invoque sur le fil JavaFX fourni par le socle (`ExecuteurTache#surFilJavaFx()`), comme le
+/// callback de progression global.
 public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
 
     private final ReadOnlyBooleanWrapper resteAReprendre = new ReadOnlyBooleanWrapper(this, "resteAReprendre", false);

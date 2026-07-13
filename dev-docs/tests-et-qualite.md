@@ -136,4 +136,6 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
 !!! warning "Mutation hors fil JavaFX"
     Un handler qui modifie l'IHM depuis un thread d'arrière-plan lève `Not on FX application thread`,
     souvent **avalée** (l'écran fige). Découper **préparation** (fil FX) / **exécution** (hors-thread)
-    / `Platform.runLater` pour le retour, et tester via `bouton.fire()` en attendant l'état terminal.
+    / retour sur le fil FX - c'est exactement le contrat du socle `ExecuteurTache` (#793, cf.
+    [Patterns](patterns.md)), **synchrone en test** : avec lui, `bouton.fire()` rend l'état terminal
+    observable au retour du clic, sans attente.
