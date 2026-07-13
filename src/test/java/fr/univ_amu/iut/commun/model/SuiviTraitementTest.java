@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -43,7 +44,7 @@ class SuiviTraitementTest {
     void relever_interroge_et_memorise() {
         armerLien();
         Traitement fini = new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:00:00+00:00", null, null);
-        when(traitement.etat(PARTICIPATION)).thenReturn(fini);
+        when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.succes(fini));
 
         assertThat(suivi.relever(ID_PASSAGE)).isEqualTo(fini);
 
@@ -59,7 +60,7 @@ class SuiviTraitementTest {
     @DisplayName("relever : une participation jamais calculée se relève aussi (« le serveur ne dit rien » est un fait)")
     void relever_un_traitement_absent() {
         armerLien();
-        when(traitement.etat(PARTICIPATION)).thenReturn(Traitement.absent());
+        when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.succes(Traitement.absent()));
 
         assertThat(suivi.relever(ID_PASSAGE).estInconnu()).isTrue();
 
@@ -76,6 +77,32 @@ class SuiviTraitementTest {
                 .hasMessageContaining("déposez d'abord");
 
         verify(traitement, never()).etat(org.mockito.ArgumentMatchers.anyString());
+        verify(releves, never()).enregistrer(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("relever : serveur illisible → exception claire et le CACHE RESTE INTACT (#1284)")
+    void relever_illisible_conserve_le_cache() {
+        armerLien();
+        when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+
+        // Avant #1284, l'injoignable se relevait comme « absent » : le cache perdait le dernier état
+        // réellement connu (mini-purge), et l'IHM affichait « jamais lancée » sur une simple coupure.
+        assertThatThrownBy(() -> suivi.relever(ID_PASSAGE))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("injoignable")
+                .hasMessageContaining("délai d'attente dépassé");
+
+        when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.refuse(404, "participation inconnue"));
+        assertThatThrownBy(() -> suivi.relever(ID_PASSAGE))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("HTTP 404");
+
+        when(traitement.etat(PARTICIPATION)).thenReturn(ReponseApi.nonConnecte());
+        assertThatThrownBy(() -> suivi.relever(ID_PASSAGE))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Non connecté");
+
         verify(releves, never()).enregistrer(org.mockito.ArgumentMatchers.any());
     }
 

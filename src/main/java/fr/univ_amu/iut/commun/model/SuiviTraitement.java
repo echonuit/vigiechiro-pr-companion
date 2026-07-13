@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.model;
 
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -34,15 +35,29 @@ public final class SuiviTraitement {
     /// Demande au serveur où en est l'analyse de cette nuit, **et enregistre le relevé**. Bloquant
     /// (réseau) : à appeler hors du fil JavaFX.
     ///
-    /// Lève une [RegleMetierException] si le passage n'est lié à aucune participation : il n'y a alors
-    /// rien à suivre (la nuit n'a pas été déposée).
-    ///
-    /// ⚠️ Un traitement [Traitement#estInconnu()] ne veut pas dire « tout va bien » : il signifie « le
-    /// serveur ne nous dit rien » — soit la nuit n'a jamais été calculée, soit il est injoignable. Le
-    /// client ne distingue pas encore ces deux cas (#1284).
+    /// Lève une [RegleMetierException] si le passage n'est lié à aucune participation (rien à suivre :
+    /// la nuit n'a pas été déposée), ou si le serveur n'a **pas pu être lu** (#1284 : non connecté,
+    /// injoignable, ou refus) — dans ce cas le **dernier relevé persisté est conservé tel quel** : un
+    /// échec de lecture n'écrase jamais un souvenir acquis, même famille que la garde anti-purge des
+    /// rapprochements. Un [Traitement#estInconnu()] rendu ici veut donc dire, enfin sans ambiguïté :
+    /// « le serveur répond, et la nuit n'a jamais été calculée ».
     public Traitement relever(Long idPassage) {
         String participationId = participationDe(idPassage);
-        Traitement etat = traitement.etat(participationId);
+        Traitement etat =
+                switch (traitement.etat(participationId)) {
+                    case ReponseApi.Succes<Traitement>(Traitement lu) -> lu;
+                    case ReponseApi.NonConnecte<Traitement> nonConnecte ->
+                        throw new RegleMetierException(
+                                "Non connecté à VigieChiro : impossible de relever l'état du traitement."
+                                        + " Le dernier état connu reste affiché.");
+                    case ReponseApi.Injoignable<Traitement>(String cause) ->
+                        throw new RegleMetierException(
+                                "VigieChiro est injoignable (" + cause
+                                        + ") : impossible de relever l'état du traitement. Le dernier état connu reste affiché.");
+                    case ReponseApi.Refuse<Traitement>(int statut, String corps) ->
+                        throw new RegleMetierException("VigieChiro a refusé la lecture de la participation (HTTP "
+                                + statut + " : " + corps + ").");
+                };
         releves.enregistrer(new ReleveTraitement(
                 idPassage, participationId, etat, horloge.maintenant().toString()));
         return etat;

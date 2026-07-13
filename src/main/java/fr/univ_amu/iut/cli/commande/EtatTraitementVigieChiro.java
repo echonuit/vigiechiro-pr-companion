@@ -29,8 +29,8 @@ import picocli.CommandLine.Spec;
 /// | `0` | **terminé** | importer les observations (`importer-vigiechiro`) |
 /// | `3` | planifié, en cours, ou nouvel essai | **patienter** |
 /// | `2` | **en échec** côté serveur | lire la trace, éventuellement relancer |
-/// | `4` | aucun traitement connu | lancer l'analyse (`lancer-traitement-vigiechiro`) |
-/// | `1` | erreur technique | passage non déposé, jeton absent |
+/// | `4` | jamais lancée (le serveur répond, #1284) | lancer l'analyse (`lancer-traitement-vigiechiro`) |
+/// | `1` | erreur technique | passage non déposé, jeton absent, plateforme injoignable ou refus |
 ///
 /// Chaque appel **rafraîchit le cache local** (#1262) : l'application affichera cet état même hors
 /// connexion.
@@ -47,8 +47,9 @@ public final class EtatTraitementVigieChiro implements Callable<Integer> {
     /// Analyse terminée : les observations sont récupérables.
     private static final int TERMINE = 0;
 
-    // Le code 1 (échec technique : nuit non déposée, jeton absent, contexte sans connexion) n'est pas posé
-    // ici : picocli le rend de lui-même quand la commande lève (RegleMetierException).
+    // Le code 1 (échec technique : nuit non déposée, jeton absent, plateforme injoignable ou refus —
+    // #1284) n'est pas posé ici : picocli le rend de lui-même quand la commande lève
+    // (RegleMetierException, y compris celle du relevé quand le serveur n'a pas pu être lu).
 
     /// Le serveur a renoncé : l'analyse a échoué.
     private static final int EN_ECHEC = 2;
@@ -56,7 +57,8 @@ public final class EtatTraitementVigieChiro implements Callable<Integer> {
     /// Le serveur travaille (ou s'apprête à le faire) : il n'y a qu'à attendre.
     private static final int EN_ATTENTE = 3;
 
-    /// Le serveur ne sait rien de cette participation : jamais calculée (ou injoignable, #1284).
+    /// Le serveur **répond** et ne connaît aucun traitement : l'analyse n'a jamais été lancée. Depuis
+    /// #1284, « injoignable » ne tombe plus ici (c'est un code 1) : ce code redit vrai.
     private static final int JAMAIS_LANCE = 4;
 
     @Option(
@@ -112,8 +114,8 @@ public final class EtatTraitementVigieChiro implements Callable<Integer> {
     private String compteRendu(Traitement traitement) {
         String passage = "Passage " + idPassage + " : ";
         if (traitement.estInconnu()) {
-            return passage + "aucun traitement connu sur VigieChiro."
-                    + " Lancez l'analyse (lancer-traitement-vigiechiro), ou vérifiez votre connexion.";
+            return passage + "aucun traitement connu sur VigieChiro : l'analyse n'a jamais été lancée."
+                    + " Lancez-la (lancer-traitement-vigiechiro).";
         }
         return passage
                 + switch (traitement.etat()) {

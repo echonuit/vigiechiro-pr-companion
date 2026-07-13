@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.api.Traitement;
@@ -110,15 +111,34 @@ public final class DepotVigieChiro {
     ///
     /// La garde est **locale** : on relit l'état du traitement et on refuse de notre propre chef, sans rien
     /// demander au serveur (qui, lui, accepterait — il l'accepte volontiers passé 24 h).
+    ///
+    /// **Fail-safe depuis #1284** : si l'état ne peut pas être **lu** (injoignable, refus), on ne lance
+    /// pas sans `forcer` — avant, un simple délai réseau au moment de la relecture faisait passer la
+    /// garde, et un compute parti malgré tout aurait détruit les observations d'une nuit ZIP. Ne pas
+    /// pouvoir prouver que le lancement est sûr, c'est ne pas lancer.
     public ResultatLancement lancerTraitement(Long idPassage, boolean forcer) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         String participationId = participations
                 .participationDe(idPassage)
                 .orElseThrow(() -> new RegleMetierException(
                         "Aucune participation VigieChiro liée à ce passage : déposez d'abord la nuit."));
-        Traitement dejaCalcule = traitement.etat(participationId);
-        if (!forcer && estDejaCalcule(dejaCalcule)) {
-            return ResultatLancement.relanceBloquee(dejaCalcule);
+        if (!forcer) {
+            switch (traitement.etat(participationId)) {
+                case ReponseApi.Succes<Traitement>(Traitement dejaCalcule) -> {
+                    if (estDejaCalcule(dejaCalcule)) {
+                        return ResultatLancement.relanceBloquee(dejaCalcule);
+                    }
+                }
+                case ReponseApi.NonConnecte<Traitement> nonConnecte -> {
+                    return ResultatLancement.injoignable();
+                }
+                case ReponseApi.Injoignable<Traitement> injoignable -> {
+                    return ResultatLancement.injoignable();
+                }
+                case ReponseApi.Refuse<Traitement>(int statut, String corps) -> {
+                    return ResultatLancement.refuse(statut, corps);
+                }
+            }
         }
         return traitement.lancer(participationId);
     }

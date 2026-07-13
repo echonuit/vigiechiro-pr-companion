@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.IssueLancement;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.api.Traitement;
@@ -83,6 +84,9 @@ class DepotVigieChiroTest {
     void preparer() {
         participations = mock(SynchronisationParticipation.class);
         client = mock(ClientVigieChiro.class);
+        // Par défaut : le serveur répond et n'a encore aucune donnée (Mockito ne fabrique pas de
+        // ReponseApi tout seul, contrairement aux List d'avant #1284).
+        when(client.donnees(org.mockito.ArgumentMatchers.anyString())).thenReturn(ReponseApi.succes(List.of()));
         traitementServeur = mock(TraitementVigieChiro.class);
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
         new MigrationSchema(source).migrer();
@@ -209,7 +213,7 @@ class DepotVigieChiroTest {
     @DisplayName("#984 : lancerTraitement délègue le compute au client pour la participation liée")
     void lancer_traitement_delegue_compute() {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(traitementServeur.etat("part-1")).thenReturn(Traitement.absent()); // jamais calculée
+        when(traitementServeur.etat("part-1")).thenReturn(ReponseApi.succes(Traitement.absent())); // jamais calculée
         when(traitementServeur.lancer("part-1")).thenReturn(ResultatLancement.accepte());
 
         assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.ACCEPTE);
@@ -223,7 +227,7 @@ class DepotVigieChiroTest {
         // dépôt en archives ZIP il ne peut plus relire les WAV (#1244) → observations perdues. On refuse
         // donc de notre propre chef, SANS même appeler le serveur.
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(traitementServeur.etat("part-1")).thenReturn(traitement(EtatTraitement.FINI));
+        when(traitementServeur.etat("part-1")).thenReturn(ReponseApi.succes(traitement(EtatTraitement.FINI)));
 
         assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.RELANCE_BLOQUEE);
         verify(traitementServeur, never()).lancer(anyString());
@@ -233,7 +237,7 @@ class DepotVigieChiroTest {
     @DisplayName("#1261 : une analyse EN ÉCHEC n'est pas relancée non plus, sauf demande explicite (forcer)")
     void lancer_traitement_relance_forcee() {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(traitementServeur.etat("part-1")).thenReturn(traitement(EtatTraitement.ERREUR));
+        when(traitementServeur.etat("part-1")).thenReturn(ReponseApi.succes(traitement(EtatTraitement.ERREUR)));
         when(traitementServeur.lancer("part-1")).thenReturn(ResultatLancement.accepte());
 
         assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.RELANCE_BLOQUEE);
@@ -248,7 +252,7 @@ class DepotVigieChiroTest {
         // La garde ne s'applique pas : il n'y a pas encore de résultat à détruire. C'est le serveur qui
         // refusera la demande concurrente (400 « Already »), et le client la traduira en DEJA_LANCE.
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(traitementServeur.etat("part-1")).thenReturn(traitement(EtatTraitement.EN_COURS));
+        when(traitementServeur.etat("part-1")).thenReturn(ReponseApi.succes(traitement(EtatTraitement.EN_COURS)));
         when(traitementServeur.lancer("part-1"))
                 .thenReturn(ResultatLancement.dejaLance(traitement(EtatTraitement.EN_COURS)));
 
@@ -427,7 +431,8 @@ class DepotVigieChiroTest {
         Path dejaEnLigne = fichier(dossier, "seq_000.wav");
         Path restant = fichier(dossier, "seq_001.wav");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.donnees("part-1")).thenReturn(List.of(new DonneeVigieChiro("d1", "seq_000", List.of())));
+        when(client.donnees("part-1"))
+                .thenReturn(ReponseApi.succes(List.of(new DonneeVigieChiro("d1", "seq_000", List.of()))));
         armerUploadOk();
 
         BilanDepot bilan = depot.deposer(idPassage, List.of(dejaEnLigne, restant));
@@ -444,7 +449,8 @@ class DepotVigieChiroTest {
     void reconciliation_complete_bascule_depose(@TempDir Path dossier) throws IOException {
         Path a = fichier(dossier, "seq_000.wav");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.donnees("part-1")).thenReturn(List.of(new DonneeVigieChiro("d1", "seq_000", List.of())));
+        when(client.donnees("part-1"))
+                .thenReturn(ReponseApi.succes(List.of(new DonneeVigieChiro("d1", "seq_000", List.of()))));
 
         BilanDepot bilan = depot.deposer(idPassage, List.of(a));
 
@@ -459,7 +465,8 @@ class DepotVigieChiroTest {
     void reconciliation_ignore_les_zip(@TempDir Path dossier) throws IOException {
         Path archive = fichier(dossier, "Car-1.zip");
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.donnees("part-1")).thenReturn(List.of(new DonneeVigieChiro("d1", "Car-1", List.of())));
+        when(client.donnees("part-1"))
+                .thenReturn(ReponseApi.succes(List.of(new DonneeVigieChiro("d1", "Car-1", List.of()))));
         armerUploadOk();
 
         depot.deposer(idPassage, List.of(archive));
