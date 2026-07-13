@@ -27,8 +27,9 @@ import picocli.CommandLine.Spec;
 /// n'est liée au passage (déposer d'abord).
 ///
 /// ⚠️ **Une nuit déjà analysée n'est pas relancée** : le serveur supprimerait ses observations pour les
-/// recalculer, or l'audio d'un dépôt en archives ZIP n'est pas récupérable (#1244, #1261). Le forçage
-/// explicite viendra avec #1265.
+/// recalculer, or l'audio d'un dépôt en archives ZIP n'est pas récupérable (#1244, #1261). L'option
+/// `--forcer` lève cette garde, en connaissance de cause — typiquement après un **échec**, où il n'y a
+/// plus rien à perdre.
 @Command(
         name = "lancer-traitement-vigiechiro",
         description = "Déclenche le traitement serveur (compute) de la participation d'un passage déjà déposé.")
@@ -47,6 +48,14 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
             description = "Jeton VigieChiro ponctuel (sinon : variable VIGIECHIRO_TOKEN, sinon la connexion"
                     + " enregistrée dans l'application).")
     private String token;
+
+    @Option(
+            names = "--forcer",
+            description = "RELANCER une nuit déjà analysée. DESTRUCTEUR : le serveur supprime les"
+                    + " observations avant de recalculer, et il ne peut pas les régénérer si la nuit a été"
+                    + " déposée en archives (l'audio n'y est pas conservé). À n'utiliser qu'en connaissance"
+                    + " de cause, typiquement après un échec.")
+    private boolean forcer;
 
     @Spec
     private CommandSpec spec;
@@ -67,7 +76,7 @@ public final class LancerTraitementVigieChiro implements Callable<Integer> {
             System.setProperty("vigiechiro.token", token);
         }
         PrintWriter sortie = spec.commandLine().getOut();
-        ResultatLancement resultat = moteur.lancerTraitement(idPassage);
+        ResultatLancement resultat = moteur.lancerTraitement(idPassage, forcer);
         sortie.println(compteRendu(resultat));
         // 0 = le traitement est en route, qu'il vienne d'être accepté ou qu'il tournait déjà : rejouer la
         // commande ne doit pas faire échouer un script (idempotence).

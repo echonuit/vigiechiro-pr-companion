@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.PreferenceSourceEspece;
 import fr.univ_amu.iut.commun.model.RechercheGlobale;
 import fr.univ_amu.iut.commun.model.SourceUniverselle;
 import fr.univ_amu.iut.commun.model.SourceUniversellePreferee;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.DispositionColonnesDao;
 import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
@@ -89,6 +90,11 @@ public class CommunModule extends AbstractModule {
         // Recherche globale du chrome (#144) : OptionalBinder VIDE (feature `recherche` désactivable, #1087).
         // `RechercheModule` fait `setBinding` quand elle est active ; sinon MainController masque la barre.
         OptionalBinder.newOptionalBinder(binder(), RechercheGlobale.class);
+        // Suivi du traitement serveur (#1259) : OptionalBinder VIDE ici, car il exige le client HTTP —
+        // absent des injecteurs de capture, qui assemblent l'application sans `connexion`. `ConnexionModule`
+        // pose la liaison réelle. Les consommateurs (M-Lot, modale de rattachement, CLI) reçoivent donc un
+        // Optional : hors connexion, le suivi est simplement indisponible, sans binding manquant.
+        OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);
     }
 
     /// Descripteurs de l'onglet « Fonctionnalités » : un booléen `feature.<id>.active` par feature

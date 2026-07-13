@@ -59,7 +59,8 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
 | `synchroniser-vigiechiro` | `[--token <jeton>]` | #1181 | rejoue les `RapprochementVigieChiro` (taxons, sites/points) après un `GET /moi` de contrôle ; `0` ssi connecté |
 | `deposer-vigiechiro` | `--passage <id> [--token <jeton>] [--archives\|--wav]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982, téléversement **parallèle** #984). Défaut = `ServiceLot.fichiersDepotParDefaut`, **le même choix que M-Lot** : ZIP si présentes, sinon invite à les générer (étape 2), sinon repli WAV. `--archives`/`--wav` forcent l'un ou l'autre |
-| `lancer-traitement-vigiechiro` | `--passage <id> [--token <jeton>]` | #984 | `DepotVigieChiro.lancerTraitement` (`POST /participations/{id}/compute`) — équivalent du bouton « Lancer la participation » ; `0` ssi le serveur accepte, `1` s'il refuse (déjà en cours) |
+| `lancer-traitement-vigiechiro` | `--passage <id> [--token <jeton>] [--forcer]` | #984, #1261, #1265 | `DepotVigieChiro.lancerTraitement` (`POST /participations/{id}/compute`) — équivalent du bouton « Lancer la participation ». `0` **dès lors que le traitement est en route** (accepté **ou** déjà en cours : la commande est idempotente), `1` sinon. Une nuit **déjà analysée n'est pas relancée** : le serveur détruirait ses observations pour les recalculer, sans pouvoir les régénérer (audio absent d'un dépôt en archives, #1244) — `--forcer` lève cette garde, typiquement après un échec |
+| `etat-traitement-vigiechiro` | `--passage <id> [--token <jeton>]` | #1265 | `SuiviTraitement.relever` (lecture seule : `GET /participations/{id}` → bloc `traitement`, et **mise à jour du cache local** #1262). Codes **faits pour un script** : `0` terminé, `3` planifié/en cours/nouvel essai, `2` en échec, `4` jamais lancé, `1` erreur technique |
 | `reinitialiser-depot` | `--passage <id>` | #984 | `ServiceLot.reinitialiserDepot` (efface le plan `depot_unite`, retour « Prêt à déposer » ; **local**, archives ZIP et lien de participation conservés) — équivalent du bouton « Réinitialiser le dépôt » |
 | `verifier-depot-vigiechiro` | `--passage <id> [--token <jeton>]` | #1132 | `VerificationDepot.verifier` (lecture seule : journal de traitement + titres des `donnees` vs plan `depot_unite` ; `0` ssi tout est retrouvé) |
 | `importer-vigiechiro` | `--passage <id> [--remplacer] [--participation <objectid>] [--token <jeton>]` | #1181 | `ImportVigieChiro.importer` (résultats Tadarida depuis l'API, sans CSV ; `--participation` = rattachement préalable) |
@@ -122,6 +123,17 @@ export VIGIECHIRO_TOKEN=…
 vigiechiro deposer-vigiechiro --passage 9 \
   && vigiechiro lancer-traitement-vigiechiro --passage 9 \
   && vigiechiro verifier-depot-vigiechiro --passage 9   # après le calcul serveur
+```
+
+Le calcul serveur dure des dizaines de minutes (Tadarida tourne sur une ferme de calcul distante).
+L'application ne **surveille** jamais la plateforme d'elle-même — le site officiel ne le fait pas
+davantage — mais un script, lui, peut l'interroger à son rythme. C'est le rôle des codes de retour
+d'`etat-traitement-vigiechiro`, le `3` signifiant « patiente » :
+
+```bash
+# attendre la fin du calcul, puis importer les observations
+until vigiechiro etat-traitement-vigiechiro --passage 9; [ $? -ne 3 ]; do sleep 300; done
+vigiechiro importer-vigiechiro --passage 9
 ```
 
 En cas de dépôt à refaire de zéro (unités marquées déposées à tort), `reinitialiser-depot --passage 9`

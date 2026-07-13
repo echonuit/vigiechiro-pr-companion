@@ -71,13 +71,6 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
         return new VerificationDepot(participations, client, depotUnites);
     }
 
-    /// Traitement serveur (compute + état) : collaborateur du client, extrait de lui (#1261).
-    @Provides
-    @Singleton
-    TraitementVigieChiro fournirTraitementVigieChiro(ClientVigieChiro client) {
-        return new TraitementVigieChiro(client);
-    }
-
     @Provides
     @Singleton
     @Named(QUALIFIANT)
