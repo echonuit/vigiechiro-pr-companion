@@ -190,7 +190,8 @@ une **relance du traitement serveur** efface les corrections publiées (republie
 nouveau traitement). L'export `_Vu` reste disponible en repli hors connexion.
 
 Pour importer, vous pouvez soit utiliser le menu « ☰ », soit **glisser-déposer** directement le fichier
-CSV sur l'écran : pratique quand la fenêtre de sélection de fichier du système ne s'ouvre pas. À la fin de
+CSV sur l'écran : pratique quand la fenêtre de sélection de fichier du système ne s'ouvre pas (une astuce
+en bas de l'écran, visible quand l'écran est ouvert sur un passage, rappelle ce geste). À la fin de
 l'import, un bandeau confirme le nombre d'observations chargées ; en cas de problème (séquence introuvable,
 fichier illisible…), un bandeau rouge explique ce qui s'est passé.
 
