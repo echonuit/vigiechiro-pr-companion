@@ -3,7 +3,6 @@ package fr.univ_amu.iut.passage.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
-import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
@@ -164,6 +163,15 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// (passage non déposé, ou déjà archivé), cf. [IndicateurBlocage] (#1300).
     @FXML
     private StackPane enveloppeArchiver;
+
+    @FXML
+    private Button boutonReactiver;
+
+    /// Enveloppe (non désactivée) du bouton « Réactiver » : porte le tooltip expliquant le blocage
+    /// (rien à réactiver : audio déjà présent, ou aucune séquence importée), cf. [IndicateurBlocage]
+    /// (#1302).
+    @FXML
+    private StackPane enveloppeReactiver;
 
     @FXML
     private Button boutonSupprimer;
@@ -339,6 +347,17 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         .then("Archiver ce passage : libère l'espace de son audio (séquences et bruts) en"
                                 + " gardant observations et validations consultables.")
                         .otherwise(viewModel.motifBlocageArchivageProperty()));
+        // « Réactiver ce passage » (#1302) : même gating amont. L'action n'apparaît utile que s'il
+        // manque de l'audio (passage archivé, ou disque incomplet).
+        boutonReactiver
+                .disableProperty()
+                .bind(viewModel.reactivationPossibleProperty().not());
+        IndicateurBlocage.expliquer(
+                enveloppeReactiver,
+                Bindings.when(viewModel.reactivationPossibleProperty())
+                        .then("Réactiver ce passage : réimporte les fichiers d'origine et les rebranche,"
+                                + " après vérification que ce sont bien les mêmes.")
+                        .otherwise(viewModel.motifBlocageReactivationProperty()));
         lblIndiceAction
                 .textProperty()
                 .bind(Bindings.createStringBinding(
@@ -463,71 +482,44 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         return new ContextePassage(idPassage, viewModel.getNumeroPassage(), contexte);
     }
 
-    /// « Supprimer » : après confirmation, supprime le passage (et sa nuit, par cascade) puis revient
-    /// à l'accueil. Un passage déposé est refusé par le service ([RegleMetierException]) ; l'erreur
-    /// est alors présentée à l'utilisateur sans quitter l'écran.
+    /// « Supprimer », « Annuler le dépôt » et « Purger les originaux » : confirmation, action et
+    /// message d'erreur délégués à [ActionsFichePassage] (le contrôleur reste du pur câblage).
     @FXML
     private void supprimer() {
-        if (!confirmateur.confirmer("Supprimer définitivement ce passage et toute sa nuit (séquences, relevés) ?"
-                + alerteValidationsMenacees())) {
-            return;
-        }
-        try {
-            viewModel.supprimer();
-            navigation.ouvrirAccueil();
-        } catch (RegleMetierException refus) {
-            alerteErreur("Suppression impossible", refus.getMessage());
-        }
+        actionsFiche().supprimer();
     }
 
-    /// Complément d'avertissement pour la confirmation de suppression : si le passage porte des validations
-    /// observateur (taxon corrigé, référence, commentaire), elles seront **définitivement perdues** avec la
-    /// cascade. Chaîne vide sinon (rien à signaler). Contrairement à une ré-importation de CSV, la
-    /// suppression ne permet aucune préservation.
-    private String alerteValidationsMenacees() {
-        int menacees = compteurValidations.menaceesPourPassage(idPassage);
-        if (menacees == 0) {
-            return "";
-        }
-        return "\n\n⚠ " + menacees
-                + " validation(s) Tadarida (correction, référence, commentaire) seront définitivement perdues.";
-    }
-
-    /// « Annuler le dépôt » : après confirmation, ramène le passage de « Déposé » à « Prêt à déposer »
-    /// (les validations Tadarida déjà saisies sont **conservées**) puis recharge l'écran pour refléter le
-    /// nouveau statut. Un passage non déposé est refusé par le service ([RegleMetierException]) ; l'erreur
-    /// est alors présentée sans quitter l'écran.
     @FXML
     private void annulerDepot() {
-        if (!confirmateur.confirmer("Annuler le dépôt de ce passage et le ramener à « Prêt à déposer » ? "
-                + "Les validations Tadarida déjà saisies sont conservées.")) {
-            return;
-        }
-        try {
-            viewModel.annulerDepot();
-            viewModel.ouvrirSur(idPassage, contexte);
-        } catch (RegleMetierException refus) {
-            alerteErreur("Annulation impossible", refus.getMessage());
-        }
+        actionsFiche().annulerDepot();
     }
 
-    /// « Purger les originaux » : après confirmation, supprime les fichiers `bruts/` de cette nuit pour
-    /// récupérer l'espace disque, puis recharge l'écran (le volume bruts tombe à 0). Les séquences
-    /// transformées, la validation Tadarida et le dépôt sont **conservés** (ils n'utilisent pas les
-    /// originaux). Action réservée aux nuits qui conservent encore des originaux (bouton masqué sinon).
     @FXML
     private void purgerOriginaux() {
-        if (!confirmateur.confirmer("Supprimer les enregistrements originaux (bruts) de cette nuit pour libérer de "
-                + "l'espace disque ? Les séquences d'écoute, la validation et le dépôt sont conservés ; "
-                + "cette suppression est définitive.")) {
-            return;
-        }
-        try {
-            viewModel.purgerOriginaux();
-            viewModel.ouvrirSur(idPassage, contexte);
-        } catch (RuntimeException echec) {
-            alerteErreur("Purge impossible", echec.getMessage());
-        }
+        actionsFiche().purgerOriginaux();
+    }
+
+    /// Actions de la fiche, construites à l'usage (elles capturent le passage **courant**).
+    private ActionsFichePassage actionsFiche() {
+        return new ActionsFichePassage(
+                viewModel,
+                confirmateur,
+                compteurValidations,
+                () -> idPassage,
+                () -> viewModel.ouvrirSur(idPassage, contexte),
+                navigation::ouvrirAccueil);
+    }
+
+    /// « Réactiver ce passage » (#1302) : choix du dossier, vérification et rebranchement hors du fil
+    /// JavaFX, rapport — délégués à [ActionReactivation] (le contrôleur reste du pur câblage).
+    @FXML
+    private void reactiver() {
+        new ActionReactivation(
+                        viewModel,
+                        occupation,
+                        () -> racine.getScene().getWindow(),
+                        () -> viewModel.ouvrirSur(idPassage, contexte))
+                .reactiver();
     }
 
     /// « Archiver ce passage » (#1300) : confirmation, purge de l'audio et bilan, délégués à

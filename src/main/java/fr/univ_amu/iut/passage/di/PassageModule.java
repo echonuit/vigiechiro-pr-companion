@@ -258,8 +258,9 @@ public class PassageModule extends ModuleDeFeature {
             MoteurWorkflowPassage moteur,
             Horloge horloge,
             SessionDao sessionDao,
-            SequenceDao sequenceDao) {
-        return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao);
+            SequenceDao sequenceDao,
+            ServiceDisponibiliteAudio disponibilite) {
+        return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao, disponibilite);
     }
 
     /// Conditions de la nuit (météo #106/#697, matériel du micro #543), extraites de ServicePassage (#1192).
@@ -289,8 +290,11 @@ public class PassageModule extends ModuleDeFeature {
     /// autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
     @Provides
     PassageViewModel fournirPassageViewModel(
-            ServicePassage service, ServicePurgeOriginaux purge, ServiceArchivagePassage archivage) {
-        return new PassageViewModel(service, purge, archivage);
+            ServicePassage service,
+            ServicePurgeOriginaux purge,
+            ServiceArchivagePassage archivage,
+            ServiceReactivationPassage reactivation) {
+        return new PassageViewModel(service, purge, archivage, reactivation);
     }
 
     /// ViewModel de la modale « Modifier le rattachement » (E2.S8). **Non-singleton** : un VM frais

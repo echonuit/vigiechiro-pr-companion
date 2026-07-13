@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
@@ -65,7 +67,8 @@ class ServicePassageMockTest {
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(LocalDate.of(2026, 6, 20)),
                 sessionDao,
-                sequenceDao);
+                sequenceDao,
+                mock(ServiceDisponibiliteAudio.class));
     }
 
     /// Conditions de la nuit (météo), extraites de ServicePassage (#1192).

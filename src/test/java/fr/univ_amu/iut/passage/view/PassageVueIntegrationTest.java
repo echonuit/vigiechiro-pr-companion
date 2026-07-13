@@ -23,9 +23,11 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -266,6 +268,7 @@ class PassageVueIntegrationTest {
         ServicePassage service = mock(ServicePassage.class);
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
         ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
+        ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
         when(service.detailPassage(anyLong())).thenReturn(detail(statut, numero));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
@@ -283,7 +286,7 @@ class PassageVueIntegrationTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage);
+                return new PassageViewModel(service, purge, archivage, reactivation);
             }
 
             @Provides
@@ -349,6 +352,7 @@ class PassageVueIntegrationTest {
                 1024L,
                 30,
                 150.0,
-                null);
+                null,
+                new DecompteAudio(0, 0));
     }
 }

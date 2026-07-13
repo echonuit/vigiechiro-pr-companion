@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
@@ -7,9 +8,13 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
+import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyIntegerProperty;
@@ -33,6 +38,7 @@ public class PassageViewModel {
     private final ServicePassage service;
     private final ServicePurgeOriginaux purge;
     private final ServiceArchivagePassage archivage;
+    private final ServiceReactivationPassage reactivation;
 
     private final ReadOnlyStringWrapper titreContexte = new ReadOnlyStringWrapper(this, "titreContexte", "");
     private final ReadOnlyStringWrapper plageHoraire = new ReadOnlyStringWrapper(this, "plageHoraire", "");
@@ -60,6 +66,10 @@ public class PassageViewModel {
             new ReadOnlyBooleanWrapper(this, "archivagePossible", false);
     private final ReadOnlyStringWrapper motifBlocageArchivage =
             new ReadOnlyStringWrapper(this, "motifBlocageArchivage", "");
+    private final ReadOnlyBooleanWrapper reactivationPossible =
+            new ReadOnlyBooleanWrapper(this, "reactivationPossible", false);
+    private final ReadOnlyStringWrapper motifBlocageReactivation =
+            new ReadOnlyStringWrapper(this, "motifBlocageReactivation", "");
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
@@ -71,10 +81,15 @@ public class PassageViewModel {
     /// n'est chargé.
     private int numeroPassage;
 
-    public PassageViewModel(ServicePassage service, ServicePurgeOriginaux purge, ServiceArchivagePassage archivage) {
+    public PassageViewModel(
+            ServicePassage service,
+            ServicePurgeOriginaux purge,
+            ServiceArchivagePassage archivage,
+            ServiceReactivationPassage reactivation) {
         this.service = Objects.requireNonNull(service, "service");
         this.purge = Objects.requireNonNull(purge, "purge");
         this.archivage = Objects.requireNonNull(archivage, "archivage");
+        this.reactivation = Objects.requireNonNull(reactivation, "reactivation");
     }
 
     /// Ouvre l'écran sur le passage `idPassage` en **synchrone**, composition de [#charger] +
@@ -156,6 +171,15 @@ public class PassageViewModel {
         return archivage.archiver(idPassage);
     }
 
+    /// Réactive le passage courant depuis `dossierSource` (action « Réactiver » de M-Passage, #1302) :
+    /// rebranche les séquences dont le fichier réimporté est **vérifié**, laisse les autres. Appelée
+    /// **hors du fil JavaFX** (opération longue) ; le rechargement de l'affichage est à la charge de
+    /// l'appelant. La [fr.univ_amu.iut.commun.model.RegleMetierException] (dossier introuvable) remonte
+    /// à la vue, qui l'affiche.
+    public RapportReactivation reactiver(Path dossierSource, Consumer<Progression> progres) {
+        return reactivation.reactiver(idPassage, dossierSource, progres);
+    }
+
     private void appliquer(DetailPassage detail, ContexteSite contexte) {
         // Identité pour la zone gauche de la barre de statut : format unifié « Carré X · Point · N° Z »
         // (socle #1020, harmonisation #1088), au lieu d'un format « / » propre à cet écran. L'année reste
@@ -187,27 +211,13 @@ public class PassageViewModel {
                 detail.statut() != StatutWorkflow.DEPOSE && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
-        // Archivage (#1300) : possible sur un passage déposé qui conserve encore de l'audio. Gating
-        // amont (#789) plutôt que découverte du refus après confirmation ; le motif alimente le
-        // tooltip de l'enveloppe.
-        boolean audioConserve = detail.volumeSequencesOctets() > 0 || detail.volumeOriginauxOctets() > 0;
-        archivagePossible.set(detail.statut() == StatutWorkflow.DEPOSE && audioConserve);
-        motifBlocageArchivage.set(motifBlocage(detail.statut(), audioConserve));
+        // Archivage (#1300) et réactivation (#1302) : gating en amont (#789), le motif alimente le
+        // tooltip de l'enveloppe. Règles pures extraites dans GatingArchive.
+        archivagePossible.set(GatingArchive.archivagePossible(detail));
+        motifBlocageArchivage.set(GatingArchive.motifArchivage(detail));
+        reactivationPossible.set(GatingArchive.reactivationPossible(detail));
+        motifBlocageReactivation.set(GatingArchive.motifReactivation(detail));
         actionRecommandee.set(EtapesWorkflow.prochaineAction(detail.statut()));
-    }
-
-    /// Motif affiché quand l'archivage est bloqué (tooltip de l'enveloppe, #789) ; chaîne vide quand
-    /// il est possible.
-    private static String motifBlocage(StatutWorkflow statut, boolean audioConserve) {
-        if (statut != StatutWorkflow.DEPOSE) {
-            return "Archivage impossible : le passage n'est pas encore déposé. L'audio est nécessaire"
-                    + " jusqu'au dépôt et à l'analyse par la plateforme.";
-        }
-        if (!audioConserve) {
-            return "Déjà archivé : l'audio de ce passage n'est plus conservé localement."
-                    + " Réimportez les fichiers d'origine pour le réactiver.";
-        }
-        return "";
     }
 
     private void reinitialiser() {
@@ -231,6 +241,8 @@ public class PassageViewModel {
         purgeDisponible.set(false);
         archivagePossible.set(false);
         motifBlocageArchivage.set("");
+        reactivationPossible.set(false);
+        motifBlocageReactivation.set("");
         actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
 
@@ -337,6 +349,14 @@ public class PassageViewModel {
 
     public ReadOnlyStringProperty motifBlocageArchivageProperty() {
         return motifBlocageArchivage.getReadOnlyProperty();
+    }
+
+    public ReadOnlyBooleanProperty reactivationPossibleProperty() {
+        return reactivationPossible.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty motifBlocageReactivationProperty() {
+        return motifBlocageReactivation.getReadOnlyProperty();
     }
 
     /// Prochaine action recommandée du workflow (carte mise en avant), dérivée du statut. Se déplace

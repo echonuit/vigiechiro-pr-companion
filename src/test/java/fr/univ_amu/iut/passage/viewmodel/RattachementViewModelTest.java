@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
@@ -73,7 +74,8 @@ class RattachementViewModelTest {
                 0L,
                 nombreSequences,
                 0.0,
-                null);
+                null,
+                new DecompteAudio(0, 0));
     }
 
     private static DetailPassage detailMeteo(MeteoReleve meteo) {
@@ -91,7 +93,8 @@ class RattachementViewModelTest {
                 0L,
                 30,
                 0.0,
-                meteo);
+                meteo,
+                new DecompteAudio(0, 0));
     }
 
     @Test

@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -10,10 +12,12 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -42,11 +46,14 @@ class PassageViewModelTest {
     @Mock
     private ServiceArchivagePassage archivage;
 
+    @Mock
+    private ServiceReactivationPassage reactivation;
+
     private PassageViewModel viewModel;
 
     @BeforeEach
     void preparer() {
-        viewModel = new PassageViewModel(service, purge, archivage);
+        viewModel = new PassageViewModel(service, purge, archivage, reactivation);
     }
 
     private static DetailPassage detail(StatutWorkflow statut) {
@@ -64,7 +71,8 @@ class PassageViewModelTest {
                 1024L,
                 30,
                 150.0,
-                MeteoReleve.VIDE);
+                MeteoReleve.VIDE,
+                new DecompteAudio(30, 30));
     }
 
     @Test
@@ -367,6 +375,38 @@ class PassageViewModelTest {
         verify(archivage).archiver(ID_PASSAGE);
     }
 
+    @Test
+    @DisplayName("#1302 : la réactivation est proposée sur un passage archivé (audio absent du disque)")
+    void reactivation_possible_sur_passage_archive() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailSansAudio(StatutWorkflow.DEPOSE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.reactivationPossibleProperty().get()).isTrue();
+        assertThat(viewModel.motifBlocageReactivationProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#1302 : rien à réactiver quand l'audio est déjà là, avec le motif affiché")
+    void reactivation_bloquee_si_audio_present() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.reactivationPossibleProperty().get()).isFalse();
+        assertThat(viewModel.motifBlocageReactivationProperty().get()).contains("déjà sur le disque");
+    }
+
+    @Test
+    @DisplayName("#1302 : reactiver délègue au service de réactivation avec le dossier choisi")
+    void reactiver_delegue_au_service() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailSansAudio(StatutWorkflow.DEPOSE));
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+        Path dossier = Path.of("/sauvegarde/nuit-du-20-juin");
+
+        viewModel.reactiver(dossier, progres -> {});
+
+        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(dossier), any());
+    }
+
     /// Fiche d'un passage dont l'audio n'est plus conservé (volumes bruts et séquences à zéro :
     /// l'état après archivage #1300).
     private static DetailPassage detailSansAudio(StatutWorkflow statut) {
@@ -384,6 +424,7 @@ class PassageViewModelTest {
                 0L,
                 30,
                 150.0,
-                MeteoReleve.VIDE);
+                MeteoReleve.VIDE,
+                new DecompteAudio(0, 30));
     }
 }

@@ -20,6 +20,7 @@ import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -79,7 +80,8 @@ class ServicePassageDetailTest {
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(LocalDate.of(2026, 6, 22)),
                 sessionDao,
-                sequenceDao);
+                sequenceDao,
+                new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)));
         conditions = new ServiceConditionsPassage(
                 passageDao,
                 new MaterielMicroDao(source),

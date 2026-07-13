@@ -26,6 +26,7 @@ import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -148,7 +149,8 @@ public final class CapturePassage {
         PassageViewModel passageVm = new PassageViewModel(
                 injecteur.getInstance(ServicePassage.class),
                 injecteur.getInstance(ServicePurgeOriginaux.class),
-                injecteur.getInstance(ServiceArchivagePassage.class));
+                injecteur.getInstance(ServiceArchivagePassage.class),
+                injecteur.getInstance(ServiceReactivationPassage.class));
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(type -> type == PassageController.class
                 ? new PassageController(

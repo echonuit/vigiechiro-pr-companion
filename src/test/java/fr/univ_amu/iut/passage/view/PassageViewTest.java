@@ -23,9 +23,11 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
+import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.ArrayList;
 import java.util.List;
@@ -68,6 +70,7 @@ class PassageViewTest {
         ServicePassage service = mock(ServicePassage.class);
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
         ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
+        ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
         when(service.detailPassage(anyLong()))
                 .thenReturn(new DetailPassage(
                         2,
@@ -83,7 +86,8 @@ class PassageViewTest {
                         1024L,
                         30,
                         150.0,
-                        null));
+                        null,
+                        new DecompteAudio(30, 30)));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
@@ -100,7 +104,7 @@ class PassageViewTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage);
+                return new PassageViewModel(service, purge, archivage, reactivation);
             }
 
             @Provides
@@ -256,6 +260,16 @@ class PassageViewTest {
         Button rattachement = robot.lookup("#boutonRattachement").queryAs(Button.class);
 
         assertThat(rattachement.isDisabled()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1302 : « Réactiver ce passage » est grisé quand l'audio est déjà sur le disque")
+    void bouton_reactiver_grise_si_audio_present(FxRobot robot) {
+        // La fixture est un passage dont les 30 séquences sont là (décompte 30/30) : rien à réactiver.
+        Button reactiver = robot.lookup("#boutonReactiver").queryAs(Button.class);
+
+        assertThat(reactiver.isVisible()).isTrue();
+        assertThat(reactiver.isDisabled()).isTrue();
     }
 
     @Test

@@ -23,6 +23,8 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param volumeSequencesOctets volume des séquences transformées (0 si inconnu)
 /// @param nombreSequences nombre de séquences d'écoute de la session
 /// @param dureeEnregistreeSecondes durée enregistrée cumulée des séquences (secondes)
+/// @param decompteAudio disponibilité **observée** de l'audio sur disque (#1298), pour gater l'écoute
+///     et la réactivation (#1302) sans refaire un balayage dans la couche IHM
 /// @param meteo relevé météo optionnel du passage (température début/fin, vent, couverture nuageuse ;
 /// #106 étendu) — jamais `null`, mais chacune de ses grandeurs peut l'être
 public record DetailPassage(
@@ -39,4 +41,5 @@ public record DetailPassage(
         long volumeSequencesOctets,
         int nombreSequences,
         double dureeEnregistreeSecondes,
-        MeteoReleve meteo) {}
+        MeteoReleve meteo,
+        DecompteAudio decompteAudio) {}

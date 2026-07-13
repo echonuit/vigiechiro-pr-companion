@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.Vent;
@@ -36,7 +37,8 @@ class StatutPassageTest {
                 536_870_912L, // 512 Mo
                 128,
                 640.0,
-                new MeteoReleve(18.5, 12.0, Vent.MOYEN, CouvertureNuageuse.DE_25_A_50));
+                new MeteoReleve(18.5, 12.0, Vent.MOYEN, CouvertureNuageuse.DE_25_A_50),
+                new DecompteAudio(128, 128));
     }
 
     private static DetailPassage passageMinimal() {
@@ -54,7 +56,8 @@ class StatutPassageTest {
                 0L,
                 0,
                 0.0,
-                new MeteoReleve(null, null, null, null)); // météo vide
+                new MeteoReleve(null, null, null, null), // météo vide
+                new DecompteAudio(0, 0));
     }
 
     @Test

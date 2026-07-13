@@ -21,6 +21,7 @@ import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
@@ -82,7 +83,8 @@ class ServicePassageTest {
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(JOUR_FIXE),
                 new SessionDao(source),
-                new SequenceDao(source));
+                new SequenceDao(source),
+                new ServiceDisponibiliteAudio(new SessionDao(source), new SequenceDao(source), new Workspace(dossier)));
         rattachement = new ServiceRattachement(
                 passageDao,
                 new SessionDao(source),

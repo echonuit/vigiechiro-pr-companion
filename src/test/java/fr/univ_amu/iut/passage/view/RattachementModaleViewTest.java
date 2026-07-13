@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.PositionMicro;
@@ -71,7 +72,8 @@ class RattachementModaleViewTest {
                         0L,
                         30,
                         0.0,
-                        null));
+                        null,
+                        new DecompteAudio(0, 0)));
         conditionsService = mock(ServiceConditionsPassage.class);
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides

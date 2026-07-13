@@ -53,6 +53,12 @@
           <Button fx:id="boutonArchiver" text="📦 Archiver ce passage"
                   styleClass="bouton-secondaire" onAction="#archiver"/>
         </StackPane>
+        <!-- Enveloppe (#789) : le tooltip explique pourquoi la réactivation est bloquée (rien à
+             réactiver : audio déjà là, ou aucune séquence importée) et survit à la désactivation (#1302). -->
+        <StackPane fx:id="enveloppeReactiver">
+          <Button fx:id="boutonReactiver" text="♻ Réactiver ce passage"
+                  styleClass="bouton-secondaire" onAction="#reactiver"/>
+        </StackPane>
         <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe sur ce
              StackPane (qui, lui, reçoit le survol) pour expliquer pourquoi la suppression est bloquée
              sur un passage déposé (#789). -->

@@ -57,6 +57,10 @@ public class ServicePassage {
     private final Horloge horloge;
     private final SessionDao sessionDao;
     private final SequenceDao sequenceDao;
+
+    /// Disponibilité **observée** de l'audio (#1298) : la fiche du passage la porte pour que l'IHM
+    /// gate l'écoute et la réactivation (#1302) sans balayer le disque elle-même.
+    private final ServiceDisponibiliteAudio disponibilite;
     private final UniciteQuadruplet unicite;
 
     public ServicePassage(
@@ -64,13 +68,23 @@ public class ServicePassage {
             MoteurWorkflowPassage moteur,
             Horloge horloge,
             SessionDao sessionDao,
-            SequenceDao sequenceDao) {
+            SequenceDao sequenceDao,
+            ServiceDisponibiliteAudio disponibilite) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
+        this.disponibilite = Objects.requireNonNull(disponibilite, "disponibilite");
         this.unicite = new UniciteQuadruplet(passageDao);
+    }
+
+    /// Disponibilité **ré-observée** de l'audio du passage : la fiche doit refléter le disque au
+    /// moment où on l'ouvre (archivage #1300 ou réactivation #1302 entre-temps, disque rebranché),
+    /// d'où l'invalidation du cache avant lecture. Balayage groupé : un accès disque par dossier.
+    private DecompteAudio decompteAudio(Long idPassage) {
+        disponibilite.invalider(idPassage);
+        return disponibilite.decompte(idPassage);
     }
 
     /// Nombre total de passages (compteur du tableau de bord d'accueil).
@@ -107,7 +121,8 @@ public class ServicePassage {
                 session.map(SessionDEnregistrement::volumeSequencesOctets).orElse(0L),
                 sequences.size(),
                 dureeEnregistree,
-                MeteoPassage.lire(passage.donneesMeteo()));
+                MeteoPassage.lire(passage.donneesMeteo()),
+                decompteAudio(idPassage));
     }
 
     /// Dossier de session (`root_path`) d'un passage, s'il en a une : sert à **localiser** ses `bruts/` à
