@@ -99,6 +99,11 @@
   <Label fx:id="lblPublierCorrections" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
          visible="false" managed="false"/>
 
+  <!-- Disponibilité de l'audio du passage (#1301) : « passage archivé » ou « audio partiel n/total »,
+       avec la voie de retour (réimport). Masqué (non managé) quand l'audio est complet. -->
+  <Label fx:id="lblBandeauArchive" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
+         visible="false" managed="false"/>
+
   <SplitPane fx:id="separateur" orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">
 
     <!-- Haut : la table des observations, pleine largeur. -->
@@ -135,7 +140,19 @@
     <VBox fx:id="panneauEcoute" styleClass="panneau-ecoute" spacing="6.0" minHeight="210.0">
       <!-- Détail de l'observation retiré du panneau (redondant avec la table) : il sera rendu dans la
            barre de statut lors de la structuration en 3 zones (#495). Le VM garde detailProperty prête. -->
-      <AudioView fx:id="audioView" VBox.vgrow="ALWAYS" minHeight="150.0"/>
+      <!-- L'AudioView et son encart de remplacement (#1301) partagent un StackPane : quand le fichier
+           de la séquence sélectionnée n'est plus sur disque (passage archivé, disque incomplet), le
+           lecteur est remplacé par une explication au lieu de rester inerte. Pas de ScrollPane autour
+           de l'AudioView (piège du spectrogramme noir, #329). -->
+      <StackPane VBox.vgrow="ALWAYS" minHeight="150.0">
+        <AudioView fx:id="audioView" minHeight="150.0"/>
+        <VBox fx:id="encartAudioManquant" alignment="CENTER" spacing="4.0" styleClass="audio-vide"
+              visible="false" managed="false">
+          <Label text="Audio non conservé sur le disque" styleClass="audio-vide"/>
+          <Label wrapText="true" maxWidth="560.0"
+                 text="Cette séquence n'est plus écoutable : son fichier a été supprimé (passage archivé ou disque incomplet). Les observations restent consultables et modifiables ; pour réécouter, réimportez les fichiers d'origine."/>
+        </VBox>
+      </StackPane>
       <!-- Chaque bouton d'action est enrobé d'un StackPane : un Button désactivé n'affiche pas de Tooltip,
            on pose donc l'explication du blocage sur l'enveloppe qui, elle, reçoit le survol (#789). -->
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">

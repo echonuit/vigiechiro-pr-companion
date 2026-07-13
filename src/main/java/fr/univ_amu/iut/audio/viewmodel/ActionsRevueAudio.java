@@ -52,6 +52,38 @@ public final class ActionsRevueAudio {
         this.messages = messages;
     }
 
+    /// Importe un CSV Tadarida (R23) pour `idPassage`, puis recharge. Si un jeu de résultats existe
+    /// déjà (`idResultatsCourant` non nul) : refus, sauf si `remplacer` est vrai (réimport
+    /// **atomique** : un CSV invalide n'efface jamais l'ancien jeu). Publie le bilan (ou l'erreur)
+    /// via [MessagesAudio] et transmet le nouvel id de résultats à `nouveauxResultats`.
+    ///
+    /// @return `true` si l'import a réussi
+    boolean importer(
+            Long idPassage,
+            Long idResultatsCourant,
+            java.nio.file.Path cheminCsv,
+            boolean remplacer,
+            java.util.function.Consumer<Long> nouveauxResultats) {
+        if (idPassage == null || cheminCsv == null) {
+            return false;
+        }
+        if (!remplacer && idResultatsCourant != null) {
+            messages.info("Des résultats Tadarida sont déjà importés pour ce passage : un seul jeu est permis.");
+            return false;
+        }
+        try {
+            fr.univ_amu.iut.validation.model.BilanImport bilan =
+                    remplacer ? service.reimporter(idPassage, cheminCsv) : service.importer(idPassage, cheminCsv);
+            recharger.run();
+            nouveauxResultats.accept(bilan.idResultats());
+            messages.succesImport(bilan);
+            return true;
+        } catch (RuntimeException echec) {
+            messages.erreur(echec.getMessage());
+            return false;
+        }
+    }
+
     // --- Actions unitaires (sur l'observation sélectionnée) ---
 
     boolean valider() {

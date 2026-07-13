@@ -25,6 +25,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
@@ -99,7 +100,9 @@ class SonsValidationDepotViewTest {
                                 mock(MarquageDouteux.class),
                                 mock(SaisieCertitude.class),
                                 mock(RevueEnLot.class),
-                                bibliotheque);
+                                bibliotheque,
+                                mock(ServiceDisponibiliteAudio.class),
+                                p -> true);
                     }
 
                     @Provides

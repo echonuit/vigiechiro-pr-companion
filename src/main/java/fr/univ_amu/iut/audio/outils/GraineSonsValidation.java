@@ -32,6 +32,7 @@ import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -127,7 +128,8 @@ final class GraineSonsValidation {
                             MarquageDouteux marquageDouteux,
                             SaisieCertitude saisieCertitude,
                             RevueEnLot revueEnLot,
-                            ServiceBibliotheque bibliotheque) {
+                            ServiceBibliotheque bibliotheque,
+                            ServiceDisponibiliteAudio disponibilite) {
                         return new AudioViewModel(
                                 validation,
                                 projectionsAudio,
@@ -136,7 +138,9 @@ final class GraineSonsValidation {
                                 marquageDouteux,
                                 saisieCertitude,
                                 revueEnLot,
-                                bibliotheque);
+                                bibliotheque,
+                                disponibilite,
+                                Files::exists);
                     }
 
                     // Import VigieChiro indisponible en capture (aucune connexion) : VM à dépôt vide.

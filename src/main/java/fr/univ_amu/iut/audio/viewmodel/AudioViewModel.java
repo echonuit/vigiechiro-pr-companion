@@ -4,7 +4,7 @@ import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import fr.univ_amu.iut.validation.model.BilanImport;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Predicate;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -55,6 +56,11 @@ import javafx.collections.transformation.FilteredList;
 public class AudioViewModel {
 
     private final ServiceValidation service;
+
+    /// Disponibilité de l'audio pour l'écran (#1301) : bandeau, présence des fichiers. Collaborateur
+    /// cohésif, extrait pour la même raison que les autres (PMD GodClass).
+    private final DisponibiliteEcoute disponibiliteEcoute;
+
     private final ResolveurSourceAudio resolveur;
     private final ExporteurAudio exporteur;
 
@@ -79,6 +85,16 @@ public class AudioViewModel {
     private final EtatSelectionAudio etatSelection = new EtatSelectionAudio();
     private final ReadOnlyObjectWrapper<Path> cheminAudioCourant =
             new ReadOnlyObjectWrapper<>(this, "cheminAudioCourant");
+
+    /// Vrai quand la ligne sélectionnée a une séquence dont le **fichier n'est plus sur disque**
+    /// (passage archivé #1297, ou disque incomplet) : la vue remplace alors le panneau d'écoute par
+    /// un encart qui explique, au lieu d'un lecteur inerte. [#cheminAudioCourant] reste `null` dans
+    /// ce cas : le lecteur ne reçoit jamais un chemin mort (#1301).
+    private final ReadOnlyBooleanWrapper audioManquant = new ReadOnlyBooleanWrapper(this, "audioManquant", false);
+
+    /// Texte du bandeau « passage archivé / audio partiel » (#1301), vide quand l'audio est complet
+    /// ou que la source couvre plusieurs passages (le gating ligne à ligne reste actif).
+    private final ReadOnlyStringWrapper bandeauArchive = new ReadOnlyStringWrapper(this, "bandeauArchive", "");
 
     private final BooleanProperty inclureMode = new SimpleBooleanProperty(this, "inclureMode", true);
     private final ObjectProperty<ModeRevue> modeRevue =
@@ -108,6 +124,9 @@ public class AudioViewModel {
                 observations.isEmpty(), observationsFiltrees.isEmpty(), ResolveurSourceAudio.messageVide(source));
     });
 
+    /// @param fichierPresent présence d'un fichier sur disque : `Files::exists` en production ;
+    ///     injecté pour rester testable avec des chemins factices (`p -> true` préserve les
+    ///     fixtures, `p -> false` simule un audio disparu, #1301)
     public AudioViewModel(
             ServiceValidation service,
             ProjectionsAudioDao projectionsAudio,
@@ -116,8 +135,11 @@ public class AudioViewModel {
             MarquageDouteux marquageDouteux,
             SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
-            ServiceBibliotheque bibliotheque) {
+            ServiceBibliotheque bibliotheque,
+            ServiceDisponibiliteAudio disponibilite,
+            Predicate<Path> fichierPresent) {
         this.service = Objects.requireNonNull(service, "service");
+        this.disponibiliteEcoute = new DisponibiliteEcoute(disponibilite, fichierPresent);
         this.resolveur = new ResolveurSourceAudio(service, projectionsAudio, plageNuitPassage);
         this.exporteur = new ExporteurAudio(service, bibliotheque);
         this.actions = new ActionsRevueAudio(
@@ -152,15 +174,14 @@ public class AudioViewModel {
         }
     }
 
-    /// Données d'ouverture chargées **hors du fil JavaFX** (#1214) : référentiel des taxons, id des
-    /// résultats et lignes d'observation de la source. Lecture seule (aucune mutation observable).
-    public record DonneesOuverture(List<Taxon> taxons, Long idResultats, List<LigneObservationAudio> lignes) {}
-
     /// **Lecture seule** des données d'ouverture (taxons + résolution de la source). Sûre **hors du fil
     /// JavaFX** (#1214, déport via `IndicateurOccupation`).
     public DonneesOuverture chargerOuverture(SourceObservations source) {
         return new DonneesOuverture(
-                service.taxonsDisponibles(), resolveur.idResultats(source), resolveur.lignes(source));
+                service.taxonsDisponibles(),
+                resolveur.idResultats(source),
+                resolveur.lignes(source),
+                disponibiliteEcoute.decompte(source));
     }
 
     /// Applique les données d'ouverture (taxons, résultats, table). **Mutations observables** : sur le
@@ -172,6 +193,7 @@ public class AudioViewModel {
         idResultats = donnees.idResultats();
         resultatsDisponibles.set(idResultats != null);
         observations.setAll(donnees.lignes());
+        bandeauArchive.set(DisponibiliteEcoute.texteBandeau(donnees.decompteAudio()));
         filtres.appliquer();
     }
 
@@ -232,28 +254,10 @@ public class AudioViewModel {
     /// @param remplacer `true` pour remplacer un jeu existant (réimport) plutôt que de refuser
     /// @return `true` si l'import a réussi
     public boolean importer(Path cheminCsv, boolean remplacer) {
-        Long idPassage = ResolveurSourceAudio.idPassage(source);
-        if (idPassage == null || cheminCsv == null) {
-            return false;
-        }
-        if (!remplacer && idResultats != null) {
-            messages.info("Des résultats Tadarida sont déjà importés pour ce passage : un seul jeu est permis.");
-            return false;
-        }
-        try {
-            // Réimport **atomique** : remplace l'ancien jeu dans une seule transaction (un CSV invalide
-            // n'efface jamais l'ancien). Premier import : insertion simple.
-            BilanImport bilan =
-                    remplacer ? service.reimporter(idPassage, cheminCsv) : service.importer(idPassage, cheminCsv);
-            charger();
-            idResultats = bilan.idResultats();
-            resultatsDisponibles.set(idResultats != null);
-            messages.succesImport(bilan);
-            return true;
-        } catch (RuntimeException echec) {
-            messages.erreur(echec.getMessage());
-            return false;
-        }
+        return actions.importer(ResolveurSourceAudio.idPassage(source), idResultats, cheminCsv, remplacer, id -> {
+            idResultats = id;
+            resultatsDisponibles.set(id != null);
+        });
     }
 
     /// Exporte le CSV `_Vu` réinjectable du jeu de résultats courant (R17, R24). Réservé à la source
@@ -320,8 +324,14 @@ public class AudioViewModel {
         boolean present = courant != null;
         etatSelection.maj(courant);
         detail.set(present ? FormatLigneAudio.detail(courant) : "");
-        cheminAudioCourant.set(
-                present ? service.cheminAudio(courant.idSequence()).orElse(null) : null);
+        // #1301 : le lecteur ne reçoit jamais un chemin mort. Si le fichier de la séquence n'est plus
+        // sur disque (passage archivé, disque incomplet), le chemin reste null et audioManquant
+        // déclenche l'encart d'explication à la place du panneau d'écoute. Un seul contrôle de
+        // présence par sélection : négligeable.
+        Path chemin = present ? service.cheminAudio(courant.idSequence()).orElse(null) : null;
+        boolean manquant = disponibiliteEcoute.manquant(chemin);
+        cheminAudioCourant.set(manquant ? null : chemin);
+        audioManquant.set(manquant);
     }
 
     private void reinitialiser() {
@@ -332,6 +342,8 @@ public class AudioViewModel {
         taxons.clear();
         detail.set("");
         comptage.set(ComptageAudio.VIDE);
+        audioManquant.set(false);
+        bandeauArchive.set("");
         messages.reinitialiser();
     }
 
@@ -390,8 +402,23 @@ public class AudioViewModel {
     }
 
     /// Chemin du fichier audio (séquence transformée) de l'observation sélectionnée, ou `null` (E7.S3).
+    /// Jamais un chemin mort : si le fichier n'est plus sur disque, reste `null` et
+    /// [#audioManquantProperty()] passe à vrai (#1301).
     public ReadOnlyObjectProperty<Path> cheminAudioCourantProperty() {
         return cheminAudioCourant.getReadOnlyProperty();
+    }
+
+    /// Vrai quand la séquence sélectionnée n'a plus son fichier sur disque (#1301) : la vue remplace
+    /// le panneau d'écoute par un encart d'explication.
+    public ReadOnlyBooleanProperty audioManquantProperty() {
+        return audioManquant.getReadOnlyProperty();
+    }
+
+    /// Texte du bandeau de disponibilité de l'audio du passage (#1301) : vide = rien à signaler
+    /// (bandeau masqué), sinon « passage archivé » ou « audio partiel n/total » avec la voie de
+    /// retour.
+    public ReadOnlyStringProperty bandeauArchiveProperty() {
+        return bandeauArchive.getReadOnlyProperty();
     }
 
     /// Détail multi-ligne de l'observation sélectionnée, vide quand aucune n'est sélectionnée.

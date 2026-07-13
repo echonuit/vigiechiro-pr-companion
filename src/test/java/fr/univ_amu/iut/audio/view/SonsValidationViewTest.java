@@ -38,6 +38,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -190,7 +191,9 @@ class SonsValidationViewTest {
                                 mock(MarquageDouteux.class),
                                 saisieCertitude,
                                 revueEnLot,
-                                bibliotheque);
+                                bibliotheque,
+                                mock(ServiceDisponibiliteAudio.class),
+                                p -> true);
                     }
 
                     @Provides

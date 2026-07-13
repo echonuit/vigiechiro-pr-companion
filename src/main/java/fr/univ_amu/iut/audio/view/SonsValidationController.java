@@ -273,6 +273,15 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private Button btnFermerRetour;
 
+    /// Bandeau de disponibilité de l'audio (#1301) : « passage archivé » ou « audio partiel n/total ».
+    @FXML
+    private Label lblBandeauArchive;
+
+    /// Encart affiché à la place du lecteur quand le fichier de la séquence sélectionnée n'est plus
+    /// sur disque (#1301) : explique au lieu de laisser un lecteur inerte.
+    @FXML
+    private VBox encartAudioManquant;
+
     @Inject
     public SonsValidationController(
             AudioViewModel viewModel,
@@ -445,6 +454,17 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // ne soit plus noyée dans le placeholder gris. Câblage isolé dans BandeauRetour.
         BandeauRetour.installer(
                 bandeauRetour, lblMessage, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+
+        // Disponibilité de l'audio (#1301) : bandeau « passage archivé / audio partiel n/total » en tête
+        // d'écran (masqué quand tout est là), et encart d'explication à la place du lecteur quand le
+        // fichier de la séquence sélectionnée n'est plus sur disque (jamais un lecteur inerte).
+        var bandeauPresent = viewModel.bandeauArchiveProperty().isNotEmpty();
+        lblBandeauArchive.textProperty().bind(viewModel.bandeauArchiveProperty());
+        lblBandeauArchive.visibleProperty().bind(bandeauPresent);
+        lblBandeauArchive.managedProperty().bind(bandeauPresent);
+        encartAudioManquant.visibleProperty().bind(viewModel.audioManquantProperty());
+        encartAudioManquant.managedProperty().bind(viewModel.audioManquantProperty());
+        audioView.visibleProperty().bind(viewModel.audioManquantProperty().not());
 
         // Glisser-déposer d'un CSV Tadarida sur l'écran : alternative au FileChooser natif (qui coince
         // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).

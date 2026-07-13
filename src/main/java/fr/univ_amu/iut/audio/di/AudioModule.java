@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
@@ -23,6 +24,7 @@ import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
+import java.nio.file.Files;
 import java.util.Optional;
 
 /// Module Guice de la feature `audio` (vue audio unifiée « Sons & validation »).
@@ -76,7 +78,8 @@ public class AudioModule extends ModuleDeFeature {
             MarquageDouteux marquageDouteux,
             SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
-            ServiceBibliotheque bibliotheque) {
+            ServiceBibliotheque bibliotheque,
+            ServiceDisponibiliteAudio disponibilite) {
         return new AudioViewModel(
                 validation,
                 projectionsAudio,
@@ -85,7 +88,9 @@ public class AudioModule extends ModuleDeFeature {
                 marquageDouteux,
                 saisieCertitude,
                 revueEnLot,
-                bibliotheque);
+                bibliotheque,
+                disponibilite,
+                Files::exists);
     }
 
     /// ViewModel dédié de l'**import VigieChiro** (axe 4.2), séparé de [AudioViewModel] (concern distinct, et

@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
@@ -69,10 +70,18 @@ class AudioViewModelTest {
     @Mock
     ServiceBibliotheque bibliotheque;
 
+    @Mock
+    ServiceDisponibiliteAudio disponibilite;
+
     private static final ContextePassage PASSAGE_7 =
             new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Mon site"));
 
     private AudioViewModel vm() {
+        return vm(p -> true);
+    }
+
+    /// Variante à présence de fichier contrôlée (#1301) : `p -> false` simule un audio disparu.
+    private AudioViewModel vm(java.util.function.Predicate<Path> fichierPresent) {
         return new AudioViewModel(
                 service,
                 projections,
@@ -81,7 +90,9 @@ class AudioViewModelTest {
                 marquageDouteux,
                 saisieCertitude,
                 revueEnLot,
-                bibliotheque);
+                bibliotheque,
+                disponibilite,
+                fichierPresent);
     }
 
     private static LigneObservationAudio ligne(
@@ -183,6 +194,72 @@ class AudioViewModelTest {
             assertThat(vm.etatSelection().avecObservationProperty().get()).isTrue();
             assertThat(vm.cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/transformes/a.wav"));
             assertThat(vm.detailProperty().get()).contains("Tadarida : Pippip").contains("À revoir");
+        }
+
+        @Test
+        @DisplayName("#1301 : passage archivé (ABSENTE) : bandeau explicite, ré-observé à l'ouverture")
+        void passage_archive_bandeau_explicite() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            when(projections.lignesAudioDuPassage(7L))
+                    .thenReturn(List.of(ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false)));
+            when(disponibilite.decompte(7L)).thenReturn(new fr.univ_amu.iut.passage.model.DecompteAudio(0, 4806));
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(source());
+
+            assertThat(vm.bandeauArchiveProperty().get()).contains("archivé").contains("réimportez");
+            verify(disponibilite).invalider(7L); // l'écran reflète le disque au moment de l'ouverture
+        }
+
+        @Test
+        @DisplayName("#1301 : audio partiel (PARTIELLE) : le bandeau porte le décompte présentes/total")
+        void audio_partiel_bandeau_decompte() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            when(projections.lignesAudioDuPassage(7L)).thenReturn(List.of());
+            when(disponibilite.decompte(7L)).thenReturn(new fr.univ_amu.iut.passage.model.DecompteAudio(4230, 4806));
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(source());
+
+            assertThat(vm.bandeauArchiveProperty().get()).contains("4230").contains("4806");
+        }
+
+        @Test
+        @DisplayName("#1301 : audio complet : aucun bandeau")
+        void audio_complet_sans_bandeau() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            when(projections.lignesAudioDuPassage(7L)).thenReturn(List.of());
+            when(disponibilite.decompte(7L)).thenReturn(new fr.univ_amu.iut.passage.model.DecompteAudio(4806, 4806));
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(source());
+
+            assertThat(vm.bandeauArchiveProperty().get()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("#1301 : fichier de la séquence absent : chemin null (jamais un chemin mort) + audioManquant")
+        void selection_sans_fichier_audio_manquant() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            LigneObservationAudio l = ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false);
+            when(projections.lignesAudioDuPassage(7L)).thenReturn(List.of(l));
+            when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/a.wav")));
+
+            AudioViewModel vm = vm(p -> false);
+            vm.ouvrirSur(source());
+            vm.selectionProperty().set(l);
+
+            assertThat(vm.cheminAudioCourantProperty().get()).isNull();
+            assertThat(vm.audioManquantProperty().get()).isTrue();
+
+            vm.selectionProperty().set(null);
+            assertThat(vm.audioManquantProperty().get())
+                    .as("plus de sélection : plus rien à expliquer")
+                    .isFalse();
         }
 
         @Test
