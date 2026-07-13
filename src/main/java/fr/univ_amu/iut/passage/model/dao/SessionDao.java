@@ -82,8 +82,17 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
         executerMaj("UPDATE recording_session SET sequences_total_bytes = 0 WHERE id = ?", idSession);
     }
 
+    /// Réécrit le volume des séquences (`sequences_total_bytes`) d'une session, après une
+    /// **réactivation** (#1302) : la fiche du passage reflète l'audio revenu sur disque (l'archivage
+    /// l'avait mis à zéro).
+    public void majVolumeSequences(Long idSession, long octets) {
+        executerMaj("UPDATE recording_session SET sequences_total_bytes = ? WHERE id = ?", octets, idSession);
+    }
+
     /// Pose le marqueur **explicite** d'archivage (#1300) : enregistre le geste volontaire, ce qui
-    /// distingue un passage archivé d'un passage corrompu aux yeux de l'audit (#1303, #1348).
+    /// distingue un passage archivé d'un passage corrompu aux yeux de l'audit (#1303, #1348). Un
+    /// horodatage `null` **efface** le marqueur : c'est ce que fait une réactivation complète
+    /// (#1302), le passage n'étant alors plus archivé.
     public void marquerArchivee(Long idSession, LocalDateTime horodatage) {
         executerMaj(
                 "UPDATE recording_session SET archived_at = ? WHERE id = ?",

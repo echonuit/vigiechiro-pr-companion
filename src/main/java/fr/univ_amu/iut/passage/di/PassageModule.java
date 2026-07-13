@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
+import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.DeclarationPurgeParSessions;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
@@ -30,7 +31,9 @@ import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
+import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.VerificationIdentiteAudio;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
@@ -90,6 +93,12 @@ public class PassageModule extends ModuleDeFeature {
         // module réel SynchronisationParticipationModule (chargé par RacineInjecteur avec la connexion) pose
         // le binding ; hors connexion, l'Optional reste vide (patron de DepotVigieChiro).
         OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class);
+
+        // Port CrisAttendus (#1302) : les observations appartiennent à `validation`, qui dépend déjà de
+        // `passage` — l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ValidationModule pose le
+        // binding réel. Absent (injecteurs partiels), la cascade de vérification (#1309) retombe sur la
+        // preuve structurelle seule.
+        OptionalBinder.newOptionalBinder(binder(), CrisAttendus.class);
 
         // Port DeclarationPurgeOriginaux (#1303) : cette feature possède les sessions, elle fournit
         // donc la déclaration réelle de la purge globale (marqueur originals_purged_at posé sur
@@ -168,6 +177,27 @@ public class PassageModule extends ModuleDeFeature {
     ServiceDisponibiliteAudio fournirServiceDisponibiliteAudio(
             SessionDao sessionDao, SequenceDao sequenceDao, Workspace workspace) {
         return new ServiceDisponibiliteAudio(sessionDao, sequenceDao, workspace);
+    }
+
+    /// Cascade de vérification d'identité d'un fichier audio (#1309) : sans état, réutilisable par
+    /// la réactivation comme par le diagnostic.
+    @Provides
+    @Singleton
+    VerificationIdentiteAudio fournirVerificationIdentiteAudio() {
+        return new VerificationIdentiteAudio();
+    }
+
+    /// Réactivation d'un passage archivé (#1302) : rebranchement **vérifié** des séquences depuis un
+    /// dossier réimporté.
+    @Provides
+    @Singleton
+    ServiceReactivationPassage fournirServiceReactivationPassage(
+            SessionDao sessionDao,
+            SequenceDao sequenceDao,
+            VerificationIdentiteAudio verification,
+            ServiceDisponibiliteAudio disponibilite,
+            Optional<CrisAttendus> crisAttendus) {
+        return new ServiceReactivationPassage(sessionDao, sequenceDao, verification, disponibilite, crisAttendus);
     }
 
     /// Archivage d'un passage (#1300) : purge volontaire de l'audio, marqueur explicite, capture

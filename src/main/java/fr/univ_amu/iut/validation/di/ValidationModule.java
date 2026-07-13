@@ -3,6 +3,7 @@ package fr.univ_amu.iut.validation.di;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.Multibinder;
+import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
@@ -13,8 +14,10 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
+import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.validation.model.CrisDesObservations;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
@@ -56,6 +59,12 @@ public class ValidationModule extends ModuleDeFeature {
     @Override
     protected void configure() {
         bind(OuvrirValidation.class).to(NavigationValidation.class);
+        // Port CrisAttendus (#1302) : cette feature possède les observations, elle fournit donc la
+        // matière de la vérification acoustique (#1309) à `passage`, qui ne peut pas dépendre d'elle
+        // (cycle). Même inversion que CoordonneesPoint (#547).
+        OptionalBinder.newOptionalBinder(binder(), CrisAttendus.class)
+                .setBinding()
+                .to(CrisDesObservations.class);
         // Port socle de comptage des validations menacées : injecté par `passage` (suppression) et
         // `importation` (écrasement) pour leurs confirmations destructives.
         bind(CompteurValidations.class).to(ServiceValidation.class);
