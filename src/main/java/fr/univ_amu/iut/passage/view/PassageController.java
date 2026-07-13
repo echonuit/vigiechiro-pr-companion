@@ -9,7 +9,9 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
@@ -73,10 +75,15 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private final OuvrirSite ouvrirSite;
     private final OuvrirMultisite ouvrirMultisite;
     private final CompteurValidations compteurValidations;
+    private final ExecuteurTache executeur;
     private final PortailVigieChiro portail;
     private final OuvreurDeLien ouvreurDeLien;
     private Long idPassage;
     private ContexteSite contexte;
+
+    /// Voile « … en cours » de l'écran (#1213) : la projection du passage (agrégats de la nuit) se
+    /// charge hors du fil JavaFX ([IndicateurOccupation], patron #1014).
+    private IndicateurOccupation occupation;
 
     /// URL de la participation liée sur le portail (#1124), vide tant que le passage n’est pas lié.
     /// Rafraîchie à chaque [#ouvrirSur] / retour : un lien posé entre-temps (import connecté, dépôt)
@@ -95,6 +102,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     ConfirmateurModifiable confirmateur() {
         return confirmateur;
     }
+
+    @FXML
+    private StackPane hoteOccupation;
 
     @FXML
     private BorderPane racine;
@@ -183,8 +193,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             OuvrirSite ouvrirSite,
             OuvrirMultisite ouvrirMultisite,
             CompteurValidations compteurValidations,
-            PortailVigieChiro portail,
-            OuvreurDeLien ouvreurDeLien) {
+            AppuisPassage appuis) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
         this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
@@ -194,8 +203,10 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirMultisite = Objects.requireNonNull(ouvrirMultisite, "ouvrirMultisite");
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
-        this.portail = Objects.requireNonNull(portail, "portail");
-        this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
+        Objects.requireNonNull(appuis, "appuis");
+        this.executeur = appuis.executeur();
+        this.portail = appuis.portail();
+        this.ouvreurDeLien = appuis.ouvreurDeLien();
     }
 
     @Override
@@ -321,6 +332,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         // (Vérifier → Préparer le dépôt → Sons & validation), au lieu de rester figé sur Vérifier.
         viewModel.actionRecommandeeProperty().addListener((obs, ancienne, nouvelle) -> majActionRecommandee(nouvelle));
         majActionRecommandee(viewModel.actionRecommandeeProperty().get());
+
+        occupation = new IndicateurOccupation(hoteOccupation, executeur);
     }
 
     /// Applique le liseré « recommandée » à la seule carte correspondant à la prochaine étape du
@@ -333,12 +346,28 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     }
 
     /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
-    /// Appelée par [NavigationPassage] après le chargement du FXML.
+    /// Appelée par [NavigationPassage] après le chargement du FXML. La projection (agrégats de la
+    /// nuit) se charge **hors du fil JavaFX** sous le voile d'occupation (#1213) ; l'application des
+    /// propriétés revient sur le fil, l'erreur rejoint le message de l'écran (#795). Le fil d'Ariane,
+    /// empilé avant la fin du chargement, est actualisé une fois le numéro connu.
     public void ouvrirSur(Long idPassage, ContexteSite contexte) {
+        memoriser(idPassage, contexte);
+        occupation.occuper(
+                "Chargement du passage…",
+                () -> viewModel.charger(idPassage),
+                detail -> {
+                    viewModel.appliquer(idPassage, detail, contexte);
+                    navigation.actualiserFil(this, libelleFil());
+                    lienParticipation.set(portail.pageParticipation(idPassage).orElse(""));
+                },
+                erreur -> viewModel.signalerErreur(idPassage, erreur));
+    }
+
+    /// Mémorise l'identité de l'écran (fil d'Ariane, actions), premier effet d'[#ouvrirSur]. Extrait
+    /// pour les tests d'emplacement sans FXML (le chargement, lui, passe par l'occupation, #1213).
+    void memoriser(Long idPassage, ContexteSite contexte) {
         this.idPassage = idPassage;
         this.contexte = contexte;
-        viewModel.ouvrirSur(idPassage, contexte);
-        lienParticipation.set(portail.pageParticipation(idPassage).orElse(""));
     }
 
     /// Rechargé par le [fr.univ_amu.iut.commun.view.Navigateur] quand on **revient** sur ce passage
@@ -348,8 +377,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @Override
     public void rafraichirAuRetour() {
         if (idPassage != null) {
-            viewModel.ouvrirSur(idPassage, contexte);
-            lienParticipation.set(portail.pageParticipation(idPassage).orElse(""));
+            ouvrirSur(idPassage, contexte);
         }
     }
 

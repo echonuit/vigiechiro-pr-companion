@@ -268,6 +268,54 @@ class NavigateurTest {
     }
 
     @Test
+    @DisplayName("#1213 : actualiserLibelleCourant relibelle l'étape au sommet sans notifier son départ")
+    void actualiser_libelle_courant_relibelle_le_sommet() {
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        EcranAvecDepart passage = new EcranAvecDepart();
+        navigateur.ouvrirRacine(new Group(), "sites", "Mes sites", null);
+        navigateur.empiler(new Group(), "passage", "Détails du passage", passage);
+
+        // Chargement asynchrone terminé : l'écran connaît enfin son numéro.
+        navigateur.actualiserLibelleCourant(passage, "Détails du passage N° 2");
+
+        assertThat(navigateur
+                        .historique()
+                        .get(navigateur.historique().size() - 1)
+                        .libelle())
+                .isEqualTo("Détails du passage N° 2");
+        assertThat(passage.departs)
+                .as("le remplacement d'étape (même vue) n'est pas un départ d'écran")
+                .isZero();
+        // Le ← Retour d'un écran empilé par-dessus montre le libellé actualisé.
+        navigateur.empiler(new Group(), "lot", "Préparer le dépôt", null);
+        assertThat(navigateur.libelleRetour()).isEqualTo("Détails du passage N° 2");
+    }
+
+    @Test
+    @DisplayName("#1213 : actualiserLibelleCourant est sans effet si l'écran n'est pas au sommet")
+    void actualiser_libelle_courant_ignore_un_autre_ecran() {
+        Navigateur navigateur = navigateur(new NavigationViewModel(), new Group());
+        EcranAvecDepart passage = new EcranAvecDepart();
+        navigateur.ouvrirRacine(new Group(), "passage", "Détails du passage", passage);
+        navigateur.empiler(new Group(), "lot", "Préparer le dépôt", null);
+
+        // Exécution synchrone (tests, captures) : le chargement se conclut avant l'empilement, le
+        // sommet appartient encore à l'écran précédent - aucune étape ne doit être relibellée.
+        navigateur.actualiserLibelleCourant(passage, "Détails du passage N° 2");
+
+        assertThat(navigateur
+                        .historique()
+                        .get(navigateur.historique().size() - 1)
+                        .libelle())
+                .isEqualTo("Préparer le dépôt");
+        assertThat(navigateur
+                        .historique()
+                        .get(navigateur.historique().size() - 2)
+                        .libelle())
+                .isEqualTo("Détails du passage");
+    }
+
+    @Test
     @DisplayName("La barre de statut suit le résumé zoné de l'écran au sommet (ResumeStatut), défaut sinon")
     void pied_suit_le_resume_de_l_ecran() {
         NavigationViewModel navigation = new NavigationViewModel();

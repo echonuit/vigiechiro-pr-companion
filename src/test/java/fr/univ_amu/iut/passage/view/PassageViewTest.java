@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -144,6 +145,17 @@ class PassageViewTest {
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
         stage.setScene(new Scene(vue, 1100, 700));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#1213 : l'overlay d'occupation est en place, masqué une fois le chargement terminé")
+    void overlay_occupation_masque_apres_chargement(FxRobot robot) {
+        Node voile = robot.lookup(".occupation-voile").query();
+
+        assertThat(voile).as("overlay d'occupation superposé à l'écran").isNotNull();
+        assertThat(voile.isVisible())
+                .as("chargement terminé (exécuteur synchrone) : overlay masqué, fiche affichée")
+                .isFalse();
     }
 
     @Test

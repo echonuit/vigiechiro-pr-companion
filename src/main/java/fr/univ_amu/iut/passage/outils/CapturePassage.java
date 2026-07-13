@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
@@ -30,6 +31,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.passage.view.AppuisPassage;
 import fr.univ_amu.iut.passage.view.NavigationPassage;
 import fr.univ_amu.iut.passage.view.PassageController;
 import fr.univ_amu.iut.passage.view.RattachementModaleController;
@@ -156,8 +158,12 @@ public final class CapturePassage {
                         ouvrirSiteNeutre(),
                         numeroCarre -> {},
                         idp -> 0,
-                        injecteur.getInstance(PortailVigieChiro.class),
-                        url -> {})
+                        // Appuis socle (#1213) : l'exécuteur vient de l'injecteur de capture, donc
+                        // SYNCHRONE (garde-fou #1278) - le snapshot part une fois l'écran chargé.
+                        new AppuisPassage(
+                                injecteur.getInstance(ExecuteurTache.class),
+                                injecteur.getInstance(PortailVigieChiro.class),
+                                url -> {}))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         PassageController controleur = loader.getController();

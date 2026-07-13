@@ -60,9 +60,12 @@ public class Navigateur {
                     continue;
                 }
                 for (EtapeNavigation retiree : changement.getRemoved()) {
-                    // Un `setAll` re-place l'accueil (retiré puis ré-ajouté) : on ne notifie pas un écran
-                    // encore présent dans l'historique (il n'est pas réellement quitté).
-                    if (retiree.auDepartEcran() != null && !historique.contains(retiree)) {
+                    // Un `setAll` re-place l'accueil (retiré puis ré-ajouté) et
+                    // [#actualiserLibelleCourant] remplace l'étape par sa jumelle relibellée (#1213) :
+                    // on ne notifie pas un écran dont la VUE est encore dans l'historique (il n'est pas
+                    // réellement quitté). Comparaison par identité de vue, pas par égalité d'étape.
+                    boolean vueEncorePresente = historique.stream().anyMatch(etape -> etape.vue() == retiree.vue());
+                    if (retiree.auDepartEcran() != null && !vueEncorePresente) {
                         retiree.auDepartEcran().auDepartEcran();
                     }
                 }
@@ -97,6 +100,26 @@ public class Navigateur {
         return historique.size() < 2
                 ? null
                 : historique.get(historique.size() - 2).libelle();
+    }
+
+    /// Met à jour le **libellé** de l'étape courante si elle appartient à `controleur` : un écran dont
+    /// l'identité n'est connue qu'après son chargement **asynchrone** (#1213, M-Passage et son numéro)
+    /// actualise ainsi fil d'Ariane et bouton ← Retour une fois la donnée arrivée. L'étape est
+    /// remplacée par sa jumelle relibellée (même vue, même controller), ce qui notifie le chrome via
+    /// l'historique observable. Sans effet si l'écran n'est pas (ou plus) au sommet : en exécution
+    /// synchrone (tests, captures), le chargement se termine **avant** l'empilement et le libellé
+    /// donné à `empiler` est déjà le bon.
+    public void actualiserLibelleCourant(Object controleur, String libelle) {
+        Objects.requireNonNull(libelle, "libelle");
+        if (historique.isEmpty()) {
+            return;
+        }
+        int sommet = historique.size() - 1;
+        EtapeNavigation courante = historique.get(sommet);
+        if (courante.controleur() != controleur || courante.libelle().equals(libelle)) {
+            return;
+        }
+        historique.set(sommet, new EtapeNavigation(courante.id(), libelle, courante.vue(), courante.controleur()));
     }
 
     /// Stratégie de confirmation « quitter malgré une saisie » (injectable pour les tests).

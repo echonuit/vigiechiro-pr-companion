@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
@@ -53,8 +54,7 @@ class PassageControllerEmplacementTest {
                 ouvrirSite,
                 numeroCarre -> {},
                 idp -> 0,
-                mock(PortailVigieChiro.class),
-                url -> {});
+                new AppuisPassage(new ExecuteurTacheSynchrone(), mock(PortailVigieChiro.class), url -> {}));
     }
 
     @Test
@@ -91,7 +91,10 @@ class PassageControllerEmplacementTest {
         };
         PassageController controller = controller(vm, ouvrirSite);
         // Contexte arrivé depuis multisite (nomSite null) : le carré suffit à situer le passage.
-        controller.ouvrirSur(1L, new ContexteSite("640380", "A1", null));
+        // Le chargement d'écran passe par l'occupation depuis #1213 (FXML requis) : on rejoue ici ses
+        // deux effets, sans toolkit - mémorisation du contexte + composition synchrone du ViewModel.
+        controller.memoriser(1L, new ContexteSite("640380", "A1", null));
+        vm.ouvrirSur(1L, new ContexteSite("640380", "A1", null));
 
         List<Lieu> fil = controller.emplacement();
 

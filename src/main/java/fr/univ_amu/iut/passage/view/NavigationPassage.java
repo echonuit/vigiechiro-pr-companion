@@ -58,6 +58,13 @@ public class NavigationPassage implements OuvrirPassage {
         navigateur.afficherAccueil();
     }
 
+    /// Actualise le libellé de l'étape de navigation du passage (fil d'Ariane, bouton ← Retour) une
+    /// fois son chargement **asynchrone** terminé (#1213) : l'écran est empilé avant que son numéro ne
+    /// soit connu. Sans effet si l'écran n'est pas (ou plus) au sommet de l'historique.
+    void actualiserFil(PassageController controleur, String libelle) {
+        navigateur.actualiserLibelleCourant(controleur, libelle);
+    }
+
     /// Ouvre la modale **« Modifier le passage »** (E2.S8) dans une fenêtre modale appartenant à
     /// `parent` : rattachement (année + n°) **et** conditions de dépôt (météo, matériel du micro). Le
     /// carré et le code point (inchangés) sont fournis par M-Passage. Après une modification réussie,

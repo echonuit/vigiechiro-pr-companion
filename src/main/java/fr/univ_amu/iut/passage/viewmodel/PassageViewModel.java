@@ -73,18 +73,39 @@ public class PassageViewModel {
         this.purge = Objects.requireNonNull(purge, "purge");
     }
 
-    /// Ouvre l'écran sur le passage `idPassage`, avec le contexte site fourni par la navigation.
-    /// Une erreur (passage introuvable) est restituée dans [#messageProperty()] sans lever.
+    /// Ouvre l'écran sur le passage `idPassage` en **synchrone**, composition de [#charger] +
+    /// [#appliquer] : conservée pour les enchaînements d'actions déjà sur le fil JavaFX (rechargement
+    /// après suppression refusée, annulation du dépôt, purge). L'ouverture d'écran passe, elle, par le
+    /// couple charger/appliquer sous le voile d'occupation (#1213). Une erreur (passage introuvable)
+    /// est restituée dans [#messageProperty()] sans lever.
     public void ouvrirSur(Long idPassage, ContexteSite contexte) {
+        try {
+            appliquer(idPassage, charger(idPassage), contexte);
+        } catch (RuntimeException echec) {
+            signalerErreur(idPassage, echec);
+        }
+    }
+
+    /// Lit la projection du passage, **hors du fil JavaFX** (lecture base + agrégats de la nuit) :
+    /// aucune propriété observable n'est touchée ici. Le résultat s'applique via [#appliquer] ; un
+    /// échec remonte à l'appelant (routé vers [#signalerErreur] par l'exécuteur).
+    public DetailPassage charger(Long idPassage) {
+        return service.detailPassage(idPassage);
+    }
+
+    /// Applique la projection aux propriétés observables, **sur le fil JavaFX**.
+    public void appliquer(Long idPassage, DetailPassage detail, ContexteSite contexte) {
+        this.idPassage = idPassage;
+        appliquer(detail, contexte);
+        message.set("");
+    }
+
+    /// Route un échec de chargement vers le message de l'écran (#795), **sur le fil JavaFX** : la
+    /// fiche est réinitialisée pour ne pas exposer l'état d'un autre passage.
+    public void signalerErreur(Long idPassage, Throwable erreur) {
         this.idPassage = idPassage;
         reinitialiser();
-        try {
-            appliquer(service.detailPassage(idPassage), contexte);
-            message.set("");
-        } catch (RuntimeException echec) {
-            reinitialiser();
-            message.set(echec.getMessage());
-        }
+        message.set(erreur.getMessage());
     }
 
     /// Supprime le passage courant (action « Supprimer » de M-Passage). Délègue à
