@@ -93,6 +93,37 @@ sondage : on relit à l'ouverture, à la demande, ou après une action).
 
 ---
 
+## Issue d'appel triée (le transport ne parle plus par silence)
+
+**Le problème.** Un client HTTP qui « dégrade proprement » convertit tout échec en `Optional.empty()`
+ou liste vide. C'est le bon réflexe pour **un seul** cas : « je ne suis pas connecté » (l'application
+vit hors ligne). Pour les autres, c'est une perte d'information catastrophique : un `422` devient une
+collection vide (l'import mort et muet de #1277, 4806 observations invisibles), un délai réseau
+devient « aucun résultat », et une panne au milieu d'une pagination rend un **préfixe silencieux**
+pire que le vide. L'appelant ne peut ni informer l'utilisateur, ni décider correctement.
+
+**La solution.** Un type scellé qui rend l'issue **exhaustive à la compilation** :
+`ReponseApi<T>` = `Succes(valeur)` / `NonConnecte` / `Injoignable(cause)` / `Refuse(statut, corps)`.
+Un `switch` qui oublie une branche ne compile pas — la famille de bugs #1277, c'est « un cas auquel
+personne n'a pensé ». Le comportement commun vit dans les variantes par **override** (`enOptionnel`,
+`transformer`, `lireAvec`, `puis`, `echec`), jamais par `switch (this)`. Là où le silence reste le
+comportement **voulu**, c'est l'appelant qui le choisit, explicitement : `enOptionnel()`.
+
+**Dans VigieChiro** (#1284). `TransportVigieChiro` émet et trie ; `ClientVigieChiro` nomme les
+endpoints ; `PaginationEve` est **tout-ou-rien** (l'issue de la page fautive, jamais un préfixe).
+Conséquences : la modale de connexion distingue « jeton refusé (401) » de « plateforme injoignable » ;
+l'import et le suivi du traitement disent pourquoi ; la **garde anti-purge** des rapprocheurs est
+inchangée mais sa cause remonte au bandeau ; la garde anti-relance du dépôt devient **fail-safe** (état
+illisible sans `--forcer` = pas de lancement) ; la vérification d'un dépôt hors ligne lève
+« vérification impossible » au lieu d'un faux « tout manquant ». Le **contrat live** verrouille
+`max_results=1000 → Refuse(422)` : la sonde qui aurait rendu #1277 bruyante par construction.
+
+**Principes.** Honnêteté (une panne n'est pas une donnée), **exhaustivité par le compilateur** plutôt
+que par la relecture, fail-safe (ne pas pouvoir prouver qu'une action destructrice est sûre = ne pas
+la faire), et un **vocabulaire unique** des messages d'échec (`ReponseApi.echec()`).
+
+---
+
 ## Package-by-feature (tranches verticales)
 
 **Le problème.** Une organisation **par couche** (`controllers/`, `services/`, `dao/`…) éparpille une

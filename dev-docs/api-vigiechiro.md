@@ -56,6 +56,24 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
 Base : `https://vigiechiro.herokuapp.com/api/v1`. Auth : `Authorization: Basic base64("<token>:")` (token en
 *username*, mot de passe vide).
 
+### Le transport dit ce qu'il est advenu de chaque appel (#1284)
+
+Toutes les méthodes de `ClientVigieChiro` rendent une **issue triée** (`ReponseApi<T>`, sealed) :
+
+| Variante | Sens | Ce qu'en fait l'appelant |
+|---|---|---|
+| `Succes(valeur)` | 2xx, réponse exploitable | la valeur ; une **liste vide** est un vrai « rien » serveur |
+| `NonConnecte` | aucun jeton, l'appel n'a pas eu lieu | silence légitime du hors-ligne |
+| `Injoignable(cause)` | réseau, DNS, TLS, délai, corps illisible | « VigieChiro est injoignable (cause) », jamais confondu avec vide |
+| `Refuse(statut, corps)` | le serveur a répondu non | remonter statut + corps (9 fois sur 10, bug de notre côté) |
+
+Règles d'accompagnement : la **pagination Eve est tout-ou-rien** (une panne page 3 rend l'issue, pas
+les pages 1-2) ; `max_results` est plafonné à 100 (au-delà Eve **rejette** : `422`, cause de #1277) et
+la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus reste un `Refuse` ; la
+**garde anti-purge** des rapprocheurs et la garde **anti-relance** du dépôt (fail-safe : état illisible
+= pas de lancement sans `--forcer`) s'appuient sur cette distinction. Patron détaillé :
+[patterns · Issue d'appel triée](patterns.md#issue-dappel-triee-le-transport-ne-parle-plus-par-silence).
+
 ### Endpoints utilisés
 
 | Méthode | Chemin | Usage |
