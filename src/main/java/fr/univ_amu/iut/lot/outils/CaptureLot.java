@@ -208,7 +208,8 @@ public final class CaptureLot {
                         injecteur.getInstance(OuvrirSite.class),
                         injecteur.getInstance(OuvrirPassage.class),
                         injecteur.getInstance(OuvreurDeLien.class),
-                        injecteur.getInstance(DepotDispositionColonnes.class))
+                        injecteur.getInstance(DepotDispositionColonnes.class),
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         LotController controleur = loader.getController();

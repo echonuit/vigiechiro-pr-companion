@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
@@ -32,7 +33,6 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import javafx.application.Platform;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
@@ -77,6 +77,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// manuel, on amène l'observateur au bon endroit. Abstrait pour rester testable (faux en tête).
     private final OuvreurDeLien ouvreurDeLien;
     private final DepotDispositionColonnes depotColonnes;
+
+    /// Socle « travail lourd hors fil JavaFX » (#1014) : le dépôt et le compute passent par lui plutôt
+    /// que par un `Thread.ofVirtual()` maison — l'IHM ne gèle pas, et les tests sont **synchrones**.
+    private final ExecuteurTache executeur;
 
     /// Calcul des 3 zones de la barre de statut (#823), extrait de ce contrôleur pour la cohésion (#984).
     private final ZonesStatutLot zonesStatutLot;
@@ -174,7 +178,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             OuvreurDeLien ouvreurDeLien,
-            DepotDispositionColonnes depotColonnes) {
+            DepotDispositionColonnes depotColonnes,
+            ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.depotViewModel = Objects.requireNonNull(depotViewModel, "depotViewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -182,6 +187,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
         this.zonesStatutLot = new ZonesStatutLot(viewModel, depotViewModel, () -> contexte);
     }
 
@@ -476,13 +482,15 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     }
 
     /// Lance le traitement serveur (compute, #984) **hors fil JavaFX** : équivalent « Lancer la
-    /// participation » du web, une fois la nuit déposée. Même patron que le dépôt (fil virtuel + résultat
-    /// via `Platform.runLater`).
+    /// participation » du web, une fois la nuit déposée. Confié au socle [ExecuteurTache] (#1014) : c'est
+    /// un travail **court, non annulable, sans progression** (un appel, un verdict) — le cas d'usage exact
+    /// du socle, qui le rend en prime **déterministe en test**. Le dépôt, lui, garde son propre fil
+    /// (cf. [#televerserVigieChiro]).
     private void lancerParticipation() {
-        executerEnFond(
-                "compute-vigiechiro",
+        executeur.executer(
                 () -> depotViewModel.lancerTraitement(contexte.idPassage()),
-                depotViewModel::restituerLancement);
+                depotViewModel::restituerLancement,
+                erreur -> depotViewModel.echec(erreur.getMessage()));
     }
 
     /// Lance la génération des archives **hors fil JavaFX** (#251) : l'opération peut être longue sur une
@@ -507,33 +515,29 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         });
     }
 
-    /// Téléverse la nuit sur VigieChiro **hors fil JavaFX** (#142), étape ③ automatisée : même patron que la
-    /// génération d'archives (état « en cours » posé au fil JavaFX, dépôt sur un fil virtuel, résultat via
-    /// `Platform.runLater`). Les statuts (« Dépôt en cours » / « Déposé ») sont posés par le moteur
-    /// reprenable (#982). L'IHM restitue l'avancement puis le bilan (ou l'erreur) via le libellé de l'étape.
+    /// Téléverse la nuit sur VigieChiro **hors fil JavaFX** (#142), étape ③ automatisée : même patron que
+    /// la génération d'archives (état « en cours » posé au fil JavaFX, dépôt sur un fil virtuel, résultat
+    /// via `Platform.runLater`). Les statuts (« Dépôt en cours » / « Déposé ») sont posés par le moteur
+    /// reprenable (#982) ; l'IHM ne fait que les restituer.
+    ///
+    /// **Pourquoi pas le socle [ExecuteurTache]** (contrairement au compute, § [#lancerParticipation]) :
+    /// le dépôt est **long, annulable et diffuse sa progression**. L'annulation (#1044) arrive de l'IHM
+    /// *pendant* qu'il tourne, ce qui exige une vraie concurrence — or le socle s'exécute **synchronement
+    /// en test**, ce qui bloquerait le fil JavaFX et rendrait le clic « Annuler » impossible. Le socle vise
+    /// les travaux courts « lancer → résultat », pas les opérations qu'on interrompt en vol.
     @FXML
     private void televerserVigieChiro() {
         Long idPassage = contexte.idPassage();
         depotViewModel.marquerEnCours();
-        executerEnFond(
-                "depot-vigiechiro",
-                () -> depotViewModel.televerser(idPassage, new RelaisSuiviDepot(depotViewModel.suiviLignes())),
-                bilan -> {
+        Thread.ofVirtual().name("depot-vigiechiro").start(() -> {
+            try {
+                var bilan = depotViewModel.televerser(idPassage, new RelaisSuiviDepot(depotViewModel.suiviLignes()));
+                Platform.runLater(() -> {
                     depotViewModel.appliquerBilan(bilan);
                     // Statut honnête (#982) : le moteur a déjà posé le bon statut (jamais « Déposé » sur un
                     // dépôt partiel) ; on recharge l'état pour le refléter.
                     viewModel.ouvrirSur(idPassage);
                 });
-    }
-
-    /// Exécute `travail` **hors du fil JavaFX** (fil virtuel), puis applique `succes` — ou l'erreur via
-    /// [DepotViewModel#echec] — **sur le fil JavaFX** (#984). Patron partagé par le téléversement et le
-    /// lancement du traitement (même squelette « en cours → runLater résultat / erreur »).
-    private <T> void executerEnFond(String nom, Supplier<T> travail, Consumer<T> succes) {
-        Thread.ofVirtual().name(nom).start(() -> {
-            try {
-                T resultat = travail.get();
-                Platform.runLater(() -> succes.accept(resultat));
             } catch (RuntimeException echec) {
                 Platform.runLater(() -> depotViewModel.echec(echec.getMessage()));
             }
