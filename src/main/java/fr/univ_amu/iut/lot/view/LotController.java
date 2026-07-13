@@ -27,6 +27,7 @@ import fr.univ_amu.iut.lot.viewmodel.EtapeDepot;
 import fr.univ_amu.iut.lot.viewmodel.LigneArchive;
 import fr.univ_amu.iut.lot.viewmodel.LigneDepot;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
+import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
@@ -82,6 +83,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// (compute, génération d'archives, dépôt) passent par lui plutôt que par un `Thread.ofVirtual()`
     /// maison — l'IHM ne gèle pas, et les tests sont **synchrones** (#1253).
     private final ExecuteurTache executeur;
+
+    /// Suivi du traitement serveur (#1263), séparé de [LotViewModel] (déjà au plafond de complexité).
+    private final TraitementViewModel traitementViewModel;
 
     /// Calcul des 3 zones de la barre de statut (#823), extrait de ce contrôleur pour la cohésion (#984).
     private final ZonesStatutLot zonesStatutLot;
@@ -171,6 +175,25 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private Label lblMessage;
 
+    /// Zone « Traitement Vigie-Chiro » (#1263) : visible une fois la nuit déposée par l'application.
+    @FXML
+    private VBox zoneTraitement;
+
+    @FXML
+    private Label lblEtatTraitement;
+
+    @FXML
+    private Label lblFraicheurTraitement;
+
+    @FXML
+    private Label lblAlerteTraitement;
+
+    @FXML
+    private Button btnActualiserTraitement;
+
+    /// Câblage de la zone de suivi, extrait de ce contrôleur (#1263).
+    private SuiviTraitementUI suiviTraitement;
+
     @Inject
     public LotController(
             LotViewModel viewModel,
@@ -180,7 +203,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
             OuvrirPassage ouvrirPassage,
             OuvreurDeLien ouvreurDeLien,
             DepotDispositionColonnes depotColonnes,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            TraitementViewModel traitementViewModel) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.depotViewModel = Objects.requireNonNull(depotViewModel, "depotViewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -189,6 +213,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.traitementViewModel = Objects.requireNonNull(traitementViewModel, "traitementViewModel");
         this.zonesStatutLot = new ZonesStatutLot(viewModel, depotViewModel, () -> contexte);
     }
 
@@ -212,6 +237,19 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private void initialize() {
+        // Zone « Traitement Vigie-Chiro » (#1263) : ce qui se passe APRÈS le dépôt. Le composant décide
+        // lui-même de son affichage (nuit déposée par l'application, et suivi disponible).
+        suiviTraitement = SuiviTraitementUI.installer(
+                traitementViewModel,
+                executeur,
+                () -> contexte.idPassage(),
+                depotViewModel.participationLieeProperty(),
+                zoneTraitement,
+                lblEtatTraitement,
+                lblFraicheurTraitement,
+                lblAlerteTraitement,
+                btnActualiserTraitement);
+
         // Opération critique en cours (#906) : la génération d'archives et le dépôt sont des tâches longues
         // qu'on ne doit pas abandonner en silence. On pose leur libellé sur le chrome (qui avertit avant de
         // quitter/fermer) et on l'efface à leur fin. Les écouteurs sont posés sur les propriétés des VM
@@ -257,36 +295,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                         .then("Figer les séquences et préparer le lot à déposer.")
                         .otherwise("Préparation impossible : le passage doit être vérifié et tous les contrôles"
                                 + " de cohérence au vert."));
-        // « Marquer déposé » : pas pendant une génération en cours, sinon on marquerait le passage déposé
-        // avant la fin de l'écriture des archives (#259).
-        btnDeposer
-                .disableProperty()
-                .bind(Bindings.when(depotViewModel.participationLieeProperty())
-                        // Mode « Lancer la participation » (#984) : cliquable dès qu'une participation est
-                        // liée, quel que soit le statut de dépôt (même « Dépôt en cours » après une
-                        // annulation ou un dépôt partiel) — sauf pendant une opération en cours.
-                        .then(depotViewModel.enCoursProperty().or(viewModel.generationEnCoursProperty()))
-                        // Mode « Marquer déposé » : garde d'origine (« Prêt à déposer », hors génération/dépôt).
-                        .otherwise(viewModel
-                                .peutDeposerProperty()
-                                .not()
-                                .or(viewModel.generationEnCoursProperty())
-                                .or(depotViewModel.enCoursProperty())));
-        // #984 : l'étape ④ bascule « Marquer déposé » → « Lancer la participation » (compute) dès qu'une
-        // participation est liée au passage (dépôt via l'API effectué).
-        btnDeposer
-                .textProperty()
-                .bind(Bindings.when(depotViewModel.participationLieeProperty())
-                        .then("🚀 Lancer la participation")
-                        .otherwise("✅ Marquer déposé"));
-        IndicateurBlocage.expliquer(
-                enveloppeDeposer,
-                Bindings.when(viewModel
-                                .peutDeposerProperty()
-                                .and(viewModel.generationEnCoursProperty().not()))
-                        .then("Marquer le passage comme déposé sur VigieChiro.")
-                        .otherwise("À faire une fois le lot préparé, les archives générées et téléversées"
-                                + " sur VigieChiro."));
+        // Bouton de l'étape ④ : trois règles (libellé qui change de sens, cliquable après un dépôt
+        // partiel, verrouillé si la nuit est déjà analysée), câblées à part (#1263).
+        EtapeDeposerUI.cabler(btnDeposer, enveloppeDeposer, viewModel, depotViewModel, traitementViewModel);
 
         // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
         // sans `connexion`). Actif une fois le lot préparé, hors génération et hors téléversement en cours.
@@ -457,6 +468,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Réhydrate la table de dépôt (#983) depuis l'état persisté : un dépôt interrompu réaffiche ses
         // unités (déposées/échecs) et propose la reprise.
         depotViewModel.rehydrater(passage.idPassage());
+        // Dernier état connu du traitement (#1262) : lu dans le cache, sans réseau — la zone n'est jamais
+        // muette, même hors connexion. Le relevé frais reste à la demande (« Actualiser »).
+        suiviTraitement.rehydrater();
     }
 
     /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Préparer le
@@ -476,20 +490,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // #984 : quand une participation est liée (dépôt via l'API effectué), le bouton lance le
         // traitement serveur (compute) au lieu de marquer déposé — déjà fait par le dépôt API.
         if (depotViewModel.participationLieeProperty().get()) {
-            lancerParticipation();
+            // Le traitement serveur appartient à la zone de suivi (#1263), lancement compris.
+            suiviTraitement.lancer(depotViewModel);
         } else {
             viewModel.deposer();
         }
-    }
-
-    /// Lance le traitement serveur (compute, #984) **hors fil JavaFX** : équivalent « Lancer la
-    /// participation » du web, une fois la nuit déposée. Confié au socle [ExecuteurTache] (#1014) : un
-    /// travail **court, non annulable, sans progression** (un appel, un verdict), déterministe en test.
-    private void lancerParticipation() {
-        executeur.executer(
-                () -> depotViewModel.lancerTraitement(contexte.idPassage()),
-                depotViewModel::restituerLancement,
-                erreur -> depotViewModel.echec(erreur.getMessage()));
     }
 
     /// Lance la génération des archives **hors fil JavaFX** (#251) via le socle étendu (#1252/#1253) :

@@ -138,6 +138,18 @@
     </StackPane>
   </VBox>
 
+  <!-- Traitement serveur (#1263) : « Déposé » n'est pas la fin. Vigie-Chiro analyse ensuite la nuit avec
+       Tadarida, et les observations ne sont récupérables qu'une fois cette analyse terminée. La zone
+       n'apparaît qu'une fois la nuit déposée par l'application (participation liée) : avant, il n'y a rien
+       à suivre. Aucun sondage : l'état est relu à l'ouverture (cache), sur demande, ou après un lancement. -->
+  <VBox fx:id="zoneTraitement" spacing="4.0" styleClass="carte-section" visible="false" managed="false">
+    <Label text="Traitement Vigie-Chiro" styleClass="section-titre"/>
+    <Label fx:id="lblEtatTraitement" styleClass="section-sous" wrapText="true"/>
+    <Label fx:id="lblFraicheurTraitement" styleClass="section-sous" wrapText="true"/>
+    <Label fx:id="lblAlerteTraitement" styleClass="message-lot" wrapText="true"/>
+    <Button fx:id="btnActualiserTraitement" text="🔄 Actualiser" styleClass="bouton-secondaire"/>
+  </VBox>
+
   <!-- Nettoyage optionnel - libérer l'espace disque (#…) : actif dès qu'il existe des archives ZIP dans
        depot/. Les copies locales sont régénérables à l'identique (une fois téléversées, on peut les
        supprimer sans risque). -->

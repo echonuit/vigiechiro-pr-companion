@@ -209,7 +209,10 @@ public final class CaptureLot {
                         injecteur.getInstance(OuvrirPassage.class),
                         injecteur.getInstance(OuvreurDeLien.class),
                         injecteur.getInstance(DepotDispositionColonnes.class),
-                        injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class))
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class),
+                        // Suivi du traitement serveur (#1263) : l'injecteur de capture n'a pas de
+                        // `connexion`, donc pas de client — le suivi est absent, et la zone reste masquée.
+                        injecteur.getInstance(fr.univ_amu.iut.lot.viewmodel.TraitementViewModel.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         LotController controleur = loader.getController();

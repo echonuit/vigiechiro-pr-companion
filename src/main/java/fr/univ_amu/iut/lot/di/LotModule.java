@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -60,6 +61,11 @@ public class LotModule extends ModuleDeFeature {
         // client HTTP — résolvent `Optional<DepotVigieChiro>` à vide. La liaison réelle est posée par
         // `DepotVigieChiroModule` (chargé seulement dans l'injecteur applicatif complet).
         OptionalBinder.newOptionalBinder(binder(), DepotVigieChiro.class);
+        // Suivi du traitement serveur (#1263) : même montage que le dépôt ci-dessus. Déclaré ici (et pas
+        // seulement dans `CommunModule`) pour que les injecteurs partiels de `lot` — capture, tests de vue —
+        // résolvent `Optional<SuiviTraitement>` à vide sans binding manquant. La liaison réelle est posée par
+        // `ConnexionModule`, où vit le client HTTP.
+        OptionalBinder.newOptionalBinder(binder(), SuiviTraitement.class);
         // Onglet « Dépôt » de l’écran Réglages (#1047) : plafond des archives.
         ongletReglages(OngletReglagesDepot.class);
     }

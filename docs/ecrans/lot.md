@@ -83,6 +83,39 @@ déposé »**. Il fait passer le passage au statut « Déposé » (ce qui déver
 Tadarida) et trace la date du dépôt — c'est une **écriture locale**, l'application ne peut pas deviner
 seule ce que vous avez déposé à la main.
 
+## Suivre l'analyse : la carte « Traitement Vigie-Chiro »
+
+Déposer n'est pas la fin. Une fois la participation lancée, la plateforme **analyse la nuit** avec
+Tadarida, et **les observations ne sont récupérables qu'une fois cette analyse terminée**. La carte
+« Traitement Vigie-Chiro » apparaît sous la dernière étape dès que l'application a déposé la nuit, et
+vous dit où en est le calcul :
+
+| Ce que la carte affiche | Ce que cela veut dire |
+|---|---|
+| **Analyse planifiée** | La demande est enregistrée, un calculateur va la prendre en charge. |
+| **Analyse en cours** | Le calcul tourne. Comptez plusieurs dizaines de minutes. |
+| **Analyse terminée** | Les observations sont prêtes : importez-les depuis « Sons & validation ». |
+| **Un premier essai a échoué…** | La plateforme a relancé le calcul d'elle-même. Patientez. |
+| **L'analyse a échoué** | Le motif est indiqué. |
+
+L'application **n'interroge pas la plateforme en permanence** : elle affiche le dernier état qu'elle
+connaît, en précisant de quand il date — y compris hors connexion. Le bouton **« 🔄 Actualiser »**
+redemande l'état à Vigie-Chiro, et vous pouvez fermer l'application entre-temps : le calcul se
+poursuit sur le serveur.
+
+Si une analyse **traîne depuis plus de 24 h**, la carte vous le signale : elle semble bloquée, et il
+peut valoir la peine de la relancer.
+
+!!! danger "Une nuit déjà analysée ne se relance pas"
+    Une fois l'analyse terminée, le bouton « Lancer la participation » se **verrouille**. Ce n'est pas
+    une limitation arbitraire : relancer un calcul **efface d'abord les observations** côté serveur
+    pour les recalculer — or l'audio d'un dépôt en archives n'est **pas conservé** par la plateforme.
+    Le recalcul rendrait donc une participation **vide, définitivement**.
+
+    Si vous devez tout de même relancer (typiquement après un échec, où il n'y a plus rien à perdre),
+    cela reste possible en ligne de commande, délibérément :
+    `vigiechiro lancer-traitement-vigiechiro --passage <id> --forcer`.
+
 ### Recommencer un dépôt de zéro
 
 Le bouton **« Réinitialiser le dépôt »** (visible dès qu'un dépôt a été entamé) **efface le suivi

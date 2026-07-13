@@ -11,6 +11,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
@@ -28,6 +29,7 @@ import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
+import fr.univ_amu.iut.lot.viewmodel.TraitementViewModel;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -97,6 +99,14 @@ class LotVueIntegrationTest {
                     @Provides
                     DepotViewModel depotViewModel() {
                         return new DepotViewModel(service, Optional.empty());
+                    }
+
+                    // Suivi du traitement serveur (#1263) : absent ici. Sans participation liee ni
+                    // connexion, la zone « Traitement Vigie-Chiro » reste masquee, et l ecran est celui
+                    // d avant.
+                    @Provides
+                    TraitementViewModel traitementViewModel() {
+                        return new TraitementViewModel(Optional.empty(), Horloge.systeme());
                     }
 
                     @Provides
