@@ -158,6 +158,10 @@
            sans cette aide visible. -->
       <Label styleClass="section-sous" wrapText="true"
              text="Raccourcis clavier : Entrée valider · R référence · D douteux · 1/2/3 certitude · N suivant à revoir"/>
+      <!-- Astuce de découvrabilité du glisser-déposer (#1015) : visible seulement quand la source offre
+           le workflow Tadarida (le controller la pilote à chaque ouverture) ; ailleurs, rien n'encombre. -->
+      <Label fx:id="lblAstuceDepot" styleClass="section-sous" wrapText="true" visible="false" managed="false"
+             text="Astuce : déposez un fichier CSV Tadarida n'importe où sur cet écran pour l'importer."/>
     </VBox>
 
   </SplitPane>

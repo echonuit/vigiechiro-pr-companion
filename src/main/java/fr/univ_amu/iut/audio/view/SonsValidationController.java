@@ -213,6 +213,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private Label lblVide;
 
     @FXML
+    private Label lblAstuceDepot;
+
+    @FXML
     private AudioView audioView;
 
     @FXML
@@ -512,6 +515,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private void adapterAffichage(SourceObservations source) {
         ColonnesAudio.adapterAuContexte(colonnes, source.cibleUnPassageUnique());
         MenuAudio.adapter(itemsMenu, source, importVigieChiro, actionsMenu.donneesVigieChiro());
+        // Astuce de découvrabilité du glisser-déposer (#1015) : rien ne signalait qu'un CSV Tadarida
+        // peut être déposé sur l'écran. Le rappel discret suit la même règle d'activation que le dépôt
+        // lui-même et disparaît (non managé) pour les sources sans workflow, l'écran restant dense.
+        boolean workflow = source.permetWorkflowTadarida();
+        lblAstuceDepot.setVisible(workflow);
+        lblAstuceDepot.setManaged(workflow);
     }
 
     private void selectionnerObservation(Long idObservation) {

@@ -163,6 +163,20 @@ class SonsValidationDepotViewTest {
     }
 
     @Test
+    @DisplayName("#1015 : l'astuce « déposez un CSV » est visible pour un passage, masquée hors workflow")
+    void astuce_depot_suit_le_workflow(FxRobot robot) {
+        Label astuce = robot.lookup("#lblAstuceDepot").queryAs(Label.class);
+        assertThat(astuce.isVisible()).as("source passage : workflow Tadarida").isTrue();
+        assertThat(astuce.getText()).contains("CSV Tadarida");
+
+        // La bibliothèque de références n'offre pas le workflow : l'astuce disparaît (non managée).
+        robot.interact(() -> controleur.ouvrirSur(new SourceObservations.References("user-1")));
+
+        assertThat(astuce.isVisible()).as("bibliothèque : pas de dépôt CSV").isFalse();
+        assertThat(astuce.isManaged()).isFalse();
+    }
+
+    @Test
     @DisplayName("#719 : l'item « Importer depuis VigieChiro » est présent et visible (passage, connecté)")
     void item_import_vigiechiro_present(FxRobot robot) {
         MenuItem item = itemImporterVigieChiro(robot);
