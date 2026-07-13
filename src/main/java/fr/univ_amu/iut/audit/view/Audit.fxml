@@ -5,6 +5,7 @@
 <?import javafx.scene.control.TableColumn?>
 <?import javafx.scene.control.TableView?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -12,26 +13,28 @@
   disque / base global et liste les écarts (fichiers manquants ou orphelins, préfixes non conformes,
   unités déposées divergentes). Pur câblage : le controller lie la table et le résumé à l'AuditViewModel.
 -->
-<VBox xmlns="http://javafx.com/javafx"
-      xmlns:fx="http://javafx.com/fxml"
-      fx:controller="fr.univ_amu.iut.audit.view.AuditController"
-      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
-      styleClass="ecran-audit"
-      spacing="10.0">
+<StackPane xmlns="http://javafx.com/javafx"
+           xmlns:fx="http://javafx.com/fxml"
+           fx:controller="fr.univ_amu.iut.audit.view.AuditController"
+           stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
+           fx:id="hoteOccupation">
+  <!-- Hôte d'occupation (#1254) : voile « … en cours » pendant la vérification en ligne. -->
+  <VBox styleClass="ecran-audit" spacing="10.0">
 
-  <HBox spacing="10.0" alignment="CENTER_LEFT">
-    <Label fx:id="lblResume" styleClass="titre-section" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
-    <Button fx:id="boutonRafraichir" text="Relancer l'audit" onAction="#rafraichir"/>
-    <Button fx:id="boutonVerifierEnLigne" text="Vérifier en ligne" onAction="#verifierEnLigne"/>
-  </HBox>
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+      <Label fx:id="lblResume" styleClass="titre-section" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
+      <Button fx:id="boutonRafraichir" text="Relancer l'audit" onAction="#rafraichir"/>
+      <Button fx:id="boutonVerifierEnLigne" text="Vérifier en ligne" onAction="#verifierEnLigne"/>
+    </HBox>
 
-  <TableView fx:id="tableConstats" VBox.vgrow="ALWAYS">
-    <columns>
-      <TableColumn fx:id="colSeverite" text="Gravité" prefWidth="110.0"/>
-      <TableColumn fx:id="colCategorie" text="Catégorie" prefWidth="180.0"/>
-      <TableColumn fx:id="colPassage" text="Passage" prefWidth="80.0"/>
-      <TableColumn fx:id="colCible" text="Cible" prefWidth="320.0"/>
-      <TableColumn fx:id="colDetail" text="Détail" prefWidth="380.0"/>
-    </columns>
-  </TableView>
-</VBox>
+    <TableView fx:id="tableConstats" VBox.vgrow="ALWAYS">
+      <columns>
+        <TableColumn fx:id="colSeverite" text="Gravité" prefWidth="110.0"/>
+        <TableColumn fx:id="colCategorie" text="Catégorie" prefWidth="180.0"/>
+        <TableColumn fx:id="colPassage" text="Passage" prefWidth="80.0"/>
+        <TableColumn fx:id="colCible" text="Cible" prefWidth="320.0"/>
+        <TableColumn fx:id="colDetail" text="Détail" prefWidth="380.0"/>
+      </columns>
+    </TableView>
+  </VBox>
+</StackPane>

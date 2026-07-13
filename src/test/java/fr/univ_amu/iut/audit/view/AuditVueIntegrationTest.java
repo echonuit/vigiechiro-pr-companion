@@ -18,6 +18,7 @@ import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
@@ -73,5 +74,45 @@ class AuditVueIntegrationTest {
 
         Label resume = robot.lookup("#lblResume").queryAs(Label.class);
         assertThat(resume.getText()).contains("2 écart").contains("1 erreur").contains("1 avertissement");
+    }
+
+    @Test
+    @DisplayName("#1254 : « Vérifier en ligne » ajoute les constats serveur via le socle, bouton réactivé")
+    void verifier_en_ligne_ajoute_les_constats_serveur(FxRobot robot) {
+        when(service.auditerEnLigne())
+                .thenReturn(new RapportAudit(List.of(new ConstatAudit(
+                        SeveriteConstat.ERREUR,
+                        CategorieConstat.DEPOT_DIVERGENT,
+                        14L,
+                        "Car040962-2026-Pass2-B2-1.zip",
+                        "Archive absente côté serveur."))));
+
+        robot.clickOn("#boutonVerifierEnLigne");
+
+        TableView<?> table = robot.lookup("#tableConstats").queryAs(TableView.class);
+        assertThat(table.getItems())
+                .as("audit hors ligne (2 constats) + vérification en ligne (1 constat)")
+                .hasSize(3);
+        assertThat(robot.lookup("#boutonVerifierEnLigne").queryAs(Button.class).isDisabled())
+                .as("le binding sur enCoursProperty() relâche le bouton une fois la vérification finie")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1254 : un échec de la vérification en ligne est restitué dans le résumé (filet #795)")
+    void verifier_en_ligne_restitue_l_echec(FxRobot robot) {
+        when(service.auditerEnLigne()).thenThrow(new RuntimeException("VigieChiro injoignable"));
+
+        robot.clickOn("#boutonVerifierEnLigne");
+
+        Label resume = robot.lookup("#lblResume").queryAs(Label.class);
+        assertThat(resume.getText())
+                .contains("Vérification en ligne impossible")
+                .contains("VigieChiro injoignable");
+        assertThat(robot.lookup("#tableConstats").queryAs(TableView.class).getItems())
+                .as("les constats de l'audit hors ligne restent affichés")
+                .hasSize(2);
+        assertThat(robot.lookup("#boutonVerifierEnLigne").queryAs(Button.class).isDisabled())
+                .isFalse();
     }
 }

@@ -53,6 +53,14 @@ public class AuditViewModel {
         resume.set(resume(rapport));
     }
 
+    /// Restitue un échec de la vérification en ligne dans le résumé (filet d'erreurs #795) : les constats
+    /// de l'audit hors ligne restent affichés, seul le bandeau explique l'échec.
+    public void signalerErreur(Throwable erreur) {
+        String detail = erreur.getMessage();
+        resume.set("Vérification en ligne impossible : "
+                + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."));
+    }
+
     private static String resume(RapportAudit rapport) {
         if (rapport.sain()) {
             return "Cohérence : aucun écart détecté.";
