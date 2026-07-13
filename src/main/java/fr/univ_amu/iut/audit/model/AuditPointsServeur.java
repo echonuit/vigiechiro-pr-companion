@@ -2,6 +2,7 @@ package fr.univ_amu.iut.audit.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -46,14 +47,32 @@ public final class AuditPointsServeur {
     }
 
     List<ConstatAudit> auditer() {
-        List<SiteVigieChiro> distants = client.mesSites();
+        // Depuis #1284, le constat dit la vraie cause : « non connecté », « injoignable », « refusé »
+        // et « aucun site distant » ne se confondent plus dans un même message.
+        return switch (client.mesSites()) {
+            case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> distants) -> confronterTous(distants);
+            case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte ->
+                List.of(constatIndisponible("non connecté à VigieChiro (aucun jeton)."));
+            case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
+                List.of(constatIndisponible("VigieChiro injoignable (" + cause + ")."));
+            case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) ->
+                List.of(constatIndisponible("VigieChiro a refusé la lecture (HTTP " + statut + ")."));
+        };
+    }
+
+    private static ConstatAudit constatIndisponible(String precision) {
+        return new ConstatAudit(
+                SeveriteConstat.INFO,
+                CategorieConstat.SERVEUR_INJOIGNABLE,
+                null,
+                "-",
+                "Points serveur indisponibles : " + precision);
+    }
+
+    /// Confrontation de chaque point local lié à sa localité serveur, sur des sites effectivement lus.
+    private List<ConstatAudit> confronterTous(List<SiteVigieChiro> distants) {
         if (distants.isEmpty()) {
-            return List.of(new ConstatAudit(
-                    SeveriteConstat.INFO,
-                    CategorieConstat.SERVEUR_INJOIGNABLE,
-                    null,
-                    "-",
-                    "Points serveur indisponibles (hors connexion ou aucun site distant)."));
+            return List.of(constatIndisponible("aucun site distant (ce compte ne participe à aucun site)."));
         }
         Map<String, SiteVigieChiro> parObjectid =
                 distants.stream().collect(Collectors.toMap(SiteVigieChiro::id, Function.identity(), (a, b) -> a));

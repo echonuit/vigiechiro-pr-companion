@@ -88,9 +88,7 @@ public final class SynchroniserVigieChiro implements Callable<Integer> {
 
         List<String> parties = new ArrayList<>();
         for (RapprochementVigieChiro rapprocheur : rapprocheurs.get()) {
-            rapprocheur
-                    .synchroniser(client)
-                    .ifPresent(rapport -> parties.add(rapport.nombre() + " " + rapport.libelle()));
+            rapprocheur.synchroniser(client).ifPresent(rapport -> parties.add(rapport.enClair()));
         }
         sortie.println(rendreResume(parties));
         return 0;

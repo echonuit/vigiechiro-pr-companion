@@ -95,7 +95,7 @@ public class SitesViewModel {
         appliquer(resultat.chargement());
         messageSynchro.set(resultat.rapport()
                 .map(SitesViewModel::messageDe)
-                .orElse("Aucun site distant récupéré (hors connexion, ou aucun site sur VigieChiro)."));
+                .orElse("Aucun site distant récupéré (non connecté, ou aucun site sur VigieChiro)."));
     }
 
     /// Route l'échec de la synchronisation vers son message de restitution (fil JavaFX) : jamais un
@@ -110,6 +110,11 @@ public class SitesViewModel {
     }
 
     private static String messageDe(RapportSynchro rapport) {
+        // #1284 : une synchronisation EMPECHEE (injoignable, refus) se dit desormais telle quelle,
+        // au lieu de se confondre avec « aucun site distant ».
+        if (rapport.souci() != null) {
+            return "Sites non synchronisés : " + rapport.souci() + ".";
+        }
         String sites = rapport.nombre() > 1 ? " sites synchronisés" : " site synchronisé";
         return rapport.nombre() + sites + " depuis VigieChiro.";
     }

@@ -78,9 +78,7 @@ public class ConnexionViewModel {
     private void amorcerRapprochements() {
         List<String> parties = new ArrayList<>();
         for (RapprochementVigieChiro rapprocheur : rapprocheurs) {
-            rapprocheur
-                    .synchroniser(client)
-                    .ifPresent(rapport -> parties.add(rapport.nombre() + " " + rapport.libelle()));
+            rapprocheur.synchroniser(client).ifPresent(rapport -> parties.add(rapport.enClair()));
         }
         resumeSynchro = String.join(", ", parties);
     }

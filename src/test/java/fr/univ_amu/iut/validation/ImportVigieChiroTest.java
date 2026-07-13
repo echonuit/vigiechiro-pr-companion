@@ -208,7 +208,7 @@ class ImportVigieChiroTest {
     @DisplayName("participationsDisponibles délègue au client ; rattacher stocke le lien participation")
     void participations_et_rattachement() {
         List<ParticipationVigieChiro> parts = List.of(new ParticipationVigieChiro("6a49", "Z41", "2026-07-03", "Site"));
-        when(client.mesParticipations()).thenReturn(parts);
+        when(client.mesParticipations()).thenReturn(ReponseApi.succes(parts));
 
         assertThat(importateur.participationsDisponibles()).isSameAs(parts);
 

@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -37,6 +38,9 @@ public class RapprochementSites implements RapprochementVigieChiro {
 
     private static final Logger LOG = Logger.getLogger(RapprochementSites.class.getName());
 
+    /// Libellé du compte-rendu (pluriel, cf. RapportSynchro#libelle).
+    private static final String LIBELLE_SITES = "sites";
+
     private final SiteDao siteDao;
     private final ServiceSites serviceSites;
     private final LienVigieChiroDao liens;
@@ -53,11 +57,29 @@ public class RapprochementSites implements RapprochementVigieChiro {
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
-            List<SiteVigieChiro> distants = client.mesSites();
-            // Liste vide = non connecté / API indisponible : on ne touche à rien (ni création, ni purge).
-            if (distants.isEmpty()) {
-                return Optional.empty();
-            }
+            // Toute issue non-succès = ne toucher à rien (ni création, ni purge : garde anti-purge).
+            // Depuis #1284 la cause remonte, au lieu d'être omise en silence — sauf « non connecté ».
+            return switch (client.mesSites()) {
+                case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> distants) -> importer(distants);
+                case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> Optional.empty();
+                case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
+                    Optional.of(RapportSynchro.empechee(LIBELLE_SITES, "VigieChiro injoignable : " + cause));
+                case ReponseApi.Refuse<List<SiteVigieChiro>>(int statut, String corps) ->
+                    Optional.of(RapportSynchro.empechee(LIBELLE_SITES, "refus HTTP " + statut));
+            };
+        } catch (RuntimeException echec) {
+            LOG.log(Level.FINE, echec, () -> "Import des sites VigieChiro ignoré (best-effort)");
+            return Optional.empty();
+        }
+    }
+
+    /// Import/liaison de sites effectivement reçus. Une liste vide (observateur sans participation)
+    /// reste un no-op prudent.
+    private Optional<RapportSynchro> importer(List<SiteVigieChiro> distants) {
+        if (distants.isEmpty()) {
+            return Optional.empty();
+        }
+        {
             Map<String, Site> localesParCarre = new HashMap<>();
             for (Site local : siteDao.findByUtilisateur(idUtilisateur)) {
                 localesParCarre.put(local.numeroCarre(), local);
@@ -70,10 +92,7 @@ public class RapprochementSites implements RapprochementVigieChiro {
                 return Optional.empty();
             }
             liens.remplacer(LienVigieChiro.ENTITE_SITE, correspondances);
-            return Optional.of(new RapportSynchro("sites", correspondances.size()));
-        } catch (RuntimeException echec) {
-            LOG.log(Level.FINE, echec, () -> "Import des sites VigieChiro ignoré (best-effort)");
-            return Optional.empty();
+            return Optional.of(new RapportSynchro(LIBELLE_SITES, correspondances.size()));
         }
     }
 

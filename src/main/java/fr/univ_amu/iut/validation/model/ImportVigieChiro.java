@@ -50,7 +50,9 @@ public class ImportVigieChiro {
     /// **Participations** de l'observateur (`GET /moi/participations`), pour rattacher à la main un passage
     /// à une participation existante (nuit non déposée par l'app). Liste vide si non connecté / indisponible.
     public List<ParticipationVigieChiro> participationsDisponibles() {
-        return client.mesParticipations();
+        // Silence conservé ici : le dialogue de rattachement vit dans la modale touchée par le
+        // chantier #1316 ; le rendre parlant est une suite de #1284 (passe 8), pas un correctif furtif.
+        return client.mesParticipations().enOptionnel().orElseGet(List::of);
     }
 
     /// **Rattache** le passage à une participation VigieChiro (stocke le lien `ENTITE_PASSAGE`) : l'import

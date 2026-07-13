@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -73,10 +74,10 @@ class RapprochementSitesTest {
     @DisplayName("site absent : créé (carré + points), relié à son objectid, marqué verrouillé")
     void importe_un_site_absent() {
         when(client.mesSites())
-                .thenReturn(List.of(siteDistant(
+                .thenReturn(ReponseApi.succes(List.of(siteDistant(
                         "s1",
                         "130711",
-                        List.of(new PointVigieChiro("Z1", 43.52, 5.46), new PointVigieChiro("Z41", 43.51, 5.45)))));
+                        List.of(new PointVigieChiro("Z1", 43.52, 5.46), new PointVigieChiro("Z41", 43.51, 5.45))))));
 
         Optional<RapportSynchro> rapport = rapprochement.synchroniser(client);
 
@@ -95,7 +96,7 @@ class RapprochementSitesTest {
     @DisplayName("site déjà présent (même carré) : relié sans re-création ; rejouer reste idempotent")
     void relie_un_site_existant_sans_doublon() {
         Site existant = service.creerSite("999999", "Mon carré", Protocole.STANDARD, null, ID_USER);
-        when(client.mesSites()).thenReturn(List.of(siteDistant("s2", "999999", List.of())));
+        when(client.mesSites()).thenReturn(ReponseApi.succes(List.of(siteDistant("s2", "999999", List.of()))));
 
         rapprochement.synchroniser(client);
         rapprochement.synchroniser(client); // rejeu : doit rester idempotent
@@ -110,9 +111,27 @@ class RapprochementSitesTest {
     @Test
     @DisplayName("hors-ligne (aucun site distant) : rien créé, rapport vide")
     void hors_ligne_ne_cree_rien() {
-        when(client.mesSites()).thenReturn(List.of());
+        when(client.mesSites()).thenReturn(ReponseApi.succes(List.of()));
 
         assertThat(rapprochement.synchroniser(client)).isEmpty();
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#1284 : injoignable → rien créé, rien purgé, mais la cause remonte")
+    void injoignable_ne_touche_rien_mais_se_dit() {
+        when(client.mesSites()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+
+        assertThat(rapprochement.synchroniser(client))
+                .get()
+                .satisfies(rapport -> assertThat(rapport.enClair())
+                        .contains("sites non synchronisés")
+                        .contains("injoignable"));
+        assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
+
+        when(client.mesSites()).thenReturn(ReponseApi.nonConnecte());
+        assertThat(rapprochement.synchroniser(client))
+                .as("non connecté : silence légitime")
+                .isEmpty();
     }
 }

@@ -52,25 +52,29 @@ public final class ClientVigieChiro {
         return transport.lire("/moi").lireAvec(ReponsesVigieChiro::profil);
     }
 
-    /// Référentiel officiel des taxons (`GET /taxons/liste`, résumé non paginé : `_id` + libellés).
-    /// Liste vide si non connecté / indisponible (dégradation propre).
-    public List<TaxonVigieChiro> taxons() {
-        return get("/taxons/liste").map(ReponsesVigieChiro::taxons).orElseGet(List::of);
+    /// Référentiel officiel des taxons (`GET /taxons/liste`, résumé non paginé : `_id` + libellés),
+    /// **trié** (#1284) : les rapprocheurs peuvent enfin dire pourquoi rien n'a été synchronisé.
+    public ReponseApi<List<TaxonVigieChiro>> taxons() {
+        return transport.lire("/taxons/liste").transformer(ReponsesVigieChiro::taxons);
     }
 
-    /// Sites rattachés à l'observateur, **dérivés de ses participations** (`GET /moi/participations`).
-    /// Liste vide si non connecté / indisponible.
+    /// Sites rattachés à l'observateur, **dérivés de ses participations** (`GET /moi/participations`),
+    /// **triés** (#1284) et **tout-ou-rien** (jamais un préfixe de pages).
     ///
     /// On ne passe **pas** par `/moi/sites` : celui-ci filtre sur le *propriétaire* du site et renvoie
     /// vide pour un simple participant à un site régional (cf. #718). Chaque participation embarque son
     /// `site` ; on les déduplique par `_id`, **toutes pages confondues** (#1150) : la réponse Eve est
     /// paginée, et un observateur peut dépasser une page de participations.
-    public List<SiteVigieChiro> mesSites() {
+    public ReponseApi<List<SiteVigieChiro>> mesSites() {
+        return PaginationEve.parcourir(PAGES_MAX, this::pageParticipations, ParticipationsVigieChiro::sites)
+                .transformer(ClientVigieChiro::dedupliquerParId);
+    }
+
+    /// Déduplication inter-pages des sites (un même site revient sur chaque participation qui le
+    /// porte) : premier vu, premier gardé.
+    private static List<SiteVigieChiro> dedupliquerParId(List<SiteVigieChiro> sites) {
         Map<String, SiteVigieChiro> parId = new LinkedHashMap<>();
-        for (SiteVigieChiro site : PaginationEve.parcourir(
-                        PAGES_MAX, this::pageParticipations, ParticipationsVigieChiro::sites)
-                .enOptionnel()
-                .orElseGet(List::of)) {
+        for (SiteVigieChiro site : sites) {
             parId.putIfAbsent(site.id(), site);
         }
         return List.copyOf(parId.values());
@@ -78,11 +82,9 @@ public final class ClientVigieChiro {
 
     /// **Participations** de l'observateur (`GET /moi/participations`, axe 4.2) : id + localité + date +
     /// site, pour rattacher à la main un passage à une participation existante (import de résultats sans
-    /// dépôt-app préalable). Liste vide si non connecté / indisponible. **Toutes pages** (#1150).
-    public List<ParticipationVigieChiro> mesParticipations() {
-        return PaginationEve.parcourir(PAGES_MAX, this::pageParticipations, ParticipationsVigieChiro::participations)
-                .enOptionnel()
-                .orElseGet(List::of);
+    /// dépôt-app préalable). **Toutes pages** (#1150), issue **triée** (#1284).
+    public ReponseApi<List<ParticipationVigieChiro>> mesParticipations() {
+        return PaginationEve.parcourir(PAGES_MAX, this::pageParticipations, ParticipationsVigieChiro::participations);
     }
 
     /// Corps JSON **trié** de la page `page` de `GET /moi/participations` : source commune des sites et

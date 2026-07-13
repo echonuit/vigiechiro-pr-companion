@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -60,7 +61,8 @@ class AuditPointsServeurTest {
     @DisplayName("Point local absent du serveur : POINT_DIVERGENT")
     void point_absent_serveur() {
         when(client.mesSites())
-                .thenReturn(List.of(new SiteVigieChiro(OBJECTID_SITE, "Étang", true, "040962", List.of())));
+                .thenReturn(ReponseApi.succes(
+                        List.of(new SiteVigieChiro(OBJECTID_SITE, "Étang", true, "040962", List.of()))));
 
         assertThat(audit.auditer()).singleElement().satisfies(c -> {
             assertThat(c.categorie()).isEqualTo(CategorieConstat.POINT_DIVERGENT);
@@ -73,8 +75,8 @@ class AuditPointsServeurTest {
     @DisplayName("Position différente du serveur : POINT_DIVERGENT")
     void position_differente() {
         when(client.mesSites())
-                .thenReturn(List.of(new SiteVigieChiro(
-                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 44.0, 5.4)))));
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
+                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 44.0, 5.4))))));
 
         assertThat(audit.auditer())
                 .extracting(ConstatAudit::categorie)
@@ -85,19 +87,39 @@ class AuditPointsServeurTest {
     @DisplayName("Point identique (code + position) : aucun constat")
     void point_identique() {
         when(client.mesSites())
-                .thenReturn(List.of(new SiteVigieChiro(
-                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 43.5, 5.4)))));
+                .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
+                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
 
         assertThat(audit.auditer()).isEmpty();
     }
 
     @Test
-    @DisplayName("Serveur injoignable (mesSites vide) : un constat INFO SERVEUR_INJOIGNABLE")
-    void serveur_injoignable() {
-        when(client.mesSites()).thenReturn(List.of());
+    @DisplayName("Aucun site distant (succès, liste vide) : constat INFO qui le dit, sans parler de panne")
+    void aucun_site_distant() {
+        when(client.mesSites()).thenReturn(ReponseApi.succes(List.of()));
 
+        assertThat(audit.auditer()).singleElement().satisfies(c -> {
+            assertThat(c.categorie()).isEqualTo(CategorieConstat.SERVEUR_INJOIGNABLE);
+            assertThat(c.detail()).contains("aucun site distant");
+        });
+    }
+
+    @Test
+    @DisplayName("#1284 : non connecté, injoignable et refusé donnent chacun leur constat exact")
+    void causes_indisponibilite_distinctes() {
+        when(client.mesSites()).thenReturn(ReponseApi.nonConnecte());
         assertThat(audit.auditer())
                 .singleElement()
-                .satisfies(c -> assertThat(c.categorie()).isEqualTo(CategorieConstat.SERVEUR_INJOIGNABLE));
+                .satisfies(c -> assertThat(c.detail()).contains("non connecté"));
+
+        when(client.mesSites()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+        assertThat(audit.auditer())
+                .singleElement()
+                .satisfies(c -> assertThat(c.detail()).contains("injoignable").contains("délai"));
+
+        when(client.mesSites()).thenReturn(ReponseApi.refuse(403, "interdit"));
+        assertThat(audit.auditer())
+                .singleElement()
+                .satisfies(c -> assertThat(c.detail()).contains("HTTP 403"));
     }
 }

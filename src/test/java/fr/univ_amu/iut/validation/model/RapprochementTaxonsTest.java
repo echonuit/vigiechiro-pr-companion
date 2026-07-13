@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.TaxonVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -55,9 +56,9 @@ class RapprochementTaxonsTest {
     void synchronise_table_et_liens() {
         // Codes volontairement hors seed (Zzz…) pour isoler l'effet de la synchro.
         when(client.taxons())
-                .thenReturn(List.of(
+                .thenReturn(ReponseApi.succes(List.of(
                         new TaxonVigieChiro("obj1", "Zzz001", "Latinus unus"),
-                        new TaxonVigieChiro("obj2", "Zzz002", "Latinus duo")));
+                        new TaxonVigieChiro("obj2", "Zzz002", "Latinus duo"))));
 
         Optional<RapportSynchro> rapport = rapprochement.synchroniser(client);
 
@@ -72,11 +73,39 @@ class RapprochementTaxonsTest {
     @DisplayName("hors-ligne (aucun taxon renvoyé) : rapport vide, ni ajout en table, ni purge des liens")
     void hors_ligne_ne_touche_rien() {
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Zzz001", "obj1"));
-        when(client.taxons()).thenReturn(List.of());
+        when(client.taxons()).thenReturn(ReponseApi.succes(List.of()));
 
         assertThat(rapprochement.synchroniser(client)).isEmpty();
 
         assertThat(taxonDao.findById("Zzz001")).isEmpty();
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_TAXON, "Zzz001")).contains("obj1");
+    }
+
+    @Test
+    @DisplayName("#1284 : injoignable/refusé → la garde anti-purge tient ET la cause remonte au bandeau")
+    void issue_non_succes_ne_touche_rien_mais_se_dit() {
+        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_TAXON, "Zzz001", "obj1"));
+        when(client.taxons()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+
+        assertThat(rapprochement.synchroniser(client))
+                .get()
+                .satisfies(rapport -> assertThat(rapport.enClair())
+                        .contains("taxons non synchronisés")
+                        .contains("injoignable"));
+        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_TAXON, "Zzz001"))
+                .as("garde anti-purge : le mapping acquis reste intact")
+                .contains("obj1");
+
+        when(client.taxons()).thenReturn(ReponseApi.refuse(500, "boom"));
+        assertThat(rapprochement.synchroniser(client))
+                .get()
+                .satisfies(rapport -> assertThat(rapport.enClair())
+                        .contains("non synchronisés")
+                        .contains("HTTP 500"));
+
+        when(client.taxons()).thenReturn(ReponseApi.nonConnecte());
+        assertThat(rapprochement.synchroniser(client))
+                .as("non connecté : le silence reste légitime")
+                .isEmpty();
     }
 }

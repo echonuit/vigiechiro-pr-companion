@@ -125,7 +125,8 @@ class ContratApiVigieChiroLiveTest {
     void client_lit_les_participations() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
 
-        List<ParticipationVigieChiro> participations = client.mesParticipations();
+        List<ParticipationVigieChiro> participations =
+                client.mesParticipations().enOptionnel().orElseThrow();
 
         assertThat(participations)
                 .as("le parseur ParticipationsVigieChiro lit la réponse réelle")
@@ -139,7 +140,11 @@ class ContratApiVigieChiroLiveTest {
     @DisplayName("Dérive client : ClientVigieChiro.participation(id) lit le détail réel (_etag présent)")
     void client_lit_le_detail_participation() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
-        String id = client.mesParticipations().getFirst().id();
+        String id = client.mesParticipations()
+                .enOptionnel()
+                .orElseThrow()
+                .getFirst()
+                .id();
 
         ParticipationDetail detail = client.participation(id).enOptionnel().orElseThrow();
 
@@ -153,7 +158,11 @@ class ContratApiVigieChiroLiveTest {
     @DisplayName("Dérive client : le bloc traitement réel est lisible (état connu, dates cohérentes) — #1260")
     void client_lit_le_traitement_reel() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
-        String id = client.mesParticipations().getFirst().id();
+        String id = client.mesParticipations()
+                .enOptionnel()
+                .orElseThrow()
+                .getFirst()
+                .id();
 
         Traitement traitement =
                 client.participation(id).enOptionnel().orElseThrow().traitement();
