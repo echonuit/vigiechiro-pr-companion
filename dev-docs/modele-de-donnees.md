@@ -96,6 +96,23 @@ accents), **SQL** (anglais).
 S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisite) et `schema_version`
 (suivi des [migrations](persistance.md#les-migrations-de-schema)).
 
+!!! note "Ancrage plateforme et certitude observateur (V21, #1139)"
+    Depuis `V21__observation_ancrage_certitude.sql`, la table `observation` porte trois colonnes
+    nullable issues du contrat d'écriture VigieChiro (#1203) :
+
+    - **`vigiechiro_data_id`** + **`vigiechiro_obs_index`** : l'**ancrage plateforme** d'une
+      observation importée de VigieChiro, c'est-à-dire le `_id` Eve de sa donnée (le WAV côté
+      serveur) et son **indice brut** dans le tableau `observations` de cette donnée : la cible
+      exacte de `PATCH /donnees/{id}/observations/{index}` (une observation n'a pas d'`_id` propre).
+      L'ancrage vient **frais du serveur à chaque import** et n'est jamais préservé d'un jeu à
+      l'autre (un re-compute régénère les `donnees`, donc les `_id`) ; `NULL` hors import VigieChiro.
+    - **`observer_certainty`** : la **certitude déclarée manuellement** par l'observateur à la revue
+      (`SUR | PROBABLE | POSSIBLE`, énumération `CertitudeObservateur`, jetons exacts du serveur).
+      **Vide par défaut**, jamais préremplie ni dérivée de `prob_observer` (qui reste la confiance
+      numérique Tadarida recopiée à la validation, héritage du format `_Vu`). C'est une décision
+      humaine : elle est **préservée** au réimport (`PreservationValidations`), et elle sera exigée
+      (avec le taxon) pour pousser une correction vers la plateforme (#723).
+
 ## Transformation audio : de l'original brut aux séquences d'écoute (R10/R11)
 
 Un **enregistrement original** (`original_recording`) est un ultrason mono 16 bits échantillonné très
