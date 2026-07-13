@@ -18,10 +18,12 @@ import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
+import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
+import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -157,6 +159,22 @@ public class PassageModule extends ModuleDeFeature {
     ServiceDisponibiliteAudio fournirServiceDisponibiliteAudio(
             SessionDao sessionDao, SequenceDao sequenceDao, Workspace workspace) {
         return new ServiceDisponibiliteAudio(sessionDao, sequenceDao, workspace);
+    }
+
+    /// Archivage d'un passage (#1300) : purge volontaire de l'audio, marqueur explicite, capture
+    /// des empreintes in extremis.
+    @Provides
+    @Singleton
+    ServiceArchivagePassage fournirServiceArchivagePassage(
+            PassageDao passageDao,
+            SessionDao sessionDao,
+            SequenceDao sequenceDao,
+            BackfillEmpreintes backfillEmpreintes,
+            ServicePurgeOriginaux purgeOriginaux,
+            ServiceDisponibiliteAudio disponibilite,
+            Horloge horloge) {
+        return new ServiceArchivagePassage(
+                passageDao, sessionDao, sequenceDao, backfillEmpreintes, purgeOriginaux, disponibilite, horloge);
     }
 
     /// Moteur (pur) des transitions de workflow d'un passage.

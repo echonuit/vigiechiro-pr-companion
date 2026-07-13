@@ -60,6 +60,14 @@ public class ServicePurgeOriginaux {
         return liberes;
     }
 
+    /// Espace récupérable (octets) sur les originaux d'**une** session : ce que [#purgerSession(Path)]
+    /// libérerait, sans rien supprimer. Sert à l'annonce avant confirmation (archivage d'un passage,
+    /// #1300).
+    public long volumeRecuperableSession(Path racineSession) {
+        Objects.requireNonNull(racineSession, "racineSession");
+        return tailleDossier(workspace.dossierBrutsDeSession(racineSession));
+    }
+
     /// Les dossiers `bruts/` **présents** des sessions du workspace (enfants directs de la racine). Liste
     /// vide si le workspace n'existe pas encore.
     private List<Path> brutsDesSessions() {
