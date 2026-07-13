@@ -130,7 +130,7 @@ class QualificationVueIntegrationTest {
         controleur = loader.getController();
         // Ces tests vérifient le comportement R12 de « Régénérer », pas la confirmation (#798) : on accepte
         // d'office pour ne pas bloquer sur un Alert natif quand une progression d'écoute est en cours.
-        controleur.setConfirmateur(message -> true);
+        controleur.confirmateur().definir(message -> true);
         controleur.ouvrirSur(
                 new ContextePassage(ID_PASSAGE, 2, new ContexteSite("640380", "A1", "Étang de la Tuilière")));
         stage.setScene(new Scene(vue, 1100, 760));

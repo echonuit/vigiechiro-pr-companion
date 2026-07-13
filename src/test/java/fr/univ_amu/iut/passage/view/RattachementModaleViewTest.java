@@ -101,7 +101,7 @@ class RattachementModaleViewTest {
         assertThat(viewModel.entraineRenommage()).isTrue();
 
         List<String> demandes = new ArrayList<>();
-        controleur.setConfirmateur(message -> {
+        controleur.confirmateur().definir(message -> {
             demandes.add(message);
             return false; // l'utilisateur refuse
         });

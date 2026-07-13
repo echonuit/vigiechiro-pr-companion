@@ -97,8 +97,8 @@ class ImportationClicImporterTest {
         // Confirmateur par défaut NON bloquant : depuis #214/#147, importer une nuit déjà importée ouvre
         // une confirmation. En headless, la boîte de dialogue native (Alert.showAndWait) bloquerait le fil
         // JavaFX indéfiniment. On injecte donc un confirmateur qui accepte ; les tests qui vérifient le
-        // dialogue le surchargent (setConfirmateur) pour capturer/refuser.
-        controleur.setConfirmateur(message -> true);
+        // dialogue le surchargent (confirmateur().definir(...)) pour capturer/refuser.
+        controleur.confirmateur().definir(message -> true);
         stage.setScene(new Scene(vue, 1100, 760));
         stage.show();
 
@@ -259,7 +259,7 @@ class ImportationClicImporterTest {
 
         // Double confirmation acceptée.
         List<String> confirmations = new ArrayList<>();
-        controleur.setConfirmateur(message -> {
+        controleur.confirmateur().definir(message -> {
             confirmations.add(message);
             return true;
         });
@@ -280,7 +280,7 @@ class ImportationClicImporterTest {
         importerUneFois(robot);
         rendreNumeroDejaPris(robot);
 
-        controleur.setConfirmateur(message -> false); // l'utilisateur annule dès le 1er message
+        controleur.confirmateur().definir(message -> false); // l'utilisateur annule dès le 1er message
         robot.interact(robot.lookup("#boutonEcraser").queryButton()::fire);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -302,7 +302,7 @@ class ImportationClicImporterTest {
 
         // L'utilisateur refuse « importer quand même » : aucun nouveau passage n'est créé.
         List<String> confirmations = new ArrayList<>();
-        controleur.setConfirmateur(message -> {
+        controleur.confirmateur().definir(message -> {
             confirmations.add(message);
             return false;
         });
@@ -324,7 +324,7 @@ class ImportationClicImporterTest {
         importerUneFois(robot);
         viserNumeroPassageLibre(robot); // sans réinspection : la garde se rafraîchit au clic
 
-        controleur.setConfirmateur(message -> true); // l'utilisateur assume le doublon
+        controleur.confirmateur().definir(message -> true); // l'utilisateur assume le doublon
         robot.interact(robot.lookup("#boutonImporter").queryButton()::fire);
         assertThat(attendreEtat(EtatImport.TERMINE)).isTrue();
 

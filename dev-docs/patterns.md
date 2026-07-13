@@ -408,6 +408,40 @@ main, y compris pour la progression et l'annulation (surcharges ci-dessus). Le d
 le voile « Chargement… » à la place du contenu. Le garde-fou `CablageInjecteursCaptureTest` casse la
 CI si un injecteur de capture résout un exécuteur asynchrone.
 
+## Confirmation d'une action destructive (socle `commun`)
+
+**Le problème.** Supprimer un passage, écraser une nuit, effacer un jeton de connexion… demandent
+une confirmation. Le patron `Alert(CONFIRMATION, …, OK, CANCEL)` + `showAndWait()` était recopié
+dans les contrôleurs, chacun redéclarant un champ `Predicate<String>` et son setter de test - car un
+dialogue natif **figerait TestFX headless** (#798), la confirmation doit donc être remplaçable par
+un stub.
+
+**La solution.** Trois briques de `commun.view` (#1013) :
+
+- `Confirmateur` : le contrat **neutre** (`boolean confirmer(String message)` - `true` pour
+  poursuivre l'action). Généralise le `ConfirmateurQuitter` né avec le `Navigateur` ;
+- `ConfirmationNavigation` : l'implémentation par défaut (vrai `Alert` modal OK / Annuler), avec un
+  **titre** optionnel quand le message seul manquerait de contexte (ex. M-Lot : « Supprimer les
+  archives de dépôt ? ») ;
+- `ConfirmateurModifiable` : le **porteur injectable** que détient chaque contrôleur (champ `final`),
+  défaut = dialogue, `definir(stub)` en test. Le contrôleur l'expose tel quel à ses tests
+  (accesseur package-private `confirmateur()`) au lieu de redéclarer champ + setter.
+
+```java
+// Contrôleur : un champ final, un accesseur pour les tests.
+private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+
+if (confirmateur.confirmer("Supprimer ce site et ses points d'écoute ?")) { … }
+
+// Test de vue : stub déterministe, jamais de dialogue natif.
+controleur.confirmateur().definir(message -> true);
+```
+
+**La règle.** Jamais de `new Alert(CONFIRMATION, …)` dans un contrôleur : toute confirmation passe
+par le porteur `ConfirmateurModifiable` (ou par un collaborateur qui reçoit le `Confirmateur` du
+contrôleur, comme `ConfirmationsImport`). Un `showAndWait()` non stubable gèle les tests headless
+(piège connu depuis #798) et prive l'écran de tests de parcours.
+
 ## Écrans de données : densité, badge, filtres (socle design partagé)
 
 **Le problème.** Les onze écrans sont nés à des moments différents, sans référentiel de design commun :

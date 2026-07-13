@@ -2,13 +2,12 @@ package fr.univ_amu.iut.connexion.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
-import java.util.function.Predicate;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -60,8 +59,8 @@ public class ConnexionModaleController {
     /// le binding sur l'état connecté.
     private final BooleanProperty verificationEnCours = new SimpleBooleanProperty(false);
 
-    /// Confirmateur injectable (#798) : par défaut un `Alert` de confirmation ; stub déterministe en test.
-    private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
+    /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
+    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
 
     @FXML
     private VBox racine;
@@ -97,9 +96,9 @@ public class ConnexionModaleController {
         this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
-    /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
-    void setConfirmateur(Predicate<String> confirmateur) {
-        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+    /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
     }
 
     @FXML
@@ -193,7 +192,7 @@ public class ConnexionModaleController {
     private void deconnecter() {
         // Confirmation (#798) : la déconnexion efface le jeton VigieChiro enregistré sur ce poste (il faudra
         // en recoller un pour se reconnecter).
-        if (!confirmateur.test("Se déconnecter effacera le jeton VigieChiro enregistré sur ce poste."
+        if (!confirmateur.confirmer("Se déconnecter effacera le jeton VigieChiro enregistré sur ce poste."
                 + " Vous devrez en recoller un pour vous reconnecter. Se déconnecter ?")) {
             return;
         }

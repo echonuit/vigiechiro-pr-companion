@@ -6,7 +6,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -29,7 +29,6 @@ import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
 import fr.univ_amu.iut.qualification.viewmodel.SelectionEcouteViewModel;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Predicate;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -86,9 +85,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
-    /// Confirmateur injectable (#798) : par défaut un `Alert` de confirmation ; remplacé dans les tests par
-    /// un stub déterministe (sans dialogue natif).
-    private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
+    /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
+    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
 
     @FXML
     private StackPane hoteOccupation;
@@ -199,9 +197,9 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private StackPane enveloppeEnregistrer;
 
-    /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
-    void setConfirmateur(Predicate<String> confirmateur) {
-        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+    /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
     }
 
     @Inject
@@ -446,7 +444,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // Régénération directe (#798) : comme la modale « Personnaliser… », prévenir avant d'effacer une
         // progression d'écoute déjà entamée. Rien à perdre si aucune séquence n'a été écoutée → pas de nag.
         if (selectionVm.progressionProperty().get() > 0
-                && !confirmateur.test("⚠ Régénérer efface la progression d'écoute (le verdict est conservé)."
+                && !confirmateur.confirmer("⚠ Régénérer efface la progression d'écoute (le verdict est conservé)."
                         + " Régénérer quand même ?")) {
             return;
         }

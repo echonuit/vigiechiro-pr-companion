@@ -2,23 +2,23 @@ package fr.univ_amu.iut.importation.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Predicate;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 /// Tests de [ConfirmationsImport] : la formulation des confirmations d'import (sans boîte de dialogue,
-/// via un prédicat de confirmation capturant les messages présentés).
+/// via un [Confirmateur] capturant les messages présentés).
 class ConfirmationsImportTest {
 
-    /// Prédicat qui accepte toujours et **mémorise** les messages présentés, pour les inspecter.
-    private static final class ConfirmateurCapturant implements Predicate<String> {
+    /// Confirmateur qui accepte toujours et **mémorise** les messages présentés, pour les inspecter.
+    private static final class ConfirmateurCapturant implements Confirmateur {
         private final List<String> messages = new ArrayList<>();
 
         @Override
-        public boolean test(String message) {
+        public boolean confirmer(String message) {
             messages.add(message);
             return true;
         }

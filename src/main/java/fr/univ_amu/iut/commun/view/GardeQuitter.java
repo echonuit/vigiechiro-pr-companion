@@ -5,7 +5,7 @@ package fr.univ_amu.iut.commun.view;
 ///
 /// Avant toute navigation sortante (retour, clic d'un segment du fil d'Ariane, retour à l'accueil), le
 /// socle interroge la garde de l'écran courant. Si une saisie est en cours, le [Navigateur] demande une
-/// confirmation (cf. [ConfirmateurQuitter] / [ConfirmationNavigation]) ; l'utilisateur peut annuler et
+/// confirmation (cf. [Confirmateur] / [ConfirmationNavigation]) ; l'utilisateur peut annuler et
 /// rester sur place.
 ///
 /// Un écran sans saisie sensible n'implémente simplement pas ce contrat (navigation libre).

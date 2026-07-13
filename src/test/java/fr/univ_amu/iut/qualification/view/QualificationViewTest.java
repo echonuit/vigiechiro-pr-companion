@@ -158,7 +158,7 @@ class QualificationViewTest {
         assertThat(progressionAvant).isGreaterThan(0);
 
         List<String> demandes = new ArrayList<>();
-        controleur.setConfirmateur(message -> {
+        controleur.confirmateur().definir(message -> {
             demandes.add(message);
             return false; // l'utilisateur refuse
         });

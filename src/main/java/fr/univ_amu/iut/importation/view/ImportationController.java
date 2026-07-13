@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.AuDepartEcran;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
@@ -24,17 +25,13 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
@@ -190,11 +187,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// fil JavaFX (lancement + clic « Annuler ») ; le travail hors-thread reçoit le jeton en paramètre.
     private JetonAnnulation jetonCourant;
 
-    /// Confirmateur de l'écrasement destructif (#214). Par défaut une boîte de dialogue de confirmation ;
-    /// **injectable** pour les tests (la double confirmation se vérifie alors sans dialogue natif),
-    /// comme le `ConfirmateurQuitter` du Navigateur. Reçoit le message, renvoie `true` si l'utilisateur
-    /// confirme.
-    private final ConfirmationsImport confirmations = new ConfirmationsImport(this::confirmerParDialogue);
+    /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
+    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+
+    /// Confirmations de l'écrasement destructif et de la nuit déjà importée (#214), déléguées à
+    /// [ConfirmationsImport] avec le porteur partagé du contrôleur ([#confirmateur]).
+    private final ConfirmationsImport confirmations = new ConfirmationsImport(confirmateur);
 
     /// Carte de confirmation du rattachement (#154, lecture seule) : carré du site + point choisi.
     private final CarteRattachement carteRattachement = new CarteRattachement();
@@ -212,9 +210,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         return zonesStatut.getReadOnlyProperty();
     }
 
-    /// Remplace le confirmateur (#214), pour les tests (évite la boîte de dialogue native).
-    void setConfirmateur(Predicate<String> confirmateur) {
-        confirmations.definirConfirmateur(confirmateur);
+    /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
     }
 
     /// Pré-sélectionne le site `idSite` dans le rattachement (raccourci « Importer une nuit » depuis
@@ -588,12 +586,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 viewModel::marquerTermineNuits,
                 viewModel::marquerAnnule,
                 echec -> viewModel.marquerEchec(echec.getMessage()));
-    }
-
-    /// Confirmation par boîte de dialogue native (défaut hors tests) : `true` si l'utilisateur clique OK.
-    private boolean confirmerParDialogue(String message) {
-        Alert alerte = new Alert(AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
-        return alerte.showAndWait().filter(ButtonType.OK::equals).isPresent();
     }
 
     /// « Annuler » : demande l'arrêt de l'opération longue en cours (décompression ou import, #146). Le

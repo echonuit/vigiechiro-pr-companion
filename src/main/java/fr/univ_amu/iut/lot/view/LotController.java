@@ -3,6 +3,8 @@ package fr.univ_amu.iut.lot.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -34,17 +36,13 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.Executor;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.ProgressBar;
@@ -97,9 +95,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
-    /// Confirmation d'une action destructive (suppression des archives). **Injectable** (patron #214) :
-    /// par défaut un dialogue natif, remplacé en test par un prédicat pour éviter un `showAndWait` bloquant.
-    private Predicate<String> confirmateur = this::confirmerParDialogue;
+    /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
+    /// Le titre personnalisé du dialogue (« Supprimer les archives de dépôt ? ») est conservé, partagé par
+    /// les deux confirmations de l'écran (suppression des archives, réinitialisation du dépôt).
+    private final ConfirmateurModifiable confirmateur =
+            new ConfirmateurModifiable(new ConfirmationNavigation("Supprimer les archives de dépôt ?"));
 
     @FXML
     private HBox stepper;
@@ -630,7 +630,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// (injectable), et le bouton n'est actif que dans l'état adéquat.
     @FXML
     private void supprimerArchives() {
-        if (confirmateur.test("Supprimer définitivement les archives ZIP de dépôt du dossier « depot/ » ?\n\n"
+        if (confirmateur.confirmer("Supprimer définitivement les archives ZIP de dépôt du dossier « depot/ » ?\n\n"
                 + "Elles ont déjà été téléversées sur Vigie-Chiro et pourront être régénérées si besoin.")) {
             viewModel.supprimerArchives();
         }
@@ -641,7 +641,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// injectable). Recharge la table (plan vidé) et l'état du passage (retour « Prêt à déposer »).
     @FXML
     private void reinitialiserDepot() {
-        if (confirmateur.test("Réinitialiser le dépôt de cette nuit ?\n\n"
+        if (confirmateur.confirmer("Réinitialiser le dépôt de cette nuit ?\n\n"
                 + "Le suivi local est effacé pour permettre un nouveau téléversement ; les archives ZIP"
                 + " sur disque et la participation VigieChiro sont conservées.")) {
             depotViewModel.reinitialiser(contexte.idPassage());
@@ -649,17 +649,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         }
     }
 
-    /// Dialogue natif de confirmation (OK / Annuler). Isolé pour être remplacé en test via
-    /// [#definirConfirmateur(Predicate)] — un `showAndWait` bloquerait sinon un test TestFX.
-    private boolean confirmerParDialogue(String message) {
-        Alert alerte = new Alert(AlertType.CONFIRMATION, message, ButtonType.OK, ButtonType.CANCEL);
-        alerte.setTitle("Supprimer les archives de dépôt ?");
-        alerte.setHeaderText(null);
-        return alerte.showAndWait().filter(ButtonType.OK::equals).isPresent();
-    }
-
-    /// Remplace le confirmateur (tests) pour éviter le dialogue natif bloquant sous TestFX.
-    void definirConfirmateur(Predicate<String> confirmateur) {
-        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+    /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
     }
 }

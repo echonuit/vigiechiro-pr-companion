@@ -5,7 +5,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -24,7 +24,6 @@ import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -85,14 +84,12 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
-    /// Confirmateur injectable (#798, #1013) : par défaut un `Alert` de confirmation partagé
-    /// ([ConfirmationNavigation]) ; remplaçable par un stub déterministe dans les tests (un
-    /// `Alert.showAndWait` figerait TestFX headless).
-    private Predicate<String> confirmateur = new ConfirmationNavigation()::confirmer;
+    /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
+    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
 
-    /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
-    void setConfirmateur(Predicate<String> confirmateur) {
-        this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+    /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
     }
 
     @FXML
@@ -328,7 +325,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private void supprimerSite() {
-        if (!confirmateur.test("Supprimer ce site et ses points d'écoute ?")) {
+        if (!confirmateur.confirmer("Supprimer ce site et ses points d'écoute ?")) {
             return;
         }
         try {

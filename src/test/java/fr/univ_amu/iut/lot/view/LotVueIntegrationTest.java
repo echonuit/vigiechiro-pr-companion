@@ -379,7 +379,7 @@ class LotVueIntegrationTest {
         when(service.archivesDepot("/ws/session-42"))
                 .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2)));
         // Confirmateur injecté (pas de dialogue natif bloquant sous TestFX).
-        robot.interact(() -> controleur.definirConfirmateur(message -> true));
+        robot.interact(() -> controleur.confirmateur().definir(message -> true));
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOSE, "/ws/session-42", 2, 8192L, List.of(), "2026-06-18"));
         Button supprimer = robot.lookup("#btnSupprimerArchives").queryAs(Button.class);
         assertThat(supprimer.isDisabled()).isFalse();

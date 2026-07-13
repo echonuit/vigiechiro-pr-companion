@@ -76,7 +76,7 @@ class ConnexionModaleConnecteeViewTest {
     @DisplayName("#798 : « Se déconnecter » confirme avant d'effacer le jeton local")
     void deconnexion_confirme_avant_effacement(FxRobot robot) {
         List<String> demandes = new ArrayList<>();
-        controleur.setConfirmateur(message -> {
+        controleur.confirmateur().definir(message -> {
             demandes.add(message);
             return false; // l'utilisateur refuse
         });

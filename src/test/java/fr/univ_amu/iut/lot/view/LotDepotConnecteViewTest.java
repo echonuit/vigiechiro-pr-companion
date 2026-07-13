@@ -113,7 +113,7 @@ class LotDepotConnecteViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        controleur.definirConfirmateur(message -> true); // pas de dialogue natif bloquant sous TestFX
+        controleur.confirmateur().definir(message -> true); // pas de dialogue natif bloquant sous TestFX
         controleur.ouvrirSur(CONTEXTE);
         stage.setScene(new Scene(vue, 980, 980));
         stage.show();

@@ -31,7 +31,7 @@ import javafx.scene.Parent;
 ///    il le déclare ([EmplacementNavigation]), sinon retombe sur l'historique.
 ///
 /// Avant toute sortie d'écran, une éventuelle [GardeQuitter] est consultée (saisie non enregistrée →
-/// confirmation via [ConfirmateurQuitter]). Le verrou dur
+/// confirmation via [Confirmateur]). Le verrou dur
 /// [NavigationViewModel#navigationVerrouilleeProperty] (#54, import en cours) bloque toute navigation.
 @Singleton
 public class Navigateur {
@@ -44,7 +44,7 @@ public class Navigateur {
     private final ObservableList<EtapeNavigation> historiqueLectureSeule =
             FXCollections.unmodifiableObservableList(historique);
     private final ObjectProperty<Parent> vueCentrale = new SimpleObjectProperty<>(this, "vueCentrale");
-    private ConfirmateurQuitter confirmateur = new ConfirmationNavigation();
+    private Confirmateur confirmateur = new ConfirmationNavigation();
     private EtapeNavigation accueil;
 
     @Inject
@@ -100,7 +100,7 @@ public class Navigateur {
     }
 
     /// Stratégie de confirmation « quitter malgré une saisie » (injectable pour les tests).
-    void setConfirmateurQuitter(ConfirmateurQuitter confirmateur) {
+    void setConfirmateurQuitter(Confirmateur confirmateur) {
         this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
     }
 
