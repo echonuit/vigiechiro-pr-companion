@@ -431,7 +431,8 @@ l'opération et vérifie l'arrêt propre au premier point de contrôle (callback
 **La règle.** Toute opération longue d'un écran passe par `IndicateurOccupation` (l'échec est routé
 vers le filet d'erreurs de l'écran, #795) — jamais un `Thread.ofVirtual()` + `runLater` recopié à la
 main, y compris pour la progression et l'annulation (surcharges ci-dessus). Le déport écran par
-écran est suivi dans l'EPIC #793.
+écran (EPIC #793 puis reliquat #1316) est **terminé** : plus aucun `Thread.ofVirtual` ne vit hors du
+socle, tout nouvel écran naît avec ce patron.
 
 **Piège capture (#1278).** Les outils de capture doivent lier les exécuteurs **synchrones**
 (`ModuleCaptureCommun`) : `ApercuFx` snapshotte immédiatement, l'asynchrone de production capturerait
