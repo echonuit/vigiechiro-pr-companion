@@ -47,7 +47,8 @@ public class MigrationSchema {
         "V18__depot_unite.sql",
         "V19__column_layout.sql",
         "V20__duree_reelle_sequences.sql",
-        "V21__observation_ancrage_certitude.sql"
+        "V21__observation_ancrage_certitude.sql",
+        "V22__participation_traitement.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";
