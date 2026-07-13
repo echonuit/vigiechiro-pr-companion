@@ -174,6 +174,21 @@ Le menu **☰ → Ouvrir les données sur Vigie-Chiro** ouvre dans votre navigat
 identifié avec ce que vous voyez ici. L'entrée n'apparaît que quand l'écran cible un passage, et
 reste grisée (« passage non lié ») tant que le passage n'a pas de participation liée.
 
+### Publier vos corrections vers Vigie-Chiro
+
+Dans l'autre sens, une fois vos observations revues (taxon retenu **et** certitude déclarée), le
+menu **☰ → Publier les corrections vers VigieChiro…** pousse vos décisions vers la plateforme :
+chaque observation publiée y porte alors votre taxon et votre confiance d'observateur, comme si
+vous les aviez saisis sur le site. Une **confirmation récapitule** d'abord ce qui va partir et ce
+qui restera à quai : les observations **sans certitude** (déclarez-la d'abord), celles **sans
+ancrage** plateforme (résultats importés d'un CSV : réimportez depuis VigieChiro pour les ancrer)
+et les taxons **hors référentiel**. La publication est **rejouable sans risque** : republier
+réécrit les mêmes valeurs.
+
+À savoir : une correction publiée se **remplace** mais ne se **retire** pas de la plateforme, et
+une **relance du traitement serveur** efface les corrections publiées (republiez alors après le
+nouveau traitement). L'export `_Vu` reste disponible en repli hors connexion.
+
 Pour importer, vous pouvez soit utiliser le menu « ☰ », soit **glisser-déposer** directement le fichier
 CSV sur l'écran : pratique quand la fenêtre de sélection de fichier du système ne s'ouvre pas. À la fin de
 l'import, un bandeau confirme le nombre d'observations chargées ; en cas de problème (séquence introuvable,

@@ -37,6 +37,7 @@ import picocli.CommandLine.Spec;
             Importer.class,
             ImporterTadarida.class,
             ImporterVigieChiro.class,
+            PublierCorrectionsVigieChiro.class,
             Qualifier.class,
             ExporterLot.class,
             Deposer.class,

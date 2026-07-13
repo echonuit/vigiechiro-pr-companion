@@ -145,6 +145,11 @@ final class GraineSonsValidation {
                         return new ImportVigieChiroViewModel(Optional.empty());
                     }
 
+                    @Provides
+                    fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel publicationCorrections() {
+                        return new fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel(Optional.empty());
+                    }
+
                     // OuvrirSite requis par le controller pour son fil d'Ariane, mais SitesModule n'est
                     // pas inclus : no-op (la source References ne l'exerce pas). OuvrirPassage, lui, est
                     // déjà fourni par PassageModule (inclus) - ne pas le rebinder (BindingAlreadySet).

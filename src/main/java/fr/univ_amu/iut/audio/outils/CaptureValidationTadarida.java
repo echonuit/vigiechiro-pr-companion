@@ -181,6 +181,11 @@ public final class CaptureValidationTadarida {
                         return new ImportVigieChiroViewModel(Optional.empty());
                     }
 
+                    @Provides
+                    fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel publicationCorrections() {
+                        return new fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel(Optional.empty());
+                    }
+
                     // OuvrirSite requis par le fil d'Ariane du controller (SitesModule non inclus) : no-op.
                     // OuvrirPassage est déjà fourni par PassageModule (inclus) - ne pas le rebinder.
                     @Provides

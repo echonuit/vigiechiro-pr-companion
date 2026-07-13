@@ -146,6 +146,11 @@ même** par les sondes `#1203` de `ContratApiVigieChiroLiveTest` : lecture (3 so
 L'hypothèse initiale de l'issue (« PATCH de la donnée avec le tableau `observations` réémis, le plus
 probable ») était **fausse** : cette voie est réservée à l'admin. La route positionnelle existe.
 
+**Implémenté (#723)** : `ClientVigieChiro.corrigerObservation` (transport, levier `?no_bilan=true`) +
+`PublicationCorrections` (tri poussables / à compléter / sans ancrage / hors référentiel, rafale avec
+bilan serveur régénéré par le seul dernier envoi), exposés par l'action ☰ « Publier les corrections
+vers VigieChiro » de Sons & validation et la commande `publier-corrections-vigiechiro`.
+
 **La route** : `PATCH /donnees/{donnee_id}/observations/{index}` : l'**indice dans le tableau
 `observations` est l'identifiant** de l'observation (`404` si hors bornes).
 
