@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import java.io.BufferedInputStream;
@@ -61,7 +62,7 @@ public final class ExtracteurZip {
     /// Le callback peut être invoqué **hors du fil JavaFX** : l'appelant le marshale lui-même.
     ///
     /// **Annulation** (#146) : `jeton` est vérifié avant chaque entrée ; une annulation lève
-    /// [AnnulationImportException] et le temporaire partiel est supprimé (cf. `catch RuntimeException`).
+    /// [OperationAnnuleeException] et le temporaire partiel est supprimé (cf. `catch RuntimeException`).
     ///
     /// @param dossierBase volume d'accueil de l'extraction (workspace disque), créé s'il manque
     /// @param surProgression notifié à chaque fichier extrait (avancement déterminé)

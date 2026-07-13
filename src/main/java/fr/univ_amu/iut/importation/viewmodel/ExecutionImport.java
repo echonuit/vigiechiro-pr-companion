@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
-import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.SuiviFichiers;
@@ -40,7 +40,7 @@ public final class ExecutionImport {
     }
 
     /// Variante **annulable** (#146) : `jeton` permet d'interrompre l'import en cours. Une annulation
-    /// remonte une [fr.univ_amu.iut.importation.model.AnnulationImportException] (RuntimeException) que
+    /// remonte une [fr.univ_amu.iut.importation.model.OperationAnnuleeException] (RuntimeException) que
     /// la vue traite via [ImportationViewModel#marquerAnnule()].
     public ResultatImport executer(DemandeImport demande, Consumer<Progression> progres, JetonAnnulation jeton) {
         return executer(demande, progres, jeton, SuiviFichiers.inerte());

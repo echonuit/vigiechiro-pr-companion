@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -46,7 +47,8 @@ class ImportationControllerGardeTest {
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
                 serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
-        ImportationController controller = new ImportationController(viewModel, conservation);
+        ImportationController controller =
+                new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone());
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
@@ -62,7 +64,8 @@ class ImportationControllerGardeTest {
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
                 serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
-        ImportationController controller = new ImportationController(viewModel, conservation);
+        ImportationController controller =
+                new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone());
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         assertThat(controller.aSaisieNonEnregistree()).isTrue(); // import préparé (PRET)
@@ -83,7 +86,8 @@ class ImportationControllerGardeTest {
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
                 serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
-        ImportationController controller = new ImportationController(viewModel, conservation);
+        ImportationController controller =
+                new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone());
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 60, 191, List.of()));

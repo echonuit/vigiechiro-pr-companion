@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import java.io.IOException;
@@ -27,7 +29,7 @@ import java.util.stream.Stream;
 ///
 /// **Résilience (#155)** : un original illisible ou de format invalide n'**abat plus** l'import — il est
 /// capturé en [ResultatDecoupage] rejeté (avec sa raison) et le découpage se poursuit sur les autres.
-/// Seule une **annulation** ([AnnulationImportException], #146) interrompt l'ensemble.
+/// Seule une **annulation** ([OperationAnnuleeException], #146) interrompt l'ensemble.
 ///
 /// L'**ordre d'origine est préservé** (Future récupérés dans l'ordre de soumission) → résultat
 /// déterministe. La progression (#33) est émise **sous verrou + compteur** pour rester appelée un à un,
@@ -97,7 +99,7 @@ final class DecoupageParallele {
                 List<ResultatDecoupage> reconcilies = ReconciliationNoms.reconcilier(bruts, dossierTransformes);
                 supprimerRecursif(dossierTemporaire);
                 return reconcilies;
-            } catch (AnnulationImportException annulation) {
+            } catch (OperationAnnuleeException annulation) {
                 // Annulation (#146) : on arrête les découpages restants au lieu d'attendre la fin de tous
                 // les originaux déjà soumis, puis on propage pour que l'appelant nettoie la session.
                 decoupagesEnCours.forEach(decoupage -> decoupage.cancel(true));

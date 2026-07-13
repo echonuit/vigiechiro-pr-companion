@@ -7,6 +7,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -21,10 +23,8 @@ import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
-import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
-import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
 import fr.univ_amu.iut.importation.model.RapportImport;
@@ -319,7 +319,7 @@ class ServiceImportTest {
         jeton.annuler();
 
         assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe, p -> {}, jeton))
-                .isInstanceOf(AnnulationImportException.class);
+                .isInstanceOf(OperationAnnuleeException.class);
 
         // Aucun demi-état : pas de passage pour le quadruplet, pas de dossier de session sur disque.
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
@@ -336,7 +336,7 @@ class ServiceImportTest {
         Consumer<Progression> annulerApresPremier = p -> jeton.annuler();
 
         assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe, annulerApresPremier, jeton))
-                .isInstanceOf(AnnulationImportException.class);
+                .isInstanceOf(OperationAnnuleeException.class);
 
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
         // La session partielle (un fichier déjà copié) a été supprimée.
@@ -356,7 +356,7 @@ class ServiceImportTest {
         };
 
         assertThatThrownBy(() -> service.importer(sd, idPoint, prefixe, annulerAuDernier, jeton))
-                .isInstanceOf(AnnulationImportException.class);
+                .isInstanceOf(OperationAnnuleeException.class);
 
         // Le point de non-retour (persistance) n'a pas été franchi : aucun passage, session nettoyée.
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isFalse();
@@ -816,7 +816,7 @@ class ServiceImportTest {
         JetonAnnulation jeton = new JetonAnnulation();
         jeton.annuler();
         assertThatThrownBy(() -> service.ecraserEtImporter(sd, idPoint, prefixe, p -> {}, jeton))
-                .isInstanceOf(AnnulationImportException.class);
+                .isInstanceOf(OperationAnnuleeException.class);
 
         // L'ancien passage, sa session et ses séquences sont préservés (rien perdu).
         assertThat(service.numeroPassageDejaUtilise(idPoint, 2026, 2)).isTrue();

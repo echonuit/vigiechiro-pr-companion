@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.model;
 
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -141,7 +142,7 @@ public class ServiceImport {
     }
 
     /// Variante **annulable** (#146) : `jeton` est vérifié entre chaque fichier copié puis transformé ;
-    /// une annulation lève [AnnulationImportException] et **nettoie la session partielle** sur disque
+    /// une annulation lève [OperationAnnuleeException] et **nettoie la session partielle** sur disque
     /// (aucun passage n'est persisté tant que la transformation n'est pas finie, persistance atomique O7
     /// → pas de demi-état en base). Même contrat transactionnel et mêmes règles que les autres variantes.
     public ResultatImport importer(

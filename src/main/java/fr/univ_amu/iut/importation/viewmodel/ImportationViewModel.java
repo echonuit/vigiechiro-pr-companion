@@ -1,12 +1,12 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
-import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;

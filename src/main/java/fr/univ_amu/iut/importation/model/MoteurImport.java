@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -132,7 +134,7 @@ final class MoteurImport {
         ctx.suiviFichiers().planEtabli(nomsDes(originauxNuit));
 
         // Annulation (#146) : la copie et la transformation se font dans un dossier de session neuf ;
-        // une annulation lève AnnulationImportException et on supprime la session partielle. Comme la
+        // une annulation lève OperationAnnuleeException et on supprime la session partielle. Comme la
         // persistance est atomique en fin de course (O7), aucun passage n'est créé → pas de demi-état.
         List<SourceOriginal> sources;
         long volumeOriginaux;
@@ -312,12 +314,12 @@ final class MoteurImport {
     }
 
     /// Vérifie l'annulation **hors du bloc try/catch de nettoyage** (#146) : si annulé, supprime la
-    /// session partielle puis lève [AnnulationImportException]. Utilisé juste avant la persistance, où le
+    /// session partielle puis lève [OperationAnnuleeException]. Utilisé juste avant la persistance, où le
     /// `catch` couvrant la copie/transformation ne s'applique plus.
     private static void verifierAnnulation(JetonAnnulation jeton, Path dossierSession) {
         if (jeton.estAnnule()) {
             supprimerSessionPartielle(dossierSession);
-            throw new AnnulationImportException();
+            throw new OperationAnnuleeException();
         }
     }
 

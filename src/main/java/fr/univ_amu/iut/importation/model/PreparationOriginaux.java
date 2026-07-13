@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import java.nio.file.Files;
@@ -146,7 +148,7 @@ final class PreparationOriginaux {
                     numeroParNomR6.put(realisee.nomR6(), realisee.numero());
                 }
                 return numeroParNomR6;
-            } catch (AnnulationImportException annulation) {
+            } catch (OperationAnnuleeException annulation) {
                 // Annulation (#146) : on arrête les copies restantes au lieu d'attendre la fin de toutes
                 // les copies déjà soumises, puis on propage pour que l'appelant nettoie la session.
                 copiesEnCours.forEach(copieEnCours -> copieEnCours.cancel(true));

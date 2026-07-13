@@ -3,11 +3,11 @@ package fr.univ_amu.iut.importation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
-import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -104,7 +104,7 @@ class ExtracteurZipTest {
         jeton.annuler(); // annulation immédiate : la 1re entrée déclenche l'arrêt
 
         assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(zip, base, p -> {}, jeton))
-                .isInstanceOf(AnnulationImportException.class);
+                .isInstanceOf(OperationAnnuleeException.class);
 
         // Le temporaire partiel a été supprimé : aucun « import-zip-* » ne subsiste sous la base.
         try (Stream<Path> entrees = Files.list(base)) {
@@ -132,7 +132,7 @@ class ExtracteurZipTest {
         };
 
         assertThatThrownBy(() -> ExtracteurZip.extraireVersDossierTemporaire(zip, base, annulerAuDernier, jeton))
-                .isInstanceOf(AnnulationImportException.class);
+                .isInstanceOf(OperationAnnuleeException.class);
 
         try (Stream<Path> entrees = Files.list(base)) {
             assertThat(entrees.filter(Files::isDirectory)

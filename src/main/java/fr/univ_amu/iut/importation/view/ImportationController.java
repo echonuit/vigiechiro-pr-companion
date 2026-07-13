@@ -1,17 +1,16 @@
 package fr.univ_amu.iut.importation.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.AuDepartEcran;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
-import fr.univ_amu.iut.importation.model.AnnulationImportException;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
-import fr.univ_amu.iut.importation.model.JetonAnnulation;
 import fr.univ_amu.iut.importation.model.ResultatImport;
-import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
@@ -26,7 +25,6 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -70,6 +68,12 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// Préférence « conserver les originaux » **partagée** (singleton) avec le ViewModel : la case s'y lie
     /// bidirectionnellement, et le ViewModel la relit au lancement de l'import.
     private final PreferenceConservation conservation;
+
+    /// Socle « travail lourd hors fil JavaFX » (#1014, étendu #1252) : décompression et imports passent
+    /// par lui plutôt que par un `Thread.ofVirtual()` maison (#1256) — progression et suivi par fichier
+    /// reviennent par ses relais, l'annulation coopérative conclut par `marquerAnnule`, et les tests
+    /// sont **synchrones**.
+    private final ExecuteurTache executeur;
 
     @FXML
     private VBox racineImport;
@@ -196,9 +200,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private final CarteRattachement carteRattachement = new CarteRattachement();
 
     @Inject
-    public ImportationController(ImportationViewModel viewModel, PreferenceConservation conservation) {
+    public ImportationController(
+            ImportationViewModel viewModel, PreferenceConservation conservation, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     @Override
@@ -457,8 +463,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     }
 
     /// Charge une source d'import (dossier **ou** `.zip`, #139) : la décompression éventuelle du zip se
-    /// fait sur un **virtual thread** (Java 25) pour ne pas figer l'IHM sur une grosse archive ; le
-    /// résultat est ensuite inspecté sur le fil JavaFX. Une archive illisible est signalée à la vue.
+    /// fait **hors du fil JavaFX** (socle #1256) pour ne pas figer l'IHM sur une grosse archive ; le
+    /// résultat est ensuite inspecté sur le fil JavaFX. Une archive illisible est signalée à la vue,
+    /// une décompression annulée revient à l'état neutre (#146).
     ///
     /// Pour un `.zip`, l'état passe à `EXTRACTION` **avant** de démarrer (la barre de progression apparaît
     /// aussitôt), puis chaque fichier décompressé fait avancer la barre « X / N » (#146).
@@ -468,22 +475,16 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
             jetonCourant = jeton; // permet d'annuler la décompression (#146)
             viewModel.marquerExtractionEnCours(); // fil JavaFX : progression visible dès le clic/dépôt
         }
-        Thread.ofVirtual().name("source-import-vigiechiro").start(() -> {
-            try {
-                Path dossier = viewModel.extraireSiZip(
-                        chemin,
-                        p -> Platform.runLater(() -> viewModel.progression().appliquer(p)),
-                        jeton);
-                Platform.runLater(() -> {
+        Consumer<Progression> progres =
+                executeur.relaisProgression(p -> viewModel.progression().appliquer(p));
+        executeur.executer(
+                () -> viewModel.extraireSiZip(chemin, progres, jeton),
+                dossier -> {
                     viewModel.inspection().dossierSourceProperty().set(dossier);
                     viewModel.inspecter();
-                });
-            } catch (AnnulationImportException annulation) {
-                Platform.runLater(viewModel::marquerAnnule); // décompression annulée : retour neutre (#146)
-            } catch (RuntimeException echec) {
-                Platform.runLater(() -> viewModel.signalerSourceIllisible(echec.getMessage()));
-            }
-        });
+                },
+                viewModel::marquerAnnule,
+                echec -> viewModel.signalerSourceIllisible(echec.getMessage()));
     }
 
     /// Vrai si un traitement est en cours (import `EN_COURS` ou décompression `EXTRACTION`) : le formulaire
@@ -503,8 +504,8 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 SuiviFichiers suivi);
     }
 
-    /// « Importer cette nuit » : exécute le travail lourd sur un **virtual thread** (Java 25) pour ne
-    /// pas figer le fil JavaFX, puis applique le résultat (succès ou échec) via `Platform.runLater`.
+    /// « Importer cette nuit » : exécute le travail lourd **hors du fil JavaFX** (socle #1256), puis
+    /// applique le résultat (succès / annulation / échec) sur le fil JavaFX.
     @FXML
     private void importer() {
         if (!viewModel.peutImporter().get()) {
@@ -523,9 +524,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Carte laissée tourner plusieurs nuits (#…) : un passage par nuit incluse (chemin multi-nuits),
         // sinon l'import mono-nuit historique.
         if (viewModel.inspection().plusieursNuits()) {
-            lancerImportNuitsHorsThread();
+            lancerImportNuitsHorsFil();
         } else {
-            lancerImportHorsThread(viewModel.execution()::executer);
+            lancerImportHorsFil(viewModel.execution()::executer);
         }
     }
 
@@ -543,31 +544,33 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         if (!confirmations.confirmerEcrasement(viewModel.controleNumero().apercuEcrasement())) {
             return;
         }
-        lancerImportHorsThread(viewModel.controleNumero()::ecraserEtImporter);
+        lancerImportHorsFil(viewModel.controleNumero()::ecraserEtImporter);
     }
 
-    /// Lance `executeur` sur un **virtual thread** (Java 25) pour ne pas figer le fil JavaFX, puis applique
-    /// le résultat (succès / annulation / échec) via `Platform.runLater`. Partagé par l'import normal et
-    /// l'écrasement (#214).
-    private void lancerImportHorsThread(ExecuteurImport executeur) {
+    /// Lance `execution` **hors du fil JavaFX** (socle #1256), puis applique le résultat sur le fil
+    /// JavaFX : succès (`marquerTermine`), annulation coopérative (#146 → `marquerAnnule`, via
+    /// [fr.univ_amu.iut.commun.model.OperationAnnuleeException]) ou échec (`marquerEchec`). Partagé par
+    /// l'import normal et l'écrasement (#214).
+    private void lancerImportHorsFil(ExecuteurImport execution) {
         var demande = viewModel.preparerImport();
         viewModel.marquerEnCours();
         JetonAnnulation jeton = new JetonAnnulation();
         jetonCourant = jeton;
-        // Progression (#33) : le service notifie hors-thread ; on relaie chaque point au fil JavaFX.
+        // Progression (#33) et suivi par fichier (#947) : le service notifie hors-thread, chaque
+        // événement est relayé au fil JavaFX par le socle.
         Consumer<Progression> progres =
-                p -> Platform.runLater(() -> viewModel.progression().appliquer(p));
-        SuiviFichiers suivi = new RelaisSuiviFichiers(viewModel.suiviFichiers());
-        surVirtualThread("import-vigiechiro", () -> {
-            ResultatImport resultatImport = executeur.executer(demande, progres, jeton, suivi);
-            Platform.runLater(() -> viewModel.marquerTermine(resultatImport));
-        });
+                executeur.relaisProgression(p -> viewModel.progression().appliquer(p));
+        SuiviFichiers suivi = new RelaisSuiviFichiers(viewModel.suiviFichiers(), executeur.surFilJavaFx());
+        executeur.executer(
+                () -> execution.executer(demande, progres, jeton, suivi),
+                viewModel::marquerTermine,
+                viewModel::marquerAnnule,
+                echec -> viewModel.marquerEchec(echec.getMessage()));
     }
 
-    /// Variante **multi-nuits** de [#lancerImportHorsThread] (#…) : un passage par nuit incluse, sur un
-    /// virtual thread, avec progression agrégée (« Nuit i/N · … ») et annulation entre deux nuits. Applique
-    /// le résultat agrégé via `Platform.runLater`.
-    private void lancerImportNuitsHorsThread() {
+    /// Variante **multi-nuits** de [#lancerImportHorsFil] : un passage par nuit incluse, avec progression
+    /// agrégée (« Nuit i/N · … ») et annulation entre deux nuits. Même enveloppe socle, résultat agrégé.
+    private void lancerImportNuitsHorsFil() {
         // Mémorise le choix « conserver les originaux » (survit aux sessions) au lancement, puis capture les
         // nuits incluses + leurs n° dans un instantané immuable (fil JavaFX).
         conservation.memoriser();
@@ -578,28 +581,13 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         JetonAnnulation jeton = new JetonAnnulation();
         jetonCourant = jeton;
         Consumer<Progression> progres =
-                p -> Platform.runLater(() -> viewModel.progression().appliquer(p));
-        SuiviFichiers suivi = new RelaisSuiviFichiers(viewModel.suiviFichiers());
-        surVirtualThread("import-nuits-vigiechiro", () -> {
-            ResultatImportMultiNuits resultat = viewModel.coordinationNuits().executer(demande, progres, jeton, suivi);
-            Platform.runLater(() -> viewModel.marquerTermineNuits(resultat));
-        });
-    }
-
-    /// Exécute `travail` sur un **virtual thread** (Java 25) nommé `nom`, en traitant de façon uniforme
-    /// l'**annulation** (#146 → `marquerAnnule`) et l'**échec** (`marquerEchec`) via `Platform.runLater`.
-    /// Mutualise l'enveloppe des deux lanceurs (mono-nuit et multi-nuits) ; `travail` poste lui-même son
-    /// succès (`marquerTermine`/`marquerTermineNuits`) sur le fil JavaFX.
-    private void surVirtualThread(String nom, Runnable travail) {
-        Thread.ofVirtual().name(nom).start(() -> {
-            try {
-                travail.run();
-            } catch (AnnulationImportException annulation) {
-                Platform.runLater(viewModel::marquerAnnule); // annulation demandée : arrêt propre (#146)
-            } catch (RuntimeException echec) {
-                Platform.runLater(() -> viewModel.marquerEchec(echec.getMessage()));
-            }
-        });
+                executeur.relaisProgression(p -> viewModel.progression().appliquer(p));
+        SuiviFichiers suivi = new RelaisSuiviFichiers(viewModel.suiviFichiers(), executeur.surFilJavaFx());
+        executeur.executer(
+                () -> viewModel.coordinationNuits().executer(demande, progres, jeton, suivi),
+                viewModel::marquerTermineNuits,
+                viewModel::marquerAnnule,
+                echec -> viewModel.marquerEchec(echec.getMessage()));
     }
 
     /// Confirmation par boîte de dialogue native (défaut hors tests) : `true` si l'utilisateur clique OK.

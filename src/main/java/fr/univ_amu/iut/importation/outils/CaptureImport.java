@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.importation.di.ImportationModule;
 import fr.univ_amu.iut.importation.model.LigneRapport;
 import fr.univ_amu.iut.importation.model.RapportImport;
@@ -109,7 +110,10 @@ public final class CaptureImport {
         ImportationViewModel vm = injecteur.getInstance(ImportationViewModel.class);
         FXMLLoader loader = new FXMLLoader(CaptureImport.class.getResource(IMPORT_FXML));
         loader.setControllerFactory(type -> type == ImportationController.class
-                ? new ImportationController(vm, injecteur.getInstance(PreferenceConservation.class))
+                ? new ImportationController(
+                        vm,
+                        injecteur.getInstance(PreferenceConservation.class),
+                        injecteur.getInstance(ExecuteurTache.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         Scene scene = new Scene(vue, 1100, 860);

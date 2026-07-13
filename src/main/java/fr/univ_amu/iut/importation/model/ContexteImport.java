@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import java.nio.file.Path;
 
 /// Invariants d'**une opération d'import** (mono- ou multi-nuits) : ce qui ne change pas d'une nuit à
