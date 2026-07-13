@@ -2,9 +2,9 @@ package fr.univ_amu.iut.connexion.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.connexion.di.ConnexionModule;
 import fr.univ_amu.iut.connexion.view.NavigationConnexion;
 import java.io.IOException;
@@ -66,6 +66,7 @@ public final class CaptureConnexion {
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage (test).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(new CommunModule(), new PersistenceModule(), new ConnexionModule());
+        return Guice.createInjector(
+                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new ConnexionModule());
     }
 }

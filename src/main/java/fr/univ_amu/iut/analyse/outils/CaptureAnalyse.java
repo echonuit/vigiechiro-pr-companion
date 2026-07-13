@@ -5,12 +5,12 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.analyse.di.AnalyseModule;
 import fr.univ_amu.iut.analyse.view.AnalyseController;
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -114,7 +114,7 @@ public final class CaptureAnalyse {
     /// (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                new CommunModule(),
+                ModuleCaptureCommun.communSynchrone(),
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),

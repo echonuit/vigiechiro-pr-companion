@@ -3,7 +3,6 @@ package fr.univ_amu.iut.importation.outils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.util.Modules;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -13,6 +12,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.importation.di.ImportationModule;
@@ -303,7 +303,7 @@ public final class CaptureImport {
 
     public static Injector creerInjecteur() {
         return Guice.createInjector(Modules.override(
-                        new CommunModule(),
+                        ModuleCaptureCommun.communSynchrone(),
                         new PersistenceModule(),
                         new SitesModule(),
                         new PassageModule(),

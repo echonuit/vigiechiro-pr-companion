@@ -2,7 +2,6 @@ package fr.univ_amu.iut.diagnostic.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.JsonSimple;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -11,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -127,7 +127,7 @@ public final class CaptureDiagnostic {
     /// (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                new CommunModule(),
+                ModuleCaptureCommun.communSynchrone(),
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),

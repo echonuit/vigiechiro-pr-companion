@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.outils;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Injector;
@@ -10,6 +11,10 @@ import fr.univ_amu.iut.audio.outils.CaptureSonsValidationFiltres;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationLot;
 import fr.univ_amu.iut.audio.outils.CaptureValidationTadarida;
 import fr.univ_amu.iut.audit.outils.CaptureAudit;
+import fr.univ_amu.iut.commun.view.ExecuteurFiche;
+import fr.univ_amu.iut.commun.view.ExecuteurFicheSynchrone;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.connexion.outils.CaptureConnexion;
 import fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic;
 import fr.univ_amu.iut.importation.outils.CaptureImport;
@@ -17,6 +22,8 @@ import fr.univ_amu.iut.lot.outils.CaptureLot;
 import fr.univ_amu.iut.multisite.outils.CaptureMultisite;
 import fr.univ_amu.iut.passage.outils.CapturePassage;
 import fr.univ_amu.iut.qualification.outils.CaptureQualification;
+import fr.univ_amu.iut.recherche.outils.CaptureRecherche;
+import fr.univ_amu.iut.sites.outils.CaptureEcrans;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.function.Supplier;
@@ -98,5 +105,31 @@ class CablageInjecteursCaptureTest {
         assertThatCode(fabrique::get)
                 .as("l'injecteur partiel de %s doit se construire : toute dépendance socle doit être liée", outil)
                 .doesNotThrowAnyException();
+    }
+
+    /// **Tous** les injecteurs de capture (partiels + chrome complet) : un aperçu se `snapshot`
+    /// immédiatement après la mise en page, sans pomper la file d'événements. Avec les exécuteurs
+    /// asynchrones de production, un écran déporté sur le socle (#793) serait capturé **pendant** son
+    /// chargement (voile « Chargement… », tables vides). Chaque injecteur de capture doit donc résoudre
+    /// les exécuteurs **synchrones** (cf. [ModuleCaptureCommun]).
+    static Stream<Arguments> tousLesInjecteurs() {
+        return Stream.concat(
+                injecteursPartiels(),
+                Stream.of(
+                        Arguments.of("CaptureAccueil", (Supplier<Injector>) CaptureAccueil::creerInjecteur),
+                        Arguments.of("CaptureRecherche", (Supplier<Injector>) CaptureRecherche::creerInjecteur),
+                        Arguments.of("CaptureEcrans", (Supplier<Injector>) CaptureEcrans::creerInjecteur)));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("tousLesInjecteurs")
+    void les_executeurs_des_captures_sont_synchrones(String outil, Supplier<Injector> fabrique) {
+        Injector injecteur = fabrique.get();
+        assertThat(injecteur.getInstance(ExecuteurTache.class))
+                .as("%s : ExecuteurTache doit être synchrone (sinon la capture montre le voile d'occupation)", outil)
+                .isInstanceOf(ExecuteurTacheSynchrone.class);
+        assertThat(injecteur.getInstance(ExecuteurFiche.class))
+                .as("%s : ExecuteurFiche doit être synchrone (sinon la capture montre une fiche vide)", outil)
+                .isInstanceOf(ExecuteurFicheSynchrone.class);
     }
 }

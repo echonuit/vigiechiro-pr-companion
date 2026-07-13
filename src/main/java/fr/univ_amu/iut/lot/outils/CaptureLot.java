@@ -5,7 +5,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.util.Modules;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -17,6 +16,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -170,7 +170,7 @@ public final class CaptureLot {
     /// (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                Modules.override(new CommunModule()).with(new AbstractModule() {
+                Modules.override(ModuleCaptureCommun.communSynchrone()).with(new AbstractModule() {
                     @Provides
                     Horloge horlogeFigee() {
                         return new HorlogeFigee(LocalDateTime.of(2026, 6, 21, 8, 0));

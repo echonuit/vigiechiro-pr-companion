@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
@@ -201,15 +202,17 @@ public final class CaptureEcrans {
     /// Injecteur du **chrome complet** (toutes les features, comme l'application réelle), car cet
     /// outil rend `MesSites` à l'intérieur de `MainView` — dont le `MainController` dépend de tout le
     /// graphe (recherche globale, etc.). On part de [RacineInjecteur#modules()] et on **surcharge**
-    /// l'horloge (rendu reproductible) et `OuvrirImportation` (no-op : la capture ne déclenche pas
-    /// d'import).
-    private static Injector creerInjecteur() {
-        return Guice.createInjector(Modules.override(RacineInjecteur.modules()).with(liaison -> {
-            liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
-            OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
-                    .setBinding()
-                    .toInstance(idSite -> {});
-        }));
+    /// l'horloge (rendu reproductible), `OuvrirImportation` (no-op : la capture ne déclenche pas
+    /// d'import) et les exécuteurs hors fil (synchrones : le snapshot doit voir le contenu chargé,
+    /// cf. [ModuleCaptureCommun]). Exposé pour le garde-fou de câblage (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(Modules.override(RacineInjecteur.modules())
+                .with(ModuleCaptureCommun.executeursSynchrones(), liaison -> {
+                    liaison.bind(Horloge.class).toInstance(new HorlogeFigee(REFERENCE));
+                    OptionalBinder.newOptionalBinder(liaison, OuvrirImportation.class)
+                            .setBinding()
+                            .toInstance(idSite -> {});
+                }));
     }
 
     /// Insere les donnees d'exemple et renvoie le site + point captures en detail et en modale.

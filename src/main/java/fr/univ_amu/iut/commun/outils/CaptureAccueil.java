@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.commun.outils;
 
+import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -62,7 +64,7 @@ public final class CaptureAccueil {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = RacineInjecteur.creer();
+        Injector injecteur = creerInjecteur();
 
         // Le rendu de l'accueil interroge les compteurs du tableau de bord (#141) : on migre donc le
         // schema pour que les tables existent (compteurs a 0 sur une base neuve, bandeau masque).
@@ -83,5 +85,13 @@ public final class CaptureAccueil {
         FXMLLoader loader = new FXMLLoader(CaptureAccueil.class.getResource(chemin));
         loader.setControllerFactory(injecteur::getInstance);
         return loader.load();
+    }
+
+    /// Injecteur applicatif complet dont les exécuteurs hors fil sont surchargés en synchrone (le
+    /// snapshot doit voir le contenu chargé, cf. [ModuleCaptureCommun]). Exposé pour le garde-fou de
+    /// câblage (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
+                Modules.override(RacineInjecteur.modules()).with(ModuleCaptureCommun.executeursSynchrones()));
     }
 }

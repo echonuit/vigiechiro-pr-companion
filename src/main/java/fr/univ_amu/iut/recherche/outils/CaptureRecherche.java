@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.recherche.outils;
 
+import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.util.Modules;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -11,6 +13,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -51,7 +54,8 @@ import javafx.scene.layout.VBox;
 /// résultats groupés (Sites / Points / Passages). La recherche n'a pas d'écran propre — elle vit dans le
 /// chrome (`MainView.fxml`) — donc on rend le **chrome complet** avec le popup ouvert.
 ///
-/// Démarche : injecteur applicatif complet ([RacineInjecteur#creer()]) pour que le chrome se charge avec
+/// Démarche : injecteur applicatif complet ([RacineInjecteur#modules()], exécuteurs synchrones pour la
+/// capture) pour que le chrome se charge avec
 /// toutes ses cartes ; base SQLite jetable **seedée** (un utilisateur, deux sites avec points et passages)
 /// pour que la recherche retourne des résultats ; on charge le chrome, on **force l'ouverture** du popup
 /// (saisie + résultats du service [RechercheGlobale], panneau rendu visible) puis on rend hors-écran par
@@ -96,7 +100,7 @@ public final class CaptureRecherche {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = RacineInjecteur.creer();
+        Injector injecteur = creerInjecteur();
         SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
         seeder(source); // AVANT toute résolution de l'utilisateur courant (premier utilisateur en base).
@@ -229,5 +233,13 @@ public final class CaptureRecherche {
                     idResultats,
                     false));
         }
+    }
+
+    /// Injecteur applicatif complet dont les exécuteurs hors fil sont surchargés en synchrone (le
+    /// snapshot doit voir le contenu chargé, cf. [ModuleCaptureCommun]). Exposé pour le garde-fou de
+    /// câblage (test).
+    public static Injector creerInjecteur() {
+        return Guice.createInjector(
+                Modules.override(RacineInjecteur.modules()).with(ModuleCaptureCommun.executeursSynchrones()));
     }
 }

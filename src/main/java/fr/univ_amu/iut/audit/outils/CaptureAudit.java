@@ -7,10 +7,10 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.view.AuditController;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.io.IOException;
@@ -78,16 +78,17 @@ public final class CaptureAudit {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// ([fr.univ_amu.iut.commun.outils.CablageInjecteursCaptureTest]).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(new CommunModule(), new PersistenceModule(), new AbstractModule() {
-            @Provides
-            ServiceAuditCoherence fournirService(SourceDeDonnees source, Workspace workspace) {
-                return new ServiceAuditCoherence(source, workspace, Optional.empty(), Optional.empty());
-            }
+        return Guice.createInjector(
+                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new AbstractModule() {
+                    @Provides
+                    ServiceAuditCoherence fournirService(SourceDeDonnees source, Workspace workspace) {
+                        return new ServiceAuditCoherence(source, workspace, Optional.empty(), Optional.empty());
+                    }
 
-            @Provides
-            AuditViewModel fournirViewModel(ServiceAuditCoherence service) {
-                return new AuditViewModel(service);
-            }
-        });
+                    @Provides
+                    AuditViewModel fournirViewModel(ServiceAuditCoherence service) {
+                        return new AuditViewModel(service);
+                    }
+                });
     }
 }

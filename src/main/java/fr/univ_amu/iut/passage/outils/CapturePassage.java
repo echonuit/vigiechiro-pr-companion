@@ -2,7 +2,6 @@ package fr.univ_amu.iut.passage.outils;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -11,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -135,7 +135,8 @@ public final class CapturePassage {
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// (test).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(new CommunModule(), new PersistenceModule(), new PassageModule());
+        return Guice.createInjector(
+                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new PassageModule());
     }
 
     /// Charge `Passage.fxml` sur `idPassage` (ViewModel connu + contrats de navigation neutres) et

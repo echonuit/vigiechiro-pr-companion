@@ -3,7 +3,6 @@ package fr.univ_amu.iut.qualification.outils;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import fr.nedjar.vigiechiro.audio.AudioView;
-import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -14,6 +13,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.AttenteAudio;
+import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.outils.SonDemo;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -167,7 +167,7 @@ public final class CaptureQualification {
     /// (test).
     public static Injector creerInjecteur() {
         return Guice.createInjector(
-                new CommunModule(),
+                ModuleCaptureCommun.communSynchrone(),
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),
