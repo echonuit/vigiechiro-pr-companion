@@ -183,6 +183,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private TableColumn<LigneObservationAudio, String> colObservateur;
 
     @FXML
+    private TableColumn<LigneObservationAudio, String> colCertitude;
+
+    @FXML
     private TableColumn<LigneObservationAudio, String> colFichier;
 
     @FXML
@@ -229,6 +232,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     @FXML
     private Button btnDouteux;
+
+    @FXML
+    private MenuButton menuCertitude;
+
+    @FXML
+    private StackPane enveloppeCertitude;
 
     /// Enveloppes (non désactivées) des boutons d'action : portent le tooltip expliquant le blocage
     /// (un Button désactivé n'en affiche pas). Câblées par [ActionsRevueAudio] (#789).
@@ -295,6 +304,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 colDebut,
                 colDuree,
                 colObservateur,
+                colCertitude,
                 colFichier,
                 colPassage,
                 colCarre,
@@ -329,6 +339,10 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Revue au clavier (#478) : Entrée = valider, R = référence, N = prochaine « À revoir » ; ↑/↓ =
         // navigation native. Entrée/R passent par actionsSelection (unitaire si 1 ligne, lot si plusieurs).
         RevueClavier.installer(tableObservations, viewModel, actionsSelection);
+        // Menu « Certitude » (#1139) : déclaration manuelle Sûr/Probable/Possible sur la sélection,
+        // en miroir de la « Confiance observateur » du site (vide par défaut). Items et blocage câblés
+        // dans MenuCertitude (classe dédiée, seuil de God Class).
+        MenuCertitude.installer(menuCertitude, enveloppeCertitude, viewModel, actionsSelection);
         tableObservations.getSelectionModel().selectedItemProperty().addListener((obs, ancienne, nouvelle) -> {
             viewModel.selectionProperty().set(nouvelle);
             // « Fiche de l'espèce » (#847) : cible la proposition Tadarida de la ligne sélectionnée.
@@ -443,6 +457,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 new GestionnaireColonnes.Colonne(colDebut, "Début", false),
                 new GestionnaireColonnes.Colonne(colDuree, "Durée", false),
                 new GestionnaireColonnes.Colonne(colObservateur, "Votre taxon", false),
+                new GestionnaireColonnes.Colonne(colCertitude, "Certitude", false),
                 new GestionnaireColonnes.Colonne(colFichier, "Fichier", false),
                 new GestionnaireColonnes.Colonne(colPassage, "Passage", false),
                 new GestionnaireColonnes.Colonne(colCarre, "Carré", false),

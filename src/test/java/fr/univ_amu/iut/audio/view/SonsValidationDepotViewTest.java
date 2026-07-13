@@ -31,6 +31,7 @@ import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -96,6 +97,7 @@ class SonsValidationDepotViewTest {
                                 mock(PlageNuitPassage.class),
                                 mock(ValidationManuelle.class),
                                 mock(MarquageDouteux.class),
+                                mock(SaisieCertitude.class),
                                 mock(RevueEnLot.class),
                                 bibliotheque);
                     }

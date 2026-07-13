@@ -44,6 +44,7 @@ import fr.univ_amu.iut.validation.di.ValidationModule;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -159,6 +160,7 @@ public final class CaptureValidationTadarida {
                             PlageNuitPassage plageNuitPassage,
                             ValidationManuelle validationManuelle,
                             MarquageDouteux marquageDouteux,
+                            SaisieCertitude saisieCertitude,
                             RevueEnLot revueEnLot,
                             ServiceBibliotheque bibliotheque) {
                         return new AudioViewModel(
@@ -167,6 +169,7 @@ public final class CaptureValidationTadarida {
                                 plageNuitPassage,
                                 validationManuelle,
                                 marquageDouteux,
+                                saisieCertitude,
                                 revueEnLot,
                                 bibliotheque);
                     }

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.validation.model;
 
+import fr.univ_amu.iut.commun.model.CertitudeObservateur;
 import java.time.LocalDateTime;
 
 /// Projection **unifiée** d'une observation pour la **vue audio** (#audio) : tout ce qu'il faut pour
@@ -51,8 +52,10 @@ import java.time.LocalDateTime;
 ///     porte l'instant complet (et non l'heure seule) pour un **tri chronologique correct à cheval sur
 ///     minuit** (00:15 est *après* 22:00 dans une même nuit) ; le filtre par plage horaire raisonne, lui,
 ///     sur l'heure du jour (`heureCapture.toLocalTime()`)
-/// @param douteux `true` si l'observation est marquée « douteuse / à repasser » (`is_doubtful`, #160) ; par
-///     souci de compatibilité, ce drapeau est le **dernier** composant du record
+/// @param douteux `true` si l'observation est marquée « douteuse / à repasser » (`is_doubtful`, #160)
+/// @param certitude certitude déclarée manuellement par l'observateur (`observer_certainty`, #1139), ou
+///     `null` = non renseignée (vide par défaut, jamais préremplie) ; ajoutée en **dernier** composant
+///     pour préserver l'ordre historique du record
 public record LigneObservationAudio(
         Long idObservation,
         long idSequence,
@@ -78,7 +81,8 @@ public record LigneObservationAudio(
         Double debutS,
         Double finS,
         LocalDateTime heureCapture,
-        boolean douteux) {
+        boolean douteux,
+        CertitudeObservateur certitude) {
 
     /// Ces deux projections désignent-elles la **même ligne** ? Une observation se réidentifie par son
     /// `idObservation` (unique, même si une séquence porte plusieurs cris) ; une **séquence non identifiée**

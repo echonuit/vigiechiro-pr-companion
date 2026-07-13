@@ -22,6 +22,7 @@ import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
@@ -60,6 +61,9 @@ class AudioViewModelTest {
     MarquageDouteux marquageDouteux;
 
     @Mock
+    SaisieCertitude saisieCertitude;
+
+    @Mock
     RevueEnLot revueEnLot;
 
     @Mock
@@ -70,7 +74,14 @@ class AudioViewModelTest {
 
     private AudioViewModel vm() {
         return new AudioViewModel(
-                service, projections, plageNuitPassage, validationManuelle, marquageDouteux, revueEnLot, bibliotheque);
+                service,
+                projections,
+                plageNuitPassage,
+                validationManuelle,
+                marquageDouteux,
+                saisieCertitude,
+                revueEnLot,
+                bibliotheque);
     }
 
     private static LigneObservationAudio ligne(
@@ -100,7 +111,8 @@ class AudioViewModelTest {
                 0.20,
                 0.32,
                 null,
-                false);
+                false,
+                null);
     }
 
     @Nested

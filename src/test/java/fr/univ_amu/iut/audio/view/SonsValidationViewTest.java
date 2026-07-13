@@ -21,6 +21,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.model.CertitudeObservateur;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
@@ -41,6 +42,7 @@ import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
@@ -98,6 +100,7 @@ class SonsValidationViewTest {
     private ServiceValidation service;
     private ProjectionsAudioDao projections;
     private RevueEnLot revueEnLot;
+    private SaisieCertitude saisieCertitude;
     private DepotVues depotVues;
     private OuvrirAnalyse ouvrirAnalyse;
     private SonsValidationController controleur;
@@ -109,7 +112,13 @@ class SonsValidationViewTest {
     Path dossierReglages;
 
     private static LigneObservationAudio ligne(
-            long id, long seq, String tadarida, String observateur, String nomEspece, String nomTadarida) {
+            long id,
+            long seq,
+            String tadarida,
+            String observateur,
+            String nomEspece,
+            String nomTadarida,
+            CertitudeObservateur certitude) {
         return new LigneObservationAudio(
                 id,
                 seq,
@@ -137,7 +146,8 @@ class SonsValidationViewTest {
                 // Heure de capture : 22:00 + n° de séquence (seq 10 → 22:10, seq 11 → 22:11), pour vérifier
                 // l'affichage de la colonne « Heure ».
                 LocalDateTime.of(2026, 4, 22, 22, 0).plusMinutes(seq),
-                false);
+                false,
+                certitude);
     }
 
     @Start
@@ -145,13 +155,21 @@ class SonsValidationViewTest {
         service = mock(ServiceValidation.class);
         projections = mock(ProjectionsAudioDao.class);
         revueEnLot = mock(RevueEnLot.class);
+        saisieCertitude = mock(SaisieCertitude.class);
         ServiceBibliotheque bibliotheque = mock(ServiceBibliotheque.class);
         when(service.taxonsDisponibles())
                 .thenReturn(List.of(new Taxon("Nyclei", "Nyctalus leisleri", "Noctule de Leisler", 1L)));
         when(projections.lignesAudioReferences("u-1"))
                 .thenReturn(List.of(
-                        ligne(1, 10, "Pippip", "Pippip", "Pipistrelle commune", "Pipistrelle commune"),
-                        ligne(2, 11, "Nyclei", "Nyclei", "Noctule de Leisler", "Noctule de Leisler")));
+                        ligne(1, 10, "Pippip", "Pippip", "Pipistrelle commune", "Pipistrelle commune", null),
+                        ligne(
+                                2,
+                                11,
+                                "Nyclei",
+                                "Nyclei",
+                                "Noctule de Leisler",
+                                "Noctule de Leisler",
+                                CertitudeObservateur.PROBABLE)));
         when(service.cheminAudio(anyLong())).thenReturn(Optional.empty());
         when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/p.wav")));
         depotVues = mock(DepotVues.class);
@@ -170,6 +188,7 @@ class SonsValidationViewTest {
                                 mock(PlageNuitPassage.class),
                                 mock(ValidationManuelle.class),
                                 mock(MarquageDouteux.class),
+                                saisieCertitude,
                                 revueEnLot,
                                 bibliotheque);
                     }
@@ -353,6 +372,52 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#1139 : la colonne « Certitude » est vide par défaut (tiret) et affiche le libellé saisi")
+    void colonne_certitude_vide_par_defaut(FxRobot robot) {
+        assertThat(colonne(robot, "Certitude").getCellData(0))
+                .as("jamais préremplie : vide tant que l'observateur n'a pas déclaré")
+                .isEqualTo("—");
+        assertThat(colonne(robot, "Certitude").getCellData(1)).isEqualTo("Probable");
+    }
+
+    @Test
+    @DisplayName("#1139 : le menu Certitude est bloqué sans sélection, puis pose la certitude choisie"
+            + " (unitaire et lot)")
+    void menu_certitude_pose_sur_la_selection(FxRobot robot) {
+        MenuButton menu = robot.lookup("#menuCertitude").queryAs(MenuButton.class);
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        assertThat(menu.isDisabled())
+                .as("sans sélection : bloqué (comme Référence/Douteux)")
+                .isTrue();
+
+        robot.interact(() -> table.getSelectionModel().select(0));
+        assertThat(menu.isDisabled()).isFalse();
+        robot.interact(() -> itemParLibelle(menu, "Sûr").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+        verify(saisieCertitude).poser(1L, CertitudeObservateur.SUR);
+
+        robot.interact(() -> table.getSelectionModel().selectIndices(0, 1));
+        robot.interact(() -> itemParLibelle(menu, "Possible").fire());
+        WaitForAsyncUtils.waitForFxEvents();
+        verify(saisieCertitude).poser(List.of(1L, 2L), CertitudeObservateur.POSSIBLE);
+    }
+
+    @Test
+    @DisplayName("#1139 : les touches 1/2/3 déclarent la certitude de la sélection (revue au clavier)")
+    void raccourci_clavier_certitude(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> {
+            table.getSelectionModel().select(0);
+            table.requestFocus();
+        });
+
+        robot.push(KeyCode.DIGIT2);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        verify(saisieCertitude).poser(1L, CertitudeObservateur.PROBABLE);
+    }
+
+    @Test
     @DisplayName("La colonne « Fichier » affiche le nom de fichier de la séquence")
     void affiche_le_nom_de_fichier(FxRobot robot) {
         assertThat(colonne(robot, "Fichier").getCellData(0)).isEqualTo("PaRec_10_000.wav");
@@ -456,8 +521,8 @@ class SonsValidationViewTest {
         // instance de record, non égale à l'ancienne) : sans resync, la table perdrait sa surbrillance.
         when(projections.lignesAudioReferences("u-1"))
                 .thenReturn(List.of(
-                        ligne(1, 10, "Pippip", "Nyclei", "Noctule de Leisler", "Pipistrelle commune"),
-                        ligne(2, 11, "Nyclei", "Nyclei", "Noctule de Leisler", "Noctule de Leisler")));
+                        ligne(1, 10, "Pippip", "Nyclei", "Noctule de Leisler", "Pipistrelle commune", null),
+                        ligne(2, 11, "Nyclei", "Nyclei", "Noctule de Leisler", "Noctule de Leisler", null)));
 
         robot.interact(() -> table.getSelectionModel().select(0)); // observation id=1
         robot.interact(valider::fire);
@@ -579,9 +644,9 @@ class SonsValidationViewTest {
             "Ordre par défaut des colonnes (contexte, fichier, identification, indicateurs) et indicateurs non triables")
     void ordre_par_defaut_et_indicateurs_non_triables(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
-        // Les 15 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
+        // Les 16 premières colonnes par en-tête ; les 2 indicateurs (icônes, sans texte) par leur id.
         assertThat(table.getColumns().stream()
-                        .limit(15)
+                        .limit(16)
                         .map(TableColumn::getText)
                         .toList())
                 .containsExactly(
@@ -594,14 +659,15 @@ class SonsValidationViewTest {
                         "Proposition Tadarida",
                         "Proba.",
                         "Votre taxon",
+                        "Certitude",
                         "Fréquence",
                         "FME",
                         "Fréq. term.",
                         "Début",
                         "Durée",
                         "Statut");
-        assertThat(table.getColumns().get(15).getId()).isEqualTo("colReference");
-        assertThat(table.getColumns().get(16).getId()).isEqualTo("colCommentaire");
+        assertThat(table.getColumns().get(16).getId()).isEqualTo("colReference");
+        assertThat(table.getColumns().get(17).getId()).isEqualTo("colCommentaire");
         // Colonnes-indicateurs : non triables (trier une icône est déroutant, cf. « colonne vide triable »).
         assertThat(colonneParId(robot, "colReference").isSortable()).isFalse();
         assertThat(colonneParId(robot, "colCommentaire").isSortable()).isFalse();

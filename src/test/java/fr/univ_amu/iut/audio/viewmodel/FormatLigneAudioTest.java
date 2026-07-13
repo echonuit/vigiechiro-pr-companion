@@ -52,7 +52,8 @@ class FormatLigneAudioTest {
                 0.20,
                 0.32,
                 null,
-                false);
+                false,
+                null);
     }
 
     @Test

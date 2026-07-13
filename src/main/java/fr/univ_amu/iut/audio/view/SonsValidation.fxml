@@ -111,6 +111,7 @@
           <TableColumn fx:id="colTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
           <TableColumn fx:id="colProba" text="Proba." prefWidth="70.0"/>
           <TableColumn fx:id="colObservateur" text="Votre taxon" prefWidth="180.0"/>
+          <TableColumn fx:id="colCertitude" text="Certitude" prefWidth="90.0"/>
           <TableColumn fx:id="colFrequence" text="Fréquence" prefWidth="100.0"/>
           <TableColumn fx:id="colFme" text="FME" prefWidth="90.0"/>
           <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="100.0"/>
@@ -142,6 +143,9 @@
         <StackPane fx:id="enveloppeCorriger">
           <Button fx:id="btnCorriger" text="✎ Corriger" onAction="#corriger"/>
         </StackPane>
+        <StackPane fx:id="enveloppeCertitude">
+          <MenuButton fx:id="menuCertitude" text="Certitude"/>
+        </StackPane>
         <Region HBox.hgrow="ALWAYS"/>
         <StackPane fx:id="enveloppeDouteux">
           <Button fx:id="btnDouteux" onAction="#basculerDouteux"/>
@@ -153,7 +157,7 @@
       <!-- Légende des raccourcis de revue au clavier (#796) : câblés (RevueClavier) mais indécouvrables
            sans cette aide visible. -->
       <Label styleClass="section-sous" wrapText="true"
-             text="Raccourcis clavier : Entrée valider · R référence · D douteux · N suivant à revoir"/>
+             text="Raccourcis clavier : Entrée valider · R référence · D douteux · 1/2/3 certitude · N suivant à revoir"/>
     </VBox>
 
   </SplitPane>

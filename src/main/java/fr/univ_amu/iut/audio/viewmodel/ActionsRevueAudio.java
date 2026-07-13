@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.model.CertitudeObservateur;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
@@ -22,6 +24,7 @@ public final class ActionsRevueAudio {
     private final ServiceValidation service;
     private final ValidationManuelle validationManuelle;
     private final MarquageDouteux marquageDouteux;
+    private final SaisieCertitude saisieCertitude;
     private final RevueEnLot revueEnLot;
     private final Supplier<LigneObservationAudio> selection;
     private final Supplier<ModeRevue> mode;
@@ -32,6 +35,7 @@ public final class ActionsRevueAudio {
             ServiceValidation service,
             ValidationManuelle validationManuelle,
             MarquageDouteux marquageDouteux,
+            SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
             Supplier<LigneObservationAudio> selection,
             Supplier<ModeRevue> mode,
@@ -40,6 +44,7 @@ public final class ActionsRevueAudio {
         this.service = service;
         this.validationManuelle = validationManuelle;
         this.marquageDouteux = marquageDouteux;
+        this.saisieCertitude = saisieCertitude;
         this.revueEnLot = revueEnLot;
         this.selection = selection;
         this.mode = mode;
@@ -88,6 +93,12 @@ public final class ActionsRevueAudio {
         return appliquer(() -> service.commenter(idObservation, texte));
     }
 
+    /// Pose (ou efface, `certitude` = `null`) la **certitude observateur** (#1139) de l'observation
+    /// sélectionnée : déclaration manuelle, jamais préremplie (miroir du site VigieChiro).
+    public boolean poserCertitude(CertitudeObservateur certitude) {
+        return surSelection(courant -> appliquer(() -> saisieCertitude.poser(courant.idObservation(), certitude)));
+    }
+
     // --- Actions en lot (sur une liste d'identifiants), atomiques (#479) ---
 
     public int validerLot(List<Long> ids) {
@@ -107,6 +118,13 @@ public final class ActionsRevueAudio {
     public int marquerDouteuxLot(List<Long> ids, boolean douteux) {
         return appliquerLot(
                 douteux ? "marquée(s) douteuse(s)" : "démarquée(s)", () -> revueEnLot.marquerDouteux(ids, douteux));
+    }
+
+    /// Pose (ou efface) la **certitude observateur** (#1139) sur un lot, en une transaction atomique.
+    public int poserCertitudeLot(List<Long> ids, CertitudeObservateur certitude) {
+        return appliquerLot(
+                certitude == null ? "sans certitude (effacée)" : "notée(s) « " + certitude.libelle() + " »",
+                () -> saisieCertitude.poser(ids, certitude));
     }
 
     // --- Rouages ---

@@ -44,6 +44,7 @@ import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -124,6 +125,7 @@ final class GraineSonsValidation {
                             PlageNuitPassage plageNuitPassage,
                             ValidationManuelle validationManuelle,
                             MarquageDouteux marquageDouteux,
+                            SaisieCertitude saisieCertitude,
                             RevueEnLot revueEnLot,
                             ServiceBibliotheque bibliotheque) {
                         return new AudioViewModel(
@@ -132,6 +134,7 @@ final class GraineSonsValidation {
                                 plageNuitPassage,
                                 validationManuelle,
                                 marquageDouteux,
+                                saisieCertitude,
                                 revueEnLot,
                                 bibliotheque);
                     }

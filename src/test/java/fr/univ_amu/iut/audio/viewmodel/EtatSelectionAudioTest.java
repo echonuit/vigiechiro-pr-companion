@@ -75,6 +75,7 @@ class EtatSelectionAudioTest {
                 0.2,
                 0.4,
                 null,
-                douteux);
+                douteux,
+                null);
     }
 }

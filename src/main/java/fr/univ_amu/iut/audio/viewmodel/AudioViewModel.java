@@ -10,6 +10,7 @@ import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
+import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
@@ -113,6 +114,7 @@ public class AudioViewModel {
             PlageNuitPassage plageNuitPassage,
             ValidationManuelle validationManuelle,
             MarquageDouteux marquageDouteux,
+            SaisieCertitude saisieCertitude,
             RevueEnLot revueEnLot,
             ServiceBibliotheque bibliotheque) {
         this.service = Objects.requireNonNull(service, "service");
@@ -122,6 +124,7 @@ public class AudioViewModel {
                 service,
                 Objects.requireNonNull(validationManuelle, "validationManuelle"),
                 Objects.requireNonNull(marquageDouteux, "marquageDouteux"),
+                Objects.requireNonNull(saisieCertitude, "saisieCertitude"),
                 Objects.requireNonNull(revueEnLot, "revueEnLot"),
                 selection::get,
                 modeRevue::get,

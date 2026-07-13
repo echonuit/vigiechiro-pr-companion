@@ -82,6 +82,7 @@ class FiltresAudioTest {
                 0.2,
                 0.4,
                 null,
-                false);
+                false,
+                null);
     }
 }

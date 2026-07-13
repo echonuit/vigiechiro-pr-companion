@@ -29,6 +29,7 @@ final class ColonnesAudio {
             TableColumn<LigneObservationAudio, String> debut,
             TableColumn<LigneObservationAudio, String> duree,
             TableColumn<LigneObservationAudio, String> observateur,
+            TableColumn<LigneObservationAudio, String> certitude,
             TableColumn<LigneObservationAudio, String> fichier,
             TableColumn<LigneObservationAudio, String> passage,
             TableColumn<LigneObservationAudio, String> carre,
@@ -67,6 +68,12 @@ final class ColonnesAudio {
                         c.getValue().debutS(), c.getValue().finS())));
         col.observateur()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(FormatLigneAudio.votreTaxon(c.getValue())));
+        // Certitude (#1139) : la déclaration manuelle de l'observateur, tiret tant que non renseignée
+        // (vide par défaut). Affichage seul : la saisie passe par le menu « Certitude » et les touches
+        // 1/2/3, comme les autres actions de revue.
+        col.certitude()
+                .setCellValueFactory(c -> new ReadOnlyStringWrapper(
+                        FormatLigneAudio.libelleCertitude(c.getValue().certitude())));
         col.fichier()
                 .setCellValueFactory(c -> new ReadOnlyStringWrapper(
                         FormatLigneAudio.ouTiret(c.getValue().nomFichier())));

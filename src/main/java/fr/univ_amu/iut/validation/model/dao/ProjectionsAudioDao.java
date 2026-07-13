@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.validation.model.dao;
 
+import fr.univ_amu.iut.commun.model.CertitudeObservateur;
 import fr.univ_amu.iut.commun.persistence.ProjectionGenerique;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -31,6 +32,7 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             + " ms.user_id AS user_id, o.taxon_tadarida AS tadarida, o.prob_tadarida AS prob_tadarida,"
             + " o.taxon_observer AS observer, o.prob_observer AS prob_observer,"
             + " o.is_reference AS is_reference, o.is_doubtful AS is_doubtful,"
+            + " o.observer_certainty AS certitude,"
             + " o.user_comment AS commentaire, o.median_freq_khz AS frequence,"
             + " te.vernacular_name_fr AS nom_espece, tt.vernacular_name_fr AS nom_tadarida,"
             + " tt.latin_name AS latin_tadarida,"
@@ -78,7 +80,8 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             (Double) rs.getObject("debut_s"),
             (Double) rs.getObject("fin_s"),
             FragmentsSqlObservation.heureCaptureDe(rs.getString("recorded_at")),
-            rs.getInt(FragmentsSqlObservation.COL_IS_DOUBTFUL) != 0);
+            rs.getInt(FragmentsSqlObservation.COL_IS_DOUBTFUL) != 0,
+            CertitudeObservateur.depuisTexte(rs.getString("certitude")));
 
     public ProjectionsAudioDao(SourceDeDonnees source) {
         super(source);
@@ -130,6 +133,7 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
     private static final String SQL_LIGNES_NON_IDENTIFIEES = "SELECT ls.id AS seq, om.id AS id,"
             + " om.taxon_observer AS observer, om.prob_observer AS prob_observer,"
             + " om.user_comment AS commentaire, om.is_reference AS is_reference, om.is_doubtful AS is_doubtful,"
+            + " om.observer_certainty AS certitude,"
             + " CASE WHEN om.taxon_observer IS NULL THEN 'NON_TOUCHEE' ELSE 'CORRIGEE' END AS statut,"
             + " te.vernacular_name_fr AS nom_espece,"
             + " p.id AS passage_id, p.passage_number AS num_passage, p.recording_date AS date_enr,"
@@ -172,7 +176,8 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
             null, // debutS
             null, // finS
             FragmentsSqlObservation.heureCaptureDe(rs.getString("recorded_at")),
-            rs.getInt(FragmentsSqlObservation.COL_IS_DOUBTFUL) != 0); // om NULL → getInt = 0 → pas douteux
+            rs.getInt(FragmentsSqlObservation.COL_IS_DOUBTFUL) != 0, // om NULL → getInt = 0 → pas douteux
+            CertitudeObservateur.depuisTexte(rs.getString("certitude")));
 
     /// Source **Non identifiés** : les séquences d'un passage **sans observation Tadarida** (à écouter et
     /// valider à la main). L'écoute ne dépend pas d'une observation, seulement de la séquence ; une

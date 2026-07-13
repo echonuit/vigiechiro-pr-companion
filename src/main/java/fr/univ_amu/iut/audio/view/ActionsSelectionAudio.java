@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.commun.model.CertitudeObservateur;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.Taxon;
 import java.util.List;
@@ -50,6 +51,18 @@ final class ActionsSelectionAudio {
         // le lot ; sinon (toutes en référence) on **retire** tout — plus prévisible qu'un toggle par ligne.
         boolean marquer = selection.stream().anyMatch(ligne -> !ligne.reference());
         viewModel.actions().marquerReferenceLot(ids(selection), marquer);
+    }
+
+    /// Pose (ou efface, `certitude` = `null`) la **certitude observateur** (#1139) : **une** ligne →
+    /// unitaire ; **plusieurs** → lot atomique. Pas de bascule ici : la valeur choisie s'applique telle
+    /// quelle à toute la sélection (saisie explicite, comme sur le site VigieChiro).
+    void poserCertitude(CertitudeObservateur certitude) {
+        List<LigneObservationAudio> selection = selection();
+        if (selection.size() <= 1) {
+            viewModel.actions().poserCertitude(certitude);
+        } else {
+            viewModel.actions().poserCertitudeLot(ids(selection), certitude);
+        }
     }
 
     /// Bascule le drapeau **douteux** (#160) : **une** ligne → bascule unitaire ; **plusieurs** → bascule en
