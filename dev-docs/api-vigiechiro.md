@@ -136,8 +136,10 @@ Points vérifiés en réel (reconnaissance #1135, 2026-07-12, lecture seule) :
 ## Écriture des corrections (spike #1203, prérequis de #723)
 
 Contrat établi le 2026-07-13 par **lecture statique du backend** (`Scille/vigiechiro-api`,
-`resources/donnees.py` + `xin/resource.py`, master du 2026-06-09), confirmé/à confirmer en réel par
-les sondes `#1203` de `ContratApiVigieChiroLiveTest` (lecture sûre + probes d'écriture opt-in).
+`resources/donnees.py` + `xin/resource.py`, master du 2026-06-09), puis **confirmé en réel le jour
+même** par les sondes `#1203` de `ContratApiVigieChiroLiveTest` : lecture (3 sondes) et écriture
+(2 probes opt-in, sur la participation banc d'essai `6a50f790aede4b981b7942be` : PATCH positionnel
+`200` + relecture conforme, verdicts négatifs `422` et `403` observés).
 L'hypothèse initiale de l'issue (« PATCH de la donnée avec le tableau `observations` réémis, le plus
 probable ») était **fausse** : cette voie est réservée à l'admin. La route positionnelle existe.
 
@@ -182,6 +184,10 @@ Effets de bord et leviers :
   désormais exposé au parsing (`DonneeVigieChiro.id`) ; côté lecture, `observateur_probabilite`
   revenant en **chaîne**, le parseur actuel (`getAsDouble`) la ramène silencieusement à `null` : à
   reprendre dans #1139 ;
+- **asymétrie écriture/lecture vérifiée en réel** : on écrit `observateur_taxon` en objectid, on le
+  relit **embarqué complet** (objet taxon avec `_id`, `libelle_court`, `libelle_long`, `parents`),
+  exactement comme `tadarida_taxon` : le parseur actuel (`codeTaxon`) lit donc déjà son
+  `libelle_court` ;
 - routes voisines découvertes : `PUT /donnees/{id}/observations/{index}/messages` (fils de
   discussion : le spike #724 a déjà sa réponse côté API) et `GET /donnees/{id}/fichiers?wav=true`
   (fichiers rattachés à une donnée, croise le repli audio #1244).
@@ -298,7 +304,9 @@ Sondé via `OPTIONS` (en-tête `Allow`) avec un token d'observateur — **aucune
 | `/sites/{id}` | `GET, PATCH, DELETE…` | PATCH réel → **403** : `Allow` reflète le **schéma Eve**, pas l'autorisation par rôle. Écriture/suppression réservées (MNHN/propriétaire) |
 | `/moi/participations` | `GET` seul | lecture seule, **paginée** (`_meta.total` fiable) |
 | `/fichiers` (collection) | `POST, GET…` | `GET` réel → **403** : on peut créer des fichiers, pas les relire |
-| `/participations/{id}/donnees` | `GET, POST` | GET = résultats Tadarida (import) ; POST vraisemblablement réservé au pipeline serveur |
+| `/participations/{id}/donnees` | `GET, POST` | GET = résultats Tadarida (import) ; POST **ouvert au propriétaire** (vérifié #1203 : création d'une donnée avec observations, `201`) |
+| `/donnees/{id}` | `GET, PATCH` | GET direct OK (vérifié #1203) ; PATCH du tableau `observations` = **403 pour l'observateur** (réservé admin) |
+| `/donnees/{id}/observations/{index}` | `PATCH` (vérifié `200` en réel) | **la** route des corrections (#1203) : l'indice du tableau est l'identifiant ; cf. § Écriture des corrections |
 
 **Ce qui est récupérable depuis la plateforme** (restauration possible, cf. issue dédiée) :
 
