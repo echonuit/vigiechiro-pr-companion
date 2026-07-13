@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
@@ -49,6 +50,7 @@ class RattachementModaleViewTest {
 
     private RattachementModaleController controleur;
     private RattachementViewModel viewModel;
+    private ServiceConditionsPassage conditionsService;
     private final AtomicBoolean succesAppele = new AtomicBoolean(false);
 
     @Start
@@ -70,13 +72,14 @@ class RattachementModaleViewTest {
                         30,
                         0.0,
                         null));
+        conditionsService = mock(ServiceConditionsPassage.class);
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             RattachementViewModel viewModel() {
                 viewModel = new RattachementViewModel(
                         service,
                         mock(ServiceRattachement.class),
-                        mock(ServiceConditionsPassage.class),
+                        conditionsService,
                         Optional.empty(),
                         // Import indisponible ici (hors connexion) : le bouton « Importer les observations »
                         // n'apparaît pas — la modale est celle d'avant.
@@ -91,6 +94,36 @@ class RattachementModaleViewTest {
         controleur.demarrer(7L, "040962", "A1", () -> succesAppele.set(true));
         stage.setScene(new Scene(vue));
         stage.show();
+    }
+
+    @Test
+    @DisplayName("#1216 : le tir VigieChiro passe par le socle, le bouton est relâché et le message routé")
+    void tir_relache_le_bouton_et_route_le_message(FxRobot robot) {
+        Button tirer = robot.lookup("#boutonTirerVigieChiro").queryAs(Button.class);
+
+        robot.interact(tirer::fire);
+
+        // Passerelle absente dans cette fixture : le tir répond « rien récupéré », jamais un silence.
+        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        assertThat(message.getText()).contains("Aucune participation VigieChiro");
+        assertThat(tirer.isDisabled())
+                .as("bouton relâché par binding une fois l'opération finie (exécuteur synchrone)")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1216 : un échec de « Récupérer la météo » est routé vers le message, le bouton relâché")
+    void echec_meteo_route_et_relache(FxRobot robot) {
+        when(conditionsService.recupererMeteo(7L)).thenThrow(new RuntimeException("Open-Meteo injoignable"));
+        Button meteo = robot.lookup("#boutonRecupererMeteo").queryAs(Button.class);
+
+        robot.interact(meteo::fire);
+
+        // L'échec inattendu rejoint la ligne de message (#795) au lieu de mourir dans le fil de fond
+        // en laissant le bouton grisé pour toujours.
+        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        assertThat(message.getText()).contains("a échoué").contains("Open-Meteo injoignable");
+        assertThat(meteo.isDisabled()).isFalse();
     }
 
     @Test

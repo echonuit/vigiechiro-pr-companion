@@ -2,20 +2,20 @@ package fr.univ_amu.iut.passage.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
-import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Function;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -43,10 +43,16 @@ import javafx.util.StringConverter;
 public class RattachementModaleController {
 
     private final RattachementViewModel viewModel;
+    private final ExecuteurTache executeur;
     private Runnable apresSucces = () -> {};
 
     /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
     private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+
+    /// Opération réseau en cours (#1216) : patron de la modale connexion (#1255), l'état local + le
+    /// grisage des boutons jouent le rôle du voile d'occupation (une modale compacte n'en porte pas).
+    /// Une seule opération à la fois : les trois actions touchent les mêmes champs météo/micro.
+    private final BooleanProperty operationEnCours = new SimpleBooleanProperty(false);
 
     private ObjectProperty<Integer> anneeObjet;
     private ObjectProperty<Integer> numeroObjet;
@@ -105,8 +111,9 @@ public class RattachementModaleController {
     private ComboBox<String> champTypeMicro;
 
     @Inject
-    public RattachementModaleController(RattachementViewModel viewModel) {
+    public RattachementModaleController(RattachementViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
@@ -160,6 +167,12 @@ public class RattachementModaleController {
         boolean peutSynchroniser = viewModel.peutSynchroniser();
         ligneSyncVigieChiro.setVisible(peutSynchroniser);
         ligneSyncVigieChiro.setManaged(peutSynchroniser);
+
+        // Boutons réseau relâchés par binding (#1216, patron #1254) : plus de setDisable posé à la
+        // main de part et d'autre du travail, plus de bouton figé si l'appel échoue.
+        boutonRecupererMeteo.disableProperty().bind(operationEnCours);
+        boutonTirerVigieChiro.disableProperty().bind(operationEnCours);
+        boutonImporterObservations.disableProperty().bind(operationEnCours);
     }
 
     /// Lie les champs des conditions de dépôt (météo + matériel du micro) au sous-ViewModel
@@ -234,21 +247,25 @@ public class RattachementModaleController {
         boutonImporterObservations.setManaged(peutImporter);
     }
 
-    /// Importe les observations de la nuit depuis Vigie-Chiro, **hors du fil JavaFX** (réseau).
+    /// Importe les observations de la nuit depuis Vigie-Chiro, **hors du fil JavaFX** (réseau, socle
+    /// [ExecuteurTache] #1216).
     ///
     /// Le bouton n'est pas gardé par l'état de l'analyse, et c'est délibéré : si elle n'est pas terminée,
     /// l'import répond **pourquoi** (analyse en cours, jamais lancée, en échec…, #1264). Un refus qui
     /// renseigne vaut mieux qu'un bouton grisé qui laisse deviner.
     @FXML
     private void importerObservations() {
-        boutonImporterObservations.setDisable(true);
-        Thread.ofVirtual().name("importer-observations").start(() -> {
-            String compteRendu = viewModel.importerObservations();
-            Platform.runLater(() -> {
-                viewModel.restituerImport(compteRendu);
-                boutonImporterObservations.setDisable(false);
-            });
-        });
+        operationEnCours.set(true);
+        executeur.executer(
+                viewModel::importerObservations,
+                compteRendu -> {
+                    operationEnCours.set(false);
+                    viewModel.restituerImport(compteRendu);
+                },
+                erreur -> {
+                    operationEnCours.set(false);
+                    viewModel.signalerErreur(erreur);
+                });
     }
 
     @FXML
@@ -267,42 +284,54 @@ public class RattachementModaleController {
     }
 
     /// Après un enregistrement **local** réussi, **pousse** les métadonnées (météo/micro/dates) vers la
-    /// participation VigieChiro en **tâche de fond** (réseau, hors fil JavaFX), comme « Récupérer la météo » :
-    /// best-effort et silencieux (le ViewModel avale un passage non encore lié à une participation). La modale
-    /// se ferme sans attendre le réseau.
+    /// participation VigieChiro en **tâche de fond** (réseau, hors fil JavaFX via [ExecuteurTache]) :
+    /// best-effort et silencieux (le ViewModel avale un passage non encore lié à une participation). La
+    /// modale se ferme sans attendre le réseau : les callbacks sont volontairement muets, un échec
+    /// inattendu n'a plus de fenêtre où s'afficher (les métadonnées repartiront au prochain dépôt).
     private void pousserVersVigieChiro() {
-        Thread.ofVirtual().name("push-participation").start(viewModel::pousserVersVigieChiro);
+        executeur.executer(
+                () -> {
+                    viewModel.pousserVersVigieChiro();
+                    return null;
+                },
+                resultat -> {},
+                erreur -> {});
     }
 
-    /// « Récupérer la météo » (#547) : l'appel Open-Meteo est **réseau**, donc lancé en **tâche de fond**
-    /// (thread virtuel) pour ne pas geler l'IHM ; le bouton est désactivé le temps de l'appel, et le
-    /// pré-remplissage des champs (ou le message d'indisponibilité) revient sur le fil JavaFX via
-    /// [Platform#runLater].
+    /// « Récupérer la météo » (#547) : l'appel Open-Meteo est **réseau**, donc déporté hors du fil
+    /// JavaFX (socle [ExecuteurTache] #1216) ; le bouton suit `operationEnCours` par binding, et le
+    /// pré-remplissage des champs (ou le message d'indisponibilité) revient sur le fil JavaFX.
     @FXML
     private void recupererMeteo() {
-        boutonRecupererMeteo.setDisable(true);
-        Thread.ofVirtual().name("recuperation-meteo").start(() -> {
-            Optional<MeteoReleve> releve = viewModel.conditions().recupererMeteo();
-            Platform.runLater(() -> {
-                viewModel.conditions().appliquerMeteoRecuperee(releve);
-                boutonRecupererMeteo.setDisable(false);
-            });
-        });
+        operationEnCours.set(true);
+        executeur.executer(
+                () -> viewModel.conditions().recupererMeteo(),
+                releve -> {
+                    operationEnCours.set(false);
+                    viewModel.conditions().appliquerMeteoRecuperee(releve);
+                },
+                erreur -> {
+                    operationEnCours.set(false);
+                    viewModel.signalerErreur(erreur);
+                });
     }
 
-    /// « Synchroniser depuis VigieChiro » : **tire** les métadonnées de la participation (réseau) en **tâche
-    /// de fond** (thread virtuel), puis **recharge** les champs météo/micro et affiche le message sur le fil
-    /// JavaFX via [Platform#runLater] — même patron que « Récupérer la météo ».
+    /// « Synchroniser depuis VigieChiro » : **tire** les métadonnées de la participation (réseau) hors
+    /// du fil JavaFX (socle [ExecuteurTache] #1216), puis **recharge** les champs météo/micro et
+    /// affiche le message sur le fil JavaFX — même patron que « Récupérer la météo ».
     @FXML
     private void tirerDepuisVigieChiro() {
-        boutonTirerVigieChiro.setDisable(true);
-        Thread.ofVirtual().name("tirer-participation").start(() -> {
-            boolean recupere = viewModel.tirerDepuisVigieChiro();
-            Platform.runLater(() -> {
-                viewModel.rechargerApresTir(recupere);
-                boutonTirerVigieChiro.setDisable(false);
-            });
-        });
+        operationEnCours.set(true);
+        executeur.executer(
+                viewModel::tirerDepuisVigieChiro,
+                recupere -> {
+                    operationEnCours.set(false);
+                    viewModel.rechargerApresTir(recupere);
+                },
+                erreur -> {
+                    operationEnCours.set(false);
+                    viewModel.signalerErreur(erreur);
+                });
     }
 
     @FXML

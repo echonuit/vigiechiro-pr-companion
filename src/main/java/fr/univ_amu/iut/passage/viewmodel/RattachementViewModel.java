@@ -209,6 +209,12 @@ public class RattachementViewModel {
         messageErreur.set(compteRendu);
     }
 
+    /// Route l'échec inattendu d'une opération réseau de la modale (import, météo, tir) vers sa ligne
+    /// de message, **sur le fil JavaFX** : jamais un silence, ni un bouton resté figé (#1216).
+    public void signalerErreur(Throwable erreur) {
+        messageErreur.set("L'opération VigieChiro a échoué : " + erreur.getMessage());
+    }
+
     /// `true` si appliquer le rattachement courant **renommera effectivement** les séquences sur le disque
     /// (le préfixe de session change). `false` si rien ne change : l'action n'a alors aucun effet disque
     /// irréversible. La vue s'en sert pour ne demander une confirmation que dans ce cas (#798).
