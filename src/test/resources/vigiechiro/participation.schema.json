@@ -42,9 +42,18 @@
     },
     "traitement": {
       "type": "object",
-      "description": "État du traitement Tadarida côté serveur (signal léger « résultats prêts »).",
+      "description": "Analyse Tadarida côté serveur, déclenchée par POST /participations/{id}/compute. Les 5 états sont ceux du backend (Scille/vigiechiro-api, resources/participations.py:73) ; FINI est le seul où GET /donnees renvoie les observations (avant : 200 liste vide). Le serveur réessaie une fois (RETRY) avant de conclure à ERREUR.",
       "properties": {
-        "etat": { "type": "string", "description": "ex. FINI" }
+        "etat": {
+          "type": "string",
+          "enum": ["PLANIFIE", "EN_COURS", "FINI", "ERREUR", "RETRY"],
+          "description": "Un état hors de cette liste = dérive du backend à instruire (le client, lui, l'ignore sans lever)."
+        },
+        "date_planification": { "type": "string", "description": "mise en file d'attente (posée par le compute)" },
+        "date_debut": { "type": "string", "description": "prise en charge par un worker" },
+        "date_fin": { "type": "string", "description": "fin de l'analyse ; posée aussi sur échec" },
+        "message": { "type": "string", "description": "trace serveur, sur ERREUR et RETRY" },
+        "retry": { "type": "integer", "description": "essais consommés (TASK_PARTICIPATION_MAX_RETRY=1 en prod)" }
       },
       "additionalProperties": true
     },

@@ -132,6 +132,38 @@ class ContratApiVigieChiroLiveTest {
         assertThat(detail.point()).as("point (code localité) non nul").isNotNull();
     }
 
+    @Test
+    @DisplayName("Dérive client : le bloc traitement réel est lisible (état connu, dates cohérentes) — #1260")
+    void client_lit_le_traitement_reel() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+        String id = client.mesParticipations().getFirst().id();
+
+        Traitement traitement = client.participation(id).orElseThrow().traitement();
+
+        // Une participation jamais calculée n'a pas de bloc traitement : c'est un cas légitime, pas un
+        // échec. En revanche, s'il y en a un, le parseur doit en reconnaître l'état — un état inconnu
+        // signalerait que le backend a introduit une valeur que cette version ignore (le point même de
+        // cette sonde : détecter la dérive).
+        if (traitement.estInconnu()) {
+            assertThat(traitement)
+                    .as("aucun traitement : le bloc doit être l'absence franche, pas un état non reconnu")
+                    .isEqualTo(Traitement.absent());
+            return;
+        }
+
+        assertThat(traitement.etat())
+                .as("état reconnu parmi les 5 valeurs du backend (participations.py:73)")
+                .isIn((Object[]) EtatTraitement.values());
+        assertThat(traitement.datePlanification())
+                .as("un traitement existe : il a forcément été planifié")
+                .isNotNull();
+        if (traitement.resultatsDisponibles()) {
+            assertThat(traitement.dateFin())
+                    .as("FINI : la date de fin est posée par le serveur")
+                    .isNotNull();
+        }
+    }
+
     // ---------------------------------------------------------------------------------------------
     // PROBES en écriture (opt-in -Dvigiechiro.write=true) : remplacent les spikes jetables. Elles
     // ÉCRIVENT sur la plateforme (fichier d'essai, PATCH quasi no-op) — à lancer sciemment, jamais
