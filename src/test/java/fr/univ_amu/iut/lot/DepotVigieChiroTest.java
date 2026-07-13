@@ -14,8 +14,13 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
+import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.FichierSigne;
+import fr.univ_amu.iut.commun.api.IssueLancement;
+import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -68,6 +73,7 @@ class DepotVigieChiroTest {
 
     private SynchronisationParticipation participations;
     private ClientVigieChiro client;
+    private TraitementVigieChiro traitementServeur;
     private DepotUniteDao depotUnites;
     private PassageDao passageDao;
     private DepotVigieChiro depot;
@@ -77,6 +83,7 @@ class DepotVigieChiroTest {
     void preparer() {
         participations = mock(SynchronisationParticipation.class);
         client = mock(ClientVigieChiro.class);
+        traitementServeur = mock(TraitementVigieChiro.class);
         SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
         new MigrationSchema(source).migrer();
         new UtilisateurDao(source).insert(new Utilisateur("u-1", "Testeur"));
@@ -108,6 +115,7 @@ class DepotVigieChiroTest {
         depot = new DepotVigieChiro(
                 participations,
                 client,
+                traitementServeur,
                 depotUnites,
                 passageDao,
                 new MoteurWorkflowPassage(),
@@ -201,10 +209,51 @@ class DepotVigieChiroTest {
     @DisplayName("#984 : lancerTraitement délègue le compute au client pour la participation liée")
     void lancer_traitement_delegue_compute() {
         when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
-        when(client.lancerTraitement("part-1")).thenReturn(true);
+        when(traitementServeur.etat("part-1")).thenReturn(Traitement.absent()); // jamais calculée
+        when(traitementServeur.lancer("part-1")).thenReturn(ResultatLancement.accepte());
 
-        assertThat(depot.lancerTraitement(idPassage)).isTrue();
-        verify(client).lancerTraitement("part-1");
+        assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.ACCEPTE);
+        verify(traitementServeur).lancer("part-1");
+    }
+
+    @Test
+    @DisplayName("#1261 : une nuit DÉJÀ analysée n'est pas relancée (le recalcul détruirait ses observations)")
+    void lancer_traitement_bloque_la_relance_destructrice() {
+        // Le serveur, lui, accepterait : il supprimerait toutes les donnees pour recalculer, et sur un
+        // dépôt en archives ZIP il ne peut plus relire les WAV (#1244) → observations perdues. On refuse
+        // donc de notre propre chef, SANS même appeler le serveur.
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(traitementServeur.etat("part-1")).thenReturn(traitement(EtatTraitement.FINI));
+
+        assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.RELANCE_BLOQUEE);
+        verify(traitementServeur, never()).lancer(anyString());
+    }
+
+    @Test
+    @DisplayName("#1261 : une analyse EN ÉCHEC n'est pas relancée non plus, sauf demande explicite (forcer)")
+    void lancer_traitement_relance_forcee() {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(traitementServeur.etat("part-1")).thenReturn(traitement(EtatTraitement.ERREUR));
+        when(traitementServeur.lancer("part-1")).thenReturn(ResultatLancement.accepte());
+
+        assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.RELANCE_BLOQUEE);
+
+        assertThat(depot.lancerTraitement(idPassage, true).issue()).isEqualTo(IssueLancement.ACCEPTE);
+        verify(traitementServeur).lancer("part-1");
+    }
+
+    @Test
+    @DisplayName("#1261 : un traitement EN COURS n'est pas une relance (rien à écraser) : le serveur tranche")
+    void lancer_traitement_en_cours_passe_au_serveur() {
+        // La garde ne s'applique pas : il n'y a pas encore de résultat à détruire. C'est le serveur qui
+        // refusera la demande concurrente (400 « Already »), et le client la traduira en DEJA_LANCE.
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(traitementServeur.etat("part-1")).thenReturn(traitement(EtatTraitement.EN_COURS));
+        when(traitementServeur.lancer("part-1"))
+                .thenReturn(ResultatLancement.dejaLance(traitement(EtatTraitement.EN_COURS)));
+
+        assertThat(depot.lancerTraitement(idPassage).issue()).isEqualTo(IssueLancement.DEJA_LANCE);
+        verify(traitementServeur).lancer("part-1");
     }
 
     @Test
@@ -215,7 +264,12 @@ class DepotVigieChiroTest {
         assertThatThrownBy(() -> depot.lancerTraitement(idPassage))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("déposez d'abord");
-        verify(client, never()).lancerTraitement(anyString());
+        verify(traitementServeur, never()).lancer(anyString());
+    }
+
+    /// Traitement serveur dans l'état voulu (les dates n'entrent pas en jeu dans la garde).
+    private static Traitement traitement(EtatTraitement etat) {
+        return new Traitement(etat, null, null, null, null, null);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.viewmodel;
 
+import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -93,10 +94,10 @@ public class DepotViewModel {
     }
 
     /// Lance le **traitement serveur** (compute, #984) de la participation liée au passage : équivalent
-    /// « Lancer la participation » du web. **Bloquant** (réseau) : à appeler **hors du fil JavaFX**. `true`
-    /// si accepté. Lève une [RegleMetierException] si le dépôt est indisponible ou si aucune participation
-    /// n'est liée (déposer d'abord).
-    public boolean lancerTraitement(Long idPassage) {
+    /// « Lancer la participation » du web. **Bloquant** (réseau) : à appeler **hors du fil JavaFX**. Lève
+    /// une [RegleMetierException] si le dépôt est indisponible ou si aucune participation n'est liée
+    /// (déposer d'abord). Le [ResultatLancement] dit ce que le serveur a fait de la demande (#1261).
+    public ResultatLancement lancerTraitement(Long idPassage) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         DepotVigieChiro depotVigieChiro =
                 depot.orElseThrow(() -> new RegleMetierException("Dépôt VigieChiro indisponible dans ce contexte."));
@@ -110,13 +111,25 @@ public class DepotViewModel {
         return participationLiee.getReadOnlyProperty();
     }
 
-    /// Restitue le résultat d'un **lancement de traitement** (#984), au fil JavaFX : message de succès ou
-    /// d'échec pour la zone de statut du dépôt.
-    public void restituerLancement(boolean accepte) {
-        message.set(
-                accepte
-                        ? "🚀 Traitement lancé sur VigieChiro : les résultats arriveront après le calcul serveur."
-                        : "Échec du lancement du traitement sur VigieChiro — réessayez.");
+    /// Restitue le résultat d'un **lancement de traitement** (#984), au fil JavaFX : un message **par
+    /// issue** pour la zone de statut du dépôt (#1261). Le message unique d'avant s'achevait sur un point
+    /// d'interrogation (« déjà en cours ? ») : le code ne savait pas, l'utilisateur non plus.
+    public void restituerLancement(ResultatLancement resultat) {
+        message.set(libelle(resultat));
+    }
+
+    /// Message d'une issue de lancement, du point de vue de l'utilisateur : que s'est-il passé, et qu'a-t-il
+    /// à faire (souvent : rien).
+    private static String libelle(ResultatLancement resultat) {
+        return switch (resultat.issue()) {
+            case ACCEPTE -> "🚀 Traitement lancé sur VigieChiro : les résultats arriveront après le calcul serveur.";
+            case DEJA_LANCE -> "🚀 Le traitement est déjà en cours sur VigieChiro : il n'y a plus qu'à attendre.";
+            case RELANCE_BLOQUEE ->
+                "Cette nuit a déjà été analysée par VigieChiro. La relancer effacerait les observations"
+                        + " du serveur sans pouvoir les recalculer : importez-les plutôt.";
+            case REFUSE -> "VigieChiro a refusé le lancement du traitement.";
+            case INJOIGNABLE -> "VigieChiro est injoignable : le traitement n'a pas pu être lancé.";
+        };
     }
 
     /// Réhydrate la table de dépôt depuis l'état persisté (`depot_unite`, #981) : à appeler sur le fil

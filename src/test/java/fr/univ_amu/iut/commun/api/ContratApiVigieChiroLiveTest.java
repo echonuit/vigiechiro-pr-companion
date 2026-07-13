@@ -187,6 +187,42 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
+    @DisplayName("PROBE #1261 : un compute est accepté, et le SECOND (400 « Already ») est reconnu comme"
+            + " « déjà lancé » — non comme un échec")
+    void probe_compute_et_refus_deja_lance() {
+        supposerEcritureAutorisee();
+        // Participation de rebut fournie par l'observateur (vide, non supprimable côté plateforme) : on
+        // peut y lancer un calcul sans conséquence. Sans elle, la probe est ignorée — on ne lance JAMAIS un
+        // compute sur une participation réelle : il détruirait ses observations pour les recalculer (#1244).
+        String participationId = System.getProperty("vigiechiro.participationRebut");
+        assumeTrue(
+                participationId != null && !participationId.isBlank(),
+                "Probe ignorée : fournir -Dvigiechiro.participationRebut=<id d'une participation jetable>.");
+
+        TraitementVigieChiro traitement =
+                new TraitementVigieChiro(new ClientVigieChiro(baseUrl, () -> Optional.of(token)));
+
+        ResultatLancement premier = traitement.lancer(participationId);
+        assertThat(premier.issue())
+                .as("premier compute sur une participation jamais calculée : le serveur accepte")
+                .isEqualTo(IssueLancement.ACCEPTE);
+
+        assertThat(traitement.etat(participationId).etat())
+                .as("le compute a posé un traitement (PLANIFIE, ou déjà EN_COURS si un worker a été prompt)")
+                .isIn(EtatTraitement.PLANIFIE, EtatTraitement.EN_COURS);
+
+        // LE cas qui motive #1261 : le serveur refuse (400 « Already ») une demande concurrente dans sa
+        // fenêtre de 24 h. Avant, ce refus était rendu comme un échec, avec un point d'interrogation.
+        ResultatLancement second = traitement.lancer(participationId);
+        assertThat(second.issue())
+                .as("refus « Already » qualifié par la relecture de l'état, pas par le message d'erreur")
+                .isEqualTo(IssueLancement.DEJA_LANCE);
+        assertThat(second.traitementEnRoute())
+                .as("le traitement est bel et bien en route : la CLI doit rendre 0, l'IHM ne doit pas crier")
+                .isTrue();
+    }
+
+    @Test
     @DisplayName("PROBE #984 (pilier B) : un ZIP déclaré + téléversé (application/zip) + finalisé est-il"
             + " accepté ? (échec = verdict WAV confirmé)")
     void probe_zip_vs_wav() {
