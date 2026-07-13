@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.persistence.DeclarationPurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux.ResultatPurge;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -22,6 +24,7 @@ final class ActionsPurge {
     private final OccupationChrome occupation;
     private final Supplier<Window> fenetre;
     private final Runnable apresPurge;
+    private final Optional<DeclarationPurgeOriginaux> declaration;
 
     /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
     private final ConfirmateurModifiable confirmateur =
@@ -32,12 +35,19 @@ final class ActionsPurge {
     /// @param fenetre fournisseur de la fenêtre propriétaire des dialogues (évalué au clic)
     /// @param apresPurge action à jouer après une purge réussie (ex. retour à l'accueil pour rafraîchir
     ///     les volumes affichés)
+    /// @param declaration port de **déclaration** du geste en base (#1303), vide dans les injecteurs
+    ///     partiels : sans lui, l'audit prendrait les bruts purgés pour une corruption
     ActionsPurge(
-            ServicePurgeOriginaux service, OccupationChrome occupation, Supplier<Window> fenetre, Runnable apresPurge) {
+            ServicePurgeOriginaux service,
+            OccupationChrome occupation,
+            Supplier<Window> fenetre,
+            Runnable apresPurge,
+            Optional<DeclarationPurgeOriginaux> declaration) {
         this.service = Objects.requireNonNull(service, "service");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
         this.fenetre = Objects.requireNonNull(fenetre, "fenetre");
         this.apresPurge = Objects.requireNonNull(apresPurge, "apresPurge");
+        this.declaration = Objects.requireNonNull(declaration, "declaration");
     }
 
     /// Inspecte l'espace **récupérable** (parcours disque, hors du fil JavaFX, #1215), l'annonce et
@@ -70,9 +80,17 @@ final class ActionsPurge {
         occupation.occuper(
                 "Purge des originaux…",
                 "la purge des originaux",
-                service::purgerTout,
+                this::purgerEtDeclarer,
                 this::restituerPurge,
                 echec -> alerte(AlertType.ERROR, "Purge impossible", message(echec)));
+    }
+
+    /// Purge puis **déclare** le geste en base (#1303), hors du fil JavaFX : sans la déclaration,
+    /// l'audit prendrait chaque brut manquant pour une corruption.
+    private ResultatPurge purgerEtDeclarer() {
+        ResultatPurge resultat = service.purgerTout();
+        declaration.ifPresent(DeclarationPurgeOriginaux::declarerPurgeGlobale);
+        return resultat;
     }
 
     /// Sur le fil JavaFX, après la purge : compte-rendu puis rafraîchissement de l'appelant.

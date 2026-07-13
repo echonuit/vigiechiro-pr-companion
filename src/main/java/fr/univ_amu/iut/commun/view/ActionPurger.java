@@ -1,8 +1,10 @@
 package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.persistence.DeclarationPurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.stage.Window;
 
 /// Entrée ☰ **« Purger les originaux importés »**, migrée en [ActionMenu] contribué (#930). Réutilise
@@ -13,12 +15,18 @@ public final class ActionPurger implements ActionMenu {
     private final ServicePurgeOriginaux service;
     private final Navigateur navigateur;
     private final OccupationChrome occupation;
+    private final Optional<DeclarationPurgeOriginaux> declaration;
 
     @Inject
-    ActionPurger(ServicePurgeOriginaux service, Navigateur navigateur, OccupationChrome occupation) {
+    ActionPurger(
+            ServicePurgeOriginaux service,
+            Navigateur navigateur,
+            OccupationChrome occupation,
+            Optional<DeclarationPurgeOriginaux> declaration) {
         this.service = Objects.requireNonNull(service, "service");
         this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
+        this.declaration = Objects.requireNonNull(declaration, "declaration");
     }
 
     @Override
@@ -38,6 +46,6 @@ public final class ActionPurger implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        new ActionsPurge(service, occupation, () -> proprietaire, navigateur::afficherAccueil).purger();
+        new ActionsPurge(service, occupation, () -> proprietaire, navigateur::afficherAccueil, declaration).purger();
     }
 }

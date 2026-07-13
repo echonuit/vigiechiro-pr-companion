@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.persistence.DeclarationPurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
+import fr.univ_amu.iut.passage.model.DeclarationPurgeParSessions;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
@@ -88,6 +90,13 @@ public class PassageModule extends ModuleDeFeature {
         // module réel SynchronisationParticipationModule (chargé par RacineInjecteur avec la connexion) pose
         // le binding ; hors connexion, l'Optional reste vide (patron de DepotVigieChiro).
         OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class);
+
+        // Port DeclarationPurgeOriginaux (#1303) : cette feature possède les sessions, elle fournit
+        // donc la déclaration réelle de la purge globale (marqueur originals_purged_at posé sur
+        // chaque session, consommé par la purge du chrome).
+        OptionalBinder.newOptionalBinder(binder(), DeclarationPurgeOriginaux.class)
+                .setBinding()
+                .to(DeclarationPurgeParSessions.class);
 
         // Contrats de navigation vers M-Diagnostic, M-Qualification et M-Lot : OptionalBinder VIDE (features
         // `diagnostic`, `qualification` et `lot` désactivables, #1087). Chaque module réel fait `setBinding`

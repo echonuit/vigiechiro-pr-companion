@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.DispositionColonnesDao;
 import fr.univ_amu.iut.commun.model.dao.VueSauvegardeeDao;
+import fr.univ_amu.iut.commun.persistence.DeclarationPurgeOriginaux;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ActionMenu;
 import fr.univ_amu.iut.commun.view.ActionOuvrirReglages;
@@ -61,6 +62,12 @@ public class CommunModule extends AbstractModule {
         // Ouverture de liens externes (ex. coordonnées GPS -> OpenStreetMap). Singleton :
         // `App` y branche le HostServices une fois au démarrage (cf. App.start).
         bind(OuvreurDeLien.class).to(OuvreurDeLienSysteme.class).in(Singleton.class);
+
+        // Port DeclarationPurgeOriginaux (#1303) : OptionalBinder VIDE. La purge globale du chrome
+        // doit DECLARER le geste en base (sinon l'audit prend les bruts manquants pour une
+        // corruption) ; c'est la feature passage, propriétaire des sessions, qui pose le binding
+        // réel (même montage d'inversion que CoordonneesPoint, #547).
+        OptionalBinder.newOptionalBinder(binder(), DeclarationPurgeOriginaux.class);
         // Préférence « source des fiches espèces » (#849) : singleton pour que le menu ☰ (qui la modifie)
         // et le constructeur de liens (qui la lit) partagent le même service persistant.
         bind(PreferenceSourceEspece.class).in(Singleton.class);
