@@ -4,8 +4,7 @@ import fr.univ_amu.iut.commun.model.NormalisationTexte;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
-import fr.univ_amu.iut.commun.view.DescripteurFiltre;
-import fr.univ_amu.iut.commun.view.DescripteurFiltreJson;
+import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.ObservationAnalyse;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.List;
@@ -53,11 +52,9 @@ final class CriteresAnalyse {
                 vueParDefaut("Chiroptères", new DescripteurCritere("groupe", List.of("Chiroptères"))));
     }
 
-    /// Une vue par défaut : `id` **nul** (jamais persistée → lecture seule) et descripteur des critères donnés
-    /// (aucun critère = vue « Tout », sans filtre).
+    /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
     private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
-        String descripteur = DescripteurFiltreJson.serialiser(new DescripteurFiltre("", List.of(criteres)));
-        return new VueSauvegardee(null, "analyse", nom, descripteur);
+        return VuesParDefaut.vue("analyse", nom, criteres);
     }
 
     /// Critère **Statut de revue** : éditeur = liste déroulante (Non touchée / Validée / Corrigée…) dans la

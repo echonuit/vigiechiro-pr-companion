@@ -6,8 +6,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
-import fr.univ_amu.iut.commun.view.DescripteurFiltre;
-import fr.univ_amu.iut.commun.view.DescripteurFiltreJson;
+import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.List;
@@ -53,11 +52,9 @@ final class CriteresMultisite {
                 vueParDefaut("Vérifiés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.VERIFIE.name()))));
     }
 
-    /// Une vue par défaut : `id` **nul** (jamais persistée → lecture seule) et descripteur des critères donnés
-    /// (aucun critère = vue « Tout », sans filtre).
+    /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
     private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
-        String descripteur = DescripteurFiltreJson.serialiser(new DescripteurFiltre("", List.of(criteres)));
-        return new VueSauvegardee(null, "multisite", nom, descripteur);
+        return VuesParDefaut.vue("multisite", nom, criteres);
     }
 
     /// Critère **Carré** : champ texte du n° de carré (ex. `640380`). Éditable au clavier **et** posé par la

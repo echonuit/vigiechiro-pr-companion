@@ -6,8 +6,7 @@ import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
-import fr.univ_amu.iut.commun.view.DescripteurFiltre;
-import fr.univ_amu.iut.commun.view.DescripteurFiltreJson;
+import fr.univ_amu.iut.commun.view.VuesParDefaut;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import java.util.Comparator;
@@ -66,11 +65,9 @@ final class CriteresAudio {
                 vueParDefaut("Sons non identifiés", new DescripteurCritere("non_identifie", List.of())));
     }
 
-    /// Une vue par défaut : `id` **nul** (jamais persistée → lecture seule) et descripteur des critères donnés
-    /// (aucun critère = vue « Tout », sans filtre).
+    /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).
     private static VueSauvegardee vueParDefaut(String nom, DescripteurCritere... criteres) {
-        String descripteur = DescripteurFiltreJson.serialiser(new DescripteurFiltre("", List.of(criteres)));
-        return new VueSauvegardee(null, "audio", nom, descripteur);
+        return VuesParDefaut.vue("audio", nom, criteres);
     }
 
     /// Critère **Statut de revue** : éditeur = liste déroulante (À revoir / Validée / Corrigée) dans la
