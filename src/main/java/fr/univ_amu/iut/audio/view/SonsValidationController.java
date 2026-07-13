@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
+import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -62,6 +63,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
     private final AudioViewModel viewModel;
     private final ImportVigieChiroViewModel importVigieChiro;
+    private final PublicationCorrectionsViewModel publicationCorrections;
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final Optional<OuvrirAnalyse> ouvrirAnalyse;
@@ -132,10 +134,16 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private MenuItem itemImporterVigieChiro;
 
     @FXML
+    private MenuItem itemPublierCorrections;
+
+    @FXML
     private MenuItem itemOuvrirVigieChiro;
 
     @FXML
     private Label lblImportVigieChiro;
+
+    @FXML
+    private Label lblPublierCorrections;
 
     @FXML
     private CheckMenuItem itemInclureMode;
@@ -269,6 +277,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     public SonsValidationController(
             AudioViewModel viewModel,
             ImportVigieChiroViewModel importVigieChiro,
+            PublicationCorrectionsViewModel publicationCorrections,
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             Optional<OuvrirAnalyse> ouvrirAnalyse,
@@ -279,6 +288,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
             ReglagesReactifs reactifs) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.importVigieChiro = Objects.requireNonNull(importVigieChiro, "importVigieChiro");
+        this.publicationCorrections = Objects.requireNonNull(publicationCorrections, "publicationCorrections");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAnalyse = Objects.requireNonNull(ouvrirAnalyse, "ouvrirAnalyse");
@@ -415,12 +425,14 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 itemImporter,
                 itemImporterVigieChiro,
                 lblImportVigieChiro,
+                itemPublierCorrections,
+                lblPublierCorrections,
                 itemInclureMode,
                 itemExporterVu,
                 itemExporterObservations,
                 itemExporterBiblio,
                 itemOuvrirVigieChiro);
-        MenuAudio.cabler(itemsMenu, viewModel, importVigieChiro, reactifs);
+        MenuAudio.cabler(itemsMenu, viewModel, importVigieChiro, publicationCorrections, reactifs);
 
         // État vide : placeholder gris superposé à la table, réservé au seul « aucune observation… ».
         var listeVide = Bindings.isEmpty(viewModel.observationsFiltrees());
@@ -514,7 +526,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// ([ColonnesAudio#adapterAuContexte]) et items du menu « ☰ » propres à la source ([MenuAudio#adapter]).
     private void adapterAffichage(SourceObservations source) {
         ColonnesAudio.adapterAuContexte(colonnes, source.cibleUnPassageUnique());
-        MenuAudio.adapter(itemsMenu, source, importVigieChiro, actionsMenu.donneesVigieChiro());
+        MenuAudio.adapter(itemsMenu, source, importVigieChiro, publicationCorrections, actionsMenu.donneesVigieChiro());
         // Astuce de découvrabilité du glisser-déposer (#1015) : rien ne signalait qu'un CSV Tadarida
         // peut être déposé sur l'écran. Le rappel discret suit la même règle d'activation que le dépôt
         // lui-même et disparaît (non managé) pour les sources sans workflow, l'écran restant dense.
@@ -603,6 +615,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private void importerDepuisVigieChiro() {
         ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source, appuis.executeur());
+    }
+
+    /// Publie les corrections observateur du passage courant vers VigieChiro (#723). Délègue à
+    /// [PublicationCorrectionsUI] (tri hors fil, confirmation récapitulative, envoi hors fil, bilan).
+    @FXML
+    private void publierCorrections() {
+        PublicationCorrectionsUI.lancer(publicationCorrections, source, appuis.executeur());
     }
 
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.

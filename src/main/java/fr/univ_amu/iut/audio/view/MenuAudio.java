@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
+import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import javafx.beans.binding.Bindings;
@@ -24,6 +25,8 @@ final class MenuAudio {
             MenuItem importer,
             MenuItem importerVigieChiro,
             Label lblImportVigieChiro,
+            MenuItem publierCorrections,
+            Label lblPublierCorrections,
             CheckMenuItem inclureMode,
             MenuItem exporterVu,
             MenuItem exporterObservations,
@@ -40,6 +43,7 @@ final class MenuAudio {
             Items items,
             AudioViewModel viewModel,
             ImportVigieChiroViewModel importVigieChiro,
+            PublicationCorrectionsViewModel publicationCorrections,
             ReglagesReactifs reactifs) {
         // Workflow Tadarida (source ParPassage) : « Importer » tant qu'aucun résultat, « Réimporter »
         // (remplacement après confirmation) une fois un jeu chargé.
@@ -51,6 +55,9 @@ final class MenuAudio {
         // Import VigieChiro (axe 4.2) : câblage (libellé Importer/Réimporter, désactivation, restitution)
         // délégué à ImportVigieChiroUI. Sa visibilité (workflow + connexion) est gérée dans [#adapter].
         ImportVigieChiroUI.cabler(items.importerVigieChiro(), items.lblImportVigieChiro(), importVigieChiro, viewModel);
+        // Publication des corrections (#723) : item désactivé pendant l'envoi, restitution dédiée.
+        PublicationCorrectionsUI.cabler(
+                items.publierCorrections(), items.lblPublierCorrections(), publicationCorrections);
         items.exporterVu()
                 .disableProperty()
                 .bind(viewModel.resultatsDisponiblesProperty().not());
@@ -83,11 +90,14 @@ final class MenuAudio {
             Items items,
             SourceObservations source,
             ImportVigieChiroViewModel importVigieChiro,
+            PublicationCorrectionsViewModel publicationCorrections,
             ActionDonneesVigieChiro donneesVigieChiro) {
         boolean workflow = source.permetWorkflowTadarida();
         items.importer().setVisible(workflow);
         // Import VigieChiro : workflow Tadarida **et** application connectée (indisponible en capture).
         items.importerVigieChiro().setVisible(workflow && importVigieChiro.disponible());
+        // Publication des corrections (#723) : mêmes conditions (workflow d'un passage + connexion).
+        items.publierCorrections().setVisible(workflow && publicationCorrections.disponible());
         items.inclureMode().setVisible(workflow);
         items.exporterVu().setVisible(workflow);
         items.exporterBiblio().setVisible(source.permetExportBibliotheque());

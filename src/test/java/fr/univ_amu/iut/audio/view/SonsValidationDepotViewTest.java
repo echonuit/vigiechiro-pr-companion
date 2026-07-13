@@ -115,6 +115,11 @@ class SonsValidationDepotViewTest {
                         return new ImportVigieChiroViewModel(Optional.of(importVigieChiro));
                     }
 
+                    @Provides
+                    fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel publicationCorrections() {
+                        return new fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel(Optional.empty());
+                    }
+
                     // « Fiche de l'espèce » (#847) : navigateur no-op, la fiche n'est pas exercée ici.
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {

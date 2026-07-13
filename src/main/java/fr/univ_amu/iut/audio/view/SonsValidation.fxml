@@ -72,6 +72,7 @@
           <SeparatorMenuItem/>
           <MenuItem fx:id="itemImporter" text="📥 Importer un CSV Tadarida…" onAction="#importer"/>
           <MenuItem fx:id="itemImporterVigieChiro" text="☁ Importer depuis VigieChiro…" onAction="#importerDepuisVigieChiro"/>
+          <MenuItem fx:id="itemPublierCorrections" text="☁ Publier les corrections vers VigieChiro…" onAction="#publierCorrections"/>
           <MenuItem fx:id="itemOuvrirVigieChiro" text="🌐 Ouvrir les données sur Vigie-Chiro" onAction="#ouvrirDonneesVigieChiro"/>
           <CheckMenuItem fx:id="itemInclureMode" text="Inclure le mode de validation à l'export _Vu"/>
           <MenuItem fx:id="itemExporterVu" text="📤 Exporter _Vu…" onAction="#exporterVu"/>
@@ -92,6 +93,10 @@
 
   <!-- Avancement / bilan de l'import VigieChiro (axe 4.2), masqué tant qu'aucun import n'a été lancé. -->
   <Label fx:id="lblImportVigieChiro" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
+         visible="false" managed="false"/>
+
+  <!-- Avancement / bilan de la publication des corrections (#723), masqué tant que rien n'a été lancé. -->
+  <Label fx:id="lblPublierCorrections" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
          visible="false" managed="false"/>
 
   <SplitPane fx:id="separateur" orientation="VERTICAL" dividerPositions="0.5" VBox.vgrow="ALWAYS">

@@ -46,6 +46,20 @@ public class PublicationCorrections {
     /// @param idPassage passage cible
     /// @return le bilan de la publication (poussées, écartées par cause, refus détaillés)
     public BilanPublication publier(Long idPassage) {
+        TriPublication tri = trier(idPassage);
+        List<String> echecs = pousser(tri.publiables(), liens.tous(LienVigieChiro.ENTITE_TAXON));
+        return new BilanPublication(
+                tri.publiables().size() - echecs.size(),
+                tri.sansCertitude(),
+                tri.sansAncrage(),
+                tri.horsReferentiel(),
+                List.copyOf(echecs));
+    }
+
+    /// Trie les observations revues du passage au regard de la publication, **sans aucun réseau** :
+    /// l'aperçu de la confirmation IHM (« N corrections vont être publiées… ») et le plan d'envoi de
+    /// [#publier]. Lève une [RegleMetierException] si aucune observation n'est revue.
+    public TriPublication trier(Long idPassage) {
         Objects.requireNonNull(idPassage, "idPassage");
         List<Observation> revues = observations.revuesDuPassage(idPassage);
         if (revues.isEmpty()) {
@@ -53,7 +67,7 @@ public class PublicationCorrections {
                     + " d'abord vos observations (et déclarez votre certitude) avant de publier.");
         }
         Map<String, String> objectids = liens.tous(LienVigieChiro.ENTITE_TAXON);
-        List<Observation> poussables = new ArrayList<>();
+        List<Observation> publiables = new ArrayList<>();
         int sansAncrage = 0;
         int sansCertitude = 0;
         int horsReferentiel = 0;
@@ -65,12 +79,10 @@ public class PublicationCorrections {
             } else if (!objectids.containsKey(revue.taxonObservateur())) {
                 horsReferentiel++;
             } else {
-                poussables.add(revue);
+                publiables.add(revue);
             }
         }
-        List<String> echecs = pousser(poussables, objectids);
-        return new BilanPublication(
-                poussables.size() - echecs.size(), sansCertitude, sansAncrage, horsReferentiel, List.copyOf(echecs));
+        return new TriPublication(List.copyOf(publiables), sansCertitude, sansAncrage, horsReferentiel);
     }
 
     /// Pousse les corrections une à une ; seul le **dernier** envoi laisse le serveur régénérer son

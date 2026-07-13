@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
+import fr.univ_amu.iut.validation.model.TriPublication;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.util.List;
 import java.util.Map;
@@ -137,6 +138,22 @@ class PublicationCorrectionsTest {
         assertThat(bilan.poussees()).isEqualTo(1);
         assertThat(bilan.sansEchec()).isFalse();
         assertThat(bilan.echecs()).singleElement().asString().contains("Observation 1", "d1", "ancrage périmé");
+    }
+
+    @Test
+    @DisplayName("trier : le même classement que publier, sans aucun envoi (aperçu de la confirmation)")
+    void trier_apercu_sans_reseau() {
+        when(observations.revuesDuPassage(7L))
+                .thenReturn(List.of(
+                        revue(1L, "Pippip", CertitudeObservateur.SUR, "d1", 0), revue(2L, "Pippip", null, "d1", 1)));
+        when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
+
+        TriPublication tri = publication().trier(7L);
+
+        assertThat(tri.publiables()).hasSize(1);
+        assertThat(tri.sansCertitude()).isEqualTo(1);
+        assertThat(tri.ecartees()).isEqualTo(1);
+        verify(client, never()).corrigerObservation(anyString(), anyInt(), anyString(), any(), anyBoolean());
     }
 
     @Test

@@ -203,6 +203,11 @@ class SonsValidationViewTest {
                         return new ImportVigieChiroViewModel(Optional.empty());
                     }
 
+                    @Provides
+                    fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel publicationCorrections() {
+                        return new fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel(Optional.empty());
+                    }
+
                     // « Fiche de l'espèce » (#847) : navigateur factice qui enregistre l'URL ouverte.
                     @Provides
                     OuvreurDeLien ouvreurDeLien() {

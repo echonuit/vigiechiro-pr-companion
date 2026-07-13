@@ -7,6 +7,7 @@ import fr.univ_amu.iut.audio.view.NavigationAudio;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
+import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
@@ -16,6 +17,7 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
+import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -54,6 +56,9 @@ public class AudioModule extends ModuleDeFeature {
         // partiels de capture (sans `connexion`, donc sans client HTTP) résolvent `Optional<ImportVigieChiro>`
         // à vide. La liaison réelle est posée par `ImportVigieChiroModule` (injecteur applicatif complet).
         OptionalBinder.newOptionalBinder(binder(), ImportVigieChiro.class);
+        // Publication des corrections (#723) : même patron (liaison réelle posée par
+        // `PublicationCorrectionsModule` dans l'injecteur applicatif complet).
+        OptionalBinder.newOptionalBinder(binder(), PublicationCorrections.class);
         // Contrat de retour vers l'analyse : OptionalBinder VIDE (feature `analyse` désactivable, #1087).
         // `AnalyseModule` fait `setBinding` quand elle est active ; sinon SonsValidationController masque
         // « Voir sur la carte » et le segment de fil d'Ariane « Espèces & observations ».
@@ -89,5 +94,14 @@ public class AudioModule extends ModuleDeFeature {
     @Provides
     ImportVigieChiroViewModel fournirImportVigieChiroViewModel(Optional<ImportVigieChiro> importVigieChiro) {
         return new ImportVigieChiroViewModel(importVigieChiro);
+    }
+
+    /// ViewModel dédié de la **publication des corrections** (#723), jumeau du VM d'import :
+    /// `publication` est vide dans les injecteurs partiels de capture, présent dans l'application
+    /// complète (cf. `PublicationCorrectionsModule`).
+    @Provides
+    PublicationCorrectionsViewModel fournirPublicationCorrectionsViewModel(
+            Optional<PublicationCorrections> publication) {
+        return new PublicationCorrectionsViewModel(publication);
     }
 }
