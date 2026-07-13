@@ -58,7 +58,9 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
 | `synchroniser-vigiechiro` | `[--token <jeton>]` | #1181 | rejoue les `RapprochementVigieChiro` (taxons, sites/points) après un `GET /moi` de contrôle ; `0` ssi connecté |
-| `deposer-vigiechiro` | `--passage <id> [--token <jeton>] [--archives]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982 ; `--archives` = les ZIP `depot/` au lieu des WAV, expérimental #984) |
+| `deposer-vigiechiro` | `--passage <id> [--token <jeton>] [--archives\|--wav]` | #1043 | `DepotVigieChiro.deposer` (moteur **reprenable** #982, téléversement **parallèle** #984). Défaut = `ServiceLot.fichiersDepotParDefaut`, **le même choix que M-Lot** : ZIP si présentes, sinon invite à les générer (étape 2), sinon repli WAV. `--archives`/`--wav` forcent l'un ou l'autre |
+| `lancer-traitement-vigiechiro` | `--passage <id> [--token <jeton>]` | #984 | `DepotVigieChiro.lancerTraitement` (`POST /participations/{id}/compute`) — équivalent du bouton « Lancer la participation » ; `0` ssi le serveur accepte, `1` s'il refuse (déjà en cours) |
+| `reinitialiser-depot` | `--passage <id>` | #984 | `ServiceLot.reinitialiserDepot` (efface le plan `depot_unite`, retour « Prêt à déposer » ; **local**, archives ZIP et lien de participation conservés) — équivalent du bouton « Réinitialiser le dépôt » |
 | `verifier-depot-vigiechiro` | `--passage <id> [--token <jeton>]` | #1132 | `VerificationDepot.verifier` (lecture seule : journal de traitement + titres des `donnees` vs plan `depot_unite` ; `0` ssi tout est retrouvé) |
 | `importer-vigiechiro` | `--passage <id> [--remplacer] [--participation <objectid>] [--token <jeton>]` | #1181 | `ImportVigieChiro.importer` (résultats Tadarida depuis l'API, sans CSV ; `--participation` = rattachement préalable) |
 | `exporter-vu` | `--passage <id> --sortie <fichier>` | P7 | `ServiceValidation` |
@@ -111,6 +113,20 @@ fichiers restent à reprendre (relancer la même commande ne re-téléverse que 
 vient de `--token`, sinon de la variable d'environnement `VIGIECHIRO_TOKEN`, sinon de la **connexion
 enregistrée** dans l'application (préférer la variable d'environnement : `--token` laisse le jeton dans
 l'historique du shell).
+
+Ces codes rendent le **cycle de dépôt complet scriptable** (#984). Le dépôt **ne déclenche pas** le
+traitement serveur : il faut l'appeler explicitement.
+
+```bash
+export VIGIECHIRO_TOKEN=…
+vigiechiro deposer-vigiechiro --passage 9 \
+  && vigiechiro lancer-traitement-vigiechiro --passage 9 \
+  && vigiechiro verifier-depot-vigiechiro --passage 9   # après le calcul serveur
+```
+
+En cas de dépôt à refaire de zéro (unités marquées déposées à tort), `reinitialiser-depot --passage 9`
+efface le plan local et ramène le passage à « Prêt à déposer » — les archives et la participation sont
+conservées, le dépôt suivant re-téléverse tout.
 
 `executer(...)` **ne fait pas** `System.exit` (il *renvoie* le code) : c'est ce qui le rend testable.
 Seul `main()` traduit le code en `System.exit`. La base est **migrée au démarrage** (idempotent) avant

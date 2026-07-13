@@ -62,7 +62,8 @@ Base : `https://vigiechiro.herokuapp.com/api/v1`. Auth : `Authorization: Basic b
 | GET | `/taxons/liste` | référentiel taxons |
 | POST | `/sites/{id}/participations` | crée une participation |
 | PATCH | `/participations/{id}` (`If-Match: _etag`) | pousse météo/config depuis la modale du passage |
-| POST | `/fichiers` puis `PUT` S3 signé puis POST `/fichiers/{id}` | téléverse un fichier (3 temps, `PUT` **en flux**) |
+| POST | `/fichiers` (`lien_participation`) puis `PUT` S3 signé puis POST `/fichiers/{id}` | téléverse un fichier **rattaché à la participation** (3 temps, `PUT` **en flux**) |
+| POST | `/participations/{id}/compute` (corps `{}`) | déclenche le **traitement serveur** (Tadarida) de la participation déposée |
 
 ### Objet `participation` (schéma canonique)
 
@@ -171,6 +172,39 @@ Deux garde-fous s'exécutent au début de chaque dépôt (IHM et CLI) :
   traitement** (`GET /fichiers` et `GET /participations/{id}/fichiers` → 403) — mais **après**
   traitement, le journal (§ ci-dessous) en fournit un complet.
 
+### Téléversement d'un fichier et déclenchement du traitement (#984)
+
+Le dépôt d'une unité (WAV ou archive ZIP) est un aller-retour en **trois temps**, porté par
+`ClientVigieChiro.creerFichier` / `televerserVersS3` / `finaliserFichier` :
+
+1. `POST /fichiers` avec le corps `{"titre": …, "multipart": false, "lien_participation": "<id>"}`
+   → renvoie l'`_id` du fichier et une **URL S3 pré-signée** de dépôt ;
+2. `PUT <url signée>` du contenu **en flux** (`BodyPublisher` sur le fichier, sans le charger en
+   mémoire), en-tête `Content-Type` = le **type MIME renvoyé** par l'étape 1 (`audio/x-wav` ou
+   `application/zip`), **sans** en-tête `Authorization` (la signature de l'URL fait foi) ;
+3. `POST /fichiers/{id}` (corps `{}`) pour **finaliser** l'enregistrement côté serveur.
+
+!!! danger "`lien_participation` est obligatoire (le bug qui n'a jamais marché avant #984)"
+    Sans `lien_participation` à l'étape 1, le fichier est **créé et téléversé sur S3 mais orphelin** :
+    il n'est **rattaché à aucune participation**, donc `compute` traite une participation vide et le
+    journal serveur affiche `Extracting 0 zipped files`. Le symptôme est trompeur — l'IHM et la CLI
+    voient trois requêtes réussies (201/200/200) et annoncent « Déposé », mais **rien n'apparaît sur la
+    plateforme**. Le rattachement est résolu par `DepotVigieChiro.participationLiee(idPassage)` (lien
+    `ENTITE_PASSAGE`) et propagé jusqu'à `creerFichier(titre, participationId)`.
+
+**Déclencher le traitement** : une fois **toutes** les unités déposées, `POST
+/participations/{id}/compute` (corps `{}`) lance le pipeline serveur (extraction des ZIP puis
+TadaridaD). C'est l'équivalent du bouton « Lancer la participation » (M-Lot) et de la commande
+`lancer-traitement-vigiechiro`. Le serveur **refuse** (`400 «Already»`) si un traitement est déjà
+`EN_COURS`/`PLANIFIE` : ce n'est pas une erreur, juste « déjà lancé ». `compute` **n'est pas
+automatique après le dépôt** : les fichiers sont sur S3, mais rien n'est traité tant qu'il n'est pas
+appelé (par l'application ou depuis la page web de la participation).
+
+!!! warning "`DEPOSE` n'est plus l'état terminal"
+    Depuis qu'on sait relire le `traitement.etat` et le journal serveur, le cycle continue **après** le
+    dépôt (`PLANIFIE → EN_COURS → FINI/ERREUR`). La modélisation des états serveur post-dépôt fait
+    l'objet d'un chantier dédié (planifié, cf. `StatutWorkflow`).
+
 ### Journal de traitement d'une participation (#1132)
 
 Le serveur trace le traitement de chaque participation dans un journal texte, accessible avec le
@@ -191,12 +225,14 @@ Même limite que `donnees` : le journal n'existe qu'après le passage du pipelin
 
 ### Verdicts des probes d'écriture (exécutées le 2026-07-11)
 
-- **ZIP (pilier B, #984)** : la plateforme **accepte** un `.zip` (déclaration, `PUT` S3
-  `application/zip`, finalisation) **et l'ingère** : la participation canonique `6a4961f5…` a été
-  déposée **en zip via le site web** et ses 4806 `donnees` listent les WAV individuellement. Reste à
-  valider que **notre chemin d'upload** (API directe) produit le même résultat : option expérimentale
-  `deposer-vigiechiro --archives` (#1043), essai prévu sur une vraie nuit — verdict à lire avec
-  `verifier-depot-vigiechiro` (journal de traitement, § ci-dessus).
+- **ZIP (pilier B, #984)** : **verdict confirmé en réel.** La plateforme accepte un `.zip`
+  (déclaration, `PUT` S3 `application/zip`, finalisation) **et l'ingère** — d'abord vérifié sur la
+  participation canonique `6a4961f5…` (déposée en zip via le site web, 4806 `donnees`), puis reproduit
+  par **notre chemin d'upload** (API directe) sur une vraie nuit (`Car130711-2026-Pass2-Z41`, 04/07) :
+  les 19 archives ZIP téléversées, `compute` lancé, WAV extraits et listés côté serveur. Le dépôt
+  **en ZIP est désormais le mode par défaut** (repli WAV seulement si l'espace disque est insuffisant),
+  déposé **en parallèle** (5 uploads simultanés, cf. `DepotVigieChiro`). La seule pièce manquante était
+  `lien_participation` (§ « Téléversement d'un fichier », sans quoi les uploads étaient orphelins).
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
   le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites — exécuté à la
   connexion, et rejouable **à la demande** depuis M-Sites (« Synchroniser depuis VigieChiro », #1045,

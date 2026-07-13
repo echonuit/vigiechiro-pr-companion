@@ -25,9 +25,16 @@ import picocli.CommandLine.Spec;
 /// **relançable** telle quelle après une coupure. À ne pas confondre avec `deposer`, le **marquage
 /// manuel** (téléversement fait sur le site web).
 ///
+/// **Ce qui est déposé** (#984) : le **même défaut que M-Lot** — les **archives ZIP** si elles sont
+/// présentes, sinon une invite à les générer (étape 2) quand l'espace disque le permet, sinon un repli
+/// sur les **séquences WAV**. `--archives` et `--wav` forcent explicitement l'un ou l'autre.
+///
 /// **Jeton** : `--token`, sinon la variable d'environnement `VIGIECHIRO_TOKEN`, sinon la **connexion
 /// enregistrée** dans l'application (préférer la variable d'environnement à `--token`, qui laisse le
 /// jeton dans l'historique du shell).
+///
+/// Le dépôt **ne déclenche pas** le traitement serveur : lancer ensuite `lancer-traitement-vigiechiro`
+/// (équivalent du bouton « Lancer la participation »).
 ///
 /// Sortie : une ligne par fichier téléversé (`+`) ou en échec (`!` + raison), puis le bilan. Code
 /// retour `0` seulement si le dépôt est **complet** (scriptable) ; `1` si des fichiers restent à
@@ -53,9 +60,15 @@ public final class DeposerVigieChiro implements Callable<Integer> {
 
     @Option(
             names = "--archives",
-            description = "Expérimental (#984) : dépose les archives ZIP générées (depot/*.zip) au lieu des"
-                    + " séquences WAV une à une. Générez d'abord les archives (M-Lot, étape 2).")
+            description = "Force le dépôt des archives ZIP générées (depot/*.zip). Par défaut, elles sont déjà"
+                    + " privilégiées si présentes (comme M-Lot) ; cette option échoue si elles manquent.")
     private boolean archives;
+
+    @Option(
+            names = "--wav",
+            description = "Force le dépôt des séquences WAV une à une, même si des archives ZIP existent"
+                    + " (par défaut : ZIP si présentes, repli WAV sinon). Incompatible avec --archives.")
+    private boolean wav;
 
     @Spec
     private CommandSpec spec;
@@ -78,18 +91,36 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             // persister — la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
-        List<Path> fichiers = archives ? cheminsDesArchives() : serviceLot.sequencesADeposer(idPassage);
-        if (fichiers.isEmpty()) {
-            throw new RegleMetierException(
-                    archives
-                            ? "Aucune archive de dépôt sur le disque : générez-les d'abord (M-Lot, étape 2)."
-                            : "Aucune séquence transformée à déposer pour ce passage"
-                                    + " (préparez d'abord le lot : statut « Prêt à déposer »).");
-        }
+        List<Path> fichiers = choisirFichiers();
         PrintWriter sortie = spec.commandLine().getOut();
         BilanDepot bilan = moteur.deposer(idPassage, fichiers, () -> false, new SuiviConsole(sortie));
         sortie.println(rendreBilan(bilan));
         return bilan.estComplet() ? 0 : 1;
+    }
+
+    /// Choix des fichiers à téléverser, **aligné sur M-Lot** :
+    /// - `--archives` : force les ZIP `depot/*.zip` (échoue si aucune n'est présente) ;
+    /// - `--wav` : force les séquences WAV une à une (échoue si le lot n'est pas préparé) ;
+    /// - sans option : le **défaut du service** (`fichiersDepotParDefaut`) — ZIP si présentes, invite à
+    ///   générer les archives (étape 2) si l'espace disque le permet, repli WAV sinon.
+    private List<Path> choisirFichiers() {
+        if (archives) {
+            List<Path> zips = cheminsDesArchives();
+            if (zips.isEmpty()) {
+                throw new RegleMetierException(
+                        "Aucune archive de dépôt sur le disque : générez-les d'abord (M-Lot, étape 2).");
+            }
+            return zips;
+        }
+        if (wav) {
+            List<Path> sequences = serviceLot.sequencesADeposer(idPassage);
+            if (sequences.isEmpty()) {
+                throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage"
+                        + " (préparez d'abord le lot : statut « Prêt à déposer »).");
+            }
+            return sequences;
+        }
+        return serviceLot.fichiersDepotParDefaut(idPassage);
     }
 
     /// Archives ZIP du lot présentes sur le disque (`depot/*.zip`), dans l'ordre des numéros. Le moteur
