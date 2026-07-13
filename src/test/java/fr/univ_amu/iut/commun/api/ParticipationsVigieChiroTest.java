@@ -89,7 +89,62 @@ class ParticipationsVigieChiroTest {
                 .containsEntry("detecteur_enregistreur_type", "PassiveRecorder")
                 .containsEntry("micro0_type", "ICS")
                 .containsEntry("micro0_hauteur", "4");
-        assertThat(detail.etatTraitement()).isEqualTo("FINI");
+        assertThat(detail.traitement().etat()).isEqualTo(EtatTraitement.FINI);
+        assertThat(detail.traitement().resultatsDisponibles()).isTrue();
+    }
+
+    @Test
+    @DisplayName("detail : le bloc traitement complet (dates, trace d'erreur, compteur d'essais) est restitué")
+    void detail_traitement_complet() {
+        // Échec rattrapé par le serveur : RETRY porte la trace et le compteur d'essais.
+        String corps = "{\"_id\":\"6a49\",\"traitement\":{\"etat\":\"RETRY\",\"retry\":1,"
+                + "\"date_planification\":\"2026-07-05T08:00:00+00:00\","
+                + "\"date_debut\":\"2026-07-05T08:12:00+00:00\","
+                + "\"date_fin\":\"2026-07-05T08:20:00+00:00\","
+                + "\"message\":\"Traceback: boom\"}}";
+
+        Traitement traitement =
+                ParticipationsVigieChiro.detail(corps).orElseThrow().traitement();
+
+        assertThat(traitement.etat()).isEqualTo(EtatTraitement.RETRY);
+        assertThat(traitement.datePlanification()).isEqualTo("2026-07-05T08:00:00+00:00");
+        assertThat(traitement.dateDebut()).isEqualTo("2026-07-05T08:12:00+00:00");
+        assertThat(traitement.dateFin()).isEqualTo("2026-07-05T08:20:00+00:00");
+        assertThat(traitement.message()).isEqualTo("Traceback: boom");
+        assertThat(traitement.retry()).isEqualTo(1);
+        // Un RETRY est un échec *rattrapé* : le serveur travaille encore, l'utilisateur n'a rien à faire.
+        assertThat(traitement.enAttente()).isTrue();
+        assertThat(traitement.enEchec()).isFalse();
+    }
+
+    @Test
+    @DisplayName("detail : les 5 états du serveur sont reconnus ; un état inconnu est toléré (traitement inconnu)")
+    void detail_tous_les_etats() {
+        assertThat(etatLu("PLANIFIE")).isEqualTo(EtatTraitement.PLANIFIE);
+        assertThat(etatLu("EN_COURS")).isEqualTo(EtatTraitement.EN_COURS);
+        assertThat(etatLu("FINI")).isEqualTo(EtatTraitement.FINI);
+        assertThat(etatLu("ERREUR")).isEqualTo(EtatTraitement.ERREUR);
+        assertThat(etatLu("RETRY")).isEqualTo(EtatTraitement.RETRY);
+
+        // Le serveur peut introduire un état sans nous prévenir : on ne lève pas, on l'ignore.
+        assertThat(etatLu("ETAT_INEDIT")).isNull();
+        assertThat(ParticipationsVigieChiro.detail("{\"_id\":\"x\",\"traitement\":{\"etat\":\"ETAT_INEDIT\"}}")
+                        .orElseThrow()
+                        .traitement()
+                        .estInconnu())
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("detail : compteur d'essais non numérique ignoré (lecture tolérante)")
+    void detail_retry_illisible() {
+        Traitement traitement = ParticipationsVigieChiro.detail(
+                        "{\"_id\":\"x\",\"traitement\":{\"etat\":\"ERREUR\",\"retry\":\"beaucoup\"}}")
+                .orElseThrow()
+                .traitement();
+
+        assertThat(traitement.retry()).isNull();
+        assertThat(traitement.enEchec()).isTrue();
     }
 
     @Test
@@ -100,10 +155,21 @@ class ParticipationsVigieChiroTest {
                 .orElseThrow();
         assertThat(minimal.meteo()).isNull();
         assertThat(minimal.configuration()).isEmpty();
-        assertThat(minimal.etatTraitement()).isNull();
         assertThat(minimal.etag()).isNull();
+        // Jamais calculée : le bloc traitement est absent, pas null (l'appelant n'a pas à s'en méfier).
+        assertThat(minimal.traitement()).isEqualTo(Traitement.absent());
+        assertThat(minimal.traitement().estInconnu()).isTrue();
+        assertThat(minimal.traitement().resultatsDisponibles()).isFalse();
 
         assertThat(ParticipationsVigieChiro.detail("{\"point\":\"Z1\"}")).isEmpty(); // sans _id
         assertThat(ParticipationsVigieChiro.detail("pas du json")).isEmpty();
+    }
+
+    /// État lu depuis un corps minimal ne portant que `traitement.etat`, ou `null` s'il est inconnu.
+    private static EtatTraitement etatLu(String etat) {
+        return ParticipationsVigieChiro.detail("{\"_id\":\"x\",\"traitement\":{\"etat\":\"" + etat + "\"}}")
+                .orElseThrow()
+                .traitement()
+                .etat();
     }
 }

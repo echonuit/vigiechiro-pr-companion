@@ -16,7 +16,8 @@ import java.util.Map;
 /// @param meteo bloc météo (vent/couverture), ou `null`
 /// @param configuration dictionnaire matériel (`micro0_*`, `detecteur_enregistreur_*`), jamais `null`
 ///     (vide si absent)
-/// @param etatTraitement état du traitement Tadarida (`traitement.etat`, ex. `FINI`), ou `null`
+/// @param traitement état de l'analyse Tadarida côté serveur, jamais `null` ([Traitement#absent()] si la
+///     participation n'a jamais été calculée)
 public record ParticipationDetail(
         String id,
         String etag,
@@ -25,4 +26,4 @@ public record ParticipationDetail(
         String dateFin,
         MeteoDepot meteo,
         Map<String, String> configuration,
-        String etatTraitement) {}
+        Traitement traitement) {}

@@ -22,6 +22,14 @@ final class ParticipationsVigieChiro {
     /// Clé de l'identifiant MongoDB (`_id`).
     private static final String CLE_ID = "_id";
 
+    /// Clé de début : la participation la porte (début de nuit) **et** son bloc `traitement` aussi (prise en
+    /// charge par un worker) — deux sens, une seule orthographe côté API.
+    private static final String CLE_DATE_DEBUT = "date_debut";
+
+    /// Clé de fin, portée elle aussi par la participation (fin de nuit) et par le `traitement` (fin, y
+    /// compris en échec).
+    private static final String CLE_DATE_FIN = "date_fin";
+
     /// Numéro de carré = **6 chiffres isolés** dans le titre du site (ex. « …-130711 »).
     private static final Pattern CARRE = Pattern.compile("(?<!\\d)\\d{6}(?!\\d)");
 
@@ -71,7 +79,7 @@ final class ParticipationsVigieChiro {
             participations.add(new ParticipationVigieChiro(
                     id,
                     ReponsesVigieChiro.texte(objet, "point"),
-                    ReponsesVigieChiro.texte(objet, "date_debut"),
+                    ReponsesVigieChiro.texte(objet, CLE_DATE_DEBUT),
                     siteTitre));
         }
         return participations;
@@ -91,11 +99,11 @@ final class ParticipationsVigieChiro {
                     id,
                     ReponsesVigieChiro.texte(objet, "_etag"),
                     ReponsesVigieChiro.texte(objet, "point"),
-                    ReponsesVigieChiro.texte(objet, "date_debut"),
-                    ReponsesVigieChiro.texte(objet, "date_fin"),
+                    ReponsesVigieChiro.texte(objet, CLE_DATE_DEBUT),
+                    ReponsesVigieChiro.texte(objet, CLE_DATE_FIN),
                     meteo(objet),
                     configuration(objet),
-                    etatTraitement(objet)));
+                    traitement(objet)));
         } catch (RuntimeException illisible) {
             return Optional.empty();
         }
@@ -126,10 +134,33 @@ final class ParticipationsVigieChiro {
         return config;
     }
 
-    /// État du traitement Tadarida (`traitement.etat`, ex. `FINI`), ou `null`.
-    private static String etatTraitement(JsonObject participation) {
+    /// Bloc `traitement` (état + dates + trace d'erreur + compteur d'essais), jamais `null` :
+    /// [Traitement#absent()] quand la participation n'a jamais été calculée. L'état inconnu est toléré
+    /// (cf. [EtatTraitement#depuis]), le compteur d'essais illisible est ignoré.
+    private static Traitement traitement(JsonObject participation) {
         JsonElement brut = participation.get("traitement");
-        return brut != null && brut.isJsonObject() ? ReponsesVigieChiro.texte(brut.getAsJsonObject(), "etat") : null;
+        if (brut == null || !brut.isJsonObject()) {
+            return Traitement.absent();
+        }
+        JsonObject traitement = brut.getAsJsonObject();
+        return new Traitement(
+                EtatTraitement.depuis(ReponsesVigieChiro.texte(traitement, "etat"))
+                        .orElse(null),
+                ReponsesVigieChiro.texte(traitement, "date_planification"),
+                ReponsesVigieChiro.texte(traitement, CLE_DATE_DEBUT),
+                ReponsesVigieChiro.texte(traitement, CLE_DATE_FIN),
+                ReponsesVigieChiro.texte(traitement, "message"),
+                entier(traitement, "retry"));
+    }
+
+    /// Entier optionnel d'un objet JSON : `null` si absent, non numérique ou illisible (tolérant).
+    private static Integer entier(JsonObject objet, String cle) {
+        String valeur = ReponsesVigieChiro.texte(objet, cle);
+        try {
+            return valeur == null ? null : Integer.valueOf(valeur.trim());
+        } catch (NumberFormatException pasUnEntier) {
+            return null;
+        }
     }
 
     /// Numéro de carré (6 chiffres isolés) extrait du titre du site, ou `null` s'il n'y en a pas.

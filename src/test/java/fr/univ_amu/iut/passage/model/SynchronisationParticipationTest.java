@@ -10,9 +10,11 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -211,7 +213,13 @@ class SynchronisationParticipationTest {
 
     /// Participation distante minimale pour le pré-vol (météo/config sans objet ici).
     private static ParticipationDetail detail(String id, String point, String dateDebut) {
-        return new ParticipationDetail(id, "e1", point, dateDebut, null, null, Map.of(), "FINI");
+        return new ParticipationDetail(id, "e1", point, dateDebut, null, null, Map.of(), traitementFini());
+    }
+
+    /// Nuit déjà analysée côté serveur : le pré-vol et la synchronisation n'en dépendent pas, mais le
+    /// détail distant en porte toujours un (#1260).
+    private static Traitement traitementFini() {
+        return new Traitement(EtatTraitement.FINI, null, null, "2026-07-04T06:00:00+00:00", null, null);
     }
 
     private void armerPassageEtPoint() {
@@ -228,7 +236,7 @@ class SynchronisationParticipationTest {
                 "2026-07-04T04:00:00+00:00",
                 new MeteoDepot("FAIBLE", "0-25"),
                 Map.of("micro0_type", "ICS", "micro0_position", "CANOPEE"),
-                "FINI");
+                traitementFini());
     }
 
     private static Passage passage(String donneesMeteo) {
