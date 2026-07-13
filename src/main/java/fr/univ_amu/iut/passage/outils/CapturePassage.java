@@ -24,6 +24,7 @@ import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -145,7 +146,9 @@ public final class CapturePassage {
     /// rend le pivot hors-écran.
     private static void rendrePivot(Injector injecteur, long idPassage, Path fichier) throws IOException {
         PassageViewModel passageVm = new PassageViewModel(
-                injecteur.getInstance(ServicePassage.class), injecteur.getInstance(ServicePurgeOriginaux.class));
+                injecteur.getInstance(ServicePassage.class),
+                injecteur.getInstance(ServicePurgeOriginaux.class),
+                injecteur.getInstance(ServiceArchivagePassage.class));
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(type -> type == PassageController.class
                 ? new PassageController(

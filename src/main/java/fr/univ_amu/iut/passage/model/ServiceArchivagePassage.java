@@ -114,6 +114,7 @@ public class ServiceArchivagePassage {
         long octetsLiberes = purgerSequences(sequenceDao.findBySession(session.id()));
         octetsLiberes += purgeOriginaux.purgerSession(Path.of(session.cheminRacine()));
         sessionDao.marquerOriginauxPurges(session.id());
+        sessionDao.marquerSequencesPurgees(session.id());
         sessionDao.marquerArchivee(session.id(), horloge.maintenant());
         disponibilite.invalider(idPassage);
         return new BilanArchivage(octetsLiberes, empreintesCapturees);

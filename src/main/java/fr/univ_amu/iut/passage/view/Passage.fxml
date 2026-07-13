@@ -47,6 +47,12 @@
         <Button fx:id="boutonPurger" text="🧹 Purger les originaux"
                 styleClass="bouton-secondaire" onAction="#purgerOriginaux"
                 visible="false" managed="false"/>
+        <!-- Enveloppe (#789) : le tooltip explique pourquoi l'archivage est bloqué (passage non déposé,
+             ou déjà archivé) et survit à la désactivation du bouton (#1300). -->
+        <StackPane fx:id="enveloppeArchiver">
+          <Button fx:id="boutonArchiver" text="📦 Archiver ce passage"
+                  styleClass="bouton-secondaire" onAction="#archiver"/>
+        </StackPane>
         <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe sur ce
              StackPane (qui, lui, reçoit le survol) pour expliquer pourquoi la suppression est bloquée
              sur un passage déposé (#789). -->

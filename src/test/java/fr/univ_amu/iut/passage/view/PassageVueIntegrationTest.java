@@ -24,6 +24,7 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
@@ -204,6 +205,8 @@ class PassageVueIntegrationTest {
         assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isFalse();
         // Déposé : le renommage (« Modifier le passage ») est bloqué, son nom étant l'identité serveur (#1134).
         assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isTrue();
+        // Déposé avec audio conservé (volumes > 0 dans la fixture) : l'archivage devient possible (#1300).
+        assertThat(bouton(vue, "#boutonArchiver").isDisabled()).isFalse();
         // Déposé → la mise en avant est passée à la carte « Sons & validation » (le dépôt n'est plus recommandé).
         assertThat(estRecommandee(bouton(vue, "#boutonValidation"))).isTrue();
         assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();
@@ -262,6 +265,7 @@ class PassageVueIntegrationTest {
     private Parent charger(StatutWorkflow statut, int numero) {
         ServicePassage service = mock(ServicePassage.class);
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
+        ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
         when(service.detailPassage(anyLong())).thenReturn(detail(statut, numero));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
@@ -279,7 +283,7 @@ class PassageVueIntegrationTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge);
+                return new PassageViewModel(service, purge, archivage);
             }
 
             @Provides

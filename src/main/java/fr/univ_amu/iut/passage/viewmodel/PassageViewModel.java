@@ -5,12 +5,10 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
-import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -34,6 +32,7 @@ public class PassageViewModel {
 
     private final ServicePassage service;
     private final ServicePurgeOriginaux purge;
+    private final ServiceArchivagePassage archivage;
 
     private final ReadOnlyStringWrapper titreContexte = new ReadOnlyStringWrapper(this, "titreContexte", "");
     private final ReadOnlyStringWrapper plageHoraire = new ReadOnlyStringWrapper(this, "plageHoraire", "");
@@ -57,6 +56,10 @@ public class PassageViewModel {
     private final ReadOnlyBooleanWrapper renommagePossible =
             new ReadOnlyBooleanWrapper(this, "renommagePossible", false);
     private final ReadOnlyBooleanWrapper purgeDisponible = new ReadOnlyBooleanWrapper(this, "purgeDisponible", false);
+    private final ReadOnlyBooleanWrapper archivagePossible =
+            new ReadOnlyBooleanWrapper(this, "archivagePossible", false);
+    private final ReadOnlyStringWrapper motifBlocageArchivage =
+            new ReadOnlyStringWrapper(this, "motifBlocageArchivage", "");
     private final ReadOnlyObjectWrapper<ActionRecommandee> actionRecommandee =
             new ReadOnlyObjectWrapper<>(this, "actionRecommandee", ActionRecommandee.AUCUNE);
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
@@ -68,9 +71,10 @@ public class PassageViewModel {
     /// n'est chargé.
     private int numeroPassage;
 
-    public PassageViewModel(ServicePassage service, ServicePurgeOriginaux purge) {
+    public PassageViewModel(ServicePassage service, ServicePurgeOriginaux purge, ServiceArchivagePassage archivage) {
         this.service = Objects.requireNonNull(service, "service");
         this.purge = Objects.requireNonNull(purge, "purge");
+        this.archivage = Objects.requireNonNull(archivage, "archivage");
     }
 
     /// Ouvre l'écran sur le passage `idPassage` en **synchrone**, composition de [#charger] +
@@ -133,6 +137,25 @@ public class PassageViewModel {
         service.marquerOriginauxPurges(idPassage);
     }
 
+    /// Espace récupérable par l'archivage du passage courant (annonce avant confirmation, #1300).
+    public long volumeArchivable() {
+        return archivage.volumeRecuperable(idPassage);
+    }
+
+    /// Séquences du passage courant encore sans empreinte (#1299) : annoncé avant la confirmation,
+    /// leur identité sera capturée in extremis par l'archivage.
+    public int sequencesSansEmpreinte() {
+        return archivage.sequencesSansEmpreinte(idPassage);
+    }
+
+    /// Archive le passage courant (action « Archiver » de M-Passage, #1300) : purge l'audio, garde
+    /// observations et validations. Délègue à [ServiceArchivagePassage#archiver] ; la
+    /// [fr.univ_amu.iut.commun.model.RegleMetierException] d'un passage non déposé remonte à la vue,
+    /// qui l'affiche. Le rechargement de l'affichage est à la charge de l'appelant.
+    public ServiceArchivagePassage.BilanArchivage archiver() {
+        return archivage.archiver(idPassage);
+    }
+
     private void appliquer(DetailPassage detail, ContexteSite contexte) {
         // Identité pour la zone gauche de la barre de statut : format unifié « Carré X · Point · N° Z »
         // (socle #1020, harmonisation #1088), au lieu d'un format « / » propre à cet écran. L'année reste
@@ -147,7 +170,7 @@ public class PassageViewModel {
         volumeTransformes.set(Formats.octetsLisibles(detail.volumeSequencesOctets()));
         dureeEnregistree.set(Formats.dureeLisible(detail.dureeEnregistreeSecondes()));
         nombreSequences.set(detail.nombreSequences());
-        etapes.setAll(construireEtapes(detail.statut()));
+        etapes.setAll(EtapesWorkflow.construire(detail.statut()));
         verificationDisponible.set(detail.statut().ordinal() >= StatutWorkflow.TRANSFORME.ordinal());
         validationVerrouillee.set(detail.statut() != StatutWorkflow.DEPOSE);
         // Accès à l'écran de dépôt (M-Lot) dès le passage vérifié ET **même une fois déposé** (#…) : on doit
@@ -164,20 +187,27 @@ public class PassageViewModel {
                 detail.statut() != StatutWorkflow.DEPOSE && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
-        actionRecommandee.set(prochaineAction(detail.statut()));
+        // Archivage (#1300) : possible sur un passage déposé qui conserve encore de l'audio. Gating
+        // amont (#789) plutôt que découverte du refus après confirmation ; le motif alimente le
+        // tooltip de l'enveloppe.
+        boolean audioConserve = detail.volumeSequencesOctets() > 0 || detail.volumeOriginauxOctets() > 0;
+        archivagePossible.set(detail.statut() == StatutWorkflow.DEPOSE && audioConserve);
+        motifBlocageArchivage.set(motifBlocage(detail.statut(), audioConserve));
+        actionRecommandee.set(EtapesWorkflow.prochaineAction(detail.statut()));
     }
 
-    /// Déduit la prochaine action recommandée du statut (progression linéaire du workflow) : la carte
-    /// correspondante est mise en avant dans M-Passage.
-    private static ActionRecommandee prochaineAction(StatutWorkflow statut) {
-        return switch (statut) {
-            case IMPORTE -> ActionRecommandee.AUCUNE;
-            case TRANSFORME -> ActionRecommandee.VERIFIER;
-            // « Dépôt en cours » (#980) : un dépôt interrompu se reprend depuis M-Lot → même mise en
-            // avant que « déposer » (la carte Lot porte la reprise).
-            case VERIFIE, PRET_A_DEPOSER, DEPOT_EN_COURS -> ActionRecommandee.DEPOSER;
-            case DEPOSE -> ActionRecommandee.VALIDER;
-        };
+    /// Motif affiché quand l'archivage est bloqué (tooltip de l'enveloppe, #789) ; chaîne vide quand
+    /// il est possible.
+    private static String motifBlocage(StatutWorkflow statut, boolean audioConserve) {
+        if (statut != StatutWorkflow.DEPOSE) {
+            return "Archivage impossible : le passage n'est pas encore déposé. L'audio est nécessaire"
+                    + " jusqu'au dépôt et à l'analyse par la plateforme.";
+        }
+        if (!audioConserve) {
+            return "Déjà archivé : l'audio de ce passage n'est plus conservé localement."
+                    + " Réimportez les fichiers d'origine pour le réactiver.";
+        }
+        return "";
     }
 
     private void reinitialiser() {
@@ -199,30 +229,9 @@ public class PassageViewModel {
         suppressionPossible.set(false);
         renommagePossible.set(false);
         purgeDisponible.set(false);
+        archivagePossible.set(false);
+        motifBlocageArchivage.set("");
         actionRecommandee.set(ActionRecommandee.AUCUNE);
-    }
-
-    /// Étapes du stepper : les 5 statuts **jalons** du workflow. Le statut technique « Dépôt en cours »
-    /// (#980) n'est pas un jalon : tant que le dépôt automatique n'est pas terminé, le jalon courant
-    /// reste « Prêt à déposer » (le détail du dépôt — unités téléversées, reprise — vit dans M-Lot).
-    private static List<EtapeWorkflow> construireEtapes(StatutWorkflow courant) {
-        StatutWorkflow jalon = courant == StatutWorkflow.DEPOT_EN_COURS ? StatutWorkflow.PRET_A_DEPOSER : courant;
-        List<EtapeWorkflow> liste = new ArrayList<>();
-        for (StatutWorkflow etape : StatutWorkflow.values()) {
-            if (etape == StatutWorkflow.DEPOT_EN_COURS) {
-                continue;
-            }
-            EtatEtape etat;
-            if (etape.ordinal() < jalon.ordinal()) {
-                etat = EtatEtape.FRANCHIE;
-            } else if (etape == jalon) {
-                etat = EtatEtape.COURANTE;
-            } else {
-                etat = EtatEtape.A_VENIR;
-            }
-            liste.add(new EtapeWorkflow(etape, etat));
-        }
-        return liste;
     }
 
     /// Numéro de passage dans l'année (0 si aucun passage chargé), pour le libellé du fil d'Ariane.
@@ -320,6 +329,14 @@ public class PassageViewModel {
     /// pour récupérer l'espace disque.
     public ReadOnlyBooleanProperty purgeDisponibleProperty() {
         return purgeDisponible.getReadOnlyProperty();
+    }
+
+    public ReadOnlyBooleanProperty archivagePossibleProperty() {
+        return archivagePossible.getReadOnlyProperty();
+    }
+
+    public ReadOnlyStringProperty motifBlocageArchivageProperty() {
+        return motifBlocageArchivage.getReadOnlyProperty();
     }
 
     /// Prochaine action recommandée du workflow (carte mise en avant), dérivée du statut. Se déplace

@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.ArrayList;
@@ -39,6 +40,9 @@ class PassageControllerEmplacementTest {
 
     @Mock
     private ServicePurgeOriginaux purge;
+
+    @Mock
+    private ServiceArchivagePassage archivage;
 
     @Mock
     private NavigationPassage navigation;
@@ -76,7 +80,7 @@ class PassageControllerEmplacementTest {
                         30,
                         150.0,
                         null));
-        PassageViewModel vm = new PassageViewModel(service, purge);
+        PassageViewModel vm = new PassageViewModel(service, purge, archivage);
         List<String> ouvertures = new ArrayList<>();
         OuvrirSite ouvrirSite = new OuvrirSite() {
             @Override
@@ -111,7 +115,7 @@ class PassageControllerEmplacementTest {
     @Test
     @DisplayName("Sans contexte (passage non ouvert), l'emplacement se limite au segment courant")
     void emplacement_sans_contexte() {
-        PassageViewModel vm = new PassageViewModel(service, purge);
+        PassageViewModel vm = new PassageViewModel(service, purge, archivage);
         OuvrirSite ouvrirSite = new OuvrirSite() {
             @Override
             public void ouvrirListe() {}

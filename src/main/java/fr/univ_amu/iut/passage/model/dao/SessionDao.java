@@ -70,6 +70,13 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
         executerMaj("UPDATE recording_session SET originals_total_bytes = 0 WHERE id = ?", idSession);
     }
 
+    /// Met à **zéro** le volume des séquences (`sequences_total_bytes`) d'une session, après purge de
+    /// son audio par l'archivage (#1300) : la fiche du passage reflète alors que les séquences ne
+    /// sont plus conservées (miroir de [#marquerOriginauxPurges]).
+    public void marquerSequencesPurgees(Long idSession) {
+        executerMaj("UPDATE recording_session SET sequences_total_bytes = 0 WHERE id = ?", idSession);
+    }
+
     /// Pose le marqueur **explicite** d'archivage (#1300) : enregistre le geste volontaire, ce qui
     /// distingue un passage archivé d'un passage corrompu aux yeux de l'audit (#1303, #1348).
     public void marquerArchivee(Long idSession, LocalDateTime horodatage) {

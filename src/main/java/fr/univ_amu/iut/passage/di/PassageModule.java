@@ -249,8 +249,9 @@ public class PassageModule extends ModuleDeFeature {
     /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les
     /// autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
     @Provides
-    PassageViewModel fournirPassageViewModel(ServicePassage service, ServicePurgeOriginaux purge) {
-        return new PassageViewModel(service, purge);
+    PassageViewModel fournirPassageViewModel(
+            ServicePassage service, ServicePurgeOriginaux purge, ServiceArchivagePassage archivage) {
+        return new PassageViewModel(service, purge, archivage);
     }
 
     /// ViewModel de la modale « Modifier le rattachement » (E2.S8). **Non-singleton** : un VM frais
