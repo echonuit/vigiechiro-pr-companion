@@ -3,6 +3,8 @@ package fr.univ_amu.iut.validation.model;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -21,11 +23,20 @@ import java.util.Optional;
 public class ImportVigieChiro {
 
     private final ClientVigieChiro client;
+
+    /// État du traitement serveur (#1260) : ce qui permet de dire POURQUOI il n y a rien a importer.
+    private final TraitementVigieChiro traitement;
+
     private final LienVigieChiroDao liens;
     private final ServiceValidation service;
 
-    public ImportVigieChiro(ClientVigieChiro client, LienVigieChiroDao liens, ServiceValidation service) {
+    public ImportVigieChiro(
+            ClientVigieChiro client,
+            TraitementVigieChiro traitement,
+            LienVigieChiroDao liens,
+            ServiceValidation service) {
         this.client = Objects.requireNonNull(client, "client");
+        this.traitement = Objects.requireNonNull(traitement, "traitement");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.service = Objects.requireNonNull(service, "service");
     }
@@ -50,9 +61,12 @@ public class ImportVigieChiro {
     }
 
     /// Importe les résultats Tadarida de la participation rattachée au passage. **Bloquant** (récupère les
-    /// `donnees` sur le réseau puis importe en base). Lève une [RegleMetierException] si le passage n'est
-    /// rattaché à aucune participation, ou si aucun résultat n'est encore disponible (analyse Tadarida non
-    /// terminée côté serveur, ou connexion indisponible).
+    /// `donnees` sur le réseau puis importe en base).
+    ///
+    /// Lève une [RegleMetierException] si le passage n'est rattaché à aucune participation, ou s'il n'y a
+    /// rien à importer — et, dans ce dernier cas, **dit pourquoi** (#1264) : le serveur renvoie « 200, liste
+    /// vide » tant que l'analyse n'est pas terminée, si bien que l'absence de résultats n'est pas une erreur
+    /// mais un **état**, qu'on relit pour l'expliquer (cf. [#pourquoiRienAImporter]).
     ///
     /// @param idPassage passage cible
     /// @param remplacer remplace le jeu existant (en préservant les validations observateur) si `true`
@@ -65,10 +79,45 @@ public class ImportVigieChiro {
                         + " existante)."));
         List<DonneeVigieChiro> donnees = client.donnees(participationId);
         if (donnees.isEmpty()) {
-            throw new RegleMetierException("Aucun résultat Tadarida disponible sur VigieChiro pour cette"
-                    + " participation (analyse serveur pas encore terminée, ou connexion indisponible).");
+            throw new RegleMetierException(pourquoiRienAImporter(participationId));
         }
         return service.importerDepuisVigieChiro(idPassage, donnees, remplacer);
+    }
+
+    /// **Pourquoi il n'y a rien à importer** (#1264). Le serveur répond « 200, liste vide » tant que
+    /// l'analyse n'est pas finie : l'absence de résultats n'est donc pas une erreur, c'est un état — encore
+    /// faut-il le dire. Le message d'avant les confondait tous (« analyse pas encore terminée, ou connexion
+    /// indisponible »), laissant l'observateur sans rien à faire de cette information.
+    ///
+    /// On relit donc l'état du traitement (#1260) et on rend la vraie raison, avec le geste qui va avec.
+    private String pourquoiRienAImporter(String participationId) {
+        Traitement traitement = this.traitement.etat(participationId);
+        if (traitement.estInconnu()) {
+            return "L'analyse n'a jamais été lancée sur VigieChiro pour cette nuit (ou la plateforme est"
+                    + " injoignable). Lancez-la depuis « Préparer le dépôt », étape ④.";
+        }
+        return switch (traitement.etat()) {
+            case PLANIFIE ->
+                "L'analyse est planifiée sur VigieChiro, mais n'a pas encore démarré."
+                        + " Réessayez une fois qu'elle sera terminée (le suivi est affiché dans « Préparer le dépôt »).";
+            case EN_COURS, RETRY ->
+                "L'analyse est en cours sur VigieChiro : les observations n'existeront"
+                        + " qu'une fois le calcul terminé. Comptez plusieurs dizaines de minutes.";
+            case ERREUR ->
+                "L'analyse a échoué sur VigieChiro : il n'y a aucune observation à importer." + motif(traitement);
+            case FINI ->
+                "VigieChiro annonce l'analyse terminée, mais ne renvoie aucune observation pour cette"
+                        + " participation. Vérifiez le dépôt (les fichiers sont-ils bien arrivés ?).";
+        };
+    }
+
+    /// Première ligne de la trace serveur : de quoi demander de l'aide, sans déverser une pile Python.
+    private static String motif(Traitement traitement) {
+        String message = traitement.message();
+        if (message == null || message.isBlank()) {
+            return "";
+        }
+        return " Motif : " + message.strip().lines().findFirst().orElse("");
     }
 
     private Optional<String> participation(Long idPassage) {

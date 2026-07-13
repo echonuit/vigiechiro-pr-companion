@@ -9,8 +9,11 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
+import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.ObservationVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
@@ -45,9 +48,12 @@ class ImportVigieChiroTest {
 
     private ImportVigieChiro importateur;
 
+    @Mock
+    private TraitementVigieChiro traitement;
+
     @BeforeEach
     void preparer() {
-        importateur = new ImportVigieChiro(client, liens, service);
+        importateur = new ImportVigieChiro(client, traitement, liens, service);
     }
 
     @Test
@@ -84,16 +90,76 @@ class ImportVigieChiroTest {
     }
 
     @Test
-    @DisplayName("aucun résultat disponible (Tadarida non terminé / hors ligne) → refus dur, aucun import")
-    void aucun_resultat_leve() {
-        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of(PARTICIPATION));
-        when(client.donnees(PARTICIPATION)).thenReturn(List.of());
+    @DisplayName("#1264 : analyse EN COURS → on le dit, et on ne parle plus d'erreur (il n'y a qu'à attendre)")
+    void rien_a_importer_car_analyse_en_cours() {
+        // Le serveur répond « 200, liste vide » tant que le calcul tourne : ce n'est pas une panne, c'est un
+        // état. Le message d'avant confondait tout (« pas encore terminée, OU connexion indisponible »).
+        armerParticipationSansDonnees();
+        when(traitement.etat(PARTICIPATION)).thenReturn(etat(EtatTraitement.EN_COURS));
 
         assertThatThrownBy(() -> importateur.importer(ID_PASSAGE, false))
                 .isInstanceOf(RegleMetierException.class)
-                .hasMessageContaining("Aucun résultat");
+                .hasMessageContaining("en cours")
+                .hasMessageContaining("dizaines de minutes");
+        aucunImport();
+    }
+
+    @Test
+    @DisplayName("#1264 : analyse JAMAIS LANCÉE → on renvoie vers l'étape qui la lance")
+    void rien_a_importer_car_jamais_lancee() {
+        armerParticipationSansDonnees();
+        when(traitement.etat(PARTICIPATION)).thenReturn(Traitement.absent());
+
+        assertThatThrownBy(() -> importateur.importer(ID_PASSAGE, false))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("jamais été lancée")
+                .hasMessageContaining("Préparer le dépôt");
+        aucunImport();
+    }
+
+    @Test
+    @DisplayName("#1264 : analyse EN ÉCHEC → le motif du serveur est restitué (première ligne)")
+    void rien_a_importer_car_analyse_en_echec() {
+        armerParticipationSansDonnees();
+        when(traitement.etat(PARTICIPATION))
+                .thenReturn(new Traitement(
+                        EtatTraitement.ERREUR, null, null, null, "RuntimeError: boum\n  at ligne 12", 1));
+
+        assertThatThrownBy(() -> importateur.importer(ID_PASSAGE, false))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("a échoué")
+                .hasMessageContaining("RuntimeError: boum")
+                .hasMessageNotContaining("at ligne 12");
+        aucunImport();
+    }
+
+    @Test
+    @DisplayName("#1264 : analyse TERMINÉE mais aucune observation → c'est le dépôt qu'il faut vérifier")
+    void rien_a_importer_alors_que_l_analyse_est_finie() {
+        // Cas anormal : le calcul est fini et pourtant le serveur ne renvoie rien. Ce n'est plus une question
+        // de patience — quelque chose s'est perdu en route.
+        armerParticipationSansDonnees();
+        when(traitement.etat(PARTICIPATION)).thenReturn(etat(EtatTraitement.FINI));
+
+        assertThatThrownBy(() -> importateur.importer(ID_PASSAGE, false))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("aucune observation")
+                .hasMessageContaining("Vérifiez le dépôt");
+        aucunImport();
+    }
+
+    private void armerParticipationSansDonnees() {
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of(PARTICIPATION));
+        when(client.donnees(PARTICIPATION)).thenReturn(List.of());
+    }
+
+    private void aucunImport() {
         verify(service, never())
                 .importerDepuisVigieChiro(eq(ID_PASSAGE), org.mockito.ArgumentMatchers.any(), eq(false));
+    }
+
+    private static Traitement etat(EtatTraitement etat) {
+        return new Traitement(etat, null, "2026-07-13T09:00:00+00:00", null, null, null);
     }
 
     @Test

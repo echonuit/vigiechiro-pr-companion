@@ -7,6 +7,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -46,7 +47,10 @@ public class ImportVigieChiroModule extends ModuleDeFeature {
     @Singleton
     @Named(QUALIFIANT)
     ImportVigieChiro fournirImportVigieChiro(
-            ClientVigieChiro client, LienVigieChiroDao liens, ServiceValidation service) {
-        return new ImportVigieChiro(client, liens, service);
+            ClientVigieChiro client,
+            TraitementVigieChiro traitement,
+            LienVigieChiroDao liens,
+            ServiceValidation service) {
+        return new ImportVigieChiro(client, traitement, liens, service);
     }
 }
