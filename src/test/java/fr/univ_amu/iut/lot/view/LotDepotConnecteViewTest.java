@@ -11,6 +11,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
+import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -112,7 +113,7 @@ class LotDepotConnecteViewTest {
     @Test
     @DisplayName("#984 : clic sur « Lancer la participation » → le compte rendu du compute est demandé au moteur")
     void clic_lance_le_traitement_serveur(FxRobot robot) {
-        when(depot.lancerTraitement(ID_PASSAGE)).thenReturn(true);
+        when(depot.lancerTraitement(ID_PASSAGE)).thenReturn(ResultatLancement.accepte());
 
         robot.clickOn("#btnDeposer");
 

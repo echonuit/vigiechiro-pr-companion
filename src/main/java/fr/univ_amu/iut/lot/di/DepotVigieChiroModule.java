@@ -7,6 +7,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -70,16 +71,25 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
         return new VerificationDepot(participations, client, depotUnites);
     }
 
+    /// Traitement serveur (compute + état) : collaborateur du client, extrait de lui (#1261).
+    @Provides
+    @Singleton
+    TraitementVigieChiro fournirTraitementVigieChiro(ClientVigieChiro client) {
+        return new TraitementVigieChiro(client);
+    }
+
     @Provides
     @Singleton
     @Named(QUALIFIANT)
     DepotVigieChiro fournirDepotVigieChiro(
             @Named(QUALIFIANT) SynchronisationParticipation participations,
             ClientVigieChiro client,
+            TraitementVigieChiro traitement,
             DepotUniteDao depotUnites,
             PassageDao passageDao,
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge) {
-        return new DepotVigieChiro(participations, client, depotUnites, passageDao, moteurWorkflow, horloge);
+        return new DepotVigieChiro(
+                participations, client, traitement, depotUnites, passageDao, moteurWorkflow, horloge);
     }
 }

@@ -2,7 +2,10 @@ package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
+import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.Traitement;
+import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -52,6 +55,9 @@ public final class DepotVigieChiro {
 
     private final SynchronisationParticipation participations;
     private final ClientVigieChiro client;
+
+    /// Traitement serveur (compute + lecture de l'état) : le client transporte, celui-ci décide (#1261).
+    private final TraitementVigieChiro traitement;
     private final DepotUniteDao depotUnites;
     private final PassageDao passageDao;
     private final MoteurWorkflowPassage moteurWorkflow;
@@ -61,12 +67,14 @@ public final class DepotVigieChiro {
     public DepotVigieChiro(
             SynchronisationParticipation participations,
             ClientVigieChiro client,
+            TraitementVigieChiro traitement,
             DepotUniteDao depotUnites,
             PassageDao passageDao,
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge) {
         this.participations = Objects.requireNonNull(participations, "participations");
         this.client = Objects.requireNonNull(client, "client");
+        this.traitement = Objects.requireNonNull(traitement, "traitement");
         this.depotUnites = Objects.requireNonNull(depotUnites, "depotUnites");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteurWorkflow = Objects.requireNonNull(moteurWorkflow, "moteurWorkflow");
@@ -80,16 +88,46 @@ public final class DepotVigieChiro {
     }
 
     /// Lance le **traitement serveur** (compute, #984) de la participation liée au passage `idPassage` :
-    /// équivalent du bouton « Lancer la participation » du web, à déclencher une fois les fichiers
-    /// déposés. `true` si le serveur a accepté. Lève une [RegleMetierException] si aucune participation
-    /// n'est liée au passage (rien à traiter : déposer d'abord).
-    public boolean lancerTraitement(Long idPassage) {
+    /// équivalent du bouton « Lancer la participation » du web, à déclencher une fois les fichiers déposés.
+    /// Lève une [RegleMetierException] si aucune participation n'est liée au passage (rien à traiter :
+    /// déposer d'abord).
+    ///
+    /// **Première demande seulement.** Si la participation a déjà été calculée, la demande est bloquée
+    /// **ici**, sans appeler le serveur : cf. [#lancerTraitement(Long, boolean)].
+    public ResultatLancement lancerTraitement(Long idPassage) {
+        return lancerTraitement(idPassage, false);
+    }
+
+    /// Lance le traitement serveur, en autorisant éventuellement une **relance**.
+    ///
+    /// ⚠️ **Une relance n'est pas un simple « réessayer ».** À chaque compute, le serveur **supprime toutes
+    /// les `donnees` avant de recalculer** (`task_participation.py:726-731`). Sur une nuit déposée en
+    /// **archives ZIP** — le mode par défaut depuis #984 — les WAV extraits ne sont pas conservés sur S3
+    /// (#1244) : le recalcul ne peut donc pas les relire, et les observations sont **définitivement
+    /// perdues**. Tant que la participation n'a **jamais** été calculée, le lancement est sûr ; ensuite, il
+    /// détruit. D'où la garde : `forcer` doit être demandé explicitement (option `--forcer`, #1265), en
+    /// connaissance de cause.
+    ///
+    /// La garde est **locale** : on relit l'état du traitement et on refuse de notre propre chef, sans rien
+    /// demander au serveur (qui, lui, accepterait — il l'accepte volontiers passé 24 h).
+    public ResultatLancement lancerTraitement(Long idPassage, boolean forcer) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         String participationId = participations
                 .participationDe(idPassage)
                 .orElseThrow(() -> new RegleMetierException(
                         "Aucune participation VigieChiro liée à ce passage : déposez d'abord la nuit."));
-        return client.lancerTraitement(participationId);
+        Traitement dejaCalcule = traitement.etat(participationId);
+        if (!forcer && estDejaCalcule(dejaCalcule)) {
+            return ResultatLancement.relanceBloquee(dejaCalcule);
+        }
+        return traitement.lancer(participationId);
+    }
+
+    /// Un calcul a-t-il **déjà eu lieu** pour cette participation ? Vrai s'il est terminé ou en échec : dans
+    /// les deux cas, relancer écraserait le résultat précédent. Un traitement encore [Traitement#enAttente]
+    /// n'est pas concerné (rien à écraser, et c'est le serveur qui refusera la demande concurrente).
+    private static boolean estDejaCalcule(Traitement traitement) {
+        return traitement.resultatsDisponibles() || traitement.enEchec();
     }
 
     /// `true` si une participation VigieChiro est **liée** au passage (dépôt via l'API effectué), donc

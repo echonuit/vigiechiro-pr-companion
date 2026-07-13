@@ -4,6 +4,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.ResultatLancement;
+import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -34,7 +37,7 @@ class LancerTraitementVigieChiroTest {
     @Test
     @DisplayName("traitement accepté → code retour 0 + message de lancement")
     void traitement_accepte_code_zero() {
-        when(depot.lancerTraitement(42L)).thenReturn(true);
+        when(depot.lancerTraitement(42L)).thenReturn(ResultatLancement.accepte());
         StringWriter sortie = new StringWriter();
 
         int code = ligne(Optional.of(depot), sortie).execute("--passage", "42");
@@ -44,9 +47,39 @@ class LancerTraitementVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#1261 : traitement DÉJÀ en cours → code retour 0 (la commande est idempotente, pas en échec)")
+    void traitement_deja_lance_code_zero() {
+        // Rejouer la commande (script, cron, second essai) ne doit pas faire échouer le script : le
+        // traitement est bel et bien en route, c'est tout ce qui compte.
+        when(depot.lancerTraitement(42L))
+                .thenReturn(ResultatLancement.dejaLance(
+                        new Traitement(EtatTraitement.EN_COURS, null, null, null, null, null)));
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(code).isZero();
+        assertThat(sortie.toString()).contains("déjà en cours");
+    }
+
+    @Test
+    @DisplayName("#1261 : nuit déjà analysée → relance bloquée, code retour 1, message qui oriente vers l'import")
+    void relance_bloquee_code_un() {
+        when(depot.lancerTraitement(42L))
+                .thenReturn(ResultatLancement.relanceBloquee(
+                        new Traitement(EtatTraitement.FINI, null, null, null, null, null)));
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(code).isEqualTo(1);
+        assertThat(sortie.toString()).contains("déjà été analysée", "importer-vigiechiro");
+    }
+
+    @Test
     @DisplayName("traitement refusé par le serveur → code retour 1")
     void traitement_refuse_code_un() {
-        when(depot.lancerTraitement(42L)).thenReturn(false);
+        when(depot.lancerTraitement(42L)).thenReturn(ResultatLancement.refuse(403, "interdit"));
 
         int code = ligne(Optional.of(depot), new StringWriter()).execute("--passage", "42");
 
@@ -54,9 +87,21 @@ class LancerTraitementVigieChiroTest {
     }
 
     @Test
+    @DisplayName("serveur injoignable → code retour 1")
+    void serveur_injoignable_code_un() {
+        when(depot.lancerTraitement(42L)).thenReturn(ResultatLancement.injoignable());
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Optional.of(depot), sortie).execute("--passage", "42");
+
+        assertThat(code).isEqualTo(1);
+        assertThat(sortie.toString()).contains("injoignable");
+    }
+
+    @Test
     @DisplayName("--token pose le jeton ponctuel (propriété système)")
     void option_token_pose_le_jeton_ponctuel() {
-        when(depot.lancerTraitement(42L)).thenReturn(true);
+        when(depot.lancerTraitement(42L)).thenReturn(ResultatLancement.accepte());
 
         ligne(Optional.of(depot), new StringWriter()).execute("--passage", "42", "--token", "jeton-essai");
 

@@ -8,6 +8,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.api.EtatTraitement;
+import fr.univ_amu.iut.commun.api.IssueLancement;
+import fr.univ_amu.iut.commun.api.ResultatLancement;
+import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
@@ -178,9 +182,11 @@ class DepotViewModelTest {
     @Test
     @DisplayName("#984 : lancerTraitement délègue au moteur ; indisponible → refus")
     void lancer_traitement_delegue_ou_refuse() {
-        when(depot.lancerTraitement(ID_PASSAGE)).thenReturn(true);
-        assertThat(new DepotViewModel(service, Optional.of(depot)).lancerTraitement(ID_PASSAGE))
-                .isTrue();
+        when(depot.lancerTraitement(ID_PASSAGE)).thenReturn(ResultatLancement.accepte());
+        assertThat(new DepotViewModel(service, Optional.of(depot))
+                        .lancerTraitement(ID_PASSAGE)
+                        .issue())
+                .isEqualTo(IssueLancement.ACCEPTE);
 
         assertThatThrownBy(() -> new DepotViewModel(service, Optional.empty()).lancerTraitement(ID_PASSAGE))
                 .isInstanceOf(RegleMetierException.class)
@@ -205,15 +211,31 @@ class DepotViewModelTest {
     }
 
     @Test
-    @DisplayName("#984 : restituerLancement pose un message de succès ou d'échec")
+    @DisplayName("#1261 : restituerLancement dit ce qui s'est VRAIMENT passé, une issue à la fois")
     void restituer_lancement_message() {
         DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
 
-        vm.restituerLancement(true);
+        vm.restituerLancement(ResultatLancement.accepte());
         assertThat(vm.messageProperty().get()).contains("Traitement lancé");
 
-        vm.restituerLancement(false);
-        assertThat(vm.messageProperty().get()).contains("Échec");
+        // « Déjà en cours » n'est PAS un échec : le serveur travaille, il n'y a qu'à attendre. Avant
+        // #1261, ce cas s'affichait comme un échec, avec un point d'interrogation en prime.
+        vm.restituerLancement(ResultatLancement.dejaLance(traitement(EtatTraitement.EN_COURS)));
+        assertThat(vm.messageProperty().get()).contains("déjà en cours").doesNotContain("Échec");
+
+        vm.restituerLancement(ResultatLancement.relanceBloquee(traitement(EtatTraitement.FINI)));
+        assertThat(vm.messageProperty().get()).contains("déjà été analysée", "effacerait");
+
+        vm.restituerLancement(ResultatLancement.refuse(403, "interdit"));
+        assertThat(vm.messageProperty().get()).contains("refusé");
+
+        vm.restituerLancement(ResultatLancement.injoignable());
+        assertThat(vm.messageProperty().get()).contains("injoignable");
+    }
+
+    /// Traitement serveur dans l'état voulu (les dates n'entrent pas en jeu dans les messages).
+    private static Traitement traitement(EtatTraitement etat) {
+        return new Traitement(etat, null, null, null, null, null);
     }
 
     @Test
