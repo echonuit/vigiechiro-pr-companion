@@ -14,9 +14,15 @@ package fr.univ_amu.iut.commun.api;
 /// et les observations sont **définitivement perdues** (#1244). Un premier lancement est sûr ; une relance
 /// ne l'est pas.
 ///
+/// ⚠️ **Le serveur remplace ce bloc, il ne le complète pas** : à chaque étape il réécrit le sous-document
+/// entier. Une fois le calcul démarré, le bloc devient `{etat, date_debut}` et la **date de planification
+/// disparaît** ; à la fin, `date_fin` s'ajoute. N'attendez donc jamais les trois dates à la fois — vérifié
+/// en réel sur la participation canonique (`FINI`, sans `date_planification`).
+///
 /// @param etat état courant, ou `null` si le serveur n'a pas de traitement pour cette participation (ou
 ///     s'il en rapporte un que nous ne connaissons pas : lecture tolérante, cf. [EtatTraitement#depuis])
-/// @param datePlanification mise en file d'attente (`date_planification`), ISO 8601, ou `null`
+/// @param datePlanification mise en file d'attente (`date_planification`), ISO 8601, ou `null` — en
+///     pratique présente au seul état [EtatTraitement#PLANIFIE], le serveur l'écrasant ensuite
 /// @param dateDebut prise en charge par un worker (`date_debut`), ISO 8601, ou `null`
 /// @param dateFin fin de l'analyse (`date_fin`), ISO 8601, ou `null` ; posée aussi sur échec
 /// @param message trace d'erreur du serveur (`message`), renseignée sur [EtatTraitement#ERREUR] et

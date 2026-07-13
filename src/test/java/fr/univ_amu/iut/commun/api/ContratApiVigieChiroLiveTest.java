@@ -154,10 +154,16 @@ class ContratApiVigieChiroLiveTest {
         assertThat(traitement.etat())
                 .as("état reconnu parmi les 5 valeurs du backend (participations.py:73)")
                 .isIn((Object[]) EtatTraitement.values());
-        assertThat(traitement.datePlanification())
-                .as("un traitement existe : il a forcément été planifié")
-                .isNotNull();
+
+        // ⚠️ Ne PAS exiger `date_planification` : le serveur **remplace** tout le sous-document
+        // `traitement` à chaque étape (`p_resource.update(id, {'traitement': …})`), il ne le complète pas.
+        // Dès qu'un worker démarre, le bloc devient {etat, date_debut} et la date de planification
+        // **disparaît**. Constaté en réel sur la participation canonique (FINI, sans date_planification) :
+        // c'est ce tir qui a corrigé l'hypothèse.
         if (traitement.resultatsDisponibles()) {
+            assertThat(traitement.dateDebut())
+                    .as("FINI : le traitement a forcément démarré")
+                    .isNotNull();
             assertThat(traitement.dateFin())
                     .as("FINI : la date de fin est posée par le serveur")
                     .isNotNull();
