@@ -574,10 +574,11 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     }
 
     /// Importe les résultats Tadarida depuis **VigieChiro** (axe 4.2) pour le passage courant. Délègue à
-    /// [ImportVigieChiroUI] (confirmation + récupération réseau hors fil JavaFX + rafraîchissement).
+    /// [ImportVigieChiroUI] (confirmation + récupération réseau hors fil JavaFX via le socle #1255 +
+    /// rafraîchissement).
     @FXML
     private void importerDepuisVigieChiro() {
-        ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source);
+        ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source, appuis.executeur());
     }
 
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.

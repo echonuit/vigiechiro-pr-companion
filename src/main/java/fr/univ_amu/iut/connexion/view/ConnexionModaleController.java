@@ -1,16 +1,14 @@
 package fr.univ_amu.iut.connexion.view;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Predicate;
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -29,7 +27,7 @@ import javafx.stage.Stage;
 /// Guide l'utilisateur en trois étapes pour relier l'app à son compte, **sans fichier externe** :
 /// 1. ouvrir VigieChiro (navigateur système, via [OuvreurDeLien]) ;
 /// 2. installer le **marque-page** qui copie le token (bouton « Copier le marque-page ») ;
-/// 3. coller le token, vérifié via `GET /moi` **hors du fil JavaFX** (thread virtuel).
+/// 3. coller le token, vérifié via `GET /moi` **hors du fil JavaFX** ([ExecuteurTache], #1255).
 ///
 /// Pur câblage : lie les contrôles aux propriétés du [ConnexionViewModel].
 public class ConnexionModaleController {
@@ -56,6 +54,7 @@ public class ConnexionModaleController {
 
     private final ConnexionViewModel viewModel;
     private final OuvreurDeLien ouvreurDeLien;
+    private final ExecuteurTache executeur;
 
     /// Vrai le temps de l'appel réseau de connexion : grise le bouton (et le champ) sans se battre avec
     /// le binding sur l'état connecté.
@@ -91,9 +90,11 @@ public class ConnexionModaleController {
     private StackPane enveloppeDeconnecter;
 
     @Inject
-    public ConnexionModaleController(ConnexionViewModel viewModel, OuvreurDeLien ouvreurDeLien) {
+    public ConnexionModaleController(
+            ConnexionViewModel viewModel, OuvreurDeLien ouvreurDeLien, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvreurDeLien = Objects.requireNonNull(ouvreurDeLien, "ouvreurDeLien");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     /// Remplace le confirmateur (#798), pour les tests (évite la boîte de dialogue native).
@@ -146,7 +147,10 @@ public class ConnexionModaleController {
                 STATUT_INFO);
     }
 
-    /// Étape 3 : vérifie et enregistre le token collé.
+    /// Étape 3 : vérifie et enregistre le token collé. L'appel réseau passe par le socle [ExecuteurTache]
+    /// (#1255) : hors du fil JavaFX en production, synchrone en test. Le bandeau d'état de la modale et le
+    /// grisage par `verificationEnCours` jouent le rôle du voile d'occupation ; une erreur réseau est
+    /// restituée dans le bandeau (auparavant elle mourait avec le thread, modale verrouillée pour toujours).
     @FXML
     private void connecter() {
         String token = champToken.getText();
@@ -156,25 +160,33 @@ public class ConnexionModaleController {
         }
         verificationEnCours.set(true);
         afficherStatut("Vérification en cours…", STATUT_INFO);
-        Thread.ofVirtual().name("connexion-vigiechiro").start(() -> {
-            Optional<ProfilVigieChiro> profil = viewModel.connecter(token);
-            Platform.runLater(() -> {
-                verificationEnCours.set(false);
-                viewModel.rafraichir();
-                if (profil.isPresent()) {
-                    String resume = viewModel.resumeSynchro();
+        executeur.executer(
+                () -> viewModel.connecter(token),
+                profil -> {
+                    verificationEnCours.set(false);
+                    viewModel.rafraichir();
+                    if (profil.isPresent()) {
+                        String resume = viewModel.resumeSynchro();
+                        afficherStatut(
+                                resume.isBlank()
+                                        ? "Connexion réussie."
+                                        : "Connexion réussie · référentiel à jour : " + resume + ".",
+                                STATUT_SUCCES);
+                        champToken.clear();
+                    } else {
+                        afficherStatut(
+                                "Token invalide ou expiré : recollez-en un depuis le site VigieChiro.", STATUT_DANGER);
+                    }
+                },
+                erreur -> {
+                    verificationEnCours.set(false);
+                    viewModel.rafraichir();
+                    String detail = erreur.getMessage();
                     afficherStatut(
-                            resume.isBlank()
-                                    ? "Connexion réussie."
-                                    : "Connexion réussie · référentiel à jour : " + resume + ".",
-                            STATUT_SUCCES);
-                    champToken.clear();
-                } else {
-                    afficherStatut(
-                            "Token invalide ou expiré : recollez-en un depuis le site VigieChiro.", STATUT_DANGER);
-                }
-            });
-        });
+                            "Vérification impossible : "
+                                    + (detail != null && !detail.isBlank() ? detail : "erreur inattendue."),
+                            STATUT_DANGER);
+                });
     }
 
     @FXML

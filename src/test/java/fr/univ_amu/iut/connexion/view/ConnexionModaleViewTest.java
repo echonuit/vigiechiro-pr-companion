@@ -2,12 +2,14 @@ package fr.univ_amu.iut.connexion.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -15,6 +17,7 @@ import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.fxml.FXMLLoader;
@@ -40,11 +43,13 @@ class ConnexionModaleViewTest {
 
     private final AtomicReference<String> urlOuverte = new AtomicReference<>();
 
+    private ClientVigieChiro client;
+
     @Start
     void start(Stage stage) throws Exception {
         Path workspace = Files.createTempDirectory("vc-connexion");
         StockageConnexion stockage = new StockageConnexion(new Workspace(workspace), Horloge.systeme());
-        ClientVigieChiro client = mock(ClientVigieChiro.class);
+        client = mock(ClientVigieChiro.class);
         OuvreurDeLien ouvreur = urlOuverte::set;
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
@@ -105,5 +110,51 @@ class ConnexionModaleViewTest {
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
         assertThat(bandeau.isVisible()).isTrue();
         assertThat(bandeau.getText()).contains("Collez d'abord");
+    }
+
+    @Test
+    @DisplayName("#1255 : un token valide connecte (socle synchrone en test) et le bandeau passe au succès")
+    void connecter_token_valide(FxRobot robot) {
+        when(client.moi()).thenReturn(Optional.of(new ProfilVigieChiro("u1", "chiro", "observateur")));
+
+        robot.clickOn("#champToken").write("jeton-valide");
+        robot.clickOn("Se connecter");
+
+        Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
+        assertThat(bandeau.getText()).contains("Connexion réussie");
+        assertThat(robot.lookup("#labelIdentite").queryAs(Label.class).getText())
+                .contains("chiro");
+    }
+
+    @Test
+    @DisplayName("#1255 : un token refusé par le serveur est restitué dans le bandeau, saisie déverrouillée")
+    void connecter_token_invalide(FxRobot robot) {
+        when(client.moi()).thenReturn(Optional.empty());
+
+        robot.clickOn("#champToken").write("jeton-perime");
+        robot.clickOn("Se connecter");
+
+        Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
+        assertThat(bandeau.getText()).contains("Token invalide ou expiré");
+        assertThat(robot.lookup("#champToken").queryAs(TextField.class).isDisabled())
+                .as("la vérification finie, la saisie doit être déverrouillée pour réessayer")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1255 : une erreur réseau est restituée dans le bandeau au lieu de verrouiller la modale")
+    void connecter_erreur_reseau(FxRobot robot) {
+        when(client.moi()).thenThrow(new RuntimeException("VigieChiro injoignable"));
+
+        robot.clickOn("#champToken").write("jeton-quelconque");
+        robot.clickOn("Se connecter");
+
+        Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
+        assertThat(bandeau.getText()).contains("Vérification impossible").contains("VigieChiro injoignable");
+        assertThat(robot.lookup("#champToken").queryAs(TextField.class).isDisabled())
+                .as("l'échec ne doit pas laisser la modale verrouillée « en cours »")
+                .isFalse();
+        assertThat(robot.lookup("#boutonConnecter").queryAs(Button.class).isDisabled())
+                .isFalse();
     }
 }

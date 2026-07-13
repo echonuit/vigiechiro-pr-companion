@@ -63,6 +63,7 @@ class SonsValidationDepotViewTest {
 
     private ServiceValidation service;
     private ProjectionsAudioDao projections;
+    private ImportVigieChiro importVigieChiro;
     private SonsValidationController controleur;
 
     /// Base jetable pour les seules préférences (`app_setting`) : les options de lecture du menu ☰ (#1006)
@@ -74,6 +75,7 @@ class SonsValidationDepotViewTest {
     void start(Stage stage) throws Exception {
         service = mock(ServiceValidation.class);
         projections = mock(ProjectionsAudioDao.class);
+        importVigieChiro = mock(ImportVigieChiro.class);
         ServiceBibliotheque bibliotheque = mock(ServiceBibliotheque.class);
         when(service.taxonsDisponibles()).thenReturn(List.of());
         // Passage sans résultats à l'ouverture (import permis).
@@ -103,11 +105,12 @@ class SonsValidationDepotViewTest {
                         return mock(DepotVues.class); // findByFeature -> liste vide par défaut (Mockito)
                     }
 
-                    // Import VigieChiro **disponible** (mock) : l'item « Importer depuis VigieChiro » apparaît
-                    // dans le menu ☰ pour cette source ParPassage (workflow Tadarida).
+                    // Import VigieChiro **disponible** (mock, champ du test pour piloter le flux #1255) :
+                    // l'item « Importer depuis VigieChiro » apparaît dans le menu ☰ pour cette source
+                    // ParPassage (workflow Tadarida).
                     @Provides
-                    ImportVigieChiroViewModel importVigieChiro() {
-                        return new ImportVigieChiroViewModel(Optional.of(mock(ImportVigieChiro.class)));
+                    ImportVigieChiroViewModel importVigieChiroViewModel() {
+                        return new ImportVigieChiroViewModel(Optional.of(importVigieChiro));
                     }
 
                     // « Fiche de l'espèce » (#847) : navigateur no-op, la fiche n'est pas exercée ici.
@@ -160,13 +163,45 @@ class SonsValidationDepotViewTest {
     @Test
     @DisplayName("#719 : l'item « Importer depuis VigieChiro » est présent et visible (passage, connecté)")
     void item_import_vigiechiro_present(FxRobot robot) {
-        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
-        MenuItem item = menu.getItems().stream()
-                .filter(i -> "itemImporterVigieChiro".equals(i.getId()))
-                .findFirst()
-                .orElseThrow();
+        MenuItem item = itemImporterVigieChiro(robot);
 
         assertThat(item.isVisible()).isTrue();
         assertThat(item.getText()).contains("VigieChiro");
+    }
+
+    @Test
+    @DisplayName("#1255 : import d'un passage rattaché via le socle, bilan restitué dans le libellé")
+    void import_vigiechiro_passage_rattache(FxRobot robot) {
+        when(importVigieChiro.estRattache(7L)).thenReturn(true);
+        when(importVigieChiro.importer(7L, false))
+                .thenReturn(new BilanImport(
+                        new ResultatsIdentification(101L, "vigiechiro", "Brut", "2026-06-30T00:00", 7L), 3, 0, 0));
+
+        robot.interact(() -> itemImporterVigieChiro(robot).fire());
+
+        Label message = robot.lookup("#lblImportVigieChiro").queryAs(Label.class);
+        assertThat(message.getText())
+                .contains("Résultats importés depuis VigieChiro")
+                .contains("3");
+    }
+
+    @Test
+    @DisplayName("#1255 : passage non rattaché sans participation, le message d'échec est restitué")
+    void import_vigiechiro_sans_participation(FxRobot robot) {
+        when(importVigieChiro.estRattache(7L)).thenReturn(false);
+        when(importVigieChiro.participationsDisponibles()).thenReturn(List.of());
+
+        robot.interact(() -> itemImporterVigieChiro(robot).fire());
+
+        Label message = robot.lookup("#lblImportVigieChiro").queryAs(Label.class);
+        assertThat(message.getText()).contains("Aucune participation VigieChiro");
+    }
+
+    private static MenuItem itemImporterVigieChiro(FxRobot robot) {
+        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        return menu.getItems().stream()
+                .filter(i -> "itemImporterVigieChiro".equals(i.getId()))
+                .findFirst()
+                .orElseThrow();
     }
 }
