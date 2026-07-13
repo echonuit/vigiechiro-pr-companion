@@ -14,6 +14,9 @@ import java.nio.file.Path;
 /// être plus courte) ; rejouée au rythme de sortie (Fe/10), elle dure ×10 à l'écoute (#1051)
 /// @param offsetSourceSecondes position de la séquence dans le signal source, **avant** le ×10
 /// @param octets taille du fichier écrit, en octets
+/// @param empreinte empreinte courte de contenu du fichier écrit (#1299, cf.
+/// [fr.univ_amu.iut.commun.model.Empreintes#empreinteCourte]), preuve d’identité persistée pour
+/// la réactivation d’un passage archivé
 public record SequenceProduite(
         int index,
         String nomFichier,
@@ -21,4 +24,5 @@ public record SequenceProduite(
         int frequenceSortieHz,
         double dureeSecondes,
         double offsetSourceSecondes,
-        long octets) {}
+        long octets,
+        String empreinte) {}

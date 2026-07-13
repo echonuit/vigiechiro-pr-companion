@@ -23,12 +23,19 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
             (Double) rs.getObject("duration_s"),
             lireIntNullable(rs, "sample_rate_hz"),
             rs.getString("sha256"),
-            rs.getLong("session_id"));
+            rs.getLong("session_id"),
+            lireLongNullable(rs, "size_bytes"));
 
     /// Lit une colonne `INTEGER` nullable en [Integer], en préservant le `null`.
     private static Integer lireIntNullable(ResultSet rs, String colonne) throws SQLException {
         Object valeur = rs.getObject(colonne);
         return valeur == null ? null : ((Number) valeur).intValue();
+    }
+
+    /// Lit une colonne `INTEGER` nullable en [Long], en préservant le `null`.
+    private static Long lireLongNullable(ResultSet rs, String colonne) throws SQLException {
+        Object valeur = rs.getObject(colonne);
+        return valeur == null ? null : ((Number) valeur).longValue();
     }
 
     public EnregistrementOriginalDao(SourceDeDonnees source) {
@@ -59,14 +66,15 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
     public EnregistrementOriginal insert(EnregistrementOriginal original) {
         long id = insererEtRecupererCle(
                 "INSERT INTO original_recording"
-                        + " (file_name, file_path, duration_s, sample_rate_hz, sha256, session_id)"
-                        + " VALUES (?, ?, ?, ?, ?, ?)",
+                        + " (file_name, file_path, duration_s, sample_rate_hz, sha256, session_id, size_bytes)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?)",
                 original.nomFichier(),
                 original.cheminFichier(),
                 original.dureeSecondes(),
                 original.frequenceEchantillonnageHz(),
                 original.sha256(),
-                original.idSession());
+                original.idSession(),
+                original.tailleOctets());
         return new EnregistrementOriginal(
                 id,
                 original.nomFichier(),
@@ -74,7 +82,8 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
                 original.dureeSecondes(),
                 original.frequenceEchantillonnageHz(),
                 original.sha256(),
-                original.idSession());
+                original.idSession(),
+                original.tailleOctets());
     }
 
     @Override
@@ -82,7 +91,7 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
         executerMaj(
                 "UPDATE original_recording SET"
                         + " file_name = ?, file_path = ?, duration_s = ?, sample_rate_hz = ?, sha256 = ?,"
-                        + " session_id = ?"
+                        + " session_id = ?, size_bytes = ?"
                         + " WHERE id = ?",
                 original.nomFichier(),
                 original.cheminFichier(),
@@ -90,6 +99,18 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
                 original.frequenceEchantillonnageHz(),
                 original.sha256(),
                 original.idSession(),
+                original.tailleOctets(),
                 original.id());
+    }
+
+    /// Originaux **sans taille** (`size_bytes` NULL) : cible du rétro-remplissage (#1299), qui relit
+    /// les fichiers encore présents (bruts non purgés) pour poser la taille rétroactivement.
+    public List<EnregistrementOriginal> sansTaille() {
+        return query("SELECT * FROM original_recording WHERE size_bytes IS NULL", MAPPER);
+    }
+
+    /// Renseigne la taille d'un original (rétro-remplissage ciblé, sans réécrire les autres colonnes).
+    public void majTaille(long idOriginal, long tailleOctets) {
+        executerMaj("UPDATE original_recording SET size_bytes = ? WHERE id = ?", tailleOctets, idOriginal);
     }
 }

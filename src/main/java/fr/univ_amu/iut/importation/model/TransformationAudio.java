@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -123,6 +124,7 @@ public class TransformationAudio {
         int octetsParSequence = DUREE_SEQUENCE_SECONDES * frequenceAcquisition * octetsParTrame;
         String nomOriginal = nomR6;
         String sha256 = empreinteSource(originalWav);
+        long tailleSource = tailleSource(originalWav);
 
         // Écriture des séquences dans le WORKSPACE : un échec ici (disque plein, permission…) est
         // **fatal** — il ne doit pas être masqué en « fichier rejeté » ; il remonte et la session est
@@ -155,6 +157,9 @@ public class TransformationAudio {
                 // `frequenceSortie` (Fe/10), la séquence dure ×10 (≈50 s) à l'écoute (#1051).
                 double dureeReelleSecondes = tramesSequence / (double) frequenceAcquisition;
                 double offsetSource = ((long) offset / octetsParTrame) / (double) frequenceAcquisition;
+                // Taille et empreinte courte (#1299), posées à l'écriture : le fichier vient d'être
+                // écrit (cache disque chaud), relire ses 64 premiers Kio est quasi gratuit, et
+                // l'empreinte est ainsi calculée sur EXACTEMENT ce qu'une réactivation relira.
                 sequences.add(new SequenceProduite(
                         index,
                         nomSequence,
@@ -162,7 +167,8 @@ public class TransformationAudio {
                         frequenceSortie,
                         dureeReelleSecondes,
                         offsetSource,
-                        Files.size(cheminSequence)));
+                        Files.size(cheminSequence),
+                        Empreintes.empreinteCourte(cheminSequence)));
                 index++;
             }
             return new TransformationOriginal(
@@ -172,6 +178,7 @@ public class TransformationAudio {
                     frequenceSortie,
                     dureeAcquisitionSecondes,
                     sha256,
+                    tailleSource,
                     sequences);
         } catch (IOException e) {
             throw new UncheckedIOException(
@@ -195,6 +202,15 @@ public class TransformationAudio {
             return Empreintes.sha256Hex(originalWav);
         } catch (IllegalStateException e) {
             throw new OriginalIllisibleException("Empreinte de l'original illisible : " + originalWav.getFileName(), e);
+        }
+    }
+
+    /// Taille de la **source** en octets (#1299) ; une lecture impossible est récupérable (rejet du fichier).
+    private static long tailleSource(Path originalWav) {
+        try {
+            return Files.size(originalWav);
+        } catch (IOException e) {
+            throw new OriginalIllisibleException("Taille de l'original illisible : " + originalWav.getFileName(), e);
         }
     }
 

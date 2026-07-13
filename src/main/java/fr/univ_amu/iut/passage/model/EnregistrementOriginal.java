@@ -14,6 +14,9 @@ package fr.univ_amu.iut.passage.model;
 /// @param frequenceEchantillonnageHz fréquence d'échantillonnage en Hz (optionnel, ex. 384000)
 /// @param sha256 empreinte SHA-256 hexadécimale (optionnel, intégrité bit-à-bit)
 /// @param idSession identifiant de la session contenante (FK → `recording_session.id`)
+/// @param tailleOctets taille du fichier en octets (#1299), pré-contrôle rapide avant le [#sha256]
+///     intégral quand une réactivation repart des bruts ; `null` si importé avant V23 et non
+///     rétro-rempli (fichier purgé)
 public record EnregistrementOriginal(
         Long id,
         String nomFichier,
@@ -21,4 +24,19 @@ public record EnregistrementOriginal(
         Double dureeSecondes,
         Integer frequenceEchantillonnageHz,
         String sha256,
-        Long idSession) {}
+        Long idSession,
+        Long tailleOctets) {
+
+    /// Constructeur de **compatibilité** (sans taille) : préserve les appels antérieurs à #1299 (la
+    /// taille vaut `null`, remplie à l'import ou par le rétro-remplissage). Voir [#tailleOctets].
+    public EnregistrementOriginal(
+            Long id,
+            String nomFichier,
+            String cheminFichier,
+            Double dureeSecondes,
+            Integer frequenceEchantillonnageHz,
+            String sha256,
+            Long idSession) {
+        this(id, nomFichier, cheminFichier, dureeSecondes, frequenceEchantillonnageHz, sha256, idSession, null);
+    }
+}

@@ -48,7 +48,8 @@ public class MigrationSchema {
         "V19__column_layout.sql",
         "V20__duree_reelle_sequences.sql",
         "V21__observation_ancrage_certitude.sql",
-        "V22__participation_traitement.sql"
+        "V22__participation_traitement.sql",
+        "V23__empreintes_fichiers.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

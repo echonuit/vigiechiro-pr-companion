@@ -23,6 +23,11 @@ import java.time.LocalDateTime;
 /// @param idSession identifiant de la session contenante (FK → `recording_session.id`)
 /// @param horodatageCapture heure réelle de début de la tranche (extraite du nom de fichier à l'import,
 ///     `_AAAAMMJJ_HHMMSS`), ou `null` si le nom n'est pas horodaté (jeux de test, fichiers non standard)
+/// @param tailleOctets taille du fichier en octets (#1299), ou `null` si importée avant V23 et non
+///     rétro-remplie (fichier déjà parti : identité vérifiable seulement par la cascade #1309)
+/// @param empreinte empreinte courte de contenu (SHA-256 hexadécimal des 64 premiers Kio, cf.
+///     `Empreintes.empreinteCourte`), ou `null` dans les mêmes cas que [#tailleOctets] ; c'est la
+///     preuve d'identité la plus forte au moment de réactiver un passage archivé (#1302)
 public record SequenceDEcoute(
         Long id,
         String nomFichier,
@@ -33,7 +38,9 @@ public record SequenceDEcoute(
         String cheminFichier,
         boolean dansSelection,
         Long idSession,
-        LocalDateTime horodatageCapture) {
+        LocalDateTime horodatageCapture,
+        Long tailleOctets,
+        String empreinte) {
 
     /// Constructeur de **compatibilité** (sans horodatage de capture) : préserve les appels antérieurs à
     /// #530 (l'horodatage est `null`, rempli à l'import ou par backfill). Voir [#horodatageCapture].
@@ -57,6 +64,35 @@ public record SequenceDEcoute(
                 cheminFichier,
                 dansSelection,
                 idSession,
+                null);
+    }
+
+    /// Constructeur de **compatibilité** (sans taille ni empreinte) : préserve les appels antérieurs à
+    /// #1299 (les deux valent `null`, remplies à l'import ou par le rétro-remplissage). Voir
+    /// [#tailleOctets] et [#empreinte].
+    public SequenceDEcoute(
+            Long id,
+            String nomFichier,
+            Long idEnregistrementOriginal,
+            Integer indexSource,
+            Double offsetSourceSecondes,
+            Double dureeSecondes,
+            String cheminFichier,
+            boolean dansSelection,
+            Long idSession,
+            LocalDateTime horodatageCapture) {
+        this(
+                id,
+                nomFichier,
+                idEnregistrementOriginal,
+                indexSource,
+                offsetSourceSecondes,
+                dureeSecondes,
+                cheminFichier,
+                dansSelection,
+                idSession,
+                horodatageCapture,
+                null,
                 null);
     }
 }

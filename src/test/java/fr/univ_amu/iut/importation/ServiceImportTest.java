@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
+import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
@@ -51,6 +52,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -172,6 +174,33 @@ class ServiceImportTest {
         assertThat(sequenceDao.findBySession(idSession)).hasSize(2);
         assertThat(originalDao.findBySession(idSession))
                 .allSatisfy(o -> assertThat(o.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_WAV));
+    }
+
+    @Test
+    @DisplayName("#1299 : séquences et originaux portent taille et empreinte dès l'import")
+    void import_pose_taille_et_empreinte() {
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+        Long idSession = resultat.session().id();
+        assertThat(sequenceDao.findBySession(idSession)).isNotEmpty().allSatisfy(s -> {
+            Path fichier = Path.of(s.cheminFichier());
+            assertThat(s.tailleOctets()).isEqualTo(taille(fichier));
+            assertThat(s.empreinte())
+                    .as("l'empreinte persistée doit être recalculable depuis le fichier écrit")
+                    .isEqualTo(Empreintes.empreinteCourte(fichier));
+        });
+        assertThat(originalDao.findBySession(idSession))
+                .isNotEmpty()
+                .allSatisfy(o -> assertThat(o.tailleOctets()).isEqualTo(taille(Path.of(o.cheminFichier()))));
+    }
+
+    /// Taille d'un fichier sans exception vérifiée (assertions dans les lambdas AssertJ).
+    private static long taille(Path fichier) {
+        try {
+            return Files.size(fichier);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     @Test

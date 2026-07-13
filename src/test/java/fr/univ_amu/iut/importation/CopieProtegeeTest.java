@@ -2,8 +2,8 @@ package fr.univ_amu.iut.importation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
-import fr.univ_amu.iut.importation.model.Empreintes;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Empreintes;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;

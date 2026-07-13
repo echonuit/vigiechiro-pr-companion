@@ -3,8 +3,8 @@ package fr.univ_amu.iut.importation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Prefixe;
-import fr.univ_amu.iut.importation.model.Empreintes;
 import fr.univ_amu.iut.importation.model.OriginalIllisibleException;
 import fr.univ_amu.iut.importation.model.SequenceProduite;
 import fr.univ_amu.iut.importation.model.TransformationAudio;

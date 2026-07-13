@@ -28,12 +28,20 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
             rs.getString("file_path"),
             rs.getInt("in_selection") != 0,
             rs.getLong("session_id"),
-            lireHorodatage(rs, "recorded_at"));
+            lireHorodatage(rs, "recorded_at"),
+            lireLongNullable(rs, "size_bytes"),
+            rs.getString("content_fingerprint"));
 
     /// Lit une colonne `INTEGER` nullable en [Integer], en préservant le `null`.
     private static Integer lireIntNullable(ResultSet rs, String colonne) throws SQLException {
         Object valeur = rs.getObject(colonne);
         return valeur == null ? null : ((Number) valeur).intValue();
+    }
+
+    /// Lit une colonne `INTEGER` nullable en [Long], en préservant le `null`.
+    private static Long lireLongNullable(ResultSet rs, String colonne) throws SQLException {
+        Object valeur = rs.getObject(colonne);
+        return valeur == null ? null : ((Number) valeur).longValue();
     }
 
     /// Lit une colonne `TEXT` ISO-8601 nullable en [LocalDateTime] (image de `recorded_at`), `null` si absente.
@@ -84,8 +92,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
         long id = insererEtRecupererCle(
                 "INSERT INTO listening_sequence"
                         + " (file_name, original_recording_id, source_index, source_offset_s, duration_s,"
-                        + " file_path, in_selection, session_id, recorded_at)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " file_path, in_selection, session_id, recorded_at, size_bytes, content_fingerprint)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 sequence.nomFichier(),
                 sequence.idEnregistrementOriginal(),
                 sequence.indexSource(),
@@ -94,7 +102,9 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.cheminFichier(),
                 sequence.dansSelection() ? 1 : 0,
                 sequence.idSession(),
-                texteHorodatage(sequence.horodatageCapture()));
+                texteHorodatage(sequence.horodatageCapture()),
+                sequence.tailleOctets(),
+                sequence.empreinte());
         return new SequenceDEcoute(
                 id,
                 sequence.nomFichier(),
@@ -105,7 +115,9 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.cheminFichier(),
                 sequence.dansSelection(),
                 sequence.idSession(),
-                sequence.horodatageCapture());
+                sequence.horodatageCapture(),
+                sequence.tailleOctets(),
+                sequence.empreinte());
     }
 
     @Override
@@ -113,7 +125,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
         executerMaj(
                 "UPDATE listening_sequence SET"
                         + " file_name = ?, original_recording_id = ?, source_index = ?, source_offset_s = ?,"
-                        + " duration_s = ?, file_path = ?, in_selection = ?, session_id = ?, recorded_at = ?"
+                        + " duration_s = ?, file_path = ?, in_selection = ?, session_id = ?, recorded_at = ?,"
+                        + " size_bytes = ?, content_fingerprint = ?"
                         + " WHERE id = ?",
                 sequence.nomFichier(),
                 sequence.idEnregistrementOriginal(),
@@ -124,6 +137,8 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.dansSelection() ? 1 : 0,
                 sequence.idSession(),
                 texteHorodatage(sequence.horodatageCapture()),
+                sequence.tailleOctets(),
+                sequence.empreinte(),
                 sequence.id());
     }
 
@@ -137,5 +152,30 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
     public void majHorodatage(long idSequence, LocalDateTime horodatage) {
         executerMaj(
                 "UPDATE listening_sequence SET recorded_at = ? WHERE id = ?", texteHorodatage(horodatage), idSequence);
+    }
+
+    /// Séquences **sans empreinte** (`content_fingerprint` NULL) : cible du rétro-remplissage (#1299),
+    /// qui relit les fichiers encore présents sur disque pour poser taille et empreinte rétroactivement.
+    public List<SequenceDEcoute> sansEmpreinte() {
+        return query("SELECT * FROM listening_sequence WHERE content_fingerprint IS NULL", MAPPER);
+    }
+
+    /// Séquences **sans empreinte** d'une session (variante ciblée de [#sansEmpreinte()], pour capturer
+    /// l'identité d'un passage juste avant son archivage, #1300).
+    public List<SequenceDEcoute> sansEmpreinteDeSession(Long idSession) {
+        return query(
+                "SELECT * FROM listening_sequence WHERE content_fingerprint IS NULL AND session_id = ?",
+                MAPPER,
+                idSession);
+    }
+
+    /// Renseigne taille et empreinte d'une séquence (rétro-remplissage ciblé, sans réécrire les autres
+    /// colonnes).
+    public void majEmpreinte(long idSequence, long tailleOctets, String empreinte) {
+        executerMaj(
+                "UPDATE listening_sequence SET size_bytes = ?, content_fingerprint = ? WHERE id = ?",
+                tailleOctets,
+                empreinte,
+                idSequence);
     }
 }

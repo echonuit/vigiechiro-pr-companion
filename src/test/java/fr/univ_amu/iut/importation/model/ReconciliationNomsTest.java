@@ -87,9 +87,10 @@ class ReconciliationNomsTest {
         Path dossier = Files.createDirectories(tmp.resolve(sousDossier));
         Path fichier = Files.write(dossier.resolve(nomTranche), pcm);
         Path original = Path.of(nomOriginal);
-        SequenceProduite tranche = new SequenceProduite(0, nomTranche, fichier, 38_400, 5.0, 0.0, pcm.length);
+        SequenceProduite tranche =
+                new SequenceProduite(0, nomTranche, fichier, 38_400, 5.0, 0.0, pcm.length, "empreinte-" + sousDossier);
         TransformationOriginal transformation = new TransformationOriginal(
-                nomOriginal, original, 384_000, 38_400, 5.0, "sha-" + sousDossier, List.of(tranche));
+                nomOriginal, original, 384_000, 38_400, 5.0, "sha-" + sousDossier, pcm.length, List.of(tranche));
         return new ResultatDecoupage(original, transformation, null);
     }
 }

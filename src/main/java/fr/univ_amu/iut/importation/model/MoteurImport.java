@@ -262,11 +262,14 @@ final class MoteurImport {
                         t.dureeSourceSecondes(),
                         t.frequenceSourceHz(),
                         t.sha256(),
-                        null);
+                        null,
+                        t.tailleSourceOctets());
                 long idOriginal = agregatDao.insererOriginal(cx, ids[1], original);
                 for (SequenceProduite sp : t.sequences()) {
                     // #530 : l'heure réelle de la tranche est encodée dans son nom (_AAAAMMJJ_HHMMSS_000),
                     // extraite ici pour être persistée (recorded_at) et servir le tri / filtre par heure.
+                    // #1299 : taille et empreinte courte, calculées à l'écriture de la tranche, sont
+                    // persistées comme preuves d'identité (réactivation d'un passage archivé).
                     SequenceDEcoute sequence = new SequenceDEcoute(
                             null,
                             sp.nomFichier(),
@@ -277,7 +280,9 @@ final class MoteurImport {
                             sp.chemin().toString(),
                             false,
                             null,
-                            Prefixe.horodatageDe(sp.nomFichier()).orElse(null));
+                            Prefixe.horodatageDe(sp.nomFichier()).orElse(null),
+                            sp.octets(),
+                            sp.empreinte());
                     agregatDao.insererSequence(cx, ids[1], idOriginal, sequence);
                 }
             }

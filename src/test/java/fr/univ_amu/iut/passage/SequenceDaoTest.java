@@ -151,6 +151,46 @@ class SequenceDaoTest {
     }
 
     @Test
+    @DisplayName("#1299 : taille et empreinte persistées et relues (size_bytes, content_fingerprint)")
+    void taille_et_empreinte_persistees() {
+        SequenceDEcoute avecEmpreinte = new SequenceDEcoute(
+                null,
+                "seq_000.wav",
+                idOriginal,
+                0,
+                0.0,
+                5.0,
+                "transformes/seq_000.wav",
+                false,
+                idSession,
+                null,
+                1_474_604L,
+                "abc123");
+
+        SequenceDEcoute relu = dao.findById(dao.insert(avecEmpreinte).id()).orElseThrow();
+
+        assertThat(relu.tailleOctets()).isEqualTo(1_474_604L);
+        assertThat(relu.empreinte()).isEqualTo("abc123");
+    }
+
+    @Test
+    @DisplayName("#1299 : sansEmpreinte liste les fingerprint NULL ; majEmpreinte les renseigne (backfill)")
+    void backfill_sans_empreinte_puis_maj() {
+        long id = dao.insert(sequence("orig_000.wav", 0, true)).id(); // constructeur compat → empreinte NULL
+        assertThat(dao.sansEmpreinte()).extracting(SequenceDEcoute::id).contains(id);
+        assertThat(dao.sansEmpreinteDeSession(idSession))
+                .extracting(SequenceDEcoute::id)
+                .contains(id);
+
+        dao.majEmpreinte(id, 42L, "def456");
+
+        SequenceDEcoute relu = dao.findById(id).orElseThrow();
+        assertThat(relu.tailleOctets()).isEqualTo(42L);
+        assertThat(relu.empreinte()).isEqualTo("def456");
+        assertThat(dao.sansEmpreinte()).extracting(SequenceDEcoute::id).doesNotContain(id);
+    }
+
+    @Test
     @DisplayName("FK active : un original source inconnu est rejeté")
     void clef_etrangere_active_un_original_inconnu_est_rejete() {
         SequenceDEcoute orphelin =

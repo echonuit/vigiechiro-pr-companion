@@ -335,8 +335,8 @@ public class AgregatImportDao {
     public long insererOriginal(Connection cx, long idSession, EnregistrementOriginal original) throws SQLException {
         try (PreparedStatement ps = cx.prepareStatement(
                 "INSERT INTO original_recording"
-                        + " (file_name, file_path, duration_s, sample_rate_hz, sha256, session_id)"
-                        + " VALUES (?, ?, ?, ?, ?, ?)",
+                        + " (file_name, file_path, duration_s, sample_rate_hz, sha256, session_id, size_bytes)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, original.nomFichier());
             ps.setString(2, original.cheminFichier());
@@ -344,6 +344,7 @@ public class AgregatImportDao {
             ps.setObject(4, original.frequenceEchantillonnageHz());
             ps.setString(5, original.sha256());
             ps.setLong(6, idSession);
+            ps.setObject(7, original.tailleOctets());
             return executerEtRecupererCle(ps, "original_recording");
         }
     }
@@ -353,8 +354,8 @@ public class AgregatImportDao {
             throws SQLException {
         try (PreparedStatement ps = cx.prepareStatement("INSERT INTO listening_sequence"
                 + " (file_name, original_recording_id, source_index, source_offset_s, duration_s,"
-                + " file_path, in_selection, session_id, recorded_at)"
-                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
+                + " file_path, in_selection, session_id, recorded_at, size_bytes, content_fingerprint)"
+                + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")) {
             ps.setString(1, sequence.nomFichier());
             ps.setLong(2, idOriginal);
             ps.setObject(3, sequence.indexSource());
@@ -368,6 +369,8 @@ public class AgregatImportDao {
                     sequence.horodatageCapture() == null
                             ? null
                             : sequence.horodatageCapture().toString());
+            ps.setObject(10, sequence.tailleOctets());
+            ps.setString(11, sequence.empreinte());
             ps.executeUpdate();
         }
     }

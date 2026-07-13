@@ -109,6 +109,29 @@ class EnregistrementOriginalDaoTest {
     }
 
     @Test
+    @DisplayName("#1299 : la taille est persistée et relue (size_bytes)")
+    void taille_persistee() {
+        EnregistrementOriginal avecTaille = new EnregistrementOriginal(
+                null, "orig.wav", "bruts/orig.wav", 12.5, 384000, "abc123", idSession, 14_746_040L);
+
+        EnregistrementOriginal relu = dao.findById(dao.insert(avecTaille).id()).orElseThrow();
+
+        assertThat(relu.tailleOctets()).isEqualTo(14_746_040L);
+    }
+
+    @Test
+    @DisplayName("#1299 : sansTaille liste les size_bytes NULL ; majTaille les renseigne (backfill)")
+    void backfill_sans_taille_puis_maj() {
+        long id = dao.insert(original("orig.wav")).id(); // constructeur compat → size_bytes NULL
+        assertThat(dao.sansTaille()).extracting(EnregistrementOriginal::id).contains(id);
+
+        dao.majTaille(id, 42L);
+
+        assertThat(dao.findById(id).orElseThrow().tailleOctets()).isEqualTo(42L);
+        assertThat(dao.sansTaille()).extracting(EnregistrementOriginal::id).doesNotContain(id);
+    }
+
+    @Test
     @DisplayName("FK active : une session inconnue est rejetée")
     void clef_etrangere_active_une_session_inconnue_est_rejetee() {
         EnregistrementOriginal orphelin =
