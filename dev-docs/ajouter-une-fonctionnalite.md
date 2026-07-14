@@ -207,10 +207,15 @@ Les écrans documentés ont un aperçu PNG régénéré en CI. Pour le vôtre :
 - **Vue** : test d'intégration **TestFX** (headless) qui charge le FXML et vérifie les bindings.
 - **Geste** : si votre écran porte une action qui **écrase ou supprime** quelque chose, elle doit être
   **cliquée** dans un test, et son **refus** aussi. Cela suppose que ses dialogues passent par les
-  ports du socle (`Confirmateur`, `Notificateur`, `SelecteurFichier` : cf.
+  ports du socle (`Confirmateur`, `Notificateur`, `SelecteurFichier`, `DemandeurDeChoix` : cf.
   [Patrons](patterns.md#les-dialogues-dune-action-sont-des-ports-socle-commun)). Un `showAndWait()` en
   dur - alerte **ou** sélecteur de fichier - **fige** le test : le geste redevient intestable, et vous
   ne saurez que son bouton existe.
+- **Formulaire** : si votre écran demande une **saisie** (créer, modifier, paramétrer), ce n'est **pas**
+  un dialogue - c'est une **vue**. Faites-en une **modale** (FXML + controller + ViewModel + une entrée
+  `ouvrirModale*` sur votre façade de navigation), comme `ModalePoint`, `ModaleSite` ou `ModaleSelection`.
+  Un `Dialog<T>` bâti à la main rend le geste **injouable**, sa **validation** intestable, et sa capture
+  de documentation **impossible** (il faudrait la reconstruire à la main - et elle dériverait).
 - **Architecture** : rien à écrire, `ArchitectureTest` couvre vos frontières automatiquement.
 - **Parcours complet** : un test `fr.univ_amu.iut.e2e.*` si votre écran s'inscrit dans un flux.
 

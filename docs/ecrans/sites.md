@@ -16,6 +16,21 @@ proposé sur chaque carte, et **+ Nouveau site** en haut à droite.
 Le badge de fraîcheur passe du **vert** (dernier passage récent) à l'**orange** (plus ancien), au
 **gris** (aucun passage). Un clic sur une carte ouvre le **détail du site**.
 
+## Déclarer un site
+
+**+ Nouveau site** ouvre une fenêtre de saisie. Un seul champ est obligatoire : le **numéro de carré**,
+six chiffres, tel qu'il figure sur la grille Vigie-Chiro. Le bouton **Créer** reste fermé tant qu'il
+n'est pas complet, et le champ rougit dès qu'il est saisi mais incomplet : l'application vous **empêche**
+de vous tromper plutôt que de vous le reprocher après coup.
+
+Le **nom convivial**, le **protocole** et le **commentaire** sont facultatifs - vous pouvez déclarer un
+carré à la volée sur le terrain et les compléter plus tard, depuis la fiche du site.
+
+![La fenêtre de déclaration d'un site : numéro de carré (obligatoire), nom, protocole et commentaire.](../assets/captures/apercu-sites-modale-site-creation.png)
+
+Si le carré est **déjà déclaré**, le motif s'affiche **dans la fenêtre**, sous le champ, et **votre saisie
+est conservée** : corrigez le numéro sans tout recommencer.
+
 Chaque carte porte aussi, quand l'application est [connectée à Vigie-Chiro](../connexion-vigiechiro.md),
 un **badge d'état plateforme** : **« Enregistré sur VigieChiro »** (bleu) quand le carré est relié au
 portail, **« Verrouillé sur VigieChiro »** (vert) quand il est en plus verrouillé par le MNHN -
