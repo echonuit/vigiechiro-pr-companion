@@ -155,6 +155,18 @@ tests utilisaient déjà. Tout se surcharge avant `semer()`.
 styles SQL et les jeux de colonnes variables rendent une conversion mécanique **risquée**, et un test
 converti trop vite est un test qu'on ne relit plus.
 
+!!! warning "Un cliquet empêche de l'oublier"
+    **Une migration opportuniste sans garde-fou est une migration qu'on oublie** - le même défaut que la
+    doc, qui dérivait parce que rien ne rougissait. `CliquetFixturePassageTest` **épingle la liste** des
+    tests qui sèment encore un passage à la main (**66** au 2026-07-14), et elle ne peut que **rétrécir** :
+
+    - **ajouter un semeur de plus** → CI rouge (c'est le cas qui compte : sans lui, la dette repousserait
+      aussi vite qu'on la coupe) ;
+    - **en migrer un** → CI rouge aussi, jusqu'à ce qu'on **retire son nom** de la liste. Le geste est
+      trivial, et c'est ce qui rend le progrès **visible**.
+
+    Le compteur restant est donc **toujours exact**, sans que personne ait à s'en souvenir.
+
 Deux limites, assumées :
 
 - la fixture **ne migre pas** le schéma (les tests ne l'obtiennent pas tous de la même façon) et **ne sème
