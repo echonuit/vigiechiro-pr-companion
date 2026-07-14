@@ -33,11 +33,14 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +49,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test E2E de **synchronisation au retour de navigation** : M-Passage doit refléter la vérification
 /// dès qu'on y revient depuis M-Qualification, sans qu'il faille ressortir jusqu'au site et rouvrir
@@ -93,7 +97,7 @@ class RetourPassageApresVerificationE2ETest {
 
     @Test
     @DisplayName("Revenir sur M-Passage après vérification montre le verdict, sans ressortir jusqu'au site")
-    void retour_sur_passage_reflete_la_verification(FxRobot robot) {
+    void retour_sur_passage_reflete_la_verification(FxRobot robot) throws TimeoutException {
         ContexteSite contexteSite = new ContexteSite(CARRE, POINT, "Étang de la Tuilière");
 
         // 1) Ouvrir M-Passage : statut « Transformé », verdict non saisi.
@@ -106,6 +110,19 @@ class RetourPassageApresVerificationE2ETest {
         // 2) Ouvrir M-Qualification sur ce passage (drill-down empilé sur M-Passage).
         robot.interact(() ->
                 injector.getInstance(OuvrirVerification.class).ouvrir(new ContextePassage(idPassage, 2, contexteSite)));
+
+        // M-Qualification se charge **hors du fil JavaFX** (#1210) et, sur le vrai injecteur, l'exécuteur
+        // est **asynchrone**. Sans cette attente, le clic ci-dessous part pendant que le chargement est
+        // encore en vol : celui-ci atterrit ensuite et **écrase** le verdict qu'on venait de choisir
+        // (`verdictVm.appliquer(...)` réapplique l'état lu en base). Rien n'est alors enregistré, et le
+        // passage reste « Transformé » - un échec qui ne se produit que sur une machine lente, donc en CI.
+        WaitForAsyncUtils.waitFor(
+                10,
+                TimeUnit.SECONDS,
+                () -> !robot.lookup("#tableSequences")
+                        .queryAs(TableView.class)
+                        .getItems()
+                        .isEmpty());
 
         // 3) Choisir le verdict OK puis enregistrer (vrai service → base mise à jour).
         robot.interact(robot.lookup("#boutonOk").queryAs(Button.class)::fire);
