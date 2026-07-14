@@ -87,9 +87,60 @@ est faite »). Le dernier relevé est mis en cache (`participation_traitement`),
 le **point de relevé unique** : il interroge **et** mémorise. Même partition que `StatutPlateforme`
 (sites).
 
+**Le disque est un autre système que nous ne possédons pas** (EPIC #1297). Les fichiers audio d'un
+passage peuvent disparaître sans nous : purge volontaire, disque externe débranché, dossier déplacé.
+« Archivé » n'est donc **pas** une valeur de `StatutWorkflow` mais un **constat** :
+`DisponibiliteAudio` (`COMPLETE` / `PARTIELLE` / `ABSENTE`), produit par `ServiceDisponibiliteAudio` en
+regardant le disque (un `Files.list` par dossier, pas un `exists` par fichier), mis en cache et
+invalidé aux gestes qui le changent. Toute l'IHM se règle **là-dessus** : l'écoute se voile, l'audit
+informe au lieu de crier, la réactivation s'offre.
+
+Un geste **déclaré** est autre chose qu'un état **observé**, et les deux coexistent :
+`recording_session.archived_at` et `originals_purged_at` disent « l'utilisateur a demandé ça, tel
+jour » ; c'est ce qui permet à l'audit de distinguer *purgé exprès* (INFO) de *corrompu* (ERREUR),
+alors que le disque, lui, rend le même verdict dans les deux cas : « absent ». **Le marqueur explique,
+l'observation décide.**
+
 **Principes.** SSOT (la source de vérité reste distante : on ne la copie pas, on la **date**),
 **honnêteté de l'IHM** (« dernier état connu le… » plutôt qu'une fraîcheur feinte) et **KISS** (pas de
 sondage : on relit à l'ouverture, à la demande, ou après une action).
+
+---
+
+## Cascade de preuves (vérification graduée, refuser plutôt que se tromper)
+
+**Le problème.** Rebrancher des fichiers retrouvés sur un passage archivé demande de répondre à : « ce
+WAV est-il **bien** celui-là ? ». Le nom ne prouve rien (deux nuits d'un même carré portent des noms
+voisins ; un fichier peut être renommé, tronqué, ré-encodé). Une empreinte cryptographique prouve tout,
+mais **n'existe pas** pour les passages antérieurs, ni pour un passage reconstruit depuis la plateforme
+(#1305) : exiger la preuve forte, c'est exclure exactement les cas où l'on en aurait le plus besoin. Et
+la faute à ne pas commettre est claire : **rebrancher silencieusement le mauvais audio** sur des
+observations, ce qui fabrique une donnée fausse et indétectable.
+
+**La solution.** Une **cascade** de preuves de force décroissante, où chaque niveau tranche s'il le
+peut et passe la main sinon, et où le doute non levé est un **refus**, jamais un « probablement bon » :
+
+1. **empreinte** (SHA-256 des 64 premiers Kio, `Empreintes.empreinteCourte`) : identité certaine, quand
+   elle a été capturée ;
+2. **structure** : la durée réelle lue dans l'en-tête WAV confrontée à celle qu'on a enregistrée
+   (tolérance 0,15 s), et la taille en octets ;
+3. **acoustique** (`AnalyseAcoustique`, filtre de Goertzel) : les **cris des observations** rapatriées
+   sont-ils réellement présents, aux fréquences et aux instants annoncés ? C'est la preuve qui reste
+   quand aucune autre n'existe, et c'est la plus parlante : elle valide l'audio **contre les données
+   qu'on s'apprête à y rebrancher**.
+
+Le verdict est un type scellé (`VerdictIdentite` = `Acceptee(NiveauConfiance, preuves)` /
+`Refusee(motif)`) : l'appelant ne peut pas confondre « accepté avec certitude » et « accepté sur faisceau
+d'indices », et le **niveau de confiance minimal** atteint remonte jusqu'au rapport, donc jusqu'à
+l'utilisateur.
+
+**Dans VigieChiro** (#1309, consommé par #1302 et #1305). `VerificationIdentiteAudio` porte la cascade ;
+`ServiceReactivationPassage` ne copie **que** les fichiers acceptés, laisse les divergents de côté et les
+**énumère** ; un passage sans empreinte reste donc réactivable, mais par la preuve acoustique, pas par la
+confiance dans un nom.
+
+**Principes.** Fail-safe (ne pas pouvoir prouver = ne pas faire), **honnêteté** (dire *avec quelle
+force* on a conclu), et refus de la fausse alternative « preuve parfaite ou rien ».
 
 ---
 

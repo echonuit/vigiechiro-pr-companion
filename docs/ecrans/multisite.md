@@ -76,6 +76,31 @@ bougé). Si vous **quittez le mode édition** alors que des déplacements ne son
 fenêtre vous propose de les **Enregistrer**, de les **Abandonner**, ou d'**Annuler** (pour rester en
 édition).
 
+## Une nuit manque dans le tableau ?
+
+Il arrive qu'une nuit existe **sur Vigie-Chiro** et nulle part sur cette machine : vous l'avez déposée
+depuis un autre ordinateur, avant d'utiliser cette application, ou vous avez réinstallé votre poste.
+Elle ne figure alors dans **aucune ligne** de ce tableau.
+
+Le menu **☰ › Reconstruire un passage manquant…** liste ces nuits (carré, localité, date), et permet
+d'en **rapatrier** une. Le passage reconstruit apparaît dans le tableau, avec ses **observations** :
+vous le consultez comme n'importe quel autre.
+
+![La modale « Reconstruire un passage manquant » : les nuits déposées sur Vigie-Chiro et absentes de cette machine. La seconde ne peut pas être reconstruite tant que son point d'écoute n'existe pas ici.](../assets/captures/apercu-multisite-reconstruction.png)
+
+!!! note "Ce qu'une nuit reconstruite ne contient pas"
+    La plateforme ne rend pas tout. Un passage reconstruit arrive donc **sans audio** (c'est un
+    [passage archivé](passage.md#archiver-un-passage-consulter-sans-ecouter) : consultable, pas
+    écoutable), **sans** journal du capteur ni relevé climatique, et **sans** les séquences que
+    Tadarida n'a pas identifiées : le serveur ne les connaît pas. Ces manques sont **affichés** à la
+    fin de la reconstruction, pas passés sous silence.
+
+    Si vous retrouvez les fichiers d'origine, ouvrez le passage et utilisez **Réactiver ce passage**.
+
+L'entrée n'apparaît **que si vous êtes connecté** à Vigie-Chiro (elle interroge la plateforme). Et une
+nuit dont le **point d'écoute n'existe pas encore ici** ne peut pas être reconstruite : créez d'abord
+le site et le point dans **Mes sites**. La rattacher à un autre point produirait une donnée fausse.
+
 ## Vues sauvegardées
 
 Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic.

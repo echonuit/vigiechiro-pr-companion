@@ -56,6 +56,37 @@ Déposer, puis Valider. Voir le [Parcours métier](parcours/index.md).
 Sur la plateforme Vigie-Chiro, 24 à 48 h après le dépôt : vous y téléchargez un fichier CSV de
 résultats, que vous **importez** ensuite dans l'écran [Validation](ecrans/validation.md).
 
+## Espace disque et archives
+
+### Mon disque est plein : que puis-je supprimer sans rien perdre d'important ?
+
+Deux niveaux, du plus anodin au plus engageant.
+
+1. **Purger les originaux** (les « bruts ») : ces fichiers ne servent ni à l'écoute ni à la
+   validation, qui s'appuient sur les séquences transformées. Vous pouvez les supprimer pour une nuit
+   (écran [Passage](ecrans/passage.md)) ou pour toutes (menu « ☰ »), sans aucune conséquence sur
+   votre travail.
+2. **Archiver un passage** : supprime aussi les **séquences d'écoute**. Vos observations et vos
+   validations restent consultables, mais vous ne pouvez plus **écouter** ce passage. Ne le faites que
+   sur un passage **déposé**, et de préférence si vous avez une **sauvegarde** des fichiers.
+
+### J'ai archivé un passage, puis-je récupérer le son ?
+
+Oui, **si vous avez encore les fichiers** : le bouton **Réactiver ce passage** les réimporte depuis un
+dossier que vous désignez, après avoir **vérifié** que ce sont bien les mêmes (voir
+[Passage](ecrans/passage.md)).
+
+En revanche, **la plateforme Vigie-Chiro ne vous rendra pas cet audio** si votre dépôt a été fait au
+format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable. Sans vos
+fichiers d'origine, la perte est **définitive** — c'est exactement ce que la confirmation vous
+rappelle avant d'archiver.
+
+### L'audit de cohérence signale-t-il un passage archivé comme une erreur ?
+
+Non. Un passage archivé **volontairement** apparaît en simple **information**, avec le décompte des
+séquences encore présentes. En revanche, des fichiers qui disparaissent **sans** que vous ayez archivé
+restent signalés en **erreur** : c'est justement ce qu'on veut voir.
+
 ## Divers
 
 ### Où mes données sont-elles stockées ?

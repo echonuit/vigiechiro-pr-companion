@@ -113,6 +113,28 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
       humaine : elle est **préservée** au réimport (`PreservationValidations`), et elle sera exigée
       (avec le taxon) pour pousser une correction vers la plateforme (#723).
 
+!!! note "Empreintes et archivage (V23 à V25, EPIC #1297)"
+    Trois migrations rendent possible le passage **archivé** : consultable sans son audio, et
+    réactivable si les fichiers d'origine reparaissent.
+
+    - **`V23__empreintes_fichiers.sql`** : `listening_sequence` gagne `size_bytes` + `fingerprint`,
+      `original_recording` gagne `size_bytes`. L'empreinte est un **SHA-256 des 64 premiers Kio**
+      (`Empreintes.empreinteCourte`), pas du fichier entier : 113 µs par fichier, soit ~0,5 s pour
+      une nuit de 4806 séquences, contre plusieurs minutes pour une empreinte complète - et elle
+      suffit à distinguer deux WAV différents, dont les en-têtes et les premières trames diffèrent.
+      Elle est posée **à l'import** (`TransformationAudio`) ; les nuits déjà importées se rattrapent
+      avec `retro-empreintes` (`BackfillEmpreintes`), et l'archivage la pose **avant** de supprimer.
+    - **`V24__archivage_passage.sql`** : `recording_session.archived_at`. Un **geste déclaré**, pas un
+      état : « l'utilisateur a archivé cette nuit, tel jour ». L'état, lui, s'**observe** sur le disque
+      (`DisponibiliteAudio`, cf. [patterns](patterns.md#etat-observe-un-statut-distant-nest-pas-un-statut-du-domaine)).
+    - **`V25__purge_originaux_declaree.sql`** : `recording_session.originals_purged_at`, et
+      **rétro-déclaration** des sessions dont le volume de bruts est déjà à zéro. Elle répare un
+      défaut latent : la purge globale des originaux n'écrivait **rien** en base, si bien que l'audit
+      aurait signalé comme *corruption* des fichiers supprimés **exprès**.
+
+    Les deux marqueurs répondent à la même question : *pourquoi* l'audio manque. Sans eux, le disque
+    dit « absent » de la même façon pour une purge volontaire et pour un disque en train de mourir.
+
 ## Transformation audio : de l'original brut aux séquences d'écoute (R10/R11)
 
 Un **enregistrement original** (`original_recording`) est un ultrason mono 16 bits échantillonné très

@@ -88,6 +88,23 @@ sa fin) est **surlignée** sur le sonogramme et le spectrogramme, et la **lectur
 directement : vous entendez le bon cri sans chercher. Le menu ☰ propose deux options d'écoute : la
 **lecture automatique** à chaque sélection (activée par défaut) et la **lecture en boucle**.
 
+## Quand l'audio n'est plus sur le disque
+
+Si le passage a été **archivé** (voir [Passage](passage.md)), ou si une partie de ses fichiers a
+disparu de votre disque, l'écran vous le dit franchement plutôt que de vous laisser devant un lecteur
+muet :
+
+- un **bandeau** en tête d'écran annonce « passage archivé » ou « audio partiel », avec le nombre de
+  séquences encore présentes ;
+- à la place du lecteur, un **encart** explique pourquoi ce son n'est pas écoutable et comment le
+  récupérer (réimporter les fichiers d'origine, bouton **Réactiver ce passage** dans l'écran Passage) ;
+- si l'audio n'est absent que **partiellement**, l'écoute fonctionne normalement sur les séquences
+  dont le fichier est là, et l'encart n'apparaît que sur les autres.
+
+**Tout le travail sur les données reste possible** : filtrer, trier, choisir les colonnes, commenter,
+marquer « douteux », corriger un taxon, changer votre certitude, exporter. Seule l'**écoute** est
+impossible — c'est bien ce qui distingue un passage archivé d'un passage perdu.
+
 ## Relire et corriger
 
 Pour l'observation sélectionnée, vous pouvez :
