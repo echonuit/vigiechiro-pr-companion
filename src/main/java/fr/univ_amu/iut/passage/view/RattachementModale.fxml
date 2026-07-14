@@ -34,11 +34,9 @@
   <HBox fx:id="ligneSyncVigieChiro" alignment="CENTER_LEFT" spacing="8.0">
     <Button fx:id="boutonTirerVigieChiro" text="Synchroniser depuis VigieChiro"
             styleClass="bouton-secondaire" onAction="#tirerDepuisVigieChiro"/>
-    <!-- Importer les observations analysées par Vigie-Chiro (#1264) : visible seulement si la nuit est
-         rattachée à une participation. Si l'analyse n'est pas terminée, le clic répond POURQUOI (analyse
-         en cours, jamais lancée, en échec…) plutôt que d'échouer sans rien dire. -->
-    <Button fx:id="boutonImporterObservations" text="Importer les observations"
-            styleClass="bouton-secondaire" onAction="#importerObservations"/>
+    <!-- « Importer les observations » a quitté cette modale (#1350) : elle est fermée sur un passage
+         déposé (garde de renommage #1134), c'est-à-dire précisément le cas où l'import a le plus de
+         sens. L'action vit désormais sur M-Passage, où aucune garde de renommage ne s'applique. -->
   </HBox>
 
   <!-- Rattachement : année + n° de passage (le site et le point ne changent pas). -->

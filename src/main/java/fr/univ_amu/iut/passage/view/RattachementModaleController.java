@@ -96,11 +96,6 @@ public class RattachementModaleController {
     @FXML
     private Button boutonTirerVigieChiro;
 
-    /// Importer les observations analysées par Vigie-Chiro (#1264) : visible seulement si la nuit est
-    /// rattachée à une participation — sinon il n'y a rien à importer.
-    @FXML
-    private Button boutonImporterObservations;
-
     @FXML
     private ComboBox<PositionMicro> champPosition;
 
@@ -172,7 +167,6 @@ public class RattachementModaleController {
         // main de part et d'autre du travail, plus de bouton figé si l'appel échoue.
         boutonRecupererMeteo.disableProperty().bind(operationEnCours);
         boutonTirerVigieChiro.disableProperty().bind(operationEnCours);
-        boutonImporterObservations.disableProperty().bind(operationEnCours);
     }
 
     /// Lie les champs des conditions de dépôt (météo + matériel du micro) au sous-ViewModel
@@ -240,32 +234,6 @@ public class RattachementModaleController {
     public void demarrer(Long idPassage, String carre, String codePoint, Runnable apresSucces) {
         this.apresSucces = Objects.requireNonNull(apresSucces, "apresSucces");
         viewModel.ouvrirSur(idPassage, carre, codePoint);
-        // « Importer les observations » (#1264) : l'action ne vaut que pour une nuit RATTACHÉE à une
-        // participation — la réponse dépend donc du passage, et se décide ici plutôt qu'à l'initialisation.
-        boolean peutImporter = viewModel.peutImporter();
-        boutonImporterObservations.setVisible(peutImporter);
-        boutonImporterObservations.setManaged(peutImporter);
-    }
-
-    /// Importe les observations de la nuit depuis Vigie-Chiro, **hors du fil JavaFX** (réseau, socle
-    /// [ExecuteurTache] #1216).
-    ///
-    /// Le bouton n'est pas gardé par l'état de l'analyse, et c'est délibéré : si elle n'est pas terminée,
-    /// l'import répond **pourquoi** (analyse en cours, jamais lancée, en échec…, #1264). Un refus qui
-    /// renseigne vaut mieux qu'un bouton grisé qui laisse deviner.
-    @FXML
-    private void importerObservations() {
-        operationEnCours.set(true);
-        executeur.executer(
-                viewModel::importerObservations,
-                compteRendu -> {
-                    operationEnCours.set(false);
-                    viewModel.restituerImport(compteRendu);
-                },
-                erreur -> {
-                    operationEnCours.set(false);
-                    viewModel.signalerErreur(erreur);
-                });
     }
 
     @FXML

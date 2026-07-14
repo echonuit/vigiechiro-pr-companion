@@ -36,6 +36,15 @@
           <Button fx:id="boutonOuvrirPortail" text="🌐 Voir la participation"
                   styleClass="bouton-secondaire" onAction="#ouvrirSurVigieChiro"/>
         </StackPane>
+        <!-- « Importer les observations » (#1350) : ici, et non dans la modale « Modifier le passage »,
+             que la garde de renommage (#1134) ferme sur un passage déposé — précisément le cas où l'on
+             veut récupérer les résultats. L'import ne renomme rien : il n'a pas à subir cette garde.
+             Enveloppe (#789) : le tooltip explique le blocage (hors connexion, ou nuit non liée à une
+             participation) et survit à la désactivation du bouton. -->
+        <StackPane fx:id="enveloppeImporterObservations">
+          <Button fx:id="boutonImporterObservations" text="⬇ Importer les observations"
+                  styleClass="bouton-secondaire" onAction="#importerObservations"/>
+        </StackPane>
         <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton
              (un passage déposé n'est plus renommable). -->
         <StackPane fx:id="enveloppeRattachement">

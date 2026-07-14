@@ -206,6 +206,14 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private StackPane enveloppeOuvrirPortail;
 
+    @FXML
+    private Button boutonImporterObservations;
+
+    /// Enveloppe (non désactivée) du bouton « Importer les observations » (#1350) : porte le tooltip
+    /// expliquant le blocage (hors connexion, ou nuit non liée à une participation). Cf. [IndicateurBlocage].
+    @FXML
+    private StackPane enveloppeImporterObservations;
+
     /// Enveloppe (non désactivée) du bouton « Supprimer » : porte le tooltip expliquant le blocage sur un
     /// passage déposé (un Button désactivé n'affiche pas de tooltip). Cf. [IndicateurBlocage].
     @FXML
@@ -335,6 +343,18 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         .then("Ouvre la participation liée sur le portail Vigie-Chiro (navigateur).")
                         .otherwise("Ce passage n'est pas encore lié à une participation VigieChiro :"
                                 + " elle est créée à l'import (connecté) ou au premier dépôt."));
+        // « Importer les observations » (#1350) : gaté en amont (#789) sur la disponibilité de l'import et
+        // le lien à une participation — **jamais** sur le statut. Un passage déposé est précisément celui
+        // dont on veut récupérer les résultats : c'est le défaut que cette action corrige.
+        boutonImporterObservations
+                .disableProperty()
+                .bind(viewModel.importObservations().possibleProperty().not());
+        IndicateurBlocage.expliquer(
+                enveloppeImporterObservations,
+                Bindings.when(viewModel.importObservations().possibleProperty())
+                        .then("Récupérer depuis VigieChiro les observations produites par l'analyse Tadarida"
+                                + " pour cette nuit.")
+                        .otherwise(viewModel.importObservations().motifBlocageProperty()));
         IndicateurBlocage.expliquer(
                 enveloppeSupprimer,
                 Bindings.when(viewModel.suppressionPossibleProperty())
@@ -550,6 +570,13 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private void archiver() {
         new ActionArchivage(viewModel, confirmateur, notificateur, () -> viewModel.ouvrirSur(idPassage, contexte))
                 .archiver();
+    }
+
+    /// « Importer les observations » (#1350) : appel réseau hors du fil JavaFX et compte rendu, délégués à
+    /// [ActionImportObservations] (le contrôleur reste du pur câblage).
+    @FXML
+    private void importerObservations() {
+        new ActionImportObservations(viewModel, occupation, notificateur).importer();
     }
 
     /// « Modifier le passage » : ouvre la modale E2.S8 en fenêtre modale. Elle édite d'un bloc le

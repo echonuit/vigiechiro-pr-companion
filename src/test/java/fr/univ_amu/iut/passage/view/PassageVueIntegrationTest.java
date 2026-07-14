@@ -11,6 +11,7 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -31,6 +32,7 @@ import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.css.PseudoClass;
 import javafx.fxml.FXMLLoader;
@@ -218,6 +220,28 @@ class PassageVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#1350 : DÉPOSÉ + nuit rattachée → « Importer les observations » est ACTIF, garde #1134 intacte")
+    void import_accessible_sur_un_passage_depose(FxRobot robot) {
+        Parent vue = chargerConnecteSurFx(robot, StatutWorkflow.DEPOSE, true);
+
+        // Le défaut corrigé : l'import vivait dans la modale « Modifier le passage », que la garde de
+        // renommage (#1134) ferme sur un passage déposé — précisément le cas où l'import a le plus de sens.
+        assertThat(bouton(vue, "#boutonImporterObservations").isDisabled())
+                .as("un passage déposé est celui dont on veut récupérer les résultats")
+                .isFalse();
+        // La garde n'est pas contournée pour autant : le renommage reste bloqué.
+        assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#1350 : nuit non liée à une participation → import grisé (il n'y a rien à importer)")
+    void import_grise_si_nuit_non_liee(FxRobot robot) {
+        Parent vue = chargerConnecteSurFx(robot, StatutWorkflow.DEPOSE, false);
+
+        assertThat(bouton(vue, "#boutonImporterObservations").isDisabled()).isTrue();
+    }
+
+    @Test
     @DisplayName("Carte recommandée : la mise en avant suit le statut (Transformé→Vérifier, Vérifié→Dépôt)")
     void carte_recommandee_suit_le_statut(FxRobot robot) {
         // Fixture affichée = VÉRIFIÉ → la prochaine étape recommandée est « Préparer le dépôt ».
@@ -254,6 +278,16 @@ class PassageVueIntegrationTest {
         return ref.get();
     }
 
+    /// Variante « observateur connecté » (#1350) : l'import des observations est disponible, et la nuit
+    /// est liée (ou non) à une participation VigieChiro.
+    private Parent chargerConnecteSurFx(FxRobot robot, StatutWorkflow statut, boolean nuitRattachee) {
+        ImportObservations importObservations = mock(ImportObservations.class);
+        when(importObservations.estRattache(anyLong())).thenReturn(nuitRattachee);
+        AtomicReference<Parent> ref = new AtomicReference<>();
+        robot.interact(() -> ref.set(charger(statut, 1, Optional.of(importObservations))));
+        return ref.get();
+    }
+
     private static Button bouton(Parent vue, String selecteur) {
         return (Button) vue.lookup(selecteur);
     }
@@ -265,6 +299,10 @@ class PassageVueIntegrationTest {
     /// Charge `Passage.fxml` via Guice sur un passage du `statut` donné et l'ouvre sur [#ID_PASSAGE].
     /// À appeler sur le fil JavaFX (chargement FXML).
     private Parent charger(StatutWorkflow statut, int numero) {
+        return charger(statut, numero, Optional.empty());
+    }
+
+    private Parent charger(StatutWorkflow statut, int numero, Optional<ImportObservations> importObservations) {
         ServicePassage service = mock(ServicePassage.class);
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
         ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
@@ -286,7 +324,7 @@ class PassageVueIntegrationTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage, reactivation);
+                return new PassageViewModel(service, purge, archivage, reactivation, importObservations);
             }
 
             @Provides

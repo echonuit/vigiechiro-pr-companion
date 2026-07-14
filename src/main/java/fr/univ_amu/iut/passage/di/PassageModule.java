@@ -316,8 +316,9 @@ public class PassageModule extends ModuleDeFeature {
             ServicePassage service,
             ServicePurgeOriginaux purge,
             ServiceArchivagePassage archivage,
-            ServiceReactivationPassage reactivation) {
-        return new PassageViewModel(service, purge, archivage, reactivation);
+            ServiceReactivationPassage reactivation,
+            Optional<ImportObservations> importObservations) {
+        return new PassageViewModel(service, purge, archivage, reactivation, importObservations);
     }
 
     /// ViewModel de la modale « Modifier le rattachement » (E2.S8). **Non-singleton** : un VM frais
@@ -327,8 +328,7 @@ public class PassageModule extends ModuleDeFeature {
             ServicePassage service,
             ServiceRattachement rattachement,
             ServiceConditionsPassage conditions,
-            Optional<SynchronisationParticipation> synchronisation,
-            Optional<ImportObservations> importObservations) {
-        return new RattachementViewModel(service, rattachement, conditions, synchronisation, importObservations);
+            Optional<SynchronisationParticipation> synchronisation) {
+        return new RattachementViewModel(service, rattachement, conditions, synchronisation);
     }
 }
