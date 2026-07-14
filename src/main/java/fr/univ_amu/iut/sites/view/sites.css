@@ -192,40 +192,10 @@
     -fx-text-fill: #b9770e;
 }
 
-/* ----- Modale d'édition de point ----- */
-.modale-point {
-    -fx-padding: 20 24 20 24;
-    -fx-background-color: #ffffff;
-}
-
-.modale-titre {
-    -fx-font-size: 16px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #2c3e50;
-}
-
-.section-label {
-    -fx-font-size: 11px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #6a737d;
-}
-
-.field-label {
-    -fx-font-size: 13px;
-    -fx-font-weight: bold;
-    -fx-text-fill: #2c3e50;
-}
-
-.field-hint {
-    -fx-font-size: 12px;
-    -fx-text-fill: #6a737d;
-}
-
-.message-erreur {
-    -fx-font-size: 12px;
-    -fx-text-fill: #a93226;
-}
-
+/* ----- Modale d edition de point -----
+   Les classes communes aux formulaires modaux (.modale-point, .modale-titre, .section-label,
+   .field-label, .field-hint, .message-erreur) vivent desormais dans commun/view/design.css (#1431) :
+   cinq modales les partagent, et elles etaient dupliquees ici a l identique. */
 /* Contrôle du carré STOC (#733), modale de point : la grille officielle confirme le carré du site (vert,
    discret) ou signale que le point tombe ailleurs (orange - une alerte, pas une erreur : l'observateur
    peut avoir raison, et rien ne bloque son enregistrement). */

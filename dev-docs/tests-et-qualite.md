@@ -94,7 +94,8 @@ l'observateur. Et pas par négligence : un `showAndWait()` **fige** un test head
 était **impossible**.
 
 Les dialogues d'une action sont désormais des **ports** remplaçables (`Confirmateur`, `Notificateur`,
-`SelecteurFichier` : cf. [Patrons](patterns.md#les-dialogues-dune-action-sont-des-ports-socle-commun)).
+`SelecteurFichier`, `DemandeurDeChoix` : cf.
+[Patrons](patterns.md#les-dialogues-dune-action-sont-des-ports-socle-commun)).
 Un test de geste les remplace par des doubles, **déclenche** l'action, et vérifie **ce qui s'est
 passé** :
 
@@ -116,6 +117,14 @@ Trois exigences, dans l'ordre d'importance :
 3. **Le message de confirmation est un contenu.** Sur une suppression en cascade, c'est le seul
    avertissement que l'utilisateur recevra : vérifier qu'il annonce le gain, ce qui est conservé, et
    ce qui est **définitivement** perdu.
+4. **Renoncer n'est pas abandonner.** Quand un dialogue offre plusieurs issues, l'une d'elles **détruit**
+   souvent quelque chose et une autre **ne fait rien**. Les deux ferment le dialogue. Un test doit les
+   **distinguer** - c'est le piège le plus coûteux de tout ce chantier.
+
+!!! tip "Ce qu'aucun test ne verra"
+    Trois défauts d'IHM de #1431 n'ont été trouvés qu'en **regardant une capture** : un libellé tronqué,
+    un emoji qui ne se rend pas (#700), et une **réplique** de dialogue qui avait **dérivé** du vrai
+    écran. Un geste testé n'est pas un écran regardé : rendez la capture, et **ouvrez-la**.
 
 ### La documentation est tenue par un test
 

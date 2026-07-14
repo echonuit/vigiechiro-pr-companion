@@ -610,19 +610,69 @@ Et cela portait précisément sur les gestes qu'on veut couvrir : purger les ori
 nuits, restaurer la base, supprimer un passage et sa nuit, réimporter par-dessus les validations de
 l'observateur. Tous irréversibles, tous non testés.
 
-**La solution.** Rendre **remplaçable** chaque forme de dialogue. Trois familles à ce jour, bâties sur
-le même triplet - un **contrat neutre**, une **implémentation réelle**, un **porteur injectable** :
+**La solution.** Rendre **remplaçable** chaque forme de dialogue. **Quatre** familles, bâties sur le même
+triplet - un **contrat neutre**, une **implémentation réelle**, un **porteur injectable** :
 
 | port | ce qu'il demande | implémentation réelle | double en test |
 |---|---|---|---|
 | `Confirmateur` (#1013) | le **oui/non** | `ConfirmationNavigation` | répond ce qu'on lui dit |
 | `Notificateur` (#1404) | le **compte rendu** | `NotificationDialogue` | **capture** ce qui a été dit |
 | `SelecteurFichier` (#1425) | la **désignation** d'un fichier / dossier | `SelecteurFichierJavaFx` | répond un chemin, **ou rien** (annulé) |
+| `DemandeurDeChoix<T>` (#1431) | le **choix** parmi plusieurs options | `ChoixDansListe` **ou** `ChoixParBoutons` | répond une option, **ou rien** (renoncé) |
 
-Chaque **écran** détient **une** instance de chaque porteur (`ConfirmateurModifiable`,
-`NotificateurModifiable`, `SelecteurFichierModifiable`), champ `final`, exposée à ses tests par un
-accesseur package-private. Ses **collaborateurs** (actions extraites, cartes, helpers) **reçoivent**
-ces porteurs : ils n'en fabriquent pas.
+Chaque **écran** détient **une** instance de chaque porteur qu'il utilise, champ `final`, exposée à ses
+tests par un accesseur package-private. Ses **collaborateurs** (actions extraites, cartes, helpers)
+**reçoivent** ces porteurs : ils n'en fabriquent pas. Quand un écran en accumule plusieurs, ils forment
+une unité qu'on peut extraire (`DialoguesAudio` en porte trois).
+
+### « Annuler » n'est pas une option : c'est un renoncement
+
+Le dernier port est né d'un dialogue qui semblait **inclassable** : « Enregistrer / Abandonner /
+**Annuler** », à la sortie du mode édition de la carte. Trois boutons, donc trois issues - et aucun
+contrat existant pour ça. Il aurait fallu inventer un port « à trois branches », taillé pour **un seul
+écran**.
+
+C'était une erreur de lecture :
+
+> **« Annuler » n'est pas une troisième décision. C'est le refus de décider.** On reste en édition, rien
+> n'est enregistré, rien n'est perdu.
+
+Le dialogue n'a donc pas trois issues : il en a **deux**, plus la possibilité de **renoncer** - ce qui se
+lit `Optional.empty()`, exactement comme un sélecteur de fichier qu'on ferme. Un seul contrat suffit, et
+il sert **aussi** au choix d'une participation VigieChiro parmi une liste.
+
+Corollaire à retenir : **renoncer n'est pas abandonner**. Les deux ferment le dialogue ; **un seul
+détruit** le travail de l'utilisateur. Un test doit les distinguer.
+
+**La présentation, elle, reste à l'appelant** - car elle n'est légitimement pas la même :
+
+- `ChoixDansListe` quand les options sont des **données** (on ignore combien de participations le compte
+  contiendra) ;
+- `ChoixParBoutons` quand ce sont des **décisions** (enregistrer / abandonner) : deux décisions se lisent
+  d'un coup d'œil, une liste déroulante y serait un **recul**.
+
+### Un formulaire n'est pas un dialogue : c'est une vue
+
+Face aux `Dialog<T>` de saisie (créer un site, personnaliser une sélection d'écoute), la tentation était
+d'ajouter un cinquième port, générique, rendant `Optional<T>`. **Il ne fallait pas** : l'application avait
+déjà le bon patron, et il était testé.
+
+> Un formulaire est une **vue** : FXML + controller + ViewModel + une entrée `ouvrirModale*` sur la façade
+> de navigation.
+
+Cinq modales le suivent (`ModalePoint`, `ModaleSite`, `RattachementModale`, `ReconstructionModale`,
+`ModaleSelection`), toutes couvertes par un test TestFX. Les `Dialog<T>` bâtis à la main étaient les
+**intrus**, et ils cumulaient **trois** défauts liés :
+
+1. le **geste** était injouable (`showAndWait`) ;
+2. la **validation** vivait dans la vue, donc n'était pas testable non plus (elle devient un binding
+   observable du ViewModel, vérifiable **sans IHM**) ;
+3. leur **capture de documentation** était une **réplique** reconstruite à la main (`CaptureDialogues`),
+   faute de `.fxml` - et elle **avait dérivé** : elle affichait un protocole « Point fixe » là où la vraie
+   valeur est « PointFixeStandard ». La doc mentait, et rien ne pouvait le signaler.
+
+Le refus métier y gagne aussi : il s'affiche **dans** la modale, à côté du champ fautif, **sans perdre la
+saisie** - là où l'alerte d'après coup obligeait à tout ressaisir.
 
 ```java
 // Écran : un champ final par porteur, un accesseur par porteur.
@@ -661,15 +711,24 @@ Deux pièges corollaires, tous deux rencontrés :
   `lancer(…)` qui fabriquait le vrai dialogue et `lancer(…, Confirmateur)` pour les tests. Un écran,
   une paire de porteurs, partagée.
 
-**Ce qui n'est pas encore porté** (cf. #1431) : les `Dialog<T>` de **saisie** (formulaires rendant une
-valeur : créer un site, choisir une participation) et le **choix à trois branches** (Enregistrer /
-Abandonner / Annuler). Ils demandent une décision de conception, pas un port de plus par réflexe.
+- **Un port qu'on croit manquant peut être un port déjà là.** `GestionnaireVues` semblait bloqué par son
+  `TextInputDialog` ; il reçoit en fait son demandeur de nom **par constructeur** depuis toujours, et onze
+  tests s'en servent avec un stub. Vérifier avant d'abstraire.
+
+**Ce qui reste en dur** (et c'est légitime) : les **implémentations** des ports elles-mêmes
+(`ConfirmationNavigation`, `NotificationDialogue`, `SelecteurFichierJavaFx`, `ChoixDansListe`,
+`ChoixParBoutons`), et le **filet global** d'`App.java` (exceptions non capturées, #795) - le seul endroit
+où le dialogue **est** la fonction.
 
 **Le contre-exemple à connaître.** Un refus **prévenu par l'affordance** n'a pas de notification à
 tester - il n'arrive jamais. Sur M-Site-detail, « Supprimer » est grisé quand un point porte des
 passages (#789), et **JavaFX n'émet aucune action sur un bouton désactivé** (`Button.fire()` est un
 no-op). Le `catch` du refus métier reste comme garde défensive, mais c'est le **grisage** que le test
 doit vérifier : *on ne prévient pas après coup ce qu'on a déjà empêché.*
+
+**Et ce qu'aucun test ne verra jamais.** Trois défauts de ce chantier n'ont été trouvés qu'en **regardant
+une capture** : un libellé tronqué, un emoji qui ne se rend pas (#700), une réplique de dialogue qui avait
+**dérivé du vrai écran**. Un geste testé n'est pas un écran regardé - [rendez la capture, et ouvrez-la](captures.md).
 
 ## Écrans de données : densité, badge, filtres (socle design partagé)
 

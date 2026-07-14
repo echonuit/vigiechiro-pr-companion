@@ -80,7 +80,8 @@ réimporter), et pour une raison mécanique : un `showAndWait()` **fige** un tes
 clic était impossible.
 
 Les dialogues d'une action sont désormais des **ports** remplaçables (`Confirmateur`, `Notificateur`,
-`SelecteurFichier` : cf. [patterns](dev-docs/patterns.md)). Un test de geste les remplace par des
+`SelecteurFichier`, `DemandeurDeChoix` : cf. [patterns](dev-docs/patterns.md)). Un test de geste les
+remplace par des
 doubles, **déclenche** l'action, et vérifie **ce qui s'est passé** :
 
 ```java
@@ -100,6 +101,9 @@ Trois exigences, dans l'ordre d'importance :
    a **disparu de la base**, pas qu'un mock a reçu un appel.
 3. **Le message de confirmation est un contenu.** Sur une cascade, c'est le seul avertissement que
    l'utilisateur recevra : vérifier qu'il annonce le gain, ce qui est conservé, et ce qui est perdu.
+4. **Renoncer n'est pas abandonner.** Quand un dialogue offre plusieurs issues, l'une d'elles **détruit**
+   souvent quelque chose et une autre **ne fait rien**. Les deux ferment le dialogue : un test doit les
+   **distinguer**.
 
 ### Tests d'architecture (ArchUnit)
 

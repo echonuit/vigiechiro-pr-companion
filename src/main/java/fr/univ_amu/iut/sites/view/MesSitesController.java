@@ -3,7 +3,6 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
-import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
@@ -53,14 +52,6 @@ public class MesSitesController implements ResumeStatut {
     /// statut (#693) au lieu d'un sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
-
-    /// Compte rendu de l'écran : porteur partagé injectable (#1405), double capturant en test.
-    private final NotificateurModifiable notificateur = new NotificateurModifiable();
-
-    /// Porteur de compte rendu exposé aux tests (#1405) : `notificateur().definir(double)`.
-    NotificateurModifiable notificateur() {
-        return notificateur;
-    }
 
     /// Voile « … en cours » de l'écran (#1212) : chargement des cartes et synchronisation tournent
     /// hors du fil JavaFX ([IndicateurOccupation], patron #1014).
