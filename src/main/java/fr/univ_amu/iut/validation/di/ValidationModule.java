@@ -25,6 +25,7 @@ import fr.univ_amu.iut.validation.model.RapprochementTaxons;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
+import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
@@ -111,6 +112,12 @@ public class ValidationModule extends ModuleDeFeature {
 
     @Provides
     @Singleton
+    MessageObservationDao fournirMessageObservationDao(SourceDeDonnees source) {
+        return new MessageObservationDao(source);
+    }
+
+    @Provides
+    @Singleton
     ProjectionsAnalyseDao fournirProjectionsAnalyseDao(SourceDeDonnees source) {
         return new ProjectionsAnalyseDao(source);
     }
@@ -156,7 +163,8 @@ public class ValidationModule extends ModuleDeFeature {
             ParserCsvTadarida parser,
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
-            Horloge horloge) {
+            Horloge horloge,
+            MessageObservationDao messageDao) {
         return new ServiceValidation(
                 resultatsDao,
                 observationDao,
@@ -166,6 +174,7 @@ public class ValidationModule extends ModuleDeFeature {
                 parser,
                 export,
                 uniteDeTravail,
-                horloge);
+                horloge,
+                messageDao);
     }
 }

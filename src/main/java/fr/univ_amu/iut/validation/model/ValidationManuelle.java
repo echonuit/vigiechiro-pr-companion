@@ -61,6 +61,8 @@ public class ValidationManuelle {
                 false, // douteux : une séquence tout juste validée n'est pas marquée douteuse
                 null, // idDonneeVigieChiro : validation locale, sans ancrage plateforme
                 null, // indiceVigieChiro
+                null,
+                null,
                 null); // certitudeObservateur : vide tant que l'observateur ne l'a pas saisie
         return observationDao.insert(manuelle);
     }

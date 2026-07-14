@@ -50,7 +50,9 @@ class PublicationCorrectionsUITest {
                 false,
                 "d1",
                 0,
-                CertitudeObservateur.SUR);
+                CertitudeObservateur.SUR,
+                null,
+                null);
     }
 
     @Test

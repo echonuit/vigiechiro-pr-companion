@@ -40,6 +40,7 @@ import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.VueValidation;
+import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
@@ -132,7 +133,8 @@ class ServiceValidationTest {
                 parser,
                 new ExportVuCsv(),
                 new UniteDeTravail(source),
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                new MessageObservationDao(source));
     }
 
     private void insererSequence(EnregistrementOriginalDao originalDao, SequenceDao sequenceDao, String base) {

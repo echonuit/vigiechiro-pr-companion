@@ -272,6 +272,6 @@ class ServiceReconstructionPassagesTest {
 
     private static fr.univ_amu.iut.commun.api.ObservationVigieChiro observation() {
         return new fr.univ_amu.iut.commun.api.ObservationVigieChiro(
-                0, "Pippip", 0.9, 45.0, 0.20, 0.32, null, null, null);
+                0, "Pippip", 0.9, 45.0, 0.20, 0.32, null, null, null, null, null, List.of());
     }
 }

@@ -126,7 +126,9 @@ public final class ParserCsvTadarida {
                     mode(cellule(ligne, index.get(COL_MODE_VALIDATION))),
                     null, // pas d'ancrage plateforme dans un CSV
                     null,
-                    CertitudeObservateur.depuisTexte(texte(cellule(ligne, index.get(COL_PROB_OBSERVATEUR))))));
+                    CertitudeObservateur.depuisTexte(texte(cellule(ligne, index.get(COL_PROB_OBSERVATEUR)))),
+                    null,
+                    null));
         }
         return new ResultatParseTadarida(format, observations);
     }

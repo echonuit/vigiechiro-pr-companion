@@ -32,14 +32,16 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             + " (sequence_id, start_time_s, end_time_s, median_freq_khz, taxon_tadarida,"
             + " prob_tadarida, taxon_other_tadarida, taxon_observer, prob_observer, user_comment,"
             + " is_reference, validation_mode, results_id, is_doubtful,"
-            + " vigiechiro_data_id, vigiechiro_obs_index, observer_certainty)"
-            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            + " vigiechiro_data_id, vigiechiro_obs_index, observer_certainty,"
+            + " taxon_validator, validator_certainty)"
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
     private static final String SQL_UPDATE = "UPDATE observation SET sequence_id = ?, start_time_s = ?,"
             + " end_time_s = ?, median_freq_khz = ?, taxon_tadarida = ?, prob_tadarida = ?,"
             + " taxon_other_tadarida = ?, taxon_observer = ?, prob_observer = ?, user_comment = ?,"
             + " is_reference = ?, validation_mode = ?, results_id = ?, is_doubtful = ?,"
-            + " vigiechiro_data_id = ?, vigiechiro_obs_index = ?, observer_certainty = ? WHERE id = ?";
+            + " vigiechiro_data_id = ?, vigiechiro_obs_index = ?, observer_certainty = ?,"
+            + " taxon_validator = ?, validator_certainty = ? WHERE id = ?";
 
     /// Mapper de l'entité (lecture `SELECT *` de la table), sur les lectures nullables partagées
     /// de [FragmentsSqlObservation].
@@ -61,7 +63,9 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             rs.getInt(FragmentsSqlObservation.COL_IS_DOUBTFUL) != 0,
             rs.getString("vigiechiro_data_id"),
             FragmentsSqlObservation.entierNullable(rs, "vigiechiro_obs_index"),
-            CertitudeObservateur.depuisTexte(rs.getString("observer_certainty")));
+            CertitudeObservateur.depuisTexte(rs.getString("observer_certainty")),
+            rs.getString("taxon_validator"),
+            CertitudeObservateur.depuisTexte(rs.getString("validator_certainty")));
 
     public ObservationDao(SourceDeDonnees source) {
         super(source);
@@ -140,7 +144,9 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
                 observation.douteux(),
                 observation.idDonneeVigieChiro(),
                 observation.indiceVigieChiro(),
-                observation.certitudeObservateur());
+                observation.certitudeObservateur(),
+                observation.taxonValidateur(),
+                observation.certitudeValidateur());
     }
 
     /// Variante transactionnelle : insère le lot sur la `connexion` fournie, sans gérer le
@@ -235,9 +241,15 @@ public class ObservationDao extends DaoGenerique<Observation, Long> {
             observation.douteux() ? 1 : 0,
             observation.idDonneeVigieChiro(),
             observation.indiceVigieChiro(),
-            observation.certitudeObservateur() == null
-                    ? null
-                    : observation.certitudeObservateur().jeton()
+            jeton(observation.certitudeObservateur()),
+            observation.taxonValidateur(),
+            jeton(observation.certitudeValidateur())
         };
+    }
+
+    /// Jeton persisté d'une certitude (`SUR` / `PROBABLE` / `POSSIBLE`), ou `null` si non renseignée :
+    /// l'observateur et le validateur partagent le même domaine fermé (contrat #1203).
+    private static String jeton(CertitudeObservateur certitude) {
+        return certitude == null ? null : certitude.jeton();
     }
 }

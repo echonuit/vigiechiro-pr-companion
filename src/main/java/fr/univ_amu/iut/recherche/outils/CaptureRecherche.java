@@ -234,6 +234,8 @@ public final class CaptureRecherche {
                     false,
                     null,
                     null,
+                    null,
+                    null,
                     null));
         }
     }

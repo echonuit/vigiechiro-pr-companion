@@ -216,6 +216,8 @@ class ServiceBibliothequeTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -236,6 +238,8 @@ class ServiceBibliothequeTest {
                 ModeValidation.NON_VALIDE,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);

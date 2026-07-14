@@ -115,6 +115,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -139,7 +141,9 @@ class ObservationDaoTest {
                 false,
                 "6a4fcaa2842983a29ba25363",
                 12,
-                fr.univ_amu.iut.commun.model.CertitudeObservateur.PROBABLE);
+                fr.univ_amu.iut.commun.model.CertitudeObservateur.PROBABLE,
+                null,
+                null);
 
         Observation inseree = dao.insert(avecAncrage);
         Observation relue = dao.findById(inseree.id()).orElseThrow();
@@ -179,7 +183,9 @@ class ObservationDaoTest {
                 false,
                 "6a4fcaa2842983a29ba25363",
                 4,
-                fr.univ_amu.iut.commun.model.CertitudeObservateur.SUR));
+                fr.univ_amu.iut.commun.model.CertitudeObservateur.SUR,
+                null,
+                null));
         // Non revue (aucun taxon observateur) : hors du vivier.
         dao.insert(observationComplete().avecObservateur(null, null, ModeValidation.NON_VALIDE));
 
@@ -257,6 +263,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
 
         Observation relu = dao.findById(dao.insert(minimale).id()).orElseThrow();
@@ -294,6 +302,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
 
         assertThatThrownBy(() -> dao.insert(orphelin))
@@ -320,6 +330,8 @@ class ObservationDaoTest {
                 ModeValidation.NON_VALIDE,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);
@@ -350,6 +362,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
 
         assertThatThrownBy(() -> dao.insert(orphelin))
@@ -376,6 +390,8 @@ class ObservationDaoTest {
                 ModeValidation.NON_VALIDE,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);
@@ -641,6 +657,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -701,6 +719,8 @@ class ObservationDaoTest {
                 ModeValidation.NON_VALIDE,
                 second[2],
                 false,
+                null,
+                null,
                 null,
                 null,
                 null)); // passage 2
@@ -788,6 +808,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null));
 
         List<LigneObservationAudio> lignes = audio.lignesAudioDesPassages(List.of(idPassage, second[0]));
@@ -826,6 +848,8 @@ class ObservationDaoTest {
                 ModeValidation.MANUEL,
                 idResultats2,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null));
@@ -907,6 +931,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -929,6 +955,8 @@ class ObservationDaoTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -949,6 +977,8 @@ class ObservationDaoTest {
                 ModeValidation.NON_VALIDE,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);

@@ -10,6 +10,7 @@ import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
+import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
@@ -76,6 +77,7 @@ public class ServiceValidation implements CompteurValidations {
     private final UniteDeTravail uniteDeTravail;
     private final Horloge horloge;
     private final PreservationValidations preservation;
+    private final FilsDiscussionVigieChiro fils;
 
     public ServiceValidation(
             ResultatsIdentificationDao resultatsDao,
@@ -86,7 +88,8 @@ public class ServiceValidation implements CompteurValidations {
             ParserCsvTadarida parser,
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
-            Horloge horloge) {
+            Horloge horloge,
+            MessageObservationDao messageDao) {
         this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
         this.taxonDao = Objects.requireNonNull(taxonDao, "taxonDao");
@@ -97,6 +100,7 @@ public class ServiceValidation implements CompteurValidations {
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.preservation = new PreservationValidations(resultatsDao, observationDao);
+        this.fils = new FilsDiscussionVigieChiro(observationDao, messageDao, uniteDeTravail);
     }
 
     // ---------------------------------------------------------------------------------------------
@@ -168,12 +172,17 @@ public class ServiceValidation implements CompteurValidations {
     /// @param remplacer remplace le jeu existant (en préservant les validations observateur) si `true`
     public BilanImport importerDepuisVigieChiro(Long idPassage, List<DonneeVigieChiro> donnees, boolean remplacer) {
         Objects.requireNonNull(donnees, "donnees");
-        return importerLignes(
+        BilanImport bilan = importerLignes(
                 idPassage,
                 ConversionDonneesVigieChiro.enLignes(donnees),
                 ResultatsIdentification.SOURCE_VIGIECHIRO,
                 "VigieChiro",
                 remplacer);
+        // Le fil de discussion ne peut pas voyager dans une LigneObservation (1-N) ni être écrit pendant
+        // l'insertion en lot (les clés générées ne sont pas récupérées) : il s'écrit ici, une fois les
+        // observations en base, rapprochées du serveur par leur ancrage plateforme (#1417).
+        fils.enregistrer(bilan.resultats().id(), donnees);
+        return bilan;
     }
 
     /// **Cœur d'import** commun à toutes les sources d'observations (CSV Tadarida ou résultats
@@ -259,13 +268,17 @@ public class ServiceValidation implements CompteurValidations {
         return (int) preservation.compterValidees(idPassage);
     }
 
-    /// Codes Tadarida hors référentiel parmi `lignes` : taxon principal (stocké tel quel → FK obligatoire)
-    /// et taxon observateur (la décision de l'observateur, à préserver), absents de `taxonsConnus`.
+    /// Codes hors référentiel parmi `lignes`, à auto-enregistrer en souches : taxon Tadarida (stocké tel
+    /// quel → FK obligatoire), taxon **observateur** (sa décision, à préserver) et taxon **validateur**
+    /// (#1417 : le verdict de l'expert du MNHN). Le validateur est ici pour la même raison que les deux
+    /// autres — sans souche, la FK forcerait [#codeOuNull] à ramener son code à `null`, et l'application
+    /// **jetterait en silence** l'avis qui fait autorité.
     private static Set<String> taxonsHorsReferentiel(List<LigneObservation> lignes, Set<String> taxonsConnus) {
         Set<String> manquants = new LinkedHashSet<>();
         for (LigneObservation ligne : lignes) {
             ajouterSiInconnu(manquants, ligne.taxonTadarida(), taxonsConnus);
             ajouterSiInconnu(manquants, ligne.taxonObservateur(), taxonsConnus);
+            ajouterSiInconnu(manquants, ligne.taxonValidateur(), taxonsConnus);
         }
         return manquants;
     }
@@ -302,7 +315,9 @@ public class ServiceValidation implements CompteurValidations {
                     false,
                     ligne.idDonneeVigieChiro(),
                     ligne.indiceVigieChiro(),
-                    ligne.certitudeObservateur()));
+                    ligne.certitudeObservateur(),
+                    codeOuNull(ligne.taxonValidateur(), taxonsConnus),
+                    ligne.certitudeValidateur()));
         }
         return aInserer;
     }
@@ -498,7 +513,9 @@ public class ServiceValidation implements CompteurValidations {
                     o.modeValidation(),
                     o.idDonneeVigieChiro(),
                     o.indiceVigieChiro(),
-                    o.certitudeObservateur()));
+                    o.certitudeObservateur(),
+                    o.taxonValidateur(),
+                    o.certitudeValidateur()));
         }
         return lignes;
     }

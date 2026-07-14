@@ -18,6 +18,14 @@ import java.util.List;
 /// Faute de colonne de mode de validation dans l'API, le mode est **déduit** : la présence d'un taxon
 /// observateur (`observateur_taxon`) traduit une décision humaine sur la plateforme, donc
 /// [ModeValidation#MANUEL] ; sinon [ModeValidation#NON_VALIDE] (résultat Tadarida brut).
+///
+/// L'avis du **validateur** (#1417) traverse ici sans transformation : il ne change **pas** le mode de
+/// validation. Un expert du MNHN peut trancher une observation que l'observateur n'a jamais touchée —
+/// la faire passer pour « validée manuellement » attribuerait à l'observateur une décision qui n'est
+/// pas la sienne. Les deux avis restent distincts, et affichés comme tels.
+///
+/// Le **fil de discussion** ne passe pas par [LigneObservation] : c'est un 1-N, et le CSV Tadarida n'en
+/// a pas. `ServiceValidation` l'écrit à part, une fois les observations insérées et leurs clés connues.
 final class ConversionDonneesVigieChiro {
 
     private ConversionDonneesVigieChiro() {}
@@ -46,7 +54,9 @@ final class ConversionDonneesVigieChiro {
                 obs.taxonObservateur() != null ? ModeValidation.MANUEL : ModeValidation.NON_VALIDE,
                 donnee.id(),
                 obs.indiceServeur(),
-                obs.certitudeObservateur());
+                obs.certitudeObservateur(),
+                obs.taxonValidateur(),
+                obs.certitudeValidateur());
     }
 
     private static Integer frequenceEntiere(Double frequenceKHz) {
