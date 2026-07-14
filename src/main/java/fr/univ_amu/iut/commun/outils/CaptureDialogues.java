@@ -1,15 +1,14 @@
 package fr.univ_amu.iut.commun.outils;
 
 import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.GardeQuitter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
+import javafx.scene.control.Alert;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -27,6 +26,10 @@ import javafx.scene.control.Label;
 /// `sites` / `qualification` / `importation` (contrainte de dépendances). Lancement headless :
 /// `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureDialogues {
+
+    /// Largeur d'enroulement des messages, en caractères : le snapshot d'un dialogue n'enroule pas tout
+    /// seul (cf. [#enrouler]).
+    private static final int LARGEUR_LIGNE = 70;
 
     private CaptureDialogues() {}
 
@@ -53,47 +56,56 @@ public final class CaptureDialogues {
 
     private static void capturer() {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
-        enregistrer(dialogueDoublon(), sortie.resolve("apercu-import-doublon.png"));
-        enregistrer(dialogueEcrasement(), sortie.resolve("apercu-import-ecrasement.png"));
-        enregistrer(alerteGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
+        enregistrer(messageGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
     }
 
-    private static void enregistrer(Dialog<?> dialogue, Path fichier) {
-        ApercuFx.enregistrerDialog(dialogue, styles(), fichier);
+    /// Rend le dialogue **de production** ([ConfirmationNavigation#dialogue]) portant le message réel.
+    ///
+    /// Seule la **largeur** est imposée : hors `showAndWait`, un `DialogPane` ne contraint pas la sienne, et
+    /// le texte s'étalerait sur une ligne interminable. On ne touche pas au texte.
+    private static void enregistrer(String message, Path fichier) {
+        // Le dialogue est celui de la PRODUCTION ([ConfirmationNavigation#dialogue]) : même type, mêmes
+        // boutons, même titre. Seul le message est enroulé (cf. [#enrouler]).
+        Alert alerte = new ConfirmationNavigation().dialogue(enrouler(message));
+        alerte.getDialogPane().setPrefWidth(540);
+        ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
-    /// Confirmation « nuit déjà importée » (#147) : même formulation que [importation `ConfirmationsImport`].
-    private static Dialog<?> dialogueDoublon() {
-        return confirmation("Cette nuit (carré 640380, point A1, passage n°2, 2026) semble déjà\n"
-                + "avoir été importée le 22/06/2026.\n\n"
-                + "Importer quand même comme nouveau passage ?");
+    /// Insère des retours à la ligne dans le message, **sans en changer un mot**.
+    ///
+    /// Hors `showAndWait`, un `DialogPane` ne contraint pas sa largeur : son libellé reste sur une ligne
+    /// unique, que le snapshot coupe par une ellipse. L'enroulement automatique de JavaFX n'opère pas dans
+    /// ce contexte - c'est la raison pour laquelle les anciennes captures **réécrivaient** leurs messages,
+    /// retours à la ligne compris. Ici, on part du **vrai** message et on se contente de le **couper aux
+    /// espaces** : aucun mot n'est ajouté, retiré ni modifié.
+    private static String enrouler(String message) {
+        StringBuilder enroule = new StringBuilder();
+        int longueurLigne = 0;
+        for (String mot : message.split(" ")) {
+            if (longueurLigne > 0 && longueurLigne + mot.length() > LARGEUR_LIGNE) {
+                enroule.append('\n');
+                longueurLigne = 0;
+            } else if (longueurLigne > 0) {
+                enroule.append(' ');
+                longueurLigne++;
+            }
+            enroule.append(mot);
+            longueurLigne += mot.length();
+        }
+        return enroule.toString();
     }
 
-    /// Seconde confirmation d'**écrasement** destructif (#279) : le détail de ce qui est définitivement perdu.
-    private static Dialog<?> dialogueEcrasement() {
-        return confirmation("⚠ Suppression DÉFINITIVE du passage existant et de ses 342 séquence(s).\n"
-                + "Dont 87 validation(s) Tadarida (correction, référence, commentaire)\n"
-                + "définitivement perdue(s). Action irréversible.\n\n"
-                + "Confirmer l'écrasement ?");
-    }
-
-    /// Garde « quitter sans enregistrer » (#178) : le message par défaut présenté par le Navigateur avant de
-    /// quitter un écran à saisie non enregistrée.
-    private static Dialog<?> alerteGardeSaisie() {
-        return confirmation("Des modifications non enregistrées seront perdues.\n" + "Quitter cet écran quand même ?");
-    }
-
-    /// Confirmation « CONFIRMATION + OK / Annuler » (le patron des confirmations de l'application). Le
-    /// message est **pré-découpé** par des `\n` : hors `showAndWait`, le `DialogPane` d'un snapshot ne
-    /// contraint pas la largeur, donc l'enroulement automatique n'opère pas — on maîtrise les retours à la
-    /// ligne pour que tout le texte soit visible.
-    private static Dialog<?> confirmation(String message) {
-        Dialog<Void> dialogue = new Dialog<>();
-        dialogue.setHeaderText("Confirmation");
-        dialogue.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
-        dialogue.getDialogPane().setContent(new Label(message));
-        return dialogue;
+    /// Garde « quitter sans enregistrer » (#178), avec le **vrai** message : celui que [GardeQuitter]
+    /// présente réellement, lu à la source (#1468). Il était recopié à la main ici - « à l'identique »,
+    /// disait le commentaire, ce qui n'engageait personne.
+    private static String messageGardeSaisie() {
+        return new GardeQuitter() {
+            @Override
+            public boolean aSaisieNonEnregistree() {
+                return true;
+            }
+        }.messageConfirmationQuitter();
     }
 
     /// Feuilles de style partagées (palette + base, dans `commun/view`) pour que les dialogues aient le

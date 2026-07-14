@@ -135,8 +135,13 @@ intermédiaire. Le rapport final distingue les enregistrements **importés**, **
 
 ![Confirmation d'une nuit déjà importée : importer quand même comme nouveau passage, ou annuler.](../assets/captures/apercu-import-doublon.png)
 
-Choisir d'**écraser** demande une **seconde confirmation** qui rappelle ce qui sera **définitivement
-supprimé** (séquences, et le cas échéant les validations Tadarida déjà saisies) : l'action est irréversible.
+Choisir d'**écraser** demande **deux** confirmations. La première pose le principe : ce numéro de passage
+est déjà pris, voulez-vous remplacer la nuit existante ?
+
+![Première confirmation d'écrasement : le numéro de passage est déjà utilisé, remplacer la nuit existante ?](../assets/captures/apercu-import-ecrasement-principe.png)
+
+La seconde rappelle ce qui sera **définitivement supprimé** (les séquences, et le cas échéant les
+validations Tadarida déjà saisies) : l'action est irréversible.
 
 ![Seconde confirmation d'écrasement : rappel de la suppression définitive (séquences et validations) avant de confirmer.](../assets/captures/apercu-import-ecrasement.png)
 

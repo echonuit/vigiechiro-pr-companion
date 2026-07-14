@@ -85,6 +85,10 @@ public final class ApercuFx {
         if (feuillesStyle != null) {
             scene.getStylesheets().addAll(feuillesStyle);
         }
+        // applyCss() AVANT layout() (#1468) : sans passe CSS, les libellés n'ont pas encore leurs métriques
+        // de police, et un texte à enrouler reste sur une ligne unique - que le snapshot coupe par une
+        // ellipse. C'est ce qui obligeait les captures de dialogue à pré-découper leurs messages à la main.
+        pane.applyCss();
         pane.layout();
         enregistrerPng(scene, fichier);
     }
