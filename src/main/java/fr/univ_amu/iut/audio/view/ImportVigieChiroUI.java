@@ -3,6 +3,7 @@ package fr.univ_amu.iut.audio.view;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -87,7 +88,16 @@ final class ImportVigieChiroUI {
         importVigieChiro.marquerEnCours();
         executeur.executer(
                 importVigieChiro::participations,
-                participations -> {
+                reponse -> {
+                    // #1370 : une panne ne ressemble plus à « aucune participation sur votre compte ».
+                    if (!(reponse
+                            instanceof
+                            ReponseApi.Succes<List<ParticipationVigieChiro>>(
+                                    List<ParticipationVigieChiro> participations))) {
+                        importVigieChiro.echec("Impossible de lister vos participations VigieChiro : "
+                                + reponse.echec().orElse("issue inattendue"));
+                        return;
+                    }
                     if (participations.isEmpty()) {
                         importVigieChiro.echec("Aucune participation VigieChiro sur votre compte :"
                                 + " déposez d'abord cette nuit sur la plateforme.");

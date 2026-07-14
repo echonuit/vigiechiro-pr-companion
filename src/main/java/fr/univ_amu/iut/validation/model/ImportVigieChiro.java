@@ -48,11 +48,11 @@ public class ImportVigieChiro {
     }
 
     /// **Participations** de l'observateur (`GET /moi/participations`), pour rattacher à la main un passage
-    /// à une participation existante (nuit non déposée par l'app). Liste vide si non connecté / indisponible.
-    public List<ParticipationVigieChiro> participationsDisponibles() {
-        // Silence conservé ici : le dialogue de rattachement vit dans la modale touchée par le
-        // chantier #1316 ; le rendre parlant est une suite de #1284 (passe 8), pas un correctif furtif.
-        return client.mesParticipations().enOptionnel().orElseGet(List::of);
+    /// à une participation existante (nuit non déposée par l'app). Issue **triée** (#1370, dernier
+    /// silence du transport levé après la fin des déports #1316) : un `Succes` à liste vide veut
+    /// réellement dire « aucune participation sur ce compte ».
+    public ReponseApi<List<ParticipationVigieChiro>> participationsDisponibles() {
+        return client.mesParticipations();
     }
 
     /// **Rattache** le passage à une participation VigieChiro (stocke le lien `ENTITE_PASSAGE`) : l'import

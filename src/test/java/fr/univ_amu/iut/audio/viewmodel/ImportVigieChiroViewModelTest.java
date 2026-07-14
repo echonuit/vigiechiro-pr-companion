@@ -6,6 +6,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
@@ -65,15 +66,16 @@ class ImportVigieChiroViewModelTest {
     @DisplayName("participations() / rattacher() délèguent (liste vide / no-op si indisponible)")
     void participations_et_rattachement() {
         List<ParticipationVigieChiro> parts = List.of(new ParticipationVigieChiro("6a49", "Z41", "2026-07-03", "S"));
-        when(importateur.participationsDisponibles()).thenReturn(parts);
+        when(importateur.participationsDisponibles()).thenReturn(ReponseApi.succes(parts));
 
         ImportVigieChiroViewModel present = new ImportVigieChiroViewModel(Optional.of(importateur));
-        assertThat(present.participations()).isSameAs(parts);
+        assertThat(present.participations()).isEqualTo(ReponseApi.succes(parts));
         present.rattacher(ID_PASSAGE, "6a49");
         verify(importateur).rattacher(ID_PASSAGE, "6a49");
 
+        // #1370 : import indisponible (injecteur sans connexion) = NonConnecte, pas un faux « vide ».
         ImportVigieChiroViewModel absent = new ImportVigieChiroViewModel(Optional.empty());
-        assertThat(absent.participations()).isEmpty();
+        assertThat(absent.participations()).isInstanceOf(ReponseApi.NonConnecte.class);
         absent.rattacher(ID_PASSAGE, "6a49"); // sans effet, ne lève pas
     }
 
