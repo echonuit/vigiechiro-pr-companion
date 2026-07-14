@@ -25,6 +25,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.view.ModalePointController;
+import fr.univ_amu.iut.sites.view.ModaleSiteController;
 import fr.univ_amu.iut.sites.view.NavigationSites;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -71,6 +72,12 @@ public final class CaptureEcrans {
 
     private static final String CHROME = "/fr/univ_amu/iut/commun/view/MainView.fxml";
     private static final String MODALE = "/fr/univ_amu/iut/sites/view/ModalePoint.fxml";
+
+    /// Modale de declaration / edition d'un site (#1431) : une VRAIE vue, rendue telle quelle. La
+    /// capture precedente (apercu-sites-modale-edition.png) etait une REPLIQUE reconstruite a la main
+    /// dans CaptureDialogues, parce que le dialogue n'avait pas de .fxml - elle pouvait donc deriver du
+    /// vrai ecran sans que rien ne le signale.
+    private static final String MODALE_SITE = "/fr/univ_amu/iut/sites/view/ModaleSite.fxml";
 
     /// Délai d'attente des tuiles OpenStreetMap (#153) avant la capture d'une modale **à carte** : les
     /// tuiles se téléchargent en arrière-plan (réseau) puis se peignent sur le fil JavaFX ; on laisse ce
@@ -123,6 +130,8 @@ public final class CaptureEcrans {
         capturerModaleEdition(
                 creerInjecteur(), seed.site(), seed.point(), sortie.resolve("apercu-sites-modale-point.png"));
         capturerModaleCreation(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-point-creation.png"));
+        capturerModaleSiteEdition(creerInjecteur(), seed.site(), sortie.resolve("apercu-sites-modale-site.png"));
+        capturerModaleSiteCreation(creerInjecteur(), sortie.resolve("apercu-sites-modale-site-creation.png"));
 
         // État vide : base neuve (juste un utilisateur, aucun site) → accueil M-Sites en état initial.
         Path workspaceVide = Files.createTempDirectory("vc-capture-sites-vide");
@@ -173,6 +182,25 @@ public final class CaptureEcrans {
         Parent vue = loader.load();
         ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {});
         ApercuFx.capturerApresPreparation(new Scene(vue), CaptureEcrans::attendreTuiles, fichier);
+    }
+
+    /// Modale d'edition d'un site (champs pre-remplis), rendue seule. Pas de carte-outil ici : aucun
+    /// chargement de tuiles a attendre.
+    private static void capturerModaleSiteEdition(Injector injecteur, Site site, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((ModaleSiteController) loader.getController()).demarrerEdition(site, () -> {});
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+    }
+
+    /// Modale de declaration d'un site (formulaire vierge), rendue seule.
+    private static void capturerModaleSiteCreation(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(CaptureEcrans.class.getResource(MODALE_SITE));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
     /// Laisse tourner le fil JavaFX (boucle d'evenements imbriquee) le temps que les tuiles OSM arrivees

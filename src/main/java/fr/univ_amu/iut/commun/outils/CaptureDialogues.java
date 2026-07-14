@@ -9,15 +9,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Separator;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -28,9 +25,8 @@ import javafx.scene.layout.VBox;
 /// (mêmes libellés, mêmes boutons) avec des données de démo, puis on les rend hors-écran en appliquant
 /// les feuilles de style partagées (palette + base), sans jamais ouvrir de fenêtre modale.
 ///
-/// Cinq états, rattachés dans le manifeste à la **vue parente** de chaque dialogue :
+/// Quatre états, rattachés dans le manifeste à la **vue parente** de chaque dialogue :
 /// - `apercu-import-doublon.png` / `apercu-import-ecrasement.png` : confirmations d'import (#147/#279) ;
-/// - `apercu-sites-modale-edition.png` : édition de la fiche site (#326) ;
 /// - `apercu-qualification-personnaliser.png` : personnaliser la sélection d'écoute (#30) ;
 /// - `apercu-navigation-garde-saisie.png` : garde « quitter sans enregistrer » (#178).
 ///
@@ -66,7 +62,6 @@ public final class CaptureDialogues {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         enregistrer(dialogueDoublon(), sortie.resolve("apercu-import-doublon.png"));
         enregistrer(dialogueEcrasement(), sortie.resolve("apercu-import-ecrasement.png"));
-        enregistrer(dialogueFicheSite(), sortie.resolve("apercu-sites-modale-edition.png"));
         enregistrer(dialoguePersonnaliser(), sortie.resolve("apercu-qualification-personnaliser.png"));
         enregistrer(alerteGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
     }
@@ -89,33 +84,6 @@ public final class CaptureDialogues {
                 + "Dont 87 validation(s) Tadarida (correction, référence, commentaire)\n"
                 + "définitivement perdue(s). Action irréversible.\n\n"
                 + "Confirmer l'écrasement ?");
-    }
-
-    /// Édition de la **fiche site** (#326) : reconstruit le `Dialog` de `SiteDetailController` (titre, en-tête,
-    /// grille des quatre champs, bouton « Enregistrer »), pré-rempli avec un site de démo.
-    private static Dialog<?> dialogueFicheSite() {
-        Dialog<Void> dialogue = new Dialog<>();
-        dialogue.setTitle("Modifier le site");
-        dialogue.setHeaderText("Fiche du carré 640380.");
-        ButtonType enregistrer = new ButtonType("Enregistrer", ButtonBar.ButtonData.OK_DONE);
-        dialogue.getDialogPane().getButtonTypes().addAll(enregistrer, ButtonType.CANCEL);
-
-        TextField champCarre = new TextField("640380");
-        TextField champNom = new TextField("Étang de la Tuilière");
-        ComboBox<String> champProtocole = new ComboBox<>();
-        champProtocole.getItems().setAll("Point fixe", "Pédestre", "Routier");
-        champProtocole.setValue("Point fixe");
-        TextField champCommentaire = new TextField("Aix-en-Provence");
-
-        GridPane grille = new GridPane();
-        grille.setHgap(8);
-        grille.setVgap(8);
-        grille.addRow(0, new Label("N° de carré"), champCarre);
-        grille.addRow(1, new Label("Nom convivial"), champNom);
-        grille.addRow(2, new Label("Protocole"), champProtocole);
-        grille.addRow(3, new Label("Commentaire"), champCommentaire);
-        dialogue.getDialogPane().setContent(grille);
-        return dialogue;
     }
 
     /// « Personnaliser la sélection d'écoute » (#30) : reconstruit le `Dialog` de `QualificationController`

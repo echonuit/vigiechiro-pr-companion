@@ -2,7 +2,6 @@ package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
-import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
@@ -17,7 +16,6 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.TableDonnees;
-import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
@@ -28,30 +26,22 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
-import javafx.util.StringConverter;
 
 /// Controller de l'écran de détail **M-Site-detail** (`SiteDetail.fxml`).
 ///
@@ -348,13 +338,10 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private void modifierSite() {
-        demanderModificationSite(viewModel.siteCourant()).ifPresent(saisie -> {
-            try {
-                viewModel.modifierSite(saisie.numeroCarre(), saisie.nom(), saisie.protocole(), saisie.commentaire());
-            } catch (RegleMetierException | IllegalArgumentException refus) {
-                alerteErreur(refus.getMessage());
-            }
-        });
+        // La modale porte la saisie, la validation en direct et le refus métier (#1431). Le Dialog bâti
+        // ici se terminait par un showAndWait : le geste était injouable dans un test, et sa capture de
+        // documentation était une réplique reconstruite à la main.
+        navigation.ouvrirModaleEditionSite(fenetre(), viewModel.siteCourant(), viewModel::rafraichir);
     }
 
     @FXML
@@ -394,71 +381,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(LignePassage::verdictClasseCss));
     }
 
-    /// Boîte de dialogue d'édition de la fiche, **pré-remplie** avec les valeurs courantes (carré,
-    /// nom, protocole, commentaire). Le protocole est choisi dans une liste affichant son libellé
-    /// métier. Renvoie la saisie validée, ou vide si l'utilisateur annule.
-    private Optional<SaisieEditionSite> demanderModificationSite(Site site) {
-        Dialog<SaisieEditionSite> dialogue = new Dialog<>();
-        dialogue.setTitle("Modifier le site");
-        dialogue.setHeaderText("Fiche du carré " + site.numeroCarre() + ".");
-        ButtonType valider = new ButtonType("Enregistrer", ButtonType.OK.getButtonData());
-        dialogue.getDialogPane().getButtonTypes().addAll(valider, ButtonType.CANCEL);
-        ValidationFormulaire.appliquerStyles(dialogue.getDialogPane());
-
-        TextField champCarre = new TextField(site.numeroCarre());
-        champCarre.setPromptText("640380");
-        // Filtre de saisie : uniquement des chiffres, au plus 6 (format du carré Vigie-Chiro).
-        champCarre.setTextFormatter(
-                new TextFormatter<>(modif -> modif.getControlNewText().matches("\\d{0,6}") ? modif : null));
-        TextField champNom = new TextField(ouVide(site.nomConvivial()));
-        champNom.setPromptText("Étang de la Tuilière (optionnel)");
-        ComboBox<Protocole> champProtocole = new ComboBox<>();
-        champProtocole.getItems().setAll(Protocole.values());
-        champProtocole.setValue(site.protocole());
-        champProtocole.setConverter(new StringConverter<>() {
-            @Override
-            public String toString(Protocole protocole) {
-                return protocole == null ? "" : protocole.libelle();
-            }
-
-            @Override
-            public Protocole fromString(String libelle) {
-                return Protocole.parLibelle(libelle);
-            }
-        });
-        TextField champCommentaire = new TextField(ouVide(site.commentaire()));
-        champCommentaire.setPromptText("Commentaire (optionnel)");
-
-        // Validation « en direct » (#790) : « Enregistrer » reste désactivé tant que le n° de carré n'a
-        // pas ses 6 chiffres, et le champ rougit dès qu'il est saisi mais incomplet (au lieu d'une Alert
-        // après coup). Le carré est pré-rempli et valide à l'ouverture.
-        BooleanBinding carreValide =
-                Bindings.createBooleanBinding(() -> champCarre.getText().matches("\\d{6}"), champCarre.textProperty());
-        BooleanBinding carreInvalideEtSaisi = Bindings.createBooleanBinding(
-                () -> !champCarre.getText().isEmpty() && !champCarre.getText().matches("\\d{6}"),
-                champCarre.textProperty());
-        ValidationFormulaire.gaterBouton(dialogue.getDialogPane(), valider, carreValide);
-        ValidationFormulaire.marquerInvalide(champCarre, carreInvalideEtSaisi);
-
-        GridPane grille = new GridPane();
-        grille.setHgap(8);
-        grille.setVgap(8);
-        grille.addRow(0, new Label("N° de carré *"), champCarre);
-        grille.addRow(1, new Label("Nom convivial"), champNom);
-        grille.addRow(2, new Label("Protocole"), champProtocole);
-        grille.addRow(3, new Label("Commentaire"), champCommentaire);
-        dialogue.getDialogPane().setContent(grille);
-
-        dialogue.setResultConverter(bouton -> bouton == valider
-                ? new SaisieEditionSite(
-                        champCarre.getText(),
-                        vide(champNom.getText()),
-                        champProtocole.getValue(),
-                        vide(champCommentaire.getText()))
-                : null);
-        return dialogue.showAndWait();
-    }
-
     /// Texte saisi → `null` si vide (champ optionnel non renseigné).
     private static String vide(String texte) {
         return texte == null || texte.isBlank() ? null : texte;
@@ -471,7 +393,6 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
 
     /// Valeurs saisies dans la boîte d'édition d'un site (carré requis ; nom et commentaire
     /// optionnels ; protocole choisi dans la liste).
-    private record SaisieEditionSite(String numeroCarre, String nom, Protocole protocole, String commentaire) {}
 
     private Window fenetre() {
         return cartesPoints.getScene().getWindow();

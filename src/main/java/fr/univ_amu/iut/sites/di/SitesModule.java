@@ -34,6 +34,7 @@ import fr.univ_amu.iut.sites.viewmodel.IndicateurPoints;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurSites;
 import fr.univ_amu.iut.sites.viewmodel.PointEditViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SiteDetailViewModel;
+import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
 import java.util.Optional;
 import java.util.UUID;
@@ -186,6 +187,14 @@ public class SitesModule extends ModuleDeFeature {
     @Provides
     PointEditViewModel fournirPointEditViewModel(ServiceSites service, Optional<ControleCarreStoc> controleCarre) {
         return new PointEditViewModel(service, controleCarre);
+    }
+
+    /// ViewModel de la modale de site (#1431) : la déclaration a besoin de l'utilisateur courant (R5,
+    /// unicité du carré **par utilisateur**) ; l'édition, elle, part du site existant.
+    @Provides
+    SiteEditViewModel fournirSiteEditViewModel(
+            ServiceSites service, @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new SiteEditViewModel(service, idUtilisateur);
     }
 
     private static String creerUtilisateurLocal(UtilisateurDao utilisateurDao) {

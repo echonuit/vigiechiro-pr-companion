@@ -90,7 +90,7 @@ public class NavigationSites implements OuvrirSite {
         Parent vue = lire(loader);
         ModalePointController controller = loader.getController();
         controller.demarrerCreation(site, apresSucces);
-        afficherModale(parent, vue);
+        afficherModale(parent, vue, "Point d'écoute");
     }
 
     /// Ouvre la modale d'**édition** du point `point` (champs pré-remplis).
@@ -99,14 +99,36 @@ public class NavigationSites implements OuvrirSite {
         Parent vue = lire(loader);
         ModalePointController controller = loader.getController();
         controller.demarrerEdition(site, point, apresSucces);
-        afficherModale(parent, vue);
+        afficherModale(parent, vue, "Point d'écoute");
     }
 
-    private void afficherModale(Window parent, Parent vue) {
+    /// Ouvre la modale de **déclaration** d'un site (#1431), en remplacement du `Dialog` bâti à la main
+    /// dans `MesSitesController` : le geste devient jouable dans un test, et sa validation aussi.
+    ///
+    /// @param parent fenêtre propriétaire (pour la modalité)
+    /// @param apresSucces action exécutée après une déclaration réussie (rafraîchir la liste)
+    public void ouvrirModaleCreationSite(Window parent, Runnable apresSucces) {
+        FXMLLoader loader = charger("ModaleSite.fxml");
+        Parent vue = lire(loader);
+        ModaleSiteController controller = loader.getController();
+        controller.demarrerCreation(apresSucces);
+        afficherModale(parent, vue, "Site de suivi");
+    }
+
+    /// Ouvre la modale d'**édition** du site `site` (champs pré-remplis).
+    public void ouvrirModaleEditionSite(Window parent, Site site, Runnable apresSucces) {
+        FXMLLoader loader = charger("ModaleSite.fxml");
+        Parent vue = lire(loader);
+        ModaleSiteController controller = loader.getController();
+        controller.demarrerEdition(site, apresSucces);
+        afficherModale(parent, vue, "Site de suivi");
+    }
+
+    private void afficherModale(Window parent, Parent vue, String titreFenetre) {
         Stage modale = new Stage();
         modale.initOwner(parent);
         modale.initModality(Modality.WINDOW_MODAL);
-        modale.setTitle("Point d'écoute");
+        modale.setTitle(titreFenetre);
         modale.setScene(new Scene(vue));
         modale.show();
     }

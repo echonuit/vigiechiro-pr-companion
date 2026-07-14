@@ -1,23 +1,17 @@
 package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
-import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
-import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.CarteSite;
 import fr.univ_amu.iut.sites.viewmodel.SitesViewModel;
 import fr.univ_amu.iut.sites.viewmodel.StatutPlateforme;
 import java.util.Objects;
-import java.util.Optional;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
@@ -25,14 +19,9 @@ import javafx.fxml.FXML;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
-import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -157,15 +146,10 @@ public class MesSitesController implements ResumeStatut {
     /// Action des boutons « + Nouveau site » (bandeau et état vide).
     @FXML
     private void nouveauSite() {
-        demanderCreationSite().ifPresent(this::creerSite);
-    }
-
-    private void creerSite(SaisieSite saisie) {
-        try {
-            viewModel.creerSite(saisie.numeroCarre(), saisie.nom(), Protocole.STANDARD, null);
-        } catch (IllegalArgumentException | RegleMetierException refus) {
-            alerteErreur(refus.getMessage());
-        }
+        // La modale porte la saisie, la validation en direct et le refus métier (#1431). Le Dialog bâti
+        // ici se terminait par un showAndWait : déclarer un site - l'entrée du produit - n'était jouable
+        // dans aucun test.
+        navigation.ouvrirModaleCreationSite(listeCartes.getScene().getWindow(), viewModel::rafraichir);
     }
 
     private void reconstruire() {
@@ -260,45 +244,6 @@ public class MesSitesController implements ResumeStatut {
         return colonne(chevron);
     }
 
-    private Optional<SaisieSite> demanderCreationSite() {
-        Dialog<SaisieSite> dialogue = new Dialog<>();
-        dialogue.setTitle("Nouveau site de suivi");
-        dialogue.setHeaderText("Déclarez un carré Vigie-Chiro (6 chiffres).");
-        ButtonType valider = new ButtonType("Créer", ButtonType.OK.getButtonData());
-        dialogue.getDialogPane().getButtonTypes().addAll(valider, ButtonType.CANCEL);
-        ValidationFormulaire.appliquerStyles(dialogue.getDialogPane());
-        TextField champCarre = new TextField();
-        champCarre.setPromptText("640380");
-        // Filtre de saisie : uniquement des chiffres, au plus 6 (format du carré Vigie-Chiro).
-        champCarre.setTextFormatter(
-                new TextFormatter<>(modif -> modif.getControlNewText().matches("\\d{0,6}") ? modif : null));
-        TextField champNom = new TextField();
-        champNom.setPromptText("Étang de la Tuilière (optionnel)");
-        // Validation « en direct » (#790) : « Créer » reste désactivé tant que le n° de carré n'a pas ses 6
-        // chiffres, et le champ rougit dès qu'il est saisi mais incomplet (au lieu d'une Alert après coup).
-        BooleanBinding carreValide =
-                Bindings.createBooleanBinding(() -> champCarre.getText().matches("\\d{6}"), champCarre.textProperty());
-        BooleanBinding carreInvalideEtSaisi = Bindings.createBooleanBinding(
-                () -> !champCarre.getText().isEmpty() && !champCarre.getText().matches("\\d{6}"),
-                champCarre.textProperty());
-        ValidationFormulaire.gaterBouton(dialogue.getDialogPane(), valider, carreValide);
-        ValidationFormulaire.marquerInvalide(champCarre, carreInvalideEtSaisi);
-        GridPane grille = new GridPane();
-        grille.setHgap(8);
-        grille.setVgap(8);
-        grille.addRow(0, new Label("N° de carré *"), champCarre);
-        grille.addRow(1, new Label("Nom convivial"), champNom);
-        dialogue.getDialogPane().setContent(grille);
-        dialogue.setResultConverter(
-                bouton -> bouton == valider ? new SaisieSite(champCarre.getText(), vide(champNom.getText())) : null);
-        return dialogue.showAndWait();
-    }
-
-    /// Le site n'a pas été créé (carré déjà déclaré, saisie refusée) : l'utilisateur sait pourquoi.
-    private void alerteErreur(String message) {
-        notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Création impossible", message);
-    }
-
     private static VBox colonne(Node... enfants) {
         VBox colonne = new VBox(enfants);
         colonne.getStyleClass().add("carte-colonne");
@@ -328,5 +273,4 @@ public class MesSitesController implements ResumeStatut {
     }
 
     /// Valeurs saisies dans la modale de création de site (carré requis, nom optionnel).
-    private record SaisieSite(String numeroCarre, String nom) {}
 }

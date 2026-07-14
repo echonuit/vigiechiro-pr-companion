@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Modale de déclaration / d'édition d'un site (ouverte depuis M-Sites et M-Site-detail dans un Stage
+  modal). Jumelle de ModalePoint.fxml : tous les champs sont liés en bidirectionnel au
+  SiteEditViewModel ; le titre, le libellé du bouton, son activation, le message d'erreur et le
+  surlignage du carré invalide (R1) sont pilotés par ce ViewModel.
+
+  Elle remplace deux Dialog<T> bâtis à la main (créer un site / modifier un site), dont le geste ne
+  pouvait pas être joué dans un test (#1431) et dont la capture de documentation était une réplique
+  reconstruite à la main.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:id="racine"
+      fx:controller="fr.univ_amu.iut.sites.view.ModaleSiteController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @sites.css"
+      styleClass="modale-point"
+      prefWidth="520.0"
+      spacing="10.0">
+
+  <Label fx:id="titreModale" styleClass="modale-titre"/>
+
+  <Label text="IDENTIFICATION" styleClass="section-label"/>
+  <HBox spacing="10.0" alignment="CENTER_LEFT">
+    <!-- minWidth=USE_PREF_SIZE : sans cela, la HBox rogne le libellé (« N° de car… »). -->
+    <Label text="N° de carré *" styleClass="field-label" minWidth="-Infinity"/>
+    <TextField fx:id="champCarre" promptText="640380" prefWidth="120.0"/>
+  </HBox>
+  <Label text="6 chiffres, tel qu'il figure sur la grille Vigie-Chiro" styleClass="field-hint" wrapText="true"/>
+  <Label fx:id="messageErreur" styleClass="message-erreur" wrapText="true"/>
+
+  <Label text="Nom convivial (optionnel)" styleClass="field-label"/>
+  <TextField fx:id="champNom" promptText="Étang de la Tuilière"/>
+
+  <Label text="PROTOCOLE" styleClass="section-label"/>
+  <ComboBox fx:id="champProtocole" prefWidth="240.0"/>
+
+  <Label text="Commentaire (optionnel)" styleClass="field-label"/>
+  <TextArea fx:id="champCommentaire" prefRowCount="2" wrapText="true"
+            promptText="Notes libres (accès, autorisations, particularités du carré)"/>
+
+  <HBox alignment="CENTER_RIGHT" spacing="8.0">
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
+    <Button fx:id="boutonValider" text="Créer" styleClass="bouton-primaire" onAction="#valider"/>
+  </HBox>
+</VBox>
