@@ -71,7 +71,9 @@ class PublicationCorrectionsTest {
                 false,
                 idDonnee,
                 indice,
-                certitude);
+                certitude,
+                null,
+                null);
     }
 
     @Test

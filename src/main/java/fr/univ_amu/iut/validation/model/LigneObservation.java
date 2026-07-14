@@ -28,6 +28,8 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 ///   uniquement par l'import VigieChiro (`ConversionDonneesVigieChiro`) ; `null` pour un CSV.
 /// - `certitudeObservateur` : certitude déclarée (#1139), lue du serveur ou du jeton
 ///   `SUR|PROBABLE|POSSIBLE` d'un CSV `_Vu` ; `null` = non renseignée.
+/// - `taxonValidateur` / `certitudeValidateur` : **avis du validateur** (#1417), reflet du serveur en
+///   lecture seule ; toujours `null` pour un CSV.
 ///
 /// @param nomSequence nom de fichier de la séquence d'écoute source (sans clé technique)
 /// @param debutS temps de début dans la séquence en secondes (optionnel)
@@ -42,6 +44,10 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 /// @param idDonneeVigieChiro `_id` Eve de la donnée serveur source (optionnel, import VigieChiro)
 /// @param indiceVigieChiro indice brut dans le tableau `observations` serveur (optionnel)
 /// @param certitudeObservateur certitude déclarée par l'observateur (optionnelle)
+/// @param taxonValidateur code **tranché par le validateur** du MNHN (#1417) : renseigné uniquement
+///     par l'import VigieChiro, `null` pour un CSV (Tadarida ne connaît pas les validateurs)
+/// @param certitudeValidateur certitude déclarée par le validateur (#1417), même domaine fermé que
+///     celle de l'observateur ; `null` hors import VigieChiro
 public record LigneObservation(
         String nomSequence,
         Double debutS,
@@ -55,4 +61,6 @@ public record LigneObservation(
         ModeValidation modeValidation,
         String idDonneeVigieChiro,
         Integer indiceVigieChiro,
-        CertitudeObservateur certitudeObservateur) {}
+        CertitudeObservateur certitudeObservateur,
+        String taxonValidateur,
+        CertitudeObservateur certitudeValidateur) {}

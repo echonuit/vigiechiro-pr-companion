@@ -94,6 +94,8 @@ class RevueEnLotTest {
                         false,
                         null,
                         null,
+                        null,
+                        null,
                         null))
                 .id();
     }
