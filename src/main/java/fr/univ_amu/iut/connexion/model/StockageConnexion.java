@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.connexion.model;
 
 import com.google.gson.Gson;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.api.FournisseurToken;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -25,6 +27,7 @@ import java.util.Set;
 /// enregistrement, il est considéré **périmé** (token et identité renvoyés vides), ce qui ramène l'app
 /// à « non connecté » sans appel réseau. Se déconnecter efface le fichier. Objet de données pur
 /// (aucune dépendance JavaFX ni JDBC) ; l'[Horloge] injectée rend la péremption testable.
+@Singleton
 public final class StockageConnexion implements FournisseurToken {
 
     /// Durée de validité locale du token, alignée sur la péremption de la plateforme (14 jours).
@@ -41,6 +44,12 @@ public final class StockageConnexion implements FournisseurToken {
     private final Path fichier;
     private final Horloge horloge;
 
+    /// `@Inject` + `@Singleton` : le stockage se laisse construire par Guice **même dans un injecteur
+    /// partiel** qui ne charge pas `ConnexionModule` (outils de capture, tests de module). Sans cela, toute
+    /// feature qui en dépend — depuis #1417, la vue audio le consulte pour dire « Vous » dans le fil de
+    /// discussion — casserait ces injecteurs, alors que `Workspace` et `Horloge` y sont toujours liés.
+    /// Là où `ConnexionModule` est chargé, son `@Provides` fait foi.
+    @Inject
     public StockageConnexion(Workspace workspace, Horloge horloge) {
         this.fichier = Objects.requireNonNull(workspace, "workspace").racine().resolve(FICHIER);
         this.horloge = Objects.requireNonNull(horloge, "horloge");
