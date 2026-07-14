@@ -9,19 +9,26 @@ import com.google.inject.name.Names;
 import fr.univ_amu.iut.audit.model.AuditPointsServeur;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.ServiceRecuperabilite;
+import fr.univ_amu.iut.audit.model.ServiceReset;
 import fr.univ_amu.iut.audit.view.ActiviteAudit;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
+import fr.univ_amu.iut.commun.persistence.BaseNeuve;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.VerificationDepot;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.util.Optional;
+import java.util.Set;
 
 /// Feature `audit` : audit de cohérence disque / base, exposé par la commande CLI `audit-coherence` et par
 /// l'écran d'accueil « Audit de cohérence » ([ActiviteAudit], prisme « Collecte & passages »). Feature
@@ -76,6 +83,24 @@ public class AuditModule extends ModuleDeFeature {
     @Singleton
     ServiceRecuperabilite fournirServiceRecuperabilite(SourceDeDonnees source, Workspace workspace) {
         return new ServiceRecuperabilite(source, workspace);
+    }
+
+    /// **Exécution** du reset guidé (#1419) : le bilan ci-dessus dit ce qu'on perdrait, ce service-ci le
+    /// fait — sauvegarde, base neuve, repeuplement depuis la plateforme, audit final. Destructeur : il
+    /// refuse de démarrer si la perte n'est pas acceptée, ou si VigieChiro ne répond pas.
+    @Provides
+    @Singleton
+    ServiceReset fournirServiceReset(
+            ServiceRecuperabilite recuperabilite,
+            ClientVigieChiro client,
+            ServiceSauvegarde sauvegarde,
+            BaseNeuve baseNeuve,
+            Set<RapprochementVigieChiro> rapprocheurs,
+            ServiceReconstructionPassages reconstruction,
+            ServiceAuditCoherence audit,
+            UtilisateurDao utilisateurDao) {
+        return new ServiceReset(
+                recuperabilite, client, sauvegarde, baseNeuve, rapprocheurs, reconstruction, audit, utilisateurDao);
     }
 
     /// ViewModel de l'écran d'audit. **Non-singleton** (un VM frais par chargement FXML).

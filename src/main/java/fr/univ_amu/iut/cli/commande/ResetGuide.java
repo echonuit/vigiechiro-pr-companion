@@ -4,10 +4,14 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.audit.model.BilanRecuperabilite;
 import fr.univ_amu.iut.audit.model.RecuperabiliteNuit;
+import fr.univ_amu.iut.audit.model.ResultatReset;
 import fr.univ_amu.iut.audit.model.ServiceRecuperabilite;
+import fr.univ_amu.iut.audit.model.ServiceReset;
 import fr.univ_amu.iut.audit.model.SourceAudio;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
 import java.io.PrintWriter;
+import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -45,7 +49,8 @@ import picocli.CommandLine.Spec;
 @Command(
         name = "reset-guide",
         description = "Établit, nuit par nuit, ce que deviendrait l'audio si l'on repartait d'une base neuve "
-                + "(disque / serveur / perdu). Lecture seule.")
+                + "(disque / serveur / perdu). Lecture seule — sauf avec --executer, qui mène la procédure "
+                + "jusqu'au bout.")
 public final class ResetGuide implements Callable<Integer> {
 
     /// Code de sortie quand au moins une nuit perdrait son audio : distinct de l'échec (1) et du succès (0).
@@ -54,19 +59,56 @@ public final class ResetGuide implements Callable<Integer> {
     @Option(names = "--json", description = "Émet le bilan au format JSON plutôt qu'en texte.")
     private boolean json;
 
+    @Option(
+            names = "--executer",
+            description = "EXÉCUTE la procédure : sauvegarde complète, base neuve, repeuplement depuis "
+                    + "VigieChiro, audit final. Exige --confirmer. Sans cette option, la commande se "
+                    + "contente d'établir le bilan (lecture seule).")
+    private boolean executer;
+
+    @Option(
+            names = "--confirmer",
+            description = "Obligatoire avec --executer : atteste que la destruction de la base est voulue.")
+    private boolean confirmer;
+
+    @Option(
+            names = "--accepter-perte",
+            description = "Autorise le reset alors que l'audio de certaines nuits ne reviendra pas. "
+                    + "Sans cette option, la procédure refuse de démarrer dès qu'une nuit est en PERDU.")
+    private boolean accepterPerte;
+
+    @Option(
+            names = "--sauvegarde",
+            paramLabel = "<dossier>",
+            description = "Où écrire la sauvegarde complète avant de détruire. Défaut : <workspace>/sauvegardes.")
+    private Path dossierSauvegarde;
+
     @Spec
     private CommandSpec spec;
 
     // Provider, non instance directe : picocli instancie les sous-commandes AVANT la migration du schéma.
     private final Provider<ServiceRecuperabilite> service;
+    private final Provider<ServiceReset> reset;
+    private final Provider<ServiceSauvegarde> sauvegarde;
 
     @Inject
-    public ResetGuide(Provider<ServiceRecuperabilite> service) {
+    public ResetGuide(
+            Provider<ServiceRecuperabilite> service,
+            Provider<ServiceReset> reset,
+            Provider<ServiceSauvegarde> sauvegarde) {
         this.service = Objects.requireNonNull(service, "service");
+        this.reset = Objects.requireNonNull(reset, "reset");
+        this.sauvegarde = Objects.requireNonNull(sauvegarde, "sauvegarde");
     }
 
     @Override
     public Integer call() {
+        return executer ? executerLeReset() : afficherLeBilan();
+    }
+
+    /// Sans `--executer` : **lecture seule**. Le bilan, et un code de sortie qui permet à un script de
+    /// refuser d'enchaîner.
+    private Integer afficherLeBilan() {
         PrintWriter sortie = spec.commandLine().getOut();
         BilanRecuperabilite bilan = service.get().bilan();
 
@@ -77,6 +119,33 @@ public final class ResetGuide implements Callable<Integer> {
             afficher(sortie, bilan);
         }
         return bilan.perteAnnoncee() ? CODE_PERTE : 0;
+    }
+
+    /// Avec `--executer` : la procédure entière. `--confirmer` est **obligatoire** — une base ne se détruit
+    /// pas par inadvertance, et surtout pas par une option qu'on aurait pu laisser traîner dans un script.
+    private Integer executerLeReset() {
+        PrintWriter sortie = spec.commandLine().getOut();
+        if (!confirmer) {
+            spec.commandLine()
+                    .getErr()
+                    .println("--executer détruit la base : ajoutez --confirmer pour l'assumer."
+                            + " (Sans --executer, la commande se contente du bilan.)");
+            return CODE_PERTE;
+        }
+        Path destination =
+                dossierSauvegarde != null ? dossierSauvegarde : sauvegarde.get().dossierParDefaut();
+
+        ResultatReset resultat = reset.get().executer(destination, accepterPerte);
+        sortie.println(resultat.enClair());
+        if (resultat instanceof ResultatReset.Refuse refus && refus.bilan().perteAnnoncee()) {
+            sortie.println();
+            afficher(sortie, refus.bilan());
+        }
+        if (resultat instanceof ResultatReset.Fait) {
+            sortie.println();
+            sortie.println("Redémarrez l'application : ses écrans tiennent encore l'ancienne base en mémoire.");
+        }
+        return resultat.codeSortie();
     }
 
     private static void afficher(PrintWriter sortie, BilanRecuperabilite bilan) {

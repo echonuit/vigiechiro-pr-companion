@@ -90,6 +90,40 @@ class CliResetGuideTest {
     }
 
     @Test
+    @DisplayName("#1419 : --executer sans --confirmer ne détruit rien — une base ne s'efface pas par une"
+            + " option qu'on aurait laissée traîner dans un script")
+    void executer_exige_confirmer() throws IOException {
+        creerNuit(1, true);
+
+        int code = cli.executer(new String[] {"reset-guide", "--executer"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(2);
+        assertThat(injecteur.getInstance(PassageDao.class).findAll())
+                .as("la base est intacte : rien n'a été touché")
+                .hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#1419 : hors connexion, --executer --confirmer REFUSE — la base neuve se repeuple depuis"
+            + " la plateforme, la détruire sans elle laisserait un workspace vide")
+    void executer_refuse_hors_connexion() throws IOException {
+        creerNuit(1, true);
+
+        int code = cli.executer(
+                new String[] {"reset-guide", "--executer", "--confirmer", "--accepter-perte"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(2);
+        assertThat(texteSortie())
+                .contains("Reset refusé")
+                .contains("VigieChiro ne répond pas")
+                .as("et le refus le dit noir sur blanc : rien n'a bougé")
+                .contains("Rien n'a été modifié");
+        assertThat(injecteur.getInstance(PassageDao.class).findAll())
+                .as("le garde-fou tient jusque dans le CLI, sur le vrai câblage")
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("Base vide : rien à perdre, code 0")
     void base_vide() {
         int code = cli.executer(new String[] {"reset-guide"}, sortie, erreur);
