@@ -5,6 +5,8 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -22,8 +24,6 @@ import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.AccessibleRole;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
@@ -64,6 +64,14 @@ public class MesSitesController implements ResumeStatut {
     /// statut (#693) au lieu d'un sous-titre.
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
+
+    /// Compte rendu de l'écran : porteur partagé injectable (#1405), double capturant en test.
+    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+
+    /// Porteur de compte rendu exposé aux tests (#1405) : `notificateur().definir(double)`.
+    NotificateurModifiable notificateur() {
+        return notificateur;
+    }
 
     /// Voile « … en cours » de l'écran (#1212) : chargement des cartes et synchronisation tournent
     /// hors du fil JavaFX ([IndicateurOccupation], patron #1014).
@@ -286,10 +294,9 @@ public class MesSitesController implements ResumeStatut {
         return dialogue.showAndWait();
     }
 
+    /// Le site n'a pas été créé (carré déjà déclaré, saisie refusée) : l'utilisateur sait pourquoi.
     private void alerteErreur(String message) {
-        Alert alerte = new Alert(AlertType.ERROR, message, ButtonType.OK);
-        alerte.setHeaderText("Création impossible");
-        alerte.showAndWait();
+        notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Création impossible", message);
     }
 
     private static VBox colonne(Node... enfants) {
