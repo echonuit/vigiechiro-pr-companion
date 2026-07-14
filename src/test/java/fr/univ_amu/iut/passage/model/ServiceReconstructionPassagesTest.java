@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -151,6 +152,24 @@ class ServiceReconstructionPassagesTest {
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
                 .contains(PARTICIPATION);
         verify(importObservations).importer(rapport.idPassage(), false);
+    }
+
+    @Test
+    @DisplayName("Le passage reconstruit porte le VRAI préfixe R6 (carré, année, passage, point)")
+    void reconstruire_pose_le_vrai_prefixe() {
+        bouchonnerPlateforme();
+
+        RapportReconstruction rapport = service.reconstruire(PARTICIPATION);
+
+        // Le préfixe est celui que l'audit RECALCULE depuis le passage : un préfixe fabriqué
+        // (« Car000000-…-P<idPoint> ») faisait signaler le passage PREFIXE_NON_CONFORME à vie (#1050).
+        SessionDEnregistrement session =
+                sessionDao.trouverParPassage(rapport.idPassage()).orElseThrow();
+        assertThat(Path.of(session.cheminRacine()).getFileName()).hasToString("Car130711-2026-Pass1-Z41");
+        assertThat(new EnregistrementOriginalDao(source).findBySession(session.id()))
+                .as("l'original porteur aussi : c'est lui que le contrôle de préfixe voyait échouer")
+                .singleElement()
+                .satisfies(original -> assertThat(original.nomFichier()).startsWith("Car130711-2026-Pass1-Z41-"));
     }
 
     @Test

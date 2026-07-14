@@ -161,9 +161,15 @@ public class ServiceReconstructionPassages {
                     + " l'analyse n'est probablement pas terminée. Réessayez plus tard.");
         }
 
-        Long idPassage = creerPassage(idPoint, debut, fin, enregistreur(detail));
-        Long idSession = creerSessionArchivee(idPassage, idPoint, debut);
-        int sequences = creerSequences(idSession, idPassage, idPoint, debut, donnees);
+        // Le préfixe R6 RÉEL de la nuit (carré, année, n° de passage, code du point) : c'est celui que
+        // l'audit recalcule depuis le passage (`ServiceAuditCoherence#prefixeAttendu`), et il doit être le
+        // même, sans quoi le passage reconstruit serait signalé PREFIXE_NON_CONFORME à vie (#1050).
+        int numeroPassage = premierNumeroLibre(idPoint, debut.getYear());
+        Prefixe prefixe = new Prefixe(carre(resume), debut.getYear(), numeroPassage, resume.point());
+
+        Long idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail));
+        Long idSession = creerSessionArchivee(idPassage, prefixe);
+        int sequences = creerSequences(idSession, prefixe, donnees);
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
 
         // L'import des observations est le mécanisme de l'EPIC #1259, consommé par son port socle : il
@@ -179,14 +185,15 @@ public class ServiceReconstructionPassages {
 
     /// Crée le passage, **déposé** (il l'est : la participation existe sur la plateforme) et sans verdict
     /// local (aucune vérification n'a eu lieu ici). Le numéro de passage est le **premier libre** pour ce
-    /// point et cette année : la plateforme ne le porte pas, et deviner « 1 ou 2 » selon la date serait
-    /// une supposition.
-    private Long creerPassage(Long idPoint, LocalDateTime debut, LocalDateTime fin, String idEnregistreur) {
+    /// point et cette année (calculé par l'appelant, qui en a aussi besoin pour le préfixe) : la
+    /// plateforme ne le porte pas, et deviner « 1 ou 2 » selon la date serait une supposition.
+    private Long creerPassage(
+            Long idPoint, int numeroPassage, LocalDateTime debut, LocalDateTime fin, String idEnregistreur) {
         int annee = debut.getYear();
         return passageDao
                 .insert(new Passage(
                         null,
-                        premierNumeroLibre(idPoint, annee),
+                        numeroPassage,
                         annee,
                         debut.toLocalDate().toString(),
                         debut.toLocalTime().toString(),
@@ -204,8 +211,8 @@ public class ServiceReconstructionPassages {
 
     /// Session **archivée d'emblée** : le passage naît sans audio (rien n'a jamais été importé ici). Le
     /// marqueur explicite (#1300) le dit, si bien que l'audit informe au lieu de crier (#1303).
-    private Long creerSessionArchivee(Long idPassage, Long idPoint, LocalDateTime debut) {
-        Path racine = workspace.dossierSession(prefixe(idPoint, debut).nomDossierSession());
+    private Long creerSessionArchivee(Long idPassage, Prefixe prefixe) {
+        Path racine = workspace.dossierSession(prefixe.nomDossierSession());
         Long idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racine.toString(), 0L, 0L, idPassage))
                 .id();
@@ -215,10 +222,9 @@ public class ServiceReconstructionPassages {
 
     /// Recrée une **ligne** de séquence par donnée distante (nom de fichier), sans fichier sur disque : le
     /// passage est archivé. Un enregistrement original **porteur** est créé pour satisfaire la clé
-    /// étrangère ; il n'a pas plus de fichier que les séquences.
-    private int creerSequences(
-            Long idSession, Long idPassage, Long idPoint, LocalDateTime debut, List<DonneeVigieChiro> donnees) {
-        Prefixe prefixe = prefixe(idPoint, debut);
+    /// étrangère ; il n'a pas plus de fichier que les séquences, mais il porte le **vrai** préfixe R6 : un
+    /// nom fabriqué ferait échouer le contrôle de préfixe de l'audit (#1050).
+    private int creerSequences(Long idSession, Prefixe prefixe, List<DonneeVigieChiro> donnees) {
         Path transformes = workspace.dossierTransformes(prefixe.nomDossierSession());
         Long idOriginal = originalDao
                 .insert(new EnregistrementOriginal(
@@ -348,14 +354,6 @@ public class ServiceReconstructionPassages {
         }
         Matcher trouve = CARRE.matcher(participation.siteTitre());
         return trouve.find() ? trouve.group(1) : null;
-    }
-
-    /// Préfixe R6 de la nuit reconstruite : il nomme le dossier de session (jamais créé sur disque tant
-    /// que le passage reste archivé) et les fichiers attendus lors d'une réactivation.
-    private Prefixe prefixe(Long idPoint, LocalDateTime debut) {
-        // Le code du point et le carré ne sont pas relus ici : le préfixe des séquences vient des noms
-        // distants, qui les portent déjà. On se contente d'un dossier de session stable par passage.
-        return new Prefixe("000000", debut.getYear(), 1, "P" + idPoint);
     }
 
     /// Date/heure d'une borne de nuit, tolérante au format (l'API rend de l'ISO 8601 avec décalage) ; vide
