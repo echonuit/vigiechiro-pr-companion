@@ -606,8 +606,10 @@
   -fx-border-color: -couleur-primaire-fond;
   -fx-border-radius: 10;
   -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.18), 16, 0, 0, 4);
-  -fx-max-width: -fx-use-computed-size;
-  -fx-max-height: -fx-use-computed-size;
+  /* Pas de -fx-max-width/-fx-max-height ici (#1386) : la valeur par défaut de Region est déjà
+     USE_COMPUTED_SIZE (la carte ne s'étire pas dans la StackPane du voile), et ce mot-clé n'existe
+     pas en CSS JavaFX (il y serait pris pour une looked-up value introuvable : un WARNING par
+     application de la règle). */
 }
 
 .occupation-libelle {
