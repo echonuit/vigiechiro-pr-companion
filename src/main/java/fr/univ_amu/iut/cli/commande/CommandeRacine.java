@@ -37,6 +37,7 @@ import picocli.CommandLine.Spec;
             RetroEmpreintes.class,
             Archiver.class,
             Reactiver.class,
+            ReconstruirePassage.class,
             Importer.class,
             ImporterTadarida.class,
             ImporterVigieChiro.class,

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.DeclarationPurgeOriginaux;
@@ -32,6 +33,7 @@ import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.VerificationIdentiteAudio;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -99,6 +101,17 @@ public class PassageModule extends ModuleDeFeature {
         // binding réel. Absent (injecteurs partiels), la cascade de vérification (#1309) retombe sur la
         // preuve structurelle seule.
         OptionalBinder.newOptionalBinder(binder(), CrisAttendus.class);
+
+        // Port PointParLocalite (#1305) : `sites` possède les carrés et leurs points ; `passage` ne peut pas
+        // en dépendre (cycle). Défaut no-op ici (injecteurs partiels), implémentation réelle par SitesModule.
+        OptionalBinder.newOptionalBinder(binder(), PointParLocalite.class)
+                .setDefault()
+                .toInstance((carre, point) -> Optional.empty());
+
+        // Reconstruction des passages jamais importés localement (#1305) : OptionalBinder VIDE — le service
+        // a besoin de la connexion VigieChiro. ReconstructionModule (chargé avec ConnexionModule) pose le
+        // binding ; hors connexion, l'Optional reste vide et l'IHM/CLI le disent.
+        OptionalBinder.newOptionalBinder(binder(), ServiceReconstructionPassages.class);
 
         // Port DeclarationPurgeOriginaux (#1303) : cette feature possède les sessions, elle fournit
         // donc la déclaration réelle de la purge globale (marqueur originals_purged_at posé sur
