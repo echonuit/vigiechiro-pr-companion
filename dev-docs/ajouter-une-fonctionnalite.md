@@ -205,6 +205,12 @@ Les écrans documentés ont un aperçu PNG régénéré en CI. Pour le vôtre :
 
 - **ViewModel / service** : tests unitaires (JUnit 5 + AssertJ), Mockito pour les dépendances.
 - **Vue** : test d'intégration **TestFX** (headless) qui charge le FXML et vérifie les bindings.
+- **Geste** : si votre écran porte une action qui **écrase ou supprime** quelque chose, elle doit être
+  **cliquée** dans un test, et son **refus** aussi. Cela suppose que ses dialogues passent par les
+  ports du socle (`Confirmateur`, `Notificateur`, `SelecteurFichier` : cf.
+  [Patrons](patterns.md#les-dialogues-dune-action-sont-des-ports-socle-commun)). Un `showAndWait()` en
+  dur - alerte **ou** sélecteur de fichier - **fige** le test : le geste redevient intestable, et vous
+  ne saurez que son bouton existe.
 - **Architecture** : rien à écrire, `ArchitectureTest` couvre vos frontières automatiquement.
 - **Parcours complet** : un test `fr.univ_amu.iut.e2e.*` si votre écran s'inscrit dans un flux.
 

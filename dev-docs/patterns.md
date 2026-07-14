@@ -530,39 +530,79 @@ socle, tout nouvel écran naît avec ce patron.
 le voile « Chargement… » à la place du contenu. Le garde-fou `CablageInjecteursCaptureTest` casse la
 CI si un injecteur de capture résout un exécuteur asynchrone.
 
-## Confirmation d'une action destructive (socle `commun`)
+## Les dialogues d'une action sont des ports (socle `commun`)
 
-**Le problème.** Supprimer un passage, écraser une nuit, effacer un jeton de connexion… demandent
-une confirmation. Le patron `Alert(CONFIRMATION, …, OK, CANCEL)` + `showAndWait()` était recopié
-dans les contrôleurs, chacun redéclarant un champ `Predicate<String>` et son setter de test - car un
-dialogue natif **figerait TestFX headless** (#798), la confirmation doit donc être remplaçable par
-un stub.
+**Le problème.** Un `showAndWait()` **fige** un test TestFX headless (piège connu depuis #798). Toute
+action qui ouvre un dialogue est donc, littéralement, **impossible à cliquer dans un test** : le test
+s'arrête sur la ligne du dialogue et n'en revient jamais. La conséquence a mis longtemps à être
+nommée (#1405) :
 
-**La solution.** Trois briques de `commun.view` (#1013) :
+> On ne testait que le **grisage** des boutons. Jamais leur **effet**.
 
-- `Confirmateur` : le contrat **neutre** (`boolean confirmer(String message)` - `true` pour
-  poursuivre l'action). Généralise le `ConfirmateurQuitter` né avec le `Navigateur` ;
-- `ConfirmationNavigation` : l'implémentation par défaut (vrai `Alert` modal OK / Annuler), avec un
-  **titre** optionnel quand le message seul manquerait de contexte (ex. M-Lot : « Supprimer les
-  archives de dépôt ? ») ;
-- `ConfirmateurModifiable` : le **porteur injectable** que détient chaque contrôleur (champ `final`),
-  défaut = dialogue, `definir(stub)` en test. Le contrôleur l'expose tel quel à ses tests
-  (accesseur package-private `confirmateur()`) au lieu de redéclarer champ + setter.
+Et cela portait précisément sur les gestes qu'on veut couvrir : purger les originaux de toutes les
+nuits, restaurer la base, supprimer un passage et sa nuit, réimporter par-dessus les validations de
+l'observateur. Tous irréversibles, tous non testés.
+
+**La solution.** Rendre **remplaçable** chaque forme de dialogue. Trois familles à ce jour, bâties sur
+le même triplet - un **contrat neutre**, une **implémentation réelle**, un **porteur injectable** :
+
+| port | ce qu'il demande | implémentation réelle | double en test |
+|---|---|---|---|
+| `Confirmateur` (#1013) | le **oui/non** | `ConfirmationNavigation` | répond ce qu'on lui dit |
+| `Notificateur` (#1404) | le **compte rendu** | `NotificationDialogue` | **capture** ce qui a été dit |
+| `SelecteurFichier` (#1425) | la **désignation** d'un fichier / dossier | `SelecteurFichierJavaFx` | répond un chemin, **ou rien** (annulé) |
+
+Chaque **écran** détient **une** instance de chaque porteur (`ConfirmateurModifiable`,
+`NotificateurModifiable`, `SelecteurFichierModifiable`), champ `final`, exposée à ses tests par un
+accesseur package-private. Ses **collaborateurs** (actions extraites, cartes, helpers) **reçoivent**
+ces porteurs : ils n'en fabriquent pas.
 
 ```java
-// Contrôleur : un champ final, un accesseur pour les tests.
+// Écran : un champ final par porteur, un accesseur par porteur.
 private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+private final NotificateurModifiable notificateur = new NotificateurModifiable();
 
-if (confirmateur.confirmer("Supprimer ce site et ses points d'écoute ?")) { … }
+if (!confirmateur.confirmer("Supprimer ce site et ses points d'écoute ?")) {
+    return;
+}
+viewModel.supprimerSite();
+notificateur.notifier(NiveauNotification.INFORMATION, "Site supprimé", "…");
 
-// Test de vue : stub déterministe, jamais de dialogue natif.
+// Test de vue : le geste devient cliquable, et vérifiable JUSQU'À SON EFFET.
 controleur.confirmateur().definir(message -> true);
+controleur.notificateur().definir((niveau, entete, message) -> annonces.add(entete));
+robot.interact(() -> robot.lookup("#boutonSupprimer").queryButton().fire());
+assertThat(sitesEnBase()).isEmpty();   // pas « un mock a été appelé » : la ligne a disparu
 ```
 
-**La règle.** Jamais de `new Alert(CONFIRMATION, …)` dans un contrôleur : toute confirmation passe
-par le porteur `ConfirmateurModifiable` (ou par un collaborateur qui reçoit le `Confirmateur` du
-contrôleur, comme `ConfirmationsImport`). Un `showAndWait()` non stubable gèle les tests headless
-(piège connu depuis #798) et prive l'écran de tests de parcours.
+**La règle.** Jamais de `new Alert(...)`, de `FileChooser` ni de `DirectoryChooser` dans un contrôleur
+ou une action. Et surtout, la formulation générale - c'est elle qui compte, pas la liste des ports :
+
+> Une action ne devient testable que si **tous** ses dialogues sont remplaçables. Il suffit d'en
+> **oublier un** pour que le geste reste hors de portée.
+
+C'est ce qui avait échappé jusqu'à #1425 : le `Confirmateur` et le `Notificateur` ne suffisaient pas à
+rendre la sauvegarde testable, parce qu'elle **commence** par un sélecteur natif. Le test s'arrêtait à
+la première ligne. Deux ports sur trois, c'est zéro geste testable.
+
+Deux pièges corollaires, tous deux rencontrés :
+
+- **Un porteur que rien n'expose est mort-né.** `CartesPointsSite` fabriquait son propre
+  `ConfirmateurModifiable` sans accesseur : le patron était là, mais aucun test ne pouvait le
+  remplacer. Un porteur se **partage depuis l'écran**, il ne se recrée pas.
+- **Une surcharge « production / test » est un troisième idiome pour le même besoin.** `audio` avait
+  `lancer(…)` qui fabriquait le vrai dialogue et `lancer(…, Confirmateur)` pour les tests. Un écran,
+  une paire de porteurs, partagée.
+
+**Ce qui n'est pas encore porté** (cf. #1431) : les `Dialog<T>` de **saisie** (formulaires rendant une
+valeur : créer un site, choisir une participation) et le **choix à trois branches** (Enregistrer /
+Abandonner / Annuler). Ils demandent une décision de conception, pas un port de plus par réflexe.
+
+**Le contre-exemple à connaître.** Un refus **prévenu par l'affordance** n'a pas de notification à
+tester - il n'arrive jamais. Sur M-Site-detail, « Supprimer » est grisé quand un point porte des
+passages (#789), et **JavaFX n'émet aucune action sur un bouton désactivé** (`Button.fire()` est un
+no-op). Le `catch` du refus métier reste comme garde défensive, mais c'est le **grisage** que le test
+doit vérifier : *on ne prévient pas après coup ce qu'on a déjà empêché.*
 
 ## Écrans de données : densité, badge, filtres (socle design partagé)
 

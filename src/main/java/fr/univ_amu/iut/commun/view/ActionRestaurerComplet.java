@@ -2,7 +2,6 @@ package fr.univ_amu.iut.commun.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.persistence.ServiceSauvegarde;
-import java.util.Objects;
 import javafx.stage.Window;
 
 /// Entrée ☰ **« Restaurer une sauvegarde complète »** (#1346) : le pendant de [ActionSauvegarderComplet].
@@ -11,15 +10,12 @@ import javafx.stage.Window;
 /// mené sous le voile du chrome avec le libellé d'opération critique (#906).
 public final class ActionRestaurerComplet implements ActionMenu {
 
-    private final ServiceSauvegarde service;
-    private final Navigateur navigateur;
-    private final OccupationChrome occupation;
+    /// Plomberie de l'entrée : l'unique action, et la fenêtre du clic (#1405).
+    private final PorteurSauvegarde porteur;
 
     @Inject
     ActionRestaurerComplet(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
-        this.service = Objects.requireNonNull(service, "service");
-        this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
-        this.occupation = Objects.requireNonNull(occupation, "occupation");
+        this.porteur = new PorteurSauvegarde(service, navigateur, occupation);
     }
 
     @Override
@@ -40,6 +36,11 @@ public final class ActionRestaurerComplet implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        new ActionsSauvegarde(service, occupation, () -> proprietaire, navigateur::afficherAccueil).restaurerComplet();
+        porteur.sous(proprietaire).restaurerComplet();
+    }
+
+    /// Porteur exposé aux tests (#1405) : `porteur().actions()` porte les trois dialogues.
+    PorteurSauvegarde porteur() {
+        return porteur;
     }
 }

@@ -10,12 +10,17 @@ import javafx.stage.Window;
 /// Entrée ☰ **« Purger les originaux importés »**, migrée en [ActionMenu] contribué (#930). Réutilise
 /// [ActionsPurge] : annonce de l'espace récupérable, **confirmation** de la suppression destructive,
 /// puis retour à l'accueil pour rafraîchir les volumes affichés.
+///
+/// L'action vit aussi longtemps que l'entrée de menu (#1405), au lieu de naître dans [#executer] avec
+/// ses vrais dialogues : c'est ce qui la rend **atteignable** par un test, comme les quatre entrées de
+/// sauvegarde via [PorteurSauvegarde].
 public final class ActionPurger implements ActionMenu {
 
-    private final ServicePurgeOriginaux service;
-    private final Navigateur navigateur;
-    private final OccupationChrome occupation;
-    private final Optional<DeclarationPurgeOriginaux> declaration;
+    /// Fenêtre propriétaire des dialogues, posée au clic : l'action la lit **paresseusement** (elle
+    /// n'existe pas encore quand l'entrée de menu est construite).
+    private Window proprietaire;
+
+    private final ActionsPurge actions;
 
     @Inject
     ActionPurger(
@@ -23,10 +28,13 @@ public final class ActionPurger implements ActionMenu {
             Navigateur navigateur,
             OccupationChrome occupation,
             Optional<DeclarationPurgeOriginaux> declaration) {
-        this.service = Objects.requireNonNull(service, "service");
-        this.navigateur = Objects.requireNonNull(navigateur, "navigateur");
-        this.occupation = Objects.requireNonNull(occupation, "occupation");
-        this.declaration = Objects.requireNonNull(declaration, "declaration");
+        Objects.requireNonNull(navigateur, "navigateur");
+        this.actions = new ActionsPurge(
+                Objects.requireNonNull(service, "service"),
+                Objects.requireNonNull(occupation, "occupation"),
+                () -> proprietaire,
+                navigateur::afficherAccueil,
+                Objects.requireNonNull(declaration, "declaration"));
     }
 
     @Override
@@ -46,6 +54,12 @@ public final class ActionPurger implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        new ActionsPurge(service, occupation, () -> proprietaire, navigateur::afficherAccueil, declaration).purger();
+        this.proprietaire = proprietaire;
+        actions.purger();
+    }
+
+    /// Action exposée aux tests (#1405) : `actions().confirmateur()/notificateur()`.
+    ActionsPurge actions() {
+        return actions;
     }
 }

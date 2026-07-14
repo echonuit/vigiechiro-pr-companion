@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,6 +89,14 @@ public final class CaptureAudit {
                     @Provides
                     AuditViewModel fournirViewModel(ServiceAuditCoherence service) {
                         return new AuditViewModel(service);
+                    }
+
+                    // Navigation « du constat au passage qu'il accuse » (#1338) : inerte ici, la capture
+                    // ne navigue pas. Mais sans cette liaison, l'injecteur partiel ne sait plus fournir
+                    // AuditController, et la capture échoue au chargement du FXML.
+                    @Provides
+                    OuvrirPassage fournirOuvrirPassage() {
+                        return (idPassage, contexte) -> {};
                     }
                 });
     }

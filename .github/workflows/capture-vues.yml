@@ -1,24 +1,32 @@
-# Met à jour les aperçus PNG des vues (.github/assets/apercu-*.png) à chaque push sur `main`.
+# Aperçus PNG des vues (.github/assets/apercu-*.png) : vérifiés sur chaque PR, régénérés sur `main`.
 #
 # Les aperçus servent d'illustrations à la documentation (docs/ecrans/*) : ce workflow les
 # régénère automatiquement à partir du code, pour qu'ils ne se désynchronisent jamais des écrans
 # réels de l'application.
 #
+# Le rendu s'exécute AUSSI sur les PR (sans rien committer), et c'est le point : un injecteur de
+# capture auquel il manque une liaison Guice ne casse pas la compilation, ne casse aucun test, et
+# n'apparaissait donc qu'au run post-merge - sur le dos du push SUIVANT, puisque `cancel-in-progress`
+# avait entre-temps annulé le run de la PR fautive. Le rouge atterrissait sur quelqu'un d'autre.
+# (Vécu : #1338 ajoute `OuvrirPassage` à `AuditController`, `CaptureAudit` ne le liait pas.)
+#
 # Rendu hors-écran via la Headless Platform JavaFX 26 (glass.platform=Headless, rendu logiciel sw) :
 # aucun display X11 requis. Le commit de mise à jour porte `[skip ci]` pour ne pas se redéclencher
 # (et ne déclenche aucune autre CI : un commit d'aperçus n'a pas de code à valider).
-name: Aperçus des vues (main)
+name: Aperçus des vues
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
   pull-requests: write
 
-# Évite que deux régénérations de main (pushes rapprochés) se marchent dessus.
+# Évite que deux régénérations de main (pushes rapprochés) se marchent dessus. Le groupe inclut la
+# ref : une PR n'annule jamais le run de `main`, ni celui d'une autre PR.
 concurrency:
   group: captures-${{ github.ref }}
   cancel-in-progress: true
@@ -29,7 +37,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: main
+          # Sur `main`, on se place sur la branche (le job y committera). Sur une PR, checkout par
+          # défaut de la tête de la PR : c'est le code qu'on veut rendre.
+          ref: ${{ github.event_name == 'push' && 'main' || '' }}
 
       - name: Set up JDK 25
         uses: actions/setup-java@v5
@@ -41,12 +51,16 @@ jobs:
           check-latest: false
           cache: maven
 
+      # Sur une PR comme sur `main` : si un écran ne se rend plus, le job échoue ici. C'est le seul
+      # endroit qui exerce réellement les injecteurs partiels de capture jusqu'au chargement du FXML.
       - name: Générer les aperçus PNG (hors-écran)
         run: |
           chmod +x .github/assets/capture-screenshots.sh
           .github/assets/capture-screenshots.sh
 
       - name: Publier les aperçus via une PR auto-mergée
+        # Uniquement sur `main` : une PR vérifie que les écrans se rendent, elle ne publie rien.
+        if: github.event_name == 'push'
         # `main` impose le passage par une PR et github-actions[bot] ne peut PAS pousser en direct.
         # On modélise donc le workflow PR : branche -> PR -> squash-merge. Le squash porte
         # [skip ci] (anti-récursion : un commit d'aperçus n'a pas de code à valider).

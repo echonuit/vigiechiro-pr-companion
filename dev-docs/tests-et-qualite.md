@@ -77,11 +77,44 @@ Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquet
 | Unitaires métier | `<feature>/model/`, `<feature>/dao/`, `commun/persistence/`, `commun/model/` | Entités, services, DAO, migrations. Sans JavaFX. |
 | ViewModel | `<feature>/viewmodel/` | État observable + logique de présentation, sans composant graphique. |
 | Intégration de vue (TestFX) | `<feature>/view/*VueIntegrationTest` | La vue FXML se lie au ViewModel et réagit (headless). |
+| **Geste** (TestFX) | `<feature>/view/*ViewTest` | Le bouton est **cliqué**, et on vérifie son **effet** (#1405). |
 | Bout en bout | `fr.univ_amu.iut.e2e.*`, `<feature>/e2e/Parcours*E2ETest` | Le scénario complet : IHM → ViewModel → service → base. |
 | Architecture (ArchUnit) | `architecture/ArchitectureTest` | Les **6 règles** de frontière MVVM (cf. [Architecture](architecture.md)). |
 
 Outils : **JUnit 5 + AssertJ + Mockito** ; **ApprovalTests** pour les sorties verbatim (CSV Tadarida
 `_Vu` : le premier run produit un `*.received`, à approuver en `*.approved`).
+
+### Tester un geste, pas un bouton
+
+Un test qui vérifie qu'un bouton est **présent et actif** ne dit rien de ce qu'il fait. C'était
+pourtant tout ce qu'on avait sur les actions **irréversibles** - purger les originaux de toutes les
+nuits, restaurer la base, supprimer un passage et sa nuit, réimporter par-dessus les validations de
+l'observateur. Et pas par négligence : un `showAndWait()` **fige** un test headless, donc le clic
+était **impossible**.
+
+Les dialogues d'une action sont désormais des **ports** remplaçables (`Confirmateur`, `Notificateur`,
+`SelecteurFichier` : cf. [Patrons](patterns.md#les-dialogues-dune-action-sont-des-ports-socle-commun)).
+Un test de geste les remplace par des doubles, **déclenche** l'action, et vérifie **ce qui s'est
+passé** :
+
+```java
+controleur.confirmateur().definir(message -> { confirmations.add(message); return confirme; });
+controleur.notificateur().definir((niveau, entete, message) -> annonces.add(entete));
+
+robot.interact(() -> robot.lookup("#boutonSupprimer").queryButton().fire());
+
+assertThat(sitesEnBase()).isEmpty();     // l'effet, pas « un mock a été appelé »
+```
+
+Trois exigences, dans l'ordre d'importance :
+
+1. **Le refus.** Sur une action irréversible, « Annuler annule vraiment » est le test qui compte le
+   plus - et c'est celui qui manquait partout.
+2. **L'effet réel.** Quand la fixture le permet (vrai injecteur + vraie base), asserter que la ligne a
+   **disparu de la base**, pas qu'un mock a reçu un appel.
+3. **Le message de confirmation est un contenu.** Sur une suppression en cascade, c'est le seul
+   avertissement que l'utilisateur recevra : vérifier qu'il annonce le gain, ce qui est conservé, et
+   ce qui est **définitivement** perdu.
 
 ## Les outils qualité
 
@@ -127,11 +160,18 @@ PMD / ArchUnit ne se désactivent **jamais** pour « faire passer » un build (c
 - Pour une capture déterministe, voir
   [Ajouter une fonctionnalité §7](ajouter-une-fonctionnalite.md#7-ajouter-un-apercu-capture-decran).
 
-### Deux pièges récurrents
+### Trois pièges récurrents
 
 !!! warning "`assertThat(path).endsWith(Path)` canonicalise"
     Cette forme appelle `toRealPath` et lève `NoSuchFileException` si le dossier n'existe pas (erreur
     sur runner neuf). Préférer le booléen **lexical** : `assertThat(p.endsWith(autre)).isTrue()`.
+
+!!! warning "`fire()` est un no-op sur un contrôle désactivé"
+    `Button.fire()` comme `Hyperlink.fire()` vérifient `isDisabled()` **avant** d'émettre. Un test qui
+    « clique » un contrôle grisé ne déclenche donc **rien**, et s'il attend un refus métier, il échoue
+    sans dire pourquoi. Le plus souvent, c'est le **test** qui a tort : quand l'affordance (#789) a
+    déjà **fermé** le geste, il n'y a plus de refus à annoncer, et c'est le **grisage** qu'il faut
+    asserter. *On ne prévient pas après coup ce qu'on a déjà empêché.*
 
 !!! warning "Mutation hors fil JavaFX"
     Un handler qui modifie l'IHM depuis un thread d'arrière-plan lève `Not on FX application thread`,

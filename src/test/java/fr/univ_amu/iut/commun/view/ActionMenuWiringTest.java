@@ -39,12 +39,17 @@ class ActionMenuWiringTest {
 
         // Les variantes « complètes » (#1346) suivent immédiatement leur variante « base seule » : les deux
         // se lisent par paire, la complète en second car elle est plus lourde et plus rare.
+        //
+        // « Repartir d'une base neuve » (#1419) ferme le groupe : c'est l'action la plus lourde et la plus
+        // rare, et les quatre qui la précèdent en sont le prérequis. L'ordre du menu se lit comme la
+        // procédure elle-même — on sauvegarde, puis seulement on recommence.
         assertThat(ordonnees)
                 .containsExactly(
                         "ActionSauvegarder",
                         "ActionSauvegarderComplet",
                         "ActionRestaurer",
                         "ActionRestaurerComplet",
+                        "ActionResetGuide",
                         "ActionPurger",
                         "ActionSourceEspece",
                         "ActionOuvrirReglages",

@@ -69,7 +69,37 @@ Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquet
 | Unitaires métier | `<feature>/model/`, `<feature>/dao/`, `commun/persistence/`, `commun/model/` | Entités, services, DAO (SQLite), migrations. Aucune dépendance JavaFX. |
 | ViewModel | `<feature>/viewmodel/` | État observable et logique de présentation, sans composant graphique. |
 | Intégration de vue (TestFX) | `<feature>/view/*VueIntegrationTest` | La vue FXML se lie au ViewModel et réagit (headless). |
+| **Geste** (TestFX) | `<feature>/view/*ViewTest` | Le bouton est **cliqué**, et on vérifie son **effet** (#1405). |
 | Parcours de bout en bout | `<feature>/e2e/Parcours*E2ETest` | Le scénario complet IHM → ViewModel → service → base. |
+
+#### Tester un geste, pas un bouton
+
+Un test qui vérifie qu'un bouton est **présent et actif** ne dit rien de ce qu'il fait. C'était
+pourtant tout ce qu'on avait sur les actions **irréversibles** (purger, restaurer, supprimer,
+réimporter), et pour une raison mécanique : un `showAndWait()` **fige** un test headless, donc le
+clic était impossible.
+
+Les dialogues d'une action sont désormais des **ports** remplaçables (`Confirmateur`, `Notificateur`,
+`SelecteurFichier` : cf. [patterns](dev-docs/patterns.md)). Un test de geste les remplace par des
+doubles, **déclenche** l'action, et vérifie **ce qui s'est passé** :
+
+```java
+controleur.confirmateur().definir(message -> { confirmations.add(message); return confirme; });
+controleur.notificateur().definir((niveau, entete, message) -> annonces.add(entete));
+
+robot.interact(() -> robot.lookup("#boutonSupprimer").queryButton().fire());
+
+assertThat(sitesEnBase()).isEmpty();     // l'effet, pas « un mock a été appelé »
+```
+
+Trois exigences, dans l'ordre d'importance :
+
+1. **Le refus.** Sur une action irréversible, « Annuler annule vraiment » est le test qui compte le
+   plus - et c'est celui qui manquait partout.
+2. **L'effet réel.** Quand la fixture le permet (vrai injecteur + vraie base), asserter que la ligne
+   a **disparu de la base**, pas qu'un mock a reçu un appel.
+3. **Le message de confirmation est un contenu.** Sur une cascade, c'est le seul avertissement que
+   l'utilisateur recevra : vérifier qu'il annonce le gain, ce qui est conservé, et ce qui est perdu.
 
 ### Tests d'architecture (ArchUnit)
 
@@ -127,7 +157,7 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
 - **ApprovalTests** : utilisé pour les sorties verbatim (CSV Tadarida `_Vu`). Le premier run produit
   un fichier `*.received`, à comparer puis approuver en `*.approved`.
 
-### Deux pièges récurrents
+### Trois pièges récurrents
 
 - **`assertThat(path).endsWith(Path)` canonicalise** (`toRealPath`) et lève `NoSuchFileException`
   si le dossier n'existe pas (erreur sur runner neuf). Préférer le booléen **lexical**
@@ -136,3 +166,9 @@ La source de vérité est [`.github/workflows/maven.yml`](.github/workflows/mave
   `Not on FX application thread`, souvent **avalée** (l'écran fige). Découper
   préparation (fil FX) / exécution (hors-thread) / `Platform.runLater` pour le retour, et tester via
   `bouton.fire()` en attendant l'état terminal.
+- **`fire()` est un no-op sur un contrôle désactivé** : `Button.fire()` comme `Hyperlink.fire()`
+  vérifient `isDisabled()` avant d'émettre. Un test qui « clique » un bouton grisé ne déclenche donc
+  **rien** - et s'il attend une erreur métier, il échoue sans dire pourquoi. Le plus souvent c'est le
+  **test** qui a tort : quand l'affordance (#789) a déjà **fermé** le geste, il n'y a plus de refus à
+  annoncer, et c'est le **grisage** qu'il faut asserter. *On ne prévient pas après coup ce qu'on a
+  déjà empêché.*
