@@ -4,6 +4,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -12,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
-import javafx.scene.control.Alert;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -48,28 +47,30 @@ final class ImportVigieChiroUI {
             ImportVigieChiroViewModel importVigieChiro,
             AudioViewModel viewModel,
             SourceObservations source,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            Confirmateur confirmateur) {
         ContextePassage contexte = source.contexteDuPassage();
         if (contexte == null) {
             return;
         }
         Long idPassage = contexte.idPassage();
         if (importVigieChiro.rattache(idPassage)) {
-            importerRattache(importVigieChiro, viewModel, source, idPassage, executeur);
+            importerRattache(importVigieChiro, viewModel, source, idPassage, executeur, confirmateur);
         } else {
             rattacherPuisImporter(importVigieChiro, viewModel, source, idPassage, executeur);
         }
     }
 
-    /// Passage déjà rattaché : confirmation FX si un jeu existe déjà, puis import hors fil.
+    /// Passage déjà rattaché : confirmation si un jeu existe déjà, puis import hors fil.
     private static void importerRattache(
             ImportVigieChiroViewModel importVigieChiro,
             AudioViewModel viewModel,
             SourceObservations source,
             Long idPassage,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            Confirmateur confirmateur) {
         boolean remplacer = viewModel.resultatsDisponiblesProperty().get();
-        if (remplacer && !confirmerRemplacement()) {
+        if (remplacer && !confirmerRemplacement(confirmateur)) {
             return;
         }
         importerHorsFil(importVigieChiro, viewModel, source, idPassage, remplacer, executeur);
@@ -161,14 +162,9 @@ final class ImportVigieChiroUI {
 
     /// Confirme le **remplacement** d'un jeu de résultats existant avant un réimport (un seul jeu par
     /// passage ; les validations en cours seraient perdues).
-    private static boolean confirmerRemplacement() {
-        Alert alerte = new Alert(
-                Alert.AlertType.CONFIRMATION,
+    private static boolean confirmerRemplacement(Confirmateur confirmateur) {
+        return confirmateur.confirmer(
                 "Des résultats Tadarida existent déjà pour ce passage. Les remplacer par ceux de VigieChiro ?"
-                        + " Les validations en cours sur ce passage seront perdues.",
-                ButtonType.OK,
-                ButtonType.CANCEL);
-        alerte.setHeaderText("Réimporter depuis VigieChiro ?");
-        return alerte.showAndWait().filter(bouton -> bouton == ButtonType.OK).isPresent();
+                        + " Les validations en cours sur ce passage seront perdues.");
     }
 }

@@ -2,7 +2,6 @@ package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
 import fr.univ_amu.iut.commun.view.Confirmateur;
-import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
@@ -15,9 +14,9 @@ import javafx.scene.control.MenuItem;
 /// contrôleur ne garde que ses champs `@FXML` et une délégation.
 ///
 /// La publication écrit vers l'extérieur et ne s'annule pas côté plateforme : elle passe par une
-/// **confirmation récapitulative** construite sur le tri du service (rien n'est envoyé avant
-/// l'accord). Le confirmateur est **injectable** (contrat neutre [Confirmateur] du socle, #1013 ;
-/// défaut [ConfirmationNavigation]) : un `Alert.showAndWait` en dur figerait les tests headless.
+/// **confirmation récapitulative** construite sur le tri du service (rien n'est envoyé avant l'accord).
+/// Le confirmateur est celui **de l'écran** (contrat neutre [Confirmateur] du socle, #1013) : un
+/// `Alert.showAndWait` en dur figerait les tests headless.
 final class PublicationCorrectionsUI {
 
     private PublicationCorrectionsUI() {}
@@ -32,12 +31,11 @@ final class PublicationCorrectionsUI {
 
     /// Lance la publication des corrections du passage de `source` : tri hors fil JavaFX (aperçu),
     /// confirmation récapitulative, envoi hors fil, bilan restitué. Sans passage ciblé, ne fait rien.
-    static void lancer(
-            PublicationCorrectionsViewModel publication, SourceObservations source, ExecuteurTache executeur) {
-        lancer(publication, source, executeur, new ConfirmationNavigation());
-    }
-
-    /// Variante à confirmateur **injectable** (tests headless : un stub remplace la boîte de dialogue).
+    ///
+    /// Le `confirmateur` est celui **de l'écran** (#1405). Il y avait ici une surcharge à trois arguments
+    /// qui fabriquait un [ConfirmationNavigation] pour la production, une à quatre pour les tests : un
+    /// troisième idiome, pour le même besoin que le porteur détenu par les autres écrans. Un écran, une
+    /// paire de porteurs, partagée par ses gestes.
     static void lancer(
             PublicationCorrectionsViewModel publication,
             SourceObservations source,

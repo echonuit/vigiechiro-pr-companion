@@ -1,7 +1,10 @@
 package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +42,7 @@ import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 import java.io.File;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -63,6 +67,16 @@ import org.testfx.framework.junit5.Start;
 /// préférences de lecture (#1006).
 @ExtendWith(ApplicationExtension.class)
 class SonsValidationDepotViewTest {
+
+    /// La source ouverte par la fixture : le passage 7 du carré 640380, point A1.
+    private static final SourceObservations PASSAGE =
+            new SourceObservations.ParPassage(new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Site")));
+
+    /// Ce que le confirmateur a **demandé** (le message du remplacement dit ce qu'on perd).
+    private final List<String> confirmations = new ArrayList<>();
+
+    /// Ce que le double de confirmation répondra : chaque test le pose avant de déposer.
+    private boolean confirme = true;
 
     private ServiceValidation service;
     private ProjectionsAudioDao projections;
@@ -150,10 +164,21 @@ class SonsValidationDepotViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        controleur.ouvrirSur(new SourceObservations.ParPassage(
-                new ContextePassage(7L, 1, new ContexteSite("640380", "A1", "Site"))));
+        // Le oui/non du remplacement, remplacé par un double (#1405) : un vrai dialogue figerait le test.
+        controleur.confirmateur().definir(message -> {
+            confirmations.add(message);
+            return confirme;
+        });
+        controleur.ouvrirSur(PASSAGE);
         stage.setScene(new Scene(vue, 1000, 700));
         stage.show();
+    }
+
+    /// Rouvre l'écran sur un passage qui porte **déjà** un jeu de résultats : le prochain import devient un
+    /// **remplacement**, donc un geste destructif (les validations en cours seront perdues).
+    private void avecResultatsExistants(FxRobot robot) {
+        when(service.resultatsDuPassage(7L)).thenReturn(Optional.of(100L));
+        robot.interact(() -> controleur.ouvrirSur(PASSAGE));
     }
 
     @Test
@@ -169,6 +194,41 @@ class SonsValidationDepotViewTest {
         assertThat(bandeau.isVisible()).isTrue();
         assertThat(message.getText()).contains("Import réussi");
         assertThat(bandeau.getStyleClass()).contains("retour-succes");
+    }
+
+    @Test
+    @DisplayName("#1405 : réimport confirmé : les résultats sont remplacés, et la confirmation dit ce qu'on perd")
+    void reimport_confirme_remplace_les_resultats(FxRobot robot) {
+        avecResultatsExistants(robot);
+        when(service.reimporter(7L, Path.of("obs.csv")))
+                .thenReturn(new BilanImport(
+                        new ResultatsIdentification(101L, "obs.csv", "Brut", "2026-06-30T00:00", 7L), 1, 0, 0));
+
+        robot.interact(() -> assertThat(controleur.deposerFichiers(List.of(new File("obs.csv"))))
+                .isTrue());
+
+        // Le message de confirmation est le seul endroit où l'utilisateur apprend qu'il va perdre son
+        // travail de validation. C'est un contenu, pas une formalité.
+        assertThat(confirmations)
+                .singleElement()
+                .satisfies(message -> assertThat(message)
+                        .contains("existent déjà")
+                        .contains("Les validations en cours sur ce passage seront perdues"));
+        verify(service).reimporter(7L, Path.of("obs.csv"));
+    }
+
+    @Test
+    @DisplayName("#1405 : réimport refusé : rien n'est remplacé, et le dépôt n'est pas annoncé comme réussi")
+    void reimport_refuse_ne_remplace_rien(FxRobot robot) {
+        avecResultatsExistants(robot);
+        confirme = false;
+
+        // `false` : sans quoi le glisser-déposer signalerait un dépôt réussi alors que rien n'a été importé.
+        robot.interact(() -> assertThat(controleur.deposerFichiers(List.of(new File("obs.csv"))))
+                .isFalse());
+
+        verify(service, never()).reimporter(anyLong(), any());
+        verify(service, never()).importer(anyLong(), any());
     }
 
     @Test
