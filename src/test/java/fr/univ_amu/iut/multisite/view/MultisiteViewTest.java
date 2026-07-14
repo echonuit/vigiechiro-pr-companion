@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,9 +16,11 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -25,6 +28,8 @@ import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import javafx.fxml.FXMLLoader;
@@ -114,9 +119,34 @@ class MultisiteViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
+        // Désignation du fichier d'export (#1431) : sans ce double, « Exporter… » ouvrirait un FileChooser
+        // natif, qui fige le test. C'est pourquoi le geste n'était couvert nulle part.
+        controleur.selecteur().definir(new SelecteurFichier() {
+            @Override
+            public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+                throw new AssertionError("l'export désigne un fichier à écrire, pas un dossier");
+            }
+
+            @Override
+            public Optional<Path> choisirFichier(String titre, Optional<Path> dossierInitial, FiltreFichier filtre) {
+                throw new AssertionError("l'export écrit un fichier, il n'en ouvre pas un existant");
+            }
+
+            @Override
+            public Optional<Path> enregistrerFichier(String titre, String nomPropose, FiltreFichier filtre) {
+                nomsProposes.add(nomPropose);
+                return choixExport;
+            }
+        });
         stage.setScene(new Scene(vue, 1100, 680));
         stage.show();
     }
+
+    /// Ce que le double de sélection répondra à l'export : vide = l'utilisateur a **annulé**.
+    private Optional<Path> choixExport = Optional.empty();
+
+    /// Noms de fichier **proposés** par l'export.
+    private final List<String> nomsProposes = new ArrayList<>();
 
     @Test
     @DisplayName("Le tableau liste les passages agrégés ; le résumé les compte")
@@ -309,5 +339,39 @@ class MultisiteViewTest {
         assertThat(voile.isVisible())
                 .as("chargement terminé (exécuteur synchrone) : overlay masqué")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1431 : « Exporter… » écrit les passages dans l'ordre AFFICHÉ (#291), pas l'ordre interne")
+    void export_ecrit_dans_l_ordre_affiche(FxRobot robot) {
+        Path destination = Path.of("/tmp/vue.csv");
+        choixExport = Optional.of(destination);
+        TableView<LignePassage> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        List<LignePassage> ordreAffiche = List.copyOf(table.getItems());
+
+        robot.interact(() -> itemExporter(robot).fire());
+
+        assertThat(nomsProposes).containsExactly("vue-multisite.csv");
+        // Ce qui part dans le CSV, c'est ce que l'utilisateur VOIT : le tri par clic d'en-tête compris.
+        verify(service).exporterCsvVers(destination, ordreAffiche);
+    }
+
+    @Test
+    @DisplayName("#1431 : « Exporter… » annulé : aucun fichier n'est écrit")
+    void export_annule_n_ecrit_rien(FxRobot robot) {
+        choixExport = Optional.empty();
+
+        robot.interact(() -> itemExporter(robot).fire());
+
+        verify(service, never()).exporterCsvVers(any(), any());
+    }
+
+    /// L'item « Exporter… » du menu ☰ : un `MenuItem` n'est pas un `Node`, il ne se trouve donc pas par
+    /// lookup - on passe par le `MenuButton` qui le porte.
+    private static MenuItem itemExporter(FxRobot robot) {
+        return robot.lookup("#menuActions").queryAs(MenuButton.class).getItems().stream()
+                .filter(item -> "itemExporter".equals(item.getId()))
+                .findFirst()
+                .orElseThrow();
     }
 }

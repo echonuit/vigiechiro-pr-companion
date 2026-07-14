@@ -1,7 +1,8 @@
 package fr.univ_amu.iut.multisite.view;
 
+import fr.univ_amu.iut.commun.view.FiltreFichier;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.multisite.model.LignePassage;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.function.Consumer;
@@ -10,8 +11,6 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
-import javafx.stage.FileChooser;
-import javafx.stage.Window;
 
 /// État et gestes du menu **☰ actions** de la vue multi-sites, extraits de [MultisiteController] : le
 /// controller y avait accumulé le câblage des quatre entrées et le sélecteur de fichier de l'export,
@@ -54,19 +53,16 @@ final class MenuActionsMultisite {
         reconstruire.setVisible(peutReconstruire);
     }
 
-    /// « Exporter » : ouvre le sélecteur de fichier natif (enregistrement) et, si l'utilisateur confirme,
-    /// remet le chemin choisi et **l'ordre réellement affiché** (tri par clic d'en-tête inclus, #291) au
-    /// travail d'écriture. Le dialogue vit dans la vue (non testé en TestFX) ; l'écriture est testée côté
-    /// ViewModel.
-    static void exporter(Window fenetre, TableView<LignePassage> table, Consumer<Path> ecrire) {
-        FileChooser selecteur = new FileChooser();
-        selecteur.setTitle("Exporter les passages en CSV");
-        selecteur.setInitialFileName("vue-multisite.csv");
-        selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
-        File fichier = selecteur.showSaveDialog(fenetre);
-        if (fichier != null) {
-            ecrire.accept(fichier.toPath());
-        }
+    /// « Exporter » : demande où écrire et, si l'utilisateur ne renonce pas, remet le chemin choisi et
+    /// **l'ordre réellement affiché** (tri par clic d'en-tête inclus, #291) au travail d'écriture.
+    ///
+    /// La désignation passe par le port [SelecteurFichier] (#1431), porté par l'écran. Le `FileChooser`
+    /// qui vivait ici **figeait** tout test du geste : la Javadoc précédente le reconnaissait sans
+    /// détour (« le dialogue vit dans la vue, non testé en TestFX »).
+    static void exporter(SelecteurFichier selecteur, TableView<LignePassage> table, Consumer<Path> ecrire) {
+        selecteur
+                .enregistrerFichier("Exporter les passages en CSV", "vue-multisite.csv", FiltreFichier.csv())
+                .ifPresent(ecrire);
     }
 
     /// Instantané des lignes **telles qu'affichées** (la table applique un `SortedList` par-dessus le

@@ -13,6 +13,8 @@ import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
@@ -89,6 +91,18 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private final DepotDispositionColonnes depotColonnes;
     private final ExecuteurTache executeur;
     private IndicateurOccupation occupation;
+
+    /// Désignation du fichier d'export : porteur partagé injectable (#1431), double répondant en test.
+    /// Le `FileChooser` en dur **figeait** tout test du geste.
+    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+            // `this.menuActions` : le champ @FXML est déclaré plus bas (référence en avant interdite dans
+            // un initialiseur). La fenêtre n'est lue qu'au clic.
+            new SelecteurFichierJavaFx(() -> this.menuActions.getScene().getWindow()));
+
+    /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
+    SelecteurFichierModifiable selecteur() {
+        return selecteur;
+    }
 
     @FXML
     private Label lblResume;
@@ -557,12 +571,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         navigation.ouvrirModaleReconstruction(menuActions.getScene().getWindow(), this::chargerDonnees);
     }
 
-    /// « Exporter » : sélecteur de fichier natif puis écriture par le ViewModel, dans **l'ordre affiché**
-    /// (#291). Le dialogue vit dans [MenuActionsMultisite].
+    /// « Exporter » : demande où écrire, puis écriture par le ViewModel dans **l'ordre affiché** (#291).
+    /// La désignation passe par le porteur de l'écran (#1431).
     @FXML
     private void exporter() {
         MenuActionsMultisite.exporter(
-                menuActions.getScene().getWindow(),
+                selecteur,
                 tableLignes,
                 chemin -> viewModel.exporter(chemin, MenuActionsMultisite.lignesAffichees(tableLignes)));
     }
