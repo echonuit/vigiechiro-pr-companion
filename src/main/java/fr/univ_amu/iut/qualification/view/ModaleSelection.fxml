@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.RadioButton?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Modale « Personnaliser la sélection d'écoute » (R12) : méthode de constitution et taille, puis
+  régénération.
+
+  Elle remplace un Dialog<ButtonType> bâti à la main dans QualificationController (#1431). Celui-ci se
+  terminait par un showAndWait : le geste était injouable dans un test - alors qu'il EFFACE la
+  progression d'écoute. Et sa capture de documentation était une réplique reconstruite à la main
+  (CaptureDialogues), qui pouvait dériver du vrai écran sans que rien ne le signale.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:id="racine"
+      fx:controller="fr.univ_amu.iut.qualification.view.ModaleSelectionController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
+      styleClass="modale-point"
+      prefWidth="480.0"
+      spacing="10.0">
+
+  <Label text="Personnaliser la sélection d'écoute" styleClass="modale-titre"/>
+  <Label text="Méthode de constitution et taille de la sélection." styleClass="field-hint" wrapText="true"/>
+
+  <Label text="MÉTHODE" styleClass="section-label"/>
+  <RadioButton fx:id="choixReparti" text="RéparTemporel : réparties sur la nuit"/>
+  <RadioButton fx:id="choixAleatoire" text="Aléatoire"/>
+
+  <Separator/>
+
+  <Label fx:id="lblTaille" styleClass="field-label"/>
+  <Slider fx:id="curseurTaille" showTickLabels="true" showTickMarks="true"
+          majorTickUnit="5.0" minorTickCount="0" snapToTicks="true"/>
+
+  <!-- Ce que l'utilisateur PERD s'il régénère : c'est le seul avertissement qu'il recevra. -->
+  <Label text="⚠ Régénérer efface la progression d'écoute (le verdict est conservé)."
+         styleClass="message-erreur" wrapText="true"/>
+
+  <HBox alignment="CENTER_RIGHT" spacing="8.0">
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
+    <Button fx:id="boutonRegenerer" text="↺ Régénérer" styleClass="bouton-primaire" onAction="#regenerer"/>
+  </HBox>
+</VBox>

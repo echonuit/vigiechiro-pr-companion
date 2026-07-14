@@ -104,6 +104,13 @@ class QualificationViewTest {
                 return (id, contexte) -> {};
             }
 
+            // Façade de navigation (#1431) : l'écran s'en sert pour ouvrir la modale « Personnaliser la
+            // sélection d'écoute ». Inerte ici : ce test ne l'ouvre pas.
+            @Provides
+            NavigationQualification navigation() {
+                return mock(NavigationQualification.class);
+            }
+
             @Provides
             OuvrirSite ouvrirSite() {
                 return new OuvrirSite() {

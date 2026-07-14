@@ -7,15 +7,9 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
-import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Separator;
-import javafx.scene.control.Slider;
-import javafx.scene.control.ToggleGroup;
-import javafx.scene.layout.VBox;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -25,9 +19,8 @@ import javafx.scene.layout.VBox;
 /// (mêmes libellés, mêmes boutons) avec des données de démo, puis on les rend hors-écran en appliquant
 /// les feuilles de style partagées (palette + base), sans jamais ouvrir de fenêtre modale.
 ///
-/// Quatre états, rattachés dans le manifeste à la **vue parente** de chaque dialogue :
+/// Trois états, rattachés dans le manifeste à la **vue parente** de chaque dialogue :
 /// - `apercu-import-doublon.png` / `apercu-import-ecrasement.png` : confirmations d'import (#147/#279) ;
-/// - `apercu-qualification-personnaliser.png` : personnaliser la sélection d'écoute (#30) ;
 /// - `apercu-navigation-garde-saisie.png` : garde « quitter sans enregistrer » (#178).
 ///
 /// Reconstruction en JavaFX pur (aucun type de feature) pour rester dans `commun` sans dépendre de
@@ -62,7 +55,6 @@ public final class CaptureDialogues {
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         enregistrer(dialogueDoublon(), sortie.resolve("apercu-import-doublon.png"));
         enregistrer(dialogueEcrasement(), sortie.resolve("apercu-import-ecrasement.png"));
-        enregistrer(dialoguePersonnaliser(), sortie.resolve("apercu-qualification-personnaliser.png"));
         enregistrer(alerteGardeSaisie(), sortie.resolve("apercu-navigation-garde-saisie.png"));
     }
 
@@ -84,37 +76,6 @@ public final class CaptureDialogues {
                 + "Dont 87 validation(s) Tadarida (correction, référence, commentaire)\n"
                 + "définitivement perdue(s). Action irréversible.\n\n"
                 + "Confirmer l'écrasement ?");
-    }
-
-    /// « Personnaliser la sélection d'écoute » (#30) : reconstruit le `Dialog` de `QualificationController`
-    /// (méthode RéparTemporel / Aléatoire, taille de la sélection, avertissement, bouton « Régénérer »).
-    private static Dialog<?> dialoguePersonnaliser() {
-        RadioButton repar = new RadioButton("⏱ RéparTemporel — réparties sur la nuit");
-        RadioButton aleatoire = new RadioButton("🎲 Aléatoire");
-        ToggleGroup methode = new ToggleGroup();
-        repar.setToggleGroup(methode);
-        aleatoire.setToggleGroup(methode);
-        repar.setSelected(true);
-
-        Slider taille = new Slider(10, 30, 20);
-        taille.setShowTickLabels(true);
-        taille.setShowTickMarks(true);
-        taille.setMajorTickUnit(5);
-        taille.setMinorTickCount(0);
-        taille.setSnapToTicks(true);
-        Label valeur = new Label("Taille : 20 séquences");
-        Label avert = new Label("⚠ Régénérer efface la progression d'écoute (le verdict est conservé).");
-        avert.setWrapText(true);
-
-        Dialog<Void> dialogue = new Dialog<>();
-        dialogue.setTitle("Personnaliser la sélection d'écoute");
-        dialogue.setHeaderText("Méthode de constitution et taille de la sélection.");
-        ButtonType regenerer = new ButtonType("↺ Régénérer", ButtonBar.ButtonData.OK_DONE);
-        dialogue.getDialogPane().getButtonTypes().addAll(regenerer, ButtonType.CANCEL);
-        dialogue.getDialogPane()
-                .setContent(
-                        new VBox(8, new Label("Méthode :"), repar, aleatoire, new Separator(), valeur, taille, avert));
-        return dialogue;
     }
 
     /// Garde « quitter sans enregistrer » (#178) : le message par défaut présenté par le Navigateur avant de
