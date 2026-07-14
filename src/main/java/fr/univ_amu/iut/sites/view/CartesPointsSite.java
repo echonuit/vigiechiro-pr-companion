@@ -2,6 +2,8 @@ package fr.univ_amu.iut.sites.view;
 
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.viewmodel.CartePoint;
@@ -10,9 +12,6 @@ import java.util.Locale;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ListChangeListener;
 import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Tooltip;
@@ -36,18 +35,27 @@ final class CartesPointsSite {
     private final NavigationSites navigation;
     private final OuvrirMultisite ouvrirMultisite;
 
-    /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
-    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+    /// Confirmation d'action destructive : le porteur **de l'écran** (#1013), et non plus un porteur
+    /// fabriqué ici. Les cartes en construisaient un que rien n'exposait : il ne pouvait donc jamais être
+    /// remplacé, et « Supprimer ce point » restait hors de portée d'un test (#1405).
+    private final ConfirmateurModifiable confirmateur;
+
+    /// Compte rendu : le porteur **de l'écran** (#1405), double capturant en test.
+    private final NotificateurModifiable notificateur;
 
     private CartesPointsSite(
             FlowPane cartesPoints,
             SiteDetailViewModel viewModel,
             NavigationSites navigation,
-            OuvrirMultisite ouvrirMultisite) {
+            OuvrirMultisite ouvrirMultisite,
+            ConfirmateurModifiable confirmateur,
+            NotificateurModifiable notificateur) {
         this.cartesPoints = cartesPoints;
         this.viewModel = viewModel;
         this.navigation = navigation;
         this.ouvrirMultisite = ouvrirMultisite;
+        this.confirmateur = confirmateur;
+        this.notificateur = notificateur;
     }
 
     /// Installe le rendu des cartes sur `cartesPoints` : repli d'état vide lié à `lblAucunPoint` (#791,
@@ -59,11 +67,14 @@ final class CartesPointsSite {
             Label lblAucunPoint,
             SiteDetailViewModel viewModel,
             NavigationSites navigation,
-            OuvrirMultisite ouvrirMultisite) {
+            OuvrirMultisite ouvrirMultisite,
+            ConfirmateurModifiable confirmateur,
+            NotificateurModifiable notificateur) {
         var aucunPoint = Bindings.isEmpty(cartesPoints.getChildren());
         lblAucunPoint.visibleProperty().bind(aucunPoint);
         lblAucunPoint.managedProperty().bind(aucunPoint);
-        CartesPointsSite cartes = new CartesPointsSite(cartesPoints, viewModel, navigation, ouvrirMultisite);
+        CartesPointsSite cartes =
+                new CartesPointsSite(cartesPoints, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur);
         viewModel.points().addListener((ListChangeListener<CartePoint>) changement -> cartes.reconstruire());
         cartes.reconstruire();
     }
@@ -170,10 +181,9 @@ final class CartesPointsSite {
         return cartesPoints.getScene().getWindow();
     }
 
+    /// Le point porte des passages : la suppression n'aura pas lieu, et l'utilisateur sait pourquoi.
     private void alerteErreur(String message) {
-        Alert alerte = new Alert(AlertType.WARNING, message, ButtonType.OK);
-        alerte.setHeaderText("Action impossible");
-        alerte.showAndWait();
+        notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Action impossible", message);
     }
 
     private static String libelleDescription(PointDEcoute point) {
