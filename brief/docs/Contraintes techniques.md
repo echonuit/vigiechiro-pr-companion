@@ -33,6 +33,17 @@ d'architecture** qui structurent son code.
 - Ces règles de couches et d'acyclicité sont **vérifiées automatiquement** par des tests
   **ArchUnit** : une violation (par exemple un `model` qui importerait JavaFX, ou une dépendance
   croisée vers une vue) casse la compilation des tests.
+- **Les dialogues d'une action passent par des contrats du socle**, jamais par un `Alert` ou un
+  `FileChooser` construit dans un contrôleur : `Confirmateur` (le oui/non), `Notificateur` (le compte
+  rendu), `SelecteurFichier` (la désignation d'un fichier). Chaque écran en détient une instance
+  remplaçable, que ses tests substituent par un double.
+
+  La contrainte est mécanique : un `showAndWait()` **fige** un test d'IHM *headless*. Une action qui
+  ouvre un dialogue en dur est donc **impossible à déclencher dans un test** - seul le **grisage** de
+  son bouton reste vérifiable, jamais son **effet**. Et il suffit d'en oublier **un seul** (l'alerte
+  finale, ou le sélecteur de fichier initial) pour que le geste entier redevienne intestable. C'est ce
+  qui privait les gestes **irréversibles** du produit (purger les originaux, restaurer la base,
+  supprimer une nuit, réimporter par-dessus des validations) de tout test de leur effet.
 
 ## Outillage et cycle de vie
 
