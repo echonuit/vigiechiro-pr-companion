@@ -19,6 +19,7 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.util.Modules;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.CertitudeObservateur;
@@ -38,7 +39,6 @@ import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
-import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
@@ -199,7 +199,7 @@ class SonsValidationViewTest {
                                 bibliotheque,
                                 mock(ServiceDisponibiliteAudio.class),
                                 p -> true,
-                                mock(StockageConnexion.class));
+                                mock(DiscussionValidateur.class));
                     }
 
                     @Provides

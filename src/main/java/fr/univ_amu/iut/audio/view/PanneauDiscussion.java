@@ -1,13 +1,26 @@
 package fr.univ_amu.iut.audio.view;
 
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.FormatAvisValidateur;
+import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.ConfirmationNavigation;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import java.util.List;
+import java.util.Optional;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 
@@ -30,6 +43,28 @@ final class PanneauDiscussion {
     private final VBox racine = new VBox(6);
     private final VBox messages = new VBox(10);
 
+    /// Zone de rédaction (#1418). Séparée du fil : on lit en haut, on écrit en bas.
+    private final TextArea saisie = new TextArea();
+
+    private final Button envoyer = new Button("Envoyer au validateur…");
+
+    /// Enveloppe du bouton : un `Button` désactivé n'affiche **pas** de tooltip, l'explication du blocage
+    /// se pose donc sur le conteneur, qui reçoit le survol (#789).
+    private final StackPane enveloppeEnvoyer = new StackPane(envoyer);
+
+    /// Texte du tooltip : ce que fait l'action, ou pourquoi elle est bloquée.
+    private final StringProperty explication = new SimpleStringProperty();
+
+    /// Observation dont le fil est affiché (cible de l'envoi), ou `null`.
+    private Long selection;
+
+    /// Confirmation d'une écriture **irréversible** : porteur injectable (#1013), stub en test.
+    private final ConfirmateurModifiable confirmateur =
+            new ConfirmateurModifiable(new ConfirmationNavigation("Envoyer ce message ?"));
+
+    /// Compte rendu : porteur injectable (#1405), double capturant en test.
+    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+
     PanneauDiscussion() {
         racine.setId("panneauDiscussion");
         racine.getStyleClass().add("panneau-discussion");
@@ -46,7 +81,89 @@ final class PanneauDiscussion {
         cadre.setFitToWidth(true);
         VBox.setVgrow(cadre, javafx.scene.layout.Priority.ALWAYS);
 
-        racine.getChildren().addAll(titre, cadre);
+        saisie.setPromptText("Écrire au validateur…");
+        saisie.setPrefRowCount(3);
+        saisie.setWrapText(true);
+        saisie.setId("saisieMessage");
+        envoyer.setId("boutonEnvoyerMessage");
+        enveloppeEnvoyer.setId("enveloppeEnvoyerMessage");
+        IndicateurBlocage.expliquer(enveloppeEnvoyer, explication);
+
+        // Rien à envoyer tant que rien n'est écrit : le bouton le dit plutôt que de ne rien faire au clic.
+        envoyer.disableProperty().bind(saisie.textProperty().isEmpty().or(saisie.disabledProperty()));
+
+        racine.getChildren().addAll(titre, cadre, saisie, enveloppeEnvoyer);
+    }
+
+    /// Branche l'envoi. Le geste est **définitif** : le confirmateur doit le dire, et l'appel réseau
+    /// tourne hors du fil JavaFX, sous le voile du chrome.
+    private void armerEnvoi(DiscussionValidateur discussion, ExecuteurTache executeur) {
+        envoyer.setOnAction(evenement -> {
+            String texte = saisie.getText().strip();
+            if (texte.isEmpty() || selection == null) {
+                return;
+            }
+            // Ce qui part ne se retire pas : le serveur ajoute par $push, et aucune route ne permet de
+            // supprimer ni de modifier un message. La confirmation doit le DIRE, pas demander « êtes-vous
+            // sûr ? » : on ne consent qu'à ce qu'on a compris.
+            if (!confirmateur.confirmer("Ce message sera visible par le validateur du MNHN et ne pourra"
+                    + " PAS être supprimé ni modifié :\n\n« " + texte + " »\n\nL'envoyer ?")) {
+                return;
+            }
+            Long cible = selection;
+            executeur.executer(
+                    () -> discussion.poster(cible, texte),
+                    reponse -> restituer(reponse, discussion),
+                    echec -> notificateur.notifier(
+                            NiveauNotification.AVERTISSEMENT, "Envoi impossible", message(echec)));
+        });
+    }
+
+    /// Sur le fil JavaFX : le message est parti (ou non), et le fil se recharge.
+    private void restituer(ReponseApi<String> reponse, DiscussionValidateur discussion) {
+        reponse.echec()
+                .ifPresentOrElse(
+                        echec -> notificateur.notifier(
+                                NiveauNotification.AVERTISSEMENT,
+                                "Message non envoyé",
+                                echec + "\n\nRien n'a été publié : votre texte est toujours là."),
+                        () -> saisie.clear());
+        afficher(discussion.fil(selection), discussion.idProfilConnecte(), discussion.pourquoiPasEcrire(selection));
+    }
+
+    private static String message(Throwable echec) {
+        return echec.getMessage() != null ? echec.getMessage() : echec.toString();
+    }
+
+    /// Zone de rédaction, exposée aux tests : c'est elle qui se désactive quand l'envoi est impossible.
+    TextArea saisie() {
+        return saisie;
+    }
+
+    /// Bouton d'envoi, exposé aux tests.
+    Button envoyer() {
+        return envoyer;
+    }
+
+    /// Arme l'envoi sur une observation donnée, **sans table ni écran** : c'est ce qui permet de jouer le
+    /// geste jusqu'à l'appel réseau (bouchonné) sans monter toute la vue « Sons & validation ».
+    void armerPourTest(DiscussionValidateur discussion, ExecuteurTache executeur, Long idObservation) {
+        armerEnvoi(discussion, executeur);
+        selection = idObservation;
+        afficher(
+                discussion.fil(idObservation),
+                discussion.idProfilConnecte(),
+                discussion.pourquoiPasEcrire(idObservation));
+    }
+
+    /// Porteur de confirmation exposé aux tests (#1013).
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
+    }
+
+    /// Porteur de compte rendu exposé aux tests (#1405).
+    NotificateurModifiable notificateur() {
+        return notificateur;
     }
 
     /// Nœud à insérer dans le panneau d'écoute.
@@ -60,34 +177,50 @@ final class PanneauDiscussion {
     /// Installé ici plutôt qu'épelé dans le contrôleur (patron de [MenuCertitude#installer]) : celui-ci est
     /// au plafond de NcssCount, et ce câblage forme une unité cohésive qui n'a rien à y faire.
     static PanneauDiscussion installer(
-            StackPane hote, TableView<LigneObservationAudio> table, AudioViewModel viewModel) {
+            StackPane hote,
+            TableView<LigneObservationAudio> table,
+            AudioViewModel viewModel,
+            ExecuteurTache executeur) {
         PanneauDiscussion panneau = new PanneauDiscussion();
+        DiscussionValidateur discussion = viewModel.discussion();
         hote.getChildren().add(panneau.racine());
         hote.visibleProperty().bind(panneau.racine().visibleProperty());
         hote.managedProperty().bind(panneau.racine().managedProperty());
+        panneau.armerEnvoi(discussion, executeur);
         table.getSelectionModel()
                 .selectedItemProperty()
-                .addListener((obs, ancienne, nouvelle) -> panneau.recharger(nouvelle, viewModel));
+                .addListener((obs, ancienne, nouvelle) -> panneau.recharger(nouvelle, discussion));
+        panneau.recharger(null, discussion);
         return panneau;
     }
 
-    /// Recharge le fil de `ligne`. Une **séquence non identifiée** (aucune observation) n'existe pas côté
-    /// plateforme : elle ne peut pas porter de discussion, le panneau se referme.
-    private void recharger(LigneObservationAudio ligne, AudioViewModel viewModel) {
-        Long idObservation = ligne == null ? null : ligne.idObservation();
-        afficher(viewModel.filDeLObservation(idObservation), viewModel.idProfilConnecte());
+    /// Recharge le fil de `ligne`, et l'état de la saisie.
+    private void recharger(LigneObservationAudio ligne, DiscussionValidateur discussion) {
+        selection = ligne == null ? null : ligne.idObservation();
+        afficher(discussion.fil(selection), discussion.idProfilConnecte(), discussion.pourquoiPasEcrire(selection));
     }
 
-    /// Affiche `fil`, ou **efface le panneau** s'il est vide : le panneau ne s'ouvre que quand un
-    /// validateur (ou nous) a réellement écrit. `idProfilConnecte` sert à dire « Vous » sans appel réseau.
-    void afficher(List<MessageObservation> fil, String idProfilConnecte) {
+    /// Affiche `fil`, et arme (ou non) la saisie. Le panneau s'ouvre s'il y a **quelque chose à lire**
+    /// *ou* **quelque chose à dire** : depuis #1418, une détection connue de VigieChiro sur laquelle
+    /// personne n'a encore écrit reste un endroit où l'on peut ouvrir une discussion.
+    ///
+    /// Quand l'envoi est impossible, la saisie est **désactivée et l'enveloppe en dit la raison**
+    /// (affordance #789) — un champ qui ne mènerait à rien serait pire qu'un champ absent.
+    void afficher(List<MessageObservation> fil, String idProfilConnecte, Optional<String> pourquoiPasEcrire) {
         messages.getChildren().clear();
-        boolean aQuelqueChoseADire = !fil.isEmpty();
-        racine.setVisible(aQuelqueChoseADire);
-        racine.setManaged(aQuelqueChoseADire);
-        if (aQuelqueChoseADire) {
-            fil.forEach(message -> messages.getChildren().add(bulle(message, idProfilConnecte)));
+        fil.forEach(message -> messages.getChildren().add(bulle(message, idProfilConnecte)));
+
+        boolean peutEcrire = pourquoiPasEcrire.isEmpty();
+        saisie.setDisable(!peutEcrire);
+        explication.set(pourquoiPasEcrire.orElse(
+                "Envoie ce message au validateur du MNHN. Définitif : il ne pourra pas être supprimé."));
+        if (!peutEcrire) {
+            saisie.clear();
         }
+
+        boolean ouvert = !fil.isEmpty() || peutEcrire;
+        racine.setVisible(ouvert);
+        racine.setManaged(ouvert);
     }
 
     /// Un message : qui, quand, quoi. Savoir **qui parle** est la moitié de l'information dans une

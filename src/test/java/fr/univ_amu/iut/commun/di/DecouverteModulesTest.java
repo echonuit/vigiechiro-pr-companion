@@ -37,6 +37,7 @@ class DecouverteModulesTest {
             "AuditModule",
             "ImportVigieChiroModule",
             "PublicationCorrectionsModule",
+            "DiscussionModule",
             "BibliothequeModule",
             "ConnexionModule",
             "DiagnosticModule",

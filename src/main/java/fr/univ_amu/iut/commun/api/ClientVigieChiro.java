@@ -205,6 +205,30 @@ public final class ClientVigieChiro {
         return echec == null ? ResultatCorrection.reussie() : ResultatCorrection.echouee(echec);
     }
 
+    /// Poste un **message** dans le fil de discussion d'une observation (#1418, axe 4.4) :
+    /// `PUT /donnees/{donneeId}/observations/{indice}/messages`, corps `{"message": "…"}`.
+    ///
+    /// Même **ancrage positionnel** que la correction (#1203 / #1139) : la donnée par son `_id`, puis
+    /// l'indice **brut** de l'observation dans son tableau. Le serveur laisse passer le propriétaire de la
+    /// donnée, donc un jeton d'`Observateur` suffit — contrairement à l'avis de validateur, qu'il refuse
+    /// (403) et que l'application ne peut donc que lire (#1417).
+    ///
+    /// ⚠️ **Écriture définitive.** Le serveur ajoute par `$push`, et **aucune route ne permet de supprimer
+    /// ni de modifier un message**. Ce qui part ne se retire pas — et part sur des données partagées avec
+    /// un validateur du MNHN. L'appelant **doit** l'avoir fait confirmer explicitement.
+    ///
+    /// Ni `If-Match`, ni `_etag` : le serveur n'offre aucun contrôle de concurrence sur cette route. Deux
+    /// messages postés en même temps s'empilent, ils ne s'écrasent pas — c'est le seul point rassurant de
+    /// cette absence.
+    ///
+    /// @return l'issue **triée** (#1284) : `Succes` (le fil contient le message), `NonConnecte`,
+    ///     `Injoignable` ou `Refuse` (statut + corps). Un `404` signale un **ancrage périmé** : la donnée a
+    ///     été régénérée par un re-compute côté serveur, et il faut réimporter avant de réessayer
+    public ReponseApi<String> posterMessage(String donneeId, int indice, String texte) {
+        String chemin = "/donnees/" + donneeId + "/observations/" + indice + "/messages";
+        return transport.ecrire("PUT", chemin, RequetesVigieChiro.message(texte), null);
+    }
+
     /// Déclare un **fichier** à téléverser (`POST /fichiers`, étape 1/3) : renvoie son `_id` et l'URL S3
     /// pré-signée ([FichierSigne]), issue **triée** (#1284) pour un message de dépôt exploitable. Le
     /// mime n'est pas transmis (déduit de l'extension du titre) ; le titre doit respecter la

@@ -58,6 +58,15 @@ final class RequetesVigieChiro {
         return GSON.toJson(Map.of("observateur_taxon", objectidTaxon, "observateur_probabilite", certitude.jeton()));
     }
 
+    /// Corps de `PUT /donnees/#id/observations/#indice/messages` (#1418) : un seul champ, `message`.
+    ///
+    /// Le serveur **refuse (422)** tout ce qui n'est pas une chaîne, et **ajoute** le message par `$push` :
+    /// il n'y a ni remplacement, ni route de suppression. Ce corps est donc celui d'une écriture
+    /// **définitive** — l'appelant doit l'avoir fait confirmer.
+    static String message(String texte) {
+        return GSON.toJson(Map.of("message", texte));
+    }
+
     /// Corps de `POST /participations/#id/compute` (lancement du traitement, #984) : aucun champ requis,
     /// le serveur déclenche le pipeline sur les fichiers déjà déposés.
     static String traitement() {

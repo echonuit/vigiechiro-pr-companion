@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.validation.model.MessageObservation;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.VBox;
@@ -13,28 +14,48 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.framework.junit5.ApplicationExtension;
 
-/// Le **fil de discussion** avec le validateur ([PanneauDiscussion], #1417).
+/// Le **fil de discussion** avec le validateur ([PanneauDiscussion], #1417 lire / #1418 répondre).
 ///
 /// Bâti comme un **nœud**, pas comme une fenêtre : c'est ce qui le rend vérifiable ici sans qu'un
-/// `showAndWait()` fige le test (leçon #1013 / #1405). L'extension JavaFX suffit à instancier les
-/// contrôles ; aucune scène n'est montée.
+/// `showAndWait()` fige le test (leçon #1013 / #1405).
 @ExtendWith(ApplicationExtension.class)
 class PanneauDiscussionTest {
 
     private static final String MOI = "u-moi";
 
+    /// Raison de blocage : la détection n'existe pas côté plateforme — il n'y a personne à qui parler.
+    private static final Optional<String> PAS_SUR_LA_PLATEFORME =
+            Optional.of("Cette détection n'existe pas sur VigieChiro.");
+
+    /// Rien ne bloque : l'utilisateur peut écrire.
+    private static final Optional<String> PEUT_ECRIRE = Optional.empty();
+
     @Test
-    @DisplayName("#1417 : personne n'a écrit → le panneau reste FERMÉ (il ne vole pas de largeur au"
-            + " spectrogramme pour ne rien dire)")
-    void fil_vide_panneau_ferme() {
+    @DisplayName("#1418 : rien à lire ET rien à dire → le panneau reste FERMÉ (il ne vole pas de largeur"
+            + " au spectrogramme pour ne rien dire)")
+    void rien_a_lire_ni_a_dire_panneau_ferme() {
         PanneauDiscussion panneau = new PanneauDiscussion();
 
-        panneau.afficher(List.of(), MOI);
+        panneau.afficher(List.of(), MOI, PAS_SUR_LA_PLATEFORME);
 
         assertThat(panneau.racine().isVisible()).isFalse();
         assertThat(panneau.racine().isManaged())
                 .as("non seulement invisible, mais non géré : il ne prend AUCUNE place")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1418 : fil vide mais détection connue de VigieChiro → le panneau S'OUVRE : on peut y"
+            + " ouvrir la discussion")
+    void fil_vide_mais_ecriture_possible_panneau_ouvert() {
+        PanneauDiscussion panneau = new PanneauDiscussion();
+
+        panneau.afficher(List.of(), MOI, PEUT_ECRIRE);
+
+        assertThat(panneau.racine().isVisible())
+                .as("depuis #1418, il n'y a plus seulement quelque chose à LIRE : il y a quelque chose à DIRE")
+                .isTrue();
+        assertThat(textes(panneau)).isEmpty();
     }
 
     @Test
@@ -52,7 +73,8 @@ class PanneauDiscussionTest {
                                 "Médiane basse pour un Eptser, non ?",
                                 Instant.parse("2026-07-11T21:04:00Z")),
                         new MessageObservation(2L, 7L, 1, MOI, "Je repasse le son.", null)),
-                MOI);
+                MOI,
+                PEUT_ECRIRE);
 
         assertThat(panneau.racine().isVisible()).isTrue();
         assertThat(textes(panneau))
@@ -65,20 +87,39 @@ class PanneauDiscussionTest {
     }
 
     @Test
-    @DisplayName("#1417 : changer de ligne pour une détection sans fil REFERME le panneau — pas de fil"
+    @DisplayName("#1417 : changer de ligne pour une détection sans fil vide le panneau — pas de fil"
             + " fantôme de la ligne précédente")
-    void changer_de_ligne_referme_le_panneau() {
+    void changer_de_ligne_vide_le_panneau() {
         PanneauDiscussion panneau = new PanneauDiscussion();
-        panneau.afficher(List.of(new MessageObservation(1L, 7L, 0, MOI, "Vu.", null)), MOI);
-        assertThat(panneau.racine().isVisible()).isTrue();
+        panneau.afficher(List.of(new MessageObservation(1L, 7L, 0, MOI, "Vu.", null)), MOI, PEUT_ECRIRE);
+        assertThat(textes(panneau)).isNotEmpty();
 
-        panneau.afficher(List.of(), MOI);
+        panneau.afficher(List.of(), MOI, PAS_SUR_LA_PLATEFORME);
 
-        assertThat(panneau.racine().isVisible()).isFalse();
         assertThat(textes(panneau))
-                .as("le fil précédent est effacé : afficher la discussion d'une autre détection serait pire"
+                .as("le fil précédent est effacé : afficher la discussion d'une AUTRE détection serait pire"
                         + " que de n'en afficher aucune")
                 .isEmpty();
+        assertThat(panneau.racine().isVisible()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1418 : l'envoi coupé → le fil reste LISIBLE, mais la saisie est désactivée : un champ"
+            + " qui ne mènerait à rien serait pire qu'un champ absent")
+    void saisie_desactivee_quand_ecriture_impossible() {
+        PanneauDiscussion panneau = new PanneauDiscussion();
+
+        panneau.afficher(
+                List.of(new MessageObservation(1L, 7L, 0, "u-validateur", "C'est Pipnat.", null)),
+                MOI,
+                Optional.of("L'envoi de messages au validateur est désactivé."));
+
+        assertThat(panneau.racine().isVisible())
+                .as("lire et répondre sont deux fonctionnalités distinctes : couper l'une laisse l'autre")
+                .isTrue();
+        assertThat(panneau.saisie().isDisabled())
+                .as("on ne peut pas répondre, et l'enveloppe du bouton en dit la raison (#789)")
+                .isTrue();
     }
 
     /// Tous les textes affichés dans le fil (entêtes et corps de messages confondus).

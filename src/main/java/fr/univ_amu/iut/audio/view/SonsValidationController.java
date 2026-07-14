@@ -393,7 +393,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // Fil de discussion avec le validateur (#1417) : le panneau vit à droite du lecteur et suit la
         // sélection ; il ne s'ouvre que si la ligne porte réellement des messages. Câblage délégué
         // (PanneauDiscussion.installer), comme MenuCertitude : ce contrôleur est au plafond de NcssCount.
-        PanneauDiscussion.installer(hoteDiscussion, tableObservations, viewModel);
+        PanneauDiscussion.installer(hoteDiscussion, tableObservations, viewModel, appuis.executeur());
 
         tableObservations.getSelectionModel().selectedItemProperty().addListener((obs, ancienne, nouvelle) -> {
             viewModel.selectionProperty().set(nouvelle);

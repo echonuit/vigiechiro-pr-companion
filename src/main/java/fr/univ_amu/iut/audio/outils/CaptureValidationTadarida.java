@@ -8,6 +8,7 @@ import com.google.inject.Singleton;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.view.SonsValidationController;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.di.BibliothequeModule;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
@@ -166,7 +167,7 @@ public final class CaptureValidationTadarida {
                             RevueEnLot revueEnLot,
                             ServiceBibliotheque bibliotheque,
                             ServiceDisponibiliteAudio disponibilite,
-                            StockageConnexion connexion) {
+                            DiscussionValidateur discussion) {
                         return new AudioViewModel(
                                 validation,
                                 projectionsAudio,
@@ -178,7 +179,16 @@ public final class CaptureValidationTadarida {
                                 bibliotheque,
                                 disponibilite,
                                 Files::exists,
-                                connexion);
+                                discussion);
+                    }
+
+                    // Repondre au validateur est indisponible en capture (aucune connexion) : le fil se
+                    // LIT, la saisie se desactive en disant pourquoi (affordance #789). Cet injecteur ne
+                    // charge pas AudioModule, il faut donc lui fournir le collaborateur ici.
+                    @Provides
+                    @Singleton
+                    DiscussionValidateur discussion(ServiceValidation service, StockageConnexion connexion) {
+                        return new DiscussionValidateur(service, connexion, java.util.Optional.empty());
                     }
 
                     // Import VigieChiro indisponible en capture (aucune connexion) : VM à dépôt vide.

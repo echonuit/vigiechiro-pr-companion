@@ -1,10 +1,12 @@
 package fr.univ_amu.iut.audio.di;
 
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.audio.view.AccueilSonsReference;
 import fr.univ_amu.iut.audio.view.NavigationAudio;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
+import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.OngletReglagesAudio;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
@@ -20,6 +22,7 @@ import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
+import fr.univ_amu.iut.validation.model.PublicationMessage;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
 import fr.univ_amu.iut.validation.model.SaisieCertitude;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
@@ -62,10 +65,24 @@ public class AudioModule extends ModuleDeFeature {
         // Publication des corrections (#723) : même patron (liaison réelle posée par
         // `PublicationCorrectionsModule` dans l'injecteur applicatif complet).
         OptionalBinder.newOptionalBinder(binder(), PublicationCorrections.class);
+        // Répondre au validateur (#1418) : ÉCRITURE DÉFINITIVE, donc feature à part et désactivable
+        // (`DiscussionModule`). Défaut-vide ici : les injecteurs partiels (captures) n'ont pas de client,
+        // et la saisie du fil s'y désactive d'elle-même en le disant (affordance #789).
+        OptionalBinder.newOptionalBinder(binder(), PublicationMessage.class);
         // Contrat de retour vers l'analyse : OptionalBinder VIDE (feature `analyse` désactivable, #1087).
         // `AnalyseModule` fait `setBinding` quand elle est active ; sinon SonsValidationController masque
         // « Voir sur la carte » et le segment de fil d'Ariane « Espèces & observations ».
         OptionalBinder.newOptionalBinder(binder(), OuvrirAnalyse.class);
+    }
+
+    /// La discussion avec le validateur (#1417 lire / #1418 répondre). `PublicationMessage` est optionnel :
+    /// la feature `discuter-validateur` est désactivable, et les injecteurs partiels n'ont pas de client.
+    /// Lire le fil continue de fonctionner sans elle.
+    @Provides
+    @Singleton
+    DiscussionValidateur fournirDiscussionValidateur(
+            ServiceValidation service, StockageConnexion connexion, Optional<PublicationMessage> publication) {
+        return new DiscussionValidateur(service, connexion, publication);
     }
 
     // ViewModel non-singleton (cf. analyse / multisite) : un VM frais par chargement d'écran, pour éviter
@@ -81,7 +98,7 @@ public class AudioModule extends ModuleDeFeature {
             RevueEnLot revueEnLot,
             ServiceBibliotheque bibliotheque,
             ServiceDisponibiliteAudio disponibilite,
-            StockageConnexion connexion) {
+            DiscussionValidateur discussion) {
         return new AudioViewModel(
                 validation,
                 projectionsAudio,
@@ -93,7 +110,7 @@ public class AudioModule extends ModuleDeFeature {
                 bibliotheque,
                 disponibilite,
                 Files::exists,
-                connexion);
+                discussion);
     }
 
     /// ViewModel dédié de l'**import VigieChiro** (axe 4.2), séparé de [AudioViewModel] (concern distinct, et

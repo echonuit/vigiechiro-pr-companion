@@ -4,11 +4,9 @@ import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
-import fr.univ_amu.iut.validation.model.MessageObservation;
 import fr.univ_amu.iut.validation.model.ModeRevue;
 import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.RevueEnLot;
@@ -129,9 +127,8 @@ public class AudioViewModel {
     /// @param fichierPresent présence d'un fichier sur disque : `Files::exists` en production ;
     ///     injecté pour rester testable avec des chemins factices (`p -> true` préserve les
     ///     fixtures, `p -> false` simule un audio disparu, #1301)
-    /// Identité du profil connecté : sert à distinguer « vous » d'« un validateur » dans le fil de
-    /// discussion (#1417), sans un appel réseau par auteur — le serveur ne donne que des objectid.
-    private final StockageConnexion connexion;
+    /// La discussion avec le validateur (#1417 lire, #1418 répondre), en un seul collaborateur.
+    private final DiscussionValidateur discussion;
 
     public AudioViewModel(
             ServiceValidation service,
@@ -144,9 +141,9 @@ public class AudioViewModel {
             ServiceBibliotheque bibliotheque,
             ServiceDisponibiliteAudio disponibilite,
             Predicate<Path> fichierPresent,
-            StockageConnexion connexion) {
+            DiscussionValidateur discussion) {
         this.service = Objects.requireNonNull(service, "service");
-        this.connexion = Objects.requireNonNull(connexion, "connexion");
+        this.discussion = Objects.requireNonNull(discussion, "discussion");
         this.disponibiliteEcoute = new DisponibiliteEcoute(disponibilite, fichierPresent);
         this.resolveur = new ResolveurSourceAudio(service, projectionsAudio, plageNuitPassage);
         this.exporteur = new ExporteurAudio(service, bibliotheque);
@@ -457,17 +454,8 @@ public class AudioViewModel {
         messages.effacerRetour();
     }
 
-    /// **Fil de discussion** d'une observation (#1417), dans l'ordre du serveur. Vide si personne n'a
-    /// écrit, ou si la ligne n'est pas une observation (une séquence non identifiée n'existe pas côté
-    /// plateforme : elle ne peut pas avoir de fil).
-    public List<MessageObservation> filDeLObservation(Long idObservation) {
-        return idObservation == null ? List.of() : service.filDeLObservation(idObservation);
-    }
-
-    /// Identifiant plateforme du profil connecté, ou `null` si l'on n'est pas connecté. Le serveur ne
-    /// donne que des objectid comme auteurs : comparer à celui-ci est ce qui permet d'écrire « vous »
-    /// plutôt que de lancer un appel réseau par auteur.
-    public String idProfilConnecte() {
-        return connexion.profil().map(profil -> profil.id()).orElse(null);
+    /// La **discussion avec le validateur** (#1417 / #1418) : lire le fil, savoir qui l'on est, répondre.
+    public DiscussionValidateur discussion() {
+        return discussion;
     }
 }
