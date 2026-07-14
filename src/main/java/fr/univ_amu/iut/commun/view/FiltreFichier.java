@@ -17,4 +17,9 @@ public record FiltreFichier(String libelle, String motif) {
     public static FiltreFichier baseSqlite() {
         return new FiltreFichier("Sauvegarde SQLite (*.db)", "*.db");
     }
+
+    /// Archive d'une nuit de capture (#139) : décompressée de façon transparente à l'import.
+    public static FiltreFichier archiveZip() {
+        return new FiltreFichier("Archive ZIP", "*.zip");
+    }
 }

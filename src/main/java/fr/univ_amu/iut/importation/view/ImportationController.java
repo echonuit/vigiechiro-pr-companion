@@ -6,9 +6,12 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.AuDepartEcran;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -21,9 +24,9 @@ import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.importation.viewmodel.RattachementImportViewModel;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -42,8 +45,6 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.FileChooser;
 import javafx.util.converter.NumberStringConverter;
 
 /// Controller de l'assistant **M-Import** (`Importation.fxml`).
@@ -213,6 +214,20 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
         return confirmateur;
+    }
+
+    /// Désignation de la source : porteur partagé injectable (#1431), double répondant en test. C'est
+    /// par lui que **commence** l'import - un `DirectoryChooser` / `FileChooser` en dur y **figeait**
+    /// tout test, de sorte que « Parcourir » n'était jamais cliqué : les tests posaient le dossier
+    /// **directement sur le ViewModel**, en contournant l'écran.
+    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+            // `this.champDossier` : le champ @FXML est déclaré plus bas (référence en avant interdite
+            // dans un initialiseur). La fenêtre n'est lue qu'au clic.
+            new SelecteurFichierJavaFx(() -> this.champDossier.getScene().getWindow()));
+
+    /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
+    SelecteurFichierModifiable selecteur() {
+        return selecteur;
     }
 
     /// Pré-sélectionne le site `idSite` dans le rattachement (raccourci « Importer une nuit » depuis
@@ -436,28 +451,21 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         lierVisibiliteGeree(zoneRejets, aDesRejets);
     }
 
-    /// « Parcourir » : ouvre le sélecteur de **dossier** natif puis charge la source.
+    /// « Parcourir » : demande le **dossier** de la nuit puis charge la source.
     @FXML
     private void parcourir() {
-        DirectoryChooser selecteur = new DirectoryChooser();
-        selecteur.setTitle("Dossier de la nuit (carte SD ou copie sur disque)");
-        File dossier = selecteur.showDialog(champDossier.getScene().getWindow());
-        if (dossier != null) {
-            chargerSource(dossier.toPath());
-        }
+        selecteur
+                .choisirDossier("Dossier de la nuit (carte SD ou copie sur disque)", Optional.empty())
+                .ifPresent(this::chargerSource);
     }
 
-    /// « Choisir un .zip » : ouvre le sélecteur de **fichier** filtré sur `*.zip` puis charge la source
-    /// (l'archive sera décompressée de façon transparente, #139).
+    /// « Choisir un .zip » : demande l'**archive** de la nuit puis charge la source (elle sera
+    /// décompressée de façon transparente, #139).
     @FXML
     private void parcourirZip() {
-        FileChooser selecteur = new FileChooser();
-        selecteur.setTitle("Archive .zip de la nuit");
-        selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("Archive ZIP", "*.zip"));
-        File zip = selecteur.showOpenDialog(champDossier.getScene().getWindow());
-        if (zip != null) {
-            chargerSource(zip.toPath());
-        }
+        selecteur
+                .choisirFichier("Archive .zip de la nuit", Optional.empty(), FiltreFichier.archiveZip())
+                .ifPresent(this::chargerSource);
     }
 
     /// Charge une source d'import (dossier **ou** `.zip`, #139) : la décompression éventuelle du zip se
