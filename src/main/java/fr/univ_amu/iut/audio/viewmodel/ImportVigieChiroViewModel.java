@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanImport;
 import fr.univ_amu.iut.validation.model.ImportVigieChiro;
@@ -47,10 +48,11 @@ public class ImportVigieChiroViewModel {
         return importateur.map(imp -> imp.estRattache(idPassage)).orElse(false);
     }
 
-    /// **Participations** de l'observateur pour le rattachement manuel (liste vide si import indisponible).
+    /// **Participations** de l'observateur pour le rattachement manuel, issue **triée** (#1370) :
+    /// `NonConnecte` si l'import est indisponible dans ce contexte (injecteur sans `connexion`).
     /// **Bloquant** (réseau) : à appeler hors du fil JavaFX.
-    public List<ParticipationVigieChiro> participations() {
-        return importateur.map(ImportVigieChiro::participationsDisponibles).orElseGet(List::of);
+    public ReponseApi<List<ParticipationVigieChiro>> participations() {
+        return importateur.map(ImportVigieChiro::participationsDisponibles).orElseGet(ReponseApi::nonConnecte);
     }
 
     /// **Rattache** le passage à une participation choisie (stocke le lien), sans effet si import

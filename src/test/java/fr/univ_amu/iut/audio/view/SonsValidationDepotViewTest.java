@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Reglages;
@@ -213,7 +214,7 @@ class SonsValidationDepotViewTest {
     @DisplayName("#1255 : passage non rattaché sans participation, le message d'échec est restitué")
     void import_vigiechiro_sans_participation(FxRobot robot) {
         when(importVigieChiro.estRattache(7L)).thenReturn(false);
-        when(importVigieChiro.participationsDisponibles()).thenReturn(List.of());
+        when(importVigieChiro.participationsDisponibles()).thenReturn(ReponseApi.succes(List.of()));
 
         robot.interact(() -> itemImporterVigieChiro(robot).fire());
 

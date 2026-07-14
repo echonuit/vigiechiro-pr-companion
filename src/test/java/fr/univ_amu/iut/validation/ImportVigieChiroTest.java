@@ -210,7 +210,7 @@ class ImportVigieChiroTest {
         List<ParticipationVigieChiro> parts = List.of(new ParticipationVigieChiro("6a49", "Z41", "2026-07-03", "Site"));
         when(client.mesParticipations()).thenReturn(ReponseApi.succes(parts));
 
-        assertThat(importateur.participationsDisponibles()).isSameAs(parts);
+        assertThat(importateur.participationsDisponibles()).isEqualTo(ReponseApi.succes(parts));
 
         importateur.rattacher(ID_PASSAGE, PARTICIPATION);
         verify(liens).upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, "42", PARTICIPATION));
