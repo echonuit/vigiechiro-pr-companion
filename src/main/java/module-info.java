@@ -78,6 +78,7 @@ open module vigiechiro {
             fr.univ_amu.iut.passage.di.SynchronisationParticipationModule,
             fr.univ_amu.iut.qualification.di.QualificationModule,
             fr.univ_amu.iut.recherche.di.RechercheModule,
+            fr.univ_amu.iut.sites.di.ControleCarreStocModule,
             fr.univ_amu.iut.sites.di.SitesModule,
             fr.univ_amu.iut.sites.di.SynchronisationSitesModule,
             fr.univ_amu.iut.validation.di.ValidationModule;

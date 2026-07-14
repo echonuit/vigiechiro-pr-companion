@@ -51,6 +51,29 @@ final class ReponsesVigieChiro {
         return taxons;
     }
 
+    /// Numéro du carré STOC **le plus proche** depuis `GET /grille_stoc/cercle` (#733) : le serveur
+    /// interroge la grille avec un `$near`, dont MongoDB rend les résultats **triés par distance
+    /// croissante**. Le premier élément est donc le carré de la position demandée ; les suivants sont ses
+    /// voisins, dont nous n'avons que faire.
+    ///
+    /// On ne lit **que** le `numero`, jamais le `centre` : la plateforme mélange les conventions de
+    /// coordonnées (les localités d'un site sont stockées `[lat, lon]`, à rebours du GeoJSON, cf.
+    /// `ParticipationsVigieChiro#coordonnees`), et rien n'oblige à trancher ce débat pour lire un numéro.
+    ///
+    /// Aucun carré (mer, hors de France) ou corps illisible → vide : ce n'est pas une erreur, c'est une
+    /// réponse.
+    static Optional<String> numeroCarreStoc(String corps) {
+        for (JsonElement element : items(corps)) {
+            if (element.isJsonObject()) {
+                String numero = texte(element.getAsJsonObject(), "numero");
+                if (numero != null && !numero.isBlank()) {
+                    return Optional.of(numero);
+                }
+            }
+        }
+        return Optional.empty();
+    }
+
     /// Identifiant du document **créé** par une écriture Eve (`POST` renvoyant le document), ou vide si le
     /// corps est illisible ou sans `_id`. Sert à récupérer l'id d'une participation créée (#142).
     static Optional<String> idCree(String corps) {

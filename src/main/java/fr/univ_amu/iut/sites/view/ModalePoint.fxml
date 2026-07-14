@@ -52,6 +52,11 @@
   <Label styleClass="field-hint" wrapText="true"
          text="Degrés décimaux (43.5298 ; virgule tolérée) ou degrés/minutes/secondes (43°31'47&quot;N) : collez depuis n'importe quelle source. Latitude −90..90, longitude −180..180."/>
 
+  <!-- Contrôle du carré STOC (#733) : ce que la grille officielle dit de la position saisie - elle confirme
+       le carré du site, ou signale que le point tombe ailleurs. Masqué tant qu'il n'y a rien à dire (hors
+       ligne : silence, la saisie manuelle reste entière). -->
+  <Label fx:id="messageCarre" wrapText="true" managed="false" visible="false"/>
+
   <!-- Carte-outil de saisie GPS (#153) : remplie par le controller (composant CarteSites, Gluon Maps),
        centrée sur le carré du site. Glisser le marqueur OU saisir les champs : les deux restent
        synchronisés. Sans GPS, le marqueur démarre au centre du carré (position approximative à caler). -->

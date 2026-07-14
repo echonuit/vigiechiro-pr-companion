@@ -34,6 +34,10 @@ public final class ClientVigieChiro {
     /// compte ~5 000).
     private static final int PAGES_MAX = 500;
 
+    /// Rayon de recherche d'un carré STOC (#733), en **mètres**. Un carré fait 2 km de côté : 10 km laissent
+    /// de la marge pour répondre « le carré voisin » plutôt que « aucun » quand la position est en limite.
+    private static final int RAYON_CARRE_STOC_METRES = 10_000;
+
     private final TransportVigieChiro transport;
 
     public ClientVigieChiro(FournisseurToken fournisseurToken) {
@@ -56,6 +60,25 @@ public final class ClientVigieChiro {
     /// **trié** (#1284) : les rapprocheurs peuvent enfin dire pourquoi rien n'a été synchronisé.
     public ReponseApi<List<TaxonVigieChiro>> taxons() {
         return transport.lire("/taxons/liste").transformer(ReponsesVigieChiro::taxons);
+    }
+
+    /// **Carré STOC officiel** d'une position (`GET /grille_stoc/cercle`, #733) : le carré de la grille
+    /// nationale dont le centre est le plus proche du point donné, ou vide s'il n'y en a aucun dans le
+    /// rayon (en mer, hors de France).
+    ///
+    /// Contrat relevé dans le code du backend (`vigiechiro/resources/grille_stoc.py`) : trois paramètres
+    /// **obligatoires** `lng`, `lat`, `r` (flottants), une requête MongoDB `$near` — donc des résultats
+    /// **triés par distance croissante** — plafonnés à 80 éléments. Le rôle `Observateur` suffit.
+    ///
+    /// Le rayon est en **mètres** (`$maxDistance` d'un `$near` GeoJSON). [#RAYON_CARRE_STOC_METRES] vaut
+    /// 10 km : les carrés STOC font 2 km de côté, un point tombe donc toujours à moins de ~1,5 km du
+    /// centre du sien ; le rayon large sert à répondre quand même (le carré voisin) plutôt que rien.
+    ///
+    /// Issue **triée** (#1284) : hors connexion, panne et refus restent distincts d'une position sans
+    /// carré — c'est ce qui permet à l'appelant de se taire au lieu d'accuser à tort.
+    public ReponseApi<Optional<String>> carreStoc(double latitude, double longitude) {
+        String requete = "/grille_stoc/cercle?lng=" + longitude + "&lat=" + latitude + "&r=" + RAYON_CARRE_STOC_METRES;
+        return transport.lire(requete).transformer(ReponsesVigieChiro::numeroCarreStoc);
     }
 
     /// Sites rattachés à l'observateur, **dérivés de ses participations** (`GET /moi/participations`),

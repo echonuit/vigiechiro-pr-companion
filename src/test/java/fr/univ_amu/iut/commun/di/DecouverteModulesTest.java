@@ -29,7 +29,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// **synchronisées**, et une feature peut être **désactivée**.
 class DecouverteModulesTest {
 
-    /// Les 20 modules de feature attendus (le socle CommunModule/PersistenceModule n'en fait pas
+    /// Les 21 modules de feature attendus (le socle CommunModule/PersistenceModule n'en fait pas
     /// partie : il est installé explicitement, jamais découvert).
     private static final Set<String> FEATURES_ATTENDUES = Set.of(
             "AnalyseModule",
@@ -49,6 +49,7 @@ class DecouverteModulesTest {
             "SynchronisationParticipationModule",
             "QualificationModule",
             "RechercheModule",
+            "ControleCarreStocModule",
             "SitesModule",
             "SynchronisationSitesModule",
             "ValidationModule");

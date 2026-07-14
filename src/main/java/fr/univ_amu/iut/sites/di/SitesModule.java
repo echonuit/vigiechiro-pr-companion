@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -95,6 +96,10 @@ public class SitesModule extends ModuleDeFeature {
         // SynchronisationParticipation (#937). SynchronisationSitesModule fait `setBinding` dans
         // l’app complète ; sinon l’Optional reste vide et M-Sites masque le bouton.
         OptionalBinder.newOptionalBinder(binder(), SynchronisationSites.class);
+        // Contrôle du carré STOC (#733) : il lit la grille nationale sur la plateforme, donc il a besoin de
+        // la connexion. ControleCarreStocModule fait `setBinding` dans l'app complète ; sinon l'Optional
+        // reste vide et la modale de point ne contrôle rien (la saisie manuelle reste entière).
+        OptionalBinder.newOptionalBinder(binder(), ControleCarreStoc.class);
         // Rapprochement des sites locaux avec VigieChiro (#728), invoqué à la connexion.
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
@@ -179,8 +184,8 @@ public class SitesModule extends ModuleDeFeature {
     }
 
     @Provides
-    PointEditViewModel fournirPointEditViewModel(ServiceSites service) {
-        return new PointEditViewModel(service);
+    PointEditViewModel fournirPointEditViewModel(ServiceSites service, Optional<ControleCarreStoc> controleCarre) {
+        return new PointEditViewModel(service, controleCarre);
     }
 
     private static String creerUtilisateurLocal(UtilisateurDao utilisateurDao) {

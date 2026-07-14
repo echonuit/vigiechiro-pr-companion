@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.carte.CarreGeo;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
@@ -37,6 +38,11 @@ public class ModalePointController {
 
     private static final String STYLE_CHAMP_INVALIDE = "champ-invalide";
 
+    /// Message du carré STOC (#733) : alerte (divergence, hors grille) ou confirmation discrète.
+    private static final String STYLE_CARRE_ALERTE = "message-carre-alerte";
+
+    private static final String STYLE_CARRE_CONFIRME = "message-carre-confirme";
+
     /// Couleur du marqueur du point en cours d'édition (indigo de l'application).
     private static final Color COULEUR_POINT = Color.web("#3f51b5");
 
@@ -44,6 +50,11 @@ public class ModalePointController {
     private static final Color COULEUR_CARRE = Color.web("#3f51b5", 0.12);
 
     private final PointEditViewModel viewModel;
+
+    /// Exécuteur du socle (#1014) : le contrôle du carré STOC est un appel **réseau**, il ne doit pas
+    /// tourner sur le fil JavaFX. Synchrone en test (déterministe), en arrière-plan en production.
+    private final ExecuteurTache executeur;
+
     private final CarteSites carte = new CarteSites();
     private Runnable apresSucces = () -> {};
 
@@ -81,9 +92,13 @@ public class ModalePointController {
     @FXML
     private StackPane zoneCarte;
 
+    @FXML
+    private Label messageCarre;
+
     @Inject
-    public ModalePointController(PointEditViewModel viewModel) {
+    public ModalePointController(PointEditViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.executeur = Objects.requireNonNull(executeur, "executeur");
     }
 
     @FXML
@@ -115,6 +130,33 @@ public class ModalePointController {
         viewModel.latitudeProperty().addListener((observable, avant, apres) -> majMarqueurSiSaisie());
         viewModel.longitudeProperty().addListener((observable, avant, apres) -> majMarqueurSiSaisie());
         viewModel.codeProperty().addListener((observable, avant, apres) -> majMarqueur());
+
+        // Contrôle du carré STOC (#733) : ce que la grille officielle dit de la position saisie. Message
+        // affiché seulement quand il y a quelque chose à dire (hors ligne, on se tait).
+        messageCarre.textProperty().bind(viewModel.messageCarreProperty());
+        messageCarre.visibleProperty().bind(viewModel.messageCarreProperty().isNotEmpty());
+        messageCarre.managedProperty().bind(viewModel.messageCarreProperty().isNotEmpty());
+        viewModel
+                .alerteCarreProperty()
+                .addListener((observable, avant, alerte) -> majStyleMessageCarre(Boolean.TRUE.equals(alerte)));
+        viewModel.latitudeProperty().addListener((observable, avant, apres) -> controlerCarre());
+        viewModel.longitudeProperty().addListener((observable, avant, apres) -> controlerCarre());
+    }
+
+    /// Demande à la grille STOC ce qu'elle sait de la position saisie, **hors du fil JavaFX** (c'est un appel
+    /// réseau : le faire ici gèlerait la modale à chaque frappe).
+    ///
+    /// Le contrôle ne **remplit** rien et ne **bloque** rien : le n° de carré appartient au site, pas au
+    /// point, et l'observateur peut avoir de bonnes raisons de s'écarter de la grille. On dit ce qu'on
+    /// sait ; il décide.
+    private void controlerCarre() {
+        executeur.executer(viewModel::controlerCarre, viewModel::appliquerControleCarre, echec -> {});
+    }
+
+    /// Colore le message du carré : alerte (divergence, hors grille) ou simple confirmation.
+    private void majStyleMessageCarre(boolean alerte) {
+        messageCarre.getStyleClass().removeAll(STYLE_CARRE_ALERTE, STYLE_CARRE_CONFIRME);
+        messageCarre.getStyleClass().add(alerte ? STYLE_CARRE_ALERTE : STYLE_CARRE_CONFIRME);
     }
 
     /// Prépare la modale en mode création et mémorise l'action de succès.

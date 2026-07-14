@@ -17,6 +17,7 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,8 +47,28 @@ class PointEditViewModelTest {
         pointDao = new PointDao(source);
         PassageDao passageDao = new PassageDao(source);
         service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.now()));
-        viewModel = new PointEditViewModel(service);
+        // Contrôle du carré STOC absent (#733) : le cas hors connexion, où la saisie doit rester entière.
+        viewModel = new PointEditViewModel(service, Optional.empty());
         site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
+    }
+
+    @Test
+    @DisplayName("#733 : sans contrôle du carré (hors connexion), la modale se tait et n'entrave rien")
+    void sans_controle_carre_le_silence() {
+        viewModel.preparerCreation(site);
+        viewModel.codeProperty().set("A1");
+        viewModel.latitudeProperty().set("43.5298");
+        viewModel.longitudeProperty().set("5.4474");
+
+        viewModel.appliquerControleCarre(viewModel.controlerCarre());
+
+        assertThat(viewModel.messageCarreProperty().get())
+                .as("le contrôle est un confort : sans plateforme, il ne dit rien plutôt que de se plaindre")
+                .isEmpty();
+        assertThat(viewModel.alerteCarreProperty().get()).isFalse();
+        assertThat(viewModel.peutEnregistrer().get())
+                .as("et il n'a jamais eu le pouvoir de bloquer l'enregistrement")
+                .isTrue();
     }
 
     @Test

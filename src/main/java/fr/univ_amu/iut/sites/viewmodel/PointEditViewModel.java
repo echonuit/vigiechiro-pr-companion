@@ -2,13 +2,17 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.AnalyseurCoordonnees;
 import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
+import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.VerdictCarre;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -39,6 +43,10 @@ public class PointEditViewModel {
 
     private final ServiceSites service;
 
+    /// Contrôle du carré STOC (#733) : **optionnel**, car il a besoin de la plateforme. Absent (feature de
+    /// connexion éteinte), le contrôle ne se fait simplement pas — la saisie manuelle reste entière.
+    private final Optional<ControleCarreStoc> controleCarre;
+
     private final StringProperty code = new SimpleStringProperty(this, "code", "");
     private final StringProperty description = new SimpleStringProperty(this, "description", "");
     private final StringProperty latitude = new SimpleStringProperty(this, "latitude", "");
@@ -46,6 +54,13 @@ public class PointEditViewModel {
     private final ReadOnlyStringWrapper titre = new ReadOnlyStringWrapper(this, "titre", "");
     private final ReadOnlyStringWrapper libelleBouton = new ReadOnlyStringWrapper(this, "libelleBouton", "+ Ajouter");
     private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
+
+    /// Ce que la grille STOC dit de la position saisie (#733) : vide tant qu'on ne sait rien.
+    private final ReadOnlyStringWrapper messageCarre = new ReadOnlyStringWrapper(this, "messageCarre", "");
+
+    /// Vrai quand [#messageCarre] est une **alerte** (carré divergent, position hors grille) plutôt qu'une
+    /// confirmation : la vue le colore en conséquence.
+    private final ReadOnlyBooleanWrapper alerteCarre = new ReadOnlyBooleanWrapper(this, "alerteCarre", false);
 
     private final BooleanBinding codeValide;
     private final BooleanBinding latitudeValide;
@@ -55,8 +70,12 @@ public class PointEditViewModel {
     private Long idSite;
     private Long idPointEnEdition;
 
-    public PointEditViewModel(ServiceSites service) {
+    /// Carré **déclaré par le site** courant : c'est lui que la grille STOC vient confirmer ou contredire.
+    private String carreDuSite;
+
+    public PointEditViewModel(ServiceSites service, Optional<ControleCarreStoc> controleCarre) {
         this.service = Objects.requireNonNull(service, "service");
+        this.controleCarre = Objects.requireNonNull(controleCarre, "controleCarre");
         codeValide = Bindings.createBooleanBinding(() -> ValidateurCodePoint.estValide(code.get()), code);
         latitudeValide = Bindings.createBooleanBinding(() -> coordonneeValide(latitude.get(), LATITUDE_MAX), latitude);
         longitudeValide =
@@ -69,6 +88,7 @@ public class PointEditViewModel {
         Objects.requireNonNull(site, "site");
         this.idSite = site.id();
         this.idPointEnEdition = null;
+        this.carreDuSite = site.numeroCarre();
         reinitialiserChamps();
         titre.set("Nouveau point d'écoute · Carré " + site.numeroCarre());
         libelleBouton.set("+ Ajouter");
@@ -80,6 +100,7 @@ public class PointEditViewModel {
         Objects.requireNonNull(point, "point");
         this.idSite = site.id();
         this.idPointEnEdition = point.id();
+        this.carreDuSite = site.numeroCarre();
         code.set(point.code());
         description.set(point.description() == null ? "" : point.description());
         latitude.set(point.latitude() == null ? "" : Double.toString(point.latitude()));
@@ -151,6 +172,37 @@ public class PointEditViewModel {
     /// Conjonction des validités : pilote l'activation du bouton de validation.
     public BooleanBinding peutEnregistrer() {
         return peutEnregistrer;
+    }
+
+    /// Confronte la position saisie à la **grille STOC officielle** (#733). **Bloquant** (réseau) : à
+    /// appeler hors du fil JavaFX, et à conclure par [#appliquerControleCarre].
+    ///
+    /// Rend [VerdictCarre.Indisponible] — donc le silence — dès qu'il n'y a rien à contrôler : coordonnées
+    /// incomplètes, ou plateforme hors d'atteinte. Le contrôle est un **confort**, jamais une condition de
+    /// saisie.
+    public VerdictCarre controlerCarre() {
+        Optional<double[]> position = coordonneesValides();
+        if (controleCarre.isEmpty() || position.isEmpty() || carreDuSite == null) {
+            return new VerdictCarre.Indisponible();
+        }
+        double[] coordonnees = position.get();
+        return controleCarre.get().confronter(carreDuSite, coordonnees[0], coordonnees[1]);
+    }
+
+    /// Applique un verdict de [#controlerCarre] aux propriétés observables, **sur le fil JavaFX**.
+    public void appliquerControleCarre(VerdictCarre verdict) {
+        messageCarre.set(verdict.message());
+        alerteCarre.set(verdict.alerte());
+    }
+
+    /// Ce que la grille STOC dit de la position saisie, vide s'il n'y a rien à dire.
+    public ReadOnlyStringProperty messageCarreProperty() {
+        return messageCarre.getReadOnlyProperty();
+    }
+
+    /// Vrai si [#messageCarreProperty] est une alerte (divergence, hors grille) plutôt qu'une confirmation.
+    public ReadOnlyBooleanProperty alerteCarreProperty() {
+        return alerteCarre.getReadOnlyProperty();
     }
 
     /// Coordonnées GPS saisies **uniquement si les deux champs sont renseignés et valides** (bornes

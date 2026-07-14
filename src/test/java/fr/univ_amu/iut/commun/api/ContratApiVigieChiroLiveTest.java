@@ -137,6 +137,34 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
+    @DisplayName("GET /grille_stoc/cercle (#733) : le carré rendu pour les coordonnées d'un point EST le carré"
+            + " de son site — la sonde qui tranche la convention lat/lng")
+    void grille_stoc_rend_le_carre_du_point() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+
+        // Un site RÉEL de l'observateur, avec un point géolocalisé : on connaît donc déjà la bonne réponse.
+        // La sonde est ainsi auto-vérifiante, sans coordonnées codées en dur qui périmeraient.
+        Optional<SiteVigieChiro> siteGeolocalise = client.mesSites().enOptionnel().orElseThrow().stream()
+                .filter(site -> site.numeroCarre() != null && !site.points().isEmpty())
+                .findFirst();
+        assumeTrue(siteGeolocalise.isPresent(), "Aucun site géolocalisé sur ce compte : sonde sans objet.");
+        SiteVigieChiro site = siteGeolocalise.get();
+        PointVigieChiro point = site.points().getFirst();
+
+        Optional<String> carre = client.carreStoc(point.latitude(), point.longitude())
+                .enOptionnel()
+                .orElseThrow();
+
+        // Le vrai risque de cet endpoint n'est pas qu'il échoue : c'est qu'il réponde À CÔTÉ. La plateforme
+        // mélange les conventions (les localités d'un site sont stockées [lat, lon], à rebours du GeoJSON),
+        // et une inversion lat/lng rendrait un carré parfaitement plausible... au milieu de l'Asie. Seule
+        // une confrontation au réel le dit — leçon de #1277, que seul le contrat live avait vue.
+        assertThat(carre)
+                .as("les coordonnées du point %s tombent dans le carré de son propre site", point.code())
+                .contains(site.numeroCarre());
+    }
+
+    @Test
     @DisplayName("Dérive client : ClientVigieChiro.participation(id) lit le détail réel (_etag présent)")
     void client_lit_le_detail_participation() {
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));

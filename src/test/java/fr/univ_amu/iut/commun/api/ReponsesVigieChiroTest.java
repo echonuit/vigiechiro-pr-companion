@@ -90,4 +90,31 @@ class ReponsesVigieChiroTest {
         assertThat(ReponsesVigieChiro.fichierSigne("{\"_id\":\"f1\"}")).isEmpty(); // pas d'URL
         assertThat(ReponsesVigieChiro.fichierSigne("nope")).isEmpty();
     }
+
+    @Test
+    @DisplayName("numeroCarreStoc : le PREMIER élément (GET /grille_stoc/cercle rend les carrés triés par distance)")
+    void numero_carre_stoc() {
+        // Réponse Eve paginée du backend (`$near` : distance croissante) — le premier item est le carré de
+        // la position demandée, les suivants sont ses voisins.
+        String corps = "{\"_items\":["
+                + "{\"_id\":\"g1\",\"numero\":\"130711\",\"centre\":{\"type\":\"Point\",\"coordinates\":[5.44,43.52]}},"
+                + "{\"_id\":\"g2\",\"numero\":\"130712\",\"centre\":{\"type\":\"Point\",\"coordinates\":[5.46,43.52]}}"
+                + "],\"_meta\":{\"total\":2}}";
+
+        assertThat(ReponsesVigieChiro.numeroCarreStoc(corps))
+                .as("le plus proche, donc le carré du point")
+                .contains("130711");
+    }
+
+    @Test
+    @DisplayName("numeroCarreStoc : aucun carré (mer, hors de France) ou corps illisible → vide, sans exception")
+    void numero_carre_stoc_absent() {
+        assertThat(ReponsesVigieChiro.numeroCarreStoc("{\"_items\":[],\"_meta\":{\"total\":0}}"))
+                .as("aucun carré dans le rayon : ce n'est pas une erreur, c'est une réponse")
+                .isEmpty();
+        assertThat(ReponsesVigieChiro.numeroCarreStoc("{\"_items\":[{\"_id\":\"g1\"}]}"))
+                .as("carré sans numéro : rien à proposer")
+                .isEmpty();
+        assertThat(ReponsesVigieChiro.numeroCarreStoc("nope")).isEmpty();
+    }
 }

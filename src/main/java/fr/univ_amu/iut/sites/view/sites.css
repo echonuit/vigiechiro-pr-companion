@@ -226,6 +226,20 @@
     -fx-text-fill: #a93226;
 }
 
+/* Contrôle du carré STOC (#733), modale de point : la grille officielle confirme le carré du site (vert,
+   discret) ou signale que le point tombe ailleurs (orange - une alerte, pas une erreur : l'observateur
+   peut avoir raison, et rien ne bloque son enregistrement). */
+.message-carre-confirme {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-succes;
+}
+
+.message-carre-alerte {
+    -fx-font-size: 12px;
+    -fx-text-fill: #b9770e;
+    -fx-font-weight: bold;
+}
+
 /* Résultat de la synchronisation à la demande (#1045) : même gabarit que .message-erreur, en vert. */
 .message-synchro {
     -fx-font-size: 12px;
