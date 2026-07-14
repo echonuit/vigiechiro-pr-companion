@@ -15,6 +15,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -22,8 +23,10 @@ import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
+import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -90,11 +93,21 @@ class MultisiteViewTest {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 bind(OuvrirAudio.class).toInstance(ouvrirAudio);
                 bind(DepotVues.class).toInstance(depotVues);
+                // La modale de reconstruction (#1396) charge un FXML via NavigationMultisite, qui a besoin
+                // du Navigateur du chrome : ici, un double suffit, aucun test n'ouvre la modale.
+                bind(Navigateur.class).toInstance(mock(Navigateur.class));
             }
 
             @Provides
             MultisiteViewModel viewModel() {
                 return viewModel;
+            }
+
+            /// Fixture **hors connexion VigieChiro** : le service de reconstruction est absent, donc
+            /// l'entrée « Reconstruire un passage manquant… » se retire du menu (#1396).
+            @Provides
+            ReconstructionViewModel reconstruction() {
+                return new ReconstructionViewModel(Optional.empty());
             }
         });
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));
@@ -180,6 +193,19 @@ class MultisiteViewTest {
                 .findFirst()
                 .orElseThrow();
         assertThat(itemExporter.isDisable()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1396 : hors connexion VigieChiro, « Reconstruire un passage manquant… » se retire du menu")
+    void reconstruction_retiree_hors_connexion(FxRobot robot) {
+        MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
+        MenuItem itemReconstruire = menu.getItems().stream()
+                .filter(item -> "itemReconstruire".equals(item.getId()))
+                .findFirst()
+                .orElseThrow();
+
+        // Un item qui ne peut rien faire ne vaut pas mieux qu'un item absent : il vaut moins.
+        assertThat(itemReconstruire.isVisible()).isFalse();
     }
 
     @Test

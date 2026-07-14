@@ -13,10 +13,14 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.multisite.di.MultisiteModule;
 import fr.univ_amu.iut.multisite.view.MultisiteController;
+import fr.univ_amu.iut.multisite.view.ReconstructionModaleController;
+import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -28,6 +32,8 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
@@ -65,6 +71,11 @@ public final class CaptureMultisite {
     private static final String ID_UTILISATEUR = "demo-enseignant";
     private static final String ENREGISTREUR = "1925492";
     private static final String FXML = "Multisite.fxml";
+
+    private static final String FXML_RECONSTRUCTION = "ReconstructionModale.fxml";
+
+    /// Carré de démonstration : celui du site seedé, du filtre de recherche et de la nuit manquante.
+    private static final String CARRE_DEMO = "640380";
 
     private CaptureMultisite() {}
 
@@ -104,6 +115,35 @@ public final class CaptureMultisite {
         rendreEcranFiltre(injecteur, sortie.resolve("apercu-multisite-filtre.png"));
         rendreEcranEdition(injecteur, sortie.resolve("apercu-multisite-edition.png"));
         rendreEcranCartePleine(injecteur, sortie.resolve("apercu-multisite-carte-pleine.png"));
+        rendreModaleReconstruction(injecteur, sortie.resolve("apercu-multisite-reconstruction.png"));
+    }
+
+    /// Rend la **modale « Reconstruire un passage manquant »** (#1396) : les nuits déposées sur
+    /// VigieChiro et absentes de cette machine, dont l'une au **point d'écoute inconnu ici** (la ligne
+    /// le dit, et le bouton la refusera).
+    ///
+    /// Le ViewModel est **alimenté à la main** plutôt que par un appel réseau : la capture ne parle à
+    /// aucune plateforme (et `ClientVigieChiro` est `final`, donc pas de double). Ce que l'on montre
+    /// reste le rendu **réel** de la vue sur des données réalistes.
+    private static void rendreModaleReconstruction(Injector injecteur, Path fichier) throws IOException {
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+        ExecuteurTache executeur = injecteur.getInstance(ExecuteurTache.class);
+        FXMLLoader loader = new FXMLLoader(ReconstructionModaleController.class.getResource(FXML_RECONSTRUCTION));
+        loader.setControllerFactory(type -> type == ReconstructionModaleController.class
+                ? new ReconstructionModaleController(viewModel, executeur)
+                : injecteur.getInstance(type));
+        Parent vue = loader.load();
+        Scene scene = new Scene(vue);
+        // `initialize()` a tenté de lire la plateforme (absente ici) : on publie ensuite la liste, qui
+        // remplace le message. C'est l'état où arrive l'utilisateur connecté.
+        ApercuFx.capturerApresPreparation(
+                scene,
+                () -> viewModel.appliquer(List.of(
+                        new ParticipationOrpheline(
+                                "6a53f5faae21902a597394d3", CARRE_DEMO, "A1", "2026-06-18T21:42:00+02:00", true),
+                        new ParticipationOrpheline(
+                                "6a53f5faae21902a597394e7", "130711", "Z41", "2026-07-03T22:00:00+02:00", false))),
+                fichier);
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -126,7 +166,7 @@ public final class CaptureMultisite {
         Parent vue = loader.load();
         // Recherche sur un carré : le tableau ne montre plus que ses passages (le résumé se recalcule).
         if (vue.lookup("#champRecherche") instanceof TextField recherche) {
-            recherche.setText("640380");
+            recherche.setText(CARRE_DEMO);
         }
         // Même fond de carte OSM que la capture principale (la carte n'est pas filtrée).
         capturerCarte(new Scene(vue, 1100, 620), fichier);
@@ -234,7 +274,7 @@ public final class CaptureMultisite {
         PassageDao passageDao = new PassageDao(source);
 
         Site tuiliere = siteDao.insert(new Site(
-                null, "640380", "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
+                null, CARRE_DEMO, "Étang de la Tuilière", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
         Site chenes = siteDao.insert(
                 new Site(null, "640381", "Bois des Chênes", Protocole.STANDARD, null, "2026-01-01", ID_UTILISATEUR));
         // Points calés DANS leur carré national réel (centroïdes carrenat dépt 64, cf. carrenat.csv) :

@@ -24,7 +24,6 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -374,10 +373,5 @@ public class ServiceReconstructionPassages {
                 return Optional.empty();
             }
         }
-    }
-
-    /// Lacunes d'un passage reconstruit, exposées pour l'IHM et la CLI (elles ne dépendent pas de la nuit).
-    public static List<String> lacunes() {
-        return new ArrayList<>(RapportReconstruction.lacunesConnues());
     }
 }
