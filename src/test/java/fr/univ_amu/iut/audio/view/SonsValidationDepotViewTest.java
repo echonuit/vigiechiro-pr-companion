@@ -24,8 +24,10 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.ReglagesDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.NavigationDeTestModule;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
@@ -83,6 +85,15 @@ class SonsValidationDepotViewTest {
     private ProjectionsAudioDao projections;
     private ImportVigieChiro importVigieChiro;
     private SonsValidationController controleur;
+
+    /// Ce que le double de sélection répondra : vide = l'utilisateur a **annulé**.
+    private Optional<Path> choixSelecteur = Optional.empty();
+
+    /// Titres des sélecteurs réellement ouverts.
+    private final List<String> titres = new ArrayList<>();
+
+    /// Noms de fichier **proposés** aux exports.
+    private final List<String> nomsProposes = new ArrayList<>();
 
     /// Base jetable pour les seules préférences (`app_setting`) : les options de lecture du menu ☰ (#1006)
     /// passent par `ReglagesReactifs`. Le reste de la vue reste mocké.
@@ -170,6 +181,29 @@ class SonsValidationDepotViewTest {
         controleur.confirmateur().definir(message -> {
             confirmations.add(message);
             return confirme;
+        });
+        // Désignation d'un fichier ou d'un dossier (#1431) : sans ce double, les QUATRE gestes qui en
+        // dépendent (importer un CSV, exporter le _Vu, les observations, la bibliothèque) ouvriraient un
+        // sélecteur natif et figeraient le test. Aucun n'était donc jouable.
+        controleur.selecteur().definir(new SelecteurFichier() {
+            @Override
+            public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+                titres.add(titre);
+                return choixSelecteur;
+            }
+
+            @Override
+            public Optional<Path> choisirFichier(String titre, Optional<Path> dossierInitial, FiltreFichier filtre) {
+                titres.add(titre);
+                return choixSelecteur;
+            }
+
+            @Override
+            public Optional<Path> enregistrerFichier(String titre, String nomPropose, FiltreFichier filtre) {
+                titres.add(titre);
+                nomsProposes.add(nomPropose);
+                return choixSelecteur;
+            }
         });
         controleur.ouvrirSur(PASSAGE);
         stage.setScene(new Scene(vue, 1000, 700));
@@ -288,6 +322,62 @@ class SonsValidationDepotViewTest {
         MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
         return menu.getItems().stream()
                 .filter(i -> "itemImporterVigieChiro".equals(i.getId()))
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Test
+    @DisplayName("#1431 : « Importer un CSV Tadarida » : le fichier désigné est réellement importé")
+    void import_csv_designe_est_importe(FxRobot robot) {
+        choixSelecteur = Optional.of(Path.of("obs.csv"));
+
+        robot.interact(() -> item(robot, "itemImporter").fire());
+
+        assertThat(titres).containsExactly("Importer un CSV Tadarida (observations ou _Vu)");
+        verify(service).importer(7L, Path.of("obs.csv"));
+    }
+
+    @Test
+    @DisplayName("#1431 : sélecteur annulé : aucun import")
+    void import_csv_annule_n_importe_rien(FxRobot robot) {
+        choixSelecteur = Optional.empty();
+
+        robot.interact(() -> item(robot, "itemImporter").fire());
+
+        verify(service, never()).importer(anyLong(), any());
+    }
+
+    @Test
+    @DisplayName("#1431 : « Exporter les observations » écrit vraiment le fichier désigné")
+    void export_observations_ecrit_le_fichier(FxRobot robot) {
+        Path destination = dossierReglages.resolve("observations-affichees.csv");
+        choixSelecteur = Optional.of(destination);
+
+        robot.interact(() -> item(robot, "itemExporterObservations").fire());
+
+        // Le nom proposé est ce que l'utilisateur acceptera neuf fois sur dix.
+        assertThat(nomsProposes).containsExactly("observations.csv");
+        assertThat(destination)
+                .as("l'export ne se contente pas d'annoncer : il écrit")
+                .exists();
+    }
+
+    @Test
+    @DisplayName("#1431 : « Exporter les observations » annulé : aucun fichier n'est écrit")
+    void export_observations_annule_n_ecrit_rien(FxRobot robot) {
+        Path destination = dossierReglages.resolve("jamais-ecrit.csv");
+        choixSelecteur = Optional.empty();
+
+        robot.interact(() -> item(robot, "itemExporterObservations").fire());
+
+        assertThat(destination).doesNotExist();
+    }
+
+    /// Un item du menu ☰ : un `MenuItem` n'est pas un `Node`, il ne se trouve pas par lookup - on passe
+    /// par le `MenuButton` qui le porte.
+    private static MenuItem item(FxRobot robot, String id) {
+        return robot.lookup("#menuActions").queryAs(MenuButton.class).getItems().stream()
+                .filter(menuItem -> id.equals(menuItem.getId()))
                 .findFirst()
                 .orElseThrow();
     }
