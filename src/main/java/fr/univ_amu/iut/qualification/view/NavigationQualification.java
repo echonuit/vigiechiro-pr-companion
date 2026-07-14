@@ -12,6 +12,10 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /// Façade de navigation de la feature `qualification` : charge la vue **M-Qualification** pour un
 /// passage donné et l'affiche dans la zone centrale du chrome.
@@ -47,6 +51,28 @@ public class NavigationQualification implements OuvrirVerification {
             QualificationController controleur = loader.getController();
             controleur.ouvrirSur(passage);
             navigateur.empiler(vue, "qualification", "Vérifier l'enregistrement", controleur);
+        } catch (IOException echec) {
+            throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
+        }
+    }
+
+    /// Ouvre la modale **« Personnaliser la sélection d'écoute »** (R12, #1431), en remplacement du
+    /// `Dialog` bâti à la main dans [QualificationController] : le geste - qui **efface la progression
+    /// d'écoute** - devient jouable dans un test, et sa capture montre la vraie vue.
+    ///
+    /// @param parent fenêtre propriétaire (pour la modalité)
+    public void ouvrirModaleSelection(Window parent) {
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationQualification.class, "ModaleSelection.fxml");
+        loader.setControllerFactory(injector::getInstance);
+        try {
+            Parent vue = loader.load();
+            ((ModaleSelectionController) loader.getController()).demarrer();
+            Stage modale = new Stage();
+            modale.initOwner(parent);
+            modale.initModality(Modality.WINDOW_MODAL);
+            modale.setTitle("Sélection d'écoute");
+            modale.setScene(new Scene(vue));
+            modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
         }

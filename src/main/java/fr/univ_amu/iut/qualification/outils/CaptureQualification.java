@@ -124,7 +124,8 @@ public final class CaptureQualification {
                         (id, contexte) -> {},
                         injecteur.getInstance(OuvrirSite.class),
                         injecteur.getInstance(DepotDispositionColonnes.class),
-                        injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class))
+                        injecteur.getInstance(fr.univ_amu.iut.commun.view.ExecuteurTache.class),
+                        injecteur.getInstance(fr.univ_amu.iut.qualification.view.NavigationQualification.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         QualificationController controleur = loader.getController();
@@ -154,6 +155,7 @@ public final class CaptureQualification {
         // ci-dessus) pour montrer un spectrogramme réel. Le Stage est montré AVANT la boucle
         // d'évènements imbriquée de l'attente, puis on `snapshot` sans recréer de Stage (cf.
         // ApercuFx#capturerApresPreparation et AttenteAudio).
+        capturerModaleSelection(injecteur, sortie.resolve("apercu-qualification-personnaliser.png"));
         Path fichier = sortie.resolve("apercu-qualification.png");
         if (vue.lookup("#audioView") instanceof AudioView audio) {
             ApercuFx.capturerApresPreparation(scene, () -> AttenteAudio.attendreChargement(audio), fichier);
@@ -177,6 +179,18 @@ public final class CaptureQualification {
     /// Seede une nuit complète (chemins sous le `workspace` temporaire) et renvoie l'identifiant du
     /// passage à vérifier. Écrit pour chaque séquence un **vrai WAV** de démonstration (cris FM, cf.
     /// [SonDemo]) afin que l'`AudioView` affiche un spectrogramme réel sur la séquence écoutée.
+    /// Modale « Personnaliser la selection d'ecoute » (R12) : une VRAIE vue, rendue telle quelle. La
+    /// capture precedente etait une REPLIQUE reconstruite a la main dans CaptureDialogues, faute de .fxml -
+    /// elle pouvait deriver du vrai ecran sans que rien ne le signale (#1431).
+    private static void capturerModaleSelection(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(
+                fr.univ_amu.iut.qualification.view.NavigationQualification.class.getResource("ModaleSelection.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ((fr.univ_amu.iut.qualification.view.ModaleSelectionController) loader.getController()).demarrer();
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+    }
+
     private static long seeder(SourceDeDonnees source, Path workspace) throws IOException {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         SiteDao siteDao = new SiteDao(source);

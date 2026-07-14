@@ -636,3 +636,41 @@
   -fx-font-size: 13px;
   -fx-text-fill: -couleur-primaire-sombre;
 }
+
+/* ----- Formulaires modaux (socle, #1431) -----
+   L application compte cinq modales de saisie (point d ecoute, site, rattachement, reconstruction,
+   selection d ecoute). Ces classes etaient dupliquees a l identique dans sites.css et importation.css ;
+   elles vivent desormais ici, une fois. Les feuilles de feature restent libres de les surcharger : elles
+   sont chargees apres celle-ci. */
+.modale-point {
+    -fx-padding: 20 24 20 24;
+    -fx-background-color: #ffffff;
+}
+
+.modale-titre {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.section-label {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #6a737d;
+}
+
+.field-label {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+
+.field-hint {
+    -fx-font-size: 12px;
+    -fx-text-fill: #6a737d;
+}
+
+.message-erreur {
+    -fx-font-size: 12px;
+    -fx-text-fill: #a93226;
+}

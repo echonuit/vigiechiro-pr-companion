@@ -3,7 +3,6 @@ package fr.univ_amu.iut.qualification.view;
 import com.google.inject.Inject;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
-import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
@@ -22,7 +21,6 @@ import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
-import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.SequenceEnSelection;
 import fr.univ_amu.iut.qualification.viewmodel.EtatVerdict;
 import fr.univ_amu.iut.qualification.viewmodel.QualificationViewModel;
@@ -35,24 +33,16 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.control.RadioButton;
-import javafx.scene.control.Separator;
-import javafx.scene.control.Slider;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputControl;
-import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 
 /// Controller de l'écran **M-Qualification** (`Qualification.fxml`).
 ///
@@ -75,6 +65,9 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private final OuvrirSite ouvrirSite;
     private final DepotDispositionColonnes depotColonnes;
     private final ExecuteurTache executeur;
+
+    /// Façade de navigation de la feature : ouvre la modale « Personnaliser la sélection » (#1431).
+    private final NavigationQualification navigation;
     private IndicateurOccupation occupation;
 
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
@@ -209,13 +202,15 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
             OuvrirPassage ouvrirPassage,
             OuvrirSite ouvrirSite,
             DepotDispositionColonnes depotColonnes,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            NavigationQualification navigation) {
         this.verdictVm = Objects.requireNonNull(verdictVm, "verdictVm");
         this.selectionVm = Objects.requireNonNull(selectionVm, "selectionVm");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.navigation = Objects.requireNonNull(navigation, "navigation");
     }
 
     /// Garde de navigation : un verdict a été **choisi mais pas encore enregistré** (brouillon). Quitter
@@ -461,49 +456,15 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                 new GestionnaireColonnes.Colonne(colEcoute, "Écouté", false));
     }
 
-    /// Ouvre la modale de personnalisation de la sélection (R12) : choix de la méthode et de la
-    /// taille, puis régénération (la progression repart de zéro, le verdict est conservé).
+    /// Ouvre la modale de personnalisation de la sélection (R12) : choix de la méthode et de la taille,
+    /// puis régénération (la progression repart de zéro, le verdict est conservé).
+    ///
+    /// Le `Dialog` bâti ici se terminait par un `showAndWait` : le geste était **injouable dans un test**
+    /// - alors qu'il **efface la progression d'écoute** de l'observateur (#1431). Il est désormais une
+    /// vraie modale ([ModaleSelectionController]), sur le patron déjà en service dans l'application.
     @FXML
     private void personnaliser() {
-        RadioButton repar = new RadioButton("⏱ RéparTemporel — réparties sur la nuit");
-        RadioButton aleatoire = new RadioButton("🎲 Aléatoire");
-        ToggleGroup methode = new ToggleGroup();
-        repar.setToggleGroup(methode);
-        aleatoire.setToggleGroup(methode);
-        boolean estAleatoire = selectionVm.methodeProperty().get() == MethodeSelection.ALEATOIRE;
-        (estAleatoire ? aleatoire : repar).setSelected(true);
-
-        Slider taille = new Slider(
-                GenerateurSelection.TAILLE_MIN,
-                GenerateurSelection.TAILLE_MAX,
-                selectionVm.tailleProperty().get());
-        taille.setShowTickLabels(true);
-        taille.setShowTickMarks(true);
-        taille.setMajorTickUnit(5);
-        taille.setMinorTickCount(0);
-        taille.setSnapToTicks(true);
-        Label valeur = new Label();
-        valeur.textProperty().bind(taille.valueProperty().asString("Taille : %.0f séquences"));
-        Label avert = new Label("⚠ Régénérer efface la progression d'écoute (le verdict est conservé).");
-        avert.setWrapText(true);
-
-        Dialog<ButtonType> dialogue = new Dialog<>();
-        dialogue.setTitle("Personnaliser la sélection d'écoute");
-        dialogue.setHeaderText("Méthode de constitution et taille de la sélection.");
-        dialogue.initOwner(tableSequences.getScene().getWindow());
-        ButtonType boutonRegenerer = new ButtonType("↺ Régénérer", ButtonBar.ButtonData.OK_DONE);
-        dialogue.getDialogPane().getButtonTypes().addAll(boutonRegenerer, ButtonType.CANCEL);
-        dialogue.getDialogPane()
-                .setContent(
-                        new VBox(8, new Label("Méthode :"), repar, aleatoire, new Separator(), valeur, taille, avert));
-
-        if (dialogue.showAndWait().filter(bouton -> bouton == boutonRegenerer).isPresent()) {
-            selectionVm
-                    .methodeProperty()
-                    .set(aleatoire.isSelected() ? MethodeSelection.ALEATOIRE : MethodeSelection.REPARTITION_TEMPORELLE);
-            selectionVm.tailleProperty().set((int) Math.round(taille.getValue()));
-            selectionVm.regenerer();
-        }
+        navigation.ouvrirModaleSelection(racine.getScene().getWindow());
     }
 
     /// Raccourcis clavier (footer de la maquette) : O / D / J posent le verdict, Entrée enregistre,
