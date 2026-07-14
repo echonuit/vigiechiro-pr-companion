@@ -33,7 +33,14 @@ public class ReconstructionViewModel {
     private final Optional<ServiceReconstructionPassages> service;
 
     private final ObservableList<ParticipationOrpheline> orphelines = FXCollections.observableArrayList();
+
+    /// Ce que la modale **constate** (combien de nuits manquent) : une information, pas une alerte.
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper("");
+
+    /// Ce qui a **échoué ou été refusé**. Distinct de [#messageProperty] : afficher « 2 nuits manquent »
+    /// en rouge ferait passer un constat pour un incident.
+    private final ReadOnlyStringWrapper erreur = new ReadOnlyStringWrapper("");
+
     private final ReadOnlyStringWrapper compteRendu = new ReadOnlyStringWrapper("");
     private final ReadOnlyBooleanWrapper reconstruit = new ReadOnlyBooleanWrapper(false);
 
@@ -53,9 +60,15 @@ public class ReconstructionViewModel {
         return orphelines;
     }
 
-    /// Message d'état de la modale : combien de nuits manquent, ou pourquoi la lecture a échoué.
+    /// Constat de la modale : combien de nuits manquent (ou qu'il n'en manque aucune).
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
+    }
+
+    /// Refus ou échec, à afficher comme tel : point d'écoute inconnu ici, analyse non terminée,
+    /// plateforme injoignable.
+    public ReadOnlyStringProperty erreurProperty() {
+        return erreur.getReadOnlyProperty();
     }
 
     /// Compte rendu de la reconstruction, **lacunes comprises** : un passage reconstruit est moins riche
@@ -78,6 +91,7 @@ public class ReconstructionViewModel {
     /// Publie la liste chargée (**fil JavaFX**).
     public void appliquer(List<ParticipationOrpheline> chargees) {
         orphelines.setAll(chargees);
+        erreur.set("");
         message.set(
                 chargees.isEmpty()
                         ? "Aucune nuit manquante : toutes vos participations VigieChiro ont un passage ici."
@@ -108,14 +122,14 @@ public class ReconstructionViewModel {
                 + System.lineSeparator()
                 + "Le passage est consultable mais pas écoutable. Si vous retrouvez les fichiers d'origine,"
                 + " ouvrez-le et utilisez « Réactiver ce passage ».");
-        message.set("");
+        erreur.set("");
     }
 
     /// Route un échec vers le message de la modale : un refus (point inconnu, hors connexion, analyse non
     /// terminée) **dit quoi faire**, il ne doit pas remonter en exception muette depuis le fil de fond.
-    public void signalerErreur(Throwable erreur) {
-        String detail = erreur.getMessage();
-        message.set(detail != null && !detail.isBlank() ? detail : "Reconstruction impossible.");
+    public void signalerErreur(Throwable echec) {
+        String detail = echec.getMessage();
+        erreur.set(detail != null && !detail.isBlank() ? detail : "Reconstruction impossible.");
     }
 
     private ServiceReconstructionPassages exiger() {

@@ -135,8 +135,11 @@ class ReconstructionModaleViewTest {
 
         robot.interact(() -> robot.lookup("#boutonReconstruire").queryButton().fire());
 
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
-        assertThat(message.getText()).contains("analyse non terminée");
+        Label erreur = robot.lookup("#lblErreur").queryAs(Label.class);
+        assertThat(erreur.getText()).contains("analyse non terminée");
+        assertThat(robot.lookup("#lblMessage").queryAs(Label.class).getText())
+                .as("le constat n'est pas un incident : il ne vire pas au rouge")
+                .contains("2 nuit(s)");
         assertThat(robot.lookup("#boutonReconstruire").queryButton().isDisabled())
                 .as("bouton relâché après l'échec : l'utilisateur peut réessayer")
                 .isFalse();

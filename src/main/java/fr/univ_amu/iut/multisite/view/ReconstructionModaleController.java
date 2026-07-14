@@ -6,6 +6,9 @@ import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
+import java.time.OffsetDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
@@ -35,9 +38,12 @@ public class ReconstructionModaleController {
 
     /// Ce que la colonne « Point d'écoute » dit d'une nuit dont le point n'existe pas encore ici. La
     /// reconstruction est alors refusée : rattacher une nuit au mauvais point serait une donnée fausse.
-    private static final String POINT_INCONNU = "Inconnu ici : créez d'abord le site et le point";
+    private static final String POINT_INCONNU = "Inconnu ici : créez le site et le point";
 
     private static final String POINT_CONNU = "Connu";
+
+    /// Début de nuit tel qu'on le lit : « 03/07/2026 à 22:00 ».
+    private static final DateTimeFormatter FORMAT_NUIT = DateTimeFormatter.ofPattern("dd/MM/yyyy 'à' HH:mm");
 
     private final ReconstructionViewModel viewModel;
     private final ExecuteurTache executeur;
@@ -73,6 +79,9 @@ public class ReconstructionModaleController {
     private Label lblMessage;
 
     @FXML
+    private Label lblErreur;
+
+    @FXML
     private Label lblCompteRendu;
 
     @FXML
@@ -95,7 +104,8 @@ public class ReconstructionModaleController {
         TableDonnees.uniformiser(tableOrphelines);
         colCarre.setCellValueFactory(cellule -> texte(cellule.getValue().numeroCarre()));
         colPoint.setCellValueFactory(cellule -> texte(cellule.getValue().codePoint()));
-        colNuit.setCellValueFactory(cellule -> texte(cellule.getValue().dateDebut()));
+        colNuit.setCellValueFactory(
+                cellule -> texte(nuitLisible(cellule.getValue().dateDebut())));
         colPointConnu.setCellValueFactory(
                 cellule -> texte(cellule.getValue().pointLocalConnu() ? POINT_CONNU : POINT_INCONNU));
         tableOrphelines.setItems(viewModel.orphelines());
@@ -103,6 +113,9 @@ public class ReconstructionModaleController {
         lblMessage.textProperty().bind(viewModel.messageProperty());
         lblMessage.visibleProperty().bind(viewModel.messageProperty().isNotEmpty());
         lblMessage.managedProperty().bind(viewModel.messageProperty().isNotEmpty());
+        lblErreur.textProperty().bind(viewModel.erreurProperty());
+        lblErreur.visibleProperty().bind(viewModel.erreurProperty().isNotEmpty());
+        lblErreur.managedProperty().bind(viewModel.erreurProperty().isNotEmpty());
         lblCompteRendu.textProperty().bind(viewModel.compteRenduProperty());
         lblCompteRendu.visibleProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
         lblCompteRendu.managedProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
@@ -192,5 +205,19 @@ public class ReconstructionModaleController {
 
     private static ObservableValue<String> texte(String valeur) {
         return new SimpleObjectProperty<>(valeur == null ? "" : valeur);
+    }
+
+    /// La plateforme rend un horodatage ISO (`2026-07-03T22:00:00+02:00`) : illisible dans un tableau.
+    /// On le rend en date et heure du début de nuit ; si le format surprend, on affiche la valeur brute
+    /// plutôt que rien.
+    private static String nuitLisible(String horodatage) {
+        if (horodatage == null || horodatage.isBlank()) {
+            return "";
+        }
+        try {
+            return OffsetDateTime.parse(horodatage).format(FORMAT_NUIT);
+        } catch (DateTimeParseException surprise) {
+            return horodatage;
+        }
     }
 }

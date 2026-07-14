@@ -29,24 +29,27 @@
 
   <Label text="☁ Reconstruire un passage manquant" styleClass="titre-page"/>
 
-  <Label text="Ces nuits existent sur VigieChiro mais pas sur cette machine. Les reconstruire les rend
-               consultables ici (observations comprises), sans les fichiers audio : ceux-ci ne sont pas
-               récupérables depuis la plateforme."
+  <!-- Texte sur UNE ligne : en FXML, un attribut multi-lignes conserve les retours et l'indentation,
+       ce qui trouait le paragraphe au rendu. -->
+  <Label text="Ces nuits existent sur VigieChiro mais pas sur cette machine. Les reconstruire les rend consultables ici (observations comprises), mais sans les fichiers audio : la plateforme ne les restitue pas."
          styleClass="section-sous" wrapText="true"/>
 
   <TableView fx:id="tableOrphelines" prefHeight="240.0">
     <columns>
-      <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
-      <TableColumn fx:id="colPoint" text="Localité" prefWidth="90.0"/>
-      <TableColumn fx:id="colNuit" text="Nuit" prefWidth="230.0"/>
-      <TableColumn fx:id="colPointConnu" text="Point d'écoute" prefWidth="270.0"/>
+      <TableColumn fx:id="colCarre" text="Carré" prefWidth="80.0"/>
+      <TableColumn fx:id="colPoint" text="Localité" prefWidth="80.0"/>
+      <TableColumn fx:id="colNuit" text="Nuit" prefWidth="200.0"/>
+      <TableColumn fx:id="colPointConnu" text="Point d'écoute" prefWidth="330.0"/>
     </columns>
     <placeholder>
       <Label fx:id="lblVide" text="Chargement des participations…" wrapText="true"/>
     </placeholder>
   </TableView>
 
-  <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
+  <!-- Constat (« 2 nuits manquent ») et refus sont deux choses : l'un s'affiche en neutre, l'autre en
+       rouge. Les confondre ferait passer une information pour un incident. -->
+  <Label fx:id="lblMessage" styleClass="section-sous" wrapText="true"/>
+  <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
   <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">

@@ -95,6 +95,9 @@ class ReconstructionViewModelTest {
 
         viewModel.signalerErreur(new RegleMetierException("Le point d'écoute n'existe pas localement."));
 
-        assertThat(viewModel.messageProperty().get()).isEqualTo("Le point d'écoute n'existe pas localement.");
+        assertThat(viewModel.erreurProperty().get()).isEqualTo("Le point d'écoute n'existe pas localement.");
+        assertThat(viewModel.messageProperty().get())
+                .as("un refus n'efface pas le constat, et le constat ne devient pas un refus")
+                .isEmpty();
     }
 }
