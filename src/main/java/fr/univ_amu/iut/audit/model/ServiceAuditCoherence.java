@@ -310,6 +310,17 @@ public class ServiceAuditCoherence {
 
     /// Préfixe `Car<carré>-<année>-Pass<n>-<point>-` attendu, calculé depuis le point puis le site
     /// (même chaîne que la vérification pré-dépôt du lot).
+    /// Site et point d'un passage (#1347) : ce qu'il faut pour **ouvrir** ce passage depuis un constat.
+    /// Un constat cite un passage par son `id` ; l'écran pivot attend le contexte de son site. Le service
+    /// d'audit sait le résoudre — il tient déjà les DAO qu'il faut pour recalculer le préfixe attendu.
+    public Optional<ContexteAuditPassage> contexteDuPassage(Long idPassage) {
+        return passageDao
+                .findById(Objects.requireNonNull(idPassage, "idPassage"))
+                .flatMap(passage -> pointDao.findById(passage.idPoint()))
+                .flatMap(point -> siteDao.findById(point.idSite())
+                        .map(site -> new ContexteAuditPassage(site.numeroCarre(), point.code(), site.nomConvivial())));
+    }
+
     private Optional<Prefixe> prefixeAttendu(Passage passage) {
         return pointDao.findById(passage.idPoint())
                 .flatMap(point -> siteDao.findById(point.idSite())

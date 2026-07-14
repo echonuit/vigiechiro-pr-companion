@@ -14,6 +14,7 @@ import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.SeveriteConstat;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -57,6 +58,13 @@ class AuditVueIntegrationTest {
             @Provides
             AuditViewModel viewModel() {
                 return new AuditViewModel(service);
+            }
+
+            /// Navigation constat → passage (#1347) : cet écran-ci ne la teste pas (c'est l'objet de
+            /// `AuditNavigationViewTest`), mais le controller l'exige désormais.
+            @Provides
+            OuvrirPassage ouvrirPassage() {
+                return (idPassage, contexte) -> {};
             }
         });
         FXMLLoader loader = new FXMLLoader(AuditController.class.getResource("Audit.fxml"));

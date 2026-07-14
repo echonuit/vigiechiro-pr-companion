@@ -25,6 +25,13 @@
       <Label fx:id="lblResume" styleClass="titre-section" maxWidth="Infinity" HBox.hgrow="ALWAYS"/>
       <Button fx:id="boutonRafraichir" text="Relancer l'audit" onAction="#rafraichir"/>
       <Button fx:id="boutonVerifierEnLigne" text="Vérifier en ligne" onAction="#verifierEnLigne"/>
+      <!-- Audit ciblé (#1347) : après avoir réparé une nuit, on veut vérifier CELLE-LÀ, pas tout le
+           workspace. Désactivé tant qu'aucun constat citant un passage n'est sélectionné (l'enveloppe
+           porte l'explication : un bouton désactivé n'affiche pas d'infobulle). -->
+      <StackPane fx:id="enveloppeAuditerPassage">
+        <Button fx:id="boutonAuditerPassage" text="Auditer ce passage"
+                onAction="#auditerLePassageSelectionne"/>
+      </StackPane>
     </HBox>
 
     <TableView fx:id="tableConstats" VBox.vgrow="ALWAYS">
