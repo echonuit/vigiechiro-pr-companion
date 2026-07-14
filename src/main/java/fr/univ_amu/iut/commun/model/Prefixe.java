@@ -45,6 +45,30 @@ public record Prefixe(String carre, int annee, int numeroPassage, String codePoi
         return "Car" + carre + TIRET + annee + TIRET + "Pass" + numeroPassage + TIRET + codePoint;
     }
 
+    /// Grammaire d'un **nom de dossier de session** (R22) : `Car<carré>-<année>-Pass<n°>-<point>`.
+    private static final Pattern MOTIF_DOSSIER_SESSION = Pattern.compile("Car(\\d+)-(\\d{4})-Pass(\\d+)-(.+)");
+
+    /// Relit un préfixe **depuis le nom de son dossier de session** : opération inverse de
+    /// [#nomDossierSession()]. Une feature qui possède la session (son chemin racine) peut ainsi
+    /// retrouver le préfixe **sans** dépendre de `sites` (le carré et le code du point y vivent, et
+    /// `passage → sites` serait un cycle) : le nom du dossier les porte déjà.
+    ///
+    /// `Optional.empty()` si le nom ne suit pas la grammaire (dossier renommé à la main, fixture de test).
+    public static Optional<Prefixe> depuisNomDossier(String nomDossier) {
+        if (nomDossier == null) {
+            return Optional.empty();
+        }
+        Matcher trouve = MOTIF_DOSSIER_SESSION.matcher(nomDossier);
+        if (!trouve.matches()) {
+            return Optional.empty();
+        }
+        return Optional.of(new Prefixe(
+                trouve.group(1),
+                Integer.parseInt(trouve.group(2)),
+                Integer.parseInt(trouve.group(3)),
+                trouve.group(4)));
+    }
+
     /// Préfixe de fichier (R6), avec tiret final : `Car040962-2026-Pass1-A1-`.
     public String prefixeFichier() {
         return nomDossierSession() + TIRET;

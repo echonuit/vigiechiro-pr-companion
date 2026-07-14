@@ -16,6 +16,10 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
+import fr.univ_amu.iut.importation.model.SequenceProduite;
+import fr.univ_amu.iut.importation.model.TransformationAudio;
+import fr.univ_amu.iut.importation.model.TransformationOriginal;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -50,6 +54,17 @@ class ServiceReactivationPassageTest {
     private static final String SEQ_1 = "Car040962-2026-Pass1-A1-PaRec_20260620_213000_000.wav";
     private static final String SEQ_2 = "Car040962-2026-Pass1-A1-PaRec_20260620_213005_000.wav";
     private static final double FREQUENCE_REELLE_HZ = 384_000;
+
+    /// Voie « bruts » (#1406) : fréquence d'ACQUISITION du brut (celle du log), en-tête à Fe/10.
+    private static final int FREQUENCE_ACQUISITION_HZ = 40_000;
+
+    /// Durée réelle du brut : 12 s → 3 tranches de 5 s (la dernière plus courte).
+    private static final double DUREE_BRUT_S = 12.0;
+
+    /// Le brut tel que la base le nomme (R6), et tel qu'une copie de carte SD le nomme (non préfixé).
+    private static final String NOM_SD_BRUT = "PaRec_20260620_213000.wav";
+
+    private static final String NOM_R6_BRUT = "Car040962-2026-Pass1-A1-PaRec_20260620_213000.wav";
     private static final double DUREE_REELLE_S = 0.5;
 
     @TempDir
@@ -62,6 +77,7 @@ class ServiceReactivationPassageTest {
     private SequenceDao sequenceDao;
     private EnregistrementOriginalDao originalDao;
     private ServiceDisponibiliteAudio disponibilite;
+    private RegenerationParTransformationAudio regeneration;
     private ServiceReactivationPassage service;
     private Long idPoint;
     private Long idPassage;
@@ -86,12 +102,17 @@ class ServiceReactivationPassageTest {
                 dossier.resolve(PREFIXE.nomDossierSession()).resolve("transformes"));
         sauvegarde = Files.createDirectories(dossier.resolve("sauvegarde-utilisateur"));
         disponibilite = new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier));
+        // Régénération branchée (port #1406) : c'est la VRAIE transformation de l'import, seule capable de
+        // reproduire les tranches à l'identique - la faire jouer ici prouve la chaîne de bout en bout.
+        regeneration = new RegenerationParTransformationAudio(new TransformationAudio());
         service = new ServiceReactivationPassage(
                 sessionDao,
                 sequenceDao,
+                originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
-                Optional.empty()); // pas de cris : cascade structurelle (injecteur partiel)
+                Optional.empty(), // pas de cris : cascade structurelle (injecteur partiel)
+                Optional.of(regeneration));
     }
 
     @Test
@@ -198,10 +219,16 @@ class ServiceReactivationPassageTest {
         archiverAvecSauvegarde(false, true); // sans empreinte : la cascade descend jusqu'à l'acoustique
         List<Long> sequencesInterrogees = new ArrayList<>();
         ServiceReactivationPassage avecCris = new ServiceReactivationPassage(
-                sessionDao, sequenceDao, new VerificationIdentiteAudio(), disponibilite, Optional.of(idSequence -> {
+                sessionDao,
+                sequenceDao,
+                originalDao,
+                new VerificationIdentiteAudio(),
+                disponibilite,
+                Optional.of(idSequence -> {
                     sequencesInterrogees.add(idSequence);
                     return List.of(); // aucune observation : rien à corrompre, structurelle seule
-                }));
+                }),
+                Optional.of(regeneration));
 
         avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
@@ -218,6 +245,95 @@ class ServiceReactivationPassageTest {
         assertThatThrownBy(() -> service.reactiver(idPassage, dossier.resolve("absent"), progres -> {}))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("Dossier introuvable");
+    }
+
+    // --- Voie « bruts » (#1406) -------------------------------------------------------------------
+
+    @Test
+    @DisplayName("#1406 : seul le brut a été gardé → séquences RÉGÉNÉRÉES, et leur empreinte concorde")
+    void bruts_regeneres_et_verifies() throws IOException {
+        List<String> noms = archiverAvecBrutSauvegarde(NOM_R6_BRUT, true);
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.voie())
+                .as("le dossier ne contenait pas les tranches : elles ont été recalculées")
+                .isEqualTo(VoieReactivation.BRUTS);
+        assertThat(rapport.reactivees()).isEqualTo(noms.size());
+        assertThat(rapport.divergentes()).isZero();
+        assertThat(rapport.confianceMinimale())
+                .as("la transformation est déterministe (R11) : les tranches régénérées retrouvent"
+                        + " l'empreinte capturée avant l'archivage. La reproductibilité est une PREUVE.")
+                .isEqualTo(NiveauConfiance.CERTITUDE);
+        assertThat(rapport.complete()).isTrue();
+        assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.COMPLETE);
+        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
+                .as("l'audio est revenu : le passage n'est plus archivé")
+                .isFalse();
+        assertThat(noms).allSatisfy(nom -> assertThat(transformes.resolve(nom)).exists());
+    }
+
+    @Test
+    @DisplayName("#1406 : le brut sauvegardé sous son nom de carte SD (non préfixé) est reconnu")
+    void brut_sous_nom_de_carte_sd() throws IOException {
+        List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.voie()).isEqualTo(VoieReactivation.BRUTS);
+        assertThat(rapport.reactivees())
+                .as("le préfixe R6 est ce que l'import AJOUTE : une copie de carte SD ne le porte pas")
+                .isEqualTo(noms.size());
+        assertThat(rapport.confianceMinimale()).isEqualTo(NiveauConfiance.CERTITUDE);
+    }
+
+    @Test
+    @DisplayName("#1406 : un brut au bon nom mais au mauvais contenu ne régénère RIEN")
+    void brut_divergent_ne_regenere_rien() throws IOException {
+        List<String> noms = archiverAvecBrutSauvegarde(NOM_R6_BRUT, false);
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.reactivees())
+                .as("un brut douteux ne redonne pas des séquences douteuses : il ne redonne RIEN")
+                .isZero();
+        assertThat(rapport.divergentes()).isEqualTo(1);
+        assertThat(rapport.ecarts())
+                .singleElement()
+                .satisfies(ecart -> assertThat(ecart.motif()).contains("SHA-256"));
+        assertThat(rapport.manquantes()).isEqualTo(noms.size());
+        assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.ABSENTE);
+    }
+
+    @Test
+    @DisplayName("#1406 : sans la feature « Importation », la voie bruts se refuse en le disant")
+    void regeneration_indisponible_refuse() throws IOException {
+        archiverAvecBrutSauvegarde(NOM_R6_BRUT, true);
+        ServiceReactivationPassage sansRegeneration = new ServiceReactivationPassage(
+                sessionDao,
+                sequenceDao,
+                originalDao,
+                new VerificationIdentiteAudio(),
+                disponibilite,
+                Optional.empty(),
+                Optional.empty());
+
+        assertThatThrownBy(() -> sansRegeneration.reactiver(idPassage, sauvegarde, progres -> {}))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Importation");
+    }
+
+    @Test
+    @DisplayName("#1406 : un dossier qui ne contient ni tranches ni bruts est reconnu comme tel")
+    void dossier_sans_rien_de_reconnaissable() throws IOException {
+        archiverAvecBrutSauvegarde(NOM_R6_BRUT, true);
+        Path vide = Files.createDirectories(dossier.resolve("photos-de-vacances"));
+
+        RapportReactivation rapport = service.reactiver(idPassage, vide, progres -> {});
+
+        assertThat(rapport.voie()).isEqualTo(VoieReactivation.AUCUNE);
+        assertThat(rapport.reactivees()).isZero();
+        assertThat(rapport.manquantes()).isPositive();
     }
 
     // --- Fixture ---------------------------------------------------------------------------------
@@ -303,5 +419,104 @@ class ServiceReactivationPassageTest {
             pcm[2 * n + 1] = (byte) ((amplitude >> 8) & 0xFF);
         }
         FichierWav.ecrire(fichier, 1, (int) (FREQUENCE_REELLE_HZ / 10), 16, pcm, 0, pcm.length);
+    }
+
+    /// Sème un passage dont **seul le brut** a été sauvegardé : les séquences sont produites par la
+    /// **vraie transformation** (c'est le seul moyen de prouver que la régénération les reproduit), leur
+    /// identité est capturée en base comme à l'import, puis l'audio transformé est supprimé (archivage).
+    ///
+    /// @param nomDansLaSauvegarde nom sous lequel l'utilisateur a gardé son brut (R6, ou nom de carte SD)
+    /// @param brutIntact `false` pour placer dans la sauvegarde un fichier **du bon nom mais d'un autre
+    ///     contenu** : le cas exact que la vérification doit attraper
+    /// @return les noms des séquences attendues
+    private List<String> archiverAvecBrutSauvegarde(String nomDansLaSauvegarde, boolean brutIntact) throws IOException {
+        idPassage = passageDao
+                .insert(new Passage(
+                        null,
+                        1,
+                        2026,
+                        "2026-06-20",
+                        "21:30:00",
+                        "05:15:00",
+                        null,
+                        StatutWorkflow.DEPOSE,
+                        Verdict.OK,
+                        null,
+                        null,
+                        null,
+                        idPoint,
+                        SERIE))
+                .id();
+        Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
+        idSession = sessionDao
+                .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
+                .id();
+
+        // Le brut, tel qu'il sort de l'enregistreur : en-tête à Fe/10, contenu piloté par une graine.
+        Path bruts = Files.createDirectories(racineSession.resolve("bruts"));
+        Path brut = bruts.resolve(NOM_R6_BRUT);
+        ecrireBrut(brut, 42);
+
+        // Les séquences, produites par la VRAIE chaîne : ce sont elles que la base connaîtra.
+        TransformationOriginal transformation = new TransformationAudio()
+                .transformer(brut, NOM_R6_BRUT, transformes, PREFIXE, FREQUENCE_ACQUISITION_HZ);
+
+        Long idOriginal = originalDao
+                .insert(new EnregistrementOriginal(
+                        null,
+                        NOM_R6_BRUT,
+                        brut.toString(),
+                        transformation.dureeSourceSecondes(),
+                        transformation.frequenceSourceHz(),
+                        transformation.sha256(),
+                        idSession,
+                        transformation.tailleSourceOctets()))
+                .id();
+
+        List<String> noms = new ArrayList<>();
+        for (SequenceProduite produite : transformation.sequences()) {
+            noms.add(produite.nomFichier());
+            sequenceDao.insert(new SequenceDEcoute(
+                    null,
+                    produite.nomFichier(),
+                    idOriginal,
+                    produite.index(),
+                    produite.offsetSourceSecondes(),
+                    produite.dureeSecondes(),
+                    produite.chemin().toString(),
+                    false,
+                    idSession,
+                    null,
+                    produite.octets(),
+                    produite.empreinte()));
+            Files.delete(produite.chemin()); // archivage : les tranches quittent le disque
+        }
+
+        // Ce que l'utilisateur a gardé : son brut (intact, ou remplacé par un autre audio du même nom).
+        Path garde = sauvegarde.resolve(nomDansLaSauvegarde);
+        if (brutIntact) {
+            Files.copy(brut, garde);
+        } else {
+            ecrireBrut(garde, 99); // même nom, autre contenu : l'imposteur
+        }
+        Files.delete(brut); // archivage : les bruts aussi ont été purgés
+        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
+        return noms;
+    }
+
+    /// Brut synthétique de [#DUREE_BRUT_S] secondes **réelles** : en-tête à `Fe/10` (comme l'écrit
+    /// l'enregistreur PR), contenu déterminé par la `graine`.
+    private void ecrireBrut(Path fichier, int graine) throws IOException {
+        int echantillons = (int) Math.round(DUREE_BRUT_S * FREQUENCE_ACQUISITION_HZ);
+        byte[] pcm = new byte[echantillons * 2];
+        int valeur = graine;
+        for (int n = 0; n < echantillons; n++) {
+            valeur = valeur * 31 + 17;
+            short amplitude = (short) (valeur % 8000);
+            pcm[2 * n] = (byte) (amplitude & 0xFF);
+            pcm[2 * n + 1] = (byte) ((amplitude >> 8) & 0xFF);
+        }
+        Files.createDirectories(fichier.getParent());
+        FichierWav.ecrire(fichier, 1, FREQUENCE_ACQUISITION_HZ / 10, 16, pcm, 0, pcm.length);
     }
 }

@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
@@ -27,6 +28,7 @@ import fr.univ_amu.iut.importation.view.NavigationImportation;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.OngletReglagesImport;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
+import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.Optional;
@@ -66,6 +68,12 @@ public class ImportationModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), OuvrirImportation.class)
                 .setBinding()
                 .to(NavigationImportation.class);
+        // Port RegenerationSequences (#1406) : c'est ici que vit la transformation, et c'est donc d'ici
+        // que `passage` obtient de quoi RÉGÉNÉRER les séquences d'un brut retrouvé, sans dépendre de
+        // cette feature (l'inverse serait un cycle). Feature désactivée : la voie « bruts » se refuse.
+        OptionalBinder.newOptionalBinder(binder(), RegenerationSequences.class)
+                .setBinding()
+                .to(RegenerationParTransformationAudio.class);
         // Onglet « Import » de l'écran Réglages (#928) : contribué au point d'extension du socle,
         // sans que le socle connaisse cette feature.
         ongletReglages(OngletReglagesImport.class);

@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
+import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.File;
 import java.nio.file.Path;
@@ -85,6 +86,10 @@ final class ActionReactivation {
     /// qui manque encore.
     private static String texte(RapportReactivation rapport) {
         StringBuilder texte = new StringBuilder();
+        if (rapport.voie() == VoieReactivation.BRUTS) {
+            texte.append("Ce dossier ne contenait que vos enregistrements bruts : les séquences d'écoute")
+                    .append(" ont été régénérées à partir d'eux, puis vérifiées une à une.\n\n");
+        }
         texte.append(rapport.reactivees()).append(" séquence(s) réactivée(s)");
         if (rapport.confianceMinimale() != null) {
             texte.append(" (identité vérifiée : ")

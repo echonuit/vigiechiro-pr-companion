@@ -60,4 +60,22 @@ class PrefixeTest {
         assertThat(Prefixe.horodatageDe("seqA_000.wav")).isEmpty();
         assertThat(Prefixe.horodatageDe("sans_horodatage.wav")).isEmpty();
     }
+
+    @Test
+    @DisplayName("#1406 : depuisNomDossier relit le préfixe du nom de son dossier (opération inverse)")
+    void depuis_nom_dossier_est_l_inverse() {
+        Prefixe prefixe = new Prefixe("040962", 2026, 3, "A1");
+
+        assertThat(Prefixe.depuisNomDossier(prefixe.nomDossierSession())).contains(prefixe);
+    }
+
+    @Test
+    @DisplayName("#1406 : depuisNomDossier est vide pour un dossier qui ne suit pas la grammaire R22")
+    void depuis_nom_dossier_vide_si_hors_grammaire() {
+        assertThat(Prefixe.depuisNomDossier(null)).isEmpty();
+        assertThat(Prefixe.depuisNomDossier("mes-donnees")).isEmpty();
+        assertThat(Prefixe.depuisNomDossier("Car040962-2026-A1"))
+                .as("sans le numéro de passage, ce n'est pas un dossier de session")
+                .isEmpty();
+    }
 }

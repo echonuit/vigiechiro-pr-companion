@@ -6,6 +6,7 @@ import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
+import fr.univ_amu.iut.passage.model.VoieReactivation;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -77,6 +78,12 @@ public final class Reactiver implements Callable<Integer> {
     /// manque encore.
     private static String enTexte(RapportReactivation rapport) {
         StringBuilder texte = new StringBuilder();
+        if (rapport.voie() == VoieReactivation.BRUTS) {
+            // L'utilisateur a le droit de savoir ce qu'on a fait de son dossier : ses tranches n'ont pas
+            // été retrouvées, elles ont été RECALCULÉES depuis ses bruts (puis vérifiées comme les autres).
+            texte.append("Ce dossier ne contenait que les enregistrements bruts : les séquences ont été")
+                    .append(" régénérées à partir d'eux, puis vérifiées.\n");
+        }
         texte.append(rapport.reactivees()).append(" séquence(s) réactivée(s)");
         if (rapport.confianceMinimale() != null) {
             texte.append(" (identité vérifiée, confiance ")
@@ -118,6 +125,7 @@ public final class Reactiver implements Callable<Integer> {
     /// Projection JSON (clés stables pour les scripts).
     static Map<String, Object> projeter(RapportReactivation rapport) {
         Map<String, Object> objet = new LinkedHashMap<>();
+        objet.put("voie", rapport.voie().name());
         objet.put("reactivees", rapport.reactivees());
         objet.put("divergentes", rapport.divergentes());
         objet.put("manquantes", rapport.manquantes());

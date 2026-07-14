@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.FichierWav;
+import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Acceptee;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Refusee;
@@ -82,7 +83,7 @@ public class VerificationIdentiteAudio {
             return new Refusee("Fichier introuvable : " + candidat + ".");
         }
         String nomCandidat = candidat.getFileName().toString();
-        if (!nomCandidat.equals(original.nomFichier())) {
+        if (!porteLeNom(original, nomCandidat)) {
             return new Refusee("Nom différent : « " + nomCandidat + " » au lieu de « " + original.nomFichier() + " ».");
         }
         VerdictIdentite parTaille = controlerTaille(original.tailleOctets(), candidat);
@@ -100,6 +101,21 @@ public class VerificationIdentiteAudio {
                         "SHA-256 intégral identique : l'original est prouvé, la redécoupe déterministe (R11)"
                                 + " transmettra cette identité aux séquences re-produites.")
                 : new Refusee("SHA-256 différent : même nom, mais ce n'est pas l'enregistrement d'origine.");
+    }
+
+    /// Le candidat porte-t-il le nom de cet original ? Deux formes sont admises (#1406), parce que
+    /// l'utilisateur sauvegarde ce qu'il veut, pas ce qui nous arrange :
+    ///
+    /// - le **nom R6** tel qu'en base (`Car640380-2026-Pass1-A1-PaRec…wav`) : une copie du dossier
+    ///   `bruts/` de l'espace de travail ;
+    /// - le **nom d'origine de l'enregistreur** (`PaRec…wav`), non encore préfixé : une copie de la
+    ///   carte SD. Le préfixe R6 est justement ce que l'import ajoute (`Renommeur`), et le nom R6 se
+    ///   termine donc par `-` + ce nom-là.
+    ///
+    /// Ce contrôle ne **prouve** rien : c'est un filtre à bon marché. Le SHA-256 intégral, lui, tranche.
+    private static boolean porteLeNom(EnregistrementOriginal original, String nomCandidat) {
+        return nomCandidat.equals(original.nomFichier())
+                || original.nomFichier().endsWith(Prefixe.TIRET + nomCandidat);
     }
 
     /// Taille connue en base et différente sur disque : refus immédiat (discriminant quasi gratuit,

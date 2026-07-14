@@ -19,6 +19,9 @@ import java.util.List;
 ///     décide en connaissance de cause
 /// @param decompte disponibilité de l'audio **après** l'opération : le passage repasse en `COMPLETE`
 ///     ou reste en `PARTIELLE` selon le résultat
+/// @param voie par où l'audio est revenu (#1406) : les séquences retrouvées telles quelles, ou les
+///     séquences **régénérées** depuis les bruts. L'utilisateur a le droit de savoir ce que
+///     l'application a fait de son dossier
 public record RapportReactivation(
         int reactivees,
         int divergentes,
@@ -26,7 +29,8 @@ public record RapportReactivation(
         int dejaPresentes,
         NiveauConfiance confianceMinimale,
         List<EcartReactivation> ecarts,
-        DecompteAudio decompte) {
+        DecompteAudio decompte,
+        VoieReactivation voie) {
 
     public RapportReactivation {
         ecarts = List.copyOf(ecarts);

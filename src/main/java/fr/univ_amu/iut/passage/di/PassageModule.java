@@ -26,6 +26,7 @@ import fr.univ_amu.iut.passage.model.DeclarationPurgeParSessions;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
@@ -101,6 +102,12 @@ public class PassageModule extends ModuleDeFeature {
         // binding réel. Absent (injecteurs partiels), la cascade de vérification (#1309) retombe sur la
         // preuve structurelle seule.
         OptionalBinder.newOptionalBinder(binder(), CrisAttendus.class);
+
+        // Port RegenerationSequences (#1406) : la transformation appartient à `importation`, qui dépend
+        // déjà de `passage` — l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ImportationModule
+        // pose le binding réel. Absent (feature « Importation » désactivée), la réactivation depuis les
+        // BRUTS se refuse en le disant ; la voie « transformés » reste entière.
+        OptionalBinder.newOptionalBinder(binder(), RegenerationSequences.class);
 
         // Port PointParLocalite (#1305) : `sites` possède les carrés et leurs points ; `passage` ne peut pas
         // en dépendre (cycle). Défaut no-op ici (injecteurs partiels), implémentation réelle par SitesModule.
@@ -207,10 +214,13 @@ public class PassageModule extends ModuleDeFeature {
     ServiceReactivationPassage fournirServiceReactivationPassage(
             SessionDao sessionDao,
             SequenceDao sequenceDao,
+            EnregistrementOriginalDao originalDao,
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
-            Optional<CrisAttendus> crisAttendus) {
-        return new ServiceReactivationPassage(sessionDao, sequenceDao, verification, disponibilite, crisAttendus);
+            Optional<CrisAttendus> crisAttendus,
+            Optional<RegenerationSequences> regeneration) {
+        return new ServiceReactivationPassage(
+                sessionDao, sequenceDao, originalDao, verification, disponibilite, crisAttendus, regeneration);
     }
 
     /// Archivage d'un passage (#1300) : purge volontaire de l'audio, marqueur explicite, capture
