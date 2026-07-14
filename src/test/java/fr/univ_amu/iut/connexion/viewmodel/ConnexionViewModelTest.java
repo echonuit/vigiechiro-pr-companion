@@ -81,6 +81,42 @@ class ConnexionViewModelTest {
     }
 
     @Test
+    @DisplayName("#1369 : plateforme injoignable → le jeton est CONSERVÉ, non vérifié, revérifiable")
+    void injoignable_conserve_le_jeton() {
+        when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
+
+        assertThat(viewModel.connecter("TOK123")).isEqualTo(ReponseApi.injoignable("délai d'attente dépassé"));
+
+        // Avant #1369, le jeton (peut-être parfaitement valide) était jeté à cause du réseau.
+        assertThat(stockage.token()).as("jeton conservé").contains("TOK123");
+        assertThat(stockage.profil()).as("mais rien de vérifié").isEmpty();
+        assertThat(viewModel.jetonAVerifier())
+                .as("à revérifier à la prochaine occasion")
+                .contains("TOK123");
+        verifyNoInteractions(rapprocheur);
+
+        viewModel.rafraichir();
+        assertThat(viewModel.connecteProperty().get())
+                .as("pas vérifié = pas « connecté » (la saisie reste possible)")
+                .isFalse();
+        assertThat(viewModel.jetonEnregistreProperty().get())
+                .as("mais la déconnexion doit rester possible")
+                .isTrue();
+        assertThat(viewModel.identiteProperty().get()).contains("non vérifié");
+    }
+
+    @Test
+    @DisplayName("#1369 : un jeton vérifié n'est pas à revérifier")
+    void jeton_verifie_na_rien_a_reverifier() {
+        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
+        when(rapprocheur.synchroniser(client)).thenReturn(Optional.empty());
+
+        viewModel.connecter("TOK123");
+
+        assertThat(viewModel.jetonAVerifier()).isEmpty();
+    }
+
+    @Test
     @DisplayName("connecter avec un token vide : vide, sans toucher au réseau ni au stockage")
     void connecter_vide() {
         assertThat(viewModel.connecter("   ")).isInstanceOf(ReponseApi.NonConnecte.class);
