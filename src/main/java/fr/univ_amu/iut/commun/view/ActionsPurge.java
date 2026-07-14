@@ -7,9 +7,6 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.stage.Window;
 
 /// Action IHM de **purge globale des originaux** (les `bruts/` de toutes les nuits importées),
@@ -18,17 +15,25 @@ import javafx.stage.Window;
 /// L'inspection de l'espace récupérable comme la suppression elle-même (parcours disque) tournent
 /// **hors du fil JavaFX** sous le voile du chrome ([OccupationChrome], #1215), qui pose aussi
 /// l'opération critique (#906) pour la phase destructive.
+///
+/// Les **deux** dialogues sont injectables (#1405) : le oui/non par [ConfirmateurModifiable], le
+/// compte rendu par [NotificateurModifiable]. C'est ce qui permet de jouer la purge **jusqu'à son
+/// effet** dans un test : tant que le compte rendu était un `Alert.showAndWait()` en dur, le geste le
+/// plus destructif de l'application ne pouvait pas être déclenché par un test headless, et n'était
+/// donc couvert nulle part.
 final class ActionsPurge {
 
     private final ServicePurgeOriginaux service;
     private final OccupationChrome occupation;
-    private final Supplier<Window> fenetre;
     private final Runnable apresPurge;
     private final Optional<DeclarationPurgeOriginaux> declaration;
 
     /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
     private final ConfirmateurModifiable confirmateur =
             new ConfirmateurModifiable(new ConfirmationNavigation("Purger les originaux ?"));
+
+    /// Compte rendu de l'action : porteur partagé injectable (#1405), double capturant en test.
+    private final NotificateurModifiable notificateur;
 
     /// @param service service de purge des originaux
     /// @param occupation voile d'occupation du chrome (#1215)
@@ -45,9 +50,10 @@ final class ActionsPurge {
             Optional<DeclarationPurgeOriginaux> declaration) {
         this.service = Objects.requireNonNull(service, "service");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
-        this.fenetre = Objects.requireNonNull(fenetre, "fenetre");
         this.apresPurge = Objects.requireNonNull(apresPurge, "apresPurge");
         this.declaration = Objects.requireNonNull(declaration, "declaration");
+        this.notificateur =
+                new NotificateurModifiable(new NotificationDialogue(Objects.requireNonNull(fenetre, "fenetre")));
     }
 
     /// Inspecte l'espace **récupérable** (parcours disque, hors du fil JavaFX, #1215), l'annonce et
@@ -59,15 +65,15 @@ final class ActionsPurge {
                 "l'inspection de l'espace disque",
                 service::volumeRecuperable,
                 this::proposerPurge,
-                echec -> alerte(AlertType.ERROR, "Purge impossible", message(echec)));
+                this::signalerEchec);
     }
 
     /// Sur le fil JavaFX, une fois l'espace récupérable connu : annonce + confirmation, puis purge
     /// hors du fil JavaFX.
     private void proposerPurge(long recuperable) {
         if (recuperable == 0L) {
-            alerte(
-                    AlertType.INFORMATION,
+            notificateur.notifier(
+                    NiveauNotification.INFORMATION,
                     "Rien à purger",
                     "Aucun enregistrement original n'est conservé sur le disque.");
             return;
@@ -82,7 +88,7 @@ final class ActionsPurge {
                 "la purge des originaux",
                 this::purgerEtDeclarer,
                 this::restituerPurge,
-                echec -> alerte(AlertType.ERROR, "Purge impossible", message(echec)));
+                this::signalerEchec);
     }
 
     /// Purge puis **déclare** le geste en base (#1303), hors du fil JavaFX : sans la déclaration,
@@ -93,10 +99,10 @@ final class ActionsPurge {
         return resultat;
     }
 
-    /// Sur le fil JavaFX, après la purge : compte-rendu puis rafraîchissement de l'appelant.
+    /// Sur le fil JavaFX, après la purge : compte rendu puis rafraîchissement de l'appelant.
     private void restituerPurge(ResultatPurge resultat) {
-        alerte(
-                AlertType.INFORMATION,
+        notificateur.notifier(
+                NiveauNotification.INFORMATION,
                 "Originaux purgés",
                 resultat.nombreSessions()
                         + " nuit(s) purgée(s), "
@@ -105,17 +111,19 @@ final class ActionsPurge {
         apresPurge.run();
     }
 
+    /// Échec du parcours disque (inspection comme suppression) : rien n'a été purgé, et on le dit.
+    private void signalerEchec(Throwable echec) {
+        notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Purge impossible", message(echec));
+    }
+
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
         return confirmateur;
     }
 
-    private void alerte(AlertType type, String titre, String message) {
-        Alert alerte = new Alert(type, message, ButtonType.OK);
-        alerte.setTitle(titre);
-        alerte.setHeaderText(null);
-        alerte.initOwner(fenetre.get());
-        alerte.showAndWait();
+    /// Porteur de compte rendu exposé aux tests (#1405) : `notificateur().definir(double)`.
+    NotificateurModifiable notificateur() {
+        return notificateur;
     }
 
     private static String message(Throwable echec) {
