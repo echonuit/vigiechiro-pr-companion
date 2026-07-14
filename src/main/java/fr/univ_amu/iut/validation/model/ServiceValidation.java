@@ -169,7 +169,11 @@ public class ServiceValidation implements CompteurValidations {
     public BilanImport importerDepuisVigieChiro(Long idPassage, List<DonneeVigieChiro> donnees, boolean remplacer) {
         Objects.requireNonNull(donnees, "donnees");
         return importerLignes(
-                idPassage, ConversionDonneesVigieChiro.enLignes(donnees), "vigiechiro", "VigieChiro", remplacer);
+                idPassage,
+                ConversionDonneesVigieChiro.enLignes(donnees),
+                ResultatsIdentification.SOURCE_VIGIECHIRO,
+                "VigieChiro",
+                remplacer);
     }
 
     /// **Cœur d'import** commun à toutes les sources d'observations (CSV Tadarida ou résultats

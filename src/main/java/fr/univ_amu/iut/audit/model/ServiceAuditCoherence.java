@@ -128,7 +128,11 @@ public class ServiceAuditCoherence {
         List<SequenceDEcoute> sequences = sequenceDao.findBySession(session.id());
         Optional<JournalDuCapteur> journal = journalDao.trouverParSession(session.id());
         Optional<ReleveClimatique> releve = releveDao.trouverParSession(session.id());
-        Optional<ResultatsIdentification> resultats = resultatsDao.findByPassage(passage.id());
+        // Des observations rapatriées de la plateforme ne viennent d'AUCUN fichier : leur « chemin » est un
+        // marqueur de provenance (#1050). Le chercher sur le disque faisait dire à l'audit qu'un fichier
+        // externe était introuvable, et soupçonner une carte SD non montée là où il n'y en a jamais eu.
+        Optional<ResultatsIdentification> resultats =
+                resultatsDao.findByPassage(passage.id()).filter(ResultatsIdentification::issuDunFichier);
 
         controleExistence(constats, passage, session, originaux, sequences, journal, releve, resultats);
         controlePrefixe(constats, passage, originaux, sequences);
