@@ -454,8 +454,10 @@ Même limite que `donnees` : le journal n'existe qu'après le passage du pipelin
   déposé **en parallèle** (5 uploads simultanés, cf. `DepotVigieChiro`). La seule pièce manquante était
   `lien_participation` (§ « Téléversement d'un fichier », sans quoi les uploads étaient orphelins).
   Depuis #1287, `probe_zip_vs_wav` **garde** ce verdict au lieu de le contredire : elle **affirme** que la
-  plateforme accepte un ZIP. Un rouge sur cette probe veut donc dire que **le mode de dépôt par défaut est
-  cassé** — et non, comme son libellé le laissait croire, qu'il faudrait revenir au WAV.
+  plateforme accepte un ZIP, et elle a été **tirée** (2026-07-14, participation de rebut) - déclaration,
+  `PUT` S3 `application/zip`, finalisation : **verte**. Un rouge sur cette probe veut donc dire que **le
+  mode de dépôt par défaut est cassé**, et non, comme son libellé le laissait croire, qu'il faudrait
+  revenir au WAV.
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
   le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites — exécuté à la
   connexion, et rejouable **à la demande** depuis M-Sites (« Synchroniser depuis VigieChiro », #1045,
