@@ -35,8 +35,8 @@ d'architecture** qui structurent son code.
   croisée vers une vue) casse la compilation des tests.
 - **Les dialogues d'une action passent par des contrats du socle**, jamais par un `Alert` ou un
   `FileChooser` construit dans un contrôleur : `Confirmateur` (le oui/non), `Notificateur` (le compte
-  rendu), `SelecteurFichier` (la désignation d'un fichier). Chaque écran en détient une instance
-  remplaçable, que ses tests substituent par un double.
+  rendu), `SelecteurFichier` (la désignation d'un fichier), `DemandeurDeChoix` (le choix parmi plusieurs
+  options). Chaque écran en détient une instance remplaçable, que ses tests substituent par un double.
 
   La contrainte est mécanique : un `showAndWait()` **fige** un test d'IHM *headless*. Une action qui
   ouvre un dialogue en dur est donc **impossible à déclencher dans un test** - seul le **grisage** de
@@ -44,6 +44,19 @@ d'architecture** qui structurent son code.
   finale, ou le sélecteur de fichier initial) pour que le geste entier redevienne intestable. C'est ce
   qui privait les gestes **irréversibles** du produit (purger les originaux, restaurer la base,
   supprimer une nuit, réimporter par-dessus des validations) de tout test de leur effet.
+
+  Deux principes de conception en découlent, et ils valent au-delà du code :
+
+  - **« Annuler » n'est pas une option, c'est un renoncement.** Un dialogue « Enregistrer / Abandonner /
+    Annuler » n'a pas trois issues : il en a **deux**, plus la possibilité de ne pas choisir. Corollaire
+    à ne jamais perdre de vue : **renoncer n'est pas abandonner** - les deux ferment la fenêtre, **un
+    seul détruit** le travail de l'utilisateur.
+  - **Un formulaire n'est pas un dialogue, c'est une vue.** Toute saisie (déclarer un site, personnaliser
+    une sélection d'écoute) est une **modale** à part entière : FXML, contrôleur, ViewModel, entrée de
+    navigation. Un `Dialog` bâti à la main rend le geste injouable, sa validation intestable, et sa
+    capture de documentation **impossible** - il faudrait la reconstruire à la main, et elle **dériverait**
+    du vrai écran (c'est arrivé : la documentation a affiché pendant des mois un protocole qui n'existait
+    pas).
 
 ## Outillage et cycle de vie
 
