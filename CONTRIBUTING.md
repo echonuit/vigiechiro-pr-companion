@@ -121,7 +121,7 @@ gh pr create --fill
 ## 5. Cycle de vie d'un chantier
 
 Un **chantier** est une évolution d'ampleur **EPIC**, répartie sur **plusieurs PR** (le §4 décrit
-_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 9 passes.
+_une_ PR ; ici on décrit l'ensemble). Il **s'ouvre** par une analyse et **se clôt** par 10 passes.
 
 **À l'ouverture** : cartographier l'existant (réutiliser les patterns en place plutôt que réinventer),
 rédiger un plan, découper en **issues reliées à un EPIC**.
@@ -140,8 +140,12 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
 6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**.
 7. **Harmonisation** : abstraire pour réduire **complexité** et **duplication** (Extract Class,
    patterns partagés).
-8. **Nouveaux chantiers** identifiés + **issues** créées.
-9. **Bilan** : ce qui a été livré, dette restante, décisions.
+8. **Revue visuelle** : **régénérer les captures** des écrans touchés et **les ouvrir**. Un geste testé
+   n'est pas un écran regardé : un texte coupé, un glyphe absent ou une régression de style ne font
+   rougir aucun test. C'est la passe précédente (CSS, socle) qui est la plus à même de casser un écran
+   sans casser un test, d'où cette relecture **juste après** elle.
+9. **Nouveaux chantiers** identifiés + **issues** créées.
+10. **Bilan** : ce qui a été livré, dette restante, décisions.
 
 > 📖 Raison d'être et mode opératoire de chaque passe, avec le **modèle de clôture** à coller dans
 > l'EPIC : [doc dev · Cycle de vie d'un chantier](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/cycle-de-chantier/).

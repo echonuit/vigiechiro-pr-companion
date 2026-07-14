@@ -8,8 +8,8 @@ le **flux de contribution**, cette page décrit le niveau au-dessus : comment on
 **clôt** un chantier entier.
 
 Le principe : un chantier ne se termine pas au dernier `feat:` mergé. Une fois le cœur livré, une
-**clôture en 9 passes** garantit que l'évolution est intégrée, cohérente entre les deux surfaces
-(IHM et CLI), documentée, testée, harmonisée, et que la suite est cadrée.
+**clôture en 10 passes** garantit que l'évolution est intégrée, cohérente entre les deux surfaces
+(IHM et CLI), documentée, testée, harmonisée, **regardée**, et que la suite est cadrée.
 
 !!! note "Où est la règle courte ?"
     La version concise pour les contributeurs vit dans la section « Cycle de vie d'un chantier » de
@@ -30,11 +30,12 @@ Avant d'écrire du code :
 3. **Découper en issues** reliées à un **EPIC** (une issue « parapluie » avec la task-list des
    sous-issues). Chaque sous-issue porte son palier et ses dépendances.
 
-## À la clôture : les 9 passes
+## À la clôture : les 10 passes
 
 Elles s'exécutent **dans l'ordre** : l'audit d'intégration peut révéler du travail à faire avant de
 documenter, la cohérence CLI peut révéler une commande à ajouter (qui sera alors documentée et
-testée par les passes suivantes), l'harmonisation peut faire émerger de nouveaux chantiers, et le
+testée par les passes suivantes), l'harmonisation peut **casser un écran sans casser un test** (d'où la
+revue visuelle **juste après** elle), la revue visuelle peut faire émerger de nouveaux chantiers, et le
 bilan vient en dernier.
 
 ### 1. Audit d'intégration
@@ -67,7 +68,7 @@ Cette passe :
 - vérifie que la CLI offre l'opération correspondante (commande ou option de `fr.univ_amu.iut.cli`)
   avec le **même comportement** : mêmes règles, mêmes formats, mêmes garde-fous ;
 - en cas d'écart : **aligner tout de suite** si c'est petit (la commande ajoutée sera alors
-  documentée et testée par les passes suivantes), sinon **créer une issue** (passe 8) pour ne pas
+  documentée et testée par les passes suivantes), sinon **créer une issue** (passe 9) pour ne pas
   perdre le contexte ;
 - si le chantier est **purement présentationnel**, le noter explicitement « sans objet côté CLI ».
 
@@ -118,13 +119,49 @@ Prendre du recul sur l'ensemble du chantier et chercher les concepts à **abstra
 garde-fou, cf. [Tests et qualité](tests-et-qualite.md)). C'est le moment de transformer trois copies
 d'un même geste en un mécanisme d'extension.
 
-### 8. Passe d'identification des nouveaux chantiers
+### 8. Passe de revue visuelle
+
+**Régénérer les captures des écrans touchés, et les ouvrir.** Une par une. Les regarder.
+
+Cette passe existe parce qu'un constat s'est répété **cinq fois** sur les chantiers #1405 et #1431 :
+
+> **Un geste testé n'est pas un écran regardé.**
+
+Cinq défauts d'IHM y ont été trouvés en **ouvrant une capture**, et **aucun** par un test - alors que les
+gestes concernés étaient couverts :
+
+- un libellé tronqué (« Code du poi… ») ; puis **le même** sur un autre écran, préexistant ;
+- une consigne rognée par le bouton voisin (« Copier le m… ») ;
+- un emoji qui ne se rend pas (glyphe absent, cf. #700) ;
+- et une **capture de documentation qui avait dérivé du produit** : elle affichait un protocole
+  « Point fixe » qui **n'existe pas**, et cachait une confirmation destructive entière.
+
+Aucun de ces défauts ne fait rougir quoi que ce soit. Un test vérifie qu'un bouton **fait** ce qu'il
+doit ; il ne vérifie pas qu'on peut **lire** ce qu'il dit.
+
+**Pourquoi ici, et pas plus tôt.** La passe précédente (harmonisation) touche volontiers au CSS partagé
+ou aux composants du socle : c'est **elle** qui est la plus à même de casser un écran sans casser un
+test. On regarde donc **après** elle. Et comme les aperçus sont **régénérés automatiquement sur `main`**,
+un défaut corrigé ici rafraîchit la documentation tout seul.
+
+**Ce qu'on cherche** (par ordre de fréquence constatée) :
+
+1. du **texte coupé** - libellé, consigne, bouton (une ellipse `…` est un aveu) ;
+2. un **glyphe absent** (emoji, symbole) ;
+3. un **écart entre la capture et le produit** : si une capture est *reconstruite* quelque part au lieu
+   d'être *rendue*, elle **mentira** tôt ou tard (cf. #1468) ;
+4. une **régression de style** après une factorisation CSS ;
+5. un **écran de la doc qui ne ressemble plus** à ce que le chantier a livré.
+
+Ce qui se corrige tout de suite se corrige ; le reste part en issue à la passe suivante.
+
+### 9. Passe d'identification des nouveaux chantiers
 
 Un chantier en révèle d'autres (dette assumée, palier différé, idée née en chemin). Les **cadrer** et
 **créer les issues** correspondantes (reliées à un nouvel EPIC si elles forment un ensemble), pour ne
 pas perdre le contexte encore frais.
 
-### 9. Phase de bilan
+### 10. Phase de bilan
 
 Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
 pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
@@ -141,6 +178,7 @@ règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`.
 - [ ] 5. Brief SAÉ (IUTInfoAix-S201/brief) répercuté si attendus/fournis changent
 - [ ] 6. Tests d'intégration + E2E couvrant chaque usage
 - [ ] 7. Harmonisation (abstractions, duplication, GodClass)
-- [ ] 8. Nouveaux chantiers identifiés + issues créées
-- [ ] 9. Bilan (livré / dette / décisions)
+- [ ] 8. Revue visuelle : captures des écrans touchés **régénérées et ouvertes**
+- [ ] 9. Nouveaux chantiers identifiés + issues créées
+- [ ] 10. Bilan (livré / dette / décisions)
 ```

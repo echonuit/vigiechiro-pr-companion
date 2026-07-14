@@ -4,6 +4,11 @@ Les **aperçus PNG** (`.github/assets/apercu-*.png`) illustrent la documentation
 **régénérés depuis le code** à chaque évolution des écrans, pour ne **jamais se désynchroniser** de
 l'application réelle. Tout est rendu **hors-écran** (Headless Platform JavaFX) : aucun display requis.
 
+!!! tip "Une capture, ça se regarde"
+    Un aperçu n'est pas qu'un livrable de doc : c'est le **seul endroit où l'on voit** ce qu'un test ne
+    dit pas (texte tronqué, glyphe absent, style cassé). D'où la **passe de revue visuelle** en clôture
+    de chantier, cf. [Cycle de vie d'un chantier](cycle-de-chantier.md#8-passe-de-revue-visuelle).
+
 ## Rendre une scène hors-écran : `ApercuFx`
 
 [`ApercuFx`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/outils/ApercuFx.java)
