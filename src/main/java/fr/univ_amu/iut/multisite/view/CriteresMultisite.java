@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.VueSauvegardee;
 import fr.univ_amu.iut.commun.view.CritereFiltre;
 import fr.univ_amu.iut.commun.view.DescripteurCritere;
 import fr.univ_amu.iut.commun.view.VuesParDefaut;
+import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.FiltresMultisite;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import java.util.List;
@@ -21,8 +22,8 @@ import javafx.util.StringConverter;
 
 /// Catalogue des **critères de filtrage** de la vue multi-sites (patron « à la Notion », #537 étape 6b).
 /// Chaque critère est une puce ajoutable : **Carré** (n° de carré, champ texte), **Statut** de workflow,
-/// **Verdict** de vérification et **Année**. La **recherche texte** permanente ([#rechercheTexte()]) couvre
-/// carré, point et date.
+/// **Verdict** de vérification, **Année** et **Analyse** (état du traitement serveur, #1338). La
+/// **recherche texte** permanente ([#rechercheTexte()]) couvre carré, point et date.
 ///
 /// Pendant, côté multisite, du `CriteresAudio` / `CriteresAnalyse`. Les prédicats **réutilisent** la
 /// sémantique de [FiltresMultisite#accepte(LignePassage)] : aucune logique de filtrage dupliquée. Aucune
@@ -33,11 +34,17 @@ final class CriteresMultisite {
     /// dupliqué).
     private static final String STATUT = "statut";
 
+    /// Clé **stable** du critère Analyse (#1338), partagée par le critère et la vue « Résultats à importer ».
+    private static final String ANALYSE = "analyse";
+
     private CriteresMultisite() {}
 
     /// Vues **par défaut** (lecture seule) du tableau des passages, rendues comme onglets avant les vues de
     /// l'utilisateur (#623), sur le modèle de `CriteresAudio` :
     /// - **« Tout »** (aucun filtre) : active au chargement, n'écarte rien ;
+    /// - **« Résultats à importer »** (#1338) : les nuits dont l'analyse est terminée et dont les
+    ///   observations ne sont **pas encore** en base — la réponse en un onglet à « lesquelles de mes nuits
+    ///   sont prêtes ? », qui obligeait jusqu'ici à ouvrir chaque passage l'un après l'autre ;
     /// - **« Déposés »** (statut Déposé : nuits déjà envoyées) ;
     /// - **« À vérifier »** (verdict À vérifier : passages à contrôler) ;
     /// - **« Vérifiés »** (statut Vérifié).
@@ -47,9 +54,61 @@ final class CriteresMultisite {
     static List<VueSauvegardee> vuesParDefaut() {
         return List.of(
                 vueParDefaut("Tout"),
+                vueParDefaut(
+                        "Résultats à importer",
+                        new DescripteurCritere(ANALYSE, List.of(EtatAnalyse.A_IMPORTER.name()))),
                 vueParDefaut("Déposés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.DEPOSE.name()))),
                 vueParDefaut("À vérifier", new DescripteurCritere("verdict", List.of(Verdict.A_VERIFIER.name()))),
                 vueParDefaut("Vérifiés", new DescripteurCritere(STATUT, List.of(StatutWorkflow.VERIFIE.name()))));
+    }
+
+    /// Critère **État d'analyse** (#1338) : liste déroulante, sans présélection. C'est lui qui porte la vue
+    /// « Résultats à importer ».
+    static CritereFiltre<LignePassage> analyse() {
+        return new CritereFiltre<LignePassage>() {
+            @Override
+            public String nom() {
+                return ANALYSE;
+            }
+
+            @Override
+            public String libelle() {
+                return "Analyse";
+            }
+
+            @Override
+            public Node editeur(Consumer<Predicate<LignePassage>> applique) {
+                ComboBox<EtatAnalyse> choix = new ComboBox<>();
+                choix.getItems().setAll(EtatAnalyse.values());
+                choix.setPromptText("Choisir un état d'analyse");
+                choix.setConverter(convertisseur(etat -> etat == null ? "" : libelleEtat(etat)));
+                choix.valueProperty()
+                        .addListener((obs, avant, etat) -> applique.accept(
+                                etat == null ? tout() : FiltresMultisite.parEtatAnalyse(etat)::accepte));
+                applique.accept(tout());
+                return choix;
+            }
+
+            @Override
+            public List<String> valeurCourante(Node editeur) {
+                Object valeur = ((ComboBox<?>) editeur).getValue();
+                return valeur == null ? List.of() : List.of(((EtatAnalyse) valeur).name());
+            }
+
+            @Override
+            public void restaurerValeurs(Node editeur, List<String> valeurs) {
+                if (!valeurs.isEmpty()) {
+                    selectionnerParValeur(editeur, EtatAnalyse.valueOf(valeurs.get(0)));
+                }
+            }
+        };
+    }
+
+    /// Libellé de l'état dans la liste déroulante. [EtatAnalyse#SANS_OBJET] n'a pas de libellé de badge
+    /// (la cellule reste vide dans le tableau) : dans un menu, il lui en faut un, sans quoi l'entrée serait
+    /// une ligne blanche que personne ne peut choisir sciemment.
+    private static String libelleEtat(EtatAnalyse etat) {
+        return etat == EtatAnalyse.SANS_OBJET ? "Nuit non déposée" : etat.libelle();
     }
 
     /// Une vue par défaut de cet écran : délégation à la fabrique partagée [VuesParDefaut] (#1257).

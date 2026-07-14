@@ -3,7 +3,6 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
-import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -27,13 +26,11 @@ import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.SourcesAudioMultisite;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.fxml.FXML;
@@ -164,6 +161,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private TableColumn<LignePassage, String> colVerdict;
 
+    /// Où en est l'analyse Tadarida de la nuit (#1338) : câblage délégué à [ColonnesMultisite].
+    @FXML
+    private TableColumn<LignePassage, String> colAnalyse;
+
     @FXML
     private Label lblMessage;
 
@@ -247,7 +248,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private void initialize() {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tableLignes);
-        configurerColonnes();
+        ColonnesMultisite.configurer(
+                colCarre, colPoint, colAnnee, colNumero, colDate, colStatut, colVerdict, colAnalyse);
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
         // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
         var colonnes = colonnesLignes();
@@ -283,7 +285,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                         CriteresMultisite.carre(),
                         CriteresMultisite.statut(),
                         CriteresMultisite.verdict(),
-                        CriteresMultisite.annee()),
+                        CriteresMultisite.annee(),
+                        CriteresMultisite.analyse()),
                 CriteresMultisite.rechercheTexte());
         // Onglets de vues mémorisées (#623) : vues par défaut (lecture seule) + vues de l'utilisateur. La vue
         // capture aussi la disposition des colonnes du tableau (#994), via l'adaptateur mono-table.
@@ -532,27 +535,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 new GestionnaireColonnes.Colonne(colNumero, "N° passage", false),
                 new GestionnaireColonnes.Colonne(colDate, "Date", false),
                 new GestionnaireColonnes.Colonne(colStatut, "Statut", false),
-                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false));
-    }
-
-    private void configurerColonnes() {
-        colCarre.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().numeroCarre()));
-        colPoint.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().codePoint()));
-        colAnnee.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(String.valueOf(c.getValue().annee())));
-        colNumero.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(String.valueOf(c.getValue().numeroPassage())));
-        // #145 : tri NUMÉRIQUE (et non alphabétique) au clic d'en-tête sur Année et N° de passage.
-        colAnnee.setComparator(Comparator.comparingInt(Integer::parseInt));
-        colNumero.setComparator(Comparator.comparingInt(Integer::parseInt));
-        colDate.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().dateEnregistrement()));
-        colStatut.setCellValueFactory(
-                c -> new ReadOnlyStringWrapper(c.getValue().statut().libelle()));
-        colVerdict.setCellValueFactory(c -> new ReadOnlyStringWrapper(
-                c.getValue().verdict() == null ? "" : c.getValue().verdict().libelle()));
-        // Statut / verdict en badges (#691), comme la table de la fiche site.
-        colStatut.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.statut())));
-        colVerdict.setCellFactory(colonne -> ColonneBadge.cellule(ligne -> ColonneBadge.classe(ligne.verdict())));
+                new GestionnaireColonnes.Colonne(colVerdict, "Verdict", false),
+                new GestionnaireColonnes.Colonne(colAnalyse, "Analyse", false));
     }
 
     private void ouvrirPassageDeLaLigne(LignePassage ligne) {

@@ -100,6 +100,9 @@
               <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
               <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
               <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
+              <!-- #1338 : où en est l'analyse Tadarida de la nuit, et ses observations sont-elles déjà
+                   là. L'infobulle porte la date du relevé : le cache est un état observé, pas une vérité. -->
+              <TableColumn fx:id="colAnalyse" text="Analyse" prefWidth="120.0"/>
             </columns>
             <placeholder>
               <Label text="Aucun passage à afficher (ajustez éventuellement les filtres)." wrapText="true"/>
