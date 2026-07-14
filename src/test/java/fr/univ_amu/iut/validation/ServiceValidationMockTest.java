@@ -34,6 +34,7 @@ import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
+import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import fr.univ_amu.iut.validation.model.dao.TaxonDao;
@@ -75,6 +76,11 @@ class ServiceValidationMockTest {
     @Mock
     UniteDeTravail uniteDeTravail;
 
+    /// Fil de discussion (#1417) : bouchonné comme les autres DAO. L'import CSV n'y touche jamais
+    /// (seul l'import VigieChiro a des fils), mais le service l'exige à la construction.
+    @Mock
+    MessageObservationDao messageDao;
+
     @Mock
     PassageDao passageDao;
 
@@ -94,7 +100,8 @@ class ServiceValidationMockTest {
                 new ParserCsvTadarida(),
                 new ExportVuCsv(),
                 uniteDeTravail,
-                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                messageDao);
     }
 
     /// Calcul de plage nuit (#549), sorti de ServiceValidation avec les projections audio (#1193).
@@ -138,6 +145,8 @@ class ServiceValidationMockTest {
                 ModeValidation.NON_VALIDE,
                 100L,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);
@@ -311,7 +320,8 @@ class ServiceValidationMockTest {
         List<DonneeVigieChiro> donnees = List.of(new DonneeVigieChiro(
                 "d1",
                 "Car130711-Z41_000",
-                List.of(new ObservationVigieChiro(0, "Pipkuh", 0.99, 44.0, 0.8, 4.7, "noise", null, null))));
+                List.of(new ObservationVigieChiro(
+                        0, "Pipkuh", 0.99, 44.0, 0.8, 4.7, "noise", null, null, null, null, List.of()))));
 
         BilanImport bilan = service().importerDepuisVigieChiro(idPassage, donnees, false);
 

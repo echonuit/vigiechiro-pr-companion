@@ -211,6 +211,8 @@ public final class GenerateurJeuDeDonnees {
                     false,
                     null,
                     null,
+                    null,
+                    null,
                     null));
         }
         return new ObservationDao(source).insererTout(observations);

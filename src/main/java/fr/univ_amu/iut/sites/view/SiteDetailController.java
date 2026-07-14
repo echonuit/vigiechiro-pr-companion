@@ -8,6 +8,8 @@ import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -31,8 +33,6 @@ import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
@@ -89,9 +89,19 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
     private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
 
+    /// Compte rendu de l'écran : porteur partagé injectable (#1405), double capturant en test. Sans lui,
+    /// le refus se terminait par un `Alert.showAndWait()` qui **fige** TestFX headless : ni « Supprimer
+    /// ce site », ni « Supprimer ce point » n'était cliquable dans un test.
+    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
         return confirmateur;
+    }
+
+    /// Porteur de compte rendu exposé aux tests (#1405) : `notificateur().definir(double)`.
+    NotificateurModifiable notificateur() {
+        return notificateur;
     }
 
     @FXML
@@ -287,8 +297,11 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
             return ligne;
         });
         // Cartes de points d'écoute + repli d'état vide (#791) : câblage extrait dans CartesPointsSite
-        // pour alléger ce controller (seuil de cohésion PMD, #1087).
-        CartesPointsSite.installer(cartesPoints, lblAucunPoint, viewModel, navigation, ouvrirMultisite);
+        // pour alléger ce controller (seuil de cohésion PMD, #1087). Les deux porteurs de dialogue sont
+        // ceux de l'écran (#1405) : les cartes fabriquaient jusqu'ici leur propre confirmateur, que
+        // personne n'exposait - donc que personne ne pouvait remplacer en test.
+        CartesPointsSite.installer(
+                cartesPoints, lblAucunPoint, viewModel, navigation, ouvrirMultisite, confirmateur, notificateur);
     }
 
     /// Contexte d'identité (carré/code/nom) transmis à M-Passage pour éviter une dépendance
@@ -464,10 +477,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         return cartesPoints.getScene().getWindow();
     }
 
+    /// L'action n'a pas eu lieu : l'écran ne bouge pas, et l'utilisateur sait pourquoi.
     private void alerteErreur(String message) {
-        Alert alerte = new Alert(AlertType.WARNING, message, ButtonType.OK);
-        alerte.setHeaderText("Action impossible");
-        alerte.showAndWait();
+        notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Action impossible", message);
     }
 
     private static ReadOnlyStringWrapper valeur(String texte) {

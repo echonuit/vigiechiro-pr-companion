@@ -124,6 +124,8 @@ class ServiceBibliothequeApprovalTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -144,6 +146,8 @@ class ServiceBibliothequeApprovalTest {
                 ModeValidation.NON_VALIDE,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);

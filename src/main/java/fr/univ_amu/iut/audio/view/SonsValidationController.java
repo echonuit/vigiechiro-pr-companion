@@ -5,6 +5,7 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
+import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -90,6 +91,18 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// (identité). Remplace l'ancien bandeau de titre (redondant avec le fil d'Ariane).
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
+
+    /// Confirmation d'action destructive : porteur **partagé de l'écran** (#1013, #1405), stub
+    /// déterministe en test. Les trois gestes qui écrasent quelque chose le partagent : réimporter un CSV
+    /// Tadarida, réimporter depuis VigieChiro (les deux perdent les validations en cours) et publier les
+    /// corrections. Ils fabriquaient chacun leur propre dialogue - un `Alert` en dur pour les deux
+    /// premiers, qui **figeait** tout test headless voulant les jouer.
+    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+
+    /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
+    ConfirmateurModifiable confirmateur() {
+        return confirmateur;
+    }
 
     @FXML
     private StackPane hoteOccupation;
@@ -512,7 +525,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         if (fichiers.isEmpty()) {
             return false;
         }
-        return ImportTadarida.lancer(viewModel, fichiers.get(0).toPath());
+        return ImportTadarida.lancer(viewModel, fichiers.get(0).toPath(), confirmateur);
     }
 
     /// Ouvre la vue audio sur `source`, en adaptant colonnes, actions et fil d'Ariane. Appelée par
@@ -625,7 +638,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         File fichier = ChoixFichierCsv.selecteur("Importer un CSV Tadarida (observations ou _Vu)", null)
                 .showOpenDialog(fenetre());
         if (fichier != null) {
-            ImportTadarida.lancer(viewModel, fichier.toPath());
+            ImportTadarida.lancer(viewModel, fichier.toPath(), confirmateur);
         }
     }
 
@@ -634,14 +647,14 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// rafraîchissement).
     @FXML
     private void importerDepuisVigieChiro() {
-        ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source, appuis.executeur());
+        ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source, appuis.executeur(), confirmateur);
     }
 
     /// Publie les corrections observateur du passage courant vers VigieChiro (#723). Délègue à
     /// [PublicationCorrectionsUI] (tri hors fil, confirmation récapitulative, envoi hors fil, bilan).
     @FXML
     private void publierCorrections() {
-        PublicationCorrectionsUI.lancer(publicationCorrections, source, appuis.executeur());
+        PublicationCorrectionsUI.lancer(publicationCorrections, source, appuis.executeur(), confirmateur);
     }
 
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.

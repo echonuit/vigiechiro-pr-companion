@@ -322,6 +322,8 @@ public final class CaptureAnalyse {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 
@@ -342,6 +344,8 @@ public final class CaptureAnalyse {
                 ModeValidation.NON_VALIDE,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);
@@ -365,6 +369,8 @@ public final class CaptureAnalyse {
                 ModeValidation.MANUEL,
                 idResultats,
                 false,
+                null,
+                null,
                 null,
                 null,
                 null);
