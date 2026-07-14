@@ -13,6 +13,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
+import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
@@ -68,7 +69,17 @@ class MultisiteViewModelTest {
     }
 
     private static LignePassage ligne(String carre, String point, int annee, int numero, StatutWorkflow statut) {
-        return new LignePassage((long) numero, carre, point, annee, numero, "2026-06-2" + numero, statut, Verdict.OK);
+        return new LignePassage(
+                (long) numero,
+                carre,
+                point,
+                annee,
+                numero,
+                "2026-06-2" + numero,
+                statut,
+                Verdict.OK,
+                EtatAnalyse.SANS_OBJET,
+                null);
     }
 
     @Test

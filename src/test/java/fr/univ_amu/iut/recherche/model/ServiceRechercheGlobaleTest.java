@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.ResultatRecherche;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.TypeResultat;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -47,7 +48,8 @@ class ServiceRechercheGlobaleTest {
     }
 
     private static LignePassage passage(Long id, String carre, String point, int annee, int numero, String date) {
-        return new LignePassage(id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, Verdict.OK);
+        return new LignePassage(
+                id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, Verdict.OK, EtatAnalyse.SANS_OBJET, null);
     }
 
     @BeforeEach

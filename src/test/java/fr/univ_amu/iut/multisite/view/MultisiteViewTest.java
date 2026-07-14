@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
+import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
@@ -75,7 +76,8 @@ class MultisiteViewTest {
 
     private static LignePassage ligne(
             long id, String carre, String point, int annee, int numero, String date, StatutWorkflow statut) {
-        return new LignePassage(id, carre, point, annee, numero, date, statut, Verdict.OK);
+        return new LignePassage(
+                id, carre, point, annee, numero, date, statut, Verdict.OK, EtatAnalyse.SANS_OBJET, null);
     }
 
     @Start
@@ -192,10 +194,11 @@ class MultisiteViewTest {
     @DisplayName("La vue par défaut « Vérifiés » est un onglet qui filtre le tableau sur le statut Vérifié")
     void vue_par_defaut_verifies_filtre_le_tableau(FxRobot robot) {
         FlowPane onglets = robot.lookup("#barreOnglets").queryAs(FlowPane.class);
-        // Les 4 onglets par défaut sont rendus (avant les vues de l'utilisateur).
+        // Les 5 onglets par défaut sont rendus (avant les vues de l'utilisateur). « Résultats à importer »
+        // (#1338) vient en second : c'est la question la plus fréquente au retour du terrain.
         assertThat(robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class))
                 .extracting(Label::getText)
-                .containsExactly("Tout", "Déposés", "À vérifier", "Vérifiés");
+                .containsExactly("Tout", "Résultats à importer", "Déposés", "À vérifier", "Vérifiés");
 
         Label verifies = robot.from(onglets).lookup(".onglet-vue-nom").queryAllAs(Label.class).stream()
                 .filter(label -> "Vérifiés".equals(label.getText()))

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -26,6 +27,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
@@ -82,7 +84,13 @@ class ServiceMultisiteTest {
         semerPassage(passageDao, 1, 2026, "2026-06-22", StatutWorkflow.DEPOSE, Verdict.OK, pBa1.id());
         semerPassage(passageDao, 2, 2026, "2026-08-20", StatutWorkflow.VERIFIE, Verdict.A_JETER, pBa1.id());
 
-        service = new ServiceMultisite(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 5, 31)));
+        service = new ServiceMultisite(
+                siteDao,
+                pointDao,
+                passageDao,
+                new ReleveTraitementDao(source),
+                new ResultatsIdentificationDao(source),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)));
     }
 
     private void semerPassage(
@@ -219,7 +227,8 @@ class ServiceMultisiteTest {
     @Test
     @DisplayName("Filtres combinés (ET logique) : site ET année")
     void filtres_combines() {
-        List<LignePassage> lignes = service.listerPassages(ID_USER, new FiltresMultisite("640380", null, null, 2026));
+        List<LignePassage> lignes =
+                service.listerPassages(ID_USER, new FiltresMultisite("640380", null, null, 2026, null));
 
         assertThat(lignes).hasSize(2).allMatch(l -> l.numeroCarre().equals("640380") && l.annee() == 2026);
     }

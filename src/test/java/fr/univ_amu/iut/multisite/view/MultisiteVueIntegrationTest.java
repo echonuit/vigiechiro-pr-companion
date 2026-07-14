@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
+import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.PointAgrege;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
@@ -35,6 +36,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -59,6 +61,8 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class MultisiteVueIntegrationTest {
 
+    private static final String RELEVE_LE = "2026-07-14T09:00:00Z";
+
     private ServiceMultisite service;
     private MultisiteController controleur;
 
@@ -68,7 +72,22 @@ class MultisiteVueIntegrationTest {
 
     private static LignePassage ligne(
             long id, String carre, String point, int annee, int numero, String date, Verdict verdict) {
-        return new LignePassage(id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, verdict);
+        return ligne(id, carre, point, annee, numero, date, verdict, EtatAnalyse.SANS_OBJET, null);
+    }
+
+    /// Variante portant l'**état d'analyse** (#1338) et la date de son relevé.
+    private static LignePassage ligne(
+            long id,
+            String carre,
+            String point,
+            int annee,
+            int numero,
+            String date,
+            Verdict verdict,
+            EtatAnalyse analyse,
+            String releveLe) {
+        return new LignePassage(
+                id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, verdict, analyse, releveLe);
     }
 
     @SuppressWarnings("unchecked")
@@ -96,8 +115,27 @@ class MultisiteVueIntegrationTest {
         when(depotVues.findByFeature(anyString())).thenReturn(List.of());
         when(service.listerPassages(anyString()))
                 .thenReturn(List.of(
-                        ligne(42L, "640380", "A1", 2026, 10, "2026-06-21"),
-                        ligne(7L, "640381", "B2", 2025, 3, "2025-07-02", Verdict.DOUTEUX)));
+                        // #1338 : deux états d'analyse distincts, pour éprouver la colonne et la puce.
+                        ligne(
+                                42L,
+                                "640380",
+                                "A1",
+                                2026,
+                                10,
+                                "2026-06-21",
+                                Verdict.OK,
+                                EtatAnalyse.A_IMPORTER,
+                                RELEVE_LE),
+                        ligne(
+                                7L,
+                                "640381",
+                                "B2",
+                                2025,
+                                3,
+                                "2025-07-02",
+                                Verdict.DOUTEUX,
+                                EtatAnalyse.IMPORTEE,
+                                RELEVE_LE)));
         // Carte (#152) : un carré avec un point géolocalisé → un marqueur attendu sur la carte.
         when(service.agregerPourCarte(anyString()))
                 .thenReturn(List.of(new CarreAgrege(
@@ -136,7 +174,7 @@ class MultisiteVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("La barre à puces (recherche, + Filtre : 4 critères) et le sélecteur de tri sont câblés")
+    @DisplayName("La barre à puces (recherche, + Filtre : 5 critères) et le sélecteur de tri sont câblés")
     void la_barre_a_puces_et_le_tri_sont_cables(FxRobot robot) {
         assertThat(robot.lookup("#champRecherche").queryAs(TextField.class)).isNotNull();
         assertThat(robot.lookup("#pucesFiltres").queryAs(FlowPane.class)).isNotNull();
@@ -144,7 +182,7 @@ class MultisiteVueIntegrationTest {
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
         assertThat(menuAjout.getItems())
                 .extracting(MenuItem::getText)
-                .containsExactlyInAnyOrder("Carré", "Statut", "Verdict", "Année");
+                .containsExactlyInAnyOrder("Carré", "Statut", "Verdict", "Année", "Analyse");
         // Tri (souvent absent) : les 4 critères de TriMultisite.
         assertThat(robot.lookup("#choixTri").queryAs(ComboBox.class).getItems()).hasSize(TriMultisite.values().length);
     }
@@ -312,6 +350,48 @@ class MultisiteVueIntegrationTest {
                 .isNotEmpty();
         // Déclencher l'action ne doit pas lever (recadre sur les données affichées).
         robot.interact(robot.lookup(".bouton-recadrer").queryButton()::fire);
+    }
+
+    @Test
+    @DisplayName("#1338 : la colonne « Analyse » affiche l'état en badge, avec la date du relevé en infobulle")
+    void colonne_analyse_affiche_le_badge_et_date_le_releve(FxRobot robot) {
+        assertThat(tableau(robot).getColumns())
+                .as("la colonne « Analyse » (#1338) doit exister dans le tableau")
+                .extracting(TableColumn::getText)
+                .contains("Analyse");
+
+        // La **cellule réellement rendue** (et non une cellule fabriquée à la main) : c'est le seul moyen de
+        // vérifier que la fabrique de cellules est bien celle du badge, tooltip compris.
+        TableCell<?, ?> cellule = robot.from(tableau(robot)).lookup(".table-cell").queryAllAs(TableCell.class).stream()
+                .filter(c -> EtatAnalyse.A_IMPORTER.libelle().equals(c.getText()))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Aucune cellule « À importer » rendue dans le tableau."));
+
+        assertThat(cellule.getStyleClass())
+                .as("la couleur est dérivée de l'état, jamais stockée")
+                .contains("badge", EtatAnalyse.A_IMPORTER.classeBadge());
+        assertThat(cellule.getTooltip()).isNotNull();
+        assertThat(cellule.getTooltip().getText())
+                .as("le cache est un relevé daté, pas une vérité : la vue doit dire de quand il date")
+                .contains("Dernier état connu le")
+                .contains(RELEVE_LE);
+    }
+
+    @Test
+    @DisplayName("#1338 : la puce « Analyse » filtre le tableau sur les nuits à importer")
+    void filtre_analyse_via_la_barre_a_puces(FxRobot robot) {
+        ajouterPuce(robot, "Analyse");
+        FlowPane puces = robot.lookup("#pucesFiltres").queryAs(FlowPane.class);
+        @SuppressWarnings("unchecked")
+        ComboBox<EtatAnalyse> choix =
+                (ComboBox<EtatAnalyse>) robot.from(puces).lookup(".combo-box").queryAs(ComboBox.class);
+        robot.interact(() -> choix.setValue(EtatAnalyse.A_IMPORTER));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(tableau(robot).getItems())
+                .as("la nuit dont les observations sont DÉJÀ importées ne doit pas rester dans la liste")
+                .extracting(LignePassage::idPassage)
+                .containsExactly(42L);
     }
 
     @Test
