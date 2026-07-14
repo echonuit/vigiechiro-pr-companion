@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Utilisateur;
@@ -20,6 +21,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
@@ -79,6 +81,12 @@ public class SitesModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), ReferentielPoint.class)
                 .setBinding()
                 .to(InfosPointSites.class);
+        // Port socle PointParLocalite (#1305) : sens INVERSE du précédent — retrouver le point local d'une
+        // participation distante (carré + localité). Même montage d'inversion, pour reconstruire un passage
+        // jamais importé ici sans que `passage` dépende de `sites`.
+        OptionalBinder.newOptionalBinder(binder(), PointParLocalite.class)
+                .setBinding()
+                .to(PointLocalParLocalite.class);
         // Contrat de navigation vers l'assistant d'import : OptionalBinder VIDE (feature `importation`
         // désactivable, #1087). `ImportationModule` fait `setBinding` quand elle est active ; sinon
         // l'Optional reste vide et SiteDetailController masque le bouton « Importer une nuit ».

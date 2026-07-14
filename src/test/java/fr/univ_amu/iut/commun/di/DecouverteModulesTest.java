@@ -29,7 +29,7 @@ import org.junit.jupiter.api.io.TempDir;
 /// **synchronisées**, et une feature peut être **désactivée**.
 class DecouverteModulesTest {
 
-    /// Les 19 modules de feature attendus (le socle CommunModule/PersistenceModule n'en fait pas
+    /// Les 20 modules de feature attendus (le socle CommunModule/PersistenceModule n'en fait pas
     /// partie : il est installé explicitement, jamais découvert).
     private static final Set<String> FEATURES_ATTENDUES = Set.of(
             "AnalyseModule",
@@ -45,6 +45,7 @@ class DecouverteModulesTest {
             "LotModule",
             "MultisiteModule",
             "PassageModule",
+            "ReconstructionModule",
             "SynchronisationParticipationModule",
             "QualificationModule",
             "RechercheModule",
@@ -67,7 +68,7 @@ class DecouverteModulesTest {
     }
 
     @Test
-    @DisplayName("ServiceLoader découvre exactement les 18 modules de feature")
+    @DisplayName("ServiceLoader découvre exactement les modules de feature attendus")
     void serviceloader_decouvre_toutes_les_features() {
         Set<String> decouverts = ServiceLoader.load(ModuleDeFeature.class).stream()
                 .map(provider -> provider.type().getSimpleName())
@@ -115,7 +116,7 @@ class DecouverteModulesTest {
     }
 
     @Test
-    @DisplayName("sans filtre, modules() = socle (2) + toutes les features (18)")
+    @DisplayName("sans filtre, modules() = socle (2) + toutes les features")
     void modules_assemble_socle_et_toutes_les_features(@TempDir Path tmp) {
         System.setProperty("vigiechiro.workspace", tmp.toString());
 
