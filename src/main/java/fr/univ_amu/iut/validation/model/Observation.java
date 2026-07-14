@@ -7,12 +7,23 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 /// `observation`). Une séquence d'écoute peut générer plusieurs observations (1 ligne par espèce
 /// détectée, avec timing début/fin).
 ///
-/// Point remarquable du MCD : l'observation porte **trois** clés étrangères distinctes vers
+/// Point remarquable du MCD : l'observation porte **quatre** clés étrangères distinctes vers
 /// [Taxon] :
 ///
 /// - `taxonTadarida` (FK `taxon_tadarida`) : **obligatoire**, proposition de Tadarida ;
 /// - `taxonAutreTadarida` (FK `taxon_other_tadarida`) : optionnel, 2e proposition ;
-/// - `taxonObservateur` (FK `taxon_observer`) : optionnel, saisi en validation.
+/// - `taxonObservateur` (FK `taxon_observer`) : optionnel, saisi en validation ;
+/// - `taxonValidateur` (FK `taxon_validator`) : optionnel, **tranché par un expert du MNHN** sur la
+///   plateforme (#1417, V26).
+///
+/// Ce sont les **trois avis** que VigieChiro distingue sur une même détection : Tadarida *propose*,
+/// l'observateur *corrige*, le validateur *tranche*. Le troisième arrivait déjà dans la réponse de
+/// `GET /participations/{id}/donnees` : l'application le jetait, et présentait donc la correction de
+/// l'observateur comme le dernier mot alors qu'un expert avait pu la réviser.
+///
+/// L'avis du validateur est en **lecture seule** : le serveur refuse (403) qu'un jeton de rôle
+/// `Observateur` le pose (spike de #724). Il est donc toujours un **reflet** du serveur, rafraîchi à
+/// chaque import — jamais une saisie locale, jamais préservé d'un import à l'autre.
 ///
 /// Le `modeValidation` est mappé via [ModeValidation] (colonne `validation_mode` ; `null` →
 /// [ModeValidation#NON_VALIDE]). Les colonnes numériques optionnelles (`REAL` / `INTEGER`
@@ -45,8 +56,12 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 /// @param indiceVigieChiro indice **brut** de l'observation dans le tableau `observations` de sa
 ///     donnée côté serveur (#1139) : l'identifiant positionnel du `PATCH` ; `null` hors import
 /// @param certitudeObservateur certitude déclarée manuellement à la revue (#1139), `null` = non
-///     renseignée (vide par défaut, jamais dérivée d'une probabilité) ; les trois derniers composants
+///     renseignée (vide par défaut, jamais dérivée d'une probabilité) ; les composants suivants
 ///     sont ajoutés en **queue** pour préserver l'ordre historique du record
+/// @param taxonValidateur code du taxon **tranché par le validateur** du MNHN (#1417) ; `null` tant
+///     qu'aucun expert ne s'est prononcé, ou hors import VigieChiro. En lecture seule
+/// @param certitudeValidateur certitude déclarée par le validateur (#1417), même domaine fermé que
+///     celle de l'observateur (`SUR | PROBABLE | POSSIBLE`) ; `null` = non renseignée
 public record Observation(
         Long id,
         Long idSequence,
@@ -65,7 +80,9 @@ public record Observation(
         boolean douteux,
         String idDonneeVigieChiro,
         Integer indiceVigieChiro,
-        CertitudeObservateur certitudeObservateur) {
+        CertitudeObservateur certitudeObservateur,
+        String taxonValidateur,
+        CertitudeObservateur certitudeValidateur) {
 
     /// Copie de cette observation avec un **commentaire** différent (tous les autres champs inchangés) :
     /// évite de réénumérer les composants du record à chaque mise à jour mono-champ côté service. Le
@@ -91,7 +108,9 @@ public record Observation(
                 douteux,
                 idDonneeVigieChiro,
                 indiceVigieChiro,
-                certitudeObservateur);
+                certitudeObservateur,
+                taxonValidateur,
+                certitudeValidateur);
     }
 
     /// Copie de cette observation avec l'archivage en **référence** modifié (tous les autres champs
@@ -115,7 +134,9 @@ public record Observation(
                 douteux,
                 idDonneeVigieChiro,
                 indiceVigieChiro,
-                certitudeObservateur);
+                certitudeObservateur,
+                taxonValidateur,
+                certitudeValidateur);
     }
 
     /// Copie de cette observation avec le drapeau **douteux** (#160) modifié (tous les autres champs
@@ -139,7 +160,9 @@ public record Observation(
                 douteux,
                 idDonneeVigieChiro,
                 indiceVigieChiro,
-                certitudeObservateur);
+                certitudeObservateur,
+                taxonValidateur,
+                certitudeValidateur);
     }
 
     /// Copie de cette observation avec le **triplet observateur** (taxon retenu, probabilité, mode de
@@ -164,7 +187,9 @@ public record Observation(
                 douteux,
                 idDonneeVigieChiro,
                 indiceVigieChiro,
-                certitudeObservateur);
+                certitudeObservateur,
+                taxonValidateur,
+                certitudeValidateur);
     }
 
     /// Copie de cette observation avec la **certitude observateur** (#1139) modifiée (tous les autres
@@ -189,6 +214,8 @@ public record Observation(
                 douteux,
                 idDonneeVigieChiro,
                 indiceVigieChiro,
-                certitude);
+                certitude,
+                taxonValidateur,
+                certitudeValidateur);
     }
 }

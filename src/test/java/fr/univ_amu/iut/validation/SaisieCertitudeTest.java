@@ -94,6 +94,8 @@ class SaisieCertitudeTest {
                         false,
                         null,
                         null,
+                        null,
+                        null,
                         null))
                 .id();
     }

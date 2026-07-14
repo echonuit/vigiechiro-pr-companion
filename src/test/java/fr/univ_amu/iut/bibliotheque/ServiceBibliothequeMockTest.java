@@ -100,6 +100,8 @@ class ServiceBibliothequeMockTest {
                 false,
                 null,
                 null,
+                null,
+                null,
                 null);
     }
 

@@ -24,7 +24,8 @@ class ConversionDonneesVigieChiroTest {
         DonneeVigieChiro donnee = new DonneeVigieChiro(
                 "d1",
                 "Car130711-2026-Pass1-Z41-PaRec_20260703_220529_000",
-                List.of(new ObservationVigieChiro(0, "Pipkuh", 0.99, 44.6, 0.8, 4.7, "noise", null, null)));
+                List.of(new ObservationVigieChiro(
+                        0, "Pipkuh", 0.99, 44.6, 0.8, 4.7, "noise", null, null, null, null, List.of())));
 
         assertThat(ConversionDonneesVigieChiro.enLignes(List.of(donnee)))
                 .containsExactly(new LigneObservation(
@@ -40,6 +41,8 @@ class ConversionDonneesVigieChiroTest {
                         ModeValidation.NON_VALIDE,
                         "d1",
                         0,
+                        null,
+                        null,
                         null));
     }
 
@@ -51,7 +54,18 @@ class ConversionDonneesVigieChiroTest {
                 "d1",
                 "F",
                 List.of(new ObservationVigieChiro(
-                        3, "Eptser", 0.70, null, 1.0, 2.0, null, "Pippip", CertitudeObservateur.SUR)));
+                        3,
+                        "Eptser",
+                        0.70,
+                        null,
+                        1.0,
+                        2.0,
+                        null,
+                        "Pippip",
+                        CertitudeObservateur.SUR,
+                        null,
+                        null,
+                        List.of())));
 
         assertThat(ConversionDonneesVigieChiro.enLignes(List.of(donnee)))
                 .singleElement()
@@ -78,10 +92,15 @@ class ConversionDonneesVigieChiroTest {
                 "d1",
                 "A",
                 List.of(
-                        new ObservationVigieChiro(0, "Pipkuh", 0.9, 40.0, 0.0, 1.0, null, null, null),
-                        new ObservationVigieChiro(1, "noise", 0.5, 42.0, 1.0, 2.0, null, null, null)));
+                        new ObservationVigieChiro(
+                                0, "Pipkuh", 0.9, 40.0, 0.0, 1.0, null, null, null, null, null, List.of()),
+                        new ObservationVigieChiro(
+                                1, "noise", 0.5, 42.0, 1.0, 2.0, null, null, null, null, null, List.of())));
         DonneeVigieChiro b = new DonneeVigieChiro(
-                "d2", "B", List.of(new ObservationVigieChiro(0, "Nyclei", 0.8, 25.0, 0.0, 3.0, null, null, null)));
+                "d2",
+                "B",
+                List.of(new ObservationVigieChiro(
+                        0, "Nyclei", 0.8, 25.0, 0.0, 3.0, null, null, null, null, null, List.of())));
 
         assertThat(ConversionDonneesVigieChiro.enLignes(List.of(a, b)))
                 .extracting(

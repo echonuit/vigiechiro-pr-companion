@@ -217,6 +217,6 @@ class ImportVigieChiroTest {
     }
 
     private static ObservationVigieChiro observation() {
-        return new ObservationVigieChiro(0, "Pipkuh", 0.99, 44.0, 0.8, 4.7, null, null, null);
+        return new ObservationVigieChiro(0, "Pipkuh", 0.99, 44.0, 0.8, 4.7, null, null, null, null, null, List.of());
     }
 }

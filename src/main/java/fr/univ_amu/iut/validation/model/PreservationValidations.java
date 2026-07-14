@@ -95,6 +95,11 @@ final class PreservationValidations {
     /// certitude (#1139). L'**ancrage plateforme** (`idDonneeVigieChiro`, `indiceVigieChiro`), lui,
     /// reste celui de `neuve` : il vient frais du serveur à chaque import (un re-compute régénère les
     /// `_id`), l'ancien serait périmé.
+    ///
+    /// L'**avis du validateur** (#1417) suit la même règle que l'ancrage : il reste celui de `neuve`. Ce
+    /// n'est pas une décision *de l'utilisateur* qu'un réimport risquerait d'effacer, c'est un reflet du
+    /// serveur — et c'est bien le point : si l'expert du MNHN a changé d'avis entre deux imports, c'est
+    /// **son** nouvel avis qui doit s'afficher, pas la copie qu'on en gardait.
     private static Observation avecValidation(Observation neuve, Observation ancienne) {
         return new Observation(
                 neuve.id(),
@@ -114,7 +119,9 @@ final class PreservationValidations {
                 ancienne.douteux(),
                 neuve.idDonneeVigieChiro(),
                 neuve.indiceVigieChiro(),
-                ancienne.certitudeObservateur());
+                ancienne.certitudeObservateur(),
+                neuve.taxonValidateur(),
+                neuve.certitudeValidateur());
     }
 
     /// Clé d'appariement d'une observation entre deux imports : même séquence, même taxon Tadarida et même

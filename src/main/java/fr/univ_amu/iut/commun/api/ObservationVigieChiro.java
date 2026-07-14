@@ -1,10 +1,20 @@
 package fr.univ_amu.iut.commun.api;
 
 import fr.univ_amu.iut.commun.model.CertitudeObservateur;
+import java.util.List;
 
 /// Une observation (détection) Tadarida d'un fichier, telle que renvoyée par
 /// `GET /participations/#id/donnees` (#719, axe 4.2). Vue destinée à alimenter une
 /// `LigneObservation` locale (mêmes unités que le CSV Tadarida : fréquence en kHz, temps en secondes).
+///
+/// Elle porte les **trois avis** que la plateforme distingue sur une même détection : Tadarida
+/// *propose* (`tadarida_*`), l'observateur *corrige* (`observateur_*`), le validateur du MNHN
+/// *tranche* (`validateur_*`, #1417) — plus le **fil de discussion** qui les relie. Tout cela arrive
+/// dans la **même** charge utile : l'application le recevait déjà et le jetait.
+///
+/// La certitude partage le **même domaine fermé** côté serveur pour l'observateur et pour le
+/// validateur (`SUR | PROBABLE | POSSIBLE`, contrat #1203) : d'où le même type ici, dont le nom
+/// ([CertitudeObservateur]) est resté celui de son premier usage.
 ///
 /// @param indiceServeur indice **brut** de l'observation dans le tableau `observations` de sa donnée
 ///     (#1139) : l'identifiant positionnel attendu par `PATCH /donnees/{id}/observations/{index}`
@@ -20,6 +30,12 @@ import fr.univ_amu.iut.commun.model.CertitudeObservateur;
 ///     `null` tant qu'aucune correction n'a été poussée
 /// @param certitudeObservateur certitude déclarée par l'observateur (`observateur_probabilite`,
 ///     énumération `SUR|PROBABLE|POSSIBLE` côté serveur, contrat #1203), ou `null`
+/// @param taxonValidateur code **tranché par le validateur** du MNHN (`validateur_taxon`), ou `null`
+///     tant qu'aucun expert ne s'est prononcé. En **lecture seule** : le serveur refuse (403) qu'un
+///     jeton de rôle `Observateur` pose ce champ (spike de #724)
+/// @param certitudeValidateur certitude déclarée par le validateur (`validateur_probabilite`), ou `null`
+/// @param messages **fil de discussion** de l'observation, dans l'ordre du serveur ; jamais `null`
+///     (liste vide si le fil n'a jamais été ouvert, ce qui est le cas courant)
 public record ObservationVigieChiro(
         int indiceServeur,
         String taxonTadarida,
@@ -29,4 +45,14 @@ public record ObservationVigieChiro(
         Double tempsFin,
         String taxonAutre,
         String taxonObservateur,
-        CertitudeObservateur certitudeObservateur) {}
+        CertitudeObservateur certitudeObservateur,
+        String taxonValidateur,
+        CertitudeObservateur certitudeValidateur,
+        List<MessageVigieChiro> messages) {
+
+    /// Fil **immuable** et tolérant au `null` : un fil absent est un fil vide, pas une erreur. Le record
+    /// est une valeur — son fil ne doit pas pouvoir muter dans le dos de qui l'a reçu.
+    public ObservationVigieChiro {
+        messages = messages == null ? List.of() : List.copyOf(messages);
+    }
+}
