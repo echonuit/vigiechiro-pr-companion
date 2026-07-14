@@ -200,6 +200,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     /// Mode édition des positions (#154) : toute la logique (clamp, file en attente, alerte) est déléguée.
     private EditionPositionsCarte edition;
 
+    /// Édition des positions exposée aux tests (#1431) : `edition().demandeur().definir(double)` remplace
+    /// le choix « enregistrer / abandonner » de la sortie d'édition, qui figeait tout test headless.
+    EditionPositionsCarte edition() {
+        return edition;
+    }
+
     /// Dernière position du diviseur quand carte ET tableau sont visibles, restaurée à la réouverture
     /// d'un panneau replié (un `SplitPane` réinitialise ses diviseurs quand on retire/rajoute un item).
     private double derniereDivision = 0.42;

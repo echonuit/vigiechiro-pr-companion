@@ -5,7 +5,9 @@ import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.audio.viewmodel.PublicationCorrectionsViewModel;
+import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.DemandeurDeChoixModifiable;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -17,7 +19,6 @@ import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
-import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
@@ -95,30 +96,25 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private final ReadOnlyObjectWrapper<ZonesStatut> zonesStatut =
             new ReadOnlyObjectWrapper<>(this, "zonesStatut", ZonesStatut.VIDE);
 
-    /// Confirmation d'action destructive : porteur **partagé de l'écran** (#1013, #1405), stub
-    /// déterministe en test. Les trois gestes qui écrasent quelque chose le partagent : réimporter un CSV
-    /// Tadarida, réimporter depuis VigieChiro (les deux perdent les validations en cours) et publier les
-    /// corrections. Ils fabriquaient chacun leur propre dialogue - un `Alert` en dur pour les deux
-    /// premiers, qui **figeait** tout test headless voulant les jouer.
-    private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
+    /// Les porteurs de dialogue de l'écran (#1431) : le oui/non et le choix de participation. Réunis dans
+    /// [DialoguesAudio] - ils forment une unité (« ce que l'écran demande à l'utilisateur »), et le
+    /// contrôleur touchait son plafond de taille.
+    private final DialoguesAudio dialogues =
+            new DialoguesAudio(() -> this.tableObservations.getScene().getWindow());
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
-        return confirmateur;
+        return dialogues.confirmateur();
     }
-
-    /// Désignation d'un fichier ou d'un dossier : porteur partagé injectable (#1431), double répondant en
-    /// test. Les **quatre** gestes qui en dépendent - importer un CSV, exporter le `_Vu`, exporter les
-    /// observations, exporter la bibliothèque - **commencent** par un sélecteur natif, qui fige un test
-    /// headless. Aucun n'était donc jouable.
-    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
-            // `this.tableObservations` : le champ @FXML est déclaré plus bas (référence en avant interdite
-            // dans un initialiseur). La fenêtre n'est lue qu'au clic.
-            new SelecteurFichierJavaFx(() -> this.tableObservations.getScene().getWindow()));
 
     /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
     SelecteurFichierModifiable selecteur() {
-        return selecteur;
+        return dialogues.selecteur();
+    }
+
+    /// Porteur de choix exposé aux tests (#1431) : `demandeurParticipation().definir(double)`.
+    DemandeurDeChoixModifiable<ParticipationVigieChiro> demandeurParticipation() {
+        return dialogues.participation();
     }
 
     @FXML
@@ -561,7 +557,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         if (fichiers.isEmpty()) {
             return false;
         }
-        return ImportTadarida.lancer(viewModel, fichiers.get(0).toPath(), confirmateur);
+        return ImportTadarida.lancer(viewModel, fichiers.get(0).toPath(), confirmateur());
     }
 
     /// Ouvre la vue audio sur `source`, en adaptant colonnes, actions et fil d'Ariane. Appelée par
@@ -672,9 +668,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// (#1431) : sans lui, le geste s'arrêtait à sa première ligne dans un test.
     @FXML
     private void importer() {
-        selecteur
+        selecteur()
                 .choisirFichier("Importer un CSV Tadarida (observations ou _Vu)", Optional.empty(), FiltreFichier.csv())
-                .ifPresent(csv -> ImportTadarida.lancer(viewModel, csv, confirmateur));
+                .ifPresent(csv -> ImportTadarida.lancer(viewModel, csv, confirmateur()));
     }
 
     /// Importe les résultats Tadarida depuis **VigieChiro** (axe 4.2) pour le passage courant. Délègue à
@@ -682,33 +678,34 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     /// rafraîchissement).
     @FXML
     private void importerDepuisVigieChiro() {
-        ImportVigieChiroUI.lancer(importVigieChiro, viewModel, source, appuis.executeur(), confirmateur);
+        ImportVigieChiroUI.lancer(
+                importVigieChiro, viewModel, source, appuis.executeur(), confirmateur(), demandeurParticipation());
     }
 
     /// Publie les corrections observateur du passage courant vers VigieChiro (#723). Délègue à
     /// [PublicationCorrectionsUI] (tri hors fil, confirmation récapitulative, envoi hors fil, bilan).
     @FXML
     private void publierCorrections() {
-        PublicationCorrectionsUI.lancer(publicationCorrections, source, appuis.executeur(), confirmateur);
+        PublicationCorrectionsUI.lancer(publicationCorrections, source, appuis.executeur(), confirmateur());
     }
 
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.
     @FXML
     private void exporterVu() {
-        ExportsAudioUI.exporterVu(viewModel, selecteur);
+        ExportsAudioUI.exporterVu(viewModel, selecteur());
     }
 
     /// « Exporter les observations (CSV) » (#149) : sélecteur de fichier natif puis délégation au VM, qui
     /// écrit le **sous-ensemble affiché** (filtres appliqués).
     @FXML
     private void exporterObservations() {
-        ExportsAudioUI.exporterObservations(viewModel, selecteur);
+        ExportsAudioUI.exporterObservations(viewModel, selecteur());
     }
 
     /// « Exporter la bibliothèque » : sélecteur de dossier natif puis délégation au VM (copie des sons de
     /// référence + récapitulatif CSV).
     @FXML
     private void exporterBibliotheque() {
-        ExportsAudioUI.exporterBibliotheque(viewModel, selecteur);
+        ExportsAudioUI.exporterBibliotheque(viewModel, selecteur());
     }
 }

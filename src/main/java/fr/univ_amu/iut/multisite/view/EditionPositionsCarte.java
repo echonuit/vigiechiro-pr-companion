@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.multisite.view;
 
+import fr.univ_amu.iut.commun.view.ChoixParBoutons;
+import fr.univ_amu.iut.commun.view.DemandeurDeChoixModifiable;
 import fr.univ_amu.iut.commun.view.carte.CarreGeo;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
@@ -11,10 +13,8 @@ import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import javafx.scene.control.Alert;
+import java.util.Optional;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
 import javafx.scene.control.ToggleButton;
 
 /// **Mode édition des positions** de la carte multi-sites (#154), extrait du [MultisiteController] pour le
@@ -34,6 +34,10 @@ final class EditionPositionsCarte {
     private final ToggleButton toggle;
     private final Button boutonEnregistrer;
 
+    /// Choix « enregistrer / abandonner » au moment de quitter l'édition : porteur injectable (#1431).
+    /// Un bouton par décision (et non une liste déroulante) : deux décisions se lisent d'un coup d'oeil.
+    private final DemandeurDeChoixModifiable<SortieEdition> demandeur;
+
     private final Map<String, Long> idPointParLibelle = new HashMap<>();
     private final Map<String, EmpriseCarre> empriseParCarre = new HashMap<>();
 
@@ -43,6 +47,8 @@ final class EditionPositionsCarte {
         this.viewModel = viewModel;
         this.toggle = toggle;
         this.boutonEnregistrer = boutonEnregistrer;
+        this.demandeur = new DemandeurDeChoixModifiable<>(new ChoixParBoutons<>(
+                "Positions modifiées", () -> toggle.getScene().getWindow()));
     }
 
     /// Câble la carte et les boutons sur la file de déplacements en attente.
@@ -102,25 +108,35 @@ final class EditionPositionsCarte {
         viewModel.positionsEnAttente().enregistrer();
     }
 
+    /// L'utilisateur quitte le mode édition avec des déplacements non enregistrés : que veut-il en faire ?
+    ///
+    /// Le choix passe par le port [DemandeurDeChoix] (#1431) : sans lui, ce `showAndWait` figeait tout
+    /// test, et **aucune** des trois issues n'était vérifiée - alors que l'une d'elles **jette** le
+    /// travail de l'utilisateur.
+    ///
+    /// Renoncer (« Annuler », ou fermer la fenêtre) n'est pas une décision sur le travail : on **reste en
+    /// édition**, rien n'est enregistré, rien n'est perdu.
     private void confirmerSortie() {
-        Alert alerte = new Alert(Alert.AlertType.CONFIRMATION);
-        alerte.setTitle("Positions modifiées");
-        alerte.setHeaderText("Des points ont été déplacés sans être enregistrés.");
-        alerte.setContentText("Enregistrer les nouvelles positions ?");
-        ButtonType enregistrer = new ButtonType("Enregistrer", ButtonBar.ButtonData.YES);
-        ButtonType abandonner = new ButtonType("Abandonner", ButtonBar.ButtonData.NO);
-        ButtonType annuler = new ButtonType("Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
-        alerte.getButtonTypes().setAll(enregistrer, abandonner, annuler);
-        ButtonType choix = alerte.showAndWait().orElse(annuler);
-        if (choix == enregistrer) {
-            viewModel.positionsEnAttente().enregistrer();
-            carte.setEditionActive(false);
-        } else if (choix == abandonner) {
-            viewModel.positionsEnAttente().annuler();
-            carte.setEditionActive(false);
-        } else {
-            toggle.setSelected(true); // Annuler → on reste en édition
+        Optional<SortieEdition> choix = demandeur.choisir(
+                "Des points ont été déplacés sans être enregistrés.",
+                "Enregistrer les nouvelles positions ?",
+                List.of(SortieEdition.values()),
+                SortieEdition::libelle);
+        if (choix.isEmpty()) {
+            toggle.setSelected(true); // renoncement : on reste en édition
+            return;
         }
+        if (choix.orElseThrow() == SortieEdition.ENREGISTRER) {
+            viewModel.positionsEnAttente().enregistrer();
+        } else {
+            viewModel.positionsEnAttente().annuler();
+        }
+        carte.setEditionActive(false);
+    }
+
+    /// Porteur de choix exposé aux tests (#1431) : `demandeur().definir(double)`.
+    DemandeurDeChoixModifiable<SortieEdition> demandeur() {
+        return demandeur;
     }
 
     /// Clampe une position proposée aux bornes de l'emprise du carré du `point` (le marqueur s'arrête au

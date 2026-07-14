@@ -2,7 +2,9 @@ package fr.univ_amu.iut.audio.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,6 +18,7 @@ import fr.univ_amu.iut.audio.viewmodel.AudioViewModel;
 import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
+import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
@@ -94,6 +97,12 @@ class SonsValidationDepotViewTest {
 
     /// Noms de fichier **proposés** aux exports.
     private final List<String> nomsProposes = new ArrayList<>();
+
+    /// Ce que le double de choix répondra : vide = l'utilisateur **renonce** au rattachement.
+    private Optional<ParticipationVigieChiro> choixParticipation = Optional.empty();
+
+    /// Libellés des participations réellement proposées à l'utilisateur.
+    private final List<String> participationsProposees = new ArrayList<>();
 
     /// Base jetable pour les seules préférences (`app_setting`) : les options de lecture du menu ☰ (#1006)
     /// passent par `ReglagesReactifs`. Le reste de la vue reste mocké.
@@ -204,6 +213,13 @@ class SonsValidationDepotViewTest {
                 nomsProposes.add(nomPropose);
                 return choixSelecteur;
             }
+        });
+        // Choix de la participation à rattacher (#1431) : sans ce double, l'import VigieChiro d'un passage
+        // NON RATTACHÉ - une nuit créée à la main - s'arrêtait sur un ChoiceDialog natif. Ce geste-là
+        // n'était jouable dans aucun test.
+        controleur.demandeurParticipation().definir((entete, question, options, libelle) -> {
+            options.forEach(option -> participationsProposees.add(libelle.apply(option)));
+            return choixParticipation;
         });
         controleur.ouvrirSur(PASSAGE);
         stage.setScene(new Scene(vue, 1000, 700));
@@ -380,5 +396,41 @@ class SonsValidationDepotViewTest {
                 .filter(menuItem -> id.equals(menuItem.getId()))
                 .findFirst()
                 .orElseThrow();
+    }
+
+    @Test
+    @DisplayName("#1431 : passage non rattaché : la participation choisie est rattachée, puis importée")
+    void import_vigiechiro_participation_choisie(FxRobot robot) {
+        ParticipationVigieChiro nuit = new ParticipationVigieChiro("p-1", "A1", "2026-06-22", "Étang de la Tuilière");
+        when(importVigieChiro.estRattache(7L)).thenReturn(false);
+        when(importVigieChiro.participationsDisponibles()).thenReturn(ReponseApi.succes(List.of(nuit)));
+        when(importVigieChiro.importer(7L, false))
+                .thenReturn(new BilanImport(
+                        new ResultatsIdentification(101L, "vigiechiro", "Brut", "2026-06-30T00:00", 7L), 3, 0, 0));
+        choixParticipation = Optional.of(nuit);
+
+        robot.interact(() -> itemImporterVigieChiro(robot).fire());
+
+        // Le libellé est ce qui permet à l'observateur de reconnaître SA nuit parmi les autres.
+        assertThat(participationsProposees).containsExactly("A1 · 2026-06-22 · Étang de la Tuilière");
+        verify(importVigieChiro).rattacher(7L, "p-1");
+        verify(importVigieChiro).importer(7L, false);
+    }
+
+    @Test
+    @DisplayName("#1431 : choix de participation annulé : aucun rattachement, aucun import")
+    void import_vigiechiro_choix_annule(FxRobot robot) {
+        when(importVigieChiro.estRattache(7L)).thenReturn(false);
+        when(importVigieChiro.participationsDisponibles())
+                .thenReturn(ReponseApi.succes(
+                        List.of(new ParticipationVigieChiro("p-1", "A1", "2026-06-22", "Étang de la Tuilière"))));
+        choixParticipation = Optional.empty();
+
+        robot.interact(() -> itemImporterVigieChiro(robot).fire());
+
+        // Rattacher une nuit à la MAUVAISE participation est difficilement réversible : renoncer doit
+        // vraiment ne rien faire.
+        verify(importVigieChiro, never()).rattacher(anyLong(), anyString());
+        verify(importVigieChiro, never()).importer(anyLong(), anyBoolean());
     }
 }

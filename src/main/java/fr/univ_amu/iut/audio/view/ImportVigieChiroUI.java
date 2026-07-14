@@ -5,15 +5,13 @@ import fr.univ_amu.iut.audio.viewmodel.ImportVigieChiroViewModel;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.view.Confirmateur;
+import fr.univ_amu.iut.commun.view.DemandeurDeChoix;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
-import javafx.scene.control.ChoiceDialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 
@@ -48,7 +46,8 @@ final class ImportVigieChiroUI {
             AudioViewModel viewModel,
             SourceObservations source,
             ExecuteurTache executeur,
-            Confirmateur confirmateur) {
+            Confirmateur confirmateur,
+            DemandeurDeChoix<ParticipationVigieChiro> demandeur) {
         ContextePassage contexte = source.contexteDuPassage();
         if (contexte == null) {
             return;
@@ -57,7 +56,7 @@ final class ImportVigieChiroUI {
         if (importVigieChiro.rattache(idPassage)) {
             importerRattache(importVigieChiro, viewModel, source, idPassage, executeur, confirmateur);
         } else {
-            rattacherPuisImporter(importVigieChiro, viewModel, source, idPassage, executeur);
+            rattacherPuisImporter(importVigieChiro, viewModel, source, idPassage, executeur, demandeur);
         }
     }
 
@@ -85,7 +84,8 @@ final class ImportVigieChiroUI {
             AudioViewModel viewModel,
             SourceObservations source,
             Long idPassage,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            DemandeurDeChoix<ParticipationVigieChiro> demandeur) {
         importVigieChiro.marquerEnCours();
         executeur.executer(
                 importVigieChiro::participations,
@@ -104,7 +104,7 @@ final class ImportVigieChiroUI {
                                 + " déposez d'abord cette nuit sur la plateforme.");
                         return;
                     }
-                    Optional<ParticipationVigieChiro> choix = choisirParticipation(participations);
+                    Optional<ParticipationVigieChiro> choix = choisirParticipation(participations, demandeur);
                     if (choix.isEmpty()) {
                         importVigieChiro.echec(""); // annulé : on efface l'état « en cours »
                         return;
@@ -133,19 +133,16 @@ final class ImportVigieChiroUI {
                 erreur -> importVigieChiro.echec(erreur.getMessage()));
     }
 
-    /// Boîte de choix de la participation à rattacher (libellé : localité · date · site). Renvoie le choix
-    /// ou vide si l'utilisateur annule.
+    /// Choix de la participation à rattacher (libellé : localité · date · site), par le port
+    /// [DemandeurDeChoix] (#1431) et non plus un `ChoiceDialog` en dur : c'est ce qui rend jouable
+    /// l'import d'un passage **non rattaché** - le cas le plus fréquent d'une nuit créée à la main.
     private static Optional<ParticipationVigieChiro> choisirParticipation(
-            List<ParticipationVigieChiro> participations) {
-        Map<String, ParticipationVigieChiro> parLibelle = new LinkedHashMap<>();
-        for (ParticipationVigieChiro participation : participations) {
-            parLibelle.put(libelle(participation), participation);
-        }
-        String premier = parLibelle.keySet().iterator().next();
-        ChoiceDialog<String> dialogue = new ChoiceDialog<>(premier, parLibelle.keySet());
-        dialogue.setHeaderText("Ce passage n'est pas encore rattaché à une participation VigieChiro.");
-        dialogue.setContentText("Rattacher à :");
-        return dialogue.showAndWait().map(parLibelle::get);
+            List<ParticipationVigieChiro> participations, DemandeurDeChoix<ParticipationVigieChiro> demandeur) {
+        return demandeur.choisir(
+                "Ce passage n'est pas encore rattaché à une participation VigieChiro.",
+                "Rattacher à :",
+                participations,
+                ImportVigieChiroUI::libelle);
     }
 
     /// Libellé lisible d'une participation pour le choix : `localité · date · titre du site`.
