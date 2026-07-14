@@ -168,23 +168,18 @@ public class ServiceAuditCoherence {
         if (originauxAudites) {
             originaux.forEach(o -> chemins.add(o.cheminFichier()));
         }
-        if (audioAudite) {
-            sequences.forEach(s -> chemins.add(s.cheminFichier()));
-        }
+        // Les séquences entrent TOUJOURS dans le balayage, même sur un passage archivé : elles ne
+        // produisent alors aucun constat d'absence, mais leur décompte (présentes / total) alimente le
+        // constat informatif (#1304, parité CLI : `audit-coherence` doit dire la disponibilité). Coût
+        // nul : c'est le même listage de dossier, groupé.
+        sequences.forEach(s -> chemins.add(s.cheminFichier()));
         journal.ifPresent(j -> chemins.add(j.cheminFichier()));
         releve.ifPresent(r -> chemins.add(r.cheminFichier()));
         resultats.ifPresent(r -> chemins.add(r.cheminFichier()));
         Map<String, Presence> presences = presenceFichiers.evaluer(chemins);
 
         if (session.archivee()) {
-            constats.add(new ConstatAudit(
-                    SeveriteConstat.INFO,
-                    CategorieConstat.AUDIO_ARCHIVE,
-                    idPassage,
-                    ciblePassage(idPassage),
-                    "Passage archivé le " + session.horodatageArchivage().toLocalDate() + " : l'audio de ses "
-                            + sequences.size()
-                            + " séquence(s) n'est plus conservé localement (réactivable par réimport)."));
+            constats.add(constatArchive(idPassage, session, sequences, presences));
         }
         if (originauxAudites) {
             for (EnregistrementOriginal original : originaux) {
@@ -202,6 +197,27 @@ public class ServiceAuditCoherence {
                 r -> signalerAbsence(constats, idPassage, r.cheminFichier(), SeveriteConstat.AVERTISSEMENT, presences));
         resultats.ifPresent(
                 r -> signalerAbsence(constats, idPassage, r.cheminFichier(), SeveriteConstat.AVERTISSEMENT, presences));
+    }
+
+    /// Constat informatif d'un passage **archivé** : la disponibilité de son audio, avec le décompte
+    /// `présentes / total` (#1304). Un passage réactivé **partiellement** (#1302) est donc décrit tel
+    /// quel, sans qu'aucune séquence absente ne soit signalée comme une corruption.
+    private static ConstatAudit constatArchive(
+            Long idPassage,
+            SessionDEnregistrement session,
+            List<SequenceDEcoute> sequences,
+            Map<String, Presence> presences) {
+        long presentes = sequences.stream()
+                .filter(sequence -> presences.get(sequence.cheminFichier()) == Presence.PRESENTE)
+                .count();
+        return new ConstatAudit(
+                SeveriteConstat.INFO,
+                CategorieConstat.AUDIO_ARCHIVE,
+                idPassage,
+                ciblePassage(idPassage),
+                "Passage archivé le " + session.horodatageArchivage().toLocalDate() + " : audio "
+                        + (presentes == 0 ? "ABSENTE" : "PARTIELLE") + " (" + presentes + "/" + sequences.size()
+                        + " séquence(s) sur disque). Consultable, réactivable par réimport (« reactiver »).");
     }
 
     /// Ajoute un constat si le fichier est absent du verdict groupé. Un chemin **hors workspace**

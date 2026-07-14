@@ -35,6 +35,8 @@ import picocli.CommandLine.Spec;
             StatutPassage.class,
             Auditer.class,
             RetroEmpreintes.class,
+            Archiver.class,
+            Reactiver.class,
             Importer.class,
             ImporterTadarida.class,
             ImporterVigieChiro.class,

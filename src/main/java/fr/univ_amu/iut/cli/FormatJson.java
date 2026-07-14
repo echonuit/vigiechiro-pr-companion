@@ -43,6 +43,11 @@ public final class FormatJson {
         return json.append('}').toString();
     }
 
+    /// Sérialise une valeur : `null`, nombre, booléen, **objet imbriqué** (`Map`) ou **liste**
+    /// (`List`, dont les éléments passent par la même règle), sinon chaîne échappée. Les imbrications
+    /// servent aux rapports composites (`reactiver --json` porte la liste motivée des fichiers
+    /// refusés, #1304) : sans elles, une liste sortirait en `toString()` Java, illisible par un
+    /// script.
     private static String valeur(Object valeur) {
         if (valeur == null) {
             return "null";
@@ -50,7 +55,32 @@ public final class FormatJson {
         if (valeur instanceof Number || valeur instanceof Boolean) {
             return valeur.toString();
         }
+        if (valeur instanceof Map<?, ?> objet) {
+            return objet(objetOrdonne(objet));
+        }
+        if (valeur instanceof List<?> liste) {
+            return liste(liste);
+        }
         return chaine(valeur.toString());
+    }
+
+    /// Tableau JSON **en ligne** d'éléments quelconques (objets, chaînes, nombres…).
+    private static String liste(List<?> elements) {
+        StringBuilder json = new StringBuilder("[");
+        for (int i = 0; i < elements.size(); i++) {
+            json.append(valeur(elements.get(i)));
+            if (i < elements.size() - 1) {
+                json.append(", ");
+            }
+        }
+        return json.append(']').toString();
+    }
+
+    /// Vue `Map<String, ?>` d'une map quelconque (les clés d'un objet JSON sont des chaînes).
+    private static Map<String, ?> objetOrdonne(Map<?, ?> objet) {
+        Map<String, Object> champs = new java.util.LinkedHashMap<>();
+        objet.forEach((cle, valeur) -> champs.put(String.valueOf(cle), valeur));
+        return champs;
     }
 
     private static String chaine(String texte) {

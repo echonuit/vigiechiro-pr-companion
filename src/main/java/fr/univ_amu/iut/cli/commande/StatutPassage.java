@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.FormatJson;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -23,8 +24,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `statut-passage` (#618) : **inspecte un passage en lecture seule** (aucun effet de bord). Synthétise le
-/// statut du workflow, le verdict, les volumes et séquences de la nuit, et la présence de résultats
-/// Tadarida — de quoi savoir « où en est ce passage ? » sans ouvrir l'interface graphique.
+/// statut du workflow, le verdict, les volumes et séquences de la nuit, la **disponibilité de son
+/// audio local** (#1297 : un passage archivé se consulte mais ne s'écoute plus) et la présence de
+/// résultats Tadarida — de quoi savoir « où en est ce passage ? » sans ouvrir l'interface graphique.
 ///
 /// La synthèse provient de [ServicePassage#detailPassage(Long)] ; la présence de résultats Tadarida est lue
 /// à part via [ResultatsIdentificationDao] (le CLI est le point de composition entre les features `passage`
@@ -98,6 +100,7 @@ public final class StatutPassage implements Callable<Integer> {
                 "Séquences",
                 detail.nombreSequences() + " (durée enregistrée "
                         + Formats.dureeLisible(detail.dureeEnregistreeSecondes()) + ")");
+        ligne(texte, "Audio", audioLisible(detail));
         ligne(texte, "Météo", meteoLisible(detail.meteo()));
         ligne(
                 texte,
@@ -105,6 +108,18 @@ public final class StatutPassage implements Callable<Integer> {
                 tadarida.map(r -> "oui (" + r.formatDetecte() + ", importé le " + r.dateImport() + ")")
                         .orElse("non"));
         return texte.toString().stripTrailing();
+    }
+
+    /// Disponibilité **observée** de l'audio local (#1298) et son décompte : `COMPLETE`, `PARTIELLE`
+    /// (avec `présentes/total`) ou `ABSENTE` — l'état d'un passage archivé (#1297), réactivable par
+    /// réimport (`reactiver`).
+    private static String audioLisible(DetailPassage detail) {
+        DecompteAudio decompte = detail.decompteAudio();
+        if (decompte.total() == 0) {
+            return "aucune séquence importée";
+        }
+        return decompte.disponibilite() + " (" + decompte.presentes() + "/" + decompte.total()
+                + " séquence(s) sur disque)";
     }
 
     /// Ajoute `  <libellé aligné> : <valeur>` (libellé cadré à 19 caractères) suivi d'un retour ligne.
@@ -149,6 +164,8 @@ public final class StatutPassage implements Callable<Integer> {
         objet.put("volumeOriginauxOctets", detail.volumeOriginauxOctets());
         objet.put("volumeSequencesOctets", detail.volumeSequencesOctets());
         objet.put("nombreSequences", detail.nombreSequences());
+        objet.put("disponibiliteAudio", detail.decompteAudio().disponibilite().name());
+        objet.put("sequencesPresentes", detail.decompteAudio().presentes());
         objet.put("dureeEnregistreeSecondes", detail.dureeEnregistreeSecondes());
         objet.put("resultatsTadarida", tadarida.isPresent());
         objet.put(

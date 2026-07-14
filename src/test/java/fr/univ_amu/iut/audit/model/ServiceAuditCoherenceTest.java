@@ -184,7 +184,11 @@ class ServiceAuditCoherenceTest {
         assertThat(rapport.constats()).singleElement().satisfies(c -> {
             assertThat(c.severite()).isEqualTo(SeveriteConstat.INFO);
             assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
-            assertThat(c.detail()).contains("archivé").contains("2 séquence(s)");
+            assertThat(c.detail())
+                    .as("#1304 : le constat porte la disponibilité et le décompte (parité CLI)")
+                    .contains("archivé")
+                    .contains("ABSENTE")
+                    .contains("0/2 séquence(s)");
         });
     }
 
