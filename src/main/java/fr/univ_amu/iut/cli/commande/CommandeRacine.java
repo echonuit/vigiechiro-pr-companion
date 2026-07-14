@@ -42,6 +42,7 @@ import picocli.CommandLine.Spec;
             ImporterTadarida.class,
             ImporterVigieChiro.class,
             PublierCorrectionsVigieChiro.class,
+            ListerObservations.class,
             Discussion.class,
             Qualifier.class,
             ExporterLot.class,

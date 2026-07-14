@@ -22,6 +22,7 @@ import fr.univ_amu.iut.validation.model.ExportVuCsv;
 import fr.univ_amu.iut.validation.model.MarquageDouteux;
 import fr.univ_amu.iut.validation.model.ParserCsvTadarida;
 import fr.univ_amu.iut.validation.model.RapprochementTaxons;
+import fr.univ_amu.iut.validation.model.SelectionObservations;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.GroupeTaxonomiqueDao;
@@ -126,6 +127,14 @@ public class ValidationModule extends ModuleDeFeature {
     @Singleton
     ProjectionsAudioDao fournirProjectionsAudioDao(SourceDeDonnees source) {
         return new ProjectionsAudioDao(source);
+    }
+
+    /// Désignation des observations (#1311) : partagée par `lister-observations` et par **tous** les gestes
+    /// de revue. C'est ce partage qui rend les gestes par filtre sûrs - on agit sur exactement ce que la
+    /// liste a montré.
+    @Provides
+    SelectionObservations fournirSelectionObservations(ProjectionsAudioDao projections) {
+        return new SelectionObservations(projections);
     }
 
     @Provides
