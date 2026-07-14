@@ -2,19 +2,25 @@ package fr.univ_amu.iut.multisite.model;
 
 import fr.univ_amu.iut.commun.model.EcrivainCsv;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 
 /// Service métier de la feature `multisite` : construit la **vue agrégée multi-sites** du
 /// parcours P5 (épopée E5), un tableau haute densité listant tous les passages de tous les sites
@@ -31,18 +37,21 @@ import java.util.Objects;
 /// Les **vues sauvegardées** ne sont plus gérées ici (#537 étape 6b) : elles passent par le composant
 /// partagé `commun.view.GestionnaireVues` (onglets « à la Notion », table `saved_filter_view`).
 ///
-/// Dépendances inter-features (lecture seule des DAO, jamais des vues) : `multisite → sites` et
-/// `multisite → passage`. Aucune feature ne dépendant de `multisite`, le graphe reste acyclique
-/// (contrôlé par `ArchitectureTest`).
+/// Dépendances inter-features (lecture seule des DAO, jamais des vues) : `multisite → sites`,
+/// `multisite → passage` et, depuis #1338, `multisite → validation` (les résultats d'identification déjà
+/// importés, qui disent si une nuit reste « à importer »). Aucune feature ne dépendant de `multisite`, le
+/// graphe reste acyclique (contrôlé par `ArchitectureTest`).
 ///
 /// L'[Horloge] est reçue par constructeur (patron du service de référence) et sert à la vue
 /// « saison courante » ([#listerPassagesDeLaSaison(String)]), pour rester déterministe en test
 /// plutôt que d'appeler `LocalDate.now()`.
 public class ServiceMultisite {
 
-    /// En-tête du tableau / export CSV : ordre stable des colonnes (P5-CA2).
+    /// En-tête du tableau / export CSV : ordre stable des colonnes (P5-CA2). `analyse` et
+    /// `analyse_relevee_le` (#1338) closent la ligne : exporter la vue « Résultats à importer » sans dire
+    /// l'état d'analyse — ni **de quand il date** — livrerait une liste que rien ne justifie.
     private static final List<String> ENTETE =
-            List.of("site", "point", "annee", "passage", "date", "statut", "verdict");
+            List.of("site", "point", "annee", "passage", "date", "statut", "verdict", "analyse", "analyse_relevee_le");
 
     /// Nom du paramètre `filtres` (messages `requireNonNull`).
     private static final String FILTRES = "filtres";
@@ -52,10 +61,24 @@ public class ServiceMultisite {
     private final PassageDao passageDao;
     private final Horloge horloge;
 
-    public ServiceMultisite(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+    /// Cache du dernier état connu du traitement serveur (#1262), lu **en masse** (#1338).
+    private final ReleveTraitementDao relevesDao;
+
+    /// Résultats d'identification déjà importés (C12) : l'autre moitié de la question « à importer ? ».
+    private final ResultatsIdentificationDao resultatsDao;
+
+    public ServiceMultisite(
+            SiteDao siteDao,
+            PointDao pointDao,
+            PassageDao passageDao,
+            ReleveTraitementDao relevesDao,
+            ResultatsIdentificationDao resultatsDao,
+            Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
+        this.relevesDao = Objects.requireNonNull(relevesDao, "relevesDao");
+        this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
@@ -83,10 +106,16 @@ public class ServiceMultisite {
         Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         Objects.requireNonNull(filtres, FILTRES);
         Objects.requireNonNull(tri, "tri");
+        // État d'analyse (#1338) : les deux sources sont lues **une seule fois**, pas une par ligne. Le
+        // tableau peut afficher des milliers de passages ; les interroger un à un ferait autant de
+        // requêtes. Les deux tables ne portent qu'une ligne par nuit déposée : elles tiennent en mémoire.
+        Map<Long, ReleveTraitement> releves = relevesDao.parPassage();
+        Set<Long> importes = resultatsDao.passagesAvecResultats();
         List<LignePassage> lignes = new ArrayList<>();
         for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
             for (PointDEcoute point : pointDao.findBySite(site.id())) {
                 for (Passage passage : passageDao.findByPoint(point.id())) {
+                    Optional<ReleveTraitement> releve = Optional.ofNullable(releves.get(passage.id()));
                     LignePassage ligne = new LignePassage(
                             passage.id(),
                             site.numeroCarre(),
@@ -95,7 +124,9 @@ public class ServiceMultisite {
                             passage.numeroPassage(),
                             passage.dateEnregistrement(),
                             passage.statutWorkflow(),
-                            passage.verdictVerification());
+                            passage.verdictVerification(),
+                            EtatAnalyse.deduire(passage.statutWorkflow(), releve, importes.contains(passage.id())),
+                            releve.map(ReleveTraitement::releveLe).orElse(null));
                     if (filtres.accepte(ligne)) {
                         lignes.add(ligne);
                     }
@@ -177,7 +208,9 @@ public class ServiceMultisite {
                     String.valueOf(ligne.numeroPassage()),
                     ligne.dateEnregistrement(),
                     ligne.statut().libelle(),
-                    ligne.verdict() == null ? "" : ligne.verdict().libelle()));
+                    ligne.verdict() == null ? "" : ligne.verdict().libelle(),
+                    ligne.etatAnalyse().libelle(),
+                    ligne.analyseReleveeLe() == null ? "" : ligne.analyseReleveeLe()));
         }
         return table;
     }

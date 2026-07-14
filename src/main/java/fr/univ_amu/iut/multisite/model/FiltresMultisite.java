@@ -17,31 +17,39 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param statut statut de workflow à conserver, ou `null` pour tous les statuts
 /// @param verdict verdict de vérification à conserver, ou `null` pour tous les verdicts
 /// @param annee année à conserver, ou `null` pour toutes les années
-public record FiltresMultisite(String numeroCarre, StatutWorkflow statut, Verdict verdict, Integer annee) {
+/// @param etatAnalyse état d'analyse à conserver (#1338), ou `null` pour tous les états
+public record FiltresMultisite(
+        String numeroCarre, StatutWorkflow statut, Verdict verdict, Integer annee, EtatAnalyse etatAnalyse) {
 
     /// Aucun filtre : toutes les lignes sont conservées.
     public static FiltresMultisite aucun() {
-        return new FiltresMultisite(null, null, null, null);
+        return new FiltresMultisite(null, null, null, null, null);
     }
 
     /// Filtre ne retenant qu'un site (par son n° de carré).
     public static FiltresMultisite parSite(String numeroCarre) {
-        return new FiltresMultisite(numeroCarre, null, null, null);
+        return new FiltresMultisite(numeroCarre, null, null, null, null);
     }
 
     /// Filtre ne retenant qu'un statut de workflow.
     public static FiltresMultisite parStatut(StatutWorkflow statut) {
-        return new FiltresMultisite(null, statut, null, null);
+        return new FiltresMultisite(null, statut, null, null, null);
     }
 
     /// Filtre ne retenant qu'un verdict de vérification.
     public static FiltresMultisite parVerdict(Verdict verdict) {
-        return new FiltresMultisite(null, null, verdict, null);
+        return new FiltresMultisite(null, null, verdict, null, null);
     }
 
     /// Filtre ne retenant qu'une année.
     public static FiltresMultisite parAnnee(int annee) {
-        return new FiltresMultisite(null, null, null, annee);
+        return new FiltresMultisite(null, null, null, annee, null);
+    }
+
+    /// Filtre ne retenant qu'un état d'analyse (#1338) : c'est lui qui porte la vue « Résultats à
+    /// importer » ([EtatAnalyse#A_IMPORTER]).
+    public static FiltresMultisite parEtatAnalyse(EtatAnalyse etatAnalyse) {
+        return new FiltresMultisite(null, null, null, null, etatAnalyse);
     }
 
     /// Indique si `ligne` satisfait **tous** les critères renseignés (les critères `null` sont
@@ -55,6 +63,9 @@ public record FiltresMultisite(String numeroCarre, StatutWorkflow statut, Verdic
             return false;
         }
         if (verdict != null && verdict != ligne.verdict()) {
+            return false;
+        }
+        if (etatAnalyse != null && etatAnalyse != ligne.etatAnalyse()) {
             return false;
         }
         return annee == null || annee.intValue() == ligne.annee();

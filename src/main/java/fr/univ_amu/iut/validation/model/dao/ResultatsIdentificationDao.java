@@ -7,6 +7,8 @@ import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /// DAO de l'entité [ResultatsIdentification] (table `identification_results`, clé
 /// auto-incrémentée).
@@ -45,6 +47,16 @@ public class ResultatsIdentificationDao extends DaoGenerique<ResultatsIdentifica
     /// Résultats annotant un passage donné (au plus un, `passage_id` unique).
     public Optional<ResultatsIdentification> findByPassage(Long idPassage) {
         return queryUnique("SELECT * FROM identification_results WHERE passage_id = ?", MAPPER, idPassage);
+    }
+
+    /// Passages dont les résultats sont **déjà importés**, en une requête (#1338).
+    ///
+    /// « Analyse terminée » et « observations déjà en base » sont deux questions distinctes : la vue
+    /// « résultats à importer » doit les croiser, sans quoi elle proposerait indéfiniment des nuits déjà
+    /// traitées. Lecture en masse : le tableau multi-sites pose la question pour des milliers de lignes, et
+    /// [#findByPassage] une par une ferait autant de requêtes.
+    public Set<Long> passagesAvecResultats() {
+        return findAll().stream().map(ResultatsIdentification::idPassage).collect(Collectors.toUnmodifiableSet());
     }
 
     @Override

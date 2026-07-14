@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.view.ActiviteMultisite;
@@ -16,6 +17,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 
 /// Module Guice de la feature `multisite` : fournit ses DAO et son service à partir de la
 /// [SourceDeDonnees] (binder en singleton par `CommunModule`).
@@ -50,8 +52,13 @@ public class MultisiteModule extends ModuleDeFeature {
     @Provides
     @Singleton
     ServiceMultisite fournirServiceMultisite(
-            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
-        return new ServiceMultisite(siteDao, pointDao, passageDao, horloge);
+            SiteDao siteDao,
+            PointDao pointDao,
+            PassageDao passageDao,
+            ReleveTraitementDao relevesDao,
+            ResultatsIdentificationDao resultatsDao,
+            Horloge horloge) {
+        return new ServiceMultisite(siteDao, pointDao, passageDao, relevesDao, resultatsDao, horloge);
     }
 
     // Le ViewModel n'est volontairement PAS @Singleton (cf. SitesModule) : un VM frais par

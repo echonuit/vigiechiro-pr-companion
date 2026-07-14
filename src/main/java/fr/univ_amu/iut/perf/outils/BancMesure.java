@@ -3,6 +3,7 @@ package fr.univ_amu.iut.perf.outils;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -13,6 +14,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -68,6 +70,10 @@ public final class BancMesure {
                 new SiteDao(source),
                 new PointDao(source),
                 new PassageDao(source),
+                // #1338 : l'état d'analyse est lu en masse à chaque listage. Le banc les branche pour
+                // mesurer le coût réel de la vue, pas une version amputée de deux tables.
+                new ReleveTraitementDao(source),
+                new ResultatsIdentificationDao(source),
                 new HorlogeFigee(LocalDate.of(2026, 6, 4)));
 
         System.out.println("=== Banc de mesure couche données (#29) — base " + racine + " ===");

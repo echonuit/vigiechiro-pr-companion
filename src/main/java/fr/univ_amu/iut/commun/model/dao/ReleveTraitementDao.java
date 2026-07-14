@@ -8,7 +8,9 @@ import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /// DAO du **dernier état connu du traitement serveur** (table `participation_traitement`, cf.
 /// [ReleveTraitement], #1262).
@@ -71,6 +73,14 @@ public class ReleveTraitementDao extends DaoGenerique<ReleveTraitement, Long> {
     /// Dernier état connu du traitement de ce passage, ou vide si on ne l'a jamais relevé.
     public Optional<ReleveTraitement> pour(Long idPassage) {
         return findById(idPassage);
+    }
+
+    /// **Tous** les relevés, indexés par passage : la lecture en masse dont les vues d'ensemble ont besoin
+    /// (#1338). Le tableau multi-sites affiche des milliers de lignes : les interroger une par une via
+    /// [#pour] ferait autant de requêtes (N+1). La table ne porte qu'une ligne par nuit déposée relevée,
+    /// elle tient donc sans peine en mémoire.
+    public Map<Long, ReleveTraitement> parPassage() {
+        return findAll().stream().collect(Collectors.toMap(ReleveTraitement::idPassage, releve -> releve));
     }
 
     /// Le cache n'a **qu'un seul chemin d'écriture** : poser un relevé est idempotent par nature (il n'y a

@@ -21,6 +21,11 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param dateEnregistrement date d'enregistrement (ISO `AAAA-MM-JJ`)
 /// @param statut statut d'avancement dans le workflow d'import → dépôt
 /// @param verdict verdict de vérification (`null` tant que le passage n'a pas été vérifié)
+/// @param etatAnalyse où en est l'analyse Tadarida de cette nuit (#1338), déduite du relevé daté du
+///     serveur croisé avec la présence de résultats en base ; jamais `null`
+/// @param analyseReleveeLe horodatage ISO de **notre dernière lecture** de l'état serveur, ou `null` si
+///     on ne l'a jamais demandé. Le cache est un relevé daté, pas une vérité : la vue doit pouvoir dire
+///     de quand l'information date (patron « État observé »)
 public record LignePassage(
         Long idPassage,
         String numeroCarre,
@@ -29,4 +34,6 @@ public record LignePassage(
         int numeroPassage,
         String dateEnregistrement,
         StatutWorkflow statut,
-        Verdict verdict) {}
+        Verdict verdict,
+        EtatAnalyse etatAnalyse,
+        String analyseReleveeLe) {}
