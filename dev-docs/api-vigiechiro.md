@@ -37,9 +37,26 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
     # car une correction posée ne se retire pas (cf. § Écriture des corrections) :
     ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
         -Dvigiechiro.participationEssai=<id-participation>
+
+    # + sonde des messages (#1456) : TROISIÈME verrou, obligatoire. Cette écriture est
+    # DÉFINITIVE ($push, aucune route ne retire ni ne modifie un message) :
+    ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
+        -Dvigiechiro.participationEssai=<id-participation> -Dvigiechiro.message=true
     ```
 
     Sans `-Dvigiechiro.token`, la suite se **skippe** proprement (aucun échec accidentel).
+
+!!! danger "Pourquoi les messages ont leur propre verrou"
+    `-Dvigiechiro.write=true` **ne suffit pas** à tirer la sonde des messages, et c'est délibéré.
+
+    Toutes les autres écritures se **rattrapent** : un `PATCH` de correction **remplace**, un
+    `POST /participations` se re-modifie, un dépôt se réinitialise. `PUT …/messages`, **non** : le serveur
+    **ajoute** par `$push`, et **aucune route** ne permet de supprimer ni de modifier un message. Ce qu'elle
+    écrit **reste**, sur des données que lit un validateur du MNHN.
+
+    Sans ce troisième drapeau, qui lance les probes d'écriture pour éprouver les **corrections** laisserait,
+    sans le vouloir, une trace **définitive**. Le contrat live **hebdomadaire** (`api-live.yml`) est en
+    lecture seule et ne passe **aucun** de ces trois drapeaux : il ne peut pas emporter la sonde avec lui.
 
 === "Newman (smoke)"
 
@@ -270,9 +287,18 @@ PUT /donnees/6a4fcaa2842983a29ba25363/observations/0/messages
     qu'on a compris), `--confirmer` obligatoire en CLI, et une **fonctionnalité désactivable**
     (`discuter-validateur`) — couper l'écriture laisse la lecture du fil intacte.
 
-    Corollaire pour les probes : toute sonde **live** sur cette route est **irréversible**. Elle reste
-    **opt-in**, sur la participation de rebut, et n'a **pas** sa place dans `api-live.yml` (contrat
-    hebdomadaire, lecture seule).
+    Corollaire pour les probes : toute sonde **live** sur cette route est **irréversible**. C'est pourquoi
+    elle exige **trois** verrous et non deux (`-Dvigiechiro.write=true` +
+    `-Dvigiechiro.participationEssai=<id>` + `-Dvigiechiro.message=true`), vise la participation de
+    **rebut**, et n'a **pas** sa place dans `api-live.yml` (contrat hebdomadaire, lecture seule, qui ne
+    passe aucun de ces drapeaux).
+
+La sonde qui **éprouve** ce contrat existe (#1456) : `probe_put_message_observation` et
+`probe_message_corps_invalide` dans `ContratApiVigieChiroLiveTest`. Elles vérifient le `200`, la
+**relecture** du message dans le fil, le `422` sur un corps non-chaîne, et le fait que le serveur
+**horodate et signe lui-même** le message (le client n'envoie que le texte). Le contrat lui-même reste,
+d'ici leur premier tir, **établi statiquement** sur le code du backend (`Scille/vigiechiro-api`,
+`donnees.py`) — la méthode qui avait fait ses preuves sur #1203.
 
 ## Cycle de vie d'une participation (EPIC #941)
 

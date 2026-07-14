@@ -44,6 +44,22 @@ import org.junit.jupiter.api.Test;
 /// probes ZIP, site et corrections d'observations) sont opt-in `-Dvigiechiro.write=true` ; les probes de
 /// corrections (#1203) exigent en plus une participation **banc d'essai** explicitement désignée
 /// (`-Dvigiechiro.participationEssai=<id>`), car une correction posée ne se retire pas.
+///
+/// ## La seule route qu'on ne peut pas défaire (#1456)
+///
+/// `PUT /donnees/{id}/observations/{index}/messages` est **à part**. Toutes les autres écritures se
+/// rattrapent : un `PATCH` de correction **remplace**, un `POST /participations` se re-modifie, un dépôt se
+/// réinitialise. Celle-ci, **non** : le serveur **ajoute** par `$push`, et **aucune route ne permet de
+/// supprimer ni de modifier un message**. Ce qu'elle écrit **reste**, sur des données que lit un validateur
+/// du MNHN. Il n'y a pas de « nettoyage après test ».
+///
+/// Elle exige donc **trois** verrous, et non deux : `-Dvigiechiro.write=true`,
+/// `-Dvigiechiro.participationEssai=<id>` **et** `-Dvigiechiro.message=true`. Le troisième existe pour une
+/// raison précise : sans lui, qui lance les probes d'écriture pour éprouver les **corrections** pousserait,
+/// sans le vouloir, une trace **définitive**.
+///
+/// Le contrat live **hebdomadaire** (`api-live.yml`) est en **lecture seule** et doit le rester : il ne
+/// passe aucun de ces trois drapeaux.
 @Tag("api-live")
 @DisplayName("Contrat API VigieChiro (live, lecture) — documentation vivante du schéma")
 class ContratApiVigieChiroLiveTest {
@@ -236,6 +252,23 @@ class ContratApiVigieChiroLiveTest {
         assumeTrue(
                 Boolean.getBoolean("vigiechiro.write"),
                 "Probe d'écriture ignorée : opt-in -Dvigiechiro.write=true (écrit sur la plateforme).");
+    }
+
+    /// **Troisième** verrou, pour la seule route **irréversible** du client (#1456).
+    ///
+    /// Toutes les autres écritures se rattrapent : un `PATCH` de correction **remplace** (#1203), un
+    /// `POST /participations` se re-modifie, un dépôt se réinitialise. `PUT …/messages`, **non** : le
+    /// serveur **ajoute** par `$push`, et **aucune route ne permet de supprimer ni de modifier un
+    /// message**. Il n'y a pas de « nettoyage après test ».
+    ///
+    /// `-Dvigiechiro.write=true` ne suffit donc **pas** : quelqu'un qui lance les probes d'écriture pour
+    /// éprouver les **corrections** pousserait, sans le vouloir, une trace **définitive** sur des données
+    /// que lit un validateur du MNHN. Ce verrou-ci ne s'ouvre qu'en le **nommant**.
+    private static void supposerEcritureIrreversibleAutorisee() {
+        assumeTrue(
+                Boolean.getBoolean("vigiechiro.message"),
+                "Probe de message ignorée : opt-in -Dvigiechiro.message=true. ATTENTION, cette écriture est"
+                        + " DÉFINITIVE (le serveur $push, aucune route ne retire ni ne modifie un message).");
     }
 
     @Test
@@ -472,6 +505,72 @@ class ContratApiVigieChiroLiveTest {
                 .as("PATCH /donnees/{id} avec observations : refusé à l'observateur (le contrat de #723"
                         + " passe par la route positionnelle, pas par le tableau complet)")
                 .isEqualTo(403);
+    }
+
+    @Test
+    @DisplayName("PROBE #1418/#1456 : PUT /donnees/{id}/observations/{index}/messages — le message part (200)"
+            + " et se relit dans le fil. ATTENTION : cette écriture est DÉFINITIVE, le serveur $push et"
+            + " aucune route ne retire ni ne modifie un message. Triple opt-in, banc d'essai seulement")
+    void probe_put_message_observation() {
+        supposerEcritureAutorisee();
+        supposerEcritureIrreversibleAutorisee();
+        CibleCorrection cible = cibleCorrection();
+
+        // Le texte se DÉSIGNE lui-même comme une sonde : ce qu'on écrit ici reste, et un validateur du
+        // MNHN peut le lire un jour. Autant qu'il sache tout de suite ce que c'est.
+        String texte = "Sonde de contrat automatisée (#1456) : vérification du contrat d'écriture des"
+                + " messages. Ce message n'appelle pas de réponse.";
+
+        api().contentType("application/json")
+                .body(Map.of("message", texte))
+                .when()
+                .put("/donnees/{id}/observations/0/messages", cible.idDonnee())
+                .then()
+                .statusCode(200);
+
+        // Le contrat ne vaut que relu : le serveur a-t-il vraiment gardé ce qu'on lui a donné ?
+        List<Map<String, Object>> fil = api().when()
+                .get("/donnees/{id}", cible.idDonnee())
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("observations[0].messages");
+
+        assertThat(fil)
+                .as("fil de discussion relu après le PUT (le serveur ajoute par $push : le fil ne rétrécit"
+                        + " jamais)")
+                .isNotNull()
+                .isNotEmpty();
+        assertThat(fil.stream().map(message -> String.valueOf(message.get("message"))))
+                .as("le texte envoyé se relit tel quel dans le fil")
+                .contains(texte);
+        // Ni auteur ni date ne sont inventés côté client : c'est le serveur qui les pose. Consigner leur
+        // présence, c'est consigner que notre modèle a raison de les attendre de lui.
+        assertThat(fil.getLast())
+                .as("le serveur horodate et signe lui-même le message (le client n'envoie que le texte)")
+                .containsKeys("auteur", "date");
+    }
+
+    @Test
+    @DisplayName("PROBE #1418/#1456 (verdict négatif) : un corps de message non-chaîne est refusé (422) —"
+            + " le serveur n'écrit rien, la sonde ne laisse donc aucune trace")
+    void probe_message_corps_invalide() {
+        supposerEcritureAutorisee();
+        supposerEcritureIrreversibleAutorisee();
+        CibleCorrection cible = cibleCorrection();
+
+        int refus = api().contentType("application/json")
+                .body(Map.of("message", Map.of("texte", "un objet, pas une chaîne")))
+                .when()
+                .put("/donnees/{id}/observations/0/messages", cible.idDonnee())
+                .then()
+                .extract()
+                .statusCode();
+
+        assertThat(refus)
+                .as("le serveur n'accepte qu'une chaîne : c'est ce refus qui garantit qu'on ne peut pas"
+                        + " glisser une structure dans un fil de discussion")
+                .isEqualTo(422);
     }
 
     /// Une observation corrigeable du banc d'essai : les probes d'écriture exigent une participation
