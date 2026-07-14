@@ -112,7 +112,10 @@ public class ConnexionModaleController {
         // a plus rien à coller. Le bouton « Se déconnecter » fait le miroir.
         champToken.disableProperty().bind(viewModel.connecteProperty().or(verificationEnCours));
         boutonConnecter.disableProperty().bind(viewModel.connecteProperty().or(verificationEnCours));
-        boutonDeconnecter.disableProperty().bind(viewModel.connecteProperty().not());
+        // Déconnexion possible dès qu'un jeton est enregistré, même non vérifié (#1369).
+        boutonDeconnecter
+                .disableProperty()
+                .bind(viewModel.jetonEnregistreProperty().not());
         // Tooltips d'explication du grisage (#789), posés sur les enveloppes (un Button désactivé n'en
         // affiche pas). Le texte suit l'état : cause du blocage ou description de l'action disponible.
         IndicateurBlocage.expliquer(
@@ -124,11 +127,14 @@ public class ConnexionModaleController {
                                 .otherwise("Se connecter à VigieChiro avec le jeton collé ci-dessus.")));
         IndicateurBlocage.expliquer(
                 enveloppeDeconnecter,
-                Bindings.when(viewModel.connecteProperty())
+                Bindings.when(viewModel.jetonEnregistreProperty())
                         .then("Se déconnecter de VigieChiro (efface le jeton mémorisé sur ce poste).")
                         .otherwise("Aucune connexion active à interrompre."));
         viewModel.rafraichir();
         majBadgeIdentite(viewModel.connecteProperty().get());
+        // #1369 : un jeton conservé hors ligne (jamais vérifié) est revérifié à l'ouverture, sans
+        // geste : le badge redevient vert dès que la plateforme répond.
+        viewModel.jetonAVerifier().ifPresent(this::verifierJeton);
     }
 
     /// Étape 1 : ouvre la plateforme dans le navigateur système (pour s'y connecter).
@@ -159,6 +165,11 @@ public class ConnexionModaleController {
             afficherStatut("Collez d'abord votre token VigieChiro.", STATUT_INFO);
             return;
         }
+        verifierJeton(token);
+    }
+
+    /// Vérifie un jeton (collé, ou enregistré non vérifié à revérifier, #1369) hors du fil JavaFX.
+    private void verifierJeton(String token) {
         verificationEnCours.set(true);
         afficherStatut("Vérification en cours…", STATUT_INFO);
         executeur.executer(
@@ -198,7 +209,8 @@ public class ConnexionModaleController {
             case ReponseApi.Injoignable<ProfilVigieChiro>(String cause) ->
                 afficherStatut(
                         "VigieChiro est injoignable (" + cause + ") : impossible de vérifier le jeton."
-                                + " Vérifiez le réseau et réessayez — le jeton n'est peut-être pas en cause.",
+                                + " Il reste enregistré et sera revérifié à la prochaine ouverture —"
+                                + " le jeton n'est peut-être pas en cause.",
                         STATUT_DANGER);
             case ReponseApi.Refuse<ProfilVigieChiro>(int statut, String corps) ->
                 afficherStatut(
