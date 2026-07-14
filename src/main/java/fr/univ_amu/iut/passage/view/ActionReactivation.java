@@ -3,17 +3,15 @@ package fr.univ_amu.iut.passage.view;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
-import java.io.File;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
-import javafx.stage.DirectoryChooser;
-import javafx.stage.Window;
+import java.util.Optional;
 
 /// Action IHM « Réactiver ce passage » (#1302), extraite de [PassageController] (pur câblage, PMD
 /// GodClass) : demande le dossier des fichiers réimportés, lance la réactivation **hors du fil
@@ -33,24 +31,27 @@ final class ActionReactivation {
     private final PassageViewModel viewModel;
     private final IndicateurOccupation occupation;
     private final NotificateurModifiable notificateur;
-    private final Supplier<Window> fenetre;
+    private final SelecteurFichier selecteur;
     private final Runnable recharger;
 
     /// @param viewModel ViewModel de M-Passage (porte la réactivation)
     /// @param occupation voile d'occupation de l'écran (#1213) : la réactivation tourne hors du fil JavaFX
     /// @param notificateur porteur de compte rendu partagé de l'écran (double capturant en test)
-    /// @param fenetre fournisseur de la fenêtre propriétaire des dialogues (évalué au clic)
+    /// @param selecteur porteur de désignation partagé de l'écran (#1431) : c'est lui qui demande le
+    ///     dossier des fichiers d'origine. Un `DirectoryChooser` en dur ici **figeait** tout test du
+    ///     geste - le clic ne revenait jamais, et « Réactiver » restait vérifiable seulement par le
+    ///     grisage de son bouton
     /// @param recharger rejeu de l'ouverture de l'écran après réactivation (volumes, boutons)
     ActionReactivation(
             PassageViewModel viewModel,
             IndicateurOccupation occupation,
             NotificateurModifiable notificateur,
-            Supplier<Window> fenetre,
+            SelecteurFichier selecteur,
             Runnable recharger) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
         this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
-        this.fenetre = Objects.requireNonNull(fenetre, "fenetre");
+        this.selecteur = Objects.requireNonNull(selecteur, "selecteur");
         this.recharger = Objects.requireNonNull(recharger, "recharger");
     }
 
@@ -58,13 +59,12 @@ final class ActionReactivation {
     /// compte. Aucune confirmation destructive : l'opération **ajoute** de l'audio, elle n'en
     /// supprime pas (les fichiers sont copiés, la sauvegarde de l'utilisateur reste intacte).
     void reactiver() {
-        DirectoryChooser selecteur = new DirectoryChooser();
-        selecteur.setTitle("Dossier des fichiers d'origine à réimporter");
-        File dossier = selecteur.showDialog(fenetre.get());
-        if (dossier == null) {
+        Optional<Path> dossier =
+                selecteur.choisirDossier("Dossier des fichiers d'origine à réimporter", Optional.empty());
+        if (dossier.isEmpty()) {
             return;
         }
-        Path source = dossier.toPath();
+        Path source = dossier.orElseThrow();
         occupation.occuper(
                 "Vérification des fichiers…",
                 () -> viewModel.reactiver(source, progres -> {}),

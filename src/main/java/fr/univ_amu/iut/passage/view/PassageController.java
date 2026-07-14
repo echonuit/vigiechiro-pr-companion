@@ -22,6 +22,8 @@ import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
+import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.view.Stepper;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -108,6 +110,20 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// Porteur de compte rendu exposé aux tests : `notificateur().definir(double)`.
     NotificateurModifiable notificateur() {
         return notificateur;
+    }
+
+    /// Désignation d'un dossier : porteur partagé injectable (#1431), double répondant en test. Le seul
+    /// geste de l'écran qui en ait besoin est « Réactiver ce passage », et c'est **par lui** qu'il
+    /// restait intestable : un `DirectoryChooser` en dur fige un test headless au même titre qu'un
+    /// `Alert`, et il ouvre l'action - le test s'arrêtait à la première ligne.
+    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+            // `this.racine` (et non `racine`) : le champ @FXML est déclaré plus bas, et une référence
+            // simple en avant est refusée dans un initialiseur. La fenêtre n'est lue qu'au clic.
+            new SelecteurFichierJavaFx(() -> this.racine.getScene().getWindow()));
+
+    /// Porteur de désignation exposé aux tests (#1431) : `selecteur().definir(double)`.
+    SelecteurFichierModifiable selecteur() {
+        return selecteur;
     }
 
     @FXML
@@ -524,11 +540,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private void reactiver() {
         new ActionReactivation(
-                        viewModel,
-                        occupation,
-                        notificateur,
-                        () -> racine.getScene().getWindow(),
-                        () -> viewModel.ouvrirSur(idPassage, contexte))
+                        viewModel, occupation, notificateur, selecteur, () -> viewModel.ouvrirSur(idPassage, contexte))
                 .reactiver();
     }
 
