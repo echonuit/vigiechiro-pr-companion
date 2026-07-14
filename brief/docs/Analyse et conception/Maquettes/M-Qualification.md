@@ -113,7 +113,7 @@ L'écran est divisé en **2 colonnes** : à gauche, la liste chronologique des s
   <text x="320" y="216" class="info-label">DATE</text>
   <text x="320" y="234" class="info-value">22/06/2026 (20:25 → 07:47)</text>
   <text x="560" y="216" class="info-label">SÉQUENCES TOTALES</text>
-  <text x="560" y="234" class="info-value">3 614 (durée audible 5h01)</text>
+  <text x="560" y="234" class="info-value">3 614 (5 h 1 min enregistrées)</text>
   <text x="800" y="216" class="info-label">VERDICT ACTUEL</text>
   <text x="800" y="234" class="info-value" fill="#6a737d" font-style="italic">non saisi</text>
   <text x="1010" y="216" class="info-label">STATUT</text>

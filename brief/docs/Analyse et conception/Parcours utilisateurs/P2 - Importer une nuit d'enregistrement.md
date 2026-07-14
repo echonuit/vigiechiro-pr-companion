@@ -23,7 +23,7 @@ Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enr
     *Cas dégradé : si le dossier mélange fichiers préfixés et non préfixés, l'application bloque l'import avec le message « Le dossier contient un mélange de fichiers nommés et non nommés. Nettoyez le dossier puis réessayez ».*
 4. Marie valide « Importer ». L'application **copie de manière protégée** tous les fichiers depuis la SD vers son espace de travail (R9 : aucune écriture sur les originaux SD). Les fichiers copiés **reçoivent ou conservent** le préfixe `CarXXXXXX-AAAA-PassN-YY-` (R6, R7, R8).
 5. Une fois la copie terminée, l'application **transforme** automatiquement chaque enregistrement original en séquences d'écoute (expansion ×10 + découpage 5 s, R10). Une barre de progression détaillée informe Marie de l'étape en cours et de l'étape suivante.
-6. À la fin, l'application affiche un récapitulatif : nombre de séquences d'écoute produites, durée totale audible, durée écoulée. Le passage est créé en base avec le statut `Transformé`. L'**association enregistreur → site/point** est mémorisée pour faciliter les imports suivants. Marie est invitée à enchaîner sur la **vérification d'enregistrement** (parcours [P3](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)).
+6. À la fin, l'application affiche un récapitulatif : nombre de séquences d'écoute produites, durée totale enregistrée, durée écoulée. Le passage est créé en base avec le statut `Transformé`. L'**association enregistreur → site/point** est mémorisée pour faciliter les imports suivants. Marie est invitée à enchaîner sur la **vérification d'enregistrement** (parcours [P3](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)).
 
 ## Notes importantes
 

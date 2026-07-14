@@ -102,7 +102,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
   <text x="40" y="352" class="section">Résumé de la nuit</text>
   <rect x="40" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="172" y="406" class="stat-num" text-anchor="middle">38,4 Go</text><text x="172" y="426" class="stat-label" text-anchor="middle">VOLUME BRUTS</text>
   <rect x="325" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="457" y="406" class="stat-num" text-anchor="middle">17 Go</text><text x="457" y="426" class="stat-label" text-anchor="middle">VOLUME TRANSFORMÉ</text>
-  <rect x="610" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="742" y="406" class="stat-num" text-anchor="middle">5h01</text><text x="742" y="426" class="stat-label" text-anchor="middle">DURÉE AUDIBLE</text>
+  <rect x="610" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="742" y="406" class="stat-num" text-anchor="middle">5 h 1 min</text><text x="742" y="426" class="stat-label" text-anchor="middle">DURÉE ENREGISTRÉE</text>
   <rect x="895" y="366" width="265" height="74" rx="4" class="stat-card"/><text x="1027" y="406" class="stat-num" text-anchor="middle">3 614</text><text x="1027" y="426" class="stat-label" text-anchor="middle">SÉQUENCES</text>
 
   <!-- Actions « avancer » (cartes). Vérifier = mise en avant ; Validation = verrouillée. -->
@@ -126,7 +126,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 - **En-tête** : le titre identifie le passage (`Carré N / Point / N° X (année)`) ; **✏ Modifier rattachement** et **🗑 Supprimer** agissent sur le passage.
 - **Bandeau d'identité** : 4 cellules condensées (date/plage horaire, enregistreur en monospace, statut d'avancement, verdict de vérification).
 - **Indicateur d’étapes du statut** : 5 étapes `Importé › Transformé › Vérifié › Prêt à déposer › Déposé`. Vert = franchi, bleu = étape courante, gris = à venir.
-- **Résumé de la nuit** : 4 statistiques clés (volume bruts, volume transformé, durée audible, nombre de séquences).
+- **Résumé de la nuit** : 4 statistiques clés (volume bruts, volume transformé, durée enregistrée, nombre de séquences). La **durée enregistrée** est la durée réelle captée par l'enregistreur (somme des durées des séquences), pas la durée d'écoute : les séquences étant ralenties ×10, les réécouter intégralement prend dix fois plus longtemps.
 - **Actions** : 4 **cartes** « avancer ». Une seule porte le **liseré « recommandée »** (prochaine étape du cycle), qui **se déplace au fil de l'avancement** : Vérifier (à `Transformé`) → Préparer le dépôt (à `Vérifié` / `Prêt à déposer`, état montré ici) → Validation Tadarida (à `Déposé`). `Diagnostic matériel` est une action transverse, toujours disponible mais jamais « recommandée ». `Validation Tadarida` est **verrouillée** (carte grisée, non cliquable) tant que le passage n'est pas `Déposé`. Un **indice contextuel** sous les cartes explique l'action attendue / les conditions de déverrouillage.
 
 ### Interactions clés
