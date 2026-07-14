@@ -293,12 +293,19 @@ PUT /donnees/6a4fcaa2842983a29ba25363/observations/0/messages
     **rebut**, et n'a **pas** sa place dans `api-live.yml` (contrat hebdomadaire, lecture seule, qui ne
     passe aucun de ces drapeaux).
 
-La sonde qui **éprouve** ce contrat existe (#1456) : `probe_put_message_observation` et
-`probe_message_corps_invalide` dans `ContratApiVigieChiroLiveTest`. Elles vérifient le `200`, la
-**relecture** du message dans le fil, le `422` sur un corps non-chaîne, et le fait que le serveur
-**horodate et signe lui-même** le message (le client n'envoie que le texte). Le contrat lui-même reste,
-d'ici leur premier tir, **établi statiquement** sur le code du backend (`Scille/vigiechiro-api`,
-`donnees.py`) — la méthode qui avait fait ses preuves sur #1203.
+**Ce contrat est vérifié en vrai** (#1456, tir du 2026-07-14 sur la participation de rebut) :
+`probe_put_message_observation` et `probe_message_corps_invalide` dans `ContratApiVigieChiroLiveTest`. Il
+n'est donc plus **déduit** du code du backend, il est **constaté** :
+
+| Ce qui est constaté | Verdict |
+|---|---|
+| `PUT` avec un jeton d'`Observateur` **propriétaire** de la donnée | `200` |
+| Le message se **relit** dans le fil juste après | oui - le `$push` a bien eu lieu |
+| Le serveur **horodate et signe** lui-même (`auteur`, `date`) | oui - le client n'envoie **que** le texte, et le modèle a raison de les attendre de lui |
+| Un corps **non-chaîne** (objet au lieu de texte) | `422` - on ne peut pas glisser une structure dans un fil |
+
+Le message écrit par ce tir **est toujours là** : la route ne permet pas de le retirer. C'est la
+démonstration, par l'exemple, de ce que dit l'encadré ci-dessus.
 
 ## Cycle de vie d'une participation (EPIC #941)
 
