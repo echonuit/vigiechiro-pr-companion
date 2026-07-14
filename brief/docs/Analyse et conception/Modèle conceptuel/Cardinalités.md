@@ -12,7 +12,7 @@ Tableau récapitulatif des cardinalités d'association du modèle conceptuel. Le
 | [Passage](C5%20-%20Passage.md) | produit | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | 1..1 | un passage donne exactement une session d'enregistrement |
 | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | contient | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | 1..* | typiquement plusieurs centaines à plusieurs milliers |
 | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | contient | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | typiquement 1,3 × le nombre d'enregistrements originaux |
-| [Enregistrement original](C7%20-%20Enregistrement%20original.md) | découpé en | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | un enregistrement original donne 1 à N séquences de 5 s ralenties ×10 |
+| [Enregistrement original](C7%20-%20Enregistrement%20original.md) | découpé en | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | 1..* | un enregistrement original donne 1 à N séquences, une par tranche de 5 s réelles, ralenties ×10 |
 | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | référence | [Journal du capteur](C9%20-%20Journal%20du%20capteur.md) | 1..1 | un seul journal par passage |
 | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | référence | [Relevé climatique](C10%20-%20Relevé%20climatique.md) | 0..1 | absent si la sonde T°/H est défaillante |
 | [Passage](C5%20-%20Passage.md) | à vérifier par | [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md) | 0..1 | créée au moment de la vérification utilisateur |

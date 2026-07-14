@@ -146,8 +146,8 @@
 
 **Critères d'acceptation** :
 
-- [ ] Pour chaque enregistrement original copié (E2.S4), l'application produit `ceil(durée × 10 / 5) = ceil(2 × durée)` séquences d'écoute ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)).
-- [ ] Chaque séquence est un fichier WAV de **5 s ralenti ×10** (expansion temporelle, pas un re-échantillonnage). La dernière séquence d'un enregistrement peut être plus courte que 5 s.
+- [ ] Pour chaque enregistrement original copié (E2.S4), l'application produit `ceil(durée / 5)` séquences d'écoute, une par tranche de **5 s réelles** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)).
+- [ ] Chaque séquence est un fichier WAV portant **5 s réelles d'enregistrement, ralenties ×10** (expansion temporelle, pas un re-échantillonnage) : elle **dure donc 50 s à l'écoute**. Le découpage se fait au rythme d'**acquisition** du signal brut, et non sur le signal déjà ralenti. La dernière séquence d'un enregistrement peut être plus courte que 5 s.
 - [ ] Le nom de chaque séquence reprend le nom de son enregistrement original source en insérant un suffixe `_000`, `_001`, etc. entre le nom de base et l'extension `.wav` ([R8](../Modèle%20conceptuel/Règles%20métier.md#r8)).
 - [ ] La transformation est **déterministe** : relancer la transformation sur les mêmes enregistrements produit les mêmes séquences au bit près ([R11](../Modèle%20conceptuel/Règles%20métier.md#r11)).
 - [ ] La transformation se fait **en arrière-plan** avec barre de progression (séquence en cours, % global). L'utilisateur peut fermer la fenêtre sans annuler.

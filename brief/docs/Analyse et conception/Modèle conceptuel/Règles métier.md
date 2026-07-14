@@ -37,7 +37,7 @@ Les règles métier du modèle conceptuel. Chaque règle a un identifiant ancré
 
 ## Transformation
 
-- **R10**{ #r10 } : la transformation d'un enregistrement original produit des **séquences d'écoute de 5 s ralenties ×10** (expansion de temps). Pour un enregistrement original de durée `D`, on obtient `ceil(D × 10 / 5) = ceil(2 × D)` séquences. La dernière séquence peut être plus courte que 5 s. La source doit être un **ultrason brut non ralenti** (échantillonné à la fréquence d'acquisition, ex. 384 kHz) : un fichier déjà ralenti est rejeté ([R31](#r31)), pas transformé.
+- **R10**{ #r10 } : la transformation d'un enregistrement original le **découpe en tranches de 5 s réelles**, puis **ralentit ×10** chaque tranche (expansion de temps). Le découpage porte donc sur le signal **brut**, pas sur le signal déjà ralenti : une séquence d'écoute contient **5 s d'enregistrement** et **dure 50 s à l'écoute**. Pour un enregistrement original de durée `D` (en secondes réelles), on obtient `ceil(D / 5)` séquences. La dernière séquence peut être plus courte que 5 s. La source doit être un **ultrason brut non ralenti** (échantillonné à la fréquence d'acquisition, ex. 384 kHz) : un fichier déjà ralenti est rejeté ([R31](#r31)), pas transformé.
 - **R11**{ #r11 } : la transformation est **deterministe** : relancer la transformation sur les mêmes enregistrements originaux produit les mêmes séquences d'écoute au bit près.
 
 ## Vérification d'enregistrement

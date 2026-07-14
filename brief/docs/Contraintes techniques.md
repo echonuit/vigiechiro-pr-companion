@@ -108,11 +108,12 @@ concentrer le développement sur la chaîne métier :
 - Les **CSV d'observations** suivent le format produit par Tadarida : séparateur point-virgule, champs
   entre guillemets quand nécessaire, encodage UTF-8 (cf. exemples dans
   [`transformes/`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit/tree/main/transformes)
-  du dépôt d'échantillon). Sur une séquence de 5 s ralentie ×10, Tadarida peut produire **plusieurs
-  lignes** (une par espèce distincte identifiée), avec un *timing* début/fin précis dans la séquence.
+  du dépôt d'échantillon). Sur une séquence (5 s réelles ralenties ×10), Tadarida peut produire **plusieurs
+  lignes** (une par espèce distincte identifiée), avec un *timing* début/fin précis dans la séquence,
+  exprimé en **secondes réelles** à l'intérieur de la tranche de 5 s.
 - Les **WAV bruts** sont au format PCM 16 bits, mono, 384 kHz. Les **WAV transformés** déposés sur
-  Vigie-Chiro sont des séquences de 5 s **déjà ralenties ×10** (signal ramené dans la bande audible) :
-  c'est ce fichier qui est lu en lecture normale dans l'IHM, et non un ralentissement appliqué à la
-  volée. Chaque séquence est **nommée par l'heure réelle de son début** (l'horodatage de
+  Vigie-Chiro sont des tranches de **5 s réelles**, **déjà ralenties ×10** (signal ramené dans la bande
+  audible), qui durent donc **50 s à l'écoute** : c'est ce fichier qui est lu en lecture normale dans
+  l'IHM, et non un ralentissement appliqué à la volée. Chaque séquence est **nommée par l'heure réelle de son début** (l'horodatage de
   l'enregistrement décalé de 5 s par séquence, suffixe `_000`) : c'est ce nom que porte l'`observations.csv`,
   et qui relie une observation à sa séquence audio.

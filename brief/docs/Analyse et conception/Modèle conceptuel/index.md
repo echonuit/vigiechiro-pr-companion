@@ -8,7 +8,7 @@ Ce document pose le **vocabulaire**, le **modèle de données** et les **règles
 
 ## Vue d'ensemble
 
-L'application *VigieChiro PR Companion* organise les données autour d'un utilisateur unique (mono-utilisateur, hors-ligne). Cet utilisateur déclare un ou plusieurs **sites de suivi**, chaque site contenant un ou plusieurs **points d'écoute**. Sur chaque point, il réalise des **passages** (= une nuit complète d'enregistrement). Chaque passage produit une **session d'enregistrement** : les enregistrements originaux copiés depuis la SD, les séquences d'écoute (ralenties ×10 et découpées en 5 s) prêtes à être déposées sur Vigie-Chiro, ainsi que le journal du capteur et le relevé climatique de l'enregistreur utilisé.
+L'application *VigieChiro PR Companion* organise les données autour d'un utilisateur unique (mono-utilisateur, hors-ligne). Cet utilisateur déclare un ou plusieurs **sites de suivi**, chaque site contenant un ou plusieurs **points d'écoute**. Sur chaque point, il réalise des **passages** (= une nuit complète d'enregistrement). Chaque passage produit une **session d'enregistrement** : les enregistrements originaux copiés depuis la SD, les séquences d'écoute (découpées en tranches de 5 s réelles, puis ralenties ×10) prêtes à être déposées sur Vigie-Chiro, ainsi que le journal du capteur et le relevé climatique de l'enregistreur utilisé.
 
 Une fois les séquences d'écoute produites, l'utilisateur **vérifie l'enregistrement** par échantillonnage (sound check global). S'il est satisfait, il prépare le lot prêt à déposer et téléverse manuellement sur le portail Vigie-Chiro. Le retour de **Tadarida** (résultats d'identification) arrive ensuite, et le passage entre alors en **validation taxonomique** (espèce par espèce).
 
@@ -39,7 +39,7 @@ Le modèle conceptuel est éclaté en plusieurs fiches pour rester lisible. Chaq
 | C5 | [Passage](C5%20-%20Passage.md) | Une nuit complète sur un point. **Entité centrale**. |
 | C6 | [Session d'enregistrement](C6%20-%20Session%20d%27enregistrement.md) | Agrégat de données produit par un passage. |
 | C7 | [Enregistrement original](C7%20-%20Enregistrement%20original.md) | Fichier audio brut, ultrason, inaudible. |
-| C8 | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | Fichier audible (×10, 5 s) déposé sur Vigie-Chiro. |
+| C8 | [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md) | Fichier audible déposé sur Vigie-Chiro : 5 s réelles ralenties ×10 (50 s à l'écoute). |
 | C9 | [Journal du capteur](C9%20-%20Journal%20du%20capteur.md) | `LogPR<n>.txt` du firmware Teensy. |
 | C10 | [Relevé climatique](C10%20-%20Relevé%20climatique.md) | `*_THLog.csv` (optionnel). |
 | C11 | [Sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md) | Sous-ensemble de séquences pour la vérification. |

@@ -39,7 +39,7 @@ flowchart TB
     S2 --> SD
     SD[("💾 Carte SD pleine - WAV bruts + LogPR + THLog")]
     SD --> S3
-    S3["📥 <b>Étape 3 · Importer la nuit</b><br/>copie protégée + renommage <code>CarXXXXXX-AAAA-PassN-YY-</code><br/>transformation ×10 + chunks 5 s"]
+    S3["📥 <b>Étape 3 · Importer la nuit</b><br/>copie protégée + renommage <code>CarXXXXXX-AAAA-PassN-YY-</code><br/>chunks 5 s réelles + transformation ×10"]
     S3 --> S4
     S4["🎧 <b>Étape 4 · Vérifier l'enregistrement</b><br/>sound check par échantillonnage<br/>verdict global OK / Douteux / À jeter"]
     S4 --> S5
@@ -75,7 +75,7 @@ flowchart TB
 
 1. **Marie** déclare son site dans l'application (étape 1).
 2. Elle se rend **sur le terrain** : programme l'enregistreur, le déploie, le récupère au matin (étape 2). Elle revient avec une **carte SD pleine** de WAV bruts.
-3. Elle revient **dans l'application** pour importer la nuit (étape 3 : copie protégée, renommage `CarXXXXXX-AAAA-PassN-YY-`, expansion temps ×10, découpage en séquences de 5 s), vérifier l'enregistrement par échantillonnage (étape 4) et préparer le lot (étape 5).
+3. Elle revient **dans l'application** pour importer la nuit (étape 3 : copie protégée, renommage `CarXXXXXX-AAAA-PassN-YY-`, découpage en tranches de 5 s réelles, expansion temps ×10), vérifier l'enregistrement par échantillonnage (étape 4) et préparer le lot (étape 5).
 4. Elle obtient un **lot prêt à déposer** sur disque, qu'elle téléverse **manuellement** via son navigateur sur le portail Vigie-Chiro.
 
 L'application **remplace entièrement** la chaîne d'outils manuels (LupasRename + Kaléidoscope 4.3.1) historiquement utilisée.

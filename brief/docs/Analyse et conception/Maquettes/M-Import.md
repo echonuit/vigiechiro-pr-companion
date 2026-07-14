@@ -284,7 +284,7 @@ Après le clic sur **📥 Importer cette nuit**, l'écran passe en mode progress
   <rect x="40" y="268" width="1120" height="130" rx="6" class="step-card-current"/>
   <circle cx="72" cy="306" r="15" class="step-num-current"/>
   <text x="72" y="311" class="step-num-txt" text-anchor="middle">3</text>
-  <text x="106" y="301" class="step-title-active">Transformation : expansion ×10 + découpage 5 s</text>
+  <text x="106" y="301" class="step-title-active">Transformation : découpage 5 s réelles + expansion ×10</text>
   <text x="106" y="319" class="step-sub">Fichier 743 / 1 572 · 7 min 32 s écoulées · temps restant estimé ~9 min</text>
   <rect x="106" y="332" width="1020" height="12" rx="6" class="progress-bg"/>
   <rect x="106" y="332" width="483" height="12" rx="6" class="progress-bar"/>
