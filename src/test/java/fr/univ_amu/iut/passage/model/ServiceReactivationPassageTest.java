@@ -65,6 +65,10 @@ class ServiceReactivationPassageTest {
     private static final String NOM_SD_BRUT = "PaRec_20260620_213000.wav";
 
     private static final String NOM_R6_BRUT = "Car040962-2026-Pass1-A1-PaRec_20260620_213000.wav";
+
+    /// Certains enregistreurs mettent un tiret dans le nom du fichier : couper au dernier tiret du nom R6
+    /// donnerait « 213000.wav », qu'on ne trouverait jamais.
+    private static final String NOM_SD_AVEC_TIRET = "PaRec-PR1925492_20260620_213000.wav";
     private static final double DUREE_REELLE_S = 0.5;
 
     @TempDir
@@ -336,6 +340,75 @@ class ServiceReactivationPassageTest {
         assertThat(rapport.manquantes()).isPositive();
     }
 
+    @Test
+    @DisplayName("#1406 : une carte SD contenant PLUSIEURS nuits ne réactive que celle du passage")
+    void carte_sd_multi_nuits() throws IOException {
+        List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);
+        // La carte porte aussi les nuits d'avant et d'après : mêmes préfixes d'enregistreur, autres
+        // horodatages. Rien ne les rattache à ce passage, et rien ne doit leur arriver.
+        Path autreNuit1 = sauvegarde.resolve("PaRec_20260618_220000.wav");
+        Path autreNuit2 = sauvegarde.resolve("PaRec_20260622_211500.wav");
+        ecrireBrut(autreNuit1, 7);
+        ecrireBrut(autreNuit2, 8);
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.voie()).isEqualTo(VoieReactivation.BRUTS);
+        assertThat(rapport.reactivees()).isEqualTo(noms.size());
+        assertThat(rapport.divergentes())
+                .as("les bruts des autres nuits ne correspondent à aucun nom connu : ignorés, pas refusés")
+                .isZero();
+        assertThat(rapport.complete()).isTrue();
+        assertThat(autreNuit1).exists();
+        assertThat(autreNuit2)
+                .as("la sauvegarde de l'utilisateur n'est jamais touchée")
+                .exists();
+    }
+
+    @Test
+    @DisplayName("#1406 : deux fichiers du même nom (copie tronquée + bonne copie) → la bonne est retrouvée")
+    void homonymes_le_bon_fichier_est_retrouve() throws IOException {
+        List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);
+        // Une copie interrompue traîne dans la sauvegarde, sous le même nom, dans un dossier qui sort
+        // AVANT l'autre dans l'ordre de parcours : s'arrêter au premier trouvé refuserait la nuit entière.
+        Path copieTronquee = sauvegarde.resolve("00-copie-interrompue").resolve(NOM_SD_BRUT);
+        ecrireBrut(copieTronquee, 123);
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.reactivees())
+                .as("tous les homonymes sont confrontés au contenu attendu, pas seulement le premier venu")
+                .isEqualTo(noms.size());
+        assertThat(rapport.divergentes()).isZero();
+        assertThat(rapport.confianceMinimale()).isEqualTo(NiveauConfiance.CERTITUDE);
+    }
+
+    @Test
+    @DisplayName("#1406 : aucun des homonymes n'est le bon → le refus dit combien ont été essayés")
+    void homonymes_tous_refuses_le_disent() throws IOException {
+        archiverAvecBrutSauvegarde(NOM_SD_BRUT, false); // l'imposteur, à la racine
+        ecrireBrut(sauvegarde.resolve("autre-copie").resolve(NOM_SD_BRUT), 77); // un second imposteur
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.reactivees()).isZero();
+        assertThat(rapport.ecarts())
+                .singleElement()
+                .satisfies(ecart -> assertThat(ecart.motif()).contains("aucun des 2 fichiers"));
+    }
+
+    @Test
+    @DisplayName("#1406 : un nom d'enregistreur contenant un tiret est retrouvé quand même")
+    void nom_d_enregistreur_avec_tiret() throws IOException {
+        List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_AVEC_TIRET, true, NOM_SD_AVEC_TIRET);
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.reactivees())
+                .as("le nom d'enregistreur s'obtient en retirant le PRÉFIXE, pas en coupant au dernier tiret")
+                .isEqualTo(noms.size());
+    }
+
     // --- Fixture ---------------------------------------------------------------------------------
 
     /// Sème un passage déposé avec deux séquences, écrit leurs WAV, en capture (ou non) l'identité,
@@ -430,6 +503,13 @@ class ServiceReactivationPassageTest {
     ///     contenu** : le cas exact que la vérification doit attraper
     /// @return les noms des séquences attendues
     private List<String> archiverAvecBrutSauvegarde(String nomDansLaSauvegarde, boolean brutIntact) throws IOException {
+        return archiverAvecBrutSauvegarde(nomDansLaSauvegarde, brutIntact, NOM_SD_BRUT);
+    }
+
+    /// Variante où le **nom d'enregistreur** du brut est choisi par le test (il peut contenir un tiret).
+    private List<String> archiverAvecBrutSauvegarde(
+            String nomDansLaSauvegarde, boolean brutIntact, String nomEnregistreur) throws IOException {
+        String nomR6 = PREFIXE.nommerOriginal(nomEnregistreur);
         idPassage = passageDao
                 .insert(new Passage(
                         null,
@@ -454,17 +534,17 @@ class ServiceReactivationPassageTest {
 
         // Le brut, tel qu'il sort de l'enregistreur : en-tête à Fe/10, contenu piloté par une graine.
         Path bruts = Files.createDirectories(racineSession.resolve("bruts"));
-        Path brut = bruts.resolve(NOM_R6_BRUT);
+        Path brut = bruts.resolve(nomR6);
         ecrireBrut(brut, 42);
 
         // Les séquences, produites par la VRAIE chaîne : ce sont elles que la base connaîtra.
-        TransformationOriginal transformation = new TransformationAudio()
-                .transformer(brut, NOM_R6_BRUT, transformes, PREFIXE, FREQUENCE_ACQUISITION_HZ);
+        TransformationOriginal transformation =
+                new TransformationAudio().transformer(brut, nomR6, transformes, PREFIXE, FREQUENCE_ACQUISITION_HZ);
 
         Long idOriginal = originalDao
                 .insert(new EnregistrementOriginal(
                         null,
-                        NOM_R6_BRUT,
+                        nomR6,
                         brut.toString(),
                         transformation.dureeSourceSecondes(),
                         transformation.frequenceSourceHz(),
