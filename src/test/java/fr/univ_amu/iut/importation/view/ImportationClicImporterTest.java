@@ -9,6 +9,8 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
+import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
@@ -24,6 +26,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -31,6 +34,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
@@ -99,11 +103,33 @@ class ImportationClicImporterTest {
         // JavaFX indéfiniment. On injecte donc un confirmateur qui accepte ; les tests qui vérifient le
         // dialogue le surchargent (confirmateur().definir(...)) pour capturer/refuser.
         controleur.confirmateur().definir(message -> true);
+        // Désignation de la source (#1431) : le double répond `choix`. Sans lui, « Parcourir » ouvrirait
+        // un DirectoryChooser natif, qui fige le test aussi sûrement qu'un Alert - c'est pourquoi ce
+        // bouton n'était jamais cliqué, et pourquoi les tests posaient le dossier directement sur le
+        // ViewModel, en contournant l'écran.
+        controleur.selecteur().definir(new SelecteurFichier() {
+            @Override
+            public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+                return choix;
+            }
+
+            @Override
+            public Optional<Path> choisirFichier(String titre, Optional<Path> dossierInitial, FiltreFichier filtre) {
+                filtres.add(filtre);
+                return choix;
+            }
+        });
         stage.setScene(new Scene(vue, 1100, 760));
         stage.show();
 
         sd = preparerCarteSD(workspace.resolve("sd"));
     }
+
+    /// Ce que le double de sélection répondra : `Optional.empty()` = l'utilisateur a **annulé**.
+    private Optional<Path> choix = Optional.empty();
+
+    /// Filtres réellement proposés par le sélecteur de fichier (« Choisir un .zip »).
+    private final List<FiltreFichier> filtres = new ArrayList<>();
 
     @AfterEach
     void nettoyerWorkspace() {
@@ -121,6 +147,49 @@ class ImportationClicImporterTest {
             }
         }
         throw new IllegalStateException("Aucun champ ImportationViewModel dans " + controleur.getClass());
+    }
+
+    @Test
+    @DisplayName("#1431 : un clic sur « Parcourir » désigne la nuit, et l'écran l'inspecte pour de bon")
+    void clic_parcourir_charge_et_inspecte_la_source(FxRobot robot) {
+        choix = Optional.of(sd);
+
+        robot.interact(() -> robot.lookup("#boutonParcourir").queryButton().fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Le dossier désigné devient la source de l'écran, et l'inspection tourne : c'est tout le geste,
+        // et il n'avait jamais été joué - les tests posaient le dossier directement sur le ViewModel.
+        assertThat(viewModel.inspection().dossierSourceProperty().get()).isEqualTo(sd);
+        assertThat(robot.lookup("#champDossier").queryAs(TextField.class).getText())
+                .contains(sd.getFileName().toString());
+        assertThat(viewModel.rattachement().sites())
+                .as("l'inspection a bien tourné : les sites rattachables sont proposés")
+                .isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("#1431 : « Parcourir » annulé : aucune source n'est chargée")
+    void clic_parcourir_annule_ne_charge_rien(FxRobot robot) {
+        choix = Optional.empty();
+
+        robot.interact(() -> robot.lookup("#boutonParcourir").queryButton().fire());
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(viewModel.inspection().dossierSourceProperty().get())
+                .as("renoncer au sélecteur ne doit rien changer à l'écran")
+                .isNull();
+    }
+
+    @Test
+    @DisplayName("#1431 : « Choisir un .zip » ne propose que des archives (#139)")
+    void clic_zip_propose_le_filtre_archive(FxRobot robot) {
+        choix = Optional.empty(); // on vérifie ce qui est PROPOSÉ, pas ce qui est choisi
+
+        robot.interact(() -> robot.lookup("#boutonZip").queryButton().fire());
+
+        assertThat(filtres)
+                .singleElement()
+                .satisfies(filtre -> assertThat(filtre.motif()).isEqualTo("*.zip"));
     }
 
     @Test
