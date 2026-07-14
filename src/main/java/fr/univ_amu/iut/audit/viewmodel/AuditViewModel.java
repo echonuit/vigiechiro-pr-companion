@@ -2,12 +2,14 @@ package fr.univ_amu.iut.audit.viewmodel;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
+import fr.univ_amu.iut.audit.model.ContexteAuditPassage;
 import fr.univ_amu.iut.audit.model.RapportAudit;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.SeveriteConstat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -42,6 +44,20 @@ public class AuditViewModel {
         List<ConstatAudit> tous = new ArrayList<>(service.auditerTout().constats());
         tous.addAll(service.auditerEnLigne().constats());
         return tous;
+    }
+
+    /// Audit **ciblé** sur un passage (#1347) : `ServiceAuditCoherence.auditerPassage` existait depuis
+    /// #1133, mais l'IHM n'exposait que l'audit global. Après avoir réparé une nuit, on veut vérifier
+    /// **cette** nuit, pas tout le workspace — surtout quand il en compte des dizaines.
+    public void auditerPassage(Long idPassage) {
+        appliquer(service.auditerPassage(idPassage).constats());
+        resume.set("Audit du passage " + idPassage + " — " + resumeProperty().get());
+    }
+
+    /// Site et point du passage cité par un constat, pour l'**ouvrir** (#1347). Vide si le constat ne cite
+    /// aucun passage, ou si son site est introuvable.
+    public Optional<ContexteAuditPassage> contexteDuPassage(Long idPassage) {
+        return idPassage == null ? Optional.empty() : service.contexteDuPassage(idPassage);
     }
 
     /// Applique une liste de constats (liste observable + résumé + drapeau sain). À exécuter sur le fil

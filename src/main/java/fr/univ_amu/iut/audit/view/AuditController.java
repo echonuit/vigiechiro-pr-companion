@@ -4,14 +4,22 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.TableDonnees;
+import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import java.util.Objects;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 
 /// Écran **Audit de cohérence** (feature `audit`) : affiche le résultat de l'audit disque / base global
@@ -46,14 +54,27 @@ public class AuditController {
     @FXML
     private Button boutonVerifierEnLigne;
 
+    @FXML
+    private Button boutonAuditerPassage;
+
+    /// Enveloppe du bouton : un `Button` désactivé n'affiche pas d'infobulle, l'explication se pose donc
+    /// sur son conteneur (socle #789).
+    @FXML
+    private StackPane enveloppeAuditerPassage;
+
     private final AuditViewModel viewModel;
     private final ExecuteurTache executeur;
+
+    /// Contrat socle de navigation vers M-Passage (#1347) : `audit` ne dépend pas du `view` de `passage`.
+    private final OuvrirPassage ouvrirPassage;
+
     private IndicateurOccupation occupation;
 
     @Inject
-    public AuditController(AuditViewModel viewModel, ExecuteurTache executeur) {
+    public AuditController(AuditViewModel viewModel, ExecuteurTache executeur, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
     }
 
     @FXML
@@ -69,10 +90,37 @@ public class AuditController {
         colDetail.setCellValueFactory(c -> texte(c.getValue().detail()));
         tableConstats.setItems(viewModel.constats());
         tableConstats.setPlaceholder(new Label("Aucun écart de cohérence détecté."));
+        // Un constat cite un passage : le double-clic l'ouvre (#1347). Jusqu'ici la table nommait le
+        // coupable et laissait l'utilisateur le retrouver à la main, alors que partout ailleurs dans
+        // l'application une ligne de table s'ouvre au double-clic.
+        TableDonnees.uniformiserNavigable(tableConstats);
+        tableConstats.setRowFactory(table -> {
+            TableRow<ConstatAudit> ligne = new TableRow<>();
+            ligne.setOnMouseClicked(clic -> {
+                if (clic.getButton() == MouseButton.PRIMARY && clic.getClickCount() == 2 && !ligne.isEmpty()) {
+                    ouvrirLePassage(ligne.getItem());
+                }
+            });
+            return ligne;
+        });
         lblResume.textProperty().bind(viewModel.resumeProperty());
         // Le voile bloque déjà l'écran pendant la vérification ; le grisage du bouton rend l'état
         // « en cours » lisible sans setDisable posé à la main (#1254).
         boutonVerifierEnLigne.disableProperty().bind(occupation.enCoursProperty());
+        // « Auditer ce passage » n'a de sens que sur un constat qui cite un passage : le bouton l'annonce
+        // en restant désactivé, plutôt que de ne rien faire au clic (affordance #789).
+        BooleanBinding sansPassageSelectionne = Bindings.createBooleanBinding(
+                () -> {
+                    ConstatAudit selection = tableConstats.getSelectionModel().getSelectedItem();
+                    return selection == null || selection.idPassage() == null;
+                },
+                tableConstats.getSelectionModel().selectedItemProperty());
+        boutonAuditerPassage.disableProperty().bind(sansPassageSelectionne);
+        IndicateurBlocage.expliquer(
+                enveloppeAuditerPassage,
+                Bindings.when(sansPassageSelectionne)
+                        .then("Sélectionnez un constat qui cite un passage pour n'auditer que celui-ci.")
+                        .otherwise("Relance l'audit sur ce seul passage (après l'avoir réparé)."));
         viewModel.rafraichir();
     }
 
@@ -91,6 +139,26 @@ public class AuditController {
                 viewModel::calculerAvecEnLigne,
                 viewModel::appliquer,
                 viewModel::signalerErreur);
+    }
+
+    /// Ouvre le passage cité par `constat` (#1347). Un constat qui ne cite aucun passage (ou dont le site
+    /// est introuvable) n'ouvre rien : il n'y a pas de destination, et un message d'erreur serait du bruit.
+    private void ouvrirLePassage(ConstatAudit constat) {
+        viewModel
+                .contexteDuPassage(constat.idPassage())
+                .ifPresent(contexte -> ouvrirPassage.ouvrir(
+                        constat.idPassage(),
+                        new ContexteSite(contexte.numeroCarre(), contexte.codePoint(), contexte.nomSite())));
+    }
+
+    /// Audit **ciblé** du passage sélectionné (#1347) : après avoir réparé une nuit, on veut vérifier
+    /// **celle-là**, pas relancer tout le workspace.
+    @FXML
+    private void auditerLePassageSelectionne() {
+        ConstatAudit selection = tableConstats.getSelectionModel().getSelectedItem();
+        if (selection != null && selection.idPassage() != null) {
+            viewModel.auditerPassage(selection.idPassage());
+        }
     }
 
     private static ReadOnlyStringWrapper texte(String valeur) {
