@@ -10,6 +10,7 @@ import fr.univ_amu.iut.audit.model.AuditPointsServeur;
 import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.audit.model.ServiceRecuperabilite;
 import fr.univ_amu.iut.audit.model.ServiceReset;
+import fr.univ_amu.iut.audit.view.ActionResetGuide;
 import fr.univ_amu.iut.audit.view.ActiviteAudit;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
@@ -44,6 +45,9 @@ public class AuditModule extends ModuleDeFeature {
     @Override
     protected void configure() {
         activite(ActiviteAudit.class);
+        // « Repartir d'une base neuve… » (#1419) : parité IHM de `reset-guide --executer`. Contribuée par
+        // la feature, pas par le socle — c'est `audit` qui sait ce qu'un reset coûte.
+        actionMenu(ActionResetGuide.class);
         // Audit en ligne (#1132 dépôts, #1178 points) : injecté en Optional pour dégrader dans les
         // injecteurs partiels (outils de capture) qui ne chargent pas ces bindings.
         // - VerificationDepot : fourni par DepotVigieChiroModule (app complète) ; défaut-vide ici.
