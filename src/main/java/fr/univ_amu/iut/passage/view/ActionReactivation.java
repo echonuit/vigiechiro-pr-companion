@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.passage.view;
 
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -9,9 +11,6 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 import javafx.stage.DirectoryChooser;
 import javafx.stage.Window;
 
@@ -32,17 +31,24 @@ final class ActionReactivation {
 
     private final PassageViewModel viewModel;
     private final IndicateurOccupation occupation;
+    private final NotificateurModifiable notificateur;
     private final Supplier<Window> fenetre;
     private final Runnable recharger;
 
     /// @param viewModel ViewModel de M-Passage (porte la réactivation)
     /// @param occupation voile d'occupation de l'écran (#1213) : la réactivation tourne hors du fil JavaFX
+    /// @param notificateur porteur de compte rendu partagé de l'écran (double capturant en test)
     /// @param fenetre fournisseur de la fenêtre propriétaire des dialogues (évalué au clic)
     /// @param recharger rejeu de l'ouverture de l'écran après réactivation (volumes, boutons)
     ActionReactivation(
-            PassageViewModel viewModel, IndicateurOccupation occupation, Supplier<Window> fenetre, Runnable recharger) {
+            PassageViewModel viewModel,
+            IndicateurOccupation occupation,
+            NotificateurModifiable notificateur,
+            Supplier<Window> fenetre,
+            Runnable recharger) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.occupation = Objects.requireNonNull(occupation, "occupation");
+        this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
         this.fenetre = Objects.requireNonNull(fenetre, "fenetre");
         this.recharger = Objects.requireNonNull(recharger, "recharger");
     }
@@ -62,14 +68,15 @@ final class ActionReactivation {
                 "Vérification des fichiers…",
                 () -> viewModel.reactiver(source, progres -> {}),
                 this::restituer,
-                echec -> alerte(AlertType.WARNING, "Réactivation impossible", message(echec)));
+                echec -> notificateur.notifier(
+                        NiveauNotification.AVERTISSEMENT, "Réactivation impossible", message(echec)));
     }
 
     /// Sur le fil JavaFX, après la réactivation : rechargement de l'écran puis compte rendu.
     private void restituer(RapportReactivation rapport) {
         recharger.run();
-        alerte(
-                rapport.divergentes() > 0 ? AlertType.WARNING : AlertType.INFORMATION,
+        notificateur.notifier(
+                rapport.divergentes() > 0 ? NiveauNotification.AVERTISSEMENT : NiveauNotification.INFORMATION,
                 rapport.complete() ? "Passage réactivé" : "Réactivation partielle",
                 texte(rapport));
     }
@@ -131,12 +138,6 @@ final class ActionReactivation {
             case CERTITUDE -> "certitude (empreinte du contenu, ou preuves structurelle et acoustique concordantes)";
             case FORTE -> "forte (nom, taille et durée concordants ; pas d'empreinte en base pour aller plus loin)";
         };
-    }
-
-    private static void alerte(AlertType type, String entete, String message) {
-        Alert alerte = new Alert(type, message, ButtonType.OK);
-        alerte.setHeaderText(entete);
-        alerte.showAndWait();
     }
 
     private static String message(Throwable echec) {

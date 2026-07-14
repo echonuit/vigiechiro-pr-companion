@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
@@ -97,9 +98,19 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// Confirmation d'action destructive : porteur partagé injectable (#1013), stub déterministe en test.
     private final ConfirmateurModifiable confirmateur = new ConfirmateurModifiable();
 
+    /// Porteur de compte rendu de l'écran : le pendant du confirmateur pour ce qui est **dit** après
+    /// l'action. Exposé aux tests (`notificateur().definir(double)`), sans quoi le `showAndWait` du
+    /// dialogue figerait TestFX headless - et le clic sur « Archiver » resterait à jamais non testé.
+    private final NotificateurModifiable notificateur = new NotificateurModifiable();
+
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
     ConfirmateurModifiable confirmateur() {
         return confirmateur;
+    }
+
+    /// Porteur de compte rendu exposé aux tests : `notificateur().definir(double)`.
+    NotificateurModifiable notificateur() {
+        return notificateur;
     }
 
     @FXML
@@ -517,6 +528,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         new ActionReactivation(
                         viewModel,
                         occupation,
+                        notificateur,
                         () -> racine.getScene().getWindow(),
                         () -> viewModel.ouvrirSur(idPassage, contexte))
                 .reactiver();
@@ -526,7 +538,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     /// [ActionArchivage] (le contrôleur reste du pur câblage).
     @FXML
     private void archiver() {
-        new ActionArchivage(viewModel, confirmateur, () -> viewModel.ouvrirSur(idPassage, contexte)).archiver();
+        new ActionArchivage(viewModel, confirmateur, notificateur, () -> viewModel.ouvrirSur(idPassage, contexte))
+                .archiver();
     }
 
     /// « Modifier le passage » : ouvre la modale E2.S8 en fenêtre modale. Elle édite d'un bloc le

@@ -2,13 +2,12 @@ package fr.univ_amu.iut.passage.view;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.NiveauNotification;
+import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.Objects;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.control.ButtonType;
 
 /// Action IHM « Archiver ce passage » (#1300), extraite de [PassageController] (pur câblage, PMD
 /// GodClass) : compose la confirmation (le gain, ce qu'on garde, ce qu'on perd, la condition de
@@ -17,14 +16,21 @@ final class ActionArchivage {
 
     private final PassageViewModel viewModel;
     private final ConfirmateurModifiable confirmateur;
+    private final NotificateurModifiable notificateur;
     private final Runnable recharger;
 
     /// @param viewModel ViewModel de M-Passage (porte l'archivage et l'annonce)
     /// @param confirmateur porteur de confirmation partagé de l'écran (stub déterministe en test)
+    /// @param notificateur porteur de compte rendu partagé de l'écran (double capturant en test)
     /// @param recharger rejeu de l'ouverture de l'écran après archivage (volumes à 0, bouton grisé)
-    ActionArchivage(PassageViewModel viewModel, ConfirmateurModifiable confirmateur, Runnable recharger) {
+    ActionArchivage(
+            PassageViewModel viewModel,
+            ConfirmateurModifiable confirmateur,
+            NotificateurModifiable notificateur,
+            Runnable recharger) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.confirmateur = Objects.requireNonNull(confirmateur, "confirmateur");
+        this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
         this.recharger = Objects.requireNonNull(recharger, "recharger");
     }
 
@@ -38,14 +44,14 @@ final class ActionArchivage {
         try {
             ServiceArchivagePassage.BilanArchivage bilan = viewModel.archiver();
             recharger.run();
-            alerte(
-                    AlertType.INFORMATION,
+            notificateur.notifier(
+                    NiveauNotification.INFORMATION,
                     "Passage archivé",
                     Formats.octetsLisibles(bilan.octetsLiberes())
                             + " libéré(s). Les observations et validations restent consultables ;"
                             + " réimportez les fichiers d'origine pour réécouter.");
         } catch (RegleMetierException refus) {
-            alerte(AlertType.WARNING, "Archivage impossible", refus.getMessage());
+            notificateur.notifier(NiveauNotification.AVERTISSEMENT, "Archivage impossible", refus.getMessage());
         }
     }
 
@@ -67,11 +73,5 @@ final class ActionArchivage {
                             + " sûr les fichiers réimportés.");
         }
         return message.toString();
-    }
-
-    private static void alerte(AlertType type, String entete, String message) {
-        Alert alerte = new Alert(type, message, ButtonType.OK);
-        alerte.setHeaderText(entete);
-        alerte.showAndWait();
     }
 }
