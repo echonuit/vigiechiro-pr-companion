@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.commun.view;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -31,6 +30,9 @@ import org.junit.jupiter.api.Test;
 /// Chaque entrée détient maintenant son action pour de bon : on remplace ses trois dialogues, on
 /// déclenche l'entrée, et on vérifie **quel** geste est parti - et, tout aussi important, **lequel ne
 /// l'est pas**.
+///
+/// Ce test dit **ce que fait** chaque entrée. Ce qu'elles forment **ensemble** - les six contribuées au
+/// menu ☰, dans l'ordre - est l'objet d'[ActionMenuWiringTest], sur le vrai injecteur.
 class ActionsMenuChromeTest {
 
     private static final Path DOSSIER = Path.of("/tmp/sauvegardes");
@@ -66,7 +68,7 @@ class ActionsMenuChromeTest {
     @DisplayName("#1405 : « Sauvegarder la base » sauvegarde - et ne restaure rien")
     void entree_sauvegarder() {
         ActionSauvegarder entree = new ActionSauvegarder(sauvegarde, navigateur, occupation);
-        neutraliserDialogues(entree.geste().actions(), DOSSIER);
+        neutraliserDialogues(entree.porteur().actions(), DOSSIER);
         when(sauvegarde.sauvegarder(DOSSIER)).thenReturn(FICHIER);
 
         entree.executer(null);
@@ -80,7 +82,7 @@ class ActionsMenuChromeTest {
     @DisplayName("#1405 : « Sauvegarde complète » emporte l'audio - ce n'est pas la sauvegarde simple")
     void entree_sauvegarder_complet() {
         ActionSauvegarderComplet entree = new ActionSauvegarderComplet(sauvegarde, navigateur, occupation);
-        neutraliserDialogues(entree.geste().actions(), DOSSIER);
+        neutraliserDialogues(entree.porteur().actions(), DOSSIER);
         when(sauvegarde.sauvegarderComplet(DOSSIER)).thenReturn(new BilanSauvegarde(DOSSIER, 2, List.of()));
 
         entree.executer(null);
@@ -95,7 +97,7 @@ class ActionsMenuChromeTest {
     @DisplayName("#1405 : « Restaurer une sauvegarde » restaure la base seule - et n'écrase pas l'audio")
     void entree_restaurer() {
         ActionRestaurer entree = new ActionRestaurer(sauvegarde, navigateur, occupation);
-        neutraliserDialogues(entree.geste().actions(), FICHIER);
+        neutraliserDialogues(entree.porteur().actions(), FICHIER);
 
         entree.executer(null);
 
@@ -108,7 +110,7 @@ class ActionsMenuChromeTest {
     @DisplayName("#1405 : « Restauration complète » remplace base ET dossiers de session")
     void entree_restaurer_complet() {
         ActionRestaurerComplet entree = new ActionRestaurerComplet(sauvegarde, navigateur, occupation);
-        neutraliserDialogues(entree.geste().actions(), DOSSIER);
+        neutraliserDialogues(entree.porteur().actions(), DOSSIER);
 
         entree.executer(null);
 
@@ -131,21 +133,5 @@ class ActionsMenuChromeTest {
         verify(purge).purgerTout();
         // Sans cette déclaration (#1303), l'audit prendrait les bruts purgés pour une corruption.
         verify(declaration).declarerPurgeGlobale();
-    }
-
-    @Test
-    @DisplayName("#1405 : les cinq entrées se rangent dans le menu ☰ sans se marcher dessus")
-    void les_entrees_sont_ordonnees() {
-        ActionSauvegarder sauvegarder = new ActionSauvegarder(sauvegarde, navigateur, occupation);
-        ActionSauvegarderComplet complete = new ActionSauvegarderComplet(sauvegarde, navigateur, occupation);
-        ActionRestaurer restaurer = new ActionRestaurer(sauvegarde, navigateur, occupation);
-
-        // Les deux sauvegardes se lisent ensemble, la complète juste après la simple ; la restauration
-        // vient après les deux. Un ordre partagé ferait dépendre l'affichage du hasard du ServiceLoader.
-        assertThat(sauvegarder.ordre()).isLessThan(complete.ordre());
-        assertThat(complete.ordre()).isLessThan(restaurer.ordre());
-        assertThat(sauvegarder.groupe()).isEqualTo(GroupeMenu.BASE);
-        assertThat(new ActionPurger(purge, navigateur, occupation, Optional.empty()).groupe())
-                .isEqualTo(GroupeMenu.MAINTENANCE);
     }
 }

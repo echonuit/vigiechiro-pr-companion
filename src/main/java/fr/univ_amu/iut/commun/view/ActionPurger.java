@@ -13,7 +13,7 @@ import javafx.stage.Window;
 ///
 /// L'action vit aussi longtemps que l'entrée de menu (#1405), au lieu de naître dans [#executer] avec
 /// ses vrais dialogues : c'est ce qui la rend **atteignable** par un test, comme les quatre entrées de
-/// sauvegarde via [GesteSauvegarde].
+/// sauvegarde via [PorteurSauvegarde].
 public final class ActionPurger implements ActionMenu {
 
     /// Fenêtre propriétaire des dialogues, posée au clic : l'action la lit **paresseusement** (elle

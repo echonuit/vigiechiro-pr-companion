@@ -10,11 +10,11 @@ import javafx.stage.Window;
 public final class ActionRestaurer implements ActionMenu {
 
     /// Plomberie de l'entrée : l'unique action, et la fenêtre du clic (#1405).
-    private final GesteSauvegarde geste;
+    private final PorteurSauvegarde porteur;
 
     @Inject
     ActionRestaurer(ServiceSauvegarde service, Navigateur navigateur, OccupationChrome occupation) {
-        this.geste = new GesteSauvegarde(service, navigateur, occupation);
+        this.porteur = new PorteurSauvegarde(service, navigateur, occupation);
     }
 
     @Override
@@ -34,11 +34,11 @@ public final class ActionRestaurer implements ActionMenu {
 
     @Override
     public void executer(Window proprietaire) {
-        geste.sous(proprietaire).restaurer();
+        porteur.sous(proprietaire).restaurer();
     }
 
-    /// Geste exposé aux tests (#1405) : `geste().actions()` porte les trois dialogues.
-    GesteSauvegarde geste() {
-        return geste;
+    /// Porteur exposé aux tests (#1405) : `porteur().actions()` porte les trois dialogues.
+    PorteurSauvegarde porteur() {
+        return porteur;
     }
 }
