@@ -308,17 +308,23 @@ class ContratApiVigieChiroLiveTest {
     }
 
     @Test
-    @DisplayName("PROBE #984 (pilier B) : un ZIP déclaré + téléversé (application/zip) + finalisé est-il"
-            + " accepté ? (échec = verdict WAV confirmé)")
+    @DisplayName("PROBE #984/#1231 : la plateforme ACCEPTE un ZIP (déclaration + PUT S3 application/zip +"
+            + " finalisation). C'est le mode de dépôt PAR DÉFAUT : un échec ici veut dire que le dépôt"
+            + " par défaut est cassé, pas qu'il faut revenir au WAV")
     void probe_zip_vs_wav() {
         supposerEcritureAutorisee();
+        // #1287 : la probe passait « probe » en second argument. Depuis #1239 c'est le lien_participation,
+        // et « probe » n'est pas un ObjectId — la déclaration était refusée, la probe échouait, et son
+        // libellé (« échec = verdict WAV confirmé ») faisait conclure l'INVERSE de la vérité. Elle vise
+        // désormais la participation de rebut, comme les autres probes d'écriture.
+        String participation = participationDeRebut();
         ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
 
-        Optional<FichierSigne> signe = client.creerFichier("Car000000-2026-Pass1-Z0-probe.zip", "probe")
+        Optional<FichierSigne> signe = client.creerFichier("Car000000-2026-Pass1-Z0-probe.zip", participation)
                 .enOptionnel();
         assertThat(signe)
-                .as("déclaration d'un .zip : refusée = verdict immédiat (les .zip ne sont pas des titres"
-                        + " valides), le dépôt reste en WAV")
+                .as("déclaration d'un .zip : la plateforme l'accepte comme fichier de participation (un"
+                        + " refus ici casserait le dépôt en archives, mode par défaut depuis #984)")
                 .isPresent();
 
         boolean televerse = client.televerserVersS3(signe.get().urlSignee(), zipDEssai(), "application/zip");
@@ -326,11 +332,21 @@ class ContratApiVigieChiroLiveTest {
 
         boolean finalise = client.finaliserFichier(signe.get().id()).echec().isEmpty();
         assertThat(finalise)
-                .as("finalisation du zip : true = la plateforme ACCEPTE un zip comme fichier de"
-                        + " participation. Vérifier ensuite à la main (après traitement Tadarida) que"
-                        + " donnees() contient les fichiers DÉZIPPÉS avant de basculer le dépôt sur les"
-                        + " archives (#984).")
+                .as("finalisation du zip : la plateforme accepte un zip comme fichier de participation,"
+                        + " l'ingère et le dézippe (vérifié en production depuis #1231 — la nuit canonique"
+                        + " a été déposée ainsi, 4806 observations à la clé)")
                 .isTrue();
+    }
+
+    /// La participation **de rebut** (`-Dvigiechiro.participationEssai=<id>`), jamais une participation
+    /// réelle : les probes d'écriture y laissent des fichiers déclarés, et un fichier déclaré ne se retire
+    /// pas d'un simple revers de main.
+    private static String participationDeRebut() {
+        String participation = System.getProperty("vigiechiro.participationEssai");
+        assumeTrue(
+                participation != null && !participation.isBlank(),
+                "Probe ignorée : fournir -Dvigiechiro.participationEssai=<participation banc d'essai>.");
+        return participation;
     }
 
     @Test
@@ -579,11 +595,7 @@ class ContratApiVigieChiroLiveTest {
     private record CibleCorrection(String idDonnee, String idTaxon) {}
 
     private static CibleCorrection cibleCorrection() {
-        String participation = System.getProperty("vigiechiro.participationEssai");
-        assumeTrue(
-                participation != null && !participation.isBlank(),
-                "Probe corrections ignorée : fournir -Dvigiechiro.participationEssai=<participation banc"
-                        + " d'essai>.");
+        String participation = participationDeRebut();
         CibleCorrection existante = chercherCible(participation);
         return existante != null ? existante : creerCible(participation);
     }

@@ -30,11 +30,12 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
     # Lecture seule (idempotent, sûr) :
     ./mvnw -Papi-live test -Dvigiechiro.token=XXXX
 
-    # + probes d'écriture (POST/PATCH/upload, sur une participation « banc d'essai ») :
+    # + probes d'écriture (POST/PATCH/upload) :
     ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true
 
-    # + probes des corrections (#1203) : exigent EN PLUS la participation banc d'essai,
-    # car une correction posée ne se retire pas (cf. § Écriture des corrections) :
+    # + probes qui écrivent SUR une participation (corrections #1203, dépôt ZIP #984) :
+    # elles exigent EN PLUS la participation de rebut, jamais une participation réelle,
+    # car ni une correction posée ni un fichier déclaré ne se retirent :
     ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
         -Dvigiechiro.participationEssai=<id-participation>
 
@@ -452,6 +453,9 @@ Même limite que `donnees` : le journal n'existe qu'après le passage du pipelin
   **en ZIP est désormais le mode par défaut** (repli WAV seulement si l'espace disque est insuffisant),
   déposé **en parallèle** (5 uploads simultanés, cf. `DepotVigieChiro`). La seule pièce manquante était
   `lien_participation` (§ « Téléversement d'un fichier », sans quoi les uploads étaient orphelins).
+  Depuis #1287, `probe_zip_vs_wav` **garde** ce verdict au lieu de le contredire : elle **affirme** que la
+  plateforme accepte un ZIP. Un rouge sur cette probe veut donc dire que **le mode de dépôt par défaut est
+  cassé** — et non, comme son libellé le laissait croire, qu'il faudrait revenir au WAV.
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
   le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites — exécuté à la
   connexion, et rejouable **à la demande** depuis M-Sites (« Synchroniser depuis VigieChiro », #1045,
