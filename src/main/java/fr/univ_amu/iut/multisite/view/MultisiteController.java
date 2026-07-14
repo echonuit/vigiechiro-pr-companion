@@ -22,8 +22,8 @@ import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.multisite.viewmodel.SourcesAudioMultisite;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -53,7 +53,6 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.stage.FileChooser;
 
 /// Controller de l'écran **M-Multisite** (`Multisite.fxml`).
 ///
@@ -78,6 +77,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private static final String FEATURE = "multisite";
 
     private final MultisiteViewModel viewModel;
+
+    /// ViewModel de la modale de reconstruction (#1396) : le controller ne s'en sert que pour **savoir**
+    /// si l'action a un sens ici (connexion VigieChiro présente) ; la modale reçoit le sien.
+    private final ReconstructionViewModel reconstruction;
+
+    private final NavigationMultisite navigation;
     private final OuvrirPassage ouvrirPassage;
     private final OuvrirAudio ouvrirAudio;
     private final DepotVues depotVues;
@@ -117,6 +122,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private MenuItem itemEcouterLot;
+
+    @FXML
+    private MenuItem itemReconstruire;
 
     @FXML
     private TableView<LignePassage> tableLignes;
@@ -193,12 +201,16 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @Inject
     public MultisiteController(
             MultisiteViewModel viewModel,
+            ReconstructionViewModel reconstruction,
+            NavigationMultisite navigation,
             OuvrirPassage ouvrirPassage,
             OuvrirAudio ouvrirAudio,
             DepotVues depotVues,
             DepotDispositionColonnes depotColonnes,
             ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
+        this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
+        this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
         this.ouvrirAudio = Objects.requireNonNull(ouvrirAudio, "ouvrirAudio");
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
@@ -281,24 +293,16 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // d'identité propre → la gauche reste au défaut du chrome).
         zonesStatut.bind(Bindings.createObjectBinding(
                 () -> ZonesStatut.centre(viewModel.resumeProperty().get()), viewModel.resumeProperty()));
-        itemExporter.disableProperty().bind(viewModel.nonVideProperty().not());
-        // Un MenuItem désactivé n'accueille pas de tooltip : on surface la cause du grisage dans son
-        // libellé (#789), visible seulement quand il est grisé (aucune ligne dans le tableau filtré).
-        itemExporter
-                .textProperty()
-                .bind(Bindings.when(viewModel.nonVideProperty())
-                        .then("📤 Exporter…")
-                        .otherwise("📤 Exporter… (aucune ligne à exporter)"));
-        // Écoute : le lot suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
-        itemEcouterLot.disableProperty().bind(viewModel.nonVideProperty().not());
-        itemEcouterLot
-                .textProperty()
-                .bind(Bindings.when(viewModel.nonVideProperty())
-                        .then("🎧 Écouter le lot filtré")
-                        .otherwise("🎧 Écouter le lot filtré (aucune ligne)"));
-        itemEcouterPassage
-                .disableProperty()
-                .bind(tableLignes.getSelectionModel().selectedItemProperty().isNull());
+        // État des entrées du menu ☰ (grisage parlant #789, retrait de la reconstruction hors connexion
+        // #1396) : déporté dans MenuActionsMultisite, le controller était au plafond de taille.
+        MenuActionsMultisite.installer(
+                itemExporter,
+                itemEcouterLot,
+                itemEcouterPassage,
+                itemReconstruire,
+                viewModel.nonVideProperty(),
+                tableLignes.getSelectionModel().selectedItemProperty(),
+                reconstruction.disponible());
 
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
@@ -545,20 +549,22 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         tableLignes.getSortOrder().clear();
     }
 
-    /// « Exporter » : ouvre le sélecteur de fichier natif (enregistrement) puis délègue au VM.
-    /// Le dialog vit dans la vue (non testé en TestFX) ; l'écriture est testée côté ViewModel.
+    /// « ☁ Reconstruire un passage manquant… » (#1396) : ouvre la modale qui liste les nuits déposées sur
+    /// VigieChiro et absentes d'ici. À sa fermeture, si une nuit a été reconstruite, la table est
+    /// rechargée : la nuit rapatriée **apparaît**, ce qui est la preuve visible de la reconstruction.
+    @FXML
+    private void reconstruirePassage() {
+        navigation.ouvrirModaleReconstruction(menuActions.getScene().getWindow(), this::chargerDonnees);
+    }
+
+    /// « Exporter » : sélecteur de fichier natif puis écriture par le ViewModel, dans **l'ordre affiché**
+    /// (#291). Le dialogue vit dans [MenuActionsMultisite].
     @FXML
     private void exporter() {
-        FileChooser selecteur = new FileChooser();
-        selecteur.setTitle("Exporter les passages en CSV");
-        selecteur.setInitialFileName("vue-multisite.csv");
-        selecteur.getExtensionFilters().add(new FileChooser.ExtensionFilter("CSV", "*.csv"));
-        File fichier = selecteur.showSaveDialog(menuActions.getScene().getWindow());
-        if (fichier != null) {
-            // #291 : on exporte l'ordre RÉELLEMENT affiché (tri par clic d'en-tête inclus), donc un
-            // instantané des items de la table (SortedList), et non l'ordre interne du ViewModel.
-            viewModel.exporter(fichier.toPath(), new ArrayList<>(tableLignes.getItems()));
-        }
+        MenuActionsMultisite.exporter(
+                menuActions.getScene().getWindow(),
+                tableLignes,
+                chemin -> viewModel.exporter(chemin, MenuActionsMultisite.lignesAffichees(tableLignes)));
     }
 
     /// « 🎧 Écouter le passage sélectionné » : ouvre la vue audio unifiée sur les observations de ce

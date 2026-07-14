@@ -73,6 +73,11 @@
           <MenuItem fx:id="itemEcouterPassage" text="🎧 Écouter le passage sélectionné" onAction="#ecouterPassage"/>
           <MenuItem fx:id="itemEcouterLot" text="🎧 Écouter le lot filtré" onAction="#ecouterLot"/>
           <MenuItem fx:id="itemExporter" text="📤 Exporter…" onAction="#exporter"/>
+          <!-- #1396 : les nuits déposées depuis un autre poste n'apparaissent dans AUCUNE ligne de cette
+               table. C'est ici qu'on s'en aperçoit, c'est donc ici qu'on les rapatrie. Retiré hors
+               connexion VigieChiro (la reconstruction lit la plateforme). -->
+          <MenuItem fx:id="itemReconstruire" text="☁ Reconstruire un passage manquant…"
+                    onAction="#reconstruirePassage"/>
         </items>
       </MenuButton>
     </right>

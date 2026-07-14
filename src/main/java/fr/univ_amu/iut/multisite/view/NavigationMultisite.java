@@ -11,6 +11,10 @@ import java.io.UncheckedIOException;
 import java.util.Objects;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.Window;
 
 /// Façade de navigation de la feature `multisite` : charge la vue FXML et la publie dans la zone
 /// centrale du chrome via le [Navigateur] du socle.
@@ -53,6 +57,27 @@ public class NavigationMultisite implements OuvrirMultisite {
     @Override
     public void ouvrirSurCarrePourPlacer(String numeroCarre) {
         publier().focaliserSurCarrePourPlacer(numeroCarre);
+    }
+
+    /// Ouvre la modale **« Reconstruire un passage manquant »** (#1396) au-dessus de la vue multi-sites.
+    /// `apresSucces` n'est exécuté qu'**après une reconstruction** : la table se recharge, et la nuit
+    /// rapatriée y apparaît.
+    public void ouvrirModaleReconstruction(Window parent, Runnable apresSucces) {
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationMultisite.class, "ReconstructionModale.fxml");
+        loader.setControllerFactory(injector::getInstance);
+        try {
+            Parent vue = loader.load();
+            ReconstructionModaleController controleur = loader.getController();
+            controleur.demarrer(apresSucces);
+            Stage modale = new Stage();
+            modale.initOwner(parent);
+            modale.initModality(Modality.WINDOW_MODAL);
+            modale.setTitle("Reconstruire un passage manquant");
+            modale.setScene(new Scene(vue));
+            modale.show();
+        } catch (IOException echec) {
+            throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
+        }
     }
 
     /// Charge `Multisite.fxml`, le publie dans la zone centrale et renvoie son controller.

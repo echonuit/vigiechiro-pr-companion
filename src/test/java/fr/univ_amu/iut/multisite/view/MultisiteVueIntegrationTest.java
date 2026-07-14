@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
@@ -20,8 +21,10 @@ import fr.univ_amu.iut.multisite.model.PointAgrege;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.multisite.viewmodel.MultisiteViewModel;
+import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
@@ -108,11 +111,20 @@ class MultisiteVueIntegrationTest {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
+                // NavigationMultisite ouvre la modale de reconstruction (#1396) et a besoin du Navigateur
+                // du chrome ; aucun test d'ici ne l'ouvre, un double suffit.
+                bind(Navigateur.class).toInstance(mock(Navigateur.class));
             }
 
             @Provides
             MultisiteViewModel viewModel() {
                 return new MultisiteViewModel(service, mock(ServiceSites.class), "u-1");
+            }
+
+            /// Hors connexion VigieChiro : la reconstruction est indisponible, son entrée de menu se retire.
+            @Provides
+            ReconstructionViewModel reconstruction() {
+                return new ReconstructionViewModel(Optional.empty());
             }
         });
         FXMLLoader loader = new FXMLLoader(MultisiteController.class.getResource("Multisite.fxml"));

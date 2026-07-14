@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Modale « Reconstruire un passage manquant » (#1396, suite de #1305), ouverte depuis le menu ☰ de la vue
+  multi-sites : c'est là qu'on constate qu'une nuit manque, puisque c'est l'écran qui les liste toutes.
+
+  Elle affiche les participations déposées sur VigieChiro qui n'ont AUCUN équivalent sur cette machine
+  (déposées depuis un autre poste, avant l'application, ou après une réinstallation), et permet d'en
+  rapatrier une en passage archivé. Le bouton se bloque - en disant pourquoi - quand le point d'écoute de
+  la nuit n'existe pas encore ici : rattacher une nuit au mauvais point serait une donnée fausse.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:id="racine"
+      fx:controller="fr.univ_amu.iut.multisite.view.ReconstructionModaleController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @multisite.css"
+      styleClass="modale-reconstruction"
+      prefWidth="720.0"
+      spacing="12.0">
+
+  <Label text="☁ Reconstruire un passage manquant" styleClass="titre-page"/>
+
+  <Label text="Ces nuits existent sur VigieChiro mais pas sur cette machine. Les reconstruire les rend
+               consultables ici (observations comprises), sans les fichiers audio : ceux-ci ne sont pas
+               récupérables depuis la plateforme."
+         styleClass="section-sous" wrapText="true"/>
+
+  <TableView fx:id="tableOrphelines" prefHeight="240.0">
+    <columns>
+      <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
+      <TableColumn fx:id="colPoint" text="Localité" prefWidth="90.0"/>
+      <TableColumn fx:id="colNuit" text="Nuit" prefWidth="230.0"/>
+      <TableColumn fx:id="colPointConnu" text="Point d'écoute" prefWidth="270.0"/>
+    </columns>
+    <placeholder>
+      <Label fx:id="lblVide" text="Chargement des participations…" wrapText="true"/>
+    </placeholder>
+  </TableView>
+
+  <Label fx:id="lblMessage" styleClass="message-erreur" wrapText="true"/>
+  <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
+
+  <HBox alignment="CENTER_RIGHT" spacing="8.0">
+    <Region HBox.hgrow="ALWAYS"/>
+    <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-secondaire" onAction="#fermer"/>
+    <!-- Enveloppe non désactivée (#789) : un bouton grisé n'affiche aucun tooltip. C'est elle qui porte
+         l'explication du blocage (aucune nuit choisie, ou point d'écoute inconnu ici). -->
+    <StackPane fx:id="enveloppeReconstruire">
+      <Button fx:id="boutonReconstruire" text="Reconstruire cette nuit" styleClass="bouton-primaire"
+              onAction="#reconstruire"/>
+    </StackPane>
+  </HBox>
+</VBox>
