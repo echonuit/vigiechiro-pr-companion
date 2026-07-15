@@ -248,7 +248,8 @@ public class ServiceQualification {
     /// @param commentaire commentaire libre facultatif (`null` ⇒ commentaire existant conservé)
     /// @return le passage mis à jour
     /// @throws IllegalArgumentException si `verdict` est `null` ou [Verdict#A_VERIFIER]
-    /// @throws RegleMetierException si le passage est introuvable
+    /// @throws RegleMetierException si le passage est introuvable, ou déjà **déposé** (verdict figé :
+    ///     une nuit déposée sur Vigie-Chiro ne peut plus changer de verdict, #1514)
     public Passage enregistrerVerdict(Long idPassage, Verdict verdict, String commentaire) {
         if (verdict == null || verdict == Verdict.A_VERIFIER) {
             throw new IllegalArgumentException("Un verdict explicite est requis (OK, Douteux ou À jeter).");
@@ -256,6 +257,13 @@ public class ServiceQualification {
         Passage passage = passageDao
                 .findById(idPassage)
                 .orElseThrow(() -> new RegleMetierException(PASSAGE_INTROUVABLE + idPassage));
+        // #1514 : un passage déposé est figé (même règle que ServicePassage.poserVerdict et la CLI).
+        // Sans cette garde, l'IHM ferait régresser le passage de « Déposé » à « Vérifié », désynchronisé
+        // de la plateforme (deposeLe conservé, participation orpheline) : corruption de données.
+        if (passage.statutWorkflow() == StatutWorkflow.DEPOSE) {
+            throw new RegleMetierException(
+                    "Verdict figé : un passage déposé ne peut plus changer de verdict de vérification.");
+        }
         String commentaireFinal = commentaire != null ? commentaire : passage.commentaire();
         Passage verifie = new Passage(
                 passage.id(),

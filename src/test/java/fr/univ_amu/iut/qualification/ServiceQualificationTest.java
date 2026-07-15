@@ -294,6 +294,38 @@ class ServiceQualificationTest {
                 .isInstanceOf(IllegalArgumentException.class);
     }
 
+    @Test
+    @DisplayName("#1514 : une nuit déposée refuse tout nouveau verdict (verdict figé, pas de régression)")
+    void verdict_fige_sur_passage_depose() {
+        // La nuit est déposée sur Vigie-Chiro (statut Déposé + date de dépôt), comme après un dépôt réel.
+        Passage passage = passageDao.findById(idPassage).orElseThrow();
+        passageDao.update(new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                "2026-06-23T08:00",
+                passage.idPoint(),
+                passage.idEnregistreur()));
+
+        assertThatThrownBy(() -> service.enregistrerVerdict(idPassage, Verdict.A_JETER, null))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Verdict figé");
+
+        // Aucune régression : la nuit reste Déposée, avec son verdict et sa date de dépôt intacts.
+        Passage relu = passageDao.findById(idPassage).orElseThrow();
+        assertThat(relu.statutWorkflow()).isEqualTo(StatutWorkflow.DEPOSE);
+        assertThat(relu.verdictVerification()).isEqualTo(Verdict.OK);
+        assertThat(relu.deposeLe()).isEqualTo("2026-06-23T08:00");
+    }
+
     // --- P3 étape 1 : pré-check 3 feux ----------------------------------------
 
     @Test
