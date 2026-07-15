@@ -58,6 +58,7 @@ nav:
   - Navigation et chrome: navigation.md
   - Persistance: persistance.md
   - Modèle de données et domaine: modele-de-donnees.md
+  - Glossaire du domaine: glossaire.md
   - Injection (Guice): injection.md
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
   - Cycle de vie d'un chantier: cycle-de-chantier.md

@@ -75,6 +75,11 @@ cd vigiechiro-pr-companion
     Le MCD Merise (vocabulaire du brief), le schéma physique SQLite, et la correspondance
     concept → record → table.
 
+-   :material-book-alphabet: **[Glossaire du domaine](glossaire.md)**
+
+    Les mots : nuit / passage / participation, « lot » déprécié, et le vocabulaire du verdict
+    (état livré et cible du chantier #1524).
+
 -   :material-console: **[Ligne de commande](cli.md)**
 
     La seconde façade *headless* sur le métier : sous-commandes, injecteur enfant, scriptabilité.
