@@ -56,6 +56,16 @@ jobs:
           java --enable-native-access=ALL-UNNAMED -cp "$jar" fr.univ_amu.iut.cli.Cli --help | tee sortie-smoke.txt
           grep -q "Usage: vigiechiro" sortie-smoke.txt
 
+      - name: E2E CLI (bats) sur le fat-jar
+        # Tests bout-en-bout au niveau SHELL sur le jar shadé : arguments picocli, codes de sortie et
+        # refus métier d'un VRAI processus - ce que les tests Java in-process (CliTest & co.) ne voient
+        # pas. Amorce du harnais (#1572, chantier #1565) ; couverture complète cadrée en suite.
+        run: |
+          set -euo pipefail
+          sudo apt-get update && sudo apt-get install -y bats
+          export VIGIECHIRO_JAR=$(ls target/vigiechiro-*-shaded.jar | head -1)
+          bats src/test/bats
+
       - name: Idempotence du packaging (2e build sans clean)
         # Le packaging doit être reproductible : un 2e `package` SANS `clean` ne doit pas re-shader le
         # fat-jar. Garde-fou contre une régression de la séparation thin/fat (#1188/#1189) — sans elle,
