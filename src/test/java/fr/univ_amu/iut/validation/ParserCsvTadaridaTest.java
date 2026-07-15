@@ -2,6 +2,7 @@ package fr.univ_amu.iut.validation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
 
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.validation.model.ExportVuCsv;
@@ -195,5 +196,31 @@ class ParserCsvTadaridaTest {
         String tempsInvalide = "nom du fichier;temps_debut;tadarida_taxon\nseq_000;abc;Pippip\n";
 
         assertThatThrownBy(() -> parser.parser(tempsInvalide)).isInstanceOf(NumberFormatException.class);
+    }
+
+    @Test
+    @DisplayName("Dialecte réel du CSV d'observations VigieChiro (#1565) : validateur_* ignorées, ancrage null")
+    void parse_le_csv_d_observations_du_serveur() {
+        // Entête exacte du serveur (probe #1568) : validateur_taxon / validateur_probabilite en plus,
+        // validation_mode en moins, frequence_mediane en flottant. Le parseur repère par nom, lit ce qu'il
+        // connaît, ignore le reste, et ne pose aucun ancrage (le CSV ne porte pas d'_id).
+        String csv = "\"nom du fichier\";\"temps_debut\";\"temps_fin\";\"frequence_mediane\";\"tadarida_taxon\";"
+                + "\"tadarida_probabilite\";\"tadarida_taxon_autre\";\"observateur_taxon\";"
+                + "\"observateur_probabilite\";\"validateur_taxon\";\"validateur_probabilite\"\n"
+                + "\"Car130711-Z41-PaRec_20260703_210004_000\";0.1;2.8;77.0;\"noise\";0.87;\"\";\"\";\"\";\"\";\"\"\n"
+                + "\"Car130711-Z41-PaRec_20260703_210254_000\";0.0;2.7;151.0;\"Pippip\";0.93;\"Tetvir\";\"\";\"\";\"\";\"\"\n";
+
+        ResultatParseTadarida resultat = parser.parser(csv);
+
+        assertThat(resultat.format()).isEqualTo(FormatTadarida.BRUT);
+        assertThat(resultat.lignes())
+                .extracting(
+                        LigneObservation::nomSequence,
+                        LigneObservation::taxonTadarida,
+                        LigneObservation::frequenceMedianeKHz,
+                        LigneObservation::idDonneeVigieChiro)
+                .containsExactly(
+                        tuple("Car130711-Z41-PaRec_20260703_210004_000", "noise", 77, null),
+                        tuple("Car130711-Z41-PaRec_20260703_210254_000", "Pippip", 151, null));
     }
 }

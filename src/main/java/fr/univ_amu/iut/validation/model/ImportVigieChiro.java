@@ -111,6 +111,21 @@ public class ImportVigieChiro {
         return service.importerDepuisVigieChiro(idPassage, donnees, remplacer);
     }
 
+    /// Import des observations d'un **CSV Tadarida** déjà téléchargé (#1565, reconstruction instantanée) :
+    /// délègue à [ServiceValidation#importerContenuCsv]. Aucun appel réseau (le contenu est déjà en main).
+    public BilanImport importerCsv(Long idPassage, String contenuCsv, boolean remplacer) {
+        Objects.requireNonNull(idPassage, CHAMP_ID_PASSAGE);
+        Objects.requireNonNull(contenuCsv, "contenuCsv");
+        return service.importerContenuCsv(idPassage, contenuCsv, remplacer);
+    }
+
+    /// Noms de séquences (fichiers) distincts d'un CSV Tadarida (#1565), pour recréer les lignes de
+    /// séquences avant l'import : délègue à [ServiceValidation#nomsSequencesCsv].
+    public List<String> nomsSequencesCsv(String contenuCsv) {
+        Objects.requireNonNull(contenuCsv, "contenuCsv");
+        return service.nomsSequencesCsv(contenuCsv);
+    }
+
     /// **Pourquoi il n'y a rien à importer** (#1264). Le serveur répond « 200, liste vide » tant que
     /// l'analyse n'est pas finie : l'absence de résultats n'est donc pas une erreur, c'est un état — encore
     /// faut-il le dire. Le message d'avant les confondait tous (« analyse pas encore terminée, ou connexion

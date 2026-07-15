@@ -1,11 +1,8 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
-import fr.univ_amu.iut.commun.api.ReponseApi;
-import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -81,7 +78,11 @@ public class ServiceReconstructionPassages {
     private final EnregistrementOriginalDao originalDao;
     private final EnregistreurDao enregistreurDao;
     private final LienVigieChiroDao liens;
-    private final ClientVigieChiro client;
+
+    /// Toutes les lectures distantes de la reconstruction (participations, détail, source des observations
+    /// CSV #1565 / donnees), extraites dans un collaborateur dédié (plafond God Class).
+    private final PlateformeReconstruction plateforme;
+
     private final PointParLocalite pointParLocalite;
 
     /// Port de l'import des observations (#1264), **optionnel** comme partout ailleurs : la feature
@@ -111,7 +112,7 @@ public class ServiceReconstructionPassages {
         this.enregistreurDao = new EnregistreurDao(source);
         this.liens = new LienVigieChiroDao(source);
         this.uniteDeTravail = new UniteDeTravail(source);
-        this.client = Objects.requireNonNull(client, "client");
+        this.plateforme = new PlateformeReconstruction(client);
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
@@ -126,7 +127,7 @@ public class ServiceReconstructionPassages {
     public List<ParticipationOrpheline> orphelines() {
         Set<String> rattachees =
                 Set.copyOf(liens.tous(LienVigieChiro.ENTITE_PASSAGE).values());
-        return participations().stream()
+        return plateforme.participations().stream()
                 .filter(participation -> !rattachees.contains(participation.id()))
                 .map(this::enOrpheline)
                 .toList();
@@ -152,7 +153,7 @@ public class ServiceReconstructionPassages {
     public RapportReconstruction reconstruire(
             String idParticipation, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(idParticipation, "idParticipation");
-        ParticipationVigieChiro resume = resume(idParticipation);
+        ParticipationVigieChiro resume = plateforme.resume(idParticipation);
         return reconstruire(idParticipation, carre(resume), resume.point(), progres, jeton);
     }
 
@@ -189,7 +190,7 @@ public class ServiceReconstructionPassages {
 
         progres.accept(new Progression("Lecture de la participation…", 0.05));
         jeton.leverSiAnnule();
-        ParticipationDetail detail = detail(idParticipation);
+        ParticipationDetail detail = plateforme.detail(idParticipation);
         Long idPoint = pointParLocalite
                 .pour(carre, localite)
                 .orElseThrow(() -> new RegleMetierException(
@@ -202,19 +203,11 @@ public class ServiceReconstructionPassages {
                                 + " nuit."));
         LocalDateTime fin = nuit(detail.dateFin()).orElse(debut);
 
-        // Les données portent les NOMS des fichiers analysés : ce sont eux qui permettront de rattacher les
-        // observations aux séquences recréées, et plus tard de reconnaître les fichiers réimportés (#1302).
-        // C'est l'étape la plus longue (des dizaines de pages) : on suit sa progression PAGE PAR PAGE et on
-        // y honore l'annulation, sans quoi la barre restait figée et « Annuler » muet plusieurs minutes.
-        jeton.leverSiAnnule();
-        List<DonneeVigieChiro> donnees = donnees(idParticipation, (page, totalPages) -> {
-            jeton.leverSiAnnule();
-            progres.accept(ProgressionTelechargement.pour(page, totalPages));
-        });
-        if (donnees.isEmpty()) {
-            throw new RegleMetierException("VigieChiro ne renvoie aucune donnée pour cette participation :"
-                    + " l'analyse n'est probablement pas terminée. Réessayez plus tard.");
-        }
+        // Où trouver les observations : le CSV téléchargé d'un coup (#1565) si la plateforme l'expose,
+        // sinon la pagination donnees (repli, l'ancien chemin). Dans les deux cas on récupère les NOMS des
+        // fichiers analysés (pour recréer les séquences, et plus tard reconnaître les fichiers réimportés
+        // #1302) et de quoi importer. C'est l'étape réseau : progression et annulation y sont honorées.
+        ObservationsAReconstruire observations = plateforme.observations(idParticipation, importateur, progres, jeton);
 
         // Le préfixe R6 RÉEL de la nuit (carré, année, n° de passage, code du point) : c'est celui que
         // l'audit recalcule depuis le passage (`ServiceAuditCoherence#prefixeAttendu`), et il doit être le
@@ -232,21 +225,17 @@ public class ServiceReconstructionPassages {
             idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail));
             Long idSession = creerSessionArchivee(idPassage, prefixe);
             progres.accept(new Progression("Création des séquences…", 0.93));
-            int sequences = creerSequences(idSession, prefixe, donnees);
+            int sequences = creerSequences(idSession, prefixe, observations.nomsFichiers());
             liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
 
-            // L'import des observations est le mécanisme de l'EPIC #1259, consommé par son port socle : il
-            // rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer. On lui passe
-            // les donnees DÉJÀ téléchargées : les re-parcourir page par page doublait le temps (#1522).
+            // L'import rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer
+            // (mécanisme du port socle, EPIC #1259). Le geste concret (CSV ou donnees) est déjà choisi.
             progres.accept(new Progression("Import des observations…", 0.96));
             jeton.leverSiAnnule();
-            importateur.importer(idPassage, donnees, false);
-            int observations = donnees.stream()
-                    .mapToInt(donnee -> donnee.observations().size())
-                    .sum();
+            observations.importer(idPassage);
             progres.accept(new Progression("Terminé.", 1.0));
             return new RapportReconstruction(
-                    idPassage, sequences, observations, RapportReconstruction.lacunesConnues());
+                    idPassage, sequences, observations.nbObservations(), RapportReconstruction.lacunesConnues());
         } catch (RuntimeException interruption) {
             if (idPassage != null) {
                 annulerReconstructionPartielle(idPassage, interruption);
@@ -311,7 +300,7 @@ public class ServiceReconstructionPassages {
     /// passage est archivé. Un enregistrement original **porteur** est créé pour satisfaire la clé
     /// étrangère ; il n'a pas plus de fichier que les séquences, mais il porte le **vrai** préfixe R6 : un
     /// nom fabriqué ferait échouer le contrôle de préfixe de l'audit (#1050).
-    private int creerSequences(Long idSession, Prefixe prefixe, List<DonneeVigieChiro> donnees) {
+    private int creerSequences(Long idSession, Prefixe prefixe, List<String> nomsFichiers) {
         Path transformes = workspace.dossierTransformes(prefixe.nomDossierSession());
         // Des milliers de séquences en UNE transaction (#1522) : un commit par ligne, c'était un fsync par
         // ligne - plusieurs minutes pour une nuit. L'annulation est consultée AVANT ce bloc (désormais
@@ -331,8 +320,8 @@ public class ServiceReconstructionPassages {
                                     idSession))
                     .id();
             int index = 0;
-            for (DonneeVigieChiro donnee : donnees) {
-                String nom = nomFichier(donnee.titre());
+            for (String titre : nomsFichiers) {
+                String nom = nomFichier(titre);
                 sequenceDao.insert(
                         cx,
                         new SequenceDEcoute(
@@ -394,46 +383,6 @@ public class ServiceReconstructionPassages {
             throw new RegleMetierException(
                     "Cette participation est déjà rattachée à un passage local : il n'y a rien à reconstruire.");
         }
-    }
-
-    private List<ParticipationVigieChiro> participations() {
-        return exiger(client.mesParticipations(), "la liste de vos participations");
-    }
-
-    private ParticipationVigieChiro resume(String idParticipation) {
-        return participations().stream()
-                .filter(participation -> idParticipation.equals(participation.id()))
-                .findFirst()
-                .orElseThrow(() -> new RegleMetierException(
-                        "Participation introuvable parmi celles de votre compte : " + idParticipation + "."));
-    }
-
-    private ParticipationDetail detail(String idParticipation) {
-        return exiger(client.participation(idParticipation), "le détail de cette participation");
-    }
-
-    private List<DonneeVigieChiro> donnees(String idParticipation, SuiviPagination suivi) {
-        return exiger(client.donnees(idParticipation, suivi), "les observations de cette participation");
-    }
-
-    /// Traduction **unique** d'une issue d'appel (#1284) en valeur ou en refus **motivé** : une seule
-    /// formulation par cause (non connecté, injoignable, refusé), et le geste qui va avec — au lieu de
-    /// répéter le même `switch` à chaque lecture distante.
-    ///
-    /// @param quoi ce qu'on lisait, pour que le message dise **ce qui** a échoué
-    private static <T> T exiger(ReponseApi<T> reponse, String quoi) {
-        return switch (reponse) {
-            case ReponseApi.Succes<T>(T valeur) -> valeur;
-            case ReponseApi.NonConnecte<T> ignore ->
-                throw new RegleMetierException("Non connecté à VigieChiro : collez un jeton (menu ☰ >"
-                        + " Se connecter à VigieChiro) avant de reconstruire un passage.");
-            case ReponseApi.Injoignable<T>(String cause) ->
-                throw new RegleMetierException(
-                        "VigieChiro est injoignable (" + cause + ") : " + quoi + " n'a pas pu être lu.");
-            case ReponseApi.Refuse<T>(int statut, String corps) ->
-                throw new RegleMetierException("VigieChiro a refusé de rendre " + quoi + " (HTTP " + statut + " : "
-                        + corps + "). C'est probablement un défaut de l'application : signalez-le.");
-        };
     }
 
     private ParticipationOrpheline enOrpheline(ParticipationVigieChiro participation) {

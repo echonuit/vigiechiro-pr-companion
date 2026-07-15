@@ -37,4 +37,23 @@ public interface ImportObservations {
     /// @param donnees les résultats déjà rapatriés (non vides : l'appelant l'a vérifié)
     /// @return un compte rendu prêt à afficher
     String importer(Long idPassage, List<DonneeVigieChiro> donnees, boolean remplacer);
+
+    /// **Reconstruction instantanée par CSV** (#1565) : noms de séquences (fichiers) **distincts** présents
+    /// dans un CSV Tadarida brut, dans leur ordre d'apparition. Le passage recrée ses lignes de séquences à
+    /// partir d'eux **avant** l'import (l'import ignore les lignes sans séquence de même nom). Le CSV est
+    /// pris tel quel (`String`) et non un `LigneObservation` : le format Tadarida est un détail de
+    /// `validation`, il n'a pas à traverser le socle. Extraction seule, aucune écriture.
+    ///
+    /// @param contenuCsv le contenu du `participation-<id>-observations.csv` (téléchargé par le client)
+    /// @return les noms de fichiers distincts, dans l'ordre ; liste vide si le CSV est vide ou illisible
+    List<String> nomsSequencesCsv(String contenuCsv);
+
+    /// Importe les observations d'un **CSV Tadarida brut** (#1565) pour un passage dont les séquences ont
+    /// déjà été recréées (à partir de [#nomsSequencesCsv]). Les observations sont créées **sans ancrage
+    /// plateforme** (`idDonneeVigieChiro = null`) : le CSV ne le porte pas ; l'ancrage est acquis plus tard,
+    /// à la réactivation (#1571). Un seul téléchargement remplace ainsi les dizaines de pages de `donnees`.
+    ///
+    /// @param remplacer remplace le jeu existant en préservant les validations de l'observateur
+    /// @return un compte rendu prêt à afficher
+    String importerCsv(Long idPassage, String contenuCsv, boolean remplacer);
 }

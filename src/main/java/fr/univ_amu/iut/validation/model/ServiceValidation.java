@@ -195,6 +195,39 @@ public class ServiceValidation implements CompteurValidations {
         return bilan;
     }
 
+    /// **Reconstruction instantanée par CSV** (#1565) : importe les observations d'un CSV Tadarida brut
+    /// téléchargé depuis VigieChiro (`participation-<id>-observations.csv`) sur un passage dont les
+    /// séquences ont déjà été recréées. Même cœur d'import que le CSV local ([#importer(Long, Path)]), mais
+    /// à partir du **contenu** déjà en mémoire (pas de fichier sur disque). Les observations naissent
+    /// **sans ancrage** : le CSV ne porte pas d'`_id`, l'ancrage plateforme est acquis à la réactivation
+    /// (#1571).
+    ///
+    /// @param idPassage passage cible (sa session doit exister : ses séquences ont été recréées)
+    /// @param contenuCsv contenu du CSV d'observations
+    /// @param remplacer remplace le jeu existant (en préservant les validations observateur) si `true`
+    public BilanImport importerContenuCsv(Long idPassage, String contenuCsv, boolean remplacer) {
+        Objects.requireNonNull(contenuCsv, "contenuCsv");
+        ResultatParseTadarida parse = parser.parser(contenuCsv);
+        return importerLignes(
+                idPassage,
+                parse.lignes(),
+                ResultatsIdentification.SOURCE_VIGIECHIRO,
+                parse.format().libelle(),
+                remplacer);
+    }
+
+    /// Noms de séquences (fichiers) **distincts** d'un CSV Tadarida brut, dans l'ordre d'apparition (#1565) :
+    /// le passage reconstruit s'en sert pour recréer ses lignes de séquences **avant** l'import (qui ignore
+    /// les lignes sans séquence de même nom). Aucune écriture.
+    public List<String> nomsSequencesCsv(String contenuCsv) {
+        Objects.requireNonNull(contenuCsv, "contenuCsv");
+        return parser.parser(contenuCsv).lignes().stream()
+                .map(LigneObservation::nomSequence)
+                .filter(nom -> nom != null && !nom.isBlank())
+                .distinct()
+                .toList();
+    }
+
     /// **Cœur d'import** commun à toutes les sources d'observations (CSV Tadarida ou résultats
     /// VigieChiro) : rattache chaque ligne à la séquence d'écoute de **même nom** (les lignes sans
     /// séquence en base ou sans taxon Tadarida sont ignorées), auto-crée les taxons hors référentiel, et

@@ -34,6 +34,16 @@ public class ImportObservationsVigieChiro implements ImportObservations {
         return compteRendu(importateur.importer(idPassage, donnees, remplacer));
     }
 
+    @Override
+    public List<String> nomsSequencesCsv(String contenuCsv) {
+        return importateur.nomsSequencesCsv(contenuCsv);
+    }
+
+    @Override
+    public String importerCsv(Long idPassage, String contenuCsv, boolean remplacer) {
+        return compteRendu(importateur.importerCsv(idPassage, contenuCsv, remplacer));
+    }
+
     private static String compteRendu(BilanImport bilan) {
         return "Observations importées depuis Vigie-Chiro : " + bilan.importees() + " observation(s)."
                 + (bilan.ignorees() > 0 ? " " + bilan.ignorees() + " ignorée(s)." : "");

@@ -66,6 +66,13 @@ class ServiceReconstructionPassagesTest {
     private static final String SEQ_2 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220534_000";
     private static final LocalDateTime MAINTENANT = LocalDateTime.of(2026, 7, 14, 2, 0);
 
+    /// CSV Tadarida BRUT réel en miniature (séparateur `;`, entête quotée) : 3 observations sur 2 fichiers.
+    private static final String CSV_OBSERVATIONS =
+            "\"nom du fichier\";\"temps_debut\";\"temps_fin\";\"frequence_mediane\";\"tadarida_taxon\";\"tadarida_probabilite\"\n"
+                    + "\"" + SEQ_1 + "\";0.1;2.8;45.0;\"Pippip\";0.9\n"
+                    + "\"" + SEQ_1 + "\";3.0;3.5;30.0;\"noise\";0.4\n"
+                    + "\"" + SEQ_2 + "\";0.0;2.7;22.0;\"Pippip\";0.8\n";
+
     @TempDir
     Path dossier;
 
@@ -164,6 +171,33 @@ class ServiceReconstructionPassagesTest {
     }
 
     @Test
+    @DisplayName("Reconstruction par CSV (#1565) : un seul téléchargement, séquences recréées, sans paginer donnees")
+    void reconstruire_par_csv_evite_la_pagination() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+        when(importObservations.importerCsv(anyLong(), eq(CSV_OBSERVATIONS), eq(false)))
+                .thenReturn("3 observation(s) importée(s).");
+
+        RapportReconstruction rapport = service.reconstruire(PARTICIPATION);
+
+        assertThat(rapport.sequencesRecreees()).isEqualTo(2);
+        assertThat(rapport.observationsImportees())
+                .as("le compte d'observations vient des lignes de données du CSV")
+                .isEqualTo(3);
+        SessionDEnregistrement session =
+                sessionDao.trouverParPassage(rapport.idPassage()).orElseThrow();
+        assertThat(sequenceDao.findBySession(session.id()))
+                .as("les séquences sont recréées depuis les noms de fichiers du CSV")
+                .extracting(SequenceDEcoute::nomFichier)
+                .containsExactlyInAnyOrder(SEQ_1 + ".wav", SEQ_2 + ".wav");
+        verify(importObservations).importerCsv(eq(rapport.idPassage()), eq(CSV_OBSERVATIONS), eq(false));
+        verify(client, never()).donnees(any(), any());
+        verify(importObservations, never()).importer(anyLong(), any(), anyBoolean());
+    }
+
+    @Test
     @DisplayName("Le passage reconstruit porte le VRAI préfixe R6 (carré, année, passage, point)")
     void reconstruire_pose_le_vrai_prefixe() {
         bouchonnerPlateforme();
@@ -223,6 +257,7 @@ class ServiceReconstructionPassagesTest {
     void aucune_donnee_refuse() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
         when(client.donnees(eq(PARTICIPATION), any())).thenReturn(new ReponseApi.Succes<>(List.of()));
 
         assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
@@ -312,6 +347,7 @@ class ServiceReconstructionPassagesTest {
     @DisplayName("Depuis une orpheline en main : reconstruit sans re-télécharger toute la liste (#1522)")
     void reconstruire_depuis_orpheline_ne_retelecharge_pas_la_liste() {
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
         when(client.donnees(eq(PARTICIPATION), any()))
                 .thenReturn(
                         new ReponseApi.Succes<>(List.of(new DonneeVigieChiro("d-1", SEQ_1, List.of(observation())))));
@@ -329,6 +365,7 @@ class ServiceReconstructionPassagesTest {
     @DisplayName("Téléchargement : progression page par page, et « Annuler » interrompt sans rien écrire")
     void telechargement_progresse_par_page_et_sannule() {
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
         JetonAnnulation jeton = new JetonAnnulation();
         // Le client relaie chaque page ; on annule après la première : le relais consulte le jeton et lève.
         when(client.donnees(eq(PARTICIPATION), any())).thenAnswer(invocation -> {
@@ -359,6 +396,8 @@ class ServiceReconstructionPassagesTest {
     private void bouchonnerPlateforme() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        // Pas de CSV exposé : ces tests exercent le REPLI par pagination donnees (#1565).
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
         when(client.donnees(eq(PARTICIPATION), any()))
                 .thenReturn(new ReponseApi.Succes<>(List.of(
                         new DonneeVigieChiro("d-1", SEQ_1, List.of(observation(), observation())),

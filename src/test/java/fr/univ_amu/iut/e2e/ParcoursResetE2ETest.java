@@ -233,6 +233,9 @@ class ParcoursResetE2ETest {
                         null,
                         Map.of("detecteur_enregistreur_numserie", SERIE),
                         Traitement.absent())));
+        // Pas de CSV exposé : la reconstruction retombe sur la pagination donnees (#1565).
+        when(client.csvObservations(eq(PARTICIPATION)))
+                .thenReturn(new ReponseApi.Succes<>(java.util.Optional.<String>empty()));
         when(client.donnees(eq(PARTICIPATION), any()))
                 .thenReturn(new ReponseApi.Succes<>(
                         List.of(new DonneeVigieChiro("d-1", SEQ_1, List.of(observation("Pippip"))))));
