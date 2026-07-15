@@ -7,9 +7,11 @@ import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -125,11 +128,49 @@ public class ServiceReconstructionPassages {
     /// Reconstruit localement la participation `idParticipation` en **passage archivé** : passage, session
     /// (marquée archivée), lignes de séquences sans fichier, puis rapatriement des observations.
     ///
+    /// Variante **non suivie** : sans progression ni annulation (jeton neutre). Sert la CLI et les appels
+    /// qui n'offrent pas de barre. L'IHM passe par la variante suivie depuis une orpheline.
+    ///
     /// @throws RegleMetierException si la participation est déjà rattachée à un passage local, si son point
     ///     n'existe pas ici, si sa nuit est indatable, ou si ses observations ne sont pas récupérables
     ///     (analyse non terminée : le message dit laquelle de ces raisons)
     public RapportReconstruction reconstruire(String idParticipation) {
+        return reconstruire(idParticipation, progression -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Variante **suivie et annulable** par identifiant (chemin CLI, qui ne connaît que l'`_id`) : le
+    /// carré et la localité, absents du détail par id, sont retrouvés via le résumé du compte - une
+    /// lecture de la **liste entière** des participations. L'IHM, qui tient déjà la nuit choisie, évite ce
+    /// coût par la variante depuis une orpheline.
+    public RapportReconstruction reconstruire(
+            String idParticipation, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(idParticipation, "idParticipation");
+        ParticipationVigieChiro resume = resume(idParticipation);
+        return reconstruire(idParticipation, carre(resume), resume.point(), progres, jeton);
+    }
+
+    /// Variante **suivie et annulable** depuis une [ParticipationOrpheline] déjà en main (chemin IHM) :
+    /// carré et localité en sont tirés directement, **sans re-télécharger toute la liste** des
+    /// participations pour retrouver une nuit qu'on a déjà sélectionnée (#1522).
+    public RapportReconstruction reconstruire(
+            ParticipationOrpheline orpheline, Consumer<Progression> progres, JetonAnnulation jeton) {
+        Objects.requireNonNull(orpheline, "orpheline");
+        return reconstruire(
+                orpheline.idParticipation(), orpheline.numeroCarre(), orpheline.codePoint(), progres, jeton);
+    }
+
+    /// Cœur de la reconstruction, une fois carré et localité connus (quelle que soit leur origine). Émet
+    /// des **points de progression** aux étapes lourdes et consulte le **jeton d'annulation** entre elles
+    /// (#1252). Dès la première écriture, toute interruption (annulation ou échec) est **compensée** :
+    /// aucun passage partiel ne subsiste.
+    private RapportReconstruction reconstruire(
+            String idParticipation,
+            String carre,
+            String localite,
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
+        Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(jeton, "jeton");
         refuserSiDejaRattachee(idParticipation);
 
         // Vérifié AVANT toute écriture : un passage reconstruit sans ses observations ne serait qu'une
@@ -139,12 +180,13 @@ public class ServiceReconstructionPassages {
                         + " « Import VigieChiro » est désactivée : réactivez-la (menu ☰ > Fonctionnalités)"
                         + " puis recommencez."));
 
+        progres.accept(new Progression("Lecture de la participation…", 0.05));
+        jeton.leverSiAnnule();
         ParticipationDetail detail = detail(idParticipation);
-        ParticipationVigieChiro resume = resume(idParticipation);
-        Long idPoint = pointLocal(resume)
+        Long idPoint = pointParLocalite
+                .pour(carre, localite)
                 .orElseThrow(() -> new RegleMetierException(
-                        "Le point d'écoute de cette participation (carré " + carre(resume) + ", localité "
-                                + resume.point()
+                        "Le point d'écoute de cette participation (carré " + carre + ", localité " + localite
                                 + ") n'existe pas localement. Créez d'abord le site et le point, puis"
                                 + " recommencez."));
         LocalDateTime debut = nuit(detail.dateDebut())
@@ -155,6 +197,8 @@ public class ServiceReconstructionPassages {
 
         // Les données portent les NOMS des fichiers analysés : ce sont eux qui permettront de rattacher les
         // observations aux séquences recréées, et plus tard de reconnaître les fichiers réimportés (#1302).
+        progres.accept(new Progression("Téléchargement des observations…", 0.15));
+        jeton.leverSiAnnule();
         List<DonneeVigieChiro> donnees = donnees(idParticipation);
         if (donnees.isEmpty()) {
             throw new RegleMetierException("VigieChiro ne renvoie aucune donnée pour cette participation :"
@@ -165,20 +209,49 @@ public class ServiceReconstructionPassages {
         // l'audit recalcule depuis le passage (`ServiceAuditCoherence#prefixeAttendu`), et il doit être le
         // même, sans quoi le passage reconstruit serait signalé PREFIXE_NON_CONFORME à vie (#1050).
         int numeroPassage = premierNumeroLibre(idPoint, debut.getYear());
-        Prefixe prefixe = new Prefixe(carre(resume), debut.getYear(), numeroPassage, resume.point());
+        Prefixe prefixe = new Prefixe(carre, debut.getYear(), numeroPassage, localite);
 
-        Long idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail));
-        Long idSession = creerSessionArchivee(idPassage, prefixe);
-        int sequences = creerSequences(idSession, prefixe, donnees);
-        liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
+        // À partir d'ici on ÉCRIT. La vraie transaction unique est hors de portée (l'import ouvre la
+        // sienne sur une base SQLite mono-écrivain) ; à la place, toute interruption défait ce qui a été
+        // créé - le schéma en ON DELETE CASCADE rend cette compensation sûre (#1522).
+        Long idPassage = null;
+        try {
+            jeton.leverSiAnnule();
+            idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail));
+            Long idSession = creerSessionArchivee(idPassage, prefixe);
+            int sequences = creerSequences(idSession, prefixe, donnees, progres, jeton);
+            liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
 
-        // L'import des observations est le mécanisme de l'EPIC #1259, consommé par son port socle : il
-        // rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer.
-        importateur.importer(idPassage, false);
-        int observations = donnees.stream()
-                .mapToInt(donnee -> donnee.observations().size())
-                .sum();
-        return new RapportReconstruction(idPassage, sequences, observations, RapportReconstruction.lacunesConnues());
+            // L'import des observations est le mécanisme de l'EPIC #1259, consommé par son port socle : il
+            // rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer.
+            progres.accept(new Progression("Import des observations…", 0.75));
+            jeton.leverSiAnnule();
+            importateur.importer(idPassage, false);
+            int observations = donnees.stream()
+                    .mapToInt(donnee -> donnee.observations().size())
+                    .sum();
+            progres.accept(new Progression("Terminé.", 1.0));
+            return new RapportReconstruction(
+                    idPassage, sequences, observations, RapportReconstruction.lacunesConnues());
+        } catch (RuntimeException interruption) {
+            if (idPassage != null) {
+                annulerReconstructionPartielle(idPassage, interruption);
+            }
+            throw interruption;
+        }
+    }
+
+    /// Défait une reconstruction interrompue : retire le lien VigieChiro (posé ou non) puis supprime le
+    /// passage, dont la suppression **cascade** sur session, séquences et observations (`ON DELETE
+    /// CASCADE`). Best-effort : un échec de compensation est **attaché** à la cause d'origine plutôt que de
+    /// la masquer, pour qu'aucune trace ne se perde (observabilité, #1523).
+    private void annulerReconstructionPartielle(Long idPassage, RuntimeException cause) {
+        try {
+            liens.supprimer(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage));
+            passageDao.delete(idPassage);
+        } catch (RuntimeException echecCompensation) {
+            cause.addSuppressed(echecCompensation);
+        }
     }
 
     // --- Création locale ---------------------------------------------------------------------------
@@ -224,14 +297,23 @@ public class ServiceReconstructionPassages {
     /// passage est archivé. Un enregistrement original **porteur** est créé pour satisfaire la clé
     /// étrangère ; il n'a pas plus de fichier que les séquences, mais il porte le **vrai** préfixe R6 : un
     /// nom fabriqué ferait échouer le contrôle de préfixe de l'audit (#1050).
-    private int creerSequences(Long idSession, Prefixe prefixe, List<DonneeVigieChiro> donnees) {
+    private int creerSequences(
+            Long idSession,
+            Prefixe prefixe,
+            List<DonneeVigieChiro> donnees,
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
         Path transformes = workspace.dossierTransformes(prefixe.nomDossierSession());
         Long idOriginal = originalDao
                 .insert(new EnregistrementOriginal(
                         null, prefixe.prefixeFichier() + "reconstruit.wav", "", null, null, null, idSession))
                 .id();
+        int total = donnees.size();
         int index = 0;
         for (DonneeVigieChiro donnee : donnees) {
+            // C'est la boucle longue (des milliers de séquences) : on y consulte le jeton à chaque tour
+            // pour que l'annulation s'arrête au plus tôt, et on y distille la progression 0,30 -> 0,70.
+            jeton.leverSiAnnule();
             String nom = nomFichier(donnee.titre());
             sequenceDao.insert(new SequenceDEcoute(
                     null,
@@ -245,6 +327,8 @@ public class ServiceReconstructionPassages {
                     idSession,
                     Prefixe.horodatageDe(nom).orElse(null)));
             index++;
+            progres.accept(new Progression(
+                    "Création des séquences (" + index + "/" + total + ")…", 0.30 + 0.40 * index / total));
         }
         return index;
     }

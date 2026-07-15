@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,8 +17,11 @@ import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -37,9 +41,11 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -240,6 +246,79 @@ class ServiceReconstructionPassagesTest {
         assertThat(passageDao.findAll())
                 .as("le refus tombe avant toute écriture : mieux vaut rien créer que créer à moitié")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("La reconstruction émet une progression croissante jusqu'à « Terminé » (100 %)")
+    void reconstruire_emet_une_progression_jusqua_termine() {
+        bouchonnerPlateforme();
+        List<Progression> points = new ArrayList<>();
+
+        service.reconstruire(PARTICIPATION, points::add, JetonAnnulation.neutre());
+
+        assertThat(points)
+                .as("la barre ne doit jamais reculer")
+                .extracting(Progression::fraction)
+                .isSorted();
+        assertThat(points).last().satisfies(dernier -> {
+            assertThat(dernier.fraction()).isEqualTo(1.0);
+            assertThat(dernier.libelle()).contains("Terminé");
+        });
+    }
+
+    @Test
+    @DisplayName("Annulation pendant la création des séquences : aucun passage partiel ne subsiste")
+    void annulation_ne_laisse_aucun_passage_partiel() {
+        bouchonnerPlateforme();
+        JetonAnnulation jeton = new JetonAnnulation();
+        // On demande l'annulation dès le premier point de progression des séquences : le tour suivant de
+        // la boucle la constate et lève, après qu'un passage a déjà été écrit -> la compensation doit tout défaire.
+        Consumer<Progression> annuleAuxSequences = point -> {
+            if (point.libelle().contains("séquences")) {
+                jeton.annuler();
+            }
+        };
+
+        assertThatThrownBy(() -> service.reconstruire(PARTICIPATION, annuleAuxSequences, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        assertThat(passageDao.findAll())
+                .as("l'annulation compense le passage à moitié reconstruit (ON DELETE CASCADE)")
+                .isEmpty();
+        assertThat(liens.tous(LienVigieChiro.ENTITE_PASSAGE)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Échec de l'import après écriture : le passage partiel est compensé, l'erreur remonte")
+    void echec_import_compense_le_passage_partiel() {
+        bouchonnerPlateforme();
+        when(importObservations.importer(anyLong(), anyBoolean())).thenThrow(new IllegalStateException("import cassé"));
+
+        assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("import cassé");
+
+        assertThat(passageDao.findAll())
+                .as("un échec de l'import ne doit pas laisser de passage sans ses observations")
+                .isEmpty();
+        assertThat(liens.tous(LienVigieChiro.ENTITE_PASSAGE)).isEmpty();
+    }
+
+    @Test
+    @DisplayName("Depuis une orpheline en main : reconstruit sans re-télécharger toute la liste (#1522)")
+    void reconstruire_depuis_orpheline_ne_retelecharge_pas_la_liste() {
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        when(client.donnees(PARTICIPATION))
+                .thenReturn(
+                        new ReponseApi.Succes<>(List.of(new DonneeVigieChiro("d-1", SEQ_1, List.of(observation())))));
+        when(importObservations.importer(anyLong(), anyBoolean())).thenReturn("1 observation(s) importée(s).");
+        ParticipationOrpheline orpheline =
+                new ParticipationOrpheline(PARTICIPATION, "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
+
+        RapportReconstruction rapport = service.reconstruire(orpheline, progression -> {}, JetonAnnulation.neutre());
+
+        assertThat(rapport.idPassage()).isNotNull();
+        verify(client, never()).mesParticipations();
     }
 
     // --- Fixture ---------------------------------------------------------------------------------
