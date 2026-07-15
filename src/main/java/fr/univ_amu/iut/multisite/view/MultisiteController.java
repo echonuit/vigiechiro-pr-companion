@@ -532,7 +532,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         edition.enregistrer();
     }
 
-    /// Colonnes du lot multi-sites proposées au sélecteur (#919). « Carré » est l'identité (verrouillée).
+    /// Colonnes du tableau multi-sites proposées au sélecteur (#919). « Carré » est l'identité (verrouillée).
     private List<GestionnaireColonnes.Colonne> colonnesLignes() {
         return List.of(
                 new GestionnaireColonnes.Colonne(colCarre, "Carré", true),
@@ -601,10 +601,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 SourcesAudioMultisite.parPassage(tableLignes.getSelectionModel().getSelectedItem()));
     }
 
-    /// « 🎧 Écouter le lot filtré » : ouvre la vue audio unifiée sur les observations de **tous** les
-    /// passages affichés (source `ParPassages`) - écoute / validation en lot à travers plusieurs passages.
+    /// « 🎧 Écouter la sélection filtrée » : ouvre la vue audio unifiée sur les observations de **tous** les
+    /// passages affichés (source `ParPassages`) - écoute / validation groupée à travers plusieurs passages.
     /// On part de l'**instantané réellement affiché** (`tableLignes.getItems()`, tri colonne inclus), comme
-    /// l'export (#291) : « le lot filtré » = exactement ce qui est dans le tableau. L'ordre de revue est de
+    /// l'export (#291) : « la sélection filtrée » = exactement ce qui est dans le tableau. L'ordre de revue est de
     /// toute façon ré-appliqué côté vue audio (`ORDRE_AUDIO`), mais on garde un contrat cohérent.
     @FXML
     private void ecouterLot() {

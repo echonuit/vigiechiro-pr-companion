@@ -412,15 +412,15 @@ class AudioViewModelTest {
     }
 
     @Nested
-    @DisplayName("Source ParPassages (lot multisite)")
+    @DisplayName("Source ParPassages (sélection multisite)")
     class ParPassages {
 
         private SourceObservations source() {
-            return new SourceObservations.ParPassages(List.of(7L, 8L), "lot (2 passages)");
+            return new SourceObservations.ParPassages(List.of(7L, 8L), "sélection (2 passages)");
         }
 
         @Test
-        @DisplayName("ouvrirSur charge le lot et masque le workflow Tadarida ; l'import est ignoré")
+        @DisplayName("ouvrirSur charge la sélection et masque le workflow Tadarida ; l'import est ignoré")
         void ouvrir_charge_lot() {
             when(service.taxonsDisponibles()).thenReturn(List.of());
             when(projections.lignesAudioDesPassages(List.of(7L, 8L)))

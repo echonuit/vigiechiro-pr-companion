@@ -294,9 +294,9 @@ class MultisiteViewTest {
     }
 
     @Test
-    @DisplayName("« Écouter le lot filtré » ouvre la vue audio sur tous les passages affichés (ParPassages)")
+    @DisplayName("« Écouter la sélection filtrée » ouvre la vue audio sur tous les passages affichés (ParPassages)")
     void ecouter_le_lot_ouvre_par_passages(FxRobot robot) {
-        // Les MenuItem ne sont pas des Node : on passe par le MenuButton (ordre du FXML : passage, lot, …).
+        // Les MenuItem ne sont pas des Node : on passe par le MenuButton (ordre du FXML : passage, sélection, …).
         MenuItem itemLot = robot.lookup("#menuActions")
                 .queryAs(MenuButton.class)
                 .getItems()

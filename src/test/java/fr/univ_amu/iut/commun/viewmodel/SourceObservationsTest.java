@@ -41,7 +41,7 @@ class SourceObservationsTest {
     @DisplayName("ParPassages copie la liste fournie (immuable, isolée des mutations de l'appelant)")
     void lot_passages_immuable() {
         List<Long> mutable = new ArrayList<>(List.of(7L, 8L));
-        SourceObservations.ParPassages source = new SourceObservations.ParPassages(mutable, "lot (2 passages)");
+        SourceObservations.ParPassages source = new SourceObservations.ParPassages(mutable, "sélection (2 passages)");
 
         mutable.add(9L);
 

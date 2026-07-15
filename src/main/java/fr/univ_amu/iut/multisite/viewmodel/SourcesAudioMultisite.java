@@ -28,11 +28,11 @@ public final class SourcesAudioMultisite {
                 new ContexteSite(ligne.numeroCarre(), ligne.codePoint(), null)));
     }
 
-    /// Source du **lot filtré** : tous les passages des `lignes` affichées. Le libellé résume le lot
-    /// pour le fil d'Ariane.
+    /// Source de la **sélection filtrée** : tous les passages des `lignes` affichées. Le libellé
+    /// résume la sélection pour le fil d'Ariane.
     public static SourceObservations parLot(List<LignePassage> lignes) {
         List<Long> idPassages = lignes.stream().map(LignePassage::idPassage).toList();
-        String libelle = "lot (" + idPassages.size() + (idPassages.size() > 1 ? " passages)" : " passage)");
+        String libelle = "sélection (" + idPassages.size() + (idPassages.size() > 1 ? " passages)" : " passage)");
         return new SourceObservations.ParPassages(idPassages, libelle);
     }
 }

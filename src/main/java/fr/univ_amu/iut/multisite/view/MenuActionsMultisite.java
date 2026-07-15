@@ -45,13 +45,13 @@ final class MenuActionsMultisite {
         exporter.disableProperty().bind(Bindings.not(nonVide));
         exporter.textProperty()
                 .bind(Bindings.when(nonVide).then("📤 Exporter…").otherwise("📤 Exporter… (aucune ligne à exporter)"));
-        // Écoute : le lot suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
+        // Écoute : la sélection filtrée suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
         ecouterLot.disableProperty().bind(Bindings.not(nonVide));
         ecouterLot
                 .textProperty()
                 .bind(Bindings.when(nonVide)
-                        .then("🎧 Écouter le lot filtré")
-                        .otherwise("🎧 Écouter le lot filtré (aucune ligne)"));
+                        .then("🎧 Écouter la sélection filtrée")
+                        .otherwise("🎧 Écouter la sélection filtrée (aucune ligne)"));
         ecouterPassage.disableProperty().bind(Bindings.isNull(selection));
         // Un item qui ne peut rien faire ne vaut pas mieux qu'un item absent : il vaut moins.
         reconstruire.setVisible(peutReconstruire);

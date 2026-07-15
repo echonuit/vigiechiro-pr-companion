@@ -24,7 +24,7 @@ import picocli.CommandLine.Spec;
 /// laissant l'utilisateur deviner où ça s'est arrêté.
 @Command(
         name = "corriger-observations",
-        description = "Corrige en lot : chaque observation retient le taxon donné à la place de Tadarida (R16).")
+        description = "Corrige en une fois : chaque observation retient le taxon donné à la place de Tadarida (R16).")
 public final class CorrigerObservations implements Callable<Integer> {
 
     @Option(

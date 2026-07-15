@@ -160,13 +160,13 @@
         </Button>
         <Button fx:id="boutonDepot" styleClass="carte-action"
                 onAction="#preparerDepot" contentDisplay="GRAPHIC_ONLY"
-                accessibleText="Préparer le dépôt : constituer le lot Tadarida"
+                accessibleText="Préparer le dépôt : constituer le jeu Tadarida"
                 maxWidth="Infinity" maxHeight="Infinity" HBox.hgrow="ALWAYS">
           <graphic>
             <VBox alignment="CENTER" spacing="6.0" styleClass="carte-action-contenu">
               <FontIcon iconLiteral="fas-box-open" styleClass="carte-action-icone"/>
               <Label text="Préparer le dépôt" styleClass="carte-action-titre" wrapText="true"/>
-              <Label text="Constituer le lot Tadarida" styleClass="carte-action-sous" wrapText="true"/>
+              <Label text="Constituer le jeu Tadarida" styleClass="carte-action-sous" wrapText="true"/>
             </VBox>
           </graphic>
         </Button>

@@ -25,7 +25,7 @@ import picocli.CommandLine.Spec;
 /// il ne verrait rien. Le lot en ligne de commande traite **exactement** les lignes visées.
 @Command(
         name = "valider-observations",
-        description = "Valide en lot : chaque observation retient la proposition de Tadarida (R15).")
+        description = "Valide en une fois : chaque observation retient la proposition de Tadarida (R15).")
 public final class ValiderObservations implements Callable<Integer> {
 
     @ArgGroup(exclusive = true, multiplicity = "1")
