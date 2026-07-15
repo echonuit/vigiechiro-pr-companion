@@ -28,12 +28,4 @@ class JournalVigieChiroTest {
                 .isEmpty();
         assertThat(JournalVigieChiro.idJournal("pas du json")).isEmpty();
     }
-
-    @Test
-    @DisplayName("urlSignee : champ s3_signed_url de GET /fichiers/{id}/acces")
-    void url_signee() {
-        assertThat(JournalVigieChiro.urlSignee("{\"s3_signed_url\": \"https://s3/others/x-logs?Signature=y\"}"))
-                .contains("https://s3/others/x-logs?Signature=y");
-        assertThat(JournalVigieChiro.urlSignee("{}")).isEmpty();
-    }
 }

@@ -117,4 +117,13 @@ class ReponsesVigieChiroTest {
                 .isEmpty();
         assertThat(ReponsesVigieChiro.numeroCarreStoc("nope")).isEmpty();
     }
+
+    @Test
+    @DisplayName("urlSignee : champ s3_signed_url de GET /fichiers/{id}/acces ; absent ou illisible → vide")
+    void url_signee() {
+        assertThat(ReponsesVigieChiro.urlSignee("{\"s3_signed_url\": \"https://s3/others/x-logs?Signature=y\"}"))
+                .contains("https://s3/others/x-logs?Signature=y");
+        assertThat(ReponsesVigieChiro.urlSignee("{}")).isEmpty();
+        assertThat(ReponsesVigieChiro.urlSignee("pas du json")).isEmpty();
+    }
 }

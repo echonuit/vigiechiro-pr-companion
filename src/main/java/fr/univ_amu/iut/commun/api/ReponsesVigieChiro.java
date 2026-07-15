@@ -109,6 +109,19 @@ final class ReponsesVigieChiro {
         }
     }
 
+    /// URL S3 **signée** renvoyée par `GET /fichiers/{id}/acces` (champ `s3_signed_url`), à télécharger
+    /// **sans** en-tête d'authentification (la signature de l'URL est l'authentification). Vide si le
+    /// champ est absent ou le corps illisible. Générique : le journal (#1132) comme le CSV d'observations
+    /// (#1565) et le repli audio (#1244) passent tous par la même route `acces`.
+    static Optional<String> urlSignee(String corps) {
+        try {
+            JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
+            return Optional.ofNullable(texte(objet, "s3_signed_url"));
+        } catch (RuntimeException illisible) {
+            return Optional.empty();
+        }
+    }
+
     /// Éléments d'une réponse de liste Eve : le tableau `_items` (réponses paginées) ou le corps
     /// lui-même s'il est déjà un tableau JSON. Corps illisible / forme inattendue → tableau vide.
     /// Package-visible : partagé par les autres lecteurs du paquet (ex. [DonneesVigieChiro]).

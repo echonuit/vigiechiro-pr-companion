@@ -109,6 +109,22 @@ class ClientVigieChiroTest {
     }
 
     @Test
+    @DisplayName("accès fichiers (#1565) : accesFichier / piecesJointes / csvObservations dégradent"
+            + " proprement — sans token → NonConnecte, hors ligne → Injoignable (#1284)")
+    void acces_fichiers_degrade_proprement() {
+        ClientVigieChiro sansToken = new ClientVigieChiro("http://localhost:1/api/v1", SANS_TOKEN);
+        assertThat(sansToken.accesFichier("f1")).isInstanceOf(ReponseApi.NonConnecte.class);
+        assertThat(sansToken.piecesJointes("6a49", TypePieceJointe.WAV)).isInstanceOf(ReponseApi.NonConnecte.class);
+        assertThat(sansToken.csvObservations("6a49")).isInstanceOf(ReponseApi.NonConnecte.class);
+
+        ClientVigieChiro horsLigne = new ClientVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        assertThat(horsLigne.accesFichier("f1")).isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(horsLigne.piecesJointes("6a49", TypePieceJointe.PROCESSING_EXTRA))
+                .isInstanceOf(ReponseApi.Injoignable.class);
+        assertThat(horsLigne.csvObservations("6a49")).isInstanceOf(ReponseApi.Injoignable.class);
+    }
+
+    @Test
     @DisplayName("corrigerObservation (#723) : sans token ou hors ligne → échec EXPLIQUÉ, distinct (#1284)")
     void correction_degrade_proprement() {
         ResultatCorrection sansToken = new ClientVigieChiro("http://localhost:1", SANS_TOKEN)

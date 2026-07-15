@@ -31,15 +31,4 @@ final class JournalVigieChiro {
             return Optional.empty();
         }
     }
-
-    /// URL S3 signée renvoyée par `GET /fichiers/{id}/acces` (champ `s3_signed_url`), à télécharger
-    /// **sans** en-tête d’authentification (la signature de l’URL est l’authentification).
-    static Optional<String> urlSignee(String corps) {
-        try {
-            JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
-            return Optional.ofNullable(ReponsesVigieChiro.texte(objet, "s3_signed_url"));
-        } catch (RuntimeException illisible) {
-            return Optional.empty();
-        }
-    }
 }

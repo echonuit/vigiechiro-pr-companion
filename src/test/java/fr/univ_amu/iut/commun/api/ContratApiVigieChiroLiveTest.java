@@ -336,6 +336,31 @@ class ContratApiVigieChiroLiveTest {
                 .isEqualTo(total);
     }
 
+    @Test
+    @DisplayName("Dérive client (#1565) : ClientVigieChiro.piecesJointes + csvObservations télécharge le CSV"
+            + " réel d'un coup (processing_extra -> accesFichier), entête Tadarida BRUT")
+    void client_telecharge_le_csv_d_observations() {
+        ClientVigieChiro client = new ClientVigieChiro(baseUrl, () -> Optional.of(token));
+        String participation = participationTraitee();
+
+        List<PieceJointe> extra = client.piecesJointes(participation, TypePieceJointe.PROCESSING_EXTRA)
+                .enOptionnel()
+                .orElseThrow();
+        assumeTrue(
+                extra.stream().anyMatch(p -> p.titre() != null && p.titre().endsWith("-observations.csv")),
+                "Pas de CSV d'observations sur cette participation.");
+
+        Optional<String> csv =
+                client.csvObservations(participation).enOptionnel().orElseThrow();
+        assertThat(csv)
+                .as("le CSV est présent et téléchargé d'un coup (une requête)")
+                .isPresent();
+        assertThat(csv.orElseThrow().lines().findFirst().orElse(""))
+                .as("entête Tadarida BRUT lue par le client")
+                .contains("nom du fichier")
+                .contains("tadarida_taxon");
+    }
+
     // ---------------------------------------------------------------------------------------------
     // PROBES en écriture (opt-in -Dvigiechiro.write=true) : remplacent les spikes jetables. Elles
     // ÉCRIVENT sur la plateforme (fichier d'essai, PATCH quasi no-op) — à lancer sciemment, jamais

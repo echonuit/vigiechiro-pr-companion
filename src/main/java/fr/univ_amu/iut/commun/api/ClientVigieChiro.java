@@ -159,11 +159,47 @@ public final class ClientVigieChiro {
         return transport
                 .lire(CHEMIN_PARTICIPATIONS + participationId)
                 .puis(corps -> JournalVigieChiro.idJournal(corps)
-                        .map(idFichier -> transport
-                                .lire("/fichiers/" + idFichier + "/acces")
-                                .lireAvec(JournalVigieChiro::urlSignee)
-                                .puis(transport::telecharger)
-                                .transformer(Optional::of))
+                        .map(idFichier -> accesFichier(idFichier).transformer(Optional::of))
+                        .orElseGet(() -> ReponseApi.succes(Optional.empty())));
+    }
+
+    /// **Télécharge le contenu d'un fichier** rattaché par son `_id` : `GET /fichiers/#id/acces` → URL S3
+    /// signée → [TransportVigieChiro#telecharger] (GET de l'URL signée, **sans** en-tête
+    /// d'authentification, la signature faisant foi). Généralise la chaîne autrefois codée en dur pour le
+    /// seul journal (#1132) : elle sert aussi le CSV d'observations (#1565) et le repli audio (#1244).
+    /// Issue **triée** (#1284) : un fichier indisponible (`disponible:false`) revient en `Refuse(410)`,
+    /// une panne en `Injoignable`.
+    public ReponseApi<String> accesFichier(String fichierId) {
+        return transport
+                .lire("/fichiers/" + fichierId + "/acces")
+                .lireAvec(ReponsesVigieChiro::urlSignee)
+                .puis(transport::telecharger);
+    }
+
+    /// **Fichiers rattachés** à une participation, filtrés par type (`GET
+    /// /participations/#id/pieces_jointes?<filtre>=true`, #1565) : chaque [PieceJointe] porte
+    /// `{_id, titre, disponible}`. C'est la **seule** voie pour obtenir le `_id` d'un fichier (la
+    /// collection `/fichiers` n'est pas listable pour un observateur, `403`). Issue **triée** (#1284) ;
+    /// une liste vide signifie « le serveur répond, aucun fichier de ce type (encore) ».
+    public ReponseApi<List<PieceJointe>> piecesJointes(String participationId, TypePieceJointe filtre) {
+        return transport
+                .lire(CHEMIN_PARTICIPATIONS + participationId + "/pieces_jointes?" + filtre.parametre() + "=true")
+                .transformer(PiecesJointesVigieChiro::pieces);
+    }
+
+    /// **CSV d'observations** d'une participation (#1565), au format Tadarida BRUT : un **seul**
+    /// téléchargement ([#piecesJointes] `processing_extra` pour trouver son `_id`, puis [#accesFichier])
+    /// qui remplace les dizaines de pages de [#donnees]. `Succes(Optional.empty())` signifie « le serveur
+    /// répond mais le CSV n'existe pas (encore) ou n'est pas monté sur S3 ». Contrepartie du format : il
+    /// ne porte **pas** l'`_id` des donnees, donc l'ancrage plateforme doit être acquis ailleurs (à la
+    /// réactivation, #1571).
+    public ReponseApi<Optional<String>> csvObservations(String participationId) {
+        return piecesJointes(participationId, TypePieceJointe.PROCESSING_EXTRA)
+                .puis(pieces -> pieces.stream()
+                        .filter(PieceJointe::disponible)
+                        .filter(piece -> piece.titre() != null && piece.titre().endsWith("-observations.csv"))
+                        .findFirst()
+                        .map(piece -> accesFichier(piece.id()).transformer(Optional::of))
                         .orElseGet(() -> ReponseApi.succes(Optional.empty())));
     }
 
