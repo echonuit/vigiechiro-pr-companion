@@ -2,6 +2,7 @@ package fr.univ_amu.iut.commun.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
@@ -83,5 +84,27 @@ class PaginationEveTest {
         assertThat(sites.enOptionnel().orElseThrow())
                 .extracting(SiteVigieChiro::id)
                 .containsExactly("s1", "s2", "s1");
+    }
+
+    @Test
+    @DisplayName("parcourir suivi : chaque page est notifiée avec le nombre total de pages (_meta.total)")
+    void suivi_notifie_le_total_de_pages() {
+        // _meta.total = 150 éléments, 100 par page -> 2 pages. Le total est lu sur la PREMIÈRE page et
+        // rapporté à chacune, pour une barre déterminée « page XX/YY » (#1534).
+        Map<Integer, String> pages = Map.of(
+                1,
+                "{\"_meta\":{\"total\":150},\"_items\":[{\"_id\":\"p1\",\"site\":{\"_id\":\"s1\","
+                        + "\"titre\":\"A-100001\"}}]}",
+                2,
+                "{\"_items\":[{\"_id\":\"p2\",\"site\":{\"_id\":\"s2\",\"titre\":\"B-100002\"}}]}");
+        List<String> vus = new ArrayList<>();
+
+        PaginationEve.parcourir(
+                500,
+                numero -> ReponseApi.succes(pages.getOrDefault(numero, "{\"_items\":[]}")),
+                ParticipationsVigieChiro::participations,
+                (page, totalPages) -> vus.add(page + "/" + totalPages));
+
+        assertThat(vus).containsExactly("1/2", "2/2");
     }
 }

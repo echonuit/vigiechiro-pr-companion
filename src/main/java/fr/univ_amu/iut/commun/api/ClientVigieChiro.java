@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.DoubleConsumer;
-import java.util.function.IntConsumer;
 
 /// Client HTTP de l'**API REST VigieChiro** (backend Eve, base `…/api/v1`, cf. #142). Socle réseau
 /// destiné à être réutilisé par les features (identité, sites, taxons, participations, fichiers).
@@ -131,19 +130,20 @@ public final class ClientVigieChiro {
     /// panne en cours de parcours rend l'issue, jamais un préfixe silencieux. Un `Succes` à liste vide
     /// signifie réellement « le serveur n'a pas (encore) de résultats » (#1264).
     public ReponseApi<List<DonneeVigieChiro>> donnees(String participationId) {
-        return donnees(participationId, page -> {});
+        return donnees(participationId, (page, totalPages) -> {});
     }
 
-    /// Variante **suivie page par page** (#1522) : `surPage.accept(n)` après chaque page lue, pour relayer
-    /// une progression et **honorer une annulation** pendant un long téléchargement (une nuit fait des
-    /// milliers de fichiers, donc des dizaines de pages). Même contrat tout-ou-rien / trié.
-    public ReponseApi<List<DonneeVigieChiro>> donnees(String participationId, IntConsumer surPage) {
+    /// Variante **suivie page par page** (#1522, #1534) : [SuiviPagination#surPage] après chaque page lue
+    /// (avec le nombre total de pages, `_meta.total`), pour une progression **déterminée** et **honorer une
+    /// annulation** pendant un long téléchargement (une nuit fait des milliers de fichiers, donc des
+    /// dizaines de pages). Même contrat tout-ou-rien / trié.
+    public ReponseApi<List<DonneeVigieChiro>> donnees(String participationId, SuiviPagination suivi) {
         return PaginationEve.parcourir(
                 PAGES_MAX,
                 page -> transport.lire(
                         CHEMIN_PARTICIPATIONS + participationId + "/donnees" + PaginationEve.requete(page)),
                 DonneesVigieChiro::donnees,
-                surPage);
+                suivi);
     }
 
     /// **Journal de traitement** d'une participation (#1132) : le serveur y trace l'ingestion —

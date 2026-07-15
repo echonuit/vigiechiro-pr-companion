@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 import java.util.function.Consumer;
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.StringBinding;
@@ -139,6 +140,14 @@ public class ReconstructionModaleController {
         lblCompteRendu.textProperty().bind(viewModel.compteRenduProperty());
         lblCompteRendu.visibleProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
         lblCompteRendu.managedProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
+        // Le compte rendu de fin (avec ses lacunes) est plus haut que la modale dimensionnée pour la
+        // table : comme il apparaît APRÈS le premier `sizeToScene` (à l'ouverture), ses dernières lignes
+        // passaient sous la ligne de flottaison (#1534). On agrandit la fenêtre quand il paraît.
+        viewModel.compteRenduProperty().addListener((observable, avant, apres) -> {
+            if (apres != null && !apres.isBlank()) {
+                Platform.runLater(this::ajusterHauteurModale);
+            }
+        });
 
         // Le bouton ne s'ouvre que sur une nuit choisie DONT le point est connu ici, et l'enveloppe dit
         // laquelle des deux conditions manque (#789) plutôt que de laisser un bouton gris sans raison.
@@ -236,6 +245,15 @@ public class ReconstructionModaleController {
     private void annuler() {
         if (jetonCourant != null) {
             jetonCourant.annuler();
+        }
+    }
+
+    /// Agrandit la modale pour afficher le compte rendu en entier (#1534) : il paraît après le premier
+    /// dimensionnement, si bien que ses dernières lignes - les lacunes - étaient coupées. Sur le fil
+    /// JavaFX, une fois la mise en page du texte calculée.
+    private void ajusterHauteurModale() {
+        if (racine.getScene() != null && racine.getScene().getWindow() instanceof Stage modale) {
+            modale.sizeToScene();
         }
     }
 

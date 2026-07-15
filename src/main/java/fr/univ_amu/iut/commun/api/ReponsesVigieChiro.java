@@ -20,6 +20,18 @@ final class ReponsesVigieChiro {
 
     private ReponsesVigieChiro() {}
 
+    /// Nombre **total** d'éléments annoncé par une collection paginée Eve (`_meta.total`), ou `0` si le
+    /// champ est absent ou le corps illisible. Permet de connaître d'avance le nombre de pages pour une
+    /// progression déterminée (#1534). Tolérant, comme le reste de ce lecteur.
+    static int total(String corps) {
+        try {
+            JsonObject meta = JsonParser.parseString(corps).getAsJsonObject().getAsJsonObject("_meta");
+            return meta != null && meta.has("total") ? meta.get("total").getAsInt() : 0;
+        } catch (RuntimeException illisible) {
+            return 0;
+        }
+    }
+
     /// Profil depuis `GET /moi` : vide si JSON illisible ou sans `_id`.
     static Optional<ProfilVigieChiro> profil(String corps) {
         try {

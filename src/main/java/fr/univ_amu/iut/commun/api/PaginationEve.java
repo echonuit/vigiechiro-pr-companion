@@ -3,7 +3,6 @@ package fr.univ_amu.iut.commun.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 
 /// Parcours d'une collection **paginée Eve** (`_items` + `?max_results=&page=`) : accumule **toutes**
@@ -41,23 +40,29 @@ final class PaginationEve {
     ///     jamais rendre un préfixe des pages déjà lues
     static <T> ReponseApi<List<T>> parcourir(
             int pagesMax, IntFunction<ReponseApi<String>> corpsPage, Function<String, List<T>> parPage) {
-        return parcourir(pagesMax, corpsPage, parPage, page -> {});
+        return parcourir(pagesMax, corpsPage, parPage, (page, totalPages) -> {});
     }
 
-    /// Variante qui **notifie chaque page** lue (#1522) : `surPage.accept(n)` est appelé après la page `n`
-    /// non vide, avant de demander la suivante. L'appelant y relaie une progression et **consulte son jeton
-    /// d'annulation** ; une exception levée depuis `surPage` interrompt le parcours et remonte telle quelle
-    /// (l'annulation d'un long téléchargement, faute de quoi la barre restait figée et « Annuler » muet).
-    ///
-    /// @param surPage notifié du numéro de page (1-based) après chaque page non vide
+    /// Variante **suivie** (#1522, #1534) : [SuiviPagination#surPage] est appelé après chaque page non
+    /// vide, avant de demander la suivante, avec le numéro de page et le **nombre total de pages** lu sur la
+    /// première (`_meta.total`, `0` si le serveur ne l'annonce pas). L'appelant y relaie une progression -
+    /// déterminée si le total est connu - et **consulte son jeton d'annulation** ; une exception levée
+    /// depuis le suivi interrompt le parcours et remonte telle quelle (annulation d'un long téléchargement,
+    /// faute de quoi la barre restait figée et « Annuler » muet).
     static <T> ReponseApi<List<T>> parcourir(
             int pagesMax,
             IntFunction<ReponseApi<String>> corpsPage,
             Function<String, List<T>> parPage,
-            IntConsumer surPage) {
+            SuiviPagination suivi) {
         List<T> tout = new ArrayList<>();
+        int totalPages = 0;
         for (int page = 1; page <= pagesMax; page++) {
-            ReponseApi<List<T>> lot = corpsPage.apply(page).transformer(parPage);
+            ReponseApi<String> reponse = corpsPage.apply(page);
+            if (page == 1 && reponse instanceof ReponseApi.Succes<String>(String corps)) {
+                int total = ReponsesVigieChiro.total(corps);
+                totalPages = total <= 0 ? 0 : (total + TAILLE_PAGE - 1) / TAILLE_PAGE;
+            }
+            ReponseApi<List<T>> lot = reponse.transformer(parPage);
             if (!(lot instanceof ReponseApi.Succes<List<T>>(List<T> elements))) {
                 return lot;
             }
@@ -65,7 +70,7 @@ final class PaginationEve {
                 break;
             }
             tout.addAll(elements);
-            surPage.accept(page);
+            suivi.surPage(page, totalPages);
         }
         return ReponseApi.succes(List.copyOf(tout));
     }

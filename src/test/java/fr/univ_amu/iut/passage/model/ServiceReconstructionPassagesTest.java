@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.ImportObservations;
@@ -48,7 +49,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.IntConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -332,10 +332,10 @@ class ServiceReconstructionPassagesTest {
         JetonAnnulation jeton = new JetonAnnulation();
         // Le client relaie chaque page ; on annule après la première : le relais consulte le jeton et lève.
         when(client.donnees(eq(PARTICIPATION), any())).thenAnswer(invocation -> {
-            IntConsumer surPage = invocation.getArgument(1);
-            surPage.accept(1);
+            SuiviPagination suivi = invocation.getArgument(1);
+            suivi.surPage(1, 3);
             jeton.annuler();
-            surPage.accept(2);
+            suivi.surPage(2, 3);
             return new ReponseApi.Succes<>(List.of());
         });
         List<Progression> points = new ArrayList<>();
@@ -346,9 +346,9 @@ class ServiceReconstructionPassagesTest {
                 .isInstanceOf(OperationAnnuleeException.class);
 
         assertThat(points)
-                .as("chaque page lue fait avancer la barre")
+                .as("chaque page lue fait avancer la barre, avec le total (page XX/YY)")
                 .extracting(Progression::libelle)
-                .anyMatch(libelle -> libelle.contains("page 1"));
+                .anyMatch(libelle -> libelle.contains("page 1/3"));
         assertThat(passageDao.findAll())
                 .as("annulé pendant le téléchargement : rien n'a été écrit")
                 .isEmpty();

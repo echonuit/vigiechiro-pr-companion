@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -32,7 +33,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -207,10 +207,9 @@ public class ServiceReconstructionPassages {
         // C'est l'étape la plus longue (des dizaines de pages) : on suit sa progression PAGE PAR PAGE et on
         // y honore l'annulation, sans quoi la barre restait figée et « Annuler » muet plusieurs minutes.
         jeton.leverSiAnnule();
-        List<DonneeVigieChiro> donnees = donnees(idParticipation, page -> {
+        List<DonneeVigieChiro> donnees = donnees(idParticipation, (page, totalPages) -> {
             jeton.leverSiAnnule();
-            progres.accept(new Progression(
-                    "Téléchargement des observations (page " + page + ")…", avancementTelechargement(page)));
+            progres.accept(ProgressionTelechargement.pour(page, totalPages));
         });
         if (donnees.isEmpty()) {
             throw new RegleMetierException("VigieChiro ne renvoie aucune donnée pour cette participation :"
@@ -229,17 +228,17 @@ public class ServiceReconstructionPassages {
         Long idPassage = null;
         try {
             jeton.leverSiAnnule();
-            progres.accept(new Progression("Création du passage…", 0.72));
+            progres.accept(new Progression("Création du passage…", 0.90));
             idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail));
             Long idSession = creerSessionArchivee(idPassage, prefixe);
-            progres.accept(new Progression("Création des séquences…", 0.78));
+            progres.accept(new Progression("Création des séquences…", 0.93));
             int sequences = creerSequences(idSession, prefixe, donnees);
             liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
 
             // L'import des observations est le mécanisme de l'EPIC #1259, consommé par son port socle : il
             // rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer. On lui passe
             // les donnees DÉJÀ téléchargées : les re-parcourir page par page doublait le temps (#1522).
-            progres.accept(new Progression("Import des observations…", 0.85));
+            progres.accept(new Progression("Import des observations…", 0.96));
             jeton.leverSiAnnule();
             importateur.importer(idPassage, donnees, false);
             int observations = donnees.stream()
@@ -354,14 +353,6 @@ public class ServiceReconstructionPassages {
         return compte[0];
     }
 
-    /// Avancement affiché pendant le téléchargement paginé : le nombre total de pages n'est pas connu
-    /// d'avance (Eve ne le donne pas), donc la fraction **tend** vers 0,70 sans jamais l'atteindre - la
-    /// barre avance à chaque page, de moins en moins vite. La plage [0,70 ; 1,0] reste à la création et à
-    /// l'import.
-    private static double avancementTelechargement(int page) {
-        return 0.10 + 0.60 * (1.0 - 1.0 / (1.0 + 0.1 * page));
-    }
-
     /// Nom de fichier de la séquence : le `titre` distant est **sans extension** (`..._000`), les
     /// séquences locales portent `.wav`.
     private static String nomFichier(String titre) {
@@ -421,8 +412,8 @@ public class ServiceReconstructionPassages {
         return exiger(client.participation(idParticipation), "le détail de cette participation");
     }
 
-    private List<DonneeVigieChiro> donnees(String idParticipation, IntConsumer surPage) {
-        return exiger(client.donnees(idParticipation, surPage), "les observations de cette participation");
+    private List<DonneeVigieChiro> donnees(String idParticipation, SuiviPagination suivi) {
+        return exiger(client.donnees(idParticipation, suivi), "les observations de cette participation");
     }
 
     /// Traduction **unique** d'une issue d'appel (#1284) en valeur ou en refus **motivé** : une seule
