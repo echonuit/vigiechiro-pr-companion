@@ -162,9 +162,7 @@ public class QualificationViewModel {
             verdictActuel.set(verdictChoisi.get());
             statut.set(StatutWorkflow.VERIFIE);
             avertissementAJeter.set(
-                    service.estAJeter(idPassage)
-                            ? "⚠ Passage marqué « à jeter » : il sera exclu du prochain lot de dépôt."
-                            : "");
+                    service.estAJeter(idPassage) ? "⚠ Passage marqué « à jeter » : il ne pourra pas être déposé." : "");
             message.set("");
             etatVerdict.set(EtatVerdict.ENREGISTRE);
         } catch (RuntimeException refus) {

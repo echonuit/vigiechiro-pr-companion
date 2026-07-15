@@ -156,7 +156,7 @@
                     onAction="#choisirAJeter" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
           </HBox>
           <Label fx:id="lblApercuR14" styleClass="apercu-r14" wrapText="true"
-                 text="⚠ « À jeter » exclura ce passage du prochain lot prêt à déposer."/>
+                 text="⚠ « À jeter » : ce passage ne pourra pas être déposé."/>
         </VBox>
 
         <VBox spacing="4.0">
