@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -55,6 +56,11 @@ public class ServiceReactivationPassage {
 
     private final ReactivationDepuisBruts depuisBruts;
 
+    /// Port d'import des observations (#1264), **optionnel** (la feature « Import VigieChiro » est
+    /// désactivable, #1057). Il sert ici la **phase d'ancrage** (#1571) : un passage reconstruit par CSV
+    /// (#1565) a des observations sans ancrage plateforme, acquis à la réactivation quand l'audio revient.
+    private final Optional<ImportObservations> importObservations;
+
     public ServiceReactivationPassage(
             SessionDao sessionDao,
             SequenceDao sequenceDao,
@@ -62,7 +68,8 @@ public class ServiceReactivationPassage {
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
             Optional<CrisAttendus> crisAttendus,
-            Optional<RegenerationSequences> regeneration) {
+            Optional<RegenerationSequences> regeneration,
+            Optional<ImportObservations> importObservations) {
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.originalDao = Objects.requireNonNull(originalDao, "originalDao");
@@ -72,6 +79,7 @@ public class ServiceReactivationPassage {
                 Objects.requireNonNull(crisAttendus, "crisAttendus"));
         this.depuisBruts = new ReactivationDepuisBruts(
                 verification, rebranchement, Objects.requireNonNull(regeneration, "regeneration"));
+        this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
     }
 
     /// Réactive le passage depuis `dossierSource` (exploré **récursivement**).
@@ -103,7 +111,32 @@ public class ServiceReactivationPassage {
                 ? depuisBruts.appliquer(sequences, originaux, candidats, prefixe, progres)
                 : rebranchement.rebrancher(sequences, candidats, progres);
 
-        return conclure(idPassage, session, sequences, bilan, voie);
+        RapportReactivation rapport = conclure(idPassage, session, sequences, bilan, voie);
+        acquerirAncrageSiNecessaire(idPassage, rapport, progres);
+        return rapport;
+    }
+
+    /// **Phase d'ancrage** (#1571) : acquiert l'ancrage plateforme (`idDonneeVigieChiro` / indice) des
+    /// observations d'un passage reconstruit par CSV (#1565), qui en sont dépourvues. On ne le fait qu'**ici**,
+    /// à la réactivation, et seulement si l'**audio est (re)devenu disponible** : l'ancrage n'est requis que
+    /// pour publier des corrections, et corriger suppose d'avoir écouté. Le ré-import depuis les `donnees`
+    /// (remplacer = true) rapatrie l'ancrage tout en **préservant les validations** de l'observateur ; la
+    /// passe `donnees` complète y est acceptable, opération déjà lourde et voulue.
+    ///
+    /// Ne se déclenche que sur un passage **reconstruit** (rattaché à une participation, ancrage manquant) :
+    /// un passage importé normalement porte déjà son ancrage, la phase ne s'y déclenche pas — donc aucune
+    /// dépendance réseau n'est imposée à la réactivation d'un passage local ordinaire.
+    private void acquerirAncrageSiNecessaire(
+            Long idPassage, RapportReactivation rapport, Consumer<Progression> progres) {
+        if (importObservations.isEmpty() || rapport.decompte().disponibilite() == DisponibiliteAudio.ABSENTE) {
+            return;
+        }
+        ImportObservations importateur = importObservations.get();
+        if (!importateur.estRattache(idPassage) || !importateur.ancrageManquant(idPassage)) {
+            return;
+        }
+        progres.accept(new Progression("Ancrage des observations sur VigieChiro…", 0.98));
+        importateur.importer(idPassage, true);
     }
 
     /// Reconnaît ce que le dossier contient. Les **séquences** l'emportent sur les **bruts** : quand les

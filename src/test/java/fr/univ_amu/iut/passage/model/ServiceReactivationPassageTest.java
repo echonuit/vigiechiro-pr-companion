@@ -2,9 +2,14 @@ package fr.univ_amu.iut.passage.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.FichierWav;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
@@ -116,7 +121,8 @@ class ServiceReactivationPassageTest {
                 new VerificationIdentiteAudio(),
                 disponibilite,
                 Optional.empty(), // pas de cris : cascade structurelle (injecteur partiel)
-                Optional.of(regeneration));
+                Optional.of(regeneration),
+                Optional.empty()); // pas d'import : pas de phase d'ancrage (comportement historique)
     }
 
     @Test
@@ -137,6 +143,60 @@ class ServiceReactivationPassageTest {
         assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().volumeSequencesOctets())
                 .as("la fiche du passage retrouve son volume")
                 .isPositive();
+    }
+
+    @Test
+    @DisplayName("Passage reconstruit réactivé (#1571) : l'audio revenu, l'ancrage manquant est acquis par ré-import")
+    void reactivation_acquiert_l_ancrage_manquant() throws IOException {
+        archiverAvecSauvegarde(true, true); // l'audio revient COMPLET
+        ImportObservations importObservations = mock(ImportObservations.class);
+        when(importObservations.estRattache(idPassage)).thenReturn(true);
+        when(importObservations.ancrageManquant(idPassage)).thenReturn(true);
+
+        avecImport(importObservations).reactiver(idPassage, sauvegarde, progres -> {});
+
+        // Audio (re)disponible + observations sans ancrage : on le rapatrie par ré-import des donnees
+        // (remplacer = true), qui pose idDonneeVigieChiro tout en préservant les validations observateur.
+        verify(importObservations).importer(idPassage, true);
+    }
+
+    @Test
+    @DisplayName("Passage déjà ancré réactivé (#1571) : pas de ré-import, l'ancrage est déjà là")
+    void reactivation_n_acquiert_pas_un_ancrage_present() throws IOException {
+        archiverAvecSauvegarde(true, true);
+        ImportObservations importObservations = mock(ImportObservations.class);
+        when(importObservations.estRattache(idPassage)).thenReturn(true);
+        when(importObservations.ancrageManquant(idPassage)).thenReturn(false);
+
+        avecImport(importObservations).reactiver(idPassage, sauvegarde, progres -> {});
+
+        verify(importObservations, never()).importer(idPassage, true);
+    }
+
+    @Test
+    @DisplayName("Réactivation sans audio (#1571) : pas d'ancrage — on ne corrige pas ce qu'on n'écoute pas")
+    void reactivation_sans_audio_n_acquiert_pas_l_ancrage() throws IOException {
+        archiverAvecSauvegarde(true, true); // passage archivé, fichiers en sauvegarde
+        ImportObservations importObservations = mock(ImportObservations.class);
+        Path vide = Files.createDirectories(dossier.resolve("dossier-vide"));
+
+        // Réactiver depuis un dossier VIDE : rien ne rebranche, l'audio reste ABSENTE → pas de phase d'ancrage.
+        avecImport(importObservations).reactiver(idPassage, vide, progres -> {});
+
+        verify(importObservations, never()).importer(idPassage, true);
+    }
+
+    /// Service muni du port d'import (phase d'ancrage #1571 active), sur la même base et le même workspace.
+    private ServiceReactivationPassage avecImport(ImportObservations importObservations) {
+        return new ServiceReactivationPassage(
+                sessionDao,
+                sequenceDao,
+                originalDao,
+                new VerificationIdentiteAudio(),
+                disponibilite,
+                Optional.empty(),
+                Optional.of(regeneration),
+                Optional.of(importObservations));
     }
 
     @Test
@@ -232,7 +292,8 @@ class ServiceReactivationPassageTest {
                     sequencesInterrogees.add(idSequence);
                     return List.of(); // aucune observation : rien à corrompre, structurelle seule
                 }),
-                Optional.of(regeneration));
+                Optional.of(regeneration),
+                Optional.empty());
 
         avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
@@ -319,6 +380,7 @@ class ServiceReactivationPassageTest {
                 originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
+                Optional.empty(),
                 Optional.empty(),
                 Optional.empty());
 

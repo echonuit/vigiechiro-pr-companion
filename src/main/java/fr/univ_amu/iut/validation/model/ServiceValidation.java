@@ -128,6 +128,19 @@ public class ServiceValidation implements CompteurValidations {
         return resultatsDao.findByPassage(idPassage).map(ResultatsIdentification::id);
     }
 
+    /// Le passage a-t-il des observations **sans ancrage plateforme** (`idDonneeVigieChiro == null`) ?
+    /// C'est le cas d'un passage reconstruit par CSV (#1565), dont l'ancrage — requis pour publier des
+    /// corrections — n'est acquis qu'à la réactivation (#1571). `false` s'il n'a pas d'observations, ou si
+    /// toutes portent déjà leur ancrage.
+    public boolean ancrageManquant(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        return resultatsDao
+                .findByPassage(idPassage)
+                .map(resultats -> observationDao.findByResults(resultats.id()).stream()
+                        .anyMatch(observation -> observation.idDonneeVigieChiro() == null))
+                .orElse(false);
+    }
+
     /// Importe les résultats Tadarida d'un passage, **en mode tolérant** : parse le CSV, crée les
     /// résultats d'identification et insère les observations raccrochées à leurs séquences.
     ///
