@@ -3,6 +3,7 @@ package fr.univ_amu.iut.commun.api;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntConsumer;
 import java.util.function.IntFunction;
 
 /// Parcours d'une collection **paginée Eve** (`_items` + `?max_results=&page=`) : accumule **toutes**
@@ -40,6 +41,20 @@ final class PaginationEve {
     ///     jamais rendre un préfixe des pages déjà lues
     static <T> ReponseApi<List<T>> parcourir(
             int pagesMax, IntFunction<ReponseApi<String>> corpsPage, Function<String, List<T>> parPage) {
+        return parcourir(pagesMax, corpsPage, parPage, page -> {});
+    }
+
+    /// Variante qui **notifie chaque page** lue (#1522) : `surPage.accept(n)` est appelé après la page `n`
+    /// non vide, avant de demander la suivante. L'appelant y relaie une progression et **consulte son jeton
+    /// d'annulation** ; une exception levée depuis `surPage` interrompt le parcours et remonte telle quelle
+    /// (l'annulation d'un long téléchargement, faute de quoi la barre restait figée et « Annuler » muet).
+    ///
+    /// @param surPage notifié du numéro de page (1-based) après chaque page non vide
+    static <T> ReponseApi<List<T>> parcourir(
+            int pagesMax,
+            IntFunction<ReponseApi<String>> corpsPage,
+            Function<String, List<T>> parPage,
+            IntConsumer surPage) {
         List<T> tout = new ArrayList<>();
         for (int page = 1; page <= pagesMax; page++) {
             ReponseApi<List<T>> lot = corpsPage.apply(page).transformer(parPage);
@@ -50,6 +65,7 @@ final class PaginationEve {
                 break;
             }
             tout.addAll(elements);
+            surPage.accept(page);
         }
         return ReponseApi.succes(List.copyOf(tout));
     }
