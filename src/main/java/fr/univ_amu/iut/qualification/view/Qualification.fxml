@@ -16,6 +16,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
   M-Qualification - vérifier l'enregistrement par échantillonnage (parcours P3). Squelette
@@ -87,12 +88,18 @@
       <!-- ============ Colonne gauche : sélection d'écoute ============ -->
       <VBox spacing="10.0" styleClass="colonne-liste">
         <HBox spacing="10.0" alignment="CENTER_LEFT">
-          <Label fx:id="lblListeTitre" text="📋 Sélection d'écoute" styleClass="colonne-titre"/>
+          <Label fx:id="lblListeTitre" text="Sélection d'écoute" styleClass="colonne-titre">
+            <graphic><FontIcon iconLiteral="fas-list-ul"/></graphic>
+          </Label>
           <Region HBox.hgrow="ALWAYS"/>
-          <Button fx:id="boutonPersonnaliser" text="⚙ Personnaliser…" styleClass="bouton-secondaire"
-                  onAction="#personnaliser"/>
-          <Button fx:id="boutonRegenerer" text="↺ Régénérer" styleClass="bouton-secondaire"
-                  onAction="#regenerer"/>
+          <Button fx:id="boutonPersonnaliser" text="Personnaliser…" styleClass="bouton-secondaire"
+                  onAction="#personnaliser">
+            <graphic><FontIcon iconLiteral="fas-sliders-h"/></graphic>
+          </Button>
+          <Button fx:id="boutonRegenerer" text="Régénérer" styleClass="bouton-secondaire"
+                  onAction="#regenerer">
+            <graphic><FontIcon iconLiteral="fas-sync-alt"/></graphic>
+          </Button>
           <MenuButton fx:id="menuOutils" text="☰" styleClass="menu-actions" accessibleText="Outils : colonnes"/>
         </HBox>
 
@@ -131,7 +138,9 @@
       <ScrollPane fitToWidth="true" fitToHeight="true" styleClass="colonne-detail-scroll">
       <VBox spacing="14.0" styleClass="colonne-detail">
         <VBox spacing="4.0">
-          <Label text="📋 Séquence sélectionnée" styleClass="section-titre"/>
+          <Label text="Séquence sélectionnée" styleClass="section-titre">
+            <graphic><FontIcon iconLiteral="fas-clipboard-list"/></graphic>
+          </Label>
           <VBox spacing="2.0" styleClass="seq-carte">
             <Label fx:id="lblSeqNumero" styleClass="seq-numero"/>
             <Label fx:id="lblSeqMeta" styleClass="seq-meta"/>
@@ -141,26 +150,34 @@
         <!-- Vue audio : sonogramme + spectrogramme + player. Composant fourni (boîte noire) ;
              la source suit la séquence courante, le marquage R10 se fait au début de lecture. -->
         <VBox spacing="4.0" VBox.vgrow="ALWAYS">
-          <Label text="🎵 Vue audio (sonogramme + spectrogramme)" styleClass="section-titre"/>
+          <Label text="Vue audio (sonogramme + spectrogramme)" styleClass="section-titre">
+            <graphic><FontIcon iconLiteral="fas-music"/></graphic>
+          </Label>
           <AudioView fx:id="audioView" minHeight="220.0" VBox.vgrow="ALWAYS"/>
         </VBox>
 
         <VBox spacing="6.0">
-          <Label text="📝 Verdict global du passage" styleClass="section-titre"/>
+          <Label text="Verdict global du passage" styleClass="section-titre">
+            <graphic><FontIcon iconLiteral="fas-gavel"/></graphic>
+          </Label>
           <HBox spacing="10.0">
-            <Button fx:id="boutonOk" text="✓ OK" styleClass="verdict,verdict-ok"
+            <Button fx:id="boutonOk" text="OK" styleClass="verdict,verdict-ok"
                     onAction="#choisirOk" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Button fx:id="boutonDouteux" text="⚠ Douteux" styleClass="verdict,verdict-douteux"
+            <Button fx:id="boutonDouteux" text="Douteux" styleClass="verdict,verdict-douteux"
                     onAction="#choisirDouteux" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-            <Button fx:id="boutonAJeter" text="❌ À jeter" styleClass="verdict,verdict-jeter"
+            <Button fx:id="boutonAJeter" text="À jeter" styleClass="verdict,verdict-jeter"
                     onAction="#choisirAJeter" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
           </HBox>
           <Label fx:id="lblApercuR14" styleClass="apercu-r14" wrapText="true"
-                 text="⚠ « À jeter » : ce passage ne pourra pas être déposé."/>
+                 text="« À jeter » : ce passage ne pourra pas être déposé.">
+            <graphic><FontIcon iconLiteral="fas-exclamation-triangle"/></graphic>
+          </Label>
         </VBox>
 
         <VBox spacing="4.0">
-          <Label text="💬 Commentaire (optionnel)" styleClass="section-sous"/>
+          <Label text="Commentaire (optionnel)" styleClass="section-sous">
+            <graphic><FontIcon iconLiteral="fas-comment-dots"/></graphic>
+          </Label>
           <TextArea fx:id="champCommentaire" prefRowCount="2" wrapText="true"
                     promptText="Ex. vent fort vers 02:00, sons à vérifier ultérieurement."/>
         </VBox>
@@ -176,12 +193,16 @@
         <HBox alignment="CENTER_RIGHT" spacing="10.0">
           <!-- Confirmation de succès locale (#797) : visible une fois le verdict persisté (état ENREGISTRE),
                masquée dès qu'une modification recrée un brouillon. Complète le grisage du bouton. -->
-          <Label fx:id="lblSucces" styleClass="badge, badge-succes" text="✓ Verdict enregistré"
-                 managed="false" visible="false"/>
+          <Label fx:id="lblSucces" styleClass="badge, badge-succes" text="Verdict enregistré"
+                 managed="false" visible="false">
+            <graphic><FontIcon iconLiteral="fas-check-circle"/></graphic>
+          </Label>
           <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
           <StackPane fx:id="enveloppeEnregistrer">
-            <Button fx:id="boutonEnregistrer" text="💾 Enregistrer le verdict"
-                    styleClass="bouton-primaire" onAction="#enregistrer"/>
+            <Button fx:id="boutonEnregistrer" text="Enregistrer le verdict"
+                    styleClass="bouton-primaire" onAction="#enregistrer">
+              <graphic><FontIcon iconLiteral="fas-save"/></graphic>
+            </Button>
           </StackPane>
         </HBox>
       </VBox>

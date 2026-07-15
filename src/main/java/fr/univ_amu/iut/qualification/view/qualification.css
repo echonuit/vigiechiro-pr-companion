@@ -169,3 +169,38 @@
   -fx-font-size: 12px;
   -fx-text-fill: #a93226;
 }
+
+/*
+ * Icônes Ikonli des libellés et boutons (#1511, règle #700 : pas d'emoji dans l'IHM).
+ * Les FontIcon posés en `graphic` sont des nœuds Text : leur couleur suit `-fx-icon-color`,
+ * qu'on aligne ici sur le `-fx-text-fill` du contexte (les icônes ne s'affichaient sinon
+ * qu'en noir, invisibles sur les boutons sombres).
+ */
+.colonne-titre .ikonli-font-icon,
+.section-titre .ikonli-font-icon {
+  -fx-icon-color: #2c3e50;
+  -fx-icon-size: 14px;
+}
+
+.section-sous .ikonli-font-icon {
+  -fx-icon-color: -couleur-texte-discret;
+  -fx-icon-size: 13px;
+}
+
+.bouton-secondaire .ikonli-font-icon {
+  -fx-icon-color: #2c3e50;
+  -fx-icon-size: 13px;
+}
+
+.bouton-primaire .ikonli-font-icon {
+  -fx-icon-color: -couleur-texte-clair;
+  -fx-icon-size: 14px;
+}
+
+.apercu-r14 .ikonli-font-icon {
+  -fx-icon-color: #b9770e;
+}
+
+.badge-succes .ikonli-font-icon {
+  -fx-icon-color: -badge-succes-texte;
+}

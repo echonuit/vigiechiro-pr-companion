@@ -273,7 +273,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         lblListeTitre
                 .textProperty()
                 .bind(Bindings.createStringBinding(
-                        () -> "📋 Sélection d'écoute (" + selectionVm.lignes().size() + " séquences)",
+                        () -> "Sélection d'écoute (" + selectionVm.lignes().size() + " séquences)",
                         selectionVm.lignes()));
         tableSequences.setItems(selectionVm.lignes());
         colPosition.setCellValueFactory(
@@ -442,7 +442,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // Régénération directe (#798) : comme la modale « Personnaliser… », prévenir avant d'effacer une
         // progression d'écoute déjà entamée. Rien à perdre si aucune séquence n'a été écoutée → pas de nag.
         if (selectionVm.progressionProperty().get() > 0
-                && !confirmateur.confirmer("⚠ Régénérer efface la progression d'écoute (le verdict est conservé)."
+                && !confirmateur.confirmer("Régénérer efface la progression d'écoute (le verdict est conservé)."
                         + " Régénérer quand même ?")) {
             return;
         }
