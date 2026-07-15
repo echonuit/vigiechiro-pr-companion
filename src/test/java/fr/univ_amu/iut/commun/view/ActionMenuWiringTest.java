@@ -51,6 +51,7 @@ class ActionMenuWiringTest {
                         "ActionRestaurerComplet",
                         "ActionResetGuide",
                         "ActionPurger",
+                        "ActionOuvrirJournaux",
                         "ActionSourceEspece",
                         "ActionOuvrirReglages",
                         "ActionConnexion");
