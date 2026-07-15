@@ -46,6 +46,15 @@ public class GenerateurSelection {
     /// Taille par défaut à l'ouverture de la vue de vérification (dans la fourchette R12).
     public static final int TAILLE_DEFAUT = 20;
 
+    /// Durée réelle minimale (en secondes, au rythme d'acquisition) pour qu'une séquence entre
+    /// dans l'échantillon d'écoute (#1507). Une tranche complète dure ≈ 5 s (C8) ; les fragments
+    /// de fin de fichier observés en recette (0,1 s, 0,6 s, 1,1 s) ne contiennent que du bruit de
+    /// fond, sans signal exploitable. Le seuil de 2 s les écarte tous avec une marge confortable
+    /// des deux côtés : bien au-dessus de la plus longue troncature observée (1,1 s), bien
+    /// en-dessous d'une tranche pleine (5 s). Les séquences écartées **restent dans le passage**
+    /// (elles partent au dépôt) : seule la sélection d'écoute les ignore.
+    public static final double DUREE_MINIMALE_ECOUTABLE_SECONDES = 2.0;
+
     /// Ordre chronologique = ordre lexicographique du nom de fichier (cf. Javadoc de classe).
     private static final Comparator<SequenceDEcoute> CHRONOLOGIQUE =
             Comparator.comparing(SequenceDEcoute::nomFichier, Comparator.nullsLast(Comparator.naturalOrder()));
@@ -56,6 +65,11 @@ public class GenerateurSelection {
     /// compte moins de séquences que demandé, on retient tout ce qui existe (« 10 à 30 » suppose
     /// un volume suffisant). La taille demandée n'est pas plafonnée à [#TAILLE_MAX] car elle est
     /// configurable au-delà (cf. P3 : l'utilisateur peut monter à 50).
+    ///
+    /// **Séquences tronquées (#1507).** Pour les méthodes automatiques, les fragments de fin de
+    /// fichier (durée connue sous [#DUREE_MINIMALE_ECOUTABLE_SECONDES]) sont écartés de
+    /// l'échantillon avant tirage : ils ne portent aucun signal exploitable. La méthode
+    /// [MethodeSelection#MANUEL] respecte le choix explicite de l'utilisateur et ne filtre pas.
     ///
     /// @param sequencesDeLaNuit toutes les séquences d'écoute de la nuit (ordre quelconque)
     /// @param methode méthode de constitution (R12)
@@ -69,7 +83,7 @@ public class GenerateurSelection {
         if (taille < 1) {
             throw new IllegalArgumentException("La taille demandée doit être au moins 1 (reçu : " + taille + ").");
         }
-        List<SequenceDEcoute> triees = new ArrayList<>(sequencesDeLaNuit);
+        List<SequenceDEcoute> triees = new ArrayList<>(ecoutablesPour(methode, sequencesDeLaNuit));
         triees.sort(CHRONOLOGIQUE);
         int k = Math.min(taille, triees.size());
         if (k == 0) {
@@ -137,5 +151,28 @@ public class GenerateurSelection {
         List<SequenceDEcoute> choisies = new ArrayList<>(copie.subList(0, k));
         choisies.sort(CHRONOLOGIQUE);
         return choisies;
+    }
+
+    /// Restreint les candidates aux séquences réellement écoutables pour les méthodes
+    /// automatiques (#1507). MANUEL respecte le choix explicite de l'utilisateur et n'est pas
+    /// filtré. Garde-fou : si le filtrage vidait un ensemble non vide (nuit intégralement
+    /// tronquée, cas pathologique), on retombe sur l'ensemble complet plutôt que de renvoyer une
+    /// sélection vide.
+    private static List<SequenceDEcoute> ecoutablesPour(MethodeSelection methode, List<SequenceDEcoute> sequences) {
+        if (methode == MethodeSelection.MANUEL) {
+            return sequences;
+        }
+        List<SequenceDEcoute> ecoutables =
+                sequences.stream().filter(GenerateurSelection::estEcoutable).toList();
+        return ecoutables.isEmpty() ? sequences : ecoutables;
+    }
+
+    /// `true` si la séquence est assez longue pour être écoutée (durée ≥
+    /// [#DUREE_MINIMALE_ECOUTABLE_SECONDES]) **ou** si sa durée est inconnue (`null`). Une durée
+    /// manquante (jeux de test, imports antérieurs au calcul de durée) n'est pas une preuve de
+    /// troncature : on ne l'écarte donc pas.
+    private static boolean estEcoutable(SequenceDEcoute sequence) {
+        Double duree = sequence.dureeSecondes();
+        return duree == null || duree >= DUREE_MINIMALE_ECOUTABLE_SECONDES;
     }
 }

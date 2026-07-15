@@ -27,8 +27,15 @@ class GenerateurSelectionTest {
 
     /// Séquence factice dont le nom de fichier croît avec `t` (ordre = ordre chronologique).
     private static SequenceDEcoute sequence(int t) {
+        return sequence(t, 5.0);
+    }
+
+    /// Variante avec durée réelle imposée (`null` = durée inconnue), pour exercer le filtrage
+    /// des séquences tronquées (#1507).
+    private static SequenceDEcoute sequence(int t, Double dureeSecondes) {
         String nom = String.format("Car040962-2026-Pass1-A1-PaRecPR1925492_20260620_%06d_000.wav", t);
-        return new SequenceDEcoute((long) (t + 1), nom, 1L, t, (double) t, 5.0, "/ws/transformes/" + nom, false, 1L);
+        return new SequenceDEcoute(
+                (long) (t + 1), nom, 1L, t, (double) t, dureeSecondes, "/ws/transformes/" + nom, false, 1L);
     }
 
     private static List<SequenceDEcoute> nuit(int taille) {
@@ -123,5 +130,63 @@ class GenerateurSelectionTest {
         List<SequenceDEcoute> selection = generateur.selectionner(choixUtilisateur, MethodeSelection.MANUEL, 5);
 
         assertThat(selection).containsExactlyElementsOf(choixUtilisateur);
+    }
+
+    @Test
+    @DisplayName("#1507 : les séquences tronquées (durée < 2 s) sont écartées de l'échantillon")
+    void tronquees_ecartees_de_l_echantillon() {
+        // Nuit mêlant tranches pleines (5 s) et fragments de fin de fichier (0,1 / 0,6 / 1,1 s).
+        List<SequenceDEcoute> nuit = List.of(
+                sequence(0, 5.0),
+                sequence(1, 0.1),
+                sequence(2, 5.0),
+                sequence(3, 0.6),
+                sequence(4, 5.0),
+                sequence(5, 1.1),
+                sequence(6, 5.0));
+
+        List<SequenceDEcoute> selection = generateur.selectionner(nuit, MethodeSelection.REPARTITION_TEMPORELLE, 20);
+
+        assertThat(selection)
+                .as("seules les 4 tranches pleines subsistent")
+                .containsExactly(sequence(0, 5.0), sequence(2, 5.0), sequence(4, 5.0), sequence(6, 5.0));
+        assertThat(selection)
+                .as("aucune séquence sous le seuil")
+                .allMatch(s -> s.dureeSecondes() >= GenerateurSelection.DUREE_MINIMALE_ECOUTABLE_SECONDES);
+    }
+
+    @Test
+    @DisplayName("#1507 : une durée inconnue (null) n'est pas une troncature, on la conserve")
+    void duree_inconnue_conservee() {
+        List<SequenceDEcoute> nuit =
+                List.of(sequence(0, 5.0), sequence(1, (Double) null), sequence(2, 0.6), sequence(3, 5.0));
+
+        List<SequenceDEcoute> selection = generateur.selectionner(nuit, MethodeSelection.REPARTITION_TEMPORELLE, 20);
+
+        assertThat(selection)
+                .as("la séquence de durée inconnue reste, seule la 0,6 s est écartée")
+                .containsExactly(sequence(0, 5.0), sequence(1, (Double) null), sequence(3, 5.0));
+    }
+
+    @Test
+    @DisplayName("#1507 : Manuel conserve les tronquées (choix explicite de l'utilisateur)")
+    void manuel_conserve_les_tronquees() {
+        List<SequenceDEcoute> choixUtilisateur = List.of(sequence(0, 5.0), sequence(1, 0.1), sequence(2, 1.1));
+
+        List<SequenceDEcoute> selection = generateur.selectionner(choixUtilisateur, MethodeSelection.MANUEL, 3);
+
+        assertThat(selection).containsExactlyElementsOf(choixUtilisateur);
+    }
+
+    @Test
+    @DisplayName("#1507 : nuit intégralement tronquée : garde-fou, on retombe sur tout")
+    void nuit_integralement_tronquee_retombe_sur_tout() {
+        List<SequenceDEcoute> nuit = List.of(sequence(0, 0.1), sequence(1, 0.6), sequence(2, 1.1));
+
+        List<SequenceDEcoute> selection = generateur.selectionner(nuit, MethodeSelection.REPARTITION_TEMPORELLE, 20);
+
+        assertThat(selection)
+                .as("plutôt qu'une sélection vide, on retient les 3 fragments")
+                .hasSize(3);
     }
 }
