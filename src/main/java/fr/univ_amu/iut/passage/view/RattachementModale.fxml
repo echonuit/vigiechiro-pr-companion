@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressIndicator?>
 <?import javafx.scene.control.Separator?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextField?>
@@ -37,6 +38,13 @@
     <!-- « Importer les observations » a quitté cette modale (#1350) : elle est fermée sur un passage
          déposé (garde de renommage #1134), c'est-à-dire précisément le cas où l'import a le plus de
          sens. L'action vit désormais sur M-Passage, où aucune garde de renommage ne s'applique. -->
+  </HBox>
+
+  <!-- Repère « en cours » (#1543) : une petite roue + un libellé pendant un aller-retour VigieChiro
+       (météo, synchronisation), faute de quoi seul le grisage des boutons signalait l'activité. -->
+  <HBox fx:id="ligneOccupation" alignment="CENTER_LEFT" spacing="8.0">
+    <ProgressIndicator prefWidth="18.0" prefHeight="18.0"/>
+    <Label text="Communication avec VigieChiro…" styleClass="section-sous"/>
   </HBox>
 
   <!-- Rattachement : année + n° de passage (le site et le point ne changent pas). -->
