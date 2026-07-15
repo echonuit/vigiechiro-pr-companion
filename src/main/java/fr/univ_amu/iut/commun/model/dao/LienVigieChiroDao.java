@@ -138,6 +138,13 @@ public class LienVigieChiroDao extends DaoGenerique<LienVigieChiro, String> {
         }
     }
 
+    /// Supprime la correspondance **unitaire** `(entite, refLocale)`. À utiliser au lieu du `delete`
+    /// hérité (mono-colonne, qui ne distingue pas l'entité, cf. en-tête). Idempotent : supprimer une
+    /// correspondance absente ne fait rien. Sert notamment à défaire un `upsert` lors d'une compensation.
+    public void supprimer(String entite, String refLocale) {
+        executerMaj("DELETE FROM vigiechiro_link WHERE entite = ? AND ref_locale = ?", entite, refLocale);
+    }
+
     @Override
     public LienVigieChiro insert(LienVigieChiro lien) {
         executerMaj(
