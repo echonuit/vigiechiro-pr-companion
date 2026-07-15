@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -61,6 +62,46 @@ public final class SuiviTraitement {
         releves.enregistrer(new ReleveTraitement(
                 idPassage, participationId, etat, horloge.maintenant().toString()));
         return etat;
+    }
+
+    /// Relève l'état de **plusieurs** nuits d'un coup, **à la demande** (#1338) : c'est le relevé groupé
+    /// que les vues d'ensemble déclenchent par un bouton, jamais un sondage automatique — la règle du
+    /// chantier reste « on n'interroge le serveur que quand l'utilisateur le demande ».
+    ///
+    /// **Best-effort** : une nuit qui échoue (injoignable, refus, non liée) n'interrompt pas les autres,
+    /// et son dernier relevé connu est conservé (garde de [#relever]). Le [BilanReleveGroupe] rend compte
+    /// de ce qui a été rafraîchi et de ce qui a échoué, pour que la vue le dise sans mentir sur une
+    /// fraîcheur qu'elle n'a pas obtenue.
+    ///
+    /// Bloquant (une requête réseau par nuit) : à appeler **hors du fil JavaFX**.
+    ///
+    /// @param idPassages nuits à relever (typiquement les passages déposés d'une vue)
+    public BilanReleveGroupe releverTout(List<Long> idPassages) {
+        Objects.requireNonNull(idPassages, "idPassages");
+        int rafraichis = 0;
+        int echecs = 0;
+        for (Long idPassage : idPassages) {
+            try {
+                relever(idPassage);
+                rafraichis++;
+            } catch (RegleMetierException echec) {
+                // Best-effort : le dernier état connu de cette nuit reste affiché, on continue les autres.
+                echecs++;
+            }
+        }
+        return new BilanReleveGroupe(rafraichis, echecs);
+    }
+
+    /// Compte rendu d'un [#releverTout] : combien de nuits ont été rafraîchies, combien ont échoué.
+    ///
+    /// @param rafraichis nuits dont l'état a été relu et réenregistré
+    /// @param echecs nuits qui n'ont pas pu être relevées (leur dernier état connu est conservé)
+    public record BilanReleveGroupe(int rafraichis, int echecs) {
+
+        /// Nombre de nuits traitées (rafraîchies ou en échec).
+        public int total() {
+            return rafraichis + echecs;
+        }
     }
 
     /// **Dernier état connu**, sans toucher au réseau : ce que la plateforme disait la dernière fois qu'on

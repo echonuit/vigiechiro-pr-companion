@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -119,6 +120,44 @@ class SuiviTraitementTest {
         assertThat(suivi.dernierReleve(ID_PASSAGE)).contains(memoire);
 
         verify(traitement, never()).etat(org.mockito.ArgumentMatchers.anyString());
+    }
+
+    @Test
+    @DisplayName("#1338 releverTout : relève chaque nuit et compte les rafraîchissements")
+    void relever_tout_compte_les_rafraichis() {
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "1")).thenReturn(Optional.of("part-1"));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "2")).thenReturn(Optional.of("part-2"));
+        when(traitement.etat("part-1")).thenReturn(ReponseApi.succes(Traitement.absent()));
+        when(traitement.etat("part-2"))
+                .thenReturn(ReponseApi.succes(
+                        new Traitement(EtatTraitement.FINI, null, null, "2026-07-13T10:00:00+00:00", null, null)));
+
+        SuiviTraitement.BilanReleveGroupe bilan = suivi.releverTout(List.of(1L, 2L));
+
+        assertThat(bilan.rafraichis()).isEqualTo(2);
+        assertThat(bilan.echecs()).isZero();
+        verify(releves, org.mockito.Mockito.times(2)).enregistrer(org.mockito.ArgumentMatchers.any());
+    }
+
+    @Test
+    @DisplayName("#1338 releverTout : best-effort — une nuit injoignable n'interrompt pas les autres")
+    void relever_tout_best_effort() {
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "1")).thenReturn(Optional.of("part-1"));
+        // Nuit 2 non liée : elle échoue (RegleMetierException), sans arrêter le relevé.
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "2")).thenReturn(Optional.empty());
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "3")).thenReturn(Optional.of("part-3"));
+        when(traitement.etat("part-1")).thenReturn(ReponseApi.succes(Traitement.absent()));
+        when(traitement.etat("part-3")).thenReturn(ReponseApi.injoignable("délai dépassé"));
+
+        SuiviTraitement.BilanReleveGroupe bilan = suivi.releverTout(List.of(1L, 2L, 3L));
+
+        assertThat(bilan.rafraichis())
+                .as("seule la nuit 1 a été relue et réenregistrée")
+                .isEqualTo(1);
+        assertThat(bilan.echecs()).isEqualTo(2);
+        assertThat(bilan.total()).isEqualTo(3);
+        // La nuit 3 a bien été tentée après l'échec de la nuit 2 : le relevé ne s'est pas arrêté au premier.
+        verify(traitement).etat("part-3");
     }
 
     private void armerLien() {

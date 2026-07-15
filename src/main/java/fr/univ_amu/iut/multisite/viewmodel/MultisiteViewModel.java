@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.multisite.viewmodel;
 
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -10,6 +12,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -66,13 +69,86 @@ public class MultisiteViewModel {
     /// publie via [#publierLignes()]. Déclaré après ses dépendances (la liste filtrée).
     private final Filtres<LignePassage> filtres = new Filtres<>(passagesFiltres, this::publierLignes);
 
-    public MultisiteViewModel(ServiceMultisite service, ServiceSites serviceSites, String idUtilisateur) {
+    /// Relevé groupé de l'état des analyses (#1338), **optionnel** : présent seulement quand l'observateur
+    /// est connecté à VigieChiro (même liaison que l'import). Absent, l'action de relève ne s'offre pas.
+    private final Optional<SuiviTraitement> suivi;
+
+    public MultisiteViewModel(
+            ServiceMultisite service,
+            ServiceSites serviceSites,
+            Optional<SuiviTraitement> suivi,
+            String idUtilisateur) {
         this.service = Objects.requireNonNull(service, "service");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
+        this.suivi = Objects.requireNonNull(suivi, "suivi");
         this.positionsEnAttente = new PositionsEnAttente(serviceSites, this::rafraichirCarte, message::set);
         // Le tri nommé ne re-filtre pas : il ré-ordonne la liste publiée. Les filtres sont posés sur
         // [#filtres] par la barre à puces de la vue (#537 étape 6b).
         tri.addListener((obs, ancien, nouveau) -> publierLignes());
+    }
+
+    /// `true` si le **relevé groupé des analyses** (#1338) a un sens ici : l'observateur est connecté à
+    /// VigieChiro. La vue n'offre l'action que dans ce cas (sinon, il n'y a rien à interroger).
+    public boolean releveAnalysesDisponible() {
+        return suivi.isPresent();
+    }
+
+    /// Identifiants des passages **déposés** actuellement chargés (source non filtrée) : ce sont les seules
+    /// nuits dont l'analyse serveur existe. À lire **sur le fil JavaFX** (la liste observable), pour passer
+    /// l'instantané à [#releverAnalyses(List)] qui, lui, part en tâche de fond.
+    public List<Long> nuitsDeposees() {
+        return tousLesPassages.stream()
+                .filter(ligne -> ligne.statut() == StatutWorkflow.DEPOSE)
+                .map(LignePassage::idPassage)
+                .toList();
+    }
+
+    /// Relève l'état des analyses des `nuitsDeposees` fournies, **à la demande** et **hors du fil JavaFX**
+    /// (#1338). Aucun sondage automatique : c'est un geste explicite. Best-effort, nuit par nuit (une qui
+    /// échoue n'écrase pas son dernier état connu).
+    ///
+    /// Reçoit la liste en paramètre (capturée sur le fil JavaFX par l'appelant, cf. [#nuitsDeposees()])
+    /// plutôt que de lire la liste observable depuis le fil de fond. Renvoie le compte rendu prêt à
+    /// afficher — ou, si la liste est vide, un message qui le dit plutôt qu'un « 0 relevé » sec.
+    /// Précondition : [#releveAnalysesDisponible()] vrai (l'appelant garde le bouton).
+    public String releverAnalyses(List<Long> nuitsDeposees) {
+        Objects.requireNonNull(nuitsDeposees, "nuitsDeposees");
+        SuiviTraitement moteur = suivi.orElseThrow(
+                () -> new IllegalStateException("Relevé des analyses indisponible : connectez-vous à VigieChiro."));
+        if (nuitsDeposees.isEmpty()) {
+            return "Aucune nuit déposée : il n'y a pas encore d'analyse à relever.";
+        }
+        return compteRenduReleve(moteur.releverTout(nuitsDeposees));
+    }
+
+    /// Résultat d'un relevé groupé : le compte rendu à afficher **et** les données rechargées, pour que la
+    /// vue applique les deux en une fois (#1338).
+    public record ResultatReleve(String compteRendu, DonneesMultisite donnees) {}
+
+    /// Relève l'état des analyses **puis relit** l'écran, le tout **hors du fil JavaFX** (#1338) : le
+    /// nouvel état du cache doit se voir dans la colonne « Analyse » dès le retour, sans imbriquer une
+    /// seconde occupation ni laisser le compte rendu se faire effacer par un rechargement concurrent.
+    public ResultatReleve releverPuisCharger(List<Long> nuitsDeposees) {
+        String compteRendu = releverAnalyses(nuitsDeposees);
+        return new ResultatReleve(compteRendu, charger());
+    }
+
+    /// Applique le résultat d'un relevé groupé **sur le fil JavaFX** : recompose le tableau (badges
+    /// « Analyse » à jour), puis publie le compte rendu. L'ordre importe : [#appliquer] efface le message
+    /// via `publierLignes`, donc le compte rendu est posé **après**.
+    public void appliquerReleve(ResultatReleve resultat) {
+        appliquer(resultat.donnees());
+        message.set(resultat.compteRendu());
+    }
+
+    /// Compte rendu du relevé groupé : ce qui a été rafraîchi, et ce qui a échoué **sans mentir** sur une
+    /// fraîcheur non obtenue (les nuits en échec gardent leur dernier état connu).
+    private static String compteRenduReleve(SuiviTraitement.BilanReleveGroupe bilan) {
+        if (bilan.echecs() == 0) {
+            return "État des analyses relevé pour " + bilan.rafraichis() + " nuit(s) déposée(s).";
+        }
+        return "État relevé pour " + bilan.rafraichis() + " nuit(s) sur " + bilan.total() + " : " + bilan.echecs()
+                + " injoignable(s), leur dernier état connu reste affiché.";
     }
 
     /// (Re)charge **tous** les passages de l'utilisateur, puis ré-applique filtres et tri courants.

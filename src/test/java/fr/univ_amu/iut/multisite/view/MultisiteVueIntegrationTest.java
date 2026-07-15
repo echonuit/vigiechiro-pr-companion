@@ -156,7 +156,7 @@ class MultisiteVueIntegrationTest {
 
             @Provides
             MultisiteViewModel viewModel() {
-                return new MultisiteViewModel(service, mock(ServiceSites.class), "u-1");
+                return new MultisiteViewModel(service, mock(ServiceSites.class), Optional.empty(), "u-1");
             }
 
             /// Hors connexion VigieChiro : la reconstruction est indisponible, son entrée de menu se retire.
