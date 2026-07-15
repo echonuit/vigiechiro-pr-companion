@@ -66,6 +66,7 @@ nav:
   - Tests et qualité: tests-et-qualite.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md
   - Performance et benchmarks: performance.md
+  - Observabilité: observabilite.md
   - Captures d'écran: captures.md
   - CI/CD et release: ci-cd-release.md
   - Sécurité et données sensibles: securite.md
