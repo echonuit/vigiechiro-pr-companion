@@ -278,23 +278,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                 verdictVm.preCheckAnomalieProperty(),
                 selectionVm.progressionTexteProperty()));
 
-        // Pré-check 3 feux (R13, consultatif et jamais bloquant). L'infobulle de chaque feu
-        // explique la mesure et l'écart (#1506).
-        Feux.lier(
-                feuCouverture,
-                "Couverture horaire",
-                verdictVm.feuCouvertureProperty(),
-                verdictVm.detailCouvertureProperty());
-        Feux.lier(feuNombre, "Nombre de fichiers", verdictVm.feuNombreProperty(), verdictVm.detailNombreProperty());
-        Feux.lier(
-                feuRenommage,
-                "Cohérence du renommage",
-                verdictVm.feuRenommageProperty(),
-                verdictVm.detailRenommageProperty());
-        // La barre de statut nomme le(s) feu(x) en cause (#1506) au lieu d'un « anomalie » anonyme.
-        lblAnomalie.textProperty().bind(verdictVm.resumeAnomalieProperty());
-        lblAnomalie.visibleProperty().bind(verdictVm.preCheckAnomalieProperty());
-        lblAnomalie.managedProperty().bind(verdictVm.preCheckAnomalieProperty());
+        lierPrecheck();
 
         // Liste de la sélection + progression d'écoute.
         lblListeTitre
@@ -478,6 +462,27 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // Compte rendu de la régénération (#1509/#1404), externalisé pour garder le contrôleur sous
         // les plafonds PMD (GodClass / NcssCount).
         CompteRenduRegeneration.rendreCompte(notificateur, selectionVm);
+    }
+
+    /// Câble le pré-check (R13, consultatif) : les 3 feux avec leur infobulle explicative (#1506) et la
+    /// barre de statut qui nomme le(s) feu(x) en cause. Extrait d'`initialize()` pour rester sous le
+    /// plafond PMD (NcssCount) une fois #1506 et #1509 réunis sur `main`.
+    private void lierPrecheck() {
+        Feux.lier(
+                feuCouverture,
+                "Couverture horaire",
+                verdictVm.feuCouvertureProperty(),
+                verdictVm.detailCouvertureProperty());
+        Feux.lier(feuNombre, "Nombre de fichiers", verdictVm.feuNombreProperty(), verdictVm.detailNombreProperty());
+        Feux.lier(
+                feuRenommage,
+                "Cohérence du renommage",
+                verdictVm.feuRenommageProperty(),
+                verdictVm.detailRenommageProperty());
+        // La barre de statut nomme le(s) feu(x) en cause (#1506) au lieu d'un « anomalie » anonyme.
+        lblAnomalie.textProperty().bind(verdictVm.resumeAnomalieProperty());
+        lblAnomalie.visibleProperty().bind(verdictVm.preCheckAnomalieProperty());
+        lblAnomalie.managedProperty().bind(verdictVm.preCheckAnomalieProperty());
     }
 
     /// Lie l'état de chargement (#1509) : le libellé « Chargement… » est visible tant qu'une séquence
