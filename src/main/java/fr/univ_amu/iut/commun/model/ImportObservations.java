@@ -56,4 +56,10 @@ public interface ImportObservations {
     /// @param remplacer remplace le jeu existant en préservant les validations de l'observateur
     /// @return un compte rendu prêt à afficher
     String importerCsv(Long idPassage, String contenuCsv, boolean remplacer);
+
+    /// Le passage a-t-il des observations **sans ancrage plateforme** (`idDonneeVigieChiro == null`) ?
+    /// C'est le cas d'un passage reconstruit par CSV (#1565), dont l'ancrage — requis pour **publier des
+    /// corrections** — n'est acquis qu'à la **réactivation** (#1571), quand l'audio (re)devient disponible.
+    /// `false` si le passage n'a pas d'observations, ou si toutes portent déjà leur ancrage.
+    boolean ancrageManquant(Long idPassage);
 }

@@ -126,6 +126,13 @@ public class ImportVigieChiro {
         return service.nomsSequencesCsv(contenuCsv);
     }
 
+    /// Le passage a-t-il des observations sans ancrage plateforme (`idDonneeVigieChiro == null`) ? (#1571)
+    /// Délègue à [ServiceValidation#ancrageManquant]. Sans réseau (lecture locale).
+    public boolean ancrageManquant(Long idPassage) {
+        Objects.requireNonNull(idPassage, CHAMP_ID_PASSAGE);
+        return service.ancrageManquant(idPassage);
+    }
+
     /// **Pourquoi il n'y a rien à importer** (#1264). Le serveur répond « 200, liste vide » tant que
     /// l'analyse n'est pas finie : l'absence de résultats n'est donc pas une erreur, c'est un état — encore
     /// faut-il le dire. Le message d'avant les confondait tous (« analyse pas encore terminée, ou connexion

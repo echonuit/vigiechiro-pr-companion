@@ -218,9 +218,17 @@ public class PassageModule extends ModuleDeFeature {
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
             Optional<CrisAttendus> crisAttendus,
-            Optional<RegenerationSequences> regeneration) {
+            Optional<RegenerationSequences> regeneration,
+            Optional<ImportObservations> importObservations) {
         return new ServiceReactivationPassage(
-                sessionDao, sequenceDao, originalDao, verification, disponibilite, crisAttendus, regeneration);
+                sessionDao,
+                sequenceDao,
+                originalDao,
+                verification,
+                disponibilite,
+                crisAttendus,
+                regeneration,
+                importObservations);
     }
 
     /// Archivage d'un passage (#1300) : purge volontaire de l'audio, marqueur explicite, capture
