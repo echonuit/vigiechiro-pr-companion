@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.qualification.viewmodel;
 
 import fr.univ_amu.iut.commun.model.MethodeSelection;
+import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
@@ -142,11 +143,30 @@ public class SelectionEcouteViewModel {
         service.marquerSequenceEcoutee(idSelection, courante.sequence().id());
         int index = lignes.indexOf(courante);
         if (index >= 0) {
-            SequenceEnSelection ecoutee = new SequenceEnSelection(courante.sequence(), courante.position(), true);
+            // Préserver le verdict par fichier (#1524, lot 6) : ne pas repasser par le constructeur qui
+            // le remettrait à NON_JUGE.
+            SequenceEnSelection ecoutee =
+                    new SequenceEnSelection(courante.sequence(), courante.position(), true, courante.verdict());
             lignes.set(index, ecoutee);
             sequenceCourante.set(ecoutee);
         }
         recalculerProgression();
+    }
+
+    /// Enregistre le **verdict par fichier** de la séquence courante (#1524, lot 6) et met à jour la
+    /// ligne en mémoire. Sans effet si aucune séquence n'est sélectionnée.
+    public void marquerVerdictCourante(VerdictFichier verdict) {
+        SequenceEnSelection courante = sequenceCourante.get();
+        if (courante == null || idPassage == null) {
+            return;
+        }
+        service.enregistrerVerdictFichier(idPassage, courante.sequence().id(), verdict);
+        int index = lignes.indexOf(courante);
+        SequenceEnSelection maj = courante.avecVerdict(verdict);
+        if (index >= 0) {
+            lignes.set(index, maj);
+        }
+        sequenceCourante.set(maj);
     }
 
     /// Régénère la sélection avec la méthode et la taille choisies (R12). Recharge la liste et remet

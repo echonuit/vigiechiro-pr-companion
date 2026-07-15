@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
@@ -120,6 +121,40 @@ class SelectionEcouteViewModelTest {
         assertThat(viewModel.progressionProperty().get()).isEqualTo(0.25);
         assertThat(viewModel.progressionTexteProperty().get()).contains("1 / 4");
         assertThat(viewModel.lignes().get(0).ecoutee()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#1524 : marquer le verdict par fichier de la courante l'enregistre et met à jour la ligne")
+    void marquer_verdict_courante_met_a_jour_la_ligne() {
+        stubOuverture(3);
+        viewModel.ouvrirSur(ID_PASSAGE);
+        viewModel.selectionner(viewModel.lignes().get(0));
+
+        viewModel.marquerVerdictCourante(VerdictFichier.INEXPLOITABLE);
+
+        verify(service).enregistrerVerdictFichier(ID_PASSAGE, 0L, VerdictFichier.INEXPLOITABLE);
+        assertThat(viewModel.lignes().get(0).verdict())
+                .as("la ligne reflète le verdict rendu")
+                .isEqualTo(VerdictFichier.INEXPLOITABLE);
+        assertThat(viewModel.sequenceCouranteProperty().get().verdict())
+                .as("la séquence courante aussi")
+                .isEqualTo(VerdictFichier.INEXPLOITABLE);
+    }
+
+    @Test
+    @DisplayName("#1524 : marquer la courante écoutée préserve son verdict par fichier")
+    void marquer_ecoutee_preserve_le_verdict() {
+        stubOuverture(3);
+        viewModel.ouvrirSur(ID_PASSAGE);
+        viewModel.selectionner(viewModel.lignes().get(0));
+        viewModel.marquerVerdictCourante(VerdictFichier.BON);
+
+        viewModel.marquerCouranteEcoutee();
+
+        assertThat(viewModel.lignes().get(0).ecoutee()).isTrue();
+        assertThat(viewModel.lignes().get(0).verdict())
+                .as("marquer écoutée ne doit pas effacer le verdict")
+                .isEqualTo(VerdictFichier.BON);
     }
 
     @Test

@@ -229,8 +229,8 @@ public class ServiceQualification {
         for (SequenceSelectionnee rattachement : selectionDao.listerSequences(idSelection)) {
             sequenceDao
                     .findById(rattachement.idSequence())
-                    .ifPresent(sequence -> lignes.add(
-                            new SequenceEnSelection(sequence, rattachement.position(), rattachement.ecoutee())));
+                    .ifPresent(sequence -> lignes.add(new SequenceEnSelection(
+                            sequence, rattachement.position(), rattachement.ecoutee(), rattachement.verdict())));
         }
         return lignes;
     }
