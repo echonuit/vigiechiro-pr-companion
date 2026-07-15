@@ -51,7 +51,17 @@ class MultisiteModuleTest {
                 new PersistenceModule(),
                 new SitesModule(),
                 new PassageModule(),
-                new MultisiteModule());
+                new MultisiteModule(),
+                // Depuis #1338, ServiceMultisite lit les résultats déjà importés : ce DAO vient de la
+                // feature `validation`, absente de cet injecteur partiel. Fourni ici, comme dans l'outil
+                // de capture — un simple objet sur la SourceDeDonnees déjà liée.
+                new com.google.inject.AbstractModule() {
+                    @com.google.inject.Provides
+                    fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao fournirResultatsDao(
+                            SourceDeDonnees source) {
+                        return new fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao(source);
+                    }
+                });
         // Le ViewModel tire l'identité de l'utilisateur courant, dont le provider lit la table `user` :
         // on migre le schéma avant de le résoudre.
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();

@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VueSauvegardee;
+import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -19,7 +20,9 @@ class CriteresMultisiteTest {
     void vues_par_defaut_portent_les_bons_filtres() {
         List<VueSauvegardee> vues = CriteresMultisite.vuesParDefaut();
 
-        assertThat(vues).extracting(VueSauvegardee::nom).containsExactly("Tout", "Déposés", "À vérifier", "Vérifiés");
+        assertThat(vues)
+                .extracting(VueSauvegardee::nom)
+                .containsExactly("Tout", "Résultats à importer", "Déposés", "À vérifier", "Vérifiés");
         assertThat(vues).allSatisfy(vue -> {
             assertThat(vue.id())
                     .as("vue par défaut : jamais persistée (lecture seule)")
@@ -28,6 +31,7 @@ class CriteresMultisiteTest {
         });
         // Chaque vue porte le bon critère + la bonne valeur d'énumération ; « Tout » ne filtre rien.
         assertThat(descripteur(vues, "Tout")).doesNotContain("statut", "verdict");
+        assertThat(descripteur(vues, "Résultats à importer")).contains("analyse", EtatAnalyse.A_IMPORTER.name());
         assertThat(descripteur(vues, "Déposés")).contains("statut", StatutWorkflow.DEPOSE.name());
         assertThat(descripteur(vues, "À vérifier")).contains("verdict", Verdict.A_VERIFIER.name());
         assertThat(descripteur(vues, "Vérifiés")).contains("statut", StatutWorkflow.VERIFIE.name());
