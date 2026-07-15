@@ -198,15 +198,16 @@ class PassageVueIntegrationTest {
     }
 
     @Test
-    @DisplayName(
-            "DÉPOSÉ : Dépôt encore accessible (retour possible), Validation déverrouillée et ouvrant M-Vision-Tadarida")
+    @DisplayName("DÉPOSÉ : Vérifier bloqué (verdict figé, #1514), Dépôt encore accessible, Validation déverrouillée")
     void etats_actions_depose(FxRobot robot) {
         Parent vue = chargerSurFx(robot, StatutWorkflow.DEPOSE, 1);
 
         // #… : le dépôt reste accessible même une fois déposé, pour revenir consulter/supprimer les archives.
         assertThat(bouton(vue, "#boutonDepot").isDisabled()).isFalse();
         assertThat(bouton(vue, "#boutonValidation").isDisabled()).isFalse();
-        assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isFalse();
+        // #1514 : une nuit déposée a un verdict figé → « Vérifier » est bloqué, avec l'explication affichée.
+        assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isTrue();
+        assertThat(((Label) vue.lookup("#lblIndiceAction")).getText()).contains("figé");
         // Déposé : le renommage (« Modifier le passage ») est bloqué, son nom étant l'identité serveur (#1134).
         assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isTrue();
         // Déposé avec audio conservé (volumes > 0 dans la fixture) : l'archivage devient possible (#1300).
