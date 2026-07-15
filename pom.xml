@@ -421,6 +421,11 @@
                         <prism.order>sw</prism.order>
                         <java.awt.headless>true</java.awt.headless>
                         <testfx.robot>glass</testfx.robot>
+                        <!-- Config JUL de test : coupe le logger JournalisationTache, dont les SEVERE
+                             + traces (voulus en prod, #1538) sont NORMAUX quand un test exerce un chemin
+                             d'échec et noieraient le journal de CI. Prod inchangée (App/Cli installent
+                             leur propre config). Cf. src/test/resources/logging-tests.properties. -->
+                        <java.util.logging.config.file>${project.basedir}/src/test/resources/logging-tests.properties</java.util.logging.config.file>
                     </systemPropertyVariables>
                     <!-- Tests en mode CLASSPATH (useModulePath=false, requis par TestFX) : JavaFX est
                          chargé dans le module SANS NOM, il n'existe donc aucun module nommé `javafx.graphics`
