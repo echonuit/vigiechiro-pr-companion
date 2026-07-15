@@ -317,6 +317,22 @@ class QualificationViewTest {
     }
 
     @Test
+    @DisplayName("#1504 : Espace est capté pour la lecture avant le nœud focalisé (n'active pas un bouton de verdict)")
+    void raccourci_espace_capte_avant_le_noeud_focalise(FxRobot robot) {
+        Button boutonOk = robot.lookup("#boutonOk").queryAs(Button.class);
+        Button enregistrer = robot.lookup("#boutonEnregistrer").queryAs(Button.class);
+        robot.interact(boutonOk::requestFocus);
+        assertThat(enregistrer.isDisabled()).isTrue(); // aucun verdict encore choisi
+
+        robot.push(KeyCode.SPACE);
+
+        // En phase de bulle (bug #1504), Espace sur le bouton OK focalisé l'aurait **activé** (→ verdict OK
+        // → « Enregistrer » actif). Le filtre de capture intercepte Espace pour la lecture **avant** le
+        // bouton : aucun verdict n'est choisi, « Enregistrer » reste désactivé.
+        assertThat(enregistrer.isDisabled()).isTrue();
+    }
+
+    @Test
     @DisplayName("#1210 : l'overlay d'occupation est en place, masqué une fois l'ouverture terminée")
     void overlay_occupation_masque_apres_ouverture(FxRobot robot) {
         Node voile = robot.lookup(".occupation-voile").query();

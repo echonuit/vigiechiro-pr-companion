@@ -364,10 +364,13 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                         .then("Enregistrer le verdict de ce passage.")
                         .otherwise("Choisissez d'abord un verdict (OK, Douteux…) pour pouvoir l'enregistrer."));
 
-        // Raccourcis clavier (O/D/J, Entrée, Espace) sur la racine de l'écran : addEventHandler (et non
-        // setOnKeyPressed) pour coexister avec d'autres handlers, et limité à cette vue plutôt qu'à la
-        // scène partagée du chrome. Les événements remontent depuis le nœud focalisé jusqu'à la racine.
-        racine.addEventHandler(KeyEvent.KEY_PRESSED, this::gererRaccourci);
+        // Raccourcis clavier (O/D/J, Entrée, Espace) sur la racine de l'écran : addEventFilter (phase de
+        // **capture**, #1504) et non addEventHandler (phase de bulle). En bulle, Espace était consommé par
+        // le nœud focalisé (un bouton de verdict, ou la liste) comme activation, avant d'atteindre la
+        // racine : la lecture ne démarrait jamais. En capture, la racine voit la touche **avant** le nœud
+        // focalisé. Limité à cette vue (et non à la scène partagée du chrome) ; la saisie du commentaire
+        // reste protégée par le test focusOwner ci-dessous.
+        racine.addEventFilter(KeyEvent.KEY_PRESSED, this::gererRaccourci);
     }
 
     /// Branche les deux zones de message d'erreur de l'écran : le verdict (colonne droite) et la sélection
