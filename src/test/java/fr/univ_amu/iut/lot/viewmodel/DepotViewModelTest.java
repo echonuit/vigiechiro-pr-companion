@@ -233,6 +233,23 @@ class DepotViewModelTest {
         assertThat(vm.messageProperty().get()).contains("injoignable");
     }
 
+    @Test
+    @DisplayName("#1543 : marquerLancementEnCours annonce « en cours » (bouton grisé), restituerLancement le lève")
+    void lancement_en_cours_visible_puis_leve() {
+        DepotViewModel vm = new DepotViewModel(service, Optional.of(depot));
+
+        vm.marquerLancementEnCours();
+        assertThat(vm.enCoursProperty().get())
+                .as("le POST de lancement ne part plus sans retour visible")
+                .isTrue();
+        assertThat(vm.messageProperty().get()).contains("Lancement");
+
+        vm.restituerLancement(ResultatLancement.accepte());
+        assertThat(vm.enCoursProperty().get())
+                .as("le lancement abouti relâche le bouton")
+                .isFalse();
+    }
+
     /// Traitement serveur dans l'état voulu (les dates n'entrent pas en jeu dans les messages).
     private static Traitement traitement(EtatTraitement etat) {
         return new Traitement(etat, null, null, null, null, null);

@@ -100,6 +100,7 @@ final class SuiviTraitementUI {
     /// rendu, lui, reste celui du dépôt (c'est son message d'étape ④).
     void lancer(DepotViewModel depot) {
         Long passage = idPassage.get();
+        depot.marquerLancementEnCours();
         executeur.executer(
                 () -> depot.lancerTraitement(passage),
                 resultat -> {

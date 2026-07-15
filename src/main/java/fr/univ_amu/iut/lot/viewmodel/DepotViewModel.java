@@ -113,11 +113,21 @@ public class DepotViewModel {
         return participationLiee.getReadOnlyProperty();
     }
 
+    /// Signale le **début du lancement du traitement** (au fil JavaFX, avant l'appel réseau) : le bouton de
+    /// l'étape ④ se grise (lié à [#enCoursProperty]) et la zone de statut annonce « en cours », faute de
+    /// quoi le POST partait sans aucun retour visible (#1543). Contrairement au téléversement, le lancement
+    /// n'est pas annulable : pas de jeton à réarmer.
+    public void marquerLancementEnCours() {
+        message.set("Lancement de l'analyse sur VigieChiro…");
+        enCours.set(true);
+    }
+
     /// Restitue le résultat d'un **lancement de traitement** (#984), au fil JavaFX : un message **par
     /// issue** pour la zone de statut du dépôt (#1261). Le message unique d'avant s'achevait sur un point
     /// d'interrogation (« déjà en cours ? ») : le code ne savait pas, l'utilisateur non plus.
     public void restituerLancement(ResultatLancement resultat) {
         message.set(libelle(resultat));
+        enCours.set(false);
     }
 
     /// Message d'une issue de lancement, du point de vue de l'utilisateur : que s'est-il passé, et qu'a-t-il
