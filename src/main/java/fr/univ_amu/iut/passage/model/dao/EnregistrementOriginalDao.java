@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.passage.model.dao;
 
 import fr.univ_amu.iut.commun.persistence.DaoGenerique;
+import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
@@ -64,7 +66,19 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
 
     @Override
     public EnregistrementOriginal insert(EnregistrementOriginal original) {
+        try (Connection connexion = source.getConnection()) {
+            return insert(connexion, original);
+        } catch (SQLException e) {
+            throw new DataAccessException("Échec de l'insertion d'un enregistrement original", e);
+        }
+    }
+
+    /// Variante **transactionnelle** : insère sur la connexion fournie (sans l'ouvrir ni la commiter), pour
+    /// grouper l'original **et ses milliers de séquences** dans une seule transaction (#1522). Propage la
+    /// [SQLException] à l'[fr.univ_amu.iut.commun.persistence.UniteDeTravail].
+    public EnregistrementOriginal insert(Connection connexion, EnregistrementOriginal original) throws SQLException {
         long id = insererEtRecupererCle(
+                connexion,
                 "INSERT INTO original_recording"
                         + " (file_name, file_path, duration_s, sample_rate_hz, sha256, session_id, size_bytes)"
                         + " VALUES (?, ?, ?, ?, ?, ?, ?)",

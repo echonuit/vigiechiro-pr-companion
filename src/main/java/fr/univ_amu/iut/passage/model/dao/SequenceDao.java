@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.passage.model.dao;
 
 import fr.univ_amu.iut.commun.persistence.DaoGenerique;
+import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDateTime;
@@ -89,7 +91,20 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
 
     @Override
     public SequenceDEcoute insert(SequenceDEcoute sequence) {
+        try (Connection connexion = source.getConnection()) {
+            return insert(connexion, sequence);
+        } catch (SQLException e) {
+            throw new DataAccessException("Échec de l'insertion d'une séquence", e);
+        }
+    }
+
+    /// Variante **transactionnelle** : insère sur la connexion fournie (sans l'ouvrir ni la commiter), pour
+    /// grouper des **milliers de séquences en une seule transaction** au lieu d'un commit (et un fsync) par
+    /// ligne - la reconstruction d'une nuit en crée des milliers (#1522). Propage la [SQLException] à
+    /// l'[fr.univ_amu.iut.commun.persistence.UniteDeTravail] qui décide du commit / rollback.
+    public SequenceDEcoute insert(Connection connexion, SequenceDEcoute sequence) throws SQLException {
         long id = insererEtRecupererCle(
+                connexion,
                 "INSERT INTO listening_sequence"
                         + " (file_name, original_recording_id, source_index, source_offset_s, duration_s,"
                         + " file_path, in_selection, session_id, recorded_at, size_bytes, content_fingerprint)"
