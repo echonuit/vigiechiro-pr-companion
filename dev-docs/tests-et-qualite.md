@@ -79,6 +79,7 @@ Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquet
 | Intégration de vue (TestFX) | `<feature>/view/*VueIntegrationTest` | La vue FXML se lie au ViewModel et réagit (headless). |
 | **Geste** (TestFX) | `<feature>/view/*ViewTest` | Le bouton est **cliqué**, et on vérifie son **effet** (#1405). |
 | Bout en bout | `fr.univ_amu.iut.e2e.*`, `<feature>/e2e/Parcours*E2ETest` | Le scénario complet : IHM → ViewModel → service → base. |
+| **CLI shell (bats)** | `src/test/bats/*.bats` | La CLI **empaquetée** (fat-jar shadé), au niveau **processus** : arguments picocli, texte d'aide, **codes de sortie**, refus métier — ce que les tests Java in-process ne voient pas. Lancés en CI après le smoke-test du fat-jar (#1572, amorce ; #1592 pour la couverture complète). |
 | Architecture (ArchUnit) | `architecture/ArchitectureTest` | Les **6 règles** de frontière MVVM (cf. [Architecture](architecture.md)). |
 | **Documentation** | `documentation/DocumentationAJourTest` | Toute commande CLI a sa ligne, tout écran a sa fiche (#1458). |
 

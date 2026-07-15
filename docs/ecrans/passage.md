@@ -139,6 +139,15 @@ disponible, et le décompte vous le dit.
     La réactivation **copie** : votre dossier source reste intact, et vos observations comme vos
     validations ne sont jamais recalculées — on rebranche des chemins, rien d'autre.
 
+!!! info "Un passage reconstruit depuis VigieChiro"
+    Si ce passage avait été **reconstruit** (récupéré depuis la plateforme sans que vous ayez conservé
+    l'audio localement), la réactivation fait une chose de plus : elle **rétablit le lien** entre vos
+    observations et la plateforme, pour que vous puissiez de nouveau **publier vos corrections**. C'est
+    le bon moment, et le seul utile : puisque vous venez de retrouver l'audio, vous allez pouvoir
+    **écouter**, corriger, puis renvoyer. Cette étape interroge la plateforme, elle peut donc prendre un
+    moment — et n'a lieu que pour ces passages-là (un passage importé normalement garde ce lien depuis le
+    départ).
+
 ### Vous n'avez gardé que vos enregistrements bruts ?
 
 C'est le cas le plus fréquent : on garde volontiers sa **carte SD** (ou sa copie), plus rarement les
