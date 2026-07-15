@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
+import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -57,8 +58,23 @@ import java.util.Objects;
 ///         .carre("130711")
 ///         .point("Z41")
 ///         .statut(StatutWorkflow.DEPOSE)
+///         .verdict(Verdict.OK)
 ///         .semer();
 /// ```
+///
+/// ## Plusieurs passages, qui **partagent** ce qu'ils ont en commun
+///
+/// Chaque `semer()` sème **un** passage. Pour une topologie à plusieurs nuits, on rappelle la fabrique :
+/// l'utilisateur, l'enregistreur, le site (par n° de carré) et le point (par code) sont **trouvés s'ils
+/// existent déjà, créés sinon**. Deux nuits sur le même point partagent donc réellement ce point, ce que
+/// les tests d'agrégation (statut dominant d'un point) exigent :
+///
+/// ```java
+/// JeuDeDonneesPassage.dans(source).point("A1").nuit(1, 2025, "2025-06-20").statut(TRANSFORME).verdict(OK).semer();
+/// JeuDeDonneesPassage.dans(source).point("A1").nuit(1, 2026, "2026-06-20").statut(VERIFIE).verdict(DOUTEUX).semer();
+/// ```
+///
+/// (Deux passages sur un même point doivent différer par (année, n°) - la règle d'unicité R5.)
 ///
 /// ## Ce qu'elle ne fait pas
 ///
@@ -86,6 +102,7 @@ public final class JeuDeDonneesPassage {
     private int annee = 2026;
     private String dateNuit = "2026-07-03";
     private StatutWorkflow statut = StatutWorkflow.IMPORTE;
+    private Verdict verdict;
 
     private Long idSite;
     private Long idPoint;
@@ -112,6 +129,13 @@ public final class JeuDeDonneesPassage {
 
     public JeuDeDonneesPassage carre(String numero) {
         this.numeroCarre = numero;
+        return this;
+    }
+
+    /// Nom convivial du site (celui qu'affiche la carte). Posé à la **création** du site seulement : deux
+    /// nuits sur le même carré partagent le site déjà créé, nom compris.
+    public JeuDeDonneesPassage nomSite(String nom) {
+        this.nomSite = nom;
         return this;
     }
 
@@ -144,18 +168,24 @@ public final class JeuDeDonneesPassage {
         return this;
     }
 
+    /// Verdict de vérification du passage (#1258 : les tests de la vue multi-sites en dépendent). `null`
+    /// par défaut - une nuit non vérifiée n'a pas de verdict.
+    public JeuDeDonneesPassage verdict(Verdict verdict) {
+        this.verdict = verdict;
+        return this;
+    }
+
     // ─── Semis ──────────────────────────────────────────────────────────────────────────────────────
 
-    /// Sème toute la chaîne, jusqu'à l'enregistrement original. À appeler une fois, avant tout `ajouter*`.
+    /// Sème toute la chaîne, jusqu'à l'enregistrement original. À appeler une fois par passage, avant tout
+    /// `ajouter*`. L'utilisateur, l'enregistreur, le site (par n° de carré) et le point (par code) sont
+    /// **trouvés s'ils existent déjà, créés sinon** : deux `semer()` qui partagent ces coordonnées sèment
+    /// deux passages sur le **même** point, sans doublonner ni violer de clé.
     public JeuDeDonneesPassage semer() {
-        new UtilisateurDao(source).insert(new Utilisateur(idUtilisateur, nomUtilisateur));
-        Site site = new SiteDao(source)
-                .insert(new Site(null, numeroCarre, nomSite, Protocole.STANDARD, null, "2026-01-01", idUtilisateur));
-        idSite = site.id();
-        idPoint = new PointDao(source)
-                .insert(new PointDEcoute(null, codePoint, latitude, longitude, null, idSite))
-                .id();
-        new EnregistreurDao(source).insert(new Enregistreur(numeroSerie, null, null));
+        trouverOuCreerUtilisateur();
+        trouverOuCreerEnregistreur();
+        idSite = trouverOuCreerSite();
+        idPoint = trouverOuCreerPoint();
         idPassage = new PassageDao(source)
                 .insert(new Passage(
                         null,
@@ -166,7 +196,7 @@ public final class JeuDeDonneesPassage {
                         "06:00",
                         null,
                         statut,
-                        null,
+                        verdict,
                         null,
                         null,
                         null,
@@ -294,5 +324,42 @@ public final class JeuDeDonneesPassage {
         if (idPassage == null) {
             throw new IllegalStateException("Appelez semer() avant d'utiliser le jeu de données.");
         }
+    }
+
+    // ─── Trouver-ou-créer : ce qui est partagé entre passages n'est semé qu'une fois ────────────────────
+
+    private void trouverOuCreerUtilisateur() {
+        UtilisateurDao dao = new UtilisateurDao(source);
+        if (dao.findById(idUtilisateur).isEmpty()) {
+            dao.insert(new Utilisateur(idUtilisateur, nomUtilisateur));
+        }
+    }
+
+    private void trouverOuCreerEnregistreur() {
+        EnregistreurDao dao = new EnregistreurDao(source);
+        if (dao.findById(numeroSerie).isEmpty()) {
+            dao.insert(new Enregistreur(numeroSerie, null, null));
+        }
+    }
+
+    private long trouverOuCreerSite() {
+        SiteDao dao = new SiteDao(source);
+        return dao.findByUtilisateur(idUtilisateur).stream()
+                .filter(site -> site.numeroCarre().equals(numeroCarre))
+                .map(Site::id)
+                .findFirst()
+                .orElseGet(() -> dao.insert(new Site(
+                                null, numeroCarre, nomSite, Protocole.STANDARD, null, "2026-01-01", idUtilisateur))
+                        .id());
+    }
+
+    private long trouverOuCreerPoint() {
+        PointDao dao = new PointDao(source);
+        return dao.findBySite(idSite).stream()
+                .filter(point -> point.code().equals(codePoint))
+                .map(PointDEcoute::id)
+                .findFirst()
+                .orElseGet(() -> dao.insert(new PointDEcoute(null, codePoint, latitude, longitude, null, idSite))
+                        .id());
     }
 }
