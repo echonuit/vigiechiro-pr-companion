@@ -10,7 +10,7 @@ Ce document pose le **vocabulaire**, le **modèle de données** et les **règles
 
 L'application *VigieChiro PR Companion* organise les données autour d'un utilisateur unique (mono-utilisateur, hors-ligne). Cet utilisateur déclare un ou plusieurs **sites de suivi**, chaque site contenant un ou plusieurs **points d'écoute**. Sur chaque point, il réalise des **passages** (= une nuit complète d'enregistrement). Chaque passage produit une **session d'enregistrement** : les enregistrements originaux copiés depuis la SD, les séquences d'écoute (découpées en tranches de 5 s réelles, puis ralenties ×10) prêtes à être déposées sur Vigie-Chiro, ainsi que le journal du capteur et le relevé climatique de l'enregistreur utilisé.
 
-Une fois les séquences d'écoute produites, l'utilisateur **vérifie l'enregistrement** par échantillonnage (sound check global). S'il est satisfait, il prépare le lot prêt à déposer et téléverse manuellement sur le portail Vigie-Chiro. Le retour de **Tadarida** (résultats d'identification) arrive ensuite, et le passage entre alors en **validation taxonomique** (espèce par espèce).
+Une fois les séquences d'écoute produites, l'utilisateur **vérifie l'enregistrement** par échantillonnage (sound check global). S'il est satisfait, il prépare le dépôt et téléverse manuellement sur le portail Vigie-Chiro. Le retour de **Tadarida** (résultats d'identification) arrive ensuite, et le passage entre alors en **validation taxonomique** (espèce par espèce).
 
 <figure markdown="span">
   ![Modèle conceptuel de données (MCD Merise) de VigieChiro PR Companion](../../assets/diagrammes/modele-conceptuel.svg){ width="100%" }

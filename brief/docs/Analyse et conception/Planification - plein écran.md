@@ -46,7 +46,7 @@ gantt
     Démo intermédiaire S1          :milestone, mS1, 2026-06-09, 0d
 
     section Sprint 2 - finition + soutenance
-    E4 Lot et dépôt                :s2a, 2026-06-10, 2d
+    E4 Dépôt                :s2a, 2026-06-10, 2d
     SHOULD opportunistes (E5/E6/E7):s2b, 2026-06-11, 4d
     Stabilisation + tests          :s2c, 2026-06-15, 2d
     Préparation soutenance         :s2d, 2026-06-15, 3d

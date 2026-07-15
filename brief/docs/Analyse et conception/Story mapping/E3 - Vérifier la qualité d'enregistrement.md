@@ -141,19 +141,19 @@
 
 **En tant que** [Marie](../Personas/Marie.md)
 
-**Je veux** consigner mon avis global sur la nuit (`OK`, `Douteux`, `À jeter`) et pouvoir y ajouter un commentaire texte
+**Je veux** consigner mon avis global sur la nuit (`OK`, `Utilisable`, `Inexploitable`) et pouvoir y ajouter un commentaire texte
 
 **Afin de** trancher si la nuit est exploitable et de garder une trace de ce que j'ai constaté pour plus tard
 
 **Critères d'acceptation** :
 
-- [ ] Un menu déroulant visible permet de choisir le verdict parmi `OK`, `Douteux`, `À jeter`.
+- [ ] Un menu déroulant visible permet de choisir le verdict parmi `OK`, `Utilisable`, `Inexploitable`.
 - [ ] Un champ texte libre (multi-ligne) permet d'ajouter un commentaire optionnel (ex. « vent fort vers 02:00, sons à vérifier »).
 - [ ] La saisie du verdict est possible **dès le premier clic** sur le menu, sans contrainte d'avoir écouté un nombre minimum de séquences ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
 - [ ] À la validation du verdict, le passage passe au statut `Vérifié` en BD ([E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3)).
 - [ ] Le verdict et le commentaire sont **persistés** : ils sont restaurés à la réouverture de l'onglet et peuvent être modifiés à tout moment.
-- [ ] Un verdict `À jeter` est mis en évidence visuelle (couleur d'alerte) et affiche un rappel : « Ce passage ne pourra pas être inclus dans un lot prêt à déposer » ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)).
-- [ ] L'utilisateur peut enchaîner sur la préparation du lot ([P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)) via un bouton mis en avant après saisie d'un verdict OK ou Douteux.
+- [ ] Un verdict `Inexploitable` est mis en évidence visuelle (couleur d'alerte) et affiche un rappel : « Ce passage ne pourra pas être inclus dans un dépôt » ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)).
+- [ ] L'utilisateur peut enchaîner sur la préparation du dépôt ([P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)) via un bouton mis en avant après saisie d'un verdict OK ou Utilisable.
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 6 et 7<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (zone de saisie du verdict en bas de l'écran)<br>

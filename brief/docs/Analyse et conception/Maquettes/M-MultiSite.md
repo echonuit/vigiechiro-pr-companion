@@ -109,7 +109,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <text x="760" y="199" class="cell">3</text>
   <text x="810" y="199" class="cell">2025-07-19</text>
   <rect x="925" y="185" width="100" height="18" rx="9" class="b-trans"/><text x="975" y="198" class="badge-txt" fill="#7e5109" text-anchor="middle">Transformé</text>
-  <text x="1070" y="199" class="cell-sec">à vérifier</text>
+  <text x="1070" y="199" class="cell-sec">Non vérifié</text>
 
   <rect x="546" y="208" width="614" height="28" class="row-alt"/>
   <text x="560" y="227" class="cell">640380</text>
@@ -118,7 +118,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <text x="760" y="227" class="cell">1</text>
   <text x="810" y="227" class="cell">2026-06-08</text>
   <rect x="925" y="213" width="80" height="18" rx="9" class="b-veri"/><text x="965" y="226" class="badge-txt" fill="#a93226" text-anchor="middle">Vérifié</text>
-  <rect x="1065" y="213" width="70" height="18" rx="9" class="b-trans"/><text x="1100" y="226" class="badge-txt" fill="#7e5109" text-anchor="middle">Douteux</text>
+  <rect x="1065" y="213" width="70" height="18" rx="9" class="b-trans"/><text x="1100" y="226" class="badge-txt" fill="#7e5109" text-anchor="middle">Utilisable</text>
 
   <rect x="546" y="236" width="614" height="28" class="row"/>
   <text x="560" y="255" class="cell">640380</text>
@@ -145,7 +145,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <text x="760" y="311" class="cell">2</text>
   <text x="810" y="311" class="cell">2026-06-29</text>
   <rect x="925" y="297" width="80" height="18" rx="9" class="b-imp"/><text x="965" y="310" class="badge-txt" fill="#2c3e50" text-anchor="middle">Importé</text>
-  <text x="1070" y="311" class="cell-sec">à vérifier</text>
+  <text x="1070" y="311" class="cell-sec">Non vérifié</text>
 
   <text x="560" y="345" class="cell-sec">Astuce : double-cliquez une ligne pour ouvrir l'écran du passage.</text>
 
@@ -214,7 +214,7 @@ Une combinaison de filtres utile peut être **enregistrée sous un nom** pour ê
 
   <rect x="200" y="144" width="400" height="40" rx="4" class="list-row"/>
   <text x="216" y="162" class="vue-name">À revérifier</text>
-  <text x="216" y="177" class="vue-detail">Verdict = Douteux</text>
+  <text x="216" y="177" class="vue-detail">Verdict = Utilisable</text>
 
   <rect x="200" y="262" width="110" height="34" rx="4" class="btn-primary"/>
   <text x="255" y="283" class="btn-txt" text-anchor="middle">Appliquer</text>

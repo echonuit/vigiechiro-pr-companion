@@ -30,13 +30,13 @@ flowchart LR
         direction TB
         S3["📥 <b>Étape 3</b><br/>Importer<br/>la nuit"]
         S4["🎧 <b>Étape 4</b><br/>Vérifier<br/>l'enregistrement"]
-        S5["📦 <b>Étape 5</b><br/>Préparer<br/>le lot"]
+        S5["📦 <b>Étape 5</b><br/>Préparer<br/>le dépôt"]
         S3 --> S4 --> S5
     end
 
     subgraph livraison[📤 Dépôt manuel]
         direction TB
-        Lot[("📦 Lot prêt<br/>à déposer")]
+        Lot[("📦 Dépôt")]
         VC(["🌐 vigiechiro<br/>.herokuapp.com"])
         Lot -.téléversement<br/>navigateur.-> VC
     end
@@ -79,22 +79,22 @@ Marie branche la SD sur son ordinateur, clique sur « Importer une nuit », choi
 
 ## Étape 4 - Vérifier l'enregistrement
 
-L'application affiche d'abord un **pré-check synthétique** (trois feux 🟢/🟠/🔴 : couverture horaire vs plage astronomique, nombre de fichiers, cohérence du renommage) - c'est la vérification minimale, suffisante pour Samuel qui passe directement au dépôt. Marie complète par un **sound check par écoute** sur une sélection automatique de 10 à 30 séquences réparties sur la nuit, pour confirmer qu'aucun défaut acoustique global (saturation, parasite continu, micro HS) ne s'est produit. Elle saisit ensuite son **verdict global** : `OK`, `Douteux`, ou `À jeter`.
+L'application affiche d'abord un **pré-check synthétique** (trois feux 🟢/🟠/🔴 : couverture horaire vs plage astronomique, nombre de fichiers, cohérence du renommage) - c'est la vérification minimale, suffisante pour Samuel qui passe directement au dépôt. Marie complète par un **sound check par écoute** sur une sélection automatique de 10 à 30 séquences réparties sur la nuit, pour confirmer qu'aucun défaut acoustique global (saturation, parasite continu, micro HS) ne s'est produit. Elle saisit ensuite son **verdict global** : `OK`, `Utilisable`, ou `Inexploitable`.
 
 → **Détail complet** : [P3 - Vérifier l'enregistrement par échantillonnage](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md).
 
-## Étape 5 - Préparer le lot pour Vigie-Chiro
+## Étape 5 - Préparer le dépôt pour Vigie-Chiro
 
-Marie clique sur « Préparer le lot à déposer ». L'application vérifie la cohérence du passage (préfixes, complétude des fichiers) et lui ouvre le dossier prêt à déposer dans son explorateur. Elle téléverse manuellement les fichiers sur <https://vigiechiro.herokuapp.com/> via son navigateur, puis revient dans l'application pour cliquer « J'ai déposé le lot ».
+Marie clique sur « Vérifier et préparer le dépôt ». L'application vérifie la cohérence du passage (préfixes, complétude des fichiers) et lui ouvre le dossier prêt à déposer dans son explorateur. Elle téléverse manuellement les fichiers sur <https://vigiechiro.herokuapp.com/> via son navigateur, puis revient dans l'application pour cliquer « J'ai déposé ».
 
-→ **Détail complet** : [P4 - Préparer un lot prêt à déposer](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md).
+→ **Détail complet** : [P4 - Préparer le dépôt](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md).
 
 ## Critères de réussite globaux
 
 - Le passage apparaît dans la base avec le statut `Déposé`.
 - Le préfixe `CarXXXXXX-AAAA-PassN-YY-` est correct sur tous les fichiers (R6, R7, R8).
 - Les fichiers originaux de la SD n'ont pas été modifiés (R9).
-- La durée totale entre l'insertion de la SD et le clic « J'ai déposé le lot » reste **acceptable pour une nuit standard de quelques Go** (cf. [O3](../../Objectifs%20qualités/Objectifs%20qualités/O3.md)).
+- La durée totale entre l'insertion de la SD et le clic « J'ai déposé » reste **acceptable pour une nuit standard de quelques Go** (cf. [O3](../../Objectifs%20qualités/Objectifs%20qualités/O3.md)).
 - Marie n'a jamais eu à manipuler manuellement le préfixe ni à passer par un outil externe (LupasRename, Kaléidoscope) - l'application a remplacé entièrement la chaîne d'outils manuels.
 
 ## Et après ?

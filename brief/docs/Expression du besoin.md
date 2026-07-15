@@ -49,8 +49,8 @@ La chaîne minimale livrable est la **chaîne fil rouge** : depuis la récupéra
 
 - **Déclarer un site de suivi** dans l'application : n° de carré (6 chiffres) et codes des points d'écoute (1 lettre + 1 chiffre). Le site doit avoir été créé en amont sur le portail Vigie-Chiro pour récupérer ces identifiants.
 - **Importer une nuit d'enregistrement** depuis un dossier (typiquement la carte SD) : détection automatique du `LogPR*.txt`, du `PaRec*_THLog.csv` et des WAV bruts ; **copie protégée** des fichiers (aucune écriture sur la SD source) ; **renommage** automatique avec le préfixe `CarXXXXXX-AAAA-PassN-YY-` ; **transformation** de chaque WAV brut en séquences de 5 s ralenties ×10 (expansion temporelle).
-- **Vérifier l'enregistrement par échantillonnage** : sound check avant dépôt. L'application propose automatiquement une dizaine de séquences réparties sur la nuit, l'utilisateur en écoute quelques-unes pour confirmer que la qualité est exploitable, et saisit un **verdict global** (`OK`, `Douteux`, `À jeter`).
-- **Préparer un lot prêt à déposer** : vérification de cohérence (préfixes conformes, journal et climat présents, etc.), affichage du chemin du dossier, ouverture dans l'explorateur natif pour téléversement manuel via navigateur sur Vigie-Chiro. L'application **ne dialogue pas** directement avec la plateforme.
+- **Vérifier l'enregistrement par échantillonnage** : sound check avant dépôt. L'application propose automatiquement une dizaine de séquences réparties sur la nuit, l'utilisateur en écoute quelques-unes pour confirmer que la qualité est exploitable, et saisit un **verdict global** (`OK`, `Utilisable`, `Inexploitable`).
+- **Préparer le dépôt** : vérification de cohérence (préfixes conformes, journal et climat présents, etc.), affichage du chemin du dossier, ouverture dans l'explorateur natif pour téléversement manuel via navigateur sur Vigie-Chiro. L'application **ne dialogue pas** directement avec la plateforme.
 - **Tracer le dépôt** : marquer le passage comme `Déposé` avec date de dépôt, pour distinguer ce qui a été livré de ce qui reste à traiter.
 
 ### SHOULD (utilité reconnue, à arbitrer selon vélocité)

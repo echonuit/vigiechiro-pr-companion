@@ -24,8 +24,8 @@ Cette chaîne **remplace** entièrement les outils manuels actuellement utilisé
 
 - **Déclarer un site de suivi** : enregistrer dans l'application les n° de carré et les codes des points d'écoute qui ont été créés en amont sur le portail Vigie-Chiro ([P1](Analyse%20et%20conception/Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)).
 - **Importer une nuit d'enregistrement** : copier de manière protégée les WAV bruts + journal + climat depuis la carte SD, les **renommer** avec le préfixe `CarXXXXXX-AAAA-PassN-YY-`, et **transformer** chaque enregistrement en séquences de 5 s ralenties ×10 ([P2](Analyse%20et%20conception/Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)).
-- **Vérifier l'enregistrement par échantillonnage** : sound check global avant dépôt - écouter quelques séquences réparties sur la nuit pour confirmer que l'audio est exploitable, et saisir un verdict (`OK`, `Douteux`, `À jeter`) ([P3](Analyse%20et%20conception/Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)).
-- **Préparer un lot prêt à déposer** sur Vigie-Chiro : vérifications de cohérence + ouverture du dossier dans l'explorateur pour téléversement manuel via le navigateur ([P4](Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).
+- **Vérifier l'enregistrement par échantillonnage** : sound check global avant dépôt - écouter quelques séquences réparties sur la nuit pour confirmer que l'audio est exploitable, et saisir un verdict (`OK`, `Utilisable`, `Inexploitable`) ([P3](Analyse%20et%20conception/Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)).
+- **Préparer le dépôt** sur Vigie-Chiro : vérifications de cohérence + ouverture du dossier dans l'explorateur pour téléversement manuel via le navigateur ([P4](Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).
 
 ### Approfondissements (SHOULD, à livrer si vélocité)
 

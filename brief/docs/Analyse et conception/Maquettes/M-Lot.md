@@ -1,15 +1,15 @@
-# M-Lot - Préparation du lot à déposer
+# M-Lot - Préparation du dépôt
 
-> **Type** : vue plein écran (atteinte par clic « Préparer le lot à déposer » depuis [M-Passage](M-Passage.md) ou depuis un raccourci dans [M-Qualification](M-Qualification.md) après saisie du verdict).
+> **Type** : vue plein écran (atteinte par clic « Vérifier et préparer le dépôt » depuis [M-Passage](M-Passage.md) ou depuis un raccourci dans [M-Qualification](M-Qualification.md) après saisie du verdict).
 > **Persona principal** : tous. C'est l'**étape finale** de la chaîne fil rouge : la nuit est vérifiée, on prépare son téléversement sur Vigie-Chiro.
-> **Parcours couverts** : [P4 - Préparer un lot prêt à déposer](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md).
+> **Parcours couverts** : [P4 - Préparer le dépôt](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md).
 
-Cette vue affiche un **rapport de cohérence** (toutes les vérifications préalables passent ✓ ou échouent ✗), puis le **récapitulatif du lot** prêt à téléverser (chemin sur disque, volume, lien direct pour ouvrir le dossier dans l'explorateur), et enfin la **section de téléversement manuel** avec lien vers le portail Vigie-Chiro et bouton de confirmation « J'ai déposé le lot ». L'application **ne dialogue jamais** avec Vigie-Chiro : le téléversement reste manuel via navigateur.
+Cette vue affiche un **rapport de cohérence** (toutes les vérifications préalables passent ✓ ou échouent ✗), puis le **récapitulatif du dépôt** prêt à téléverser (chemin sur disque, volume, lien direct pour ouvrir le dossier dans l'explorateur), et enfin la **section de téléversement manuel** avec lien vers le portail Vigie-Chiro et bouton de confirmation « J'ai déposé ». L'application **ne dialogue jamais** avec Vigie-Chiro : le téléversement reste manuel via navigateur.
 
-## Maquette principale - vérifications passent, lot prêt à déposer
+## Maquette principale - vérifications passent, dépôt prêt
 
 <div markdown="0">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" role="img" aria-label="Maquette M-Lot - Préparation du lot à déposer" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 820" role="img" aria-label="Maquette M-Lot - Préparation du dépôt" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
   <style>
     .frame { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
     .chrome { fill: #3f51b5; }
@@ -65,7 +65,7 @@ Cette vue affiche un **rapport de cohérence** (toutes les vérifications préal
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
   <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
 
-  <text x="40" y="148" class="pagetitle">📦 Préparer le lot à déposer sur Vigie-Chiro</text>
+  <text x="40" y="148" class="pagetitle">📦 Préparer le dépôt sur Vigie-Chiro</text>
   <text x="40" y="170" class="pagesub">Le téléversement est manuel via navigateur. L'application prépare le dossier et trace la date de dépôt.</text>
 
   <!-- Bandeau passage -->
@@ -85,7 +85,7 @@ Cette vue affiche un **rapport de cohérence** (toutes les vérifications préal
   <circle cx="62" cy="290" r="16" class="step-num"/>
   <text x="62" y="295" class="step-num-txt" text-anchor="middle">1</text>
   <text x="92" y="287" class="section-title">Vérifications de cohérence</text>
-  <text x="92" y="304" class="section-sub">Contrôles automatiques avant préparation du lot (R31).</text>
+  <text x="92" y="304" class="section-sub">Contrôles automatiques avant préparation du dépôt (R31).</text>
 
   <rect x="40" y="320" width="1120" height="135" rx="4" class="check-card-success"/>
 
@@ -101,10 +101,10 @@ Cette vue affiche un **rapport de cohérence** (toutes les vérifications préal
   <text x="86" y="421" class="check-row" font-weight="600">Journal du capteur et relevé climatique présents.</text>
   <text x="86" y="438" class="check-detail">LogPR1925492.txt (4,2 Mo) · PaRecPR1925492_THLog.csv (12 Ko, 144 mesures).</text>
 
-  <!-- ============ Étape 2 : Récapitulatif du lot ============ -->
+  <!-- ============ Étape 2 : Récapitulatif du dépôt ============ -->
   <circle cx="62" cy="495" r="16" class="step-num"/>
   <text x="62" y="500" class="step-num-txt" text-anchor="middle">2</text>
-  <text x="92" y="492" class="section-title">Récapitulatif du lot</text>
+  <text x="92" y="492" class="section-title">Récapitulatif du dépôt</text>
   <text x="92" y="509" class="section-sub">Tout ce qui sera téléversé sur Vigie-Chiro.</text>
 
   <rect x="40" y="525" width="1120" height="115" rx="4" class="lot-card"/>
@@ -143,7 +143,7 @@ Cette vue affiche un **rapport de cohérence** (toutes les vérifications préal
   <text x="58" y="768" class="upload-warn-txt">ouvert ci-dessus et téléversez-les manuellement sur <tspan class="btn-txt-link">vigiechiro.herokuapp.com 🔗</tspan></text>
 
   <rect x="940" y="734" width="220" height="40" rx="4" class="btn-primary-big"/>
-  <text x="1050" y="759" class="btn-txt-big" text-anchor="middle">✓ J'ai déposé le lot</text>
+  <text x="1050" y="759" class="btn-txt-big" text-anchor="middle">✓ J'ai déposé</text>
 
   <!-- Footer -->
   <rect x="10" y="790" width="1180" height="20" class="footer"/>
@@ -156,19 +156,19 @@ Cette vue affiche un **rapport de cohérence** (toutes les vérifications préal
 - **Fil d'Ariane et retour** : portés par le **chrome** (barre de navigation commune) via le contrat `EmplacementNavigation` ; l'écran ne dessine pas son propre fil. Emplacement affiché : `🏠 Accueil › Mes sites › Carré N › Détails du passage N° X › Préparer le dépôt`, identique quelle que soit la route.
 - **Bandeau passage** : 5 cellules de rappel (passage, verdict ✓ OK en vert, statut Vérifié, nombre de séquences, volume total).
 - **Étape 1 - Vérifications** (encart vert) : 3 lignes ✓ couvrant les contrôles de cohérence (R31). Toutes les vérifications passent, donc on peut continuer. Si **au moins une** échoue (✗ rouge), l'encart passe en rouge et le bouton « J'ai déposé » de l'étape 3 est désactivé.
-- **Étape 2 - Récapitulatif du lot** : 4 informations clés (nombre de fichiers, volume, format, chemin sur disque). Le **chemin** est tronqué dans l'affichage mais cliquable pour copier (icône 📋) ou ouvrir dans l'explorateur (bouton primary).
+- **Étape 2 - Récapitulatif du dépôt** : 4 informations clés (nombre de fichiers, volume, format, chemin sur disque). Le **chemin** est tronqué dans l'affichage mais cliquable pour copier (icône 📋) ou ouvrir dans l'explorateur (bouton primary).
 - **Étape 3 - Téléversement** :
     - Bandeau jaune d'avertissement explicite que l'application **ne dialogue pas** avec Vigie-Chiro, avec lien direct vers le portail (s'ouvre dans le navigateur par défaut)
-    - Bouton **vert primary `✓ J'ai déposé le lot`** à droite : action de confirmation finale : marque le passage **Déposé**.
+    - Bouton **vert primary `✓ J'ai déposé`** à droite : action de confirmation finale : marque le passage **Déposé**.
 
 ### Interactions clés
 
 | Élément | Action |
 |---|---|
-| Bouton **📂 Ouvrir le dossier** | Ouvre l'explorateur natif de l'OS sur le dossier du lot (`java.awt.Desktop.open`) |
+| Bouton **📂 Ouvrir le dossier** | Ouvre l'explorateur natif de l'OS sur le dossier du dépôt (`java.awt.Desktop.open`) |
 | Icône **📋** près du chemin | Copie le chemin absolu dans le presse-papier |
 | Lien **vigiechiro.herokuapp.com 🔗** | Ouvre le portail dans le navigateur par défaut |
-| Bouton **✓ J'ai déposé le lot** | Confirmation modale → passage au statut `Déposé` + persistance de la date courante comme date de dépôt déclarée |
+| Bouton **✓ J'ai déposé** | Confirmation modale → passage au statut `Déposé` + persistance de la date courante comme date de dépôt déclarée |
 
 ---
 
@@ -207,7 +207,7 @@ Une fois que l'utilisateur a confirmé le dépôt, l'écran évolue : la zone de
 
   <rect x="40" y="80" width="1120" height="80" rx="6" class="deposit-card"/>
   <text x="80" y="125" class="deposit-icon">📤</text>
-  <text x="130" y="115" class="deposit-title">Lot déposé le 24/06/2026</text>
+  <text x="130" y="115" class="deposit-title">Déposé le 24/06/2026</text>
   <text x="130" y="138" class="deposit-date">Confirmé par vous-même · stocké en base locale.</text>
 
   <rect x="800" y="105" width="170" height="30" rx="3" class="btn-secondary"/>
@@ -226,19 +226,19 @@ Une fois que l'utilisateur a confirmé le dépôt, l'écran évolue : la zone de
 
 ### Notes sur le mode « déjà déposé »
 
-- **Encart vert** « Lot déposé le DD/MM/AAAA » qui remplace les boutons d'action principaux.
+- **Encart vert** « Déposé le DD/MM/AAAA » qui remplace les boutons d'action principaux.
 - **✏ Corriger la date** : utile si l'utilisateur a coché « J'ai déposé » un jour après le téléversement réel (modale avec date picker).
 - **↺ Annuler le dépôt** : action de récupération en cas d'erreur (le statut redevient `Vérifié`, la date est effacée).
 - **Bannière bleue « Et maintenant ? »** : guide l'utilisateur vers la suite (validation Tadarida via [M-SonsValidation](M-SonsValidation.md) une fois le CSV reçu). Signale clairement que c'est une **cible étirable**.
 
 ---
 
-## Variante - vérifications échouent ou verdict À jeter
+## Variante - vérifications échouent ou verdict Inexploitable
 
-Si le verdict du passage est `À jeter` (R14) ou si une vérification de cohérence échoue, le bouton de préparation du lot est désactivé avec un message explicite.
+Si le verdict du passage est `Inexploitable` (R14) ou si une vérification de cohérence échoue, le bouton de préparation du dépôt est désactivé avec un message explicite.
 
 <div markdown="0">
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-label="Maquette M-Lot - Vérification échoue ou verdict à jeter" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" role="img" aria-label="Maquette M-Lot - Vérification échoue ou verdict inexploitable" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #fafbfc;">
   <style>
     .frame { fill: #ffffff; stroke: #2c3e50; stroke-width: 1.5; }
     .info-bar-warn { fill: #fde7e7; stroke: #a93226; stroke-width: 1; }
@@ -262,26 +262,26 @@ Si le verdict du passage est `À jeter` (R14) ou si une vérification de cohére
 
   <rect x="10" y="10" width="1180" height="300" rx="4" class="frame"/>
 
-  <!-- Bandeau passage avec verdict À jeter -->
+  <!-- Bandeau passage avec verdict Inexploitable -->
   <rect x="40" y="30" width="1120" height="50" rx="4" class="info-bar-warn"/>
   <text x="60" y="51" class="info-label">PASSAGE</text>
   <text x="60" y="69" class="info-value">Carré 640380 / A1 / N° 2 (2026) - 22/06/2026</text>
   <text x="430" y="51" class="info-label">VERDICT</text>
-  <text x="430" y="69" class="info-value-warn">❌ À jeter</text>
+  <text x="430" y="69" class="info-value-warn">❌ Inexploitable</text>
   <text x="540" y="51" class="info-label">STATUT</text>
   <text x="540" y="69" class="info-value">Vérifié</text>
 
   <!-- Étape vérifications -->
   <circle cx="62" cy="120" r="16" class="step-num-err"/>
   <text x="62" y="125" class="step-num-txt" text-anchor="middle">!</text>
-  <text x="92" y="117" class="section-title">Préparation du lot impossible</text>
+  <text x="92" y="117" class="section-title">Préparation du dépôt impossible</text>
   <text x="92" y="134" class="section-sub">Une ou plusieurs vérifications bloquent le passage au statut « Prêt à déposer ».</text>
 
   <rect x="40" y="150" width="1120" height="105" rx="4" class="check-card-fail"/>
 
   <text x="60" y="174" class="check-fail">❌</text>
-  <text x="86" y="174" class="check-row" font-weight="600">Verdict actuel : À jeter (R14).</text>
-  <text x="86" y="190" class="check-detail">Un passage avec verdict « À jeter » ne peut pas être inclus dans un lot prêt à déposer.</text>
+  <text x="86" y="174" class="check-row" font-weight="600">Verdict actuel : Inexploitable (R14).</text>
+  <text x="86" y="190" class="check-detail">Un passage avec verdict « Inexploitable » ne peut pas être inclus dans un dépôt.</text>
 
   <text x="60" y="216" class="check-ok">✓</text>
   <text x="86" y="216" class="check-row">Préfixe Car640380-2026-Pass2-A1- conforme sur tous les fichiers.</text>
@@ -291,7 +291,7 @@ Si le verdict du passage est `À jeter` (R14) ou si une vérification de cohére
 
   <!-- Bouton désactivé + lien correctif -->
   <rect x="930" y="270" width="230" height="34" rx="4" class="btn-disabled"/>
-  <text x="1045" y="293" class="btn-txt-disabled" text-anchor="middle">✓ J'ai déposé le lot</text>
+  <text x="1045" y="293" class="btn-txt-disabled" text-anchor="middle">✓ J'ai déposé</text>
 
   <rect x="60" y="270" width="240" height="34" rx="4" class="btn-secondary"/>
   <text x="180" y="293" class="btn-txt-dark" text-anchor="middle">🎧 Modifier le verdict</text>
@@ -302,13 +302,13 @@ Si le verdict du passage est `À jeter` (R14) ou si une vérification de cohére
 
 - **Bandeau rouge** en haut signale immédiatement le verdict bloquant.
 - **3 lignes** dans l'encart rouge : la première est l'échec ❌ (raison du blocage), les suivantes sont ✓ pour montrer que les autres vérifications passent.
-- **Le bouton « ✓ J'ai déposé le lot »** est **désactivé** (gris) - l'utilisateur ne peut pas franchir l'étape même en force.
-- **Bouton secondary « 🎧 Modifier le verdict »** : redirige vers [M-Qualification](M-Qualification.md) pour permettre à l'utilisateur de revoir sa décision s'il le souhaite (par exemple si le « À jeter » était précipité).
+- **Le bouton « ✓ J'ai déposé »** est **désactivé** (gris) - l'utilisateur ne peut pas franchir l'étape même en force.
+- **Bouton secondary « 🎧 Modifier le verdict »** : redirige vers [M-Qualification](M-Qualification.md) pour permettre à l'utilisateur de revoir sa décision s'il le souhaite (par exemple si le « Inexploitable » était précipité).
 
 ## Notes pour l'implémentation
 
 - **Calcul des vérifications** : exécuté à chaque ouverture de l'écran (pas mémorisé en BD). Coût négligeable car les contrôles sont des requêtes simples sur les passages/séquences déjà persistés.
-- **Détection ✗ vs ✓** : le bouton « J'ai déposé » est activé **uniquement** si toutes les vérifications passent ET que le verdict est OK ou Douteux (jamais À jeter).
+- **Détection ✗ vs ✓** : le bouton « J'ai déposé » est activé **uniquement** si toutes les vérifications passent ET que le verdict est OK ou Utilisable (jamais Inexploitable).
 - **Confirmation de dépôt** : modale séparée (non figurée) avec récap des conséquences (« Le passage va passer au statut Déposé, la date 24/06/2026 sera enregistrée ») avant d'écrire en BD.
 - **Annulation du dépôt** : autorisée pendant N jours (à arbitrer côté équipe étudiante) pour récupération d'erreur. Au-delà, considérer le passage comme « clos ».
 - **Ouverture du dossier** : `java.awt.Desktop.open(File)` est la méthode standard, fonctionne sur Linux/macOS/Windows. Tester en environnement sans bureau graphique : le bouton doit être désactivé proprement avec un message explicite (et le chemin reste copiable via 📋).

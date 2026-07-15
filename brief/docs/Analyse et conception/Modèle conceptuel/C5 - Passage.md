@@ -11,10 +11,10 @@ L'unité métier centrale : une nuit complète d'enregistrement sur un point d'u
 | heure de fin | heure | obligatoire | Lue du journal du capteur. |
 | paramètres d'acquisition | structure | extraits du journal du capteur | Fe, FL, FPH, S.R., gain, bande de fréquence, durée enregistrement, seuil SD. Sérialisés tels quels. |
 | statut d'avancement | énum | `Importé` / `Transformé` / `Vérifié` / `Prêt à déposer` / `Déposé` | Progression de la chaîne pré-VigieChiro. |
-| verdict de vérification | énum | `À vérifier` / `OK` / `Douteux` / `À jeter` | Saisi par l'utilisateur après écoute de la sélection d'écoute. |
+| verdict final de vérification | énum | `Non vérifié` / `OK` / `Utilisable` / `Inexploitable` | **Dérivé** des verdicts par fichier son de la [sélection d'écoute](C11%20-%20Sélection%20d%27écoute.md), **surchargeable** à la main. Un passage `Inexploitable` ne peut pas être déposé ([R14](Règles%20métier.md#r14)). |
 | commentaire de session | texte | optionnel, ≤ 2000 car. | Météo, intervention humaine, anomalie matérielle, etc. |
 | données météo structurées | structure | optionnelles | T° début/fin nuit, couverture nuageuse, vent. À aligner sur les champs Vigie-Chiro pour faciliter le dépôt. |
-| date de dépôt sur Vigie-Chiro | datetime | optionnelle | Tracée à l'export du lot. |
+| date de dépôt sur Vigie-Chiro | datetime | optionnelle | Tracée au dépôt. |
 
 > **Note importante** : ce que les anciennes maquettes appelaient « session » est désormais nommé **passage** pour rester cohérent avec le vocabulaire Vigie-Chiro.
 
@@ -23,7 +23,7 @@ L'unité métier centrale : une nuit complète d'enregistrement sur un point d'u
 - [R3](Règles%20métier.md#r3) - fenêtres temporelles des passages 1 et 2 (alerte sans bloquer).
 - [R4](Règles%20métier.md#r4) - intervalle ≥ 1 mois entre les deux passages d'un site.
 - [R5](Règles%20métier.md#r5) - unicité du quadruplet `(Site, Point, Année, n° de passage)`.
-- [R14](Règles%20métier.md#r14) - un passage avec verdict `À jeter` ne peut pas rejoindre un lot prêt à déposer.
+- [R14](Règles%20métier.md#r14) - un passage `Inexploitable` ne peut pas être déposé.
 
 ## Voisins dans le modèle
 

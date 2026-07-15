@@ -26,17 +26,17 @@ Pour creuser les détails (courbes T°/H, événements anormaux du journal du ca
 Si Marie souhaite confirmer auditivement l'absence de problème acoustique (saturation, micro HS, parasite continu), elle ouvre l'onglet **« Écouter la sélection »** :
 
 1. L'application constitue automatiquement une **sélection d'écoute** : 10 à 30 séquences d'écoute réparties uniformément sur la nuit (méthode `RéparTemporel` par défaut, [R12](../Modèle%20conceptuel/Règles%20métier.md#r12)).
-2. La sélection s'affiche sous forme de liste chronologique. Pour chaque séquence : horodatage, durée, fréquence dominante (indicative), bouton ▶ pour écouter.
-3. Marie écoute quelques séquences à des moments différents de la nuit. Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)), la lecture se fait à vitesse normale, sans transformation à la volée - l'audio est immédiatement audible pour l'oreille humaine.
+2. La sélection s'affiche sous forme de liste chronologique. Pour chaque séquence : horodatage, durée, fréquence dominante (indicative), bouton ▶ pour écouter, et un **verdict par fichier** à poser après écoute (`Bon` / `Mauvais` / `Inexploitable`).
+3. Marie écoute quelques séquences à des moments différents de la nuit et **juge chacune**. Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)), la lecture se fait à vitesse normale, sans transformation à la volée - l'audio est immédiatement audible pour l'oreille humaine. Une **barre de progression tricolore** (vert / orange / rouge) résume au fil de l'eau les verdicts posés.
 4. Marie peut compléter sa sélection si elle en ressent le besoin (changer la méthode pour `Aléatoire`, augmenter la taille à 50 séquences, ou ajouter manuellement une séquence à un moment précis).
 
 > 💡 **Quand utiliser le sound check ?** Marie, débutante, s'en sert systématiquement par sécurité. Samuel, par expérience, sait que la majorité des fichiers sont du bruit et préfère envoyer directement à Tadarida sans écouter - il attend le tableur de résultats pour cibler son écoute sur les fichiers d'intérêt. Karim navigue entre les deux selon le chantier.
 
-## Étape 3 - Verdict global
+## Étape 3 - Verdict final du passage
 
-Une fois sa revue faite (pré-check seul ou pré-check + sound check), l'utilisateur saisit son **verdict global** dans un menu déroulant : `OK`, `Douteux`, `À jeter`. Il peut compléter par un commentaire libre (« vent fort vers 02:00, sons à vérifier »).
+Une fois l'échantillon écouté (pré-check seul ou pré-check + sound check), l'application **propose un verdict final du passage dérivé** des verdicts par fichier : `OK` (tout est bon), `Utilisable` (quelques défauts mais exploitable) ou `Inexploitable`. L'utilisateur garde le **dernier mot** : il peut **forcer** ce verdict, et le compléter par un commentaire libre (« vent fort vers 02:00, sons à vérifier »).
 
-Le passage passe au statut `Vérifié` et le verdict est mémorisé. Marie peut enchaîner sur la préparation du lot ([P4](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).
+Le passage passe au statut `Vérifié` et le verdict est mémorisé. Un passage `Inexploitable` doit être **requalifié** (re-vérifié) avant de pouvoir être déposé ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)). Marie peut enchaîner sur la préparation du dépôt ([P4](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).
 
 ## Règles métier visibles
 
@@ -44,5 +44,5 @@ Le passage passe au statut `Vérifié` et le verdict est mémorisé. Marie peut 
 - [R6](../Modèle%20conceptuel/Règles%20métier.md#r6) : préfixe `CarXXXXXX-AAAA-PassN-YY-` (tirets du 6), source du check de cohérence du renommage.
 - [R10](../Modèle%20conceptuel/Règles%20métier.md#r10) : séquences d'écoute ralenties ×10 sur disque, lecture sans transformation à la volée.
 - [R12](../Modèle%20conceptuel/Règles%20métier.md#r12) : sélection d'écoute constituée automatiquement (méthode `RéparTemporel` par défaut).
-- [R13](../Modèle%20conceptuel/Règles%20métier.md#r13) : l'utilisateur reste responsable - aucun seuil minimum d'écoute imposé.
-- [R14](../Modèle%20conceptuel/Règles%20métier.md#r14) : un passage avec verdict `À jeter` ne peut pas être inclus dans un lot prêt à déposer (alerte bloquante au moment du parcours [P4](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).
+- [R13](../Modèle%20conceptuel/Règles%20métier.md#r13) : verdict par fichier son, verdict final dérivé et surchargeable ; l'utilisateur reste responsable - aucun seuil minimum d'écoute imposé.
+- [R14](../Modèle%20conceptuel/Règles%20métier.md#r14) : un passage `Inexploitable` ne peut pas être déposé (alerte bloquante au moment du parcours [P4](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).

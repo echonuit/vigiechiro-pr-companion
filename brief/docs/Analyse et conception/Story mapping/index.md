@@ -57,7 +57,7 @@ Les **maquettes** sont en cours de refonte (étape ultérieure du dossier). Chaq
 | M-Import | Modale d'import enrichie (sélection site + point + passage) |
 | M-Passage | Détail d'un passage (méta + qualification + diagnostic en onglet) |
 | M-Qualification | Vue vérification d'enregistrement par échantillonnage |
-| M-Lot | Préparation du lot à déposer |
+| M-Lot | Préparation du dépôt |
 | M-MultiSite | Tableau croisé Site × Passage |
 | M-SonsValidation | Vue de validation taxonomique (cible étirée) |
 

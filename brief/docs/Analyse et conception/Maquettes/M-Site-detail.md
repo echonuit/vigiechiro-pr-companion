@@ -140,7 +140,7 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
   <text x="300" y="496" class="cell">2</text>
   <rect x="425" y="481" width="110" height="20" rx="10" class="badge-trans"/>
   <text x="480" y="495" class="badge-txt" fill="#7e5109" text-anchor="middle">Transformé</text>
-  <text x="620" y="496" class="cell-sec">à vérifier</text>
+  <text x="620" y="496" class="cell-sec">Non vérifié</text>
   <text x="800" y="496" class="cell">PR 1925492</text>
   <text x="1010" y="496" class="cell-sec">-</text>
 
@@ -164,17 +164,17 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
   <rect x="425" y="549" width="80" height="20" rx="10" class="badge-dep"/>
   <text x="465" y="563" class="badge-txt" fill="#2563a3" text-anchor="middle">Déposé</text>
   <rect x="615" y="549" width="80" height="20" rx="10" class="badge-trans"/>
-  <text x="655" y="563" class="badge-txt" fill="#7e5109" text-anchor="middle">Douteux</text>
+  <text x="655" y="563" class="badge-txt" fill="#7e5109" text-anchor="middle">Utilisable</text>
   <text x="800" y="564" class="cell">PR 1925492</text>
   <text x="1010" y="564" class="cell">2026-04-24</text>
 
-  <!-- Ligne 4 (a jeter) -->
+  <!-- Ligne 4 (inexploitable) -->
   <rect x="40" y="576" width="1120" height="34" class="table-row-alt"/>
   <text x="60" y="598" class="cell">2026-04-08</text>
   <text x="190" y="598" class="cell">B2</text>
   <text x="300" y="598" class="cell">1</text>
   <rect x="425" y="583" width="80" height="20" rx="10" class="badge-veri"/>
-  <text x="465" y="597" class="badge-txt" fill="#a93226" text-anchor="middle">À jeter</text>
+  <text x="465" y="597" class="badge-txt" fill="#a93226" text-anchor="middle">Inexploitable</text>
   <text x="620" y="598" class="cell-sec">-</text>
   <text x="800" y="598" class="cell">PR 1925487</text>
   <text x="1010" y="598" class="cell-sec">-</text>

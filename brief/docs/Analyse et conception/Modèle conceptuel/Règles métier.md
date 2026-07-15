@@ -43,12 +43,12 @@ Les règles métier du modèle conceptuel. Chaque règle a un identifiant ancré
 ## Vérification d'enregistrement
 
 - **R12**{ #r12 } : une sélection d'écoute est constituée automatiquement à l'ouverture de la vue, avec la méthode `RéparTemporel` par défaut (séquences réparties uniformément sur la nuit).
-- **R13**{ #r13 } : le verdict global est saisi par l'utilisateur après écoute de **tout ou partie** de la sélection. Aucun seuil obligatoire d'écoute (l'utilisateur reste responsable).
-- **R14**{ #r14 } : un passage avec verdict `À jeter` ne peut pas être inclus dans un lot prêt à déposer (alerte bloquante).
+- **R13**{ #r13 } : le verdict de chaque **fichier son écouté** (`Bon` / `Mauvais` / `Inexploitable`) est saisi par l'utilisateur ; le **verdict final du passage** (`OK` / `Utilisable` / `Inexploitable`, état initial `Non vérifié`) en est **dérivé automatiquement** mais reste **surchargeable** à la main. Aucun seuil obligatoire d'écoute : l'utilisateur écoute **tout ou partie** de la sélection et reste responsable.
+- **R14**{ #r14 } : un passage au verdict final `Inexploitable` ne peut pas être déposé (alerte bloquante). Pour déposer, il faut le **requalifier** (re-vérifier jusqu'à un verdict déposable) ; une fois **déposé**, le verdict est **figé**.
 
-## Préparation du lot
+## Préparation du dépôt
 
-- **R31**{ #r31 } : préparer un lot s'appuie sur une **checklist de cohérence vivante** (chaque contrôle est affiché, même satisfait : ✓ / ⚠ / ✗). Un contrôle **bloquant** (✗) **interdit la préparation** tant qu'il n'est pas corrigé : verdict `À jeter` ([R14](#r14)), **transformation incomplète**, **préfixe de fichier non conforme** ([R6](#r6)), **journal du capteur absent**. Les contrôles **non bloquants** (⚠) - par exemple un **relevé climatique absent** ([R20](#r20)) - sont signalés mais **laissent préparer**. Quand la préparation réussit, le passage passe au statut `Prêt à déposer`.
+- **R31**{ #r31 } : préparer le dépôt s'appuie sur une **checklist de cohérence vivante** (chaque contrôle est affiché, même satisfait : ✓ / ⚠ / ✗). Un contrôle **bloquant** (✗) **interdit la préparation** tant qu'il n'est pas corrigé : verdict `Inexploitable` ([R14](#r14)), **transformation incomplète**, **préfixe de fichier non conforme** ([R6](#r6)), **journal du capteur absent**. Les contrôles **non bloquants** (⚠) - par exemple un **relevé climatique absent** ([R20](#r20)) - sont signalés mais **laissent préparer**. Quand la préparation réussit, le passage passe au statut `Prêt à déposer`.
 
 ## Validation taxonomique (SHOULD)
 

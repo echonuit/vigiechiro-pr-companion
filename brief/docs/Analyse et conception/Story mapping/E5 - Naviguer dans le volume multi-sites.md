@@ -102,7 +102,7 @@
 
 - [ ] La vue tabulaire ([E5.S2](#e5s2)) permet la sélection multiple (Ctrl+clic, Maj+clic pour plage, Ctrl+A pour tout).
 - [ ] Une barre d'actions contextuelle apparaît dès qu'au moins 2 passages sont sélectionnés : « Actions sur 5 passages : [Verdict] [Exporter] [Supprimer] ».
-- [ ] Action **Verdict** : applique le même verdict (OK / Douteux / À jeter) à tous les passages sélectionnés, avec confirmation explicite.
+- [ ] Action **Verdict** : applique le même verdict (OK / Utilisable / Inexploitable) à tous les passages sélectionnés, avec confirmation explicite.
 - [ ] Action **Exporter** : produit un récapitulatif CSV (1 ligne par passage avec ses métadonnées) téléchargeable.
 - [ ] Action **Supprimer** : confirmation forte (fenêtre modale expliquant que les fichiers sur disque seront aussi supprimés), avec saisie de « SUPPRIMER » pour valider. Action irréversible.
 - [ ] Toute action de masse est tracée dans un journal d'opérations (pour audit en cas de bug ou de fausse manipulation).

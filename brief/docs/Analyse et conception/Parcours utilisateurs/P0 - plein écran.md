@@ -41,11 +41,11 @@ flowchart TB
     SD --> S3
     S3["📥 <b>Étape 3 · Importer la nuit</b><br/>copie protégée + renommage <code>CarXXXXXX-AAAA-PassN-YY-</code><br/>chunks 5 s réelles + transformation ×10"]
     S3 --> S4
-    S4["🎧 <b>Étape 4 · Vérifier l'enregistrement</b><br/>sound check par échantillonnage<br/>verdict global OK / Douteux / À jeter"]
+    S4["🎧 <b>Étape 4 · Vérifier l'enregistrement</b><br/>sound check par échantillonnage<br/>verdict global OK / Utilisable / Inexploitable"]
     S4 --> S5
-    S5["📦 <b>Étape 5 · Préparer le lot</b><br/>vérification cohérence · ouverture du dossier"]
+    S5["📦 <b>Étape 5 · Préparer le dépôt</b><br/>vérification cohérence · ouverture du dossier"]
     S5 --> Lot
-    Lot[("📦 Lot prêt à déposer - séquences + journal + climat")]
+    Lot[("📦 Dépôt - séquences + journal + climat")]
     Lot -.téléversement manuel via navigateur.-> VC
     VC(["🌐 vigiechiro.herokuapp.com"])
 
@@ -68,15 +68,15 @@ flowchart TB
 | 🟦 Bleu | Actrice (Marie) |
 | 🟩 Vert | Étape réalisée **dans l'application** |
 | 🟫 Marron | Étape réalisée **hors application** (terrain) |
-| 🟨 Crème (cylindre) | Artefact produit ou consommé (carte SD, lot) |
+| 🟨 Crème (cylindre) | Artefact produit ou consommé (carte SD, dépôt) |
 | ⬛ Gris foncé | Système externe (portail Vigie-Chiro) |
 
 ## Lecture du parcours
 
 1. **Marie** déclare son site dans l'application (étape 1).
 2. Elle se rend **sur le terrain** : programme l'enregistreur, le déploie, le récupère au matin (étape 2). Elle revient avec une **carte SD pleine** de WAV bruts.
-3. Elle revient **dans l'application** pour importer la nuit (étape 3 : copie protégée, renommage `CarXXXXXX-AAAA-PassN-YY-`, découpage en tranches de 5 s réelles, expansion temps ×10), vérifier l'enregistrement par échantillonnage (étape 4) et préparer le lot (étape 5).
-4. Elle obtient un **lot prêt à déposer** sur disque, qu'elle téléverse **manuellement** via son navigateur sur le portail Vigie-Chiro.
+3. Elle revient **dans l'application** pour importer la nuit (étape 3 : copie protégée, renommage `CarXXXXXX-AAAA-PassN-YY-`, découpage en tranches de 5 s réelles, expansion temps ×10), vérifier l'enregistrement par échantillonnage (étape 4) et préparer le dépôt (étape 5).
+4. Elle obtient un **dépôt** sur disque, qu'elle téléverse **manuellement** via son navigateur sur le portail Vigie-Chiro.
 
 L'application **remplace entièrement** la chaîne d'outils manuels (LupasRename + Kaléidoscope 4.3.1) historiquement utilisée.
 

@@ -8,12 +8,13 @@ Sous-ensemble de séquences d'écoute sélectionné pour permettre à l'utilisat
 | taille | entier | par défaut 10-30 séquences | Configurable. |
 | séquences rattachées | référence × N | obligatoire | Ordonnées par horodatage de l'enregistrement original source. |
 | séquences écoutées | référence × M | dérivé | Mis à jour à chaque play de l'utilisateur. |
+| verdict par séquence | énum × M | saisi | `Bon` / `Mauvais` / `Inexploitable` pour chaque fichier son écouté ([R13](Règles%20métier.md#r13)). Alimente la **barre de progression tricolore** et **dérive** le verdict final du passage. |
 
 ## Règles applicables
 
 - [R12](Règles%20métier.md#r12) - sélection auto à l'ouverture (méthode `RéparTemporel` par défaut).
-- [R13](Règles%20métier.md#r13) - verdict global saisi par l'utilisateur, sans seuil obligatoire d'écoute.
-- [R14](Règles%20métier.md#r14) - un passage `À jeter` ne peut pas rejoindre un lot prêt à déposer.
+- [R13](Règles%20métier.md#r13) - verdict par fichier son saisi par l'utilisateur (verdict final du passage dérivé, surchargeable), sans seuil obligatoire d'écoute.
+- [R14](Règles%20métier.md#r14) - un passage `Inexploitable` ne peut pas être déposé.
 
 ## Voisins dans le modèle
 

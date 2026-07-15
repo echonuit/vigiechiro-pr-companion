@@ -29,7 +29,7 @@ flowchart LR
     E0[🗄️ E0 socle<br/>S1-S5<br/>14 ★]
     E1[🌐 E1<br/>Sites/points<br/>10 ★] --> E2[📥 E2<br/>Import/transform<br/>21 ★]
     E2 --> E3[🎧 E3<br/>Vérif<br/>9 ★]
-    E3 --> E4[📦 E4<br/>Lot<br/>5 ★]
+    E3 --> E4[📦 E4<br/>Dépôt<br/>5 ★]
     E0 --> E1
     E0 --> E2
     E0 --> E3
@@ -93,10 +93,10 @@ E3.S6 (personnaliser la sélection) est en SHOULD.
 
 ### E4 cœur (3 stories sur 4, ~5 ★)
 
-La préparation du lot et la traçabilité du dépôt.
+La préparation du dépôt et la traçabilité du dépôt.
 
 - [E4.S1 - Vérifier la cohérence du passage avant préparation](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s1) ★★
-- [E4.S2 - Voir le récapitulatif du lot et ouvrir le dossier](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s2) ★★
+- [E4.S2 - Voir le récapitulatif du dépôt et ouvrir le dossier](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s2) ★★
 - [E4.S3 - Marquer le passage comme déposé](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s3) ★
 
 E4.S4 (indicateur d’étapes de statut et chronologie) est en SHOULD.
@@ -172,7 +172,7 @@ Vue exhaustive des 50 stories. Tri par épopée puis par n°.
 | [E3.S4](Story%20mapping/E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s4) | Marquer les séquences écoutées | ★ | ✅ MUST | Léger, ergonomie. |
 | [E3.S5](Story%20mapping/E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s5) | Saisir le verdict global | ★ | ✅ MUST | Cœur du parcours P3. |
 | [E3.S6](Story%20mapping/E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s6) | Personnaliser la sélection | ★★★ | 🟠 SHOULD | La sélection auto suffit pour le MVP. |
-| [E4.S1](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s1) | Vérifier la cohérence avant lot | ★★ | ✅ MUST | Garde-fou avant dépôt. |
+| [E4.S1](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s1) | Vérifier la cohérence avant dépôt | ★★ | ✅ MUST | Garde-fou avant dépôt. |
 | [E4.S2](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s2) | Récapitulatif + ouvrir dossier | ★★ | ✅ MUST | Sans cette story, l'utilisateur ne sait pas où sont ses fichiers. |
 | [E4.S3](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s3) | Marquer comme déposé | ★ | ✅ MUST | Léger, traçabilité. |
 | [E4.S4](Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s4) | Indicateur d’étapes de statut et chronologie | ★★★ | 🟠 SHOULD | Badge brut suffit pour MUST. |
@@ -204,7 +204,7 @@ Vue exhaustive des 50 stories. Tri par épopée puis par n°.
 | E1 - Sites et points | 5 | 10 | **5 / 10 ★** | 0 | 0 |
 | E2 - Import et transformation | 8 | 24 | 7 / 21 ★ | 1 / 3 ★ | 0 |
 | E3 - Vérification d'enregistrement | 6 | 12 | 5 / 9 ★ | 1 / 3 ★ | 0 |
-| E4 - Lot et dépôt | 4 | 8 | 3 / 5 ★ | 1 / 3 ★ | 0 |
+| E4 - Dépôt | 4 | 8 | 3 / 5 ★ | 1 / 3 ★ | 0 |
 | E5 - Multi-sites | 5 | 16 | 0 | 2 / 6 ★ | 3 / 10 ★ |
 | E6 - Diagnostic matériel | 5 | 13 | 0 | 2 / 6 ★ | 3 / 7 ★ |
 | E7 - Validation Tadarida | 7 | 19 | 0 | 6 / 17 ★ | 1 / 2 ★ |

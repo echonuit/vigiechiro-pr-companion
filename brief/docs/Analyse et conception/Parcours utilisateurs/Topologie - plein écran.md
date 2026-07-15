@@ -30,7 +30,7 @@ hide:
 flowchart LR
     P1[🌐 P1 - Déclarer<br/>un site] --> P2[📥 P2 - Importer<br/>une nuit]
     P2 --> P3[🎧 P3 - Vérifier<br/>l'enregistrement]
-    P3 --> P4[📦 P4 - Préparer<br/>le lot à déposer]
+    P3 --> P4[📦 P4 - Préparer<br/>le dépôt]
     P4 -->|dépôt manuel<br/>VigieChiro| P7[✅ P7 - Valider les<br/>résultats Tadarida]
 
     P1 --> P5[🗂 P5 - Naviguer<br/>multi-sites]

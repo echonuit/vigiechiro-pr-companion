@@ -39,7 +39,7 @@ L'amorçage ne demande **pas de développement intensif** : c'est le moment de p
 
 ### Sprint 1 - 01/06 → 09/06 (7 jours ouvrés, dev exclusif)
 
-**Objectif** : livrer la chaîne fil rouge MUST complète : un utilisateur peut **déclarer un site**, **importer une nuit**, **vérifier l'enregistrement** et **préparer le lot** à déposer.
+**Objectif** : livrer la chaîne fil rouge MUST complète : un utilisateur peut **déclarer un site**, **importer une nuit**, **vérifier l'enregistrement** et **préparer le dépôt**.
 
 **Stories MUST visées** :
 
@@ -54,7 +54,7 @@ L'amorçage ne demande **pas de développement intensif** : c'est le moment de p
 
 **Point de risque principal** : [E2.S6](Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6) (transformation ×10 + chunks 5 s, ★★★★★). **À sécuriser dès le premier jour** : sans elle, toute la chaîne fil rouge dérape.
 
-**Démo de fin de Sprint 1** : importer le dossier d'une nuit d'enregistrement, voir les séquences ralenties générées, écouter quelques-unes via la vue échantillonnée, saisir un verdict global. La préparation du lot (E4) reste pour le Sprint 2.
+**Démo de fin de Sprint 1** : importer le dossier d'une nuit d'enregistrement, voir les séquences ralenties générées, écouter quelques-unes via la vue échantillonnée, saisir un verdict global. La préparation du dépôt (E4) reste pour le Sprint 2.
 
 ### Sprint 2 - 10/06 → 17/06 (6 jours ouvrés, dev exclusif)
 
@@ -64,7 +64,7 @@ L'amorçage ne demande **pas de développement intensif** : c'est le moment de p
 
 | Épopée | Stories | Charge ★ |
 |---|---|---|
-| [E4](../Analyse%20et%20conception/Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md) - Lot et dépôt | S1, S2, S3 | 5 ★ |
+| [E4](../Analyse%20et%20conception/Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md) - Dépôt | S1, S2, S3 | 5 ★ |
 
 **SHOULD opportunistes** (à arbitrer en début de sprint en fonction de la vélocité Sprint 1) :
 

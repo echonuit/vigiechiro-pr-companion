@@ -25,7 +25,7 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
 | [M-Passage](M-Passage.md) | Détail d'un passage (4 onglets) | Vue pivot | transverse | [E0.S3](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s3), [E4.S4](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s4), [E6](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md) |
 | [M-Qualification](M-Qualification.md) | Vérification d'enregistrement par échantillonnage | Vue plein écran | [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | [E3](../Story%20mapping/E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md) |
 | [M-SonsValidation](M-SonsValidation.md) | Sons & validation (écoute, validation taxonomique, références) | Vue plein écran (4 sources) | [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md), [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) | prisme biodiversité |
-| [M-Lot](M-Lot.md) | Préparation du lot à déposer | Vue plein écran | [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | [E4.S1](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s1) à [E4.S3](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s3) |
+| [M-Lot](M-Lot.md) | Préparation du dépôt | Vue plein écran | [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | [E4.S1](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s1) à [E4.S3](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s3) |
 | [M-MultiSite](M-MultiSite.md) | Carte & passages (carte au carroyage + tableau) | Vue plein écran | [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | [E5](../Story%20mapping/E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md) |
 | [M-Diagnostic](M-Diagnostic.md) | Diagnostic matériel d'un passage | Vue secondaire (depuis M-Passage) | [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) | [E6](../Story%20mapping/E6%20-%20Diagnostiquer%20le%20matériel.md) |
 | [M-Analyse](M-Analyse.md) | Espèces & observations (inventaire transverse) | Vue plein écran | [P11](../Parcours%20utilisateurs/P11%20-%20Inventaire%20des%20espèces%20détectées.md) | prisme biodiversité |
@@ -108,8 +108,8 @@ L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titr
 |---|---|---|
 | Primary actions / liens | `#4a90d9` (bleu) | Boutons primaires, liens d'action |
 | Success / verdict OK | `#1e8449` (vert) | Badges Déposé OK, statut Vérifié |
-| Warning / verdict Douteux | `#b9770e` (orange) | Statut Transformé, cible étirée |
-| Danger / verdict À jeter | `#a93226` (rouge) | Bouton Supprimer, verdict À jeter |
+| Warning / verdict Utilisable | `#b9770e` (orange) | Statut Transformé, cible étirée |
+| Danger / verdict Inexploitable | `#a93226` (rouge) | Bouton Supprimer, verdict Inexploitable |
 | Neutral / inactif | `#6a737d` (gris) | Texte secondaire, états désactivés |
 | Background subtil | `#f6f8fa` (gris très clair) | Bandeaux d'info, rows alternées |
 

@@ -3,7 +3,7 @@
 Cette section présente les **parcours d'usage** de l'application, organisés en trois groupes. Chaque parcours a sa propre fiche dans la barre latérale - utilisez ce sommaire comme point d'entrée et table des matières. **Tous ces parcours sont supportés par l'application livrée.**
 
 - **Section A - Fil rouge** : un seul parcours, **P0**, qui raconte l'usage de bout-en-bout vu par Marie, de la carte SD au dépôt.
-- **Section B - Chaîne de production** : les parcours **P1 à P6** qui composent et enrichissent le fil rouge - déclaration de site, import, vérification, préparation du lot, navigation multi-sites et diagnostic matériel.
+- **Section B - Chaîne de production** : les parcours **P1 à P6** qui composent et enrichissent le fil rouge - déclaration de site, import, vérification, préparation du dépôt, navigation multi-sites et diagnostic matériel.
 - **Section C - Après le dépôt & exploitation** : **P7** (validation des résultats Tadarida) et son prolongement **biodiversité** - regroupement (**P9**), bibliothèque de sons (**P10**) et inventaire des espèces (**P11**).
 - **Transverse** : **P8** (recherche globale) est accessible depuis **n'importe quel écran**.
 
@@ -18,7 +18,7 @@ Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel]
 flowchart LR
     P1[🌐 P1 - Déclarer<br/>un site] --> P2[📥 P2 - Importer<br/>une nuit]
     P2 --> P3[🎧 P3 - Vérifier<br/>l'enregistrement]
-    P3 --> P4[📦 P4 - Préparer<br/>le lot à déposer]
+    P3 --> P4[📦 P4 - Préparer<br/>le dépôt]
     P4 -->|dépôt manuel<br/>VigieChiro| P7[✅ P7 - Valider les<br/>résultats Tadarida]
 
     P1 --> P5[🗂 P5 - Naviguer<br/>multi-sites]
@@ -45,7 +45,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Tous les nœu
 | **B. Chaîne de production** | [P1 - Déclarer un site de suivi](P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | Marie | gérer ses sites et points |
 | | [P2 - Importer une nuit d'enregistrement](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | tous | copier, renommer, transformer |
 | | [P3 - Vérifier l'enregistrement par échantillonnage](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | tous | sound check + verdict |
-| | [P4 - Préparer un lot prêt à déposer](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | tous | cohérence + dépôt manuel |
+| | [P4 - Préparer le dépôt](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | tous | cohérence + dépôt manuel |
 | | [P5 - Naviguer dans plusieurs sites et passages](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | Karim / Samuel | vue agrégée (carte + tableau) |
 | | [P6 - Diagnostiquer le matériel](P6%20-%20Diagnostiquer%20le%20matériel.md) | Karim / Samuel | climat, anomalies du capteur |
 | **C. Après le dépôt & exploitation** | [P7 - Valider les résultats Tadarida](P7%20-%20Valider%20les%20résultats%20Tadarida.md) | Marie / Samuel | revue des observations |
@@ -62,7 +62,7 @@ Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Tous les nœu
 | [P1 - Déclarer un site](P1%20-%20Déclarer%20un%20site%20de%20suivi.md) | ✅ ⭐ | ✅ | ✅ |
 | [P2 - Importer une nuit](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | ✅ ⭐ | ✅ ⭐ | ✅ ⭐ |
 | [P3 - Vérifier l'enregistrement](P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) | ✅ ⭐ | ✅ | ✅ |
-| [P4 - Préparer le lot](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | ✅ ⭐ | ✅ | ✅ |
+| [P4 - Préparer le dépôt](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | ✅ ⭐ | ✅ | ✅ |
 | [P5 - Multi-sites](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | (1 site) | ✅ ⭐ | ✅ ⭐ |
 | [P6 - Diagnostic matériel (incl. cohérence horaires)](P6%20-%20Diagnostiquer%20le%20matériel.md) | ✓ | ✅ ⭐ | ✅ |
 | [P7 - Validation Tadarida](P7%20-%20Valider%20les%20résultats%20Tadarida.md) | ✅ ⭐ | ✓ | ✅ ⭐ |
