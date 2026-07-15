@@ -187,9 +187,11 @@ class QualificationVueIntegrationTest {
     void anomalie_visible_quand_feu_rouge(FxRobot robot) {
         Label anomalie = robot.lookup("#lblAnomalie").queryAs(Label.class);
 
-        // Le diagnostic seedé porte un feu rouge → preCheckAnomalieProperty vrai → label affiché.
+        // Le diagnostic seedé porte un feu rouge (couverture) → preCheckAnomalieProperty vrai → affiché.
         assertThat(anomalie.isVisible()).isTrue();
         assertThat(anomalie.isManaged()).isTrue();
+        // #1506 : la barre nomme le feu en cause plutôt qu'un « anomalie » anonyme.
+        assertThat(anomalie.getText()).contains("couverture horaire");
     }
 
     @Test

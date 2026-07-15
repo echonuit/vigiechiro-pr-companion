@@ -262,10 +262,21 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                 verdictVm.preCheckAnomalieProperty(),
                 selectionVm.progressionTexteProperty()));
 
-        // Pré-check 3 feux (R13, consultatif et jamais bloquant).
-        Feux.lier(feuCouverture, "Couverture horaire", verdictVm.feuCouvertureProperty());
-        Feux.lier(feuNombre, "Nombre de fichiers", verdictVm.feuNombreProperty());
-        Feux.lier(feuRenommage, "Cohérence du renommage", verdictVm.feuRenommageProperty());
+        // Pré-check 3 feux (R13, consultatif et jamais bloquant). L'infobulle de chaque feu
+        // explique la mesure et l'écart (#1506).
+        Feux.lier(
+                feuCouverture,
+                "Couverture horaire",
+                verdictVm.feuCouvertureProperty(),
+                verdictVm.detailCouvertureProperty());
+        Feux.lier(feuNombre, "Nombre de fichiers", verdictVm.feuNombreProperty(), verdictVm.detailNombreProperty());
+        Feux.lier(
+                feuRenommage,
+                "Cohérence du renommage",
+                verdictVm.feuRenommageProperty(),
+                verdictVm.detailRenommageProperty());
+        // La barre de statut nomme le(s) feu(x) en cause (#1506) au lieu d'un « anomalie » anonyme.
+        lblAnomalie.textProperty().bind(verdictVm.resumeAnomalieProperty());
         lblAnomalie.visibleProperty().bind(verdictVm.preCheckAnomalieProperty());
         lblAnomalie.managedProperty().bind(verdictVm.preCheckAnomalieProperty());
 

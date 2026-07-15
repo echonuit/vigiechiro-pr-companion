@@ -76,8 +76,9 @@
         <Label fx:id="feuCouverture" text="Couverture horaire" styleClass="feu"/>
         <Label fx:id="feuNombre" text="Nombre de fichiers" styleClass="feu"/>
         <Label fx:id="feuRenommage" text="Cohérence du renommage" styleClass="feu"/>
+        <!-- Texte lié à resumeAnomalieProperty (#1506) : nomme le(s) feu(x) en cause. -->
         <Label fx:id="lblAnomalie" styleClass="precheck-anomalie"
-               text="⚠ Une anomalie est signalée (consultatif, non bloquant)."/>
+               text="Anomalie au pré-check (consultatif, non bloquant)."/>
       </HBox>
     </VBox>
   </top>

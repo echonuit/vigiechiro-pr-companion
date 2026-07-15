@@ -23,6 +23,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -65,6 +66,9 @@ public class ServiceQualification {
 
     /// Horodatage de l'enregistreur dans le nom de fichier (R7) : `_AAAAMMJJ_HHMMSS`.
     private static final Pattern HORODATAGE = Pattern.compile("_(\\d{8})_(\\d{6})");
+
+    /// Format d'affichage des heures dans les explications du pré-check (#1506) : `HH:mm`.
+    private static final DateTimeFormatter HEURE_COURTE = DateTimeFormatter.ofPattern("HH:mm");
 
     /// Message d'erreur métier émis quand l'`id` de passage ne correspond à aucune ligne.
     private static final String PASSAGE_INTROUVABLE = "Passage introuvable : ";
@@ -324,11 +328,21 @@ public class ServiceQualification {
 
         int nombreFichiers = originaux.size();
         int fichiersMalNommes = compterFichiersMalNommes(passage, originaux);
-        long[] couverture = mesurerCouverture(passage, originaux);
-        PreCheckNuit.Mesures mesures =
-                new PreCheckNuit.Mesures(nombreFichiers, fichiersMalNommes, couverture[0], couverture[1] == 1L);
+        Couverture couverture = mesurerCouverture(passage, originaux);
+        PreCheckNuit.Mesures mesures = new PreCheckNuit.Mesures(
+                nombreFichiers,
+                fichiersMalNommes,
+                couverture.ecartMinutes(),
+                couverture.moitieManquante(),
+                couverture.plageObservee(),
+                couverture.plageAttendue());
         return preCheck.evaluer(mesures);
     }
+
+    /// Résultat de la mesure de couverture horaire : l'écart et le drapeau de moitié manquante
+    /// (consommés par le moteur), plus les deux plages **déjà formatées** (`HH:mm à HH:mm`) qui
+    /// alimentent l'explication du feu (#1506). Les plages sont `null` si non mesurables.
+    private record Couverture(long ecartMinutes, boolean moitieManquante, String plageObservee, String plageAttendue) {}
 
     // --- Helpers de mesure (privés) -------------------------------------------
 
@@ -361,10 +375,8 @@ public class ServiceQualification {
         return new Prefixe(site.numeroCarre(), passage.annee(), passage.numeroPassage(), point.code()).prefixeFichier();
     }
 
-    /// Mesure le déficit de couverture horaire.
-    ///
-    /// @return `[ecartMinutes, moitieManquante (0|1)]`
-    private long[] mesurerCouverture(Passage passage, List<EnregistrementOriginal> originaux) {
+    /// Mesure le déficit de couverture horaire et formate les plages pour l'explication (#1506).
+    private Couverture mesurerCouverture(Passage passage, List<EnregistrementOriginal> originaux) {
         List<LocalDateTime> horodatages = originaux.stream()
                 .map(original -> horodatageDe(original.nomFichier()))
                 .filter(Optional::isPresent)
@@ -373,7 +385,7 @@ public class ServiceQualification {
                 .toList();
         Optional<LocalDateTime[]> fenetre = fenetreAttendue(passage);
         if (horodatages.isEmpty() || fenetre.isEmpty()) {
-            return new long[] {0L, 0L}; // pas de quoi statuer : couverture neutre (verte).
+            return new Couverture(0L, false, null, null); // pas de quoi statuer : couverture neutre (verte).
         }
         LocalDateTime debutObserve = horodatages.get(0);
         LocalDateTime finObservee = horodatages.get(horodatages.size() - 1);
@@ -387,7 +399,14 @@ public class ServiceQualification {
         long dureeFenetre =
                 Math.max(1, Duration.between(debutAttendu, finAttendue).toMinutes());
         boolean moitieManquante = ecart * 2 >= dureeFenetre;
-        return new long[] {ecart, moitieManquante ? 1L : 0L};
+        return new Couverture(
+                ecart, moitieManquante, plage(debutObserve, finObservee), plage(debutAttendu, finAttendue));
+    }
+
+    /// Formate une plage `HH:mm à HH:mm` (l'heure seule, la date étant implicite) pour l'affichage
+    /// de la couverture (#1506).
+    private static String plage(LocalDateTime debut, LocalDateTime fin) {
+        return debut.format(HEURE_COURTE) + " à " + fin.format(HEURE_COURTE);
     }
 
     /// Fenêtre théorique de la nuit déduite de `start_time`/`end_time` du passage.

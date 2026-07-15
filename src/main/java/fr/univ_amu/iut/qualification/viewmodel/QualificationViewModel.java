@@ -41,6 +41,13 @@ public class QualificationViewModel {
             new ReadOnlyObjectWrapper<>(this, "feuRenommage");
     private final ReadOnlyBooleanWrapper preCheckAnomalie = new ReadOnlyBooleanWrapper(this, "preCheckAnomalie", false);
 
+    // Explications en clair des feux (#1506) : mesure + écart au protocole, portées en infobulle,
+    // plus un résumé qui nomme le(s) feu(x) en cause pour la barre de statut.
+    private final ReadOnlyStringWrapper detailCouverture = new ReadOnlyStringWrapper(this, "detailCouverture", "");
+    private final ReadOnlyStringWrapper detailNombre = new ReadOnlyStringWrapper(this, "detailNombre", "");
+    private final ReadOnlyStringWrapper detailRenommage = new ReadOnlyStringWrapper(this, "detailRenommage", "");
+    private final ReadOnlyStringWrapper resumeAnomalie = new ReadOnlyStringWrapper(this, "resumeAnomalie", "");
+
     // Statut/verdict persistés du passage (bandeau), mutés à l'enregistrement.
     private final ReadOnlyObjectWrapper<Verdict> verdictActuel =
             new ReadOnlyObjectWrapper<>(this, "verdictActuel", Verdict.A_VERIFIER);
@@ -127,6 +134,10 @@ public class QualificationViewModel {
         feuNombre.set(null);
         feuRenommage.set(null);
         preCheckAnomalie.set(false);
+        detailCouverture.set("");
+        detailNombre.set("");
+        detailRenommage.set("");
+        resumeAnomalie.set("");
         statut.set(null);
         verdictActuel.set(Verdict.A_VERIFIER);
         verdictChoisi.set(null);
@@ -175,6 +186,10 @@ public class QualificationViewModel {
         feuNombre.set(diagnostic.nombreFichiers());
         feuRenommage.set(diagnostic.coherenceRenommage());
         preCheckAnomalie.set(diagnostic.presenteUneAnomalie());
+        detailCouverture.set(diagnostic.detailCouverture());
+        detailNombre.set(diagnostic.detailNombre());
+        detailRenommage.set(diagnostic.detailRenommage());
+        resumeAnomalie.set(diagnostic.resumeAnomalie());
     }
 
     private String commentaireOuNull() {
@@ -201,6 +216,26 @@ public class QualificationViewModel {
     /// bloquant (R13).
     public ReadOnlyBooleanProperty preCheckAnomalieProperty() {
         return preCheckAnomalie.getReadOnlyProperty();
+    }
+
+    /// Explication en clair du feu de couverture horaire (mesure + écart, #1506) : infobulle du feu.
+    public ReadOnlyStringProperty detailCouvertureProperty() {
+        return detailCouverture.getReadOnlyProperty();
+    }
+
+    /// Explication en clair du feu de nombre de fichiers (#1506) : infobulle du feu.
+    public ReadOnlyStringProperty detailNombreProperty() {
+        return detailNombre.getReadOnlyProperty();
+    }
+
+    /// Explication en clair du feu de cohérence du renommage (#1506) : infobulle du feu.
+    public ReadOnlyStringProperty detailRenommageProperty() {
+        return detailRenommage.getReadOnlyProperty();
+    }
+
+    /// Résumé nommant le(s) feu(x) en cause pour la barre de statut (#1506) ; vide si aucun feu rouge.
+    public ReadOnlyStringProperty resumeAnomalieProperty() {
+        return resumeAnomalie.getReadOnlyProperty();
     }
 
     /// Verdict persisté du passage (`A_VERIFIER` tant qu'aucun verdict n'est enregistré).
