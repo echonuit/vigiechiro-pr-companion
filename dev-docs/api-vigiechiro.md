@@ -237,8 +237,11 @@ Effets de bord et leviers :
   relit **embarqué complet** (objet taxon avec `_id`, `libelle_court`, `libelle_long`, `parents`),
   exactement comme `tadarida_taxon` : le parseur actuel (`codeTaxon`) lit donc déjà son
   `libelle_court` ;
-- route voisine restée à explorer : `GET /donnees/{id}/fichiers?wav=true` (fichiers rattachés à une
-  donnée, croise le repli audio #1244).
+- route des fichiers rattachés **confirmée** (#1565, probe #1568) : `GET
+  /participations/{id}/pieces_jointes?<filtre>` (`ta` / `tc` / `wav` / `photos` / `processing_extra`)
+  liste les fichiers d'une participation avec `{_id, titre, disponible, s3_id}` ;
+  `?processing_extra=true` expose le **CSV d'observations** (§ « Pièces jointes » ci-dessous), `?wav=true`
+  croise le repli audio #1244.
 
 ### Les trois avis, et le fil : tout arrive déjà dans `GET …/donnees` (#1417)
 
@@ -442,6 +445,36 @@ S3 après extraction, TadaridaD en **expansion x10**. C'est la **vérification a
 dépôt — la seule capable de vérifier un dépôt en **ZIP** — portée par `ClientVigieChiro
 .journalTraitement`, `lot/model/VerificationDepot` et la commande CLI `verifier-depot-vigiechiro`.
 Même limite que `donnees` : le journal n'existe qu'après le passage du pipeline serveur.
+
+### Pièces jointes et CSV d'observations (#1565, probe #1568)
+
+Une participation traitée expose ses fichiers rattachés via `GET /participations/{id}/pieces_jointes`,
+filtrable par type : `?ta=true`, `?tc=true`, `?wav=true`, `?photos=true`, `?processing_extra=true`
+(backend `Scille/vigiechiro-api`, `participations.py:342-350`). Chaque entrée porte `{_id, titre,
+disponible, s3_id}`. C'est **la** voie pour obtenir le `_id` d'un fichier : la collection `/fichiers`
+n'est **pas listable** (`403`), seul le document qui la référence donne l'`_id`.
+
+**Le CSV d'observations** (`?processing_extra=true`, un unique `participation-<id>-observations.csv`)
+est **`disponible: true` sur S3** : il est généré avec `force_upload=True`
+(`task_observations_csv.py:52`), donc toujours monté (comme les logs, contrairement aux WAV extraits
+d'un ZIP qui, eux, restent `disponible: false`, #1244). On le télécharge en **trois requêtes**,
+exactement comme le journal :
+
+1. `GET /participations/{id}/pieces_jointes?processing_extra=true` → `_items[0]._id` ;
+2. `GET /fichiers/{_id}/acces` → `{"s3_signed_url": …}` ;
+3. `GET` de l'URL signée, **sans** `Authorization` (la signature fait foi).
+
+Le contenu est du **Tadarida BRUT** (`;` séparateur, champs quotés :
+`"nom du fichier";"temps_debut";"temps_fin";"frequence_mediane";"tadarida_taxon";…`), **sans `_id`
+d'observation**. Un seul téléchargement (≈1,4 Mo, ≈12 700 lignes pour une grosse nuit) remplace les ~48
+pages de `GET …/donnees` (plafonnées à 100/page) : c'est le socle de la **reconstruction instantanée**
+(#1565). Contrepartie de l'absence d'`_id` : l'**ancrage plateforme** (`idDonneeVigieChiro`) ne peut pas
+venir du CSV ; il est acquis séparément, à la **réactivation**, par une passe `donnees` complète (le
+filtre `donnees?where={titre}` étant **silencieusement ignoré**, même faux-négatif que `max_results>100`
+#1277 ; la passe reste parallélisable, `_meta.total` étant connu dès la page 1).
+
+Route serveur voisine, non utilisée : `POST /participations/{id}/csv` (`participations.py:182`)
+régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà après traitement.
 
 ### Verdicts des probes d'écriture (exécutées le 2026-07-11)
 

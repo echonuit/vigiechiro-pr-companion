@@ -241,6 +241,101 @@ class ContratApiVigieChiroLiveTest {
         }
     }
 
+    @Test
+    @DisplayName("PROBE #1565 : le CSV d'observations est disponible sur S3 et se télécharge d'un coup."
+            + " Découverte via pieces_jointes?processing_extra=true (PAS /fichiers, non listable), puis"
+            + " /fichiers/{id}/acces -> URL signée. Entête Tadarida BRUT, sans _id : un seul téléchargement"
+            + " remplace les ~48 pages de donnees (reconstruction quasi instantanée)")
+    void csv_observations_est_telechargeable_via_pieces_jointes() {
+        String participation = participationTraitee();
+
+        // La BONNE route de découverte : pieces_jointes filtré sur processing_extra. Le CSV d'observations
+        // est généré avec force_upload=True (task_observations_csv.py:52, backend Scille/vigiechiro-api),
+        // donc TOUJOURS monté sur S3 (comme les logs, contrairement aux WAV extraits d'un ZIP, #1244). La
+        // collection /fichiers, elle, n'est pas listable (403) : c'est pourquoi le _id du CSV vient d'ici.
+        var extra = api().when()
+                .get("/participations/{id}/pieces_jointes?processing_extra=true", participation)
+                .then()
+                .statusCode(200)
+                .extract();
+        String idCsv = extra.path("_items[0]._id");
+        assumeTrue(idCsv != null, "Pas de CSV d'observations (processing_extra) sur cette participation.");
+        assertThat(extra.<String>path("_items[0].titre"))
+                .as("le fichier processing_extra EST le CSV d'observations")
+                .endsWith("-observations.csv");
+        assertThat(extra.<Boolean>path("_items[0].disponible"))
+                .as("le CSV est monté sur S3 (force_upload=True) : disponible, contrairement aux WAV en ZIP")
+                .isTrue();
+
+        // /acces rend une URL S3 signée (même mécanisme que le journal, JournalVigieChiro.urlSignee).
+        String urlSignee = api().when()
+                .get("/fichiers/{id}/acces", idCsv)
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("s3_signed_url");
+        assertThat(urlSignee).as("URL S3 signée du CSV").isNotNull();
+
+        // Téléchargement direct, SANS Authorization (la signature de l'URL fait foi) et SANS ré-encoder
+        // l'URL (sinon la signature casse). Un seul appel ramène toutes les observations.
+        String csv = given().urlEncodingEnabled(false)
+                .when()
+                .get(urlSignee)
+                .then()
+                .statusCode(200)
+                .extract()
+                .asString();
+        String entete = csv.lines().findFirst().orElse("");
+        assertThat(entete)
+                .as("entête Tadarida BRUT (séparateur ';', champs quotés)")
+                .contains("nom du fichier")
+                .contains("temps_debut")
+                .contains("frequence_mediane")
+                .contains("tadarida_taxon");
+        assertThat(entete)
+                .as("le CSV ne porte AUCUN _id d'observation : l'ancrage plateforme doit venir d'ailleurs"
+                        + " (à la réactivation, #1565)")
+                .doesNotContain("_id");
+    }
+
+    @Test
+    @DisplayName("PROBE #1565 : donnees?where={titre} est SILENCIEUSEMENT IGNORÉ (renvoie le jeu complet,"
+            + " _meta.total inchangé). Même classe de faux-négatif que max_results>100 (#1277) : l'ancrage"
+            + " à la réactivation ne peut donc pas se résoudre par fichier, il faut une passe donnees complète")
+    void donnees_where_titre_est_silencieusement_ignore() {
+        String participation = participationTraitee();
+
+        int total = api().when()
+                .get("/participations/{id}/donnees?max_results=1", participation)
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("_meta.total");
+        assumeTrue(total > 1, "Il faut au moins deux donnees pour prouver que le filtre ne filtre pas.");
+        String titre = api().when()
+                .get("/participations/{id}/donnees?max_results=1", participation)
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("_items[0].titre");
+
+        // where={"titre":"<un seul fichier>"} : si le filtre s'appliquait, _meta.total vaudrait le nombre
+        // de donnees de CE fichier (une poignée), pas le total de la participation. RestAssured encode le
+        // queryParam comme Eve l'attend.
+        int totalFiltre = api().queryParam("where", "{\"titre\":\"" + titre + "\"}")
+                .when()
+                .get("/participations/{id}/donnees", participation)
+                .then()
+                .statusCode(200)
+                .extract()
+                .path("_meta.total");
+
+        assertThat(totalFiltre)
+                .as("where={titre} est ignoré : le serveur renvoie TOUT le jeu, pas le sous-ensemble du"
+                        + " fichier demandé. L'ancrage à la réactivation exige donc une passe donnees complète")
+                .isEqualTo(total);
+    }
+
     // ---------------------------------------------------------------------------------------------
     // PROBES en écriture (opt-in -Dvigiechiro.write=true) : remplacent les spikes jetables. Elles
     // ÉCRIVENT sur la plateforme (fichier d'essai, PATCH quasi no-op) — à lancer sciemment, jamais
