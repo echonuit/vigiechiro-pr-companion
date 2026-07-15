@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
@@ -18,6 +19,7 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
+import java.util.Optional;
 
 /// Module Guice de la feature `multisite` : fournit ses DAO et son service à partir de la
 /// [SourceDeDonnees] (binder en singleton par `CommunModule`).
@@ -66,7 +68,10 @@ public class MultisiteModule extends ModuleDeFeature {
     // de l'utilisateur courant publiée par SitesModule.
     @Provides
     MultisiteViewModel fournirMultisiteViewModel(
-            ServiceMultisite service, ServiceSites serviceSites, @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new MultisiteViewModel(service, serviceSites, idUtilisateur);
+            ServiceMultisite service,
+            ServiceSites serviceSites,
+            Optional<SuiviTraitement> suivi,
+            @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new MultisiteViewModel(service, serviceSites, suivi, idUtilisateur);
     }
 }

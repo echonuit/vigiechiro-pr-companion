@@ -29,15 +29,19 @@ final class MenuActionsMultisite {
     ///
     /// @param nonVide vrai quand le tableau filtré contient au moins une ligne
     /// @param selection ligne sélectionnée (`null` si aucune)
+    /// @param reculerAnalyses item « Relever l'état des analyses » (#1338)
     /// @param peutReconstruire vrai quand la passerelle VigieChiro est présente (#1396)
+    /// @param peutRelever vrai quand le relevé groupé est disponible (connecté à VigieChiro, #1338)
     static void installer(
             MenuItem exporter,
             MenuItem ecouterLot,
             MenuItem ecouterPassage,
             MenuItem reconstruire,
+            MenuItem reculerAnalyses,
             ObservableBooleanValue nonVide,
             ObservableObjectValue<LignePassage> selection,
-            boolean peutReconstruire) {
+            boolean peutReconstruire,
+            boolean peutRelever) {
         exporter.disableProperty().bind(Bindings.not(nonVide));
         exporter.textProperty()
                 .bind(Bindings.when(nonVide).then("📤 Exporter…").otherwise("📤 Exporter… (aucune ligne à exporter)"));
@@ -51,6 +55,10 @@ final class MenuActionsMultisite {
         ecouterPassage.disableProperty().bind(Bindings.isNull(selection));
         // Un item qui ne peut rien faire ne vaut pas mieux qu'un item absent : il vaut moins.
         reconstruire.setVisible(peutReconstruire);
+        // #1338 : hors connexion, il n'y a rien à interroger — l'item se retire plutôt que de rester
+        // grisé. Il n'est pas désactivé faute de nuit déposée : dans ce cas, le clic répond « rien à
+        // relever » (le VM le dit), ce qui renseigne mieux qu'un item muet.
+        reculerAnalyses.setVisible(peutRelever);
     }
 
     /// « Exporter » : demande où écrire et, si l'utilisateur ne renonce pas, remet le chemin choisi et

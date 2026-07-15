@@ -137,6 +137,10 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private MenuItem itemReconstruire;
 
+    /// « ☁ Relever l'état des analyses » (#1338) : retiré hors connexion (il interroge la plateforme).
+    @FXML
+    private MenuItem itemReleverAnalyses;
+
     @FXML
     private TableView<LignePassage> tableLignes;
 
@@ -323,9 +327,11 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 itemEcouterLot,
                 itemEcouterPassage,
                 itemReconstruire,
+                itemReleverAnalyses,
                 viewModel.nonVideProperty(),
                 tableLignes.getSelectionModel().selectedItemProperty(),
-                reconstruction.disponible());
+                reconstruction.disponible(),
+                viewModel.releveAnalysesDisponible());
 
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
@@ -559,6 +565,21 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     @FXML
     private void reconstruirePassage() {
         navigation.ouvrirModaleReconstruction(menuActions.getScene().getWindow(), this::chargerDonnees);
+    }
+
+    /// « ☁ Relever l'état des analyses » (#1338) : interroge VigieChiro pour **toutes les nuits déposées**,
+    /// à la demande. L'instantané des nuits déposées est capturé **sur le fil JavaFX** (`nuitsDeposees`),
+    /// puis le relevé (une requête réseau par nuit) part **hors du fil JavaFX** sous le voile d'occupation.
+    /// Au retour, on **recharge** l'écran : les badges de la colonne « Analyse » reflètent le nouvel état,
+    /// et le compte rendu part dans le bandeau de message.
+    @FXML
+    private void releverAnalyses() {
+        List<Long> nuitsDeposees = viewModel.nuitsDeposees();
+        occupation.occuper(
+                "Relevé de l'état des analyses…",
+                () -> viewModel.releverPuisCharger(nuitsDeposees),
+                viewModel::appliquerReleve,
+                viewModel::signalerErreur);
     }
 
     /// « Exporter » : demande où écrire, puis écriture par le ViewModel dans **l'ordre affiché** (#291).
