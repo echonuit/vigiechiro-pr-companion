@@ -23,6 +23,8 @@ import java.util.Optional;
 /// sans `connexion`, donc sans client HTTP).
 public class ImportVigieChiro {
 
+    private static final String CHAMP_ID_PASSAGE = "idPassage";
+
     private final ClientVigieChiro client;
 
     /// État du traitement serveur (#1260) : ce qui permet de dire POURQUOI il n y a rien a importer.
@@ -58,7 +60,7 @@ public class ImportVigieChiro {
     /// **Rattache** le passage à une participation VigieChiro (stocke le lien `ENTITE_PASSAGE`) : l'import
     /// de ses résultats devient alors possible. Idempotent (upsert : un seul lien par passage).
     public void rattacher(Long idPassage, String participationId) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, CHAMP_ID_PASSAGE);
         Objects.requireNonNull(participationId, "participationId");
         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), participationId));
     }
@@ -75,7 +77,7 @@ public class ImportVigieChiro {
     /// @param remplacer remplace le jeu existant (en préservant les validations observateur) si `true`
     /// @return le bilan de l'import
     public BilanImport importer(Long idPassage, boolean remplacer) {
-        Objects.requireNonNull(idPassage, "idPassage");
+        Objects.requireNonNull(idPassage, CHAMP_ID_PASSAGE);
         String participationId = participation(idPassage)
                 .orElseThrow(() -> new RegleMetierException("Ce passage n'est rattaché à aucune participation"
                         + " VigieChiro. Déposez-le d'abord sur VigieChiro (ou rattachez-le à une participation"
@@ -96,6 +98,16 @@ public class ImportVigieChiro {
         if (donnees.isEmpty()) {
             throw new RegleMetierException(pourquoiRienAImporter(participationId));
         }
+        return service.importerDepuisVigieChiro(idPassage, donnees, remplacer);
+    }
+
+    /// Variante **sans re-téléchargement** (#1522) : importe des `donnees` **déjà rapatriées** par
+    /// l'appelant (la reconstruction les a téléchargées pour recréer les séquences ; les re-parcourir page
+    /// par page doublait le temps). Mêmes écritures en base que [#importer(Long, boolean)], sans l'appel
+    /// réseau ni le diagnostic d'absence : la non-vacuité est garantie par l'appelant.
+    public BilanImport importer(Long idPassage, List<DonneeVigieChiro> donnees, boolean remplacer) {
+        Objects.requireNonNull(idPassage, CHAMP_ID_PASSAGE);
+        Objects.requireNonNull(donnees, "donnees");
         return service.importerDepuisVigieChiro(idPassage, donnees, remplacer);
     }
 

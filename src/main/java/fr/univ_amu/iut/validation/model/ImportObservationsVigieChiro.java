@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.validation.model;
 
+import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import java.util.List;
 import java.util.Objects;
 
 /// Implémentation du port [ImportObservations] (#1264) : elle branche l'import réel ([ImportVigieChiro])
@@ -24,7 +26,15 @@ public class ImportObservationsVigieChiro implements ImportObservations {
 
     @Override
     public String importer(Long idPassage, boolean remplacer) {
-        BilanImport bilan = importateur.importer(idPassage, remplacer);
+        return compteRendu(importateur.importer(idPassage, remplacer));
+    }
+
+    @Override
+    public String importer(Long idPassage, List<DonneeVigieChiro> donnees, boolean remplacer) {
+        return compteRendu(importateur.importer(idPassage, donnees, remplacer));
+    }
+
+    private static String compteRendu(BilanImport bilan) {
         return "Observations importées depuis Vigie-Chiro : " + bilan.importees() + " observation(s)."
                 + (bilan.ignorees() > 0 ? " " + bilan.ignorees() + " ignorée(s)." : "");
     }

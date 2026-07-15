@@ -1,5 +1,8 @@
 package fr.univ_amu.iut.commun.model;
 
+import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
+import java.util.List;
+
 /// **Port** : importer les observations d'une nuit depuis Vigie-Chiro, depuis n'importe quel écran (#1264).
 ///
 /// L'import lui-même vit dans la feature `validation` (il écrit les observations). Mais c'est depuis
@@ -25,4 +28,13 @@ public interface ImportObservations {
     /// @param remplacer remplace le jeu existant en préservant les validations de l'observateur
     /// @return un compte rendu prêt à afficher
     String importer(Long idPassage, boolean remplacer);
+
+    /// Variante **sans re-téléchargement** : importe des `donnees` **déjà rapatriées** par l'appelant, pour
+    /// éviter de re-parcourir toutes les pages du réseau quand elles sont déjà en main (reconstruction d'un
+    /// passage, #1522 : la nuit vient d'être téléchargée pour recréer ses séquences - la re-télécharger
+    /// doublait le temps). Même écriture en base que [#importer(Long, boolean)], sans l'appel réseau.
+    ///
+    /// @param donnees les résultats déjà rapatriés (non vides : l'appelant l'a vérifié)
+    /// @return un compte rendu prêt à afficher
+    String importer(Long idPassage, List<DonneeVigieChiro> donnees, boolean remplacer);
 }
