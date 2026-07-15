@@ -1,7 +1,9 @@
 package fr.univ_amu.iut.multisite.outils;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -29,6 +31,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -148,6 +151,11 @@ public final class CaptureMultisite {
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// (test).
+    ///
+    /// `ResultatsIdentificationDao` (#1338) est fourni **ici** plutôt que via `ValidationModule` : depuis
+    /// que `ServiceMultisite` lit les résultats déjà importés, il en a besoin, mais tirer toute la feature
+    /// `validation` dans un injecteur de capture du multisite y ajouterait bien plus que ce DAO. C'est un
+    /// simple objet sur la [SourceDeDonnees] déjà liée par [PersistenceModule].
     public static Injector creerInjecteur() {
         return Guice.createInjector(
                 ModuleCaptureCommun.communSynchrone(),
@@ -155,7 +163,13 @@ public final class CaptureMultisite {
                 new SitesModule(),
                 new PassageModule(),
                 new MultisiteModule(),
-                new ModuleCaptureNavigationAudio());
+                new ModuleCaptureNavigationAudio(),
+                new AbstractModule() {
+                    @Provides
+                    ResultatsIdentificationDao fournirResultatsIdentificationDao(SourceDeDonnees source) {
+                        return new ResultatsIdentificationDao(source);
+                    }
+                });
     }
 
     /// Rend le tableau **filtré** via la recherche de la barre à puces (#537 étape 6b), pour montrer la
