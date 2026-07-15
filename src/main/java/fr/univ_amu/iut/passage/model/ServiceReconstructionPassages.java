@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
@@ -31,6 +32,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -90,6 +92,10 @@ public class ServiceReconstructionPassages {
     private final Workspace workspace;
     private final Horloge horloge;
 
+    /// Pour grouper la création des séquences (des milliers) en **une seule transaction** au lieu d'un
+    /// commit par ligne (#1522). Construit depuis la même [SourceDeDonnees] que les DAO.
+    private final UniteDeTravail uniteDeTravail;
+
     public ServiceReconstructionPassages(
             SourceDeDonnees source,
             ClientVigieChiro client,
@@ -104,6 +110,7 @@ public class ServiceReconstructionPassages {
         this.originalDao = new EnregistrementOriginalDao(source);
         this.enregistreurDao = new EnregistreurDao(source);
         this.liens = new LienVigieChiroDao(source);
+        this.uniteDeTravail = new UniteDeTravail(source);
         this.client = Objects.requireNonNull(client, "client");
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
@@ -197,9 +204,14 @@ public class ServiceReconstructionPassages {
 
         // Les données portent les NOMS des fichiers analysés : ce sont eux qui permettront de rattacher les
         // observations aux séquences recréées, et plus tard de reconnaître les fichiers réimportés (#1302).
-        progres.accept(new Progression("Téléchargement des observations…", 0.15));
+        // C'est l'étape la plus longue (des dizaines de pages) : on suit sa progression PAGE PAR PAGE et on
+        // y honore l'annulation, sans quoi la barre restait figée et « Annuler » muet plusieurs minutes.
         jeton.leverSiAnnule();
-        List<DonneeVigieChiro> donnees = donnees(idParticipation);
+        List<DonneeVigieChiro> donnees = donnees(idParticipation, page -> {
+            jeton.leverSiAnnule();
+            progres.accept(new Progression(
+                    "Téléchargement des observations (page " + page + ")…", avancementTelechargement(page)));
+        });
         if (donnees.isEmpty()) {
             throw new RegleMetierException("VigieChiro ne renvoie aucune donnée pour cette participation :"
                     + " l'analyse n'est probablement pas terminée. Réessayez plus tard.");
@@ -217,16 +229,19 @@ public class ServiceReconstructionPassages {
         Long idPassage = null;
         try {
             jeton.leverSiAnnule();
+            progres.accept(new Progression("Création du passage…", 0.72));
             idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail));
             Long idSession = creerSessionArchivee(idPassage, prefixe);
-            int sequences = creerSequences(idSession, prefixe, donnees, progres, jeton);
+            progres.accept(new Progression("Création des séquences…", 0.78));
+            int sequences = creerSequences(idSession, prefixe, donnees);
             liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
 
             // L'import des observations est le mécanisme de l'EPIC #1259, consommé par son port socle : il
-            // rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer.
-            progres.accept(new Progression("Import des observations…", 0.75));
+            // rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer. On lui passe
+            // les donnees DÉJÀ téléchargées : les re-parcourir page par page doublait le temps (#1522).
+            progres.accept(new Progression("Import des observations…", 0.85));
             jeton.leverSiAnnule();
-            importateur.importer(idPassage, false);
+            importateur.importer(idPassage, donnees, false);
             int observations = donnees.stream()
                     .mapToInt(donnee -> donnee.observations().size())
                     .sum();
@@ -297,40 +312,54 @@ public class ServiceReconstructionPassages {
     /// passage est archivé. Un enregistrement original **porteur** est créé pour satisfaire la clé
     /// étrangère ; il n'a pas plus de fichier que les séquences, mais il porte le **vrai** préfixe R6 : un
     /// nom fabriqué ferait échouer le contrôle de préfixe de l'audit (#1050).
-    private int creerSequences(
-            Long idSession,
-            Prefixe prefixe,
-            List<DonneeVigieChiro> donnees,
-            Consumer<Progression> progres,
-            JetonAnnulation jeton) {
+    private int creerSequences(Long idSession, Prefixe prefixe, List<DonneeVigieChiro> donnees) {
         Path transformes = workspace.dossierTransformes(prefixe.nomDossierSession());
-        Long idOriginal = originalDao
-                .insert(new EnregistrementOriginal(
-                        null, prefixe.prefixeFichier() + "reconstruit.wav", "", null, null, null, idSession))
-                .id();
-        int total = donnees.size();
-        int index = 0;
-        for (DonneeVigieChiro donnee : donnees) {
-            // C'est la boucle longue (des milliers de séquences) : on y consulte le jeton à chaque tour
-            // pour que l'annulation s'arrête au plus tôt, et on y distille la progression 0,30 -> 0,70.
-            jeton.leverSiAnnule();
-            String nom = nomFichier(donnee.titre());
-            sequenceDao.insert(new SequenceDEcoute(
-                    null,
-                    nom,
-                    idOriginal,
-                    index,
-                    null,
-                    null,
-                    transformes.resolve(nom).toString(),
-                    false,
-                    idSession,
-                    Prefixe.horodatageDe(nom).orElse(null)));
-            index++;
-            progres.accept(new Progression(
-                    "Création des séquences (" + index + "/" + total + ")…", 0.30 + 0.40 * index / total));
-        }
-        return index;
+        // Des milliers de séquences en UNE transaction (#1522) : un commit par ligne, c'était un fsync par
+        // ligne - plusieurs minutes pour une nuit. L'annulation est consultée AVANT ce bloc (désormais
+        // rapide), pas dedans : l'unité de travail enveloppe les exceptions, ce qui masquerait l'annulation.
+        int[] compte = {0};
+        uniteDeTravail.executer(cx -> {
+            Long idOriginal = originalDao
+                    .insert(
+                            cx,
+                            new EnregistrementOriginal(
+                                    null,
+                                    prefixe.prefixeFichier() + "reconstruit.wav",
+                                    "",
+                                    null,
+                                    null,
+                                    null,
+                                    idSession))
+                    .id();
+            int index = 0;
+            for (DonneeVigieChiro donnee : donnees) {
+                String nom = nomFichier(donnee.titre());
+                sequenceDao.insert(
+                        cx,
+                        new SequenceDEcoute(
+                                null,
+                                nom,
+                                idOriginal,
+                                index,
+                                null,
+                                null,
+                                transformes.resolve(nom).toString(),
+                                false,
+                                idSession,
+                                Prefixe.horodatageDe(nom).orElse(null)));
+                index++;
+            }
+            compte[0] = index;
+        });
+        return compte[0];
+    }
+
+    /// Avancement affiché pendant le téléchargement paginé : le nombre total de pages n'est pas connu
+    /// d'avance (Eve ne le donne pas), donc la fraction **tend** vers 0,70 sans jamais l'atteindre - la
+    /// barre avance à chaque page, de moins en moins vite. La plage [0,70 ; 1,0] reste à la création et à
+    /// l'import.
+    private static double avancementTelechargement(int page) {
+        return 0.10 + 0.60 * (1.0 - 1.0 / (1.0 + 0.1 * page));
     }
 
     /// Nom de fichier de la séquence : le `titre` distant est **sans extension** (`..._000`), les
@@ -392,8 +421,8 @@ public class ServiceReconstructionPassages {
         return exiger(client.participation(idParticipation), "le détail de cette participation");
     }
 
-    private List<DonneeVigieChiro> donnees(String idParticipation) {
-        return exiger(client.donnees(idParticipation), "les observations de cette participation");
+    private List<DonneeVigieChiro> donnees(String idParticipation, IntConsumer surPage) {
+        return exiger(client.donnees(idParticipation, surPage), "les observations de cette participation");
     }
 
     /// Traduction **unique** d'une issue d'appel (#1284) en valeur ou en refus **motivé** : une seule

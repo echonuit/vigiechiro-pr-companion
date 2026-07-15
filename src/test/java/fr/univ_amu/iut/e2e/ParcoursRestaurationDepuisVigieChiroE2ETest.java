@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.e2e;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -223,7 +225,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                         null,
                         Map.of("detecteur_enregistreur_numserie", "1925492"),
                         Traitement.absent())));
-        when(client.donnees(PARTICIPATION))
+        when(client.donnees(eq(PARTICIPATION), any()))
                 .thenReturn(new ReponseApi.Succes<>(List.of(
                         new DonneeVigieChiro("d-1", SEQ_1, List.of(observation("Pippip"), observation("Pipkuh"))),
                         new DonneeVigieChiro("d-2", SEQ_2, List.of(observation("Rhifer"))))));

@@ -2,8 +2,10 @@ package fr.univ_amu.iut.passage.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -46,6 +48,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -157,7 +160,7 @@ class ServiceReconstructionPassagesTest {
                 .containsExactlyInAnyOrder(SEQ_1 + ".wav", SEQ_2 + ".wav");
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
                 .contains(PARTICIPATION);
-        verify(importObservations).importer(rapport.idPassage(), false);
+        verify(importObservations).importer(eq(rapport.idPassage()), any(), eq(false));
     }
 
     @Test
@@ -220,7 +223,7 @@ class ServiceReconstructionPassagesTest {
     void aucune_donnee_refuse() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
-        when(client.donnees(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(List.of()));
+        when(client.donnees(eq(PARTICIPATION), any())).thenReturn(new ReponseApi.Succes<>(List.of()));
 
         assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
                 .isInstanceOf(RegleMetierException.class)
@@ -271,8 +274,8 @@ class ServiceReconstructionPassagesTest {
     void annulation_ne_laisse_aucun_passage_partiel() {
         bouchonnerPlateforme();
         JetonAnnulation jeton = new JetonAnnulation();
-        // On demande l'annulation dès le premier point de progression des séquences : le tour suivant de
-        // la boucle la constate et lève, après qu'un passage a déjà été écrit -> la compensation doit tout défaire.
+        // On demande l'annulation au point « Création des séquences » (émis juste avant le lot) : la
+        // reconstruction la constate avant l'import et compense le passage déjà écrit.
         Consumer<Progression> annuleAuxSequences = point -> {
             if (point.libelle().contains("séquences")) {
                 jeton.annuler();
@@ -292,7 +295,8 @@ class ServiceReconstructionPassagesTest {
     @DisplayName("Échec de l'import après écriture : le passage partiel est compensé, l'erreur remonte")
     void echec_import_compense_le_passage_partiel() {
         bouchonnerPlateforme();
-        when(importObservations.importer(anyLong(), anyBoolean())).thenThrow(new IllegalStateException("import cassé"));
+        when(importObservations.importer(anyLong(), any(), anyBoolean()))
+                .thenThrow(new IllegalStateException("import cassé"));
 
         assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
                 .isInstanceOf(IllegalStateException.class)
@@ -308,10 +312,10 @@ class ServiceReconstructionPassagesTest {
     @DisplayName("Depuis une orpheline en main : reconstruit sans re-télécharger toute la liste (#1522)")
     void reconstruire_depuis_orpheline_ne_retelecharge_pas_la_liste() {
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
-        when(client.donnees(PARTICIPATION))
+        when(client.donnees(eq(PARTICIPATION), any()))
                 .thenReturn(
                         new ReponseApi.Succes<>(List.of(new DonneeVigieChiro("d-1", SEQ_1, List.of(observation())))));
-        when(importObservations.importer(anyLong(), anyBoolean())).thenReturn("1 observation(s) importée(s).");
+        when(importObservations.importer(anyLong(), any(), anyBoolean())).thenReturn("1 observation(s) importée(s).");
         ParticipationOrpheline orpheline =
                 new ParticipationOrpheline(PARTICIPATION, "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
 
@@ -321,16 +325,45 @@ class ServiceReconstructionPassagesTest {
         verify(client, never()).mesParticipations();
     }
 
+    @Test
+    @DisplayName("Téléchargement : progression page par page, et « Annuler » interrompt sans rien écrire")
+    void telechargement_progresse_par_page_et_sannule() {
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
+        JetonAnnulation jeton = new JetonAnnulation();
+        // Le client relaie chaque page ; on annule après la première : le relais consulte le jeton et lève.
+        when(client.donnees(eq(PARTICIPATION), any())).thenAnswer(invocation -> {
+            IntConsumer surPage = invocation.getArgument(1);
+            surPage.accept(1);
+            jeton.annuler();
+            surPage.accept(2);
+            return new ReponseApi.Succes<>(List.of());
+        });
+        List<Progression> points = new ArrayList<>();
+        ParticipationOrpheline orpheline =
+                new ParticipationOrpheline(PARTICIPATION, "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
+
+        assertThatThrownBy(() -> service.reconstruire(orpheline, points::add, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        assertThat(points)
+                .as("chaque page lue fait avancer la barre")
+                .extracting(Progression::libelle)
+                .anyMatch(libelle -> libelle.contains("page 1"));
+        assertThat(passageDao.findAll())
+                .as("annulé pendant le téléchargement : rien n'a été écrit")
+                .isEmpty();
+    }
+
     // --- Fixture ---------------------------------------------------------------------------------
 
     private void bouchonnerPlateforme() {
         when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
         when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detail()));
-        when(client.donnees(PARTICIPATION))
+        when(client.donnees(eq(PARTICIPATION), any()))
                 .thenReturn(new ReponseApi.Succes<>(List.of(
                         new DonneeVigieChiro("d-1", SEQ_1, List.of(observation(), observation())),
                         new DonneeVigieChiro("d-2", SEQ_2, List.of(observation())))));
-        when(importObservations.importer(anyLong(), anyBoolean())).thenReturn("3 observation(s) importée(s).");
+        when(importObservations.importer(anyLong(), any(), anyBoolean())).thenReturn("3 observation(s) importée(s).");
     }
 
     private static ParticipationVigieChiro participation(String id) {
