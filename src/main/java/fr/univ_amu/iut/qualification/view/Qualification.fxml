@@ -171,7 +171,7 @@
         <!-- Légende des raccourcis clavier (#796) : câblés (gererRaccourci) mais indécouvrables sans
              cette aide visible. -->
         <Label styleClass="section-sous" wrapText="true"
-               text="Raccourcis clavier : O vérifié · D douteux · J à jeter · Espace écouter · Entrée enregistrer"/>
+               text="Raccourcis clavier : O OK · D Douteux · J À jeter · Espace écouter · Entrée enregistrer"/>
 
         <HBox alignment="CENTER_RIGHT" spacing="10.0">
           <!-- Confirmation de succès locale (#797) : visible une fois le verdict persisté (état ENREGISTRE),
