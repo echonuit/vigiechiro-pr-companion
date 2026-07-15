@@ -105,3 +105,10 @@ et corpus de sons de référence). La barre <kbd>Espace</kbd> lance ou met en pa
 Le **niveau sonore est normalisé** automatiquement : les cris de faible et de forte amplitude sont
 ramenés à un volume comparable, pour les écouter et les comparer sans réajuster le volume à chaque
 séquence.
+
+### L'application a eu un comportement inattendu, comment le signaler ?
+
+L'application tient un **journal** de son activité et de ses erreurs. Le menu **☰ → « Ouvrir le dossier
+des journaux »** ouvre le dossier `logs/` de votre espace de travail : joignez le fichier
+`vigiechiro-*.log` le plus récent à votre signalement. Il aide à comprendre ce qui s'est passé, même
+quand l'erreur n'affichait aucun message à l'écran.
