@@ -6,6 +6,7 @@ import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -130,6 +131,7 @@ public class NavigationSites implements OuvrirSite {
         modale.initModality(Modality.WINDOW_MODAL);
         modale.setTitle(titreFenetre);
         modale.setScene(new Scene(vue));
+        Modales.fermerParEchap(modale);
         modale.show();
     }
 

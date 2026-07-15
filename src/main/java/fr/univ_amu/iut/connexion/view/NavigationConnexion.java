@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.connexion.model.StockageConnexion;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -43,6 +44,7 @@ public final class NavigationConnexion {
             modale.initModality(Modality.APPLICATION_MODAL);
             modale.setTitle("Connexion VigieChiro");
             modale.setScene(new Scene(vue));
+            Modales.fermerParEchap(modale);
             modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);

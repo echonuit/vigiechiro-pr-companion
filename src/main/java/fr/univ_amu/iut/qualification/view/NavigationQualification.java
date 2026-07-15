@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -72,6 +73,7 @@ public class NavigationQualification implements OuvrirVerification {
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Sélection d'écoute");
             modale.setScene(new Scene(vue));
+            Modales.fermerParEchap(modale);
             modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);

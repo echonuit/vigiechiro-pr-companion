@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import java.io.IOException;
@@ -74,6 +75,7 @@ public class NavigationMultisite implements OuvrirMultisite {
             modale.initModality(Modality.WINDOW_MODAL);
             modale.setTitle("Reconstruire un passage manquant");
             modale.setScene(new Scene(vue));
+            Modales.fermerParEchap(modale);
             modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
