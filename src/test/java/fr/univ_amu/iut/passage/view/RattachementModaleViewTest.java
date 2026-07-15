@@ -158,6 +158,17 @@ class RattachementModaleViewTest {
     }
 
     @Test
+    @DisplayName("Le repère « en cours » est masqué au repos (#1543)")
+    void repere_en_cours_masque_au_repos(FxRobot robot) {
+        javafx.scene.Node repere = robot.lookup("#ligneOccupation").query();
+
+        assertThat(repere.isVisible())
+                .as("le repère ne s'affiche que pendant un aller-retour VigieChiro")
+                .isFalse();
+        assertThat(repere.isManaged()).isFalse();
+    }
+
+    @Test
     @DisplayName("Changer le n° dans le spinner met à jour le récap (quadruplet X → Y)")
     void changer_numero_met_a_jour_le_recap(FxRobot robot) {
         @SuppressWarnings("unchecked")

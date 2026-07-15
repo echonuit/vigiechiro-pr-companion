@@ -76,6 +76,9 @@ public class RattachementModaleController {
     private Label messageErreur;
 
     @FXML
+    private HBox ligneOccupation;
+
+    @FXML
     private TextField champTemperature;
 
     @FXML
@@ -167,6 +170,10 @@ public class RattachementModaleController {
         // main de part et d'autre du travail, plus de bouton figé si l'appel échoue.
         boutonRecupererMeteo.disableProperty().bind(operationEnCours);
         boutonTirerVigieChiro.disableProperty().bind(operationEnCours);
+        // Repère « en cours » (roue + libellé) visible seulement pendant un aller-retour VigieChiro : le
+        // grisage des boutons seul ne suffisait pas à montrer que quelque chose se passe (#1543).
+        ligneOccupation.visibleProperty().bind(operationEnCours);
+        ligneOccupation.managedProperty().bind(operationEnCours);
     }
 
     /// Lie les champs des conditions de dépôt (météo + matériel du micro) au sous-ViewModel
