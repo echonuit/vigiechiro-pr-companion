@@ -181,7 +181,20 @@ public class ServiceReactivationPassage {
         }
         boolean brutsTrouves = originaux.stream()
                 .anyMatch(original -> !candidats.brutsDe(original, prefixe).isEmpty());
-        return brutsTrouves ? VoieReactivation.BRUTS : VoieReactivation.AUCUNE;
+        if (brutsTrouves) {
+            return VoieReactivation.BRUTS;
+        }
+        return sansInventaireExploitable(originaux) ? VoieReactivation.RECONSTRUIT : VoieReactivation.AUCUNE;
+    }
+
+    /// Un passage **reconstruit** (#1305) ne porte aucun original exploitable pour repartir des bruts : ses
+    /// « originaux » se réduisent à un placeholder sans **fréquence d'acquisition** (ni empreinte). Sans
+    /// cette fréquence, aucune tranche ne peut être régénérée, et la voie « bruts » ne peut rien apparier.
+    /// On distingue ce cas de l'absence pure ([VoieReactivation#AUCUNE]) pour rendre un compte rendu
+    /// **honnête** au lieu de prétendre « introuvables » (#1648, EPIC #1653) : un passage réel, même
+    /// archivé ou purgé, garde en base la fréquence d'acquisition de ses originaux.
+    private static boolean sansInventaireExploitable(List<EnregistrementOriginal> originaux) {
+        return originaux.stream().noneMatch(original -> original.frequenceEchantillonnageHz() != null);
     }
 
     /// Remet la fiche du passage d'aplomb, puis rend compte.
