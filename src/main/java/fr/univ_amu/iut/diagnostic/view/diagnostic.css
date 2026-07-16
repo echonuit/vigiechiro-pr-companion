@@ -21,3 +21,28 @@
   -fx-font-size: 12px;
   -fx-text-fill: #a93226;
 }
+
+/*
+ * Ligne d'état GPS du point d'écoute (#1497) : repère permanent, coloré selon l'état posé par le
+ * controller (marqueur vert « disponible » / triangle ambre « non renseigné »). Rôles sémantiques
+ * repris de palette.css, sur le patron de .ligne-suivi (libellé + icône colorés ensemble).
+ */
+.ligne-gps {
+  -fx-font-size: 12px;
+}
+
+.ligne-gps .icone-gps {
+  -fx-icon-size: 14px;
+}
+
+.ligne-gps.gps-disponible .label,
+.ligne-gps.gps-disponible .icone-gps {
+  -fx-text-fill: -couleur-succes;
+  -fx-icon-color: -couleur-succes;
+}
+
+.ligne-gps.gps-absent .label,
+.ligne-gps.gps-absent .icone-gps {
+  -fx-text-fill: -couleur-avertissement;
+  -fx-icon-color: -couleur-avertissement;
+}

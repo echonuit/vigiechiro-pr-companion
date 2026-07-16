@@ -30,10 +30,12 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -48,7 +50,7 @@ import org.testfx.framework.junit5.Start;
 /// Cet écran est en **lecture seule** (patron « pur câblage » du CM4) : il ne comporte ni bouton,
 /// ni `ComboBox`, ni `TableView`, donc aucun `onAction`. Les « interactions » testées sont les
 /// transitions d'état déclenchées par `ouvrirSur(...)` : reconstruction du graphe climatique
-/// (`ListChangeListener` → `majGraphe()`), signalement R20 (relevé absent), note GPS et message
+/// (`ListChangeListener` → `majGraphe()`), signalement R20 (relevé absent), ligne d'état GPS et message
 /// d'erreur (visibilités liées). Le [ServiceDiagnostic] est mocké : aucune base de données.
 @ExtendWith(ApplicationExtension.class)
 class DiagnosticVueIntegrationTest {
@@ -64,6 +66,9 @@ class DiagnosticVueIntegrationTest {
         when(service.diagnostiquer(8L)).thenReturn(diagnosticSansReleve());
         // Passage introuvable : le ViewModel neutralise l'erreur dans son message sans lever.
         when(service.diagnostiquer(999L)).thenThrow(new RuntimeException("Passage 999 introuvable"));
+        // Passage nuit complète (#1497) : GPS renseigné ET cohérence horaires calculée. Le repère GPS
+        // doit rester affiché (l'ancien câblage le masquait dès que la fenêtre nocturne était calculable).
+        when(service.diagnostiquer(77L)).thenReturn(diagnosticNuitComplete());
 
         Injector injector = Guice.createInjector(
                 new AbstractModule() {
@@ -108,6 +113,8 @@ class DiagnosticVueIntegrationTest {
         assertThat(robot.lookup("#grapheClimat").tryQuery()).isPresent();
         assertThat(robot.lookup("#listeAnomalies").tryQuery()).isPresent();
         assertThat(robot.lookup("#listeEvenements").tryQuery()).isPresent();
+        assertThat(robot.lookup("#ligneGps").tryQuery()).isPresent();
+        assertThat(robot.lookup("#iconeGps").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblGps").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblMessage").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblTemperature").tryQuery()).isPresent(); // #106
@@ -151,16 +158,38 @@ class DiagnosticVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("Un diagnostic chargé avec GPS renseigné affiche la note GPS « disponible »")
-    void note_gps_visible_quand_diagnostic_charge(FxRobot robot) {
+    @DisplayName("Diagnostic avec GPS renseigné : ligne d'état verte « GPS du point : disponible » (marqueur)")
+    void ligne_gps_disponible_quand_gps_renseigne(FxRobot robot) {
+        HBox ligne = robot.lookup("#ligneGps").queryAs(HBox.class);
+        FontIcon icone = robot.lookup("#iconeGps").queryAs(FontIcon.class);
         Label gps = robot.lookup("#lblGps").queryAs(Label.class);
 
-        assertThat(gps.isVisible()).isTrue();
-        assertThat(gps.getText()).contains("disponible");
+        assertThat(ligne.isVisible()).isTrue();
+        assertThat(ligne.isManaged()).isTrue();
+        assertThat(ligne.getStyleClass()).contains("gps-disponible");
+        assertThat(icone.getIconLiteral()).isEqualTo("fas-map-marker-alt");
+        assertThat(gps.getText()).isEqualTo("GPS du point : disponible");
     }
 
     @Test
-    @DisplayName("Changer pour un passage sans relevé signale R20, vide le graphe et la note GPS")
+    @DisplayName("#1497 : le repère GPS reste affiché même quand la cohérence horaires est calculée")
+    void gps_reste_visible_quand_coherence_disponible(FxRobot robot) {
+        // Nuit complète : GPS renseigné + fenêtre nocturne calculable. L'ancien câblage masquait le GPS
+        // dès que la cohérence était disponible ; il doit désormais rester visible et « disponible ».
+        robot.interact(() -> controleur.ouvrirSur(ctx(77L)));
+
+        HBox ligne = robot.lookup("#ligneGps").queryAs(HBox.class);
+        Label gps = robot.lookup("#lblGps").queryAs(Label.class);
+
+        assertThat(ligne.isVisible()).isTrue();
+        assertThat(ligne.isManaged()).isTrue();
+        assertThat(ligne.getStyleClass()).contains("gps-disponible");
+        assertThat(gps.getText()).isEqualTo("GPS du point : disponible");
+    }
+
+    @Test
+    @DisplayName(
+            "Changer pour un passage sans relevé signale R20, vide le graphe et bascule le GPS en « non renseigné »")
     void releve_absent_signale_r20_et_vide_le_graphe(FxRobot robot) {
         // Interaction : on rouvre l'écran sur un passage dont le relevé climatique est absent (R20).
         robot.interact(() -> controleur.ouvrirSur(ctx(8L)));
@@ -168,6 +197,8 @@ class DiagnosticVueIntegrationTest {
         Label alerteR20 = robot.lookup("#lblReleveAbsent").queryAs(Label.class);
         Label resume = robot.lookup("#lblResumeClimat").queryAs(Label.class);
         Label gps = robot.lookup("#lblGps").queryAs(Label.class);
+        HBox ligneGps = robot.lookup("#ligneGps").queryAs(HBox.class);
+        FontIcon iconeGps = robot.lookup("#iconeGps").queryAs(FontIcon.class);
         LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
 
         assertThat(alerteR20.isVisible()).isTrue();
@@ -177,7 +208,11 @@ class DiagnosticVueIntegrationTest {
         assertThat(graphe.getData()).hasSize(2);
         assertThat(graphe.getData().get(0).getData()).isEmpty();
         assertThat(graphe.getData().get(1).getData()).isEmpty();
-        assertThat(gps.getText()).contains("non renseigné");
+        // GPS absent : ligne d'état toujours affichée (jamais muette), en état d'avertissement ambre.
+        assertThat(ligneGps.isVisible()).isTrue();
+        assertThat(ligneGps.getStyleClass()).contains("gps-absent");
+        assertThat(iconeGps.getIconLiteral()).isEqualTo("fas-exclamation-triangle");
+        assertThat(gps.getText()).isEqualTo("GPS du point : non renseigné (compléter la fiche site)");
     }
 
     @Test
@@ -187,7 +222,7 @@ class DiagnosticVueIntegrationTest {
         robot.interact(() -> controleur.ouvrirSur(ctx(999L)));
 
         Label message = robot.lookup("#lblMessage").queryAs(Label.class);
-        Label gps = robot.lookup("#lblGps").queryAs(Label.class);
+        HBox ligneGps = robot.lookup("#ligneGps").queryAs(HBox.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
 
@@ -197,7 +232,9 @@ class DiagnosticVueIntegrationTest {
         assertThat(controleur.zonesStatutProperty().get().centre()).isEmpty();
         assertThat(anomalies.getItems()).isEmpty();
         assertThat(evenements.getItems()).isEmpty();
-        assertThat(gps.isVisible()).isFalse();
+        // La ligne GPS n'a de sens qu'avec un diagnostic chargé : masquée après réinitialisation.
+        assertThat(ligneGps.isVisible()).isFalse();
+        assertThat(ligneGps.isManaged()).isFalse();
     }
 
     @Test
@@ -243,5 +280,23 @@ class DiagnosticVueIntegrationTest {
                 LocalDateTime.of(2026, 6, 24, 8, 0),
                 null,
                 CoherenceHoraire.indisponible());
+    }
+
+    /// Diagnostic « nuit complète » (#1497) : GPS renseigné ET cohérence horaires calculée (fenêtre
+    /// nocturne connue, sans écart). Sert à prouver que le repère GPS reste affiché dans ce cas.
+    private static Diagnostic diagnosticNuitComplete() {
+        return new Diagnostic(
+                77L,
+                11L,
+                "1925492",
+                new AnalyseAnomalies(List.of(), List.of("Démarrage")),
+                SerieClimatique.presente(List.of(
+                        new MesureClimatique(LocalDate.of(2026, 6, 22), LocalTime.of(22, 0), 18.5, 72),
+                        new MesureClimatique(LocalDate.of(2026, 6, 23), LocalTime.of(2, 0), 14.0, 88))),
+                43.5,
+                5.4,
+                LocalDateTime.of(2026, 6, 23, 8, 0),
+                8.5,
+                new CoherenceHoraire(true, LocalTime.of(21, 58), LocalTime.of(5, 48), false, false));
     }
 }

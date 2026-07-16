@@ -24,6 +24,8 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.layout.HBox;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Diagnostic** (`Diagnostic.fxml`).
 ///
@@ -73,6 +75,12 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
 
     @FXML
     private Label lblAlerteHorsNuit;
+
+    @FXML
+    private HBox ligneGps;
+
+    @FXML
+    private FontIcon iconeGps;
 
     @FXML
     private Label lblGps;
@@ -135,18 +143,21 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         lblAlerteHorsNuit.visibleProperty().bind(horsNuit);
         lblAlerteHorsNuit.managedProperty().bind(horsNuit);
 
+        // Disponibilité GPS du point d'écoute (#1497) : ligne d'état permanente, affichée dès qu'un
+        // diagnostic est chargé et découplée de la cohérence horaires (le repère ne disparaît plus
+        // sur une nuit complète). L'absence est dite, jamais muette ; la provenance est le point
+        // d'écoute (feature sites), pas le capteur.
         lblGps.textProperty()
                 .bind(Bindings.createStringBinding(
                         () -> viewModel.gpsDisponibleProperty().get()
-                                ? "📍 GPS du point disponible, mais horaires incomplets : cohérence horaires indisponible."
-                                : "📍 GPS du point non renseigné : cohérence horaires indisponible.",
+                                ? "GPS du point : disponible"
+                                : "GPS du point : non renseigné (compléter la fiche site)",
                         viewModel.gpsDisponibleProperty()));
-        // La note GPS n'explique l'absence d'encart qu'une fois un diagnostic chargé sans fenêtre calculée.
+        viewModel.gpsDisponibleProperty().addListener((observable, avant, disponible) -> majEtatGps(disponible));
+        majEtatGps(viewModel.gpsDisponibleProperty().get());
         var diagnosticCharge = viewModel.enregistreurProperty().isNotEmpty();
-        var coherenceIndisponible = diagnosticCharge.and(
-                viewModel.coherenceHoraireDisponibleProperty().not());
-        lblGps.visibleProperty().bind(coherenceIndisponible);
-        lblGps.managedProperty().bind(coherenceIndisponible);
+        ligneGps.visibleProperty().bind(diagnosticCharge);
+        ligneGps.managedProperty().bind(diagnosticCharge);
 
         lblMessage.textProperty().bind(viewModel.messageProperty());
         var messagePresent = viewModel.messageProperty().isNotEmpty();
@@ -166,6 +177,14 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     @Override
     public List<Lieu> emplacement() {
         return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Diagnostic matériel");
+    }
+
+    /// Bascule l'icône et la classe d'état de la ligne GPS (#1497) : marqueur de localisation vert
+    /// « disponible » ou triangle d'avertissement ambre « non renseigné ». Le libellé, lui, est lié.
+    private void majEtatGps(boolean disponible) {
+        iconeGps.setIconLiteral(disponible ? "fas-map-marker-alt" : "fas-exclamation-triangle");
+        ligneGps.getStyleClass().removeAll("gps-disponible", "gps-absent");
+        ligneGps.getStyleClass().add(disponible ? "gps-disponible" : "gps-absent");
     }
 
     private void majGraphe() {
