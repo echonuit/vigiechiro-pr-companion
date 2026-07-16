@@ -26,8 +26,8 @@ Le tableau de la **sélection d'écoute** se **trie**, se **réorganise** et lai
 
 ## Poser un verdict
 
-Au terme du contrôle, vous posez un **verdict global** sur la nuit : **OK**, **Douteux** ou
-**À jeter**, éventuellement accompagné d'un commentaire, puis vous **enregistrez**.
+Au terme du contrôle, vous posez un **verdict global** sur la nuit : **OK**, **Utilisable** ou
+**Inexploitable**, éventuellement accompagné d'un commentaire, puis vous **enregistrez**.
 
 ## État initial
 

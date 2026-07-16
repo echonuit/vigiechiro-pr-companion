@@ -62,8 +62,8 @@ enregistre, on passe au suivant.
 |---|---|
 | <kbd>Espace</kbd> | Lecture / pause de l'extrait |
 | <kbd>O</kbd> | Verdict : OK |
-| <kbd>D</kbd> | Verdict : Douteux |
-| <kbd>J</kbd> | Verdict : À jeter |
+| <kbd>D</kbd> | Verdict : Utilisable |
+| <kbd>J</kbd> | Verdict : Inexploitable |
 | <kbd>Entrée</kbd> | Enregistrer le verdict |
 | <kbd>↑</kbd> / <kbd>↓</kbd> | Passer d'une séquence à l'autre, lorsque la **liste des séquences** a le focus |
 

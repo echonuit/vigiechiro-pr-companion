@@ -68,7 +68,7 @@ Sur l'écran **Qualification**, vous contrôlez que la nuit est exploitable, à 
 - un **contrôle par écoute** sur une sélection automatique de 10 à 30 séquences réparties sur la
   nuit, via la vue audio (sonogramme et spectrogramme).
 
-Vous posez ensuite un **verdict global** : OK, Douteux ou À jeter. Cet écran se pilote
+Vous posez ensuite un **verdict global** : OK, Utilisable ou Inexploitable. Cet écran se pilote
 efficacement au clavier (voir [Raccourcis clavier](../raccourcis-clavier.md)).
 
 ## Déposer le passage
