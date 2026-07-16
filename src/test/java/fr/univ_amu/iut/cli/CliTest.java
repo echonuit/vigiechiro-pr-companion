@@ -301,6 +301,25 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("constituer-selection sur un passage introuvable : échec métier (1)")
+    void constituer_selection_passage_introuvable() {
+        int code = cli.executer(new String[] {"constituer-selection", "--passage", "999"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("introuvable");
+    }
+
+    @Test
+    @DisplayName("constituer-selection avec une méthode inconnue : erreur d'usage (code 2)")
+    void constituer_selection_methode_inconnue() {
+        int code = cli.executer(
+                new String[] {"constituer-selection", "--passage", "1", "--methode", "magique"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("Méthode inconnue");
+    }
+
+    @Test
     @DisplayName("deposer sur un passage introuvable : échec métier (1)")
     void deposer_passage_introuvable() {
         int code = cli.executer(new String[] {"deposer", "--passage", "999"}, sortie, erreur);

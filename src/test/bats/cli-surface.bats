@@ -27,7 +27,7 @@ COMMANDES_OPTIONS_REQUISES=(
   exporter-observations exporter-vu exporter-lot
   importer importer-tadarida
   marquer-douteux marquer-reference poser-certitude
-  valider-observations corriger-observations qualifier qualifier-fichier lister-selection pre-check
+  valider-observations corriger-observations qualifier qualifier-fichier lister-selection pre-check constituer-selection
   restaurer reinitialiser-depot archiver
   deposer deposer-vigiechiro importer-vigiechiro publier-corrections-vigiechiro
   etat-traitement-vigiechiro lancer-traitement-vigiechiro verifier-depot-vigiechiro

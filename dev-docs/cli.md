@@ -63,6 +63,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `qualifier-fichier` | `--passage <id> --sequence <id> --verdict <bon\|mauvais\|inexploitable>` | #1512 | Verdict **par fichier** d'une séquence de la sélection d'écoute ; recalcule le verdict final proposé. Parité CLI de M-Qualification |
 | `lister-selection` | `--passage <id> [--json]` | #1512 | Sélection d'écoute d'un passage : **verdict par fichier** de chaque séquence + **verdict final proposé** (dérivé). Parité CLI de M-Qualification, lecture seule |
 | `pre-check` | `--passage <id> [--json]` | #1512 | **Pré-check consultatif** d'une nuit (3 feux : couverture horaire, nombre de fichiers, renommage) + résumé des anomalies. Parité CLI de M-Qualification, lecture seule, jamais bloquant (R13) |
+| `constituer-selection` | `--passage <id> [--methode <reparti\|aleatoire\|manuel>] [--taille <n>]` | R12 | (Re)constitue la sélection d'écoute (échantillon à écouter). Remplace la sélection existante et **efface** ses verdicts. Parité CLI de « Personnaliser… » / « Régénérer » |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
 | `synchroniser-vigiechiro` | `[--token <jeton>]` | #1181 | rejoue les `RapprochementVigieChiro` (taxons, sites/points) après un `GET /moi` de contrôle ; `0` ssi connecté |
