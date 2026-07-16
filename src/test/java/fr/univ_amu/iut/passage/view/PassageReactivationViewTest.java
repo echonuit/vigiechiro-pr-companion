@@ -230,6 +230,27 @@ class PassageReactivationViewTest {
     }
 
     @Test
+    @DisplayName("#1648 : passage reconstruit : le compte rendu est honnête, jamais « introuvables »")
+    void passage_reconstruit_compte_rendu_honnete(FxRobot robot) {
+        // Les bruts peuvent être là : c'est l'application qui n'a pas de quoi les relier. Le rapport doit le
+        // dire, sans niveau d'alarme (aucune séquence refusée) et sans prétendre « introuvables ».
+        when(reactivation.reactiver(anyLong(), any(), any(), any()))
+                .thenReturn(new RapportReactivation(
+                        0, 0, 30, 0, null, List.of(), new DecompteAudio(0, 30), VoieReactivation.RECONSTRUIT));
+
+        cliquerReactiver(robot);
+
+        assertThat(niveaux).containsExactly(NiveauNotification.INFORMATION);
+        assertThat(annonces).singleElement().satisfies(annonce -> {
+            assertThat(annonce).contains("Passage reconstruit");
+            assertThat(annonce).contains("reconstruit depuis VigieChiro");
+            assertThat(annonce)
+                    .as("les fichiers peuvent être présents : ne pas prétendre le contraire")
+                    .doesNotContain("introuvables");
+        });
+    }
+
+    @Test
     @DisplayName("#1431 : sélecteur annulé : rien n'est réactivé, rien n'est annoncé")
     void selecteur_annule_ne_reactive_rien(FxRobot robot) {
         choix = Optional.empty();

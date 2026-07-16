@@ -77,6 +77,15 @@ public final class Reactiver implements Callable<Integer> {
     /// Rendu **texte** : ce qui est revenu et sur quelle preuve, ce qui a été refusé et pourquoi, ce qui
     /// manque encore.
     private static String enTexte(RapportReactivation rapport) {
+        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
+            // Passage reconstruit depuis la plateforme (#1648) : ni empreinte ni fréquence d'acquisition en
+            // base, donc rien à apparier ni à régénérer. On le DIT au lieu de prétendre « introuvables ».
+            return "Passage reconstruit depuis VigieChiro : le nom des "
+                    + rapport.decompte().total()
+                    + " séquence(s) est connu, mais pas la correspondance avec les fichiers d'origine ni les"
+                    + " empreintes nécessaires pour les régénérer. La réactivation depuis les bruts n'est pas"
+                    + " encore disponible pour ce type de passage.";
+        }
         StringBuilder texte = new StringBuilder();
         if (rapport.voie() == VoieReactivation.BRUTS) {
             // L'utilisateur a le droit de savoir ce qu'on a fait de son dossier : ses tranches n'ont pas
