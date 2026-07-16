@@ -11,22 +11,17 @@
 # `--help` est activé sur chaque sous-commande (Cli.executer, #1592) : `reactiver --help` décrit la
 # commande au lieu d'échouer « Unknown option ».
 #
+# Découverte du jar et lancement d'un processus : fixtures partagées (`helper.bash`). La couverture
+# hors-ligne de TOUTE la surface CLI (chaque commande) vit dans `cli-surface.bats`.
+#
 # Lancer :  ./mvnw -DskipTests package   # produit target/vigiechiro-*-shaded.jar
 #           bats src/test/bats
 # (ou définir VIGIECHIRO_JAR=/chemin/vers/le-fat-jar.jar)
 
-setup() {
-  JAR="${VIGIECHIRO_JAR:-$(ls "${BATS_TEST_DIRNAME}"/../../../target/vigiechiro-*-shaded.jar 2>/dev/null | head -1)}"
-  if [ -z "${JAR}" ] || [ ! -f "${JAR}" ]; then
-    skip "fat-jar introuvable : lancer './mvnw -DskipTests package' d'abord (ou définir VIGIECHIRO_JAR)"
-  fi
-}
+load helper
 
-# Un vrai processus : workspace jetable (base SQLite créée sous le tmpdir du test), aucun jeton VigieChiro
-# (on éprouve les contrats hors-ligne). Même point d'entrée que le smoke-test CI (fr.univ_amu.iut.cli.Cli).
-cli() {
-  java --enable-native-access=ALL-UNNAMED -Dvigiechiro.workspace="${BATS_TEST_TMPDIR}" \
-    -cp "${JAR}" fr.univ_amu.iut.cli.Cli "$@"
+setup() {
+  decouvrir_jar
 }
 
 @test "aide générale : liste les commandes du chantier, exit 0" {
