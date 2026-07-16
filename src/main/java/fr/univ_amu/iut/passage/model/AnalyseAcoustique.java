@@ -12,10 +12,13 @@ import java.util.OptionalDouble;
 /// `java.base` pur : le paquet DSP d'`audio-view` est délibérément non exporté par son module
 /// (boîte noire), et un spectrogramme complet serait disproportionné pour un test de présence.
 ///
-/// Un cri est **présent** si sa fenêtre porte, à sa fréquence médiane, nettement plus d'énergie
-/// ([#RAPPORT_PRESENCE]) que des fenêtres témoin de même longueur prélevées ailleurs dans le
-/// fichier (médiane robuste). Les seuils sont volontairement **permissifs** : on cherche à écarter
-/// un fichier manifestement autre, pas à réidentifier l'espèce.
+/// Un cri est **présent** si son énergie **de pointe**, à sa fréquence médiane, dépasse nettement
+/// ([#RAPPORT_PRESENCE]) le plancher des fenêtres témoin prélevées ailleurs dans le fichier (médiane
+/// robuste). On cherche la **pointe** sur une fenêtre courte glissée dans la fenêtre de l'observation
+/// (#1687), et non l'énergie moyenne de toute cette fenêtre : un cri de chauve-souris ne dure que
+/// quelques ms, une observation peut couvrir plusieurs secondes, et la moyenne le **diluait** au plancher
+/// (faux négatifs). Les seuils restent volontairement **permissifs** : on cherche à écarter un fichier
+/// manifestement autre, pas à réidentifier l'espèce.
 final class AnalyseAcoustique {
 
     /// Facteur d'expansion de temps du pipeline Vigie-Chiro (cf. `TransformationAudio`) : l'en-tête
@@ -35,6 +38,13 @@ final class AnalyseAcoustique {
     /// est ignoré (ni présent ni absent).
     private static final int LONGUEUR_MIN_FENETRE = 64;
 
+    /// Durée d'analyse d'un cri, en secondes **réelles** (#1687). Un cri de chauve-souris ne dure que
+    /// quelques ms, mais la fenêtre `[start, end]` d'une observation peut couvrir **plusieurs secondes** :
+    /// mesurer l'énergie sur toute la fenêtre **diluait** le cri jusqu'au plancher du bruit (faux
+    /// négatifs). On cherche donc l'énergie **de pointe** sur une fenêtre courte glissée dans `[start,
+    /// end]`. 10 ms : assez long pour porter un cri, assez court pour ne pas le noyer.
+    private static final double DUREE_FENETRE_CRI_SECONDES = 0.010;
+
     private AnalyseAcoustique() {}
 
     /// Fraction des cris attendus retrouvés dans `wav` (0..1), ou vide si rien n'est mesurable
@@ -46,6 +56,8 @@ final class AnalyseAcoustique {
         }
         double[] echantillons = echantillons(wav);
         double frequenceReelle = (double) wav.frequenceEchantillonnageHz() * FACTEUR_EXPANSION;
+        int fenetreCourte =
+                Math.max(LONGUEUR_MIN_FENETRE, (int) Math.round(DUREE_FENETRE_CRI_SECONDES * frequenceReelle));
         int testes = 0;
         int presents = 0;
         for (CriAttendu cri : cris) {
@@ -55,18 +67,21 @@ final class AnalyseAcoustique {
                 continue;
             }
             testes++;
-            if (criPresent(echantillons, debut, fin, cri.frequenceMedianeHz() / frequenceReelle)) {
+            if (criPresent(echantillons, debut, fin, cri.frequenceMedianeHz() / frequenceReelle, fenetreCourte)) {
                 presents++;
             }
         }
         return testes == 0 ? OptionalDouble.empty() : OptionalDouble.of(presents / (double) testes);
     }
 
-    /// Le cri est présent si l'énergie de sa fenêtre, à sa fréquence, dépasse nettement la médiane
-    /// des fenêtres témoin de même longueur.
-    private static boolean criPresent(double[] echantillons, int debut, int fin, double frequenceNormalisee) {
-        int longueur = fin - debut;
-        double energieCri = puissanceGoertzel(echantillons, debut, fin, frequenceNormalisee);
+    /// Le cri est présent si son énergie **de pointe** (max sur une fenêtre courte glissée dans `[debut,
+    /// fin)`, à sa fréquence) dépasse nettement le plancher : la médiane de fenêtres témoin de **même
+    /// longueur courte** prélevées dans tout le fichier. Chercher la **pointe** et non la moyenne de toute
+    /// la fenêtre évite de diluer un cri bref dans une longue fenêtre d'observation (#1687).
+    private static boolean criPresent(
+            double[] echantillons, int debut, int fin, double frequenceNormalisee, int fenetreCourte) {
+        int longueur = Math.min(fenetreCourte, fin - debut);
+        double energieCri = maxPuissance(echantillons, debut, fin, longueur, frequenceNormalisee);
         double[] temoins = new double[NB_FENETRES_TEMOIN];
         int pas = Math.max(1, (echantillons.length - longueur) / NB_FENETRES_TEMOIN);
         for (int i = 0; i < NB_FENETRES_TEMOIN; i++) {
@@ -76,6 +91,19 @@ final class AnalyseAcoustique {
         java.util.Arrays.sort(temoins);
         double plancher = Math.max(temoins[NB_FENETRES_TEMOIN / 2], Double.MIN_NORMAL);
         return energieCri > RAPPORT_PRESENCE * plancher;
+    }
+
+    /// Énergie **de pointe** à la fréquence donnée : le maximum de la puissance de Goertzel sur une fenêtre
+    /// de `longueur` échantillons glissée (recouvrement 50 %) dans `[debut, fin)`. La fenêtre étant bornée
+    /// par la longueur du cri, une observation brève retombe sur une unique fenêtre (comportement d'avant).
+    private static double maxPuissance(
+            double[] echantillons, int debut, int fin, int longueur, double frequenceNormalisee) {
+        int pas = Math.max(1, longueur / 2);
+        double max = 0;
+        for (int depart = debut; depart + longueur <= fin; depart += pas) {
+            max = Math.max(max, puissanceGoertzel(echantillons, depart, depart + longueur, frequenceNormalisee));
+        }
+        return max;
     }
 
     /// Puissance du signal à la fréquence normalisée `f/Fe` sur `[debut, fin)` (algorithme de
