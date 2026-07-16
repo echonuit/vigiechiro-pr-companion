@@ -60,11 +60,7 @@ public final class ImporterTadarida implements Callable<Integer> {
         if (!Files.isRegularFile(csv)) {
             throw new ErreurUsage("Fichier CSV introuvable : " + csv + ".");
         }
-        boolean dejaImporte = resultatsDao.findByPassage(idPassage).isPresent();
-        if (dejaImporte && !remplacer) {
-            throw new ErreurUsage("Ce passage a déjà des résultats Tadarida."
-                    + " Relancez avec --remplacer pour remplacer le jeu existant.");
-        }
+        GardeJeuExistant.refuserSiDejaImporte(resultatsDao, idPassage, remplacer);
         BilanImport bilan = remplacer ? service.reimporter(idPassage, csv) : service.importer(idPassage, csv);
         spec.commandLine().getOut().println(rendreBilan(bilan, remplacer));
         return 0;
