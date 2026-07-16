@@ -314,8 +314,8 @@ public class ServicePassage {
         return misAJour;
     }
 
-    /// Pose (ou met à jour) le verdict de vérification d'un passage (R13 : verdict `À vérifier` /
-    /// `OK` / `Douteux` / `À jeter`, saisi par l'utilisateur après écoute).
+    /// Pose (ou met à jour) le verdict de vérification d'un passage (R13 : verdict `Non vérifié` /
+    /// `OK` / `Utilisable` / `Inexploitable`, saisi par l'utilisateur après écoute).
     ///
     /// Invariant dur : un passage déjà [StatutWorkflow#DEPOSE] ne peut plus être re-jugé (son
     /// verdict est figé une fois déposé sur Vigie-Chiro).

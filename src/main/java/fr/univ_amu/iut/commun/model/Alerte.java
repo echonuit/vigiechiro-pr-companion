@@ -8,7 +8,7 @@ import java.util.Objects;
 ///
 /// - les règles **SOFT** (ex. R3 : passage hors fenêtre, R4 : intervalle &lt; 1 mois) :
 /// l'application *alerte sans bloquer*, l'utilisateur reste libre de continuer ;
-/// - les règles **BLOQUANTES** (ex. R14 : un passage « À jeter » ne peut pas rejoindre un
+/// - les règles **BLOQUANTES** (ex. R14 : un passage « Inexploitable » ne peut pas rejoindre un
 /// lot) : l'action est *refusée*.
 ///
 /// Une `Alerte` porte ce niveau + un message destiné à l'utilisateur. Les services agrègent
