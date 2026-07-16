@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.ImportObservations;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -196,6 +197,14 @@ public class PassageViewModel {
     /// à la vue, qui l'affiche.
     public RapportReactivation reactiver(Path dossierSource, Consumer<Progression> progres) {
         return reactivation.reactiver(idPassage, dossierSource, progres);
+    }
+
+    /// Variante **suivie et annulable** (#1597) : le `jeton` interrompt la phase d'ancrage (le ré-import
+    /// des `donnees` d'un passage reconstruit peut durer plusieurs dizaines de secondes). C'est la modale
+    /// de progression ([fr.univ_amu.iut.commun.view.DialogueProgression]) qui fournit le jeton et le relais
+    /// de progression.
+    public RapportReactivation reactiver(Path dossierSource, Consumer<Progression> progres, JetonAnnulation jeton) {
+        return reactivation.reactiver(idPassage, dossierSource, progres, jeton);
     }
 
     private void appliquer(DetailPassage detail, ContexteSite contexte) {

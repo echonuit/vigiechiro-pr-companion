@@ -204,7 +204,7 @@ class PassageReactivationViewTest {
     @Test
     @DisplayName("#1431 : le dossier désigné est réactivé, et le rapport dit sur quelle preuve")
     void reactivation_rebranche_et_rend_compte(FxRobot robot) {
-        when(reactivation.reactiver(anyLong(), any(), any()))
+        when(reactivation.reactiver(anyLong(), any(), any(), any()))
                 .thenReturn(new RapportReactivation(
                         28,
                         0,
@@ -222,7 +222,7 @@ class PassageReactivationViewTest {
         cliquerReactiver(robot);
 
         assertThat(demandes).containsExactly("Dossier des fichiers d'origine à réimporter");
-        verify(reactivation).reactiver(anyLong(), any(), any());
+        verify(reactivation).reactiver(anyLong(), any(), any(), any());
         assertThat(niveaux).containsExactly(NiveauNotification.INFORMATION);
         assertThat(annonces)
                 .singleElement()
@@ -236,7 +236,7 @@ class PassageReactivationViewTest {
 
         cliquerReactiver(robot);
 
-        verify(reactivation, never()).reactiver(anyLong(), any(), any());
+        verify(reactivation, never()).reactiver(anyLong(), any(), any(), any());
         assertThat(annonces).as("renoncer n'est pas un événement").isEmpty();
     }
 
@@ -245,7 +245,7 @@ class PassageReactivationViewTest {
     void sequences_refusees_avertissent(FxRobot robot) {
         // Un fichier homonyme au contenu différent n'est jamais rebranché en silence (#1309) : le rapport
         // doit le dire, et il ne doit pas ressembler à un succès.
-        when(reactivation.reactiver(anyLong(), any(), any()))
+        when(reactivation.reactiver(anyLong(), any(), any(), any()))
                 .thenReturn(new RapportReactivation(
                         20,
                         10,
@@ -264,7 +264,8 @@ class PassageReactivationViewTest {
     @Test
     @DisplayName("#1431 : dossier illisible : l'utilisateur est averti, l'écran ne bouge pas")
     void echec_est_annonce(FxRobot robot) {
-        when(reactivation.reactiver(anyLong(), any(), any())).thenThrow(new IllegalStateException("dossier illisible"));
+        when(reactivation.reactiver(anyLong(), any(), any(), any()))
+                .thenThrow(new IllegalStateException("dossier illisible"));
 
         cliquerReactiver(robot);
 

@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.passage.view;
 
-import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
@@ -12,11 +12,15 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
+import javafx.stage.Window;
 
 /// Action IHM « Réactiver ce passage » (#1302), extraite de [PassageController] (pur câblage, PMD
 /// GodClass) : demande le dossier des fichiers réimportés, lance la réactivation **hors du fil
-/// JavaFX** (la vérification lit chaque fichier : compter en secondes sur une nuit entière) sous le
-/// voile d'occupation de l'écran, puis présente le **rapport**.
+/// JavaFX** dans une **modale de progression annulable** ([DialogueProgression], #1597) — la
+/// vérification lit chaque fichier, et un passage reconstruit rapatrie en plus ses `donnees` pour
+/// s'ancrer (#1571) : plusieurs dizaines de secondes, d'où barre de progression et bouton « Annuler »
+/// plutôt qu'un voile opaque. Elle présente ensuite le **rapport**.
 ///
 /// Le rapport n'est jamais un simple « c'est fait » : il dit combien de séquences ont été
 /// rebranchées et **sur quelle preuve** (niveau de confiance), combien ont été **refusées** et
@@ -29,13 +33,18 @@ final class ActionReactivation {
     private static final int ECARTS_DETAILLES = 5;
 
     private final PassageViewModel viewModel;
-    private final IndicateurOccupation occupation;
+    private final DialogueProgression dialogue;
+    private final Supplier<Window> proprietaire;
     private final NotificateurModifiable notificateur;
     private final SelecteurFichier selecteur;
     private final Runnable recharger;
 
     /// @param viewModel ViewModel de M-Passage (porte la réactivation)
-    /// @param occupation voile d'occupation de l'écran (#1213) : la réactivation tourne hors du fil JavaFX
+    /// @param dialogue modale de progression **annulable** (#1597) : la réactivation, potentiellement
+    ///     longue (ré-import des `donnees` pour ancrer un passage reconstruit), tourne hors du fil JavaFX
+    ///     avec barre de progression et bouton « Annuler » — non plus un voile opaque
+    /// @param proprietaire fenêtre propriétaire de la modale, lue **au moment du geste** (la scène n'existe
+    ///     pas forcément à la construction du contrôleur)
     /// @param notificateur porteur de compte rendu partagé de l'écran (double capturant en test)
     /// @param selecteur porteur de désignation partagé de l'écran (#1431) : c'est lui qui demande le
     ///     dossier des fichiers d'origine. Un `DirectoryChooser` en dur ici **figeait** tout test du
@@ -44,12 +53,14 @@ final class ActionReactivation {
     /// @param recharger rejeu de l'ouverture de l'écran après réactivation (volumes, boutons)
     ActionReactivation(
             PassageViewModel viewModel,
-            IndicateurOccupation occupation,
+            DialogueProgression dialogue,
+            Supplier<Window> proprietaire,
             NotificateurModifiable notificateur,
             SelecteurFichier selecteur,
             Runnable recharger) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
-        this.occupation = Objects.requireNonNull(occupation, "occupation");
+        this.dialogue = Objects.requireNonNull(dialogue, "dialogue");
+        this.proprietaire = Objects.requireNonNull(proprietaire, "proprietaire");
         this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
         this.selecteur = Objects.requireNonNull(selecteur, "selecteur");
         this.recharger = Objects.requireNonNull(recharger, "recharger");
@@ -65,9 +76,10 @@ final class ActionReactivation {
             return;
         }
         Path source = dossier.orElseThrow();
-        occupation.occuper(
-                "Vérification des fichiers…",
-                () -> viewModel.reactiver(source, progres -> {}),
+        dialogue.lancer(
+                proprietaire.get(),
+                "Réactivation du passage",
+                (progres, jeton) -> viewModel.reactiver(source, progres, jeton),
                 this::restituer,
                 echec -> notificateur.notifier(
                         NiveauNotification.AVERTISSEMENT, "Réactivation impossible", message(echec)));

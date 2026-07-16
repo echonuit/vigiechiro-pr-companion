@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
@@ -554,7 +555,12 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private void reactiver() {
         new ActionReactivation(
-                        viewModel, occupation, notificateur, selecteur, () -> viewModel.ouvrirSur(idPassage, contexte))
+                        viewModel,
+                        new DialogueProgression(executeur),
+                        () -> racine.getScene().getWindow(),
+                        notificateur,
+                        selecteur,
+                        () -> viewModel.ouvrirSur(idPassage, contexte))
                 .reactiver();
     }
 
