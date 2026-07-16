@@ -5,12 +5,11 @@
 # picocli, et les CODES DE SORTIE d'un vrai processus.
 #
 # Amorce focalisée sur les commandes du chantier (reconstruire-passage, reactiver) en contrat
-# HORS-LIGNE (aide générale, validation d'arguments, refus métier). La couverture bats complète des ~35
-# commandes et des chemins réseau est cadrée en suite (#1592).
+# HORS-LIGNE (aide générale, aide par commande, validation d'arguments, refus métier). La couverture bats
+# complète des ~35 commandes et des chemins réseau est cadrée en suite (#1592).
 #
-# Constat relevé à l'amorce (à traiter dans la suite) : les SOUS-commandes n'exposent pas `--help`
-# (seule la racine porte `mixinStandardHelpOptions` : 1 commande sur 36). `reactiver --help` échoue donc
-# au lieu d'afficher l'aide de la commande — à corriger d'un coup sur les 35 sous-commandes.
+# `--help` est désormais activé sur CHAQUE sous-commande (Cli.executer, #1592) : `reactiver --help`
+# décrit la commande au lieu d'échouer « Unknown option ».
 #
 # Lancer :  ./mvnw -DskipTests package   # produit target/vigiechiro-*-shaded.jar
 #           bats src/test/bats
@@ -36,6 +35,21 @@ cli() {
   [[ "${output}" == *"Usage: vigiechiro"* ]]
   [[ "${output}" == *"reconstruire-passage"* ]]
   [[ "${output}" == *"reactiver"* ]]
+}
+
+@test "reactiver --help : décrit la commande et ses options, exit 0 (#1592)" {
+  run cli reactiver --help
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Usage: vigiechiro reactiver"* ]]
+  [[ "${output}" == *"--passage"* ]]
+  [[ "${output}" == *"--source"* ]]
+}
+
+@test "reconstruire-passage --help : décrit la commande, exit 0 (#1592)" {
+  run cli reconstruire-passage --help
+  [ "${status}" -eq 0 ]
+  [[ "${output}" == *"Usage: vigiechiro reconstruire-passage"* ]]
+  [[ "${output}" == *"--participation"* ]]
 }
 
 @test "reconstruire-passage hors connexion : refus métier expliqué, exit 1" {

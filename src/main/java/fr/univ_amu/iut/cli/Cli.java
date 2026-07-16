@@ -79,6 +79,10 @@ public final class Cli {
     /// @param erreur flux des messages d'erreur (typiquement `System.err`)
     public int executer(String[] args, PrintStream sortie, PrintStream erreur) {
         CommandLine ligne = new CommandLine(CommandeRacine.class, new FabriqueGuice(injecteur));
+        // `-h`/`--help` sur CHAQUE sous-commande (pas seulement la racine), en un seul point plutôt que
+        // `mixinStandardHelpOptions` répété sur 35 `@Command` (#1592) : `reactiver --help` doit décrire la
+        // commande, pas échouer « Unknown option ». Le drapeau court-circuite la validation des arguments.
+        ligne.getSubcommands().values().forEach(sous -> sous.getCommandSpec().mixinStandardHelpOptions(true));
         ligne.setCaseInsensitiveEnumValuesAllowed(true); // --protocole standard == STANDARD (confort de saisie)
         ligne.setOut(new PrintWriter(sortie, true, StandardCharsets.UTF_8));
         ligne.setErr(new PrintWriter(erreur, true, StandardCharsets.UTF_8));
