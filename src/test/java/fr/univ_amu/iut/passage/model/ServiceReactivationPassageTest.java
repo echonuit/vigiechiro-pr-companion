@@ -429,6 +429,28 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
+    @DisplayName("#1648 : passage reconstruit + bruts présents → voie RECONSTRUIT (pas « introuvables » trompeur)")
+    void passage_reconstruit_bruts_presents_est_dit_honnetement() throws IOException {
+        List<String> sequences = reconstruireAvecBrutsEnSauvegarde();
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.voie())
+                .as("les bruts sont là, mais un passage reconstruit n'a pas d'inventaire d'originaux : on le"
+                        + " DIT au lieu de prétendre « introuvables »")
+                .isEqualTo(VoieReactivation.RECONSTRUIT);
+        assertThat(rapport.reactivees()).isZero();
+        assertThat(rapport.divergentes()).isZero();
+        assertThat(rapport.decompte().total()).isEqualTo(sequences.size());
+        assertThat(disponibilite.disponibilite(idPassage))
+                .as("rien n'a été rebranché : l'audio reste absent")
+                .isEqualTo(DisponibiliteAudio.ABSENTE);
+        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
+                .as("le passage reste archivé : l'audio n'est pas revenu")
+                .isTrue();
+    }
+
+    @Test
     @DisplayName("#1406 : une carte SD contenant PLUSIEURS nuits ne réactive que celle du passage")
     void carte_sd_multi_nuits() throws IOException {
         List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);
@@ -669,6 +691,66 @@ class ServiceReactivationPassageTest {
         }
         Files.delete(brut); // archivage : les bruts aussi ont été purgés
         sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
+        return noms;
+    }
+
+    /// Sème un passage **reconstruit** depuis la plateforme (#1305), à l'identique de
+    /// `ServiceReconstructionPassages.creerSequences` : un **unique original placeholder**
+    /// `<prefixe>reconstruit.wav` **sans empreinte ni fréquence d'acquisition**, et des séquences nommées
+    /// d'après les titres CSV distants (noms de tranches), rattachées à ce placeholder, **sans fichier sur
+    /// disque**. Puis place les **bruts** de la carte SD (sous leur nom d'enregistreur) dans la sauvegarde :
+    /// ils sont là, mais rien en base ne permet de les relier.
+    ///
+    /// @return les noms des séquences reconstruites
+    private List<String> reconstruireAvecBrutsEnSauvegarde() throws IOException {
+        idPassage = passageDao
+                .insert(new Passage(
+                        null,
+                        1,
+                        2026,
+                        "2026-06-20",
+                        "21:30:00",
+                        "05:15:00",
+                        null,
+                        StatutWorkflow.DEPOSE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        idPoint,
+                        SERIE))
+                .id();
+        Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
+        idSession = sessionDao
+                .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
+                .id();
+        Long idPlaceholder = originalDao
+                .insert(new EnregistrementOriginal(
+                        null, PREFIXE.prefixeFichier() + "reconstruit.wav", "", null, null, null, idSession))
+                .id();
+
+        List<String> noms = List.of(SEQ_1, SEQ_2);
+        int index = 0;
+        for (String nom : noms) {
+            sequenceDao.insert(new SequenceDEcoute(
+                    null,
+                    nom,
+                    idPlaceholder,
+                    index,
+                    null,
+                    null,
+                    transformes.resolve(nom).toString(),
+                    false,
+                    idSession,
+                    null,
+                    null,
+                    null));
+            index++;
+        }
+        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
+
+        // Les bruts sont bien là, sous leur nom de carte SD : c'est tout l'objet du bug.
+        ecrireBrut(sauvegarde.resolve(NOM_SD_BRUT), 42);
         return noms;
     }
 

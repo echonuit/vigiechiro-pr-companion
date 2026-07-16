@@ -13,6 +13,14 @@ public enum VoieReactivation {
     /// (transformation déterministe, R11), puis vérifiées comme n'importe quel candidat.
     BRUTS,
 
+    /// Le passage a été **reconstruit** depuis la plateforme (#1305) : il connaît le **nom** de ses
+    /// séquences (issu du CSV distant) mais ne porte **aucun inventaire d'originaux réutilisable** - ni
+    /// empreinte, ni fréquence d'acquisition. La voie « bruts » ne peut donc rien apparier ni régénérer,
+    /// et prétendre que les fichiers sont « introuvables » serait un mensonge : les bruts peuvent être là,
+    /// c'est l'application qui n'a pas de quoi les relier. On le **dit** (#1648, EPIC #1653) ; l'hydratation
+    /// effective depuis les bruts est un palier suivant.
+    RECONSTRUIT,
+
     /// Le dossier ne contient ni les unes ni les autres : rien à rebrancher.
     AUCUNE
 }

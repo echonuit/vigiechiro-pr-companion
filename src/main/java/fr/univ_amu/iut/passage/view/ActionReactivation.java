@@ -90,13 +90,24 @@ final class ActionReactivation {
         recharger.run();
         notificateur.notifier(
                 rapport.divergentes() > 0 ? NiveauNotification.AVERTISSEMENT : NiveauNotification.INFORMATION,
-                rapport.complete() ? "Passage réactivé" : "Réactivation partielle",
+                titre(rapport),
                 texte(rapport));
+    }
+
+    /// Titre du compte rendu : honnête aussi quand rien n'a pu être tenté (passage reconstruit, #1648).
+    private static String titre(RapportReactivation rapport) {
+        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
+            return "Passage reconstruit";
+        }
+        return rapport.complete() ? "Passage réactivé" : "Réactivation partielle";
     }
 
     /// Compte rendu : ce qui est revenu et sur quelle preuve, ce qui a été refusé et pourquoi, ce
     /// qui manque encore.
     private static String texte(RapportReactivation rapport) {
+        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
+            return texteReconstruit(rapport);
+        }
         StringBuilder texte = new StringBuilder();
         if (rapport.voie() == VoieReactivation.BRUTS) {
             texte.append("Ce dossier ne contenait que vos enregistrements bruts : les séquences d'écoute")
@@ -124,6 +135,19 @@ final class ActionReactivation {
                                         + rapport.decompte().presentes() + " séquence(s) sur "
                                         + rapport.decompte().total() + " présentes.");
         return texte.toString();
+    }
+
+    /// Compte rendu **honnête** d'un passage reconstruit (#1648) : ni « introuvables » (les bruts peuvent
+    /// être là), ni fausse promesse. On explique pourquoi rien n'a pu être relié, et que ce n'est pas la
+    /// faute des fichiers de l'utilisateur.
+    private static String texteReconstruit(RapportReactivation rapport) {
+        return "Ce passage a été reconstruit depuis VigieChiro : l'application connaît le nom de ses "
+                + rapport.decompte().total()
+                + " séquence(s), mais pas la correspondance avec vos fichiers d'origine, ni les empreintes"
+                + " nécessaires pour les régénérer.\n\n"
+                + "Vos fichiers ne sont pas en cause : ils n'ont simplement pas pu être reliés. La"
+                + " réactivation depuis les enregistrements bruts n'est pas encore disponible pour ce type de"
+                + " passage.";
     }
 
     /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif. Au-delà de
