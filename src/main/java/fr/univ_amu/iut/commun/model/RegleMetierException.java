@@ -4,7 +4,7 @@ package fr.univ_amu.iut.commun.model;
 /// règles soft restituées via [ResultatVerification].
 ///
 /// Exemples portés par `ServiceSites` : unicité du carré par utilisateur (R5), refus de
-/// supprimer un site auquel des passages sont rattachés. À venir : R14 (un passage « À jeter » ne
+/// supprimer un site auquel des passages sont rattachés. R14 (un passage « Inexploitable » ne
 /// peut pas rejoindre un lot).
 ///
 /// Cette exception se distingue volontairement :

@@ -13,9 +13,9 @@ import picocli.CommandLine.Option;
 import picocli.CommandLine.Spec;
 
 /// `deposer` (#617) : clôture le workflow d'un passage — **prépare le lot** ([ServiceLot#preparerLot],
-/// transition Vérifié → Prêt à déposer, avec les gardes métier : R14 « À jeter », cohérence bloquante) puis
+/// transition Vérifié → Prêt à déposer, avec les gardes métier : R14 « Inexploitable », cohérence bloquante) puis
 /// le **marque déposé** ([ServiceLot#marquerDepose], Prêt à déposer → Déposé). Réutilise `ServiceLot` sans
-/// logique nouvelle. Tout refus métier (statut incompatible, passage « À jeter », session introuvable)
+/// logique nouvelle. Tout refus métier (statut incompatible, passage « Inexploitable », session introuvable)
 /// sort en échec d'exécution (code 1), avant tout changement d'état si la préparation échoue.
 @Command(name = "deposer", description = "Clôture le dépôt d'un passage : prépare le dépôt puis le marque déposé.")
 public final class Deposer implements Callable<Integer> {

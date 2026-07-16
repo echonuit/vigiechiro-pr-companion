@@ -84,7 +84,7 @@ public final class ColonneBadge {
         return ClasseBadge.pour(statut);
     }
 
-    /// Classe CSS du badge de **verdict** d'un passage (`badge-verdict-…`) ; « À vérifier » par défaut
+    /// Classe CSS du badge de **verdict** d'un passage (`badge-verdict-…`) ; « Non vérifié » par défaut
     /// lorsqu'aucun verdict n'est encore saisi. Délègue à [ClasseBadge].
     public static String classe(Verdict verdict) {
         return ClasseBadge.pour(verdict);

@@ -26,7 +26,7 @@ import java.util.Objects;
 /// [Diagnostic] ; sa conversion [Diagnostic#versResultatVerification()] n'émet donc que des
 /// alertes **soft** (jamais bloquantes), conformément au patron « règle soft →
 /// [ResultatVerification] ». La seule règle réellement bloquante de cette chaîne est R14
-/// (verdict « À jeter » ⇒ exclu d'un lot), traitée en aval par la feature `lot`.
+/// (verdict « Inexploitable » ⇒ exclu d'un lot), traitée en aval par la feature `lot`.
 public class PreCheckNuit {
 
     /// En-deçà de ce nombre d'enregistrements, la nuit est jugée anormalement creuse (🟠).
