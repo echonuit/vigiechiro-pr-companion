@@ -50,6 +50,7 @@ import picocli.CommandLine.Spec;
             PoserCertitude.class,
             Discussion.class,
             Qualifier.class,
+            ListerSelection.class,
             ExporterLot.class,
             Deposer.class,
             SynchroniserVigieChiro.class,

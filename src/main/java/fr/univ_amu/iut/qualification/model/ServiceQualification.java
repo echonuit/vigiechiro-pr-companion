@@ -235,6 +235,15 @@ public class ServiceQualification {
         return lignes;
     }
 
+    /// Détaille la sélection d'écoute **d'un passage** (jointure de lecture par `idPassage`) : liste vide
+    /// si le passage n'a pas de sélection. Convenience de lecture pour la CLI (#1512). Lecture seule.
+    public List<SequenceEnSelection> detaillerSelectionParPassage(Long idPassage) {
+        return selectionDao
+                .findByPassage(idPassage)
+                .map(selection -> detaillerSelection(selection.id()))
+                .orElseGet(List::of);
+    }
+
     /// Enregistre le **verdict par fichier** d'une séquence de la sélection d'un passage (#1524,
     /// lot 5). Lève si le passage n'a pas de sélection. N'écrit **que** `selection_sequence.verdict` :
     /// il ne rafraîchit pas le cache dénormalisé `passage.verification_verdict`. Depuis le lot 6a, l'IHM

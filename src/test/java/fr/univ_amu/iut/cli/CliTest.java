@@ -251,6 +251,23 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("lister-selection sans sélection d'écoute : message clair (code 0)")
+    void lister_selection_sans_selection() {
+        String texte = executerSortie("lister-selection", "--passage", "1");
+        assertThat(texte).contains("Aucune sélection").contains("#1");
+    }
+
+    @Test
+    @DisplayName("lister-selection --json expose le verdict final proposé et le tableau des séquences")
+    void lister_selection_json() {
+        String texte = executerSortie("lister-selection", "--passage", "1", "--json");
+        assertThat(texte)
+                .contains("\"passage\"")
+                .contains("\"verdictFinalPropose\"")
+                .contains("\"sequences\"");
+    }
+
+    @Test
     @DisplayName("deposer sur un passage introuvable : échec métier (1)")
     void deposer_passage_introuvable() {
         int code = cli.executer(new String[] {"deposer", "--passage", "999"}, sortie, erreur);

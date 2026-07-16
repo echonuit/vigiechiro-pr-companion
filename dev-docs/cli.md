@@ -60,6 +60,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `importer` | `--source <dir> --point <id> [--annee N] [--passage N]` | P2 | `ServiceImport` |
 | `importer-tadarida` | `--passage <id> --csv <fichier> [--remplacer]` | P6 | `ServiceValidation.importer` / `reimporter` |
 | `qualifier` | `--passage <id> --verdict <ok\|utilisable\|inexploitable> [--commentaire ..]` | R13 | `ServicePassage.poserVerdict` (alias `douteux`/`a-jeter` rétro-compatibles) |
+| `lister-selection` | `--passage <id> [--json]` | #1512 | Sélection d'écoute d'un passage : **verdict par fichier** de chaque séquence + **verdict final proposé** (dérivé). Parité CLI de M-Qualification, lecture seule |
 | `exporter-lot` | `--passage <id>` | P4 | `ServiceLot` |
 | `deposer` | `--passage <id>` | P8 | `ServiceLot.preparerLot` + `marquerDepose` (marquage **manuel**) |
 | `synchroniser-vigiechiro` | `[--token <jeton>]` | #1181 | rejoue les `RapprochementVigieChiro` (taxons, sites/points) après un `GET /moi` de contrôle ; `0` ssi connecté |

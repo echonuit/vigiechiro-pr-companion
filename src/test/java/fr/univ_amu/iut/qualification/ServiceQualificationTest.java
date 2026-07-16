@@ -242,6 +242,27 @@ class ServiceQualificationTest {
     }
 
     @Test
+    @DisplayName("#1512 : detaillerSelectionParPassage joint la sélection par passage (vide si absente)")
+    void detailler_selection_par_passage() {
+        // Sans sélection : liste vide (lecture seule, ne constitue rien).
+        assertThat(service.detaillerSelectionParPassage(idPassage)).isEmpty();
+
+        creerNuit(3);
+        SelectionDEcoute selection = service.creerSelection(idPassage, MethodeSelection.MANUEL, 3);
+        List<Long> sequences = service.sequencesDeLaSelection(selection.id()).stream()
+                .map(SequenceSelectionnee::idSequence)
+                .toList();
+        service.enregistrerVerdictFichier(idPassage, sequences.get(0), VerdictFichier.BON);
+        service.enregistrerVerdictFichier(idPassage, sequences.get(2), VerdictFichier.INEXPLOITABLE);
+
+        List<SequenceEnSelection> lignes = service.detaillerSelectionParPassage(idPassage);
+        assertThat(lignes).hasSize(3);
+        assertThat(lignes)
+                .extracting(SequenceEnSelection::verdict)
+                .containsExactlyInAnyOrder(VerdictFichier.BON, VerdictFichier.NON_JUGE, VerdictFichier.INEXPLOITABLE);
+    }
+
+    @Test
     @DisplayName("#1524 : enregistrer un verdict de fichier sans sélection lève une RegleMetierException")
     void verdict_fichier_sans_selection_leve() {
         assertThatThrownBy(() -> service.enregistrerVerdictFichier(idPassage, 1L, VerdictFichier.BON))
