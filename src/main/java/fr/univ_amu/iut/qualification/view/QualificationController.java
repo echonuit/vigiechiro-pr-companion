@@ -194,6 +194,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private Label lblApercuR14;
 
+    /// Puce « Proposé : X » (#1524, lot 6a) : verdict final dérivé des verdicts par fichier, affiché près
+    /// des boutons de verdict global.
+    @FXML
+    private Label lblVerdictPropose;
+
     @FXML
     private Label lblAvertissement;
 
@@ -364,6 +369,8 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         marquerChoisi(boutonOk, Verdict.OK);
         marquerChoisi(boutonDouteux, Verdict.DOUTEUX);
         marquerChoisi(boutonAJeter, Verdict.A_JETER);
+        // Verdict final proposé (#1524, lot 6a) : puce colorée dérivée en direct des verdicts par fichier.
+        VerdictPropose.lier(lblVerdictPropose, selectionVm.verdictProposeProperty());
         champCommentaire.textProperty().bindBidirectional(verdictVm.commentaireProperty());
 
         // Aperçu R14 : prévient, avant l'enregistrement, qu'un verdict « à jeter » exclura le passage.

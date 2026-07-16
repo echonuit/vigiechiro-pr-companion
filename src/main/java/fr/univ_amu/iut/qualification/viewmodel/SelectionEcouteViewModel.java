@@ -1,9 +1,11 @@
 package fr.univ_amu.iut.qualification.viewmodel;
 
 import fr.univ_amu.iut.commun.model.MethodeSelection;
+import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
+import fr.univ_amu.iut.qualification.model.AgregationVerdict;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.GenerateurSelection;
 import fr.univ_amu.iut.qualification.model.SelectionDEcoute;
@@ -23,6 +25,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 
 /// ViewModel de la **sélection d'écoute** de l'écran M-Qualification (vérification par
@@ -63,9 +66,18 @@ public class SelectionEcouteViewModel {
 
     private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
 
+    /// Verdict final PROPOSÉ du passage (#1524, lot 6a) : dérivé **en direct** des verdicts par fichier
+    /// de la sélection ([AgregationVerdict]). Proposition seulement (l'utilisateur garde le dernier mot) ;
+    /// vaut [Verdict#A_VERIFIER] tant qu'aucune séquence n'est jugée.
+    private final ReadOnlyObjectWrapper<Verdict> verdictPropose =
+            new ReadOnlyObjectWrapper<>(this, "verdictPropose", Verdict.A_VERIFIER);
+
     public SelectionEcouteViewModel(ServiceQualification service) {
         this.service = Objects.requireNonNull(service, "service");
         sequenceCourante.addListener((obs, ancien, nouveau) -> majCheminCourant(nouveau));
+        // Le verdict proposé se recalcule à chaque évolution de la liste : (ré)ouverture, régénération,
+        // et surtout chaque verdict par fichier rendu (marquerVerdictCourante remplace une ligne).
+        lignes.addListener((ListChangeListener<SequenceEnSelection>) changement -> recalculerPropose());
     }
 
     /// Ouvre la sélection d'écoute du passage `idPassage` : bandeau de contexte et liste de la
@@ -216,6 +228,13 @@ public class SelectionEcouteViewModel {
                         : ecoutees + " / " + total + " écoutées (" + Math.round(progression.get() * 100) + " %)");
     }
 
+    /// Dérive le verdict proposé du passage à partir des verdicts par fichier courants
+    /// ([AgregationVerdict] : majorité stricte d'inexploitables → À jeter ; tout Bon → OK ; sinon Douteux).
+    private void recalculerPropose() {
+        verdictPropose.set(AgregationVerdict.deriver(
+                lignes.stream().map(SequenceEnSelection::verdict).toList()));
+    }
+
     /// Titre de contexte du bandeau (ex. `Carré 640380 / A1 / N° 2 (2026)`).
     public ReadOnlyStringProperty titreContexteProperty() {
         return titreContexte.getReadOnlyProperty();
@@ -281,5 +300,11 @@ public class SelectionEcouteViewModel {
     /// Message d'erreur (passage introuvable, sans séquence), vide en fonctionnement nominal.
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
+    }
+
+    /// Verdict final **proposé** du passage, dérivé en direct des verdicts par fichier de la sélection
+    /// (#1524, lot 6a). [Verdict#A_VERIFIER] tant qu'aucune séquence n'est jugée.
+    public ReadOnlyObjectProperty<Verdict> verdictProposeProperty() {
+        return verdictPropose.getReadOnlyProperty();
     }
 }
