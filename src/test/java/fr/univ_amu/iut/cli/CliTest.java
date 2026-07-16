@@ -268,6 +268,30 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("qualifier-fichier sans sélection d'écoute : échec métier (1)")
+    void qualifier_fichier_sans_selection() {
+        int code = cli.executer(
+                new String[] {"qualifier-fichier", "--passage", "1", "--sequence", "1", "--verdict", "bon"},
+                sortie,
+                erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("sélection");
+    }
+
+    @Test
+    @DisplayName("qualifier-fichier avec un verdict par fichier inconnu : erreur d'usage (code 2)")
+    void qualifier_fichier_verdict_inconnu() {
+        int code = cli.executer(
+                new String[] {"qualifier-fichier", "--passage", "1", "--sequence", "1", "--verdict", "bof"},
+                sortie,
+                erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_ARGUMENTS);
+        assertThat(texteErreur()).contains("Verdict de fichier inconnu");
+    }
+
+    @Test
     @DisplayName("deposer sur un passage introuvable : échec métier (1)")
     void deposer_passage_introuvable() {
         int code = cli.executer(new String[] {"deposer", "--passage", "999"}, sortie, erreur);
