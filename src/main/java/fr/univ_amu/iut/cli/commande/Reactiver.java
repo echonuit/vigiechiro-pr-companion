@@ -3,6 +3,7 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
@@ -107,6 +108,14 @@ public final class Reactiver implements Callable<Integer> {
             texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
         }
         ajouterEcarts(texte, rapport.ecarts());
+        IndiceAcoustique indice = rapport.indiceAcoustique();
+        if (indice != null && indice.estRenseigne()) {
+            texte.append("Concordance acoustique (indice, non bloquant) : ")
+                    .append(indice.concordantes())
+                    .append('/')
+                    .append(indice.mesurees())
+                    .append(" séquence(s) présentent les cris attendus.\n");
+        }
         texte.append("Audio : ")
                 .append(rapport.decompte().disponibilite())
                 .append(" (")
@@ -147,6 +156,9 @@ public final class Reactiver implements Callable<Integer> {
         objet.put("disponibiliteAudio", rapport.decompte().disponibilite().name());
         objet.put("sequencesPresentes", rapport.decompte().presentes());
         objet.put("sequencesTotal", rapport.decompte().total());
+        IndiceAcoustique indice = rapport.indiceAcoustique();
+        objet.put("acoustiqueMesurees", indice == null ? 0 : indice.mesurees());
+        objet.put("acoustiqueConcordantes", indice == null ? 0 : indice.concordantes());
         objet.put(
                 "ecarts",
                 rapport.ecarts().stream()

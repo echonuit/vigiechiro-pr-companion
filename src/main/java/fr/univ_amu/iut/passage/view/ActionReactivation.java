@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.view.DialogueProgression;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
+import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
@@ -127,6 +128,7 @@ final class ActionReactivation {
             texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
         }
         ajouterEcarts(texte, rapport.ecarts());
+        ajouterIndiceAcoustique(texte, rapport.indiceAcoustique());
         texte.append('\n')
                 .append(
                         rapport.complete()
@@ -135,6 +137,20 @@ final class ActionReactivation {
                                         + rapport.decompte().presentes() + " séquence(s) sur "
                                         + rapport.decompte().total() + " présentes.");
         return texte.toString();
+    }
+
+    /// Concordance acoustique en **indice** (#1682), quand elle a été mesurée (hydratation d'un passage
+    /// reconstruit) : purement informatif. Les tranches régénérées sont acceptées sur preuve structurelle
+    /// (extrait du brut désigné) ; cet indice dit seulement à quel point les cris attendus s'y retrouvent.
+    private static void ajouterIndiceAcoustique(StringBuilder texte, IndiceAcoustique indice) {
+        if (indice == null || !indice.estRenseigne()) {
+            return;
+        }
+        texte.append("Concordance acoustique (indice, non bloquant) : ")
+                .append(indice.concordantes())
+                .append(" séquence(s) sur ")
+                .append(indice.mesurees())
+                .append(" présentent les cris attendus.\n");
     }
 
     /// Compte rendu **honnête** d'un passage reconstruit (#1648) : ni « introuvables » (les bruts peuvent
