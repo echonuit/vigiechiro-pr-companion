@@ -19,6 +19,7 @@ import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.InventaireParInspection;
 import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -28,6 +29,7 @@ import fr.univ_amu.iut.importation.view.NavigationImportation;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.OngletReglagesImport;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
+import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -74,6 +76,13 @@ public class ImportationModule extends ModuleDeFeature {
         OptionalBinder.newOptionalBinder(binder(), RegenerationSequences.class)
                 .setBinding()
                 .to(RegenerationParTransformationAudio.class);
+        // Port InventaireBrutsSource (#1649) : c'est ici que vit la lecture du log (fréquence d'acquisition)
+        // et l'inspection du dossier, d'où `passage` obtient l'inventaire des bruts d'un passage RECONSTRUIT
+        // pour l'hydrater (#1650). Feature désactivée : le passage reconstruit reste sur le compte rendu
+        // honnête (#1648).
+        OptionalBinder.newOptionalBinder(binder(), InventaireBrutsSource.class)
+                .setBinding()
+                .to(InventaireParInspection.class);
         // Onglet « Import » de l'écran Réglages (#928) : contribué au point d'extension du socle,
         // sans que le socle connaisse cette feature.
         ongletReglages(OngletReglagesImport.class);

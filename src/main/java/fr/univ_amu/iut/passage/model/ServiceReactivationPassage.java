@@ -58,6 +58,10 @@ public class ServiceReactivationPassage {
 
     private final ReactivationDepuisBruts depuisBruts;
 
+    /// La voie « bruts » d'un passage **reconstruit** (#1650) : il n'a pas d'inventaire d'originaux, on part
+    /// donc du dossier (log + bruts) plutôt que des originaux connus.
+    private final HydratationDepuisBruts hydratation;
+
     /// Port d'import des observations (#1264), **optionnel** (la feature « Import VigieChiro » est
     /// désactivable, #1057). Il sert ici la **phase d'ancrage** (#1571) : un passage reconstruit par CSV
     /// (#1565) a des observations sans ancrage plateforme, acquis à la réactivation quand l'audio revient.
@@ -71,6 +75,7 @@ public class ServiceReactivationPassage {
             ServiceDisponibiliteAudio disponibilite,
             Optional<CrisAttendus> crisAttendus,
             Optional<RegenerationSequences> regeneration,
+            Optional<InventaireBrutsSource> inventaireBruts,
             Optional<ImportObservations> importObservations) {
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
@@ -81,6 +86,8 @@ public class ServiceReactivationPassage {
                 Objects.requireNonNull(crisAttendus, "crisAttendus"));
         this.depuisBruts = new ReactivationDepuisBruts(
                 verification, rebranchement, Objects.requireNonNull(regeneration, "regeneration"));
+        this.hydratation = new HydratationDepuisBruts(
+                Objects.requireNonNull(inventaireBruts, "inventaireBruts"), regeneration, rebranchement);
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
     }
 
@@ -124,9 +131,23 @@ public class ServiceReactivationPassage {
         // Ce que le dossier contient, constaté et non supposé.
         jeton.leverSiAnnule();
         VoieReactivation voie = reconnaitre(sequences, originaux, candidats, prefixe);
-        BilanReactivation bilan = voie == VoieReactivation.BRUTS
-                ? depuisBruts.appliquer(sequences, originaux, candidats, prefixe, progres)
-                : rebranchement.rebrancher(sequences, candidats, progres);
+        BilanReactivation bilan;
+        if (voie == VoieReactivation.BRUTS) {
+            bilan = depuisBruts.appliquer(sequences, originaux, candidats, prefixe, progres);
+        } else if (voie == VoieReactivation.RECONSTRUIT) {
+            // Un passage reconstruit peut être hydraté depuis ses bruts (log + WAV) : si c'est possible, la
+            // voie devient BRUTS (les séquences ont été régénérées) ; sinon on reste sur le compte rendu
+            // honnête (#1648), sans rien inventer.
+            Optional<BilanReactivation> hydrate = hydratation.appliquer(sequences, dossierSource, prefixe, progres);
+            if (hydrate.isPresent()) {
+                voie = VoieReactivation.BRUTS;
+                bilan = hydrate.orElseThrow();
+            } else {
+                bilan = rebranchement.rebrancher(sequences, candidats, progres);
+            }
+        } else {
+            bilan = rebranchement.rebrancher(sequences, candidats, progres);
+        }
 
         RapportReactivation rapport = conclure(idPassage, session, sequences, bilan, voie);
         jeton.leverSiAnnule();
