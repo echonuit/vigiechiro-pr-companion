@@ -15,6 +15,7 @@ import com.google.inject.Provides;
 import fr.nedjar.vigiechiro.audio.AudioView;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -382,6 +383,25 @@ class QualificationVueIntegrationTest {
         assertThat(boutonOk.getStyleClass()).contains("verdict-choisi");
         assertThat(boutonDouteux.getStyleClass()).doesNotContain("verdict-choisi");
         assertThat(propose.getText()).contains("Proposé").contains("Douteux").contains("surchargé");
+    }
+
+    @Test
+    @DisplayName("#1524 : « Enregistrer » persiste le verdict DÉRIVÉ (la dérivation fait autorité)")
+    void enregistrer_persiste_le_verdict_derive(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+        Button enregistrer = robot.lookup("#boutonEnregistrer").queryAs(Button.class);
+
+        // 2 Bon + 1 Inexploitable → proposé Douteux, qui pré-remplit le verdict global (aucune surcharge).
+        jugerLigne(robot, table, 0, "#boutonBon");
+        jugerLigne(robot, table, 1, "#boutonBon");
+        jugerLigne(robot, table, 2, "#boutonInexploitable");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        robot.interact(enregistrer::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Le verdict persisté est le dérivé (Douteux), sans saisie manuelle : la dérivation fait autorité.
+        verify(service).enregistrerVerdict(ID_PASSAGE, Verdict.DOUTEUX, null);
     }
 
     private static void jugerLigne(FxRobot robot, TableView<?> table, int index, String boutonId) {

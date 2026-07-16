@@ -236,9 +236,11 @@ public class ServiceQualification {
     }
 
     /// Enregistre le **verdict par fichier** d'une séquence de la sélection d'un passage (#1524,
-    /// lot 5). Lève si le passage n'a pas de sélection. Ne recalcule pas encore le verdict du passage
-    /// (le rebranchage de la source de vérité est au lot 6) : c'est un point d'entrée « sous le
-    /// capot » pour la future IHM par fichier.
+    /// lot 5). Lève si le passage n'a pas de sélection. N'écrit **que** `selection_sequence.verdict` :
+    /// il ne rafraîchit pas le cache dénormalisé `passage.verification_verdict`. Depuis le lot 6a, l'IHM
+    /// dérive le verdict du passage de ces verdicts par fichier ([#verdictDerivePassage]) et le persiste
+    /// à l'enregistrement ([#enregistrerVerdict]). La **propagation automatique** du cache (M-Passage,
+    /// listes, dépôt) au fil des verdicts par fichier relève du lot 6b (#1551).
     ///
     /// @throws RegleMetierException si le passage n'a pas de sélection d'écoute
     public void enregistrerVerdictFichier(Long idPassage, Long idSequence, VerdictFichier verdict) {
@@ -251,9 +253,11 @@ public class ServiceQualification {
     }
 
     /// **Verdict final proposé** pour un passage, dérivé des verdicts par fichier de sa sélection
-    /// ([AgregationVerdict], #1524, lot 5). Lecture seule : ne persiste rien et ne fait pas encore
-    /// autorité (la surcharge et le cache dérivé arrivent au lot 6). Renvoie [Verdict#A_VERIFIER] si
-    /// le passage n'a pas de sélection ou si aucune séquence n'est jugée.
+    /// ([AgregationVerdict], #1524). Lecture seule : ne persiste rien. Depuis le lot 6a, ce dérivé
+    /// **pré-remplit** le verdict global dans l'IHM (surchargeable), et devient donc, à l'enregistrement,
+    /// la valeur persistée par [#enregistrerVerdict]. Persister le cache `passage.verification_verdict`
+    /// automatiquement (sans passer par l'enregistrement) est un chantier du lot 6b (#1551). Renvoie
+    /// [Verdict#A_VERIFIER] si le passage n'a pas de sélection ou si aucune séquence n'est jugée.
     public Verdict verdictDerivePassage(Long idPassage) {
         return selectionDao
                 .findByPassage(idPassage)
