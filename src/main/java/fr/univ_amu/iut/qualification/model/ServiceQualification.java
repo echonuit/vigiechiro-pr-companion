@@ -244,12 +244,13 @@ public class ServiceQualification {
                 .orElseGet(List::of);
     }
 
-    /// Enregistre le **verdict par fichier** d'une séquence de la sélection d'un passage (#1524,
-    /// lot 5). Lève si le passage n'a pas de sélection. N'écrit **que** `selection_sequence.verdict` :
-    /// il ne rafraîchit pas le cache dénormalisé `passage.verification_verdict`. Depuis le lot 6a, l'IHM
-    /// dérive le verdict du passage de ces verdicts par fichier ([#verdictDerivePassage]) et le persiste
-    /// à l'enregistrement ([#enregistrerVerdict]). La **propagation automatique** du cache (M-Passage,
-    /// listes, dépôt) au fil des verdicts par fichier relève du lot 6b (#1551).
+    /// Enregistre le **verdict par fichier** d'une séquence de la sélection d'un passage (#1524, lot 5).
+    /// Lève si le passage n'a pas de sélection. Écrit `selection_sequence.verdict`, puis — **uniquement
+    /// si le passage est déjà `VÉRIFIÉ`** — resynchronise le cache dénormalisé `passage.verification_verdict`
+    /// avec le verdict dérivé ([#resynchroniserCacheSiVerifie]). Depuis le lot 6a, l'IHM dérive le verdict
+    /// du passage de ces verdicts par fichier ([#verdictDerivePassage]) et le persiste à l'enregistrement
+    /// ([#enregistrerVerdict]) : cette resynchronisation garde le cache d'un passage **déjà vérifié**
+    /// cohérent quand on rejuge un de ses fichiers.
     ///
     /// @throws RegleMetierException si le passage n'a pas de sélection d'écoute
     public void enregistrerVerdictFichier(Long idPassage, Long idSequence, VerdictFichier verdict) {
@@ -259,14 +260,54 @@ public class ServiceQualification {
                 .orElseThrow(
                         () -> new RegleMetierException("Aucune sélection d'écoute pour le passage " + idPassage + "."));
         selectionDao.marquerVerdict(selection.id(), idSequence, verdict);
+        resynchroniserCacheSiVerifie(idPassage);
+    }
+
+    /// Resynchronise le cache dénormalisé `passage.verification_verdict` avec le verdict dérivé
+    /// ([#verdictDerivePassage]), **uniquement pour un passage déjà `VÉRIFIÉ`** (#1524, item cache).
+    ///
+    /// Restreindre au statut `VÉRIFIÉ` est délibéré : le cache d'un passage vérifié reste cohérent quand
+    /// on rejuge un de ses fichiers, **sans** polluer les passages **non vérifiés** — dont le cache `null`
+    /// sert de sentinelle « pas encore vérifié » à d'autres écrans (M-Sites, multisite, filtres, CSV) —
+    /// ni toucher un passage **déposé**, dont le verdict est figé (#1514, statut ≠ `VÉRIFIÉ`). On ne
+    /// rétrograde jamais vers `Non vérifié` : la resynchronisation n'a lieu que sur un dérivé décisif.
+    private void resynchroniserCacheSiVerifie(Long idPassage) {
+        passageDao.findById(idPassage).ifPresent(passage -> {
+            Verdict derive = verdictDerivePassage(idPassage);
+            if (passage.statutWorkflow() == StatutWorkflow.VERIFIE
+                    && derive != Verdict.A_VERIFIER
+                    && passage.verdictVerification() != derive) {
+                passageDao.update(avecVerdict(passage, derive));
+            }
+        });
+    }
+
+    /// Copie d'un passage avec un nouveau verdict de vérification (tous les autres champs inchangés).
+    private static Passage avecVerdict(Passage passage, Verdict verdict) {
+        return new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                verdict,
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur());
     }
 
     /// **Verdict final proposé** pour un passage, dérivé des verdicts par fichier de sa sélection
     /// ([AgregationVerdict], #1524). Lecture seule : ne persiste rien. Depuis le lot 6a, ce dérivé
     /// **pré-remplit** le verdict global dans l'IHM (surchargeable), et devient donc, à l'enregistrement,
-    /// la valeur persistée par [#enregistrerVerdict]. Persister le cache `passage.verification_verdict`
-    /// automatiquement (sans passer par l'enregistrement) est un chantier du lot 6b (#1551). Renvoie
-    /// [Verdict#A_VERIFIER] si le passage n'a pas de sélection ou si aucune séquence n'est jugée.
+    /// la valeur persistée par [#enregistrerVerdict]. Sur un passage **déjà vérifié**, ce dérivé est aussi
+    /// resynchronisé dans le cache `passage.verification_verdict` à chaque verdict par fichier rendu
+    /// ([#enregistrerVerdictFichier]). Renvoie [Verdict#A_VERIFIER] si le passage n'a pas de sélection ou
+    /// si aucune séquence n'est jugée.
     public Verdict verdictDerivePassage(Long idPassage) {
         return selectionDao
                 .findByPassage(idPassage)

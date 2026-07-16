@@ -263,6 +263,50 @@ class ServiceQualificationTest {
     }
 
     @Test
+    @DisplayName("#1524 : rejuger un fichier resynchronise le cache verdict d'un passage DÉJÀ vérifié")
+    void rejuger_resynchronise_le_cache_sur_passage_verifie() {
+        creerNuit(3);
+        SelectionDEcoute selection = service.creerSelection(idPassage, MethodeSelection.MANUEL, 3);
+        List<Long> sequences = service.sequencesDeLaSelection(selection.id()).stream()
+                .map(SequenceSelectionnee::idSequence)
+                .toList();
+        // On vérifie le passage avec un verdict OK explicite (statut → VÉRIFIÉ, cache = OK).
+        service.enregistrerVerdict(idPassage, Verdict.OK, null);
+        assertThat(passageDao.findById(idPassage).orElseThrow().verdictVerification())
+                .isEqualTo(Verdict.OK);
+
+        // Rejuger : majorité stricte d'inexploitables → dérivé « Inexploitable ».
+        service.enregistrerVerdictFichier(idPassage, sequences.get(0), VerdictFichier.INEXPLOITABLE);
+        service.enregistrerVerdictFichier(idPassage, sequences.get(1), VerdictFichier.INEXPLOITABLE);
+
+        Passage apres = passageDao.findById(idPassage).orElseThrow();
+        assertThat(apres.verdictVerification())
+                .as("le cache d'un passage vérifié suit le dérivé")
+                .isEqualTo(Verdict.A_JETER);
+        assertThat(apres.statutWorkflow()).as("le statut reste Vérifié").isEqualTo(StatutWorkflow.VERIFIE);
+    }
+
+    @Test
+    @DisplayName("#1524 : juger un fichier ne touche pas le cache verdict d'un passage NON vérifié")
+    void juger_ne_touche_pas_le_cache_sur_passage_non_verifie() {
+        creerNuit(3);
+        SelectionDEcoute selection = service.creerSelection(idPassage, MethodeSelection.MANUEL, 3);
+        Long sequence0 = service.sequencesDeLaSelection(selection.id()).get(0).idSequence();
+        // Le passage est TRANSFORMÉ (non vérifié) : son cache verdict est null.
+        assertThat(passageDao.findById(idPassage).orElseThrow().verdictVerification())
+                .isNull();
+
+        service.enregistrerVerdictFichier(idPassage, sequence0, VerdictFichier.BON);
+
+        // Le cache reste null : la sentinelle « pas encore vérifié » est préservée pour les autres écrans.
+        assertThat(passageDao.findById(idPassage).orElseThrow().verdictVerification())
+                .as("un passage non vérifié n'est pas auto-renseigné")
+                .isNull();
+        // Le proposé dérivé reste néanmoins disponible en lecture.
+        assertThat(service.verdictDerivePassage(idPassage)).isEqualTo(Verdict.OK);
+    }
+
+    @Test
     @DisplayName("#1524 : enregistrer un verdict de fichier sans sélection lève une RegleMetierException")
     void verdict_fichier_sans_selection_leve() {
         assertThatThrownBy(() -> service.enregistrerVerdictFichier(idPassage, 1L, VerdictFichier.BON))
