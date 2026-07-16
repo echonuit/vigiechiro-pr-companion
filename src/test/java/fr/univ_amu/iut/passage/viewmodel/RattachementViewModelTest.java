@@ -95,6 +95,25 @@ class RattachementViewModelTest {
                 new DecompteAudio(0, 0));
     }
 
+    private static DetailPassage detailDepose(MeteoReleve meteo) {
+        return new DetailPassage(
+                1,
+                2026,
+                "2026-06-20",
+                "21:00:00",
+                "05:00:00",
+                "1925492",
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                null,
+                0L,
+                0L,
+                30,
+                0.0,
+                meteo,
+                new DecompteAudio(0, 0));
+    }
+
     @Test
     @DisplayName("ouvrirSur pré-remplit l'année et le n° ; le récap est neutre tant que rien ne change")
     void ouvrir_pre_remplit_et_recap_neutre() {
@@ -339,6 +358,34 @@ class RattachementViewModelTest {
 
         assertThat(ok).isFalse();
         assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        verify(rattachement, never()).modifierRattachement(any(), any());
+    }
+
+    @Test
+    @DisplayName("#1688 : le renommage est verrouillé sur un passage déposé, pas sur un passage transformé")
+    void renommage_verrouille_selon_statut() {
+        when(service.detailPassage(ID)).thenReturn(detailDepose(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        assertThat(viewModel.renommageVerrouilleProperty().get())
+                .as("un passage déposé a son nom figé côté serveur (#1134)")
+                .isTrue();
+
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30)); // TRANSFORME
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        assertThat(viewModel.renommageVerrouilleProperty().get()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#1688 : passage déposé — appliquer enregistre la météo mais ne renomme PAS (année/n° verrouillés)")
+    void appliquer_sur_passage_depose_enregistre_conditions_sans_renommer() {
+        when(service.detailPassage(ID)).thenReturn(detailDepose(MeteoReleve.VIDE));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+        viewModel.conditions().temperatureSaisieProperty().set("9,0");
+
+        boolean ok = viewModel.appliquer();
+
+        assertThat(ok).isTrue();
+        verify(conditionsPassage).definirMeteo(ID, new MeteoReleve(9.0, null, null, null));
         verify(rattachement, never()).modifierRattachement(any(), any());
     }
 

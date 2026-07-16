@@ -206,8 +206,9 @@ class PassageVueIntegrationTest {
         // #1514 : une nuit déposée a un verdict figé → « Vérifier » est bloqué, avec l'explication affichée.
         assertThat(bouton(vue, "#boutonVerifier").isDisabled()).isTrue();
         assertThat(((Label) vue.lookup("#lblIndiceAction")).getText()).contains("figé");
-        // Déposé : le renommage (« Modifier le passage ») est bloqué, son nom étant l'identité serveur (#1134).
-        assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isTrue();
+        // Déposé : « Modifier le passage » reste ACTIF (météo + micro restent éditables). Le renommage
+        // (année/n°), lui, est verrouillé DANS la modale (#1134), plus sur le bouton (#1688).
+        assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isFalse();
         // Déposé avec audio conservé (volumes > 0 dans la fixture) : l'archivage devient possible (#1300).
         assertThat(bouton(vue, "#boutonArchiver").isDisabled()).isFalse();
         // Déposé → la mise en avant est passée à la carte « Sons & validation » (le dépôt n'est plus recommandé).

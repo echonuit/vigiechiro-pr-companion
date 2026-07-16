@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -10,6 +11,8 @@ import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -35,6 +38,13 @@ public class RattachementViewModel {
     private final IntegerProperty numeroPassage = new SimpleIntegerProperty(this, "numeroPassage");
     private final ReadOnlyStringWrapper recap = new ReadOnlyStringWrapper(this, "recap", "");
     private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
+
+    /// Le renommage (année + n°) est-il **verrouillé** ? Vrai dès qu'un passage est déposé (ou en cours de
+    /// dépôt) : son nom est l'identité de ses fichiers côté serveur (garde #1134). Dans ce cas la modale
+    /// reste ouvrable pour la **météo + le micro** (qui n'ont rien à voir avec le nom), mais l'année et le
+    /// n° sont en lecture seule.
+    private final ReadOnlyBooleanWrapper renommageVerrouille =
+            new ReadOnlyBooleanWrapper(this, "renommageVerrouille", false);
 
     /// Conditions de dépôt (météo + matériel du micro) éditées **dans la même modale** : la saisie de
     /// ces métadonnées VigieChiro se fait au moment où l'on modifie le passage, plutôt que sur l'écran
@@ -76,6 +86,8 @@ public class RattachementViewModel {
         anneeActuelle = detail.annee();
         numeroActuel = detail.numeroPassage();
         nombreSequences = detail.nombreSequences();
+        renommageVerrouille.set(
+                detail.statut() == StatutWorkflow.DEPOSE || detail.statut() == StatutWorkflow.DEPOT_EN_COURS);
         conditions.charger(idPassage, detail.meteo());
         messageErreur.set("");
         annee.set(detail.annee());
@@ -110,13 +122,18 @@ public class RattachementViewModel {
         }
     }
 
-    /// Applique **d'un bloc** le rattachement (année + n°) et les conditions de dépôt (météo + micro)
-    /// saisis dans la modale. Enregistre d'abord les conditions (une saisie non numérique laisse la
-    /// modale ouverte sans rien renommer sur le disque), puis délègue au rattachement [#valider] (qui,
-    /// lui, renomme les séquences). Renvoie `true` si **tout** a réussi (la vue peut fermer la modale).
+    /// Applique les conditions de dépôt (météo + micro) et, **si le renommage n'est pas verrouillé**, le
+    /// rattachement (année + n°). Enregistre d'abord les conditions (une saisie non numérique laisse la
+    /// modale ouverte sans rien renommer sur le disque). Sur un passage déposé
+    /// ([#renommageVerrouilleProperty]), l'année et le n° sont l'identité serveur : on ne les touche pas et
+    /// on n'appelle pas [#valider] (aucun renommage). Sinon on délègue à [#valider] (qui renomme les
+    /// séquences). Renvoie `true` si **tout** a réussi (la vue peut fermer la modale).
     public boolean appliquer() {
         if (!conditions.enregistrerMeteo() || !conditions.enregistrerMateriel()) {
             return false;
+        }
+        if (renommageVerrouille.get()) {
+            return true;
         }
         return valider();
     }
@@ -221,6 +238,12 @@ public class RattachementViewModel {
 
     public ReadOnlyStringProperty recapProperty() {
         return recap.getReadOnlyProperty();
+    }
+
+    /// `true` si l'année et le n° de passage sont **verrouillés** (passage déposé) : la vue met alors les
+    /// deux spinners en lecture seule, tout en laissant éditer la météo et le micro.
+    public ReadOnlyBooleanProperty renommageVerrouilleProperty() {
+        return renommageVerrouille.getReadOnlyProperty();
     }
 
     public ReadOnlyStringProperty messageErreurProperty() {

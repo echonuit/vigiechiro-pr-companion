@@ -61,6 +61,10 @@
       <Spinner fx:id="spinnerNumero" editable="true" prefWidth="110.0"/>
     </VBox>
   </HBox>
+  <!-- Passage déposé (#1134) : renommage verrouillé, mais météo/micro restent éditables. Indice masqué sinon. -->
+  <Label fx:id="indiceRenommageVerrouille"
+         text="Passage déposé : l'année et le n° sont verrouillés (identité serveur). Vous pouvez ajuster la météo et le micro ci-dessous."
+         styleClass="section-sous" wrapText="true"/>
 
   <Separator/>
 

@@ -73,6 +73,9 @@ public class RattachementModaleController {
     private Label labelRecap;
 
     @FXML
+    private Label indiceRenommageVerrouille;
+
+    @FXML
     private Label messageErreur;
 
     @FXML
@@ -137,6 +140,13 @@ public class RattachementModaleController {
         numeroObjet = viewModel.numeroPassageProperty().asObject();
         spinnerAnnee.getValueFactory().valueProperty().bindBidirectional(anneeObjet);
         spinnerNumero.getValueFactory().valueProperty().bindBidirectional(numeroObjet);
+
+        // Passage déposé (#1134) : l'année et le n° sont l'identité serveur, on verrouille les deux spinners
+        // - mais la modale reste ouverte pour éditer la météo et le micro. Un indice sous les spinners le dit.
+        spinnerAnnee.disableProperty().bind(viewModel.renommageVerrouilleProperty());
+        spinnerNumero.disableProperty().bind(viewModel.renommageVerrouilleProperty());
+        indiceRenommageVerrouille.visibleProperty().bind(viewModel.renommageVerrouilleProperty());
+        indiceRenommageVerrouille.managedProperty().bind(viewModel.renommageVerrouilleProperty());
 
         labelRecap.textProperty().bind(viewModel.recapProperty());
         labelRecap.setWrapText(true);

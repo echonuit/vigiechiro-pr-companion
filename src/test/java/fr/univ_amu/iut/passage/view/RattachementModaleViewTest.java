@@ -52,11 +52,12 @@ class RattachementModaleViewTest {
     private RattachementModaleController controleur;
     private RattachementViewModel viewModel;
     private ServiceConditionsPassage conditionsService;
+    private ServicePassage service;
     private final AtomicBoolean succesAppele = new AtomicBoolean(false);
 
     @Start
     void start(Stage stage) throws Exception {
-        ServicePassage service = mock(ServicePassage.class);
+        service = mock(ServicePassage.class);
         when(service.detailPassage(anyLong()))
                 .thenReturn(new DetailPassage(
                         1,
@@ -223,5 +224,46 @@ class RattachementModaleViewTest {
         ComboBox<String> typeMicro = robot.lookup("#champTypeMicro").queryAs(ComboBox.class);
         assertThat(typeMicro.getItems()).hasSize(MaterielMicro.TYPES_VIGIECHIRO.size() + 1);
         assertThat(typeMicro.getItems()).contains("SMX-U1", "SPU avec coque de protection");
+    }
+
+    @Test
+    @DisplayName("#1688 : passage déposé — année/n° verrouillés (spinners grisés + indice), météo éditable")
+    void passage_depose_verrouille_le_renommage_pas_la_meteo(FxRobot robot) {
+        // Rouvrir la modale sur un passage déposé : son nom est l'identité serveur (#1134). Les bindings du
+        // verrou sont réactifs, l'IHM se met à jour au ré-ouvrir.
+        when(service.detailPassage(anyLong())).thenReturn(detailDepose());
+        robot.interact(() -> controleur.demarrer(7L, "040962", "A1", () -> {}));
+
+        assertThat(robot.lookup("#spinnerAnnee").queryAs(Spinner.class).isDisabled())
+                .as("année verrouillée sur un passage déposé")
+                .isTrue();
+        assertThat(robot.lookup("#spinnerNumero").queryAs(Spinner.class).isDisabled())
+                .isTrue();
+        assertThat(robot.lookup("#indiceRenommageVerrouille").query().isVisible())
+                .as("un indice explique le verrou")
+                .isTrue();
+        // Le verrou ne porte que sur le nom : la météo reste éditable, c'est tout l'intérêt.
+        assertThat(robot.lookup("#champTemperature").queryAs(TextField.class).isDisabled())
+                .as("météo éditable même sur un passage déposé")
+                .isFalse();
+    }
+
+    private static DetailPassage detailDepose() {
+        return new DetailPassage(
+                1,
+                2026,
+                "2026-06-20",
+                "21:00:00",
+                "05:00:00",
+                "1925492",
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                null,
+                0L,
+                0L,
+                30,
+                0.0,
+                null,
+                new DecompteAudio(0, 0));
     }
 }

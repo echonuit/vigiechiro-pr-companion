@@ -342,18 +342,17 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         .then("Supprimer définitivement ce passage et toute sa nuit (séquences, relevés).")
                         .otherwise("Suppression impossible : ce passage est déposé sur VigieChiro."
                                 + " Annulez d'abord le dépôt."));
-        // Renommage gaté en amont (#789) : un passage déposé (ou en cours de dépôt) n'est plus renommable
-        // (le service le refuse, son nom étant l'identité de ses fichiers côté serveur). On grise « Modifier
-        // le passage » et on explique le blocage par le tooltip de l'enveloppe.
-        boutonRattachement
-                .disableProperty()
-                .bind(viewModel.renommagePossibleProperty().not());
+        // « Modifier le passage » ouvre toujours la modale (la météo et le micro sont éditables à tout
+        // statut, y compris sur un passage déposé ou reconstruit). Le renommage (année/n°), lui, est
+        // verrouillé sur un passage déposé (#1134) : ce verrou vit désormais DANS la modale, pas sur le
+        // bouton. On ne grise donc plus que s'il n'y a aucun passage chargé.
+        boutonRattachement.disableProperty().bind(viewModel.statutProperty().isNull());
         IndicateurBlocage.expliquer(
                 enveloppeRattachement,
                 Bindings.when(viewModel.renommagePossibleProperty())
-                        .then("Modifier le rattachement (année, n° de passage) : renomme toute la nuit.")
-                        .otherwise("Modification impossible : ce passage est déposé sur VigieChiro."
-                                + " Annulez d'abord le dépôt."));
+                        .then("Modifier le passage : année, n° (renomme la nuit), météo et micro.")
+                        .otherwise("Modifier le passage : météo et micro. L'année et le n° sont verrouillés"
+                                + " (passage déposé, identité serveur)."));
         // « Annuler le dépôt » n'a de sens que sur un passage déposé : le bouton n'apparaît (et n'occupe
         // de place) que dans ce cas, au lieu de rester grisé en permanence dans la barre d'actions.
         boutonAnnulerDepot.visibleProperty().bind(viewModel.annulationDepotDisponibleProperty());
