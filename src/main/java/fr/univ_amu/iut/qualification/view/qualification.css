@@ -94,8 +94,33 @@
   -fx-text-fill: #2c3e50;
 }
 
-.barre-progression {
-  -fx-accent: #1e8449;
+/*
+ * Barre empilée des verdicts par fichier (#1524) : le fond gris clair tient lieu de queue « non jugé »
+ * (le segment correspondant est transparent et laisse voir ce fond), les segments colorés se posent
+ * par-dessus. Même palette que les badges de la colonne et les feux du pré-check.
+ */
+.barre-verdicts {
+  -fx-min-height: 14;
+  -fx-pref-height: 14;
+  -fx-background-color: #eef2f5;
+  -fx-border-color: #d0d7de;
+  -fx-border-width: 1;
+}
+
+.barre-verdicts .segment-bon {
+  -fx-background-color: #1e8449;
+}
+
+.barre-verdicts .segment-mauvais {
+  -fx-background-color: #b9770e;
+}
+
+.barre-verdicts .segment-inexploitable {
+  -fx-background-color: #a93226;
+}
+
+.barre-verdicts .segment-non-juge {
+  -fx-background-color: transparent;
 }
 
 .progression-texte {

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import fr.nedjar.vigiechiro.audio.AudioView?>
+<?import fr.univ_amu.iut.qualification.view.BarreVerdicts?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Hyperlink?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.MenuButton?>
-<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TableColumn?>
@@ -104,11 +104,14 @@
           <MenuButton fx:id="menuOutils" text="☰" styleClass="menu-actions" accessibleText="Outils : colonnes"/>
         </HBox>
 
+        <!-- Répartition des verdicts PAR FICHIER (#1524, lot 6a) : barre empilée tricolore (Bon / Mauvais
+             / Inexploitable) + queue « non jugé » grise qui recule au fil du jugement. Remplace la barre
+             de progression d'écoute : un segment rouge dominant signale d'un coup d'œil un enregistrement
+             à problème. La progression d'écoute reste lisible (colonne « Écouté » + barre de statut). -->
         <VBox spacing="4.0">
-          <ProgressBar fx:id="barreProgression" progress="0.0" maxWidth="Infinity"
-                       styleClass="barre-progression"/>
+          <BarreVerdicts fx:id="barreVerdicts" maxWidth="Infinity"/>
           <HBox spacing="10.0" alignment="CENTER_LEFT">
-            <Label fx:id="lblProgression" styleClass="progression-texte"/>
+            <Label fx:id="lblRepartitionVerdicts" styleClass="progression-texte"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label text="Aucun seuil d'écoute obligatoire" styleClass="progression-hint"/>
           </HBox>

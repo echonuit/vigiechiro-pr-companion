@@ -37,7 +37,6 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -124,11 +123,13 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     @FXML
     private Label lblListeTitre;
 
+    /// Répartition des verdicts par fichier (#1524, lot 6a) : barre empilée tricolore + queue « non
+    /// jugé », en remplacement de la barre de progression d'écoute.
     @FXML
-    private ProgressBar barreProgression;
+    private BarreVerdicts barreVerdicts;
 
     @FXML
-    private Label lblProgression;
+    private Label lblRepartitionVerdicts;
 
     /// Menu ☰ « outils » (#920) : porte l'entrée « Colonnes… » (le clic droit de la table la porte aussi).
     @FXML
@@ -318,8 +319,10 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
                 .getSelectionModel()
                 .selectedItemProperty()
                 .addListener((obs, ancien, nouveau) -> selectionVm.selectionner(nouveau));
-        barreProgression.progressProperty().bind(selectionVm.progressionProperty());
-        lblProgression.textProperty().bind(selectionVm.progressionTexteProperty());
+        // Barre tricolore des verdicts par fichier (#1524) : suit la liste, se recompose à chaque verdict
+        // rendu. Le résumé chiffré (« 7 Bon · 3 Mauvais · … ») légende la barre en dessous.
+        barreVerdicts.suivre(selectionVm.lignes());
+        lblRepartitionVerdicts.textProperty().bind(barreVerdicts.resumeProperty());
 
         // Détail de la séquence courante.
         lblSeqNumero

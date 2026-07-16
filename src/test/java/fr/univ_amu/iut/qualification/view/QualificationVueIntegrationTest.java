@@ -37,9 +37,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -280,40 +280,66 @@ class QualificationVueIntegrationTest {
     }
 
     @Test
-    @DisplayName("R10 : marquer une séquence écoutée met à jour la barre et le texte de progression")
-    void progression_reflete_l_ecoute(FxRobot robot) {
+    @DisplayName("R10 : marquer une séquence écoutée coche la colonne « Écouté »")
+    void ecoute_coche_la_colonne_ecoute(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
         AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
-        ProgressBar barre = robot.lookup("#barreProgression").queryAs(ProgressBar.class);
-        Label progression = robot.lookup("#lblProgression").queryAs(Label.class);
-        assertThat(barre.getProgress()).isEqualTo(0.0);
+        TableColumn<?, ?> colEcoute = table.getColumns().get(3);
+        assertThat((String) colEcoute.getCellData(0)).isEqualTo("○");
 
         robot.interact(() -> table.getSelectionModel().select(0));
         robot.interact(() -> audio.setPlaying(true)); // début de lecture → marquage écouté (R10)
+        WaitForAsyncUtils.waitForFxEvents();
 
-        assertThat(barre.getProgress()).isGreaterThan(0.0);
-        assertThat(progression.getText()).contains("1 / 3");
+        assertThat((String) colEcoute.getCellData(0)).isEqualTo("✓");
     }
 
     @Test
-    @DisplayName("R12 : « Régénérer » recharge la liste et remet la progression à zéro (lookup fx:id)")
-    void regenerer_remet_la_progression_a_zero(FxRobot robot) {
+    @DisplayName("R12 : « Régénérer » recharge la liste et remet l'écoute à zéro (colonne « Écouté »)")
+    void regenerer_remet_l_ecoute_a_zero(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
         AudioView audio = robot.lookup("#audioView").queryAs(AudioView.class);
-        ProgressBar barre = robot.lookup("#barreProgression").queryAs(ProgressBar.class);
         Button regenerer = robot.lookup("#boutonRegenerer").queryAs(Button.class);
+        TableColumn<?, ?> colEcoute = table.getColumns().get(3);
 
-        // On écoute une séquence pour faire progresser la barre...
+        // On écoute une séquence...
         robot.interact(() -> table.getSelectionModel().select(0));
         robot.interact(() -> audio.setPlaying(true));
-        assertThat(barre.getProgress()).isGreaterThan(0.0);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat((String) colEcoute.getCellData(0)).isEqualTo("✓");
 
-        // ... puis on régénère : la sélection est rechargée, la progression repart de zéro (R12).
+        // ... puis on régénère : la sélection est rechargée, l'écoute repart de zéro (R12).
         robot.interact(regenerer::fire);
+        WaitForAsyncUtils.waitForFxEvents();
 
-        assertThat(barre.getProgress()).isEqualTo(0.0);
-        TableColumn<?, ?> colEcoute = table.getColumns().get(3);
         assertThat((String) colEcoute.getCellData(0)).isEqualTo("○"); // liste rechargée, rien d'écouté
+    }
+
+    @Test
+    @DisplayName("#1524 : la barre tricolore reflète la répartition des verdicts par fichier")
+    void barre_tricolore_reflete_les_verdicts(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+        BarreVerdicts barre = robot.lookup("#barreVerdicts").queryAs(BarreVerdicts.class);
+        Label resume = robot.lookup("#lblRepartitionVerdicts").queryAs(Label.class);
+
+        // 2 Bon (lignes 0, 1) + 1 Inexploitable (ligne 2), sur 3 séquences → aucune « non jugée ».
+        jugerLigne(robot, table, 0, "#boutonBon");
+        jugerLigne(robot, table, 1, "#boutonBon");
+        jugerLigne(robot, table, 2, "#boutonInexploitable");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Le résumé chiffré double la couleur en texte (accessibilité #801).
+        assertThat(resume.getText()).contains("2 Bon").contains("0 Mauvais").contains("1 Inexploitable");
+        // Le segment vert (2 Bon) fait ~2× le rouge (1 Inexploitable), tous deux non nuls.
+        Region segBon = (Region) barre.lookup(".segment-bon");
+        Region segInexploitable = (Region) barre.lookup(".segment-inexploitable");
+        assertThat(segInexploitable.getPrefWidth()).isGreaterThan(0.0);
+        assertThat(segBon.getPrefWidth()).isGreaterThan(segInexploitable.getPrefWidth());
+    }
+
+    private static void jugerLigne(FxRobot robot, TableView<?> table, int index, String boutonId) {
+        robot.interact(() -> table.getSelectionModel().select(index));
+        robot.interact(() -> robot.lookup(boutonId).queryAs(Button.class).fire());
     }
 
     @Test
