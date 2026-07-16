@@ -356,6 +356,34 @@ class QualificationVueIntegrationTest {
         assertThat(propose.getStyleClass()).contains("propose-douteux");
     }
 
+    @Test
+    @DisplayName("#1524 : le proposé pré-remplit le verdict global, et la surcharge est signalée sur la puce")
+    void propose_pre_remplit_le_verdict_global_et_signale_la_surcharge(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+        Button boutonOk = robot.lookup("#boutonOk").queryAs(Button.class);
+        Button boutonDouteux = robot.lookup("#boutonDouteux").queryAs(Button.class);
+        Button enregistrer = robot.lookup("#boutonEnregistrer").queryAs(Button.class);
+        Label propose = robot.lookup("#lblVerdictPropose").queryAs(Label.class);
+
+        // 2 Bon + 1 Inexploitable → proposé Douteux, qui pré-remplit le verdict global.
+        jugerLigne(robot, table, 0, "#boutonBon");
+        jugerLigne(robot, table, 1, "#boutonBon");
+        jugerLigne(robot, table, 2, "#boutonInexploitable");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(boutonDouteux.getStyleClass()).contains("verdict-choisi");
+        assertThat(enregistrer.isDisabled())
+                .as("proposé décisif → enregistrable")
+                .isFalse();
+        assertThat(propose.getText()).doesNotContain("surchargé");
+
+        // Surcharge : l'utilisateur clique OK → le choix bascule, la puce le signale.
+        robot.interact(boutonOk::fire);
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(boutonOk.getStyleClass()).contains("verdict-choisi");
+        assertThat(boutonDouteux.getStyleClass()).doesNotContain("verdict-choisi");
+        assertThat(propose.getText()).contains("Proposé").contains("Douteux").contains("surchargé");
+    }
+
     private static void jugerLigne(FxRobot robot, TableView<?> table, int index, String boutonId) {
         robot.interact(() -> table.getSelectionModel().select(index));
         robot.interact(() -> robot.lookup(boutonId).queryAs(Button.class).fire());

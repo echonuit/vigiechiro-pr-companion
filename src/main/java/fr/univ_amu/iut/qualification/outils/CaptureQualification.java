@@ -154,9 +154,10 @@ public final class CaptureQualification {
         if (!selectionVm.lignes().isEmpty()) {
             selectionVm.selectionner(selectionVm.lignes().get(0));
         }
-        // Verdict global cohérent avec le mélange par fichier (ni tout Bon, ni majorité d'inexploitables
-        // → Douteux) : c'est aussi ce que la dérivation proposera au lot 6a, tranche suivante.
-        verdictVm.choisirVerdict(Verdict.DOUTEUX);
+        // Le mélange par fichier propose « Douteux » (ni tout Bon, ni majorité d'inexploitables), qui
+        // PRÉ-REMPLIT le verdict global (#1524, lot 6a). Ici l'utilisateur SURCHARGE en retenant « OK » :
+        // la puce affiche « Proposé : Douteux (surchargé) » et le bouton OK est mis en évidence.
+        verdictVm.choisirVerdict(Verdict.OK);
 
         // DERNIÈRE capture : on attend le chargement audio de la séquence courante (sélectionnée
         // ci-dessus) pour montrer un spectrogramme réel. Le Stage est montré AVANT la boucle

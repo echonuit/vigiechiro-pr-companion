@@ -15,6 +15,7 @@ import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit.Feu;
 import fr.univ_amu.iut.qualification.model.ServiceQualification;
+import javafx.beans.property.SimpleObjectProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -57,6 +58,34 @@ class QualificationViewModelTest {
                         100.0,
                         StatutWorkflow.TRANSFORME,
                         null));
+    }
+
+    @Test
+    @DisplayName("#1524 : le proposé pré-remplit le choix, une surcharge le préserve et est signalée")
+    void propose_pre_remplit_sauf_surcharge() {
+        SimpleObjectProperty<Verdict> propose = new SimpleObjectProperty<>(Verdict.A_VERIFIER);
+        viewModel.lierPropose(propose);
+        // Rien de jugé : aucun choix pré-rempli, pas de surcharge.
+        assertThat(viewModel.verdictChoisiProperty().get()).isNull();
+        assertThat(viewModel.surchargeProperty().get()).isFalse();
+
+        // Le proposé devient Douteux → pré-remplit le choix (le dérivé fait foi).
+        propose.set(Verdict.DOUTEUX);
+        assertThat(viewModel.verdictChoisiProperty().get()).isEqualTo(Verdict.DOUTEUX);
+        assertThat(viewModel.surchargeProperty().get()).isFalse();
+
+        // Surcharge : l'utilisateur choisit OK.
+        viewModel.choisirVerdict(Verdict.OK);
+        assertThat(viewModel.surchargeProperty().get()).isTrue();
+
+        // Le proposé bouge (À jeter) : la surcharge tient, le choix n'est pas écrasé.
+        propose.set(Verdict.A_JETER);
+        assertThat(viewModel.verdictChoisiProperty().get()).isEqualTo(Verdict.OK);
+        assertThat(viewModel.surchargeProperty().get()).isTrue();
+
+        // L'utilisateur re-choisit la valeur proposée : la surcharge s'efface, le suivi reprend.
+        viewModel.choisirVerdict(Verdict.A_JETER);
+        assertThat(viewModel.surchargeProperty().get()).isFalse();
     }
 
     @Test
