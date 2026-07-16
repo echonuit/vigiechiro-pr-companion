@@ -11,7 +11,6 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
-import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
@@ -393,17 +392,55 @@ class ServiceValidationTest {
     }
 
     @Test
-    @DisplayName("Import atomique : un second import (passage_id unique) échoue sans altérer le premier")
-    void import_second_echec_preserve_le_premier() {
+    @DisplayName(
+            "Import hors remplacement sur un passage déjà pourvu d'un jeu : refus métier lisible, premier jeu intact")
+    void import_sur_passage_deja_pourvu_refuse_proprement() {
         Long idResultats1 = service.importer(idPassage, ecrireBrut()).idResultats();
         int nbObs1 = observationDao.findByResults(idResultats1).size();
 
-        // Le 2e import insère d'abord le jeu de résultats : passage_id étant unique, l'écriture échoue
-        // et la transaction est annulée (rollback) sans laisser de jeu vide durable.
-        assertThatThrownBy(() -> service.importer(idPassage, ecrireBrut())).isInstanceOf(DataAccessException.class);
+        // Un passage a déjà un jeu (ici déjà importé ; même situation qu'un passage reconstruit par CSV).
+        // Hors remplacement, l'invariant « un seul jeu par passage » refuse AVANT l'INSERT : une
+        // RegleMetierException lisible plutôt que la contrainte UNIQUE qui fuyait en DataAccessException
+        // (« échec inattendu »). Le message guide vers « Sons & validation » pour remplacer.
+        assertThatThrownBy(() -> service.importer(idPassage, ecrireBrut()))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("déjà un jeu")
+                .hasMessageContaining("Sons & validation");
 
+        // Aucune insertion : le premier jeu et ses observations sont préservés à l'identique.
         assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().id()).isEqualTo(idResultats1);
         assertThat(observationDao.findByResults(idResultats1)).hasSize(nbObs1);
+    }
+
+    @Test
+    @DisplayName(
+            "Reconstruction par CSV (importerContenuCsv) : passage neuf importe, puis réimport sans remplacement refusé")
+    void import_contenu_csv_passage_neuf_puis_reimport_refuse() {
+        String contenu = guillemets(
+                        "nom du fichier",
+                        "temps_debut",
+                        "temps_fin",
+                        "frequence_mediane",
+                        "tadarida_taxon",
+                        "tadarida_probabilite",
+                        "tadarida_taxon_autre",
+                        "observateur_taxon",
+                        "observateur_probabilite",
+                        "validateur_taxon",
+                        "validateur_probabilite")
+                + guillemets("seqA_000", "0.4", "4.1", "45", "Pippip", "0.80", "", "", "", "", "");
+
+        // Passage neuf (cas de la reconstruction #1565) : le garde ne se déclenche pas, l'import réussit.
+        BilanImport bilan = service.importerContenuCsv(idPassage, contenu, false);
+        assertThat(bilan.importees()).isEqualTo(1);
+
+        // Le passage est désormais pourvu d'un jeu : réimporter sans remplacement le refuse proprement,
+        // sans détruire le jeu existant. C'est exactement le scénario « reconstruit par CSV puis import ».
+        Long idJeu = bilan.idResultats();
+        assertThatThrownBy(() -> service.importerContenuCsv(idPassage, contenu, false))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("déjà un jeu");
+        assertThat(resultatsDao.findByPassage(idPassage).orElseThrow().id()).isEqualTo(idJeu);
     }
 
     @Test
