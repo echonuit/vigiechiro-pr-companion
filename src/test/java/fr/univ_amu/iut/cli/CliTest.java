@@ -292,6 +292,15 @@ class CliTest {
     }
 
     @Test
+    @DisplayName("pre-check sur un passage introuvable : échec métier (1)")
+    void precheck_passage_introuvable() {
+        int code = cli.executer(new String[] {"pre-check", "--passage", "999"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Échec").contains("introuvable");
+    }
+
+    @Test
     @DisplayName("deposer sur un passage introuvable : échec métier (1)")
     void deposer_passage_introuvable() {
         int code = cli.executer(new String[] {"deposer", "--passage", "999"}, sortie, erreur);

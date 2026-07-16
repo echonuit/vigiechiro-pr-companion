@@ -52,6 +52,7 @@ import picocli.CommandLine.Spec;
             Qualifier.class,
             QualifierFichier.class,
             ListerSelection.class,
+            PreCheck.class,
             ExporterLot.class,
             Deposer.class,
             SynchroniserVigieChiro.class,
