@@ -26,6 +26,9 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
+import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.InventaireParInspection;
 import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
 import fr.univ_amu.iut.importation.model.SequenceProduite;
 import fr.univ_amu.iut.importation.model.TransformationAudio;
@@ -127,6 +130,7 @@ class ServiceReactivationPassageTest {
                 disponibilite,
                 Optional.empty(), // pas de cris : cascade structurelle (injecteur partiel)
                 Optional.of(regeneration),
+                Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                 Optional.empty()); // pas d'import : pas de phase d'ancrage (comportement historique)
     }
 
@@ -222,6 +226,7 @@ class ServiceReactivationPassageTest {
                 disponibilite,
                 Optional.empty(),
                 Optional.of(regeneration),
+                Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                 Optional.of(importObservations));
     }
 
@@ -319,6 +324,7 @@ class ServiceReactivationPassageTest {
                     return List.of(); // aucune observation : rien à corrompre, structurelle seule
                 }),
                 Optional.of(regeneration),
+                Optional.empty(),
                 Optional.empty());
 
         avecCris.reactiver(idPassage, sauvegarde, progres -> {});
@@ -408,6 +414,7 @@ class ServiceReactivationPassageTest {
                 disponibilite,
                 Optional.empty(),
                 Optional.empty(),
+                Optional.empty(),
                 Optional.empty());
 
         assertThatThrownBy(() -> sansRegeneration.reactiver(idPassage, sauvegarde, progres -> {}))
@@ -448,6 +455,29 @@ class ServiceReactivationPassageTest {
         assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
                 .as("le passage reste archivé : l'audio n'est pas revenu")
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("#1650 : passage reconstruit HYDRATÉ depuis ses bruts + log : séquences régénérées, audio complet")
+    void passage_reconstruit_hydrate_depuis_bruts() throws IOException {
+        List<String> noms = reconstruireAvecBrutEtLog();
+
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.voie())
+                .as("le dossier portait le log et les bruts : les séquences ont été régénérées")
+                .isEqualTo(VoieReactivation.BRUTS);
+        assertThat(rapport.reactivees()).isEqualTo(noms.size());
+        assertThat(rapport.divergentes()).isZero();
+        assertThat(rapport.confianceMinimale())
+                .as("sans empreinte ni cris en base (passage reconstruit), la structurelle seule vaut FORTE")
+                .isEqualTo(NiveauConfiance.FORTE);
+        assertThat(rapport.complete()).isTrue();
+        assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.COMPLETE);
+        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
+                .as("l'audio est revenu : le passage n'est plus archivé")
+                .isFalse();
+        assertThat(noms).allSatisfy(nom -> assertThat(transformes.resolve(nom)).exists());
     }
 
     @Test
@@ -752,6 +782,88 @@ class ServiceReactivationPassageTest {
         // Les bruts sont bien là, sous leur nom de carte SD : c'est tout l'objet du bug.
         ecrireBrut(sauvegarde.resolve(NOM_SD_BRUT), 42);
         return noms;
+    }
+
+    /// Sème un passage **reconstruit** dont l'utilisateur a gardé, dans sa sauvegarde, **le brut** (sous son
+    /// nom de carte SD) **et le log** de l'enregistreur (qui porte la fréquence d'acquisition). Les séquences
+    /// sont produites par la VRAIE transformation (ce sont leurs noms exacts que la base connaîtra, comme à
+    /// la reconstruction depuis le CSV), puis leur audio est supprimé (archivage) ; les originaux se
+    /// réduisent au placeholder de reconstruction.
+    ///
+    /// @return les noms des séquences reconstruites, que l'hydratation (#1650) doit régénérer
+    private List<String> reconstruireAvecBrutEtLog() throws IOException {
+        idPassage = passageDao
+                .insert(new Passage(
+                        null,
+                        1,
+                        2026,
+                        "2026-06-20",
+                        "21:30:00",
+                        "05:15:00",
+                        null,
+                        StatutWorkflow.DEPOSE,
+                        null,
+                        null,
+                        null,
+                        null,
+                        idPoint,
+                        SERIE))
+                .id();
+        Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
+        idSession = sessionDao
+                .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
+                .id();
+        Long idPlaceholder = originalDao
+                .insert(new EnregistrementOriginal(
+                        null, PREFIXE.prefixeFichier() + "reconstruit.wav", "", null, null, null, idSession))
+                .id();
+
+        // Le brut tel qu'il sort de l'enregistreur, transformé pour connaître les noms EXACTS des tranches.
+        Path brut = dossier.resolve("origine").resolve(NOM_SD_BRUT);
+        ecrireBrut(brut, 42);
+        TransformationOriginal transformation = new TransformationAudio()
+                .transformer(brut, NOM_R6_BRUT, transformes, PREFIXE, FREQUENCE_ACQUISITION_HZ);
+
+        List<String> noms = new ArrayList<>();
+        int index = 0;
+        for (SequenceProduite produite : transformation.sequences()) {
+            noms.add(produite.nomFichier());
+            sequenceDao.insert(new SequenceDEcoute(
+                    null,
+                    produite.nomFichier(),
+                    idPlaceholder,
+                    index,
+                    null,
+                    null,
+                    transformes.resolve(produite.nomFichier()).toString(),
+                    false,
+                    idSession,
+                    null,
+                    null,
+                    null));
+            Files.delete(produite.chemin()); // archivage : les tranches quittent le disque
+            index++;
+        }
+        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
+
+        // Ce que l'utilisateur a gardé : son brut (nom de carte SD) et le log de l'enregistreur.
+        Files.copy(brut, sauvegarde.resolve(NOM_SD_BRUT));
+        ecrireLog(sauvegarde.resolve("LogPR" + SERIE + ".txt"), FREQUENCE_ACQUISITION_HZ / 1000);
+        Files.delete(brut);
+        return noms;
+    }
+
+    /// Journal minimal de l'enregistreur : une ligne « Paramètres » porte la fréquence `Fe…kHz`, la seule
+    /// chose que l'inventaire (#1649) y lit pour régénérer à l'identique.
+    private void ecrireLog(Path fichier, int frequenceKhz) throws IOException {
+        Files.createDirectories(fichier.getParent());
+        Files.write(
+                fichier,
+                List.of(
+                        "20/06/26 - 21:30:00 PR" + SERIE + " Démarrage v1.0",
+                        "20/06/26 - 21:30:01 PR" + SERIE + " Paramètres : Acquisi. 21:30-05:15, Fe" + frequenceKhz
+                                + "kHz, S. R. Med, Bd. Freq. 8-120kHz"),
+                java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /// Brut synthétique de [#DUREE_BRUT_S] secondes **réelles** : en-tête à `Fe/10` (comme l'écrit

@@ -24,6 +24,7 @@ import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
 import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.DeclarationPurgeParSessions;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
+import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
@@ -108,6 +109,12 @@ public class PassageModule extends ModuleDeFeature {
         // pose le binding réel. Absent (feature « Importation » désactivée), la réactivation depuis les
         // BRUTS se refuse en le disant ; la voie « transformés » reste entière.
         OptionalBinder.newOptionalBinder(binder(), RegenerationSequences.class);
+
+        // Port InventaireBrutsSource (#1649) : inventaire des bruts d'un passage reconstruit (fréquence du
+        // log + noms R6), lu par `importation` (qui connaît le format du log). Même patron que
+        // RegenerationSequences : OptionalBinder VIDE ici, binding réel dans ImportationModule. Absent, un
+        // passage reconstruit reste sur le compte rendu honnête (#1648) : rien n'est régénéré.
+        OptionalBinder.newOptionalBinder(binder(), InventaireBrutsSource.class);
 
         // Port PointParLocalite (#1305) : `sites` possède les carrés et leurs points ; `passage` ne peut pas
         // en dépendre (cycle). Défaut no-op ici (injecteurs partiels), implémentation réelle par SitesModule.
@@ -219,6 +226,7 @@ public class PassageModule extends ModuleDeFeature {
             ServiceDisponibiliteAudio disponibilite,
             Optional<CrisAttendus> crisAttendus,
             Optional<RegenerationSequences> regeneration,
+            Optional<InventaireBrutsSource> inventaireBruts,
             Optional<ImportObservations> importObservations) {
         return new ServiceReactivationPassage(
                 sessionDao,
@@ -228,6 +236,7 @@ public class PassageModule extends ModuleDeFeature {
                 disponibilite,
                 crisAttendus,
                 regeneration,
+                inventaireBruts,
                 importObservations);
     }
 
