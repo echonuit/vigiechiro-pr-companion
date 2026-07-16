@@ -28,7 +28,8 @@
   <Label fx:id="lblReleveAbsent" styleClass="alerte-r20" wrapText="true"
          text="⚠ Relevé climatique absent : la température et l'hygrométrie ne sont pas disponibles pour cette nuit."/>
 
-  <Label fx:id="lblResumeClimat" styleClass="section-sous"/>
+  <!-- Résumé « N mesures » déporté en zone centre de la barre de statut (#1498, piste B) : plus de
+       label empilé ici. L'absence de relevé (R20) reste portée par lblReleveAbsent + la zone droite. -->
   <!-- Température en début de nuit (#106) : donnée optionnelle saisie dans M-Passage. -->
   <Label fx:id="lblTemperature" styleClass="section-sous"/>
   <!-- Axe X temporel (#1498) : NumberAxis en minutes depuis la 1re mesure, étiqueté HH:mm par le

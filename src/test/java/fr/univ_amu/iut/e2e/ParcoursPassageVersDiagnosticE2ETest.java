@@ -102,7 +102,7 @@ class ParcoursPassageVersDiagnosticE2ETest {
 
         assertThat(navigation.getVueCourante()).isEqualTo("diagnostic");
         // En-tête retiré (#693) : on vérifie un contrôle interne de l'écran diagnostic à la place.
-        assertThat(robot.lookup("#lblResumeClimat").tryQuery()).isPresent();
+        assertThat(robot.lookup("#grapheClimat").tryQuery()).isPresent();
     }
 
     @Test

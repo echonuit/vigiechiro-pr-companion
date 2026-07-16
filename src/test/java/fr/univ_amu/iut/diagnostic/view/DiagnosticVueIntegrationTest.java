@@ -109,7 +109,6 @@ class DiagnosticVueIntegrationTest {
         // Un écran placeholder (sans fx:id) ferait échouer ces lookups : c'est la garde structurelle.
         // L'enregistreur est déporté en barre de statut (#693) : vérifié via les zones, plus de label.
         assertThat(controleur.zonesStatutProperty().get().centre()).isNotEmpty();
-        assertThat(robot.lookup("#lblResumeClimat").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblReleveAbsent").tryQuery()).isPresent();
         assertThat(robot.lookup("#grapheClimat").tryQuery()).isPresent();
         assertThat(robot.lookup("#listeAnomalies").tryQuery()).isPresent();
@@ -124,15 +123,13 @@ class DiagnosticVueIntegrationTest {
     @Test
     @DisplayName("À l'ouverture, labels, graphe et listes reflètent le ViewModel")
     void etat_initial_reflete_le_viewmodel(FxRobot robot) {
-        Label resume = robot.lookup("#lblResumeClimat").queryAs(Label.class);
         Label temperature = robot.lookup("#lblTemperature").queryAs(Label.class);
         LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);
 
-        // Enregistreur déporté en barre de statut (#693).
-        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("PR 1925492");
-        assertThat(resume.getText()).isEqualTo("2 mesures T°/hygrométrie");
+        // Enregistreur + nombre de mesures déportés en barre de statut (#693, #1498).
+        assertThat(controleur.zonesStatutProperty().get().centre()).isEqualTo("PR 1925492 · 2 mesures");
         assertThat(temperature.getText())
                 .as("#106 : température affichée en M-Diagnostic")
                 .contains("8,5 °C");
@@ -212,7 +209,6 @@ class DiagnosticVueIntegrationTest {
         robot.interact(() -> controleur.ouvrirSur(ctx(8L)));
 
         Label alerteR20 = robot.lookup("#lblReleveAbsent").queryAs(Label.class);
-        Label resume = robot.lookup("#lblResumeClimat").queryAs(Label.class);
         Label gps = robot.lookup("#lblGps").queryAs(Label.class);
         HBox ligneGps = robot.lookup("#ligneGps").queryAs(HBox.class);
         FontIcon iconeGps = robot.lookup("#iconeGps").queryAs(FontIcon.class);
@@ -220,7 +216,11 @@ class DiagnosticVueIntegrationTest {
 
         assertThat(alerteR20.isVisible()).isTrue();
         assertThat(alerteR20.isManaged()).isTrue();
-        assertThat(resume.getText()).isEqualTo("Relevé climatique absent");
+        // Relevé absent : pas de compteur au centre (enregistreur seul), l'absence est portée par la
+        // zone droite de la barre de statut (#1498, piste B) et le bandeau R20.
+        var zones = controleur.zonesStatutProperty().get();
+        assertThat(zones.centre()).isEqualTo("PR 1925492");
+        assertThat(zones.droite()).contains("Relevé climatique absent");
         // Le ListChangeListener a reconstruit le graphe : deux séries, mais sans aucun point.
         assertThat(graphe.getData()).hasSize(2);
         assertThat(graphe.getData().get(0).getData()).isEmpty();

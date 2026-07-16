@@ -28,7 +28,6 @@ public class DiagnosticViewModel {
     private final ServiceDiagnostic service;
 
     private final ReadOnlyStringWrapper enregistreur = new ReadOnlyStringWrapper(this, "enregistreur", "");
-    private final ReadOnlyStringWrapper resumeClimat = new ReadOnlyStringWrapper(this, "resumeClimat", "");
     private final ReadOnlyBooleanWrapper releveClimatiqueAbsent =
             new ReadOnlyBooleanWrapper(this, "releveClimatiqueAbsent", false);
     private final ReadOnlyBooleanWrapper gpsDisponible = new ReadOnlyBooleanWrapper(this, "gpsDisponible", false);
@@ -74,10 +73,6 @@ public class DiagnosticViewModel {
         mesures.setAll(diagnostic.climat().mesures());
         anomalies.setAll(diagnostic.anomalies().anomalies());
         evenements.setAll(diagnostic.anomalies().evenements());
-        resumeClimat.set(
-                diagnostic.climat().present()
-                        ? diagnostic.climat().nombreMesures() + " mesures T°/hygrométrie"
-                        : "Relevé climatique absent");
         temperature.set(Formats.temperatureLisible(diagnostic.temperatureDebutNuit()));
         appliquerCoherence(diagnostic.coherenceHoraire());
     }
@@ -111,7 +106,6 @@ public class DiagnosticViewModel {
 
     private void reinitialiser() {
         enregistreur.set("");
-        resumeClimat.set("");
         releveClimatiqueAbsent.set(false);
         gpsDisponible.set(false);
         mesures.clear();
@@ -126,11 +120,6 @@ public class DiagnosticViewModel {
     /// Enregistreur de la nuit (`PR <n° de série>`).
     public ReadOnlyStringProperty enregistreurProperty() {
         return enregistreur.getReadOnlyProperty();
-    }
-
-    /// Résumé de la série climatique (`N mesures T°/hygrométrie`, ou absence R20).
-    public ReadOnlyStringProperty resumeClimatProperty() {
-        return resumeClimat.getReadOnlyProperty();
     }
 
     /// Température en début de nuit, libellé d'affichage (`8,5 °C` / `—`, #106).

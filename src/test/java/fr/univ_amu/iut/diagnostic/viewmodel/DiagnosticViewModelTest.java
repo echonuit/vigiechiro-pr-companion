@@ -75,7 +75,6 @@ class DiagnosticViewModelTest {
         assertThat(viewModel.evenements()).containsExactly("Démarrage 20:25");
         assertThat(viewModel.releveClimatiqueAbsentProperty().get()).isFalse();
         assertThat(viewModel.gpsDisponibleProperty().get()).isTrue();
-        assertThat(viewModel.resumeClimatProperty().get()).contains("2 mesures");
         assertThat(viewModel.temperatureProperty().get())
                 .as("#106 : température de début de nuit affichée au diagnostic")
                 .isEqualTo("8,5 °C");
@@ -104,7 +103,6 @@ class DiagnosticViewModelTest {
 
         assertThat(viewModel.releveClimatiqueAbsentProperty().get()).isTrue();
         assertThat(viewModel.gpsDisponibleProperty().get()).isFalse();
-        assertThat(viewModel.resumeClimatProperty().get()).contains("absent");
         assertThat(viewModel.mesures()).isEmpty();
     }
 

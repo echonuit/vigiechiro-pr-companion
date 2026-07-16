@@ -59,9 +59,6 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private Label lblReleveAbsent;
 
     @FXML
-    private Label lblResumeClimat;
-
-    @FXML
     private Label lblTemperature;
 
     @FXML
@@ -104,13 +101,24 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     }
 
     /// Compose les 3 zones de la barre de statut (#1022) : identité du passage (gauche), matériel du
-    /// diagnostic (centre), et à droite l'**alerte prioritaire** — hors-nuit puis relevé climatique absent.
+    /// diagnostic (centre), et à droite l'**alerte prioritaire** : hors-nuit puis relevé climatique absent.
     private ZonesStatut calculerZonesStatut() {
         String gauche = contexte == null ? "" : contexte.identiteStatut();
         String releveAbsent = viewModel.releveClimatiqueAbsentProperty().get() ? "⚠ Relevé climatique absent" : "";
         String droite =
                 ZonesStatut.premierNonVide(viewModel.alerteHorsNuitProperty().get(), releveAbsent);
-        return new ZonesStatut(gauche, viewModel.enregistreurProperty().get(), droite);
+        return new ZonesStatut(gauche, materielCentre(), droite);
+    }
+
+    /// Zone centre : l'enregistreur, suivi du nombre de mesures climatiques quand un relevé est présent
+    /// (« PR 1925492 · 10 mesures », #1498). Vide tant qu'aucun diagnostic n'est chargé.
+    private String materielCentre() {
+        String enregistreur = viewModel.enregistreurProperty().get();
+        if (enregistreur.isEmpty() || viewModel.releveClimatiqueAbsentProperty().get()) {
+            return enregistreur;
+        }
+        int nombre = viewModel.mesures().size();
+        return enregistreur + " · " + nombre + (nombre > 1 ? " mesures" : " mesure");
     }
 
     @FXML
@@ -121,8 +129,8 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
                 this::calculerZonesStatut,
                 viewModel.enregistreurProperty(),
                 viewModel.alerteHorsNuitProperty(),
-                viewModel.releveClimatiqueAbsentProperty()));
-        lblResumeClimat.textProperty().bind(viewModel.resumeClimatProperty());
+                viewModel.releveClimatiqueAbsentProperty(),
+                viewModel.mesures()));
         lblTemperature
                 .textProperty()
                 .bind(Bindings.concat("🌡 Température en début de nuit : ", viewModel.temperatureProperty()));
