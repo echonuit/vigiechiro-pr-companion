@@ -44,8 +44,10 @@ public final class ClientVigieChiro {
         this(URL_DEFAUT, fournisseurToken);
     }
 
-    /// Constructeur d'injection de l'URL de base (tests hors-ligne : une URL injoignable donne `empty`).
-    ClientVigieChiro(String baseUrl, FournisseurToken fournisseurToken) {
+    /// Constructeur d'**injection de l'URL de base** : les tests hors-ligne pointent une URL injoignable
+    /// (les réponses deviennent `empty`), et l'exécution peut viser un serveur de recette ou le **stub**
+    /// des E2E CLI via la surcharge `vigiechiro.url` / `VIGIECHIRO_URL` (cf. `ConnexionModule#urlDeBase`).
+    public ClientVigieChiro(String baseUrl, FournisseurToken fournisseurToken) {
         this.transport = new TransportVigieChiro(baseUrl, fournisseurToken);
     }
 

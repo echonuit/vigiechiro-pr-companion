@@ -82,12 +82,25 @@ public class ConnexionModule extends ModuleDeFeature {
                 .or(() -> Optional.ofNullable(System.getenv("VIGIECHIRO_TOKEN")).filter(jeton -> !jeton.isBlank()));
     }
 
+    /// URL de base de l'API **surchargée pour l'exécution** (serveur de recette, ou serveur **stub** des
+    /// E2E CLI, #1592) : propriété système `vigiechiro.url` d'abord, variable d'environnement
+    /// `VIGIECHIRO_URL` ensuite ; vide sinon (l'API de production par défaut). Même idiome que
+    /// [#jetonPonctuel].
+    static Optional<String> urlDeBase() {
+        return Optional.ofNullable(System.getProperty("vigiechiro.url"))
+                .filter(url -> !url.isBlank())
+                .or(() -> Optional.ofNullable(System.getenv("VIGIECHIRO_URL")).filter(url -> !url.isBlank()));
+    }
+
     /// Client de l'API VigieChiro, alimenté par le token stocké (ou ponctuel). Singleton : partagé par
-    /// les features consommatrices (référentiel taxons, sites, dépôt…).
+    /// les features consommatrices (référentiel taxons, sites, dépôt…). L'URL de base suit [#urlDeBase]
+    /// (production par défaut, surchargeable pour une recette ou un stub).
     @Provides
     @Singleton
     ClientVigieChiro fournirClient(FournisseurToken fournisseurToken) {
-        return new ClientVigieChiro(fournisseurToken);
+        return urlDeBase()
+                .map(url -> new ClientVigieChiro(url, fournisseurToken))
+                .orElseGet(() -> new ClientVigieChiro(fournisseurToken));
     }
 
     /// Traitement serveur (compute + lecture de l'état, #1261) : collaborateur du client, chez qui le
