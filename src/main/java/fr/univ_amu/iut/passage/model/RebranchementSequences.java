@@ -11,6 +11,7 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.function.Consumer;
 
 /// **La garde** de la réactivation (#1302, #1309), extraite de [ServiceReactivationPassage] : confronter
@@ -27,9 +28,21 @@ final class RebranchementSequences {
     /// retombe sur la vérification structurelle seule.
     private final Optional<CrisAttendus> crisAttendus;
 
+    /// Mode **régénération** (#1682) : quand les candidats sont des tranches **régénérées** depuis le brut
+    /// désigné (voie hydratation d'un passage reconstruit), l'identité tient à la régénération déterministe,
+    /// pas à une empreinte. La vérification accepte alors sur le structurel et l'acoustique n'est qu'un
+    /// **indice** (pas de veto). En mode normal (`false`), la cascade complète s'applique, acoustique comprise.
+    private final boolean regeneration;
+
     RebranchementSequences(VerificationIdentiteAudio verification, Optional<CrisAttendus> crisAttendus) {
+        this(verification, crisAttendus, false);
+    }
+
+    RebranchementSequences(
+            VerificationIdentiteAudio verification, Optional<CrisAttendus> crisAttendus, boolean regeneration) {
         this.verification = Objects.requireNonNull(verification, "verification");
         this.crisAttendus = Objects.requireNonNull(crisAttendus, "crisAttendus");
+        this.regeneration = regeneration;
     }
 
     /// Confronte chaque séquence **absente du disque** aux fichiers candidats de même nom, et rebranche
@@ -71,17 +84,28 @@ final class RebranchementSequences {
                 crisAttendus.map(port -> port.pour(sequence.id())).orElseGet(List::of);
         String premierMotif = null;
         for (Path candidat : homonymes) {
-            VerdictIdentite verdict = verification.verifierSequence(sequence, candidat, cris);
-            if (verdict instanceof Acceptee acceptee) {
+            VerdictRegenere resultat = verifier(sequence, candidat, cris);
+            if (resultat.verdict() instanceof Acceptee acceptee) {
                 copier(candidat, destination);
                 bilan.accepter(acceptee.niveau());
+                bilan.noterAcoustique(resultat.concordanceCris());
                 return;
             }
-            if (premierMotif == null && verdict instanceof Refusee refusee) {
+            if (premierMotif == null && resultat.verdict() instanceof Refusee refusee) {
                 premierMotif = refusee.motif();
             }
         }
         bilan.refuser(sequence.nomFichier(), premierMotif, homonymes.size());
+    }
+
+    /// Vérifie un candidat selon le mode : en **régénération** (#1682), acceptation structurelle et
+    /// concordance acoustique en indice ; en mode normal, cascade complète (l'acoustique redevient un veto,
+    /// concordance non exposée). Un seul point de branchement, pour que le rebranchement reste identique.
+    private VerdictRegenere verifier(SequenceDEcoute sequence, Path candidat, List<CriAttendu> cris) {
+        if (regeneration) {
+            return verification.verifierSequenceRegeneree(sequence, candidat, cris);
+        }
+        return new VerdictRegenere(verification.verifierSequence(sequence, candidat, cris), OptionalDouble.empty());
     }
 
     /// Copie (jamais déplace : la sauvegarde de l'utilisateur reste intacte) le fichier vérifié à

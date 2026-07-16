@@ -481,6 +481,42 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
+    @DisplayName("#1682 : hydratation même si l'acoustique discorde : structurel suffit, l'acoustique est un indice")
+    void passage_reconstruit_hydrate_malgre_acoustique_discordante() throws IOException {
+        List<String> noms = reconstruireAvecBrutEtLog();
+        // Cris introuvables dans l'audio synthétique (bruit pseudo-aléatoire, sans pic à 8 kHz) : l'acoustique
+        // discordera. Avec un veto (ancien comportement), tout serait REFUSÉ ; ici, les tranches sont des
+        // extraits verbatim du brut désigné → acceptées sur structurel, l'acoustique n'étant qu'un indice.
+        ServiceReactivationPassage avecCris = new ServiceReactivationPassage(
+                sessionDao,
+                sequenceDao,
+                originalDao,
+                new VerificationIdentiteAudio(),
+                disponibilite,
+                Optional.of(idSequence -> List.of(new CriAttendu(0.1, 0.4, 8_000))),
+                Optional.of(regeneration),
+                Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
+                Optional.empty());
+
+        RapportReactivation rapport = avecCris.reactiver(idPassage, sauvegarde, progres -> {});
+
+        assertThat(rapport.reactivees())
+                .as("l'acoustique discordante NE DOIT PAS refuser une tranche régénérée depuis le brut désigné")
+                .isEqualTo(noms.size());
+        assertThat(rapport.divergentes())
+                .as("aucun refus : le veto acoustique est retiré pour les tranches régénérées")
+                .isZero();
+        assertThat(rapport.confianceMinimale()).isEqualTo(NiveauConfiance.FORTE);
+        assertThat(rapport.indiceAcoustique())
+                .as("la concordance acoustique est tout de même mesurée et rapportée en indice")
+                .isNotNull();
+        assertThat(rapport.indiceAcoustique().mesurees()).isEqualTo(noms.size());
+        assertThat(rapport.indiceAcoustique().concordantes())
+                .as("cris introuvables dans le bruit synthétique : concordance faible, mais non bloquante")
+                .isLessThan(noms.size());
+    }
+
+    @Test
     @DisplayName("#1406 : une carte SD contenant PLUSIEURS nuits ne réactive que celle du passage")
     void carte_sd_multi_nuits() throws IOException {
         List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);

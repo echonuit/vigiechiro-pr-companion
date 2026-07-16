@@ -28,6 +28,12 @@ import java.util.OptionalDouble;
 ///    `sha256` intégral (posé à l'import depuis toujours) prouve l'original ; la redécoupe étant
 ///    déterministe au bit près (R11), les séquences re-produites héritent de cette identité.
 ///
+/// **Séquences régénérées d'un passage reconstruit** ([#verifierSequenceRegeneree], #1682) : un passage
+/// reconstruit n'a **pas d'empreinte**, et son audio régénéré est un extrait **verbatim** du brut désigné
+/// (transformation déterministe). L'identité tient donc à la régénération elle-même ; la concordance
+/// acoustique y est **mesurée en indice**, jamais en veto (le détecteur produit des faux négatifs sur des
+/// cris réels faibles, et refuser sur cette base écarterait le bon audio).
+///
 /// Les seuils sont **permissifs** ([#TOLERANCE_DUREE_SECONDES], [#SEUIL_FRACTION_CRIS]) : un faux
 /// négatif (refuser le bon fichier) coûte plus cher à l'utilisateur qu'un faux positif quand
 /// plusieurs preuves concordent déjà. Le mode de défaillance réel est **systémique** (se tromper de
@@ -46,6 +52,8 @@ public class VerificationIdentiteAudio {
     /// mais permissif : un cri faible peut se perdre, la moitié qui manque ne se perd pas.
     private static final double SEUIL_FRACTION_CRIS = 0.5;
 
+    private static final String PARAM_CANDIDAT = "candidat";
+
     /// Vérifie qu'un fichier candidat est bien la séquence d'écoute que la base décrit.
     ///
     /// @param sequence la séquence à rebrancher (ses colonnes V23 peuvent être `NULL`)
@@ -54,15 +62,11 @@ public class VerificationIdentiteAudio {
     ///     vide si la séquence n'en porte aucune)
     public VerdictIdentite verifierSequence(SequenceDEcoute sequence, Path candidat, List<CriAttendu> crisAttendus) {
         Objects.requireNonNull(sequence, "sequence");
-        Objects.requireNonNull(candidat, "candidat");
+        Objects.requireNonNull(candidat, PARAM_CANDIDAT);
         Objects.requireNonNull(crisAttendus, "crisAttendus");
-        if (!Files.isRegularFile(candidat)) {
-            return new Refusee("Fichier introuvable : " + candidat + ".");
-        }
-        String nomCandidat = candidat.getFileName().toString();
-        if (!nomCandidat.equals(sequence.nomFichier())) {
-            return new Refusee("Nom différent : « " + nomCandidat + " » au lieu de « " + sequence.nomFichier()
-                    + " » (autre tranche, autre nuit ?).");
+        Refusee parNom = controleNom(sequence, candidat);
+        if (parNom != null) {
+            return parNom;
         }
         VerdictIdentite parTaille = controlerTaille(sequence.tailleOctets(), candidat);
         if (parTaille != null) {
@@ -74,11 +78,51 @@ public class VerificationIdentiteAudio {
         return verdictSansEmpreinte(sequence, candidat, crisAttendus);
     }
 
+    /// Vérifie une séquence **régénérée depuis le brut désigné** (voie hydratation d'un passage
+    /// reconstruit, #1682). Le contrôle reste **structurel** (nom, taille si connue, durée si connue) et
+    /// **accepte** en [NiveauConfiance#FORTE] : l'audio est un extrait verbatim du brut, la régénération
+    /// déterministe est la preuve. La concordance acoustique est **mesurée** et rendue à l'appelant en
+    /// **indice**, sans jamais provoquer de refus.
+    ///
+    /// @return le verdict structurel (accepté sur nom/durée, ou refusé) et la concordance acoustique mesurée
+    public VerdictRegenere verifierSequenceRegeneree(
+            SequenceDEcoute sequence, Path candidat, List<CriAttendu> crisAttendus) {
+        Objects.requireNonNull(sequence, "sequence");
+        Objects.requireNonNull(candidat, PARAM_CANDIDAT);
+        Objects.requireNonNull(crisAttendus, "crisAttendus");
+        Refusee parNom = controleNom(sequence, candidat);
+        if (parNom != null) {
+            return new VerdictRegenere(parNom, OptionalDouble.empty());
+        }
+        VerdictIdentite parTaille = controlerTaille(sequence.tailleOctets(), candidat);
+        if (parTaille != null) {
+            return new VerdictRegenere(parTaille, OptionalDouble.empty());
+        }
+        FichierWav wav;
+        try {
+            wav = FichierWav.lire(candidat);
+        } catch (IOException e) {
+            return new VerdictRegenere(
+                    new Refusee("WAV illisible (" + e.getMessage() + ") : " + candidat + "."), OptionalDouble.empty());
+        }
+        Refusee parDuree = controleDuree(wav, sequence.dureeSecondes());
+        if (parDuree != null) {
+            return new VerdictRegenere(parDuree, OptionalDouble.empty());
+        }
+        OptionalDouble concordance = AnalyseAcoustique.fractionCrisPresents(wav, crisAttendus);
+        return new VerdictRegenere(
+                new Acceptee(
+                        NiveauConfiance.FORTE,
+                        "Extrait régénéré depuis le brut désigné (transformation déterministe R11) ; identité"
+                                + " structurelle (nom et durée concordants)."),
+                concordance);
+    }
+
     /// Vérifie qu'un fichier candidat est bien l'enregistrement **original** que la base décrit
     /// (voie « recoupe depuis les bruts » : l'utilisateur n'a gardé que ses originaux).
     public VerdictIdentite verifierOriginal(EnregistrementOriginal original, Path candidat) {
         Objects.requireNonNull(original, "original");
-        Objects.requireNonNull(candidat, "candidat");
+        Objects.requireNonNull(candidat, PARAM_CANDIDAT);
         if (!Files.isRegularFile(candidat)) {
             return new Refusee("Fichier introuvable : " + candidat + ".");
         }
@@ -118,6 +162,20 @@ public class VerificationIdentiteAudio {
                 || original.nomFichier().endsWith(Prefixe.TIRET + nomCandidat);
     }
 
+    /// Contrôle de **nom** (filtre à bon marché, commun aux deux voies séquence) : le candidat existe et
+    /// porte exactement le nom attendu. `null` si le nom concorde.
+    private static Refusee controleNom(SequenceDEcoute sequence, Path candidat) {
+        if (!Files.isRegularFile(candidat)) {
+            return new Refusee("Fichier introuvable : " + candidat + ".");
+        }
+        String nomCandidat = candidat.getFileName().toString();
+        if (!nomCandidat.equals(sequence.nomFichier())) {
+            return new Refusee("Nom différent : « " + nomCandidat + " » au lieu de « " + sequence.nomFichier()
+                    + " » (autre tranche, autre nuit ?).");
+        }
+        return null;
+    }
+
     /// Taille connue en base et différente sur disque : refus immédiat (discriminant quasi gratuit,
     /// contrôlé avant toute lecture de contenu). `null` si le contrôle ne tranche pas.
     private VerdictIdentite controlerTaille(Long tailleAttendue, Path candidat) {
@@ -134,6 +192,21 @@ public class VerificationIdentiteAudio {
                 ? null
                 : new Refusee("Taille différente : " + tailleCandidat + " octets au lieu de " + tailleAttendue
                         + " (contenu forcément différent).");
+    }
+
+    /// Contrôle de **durée réelle** (en-tête WAV ÷ facteur d'expansion) contre la durée attendue. `null`
+    /// si la durée n'est pas connue en base (rien à confronter) ou concorde à la tolérance près.
+    private static Refusee controleDuree(FichierWav wav, Double dureeAttendueSecondes) {
+        if (dureeAttendueSecondes == null) {
+            return null;
+        }
+        double dureeReelle = wav.dureeSecondes() / FACTEUR_EXPANSION;
+        if (Math.abs(dureeReelle - dureeAttendueSecondes) > TOLERANCE_DUREE_SECONDES) {
+            return new Refusee(String.format(
+                    "Durée réelle différente : %.2f s au lieu de %.2f s (redécoupe à d'autres paramètres ?).",
+                    dureeReelle, dureeAttendueSecondes));
+        }
+        return null;
     }
 
     private VerdictIdentite verdictParEmpreinte(String empreinteAttendue, Path candidat) {
@@ -156,12 +229,9 @@ public class VerificationIdentiteAudio {
         } catch (IOException e) {
             return new Refusee("WAV illisible (" + e.getMessage() + ") : " + candidat + ".");
         }
-        double dureeReelle = wav.dureeSecondes() / FACTEUR_EXPANSION;
-        if (sequence.dureeSecondes() != null
-                && Math.abs(dureeReelle - sequence.dureeSecondes()) > TOLERANCE_DUREE_SECONDES) {
-            return new Refusee(String.format(
-                    "Durée réelle différente : %.2f s au lieu de %.2f s (redécoupe à d'autres paramètres ?).",
-                    dureeReelle, sequence.dureeSecondes()));
+        Refusee parDuree = controleDuree(wav, sequence.dureeSecondes());
+        if (parDuree != null) {
+            return parDuree;
         }
         if (crisAttendus.isEmpty()) {
             return new Acceptee(
@@ -177,7 +247,7 @@ public class VerificationIdentiteAudio {
                             + " sur ce fichier).");
         }
         int pourcent = (int) Math.round(fraction.getAsDouble() * 100);
-        return fraction.getAsDouble() >= SEUIL_FRACTION_CRIS
+        return acoustiqueConcordante(fraction.getAsDouble())
                 ? new Acceptee(
                         NiveauConfiance.CERTITUDE,
                         "Structurelle + acoustique : " + pourcent + " % des cris attendus retrouvés aux instants"
@@ -185,5 +255,11 @@ public class VerificationIdentiteAudio {
                                 + " valent une empreinte.")
                 : new Refusee("Acoustique discordante : " + pourcent + " % seulement des cris attendus retrouvés."
                         + " Même nom et même durée, mais ce n'est probablement pas le bon audio.");
+    }
+
+    /// La concordance acoustique est-elle **suffisante** ? Seuil partagé (#1682) entre la cascade et le
+    /// décompte de l'indice non bloquant ([IndiceAcoustique]).
+    static boolean acoustiqueConcordante(double fraction) {
+        return fraction >= SEUIL_FRACTION_CRIS;
     }
 }

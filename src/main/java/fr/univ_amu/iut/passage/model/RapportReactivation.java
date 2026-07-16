@@ -22,6 +22,9 @@ import java.util.List;
 /// @param voie par où l'audio est revenu (#1406) : les séquences retrouvées telles quelles, ou les
 ///     séquences **régénérées** depuis les bruts. L'utilisateur a le droit de savoir ce que
 ///     l'application a fait de son dossier
+/// @param indiceAcoustique concordance acoustique **non bloquante** (#1682) mesurée lors d'une hydratation
+///     (passage reconstruit) : combien de séquences rebranchées présentent les cris attendus. `null` pour
+///     les voies où elle n'est pas mesurée (rebranchement direct, réactivation ordinaire depuis les bruts)
 public record RapportReactivation(
         int reactivees,
         int divergentes,
@@ -30,10 +33,25 @@ public record RapportReactivation(
         NiveauConfiance confianceMinimale,
         List<EcartReactivation> ecarts,
         DecompteAudio decompte,
-        VoieReactivation voie) {
+        VoieReactivation voie,
+        IndiceAcoustique indiceAcoustique) {
 
     public RapportReactivation {
         ecarts = List.copyOf(ecarts);
+    }
+
+    /// Constructeur de **commodité** sans indice acoustique (`null`) : préserve les appels des voies qui ne
+    /// le mesurent pas et des tests antérieurs à #1682.
+    public RapportReactivation(
+            int reactivees,
+            int divergentes,
+            int manquantes,
+            int dejaPresentes,
+            NiveauConfiance confianceMinimale,
+            List<EcartReactivation> ecarts,
+            DecompteAudio decompte,
+            VoieReactivation voie) {
+        this(reactivees, divergentes, manquantes, dejaPresentes, confianceMinimale, ecarts, decompte, voie, null);
     }
 
     /// Une séquence **refusée** : un fichier homonyme était là, mais la vérification l'a écarté.

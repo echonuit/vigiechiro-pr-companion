@@ -86,8 +86,13 @@ public class ServiceReactivationPassage {
                 Objects.requireNonNull(crisAttendus, "crisAttendus"));
         this.depuisBruts = new ReactivationDepuisBruts(
                 verification, rebranchement, Objects.requireNonNull(regeneration, "regeneration"));
+        // Voie hydratation (#1682) : les tranches y sont **régénérées** depuis le brut désigné, l'acoustique
+        // n'y est donc qu'un indice (pas de veto). Un rebranchement dédié, en mode régénération, porte cette
+        // règle - même vérification, même port de cris, mais acceptation structurelle.
         this.hydratation = new HydratationDepuisBruts(
-                Objects.requireNonNull(inventaireBruts, "inventaireBruts"), regeneration, rebranchement);
+                Objects.requireNonNull(inventaireBruts, "inventaireBruts"),
+                regeneration,
+                new RebranchementSequences(verification, crisAttendus, true));
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
     }
 
@@ -243,7 +248,16 @@ public class ServiceReactivationPassage {
                 bilan.confianceMinimale,
                 bilan.ecarts,
                 decompte,
-                voie);
+                voie,
+                indiceAcoustique(bilan));
+    }
+
+    /// Indice acoustique **non bloquant** (#1682) du bilan, ou `null` s'il n'a rien mesuré (voies autres que
+    /// l'hydratation, ou aucune séquence porteuse de cris) : rien à afficher.
+    private static IndiceAcoustique indiceAcoustique(BilanReactivation bilan) {
+        return bilan.acoustiqueMesurees > 0
+                ? new IndiceAcoustique(bilan.acoustiqueMesurees, bilan.acoustiqueConcordantes)
+                : null;
     }
 
     /// Préfixe de la session, relu du **nom de son dossier** (`Car…-2026-Pass1-A1`) : c'est le seul endroit
