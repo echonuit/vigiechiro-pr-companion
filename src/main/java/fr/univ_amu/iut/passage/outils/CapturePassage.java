@@ -150,10 +150,7 @@ public final class CapturePassage {
                 injecteur.getInstance(ServicePassage.class),
                 injecteur.getInstance(ServicePurgeOriginaux.class),
                 injecteur.getInstance(ServiceArchivagePassage.class),
-                injecteur.getInstance(ServiceReactivationPassage.class),
-                // La capture tourne hors connexion : « Importer les observations » (#1350) s'y montre
-                // donc grisé, avec le tooltip qui dit pourquoi. C'est l'aperçu fidèle de cet état.
-                Optional.empty());
+                injecteur.getInstance(ServiceReactivationPassage.class));
         FXMLLoader loader = new FXMLLoader(PassageController.class.getResource("Passage.fxml"));
         loader.setControllerFactory(type -> type == PassageController.class
                 ? new PassageController(

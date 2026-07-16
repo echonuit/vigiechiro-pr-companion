@@ -36,7 +36,6 @@ import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -122,7 +121,7 @@ class PassageArchivageViewTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage, reactivation, Optional.empty());
+                return new PassageViewModel(service, purge, archivage, reactivation);
             }
 
             @Provides

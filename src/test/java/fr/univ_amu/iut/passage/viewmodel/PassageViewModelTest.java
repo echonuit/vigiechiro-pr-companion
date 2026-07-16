@@ -3,11 +3,9 @@ package fr.univ_amu.iut.passage.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -55,7 +53,7 @@ class PassageViewModelTest {
 
     @BeforeEach
     void preparer() {
-        viewModel = new PassageViewModel(service, purge, archivage, reactivation, Optional.empty());
+        viewModel = new PassageViewModel(service, purge, archivage, reactivation);
     }
 
     private static DetailPassage detail(StatutWorkflow statut) {
@@ -419,76 +417,6 @@ class PassageViewModelTest {
         viewModel.reactiver(dossier, progres -> {});
 
         verify(reactivation).reactiver(eq(ID_PASSAGE), eq(dossier), any());
-    }
-
-    // --- « Importer les observations » (#1350), déplacé ici depuis la modale de rattachement ---
-
-    /// ViewModel branché sur un import disponible (observateur connecté).
-    private PassageViewModel avecImport(ImportObservations importObservations) {
-        return new PassageViewModel(service, purge, archivage, reactivation, Optional.of(importObservations));
-    }
-
-    @Test
-    @DisplayName("#1350 : un passage DÉPOSÉ reste importable — c'est précisément le cas qui était fermé")
-    void import_possible_sur_un_passage_depose() {
-        ImportObservations importObservations = mock(ImportObservations.class);
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-        when(importObservations.estRattache(ID_PASSAGE)).thenReturn(true);
-        PassageViewModel vm = avecImport(importObservations);
-
-        vm.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        assertThat(vm.importObservations().possibleProperty().get())
-                .as("la garde de renommage (#1134) fermait la modale, donc l'import, sur un passage déposé :"
-                        + " l'import n'a rien à voir avec le renommage")
-                .isTrue();
-        assertThat(vm.importObservations().motifBlocageProperty().get()).isEmpty();
-        assertThat(vm.renommagePossibleProperty().get())
-                .as("la garde #1134 reste intacte : un passage déposé n'est toujours pas renommable")
-                .isFalse();
-    }
-
-    @Test
-    @DisplayName("#1350 : nuit non liée à une participation → import bloqué, et le motif le dit")
-    void import_bloque_si_nuit_non_liee() {
-        ImportObservations importObservations = mock(ImportObservations.class);
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.TRANSFORME));
-        when(importObservations.estRattache(ID_PASSAGE)).thenReturn(false);
-        PassageViewModel vm = avecImport(importObservations);
-
-        vm.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        assertThat(vm.importObservations().possibleProperty().get()).isFalse();
-        assertThat(vm.importObservations().motifBlocageProperty().get()).contains("pas encore lié à une participation");
-    }
-
-    @Test
-    @DisplayName("#1350 : hors connexion (import absent) → bloqué, et le motif parle de connexion")
-    void import_bloque_hors_connexion() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE); // @BeforeEach : Optional.empty()
-
-        assertThat(viewModel.importObservations().possibleProperty().get()).isFalse();
-        assertThat(viewModel.importObservations().motifBlocageProperty().get()).contains("hors connexion");
-    }
-
-    @Test
-    @DisplayName("#1350 : importer restitue le compte rendu — ou LA RAISON quand il n'y a rien à importer")
-    void importer_restitue_le_compte_rendu_ou_la_raison() {
-        ImportObservations importObservations = mock(ImportObservations.class);
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-        PassageViewModel vm = avecImport(importObservations);
-        vm.ouvrirSur(ID_PASSAGE, CONTEXTE);
-        when(importObservations.importer(ID_PASSAGE, false)).thenReturn("42 observation(s).");
-
-        assertThat(vm.importObservations().importer()).isEqualTo("42 observation(s).");
-
-        // Un refus n'est pas un incident : c'est une réponse, et elle dit quoi faire (#1264).
-        when(importObservations.importer(ID_PASSAGE, false))
-                .thenThrow(new RegleMetierException("L'analyse est en cours sur VigieChiro."));
-
-        assertThat(vm.importObservations().importer()).contains("L'analyse est en cours");
     }
 
     /// Fiche d'un passage dont l'audio n'est plus conservé (volumes bruts et séquences à zéro :

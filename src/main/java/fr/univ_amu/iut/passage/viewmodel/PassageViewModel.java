@@ -1,6 +1,5 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
-import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -16,7 +15,6 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.nio.file.Path;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -42,11 +40,6 @@ public class PassageViewModel {
     private final ServicePurgeOriginaux purge;
     private final ServiceArchivagePassage archivage;
     private final ServiceReactivationPassage reactivation;
-
-    /// Sous-ViewModel « Importer les observations » (#1350), porté par M-Passage et non plus par la modale
-    /// de rattachement : l'import n'a rien à voir avec le renommage, et n'a donc pas à subir la garde qui
-    /// ferme cette modale sur un passage déposé.
-    private final ImportObservationsPassage importObservations;
 
     private final ReadOnlyStringWrapper titreContexte = new ReadOnlyStringWrapper(this, "titreContexte", "");
     private final ReadOnlyStringWrapper plageHoraire = new ReadOnlyStringWrapper(this, "plageHoraire", "");
@@ -97,18 +90,11 @@ public class PassageViewModel {
             ServicePassage service,
             ServicePurgeOriginaux purge,
             ServiceArchivagePassage archivage,
-            ServiceReactivationPassage reactivation,
-            Optional<ImportObservations> importObservations) {
+            ServiceReactivationPassage reactivation) {
         this.service = Objects.requireNonNull(service, "service");
         this.purge = Objects.requireNonNull(purge, "purge");
         this.archivage = Objects.requireNonNull(archivage, "archivage");
         this.reactivation = Objects.requireNonNull(reactivation, "reactivation");
-        this.importObservations = new ImportObservationsPassage(importObservations);
-    }
-
-    /// Sous-ViewModel « Importer les observations » (#1350) : gating, motif de blocage et action.
-    public ImportObservationsPassage importObservations() {
-        return importObservations;
     }
 
     /// Ouvre l'écran sur le passage `idPassage` en **synchrone**, composition de [#charger] +
@@ -252,7 +238,6 @@ public class PassageViewModel {
         motifBlocageArchivage.set(GatingArchive.motifArchivage(detail));
         reactivationPossible.set(GatingArchive.reactivationPossible(detail));
         motifBlocageReactivation.set(GatingArchive.motifReactivation(detail));
-        importObservations.charger(idPassage);
         actionRecommandee.set(EtapesWorkflow.prochaineAction(detail.statut()));
     }
 
@@ -280,7 +265,6 @@ public class PassageViewModel {
         motifBlocageArchivage.set("");
         reactivationPossible.set(false);
         motifBlocageReactivation.set("");
-        importObservations.reinitialiser();
         actionRecommandee.set(ActionRecommandee.AUCUNE);
     }
 

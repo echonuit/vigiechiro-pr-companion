@@ -126,7 +126,7 @@ class PassageReactivationViewTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage, reactivation, Optional.empty());
+                return new PassageViewModel(service, purge, archivage, reactivation);
             }
 
             @Provides
