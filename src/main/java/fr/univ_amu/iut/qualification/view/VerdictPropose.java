@@ -15,10 +15,15 @@ final class VerdictPropose {
 
     private VerdictPropose() {}
 
-    /// Lie la puce à la valeur observable du verdict proposé : texte, visibilité (masquée si rien n'est
-    /// jugé) et classe de couleur, appliqués à l'état courant puis à chaque changement.
-    static void lier(Label puce, ObservableValue<Verdict> propose) {
-        puce.textProperty().bind(Bindings.createStringBinding(() -> texte(propose.getValue()), propose));
+    /// Lie la puce au verdict proposé et à l'état de surcharge : texte (« Proposé : X », suffixé
+    /// « (surchargé) » quand le choix diffère du proposé), visibilité (masquée si rien n'est jugé) et
+    /// classe de couleur, appliqués à l'état courant puis à chaque changement.
+    static void lier(Label puce, ObservableValue<Verdict> propose, ObservableValue<Boolean> surcharge) {
+        puce.textProperty()
+                .bind(Bindings.createStringBinding(
+                        () -> texte(propose.getValue(), Boolean.TRUE.equals(surcharge.getValue())),
+                        propose,
+                        surcharge));
         var visible = Bindings.createBooleanBinding(() -> estDecisif(propose.getValue()), propose);
         puce.visibleProperty().bind(visible);
         puce.managedProperty().bind(visible);
@@ -30,8 +35,11 @@ final class VerdictPropose {
         return verdict != null && verdict != Verdict.A_VERIFIER;
     }
 
-    private static String texte(Verdict verdict) {
-        return estDecisif(verdict) ? "Proposé : " + verdict.libelle() : "";
+    private static String texte(Verdict verdict, boolean surcharge) {
+        if (!estDecisif(verdict)) {
+            return "";
+        }
+        return "Proposé : " + verdict.libelle() + (surcharge ? " (surchargé)" : "");
     }
 
     private static void appliquerClasse(Label puce, Verdict verdict) {

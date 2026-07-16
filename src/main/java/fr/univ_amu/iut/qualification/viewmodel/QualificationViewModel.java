@@ -64,6 +64,13 @@ public class QualificationViewModel {
 
     private final BooleanBinding peutEnregistrer;
 
+    // Verdict PROPOSÉ (#1524, lot 6a) : le verdict dérivé des verdicts par fichier, transmis par le
+    // controller depuis SelectionEcouteViewModel via lierPropose. Il pré-remplit le verdict choisi tant
+    // que l'utilisateur ne l'a pas surchargé (Q1 : le dérivé fait foi, même sur un passage déjà décidé).
+    private final ReadOnlyObjectWrapper<Verdict> verdictPropose =
+            new ReadOnlyObjectWrapper<>(this, "verdictPropose", Verdict.A_VERIFIER);
+    private final BooleanBinding surcharge;
+
     public QualificationViewModel(ServiceQualification service) {
         this.service = Objects.requireNonNull(service, "service");
         // Enregistrable seulement si un verdict réel est choisi ET qu'il constitue un brouillon non encore
@@ -75,6 +82,12 @@ public class QualificationViewModel {
                         && etatVerdict.get() == EtatVerdict.BROUILLON,
                 verdictChoisi,
                 etatVerdict);
+        // Surcharge (#1524, lot 6a) : le choix décisif diffère du proposé → l'utilisateur a écarté la
+        // proposition. Pilote le marqueur « (surchargé) » de la puce et la logique de pré-remplissage.
+        surcharge = Bindings.createBooleanBinding(
+                () -> estDecisif(verdictChoisi.get()) && verdictChoisi.get() != verdictPropose.get(),
+                verdictChoisi,
+                verdictPropose);
         // Ré-armer la garde de saisie : verdict et commentaire restent éditables après un
         // enregistrement. Toute modification recrée donc un brouillon non persisté (le verdict/
         // commentaire à l'écran ne correspond plus à l'état enregistré) ; sans ce ré-armement, quitter
@@ -140,6 +153,7 @@ public class QualificationViewModel {
         resumeAnomalie.set("");
         statut.set(null);
         verdictActuel.set(Verdict.A_VERIFIER);
+        verdictPropose.set(Verdict.A_VERIFIER);
         verdictChoisi.set(null);
         commentaire.set("");
         etatVerdict.set(EtatVerdict.BROUILLON);
@@ -156,9 +170,34 @@ public class QualificationViewModel {
         }
     }
 
-    /// Choix (différé) du verdict global de la nuit (boutons OK / douteux / à jeter).
+    /// Choix (différé) du verdict global de la nuit (boutons OK / douteux / à jeter). Un choix décisif
+    /// différent du proposé constitue une surcharge (cf. [#surchargeProperty()]).
     public void choisirVerdict(Verdict verdict) {
         verdictChoisi.set(verdict);
+    }
+
+    /// Câble le verdict **proposé** (source dérivée des verdicts par fichier, #1524) : il pré-remplit le
+    /// verdict choisi tant que l'utilisateur ne l'a pas surchargé, et suit ses évolutions en direct.
+    public void lierPropose(ReadOnlyObjectProperty<Verdict> propose) {
+        propose.addListener((obs, ancien, nouveau) -> appliquerPropose(nouveau));
+        appliquerPropose(propose.get());
+    }
+
+    /// Applique un nouveau verdict proposé. Le choix « suit » le proposé tant qu'il n'est pas décisif ou
+    /// qu'il vaut encore l'ancien proposé : on pré-remplit alors avec le nouveau (Q1 : le dérivé fait
+    /// foi). Si l'utilisateur a surchargé (choix décisif ≠ ancien proposé), son choix est préservé.
+    private void appliquerPropose(Verdict propose) {
+        Verdict ancien = verdictPropose.get();
+        Verdict nouveau = propose == null ? Verdict.A_VERIFIER : propose;
+        boolean suivaitLePropose = !estDecisif(verdictChoisi.get()) || verdictChoisi.get() == ancien;
+        verdictPropose.set(nouveau);
+        if (suivaitLePropose) {
+            verdictChoisi.set(estDecisif(nouveau) ? nouveau : null);
+        }
+    }
+
+    private static boolean estDecisif(Verdict verdict) {
+        return verdict != null && verdict != Verdict.A_VERIFIER;
     }
 
     /// Enregistre le verdict choisi : transite le passage vers `VERIFIE`. Refuse si aucun verdict
@@ -276,5 +315,17 @@ public class QualificationViewModel {
     /// Activation du bouton « Enregistrer le verdict » : un verdict décisif (≠ `A_VERIFIER`) choisi.
     public BooleanBinding peutEnregistrer() {
         return peutEnregistrer;
+    }
+
+    /// Verdict final **proposé** (dérivé des verdicts par fichier) qui pré-remplit le choix. `A_VERIFIER`
+    /// tant qu'aucune séquence n'est jugée.
+    public ReadOnlyObjectProperty<Verdict> verdictProposeProperty() {
+        return verdictPropose.getReadOnlyProperty();
+    }
+
+    /// `true` quand le verdict choisi (décisif) diffère du proposé : l'utilisateur a surchargé la
+    /// proposition (pilote le marqueur « (surchargé) » de la puce).
+    public BooleanBinding surchargeProperty() {
+        return surcharge;
     }
 }
