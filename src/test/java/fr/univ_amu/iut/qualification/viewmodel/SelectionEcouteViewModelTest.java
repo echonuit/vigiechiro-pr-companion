@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
@@ -139,6 +140,30 @@ class SelectionEcouteViewModelTest {
         assertThat(viewModel.sequenceCouranteProperty().get().verdict())
                 .as("la séquence courante aussi")
                 .isEqualTo(VerdictFichier.INEXPLOITABLE);
+    }
+
+    @Test
+    @DisplayName("#1524 : le verdict proposé se dérive en direct des verdicts par fichier")
+    void verdict_propose_derive_des_verdicts_par_fichier() {
+        stubOuverture(3);
+        viewModel.ouvrirSur(ID_PASSAGE);
+        // Aucune séquence jugée : rien à proposer.
+        assertThat(viewModel.verdictProposeProperty().get()).isEqualTo(Verdict.A_VERIFIER);
+
+        // 2 Bon + 1 Inexploitable (minorité) → Douteux.
+        jugerFichier(0, VerdictFichier.BON);
+        jugerFichier(1, VerdictFichier.BON);
+        jugerFichier(2, VerdictFichier.INEXPLOITABLE);
+        assertThat(viewModel.verdictProposeProperty().get()).isEqualTo(Verdict.DOUTEUX);
+
+        // La dernière séquence rebasculée en Bon → toutes Bon → OK.
+        jugerFichier(2, VerdictFichier.BON);
+        assertThat(viewModel.verdictProposeProperty().get()).isEqualTo(Verdict.OK);
+    }
+
+    private void jugerFichier(int index, VerdictFichier verdict) {
+        viewModel.selectionner(viewModel.lignes().get(index));
+        viewModel.marquerVerdictCourante(verdict);
     }
 
     @Test

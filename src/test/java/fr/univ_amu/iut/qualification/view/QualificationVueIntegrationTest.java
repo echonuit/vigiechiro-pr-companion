@@ -337,6 +337,25 @@ class QualificationVueIntegrationTest {
         assertThat(segBon.getPrefWidth()).isGreaterThan(segInexploitable.getPrefWidth());
     }
 
+    @Test
+    @DisplayName("#1524 : la puce « Proposé » affiche le verdict dérivé des verdicts par fichier")
+    void puce_propose_affiche_le_verdict_derive(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableSequences").queryAs(TableView.class);
+        Label propose = robot.lookup("#lblVerdictPropose").queryAs(Label.class);
+        // À l'ouverture, aucune séquence n'est jugée → puce masquée.
+        assertThat(propose.isVisible()).isFalse();
+
+        // 2 Bon + 1 Inexploitable (minorité) → Douteux.
+        jugerLigne(robot, table, 0, "#boutonBon");
+        jugerLigne(robot, table, 1, "#boutonBon");
+        jugerLigne(robot, table, 2, "#boutonInexploitable");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(propose.isVisible()).isTrue();
+        assertThat(propose.getText()).contains("Proposé").contains("Douteux");
+        assertThat(propose.getStyleClass()).contains("propose-douteux");
+    }
+
     private static void jugerLigne(FxRobot robot, TableView<?> table, int index, String boutonId) {
         robot.interact(() -> table.getSelectionModel().select(index));
         robot.interact(() -> robot.lookup(boutonId).queryAs(Button.class).fire());

@@ -259,6 +259,41 @@
   -fx-text-fill: #6a737d;
 }
 
+/*
+ * ---- Puce « Verdict proposé » (#1524) ----
+ * Verdict final dérivé des verdicts par fichier, affiché près des boutons de verdict global. Colorée
+ * selon sa valeur (même palette que les badges), pour lier visuellement le proposé à la répartition.
+ */
+.verdict-propose {
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+  -fx-padding: 5 12 5 12;
+  -fx-background-radius: 12;
+  -fx-border-radius: 12;
+  -fx-border-width: 1.5;
+  -fx-background-color: #eef2f5;
+  -fx-text-fill: #2c3e50;
+  -fx-border-color: #d0d7de;
+}
+
+.verdict-propose.propose-ok {
+  -fx-background-color: #d5f0de;
+  -fx-text-fill: #0e5128;
+  -fx-border-color: #1e8449;
+}
+
+.verdict-propose.propose-douteux {
+  -fx-background-color: #fbe6c8;
+  -fx-text-fill: #7e5109;
+  -fx-border-color: #b9770e;
+}
+
+.verdict-propose.propose-jeter {
+  -fx-background-color: #f5d2cd;
+  -fx-text-fill: #6e2c00;
+  -fx-border-color: #a93226;
+}
+
 /* ---- Messages + actions ---- */
 .avertissement {
   -fx-font-size: 12px;

@@ -201,6 +201,9 @@
           <Label styleClass="section-sous" wrapText="true"
                  text="Décision d'ensemble pour toute la nuit, pas pour un seul fichier."/>
         </VBox>
+        <!-- Verdict final PROPOSÉ (#1524, lot 6a) : dérivé en direct de la répartition des verdicts par
+             fichier (barre tricolore). Proposition seulement ; masquée tant qu'aucune séquence n'est jugée. -->
+        <Label fx:id="lblVerdictPropose" styleClass="verdict-propose"/>
         <Button fx:id="boutonOk" text="OK" styleClass="verdict,verdict-ok"
                 onAction="#choisirOk" prefWidth="150.0"/>
         <Button fx:id="boutonDouteux" text="Douteux" styleClass="verdict,verdict-douteux"
