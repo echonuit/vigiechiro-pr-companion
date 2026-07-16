@@ -8,15 +8,18 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-/// Traduction du mot-clé de verdict de `qualifier` (#617). `verdictDepuis` est une fonction pure : les
-/// mots-clés `ok` / `douteux` / `a-jeter` (toute casse) donnent le bon [Verdict], l'inconnu lève une
-/// erreur d'usage.
+/// Traduction du mot-clé de verdict de `qualifier` (#617, lexique #1524). `verdictDepuis` est une
+/// fonction pure : `ok` / `utilisable` / `inexploitable` (+ alias `douteux` / `a-jeter`, toute casse)
+/// donnent le bon [Verdict], l'inconnu lève une erreur d'usage.
 class QualifierTest {
 
     @Test
-    @DisplayName("ok / douteux / a-jeter (toute casse) donnent le bon verdict")
+    @DisplayName("ok / utilisable / inexploitable (+ alias douteux / a-jeter, toute casse) donnent le bon verdict")
     void verdict_depuis_mots_cles() {
         assertThat(Qualifier.verdictDepuis("ok")).isEqualTo(Verdict.OK);
+        assertThat(Qualifier.verdictDepuis("utilisable")).isEqualTo(Verdict.DOUTEUX);
+        assertThat(Qualifier.verdictDepuis("INEXPLOITABLE")).isEqualTo(Verdict.A_JETER);
+        // Alias rétro-compatibles (ancien lexique), conservés pour ne pas casser les scripts existants.
         assertThat(Qualifier.verdictDepuis("DOUTEUX")).isEqualTo(Verdict.DOUTEUX);
         assertThat(Qualifier.verdictDepuis("a-jeter")).isEqualTo(Verdict.A_JETER);
         assertThat(Qualifier.verdictDepuis("Ajeter")).isEqualTo(Verdict.A_JETER);
@@ -27,6 +30,6 @@ class QualifierTest {
     void verdict_inconnu_leve_erreur_usage() {
         assertThatThrownBy(() -> Qualifier.verdictDepuis("peut-etre"))
                 .isInstanceOf(ErreurUsage.class)
-                .hasMessageContaining("ok, douteux, a-jeter");
+                .hasMessageContaining("ok, utilisable, inexploitable");
     }
 }
