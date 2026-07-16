@@ -28,6 +28,7 @@ import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
@@ -143,6 +144,22 @@ class DiagnosticVueIntegrationTest {
         assertThat(anomalies.getItems().get(0)).isEqualTo("Réveil non programmé à 03:12");
         assertThat(evenements.getItems()).hasSize(1);
         assertThat(evenements.getItems().get(0)).isEqualTo("Démarrage");
+    }
+
+    @Test
+    @DisplayName("Le graphe utilise un axe temporel (NumberAxis) étiqueté en HH:mm, aux minutes réelles")
+    void axe_du_graphe_est_temporel_en_heures(FxRobot robot) {
+        LineChart<?, ?> graphe = robot.lookup("#grapheClimat").queryAs(LineChart.class);
+
+        assertThat(graphe.getXAxis()).isInstanceOf(NumberAxis.class);
+        NumberAxis axe = (NumberAxis) graphe.getXAxis();
+        // Chaque point est placé à sa minute réelle depuis la première mesure : 22:00 -> 0, 02:00 (J+1) -> 240.
+        assertThat(graphe.getData().get(0).getData().get(0).getXValue()).isEqualTo(0L);
+        assertThat(graphe.getData().get(0).getData().get(1).getXValue()).isEqualTo(240L);
+        // Les étiquettes sont reconstruites en HH:mm, et non un libellé brut par mesure.
+        assertThat(axe.getTickLabelFormatter().toString(0L)).isEqualTo("22:00");
+        assertThat(axe.getTickLabelFormatter().toString(240L)).isEqualTo("02:00");
+        assertThat(axe.isAutoRanging()).isFalse();
     }
 
     @Test

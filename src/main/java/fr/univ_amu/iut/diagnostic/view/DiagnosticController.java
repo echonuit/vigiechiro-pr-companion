@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.diagnostic.model.MesureClimatique;
 import fr.univ_amu.iut.diagnostic.viewmodel.DiagnosticViewModel;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -21,10 +22,12 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.HBox;
+import javafx.util.StringConverter;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Diagnostic** (`Diagnostic.fxml`).
@@ -38,8 +41,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// est déporté en barre de statut (le titre « Diagnostic matériel » étant redondant avec le fil d'Ariane).
 public class DiagnosticController implements EmplacementNavigation, ResumeStatut {
 
-    //   Le graphe T°/hygrométrie se reconstruit depuis viewModel.mesures().
-    private static final DateTimeFormatter MOMENT = DateTimeFormatter.ofPattern("dd/MM HH:mm");
+    //   Le graphe T°/hygrométrie se reconstruit depuis viewModel.mesures() sur un axe temporel.
+    private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH:mm");
 
     private final DiagnosticViewModel viewModel;
     private final OuvrirSite ouvrirSite;
@@ -62,7 +65,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private Label lblTemperature;
 
     @FXML
-    private LineChart<String, Number> grapheClimat;
+    private LineChart<Number, Number> grapheClimat;
 
     @FXML
     private ListView<String> listeAnomalies;
@@ -187,16 +190,67 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         ligneGps.getStyleClass().add(disponible ? "gps-disponible" : "gps-absent");
     }
 
+    /// Reconstruit les deux séries T°/hygrométrie sur un **axe temporel** : chaque point est placé à sa
+    /// minute réelle depuis la première mesure, pour refléter l'espacement réel (et non des catégories
+    /// équidistantes). L'axe est ensuite calibré par [#configurerAxeTemps].
     private void majGraphe() {
-        XYChart.Series<String, Number> temperature = new XYChart.Series<>();
+        XYChart.Series<Number, Number> temperature = new XYChart.Series<>();
         temperature.setName("T° (°C)");
-        XYChart.Series<String, Number> humidite = new XYChart.Series<>();
+        XYChart.Series<Number, Number> humidite = new XYChart.Series<>();
         humidite.setName("Humidité (%)");
-        for (MesureClimatique mesure : viewModel.mesures()) {
-            String moment = LocalDateTime.of(mesure.date(), mesure.heure()).format(MOMENT);
-            temperature.getData().add(new XYChart.Data<>(moment, mesure.temperatureCelsius()));
-            humidite.getData().add(new XYChart.Data<>(moment, mesure.humiditePourcent()));
+        List<MesureClimatique> mesures = viewModel.mesures();
+        NumberAxis axeTemps = (NumberAxis) grapheClimat.getXAxis();
+        if (mesures.isEmpty()) {
+            axeTemps.setTickLabelFormatter(null);
+            axeTemps.setAutoRanging(true);
+        } else {
+            LocalDateTime origine = instant(mesures.get(0));
+            for (MesureClimatique mesure : mesures) {
+                long minutes = Duration.between(origine, instant(mesure)).toMinutes();
+                temperature.getData().add(new XYChart.Data<>(minutes, mesure.temperatureCelsius()));
+                humidite.getData().add(new XYChart.Data<>(minutes, mesure.humiditePourcent()));
+            }
+            configurerAxeTemps(axeTemps, origine, mesures);
         }
         grapheClimat.getData().setAll(List.of(temperature, humidite));
+    }
+
+    /// Calibre l'axe du temps : bornes 0..durée, un pas « propre » visant 6 à 8 repères, et des
+    /// étiquettes en `HH:mm` reconstruites depuis l'origine (au lieu d'un libellé par mesure).
+    private void configurerAxeTemps(NumberAxis axeTemps, LocalDateTime origine, List<MesureClimatique> mesures) {
+        long span = Duration.between(origine, instant(mesures.get(mesures.size() - 1)))
+                .toMinutes();
+        axeTemps.setAutoRanging(false);
+        axeTemps.setLowerBound(0);
+        axeTemps.setUpperBound(Math.max(span, 1));
+        axeTemps.setTickUnit(pasLisibleMinutes(span));
+        axeTemps.setMinorTickCount(0);
+        axeTemps.setTickLabelFormatter(new StringConverter<>() {
+            @Override
+            public String toString(Number minutes) {
+                return origine.plusMinutes(minutes.longValue()).format(HEURE);
+            }
+
+            @Override
+            public Number fromString(String texte) {
+                return 0;
+            }
+        });
+    }
+
+    private static LocalDateTime instant(MesureClimatique mesure) {
+        return LocalDateTime.of(mesure.date(), mesure.heure());
+    }
+
+    /// Pas d'axe « propre » (multiple usuel de minutes) visant environ 7 repères sur `spanMinutes`.
+    private static double pasLisibleMinutes(long spanMinutes) {
+        double cible = Math.max(spanMinutes, 1) / 7.0;
+        long[] paliers = {15, 30, 45, 60, 90, 120, 180, 240, 300};
+        for (long pas : paliers) {
+            if (pas >= cible) {
+                return pas;
+            }
+        }
+        return 360;
     }
 }
