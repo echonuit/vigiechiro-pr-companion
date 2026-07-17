@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.commun.model.ExecutionParallele;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -10,12 +12,12 @@ import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -43,13 +45,20 @@ final class HydratationDepuisBruts {
     private final Optional<RegenerationSequences> regeneration;
     private final RebranchementSequences rebranchement;
 
+    /// Régénère les bruts **en parallèle** (#1779) : la transformation audio d'un brut est la partie
+    /// coûteuse, et une nuit en compte souvent des dizaines. Concurrence bornée, progression thread-safe,
+    /// jeton honoré : cf. [ExecutionParallele].
+    private final ExecutionParallele executionParallele;
+
     HydratationDepuisBruts(
             Optional<InventaireBrutsSource> inventaire,
             Optional<RegenerationSequences> regeneration,
-            RebranchementSequences rebranchement) {
+            RebranchementSequences rebranchement,
+            ExecutionParallele executionParallele) {
         this.inventaire = Objects.requireNonNull(inventaire, "inventaire");
         this.regeneration = Objects.requireNonNull(regeneration, "regeneration");
         this.rebranchement = Objects.requireNonNull(rebranchement, "rebranchement");
+        this.executionParallele = Objects.requireNonNull(executionParallele, "executionParallele");
     }
 
     /// Tente d'hydrater le passage depuis `dossierSource`.
@@ -61,7 +70,8 @@ final class HydratationDepuisBruts {
             List<SequenceDEcoute> sequences,
             Path dossierSource,
             Optional<Prefixe> prefixeSession,
-            Consumer<Progression> progres) {
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
         if (inventaire.isEmpty() || regeneration.isEmpty() || prefixeSession.isEmpty()) {
             return Optional.empty();
         }
@@ -69,63 +79,101 @@ final class HydratationDepuisBruts {
         return inventaire
                 .get()
                 .inventorier(dossierSource, prefixe)
-                .map(inventorie -> regenererEtRebrancher(sequences, inventorie, prefixe, progres));
+                .map(inventorie -> regenererEtRebrancher(sequences, inventorie, prefixe, progres, jeton));
     }
 
-    /// Régénère et rebranche, **brut par brut**. Le temporaire est vidé après chaque brut : régénérer une
-    /// nuit entière d'un coup doublerait transitoirement l'occupation disque, ce que l'archivage cherchait
-    /// justement à éviter. On retient, pour chaque brut ayant produit des séquences, ces séquences : elles
-    /// serviront à remplacer le placeholder par les vrais originaux (#1651).
+    /// Régénère et rebranche, **brut par brut mais en parallèle** (#1779) : la transformation audio d'un brut
+    /// est la partie coûteuse (une nuit en compte des dizaines), et la faire séquentiellement rendait la
+    /// réactivation très longue. Chaque brut est régénéré dans **son** temporaire, vidé aussitôt après son
+    /// rebranchement : régénérer une nuit entière d'un coup doublerait l'occupation disque, ce que l'archivage
+    /// cherchait à éviter - le [ExecutionParallele] borne donc le nombre de temporaires vivants à la fois.
+    ///
+    /// On retient, pour chaque brut ayant produit des séquences, ces séquences (elles serviront à remplacer le
+    /// placeholder par les vrais originaux, #1651), et on **revendique** chaque séquence de façon atomique :
+    /// un seul brut la rebranche, même si deux bruts en produisent une de même nom. Les contributions sont
+    /// **réduites dans l'ordre de la liste des bruts**, pour un bilan et une adoption déterministes.
     private ResultatHydratation regenererEtRebrancher(
             List<SequenceDEcoute> sequences,
             InventaireBruts inventorie,
             Prefixe prefixe,
-            Consumer<Progression> progres) {
-        RegenerationSequences moteur = regeneration.orElseThrow();
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
         Map<String, SequenceDEcoute> parNom = indexerParNom(sequences);
-        Set<String> restantes = new HashSet<>(parNom.keySet());
+        Set<String> restantes = ConcurrentHashMap.newKeySet();
+        restantes.addAll(parNom.keySet());
+        List<BrutInventorie> bruts = nuit(sequences, inventorie.bruts());
+
+        List<ContributionBrut> contributions = executionParallele.cartographier(
+                bruts,
+                "Régénération",
+                brut -> regenererUn(brut, inventorie, prefixe, parNom, restantes),
+                progres,
+                jeton);
+
         BilanReactivation bilan = new BilanReactivation();
         List<BrutRebranche> brutsRebranches = new ArrayList<>();
-        List<BrutInventorie> bruts = nuit(sequences, inventorie.bruts());
-        int traites = 0;
-        for (BrutInventorie brut : bruts) {
-            traites++;
-            progres.accept(
-                    new Progression("Régénération " + traites + "/" + bruts.size(), traites / (double) bruts.size()));
-            Path temporaire = DossierTemporaire.creer("vc-hydrate-");
-            try {
-                SequencesRegenerees regenerees = moteur.regenerer(
-                        brut.source(), brut.nomOriginal(), prefixe, inventorie.frequenceAcquisitionHz(), temporaire);
-                List<SequenceDEcoute> sesSequences = sequencesProduites(temporaire, parNom, restantes);
-                if (!sesSequences.isEmpty()) {
-                    brutsRebranches.add(new BrutRebranche(brut, sesSequences, regenerees.empreinteSource()));
-                }
-                bilan.absorber(rebranchement.rebrancher(
-                        sesSequences, CandidatsReactivation.dans(temporaire), avancement -> {}));
-                sesSequences.forEach(sequence -> restantes.remove(sequence.nomFichier()));
-            } finally {
-                DossierTemporaire.supprimer(temporaire);
-            }
+        for (ContributionBrut contribution : contributions) {
+            bilan.absorber(contribution.bilan());
+            contribution.rebranche().ifPresent(brutsRebranches::add);
         }
         bilan.manquantes += absentesDuDisque(restantes, parNom);
         return new ResultatHydratation(bilan, inventorie.frequenceAcquisitionHz(), brutsRebranches);
     }
 
-    /// Les séquences que **ce brut** a régénérées : celles dont le nom figure parmi les tranches produites,
-    /// et qui n'ont pas déjà été rebranchées par un brut précédent. Filtrer ainsi évite de compter comme
-    /// « manquantes », à chaque brut, les séquences des autres bruts ; elles ne le sont qu'une fois, à la fin.
-    private static List<SequenceDEcoute> sequencesProduites(
+    /// Régénère **un** brut dans son propre temporaire et rebranche les séquences qu'il revendique. Rend sa
+    /// contribution (bilan partiel + brut rebranché éventuel) ; le temporaire est supprimé dans tous les cas.
+    /// Exécuté sur un thread de [ExecutionParallele] : ne touche que du local et le `Set` concurrent
+    /// `restantes` (revendication atomique), jamais le bilan agrégé (réduit en aval, en séquentiel).
+    private ContributionBrut regenererUn(
+            BrutInventorie brut,
+            InventaireBruts inventorie,
+            Prefixe prefixe,
+            Map<String, SequenceDEcoute> parNom,
+            Set<String> restantes) {
+        RegenerationSequences moteur = regeneration.orElseThrow();
+        Path temporaire = DossierTemporaire.creer("vc-hydrate-");
+        try {
+            SequencesRegenerees regenerees = moteur.regenerer(
+                    brut.source(), brut.nomOriginal(), prefixe, inventorie.frequenceAcquisitionHz(), temporaire);
+            List<SequenceDEcoute> sesSequences = sequencesRevendiquees(temporaire, parNom, restantes);
+            Optional<BrutRebranche> rebranche = sesSequences.isEmpty()
+                    ? Optional.empty()
+                    : Optional.of(new BrutRebranche(brut, sesSequences, regenerees.empreinteSource()));
+            BilanReactivation bilan =
+                    rebranchement.rebrancher(sesSequences, CandidatsReactivation.dans(temporaire), avancement -> {});
+            return new ContributionBrut(bilan, rebranche);
+        } finally {
+            DossierTemporaire.supprimer(temporaire);
+        }
+    }
+
+    /// La contribution d'**un** brut à l'hydratation : son bilan partiel (à absorber dans le bilan global) et,
+    /// s'il a produit des séquences, le brut rebranché (pour l'adoption des originaux, #1651).
+    private record ContributionBrut(BilanReactivation bilan, Optional<BrutRebranche> rebranche) {}
+
+    /// Les séquences que **ce brut** régénère et **revendique** : celles dont le nom figure parmi les tranches
+    /// produites et qu'aucun autre brut n'a déjà prises. La revendication est **atomique**
+    /// ([Set#remove] sur un `Set` concurrent) : sur deux bruts produisant une séquence de même nom, un seul la
+    /// rebranche. Les séquences jamais revendiquées par aucun brut sont comptées « manquantes » une seule fois,
+    /// à la fin ([#absentesDuDisque]).
+    private static List<SequenceDEcoute> sequencesRevendiquees(
             Path temporaire, Map<String, SequenceDEcoute> parNom, Set<String> restantes) {
-        try (Stream<Path> produits = Files.walk(temporaire)) {
-            return produits.filter(Files::isRegularFile)
-                    .map(chemin -> chemin.getFileName().toString())
-                    .map(parNom::get)
+        List<SequenceDEcoute> produites;
+        try (Stream<Path> fichiers = Files.walk(temporaire)) {
+            produites = fichiers.filter(Files::isRegularFile)
+                    .map(chemin -> parNom.get(chemin.getFileName().toString()))
                     .filter(Objects::nonNull)
-                    .filter(sequence -> restantes.contains(sequence.nomFichier()))
                     .toList();
         } catch (IOException e) {
             throw new UncheckedIOException("Lecture impossible du dossier régénéré " + temporaire, e);
         }
+        List<SequenceDEcoute> revendiquees = new ArrayList<>();
+        for (SequenceDEcoute sequence : produites) {
+            if (restantes.remove(sequence.nomFichier())) {
+                revendiquees.add(sequence);
+            }
+        }
+        return revendiquees;
     }
 
     private static Map<String, SequenceDEcoute> indexerParNom(List<SequenceDEcoute> sequences) {

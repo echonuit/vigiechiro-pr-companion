@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.SuiviPagination;
+import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -58,6 +59,11 @@ public class ServiceReactivationPassage {
 
     private static final String PARAM_ID_PASSAGE = "idPassage";
 
+    /// Parallélisme de la régénération des bruts à l'hydratation (#1779), calqué sur l'import
+    /// (`ServiceImport.PARALLELISME_FICHIERS`) : autant de tâches que de cœurs, le pic disque/mémoire étant
+    /// borné par le sémaphore de [ExecutionParallele].
+    private static final int PARALLELISME = Runtime.getRuntime().availableProcessors();
+
     private final SessionDao sessionDao;
     private final SequenceDao sequenceDao;
     private final EnregistrementOriginalDao originalDao;
@@ -106,7 +112,8 @@ public class ServiceReactivationPassage {
         this.hydratation = new HydratationDepuisBruts(
                 Objects.requireNonNull(inventaireBruts, "inventaireBruts"),
                 regeneration,
-                new RebranchementSequences(verification, crisAttendus, true));
+                new RebranchementSequences(verification, crisAttendus, true),
+                new ExecutionParallele(PARALLELISME));
         this.adoption = Objects.requireNonNull(adoption, "adoption");
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
     }
@@ -158,7 +165,8 @@ public class ServiceReactivationPassage {
             // Un passage reconstruit peut être hydraté depuis ses bruts (log + WAV) : si c'est possible, la
             // voie devient BRUTS (les séquences ont été régénérées) et on remplace le placeholder par les
             // vrais originaux (#1651) ; sinon on reste sur le compte rendu honnête (#1648), sans rien inventer.
-            Optional<ResultatHydratation> hydrate = hydratation.appliquer(sequences, dossierSource, prefixe, progres);
+            Optional<ResultatHydratation> hydrate =
+                    hydratation.appliquer(sequences, dossierSource, prefixe, progres, jeton);
             if (hydrate.isPresent()) {
                 voie = VoieReactivation.BRUTS;
                 ResultatHydratation resultat = hydrate.orElseThrow();
