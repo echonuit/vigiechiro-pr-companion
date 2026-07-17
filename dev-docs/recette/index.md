@@ -137,9 +137,10 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
   [CLI](../cli.md).
 - **Les parcours E2E** (`Parcours*E2ETest`) sont les **scripts de départ** des sessions : ils pilotent
   les vrais ViewModels et services sur base jetable.
-- **Les fixtures** (cartes SD de recette, workspace) ont vocation à être **générées** depuis une spec de
-  quelques kilo-octets plutôt que stockées en binaire : versionnables, rejouables à l'identique.
-  *(Générateur à venir ; les cartes SD faites main servent de référence.)*
+- **Les fixtures** (cartes SD de recette, workspace) sont **générées** depuis une spec de quelques
+  kilo-octets plutôt que stockées en binaire : versionnables, rejouables à l'identique. Les 9 cartes de
+  recette (+ `sd-nominale.zip`) se reconstruisent à l'identique via le générateur déterministe : voir
+  [Fixtures (générateur de cartes SD)](fixtures.md).
 
 !!! danger "Jamais de secret dans le dépôt"
     Le `connexion.json` d'un workspace de recette contient un **token** Vigie-Chiro : il n'est **jamais**
@@ -150,5 +151,6 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
 
 - `dev-docs/recette/index.md` : **cette page**, la méthode.
 - `dev-docs/recette/sessions/` : les **scripts de session** figés (S1-S4 ; S5-S7 à venir).
+- `recette/fixtures/spec/` : les **specs** (YAML) des cartes SD, matérialisées par le générateur
+  déterministe ; voir [Fixtures (générateur de cartes SD)](fixtures.md).
 - L'**EPIC** (label `recette`) : le déroulé vivant, les comptes-rendus, la task-list des issues.
-- *(À venir : `recette/fixtures/spec/` pour les specs du générateur de cartes SD.)*

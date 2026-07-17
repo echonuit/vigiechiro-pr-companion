@@ -80,6 +80,7 @@ nav:
     - 0014 · Parité CLI ↔ IHM: decisions/0014-parite-cli-ihm.md
   - Recette (acceptation):
     - Méthode: recette/index.md
+    - Fixtures (générateur de cartes SD): recette/fixtures.md
     - S1 · Premier contact: recette/sessions/s1-premier-contact.md
     - S2 · Importer une nuit: recette/sessions/s2-importer.md
     - S3 · Vérifier: recette/sessions/s3-verifier.md
