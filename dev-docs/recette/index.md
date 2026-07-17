@@ -93,6 +93,23 @@ empêche une dette de fixtures de repousser, et *[« la doc est tenue par un tes
 qui empêche la doc de dériver. La recette est donc une **fabrique de tests** : la campagne se termine, le
 filet reste.
 
+!!! example "En pratique : trois constats, trois filets à trois étages"
+    La campagne courante l'a déjà fait plusieurs fois, et chaque fois le test atterrit dans la **couche
+    qui convient** :
+
+    - **Un raccourci clavier muet** (axe R). En S3, « Espace » n'ouvrait pas la lecture sur l'écran de
+      qualification, et *rien ne le testait* (#1504). La correction est revenue avec son test **TestFX** :
+      `QualificationViewTest` vérifie désormais qu'« Espace est capté pour la lecture avant le nœud
+      focalisé », donc n'active plus par mégarde un bouton de verdict.
+    - **Une régression silencieuse de données** (critère bloquant b). Toujours en S3, une nuit **déposée**
+      pouvait **régresser** vers « Vérifié » depuis l'écran de vérification (#1514) : un verdict figé qui
+      se défige, c'est un risque d'incohérence. Le filet est posé au **bon étage**, côté service :
+      `ServiceQualificationTest` garantit qu'« une nuit déposée refuse tout nouveau verdict ».
+    - **Un constat qui devient un patron** (axe R, transverse). « Échap » ne fermait aucune modale
+      (#1505). Plutôt qu'un correctif écran par écran, la correction a **extrait un patron commun**
+      (`Modales.fermerParEchap`) gardé par `ModalesTest` : un constat de recette a nourri
+      l'**harmonisation**.
+
 ## Rejouer une campagne de façon déterministe
 
 Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejoue le **fond fonctionnel**
