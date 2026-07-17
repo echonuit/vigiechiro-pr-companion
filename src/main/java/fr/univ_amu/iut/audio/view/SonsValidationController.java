@@ -415,11 +415,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
 
         tableObservations.getSelectionModel().selectedItemProperty().addListener((obs, ancienne, nouvelle) -> {
             viewModel.selectionProperty().set(nouvelle);
-            // « Fiche de l'espèce » (#847) : cible la proposition Tadarida de la ligne sélectionnée.
-            actionsMenu.configurerFiche(itemFicheEspece, nouvelle);
+            // « Fiche de l'espèce » (#847, #1795) : cible la proposition Tadarida de la ligne sélectionnée,
+            // pour l'item du ☰ comme pour celui du clic droit (tous deux tenus par ActionsMenuAudio).
+            actionsMenu.configurerFiches(itemFicheEspece, nouvelle);
         });
-        // État initial de l'item « Fiche de l'espèce » avant toute sélection (désactivé, libellé explicatif).
-        actionsMenu.configurerFiche(
+        // État initial des items « Fiche de l'espèce » avant toute sélection (désactivés, libellé explicatif).
+        actionsMenu.configurerFiches(
                 itemFicheEspece, tableObservations.getSelectionModel().getSelectedItem());
         // Resynchronisation **VM → table** : après un Valider/Corriger, charger() reconstruit la liste avec
         // de nouvelles instances de record (statut/taxon changés), ce qui vide la surbrillance de la table
@@ -522,7 +523,13 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // et item « Colonnes… » du ☰ ouvrent le même panneau. La proposition Tadarida, colonne d'identité,
         // reste toujours affichée (visibilité verrouillée) mais peut être déplacée comme les autres.
         GestionnaireColonnes.installerEtPersister(
-                tableObservations, menuActions, colonnesTableAudio(), appuis.depotColonnes(), FEATURE, "principale");
+                tableObservations,
+                menuActions,
+                colonnesTableAudio(),
+                appuis.depotColonnes(),
+                FEATURE,
+                "principale",
+                actionsMenu.itemFicheContexte());
 
         occupation = new IndicateurOccupation(hoteOccupation, appuis.executeur());
     }

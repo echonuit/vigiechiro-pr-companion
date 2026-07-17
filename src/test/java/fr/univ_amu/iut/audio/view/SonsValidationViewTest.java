@@ -354,6 +354,24 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#1795 : « Fiche de l'espèce » est aussi au clic droit de la table (en plus du ☰)")
+    void fiche_au_clic_droit_des_observations(FxRobot robot) {
+        // Première ligne = « Pippip » (Pipistrelle commune), chiroptère à fiche PNA.
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        MenuItem fiche = table.getContextMenu().getItems().get(0);
+        assertThat(fiche.getText()).isEqualTo("Fiche de l'espèce (Pipistrelle commune)");
+        assertThat(fiche.isDisable()).isFalse();
+
+        robot.interact(fiche::fire);
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
+    }
+
+    @Test
     @DisplayName("Les puces de filtres s'alignent horizontalement (une seule rangée, pas empilées)")
     void puces_filtres_alignees_horizontalement(FxRobot robot) {
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);

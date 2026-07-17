@@ -102,6 +102,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// Item « Fiche de l'espèce » du menu contextuel de [#tableEspeces], reconfiguré à chaque sélection.
     private MenuItem itemFicheEspece;
 
+    /// Item « Fiche de l'espèce » du menu contextuel de [#tableObservations] (#1795) : même cible (l'espèce
+    /// sélectionnée), instance distincte car un [MenuItem] n'appartient qu'à un seul menu.
+    private MenuItem itemFicheEspeceObs;
+
     /// Sélecteur de colonnes des trois tables (extrait, #914/#994) : câble clic droit + ☰ et fournit
     /// l'adaptateur qui capture/rejoue les colonnes dans les vues mémorisées.
     private SelecteurColonnesAnalyse selecteurColonnes;
@@ -293,18 +297,19 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         // table maître visible, et adaptateur pour la capture dans les vues mémorisées (#994). Un clic droit
         // sélectionne d'abord la ligne visée pour que la fiche porte bien sur elle.
         itemFicheEspece = new MenuItem();
+        itemFicheEspeceObs = new MenuItem();
         selecteurColonnes = new SelecteurColonnesAnalyse(
                 tableEspeces,
                 tableCarres,
                 tableObservations,
                 menuOutils,
                 () -> viewModel.regroupementProperty().get());
-        selecteurColonnes.installer(itemFicheEspece);
+        selecteurColonnes.installer(itemFicheEspece, itemFicheEspeceObs);
         selecteurColonnes.persister(depotColonnes, FEATURE);
         // Clic droit : sélectionne la ligne (cible du menu contextuel). Double-clic : ouvre la fiche de
         // l'espèce, même cible que l'item « Fiche de l'espèce » du menu (#1794).
         DoubleClicLigne.installer(tableEspeces, espece -> actionFicheEspece.ouvrir(especeDe(espece)));
-        actionFicheEspece.configurer(itemFicheEspece, especeDe(null));
+        configurerFiches(especeDe(null));
 
         // Sélecteur de regroupement (pivot espèce ↔ lieu).
         choixRegroupement.getItems().setAll(Regroupement.values());
@@ -402,7 +407,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         // cible du menu contextuel « Fiche de l'espèce » (#848).
         tableEspeces.getSelectionModel().selectedItemProperty().addListener((obs, ancien, espece) -> {
             viewModel.selectionnerEspece(espece, statutCourant());
-            actionFicheEspece.configurer(itemFicheEspece, especeDe(espece));
+            configurerFiches(especeDe(espece));
         });
 
         lblDetailTitre.textProperty().bind(viewModel.detailTitreProperty());
@@ -445,6 +450,13 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         return espece == null
                 ? new EspeceIdentifiee(null, null, null)
                 : new EspeceIdentifiee(espece.code(), espece.nomLatin(), espece.nomVernaculaireFr());
+    }
+
+    /// Reconfigure les deux items « Fiche de l'espèce » (table des espèces et détail des observations, #1795)
+    /// sur la même `espece` : un seul point pour garder les deux menus contextuels alignés sur la sélection.
+    private void configurerFiches(EspeceIdentifiee espece) {
+        actionFicheEspece.configurer(itemFicheEspece, espece);
+        actionFicheEspece.configurer(itemFicheEspeceObs, espece);
     }
 
     /// Affiche le panneau détail (et restaure la position du séparateur) en regroupement **Par espèce**,
