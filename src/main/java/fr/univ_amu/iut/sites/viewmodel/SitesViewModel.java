@@ -210,6 +210,7 @@ public class SitesViewModel {
     private CarteSite construireCarte(Site site, LocalDate aujourdhui, int annee, StatutPlateforme statut) {
         List<PointDEcoute> points = service.listerPoints(site.id());
         List<Passage> passages = passagesDuSite(points);
+        Set<Long> pointsAvecPassage = passages.stream().map(Passage::idPoint).collect(Collectors.toSet());
         int passagesAnnee =
                 (int) passages.stream().filter(p -> p.annee() == annee).count();
         int aVerifier = (int) passages.stream()
@@ -221,7 +222,7 @@ public class SitesViewModel {
         return new CarteSite(
                 site,
                 points.size(),
-                joindreCodes(points),
+                joindreCodes(points, pointsAvecPassage),
                 passagesAnnee,
                 annee,
                 aVerifier,
@@ -243,11 +244,26 @@ public class SitesViewModel {
         return passage.verdictVerification() == null;
     }
 
-    private String joindreCodes(List<PointDEcoute> points) {
+    /// Codes des points à **mettre en avant** sur la carte du site : ceux qui **servent** (au moins un
+    /// passage) ou **ajoutés à la main** (non synchronisés). Les points **rapatriés non utilisés** (grille
+    /// STOC importée en masse par la synchro) ne sont pas égrenés mais **résumés** - « + N rapatriés » -,
+    /// pour que la carte reste lisible (#1750, corollaire de #1738 côté « Mes Sites »).
+    private String joindreCodes(List<PointDEcoute> points, Set<Long> pointsAvecPassage) {
         if (points.isEmpty()) {
             return "—";
         }
-        return points.stream().map(PointDEcoute::code).collect(Collectors.joining(" · "));
+        List<PointDEcoute> enAvant = points.stream()
+                .filter(point -> pointsAvecPassage.contains(point.id()) || !point.synchronise())
+                .toList();
+        long rapatriesMasques = points.size() - enAvant.size();
+        if (enAvant.isEmpty()) {
+            // Carré entièrement rapatrié, aucun point encore utilisé : on résume, on n'égrène pas.
+            return rapatriesMasques + " point(s) rapatrié(s), aucun utilisé";
+        }
+        String codes = enAvant.stream().map(PointDEcoute::code).collect(Collectors.joining(" · "));
+        return rapatriesMasques == 0
+                ? codes
+                : codes + "  (+ " + rapatriesMasques + " rapatrié" + (rapatriesMasques > 1 ? "s" : "") + ")";
     }
 
     private LocalDate datePlusRecente(List<Passage> passages) {
