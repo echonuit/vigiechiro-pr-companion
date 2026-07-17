@@ -1012,6 +1012,43 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName(
+            "#1696 : import multi-nuits à log unique → le journal de chaque session ne contient que les évènements de sa nuit")
+    void import_multi_nuits_journal_par_nuit() throws IOException {
+        Path carte = racine.resolve("sd-multi-journal");
+        Files.createDirectories(carte);
+        // Journal UNIQUE : lignes de déploiement (22/04) + un réveil daté par nuit (bascule midi).
+        String log = LOG
+                + "23/04/26 - 03:00:00 PR1925492 Wakeup by WATCHDOG Cpt3 nuit22\n"
+                + "24/04/26 - 02:00:00 PR1925492 Wakeup by WATCHDOG Cpt5 nuit23\n";
+        Files.writeString(carte.resolve("LogPR1925492.txt"), log, StandardCharsets.UTF_8);
+        for (String jour : List.of("20260422", "20260423")) {
+            ecrireWav(carte.resolve("PaRecPR1925492_" + jour + "_203922.wav"));
+            ecrireWav(carte.resolve("PaRecPR1925492_" + jour + "_204326.wav"));
+        }
+        List<NuitDetectee> nuits =
+                new InspecteurDossier(new AnalyseurLogPR()).inspecter(carte).partitionNuits();
+        List<NuitAImporter> aImporter = List.of(new NuitAImporter(1, nuits.get(0)), new NuitAImporter(2, nuits.get(1)));
+
+        ResultatImportMultiNuits resultat = service.importerNuits(
+                carte, idPoint, prefixe, aImporter, true, progression -> {}, JetonAnnulation.neutre());
+
+        // Le réveil du 23/04 03:00 revient à la nuit du 22 ; celui du 24/04 02:00 à la nuit du 23.
+        assertThat(anomaliesSession(resultat.parNuit().get(0).passage().id()))
+                .contains("nuit22")
+                .doesNotContain("nuit23");
+        assertThat(anomaliesSession(resultat.parNuit().get(1).passage().id()))
+                .contains("nuit23")
+                .doesNotContain("nuit22");
+    }
+
+    /// Anomalies (JSON `detected_anomalies`) persistées pour la session du passage `idPassage`.
+    private String anomaliesSession(Long idPassage) {
+        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
+        return journalDao.trouverParSession(idSession).orElseThrow().anomaliesDetectees();
+    }
+
+    @Test
     @DisplayName("Import multi-nuits : un n° déjà pris est refusé AVANT tout import (échec rapide, pas de demi-groupe)")
     void import_multi_nuits_precontrole_numero_pris() throws IOException {
         Path carte = preparerCarteMultiNuits(racine.resolve("sd-conflit"));

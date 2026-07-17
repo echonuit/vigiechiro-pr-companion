@@ -49,7 +49,18 @@ final class JournalDeRepli {
                 analyse.series().isEmpty() ? SERIE_INCONNUE : analyse.series().first();
         LocalDate date = analyse.nuits().isEmpty() ? null : analyse.nuits().first();
         return new JournalParse(
-                serie, null, date, null, null, null, null, null, false, null, List.of(), List.of(ANOMALIE_ABSENCE));
+                serie,
+                null,
+                date,
+                null,
+                null,
+                null,
+                null,
+                null,
+                false,
+                null,
+                List.of(),
+                List.of(new LigneJournal(null, ANOMALIE_ABSENCE)));
     }
 
     /// Écrit la **trace synthétique** de journal dégradé dans `dossierSession` et renvoie son chemin :

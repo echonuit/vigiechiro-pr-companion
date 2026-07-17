@@ -6,6 +6,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -37,7 +39,7 @@ public final class AnalyseurLogPR {
     public static final int SEUIL_BATTERIE_FAIBLE = 20;
 
     private static final Pattern LIGNE =
-            Pattern.compile("^(\\d{2})/(\\d{2})/(\\d{2})\\s*-\\s*\\d{2}:\\d{2}:\\d{2}\\s+PR\\d+\\s+(.*)$");
+            Pattern.compile("^(\\d{2})/(\\d{2})/(\\d{2})\\s*-\\s*(\\d{2}):(\\d{2}):(\\d{2})\\s+PR\\d+\\s+(.*)$");
     private static final Pattern SERIE_EXPLICITE = Pattern.compile("num[ée]ro de s[ée]rie\\s+(\\d+)");
     private static final Pattern SERIE_PREFIXE = Pattern.compile("PR(\\d+)");
     private static final Pattern FENETRE = Pattern.compile("Acquisi\\.?\\s*(\\d{1,2}:\\d{2})-(\\d{1,2}:\\d{2})");
@@ -76,21 +78,25 @@ public final class AnalyseurLogPR {
         String sensibilite = null;
         Boolean sondePresente = null;
         String parametresBruts = null;
-        List<String> evenements = new ArrayList<>();
-        List<String> anomalies = new ArrayList<>();
+        List<LigneJournal> evenements = new ArrayList<>();
+        List<LigneJournal> anomalies = new ArrayList<>();
 
         for (String brute : lignes) {
             Matcher m = LIGNE.matcher(brute.strip());
             if (!m.matches()) {
                 continue; // ligne non conforme (en-tête isolé, séparateur) : ignorée
             }
+            LocalDateTime horodatage = LocalDateTime.of(
+                    LocalDate.of(
+                            2000 + Integer.parseInt(m.group(3)),
+                            Integer.parseInt(m.group(2)),
+                            Integer.parseInt(m.group(1))),
+                    LocalTime.of(
+                            Integer.parseInt(m.group(4)), Integer.parseInt(m.group(5)), Integer.parseInt(m.group(6))));
             if (dateDebut == null) {
-                dateDebut = LocalDate.of(
-                        2000 + Integer.parseInt(m.group(3)),
-                        Integer.parseInt(m.group(2)),
-                        Integer.parseInt(m.group(1)));
+                dateDebut = horodatage.toLocalDate();
             }
-            String message = m.group(4).strip();
+            String message = m.group(7).strip();
 
             if (numeroSerie == null) {
                 numeroSerie = extraire(SERIE_EXPLICITE, message);
@@ -111,8 +117,8 @@ public final class AnalyseurLogPR {
                 sensibilite = nettoyer(extraire(SENSIBILITE, message));
             }
 
-            collecterEvenement(message, evenements);
-            collecterAnomalie(message, anomalies);
+            collecterEvenement(horodatage, message, evenements);
+            collecterAnomalie(horodatage, message, anomalies);
         }
 
         if (numeroSerie == null) {
@@ -123,7 +129,8 @@ public final class AnalyseurLogPR {
                     "Journal LogPR inexploitable : aucun numéro de série d'enregistreur trouvé.");
         }
         if (sondePresente != null && !sondePresente) {
-            anomalies.add("Sonde température/hygrométrie absente ou défaillante.");
+            // Propriété du déploiement (pas rattachée à une ligne datée) : horodatage null → toutes les nuits.
+            anomalies.add(new LigneJournal(null, "Sonde température/hygrométrie absente ou défaillante."));
         }
 
         return new JournalParse(
@@ -142,31 +149,31 @@ public final class AnalyseurLogPR {
     }
 
     /// Évènements remarquables conservés (changements de mode, réveils, mises en veille).
-    private static void collecterEvenement(String message, List<String> evenements) {
+    private static void collecterEvenement(LocalDateTime horodatage, String message, List<LigneJournal> evenements) {
         if (message.startsWith("###") || message.contains("Wakeup") || message.startsWith("Mise en veille")) {
-            evenements.add(message);
+            evenements.add(new LigneJournal(horodatage, message));
         }
     }
 
     /// Détection conservatrice des anomalies (R19) : réveil non programmé, batterie faible, erreur
     /// SD.
-    private static void collecterAnomalie(String message, List<String> anomalies) {
+    private static void collecterAnomalie(LocalDateTime horodatage, String message, List<LigneJournal> anomalies) {
         if (message.contains("Wakeup") && !message.contains("ALARM")) {
-            anomalies.add("Réveil non programmé : " + message);
+            anomalies.add(new LigneJournal(horodatage, "Réveil non programmé : " + message));
         }
         String minuscule = message.toLowerCase(Locale.ROOT);
         if (minuscule.contains("erreur")
                 || minuscule.contains("error")
                 || minuscule.contains("échec")
                 || minuscule.contains("fail")) {
-            anomalies.add(message);
+            anomalies.add(new LigneJournal(horodatage, message));
         }
         if (message.startsWith("Batteries internes") || message.contains("Bat. Interne")) {
             Matcher pct = POURCENTAGE.matcher(message);
             if (pct.find()) {
                 int niveau = Integer.parseInt(pct.group(1));
                 if (niveau < SEUIL_BATTERIE_FAIBLE) {
-                    anomalies.add("Batterie faible (" + niveau + "%) : " + message);
+                    anomalies.add(new LigneJournal(horodatage, "Batterie faible (" + niveau + "%) : " + message));
                 }
             }
         }

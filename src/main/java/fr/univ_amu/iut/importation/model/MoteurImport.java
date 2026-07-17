@@ -229,8 +229,15 @@ final class MoteurImport {
                 new SessionDEnregistrement(null, dossierSession.toString(), volumeOriginaux, volumeSequences, null);
         // Entité journal **uniforme** : en mode dégradé, le journal de repli porte déjà des évènements
         // vides et l'anomalie « import dégradé », donc on construit la trace de la même façon (#107).
+        // Journal restreint à CETTE nuit (#1696) : sur une carte multi-nuits à log unique, les
+        // évènements/anomalies horodatés sont rangés par nuit (les entrées de déploiement non datées,
+        // ex. sonde absente, restent sur chaque nuit).
         JournalDuCapteur journalEntite = new JournalDuCapteur(
-                null, cheminJournalCopie.toString(), journal.evenementsJson(), journal.anomaliesJson(), null);
+                null,
+                cheminJournalCopie.toString(),
+                journal.evenementsJsonPourNuit(dateNuit),
+                journal.anomaliesJsonPourNuit(dateNuit),
+                null);
         ReleveClimatique releveEntite =
                 cheminReleveCopie == null ? null : new ReleveClimatique(null, cheminReleveCopie.toString(), null, null);
 
@@ -301,7 +308,7 @@ final class MoteurImport {
                 journal.numeroSerie(),
                 transformations.size(),
                 nombreSequences,
-                journal.anomalies(),
+                journal.messagesAnomalies(),
                 rapportImport);
     }
 

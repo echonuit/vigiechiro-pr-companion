@@ -88,12 +88,42 @@ class AnalyseurLogPRTest {
 
         assertThat(journal.sondePresente()).isFalse();
         assertThat(journal.aDesAnomalies()).isTrue();
-        assertThat(journal.anomalies())
+        assertThat(journal.messagesAnomalies())
                 .anyMatch(a -> a.contains("Sonde"))
                 .anyMatch(a -> a.contains("Batterie faible"))
                 .anyMatch(a -> a.contains("Réveil non programmé"));
         // #258 : les anomalies sont affichées dans la liste du diagnostic → pas de code de règle visible.
-        assertThat(journal.anomalies()).allSatisfy(a -> assertThat(a).doesNotContain("R20", "R19"));
+        assertThat(journal.messagesAnomalies()).allSatisfy(a -> assertThat(a).doesNotContain("R20", "R19"));
+    }
+
+    @Test
+    @DisplayName("#1696 : évènements/anomalies filtrables par nuit ; une entrée de déploiement reste sur chaque nuit")
+    void journal_filtrable_par_nuit() {
+        List<String> journal = List.of(
+                "22/04/26 - 20:30:00 PR1925492 Sonde température/hygrométrie absente",
+                "22/04/26 - 20:31:00 PR1925492 ### demarrage soir22",
+                "23/04/26 - 03:00:00 PR1925492 Wakeup by WATCHDOG Cpt3 nuit22", // avant midi → nuit du 22
+                "23/04/26 - 21:00:00 PR1925492 ### changement soir23",
+                "24/04/26 - 02:00:00 PR1925492 Wakeup by WATCHDOG Cpt5 nuit23"); // avant midi → nuit du 23
+
+        JournalParse j = analyseur.analyser(journal);
+
+        // Évènements rangés par nuit (bascule midi : le réveil du 23/04 03:00 appartient à la nuit du 22).
+        assertThat(j.evenementsJsonPourNuit(LocalDate.of(2026, 4, 22)))
+                .contains("soir22")
+                .contains("nuit22")
+                .doesNotContain("soir23", "nuit23");
+        assertThat(j.evenementsJsonPourNuit(LocalDate.of(2026, 4, 23)))
+                .contains("soir23")
+                .contains("nuit23")
+                .doesNotContain("soir22", "nuit22");
+        // Réveil non programmé (horodaté) : rangé dans sa nuit.
+        assertThat(j.anomaliesJsonPourNuit(LocalDate.of(2026, 4, 22)))
+                .contains("nuit22")
+                .doesNotContain("nuit23");
+        // Anomalie de déploiement (sonde absente, non datée) : présente sur chaque nuit.
+        assertThat(j.anomaliesJsonPourNuit(LocalDate.of(2026, 4, 22))).contains("Sonde");
+        assertThat(j.anomaliesJsonPourNuit(LocalDate.of(2026, 4, 23))).contains("Sonde");
     }
 
     @Test
