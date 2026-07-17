@@ -11,7 +11,7 @@ Trois personas de référence représentent les utilisateurs cibles du *VigieChi
 
 > 🎯 La persona **principale** pour les choix d'IHM est **Marie** : si l'application convient à Marie, elle conviendra aux deux autres. Karim et Samuel servent à éviter de tomber dans le piège « interface uniquement adaptée aux débutants », inutilisable au-delà de quelques sessions.
 >
-> ⭐ **Samuel est en plus le client réel** : il valide le besoin, il réceptionne la démonstration en phase 2, et son avis qualitatif sur l'application pèse dans l'évaluation. Sa première campagne (sur AudioMoth) a généré 560 000+ contacts qu'il a dû avaler avec des scripts ad hoc. Ses prochaines campagnes seront sur PR Teensy - sans outil propre, le travail manuel est ingérable.
+> ⭐ **Samuel est en plus le commanditaire réel** : il exprime le besoin, et son avis qualitatif sur l'application fait autorité. Sa première campagne (sur AudioMoth) a généré 560 000+ contacts qu'il a dû avaler avec des scripts ad hoc. Ses prochaines campagnes seront sur PR Teensy - sans outil propre, le travail manuel est ingérable.
 
 ## Pourquoi ces trois-là ?
 

@@ -1,4 +1,4 @@
-# SAE 2.01 - VigieChiro PR Companion
+# VigieChiro PR Companion - Brief projet
 
 <div markdown="0" style="margin: 1rem 0 2rem 0;">
   <img src="assets/illustrations/hero-bandeau.webp"
@@ -6,22 +6,17 @@
        style="width: 100%; height: auto; display: block; border-radius: 4px;">
 </div>
 
-> Dossier de conception et **documentation produit** de *VigieChiro PR Companion*, l'application née de
-> la SAE 2.01 du semestre 2 du BUT Informatique de l'IUT d'Aix-Marseille (SAE commune aux modules
-> **R2.02 - Développement d'applications avec IHM** et **R2.03 - Qualité de développement**).
+> **Dossier de conception** et documentation produit de *VigieChiro PR Companion*, le logiciel open
+> source qui accompagne les naturalistes utilisant un **Passive Recorder** pour le protocole Vigie-Chiro.
+> Né d'une commande réelle de Samuel Busson (CEREMA), construit dans le cadre de la SAÉ 2.01 du BUT
+> Informatique de l'IUT d'Aix-Marseille.
 
-!!! info "De l'énoncé au produit"
-    Ce dossier a d'abord été l'**énoncé** d'une SAE de développement. Il décrit désormais l'application
-    **telle qu'elle a été construite** : le besoin, le modèle de données, les parcours et les écrans
-    réels. La genèse pédagogique (story mapping, arbitrage MVP, planification) est conservée mais
-    rédigée **au passé**, comme mémoire du projet. Le code de l'application est public :
+!!! info "Un brief aligné sur le produit"
+    Ce dossier décrit l'application **telle qu'elle est construite** : le besoin, le modèle de données,
+    les parcours utilisateurs et les écrans réels. C'est un document de conception **vivant**, qui évolue
+    avec le produit - pas un énoncé figé. Le code est public :
     [IUTInfoAix-S201/vigiechiro-pr-companion](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion)
     (documentation utilisateur et d'architecture séparées).
-
-!!! tip "Présentation en slides"
-    Une vue d'ensemble rapide du projet est disponible en slides :
-    [**VigieChiro PR Companion**](https://iutinfoaix-r202.github.io/cours/presentation-sae-2.01.html)
-    (support R2.02), à parcourir avant de plonger dans les sections détaillées ci-dessous.
 
 ## Sommaire
 
@@ -29,11 +24,7 @@
 2. [Stack technique et architecture](Contraintes%20techniques.md)
 3. [Objectifs qualités](Objectifs%20qualités/index.md)
 4. [Expression du besoin](Expression%20du%20besoin.md)
-5. [**Analyse et conception**](Analyse%20et%20conception/index.md) (modèle conceptuel, personas, parcours, et - au passé - story mapping, périmètre MVP, planification)
-6. [Genèse pédagogique](Travail%20à%20faire.md) (méthode et organisation de la SAE, conservées pour mémoire)
-7. [Jalons et livrables](Jalons%20et%20livrables.md)
-8. [Calendrier de travail](Calendrier%20de%20travail.md)
-9. [Consignes générales](Consignes%20générales.md)
+5. [**Analyse et conception**](Analyse%20et%20conception/index.md) (modèle conceptuel, personas, parcours utilisateurs, maquettes, story mapping)
 
 ## Données d'exemple fournies
 

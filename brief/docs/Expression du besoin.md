@@ -2,13 +2,13 @@
 
 ## Contexte
 
-Le département Informatique de l'IUT d'Aix-Marseille sollicite ses étudiants de BUT1 pour réaliser, en partenariat avec un chercheur du CEREMA, une **preuve de concept** d'un compagnon logiciel destiné aux possesseurs de Passive Recorder. Aujourd'hui, ces utilisateurs jonglent entre l'explorateur de fichiers, un tableur, un lecteur audio et la plateforme web VigieChiro pour gérer leurs campagnes - et passent un temps important en manipulations répétitives à chaque nuit traitée.
+*VigieChiro PR Companion* est un **compagnon logiciel** destiné aux possesseurs de Passive Recorder, né d'un besoin exprimé par un chercheur du CEREMA. Aujourd'hui, ces utilisateurs jonglent entre l'explorateur de fichiers, un tableur, un lecteur audio et la plateforme web VigieChiro pour gérer leurs campagnes - et passent un temps important en manipulations répétitives à chaque nuit traitée.
 
-Plusieurs scripts ad hoc circulent dans la communauté (Python, R), et il existe des outils commerciaux comme [Kaleidoscope Pro](https://www.wildlifeacoustics.com/products/kaleidoscope-pro), mais aucune application gratuite et open-source dédiée au pipeline VigieChiro / PR Teensy n'est disponible. C'est cette lacune que la SAE 2.01 cherche à combler - en livrant un prototype crédible que la communauté pourrait reprendre et faire évoluer après le projet.
+Plusieurs scripts ad hoc circulent dans la communauté (Python, R), et il existe des outils commerciaux comme [Kaleidoscope Pro](https://www.wildlifeacoustics.com/products/kaleidoscope-pro), mais aucune application gratuite et open-source dédiée au pipeline VigieChiro / PR Teensy n'est disponible. C'est cette lacune que *VigieChiro PR Companion* comble - un logiciel libre que la communauté peut reprendre et faire évoluer.
 
 ## Données fournies
 
-Un jeu de données réel issu d'une session d'enregistrement nocturne (PR n° 1925492, nuit du 22 au 23 avril 2026, point fixe en zone Z1 de la carrée 640380 du protocole Vigie-Chiro Carré) est mis à votre disposition comme support de développement et de test tout au long du projet. Il existe en deux variantes :
+Un jeu de données réel issu d'une session d'enregistrement nocturne (PR n° 1925492, nuit du 22 au 23 avril 2026, point fixe en zone Z1 de la carrée 640380 du protocole Vigie-Chiro Carré) est fourni comme jeu de test de référence. Il existe en deux variantes :
 
 - **Échantillon** versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit) : sous-ensemble représentatif (audio réduit, observations complètes sur tous les taxa principaux). Disponible immédiatement après `git clone` de ce dépôt.
 - **`data/`** (~4,2 Go zippés / ~11 Go décompressés, à télécharger depuis Zenodo, gitignored) : full dataset (1572 WAV bruts + 2109 WAV redécoupés + 4031 observations). Nécessaire pour valider la volumétrie. Cf. l'[accueil](index.md#donnees-dexemple-fournies).
@@ -21,7 +21,7 @@ Le tableau ci-dessous décrit la structure du **full dataset**, conforme à [R22
 | `PaRecPR1925492_THLog.csv` | Log température / hygrométrie produit par la sonde embarquée. Une mesure toutes les 600 s, colonnes `Date;Hour;Temperature;Humidity`. |
 | `bruts/` | 1572 fichiers WAV originaux ([C7](Analyse%20et%20conception/Modèle%20conceptuel/C7%20-%20Enregistrement%20original.md)), format `Car<carre>-<annee>-<passage>-<zone>-PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>.wav` (ex. `Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_202623.wav`). Mono 16 bits 384 kHz. Durée variable (2 à 30 s, déclenchement sur seuil). |
 | `transformes/` | 2109 séquences d'écoute ([C8](Analyse%20et%20conception/Modèle%20conceptuel/C8%20-%20Séquence%20d%27écoute.md)) : les WAV bruts **renommés, découpés en séquences de 5 s et ralentis ×10** (suffixe `_000`, `_001`...) + 2 CSV d'observations Tadarida ([C12](Analyse%20et%20conception/Modèle%20conceptuel/C12%20-%20Résultats%20d%27identification.md), cf. [R23](Analyse%20et%20conception/Modèle%20conceptuel/Règles%20métier.md#r23)). C'est cette version, prête au dépôt sur Vigie-Chiro, que Tadarida analyse. |
-| `transformes/8a4fa…-observations.csv` | CSV des observations brutes Tadarida. Colonnes : `nom du fichier;temps_debut;temps_fin;frequence_mediane;tadarida_taxon;tadarida_probabilite;tadarida_taxon_autre;observateur_taxon;observateur_probabilite;validateur_taxon;validateur_probabilite`. ~4031 lignes. Champs `observateur_*` et `validateur_*` vides au départ. Les champs `observateur_*` sont ceux que votre application aide à remplir. Les champs `validateur_*`, eux, sont **réservés à un expert du MNHN** : la plateforme refuse (403) qu'un compte `Observateur` les pose. L'application les **lit** - elle affiche le verdict de l'expert à côté de votre correction - mais ne les écrit jamais. Sur une séquence de 5 s, **plusieurs lignes peuvent coexister** (1 ligne par espèce distincte identifiée), avec timing début/fin précis dans la séquence. |
+| `transformes/8a4fa…-observations.csv` | CSV des observations brutes Tadarida. Colonnes : `nom du fichier;temps_debut;temps_fin;frequence_mediane;tadarida_taxon;tadarida_probabilite;tadarida_taxon_autre;observateur_taxon;observateur_probabilite;validateur_taxon;validateur_probabilite`. ~4031 lignes. Champs `observateur_*` et `validateur_*` vides au départ. Les champs `observateur_*` sont ceux que l'application aide à remplir. Les champs `validateur_*`, eux, sont **réservés à un expert du MNHN** : la plateforme refuse (403) qu'un compte `Observateur` les pose. L'application les **lit** - elle affiche le verdict de l'expert à côté de la correction de l'observateur - mais ne les écrit jamais. Sur une séquence de 5 s, **plusieurs lignes peuvent coexister** (1 ligne par espèce distincte identifiée), avec timing début/fin précis dans la séquence. |
 | `transformes/…-observations_Vu.csv` | Même format que ci-dessus, mais avec encodage CSV légèrement différent (séparateur `;` sans guillemets, doubles guillemets vides `""""` pour les champs nuls). Format réinjectable par la plateforme VigieChiro. |
 
 Distribution des classifications Tadarida sur cette session, à titre indicatif. Cette distribution donne **l'identification la plus probable** d'un des sons ou d'une des séquences détectées dans la séquence ralentie de 5 s, mais **des erreurs sont possibles dans tous les sens** (faux positifs, faux négatifs) et plusieurs espèces ou natures de sons peuvent cohabiter dans une même séquence :
@@ -41,7 +41,7 @@ Distribution des classifications Tadarida sur cette session, à titre indicatif.
 
 ## Fonctionnalités attendues
 
-L'application **doit** offrir les fonctionnalités suivantes (priorité MUST). Les fonctionnalités SHOULD et COULD sont soumises à arbitrage en phase 1.
+L'application **doit** offrir les fonctionnalités suivantes (priorité MUST). Les fonctionnalités SHOULD et COULD sont soumises à arbitrage selon les priorités.
 
 ### MUST (chaîne fil rouge - remplace LupasRename + Kaléidoscope)
 
@@ -53,14 +53,14 @@ La chaîne minimale livrable est la **chaîne fil rouge** : depuis la récupéra
 - **Préparer le dépôt** : vérification de cohérence (préfixes conformes, journal et climat présents, etc.), affichage du chemin du dossier, ouverture dans l'explorateur natif pour téléversement manuel via navigateur sur Vigie-Chiro. L'application **ne dialogue pas** directement avec la plateforme.
 - **Tracer le dépôt** : marquer le passage comme `Déposé` avec date de dépôt, pour distinguer ce qui a été livré de ce qui reste à traiter.
 
-### SHOULD (utilité reconnue, à arbitrer selon vélocité)
+### SHOULD (utilité reconnue)
 
 Une fois la chaîne fil rouge livrée, ces capacités étendent la valeur en cas de marge :
 
 - **Naviguer dans plusieurs sites et passages** via une vue tabulaire performante avec tri, filtres et actions de masse. **Devient MUST de fait** dès qu'on dépasse 3-4 sites (cas Karim et Samuel).
 - **Diagnostiquer le matériel** : visualiser les courbes de température et d'hygrométrie de la nuit, les niveaux de batterie début/fin, la liste des évènements anormaux du `LogPR*.txt` (réveils non programmés, erreurs SD, redémarrages).
 - **Vérifier la cohérence des horaires astronomiques** : le PR doit s'allumer 30 min avant le coucher du soleil et s'éteindre 30 min après son lever. L'application calcule localement ces heures d'après les coordonnées GPS du point et les compare avec celles loguées dans le `LogPR*.txt`. (Idée Samuel mai 2026.)
-- **Valider les résultats Tadarida** (cible étirable principale, filet de sécurité si la SAE déborde du fil rouge) : charger le CSV de résultats récupéré depuis Vigie-Chiro 24-48 h après le dépôt, parcourir les observations avec sonogramme + spectrogramme + zoom, valider ou corriger la classification, exporter un CSV `*_Vu.csv` réinjectable par la plateforme.
+- **Valider les résultats Tadarida** (cible étirable principale, filet de sécurité au-delà du fil rouge) : charger le CSV de résultats récupéré depuis Vigie-Chiro 24-48 h après le dépôt, parcourir les observations avec sonogramme + spectrogramme + zoom, valider ou corriger la classification, exporter un CSV `*_Vu.csv` réinjectable par la plateforme.
 - **Filtrer** les observations Tadarida par taxon, par groupe taxonomique (Pipistrelles, Murins, Noctules), par seuil de probabilité, par plage horaire.
 - **Annoter** une nuit avec un commentaire libre (contexte météo, intervention humaine, problème matériel) ainsi qu'avec les **données météo structurées** attendues par Vigie-Chiro (température début/fin de nuit, couverture nuageuse, vent).
 
@@ -85,15 +85,15 @@ Une fois la chaîne fil rouge livrée, ces capacités étendent la valeur en cas
 
 ## Et après ?
 
-Le présent document est l'**expression brute du besoin**, telle qu'elle pourrait être recueillie auprès du client. Il a été traduit par l'équipe pédagogique en un **dossier d'analyse et de conception opérationnel** que vous trouverez dans [`Analyse et conception/`](Analyse%20et%20conception/index.md) :
+Le présent document est l'**expression brute du besoin**, telle qu'elle pourrait être recueillie auprès du commanditaire. Il est décliné en un **dossier d'analyse et de conception** dans [`Analyse et conception/`](Analyse%20et%20conception/index.md) :
 
+- le [modèle conceptuel](Analyse%20et%20conception/Modèle%20conceptuel/index.md) - vocabulaire et données
 - 3 [personas](Analyse%20et%20conception/Personas/index.md) représentatifs des utilisateurs cibles
 - les [parcours utilisateurs](Analyse%20et%20conception/Parcours%20utilisateurs/index.md) attendus
-- une [cartographie des histoires utilisateurs](Analyse%20et%20conception/Story%20mapping/index.md) (épopées + stories INVEST + critères d'acceptation + estimations en étoiles)
-- le [périmètre fonctionnel MVP](Analyse%20et%20conception/Périmètre%20MVP.md) arbitré
-- la [planification prospective](Analyse%20et%20conception/Planification.md) sous forme de Gantt
+- les [maquettes](Analyse%20et%20conception/Maquettes/index.md) des écrans
+- une [cartographie des histoires utilisateurs](Analyse%20et%20conception/Story%20mapping/index.md) (épopées, stories et critères d'acceptation)
 
-C'est ce dossier qui pilote votre développement. Le présent document reste utile pour comprendre **d'où viennent** les choix qui y sont actés.
+Le présent document reste utile pour comprendre **d'où viennent** les choix actés dans ce dossier.
 
 Quelques points d'inspiration ergonomique à explorer si besoin :
 

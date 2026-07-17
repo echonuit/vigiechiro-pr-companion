@@ -10,9 +10,9 @@ Cette section regroupe les **maquettes basse fidélité** de l'application *Vigi
 - des **notes d'implémentation** ciblées (composants JavaFX recommandés, points d'attention performance ou UX, raccourcis claviers).
 
 !!! warning "Maquettes basse fidélité, pas spécification figée"
-    Ces maquettes posent l'**organisation** des écrans et la **hiérarchie** des informations à afficher. Elles n'imposent pas le style visuel final (couleurs, typographies, icônes, espacements précis) : ce travail vous revient et fait partie de l'évaluation R2.02 / R2.03.
+    Ces maquettes posent l'**organisation** des écrans et la **hiérarchie** des informations à afficher. Elles n'imposent pas le style visuel final (couleurs, typographies, icônes, espacements précis) : ce niveau relève de l'implémentation.
 
-    Vous pouvez **proposer une variante** d'un écran si vous identifiez une meilleure organisation : dans ce cas, justifiez le choix dans votre soutenance.
+    Une **variante** d'un écran est envisageable si elle améliore l'organisation ; le choix se justifie alors dans la documentation.
 
 ## Cartographie des écrans
 
@@ -98,7 +98,7 @@ Toutes les maquettes reprennent le **cadre fenêtre** du chrome (`MainView.fxml`
 - **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro PR Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, et le champ de **recherche globale** (`Ctrl+F`) aligné à droite.
 - **En-tête de page** avec titre principal et sous-titre éventuel, juste sous le bandeau.
 - **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou **panneau de détail** « liste + détail » (M-Qualification, M-SonsValidation).
-- **Pied de page** discret (`SAÉ 2.01 · IUT d'Aix-Marseille`).
+- **Pied de page** discret (`VigieChiro PR Companion`).
 
 L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titre, invite, tableau de bord de compteurs) puis deux **sections-prismes** de cartes d'activité.
 

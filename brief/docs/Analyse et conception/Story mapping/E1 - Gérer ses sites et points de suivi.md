@@ -1,6 +1,6 @@
 # E1 - 🌐 Gérer ses sites et points de suivi
 
-[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) · ✅ MUST
+[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)
 
 **Portée** : permettre à l'utilisateur de déclarer ses sites de suivi (créés en amont sur le portail VigieChiro) dans l'application, avec leurs points d'écoute, pour pouvoir y rattacher ensuite les nuits importées. Inclut la création à la volée depuis l'import.
 
@@ -30,8 +30,6 @@
 **Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)<br>
 **Maquettes cibles** : [M-Sites](../Maquettes/M-Sites.md) (vue listant les sites + bouton « Ajouter »), [M-Site-detail](../Maquettes/M-Site-detail.md) (formulaire de création/édition)<br>
 **Dépendances** : [E0.S1](E0%20-%20Fondations%20de%20persistance.md#e0s1), [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2)<br>
-**Complexité** : ★★ (simple - formulaire avec validations métier sur un seul écran)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -55,8 +53,6 @@
 **Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)<br>
 **Maquettes cibles** : [M-Site-detail](../Maquettes/M-Site-detail.md) (avec section « Points d'écoute » et boutons d'action)<br>
 **Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E1.S1](#e1s1)<br>
-**Complexité** : ★★ (simple - CRUD avec une contrainte d'intégrité métier)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -79,8 +75,6 @@
 **Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)<br>
 **Maquettes cibles** : [M-Site-detail](../Maquettes/M-Site-detail.md) (champs supplémentaires dans le formulaire de point)<br>
 **Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E1.S1](#e1s1)<br>
-**Complexité** : ★ (trivial - 2 champs avec validation simple)<br>
-**MoSCoW** : ✅ MUST (les coordonnées débloquent E6 « Cohérence horaires »)
 
 ---
 
@@ -104,8 +98,6 @@
 **Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md), point d'entrée vers [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)<br>
 **Maquettes cibles** : [M-Sites](../Maquettes/M-Sites.md)<br>
 **Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3) (pour les compteurs de passages), [E1.S1](#e1s1)<br>
-**Complexité** : ★★★ (moyen - vue avec agrégation, état vide, navigation)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -128,5 +120,3 @@
 **Parcours rattaché** : [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md) (variante), [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (avec l'option « + Créer un nouveau site » dans le combobox)<br>
 **Dépendances** : [E1.S1](#e1s1), E2 (la modale d'import existe)<br>
-**Complexité** : ★★ (simple - composition d'écrans déjà développés)<br>
-**MoSCoW** : ✅ MUST

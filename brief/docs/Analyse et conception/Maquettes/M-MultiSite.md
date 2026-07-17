@@ -156,7 +156,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <text x="1105" y="618" class="btn-txt-dark" text-anchor="middle">Tableau ▶</text>
 
   <rect x="10" y="660" width="1180" height="30" class="footer"/>
-  <text x="40" y="680" class="footer-txt">SAÉ 2.01 · IUT d'Aix-Marseille · la carte montre TOUS les sites (non restreinte par les filtres du tableau)</text>
+  <text x="40" y="680" class="footer-txt">VigieChiro PR Companion · la carte montre TOUS les sites (non restreinte par les filtres du tableau)</text>
 </svg>
 </div>
 

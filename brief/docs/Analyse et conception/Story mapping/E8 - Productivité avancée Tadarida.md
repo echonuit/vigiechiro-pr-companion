@@ -1,16 +1,10 @@
 # E8 - 🚀 Productivité avancée Tadarida
 
-[← Retour au sommaire story mapping](index.md) · **Parcours principaux** : [P9 - Regrouper les nuits successives par point](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md), [P10 - Exporter une bibliothèque de sons de référence](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) · ⚪ COULD (au mieux)
+[← Retour au sommaire story mapping](index.md) · **Parcours principaux** : [P9 - Regrouper les nuits successives par point](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md), [P10 - Exporter une bibliothèque de sons de référence](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md) (au mieux)
 
-**Portée** : les gains de productivité avancés sur la validation taxonomique - regrouper plusieurs nuits successives du même point pour validation conjointe (P9), constituer une bibliothèque de sons de référence par espèce pour partage pédagogique (P10). Ce sont des **idées remontées par Samuel** (mai 2026) qui multiplient la valeur de la chaîne de validation [E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md) mais qui ne sont pas critiques au MVP.
+**Portée** : les gains de productivité avancés sur la validation taxonomique - regrouper plusieurs nuits successives du même point pour validation conjointe (P9), constituer une bibliothèque de sons de référence par espèce (P10). Ce sont des **idées remontées par Samuel** (mai 2026) qui multiplient la valeur de la chaîne de validation [E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md).
 
-**Position dans le MoSCoW** : E8 reste **COULD au mieux**. À engager **uniquement** si la SAE a déjà :
-
-1. livré la chaîne fil rouge complète ([E1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md) à [E4](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md))
-2. couvert [E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md) dans une version utilisable bout-en-bout
-3. et qu'il reste de la vélocité dans le sprint final
-
-Sinon, ces stories restent documentées pour une suite éventuelle de l'application post-SAE.
+Ces gains sont **secondaires** : ils enrichissent la validation sans en être un prérequis. Ils prennent leur sens une fois la chaîne principale ([E1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md) à [E4](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md)) et la validation ([E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md)) solides.
 
 **Persona principal** : Samuel exclusivement (Karim en bénéficie aussi par effet de bord, Marie n'en a pas l'usage).
 
@@ -38,8 +32,6 @@ Sinon, ces stories restent documentées pour une suite éventuelle de l'applicat
 **Parcours rattaché** : [P9](../Parcours%20utilisateurs/P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md)<br>
 **Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (variante regroupée), [M-MultiSite](../Maquettes/M-MultiSite.md) (action de regroupement)<br>
 **Dépendances** : [E5.S2](E5%20-%20Naviguer%20dans%20le%20volume%20multi-sites.md#e5s2), [E7.S2](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s2), [E7.S4](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s4), [E7.S6](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s6)<br>
-**Complexité** : ★★★★ (significatif - fusion de plusieurs passages, propagation des validations, export multi-fichiers)<br>
-**MoSCoW** : ⚪ COULD (Samuel lui-même la qualifiait de « utile mais peut-être trop complexe »)
 
 ---
 
@@ -73,5 +65,3 @@ Sinon, ces stories restent documentées pour une suite éventuelle de l'applicat
 **Parcours rattaché** : [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md)<br>
 **Maquettes cibles** : [M-SonsValidation](../Maquettes/M-SonsValidation.md) (bouton « Marquer comme référence »), [M-Lot](../Maquettes/M-Lot.md) (action « Exporter bibliothèque »)<br>
 **Dépendances** : [E0.S5](E0%20-%20Fondations%20de%20persistance.md#e0s5), [E7.S4](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s4)<br>
-**Complexité** : ★★★ (moyen - flag persisté + export structuré par espèce + zip optionnel + variante PDF)<br>
-**MoSCoW** : ⚪ COULD (fonctionnalité bonus pédagogique, Samuel-only)

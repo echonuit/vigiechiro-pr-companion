@@ -1,6 +1,6 @@
 # E5 - 🗂 Naviguer dans le volume multi-sites
 
-[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P5 - Naviguer dans plusieurs sites et passages](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) · 🟠 SHOULD (MUST de fait pour Karim et Samuel)
+[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P5 - Naviguer dans plusieurs sites et passages](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) (MUST de fait pour Karim et Samuel)
 
 **Portée** : permettre à l'utilisateur de **se repérer rapidement** dans un volume de plusieurs sites, points et passages, sans se perdre. C'est l'épopée qui transforme l'application d'un outil mono-site (où la barre latérale de [E1.S4](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4) suffit) en un outil de production capable de tenir l'échelle de Karim (3 chantiers, 8 nuits par retour terrain) ou Samuel (24 enregistreurs × 40-50 nuits = **plus de 1 000 passages par saison**).
 
@@ -29,8 +29,6 @@
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), étape 1<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau gauche arborescent), [M-Sites](../Maquettes/M-Sites.md) (vue d'entrée également)<br>
 **Dépendances** : [E0.S2](E0%20-%20Fondations%20de%20persistance.md#e0s2), [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1.S4](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s4)<br>
-**Complexité** : ★★★ (moyen - TreeView JavaFX avec rendu personnalisé et agrégation par niveau)<br>
-**MoSCoW** : 🟠 SHOULD (la vue plate de E1.S4 suffit pour le MVP strict mono-site)
 
 ---
 
@@ -58,8 +56,6 @@
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), étape 2<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau principal en mode tableau)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E4.S4](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s4)<br>
-**Complexité** : ★★★ (moyen - TableView JavaFX avec colonnes typées, tri, filtres, virtualisation pour la perf)<br>
-**MoSCoW** : 🟠 SHOULD (devient MUST de fait dès qu'on dépasse 3-4 sites)
 
 ---
 
@@ -85,8 +81,6 @@
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), Notes pour Samuel<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau « Filtres avancés » dépliable + menu vues sauvegardées)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E5.S2](#e5s2)<br>
-**Complexité** : ★★★★ (significatif - composition de critères, persistance des vues, optimisation perf grand volume)<br>
-**MoSCoW** : ⚪ COULD (vraiment utile uniquement pour Samuel et son volume hors normes)
 
 ---
 
@@ -111,8 +105,6 @@
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), Notes pour Samuel<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (barre d'actions contextuelle)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E5.S2](#e5s2)<br>
-**Complexité** : ★★★ (moyen - sélection multi-row + batch DAO + confirmation forte + journal)<br>
-**MoSCoW** : ⚪ COULD (Samuel uniquement ; risqué côté UX pour Marie qui pourrait supprimer en masse par erreur)
 
 ---
 
@@ -136,5 +128,3 @@
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), étape 3<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (variante multi-dossiers), [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau file d'attente)<br>
 **Dépendances** : [E0.S6](E0%20-%20Fondations%20de%20persistance.md#e0s6), [E2.S1](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s1), [E2.S2](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s2), [E2.S4](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s4), [E2.S6](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6)<br>
-**Complexité** : ★★★ (moyen - composition de l'import existant + file d'attente UI + reprise via E0.S6)<br>
-**MoSCoW** : ⚪ COULD (un import à la fois suffit fonctionnellement ; commodité pour Karim et Samuel)

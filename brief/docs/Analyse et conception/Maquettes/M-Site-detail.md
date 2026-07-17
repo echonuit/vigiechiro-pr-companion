@@ -181,7 +181,7 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 
   <!-- Footer -->
   <rect x="10" y="780" width="1180" height="30" class="footer"/>
-  <text x="40" y="800" class="footer-txt">SAÉ 2.01 · IUT d'Aix-Marseille · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
+  <text x="40" y="800" class="footer-txt">VigieChiro PR Companion · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
 </svg>
 </div>
 

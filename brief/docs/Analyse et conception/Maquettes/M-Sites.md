@@ -110,7 +110,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 
   <!-- Footer -->
   <rect x="10" y="660" width="1180" height="30" class="footer"/>
-  <text x="40" y="680" class="footer-txt">SAÉ 2.01 · IUT d'Aix-Marseille · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
+  <text x="40" y="680" class="footer-txt">VigieChiro PR Companion · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
 </svg>
 </div>
 
@@ -187,7 +187,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <text x="300" y="624" class="hint-txt">🔗 https://vigiechiro.herokuapp.com (s'ouvre dans le navigateur)</text>
 
   <rect x="10" y="660" width="1180" height="30" class="footer"/>
-  <text x="40" y="680" class="footer-txt">SAÉ 2.01 · IUT d'Aix-Marseille · base locale initialisée</text>
+  <text x="40" y="680" class="footer-txt">VigieChiro PR Companion · base locale initialisée</text>
 </svg>
 </div>
 

@@ -10,7 +10,7 @@ Le programme VigieChiro porte sur la faune et non sur les humains, mais les iden
 
 - L'application **ne contacte aucun service distant** par défaut.
 - Si l'application produit des logs (utile pour le débogage), les identifiants traçants sont anonymisés (hash, redaction).
-- Le `.gitignore` du dépôt étudiant interdit le commit accidentel de fichiers de session contenant de vrais UUID.
+- Le `.gitignore` du dépôt interdit le commit accidentel de fichiers de session contenant de vrais UUID.
 - Le jeu de données pédagogique fourni dans `data/` est explicitement signalé comme tel et provient d'un PR de test.
 
 ## Objectif lié

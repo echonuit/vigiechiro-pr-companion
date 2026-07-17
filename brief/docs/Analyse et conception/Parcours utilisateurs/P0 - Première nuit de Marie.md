@@ -4,8 +4,8 @@
 
 > **Persona** : Marie. **Préconditions** : enregistreur reçu, site choisi, première nuit d'enregistrement effectuée.
 
-!!! info "À utiliser comme support de soutenance"
-    Ce parcours raconte l'usage cible **vu par Marie**, persona débutante mono-site. Il vous donne en une page la chaîne complète de bout-en-bout. Chaque étape pointe vers le parcours détaillé `Pn` correspondant pour les règles métier précises.
+!!! info "Le fil rouge en une page"
+    Ce parcours raconte l'usage cible **vu par Marie**, persona débutante mono-site. Il donne en une page la chaîne complète de bout-en-bout. Chaque étape pointe vers le parcours détaillé `Pn` correspondant pour les règles métier précises.
 
 [🖼️ Voir le diagramme en plein écran ↗](P0%20-%20plein%20écran.md){ .md-button }
 

@@ -133,7 +133,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 
   <!-- Footer -->
   <rect x="10" y="656" width="1180" height="34" class="footer"/>
-  <text x="40" y="677" class="footer-txt">SAÉ 2.01 · IUT d'Aix-Marseille</text>
+  <text x="40" y="677" class="footer-txt">VigieChiro PR Companion</text>
 </svg>
 </div>
 

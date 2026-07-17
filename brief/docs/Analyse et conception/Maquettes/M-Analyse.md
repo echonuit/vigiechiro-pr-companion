@@ -158,7 +158,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="74" y="556" class="cell-sec">… 635 autres observations (faites défiler).</text>
 
   <rect x="10" y="720" width="1180" height="30" class="footer"/>
-  <text x="40" y="740" class="footer-txt">SAÉ 2.01 · IUT d'Aix-Marseille · lecture transverse, consultation seule (aucune observation modifiée ici)</text>
+  <text x="40" y="740" class="footer-txt">VigieChiro PR Companion · lecture transverse, consultation seule (aucune observation modifiée ici)</text>
 </svg>
 </div>
 

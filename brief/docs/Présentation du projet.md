@@ -27,14 +27,14 @@ Cette chaîne **remplace** entièrement les outils manuels actuellement utilisé
 - **Vérifier l'enregistrement par échantillonnage** : sound check global avant dépôt - écouter quelques séquences réparties sur la nuit pour confirmer que l'audio est exploitable, et saisir un verdict (`OK`, `Utilisable`, `Inexploitable`) ([P3](Analyse%20et%20conception/Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)).
 - **Préparer le dépôt** sur Vigie-Chiro : vérifications de cohérence + ouverture du dossier dans l'explorateur pour téléversement manuel via le navigateur ([P4](Analyse%20et%20conception/Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)).
 
-### Approfondissements (SHOULD, à livrer si vélocité)
+### Approfondissements (SHOULD)
 
 - **Naviguer dans plusieurs sites et passages** via une vue tabulaire performante, indispensable dès qu'on dépasse 3-4 sites (cas Karim et Samuel, [P5](Analyse%20et%20conception/Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md)).
 - **Diagnostiquer le matériel** : visualiser les courbes de température / hygrométrie, le niveau de batterie, les évènements anormaux du journal du capteur ([P6](Analyse%20et%20conception/Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md)).
 
 ### Cible étirable (SHOULD, filet de sécurité)
 
-- **Valider les résultats Tadarida** : 24-48 h après le dépôt, charger le CSV de résultats fourni par la plateforme, écouter / visualiser chaque observation, et valider ou corriger la classification automatique avant ré-injection ([P7](Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)). C'est le **filet de sécurité** si la SAE déborde du périmètre fil rouge.
+- **Valider les résultats Tadarida** : 24-48 h après le dépôt, charger le CSV de résultats fourni par la plateforme, écouter / visualiser chaque observation, et valider ou corriger la classification automatique avant ré-injection ([P7](Analyse%20et%20conception/Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)). C'est le **filet de sécurité** si le périmètre s'étend au-delà du fil rouge.
 
 ### Exigences transverses
 
@@ -44,35 +44,20 @@ L'application doit également :
 - **fonctionner hors-ligne** : une nuit de terrain peut produire des giga-octets de données et l'utilisateur doit pouvoir travailler sans connexion ;
 - **être portable** sur Windows, Linux et macOS sans installation système lourde.
 
-Le détail complet du périmètre, avec arbitrage MoSCoW par story, est dans le [Périmètre MVP](Analyse%20et%20conception/Périmètre%20MVP.md).
+## Le commanditaire : Samuel Busson (CEREMA)
 
-## Le client réel : Samuel Busson (CEREMA)
-
-🎯 Cette SAE n'est pas une simulation. Le commanditaire est **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, Département Territoire Ville et Bâtiment, Groupe Territoire, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, et en particulier sur l'**influence de la visibilité des sources lumineuses** sur l'activité des chauves-souris **et des insectes volants**.
+🎯 Le commanditaire n'est pas fictif : **Samuel Busson**, doctorant écologue au [CEREMA](https://www.cerema.fr/) (équipe Climat & Territoires de demain, Département Territoire Ville et Bâtiment, Groupe Territoire, site d'Aix-en-Provence). Sa thèse porte sur l'**effet de l'éclairage public LED sur l'activité acoustique des chiroptères**, et en particulier sur l'**influence de la visibilité des sources lumineuses** sur l'activité des chauves-souris **et des insectes volants**.
 
 Une précédente campagne expérimentale, liée à un autre projet, s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû développer avec ses collègues informaticiens des scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
 
-Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire. Le *VigieChiro PR Companion* que vous allez développer **est l'outil qui manque à Samuel et à la communauté** pour exploiter sereinement le PR.
-
-Samuel viendra **réceptionner votre démonstration** en phase 2 et donnera son avis sur l'application. Cet avis pèse dans l'évaluation au même titre que la note technique de l'équipe pédagogique. Voir sa fiche persona détaillée : [Samuel](Analyse%20et%20conception/Personas/Samuel.md).
-
-## Construction de votre propre PR
-
-Pour vous mettre en condition réelle (sous réserve d'avoir reçu les pièces détachées à temps), **chaque équipe assemblera son propre PR au démarrage du projet**. Cette activité (encadrée, demi-journée à une journée selon les groupes) poursuit trois objectifs :
-
-1. **Comprendre concrètement** la chaîne complète : du capteur Teensy à la carte SD, de la carte SD au dossier de session, du dossier de session à VigieChiro.
-2. **Vivre la complexité** de la récupération des fichiers, de leur renommage selon la convention `Car<carre>-<annee>-<passage>-<zone>-PaRecPR<sn>_<AAAAMMJJ>_<HHMMSS>.wav`, et de la mise au format attendu par la plateforme VigieChiro.
-3. **Produire vos propres données de test** complémentaires au [jeu de données fourni](Expression%20du%20besoin.md#donnees-fournies) - utiles pour challenger votre application sur des cas non anticipés.
-
-Le matériel (kits PR Teensy, cartes SD, micros) est fourni par l'équipe pédagogique. Voir [Consignes générales](Consignes%20générales.md#materiel-fourni) et [Calendrier de travail](Calendrier%20de%20travail.md).
+Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire : le *VigieChiro PR Companion* **est l'outil qui manque** à Samuel et à la communauté pour exploiter sereinement le PR. Voir sa fiche persona détaillée : [Samuel](Analyse%20et%20conception/Personas/Samuel.md).
 
 ## Parties prenantes
 
 | Acteur | Rôle |
 |---|---|
-| **Samuel Busson (CEREMA)** | **Client réel**. Exprime le besoin, réceptionne la démonstration, donne un avis qualitatif sur l'application en phase 2. |
+| **Samuel Busson (CEREMA)** | **Commanditaire réel**. Exprime le besoin et donne un avis qualitatif sur l'application. |
 | **Possesseur de PR** (utilisateur principal) | Naturaliste amateur ou professionnel qui exploite un PR. Il installe l'appareil sur le terrain, récupère la carte SD, importe les données dans l'application, valide les classifications, exporte vers VigieChiro. La plupart ne sont pas informaticiens : l'application doit être abordable. |
 | **Plateforme VigieChiro** (système amont/aval) | Reçoit les fichiers du possesseur et restitue les CSV Tadarida. L'application n'a pas à dialoguer en direct avec la plateforme - les échanges se font par téléversement / téléchargement de fichiers. |
-| **Équipe pédagogique R2.02 / R2.03** | Encadre, accompagne, évalue les livrables aux deux jalons. Donne les critères d'arbitrage en cas de doute. |
 
 💡 Dans la première version, l'application reste mono-utilisateur : pas de comptes, pas de synchronisation cloud, pas de gestion d'équipe. Le possesseur de PR est seul devant son ordinateur, l'application travaille sur ses fichiers locaux.

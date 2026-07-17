@@ -310,5 +310,5 @@ Si le verdict du passage est `Inexploitable` (R14) ou si une vérification de co
 - **Calcul des vérifications** : exécuté à chaque ouverture de l'écran (pas mémorisé en BD). Coût négligeable car les contrôles sont des requêtes simples sur les passages/séquences déjà persistés.
 - **Détection ✗ vs ✓** : le bouton « J'ai déposé » est activé **uniquement** si toutes les vérifications passent ET que le verdict est OK ou Utilisable (jamais Inexploitable).
 - **Confirmation de dépôt** : modale séparée (non figurée) avec récap des conséquences (« Le passage va passer au statut Déposé, la date 24/06/2026 sera enregistrée ») avant d'écrire en BD.
-- **Annulation du dépôt** : autorisée pendant N jours (à arbitrer côté équipe étudiante) pour récupération d'erreur. Au-delà, considérer le passage comme « clos ».
+- **Annulation du dépôt** : autorisée pendant N jours (à arbitrer) pour récupération d'erreur. Au-delà, considérer le passage comme « clos ».
 - **Ouverture du dossier** : `java.awt.Desktop.open(File)` est la méthode standard, fonctionne sur Linux/macOS/Windows. Tester en environnement sans bureau graphique : le bouton doit être désactivé proprement avec un message explicite (et le chemin reste copiable via 📋).

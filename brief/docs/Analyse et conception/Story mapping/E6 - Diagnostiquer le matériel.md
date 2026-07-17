@@ -1,6 +1,6 @@
 # E6 - 🩺 Diagnostiquer le matériel
 
-[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) · 🟠 SHOULD
+[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md)
 
 **Portée** : exploiter le **journal du capteur** (`LogPR<n>.txt`) et le **relevé climatique** (`PaRecPR<sn>_THLog.csv`) capturés pendant la nuit pour donner à l'utilisateur une vue d'ensemble de la santé matérielle de son enregistreur. Comprend également la **vérification astronomique** (idée Samuel, mai 2026) qui compare la plage effective d'enregistrement à la plage théorique calculée d'après les coordonnées GPS du point.
 
@@ -28,8 +28,6 @@
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), étape 2 (sous-bloc T°/H)<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (onglet Diagnostic, partie haute)<br>
 **Dépendances** : [E2.S1](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s1), [E2.S4](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s4)<br>
-**Complexité** : ★★★ (moyen - parse CSV + JavaFX LineChart à 2 axes + gestion du cas absent)<br>
-**MoSCoW** : 🟠 SHOULD
 
 ---
 
@@ -57,8 +55,6 @@
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), étape 2 (sous-blocs batterie + évènements)<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (onglet Diagnostic, encart batterie + liste évènements)<br>
 **Dépendances** : [E2.S1](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s1), [E2.S4](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s4)<br>
-**Complexité** : ★★★ (moyen - parser du format texte LogPR + extraction patterns de batterie + classification des évènements)<br>
-**MoSCoW** : 🟠 SHOULD
 
 ---
 
@@ -86,8 +82,6 @@
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), section « Cohérence horaires (calcul astronomique) »<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (onglet Diagnostic, encart cohérence horaires)<br>
 **Dépendances** : [E1.S3](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s3), [E2.S1](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s1), [E6.S2](#e6s2)<br>
-**Complexité** : ★★★ (moyen - bibliothèque astronomique + comparaison de plages + gestion conditionnelle de l'encart)<br>
-**MoSCoW** : ⚪ COULD (idée Samuel, utile pour audit qualité mais pas critique au MVP)
 
 ---
 
@@ -111,8 +105,6 @@
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), étape 3<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (variante diagnostic avec mode comparaison)<br>
 **Dépendances** : [E6.S1](#e6s1), [E6.S2](#e6s2)<br>
-**Complexité** : ★★ (simple - composition de 2 vues identiques + bascule de superposition de courbes)<br>
-**MoSCoW** : ⚪ COULD (productivité Karim/Samuel ; pas dans le périmètre minimal de diagnostic)
 
 ---
 
@@ -141,8 +133,6 @@
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), étape 4<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (bouton « Exporter le diagnostic » + fenêtre modale de choix de format)<br>
 **Dépendances** : [E6.S1](#e6s1), [E6.S2](#e6s2)<br>
-**Complexité** : ★★ (simple - sérialisation CSV + génération PDF basique via bibliothèque type iText ou OpenPDF)<br>
-**MoSCoW** : ⚪ COULD (export confort, pas critique au MVP)
 
 ---
 
@@ -167,5 +157,3 @@
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) (signal partagé) + [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) (indicateur affiché dans le pré-check)<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) + [M-Qualification](../Maquettes/M-Qualification.md) - *à mettre à jour avec un 4e indicateur*<br>
 **Dépendances** : [E2.S2](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s2) (parsing du `LogPR`), [E3.S0](E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s0) (encart « État de la nuit » qui accueille le 4e indicateur)<br>
-**Complexité** : ★★ (simple - comparaison de quelques valeurs numériques à un référentiel)<br>
-**MoSCoW** : 🟠 SHOULD (rentabilise rapidement l'investissement parsing du journal déjà fait pour E6.S1/S2)

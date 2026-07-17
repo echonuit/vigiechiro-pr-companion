@@ -1,6 +1,6 @@
 # E3 - 🎧 Vérifier la qualité d'enregistrement
 
-[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P3 - Vérifier l'enregistrement par échantillonnage](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) · ✅ MUST
+[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P3 - Vérifier l'enregistrement par échantillonnage](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)
 
 **Portée** : permettre à l'utilisateur de **valider qu'une nuit d'enregistrement est exploitable** avant de la déposer sur Vigie-Chiro. La vérification se fait en deux temps complémentaires : (1) un **pré-check synthétique** rapide sans écoute (couverture horaire, nombre de fichiers, cohérence du renommage), pratiqué par défaut par Samuel ; (2) un **sound check par échantillonnage** audio plus long, pratiqué par défaut par Marie. C'est un sound check global, distinct de la validation taxonomique espèce par espèce (qui est l'objet de E7).
 
@@ -30,8 +30,6 @@
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 1<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (encart « État de la nuit » en haut de la vue de vérification) - *à mettre à jour*<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3) (passage en BD), [E2.S6](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6) (transformation terminée), librairie astronomique pour les horaires (re-use [E6.S3](E6%20-%20Diagnostiquer%20le%20matériel.md#e6s3) si possible)<br>
-**Complexité** : ★★★ (moyen - 3 calculs indépendants, recoupement avec horaires astronomiques, rendu visuel)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -55,8 +53,6 @@
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 2<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (état initial à l'ouverture de l'onglet)<br>
 **Dépendances** : [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4), [E2.S6](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6)<br>
-**Complexité** : ★★ (simple - algorithme d'échantillonnage uniforme + persistance)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -79,8 +75,6 @@
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 3<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (tableau central de la vue de vérification)<br>
 **Dépendances** : [E3.S1](#e3s1)<br>
-**Complexité** : ★★ (simple - TableView ou ListView JavaFX avec rendu personnalisé par cellule)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -107,9 +101,7 @@
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 4<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (vue audio combinée)<br>
-**Dépendances** : [E3.S2](#e3s2), composant audio fourni par l'équipe pédagogique<br>
-**Complexité** : ★★ (simple - intégration du composant + gestion d'état lecture)<br>
-**MoSCoW** : ✅ MUST
+**Dépendances** : [E3.S2](#e3s2), composant de vue audio partagé<br>
 
 ---
 
@@ -132,8 +124,6 @@
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 4<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (compteur d'avancement, indicateur visuel par ligne)<br>
 **Dépendances** : [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4), [E3.S2](#e3s2), [E3.S3](#e3s3)<br>
-**Complexité** : ★ (trivial - booléen persisté + indicateur UI)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -158,8 +148,6 @@
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 6 et 7<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (zone de saisie du verdict en bas de l'écran)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3)<br>
-**Complexité** : ★ (trivial - menu déroulant + champ texte + persistance)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -182,5 +170,3 @@
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 5<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (panneau « Modifier la sélection »)<br>
 **Dépendances** : [E3.S1](#e3s1), [E3.S2](#e3s2)<br>
-**Complexité** : ★★★ (moyen - interface de personnalisation + algorithme aléatoire + ajout manuel par recherche)<br>
-**MoSCoW** : 🟠 SHOULD (personnalisation est un confort, la sélection automatique par défaut suffit pour le MVP strict)

@@ -15,11 +15,11 @@
 | **Sujet de thèse** | Effet de l'éclairage public LED sur l'activité acoustique des chiroptères, et en particulier influence de la visibilité des sources lumineuses sur l'activité des chauves-souris et des insectes volants |
 | **Contact** | <samuel.busson@cerema.fr> |
 
-## Positionnement dans la SAE
+## Positionnement
 
-> 🎯 **Samuel est le client réel.** C'est lui qui exprime le besoin, c'est lui qui réceptionnera votre démonstration en phase 2, c'est sur sa connaissance du terrain et du pipeline que repose la pertinence de l'application.
+> 🎯 **Samuel est le commanditaire réel.** C'est lui qui exprime le besoin, et c'est sur sa connaissance du terrain et du pipeline que repose la pertinence de l'application.
 >
-> Samuel n'est pas naturaliste amateur : c'est un **chercheur** qui a vécu de l'intérieur le manque d'outillage de la communauté acoustique chiroptères. Son avis qualitatif sur votre application **pèse autant que la note technique** de l'équipe pédagogique.
+> Samuel n'est pas naturaliste amateur : c'est un **chercheur** qui a vécu de l'intérieur le manque d'outillage de la communauté acoustique chiroptères. Son avis qualitatif sur l'application fait autorité.
 
 ## Ce qu'il a déjà fait (campagne précédente, autre projet)
 
@@ -31,7 +31,7 @@ Premiers résultats publiés en 2025 :
 - **525 399 contacts** chiroptères moyenne portée (Pipistrellus, Miniopterus, Hypsugo)
 - Conclusion partielle : **pas d'effet significatif du CCT** sur l'activité globale, en accord avec la littérature récente
 
-Pour avaler ce volume de données, Samuel a **développé avec ses collègues informaticiens** des scripts R / Bash de pré-traitement, de renommage et de croisement avec les CSV Tadarida. Ces scripts marchent, mais sont impossibles à transmettre à un autre chercheur sans plusieurs jours d'onboarding. C'est précisément ce manque d'**outillage utilisable, partageable et durable** que la SAE doit combler.
+Pour avaler ce volume de données, Samuel a **développé avec ses collègues informaticiens** des scripts R / Bash de pré-traitement, de renommage et de croisement avec les CSV Tadarida. Ces scripts marchent, mais sont impossibles à transmettre à un autre chercheur sans plusieurs jours d'onboarding. C'est précisément ce manque d'**outillage utilisable, partageable et durable** que ce produit vient combler.
 
 ## Ce qu'il s'apprête à faire (futur protocole)
 
@@ -41,9 +41,7 @@ Pour ses **futures campagnes**, Samuel a choisi le projet **Passive Recorder Tee
 - **Ouverture** : firmware open-source, schémas électroniques publics, format de sortie documenté - condition *sine qua non* de la reproductibilité scientifique et de l'évolution à long terme du matériel.
 - **Accessibilité** : coût modéré, assemblage à la portée d'un laboratoire ou d'une association naturaliste, communauté active autour de framagit.
 
-L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : pas d'outil de validation des observations VigieChiro, pas d'IHM de suivi de campagne, pas de moyen propre d'exporter aux formats attendus. **C'est là que votre application intervient.**
-
-> 💡 Pour vivre concrètement ce que Samuel et ses collègues vont vivre sur PR Teensy, vous **assemblerez votre propre PR** au démarrage du projet (cf. [Présentation du projet](../../Présentation%20du%20projet.md#construction-de-votre-propre-pr)). Vous mesurerez ainsi en quelques heures la richesse, la complexité et le volume du flux de données acoustiques.
+L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : pas d'outil de validation des observations VigieChiro, pas d'IHM de suivi de campagne, pas de moyen propre d'exporter aux formats attendus. **C'est là que *VigieChiro PR Companion* intervient.**
 
 ## Compétences techniques
 
@@ -52,7 +50,7 @@ L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : p
 
 ## Ce qu'il attend de l'application
 
-> ⚠️ Cette liste a été reconstituée à partir du profil de Samuel et de sa publication 2025. Elle sera précisée lors d'un échange direct avec lui en début de SAE.
+> ⚠️ Cette liste a été reconstituée à partir du profil de Samuel et de sa publication 2025.
 
 - Un **format d'export propre, documenté, reproductible** : si on relance l'export, on doit obtenir le même fichier au bit près.
 - L'**intégrité totale** des annotations : aucune action de l'application ne doit modifier ou écraser les validations sans consentement explicite.
@@ -73,4 +71,4 @@ L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : p
 - L'application permet de **scripter** une partie du flux (import en CLI, export en CLI) tout en utilisant l'IHM pour la validation manuelle.
 - La base SQLite reste **interrogeable** depuis R / DBeaver sans que l'application ne s'en plaigne.
 - Le format d'export est **stable et documenté** : reproductible à plusieurs mois d'écart.
-- À la soutenance, Samuel donne un avis qualitatif positif - prêt à recommander l'outil à ses collègues qui passeront sur PR Teensy.
+- En usage, Samuel donne un avis qualitatif positif - prêt à recommander l'outil à ses collègues qui passeront sur PR Teensy.

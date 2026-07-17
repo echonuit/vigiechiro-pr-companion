@@ -1,6 +1,6 @@
 # E2 - 📥 Importer et transformer une nuit
 
-[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) · ✅ MUST
+[← Retour au sommaire story mapping](index.md) · **Parcours principal** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md)
 
 **Portée** : remplacer entièrement la chaîne d'outils manuels (LupasRename + Kaléidoscope 4.3.1). Inspecter un dossier source SD, rattacher la nuit à un site/point/passage, copier de manière protégée les fichiers, les renommer selon le préfixe Vigie-Chiro, et produire les séquences d'écoute (expansion ×10 + chunks 5 s). C'est l'**épopée la plus dense** et la plus à risque techniquement (volumétrie 40 Go, traitement audio).
 
@@ -29,8 +29,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 2<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (récapitulatif d'inspection du dossier source)<br>
 **Dépendances** : aucune (lecture seule, pas besoin de la BD à ce stade)<br>
-**Complexité** : ★★★ (moyen - parsing de fichiers texte hétérogènes, détection de pattern de nommage)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -54,8 +52,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 3 (cas « sans préfixe »)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (formulaire de rattachement avec auto-incrément du n° de passage)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E1.S1](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s1), [E1.S2](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s2), [E2.S1](#e2s1)<br>
-**Complexité** : ★★★ (moyen - formulaire avec dépendances entre champs et calcul d'auto-incrément)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -78,8 +74,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 3 (cas « déjà préfixés ») + étape 4 (incohérence)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (avec affichage du quadruplet extrait + alerte d'incohérence)<br>
 **Dépendances** : [E2.S1](#e2s1), [E2.S2](#e2s2)<br>
-**Complexité** : ★★★ (moyen - parsing du préfixe, scénario à branches, gestion de l'incohérence)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -105,8 +99,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 4<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (barre de progression et état de la copie)<br>
 **Dépendances** : [E0.S6](E0%20-%20Fondations%20de%20persistance.md#e0s6) (pour la reprise), [E2.S2](#e2s2) ou [E2.S3](#e2s3) (rattachement validé)<br>
-**Complexité** : ★★★★ (significatif - gestion arrière-plan, perf 40 Go, espace disque, reprise)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -131,8 +123,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 4<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (étape de progression « renommage » dans la barre)<br>
 **Dépendances** : [E2.S4](#e2s4)<br>
-**Complexité** : ★★ (simple - manipulation de noms de fichiers selon un pattern bien défini)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -158,8 +148,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 5<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (barre de progression de la transformation)<br>
 **Dépendances** : [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4), [E2.S4](#e2s4), [E2.S5](#e2s5)<br>
-**Complexité** : ★★★★★ (lourd - c'est le cœur technique de l'application, choix d'une bibliothèque audio Java, perf, déterminisme à garantir)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -182,8 +170,6 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), étape 7 (mémorisation), réutilisé en étape 3 (présélection au prochain import)<br>
 **Maquettes cibles** : [M-Import](../Maquettes/M-Import.md) (combobox avec valeur présélectionnée + indication discrète « dernière association connue pour cet enregistreur »)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E2.S2](#e2s2)<br>
-**Complexité** : ★ (trivial - clé/valeur en BD, lecture/écriture simple)<br>
-**MoSCoW** : ✅ MUST
 
 ---
 
@@ -208,5 +194,3 @@
 **Parcours rattaché** : [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), notes importantes (« changer rétroactivement »)<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (avec action « Modifier le rattachement » et écran de confirmation)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3), [E2.S2](#e2s2), [E2.S5](#e2s5)<br>
-**Complexité** : ★★★ (moyen - re-renommage cascade, confirmation utilisateur, gestion de conflits)<br>
-**MoSCoW** : 🟠 SHOULD (utile mais pas dans la chaîne minimale d'un premier import)
