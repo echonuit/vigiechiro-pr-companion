@@ -1,0 +1,46 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+# Cette spec décrit un arbre SD à reconstruire à l'identique ; le générateur ne tire aucune
+# date de l'horloge ni aucun octet au hasard.
+fixture: sd-nominale
+but: "Cas propre : 6 wav, un seul enregistreur, une seule nuit, journal + relevé climatique présents."
+
+# Journal du capteur LogPR<serie>.txt. La date `nuit` est celle de la première ligne (elle fixe
+# `dateDebut` pour l'analyseur) ; les paramètres d'acquisition realistes sont ajoutés par le
+# générateur. Retirer `present: true` (ou mettre `present: false`) supprime le journal.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+
+# Relevé climatique PaRecPR<serie>_THLog.csv. `mesures` = nombre de lignes de mesures déterministes.
+thlog:
+  present: true
+  mesures: 6
+
+# Paramètres des WAV générés (en-tête RIFF/WAVE valide, mono 16 bits). `frequenceHz` doit rester
+# divisible par 10 (règle R10) ; `dureeSecondes` reste courte pour des fixtures légères.
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Enregistreurs présents dans `bruts/`. Un fichier par horodatage : PaRecPR<serie>_<yyyyMMdd>_<HHmmss>.wav.
+# Ici une seule série et une seule nuit (soir du 22/04 -> matin du 23/04).
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_210515"
+      - "20260422_223045"
+      - "20260423_001200"
+      - "20260423_030000"
+      - "20260423_054530"
+
+# Contrat de recette : ce que l'inspection reelle (InspecteurDossier) doit constater. Le garde-fou
+# genere la SD depuis cette spec puis verifie que le code d'import produit bien ces signaux.
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1

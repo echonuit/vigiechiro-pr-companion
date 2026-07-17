@@ -1,0 +1,40 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-melange
+but: "Deux enregistreurs dans le même dossier -> bandeau « mélange » (non bloquant)."
+
+# Le journal ne décrit qu'un seul enregistreur (1925492) : c'est le mélange des noms de WAV, pas le
+# journal, qui déclenche l'avertissement.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Deux séries d'enregistreur, la même nuit : AnalyseMelange voit plusieurs enregistreurs. Les deux
+# séries restent cohérentes avec le journal/relevé (1925492 est bien présente), donc pas d'incohérence.
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_210515"
+      - "20260422_223045"
+  - serie: "1648011"
+    horodatages:
+      - "20260422_204010"
+      - "20260422_211500"
+      - "20260422_224500"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: true
+  incoherent: false
+  nuits: 1
