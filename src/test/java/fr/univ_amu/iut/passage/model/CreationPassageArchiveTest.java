@@ -9,14 +9,14 @@ import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
-import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
@@ -71,7 +71,8 @@ class CreationPassageArchiveTest {
     }
 
     @Test
-    @DisplayName("creer : passage déposé + session archivée + séquences + enregistreur/météo/micro, progression émise")
+    @DisplayName(
+            "creer : session archivée + une séquence par fichier + enregistreur/micro rapatriés, progression émise")
     void creer_squelette_complet() {
         LocalDateTime debut = LocalDateTime.of(2026, 7, 3, 21, 0);
         LocalDateTime fin = LocalDateTime.of(2026, 7, 4, 5, 0);
@@ -81,19 +82,20 @@ class CreationPassageArchiveTest {
         CreationPassageArchive.PassageArchive r = creation.creer(
                 idPoint, 1, debut, fin, prefixe, detailComplet(), List.of("seqA_000", "seqB_000"), points::add);
 
+        // Le statut (déposé) et la météo du passage lui-même sont vérifiés de bout en bout par
+        // ServiceReconstructionPassagesTest (qui délègue à ce noyau) ; ici on cible les pièces de structure.
         assertThat(r.nbSequences()).isEqualTo(2);
-        Passage passage = new PassageDao(source).findById(r.idPassage()).orElseThrow();
-        assertThat(passage.statutWorkflow()).isEqualTo(StatutWorkflow.DEPOSE);
-        assertThat(passage.idEnregistreur())
-                .as("n° de série rapatrié (clé canonique), pas « INCONNU »")
-                .isEqualTo("1997632");
-        assertThat(passage.donneesMeteo()).as("météo rapatriée").isNotNull();
-        assertThat(new SessionDao(source)
-                        .trouverParPassage(r.idPassage())
-                        .orElseThrow()
-                        .archivee())
+        assertThat(new EnregistreurDao(source).findById("1997632"))
+                .as("enregistreur créé depuis le n° de série rapatrié (clé canonique), pas « INCONNU »")
+                .isPresent();
+        SessionDEnregistrement session =
+                new SessionDao(source).trouverParPassage(r.idPassage()).orElseThrow();
+        assertThat(session.archivee())
                 .as("le passage naît archivé (aucun audio)")
                 .isTrue();
+        assertThat(new SequenceDao(source).findBySession(session.id()))
+                .as("une ligne de séquence par fichier distant, sans fichier sur disque")
+                .hasSize(2);
         assertThat(new MaterielMicroDao(source).pour(r.idPassage()).typeMicro()).isEqualTo("ICS");
         assertThat(points)
                 .extracting(Progression::libelle)
