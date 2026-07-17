@@ -84,6 +84,11 @@ cd vigiechiro-pr-companion
 
     La seconde façade *headless* sur le métier : sous-commandes, injecteur enfant, scriptabilité.
 
+-   :material-scale-balance: **[Décisions (ADR)](decisions/index.md)**
+
+    Le journal des choix d'architecture : le *pourquoi* des décisions structurantes, une par page.
+    Alimenté à la **passe 3** de chaque [clôture de chantier](cycle-de-chantier.md).
+
 -   :material-source-pull: **Contribuer**
 
     Le flux fork → branche → PR et les conventions de commit :

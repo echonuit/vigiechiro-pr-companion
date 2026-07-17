@@ -133,7 +133,7 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
 2. **Cohérence CLI ↔ UI** : quand le chantier ajoute/change une **capacité métier**, la **CLI**
    (`fr.univ_amu.iut.cli`) doit exposer l'équivalent (même comportement) ; aligner si petit, sinon
    ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
-3. **Doc développeur** (site `dev-docs/`) à jour.
+3. **Doc développeur** (site `dev-docs/`) à jour **+ une ADR** (`dev-docs/decisions/`) pour toute **décision structurante** prise pendant le chantier.
 4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
 5. **Brief SAÉ** : répercuter dans le brief de la SAÉ 2.01 (dépôt `IUTInfoAix-S201/brief`) les
    évolutions qui changent ce qui est **attendu** ou **fourni** aux étudiants.
@@ -145,7 +145,7 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
    rougir aucun test. C'est la passe précédente (CSS, socle) qui est la plus à même de casser un écran
    sans casser un test, d'où cette relecture **juste après** elle.
 9. **Nouveaux chantiers** identifiés + **issues** créées.
-10. **Bilan** : ce qui a été livré, dette restante, décisions.
+10. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 3).
 
 > 📖 Raison d'être et mode opératoire de chaque passe, avec le **modèle de clôture** à coller dans
 > l'EPIC : [doc dev · Cycle de vie d'un chantier](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/cycle-de-chantier/).

@@ -178,7 +178,7 @@ règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan 
 ## Clôture de chantier
 - [ ] 1. Audit d'intégration (rebase sur `main`, points d'accroche, régressions)
 - [ ] 2. Cohérence CLI ↔ UI (capacités métier exposées des deux côtés, ou « sans objet »)
-- [ ] 3. Doc développeur (dev-docs) à jour
+- [ ] 3. Doc développeur (dev-docs) à jour + ADR pour toute décision structurante (dev-docs/decisions/)
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief SAÉ (IUTInfoAix-S201/brief) répercuté si attendus/fournis changent
 - [ ] 6. Tests d'intégration + E2E couvrant chaque usage
