@@ -148,6 +148,22 @@ preuve, pas un prérequis** - on ne se dispense jamais de vérifier au motif qu'
 soi-même. Et un **brut refusé ne régénère rien** : recalculer à partir d'un fichier dont l'identité n'est
 pas établie, c'est fabriquer du faux.
 
+**Cas limite : le passage *reconstruit* (EPIC #1653).** Un passage reconstruit depuis la plateforme
+(#1305) n'a **jamais eu** d'empreinte : ni sur ses originaux (un placeholder `…-reconstruit.wav` tient
+lieu d'inventaire, sans fréquence d'acquisition), ni sur ses séquences. La cascade y tomberait donc
+directement sur l'acoustique - qui produit des **faux négatifs** sur des cris réels faibles. Mais l'audio
+régénéré est, par construction, un **extrait verbatim** du brut **désigné par l'utilisateur** (la
+transformation copie le PCM sans rééchantillonnage, prouvé octet à octet) : son identité tient à la
+**régénération elle-même**, pas à une empreinte qu'on n'a pas. L'**hydratation** (`HydratationDepuisBruts`,
+#1650/#1682) l'accepte donc sur preuve **structurelle** (nom + durée, `FORTE`), et la concordance
+acoustique y devient un **indice non bloquant** (`IndiceAcoustique`), jamais un veto. La chaîne :
+`InventaireBrutsSource` (#1649, lit la Fe du **log** et énumère les bruts) → régénération → rebranchement
+structurel → `AdoptionOriginauxReconstruits` (#1651, remplace le placeholder par les vrais originaux,
+déclarés « purgés » puisque connus mais non stockés localement). Détail : `AnalyseAcoustique` mesure
+désormais l'énergie **de pointe** sur une courte fenêtre glissée dans celle de l'observation (#1687) - la
+moyenne sur **toute** la fenêtre diluait un cri de quelques ms noyé dans plusieurs secondes, d'où des faux
+négatifs qui rendaient l'hydratation d'un vrai passage inopérante avant correction.
+
 **Principes.** Fail-safe (ne pas pouvoir prouver = ne pas faire), **honnêteté** (dire *avec quelle
 force* on a conclu), et refus de la fausse alternative « preuve parfaite ou rien ».
 
