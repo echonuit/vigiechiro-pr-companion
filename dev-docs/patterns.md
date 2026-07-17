@@ -162,7 +162,9 @@ structurel → `AdoptionOriginauxReconstruits` (#1651, remplace le placeholder p
 déclarés « purgés » puisque connus mais non stockés localement). Détail : `AnalyseAcoustique` mesure
 désormais l'énergie **de pointe** sur une courte fenêtre glissée dans celle de l'observation (#1687) - la
 moyenne sur **toute** la fenêtre diluait un cri de quelques ms noyé dans plusieurs secondes, d'où des faux
-négatifs qui rendaient l'hydratation d'un vrai passage inopérante avant correction.
+négatifs qui rendaient l'hydratation d'un vrai passage inopérante avant correction. Le *pourquoi* de ces
+deux choix est consigné en [ADR 0001](decisions/0001-reactivation-passage-reconstruit-identite-structurelle.md)
+(identité structurelle) et [ADR 0002](decisions/0002-detection-acoustique-energie-de-pointe.md) (énergie de pointe).
 
 **Principes.** Fail-safe (ne pas pouvoir prouver = ne pas faire), **honnêteté** (dire *avec quelle
 force* on a conclu), et refus de la fausse alternative « preuve parfaite ou rien ».

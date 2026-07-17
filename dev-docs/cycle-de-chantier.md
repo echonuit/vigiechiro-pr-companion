@@ -84,6 +84,10 @@ colle au code livré : [Architecture](architecture.md), [Patterns et principes](
 [Injection (Guice)](injection.md), [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md) si le
 chantier a introduit un **nouveau pattern d'extension** que les futures features devront suivre.
 
+Toute **décision structurante** prise pendant le chantier - un choix d'architecture ou de domaine qu'un
+développeur futur pourrait raisonnablement remettre en cause faute d'en connaître les raisons - donne une
+**[ADR](decisions/index.md)** : une par décision, immuable, expliquant le pourquoi.
+
 ### 4. Passe de doc utilisateur
 
 Documenter le chantier pour les **utilisateurs** dans le site produit (`docs/`), avec **autant de
@@ -165,7 +169,8 @@ pas perdre le contexte encore frais.
 
 Une **synthèse** courte : ce qui a été livré, la **dette restante**, les **décisions** prises et leur
 pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si elle change une
-règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`.
+règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan **renvoie** aux
+[ADR](decisions/index.md) écrites en passe 3 plutôt que de redérouler le raisonnement des décisions.
 
 ## Modèle de clôture (à coller dans l'EPIC)
 

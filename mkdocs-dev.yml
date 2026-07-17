@@ -62,6 +62,10 @@ nav:
   - Injection (Guice): injection.md
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
   - Cycle de vie d'un chantier: cycle-de-chantier.md
+  - Décisions (ADR):
+    - Journal: decisions/index.md
+    - 0001 · Réactivation d'un passage reconstruit: decisions/0001-reactivation-passage-reconstruit-identite-structurelle.md
+    - 0002 · Détection acoustique de pointe: decisions/0002-detection-acoustique-energie-de-pointe.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - S1 · Premier contact: recette/sessions/s1-premier-contact.md
