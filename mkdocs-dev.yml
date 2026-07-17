@@ -66,6 +66,18 @@ nav:
     - Journal: decisions/index.md
     - 0001 · Réactivation d'un passage reconstruit: decisions/0001-reactivation-passage-reconstruit-identite-structurelle.md
     - 0002 · Détection acoustique de pointe: decisions/0002-detection-acoustique-energie-de-pointe.md
+    - 0003 · Feature = plugin désactivable: decisions/0003-feature-plugin-desactivable-ports-optionnels.md
+    - 0004 · Cross-feature sans cycle: decisions/0004-cross-feature-sans-cycle-ports-commun.md
+    - 0005 · Cascade de preuves, archivé = état observé: decisions/0005-reactivation-cascade-de-preuves-archive-etat-observe.md
+    - 0006 · Dépôt par ZIP par défaut: decisions/0006-depot-zip-par-defaut-perte-audio-serveur-assumee.md
+    - 0007 · Retours HTTP scellés (ReponseApi): decisions/0007-retours-http-type-scelle-reponse-api.md
+    - 0008 · Aucun échec silencieux: decisions/0008-aucun-echec-silencieux-severite-a-l-emission.md
+    - 0009 · La nuit comme unité: decisions/0009-la-nuit-est-l-unite-bornee-a-midi.md
+    - 0010 · Dialogues bloquants = ports: decisions/0010-dialogues-bloquants-sont-des-ports.md
+    - 0011 · Transformation pilotée par le log: decisions/0011-transformation-audio-pilotee-par-le-log.md
+    - "0012 · Audit : tout écart visible, un état normal silencieux": decisions/0012-audit-coherence-tout-ecart-visible-etat-normal-silencieux.md
+    - 0013 · Ancrage passage ↔ participation: decisions/0013-ancrage-passage-relie-a-sa-participation.md
+    - 0014 · Parité CLI ↔ IHM: decisions/0014-parite-cli-ihm.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - S1 · Premier contact: recette/sessions/s1-premier-contact.md
