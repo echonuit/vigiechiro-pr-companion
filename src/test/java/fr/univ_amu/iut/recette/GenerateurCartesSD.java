@@ -100,12 +100,13 @@ public final class GenerateurCartesSD {
     }
 
     private static void ecrireBruts(SpecCarteSd spec, Path bruts) throws IOException {
-        int trames = FabriqueWav.tramesPour(spec.wav().frequenceHz(), spec.wav().dureeSecondes());
-        byte[] octets = FabriqueWav.octetsWav(spec.wav().frequenceHz(), trames);
+        int frequenceHz = spec.wav().frequenceHz();
+        int trames = FabriqueWav.tramesPour(frequenceHz, spec.wav().dureeSecondes());
         String prefixe = prefixeFichier(spec.prefixe());
         for (Enregistreur enregistreur : spec.enregistreurs()) {
             for (String horodatage : enregistreur.horodatages()) {
-                Files.write(cheminBrut(bruts, prefixe, enregistreur.serie(), horodatage), octets);
+                FabriqueWav.ecrireWav(
+                        cheminBrut(bruts, prefixe, enregistreur.serie(), horodatage), frequenceHz, trames);
             }
             for (String horodatage : enregistreur.fauxWav()) {
                 Files.write(cheminBrut(bruts, prefixe, enregistreur.serie(), horodatage), OCTETS_FAUX_WAV);
