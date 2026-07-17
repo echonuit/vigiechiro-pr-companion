@@ -166,8 +166,10 @@ final class MoteurImport {
             cheminJournalCopie = ctx.sansJournal()
                     ? JournalDeRepli.ecrireTraceSynthetique(dossierSession)
                     : copie.copierVers(rapport.cheminJournal(), dossierSession);
+            // Relevé climatique restreint à CETTE nuit (#1696) : sur une carte multi-nuits à log unique,
+            // le THLog couvre tout le déploiement ; on n'en garde que les mesures de la nuit du passage.
             cheminReleveCopie = rapport.aUnReleveClimatique()
-                    ? copie.copierVers(rapport.cheminReleveClimatique(), dossierSession)
+                    ? copierReleveDeNuit(rapport.cheminReleveClimatique(), dossierSession, dateNuit)
                     : null;
 
             // 3) Transformation R10/R11 (découpée en parallèle, #12, résiliente #155 : un original invalide
@@ -363,5 +365,21 @@ final class MoteurImport {
             throw new UncheckedIOException("Calcul du volume des originaux impossible", e);
         }
         return total;
+    }
+
+    /// Écrit dans la session un relevé climatique THLog **restreint à la nuit** `dateNuit` (#1696). La
+    /// source (carte SD) est lue seule (R9) ; ce n'est volontairement pas une copie fidèle (empreinte
+    /// différente), donc on n'emprunte pas [CopieProtegee]. En mono-nuit, toutes les lignes sont
+    /// conservées : comportement inchangé.
+    private static Path copierReleveDeNuit(Path source, Path dossierSession, LocalDate dateNuit) {
+        try {
+            List<String> filtrees = FiltreThLogNuit.filtrer(Files.readAllLines(source), dateNuit);
+            Files.createDirectories(dossierSession);
+            Path cible = dossierSession.resolve(source.getFileName());
+            Files.write(cible, filtrees);
+            return cible;
+        } catch (IOException echec) {
+            throw new UncheckedIOException("Écriture du relevé climatique de la nuit impossible : " + source, echec);
+        }
     }
 }

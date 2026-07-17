@@ -971,6 +971,47 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName(
+            "#1696 : import multi-nuits à log unique → le relevé climatique de chaque session est restreint à sa nuit")
+    void import_multi_nuits_releve_climatique_par_nuit() throws IOException {
+        Path carte = preparerCarteMultiNuits(racine.resolve("sd-multi-thlog"));
+        // Un THLog UNIQUE couvrant les trois nuits (bascule midi : un relevé d'avant midi = nuit de la veille).
+        String thlog = "Date\tHour\tTemperature\tHumidity\n"
+                + "22/04/2026\t22:30:00\t+16.1\t70\n"
+                + "23/04/2026\t05:30:00\t+11.9\t84\n"
+                + "23/04/2026\t22:30:00\t+15.0\t72\n"
+                + "24/04/2026\t05:30:00\t+10.0\t88\n"
+                + "24/04/2026\t22:30:00\t+14.0\t75\n";
+        Files.writeString(carte.resolve("PaRecPR1925492_THLog.csv"), thlog, StandardCharsets.UTF_8);
+        List<NuitDetectee> nuits =
+                new InspecteurDossier(new AnalyseurLogPR()).inspecter(carte).partitionNuits();
+        List<NuitAImporter> aImporter = List.of(new NuitAImporter(1, nuits.get(0)), new NuitAImporter(2, nuits.get(1)));
+
+        ResultatImportMultiNuits resultat = service.importerNuits(
+                carte, idPoint, prefixe, aImporter, true, progression -> {}, JetonAnnulation.neutre());
+
+        // Nuit du 22/04 : uniquement ses mesures (soir + petit matin), pas celles des autres nuits.
+        assertThat(lignesReleve(resultat.parNuit().get(0).passage().id()))
+                .containsExactly(
+                        "Date\tHour\tTemperature\tHumidity",
+                        "22/04/2026\t22:30:00\t+16.1\t70",
+                        "23/04/2026\t05:30:00\t+11.9\t84");
+        // Nuit du 23/04 : ses mesures à elle, disjointes de la nuit précédente.
+        assertThat(lignesReleve(resultat.parNuit().get(1).passage().id()))
+                .containsExactly(
+                        "Date\tHour\tTemperature\tHumidity",
+                        "23/04/2026\t22:30:00\t+15.0\t72",
+                        "24/04/2026\t05:30:00\t+10.0\t88");
+    }
+
+    /// Lignes du relevé climatique THLog persisté pour le passage `idPassage` (fichier de sa session).
+    private List<String> lignesReleve(Long idPassage) throws IOException {
+        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
+        String chemin = releveDao.trouverParSession(idSession).orElseThrow().cheminFichier();
+        return Files.readAllLines(Path.of(chemin));
+    }
+
+    @Test
     @DisplayName("Import multi-nuits : un n° déjà pris est refusé AVANT tout import (échec rapide, pas de demi-groupe)")
     void import_multi_nuits_precontrole_numero_pris() throws IOException {
         Path carte = preparerCarteMultiNuits(racine.resolve("sd-conflit"));

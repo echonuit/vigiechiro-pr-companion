@@ -62,8 +62,9 @@ public final class PartitionNuits {
     }
 
     /// La nuit d'un horodatage : sa **date du soir** (un enregistrement d'avant midi appartient à la nuit
-    /// de la veille).
-    private static LocalDate nuitDe(LocalDateTime ts) {
+    /// de la veille). Réutilisé par [FiltreThLogNuit] pour ranger une mesure climatique dans sa nuit
+    /// (#1696), avec la même bascule que les WAV.
+    static LocalDate nuitDe(LocalDateTime ts) {
         return ts.toLocalTime().isBefore(BASCULE) ? ts.toLocalDate().minusDays(1) : ts.toLocalDate();
     }
 
