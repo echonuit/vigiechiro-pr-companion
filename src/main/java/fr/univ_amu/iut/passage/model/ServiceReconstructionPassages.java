@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -153,9 +154,10 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// légitime (le rapprocheur des sites porte déjà le souci dans le même geste). Renvoie un rapport
     /// seulement s'il y a du neuf à annoncer.
     ///
-    /// **Ordre.** Ne crée un squelette que pour les points **déjà** locaux : un site tout juste synchronisé
-    /// dans le même geste voit ses passages à la synchro suivante (les rapprocheurs ne sont pas ordonnés).
-    /// La synchro est idempotente : relancée, elle ne recrée pas ce qui est déjà rattaché.
+    /// **Ordre.** Ne crée un squelette que pour les points **déjà** locaux. Ce rapprocheur est donc en
+    /// [Phase#DEPENDANTE] : la synchro le rejoue **après** le rapprocheur des sites (#1776), si bien qu'un
+    /// site tout juste synchronisé voit ses passages **dès ce tour**. La synchro reste idempotente :
+    /// relancée, elle ne recrée pas ce qui est déjà rattaché.
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
@@ -164,6 +166,13 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         } catch (RuntimeException echecBestEffort) {
             return Optional.empty();
         }
+    }
+
+    /// [Phase#DEPENDANTE] : les passages se rapatrient sur des points d'écoute **déjà locaux**, créés par le
+    /// rapprocheur des sites ([Phase#STRUCTURE]) - la synchro rejoue donc ce rapprocheur après lui (#1776).
+    @Override
+    public Phase phase() {
+        return Phase.DEPENDANTE;
     }
 
     /// Crée un **squelette** de passage pour chaque participation **sans passage local**, dont le point est

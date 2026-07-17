@@ -1,5 +1,8 @@
 package fr.univ_amu.iut.commun.api;
 
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 /// Point d'extension de **rapprochement** d'un référentiel local avec VigieChiro (#728, axe 1).
@@ -18,6 +21,14 @@ import java.util.Optional;
 /// client ([ClientVigieChiro]) dégrade déjà proprement (réseau/token indisponible → listes vides), et
 /// l'implémentation avale ses propres erreurs de rapprochement : un échec ne compromet ni la connexion
 /// ni les autres rapprocheurs.
+///
+/// **Ordre des rapprocheurs** (#1776) : le `Multibinder` est un ensemble **non ordonné**, or certains
+/// rapprocheurs **dépendent** du résultat d'un autre. Les passages, par exemple, ne se rapatrient que sur
+/// des **points d'écoute déjà locaux** ([Phase#DEPENDANTE]) - points que le rapprocheur des sites vient
+/// justement de créer ([Phase#STRUCTURE]). Sans ordre, un site tout juste créé ne verrait ses passages
+/// qu'à la synchro **suivante**. Les appelants (connexion, CLI) rejouent donc les rapprocheurs via
+/// [#ordonnes(Collection)], qui place la structure avant ce qui en dépend. Un rapprocheur qui ne dépend de
+/// rien n'a rien à déclarer : la phase par défaut est [Phase#STRUCTURE].
 @FunctionalInterface
 public interface RapprochementVigieChiro {
 
@@ -29,4 +40,31 @@ public interface RapprochementVigieChiro {
     ///     [Optional#empty()] s'il n'y a rien à dire (non connecté : silence légitime ; échec interne
     ///     best-effort). L'appelant affiche [RapportSynchro#enClair()] sans deviner.
     Optional<RapportSynchro> synchroniser(ClientVigieChiro client);
+
+    /// Phase d'exécution de ce rapprocheur (#1776). Par défaut [Phase#STRUCTURE] : un rapprocheur qui
+    /// n'attend rien d'un autre n'a rien à surcharger. Ceux qui dépendent d'un référentiel déjà rapproché
+    /// (les passages, sur les points locaux) renvoient [Phase#DEPENDANTE].
+    default Phase phase() {
+        return Phase.STRUCTURE;
+    }
+
+    /// Ordonne des rapprocheurs par phase (structure d'abord, dépendants ensuite), en **préservant l'ordre
+    /// d'origine à l'intérieur d'une même phase** (tri stable). À utiliser partout où l'on rejoue le
+    /// `Multibinder` (connexion, CLI), pour qu'un site tout juste rapproché voie ses passages dès ce tour.
+    static List<RapprochementVigieChiro> ordonnes(Collection<RapprochementVigieChiro> rapprocheurs) {
+        return rapprocheurs.stream()
+                .sorted(Comparator.comparingInt(
+                        rapprocheur -> rapprocheur.phase().ordinal()))
+                .toList();
+    }
+
+    /// Les phases de synchro, dans leur ordre d'exécution.
+    enum Phase {
+        /// Établit le référentiel local (les sites et leurs points, les taxons) : rien ne le précède.
+        STRUCTURE,
+
+        /// Dépend d'un référentiel déjà rapproché à ce tour - les passages, rapatriés uniquement sur des
+        /// points d'écoute **déjà locaux** (#1776).
+        DEPENDANTE
+    }
 }

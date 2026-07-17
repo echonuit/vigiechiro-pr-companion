@@ -87,7 +87,8 @@ public final class SynchroniserVigieChiro implements Callable<Integer> {
         sortie.println("Connecté : " + profil.pseudo() + ".");
 
         List<String> parties = new ArrayList<>();
-        for (RapprochementVigieChiro rapprocheur : rapprocheurs.get()) {
+        // Ordre (#1776) : structure d'abord (sites, taxons), puis ce qui en dépend (passages sur points locaux).
+        for (RapprochementVigieChiro rapprocheur : RapprochementVigieChiro.ordonnes(rapprocheurs.get())) {
             rapprocheur.synchroniser(client).ifPresent(rapport -> parties.add(rapport.enClair()));
         }
         sortie.println(rendreResume(parties));

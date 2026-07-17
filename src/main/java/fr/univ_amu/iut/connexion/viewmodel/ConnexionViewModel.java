@@ -97,7 +97,8 @@ public class ConnexionViewModel {
     /// du fil JavaFX (appelé depuis [#connecter]).
     private void amorcerRapprochements() {
         List<String> parties = new ArrayList<>();
-        for (RapprochementVigieChiro rapprocheur : rapprocheurs) {
+        // Ordre (#1776) : structure d'abord (sites, taxons), puis ce qui en dépend (passages sur points locaux).
+        for (RapprochementVigieChiro rapprocheur : RapprochementVigieChiro.ordonnes(rapprocheurs)) {
             rapprocheur.synchroniser(client).ifPresent(rapport -> parties.add(rapport.enClair()));
         }
         resumeSynchro = String.join(", ", parties);

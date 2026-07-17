@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.connexion.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -9,6 +11,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
+import fr.univ_amu.iut.commun.api.RapprochementVigieChiro.Phase;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -64,6 +68,27 @@ class ConnexionViewModelTest {
         viewModel.rafraichir();
         assertThat(viewModel.connecteProperty().get()).isTrue();
         assertThat(viewModel.identiteProperty().get()).contains("Sébastien").contains("Observateur");
+    }
+
+    @Test
+    @DisplayName("#1776 : la structure (sites) est rapprochée AVANT les dépendants (passages), pas l'ordre du Set")
+    void connecter_amorce_la_structure_avant_les_dependants() {
+        RapprochementVigieChiro sites = mock(RapprochementVigieChiro.class);
+        RapprochementVigieChiro passages = mock(RapprochementVigieChiro.class);
+        when(sites.phase()).thenReturn(Phase.STRUCTURE);
+        when(passages.phase()).thenReturn(Phase.DEPENDANTE);
+        when(client.moi()).thenReturn(ReponseApi.succes(PROFIL));
+        when(sites.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("site(s)", 3)));
+        when(passages.synchroniser(client)).thenReturn(Optional.of(new RapportSynchro("passage(s) rapatrié(s)", 2)));
+        // Le passage est donné AVANT le site dans le Set : l'ordre ne doit venir que des phases, pas de l'entrée.
+        ConnexionViewModel avecDeux = new ConnexionViewModel(stockage, client, Set.of(passages, sites));
+
+        avecDeux.connecter("TOK123");
+
+        InOrder ordre = inOrder(sites, passages);
+        ordre.verify(sites).synchroniser(client);
+        ordre.verify(passages)
+                .synchroniser(client); // les passages, dépendant des points locaux, passent après les sites
     }
 
     @Test
