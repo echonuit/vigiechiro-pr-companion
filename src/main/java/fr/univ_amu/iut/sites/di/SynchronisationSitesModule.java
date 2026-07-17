@@ -7,11 +7,14 @@ import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
+import java.util.List;
+import java.util.Set;
 
 /// Liaison **réelle** de la passerelle [SynchronisationSites] (#1045), patron de
 /// `SynchronisationParticipationModule` : chargée seulement dans `RacineInjecteur` (app complète,
@@ -39,7 +42,13 @@ public class SynchronisationSitesModule extends ModuleDeFeature {
     @Provides
     @Singleton
     @Named(QUALIFIANT)
-    SynchronisationSites fournirSynchronisationSites(RapprochementSites rapprochement, ClientVigieChiro client) {
-        return new SynchronisationSites(rapprochement, client);
+    SynchronisationSites fournirSynchronisationSites(
+            RapprochementSites sites, Set<RapprochementVigieChiro> rapprocheurs, ClientVigieChiro client) {
+        // Le bouton « Mes sites » rejoue la structure des sites puis ce qui en dépend (squelettes de nuits,
+        // #1662), sans re-tirer le référentiel taxons (STRUCTURE global, hors sujet ici).
+        List<RapprochementVigieChiro> dependants = rapprocheurs.stream()
+                .filter(rapprocheur -> rapprocheur.phase() == RapprochementVigieChiro.Phase.DEPENDANTE)
+                .toList();
+        return new SynchronisationSites(sites, dependants, client);
     }
 }

@@ -41,6 +41,10 @@ import javafx.collections.ObservableList;
 /// `javafx.beans`/`javafx.collections` est importé ici (jamais `javafx.scene`).
 public class SitesViewModel {
 
+    /// Libellé du compte-rendu des sites, aligné sur `RapprochementSites` : pilote la forme
+    /// singulier/pluriel du message de synchro (les autres rapprocheurs se disent via `enClair`).
+    private static final String LIBELLE_SITES = "sites";
+
     private final ServiceSites service;
     private final PassageDao passageDao;
     private final Horloge horloge;
@@ -75,11 +79,12 @@ public class SitesViewModel {
         return synchronisation.isPresent();
     }
 
-    /// Rejoue le pull des sites depuis VigieChiro (#1045). À appeler **hors du fil JavaFX** (réseau +
-    /// écritures base) ; best-effort, sémantique conservatrice de [SynchronisationSites] (jamais
-    /// d’écrasement local). Vide si la passerelle est absente ou n’a rien récupéré.
-    public Optional<RapportSynchro> synchroniserDepuisVigieChiro() {
-        return synchronisation.flatMap(SynchronisationSites::synchroniser);
+    /// Rejoue le pull depuis VigieChiro (#1045) : sites **puis** ce qui en dépend, dont les squelettes de
+    /// nuits (#1662). À appeler **hors du fil JavaFX** (réseau + écritures base) ; best-effort, sémantique
+    /// conservatrice de [SynchronisationSites] (jamais d’écrasement local). Un compte-rendu par rapprocheur
+    /// ayant du neuf à annoncer ; liste vide si la passerelle est absente ou n’a rien récupéré.
+    public List<RapportSynchro> synchroniserDepuisVigieChiro() {
+        return synchronisation.map(SynchronisationSites::synchroniser).orElseGet(List::of);
     }
 
     /// Parcours complet de la synchronisation à la demande (#1045, déporté #1212), à appeler **hors du
@@ -93,9 +98,7 @@ public class SitesViewModel {
     /// rechargées puis pose le message de résultat, jamais un silence (#937).
     public void appliquerSynchro(SynchroEtChargement resultat) {
         appliquer(resultat.chargement());
-        messageSynchro.set(resultat.rapport()
-                .map(SitesViewModel::messageDe)
-                .orElse("Aucun site distant récupéré (non connecté, ou aucun site sur VigieChiro)."));
+        messageSynchro.set(messageDe(resultat.rapports()));
     }
 
     /// Route l'échec de la synchronisation vers son message de restitution (fil JavaFX) : jamais un
@@ -109,14 +112,29 @@ public class SitesViewModel {
         return messageSynchro.getReadOnlyProperty();
     }
 
-    private static String messageDe(RapportSynchro rapport) {
-        // #1284 : une synchronisation EMPECHEE (injoignable, refus) se dit desormais telle quelle,
-        // au lieu de se confondre avec « aucun site distant ».
-        if (rapport.souci() != null) {
-            return "Sites non synchronisés : " + rapport.souci() + ".";
+    private static String messageDe(List<RapportSynchro> rapports) {
+        if (rapports.isEmpty()) {
+            return "Aucun site distant récupéré (non connecté, ou aucun site sur VigieChiro).";
         }
-        String sites = rapport.nombre() > 1 ? " sites synchronisés" : " site synchronisé";
-        return rapport.nombre() + sites + " depuis VigieChiro.";
+        // #1284 : une synchronisation EMPECHEE (injoignable, refus) se dit telle quelle, au lieu de se
+        // confondre avec « aucun site distant ».
+        Optional<RapportSynchro> empeche =
+                rapports.stream().filter(rapport -> rapport.souci() != null).findFirst();
+        if (empeche.isPresent()) {
+            return "Sites non synchronisés : " + empeche.get().souci() + ".";
+        }
+        String corps = rapports.stream().map(SitesViewModel::segmentSynchro).collect(Collectors.joining(", "));
+        return corps + " depuis VigieChiro.";
+    }
+
+    /// Rend un rapport dans le message du bouton. Les sites gardent leur forme verbale singulier/pluriel
+    /// (« 1 site synchronisé ») ; les autres rapprocheurs (passages rapatriés, #1662) se disent via
+    /// [RapportSynchro#enClair] (« 5 passage(s) rapatrié(s) »).
+    private static String segmentSynchro(RapportSynchro rapport) {
+        if (LIBELLE_SITES.equals(rapport.libelle())) {
+            return rapport.nombre() + (rapport.nombre() > 1 ? " sites synchronisés" : " site synchronisé");
+        }
+        return rapport.enClair();
     }
 
     /// Liste observable des cartes de sites, alimentée par [#rafraichir()].
@@ -193,9 +211,10 @@ public class SitesViewModel {
     /// sur le fil JavaFX ([#appliquer]) - le ViewModel reste agnostique de l'IHM (#1212).
     public record ChargementCartes(List<CarteSite> cartes, String sousTitre) {}
 
-    /// Résultat du parcours « synchroniser puis recharger » ([#synchroniserEtRecharger]) : le rapport
-    /// du pull (vide si rien récupéré) et les cartes rechargées à appliquer.
-    public record SynchroEtChargement(Optional<RapportSynchro> rapport, ChargementCartes chargement) {}
+    /// Résultat du parcours « synchroniser puis recharger » ([#synchroniserEtRecharger]) : les rapports
+    /// du pull (un par rapprocheur ayant du neuf ; liste vide si rien récupéré) et les cartes rechargées
+    /// à appliquer.
+    public record SynchroEtChargement(List<RapportSynchro> rapports, ChargementCartes chargement) {}
 
     /// Crée un site pour l'utilisateur courant (bouton « + Nouveau site ») puis rafraîchit la liste.
     ///

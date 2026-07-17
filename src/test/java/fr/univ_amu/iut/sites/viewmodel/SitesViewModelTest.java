@@ -28,6 +28,7 @@ import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -82,7 +83,7 @@ class SitesViewModelTest {
         when(sync.synchroniser()).thenAnswer(invocation -> {
             // Le pull crée un site local (comportement réel de RapprochementSites) : le rechargement doit le voir.
             service.creerSite("640380", "Étang de Berre", Protocole.STANDARD, null, ID_USER);
-            return Optional.of(new RapportSynchro("sites", 3));
+            return List.of(new RapportSynchro("sites", 3));
         });
         SitesViewModel vm =
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
@@ -99,10 +100,27 @@ class SitesViewModelTest {
     }
 
     @Test
+    @DisplayName("#1808 : le pull annonce aussi les passages rapatriés (squelettes de nuits, #1662)")
+    void synchro_rapatrie_sites_et_passages() {
+        SynchronisationSites sync = mock(SynchronisationSites.class);
+        // Le bouton rejoue désormais la structure des sites PUIS ses dépendants : le rapport des passages
+        // (ServiceReconstructionPassages, phase DEPENDANTE) s'ajoute à celui des sites.
+        when(sync.synchroniser())
+                .thenReturn(List.of(new RapportSynchro("sites", 1), new RapportSynchro("passage(s) rapatrié(s)", 5)));
+        SitesViewModel vm =
+                new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
+
+        vm.appliquerSynchro(vm.synchroniserEtRecharger());
+
+        assertThat(vm.messageSynchroProperty().get())
+                .isEqualTo("1 site synchronisé, 5 passage(s) rapatrié(s) depuis VigieChiro.");
+    }
+
+    @Test
     @DisplayName("#1045 : rien récupéré (hors connexion, aucun site distant) → message explicite, pas un silence")
     void synchro_sans_resultat() {
         SynchronisationSites sync = mock(SynchronisationSites.class);
-        when(sync.synchroniser()).thenReturn(Optional.empty());
+        when(sync.synchroniser()).thenReturn(List.of());
         SitesViewModel vm =
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
 

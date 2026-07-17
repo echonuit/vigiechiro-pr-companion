@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.api.ObservationVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
@@ -50,6 +51,7 @@ import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
+import fr.univ_amu.iut.sites.model.SynchronisationSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.io.IOException;
@@ -276,6 +278,33 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .allSatisfy(original ->
                         assertThat(original.frequenceEchantillonnageHz()).isNotNull())
                 .noneMatch(original -> original.nomFichier().endsWith("reconstruit.wav"));
+    }
+
+    @Test
+    @DisplayName("#1808 : le bouton « Mes sites » rapatrie AUSSI les passages, en un seul tour (pas que la connexion)")
+    void bouton_mes_sites_rapatrie_les_passages() throws Exception {
+        ClientVigieChiro client = plateformeBouchonnee();
+        Injector injector = injecteurAvec(client);
+        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
+        new MigrationSchema(source).migrer();
+
+        // Le chemin du BOUTON (SitesViewModel -> SynchronisationSites), distinct de la connexion et de la CLI
+        // qui itèrent le set de rapprocheurs. Le vrai câblage : la structure des sites précède ses dépendants,
+        // si bien qu'UN SEUL appel suffit à rapatrier le squelette de nuit sur le point tout juste créé (#1776).
+        SynchronisationSites synchronisation = injector.getInstance(
+                        Key.get(new TypeLiteral<Optional<SynchronisationSites>>() {}))
+                .orElseThrow();
+
+        List<RapportSynchro> rapports = synchronisation.synchroniser();
+
+        assertThat(rapports)
+                .as("le bouton annonce et les sites et les passages : plus jamais « 41 points, 0 passage »")
+                .extracting(RapportSynchro::libelle)
+                .contains("sites", "passage(s) rapatrié(s)");
+        assertThat(new PassageDao(source).findAll())
+                .as("un squelette de nuit est créé dès ce clic, sur le point tout juste rapatrié")
+                .singleElement()
+                .satisfies(passage -> assertThat(passage.statutWorkflow()).isEqualTo(StatutWorkflow.DEPOSE));
     }
 
     // --- Harnais -----------------------------------------------------------------------------------
