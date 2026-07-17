@@ -1,11 +1,13 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,6 +17,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /// La voie **« bruts »** d'un passage **reconstruit** (#1650, EPIC #1653) : l'hydratation.
@@ -83,7 +86,7 @@ final class HydratationDepuisBruts {
         Set<String> restantes = new HashSet<>(parNom.keySet());
         BilanReactivation bilan = new BilanReactivation();
         List<BrutRebranche> brutsRebranches = new ArrayList<>();
-        List<BrutInventorie> bruts = inventorie.bruts();
+        List<BrutInventorie> bruts = nuit(sequences, inventorie.bruts());
         int traites = 0;
         for (BrutInventorie brut : bruts) {
             traites++;
@@ -131,6 +134,32 @@ final class HydratationDepuisBruts {
             parNom.putIfAbsent(sequence.nomFichier(), sequence);
         }
         return parNom;
+    }
+
+    /// Ne garde que les bruts de **la ou les nuits du passage** (#1724). Sur une carte SD **multi-nuits**,
+    /// régénérer les bruts des nuits voisines est du travail pur perdu : leurs tranches ne se
+    /// rebrancheraient sur aucune séquence (autres horodatages). On les écarte donc **avant** la
+    /// transformation, qui est la partie coûteuse - le résultat était déjà correct, seul le temps change.
+    ///
+    /// Prudence : on n'écarte un brut que si l'on est **sûr** qu'il est d'une autre nuit. S'il ne porte pas
+    /// d'horodatage exploitable, ou si le passage n'a aucune nuit déductible (fixtures aux noms non
+    /// standard), on le **garde** - le nommage des tranches fera de toute façon foi (#1650), on ne troque
+    /// jamais l'efficience contre une régression.
+    private static List<BrutInventorie> nuit(List<SequenceDEcoute> sequences, List<BrutInventorie> bruts) {
+        Set<LocalDate> nuitsPassage = sequences.stream()
+                .map(sequence -> Prefixe.horodatageDe(sequence.nomFichier()))
+                .flatMap(Optional::stream)
+                .map(Nuit::de)
+                .collect(Collectors.toSet());
+        if (nuitsPassage.isEmpty()) {
+            return bruts;
+        }
+        return bruts.stream()
+                .filter(brut -> Prefixe.horodatageDe(brut.nomOriginal())
+                        .map(Nuit::de)
+                        .map(nuitsPassage::contains)
+                        .orElse(true))
+                .toList();
     }
 
     private static int absentesDuDisque(Set<String> restantes, Map<String, SequenceDEcoute> parNom) {

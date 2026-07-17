@@ -537,6 +537,30 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
+    @DisplayName("#1724 : passage reconstruit sur carte SD multi-nuits : seule la nuit du passage est régénérée")
+    void hydratation_multi_nuits_ne_regenere_que_la_nuit_du_passage() throws IOException {
+        List<String> noms = reconstruireAvecBrutEtLog();
+        // La sauvegarde porte aussi un brut d'une AUTRE nuit (même enregistreur, autre horodatage). Le
+        // transformer serait du travail perdu : ses tranches ne se rebrancheraient sur aucune séquence.
+        ecrireBrut(sauvegarde.resolve("PaRec_20260618_220000.wav"), 7);
+
+        List<String> regenerations = new ArrayList<>();
+        RapportReactivation rapport = service.reactiver(idPassage, sauvegarde, progres -> {
+            if (progres.libelle().startsWith("Régénération")) {
+                regenerations.add(progres.libelle());
+            }
+        });
+
+        assertThat(rapport.reactivees())
+                .as("la nuit du passage reste intégralement régénérée")
+                .isEqualTo(noms.size());
+        assertThat(rapport.complete()).isTrue();
+        assertThat(regenerations)
+                .as("le brut de l'autre nuit est écarté AVANT la transformation : une seule régénération, pas deux")
+                .hasSize(1);
+    }
+
+    @Test
     @DisplayName("#1406 : une carte SD contenant PLUSIEURS nuits ne réactive que celle du passage")
     void carte_sd_multi_nuits() throws IOException {
         List<String> noms = archiverAvecBrutSauvegarde(NOM_SD_BRUT, true);
