@@ -67,9 +67,20 @@ public final class ActionFicheEspece {
         }
         item.setText(libelle(espece));
         item.setDisable(false);
-        String url = lien.get();
-        // Au clic : résolution éventuelle (GBIF recherche → fiche) hors du fil JavaFX, puis ouverture.
-        item.setOnAction(evenement -> executeur.resoudrePuisOuvrir(() -> resolveur.resoudre(url), ouvreur::ouvrir));
+        // Au clic : délègue au point d'entrée impératif [#ouvrir] (résolution éventuelle hors fil JavaFX).
+        item.setOnAction(evenement -> ouvrir(espece));
+    }
+
+    /// Ouvre la fiche de `espece` dans le navigateur système **si** une fiche est constructible : une
+    /// éventuelle résolution (GBIF recherche → fiche, #922) tourne hors du fil JavaFX, puis l'ouverture est
+    /// reprise sur ce fil ([ExecuteurFiche]). Quand aucune fiche n'est disponible (pseudo-taxons
+    /// `noise`/`piaf`, couple sans binôme), l'appel est **inerte**. Point d'entrée **impératif** partagé
+    /// entre le menu contextuel ([#configurer]) et les autres gestes des vues espèces (double-clic, #1792) :
+    /// une même logique d'ouverture, un seul endroit.
+    public void ouvrir(EspeceIdentifiee espece) {
+        constructeur
+                .lienFiche(espece)
+                .ifPresent(url -> executeur.resoudrePuisOuvrir(() -> resolveur.resoudre(url), ouvreur::ouvrir));
     }
 
     private static String libelle(EspeceIdentifiee espece) {

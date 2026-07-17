@@ -86,4 +86,22 @@ class ActionFicheEspeceTest {
                 .containsExactly(
                         "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
     }
+
+    @Test
+    @DisplayName("ouvrir : point d'entrée impératif, ouvre la fiche d'un taxon avec lien")
+    void ouvrir_ouvre_la_fiche_directement() {
+        action.ouvrir(new EspeceIdentifiee("Pippip", "Pipistrellus pipistrellus", "Pipistrelle commune"));
+
+        assertThat(urlsOuvertes)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
+    }
+
+    @Test
+    @DisplayName("ouvrir : sans fiche constructible (pseudo-taxon), l'appel est inerte")
+    void ouvrir_sans_fiche_est_inerte() {
+        action.ouvrir(new EspeceIdentifiee("noise", null, null));
+
+        assertThat(urlsOuvertes).isEmpty();
+    }
 }
