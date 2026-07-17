@@ -137,3 +137,6 @@ d'import change de comportement (`AnalyseMelange`, `AnalyseCoherence`, `Partitio
   `LecteurSpec`, `SpecCarteSd`) et les deux garde-fous.
 - Le rejeu déterministe complet (générer -> importer via la [CLI](../cli.md) -> comparer à un golden)
   prolonge ce socle : voir la section « Rejouer une campagne » de la [méthode](index.md).
+
+La décision de conception (specs déclaratives + générateur déterministe, portée test) est consignée dans
+l'[ADR 0015](../decisions/0015-generateur-deterministe-cartes-sd-recette.md).

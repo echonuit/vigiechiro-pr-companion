@@ -78,6 +78,7 @@ nav:
     - "0012 · Audit : tout écart visible, un état normal silencieux": decisions/0012-audit-coherence-tout-ecart-visible-etat-normal-silencieux.md
     - 0013 · Ancrage passage ↔ participation: decisions/0013-ancrage-passage-relie-a-sa-participation.md
     - 0014 · Parité CLI ↔ IHM: decisions/0014-parite-cli-ihm.md
+    - "0015 · Cartes SD de recette : générateur déterministe": decisions/0015-generateur-deterministe-cartes-sd-recette.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
