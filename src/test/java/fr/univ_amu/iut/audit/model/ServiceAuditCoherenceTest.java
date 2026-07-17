@@ -193,6 +193,30 @@ class ServiceAuditCoherenceTest {
     }
 
     @Test
+    @DisplayName(
+            "#1719 : squelette synchronisé (archivé, 0 séquence, 0 résultat) est bénin : un seul INFO, zéro erreur")
+    void passage_squelette_non_hydrate_est_benin() {
+        // Ce que la synchro « mes sites » (#1707) créera : un passage rattaché, archivé, SANS séquence ni
+        // résultat (« nuit connue, pas encore importée »). Le patron « archivé » (#1300) le rend déjà bénin.
+        Long idPassage = creerPassage(1);
+        Long idSession = sessionDao
+                .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
+                .id();
+        sessionDao.marquerArchivee(idSession, java.time.LocalDateTime.of(2026, 7, 17, 10, 0));
+
+        RapportAudit rapport = service.auditerPassage(idPassage);
+
+        assertThat(rapport.aDesErreurs())
+                .as("un squelette (synchronisé, pas encore importé) n'est pas corrompu")
+                .isFalse();
+        assertThat(rapport.constats()).singleElement().satisfies(c -> {
+            assertThat(c.severite()).isEqualTo(SeveriteConstat.INFO);
+            assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
+            assertThat(c.detail()).contains("0/0 séquence(s)");
+        });
+    }
+
+    @Test
     @DisplayName("#1348 : archivé n'exempte que l'audio : un journal manquant reste une erreur")
     void passage_archive_journal_manquant_reste_une_erreur() throws IOException {
         Long idPassage = creerSessionCoherente(1);
