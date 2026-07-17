@@ -122,7 +122,16 @@ public class ServiceReset {
     /// `reconstruire-passage` ciblé la rattrapera. Tout abandonner parce qu'une nuit résiste laisserait
     /// le workspace à moitié repeuplé, ce qui est pire.
     private int repeupler() {
-        rapprocheurs.forEach(rapprocheur -> rapprocheur.synchroniser(client));
+        // Les rapprocheurs RÉFÉRENTIELS (taxons, sites, points) d'abord : sans eux, une participation
+        // n'aurait nulle part où s'accrocher. On écarte le rapprocheur des PASSAGES : depuis #1707 sa
+        // synchro crée des SQUELETTES qui consommeraient l'orpheline avant la boucle ci-dessous, selon
+        // l'ordre (non déterministe) d'un Set — d'où un `reconstruits` tantôt 0, tantôt 1. Le reset
+        // reconstruit en PLEIN (séquences comprises), pas en squelette : c'est son objet même (repeupler
+        // tout ce que la plateforme sait), et c'est ce que la boucle explicite fait ensuite, de façon
+        // déterministe.
+        rapprocheurs.stream()
+                .filter(rapprocheur -> !(rapprocheur instanceof ServiceReconstructionPassages))
+                .forEach(rapprocheur -> rapprocheur.synchroniser(client));
 
         int reconstruits = 0;
         List<ParticipationOrpheline> orphelines = new ArrayList<>(reconstruction.orphelines());
