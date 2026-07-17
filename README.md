@@ -134,7 +134,7 @@ scientifique nationale. Il s'appuie sur, et complète, plusieurs projets ouverts
 | **Passive Recorder (Teensy)** | L'**enregistreur open-hardware** posé sur le terrain : firmware open-source qui capte les ultrasons toute la nuit | [framagit · PassiveRecorder](https://framagit.org/PiBatRecorderProjects/TeensyRecorders/-/tree/master/PassiveRecorder) |
 | **audio-view** | Le **composant JavaFX** (sonogramme + spectrogramme) utilisé pour l'écoute, publié sur Maven Central | [github.com/IUTInfoAix-S201/audio-view](https://github.com/IUTInfoAix-S201/audio-view) |
 | **Jeu de données exemple** | Une **nuit complète** de capture (échantillon audio + observations), pour tester sans matériel | [Dépôt](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit) · [DOI Zenodo](https://doi.org/10.5281/zenodo.20492247) |
-| **Le brief** | L'**énoncé pédagogique** d'origine : contexte, besoin, parcours utilisateurs, *story mapping* | [iutinfoaix-s201.github.io/brief](https://iutinfoaix-s201.github.io/brief/) |
+| **Le brief** | Le **brief projet** : contexte, besoin, parcours utilisateurs, *story mapping* (document de conception vivant) | [iutinfoaix-s201.github.io/brief](https://iutinfoaix-s201.github.io/brief/) |
 
 ## 🛠️ Sous le capot (pour les développeuses et développeurs)
 

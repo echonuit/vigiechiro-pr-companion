@@ -135,8 +135,9 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
    ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
 3. **Doc développeur** (site `dev-docs/`) à jour **+ une ADR** (`dev-docs/decisions/`) pour toute **décision structurante** prise pendant le chantier.
 4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
-5. **Brief SAÉ** : répercuter dans le brief de la SAÉ 2.01 (dépôt `IUTInfoAix-S201/brief`) les
-   évolutions qui changent ce qui est **attendu** ou **fourni** aux étudiants.
+5. **Brief projet** : répercuter dans le **brief projet** (dépôt `IUTInfoAix-S201/brief`, document de
+   conception vivant : besoin, parcours utilisateurs, maquettes, MCD - **pas** un sujet pédagogique) les
+   évolutions qui changent un de ces **éléments de conception**.
 6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**.
 7. **Harmonisation** : abstraire pour réduire **complexité** et **duplication** (Extract Class,
    patterns partagés).

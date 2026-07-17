@@ -95,14 +95,16 @@ captures que nécessaire**. Les aperçus sont régénérés en CI : ajouter/mett
 `Capture*` et le manifeste, cf. [Captures d'écran](captures.md). Une fonctionnalité visible sans
 capture est une fonctionnalité à moitié livrée.
 
-### 5. Passe de brief SAÉ
+### 5. Passe de brief projet
 
-L'application est le **companion** de la SAÉ 2.01 : le **brief** (dépôt
-[`IUTInfoAix-S201/brief`](https://github.com/IUTInfoAix-S201/brief), sujet distribué aux étudiants)
-décrit ce qu'ils construisent et utilisent. Quand un chantier change **ce qui est attendu ou fourni**
-(un parcours, une capture du sujet, une contrainte, une feature de référence), répercuter l'évolution
-dans le brief pour que le sujet reste aligné avec le socle réellement livré. Un brief qui décrit une
-version périmée de l'app induit les étudiants en erreur.
+Le **brief projet** (dépôt [`IUTInfoAix-S201/brief`](https://github.com/IUTInfoAix-S201/brief)) est le
+document de **conception** vivant du produit : le besoin, les **parcours utilisateurs** (P1-P10), les
+maquettes, le modèle conceptuel. Ce n'est **pas** un sujet pédagogique - son lecteur est un
+**contributeur** du produit, pas un étudiant. Quand un chantier change un de ces **éléments de
+conception** (un parcours, une maquette, le modèle de données, une contrainte produit), répercuter
+l'évolution dans le brief pour qu'il reste aligné avec le produit réellement livré. Un brief qui décrit
+une version périmée du produit égare son lecteur. C'est **rarement** « sans objet » pour un chantier
+qui touche au comportement ou à la conception du produit.
 
 ### 6. Passe de tests
 
@@ -180,7 +182,7 @@ règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan 
 - [ ] 2. Cohérence CLI ↔ UI (capacités métier exposées des deux côtés, ou « sans objet »)
 - [ ] 3. Doc développeur (dev-docs) à jour + ADR pour toute décision structurante (dev-docs/decisions/)
 - [ ] 4. Doc utilisateur (docs/) + captures
-- [ ] 5. Brief SAÉ (IUTInfoAix-S201/brief) répercuté si attendus/fournis changent
+- [ ] 5. Brief projet (IUTInfoAix-S201/brief) répercuté si un élément de conception change
 - [ ] 6. Tests d'intégration + E2E couvrant chaque usage
 - [ ] 7. Harmonisation (abstractions, duplication, GodClass)
 - [ ] 8. Revue visuelle : captures des écrans touchés **régénérées et ouvertes**
