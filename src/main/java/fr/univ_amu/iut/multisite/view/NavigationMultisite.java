@@ -76,6 +76,9 @@ public class NavigationMultisite implements OuvrirMultisite {
             modale.setTitle("Reconstruire un passage manquant");
             modale.setScene(new Scene(vue));
             Modales.fermerParEchap(modale);
+            // Rafraîchir l'écran appelant à TOUTE fermeture (bouton « Fermer », croix, Échap), et non au seul
+            // bouton : sinon fermer par la croix laissait la table périmée, sans la nuit reconstruite (#1647).
+            modale.setOnHidden(evenement -> controleur.rafraichirSiReconstruit());
             modale.show();
         } catch (IOException echec) {
             throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);

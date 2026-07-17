@@ -49,9 +49,11 @@ class ReconstructionModaleViewTest {
 
     private ServiceReconstructionPassages service;
     private final AtomicBoolean appelantRafraichi = new AtomicBoolean(false);
+    private Stage stage;
 
     @Start
     void start(Stage stage) throws Exception {
+        this.stage = stage;
         service = mock(ServiceReconstructionPassages.class);
         when(service.orphelines()).thenReturn(List.of(CONNUE, INCONNUE));
         Injector injector = Guice.createInjector(new AbstractModule() {
@@ -67,6 +69,8 @@ class ReconstructionModaleViewTest {
         ReconstructionModaleController controleur = loader.getController();
         controleur.demarrer(() -> appelantRafraichi.set(true));
         stage.setScene(new Scene(vue));
+        // Comme NavigationMultisite : le rafraîchissement de l'appelant joue à TOUTE fermeture (#1647).
+        stage.setOnHidden(evenement -> controleur.rafraichirSiReconstruit());
         stage.show();
     }
 
@@ -124,6 +128,23 @@ class ReconstructionModaleViewTest {
         robot.interact(() -> robot.lookup("#boutonFermer").queryButton().fire());
         assertThat(appelantRafraichi)
                 .as("la table des passages se recharge : la nuit rapatriée y apparaît")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("#1647 : fermer par la croix (pas le bouton « Fermer ») rafraîchit aussi l'écran appelant")
+    void fermer_par_la_croix_rafraichit_aussi(FxRobot robot) {
+        when(service.reconstruire(eq(CONNUE), any(), any()))
+                .thenReturn(new RapportReconstruction(12L, 56, 132, RapportReconstruction.lacunesConnues()));
+        TableView<ParticipationOrpheline> table =
+                robot.lookup("#tableOrphelines").queryTableView();
+        robot.interact(() -> table.getSelectionModel().select(CONNUE));
+        robot.interact(() -> robot.lookup("#boutonReconstruire").queryButton().fire());
+
+        robot.interact(stage::close); // fermeture par la croix / le système, pas le bouton « Fermer »
+
+        assertThat(appelantRafraichi)
+                .as("le rafraîchissement de la table ne doit pas dépendre du bouton « Fermer » (#1647)")
                 .isTrue();
     }
 
