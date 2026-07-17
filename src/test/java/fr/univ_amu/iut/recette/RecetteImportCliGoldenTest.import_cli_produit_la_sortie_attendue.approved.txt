@@ -1,0 +1,9 @@
+Import réussi.
+  Passage     : #1
+  Quadruplet  : carré 640380 / point Z1 / 2026 / passage 2
+  Statut      : Transformé
+  Enregistreur: 1925492
+  Originaux   : 6
+  Séquences   : 6
+  Rapport     : 6 importés · 0 ignorés · 0 rejetés
+  Rapport CSV : <workspace>/rapport-import.csv
