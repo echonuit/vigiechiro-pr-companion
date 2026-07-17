@@ -66,6 +66,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
@@ -386,6 +387,29 @@ class SonsValidationViewTest {
         assertThat(ouvrir.isDisable())
                 .as("actif quand une ligne est sélectionnée")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1797 : le sous-menu « Validation » au clic droit valide la sélection")
+    void menu_validation_valide_la_selection(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Menu validation = (Menu) table.getContextMenu().getItems().stream()
+                .filter(i -> "Validation".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(validation.getItems())
+                .extracting(MenuItem::getText)
+                .contains("Valider", "Corriger", "Certitude", "Marquer référence", "Marquer douteux");
+
+        MenuItem valider = validation.getItems().stream()
+                .filter(i -> "Valider".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(valider::fire);
+        verify(service).validerSelonMode(eq(1L), any());
     }
 
     @Test
