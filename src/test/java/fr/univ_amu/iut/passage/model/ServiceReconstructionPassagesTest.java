@@ -505,6 +505,57 @@ class ServiceReconstructionPassagesTest {
         assertThat(passageDao.findAll()).isEmpty();
     }
 
+    @Test
+    @DisplayName("#1710 : reconstruire une nuit déjà rapatriée en squelette la remplace par un passage complet")
+    void reconstruire_hydrate_un_squelette() {
+        // La synchro (#1707) rapatrie d'abord la nuit en SQUELETTE : rattachée, archivée, 0 séquence.
+        bouchonnerPlateforme();
+        service.synchroniser(client);
+        assertThat(passageDao.findAll())
+                .as("un squelette a été créé par la synchro")
+                .hasSize(1);
+        Long idSquelette = passageDao.findAll().getFirst().id();
+        assertThat(sequenceDao.findBySession(
+                        sessionDao.trouverParPassage(idSquelette).orElseThrow().id()))
+                .as("le squelette n'a aucune séquence")
+                .isEmpty();
+
+        // Reconstruire : le squelette est REMPLACÉ par un passage complet (séquences + observations).
+        RapportReconstruction rapport = service.reconstruire(PARTICIPATION);
+
+        assertThat(rapport.sequencesRecreees()).isEqualTo(2);
+        assertThat(rapport.observationsImportees()).isEqualTo(3);
+        assertThat(passageDao.findAll())
+                .as("toujours un seul passage : le squelette est remplacé, pas doublé")
+                .hasSize(1);
+        assertThat(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
+                .as("la participation est rattachée au passage reconstruit (lien reposé)")
+                .contains(PARTICIPATION);
+    }
+
+    @Test
+    @DisplayName("#1710 : une nuit rapatriée en squelette reste listée « à reconstruire » (à hydrater)")
+    void orphelines_inclut_un_squelette() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        service.synchroniser(client); // crée le squelette (rattache la participation)
+
+        assertThat(service.orphelines())
+                .as("le squelette est à hydrater : il reste listé malgré son rattachement")
+                .singleElement()
+                .satisfies(orpheline -> assertThat(orpheline.idParticipation()).isEqualTo(PARTICIPATION));
+    }
+
+    @Test
+    @DisplayName("#1710 : reconstruire une nuit déjà reconstruite (avec séquences) est refusé")
+    void reconstruire_refuse_un_passage_deja_hydrate() {
+        bouchonnerPlateforme();
+        service.reconstruire(PARTICIPATION); // 1re reconstruction : passage complet (séquences + observations)
+
+        assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("déjà reconstruit");
+    }
+
     private static ParticipationVigieChiro participation(String id) {
         return new ParticipationVigieChiro(id, "Z41", "2026-07-03T22:00:00+02:00", "Vigiechiro - Point Fixe-130711");
     }

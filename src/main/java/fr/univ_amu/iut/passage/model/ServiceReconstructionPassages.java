@@ -17,10 +17,14 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -64,6 +68,13 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     private final PassageDao passageDao;
     private final LienVigieChiroDao liens;
 
+    /// Pour reconnaître un **squelette** (#1710) : un passage rattaché mais dont la session archivée n'a
+    /// **aucune séquence** est une nuit rapatriée par la synchro (#1707) pas encore hydratée. Reconstruire
+    /// une telle nuit la **remplace** au lieu de la refuser.
+    private final SessionDao sessionDao;
+
+    private final SequenceDao sequenceDao;
+
     /// Toutes les lectures distantes de la reconstruction (participations, détail, source des observations
     /// CSV #1565 / donnees), extraites dans un collaborateur dédié (plafond God Class).
     private final PlateformeReconstruction plateforme;
@@ -90,24 +101,45 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         Objects.requireNonNull(source, "source");
         this.passageDao = new PassageDao(source);
         this.liens = new LienVigieChiroDao(source);
+        this.sessionDao = new SessionDao(source);
+        this.sequenceDao = new SequenceDao(source);
         this.plateforme = new PlateformeReconstruction(client);
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
         this.creationStructure = new CreationPassageArchive(source, workspace, horloge);
     }
 
-    /// Participations de la plateforme **sans équivalent local** : celles dont l'`_id` n'est rattaché à
-    /// aucun passage d'ici. Chacune dit si son point est déjà connu localement — sinon, il faudra créer
-    /// le site et le point avant de pouvoir la reconstruire.
+    /// Participations de la plateforme **à reconstruire ici** : celles qui n'ont aucun passage local, **ou**
+    /// dont le passage local n'est qu'un **squelette** rapatrié par la synchro (#1707) — point + date, sans
+    /// séquences — qu'il reste à **hydrater** (#1710). Chacune dit si son point est déjà connu localement.
+    ///
+    /// Depuis #1707, la synchro consomme en squelettes les orphelines « jamais vues » ; sans les inclure
+    /// ici, la liste de reconstruction serait vide juste après une synchro, et les nuits rapatriées
+    /// resteraient inhydratables.
     ///
     /// @throws RegleMetierException hors connexion, ou si la plateforme est injoignable (avec la cause)
     public List<ParticipationOrpheline> orphelines() {
-        Set<String> rattachees =
-                Set.copyOf(liens.tous(LienVigieChiro.ENTITE_PASSAGE).values());
+        Map<String, Long> passageParParticipation = passagesParParticipation();
         return plateforme.participations().stream()
-                .filter(participation -> !rattachees.contains(participation.id()))
+                .filter(participation -> aReconstruire(passageParParticipation.get(participation.id())))
                 .map(this::enOrpheline)
                 .toList();
+    }
+
+    /// Une participation est **à reconstruire** si elle n'a pas de passage local (`idPassageLie == null`) ou
+    /// si ce passage est un **squelette** (rattaché, sans séquence) qu'il reste à hydrater (#1710).
+    private boolean aReconstruire(Long idPassageLie) {
+        return idPassageLie == null || estSquelette(idPassageLie);
+    }
+
+    /// Inverse de [LienVigieChiroDao#tous] pour l'entité passage : identifiant de participation distante →
+    /// passage local rattaché.
+    private Map<String, Long> passagesParParticipation() {
+        Map<String, Long> parParticipation = new HashMap<>();
+        liens.tous(LienVigieChiro.ENTITE_PASSAGE)
+                .forEach(
+                        (idPassage, idParticipation) -> parParticipation.put(idParticipation, Long.valueOf(idPassage)));
+        return parParticipation;
     }
 
     /// **Rapprocheur de structure** (#1707, EPIC #1662) : à la synchronisation « mes sites », rapatrie sous
@@ -133,16 +165,24 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         }
     }
 
-    /// Crée un **squelette** de passage pour chaque orpheline dont le point est déjà local et la nuit
-    /// datable ; les autres sont **ignorées** (pas encore situables). Réutilise l'énumération
-    /// ([#orphelines]), la résolution de point, le calcul de numéro et la création de structure de la
-    /// reconstruction : **même geste, mêmes invariants** que la reconstruction d'une nuit unique. La
-    /// création séquentielle donne des numéros de passage successifs pour un même point/année.
+    /// Crée un **squelette** de passage pour chaque participation **sans passage local**, dont le point est
+    /// déjà local et la nuit datable ; les autres sont **ignorées** (déjà rapatriées, ou pas encore
+    /// situables). Réutilise la résolution de point, le calcul de numéro et la création de structure de la
+    /// reconstruction : **même geste, mêmes invariants** que la reconstruction d'une nuit unique. La création
+    /// séquentielle donne des numéros de passage successifs pour un même point/année.
     ///
     /// @return le nombre de squelettes créés
     int synchroniserStructure() {
+        Map<String, Long> passageParParticipation = passagesParParticipation();
         int crees = 0;
-        for (ParticipationOrpheline orpheline : orphelines()) {
+        for (ParticipationVigieChiro participation : plateforme.participations()) {
+            // Une nuit qui a déjà un passage local (squelette OU hydraté) n'est pas rapatriée une seconde
+            // fois : c'est ce qui rend la synchro idempotente (#1707). On n'itère donc pas [#orphelines],
+            // qui inclut désormais les squelettes à hydrater (#1710) — les recréer ferait des doublons.
+            if (passageParParticipation.containsKey(participation.id())) {
+                continue;
+            }
+            ParticipationOrpheline orpheline = enOrpheline(participation);
             Optional<Long> idPoint = pointParLocalite.pour(orpheline.numeroCarre(), orpheline.codePoint());
             Optional<LocalDateTime> debut = nuit(orpheline.dateDebut());
             if (idPoint.isEmpty() || debut.isEmpty()) {
@@ -167,9 +207,9 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// Variante **non suivie** : sans progression ni annulation (jeton neutre). Sert la CLI et les appels
     /// qui n'offrent pas de barre. L'IHM passe par la variante suivie depuis une orpheline.
     ///
-    /// @throws RegleMetierException si la participation est déjà rattachée à un passage local, si son point
-    ///     n'existe pas ici, si sa nuit est indatable, ou si ses observations ne sont pas récupérables
-    ///     (analyse non terminée : le message dit laquelle de ces raisons)
+    /// @throws RegleMetierException si la participation est déjà rattachée à un passage **déjà reconstruit**
+    ///     (un squelette rapatrié, lui, est remplacé), si son point n'existe pas ici, si sa nuit est
+    ///     indatable, ou si ses observations ne sont pas récupérables (le message dit laquelle de ces raisons)
     public RapportReconstruction reconstruire(String idParticipation) {
         return reconstruire(idParticipation, progression -> {}, JetonAnnulation.neutre());
     }
@@ -207,7 +247,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             JetonAnnulation jeton) {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
-        refuserSiDejaRattachee(idParticipation);
+        remplacerSiSquelette(idParticipation);
 
         // Vérifié AVANT toute écriture : un passage reconstruit sans ses observations ne serait qu'une
         // coquille, et mieux vaut ne rien créer que créer à moitié.
@@ -306,12 +346,45 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
 
     // --- Lectures distantes et helpers -------------------------------------------------------------
 
-    private void refuserSiDejaRattachee(String idParticipation) {
-        boolean rattachee = liens.tous(LienVigieChiro.ENTITE_PASSAGE).containsValue(idParticipation);
-        if (rattachee) {
-            throw new RegleMetierException(
-                    "Cette participation est déjà rattachée à un passage local : il n'y a rien à reconstruire.");
+    /// Si la participation est déjà rattachée à un passage local, deux cas (#1710) :
+    ///
+    /// - **squelette** (rapatrié par la synchro #1707, sans séquence) : on le **retire** pour le reconstruire
+    ///   complet par le même geste qu'une nuit jamais vue (sa session vide part en cascade ; le lien sera
+    ///   reposé par la reconstruction). Retiré **avant** les lectures réseau, pour que le numéro de passage
+    ///   libéré soit réutilisé ; si un aléa réseau interrompt ensuite, la synchro suivante recrée le squelette
+    ///   (idempotente, #1707) — rien n'est perdu durablement.
+    /// - **déjà hydraté** (avec séquences) : il n'y a rien à reconstruire, on refuse.
+    private void remplacerSiSquelette(String idParticipation) {
+        Optional<Long> idPassageLie = passageRattache(idParticipation);
+        if (idPassageLie.isEmpty()) {
+            return; // vraie orpheline : aucun passage à remplacer
         }
+        Long idPassage = idPassageLie.get();
+        if (!estSquelette(idPassage)) {
+            throw new RegleMetierException(
+                    "Cette participation est déjà rattachée à un passage local déjà reconstruit : il n'y a rien"
+                            + " à reconstruire.");
+        }
+        liens.supprimer(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage));
+        passageDao.delete(idPassage);
+    }
+
+    /// Passage local rattaché à cette participation, s'il en existe un.
+    private Optional<Long> passageRattache(String idParticipation) {
+        return liens.tous(LienVigieChiro.ENTITE_PASSAGE).entrySet().stream()
+                .filter(entree -> entree.getValue().equals(idParticipation))
+                .map(entree -> Long.valueOf(entree.getKey()))
+                .findFirst();
+    }
+
+    /// Un passage est un **squelette** (#1710) s'il porte une session **sans aucune séquence** : une nuit
+    /// rapatriée par la synchro (#1707), point + date, jamais hydratée. Un passage reconstruit ou importé, lui,
+    /// a des séquences.
+    private boolean estSquelette(Long idPassage) {
+        return sessionDao
+                .trouverParPassage(idPassage)
+                .map(session -> sequenceDao.findBySession(session.id()).isEmpty())
+                .orElse(false);
     }
 
     private ParticipationOrpheline enOrpheline(ParticipationVigieChiro participation) {

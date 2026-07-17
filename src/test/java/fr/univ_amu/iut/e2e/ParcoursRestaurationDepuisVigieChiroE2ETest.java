@@ -51,6 +51,7 @@ import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
+import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -77,19 +78,19 @@ import org.junit.jupiter.api.Test;
 /// 1. **synchroniser** : les rapprocheurs du socle (`Set<RapprochementVigieChiro>`, ceux-là mêmes que
 ///    déclenche la connexion) créent les **sites et leurs points** à partir des participations, puis les
 ///    **passages en squelettes** (#1707) : point + date + n°, archivés, sans observations ;
-/// 2. **retrouver** : la nuit déposée sur la plateforme est désormais un **passage local** (elle n'est
-///    plus une « orpheline »), consultable dans l'historique de son carré ;
-/// 3. **auditer** : le workspace, réduit à des squelettes, est **sain**. Un passage sans audio n'est pas
-///    un passage cassé — c'est un passage **archivé** (#1297), et l'audit informe au lieu de crier
-///    (#1303, garde-fou #1719).
+/// 2. **retrouver** : la nuit déposée sur la plateforme est un **passage local en squelette**, listé
+///    « à reconstruire » ;
+/// 3. **hydrater** : reconstruire la nuit **remplace** le squelette par un passage complet — séquences
+///    (lignes sans fichier) + observations rapatriées (#1710) ;
+/// 4. **auditer** : le workspace restauré est **sain**. Un passage sans audio n'est pas un passage cassé —
+///    c'est un passage **archivé** (#1297), et l'audit informe au lieu de crier (#1303, garde-fou #1719).
 ///
 /// La plateforme est bouchonnée ([ClientVigieChiro] mocké, substitué dans l'injecteur **réel** par
 /// `Modules.override`) : tout le reste est le vrai câblage de l'application.
 ///
-/// ⚠️ Ce que le test **ne** prouve **pas**, parce que ce n'est pas encore fait : l'**hydratation** du
-/// squelette (séquences, observations, matériel, météo) à la demande de l'utilisateur — c'est le geste
-/// suivant (#1710). Et ce qu'il ne prouvera jamais, parce que c'est faux : que l'audio revienne d'un
-/// dépôt ZIP (le mode par défaut ne laisse **aucun** audio sur le serveur).
+/// ⚠️ Ce que le test **ne** prouve **pas**, parce que c'est faux : que l'audio revienne. Un dépôt ZIP (le
+/// mode par défaut) ne laisse **aucun** audio sur le serveur ; le passage restauré est **ABSENTE** :
+/// consultable, non écoutable, réactivable en réimportant les fichiers d'origine (#1302).
 class ParcoursRestaurationDepuisVigieChiroE2ETest {
 
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";
@@ -136,54 +137,77 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .as("ses points d'écoute aussi : sans eux, aucune participation ne serait rattachable")
                 .hasSize(1);
 
-        // 2. Retrouver : la nuit déposée sur la plateforme est désormais un PASSAGE LOCAL, en squelette. Elle
-        //    n'est donc plus une « orpheline » (participation sans passage). Son hydratation - séquences,
-        //    observations, matériel, météo - est le geste SUIVANT (#1710), à la demande de l'utilisateur.
+        // 2. Retrouver : la nuit déposée sur la plateforme est désormais un PASSAGE LOCAL, en SQUELETTE
+        //    (point + date, sans séquence). Elle reste listée « à reconstruire » (#1710) : rattachée, mais
+        //    pas encore hydratée.
         ServiceReconstructionPassages reconstruction = injector.getInstance(
                         Key.get(new TypeLiteral<Optional<ServiceReconstructionPassages>>() {}))
                 .orElseThrow();
         assertThat(reconstruction.orphelines())
-                .as("la synchro a consommé l'orpheline : la nuit est un passage local (squelette)")
-                .isEmpty();
+                .as("la nuit rapatriée en squelette reste à hydrater : elle figure dans la liste")
+                .singleElement()
+                .satisfies(orpheline -> assertThat(orpheline.idParticipation()).isEqualTo(PARTICIPATION));
 
-        List<Passage> passages = new PassageDao(source).findAll();
-        assertThat(passages)
-                .as("un seul passage : le squelette de la nuit rapatriée")
-                .hasSize(1);
-        Passage squelette = passages.getFirst();
+        SessionDao sessionDao = new SessionDao(source);
+        SequenceDao sequenceDao = new SequenceDao(source);
+        Passage squelette = new PassageDao(source).findAll().getFirst();
         assertThat(squelette.statutWorkflow())
                 .as("la participation existe sur la plateforme : le passage est déposé")
                 .isEqualTo(StatutWorkflow.DEPOSE);
         assertThat(squelette.idEnregistreur())
                 .as("aucun détail téléchargé pour un squelette : enregistreur honnêtement « inconnu »")
                 .isEqualTo("INCONNU");
-        SessionDao sessionDao = new SessionDao(source);
-        SequenceDao sequenceDao = new SequenceDao(source);
-        SessionDEnregistrement session =
+        SessionDEnregistrement sessionSquelette =
                 sessionDao.trouverParPassage(squelette.id()).orElseThrow();
-        assertThat(session.archivee())
+        assertThat(sessionSquelette.archivee())
                 .as("un squelette naît archivé : rien n'a jamais été importé ici")
                 .isTrue();
-        assertThat(sequenceDao.findBySession(session.id()))
-                .as("un squelette n'a pas encore de séquence : l'hydratation (#1710) les créera")
+        assertThat(sequenceDao.findBySession(sessionSquelette.id()))
+                .as("un squelette n'a pas encore de séquence")
                 .isEmpty();
+
+        // 3. Hydrater : reconstruire la nuit REMPLACE le squelette par un passage complet - séquences (lignes
+        //    sans fichier) + observations rapatriées. Rendu possible par #1710 : reconstruire sait désormais
+        //    hydrater un squelette rattaché au lieu de le refuser.
+        RapportReconstruction rapport = reconstruction.reconstruire(PARTICIPATION);
+        assertThat(rapport.sequencesRecreees()).isEqualTo(2);
+
+        Long idSession =
+                sessionDao.trouverParPassage(rapport.idPassage()).orElseThrow().id();
+        ObservationDao observationDao = new ObservationDao(source);
+        long observations = sequenceDao.findBySession(idSession).stream()
+                .mapToLong(
+                        sequence -> observationDao.findBySequence(sequence.id()).size())
+                .sum();
+        assertThat(observations)
+                .as("les observations sont EN BASE, rattachées aux séquences recréées par leur nom")
+                .isEqualTo(3);
         assertThat(new LienVigieChiroDao(source)
-                        .objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(squelette.id())))
-                .as("le passage est ancré sur sa participation : la nuit est reliée à ce qu'en sait le serveur")
+                        .objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
+                .as("le passage hydraté est ré-ancré sur sa participation : il se re-déposera, se re-vérifiera")
                 .contains(PARTICIPATION);
 
-        // 3. Auditer : le workspace, réduit à un squelette, est SAIN. C'est la question de fond de l'EPIC
-        //    #1154 — « chaque écart disque / base / serveur est-il visible ? » — et sa réciproque, tout
-        //    aussi importante : un audit qui crie sur un état normal ne vaut rien, car on cesse de l'écouter.
+        // La limite, figée : le serveur n'a pas rendu l'audio, et il ne le rendra pas (dépôt ZIP).
+        ServiceDisponibiliteAudio disponibilite = injector.getInstance(ServiceDisponibiliteAudio.class);
+        assertThat(disponibilite.disponibilite(rapport.idPassage()))
+                .as("consultable, pas écoutable : le passage restauré est archivé, pas complet")
+                .isEqualTo(DisponibiliteAudio.ABSENTE);
+        assertThat(rapport.lacunes())
+                .as("ce qui manque est DIT, pas deviné (ni journal, ni relevé, ni non-identifiés, ni empreintes)")
+                .isNotEmpty();
+
+        // 4. Auditer : le workspace restauré est SAIN. C'est la question de fond de l'EPIC #1154 — « chaque
+        //    écart disque / base / serveur est-il visible ? » — et sa réciproque, tout aussi importante : un
+        //    audit qui crie sur un état normal ne vaut rien, car on cesse de l'écouter.
         RapportAudit audit = injector.getInstance(ServiceAuditCoherence.class).auditerTout();
         assertThat(audit.constats())
-                .as("aucune ERREUR : un squelette est archivé, pas corrompu (#1303, garde-fou #1719)")
+                .as("aucune ERREUR : un passage restauré est archivé, pas corrompu (#1303)")
                 .noneMatch(constat -> constat.severite() == SeveriteConstat.ERREUR);
         assertThat(audit.constats())
-                .as("le squelette porte le VRAI préfixe R6 : un préfixe fabriqué serait signalé à vie")
+                .as("le passage restauré porte le VRAI préfixe R6 : un préfixe fabriqué serait signalé à vie")
                 .noneMatch(constat -> constat.categorie() == CategorieConstat.PREFIXE_NON_CONFORME);
         assertThat(audit.constats())
-                .as("aucun fichier n'est réclamé : un squelette n'a aucune séquence sur disque")
+                .as("aucun fichier n'est réclamé : les observations de la plateforme ne viennent d'aucun CSV")
                 .noneMatch(constat -> constat.categorie() == CategorieConstat.DISQUE_MANQUANT);
         assertThat(audit.constats())
                 .as("il reste ce qu'il doit rester : UN constat, informatif, qui dit que l'audio est archivé")
