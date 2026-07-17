@@ -1,75 +1,53 @@
 package fr.univ_amu.iut.passage.view;
 
-import fr.univ_amu.iut.commun.view.DialogueProgression;
-import fr.univ_amu.iut.commun.view.NiveauNotification;
-import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
-import fr.univ_amu.iut.passage.model.IndiceAcoustique;
-import fr.univ_amu.iut.passage.model.RapportReactivation;
-import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
-import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
 import javafx.stage.Window;
 
 /// Action IHM « Réactiver ce passage » (#1302), extraite de [PassageController] (pur câblage, PMD
-/// GodClass) : demande le dossier des fichiers réimportés, lance la réactivation **hors du fil
-/// JavaFX** dans une **modale de progression annulable** ([DialogueProgression], #1597) — la
-/// vérification lit chaque fichier, et un passage reconstruit rapatrie en plus ses `donnees` pour
-/// s'ancrer (#1571) : plusieurs dizaines de secondes, d'où barre de progression et bouton « Annuler »
-/// plutôt qu'un voile opaque. Elle présente ensuite le **rapport**.
+/// GodClass) : demande le dossier des fichiers réimportés, puis ouvre la **modale de réactivation** (#1780).
+/// C'est elle qui lance l'opération **hors du fil JavaFX** et suit ses deux phases - régénération des
+/// séquences, puis acquisition de l'ancrage - sur deux barres distinctes, plutôt qu'une barre unique qui
+/// restait figée à 100 % pendant l'ancrage réseau.
 ///
-/// Le rapport n'est jamais un simple « c'est fait » : il dit combien de séquences ont été
-/// rebranchées et **sur quelle preuve** (niveau de confiance), combien ont été **refusées** et
-/// pourquoi (un fichier homonyme au contenu différent n'est jamais rebranché en silence), et
-/// combien manquent encore.
+/// Aucune confirmation destructive : l'opération **ajoute** de l'audio (les fichiers sont copiés, la
+/// sauvegarde de l'utilisateur reste intacte). Le compte rendu - ce qui est revenu et sur quelle preuve, ce
+/// qui a été refusé et pourquoi, ce qui manque - s'affiche **dans** la modale
+/// ([fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel]).
 final class ActionReactivation {
 
-    /// Nombre d'écarts détaillés dans le rapport : au-delà, on résume (une nuit peut en compter des
-    /// milliers, et le dialogue doit rester lisible).
-    private static final int ECARTS_DETAILLES = 5;
-
     private final PassageViewModel viewModel;
-    private final DialogueProgression dialogue;
+    private final NavigationPassage navigation;
     private final Supplier<Window> proprietaire;
-    private final NotificateurModifiable notificateur;
     private final SelecteurFichier selecteur;
     private final Runnable recharger;
 
-    /// @param viewModel ViewModel de M-Passage (porte la réactivation)
-    /// @param dialogue modale de progression **annulable** (#1597) : la réactivation, potentiellement
-    ///     longue (ré-import des `donnees` pour ancrer un passage reconstruit), tourne hors du fil JavaFX
-    ///     avec barre de progression et bouton « Annuler » — non plus un voile opaque
+    /// @param viewModel ViewModel de M-Passage (porte la réactivation et connaît l'idPassage courant)
+    /// @param navigation façade de navigation de la feature : ouvre la modale de réactivation (FXML injecté)
     /// @param proprietaire fenêtre propriétaire de la modale, lue **au moment du geste** (la scène n'existe
     ///     pas forcément à la construction du contrôleur)
-    /// @param notificateur porteur de compte rendu partagé de l'écran (double capturant en test)
-    /// @param selecteur porteur de désignation partagé de l'écran (#1431) : c'est lui qui demande le
-    ///     dossier des fichiers d'origine. Un `DirectoryChooser` en dur ici **figeait** tout test du
-    ///     geste - le clic ne revenait jamais, et « Réactiver » restait vérifiable seulement par le
-    ///     grisage de son bouton
+    /// @param selecteur porteur de désignation partagé de l'écran (#1431) : c'est lui qui demande le dossier
+    ///     des fichiers d'origine. Un `DirectoryChooser` en dur **figeait** tout test du geste
     /// @param recharger rejeu de l'ouverture de l'écran après réactivation (volumes, boutons)
     ActionReactivation(
             PassageViewModel viewModel,
-            DialogueProgression dialogue,
+            NavigationPassage navigation,
             Supplier<Window> proprietaire,
-            NotificateurModifiable notificateur,
             SelecteurFichier selecteur,
             Runnable recharger) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
-        this.dialogue = Objects.requireNonNull(dialogue, "dialogue");
+        this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.proprietaire = Objects.requireNonNull(proprietaire, "proprietaire");
-        this.notificateur = Objects.requireNonNull(notificateur, "notificateur");
         this.selecteur = Objects.requireNonNull(selecteur, "selecteur");
         this.recharger = Objects.requireNonNull(recharger, "recharger");
     }
 
-    /// Demande le dossier des fichiers d'origine, vérifie et rebranche ce qui correspond, puis rend
-    /// compte. Aucune confirmation destructive : l'opération **ajoute** de l'audio, elle n'en
-    /// supprime pas (les fichiers sont copiés, la sauvegarde de l'utilisateur reste intacte).
+    /// Demande le dossier des fichiers d'origine, puis ouvre la modale qui vérifie et rebranche ce qui
+    /// correspond. Rien ne se passe si l'utilisateur renonce au choix du dossier.
     void reactiver() {
         Optional<Path> dossier =
                 selecteur.choisirDossier("Dossier des fichiers d'origine à réimporter", Optional.empty());
@@ -77,127 +55,10 @@ final class ActionReactivation {
             return;
         }
         Path source = dossier.orElseThrow();
-        dialogue.lancer(
+        navigation.ouvrirModaleReactivation(
                 proprietaire.get(),
-                "Réactivation du passage",
-                (progres, jeton) -> viewModel.reactiver(source, progres, jeton),
-                this::restituer,
-                echec -> notificateur.notifier(
-                        NiveauNotification.AVERTISSEMENT, "Réactivation impossible", message(echec)));
-    }
-
-    /// Sur le fil JavaFX, après la réactivation : rechargement de l'écran puis compte rendu.
-    private void restituer(RapportReactivation rapport) {
-        recharger.run();
-        notificateur.notifier(
-                rapport.divergentes() > 0 ? NiveauNotification.AVERTISSEMENT : NiveauNotification.INFORMATION,
-                titre(rapport),
-                texte(rapport));
-    }
-
-    /// Titre du compte rendu : honnête aussi quand rien n'a pu être tenté (passage reconstruit, #1648).
-    private static String titre(RapportReactivation rapport) {
-        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
-            return "Passage reconstruit";
-        }
-        return rapport.complete() ? "Passage réactivé" : "Réactivation partielle";
-    }
-
-    /// Compte rendu : ce qui est revenu et sur quelle preuve, ce qui a été refusé et pourquoi, ce
-    /// qui manque encore.
-    private static String texte(RapportReactivation rapport) {
-        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
-            return texteReconstruit(rapport);
-        }
-        StringBuilder texte = new StringBuilder();
-        if (rapport.voie() == VoieReactivation.BRUTS) {
-            texte.append("Ce dossier ne contenait que vos enregistrements bruts : les séquences d'écoute")
-                    .append(" ont été régénérées à partir d'eux, puis vérifiées une à une.\n\n");
-        }
-        texte.append(rapport.reactivees()).append(" séquence(s) réactivée(s)");
-        if (rapport.confianceMinimale() != null) {
-            texte.append(" (identité vérifiée : ")
-                    .append(libelleConfiance(rapport))
-                    .append(')');
-        }
-        texte.append(".\n");
-        if (rapport.dejaPresentes() > 0) {
-            texte.append(rapport.dejaPresentes()).append(" séquence(s) étaient déjà sur le disque.\n");
-        }
-        if (rapport.manquantes() > 0) {
-            texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
-        }
-        ajouterEcarts(texte, rapport.ecarts());
-        ajouterIndiceAcoustique(texte, rapport.indiceAcoustique());
-        texte.append('\n')
-                .append(
-                        rapport.complete()
-                                ? "L'audio est de nouveau complet : le passage est écoutable."
-                                : "L'audio reste incomplet : "
-                                        + rapport.decompte().presentes() + " séquence(s) sur "
-                                        + rapport.decompte().total() + " présentes.");
-        return texte.toString();
-    }
-
-    /// Concordance acoustique en **indice** (#1682), quand elle a été mesurée (hydratation d'un passage
-    /// reconstruit) : purement informatif. Les tranches régénérées sont acceptées sur preuve structurelle
-    /// (extrait du brut désigné) ; cet indice dit seulement à quel point les cris attendus s'y retrouvent.
-    private static void ajouterIndiceAcoustique(StringBuilder texte, IndiceAcoustique indice) {
-        if (indice == null || !indice.estRenseigne()) {
-            return;
-        }
-        texte.append("Concordance acoustique (indice, non bloquant) : ")
-                .append(indice.concordantes())
-                .append(" séquence(s) sur ")
-                .append(indice.mesurees())
-                .append(" présentent les cris attendus.\n");
-    }
-
-    /// Compte rendu **honnête** d'un passage reconstruit (#1648) : ni « introuvables » (les bruts peuvent
-    /// être là), ni fausse promesse. On explique pourquoi rien n'a pu être relié, et que ce n'est pas la
-    /// faute des fichiers de l'utilisateur.
-    private static String texteReconstruit(RapportReactivation rapport) {
-        return "Ce passage a été reconstruit depuis VigieChiro : l'application connaît le nom de ses "
-                + rapport.decompte().total()
-                + " séquence(s), mais pas la correspondance avec vos fichiers d'origine, ni les empreintes"
-                + " nécessaires pour les régénérer.\n\n"
-                + "Vos fichiers ne sont pas en cause : ils n'ont simplement pas pu être reliés. La"
-                + " réactivation depuis les enregistrements bruts n'est pas encore disponible pour ce type de"
-                + " passage.";
-    }
-
-    /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif. Au-delà de
-    /// [#ECARTS_DETAILLES], on résume pour garder le dialogue lisible.
-    private static void ajouterEcarts(StringBuilder texte, List<EcartReactivation> ecarts) {
-        if (ecarts.isEmpty()) {
-            return;
-        }
-        texte.append('\n')
-                .append(ecarts.size())
-                .append(" fichier(s) portaient le bon nom mais n'étaient pas le bon audio :")
-                .append(" ils n'ont pas été rebranchés (les observations auraient pointé sur le mauvais son).\n");
-        ecarts.stream()
-                .limit(ECARTS_DETAILLES)
-                .forEach(ecart -> texte.append("  • ")
-                        .append(ecart.nomFichier())
-                        .append(" : ")
-                        .append(ecart.motif())
-                        .append('\n'));
-        if (ecarts.size() > ECARTS_DETAILLES) {
-            texte.append("  • … et ").append(ecarts.size() - ECARTS_DETAILLES).append(" autre(s).\n");
-        }
-    }
-
-    /// Libellé du niveau de confiance **le plus faible** obtenu : c'est lui qui qualifie honnêtement
-    /// la réactivation entière.
-    private static String libelleConfiance(RapportReactivation rapport) {
-        return switch (rapport.confianceMinimale()) {
-            case CERTITUDE -> "certitude (empreinte du contenu, ou preuves structurelle et acoustique concordantes)";
-            case FORTE -> "forte (nom, taille et durée concordants ; pas d'empreinte en base pour aller plus loin)";
-        };
-    }
-
-    private static String message(Throwable echec) {
-        return echec.getMessage() != null ? echec.getMessage() : echec.toString();
+                (progresRegeneration, progresAncrage, jeton) ->
+                        viewModel.reactiver(source, progresRegeneration, progresAncrage, jeton),
+                recharger);
     }
 }

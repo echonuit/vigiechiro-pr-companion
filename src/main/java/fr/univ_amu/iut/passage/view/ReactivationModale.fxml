@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  Modale « Réactiver ce passage » (#1780), ouverte depuis M-Passage dans un Stage modal. La réactivation
+  enchaîne deux phases longues, chacune sur SA barre : la régénération / le rebranchement des séquences
+  (disque), puis - sur un passage reconstruit dont l'audio est revenu - l'acquisition de l'ancrage des
+  observations (réseau VigieChiro). Avant #1780, ces phases partageaient une barre unique qui restait figée
+  à 100 % pendant l'ancrage silencieux : on ne savait pas si c'était terminé, et « Annuler » y était ambigu.
+
+  La barre d'ancrage n'apparaît que si la phase se déclenche. Le compte rendu (honnête : ce qui est revenu
+  et sur quelle preuve, ce qui a été refusé, ce qui manque) s'affiche à la fin, dans la modale.
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:id="racine"
+      fx:controller="fr.univ_amu.iut.passage.view.ReactivationModaleController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @passage.css"
+      styleClass="modale-reactivation"
+      prefWidth="600.0"
+      spacing="12.0">
+
+  <Label text="♻ Réactivation du passage" styleClass="titre-page"/>
+
+  <!-- L'étape en cours, en clair : « Régénération des séquences… » puis « Ancrage… », enfin « Terminé. ». -->
+  <Label fx:id="lblEtape" styleClass="section-sous" wrapText="true"/>
+
+  <!-- Phase disque : régénération puis rebranchement des séquences (0 -> 1). -->
+  <HBox fx:id="zoneRegeneration" alignment="CENTER_LEFT" spacing="8.0">
+    <Label text="Régénération" minWidth="80.0" styleClass="section-sous"/>
+    <ProgressBar fx:id="barreRegeneration" prefWidth="200.0"/>
+    <Label fx:id="lblRegeneration" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
+  </HBox>
+
+  <!-- Phase réseau : acquisition de l'ancrage (#1571), révélée seulement quand elle démarre. -->
+  <HBox fx:id="zoneAncrage" alignment="CENTER_LEFT" spacing="8.0">
+    <Label text="Ancrage" minWidth="80.0" styleClass="section-sous"/>
+    <ProgressBar fx:id="barreAncrage" prefWidth="200.0"/>
+    <Label fx:id="lblAncrage" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
+  </HBox>
+
+  <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
+  <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
+
+  <HBox alignment="CENTER_RIGHT" spacing="8.0">
+    <Region HBox.hgrow="ALWAYS"/>
+    <!-- « Annuler » n'apparaît que pendant l'opération : elle interrompt proprement (la réactivation AJOUTE
+         de l'audio, elle n'en supprime pas ; rien n'est défait). -->
+    <Button fx:id="boutonAnnuler" text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
+    <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-primaire" onAction="#fermer"/>
+  </HBox>
+</VBox>

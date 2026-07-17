@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.view;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -14,12 +15,12 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
-import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
@@ -31,12 +32,9 @@ import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
-import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
-import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -50,32 +48,27 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 
-/// Le **geste** de réactivation, cliqué pour de vrai (#1431, suite de #1302).
+/// Le **geste** de réactivation, cliqué pour de vrai (#1431, suite de #1302). Depuis #1780, il **ouvre la
+/// modale** de réactivation (deux barres, phases distinctes) plutôt que la modale de progression générique :
+/// ce test vérifie donc que le clic ouvre bien la modale avec le **dossier désigné** et un travail qui
+/// **délègue** au service pour le passage courant. Le contenu de la modale (compte rendu, phases, erreurs)
+/// est couvert par [ReactivationModaleViewTest].
 ///
-/// Ce geste était resté hors de portée alors même que son compte rendu passait déjà par le port
-/// `Notificateur` (#1405). La raison est celle qui a structuré tout le chantier : **une action ne
-/// devient testable que si tous ses dialogues sont remplaçables**. Ici il en restait un, et c'était le
-/// **premier** - un `DirectoryChooser` natif, qui **ouvre** l'action. Le test s'arrêtait donc à la
-/// première ligne, et « Réactiver ce passage » ne se vérifiait que par le grisage de son bouton.
+/// La désignation du dossier passe par [SelecteurFichier], porté par l'écran : sans ce point de
+/// remplacement, le clic ouvrirait un `DirectoryChooser` natif et le test ne reviendrait jamais.
 ///
-/// La désignation du dossier passe maintenant par [SelecteurFichier], porté par l'écran.
-///
-/// La fixture est un passage dont les **séquences sont importées mais l'audio absent du disque**
-/// (archivé, ou fichiers effacés) : c'est exactement l'état où la réactivation s'ouvre.
+/// La fixture est un passage dont les **séquences sont importées mais l'audio absent du disque** (archivé,
+/// ou fichiers effacés) : c'est exactement l'état où la réactivation s'ouvre.
 @ExtendWith(ApplicationExtension.class)
 class PassageReactivationViewTest {
 
     private static final long ID_PASSAGE = 42L;
     private static final Path DOSSIER = Path.of("/media/carte-sd/Car640380");
-
-    /// Ce que le notificateur a **dit**, au lieu de l'afficher.
-    private final List<String> annonces = new ArrayList<>();
-
-    private final List<NiveauNotification> niveaux = new ArrayList<>();
 
     /// Titres des sélecteurs réellement ouverts (vide = l'action n'a même pas demandé de dossier).
     private final List<String> demandes = new ArrayList<>();
@@ -84,11 +77,13 @@ class PassageReactivationViewTest {
     private Optional<Path> choix = Optional.of(DOSSIER);
 
     private ServiceReactivationPassage reactivation;
+    private NavigationPassage navigation;
 
     @Start
     void start(Stage stage) throws Exception {
         ServicePassage service = mock(ServicePassage.class);
         reactivation = mock(ServiceReactivationPassage.class);
+        navigation = mock(NavigationPassage.class);
         // Séquences importées (30) mais aucune présente sur le disque : la réactivation est ouverte.
         when(service.detailPassage(anyLong()))
                 .thenReturn(new DetailPassage(
@@ -113,6 +108,7 @@ class PassageReactivationViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
+                bind(NavigationPassage.class).toInstance(navigation);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> {});
@@ -169,8 +165,7 @@ class PassageReactivationViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
-        // Les deux dialogues du geste : la désignation du dossier, et le compte rendu. Sans le premier,
-        // le clic ouvrirait un DirectoryChooser natif et le test ne reviendrait jamais.
+        // Sans ce double de désignation, le clic ouvrirait un DirectoryChooser natif et le test figerait.
         controleur.selecteur().definir(new SelecteurFichier() {
             @Override
             public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
@@ -188,10 +183,6 @@ class PassageReactivationViewTest {
                 throw new AssertionError("la réactivation lit un dossier, elle n'écrit aucun fichier");
             }
         });
-        controleur.notificateur().definir((niveau, entete, message) -> {
-            niveaux.add(niveau);
-            annonces.add(entete + " | " + message);
-        });
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
         stage.setScene(new Scene(vue, 1100, 700));
         stage.show();
@@ -202,98 +193,31 @@ class PassageReactivationViewTest {
     }
 
     @Test
-    @DisplayName("#1431 : le dossier désigné est réactivé, et le rapport dit sur quelle preuve")
-    void reactivation_rebranche_et_rend_compte(FxRobot robot) {
-        when(reactivation.reactiver(anyLong(), any(), any(), any()))
-                .thenReturn(new RapportReactivation(
-                        28,
-                        0,
-                        2,
-                        0,
-                        NiveauConfiance.CERTITUDE,
-                        List.of(),
-                        new DecompteAudio(28, 30),
-                        VoieReactivation.TRANSFORMES));
-
+    @DisplayName("#1780 : le geste ouvre la modale avec le dossier choisi, et le travail délègue au service")
+    void geste_ouvre_la_modale_avec_le_dossier(FxRobot robot) {
         Button reactiver = robot.lookup("#boutonReactiver").queryAs(Button.class);
         assertThat(reactiver.isDisabled())
                 .as("séquences importées, audio absent du disque : le geste est ouvert")
                 .isFalse();
+
         cliquerReactiver(robot);
 
         assertThat(demandes).containsExactly("Dossier des fichiers d'origine à réimporter");
-        verify(reactivation).reactiver(anyLong(), any(), any(), any());
-        assertThat(niveaux).containsExactly(NiveauNotification.INFORMATION);
-        assertThat(annonces)
-                .singleElement()
-                .satisfies(annonce -> assertThat(annonce).contains("28"));
+        ArgumentCaptor<ReactivationModaleController.Travail> travail =
+                ArgumentCaptor.forClass(ReactivationModaleController.Travail.class);
+        verify(navigation).ouvrirModaleReactivation(any(), travail.capture(), any());
+        // Le travail confié à la modale réactive le PASSAGE COURANT depuis le DOSSIER DÉSIGNÉ.
+        travail.getValue().executer(point -> {}, point -> {}, new JetonAnnulation());
+        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(DOSSIER), any(), any(), any());
     }
 
     @Test
-    @DisplayName("#1648 : passage reconstruit : le compte rendu est honnête, jamais « introuvables »")
-    void passage_reconstruit_compte_rendu_honnete(FxRobot robot) {
-        // Les bruts peuvent être là : c'est l'application qui n'a pas de quoi les relier. Le rapport doit le
-        // dire, sans niveau d'alarme (aucune séquence refusée) et sans prétendre « introuvables ».
-        when(reactivation.reactiver(anyLong(), any(), any(), any()))
-                .thenReturn(new RapportReactivation(
-                        0, 0, 30, 0, null, List.of(), new DecompteAudio(0, 30), VoieReactivation.RECONSTRUIT));
-
-        cliquerReactiver(robot);
-
-        assertThat(niveaux).containsExactly(NiveauNotification.INFORMATION);
-        assertThat(annonces).singleElement().satisfies(annonce -> {
-            assertThat(annonce).contains("Passage reconstruit");
-            assertThat(annonce).contains("reconstruit depuis VigieChiro");
-            assertThat(annonce)
-                    .as("les fichiers peuvent être présents : ne pas prétendre le contraire")
-                    .doesNotContain("introuvables");
-        });
-    }
-
-    @Test
-    @DisplayName("#1431 : sélecteur annulé : rien n'est réactivé, rien n'est annoncé")
-    void selecteur_annule_ne_reactive_rien(FxRobot robot) {
+    @DisplayName("#1431 : sélecteur annulé : la modale ne s'ouvre pas, rien n'est réactivé")
+    void selecteur_annule_n_ouvre_pas_la_modale(FxRobot robot) {
         choix = Optional.empty();
 
         cliquerReactiver(robot);
 
-        verify(reactivation, never()).reactiver(anyLong(), any(), any(), any());
-        assertThat(annonces).as("renoncer n'est pas un événement").isEmpty();
-    }
-
-    @Test
-    @DisplayName("#1431 : des séquences refusées : c'est un AVERTISSEMENT, pas une réussite")
-    void sequences_refusees_avertissent(FxRobot robot) {
-        // Un fichier homonyme au contenu différent n'est jamais rebranché en silence (#1309) : le rapport
-        // doit le dire, et il ne doit pas ressembler à un succès.
-        when(reactivation.reactiver(anyLong(), any(), any(), any()))
-                .thenReturn(new RapportReactivation(
-                        20,
-                        10,
-                        0,
-                        0,
-                        NiveauConfiance.FORTE,
-                        List.of(),
-                        new DecompteAudio(20, 30),
-                        VoieReactivation.TRANSFORMES));
-
-        cliquerReactiver(robot);
-
-        assertThat(niveaux).containsExactly(NiveauNotification.AVERTISSEMENT);
-    }
-
-    @Test
-    @DisplayName("#1431 : dossier illisible : l'utilisateur est averti, l'écran ne bouge pas")
-    void echec_est_annonce(FxRobot robot) {
-        when(reactivation.reactiver(anyLong(), any(), any(), any()))
-                .thenThrow(new IllegalStateException("dossier illisible"));
-
-        cliquerReactiver(robot);
-
-        assertThat(niveaux).containsExactly(NiveauNotification.AVERTISSEMENT);
-        assertThat(annonces)
-                .singleElement()
-                .satisfies(annonce ->
-                        assertThat(annonce).contains("Réactivation impossible").contains("dossier illisible"));
+        verify(navigation, never()).ouvrirModaleReactivation(any(), any(), any());
     }
 }
