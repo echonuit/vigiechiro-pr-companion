@@ -1,10 +1,10 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -25,10 +25,6 @@ import java.util.TreeMap;
 /// correspondant (journal absent) est supposée **complète** — on ne devine pas, pour éviter les fausses
 /// alertes (une nuit calme au petit matin a peu de fichiers sans être tronquée).
 public final class PartitionNuits {
-
-    /// Heure de bascule jour/nuit : les protocoles nocturnes (acquisition ~21:00→06:30) ne produisent
-    /// aucun fichier autour de midi, qui sépare donc proprement deux nuits consécutives.
-    private static final LocalTime BASCULE = LocalTime.NOON;
 
     private PartitionNuits() {}
 
@@ -63,9 +59,9 @@ public final class PartitionNuits {
 
     /// La nuit d'un horodatage : sa **date du soir** (un enregistrement d'avant midi appartient à la nuit
     /// de la veille). Réutilisé par [FiltreThLogNuit] pour ranger une mesure climatique dans sa nuit
-    /// (#1696), avec la même bascule que les WAV.
+    /// (#1696), avec la même bascule que les WAV. Délègue à [Nuit] (concept partagé, #1724).
     static LocalDate nuitDe(LocalDateTime ts) {
-        return ts.toLocalTime().isBefore(BASCULE) ? ts.toLocalDate().minusDays(1) : ts.toLocalDate();
+        return Nuit.de(ts);
     }
 
     private static Optional<LocalDateTime> horodatage(Path original) {
