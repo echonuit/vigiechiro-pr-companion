@@ -167,6 +167,18 @@ Le brut lui-même est d'abord vérifié (empreinte du fichier entier). **Un brut
 rien** : il serait absurde de recalculer des séquences à partir d'un fichier dont l'identité n'est pas
 établie.
 
+!!! info "Un passage *reconstruit* n'avait, lui, aucune empreinte"
+    Ce qui précède vaut pour un passage que vous aviez importé puis archivé : ses empreintes avaient été
+    relevées avant l'archivage. Un passage **reconstruit** (récupéré depuis VigieChiro sans que l'audio
+    soit jamais passé par cette machine) n'en a **aucune**, ni sur ses séquences, ni sur ses bruts. La
+    réactivation depuis les bruts fonctionne pourtant — c'est même le **seul** moyen de récupérer son
+    audio — mais elle s'appuie sur ce dont elle dispose : les tranches régénérées sont un **extrait
+    fidèle** de **votre** brut désigné (le découpage recopie le son sans le retoucher), et l'application
+    vérifie qu'elles portent le **bon nom** et la **bonne durée**. Elle mesure en plus, à titre
+    **indicatif**, la part des cris attendus qu'elle retrouve dans l'audio (« Concordance acoustique »),
+    sans en faire un couperet : sur des cris réels faibles, une mesure automatique se trompe plus
+    facilement qu'elle ne rassure, et refuser sur cette base écarterait le bon son.
+
 !!! note "Vos bruts ne sont pas recopiés sur le disque"
     Ils servent à recalculer les séquences, puis l'application les oublie. Recopier les gigaoctets que
     vous aviez justement demandé de libérer n'aurait aucun sens : le passage redevient **écoutable**,
