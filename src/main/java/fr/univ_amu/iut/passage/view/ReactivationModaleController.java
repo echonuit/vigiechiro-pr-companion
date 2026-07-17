@@ -144,7 +144,7 @@ public class ReactivationModaleController {
 
     private void lancer(Travail travail) {
         operationEnCours.set(true);
-        etape.set("Régénération des séquences…");
+        etape.set("Étape : régénération des séquences");
         viewModel.progressionRegeneration().demarrer("Régénération…");
         JetonAnnulation jeton = new JetonAnnulation();
         jetonCourant = jeton;
@@ -153,7 +153,7 @@ public class ReactivationModaleController {
         Consumer<Progression> progresAncrage = executeur.relaisProgression(point -> {
             if (!ancrageDemarre.get()) {
                 ancrageDemarre.set(true);
-                etape.set("Ancrage des observations sur VigieChiro…");
+                etape.set("Étape : ancrage réseau");
                 viewModel.progressionAncrage().demarrer(point.libelle());
             }
             viewModel.progressionAncrage().appliquer(point);
@@ -206,6 +206,26 @@ public class ReactivationModaleController {
         if (racine.getScene() != null && racine.getScene().getWindow() instanceof Stage modale) {
             modale.sizeToScene();
         }
+    }
+
+    /// **Aperçu de documentation** (#1780) : place la modale dans l'état « les deux phases en cours » - la
+    /// barre de régénération pleine, la barre d'ancrage à mi-course, l'étape nommée - pour la capture, **sans
+    /// lancer de vrai travail**. Réservé aux outils de capture
+    /// ([fr.univ_amu.iut.passage.outils.CapturePassage]) : l'application, elle, passe par [#demarrer]. Sur le
+    /// fil JavaFX.
+    public void apercuPhasesEnCours(
+            String etapeLibelle,
+            String libelleRegeneration,
+            double fractionRegeneration,
+            String libelleAncrage,
+            double fractionAncrage) {
+        operationEnCours.set(true);
+        etape.set(etapeLibelle);
+        viewModel.progressionRegeneration().demarrer(libelleRegeneration);
+        viewModel.progressionRegeneration().appliquer(new Progression(libelleRegeneration, fractionRegeneration));
+        ancrageDemarre.set(true);
+        viewModel.progressionAncrage().demarrer(libelleAncrage);
+        viewModel.progressionAncrage().appliquer(new Progression(libelleAncrage, fractionAncrage));
     }
 
     /// Le travail de réactivation, fourni par l'appelant : il reçoit les deux relais de progression
