@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.12.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.12.0...v2.12.1) (2026-07-17)
+
+
+### Bug Fixes
+
+* **cli:** un refus de validation n'est plus journalisé comme un incident SEVERE ([#1744](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1744)) ([d98c185](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/d98c1859201659997cd8cac47a14373067d9b055))
+
 # [2.12.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.11.1...v2.12.0) (2026-07-17)
 
 
