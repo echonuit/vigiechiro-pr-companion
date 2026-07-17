@@ -1,4 +1,4 @@
-# ADR 0015 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
+# ADR 0016 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
 
 - **Statut** : Accepté — 2026-07-17
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)

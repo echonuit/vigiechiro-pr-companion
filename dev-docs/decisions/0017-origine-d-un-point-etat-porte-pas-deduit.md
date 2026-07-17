@@ -1,4 +1,4 @@
-# ADR 0016 — L'origine d'un point d'écoute (rapatrié vs ajouté à la main) est un état porté, pas déduit
+# ADR 0017 — L'origine d'un point d'écoute (rapatrié vs ajouté à la main) est un état porté, pas déduit
 
 - **Statut** : Accepté — 2026-07-17
 - **Chantier** : EPIC #1662 (#1738)
