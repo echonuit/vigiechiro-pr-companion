@@ -8,6 +8,8 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.BilanReconstructionGroupe;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.IssueNuit;
 import java.io.PrintWriter;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -95,43 +97,46 @@ public final class ReconstruirePassage implements Callable<Integer> {
             return 0;
         }
         int total = orphelines.size();
-        int reussies = 0;
-        int ignorees = 0;
-        long sequences = 0;
-        long observations = 0;
-        for (int index = 0; index < total; index++) {
-            ParticipationOrpheline orpheline = orphelines.get(index);
-            String position = "[" + (index + 1) + "/" + total + "] nuit du " + orpheline.dateDebut();
-            try {
-                RapportReconstruction rapport =
-                        reconstruction.reconstruire(orpheline, progression -> {}, JetonAnnulation.neutre());
-                reussies++;
-                sequences += rapport.sequencesRecreees();
-                observations += rapport.observationsImportees();
-                if (!json) {
-                    sortie.println("  " + position + " -> passage " + rapport.idPassage() + " ("
-                            + rapport.sequencesRecreees() + " séquence(s), " + rapport.observationsImportees()
-                            + " observation(s))");
-                }
-            } catch (RegleMetierException echecNuit) {
-                ignorees++;
-                if (!json) {
-                    sortie.println("  " + position + " -> ignorée : " + echecNuit.getMessage());
-                }
-            }
-        }
+        // La boucle + le best-effort vivent au service (harmonisation passe 7). La CLI ne garde que son
+        // rendu : une ligne par nuit (via l'issue), sans barre de progression (les progressions sont ignorées).
+        int[] rang = {0};
+        BilanReconstructionGroupe bilan = reconstruction.reconstruireTout(
+                orphelines,
+                progression -> {},
+                progression -> {},
+                issue -> {
+                    rang[0]++;
+                    if (!json) {
+                        sortie.println("  " + ligneIssue(issue, rang[0], total));
+                    }
+                },
+                JetonAnnulation.neutre());
         if (json) {
-            Map<String, Object> bilan = new LinkedHashMap<>();
-            bilan.put("reussies", reussies);
-            bilan.put("ignorees", ignorees);
-            bilan.put("sequences", sequences);
-            bilan.put("observations", observations);
-            sortie.println(FormatJson.objet(bilan));
+            Map<String, Object> objet = new LinkedHashMap<>();
+            objet.put("reussies", bilan.reussies());
+            objet.put("ignorees", bilan.ignorees());
+            objet.put("sequences", bilan.sequences());
+            objet.put("observations", bilan.observations());
+            sortie.println(FormatJson.objet(objet));
         } else {
-            sortie.println(reussies + " nuit(s) reconstruite(s), " + ignorees + " ignorée(s) : " + sequences
-                    + " séquence(s), " + observations + " observation(s) rapatriée(s).");
+            sortie.println(bilan.reussies() + " nuit(s) reconstruite(s), " + bilan.ignorees() + " ignorée(s) : "
+                    + bilan.sequences() + " séquence(s), " + bilan.observations() + " observation(s) rapatriée(s).");
         }
         return 0;
+    }
+
+    /// Ligne de compte rendu d'une nuit d'un import groupé : le passage créé (reconstruite) ou la cause du
+    /// saut (ignorée). La CLI **pattern-matche** l'issue du service pour son rendu ; le service, lui, ne
+    /// connaît ni la CLI ni l'IHM.
+    private static String ligneIssue(IssueNuit issue, int rang, int total) {
+        String position = "[" + rang + "/" + total + "] nuit du " + issue.nuit().dateDebut();
+        return switch (issue) {
+            case IssueNuit.Reconstruite reconstruite ->
+                position + " -> passage " + reconstruite.rapport().idPassage() + " ("
+                        + reconstruite.rapport().sequencesRecreees() + " séquence(s), "
+                        + reconstruite.rapport().observationsImportees() + " observation(s))";
+            case IssueNuit.Ignoree ignoree -> position + " -> ignorée : " + ignoree.cause();
+        };
     }
 
     /// Liste les participations sans équivalent local ; `0` même si la liste est vide (ce n'est pas une

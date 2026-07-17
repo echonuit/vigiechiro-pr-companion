@@ -5,19 +5,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
-import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel.BilanReconstructionGroupe;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
-import java.util.ArrayList;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.BilanReconstructionGroupe;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -97,70 +92,24 @@ class ReconstructionViewModelTest {
     }
 
     @Test
-    @DisplayName("#1708 import groupé : chaque nuit est reconstruite, le bilan additionne séquences/observations")
-    void reconstruire_tout_hydrate_chaque_nuit() {
+    @DisplayName("#1708 import groupé : le viewModel DÉLÈGUE au service (la boucle y vit) et restitue son bilan")
+    void reconstruire_tout_delegue_au_service_et_restitue() {
         ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
-        ParticipationOrpheline nuit2 =
-                new ParticipationOrpheline("autre", "130711", "Z41", "2026-07-04T22:00:00+02:00", true);
-        when(service.reconstruire(eq(ORPHELINE), any(), any()))
-                .thenReturn(new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues()));
-        when(service.reconstruire(eq(nuit2), any(), any()))
-                .thenReturn(new RapportReconstruction(2L, 5, 8, RapportReconstruction.lacunesConnues()));
+        BilanReconstructionGroupe bilan = new BilanReconstructionGroupe(2, 1, 15, 28);
+        when(service.reconstruireTout(any(), any(), any(), any(), any())).thenReturn(bilan);
         ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.of(service));
 
-        List<Progression> global = new ArrayList<>();
-        BilanReconstructionGroupe bilan = viewModel.reconstruireTout(
-                List.of(ORPHELINE, nuit2), global::add, progression -> {}, JetonAnnulation.neutre());
+        BilanReconstructionGroupe rendu = viewModel.reconstruireTout(
+                List.of(ORPHELINE), progression -> {}, progression -> {}, JetonAnnulation.neutre());
 
-        assertThat(bilan.reussies()).isEqualTo(2);
-        assertThat(bilan.ignorees()).isZero();
-        assertThat(bilan.sequences()).isEqualTo(15);
-        assertThat(bilan.observations()).isEqualTo(28);
-        assertThat(global)
-                .as("la progression GLOBALE annonce chaque nuit puis « Terminé »")
-                .extracting(Progression::libelle)
-                .contains("Nuit 1 / 2…", "Nuit 2 / 2…", "Terminé.");
-    }
-
-    @Test
-    @DisplayName("#1708 import groupé : une nuit qui échoue (point inconnu) est ignorée, le lot continue")
-    void reconstruire_tout_best_effort() {
-        ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
-        ParticipationOrpheline ko =
-                new ParticipationOrpheline("ko", "999999", "Z9", "2026-07-04T22:00:00+02:00", false);
-        when(service.reconstruire(eq(ORPHELINE), any(), any()))
-                .thenReturn(new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues()));
-        when(service.reconstruire(eq(ko), any(), any()))
-                .thenThrow(new RegleMetierException("Le point d'écoute de cette participation n'existe pas ici."));
-        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.of(service));
-
-        BilanReconstructionGroupe bilan = viewModel.reconstruireTout(
-                List.of(ORPHELINE, ko), progression -> {}, progression -> {}, JetonAnnulation.neutre());
-
-        assertThat(bilan.reussies()).isEqualTo(1);
-        assertThat(bilan.ignorees()).isEqualTo(1);
-        viewModel.restituerLot(bilan);
+        assertThat(rendu).as("le viewModel renvoie le bilan du service").isSameAs(bilan);
+        viewModel.restituerLot(rendu);
         assertThat(viewModel.compteRenduProperty().get())
-                .contains("1 nuit(s) reconstruite(s)")
+                .contains("2 nuit(s) reconstruite(s)")
                 .contains("1 nuit(s) ignorée(s)");
         assertThat(viewModel.reconstruitProperty().get())
                 .as("au moins une nuit reconstruite : l'appelant doit recharger sa table")
                 .isTrue();
-    }
-
-    @Test
-    @DisplayName(
-            "#1708 import groupé : l'annulation arrête tout le lot (les nuits restantes ne sont pas reconstruites)")
-    void reconstruire_tout_annulation_arrete_le_lot() {
-        ServiceReconstructionPassages service = mock(ServiceReconstructionPassages.class);
-        JetonAnnulation jeton = new JetonAnnulation();
-        jeton.annuler(); // annulé d'emblée : la boucle lève au premier tour
-        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.of(service));
-
-        assertThatThrownBy(() ->
-                        viewModel.reconstruireTout(List.of(ORPHELINE), progression -> {}, progression -> {}, jeton))
-                .isInstanceOf(OperationAnnuleeException.class);
-        verify(service, never()).reconstruire(any(ParticipationOrpheline.class), any(), any());
     }
 
     @Test

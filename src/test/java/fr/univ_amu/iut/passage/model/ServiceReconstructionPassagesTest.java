@@ -6,8 +6,11 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -554,6 +557,62 @@ class ServiceReconstructionPassagesTest {
         assertThatThrownBy(() -> service.reconstruire(PARTICIPATION))
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("déjà reconstruit");
+    }
+
+    @Test
+    @DisplayName("#1708 import groupé : la boucle best-effort vit au service - reconstruites + ignorée, bilan + issues")
+    void reconstruire_tout_boucle_best_effort() {
+        ServiceReconstructionPassages espion = spy(service);
+        ParticipationOrpheline n1 =
+                new ParticipationOrpheline("p1", "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
+        ParticipationOrpheline n2 =
+                new ParticipationOrpheline("p2", "130711", "Z41", "2026-07-04T22:00:00+02:00", true);
+        ParticipationOrpheline ko =
+                new ParticipationOrpheline("ko", "999999", "Z9", "2026-07-05T22:00:00+02:00", false);
+        doReturn(new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues()))
+                .when(espion)
+                .reconstruire(eq(n1), any(), any());
+        doReturn(new RapportReconstruction(2L, 5, 8, RapportReconstruction.lacunesConnues()))
+                .when(espion)
+                .reconstruire(eq(n2), any(), any());
+        doThrow(new RegleMetierException("Le point d'écoute n'existe pas localement."))
+                .when(espion)
+                .reconstruire(eq(ko), any(), any());
+
+        List<Progression> global = new ArrayList<>();
+        List<ServiceReconstructionPassages.IssueNuit> issues = new ArrayList<>();
+        ServiceReconstructionPassages.BilanReconstructionGroupe bilan = espion.reconstruireTout(
+                List.of(n1, n2, ko), global::add, progression -> {}, issues::add, JetonAnnulation.neutre());
+
+        assertThat(bilan.reussies()).isEqualTo(2);
+        assertThat(bilan.ignorees()).isEqualTo(1);
+        assertThat(bilan.sequences()).isEqualTo(15);
+        assertThat(bilan.observations()).isEqualTo(28);
+        assertThat(global)
+                .as("la progression globale annonce chaque nuit puis « Terminé »")
+                .extracting(Progression::libelle)
+                .contains("Nuit 1 / 3…", "Nuit 3 / 3…", "Terminé.");
+        assertThat(issues).hasSize(3);
+        assertThat(issues.get(0)).isInstanceOf(ServiceReconstructionPassages.IssueNuit.Reconstruite.class);
+        assertThat(issues.get(2))
+                .asInstanceOf(org.assertj.core.api.InstanceOfAssertFactories.type(
+                        ServiceReconstructionPassages.IssueNuit.Ignoree.class))
+                .satisfies(ignoree -> assertThat(ignoree.cause()).contains("n'existe pas"));
+    }
+
+    @Test
+    @DisplayName("#1708 import groupé : l'annulation arrête tout le lot (aucune nuit reconstruite)")
+    void reconstruire_tout_annulation_arrete_le_lot() {
+        ServiceReconstructionPassages espion = spy(service);
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler();
+        ParticipationOrpheline n1 =
+                new ParticipationOrpheline("p1", "130711", "Z41", "2026-07-03T22:00:00+02:00", true);
+
+        assertThatThrownBy(() ->
+                        espion.reconstruireTout(List.of(n1), progression -> {}, progression -> {}, issue -> {}, jeton))
+                .isInstanceOf(OperationAnnuleeException.class);
+        verify(espion, never()).reconstruire(any(ParticipationOrpheline.class), any(), any());
     }
 
     private static ParticipationVigieChiro participation(String id) {

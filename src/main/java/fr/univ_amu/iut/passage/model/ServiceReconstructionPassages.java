@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -233,6 +234,70 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         Objects.requireNonNull(orpheline, "orpheline");
         return reconstruire(
                 orpheline.idParticipation(), orpheline.numeroCarre(), orpheline.codePoint(), progres, jeton);
+    }
+
+    /// **Import groupé** (#1708) : reconstruit **toutes** les nuits de `aTraiter`, l'une après l'autre. Le
+    /// geste - boucle, best-effort par nuit, accumulation d'un bilan - vit **ici**, au service, et les deux
+    /// surfaces (IHM et CLI) l'appellent en ne gardant que leur **rendu** (barres de progression / lignes) via
+    /// les rappels. C'est l'harmonisation de la passe 7 : un seul endroit porte la **politique best-effort**.
+    ///
+    /// - `progresGlobal` : émis **avant** chaque nuit (« Nuit X / N »), pour la barre du **lot** (IHM) ;
+    /// - `progresParNuit` : émis **pendant** chaque nuit, pour la barre de la **nuit courante** (IHM) ;
+    /// - `issueParNuit` : émis **après** chaque nuit, son issue (reconstruite/ignorée), pour la **ligne** CLI ;
+    /// - `jeton` : consulté entre chaque nuit et à l'intérieur.
+    ///
+    /// **Best-effort par nuit** : une nuit qui échoue pour une raison métier est **comptée « ignorée » et
+    /// sautée**, le lot continue. Une **annulation** ([OperationAnnuleeException]) arrête tout le lot (geste
+    /// délibéré). Réutilise [#reconstruire] par nuit : aucune logique d'import dupliquée.
+    public BilanReconstructionGroupe reconstruireTout(
+            List<ParticipationOrpheline> aTraiter,
+            Consumer<Progression> progresGlobal,
+            Consumer<Progression> progresParNuit,
+            Consumer<IssueNuit> issueParNuit,
+            JetonAnnulation jeton) {
+        Objects.requireNonNull(aTraiter, "aTraiter");
+        int total = aTraiter.size();
+        int reussies = 0;
+        int ignorees = 0;
+        long sequences = 0;
+        long observations = 0;
+        for (int index = 0; index < total; index++) {
+            jeton.leverSiAnnule();
+            ParticipationOrpheline nuit = aTraiter.get(index);
+            progresGlobal.accept(new Progression(
+                    "Nuit " + (index + 1) + " / " + total + "…", total == 0 ? 1.0 : (double) index / total));
+            try {
+                RapportReconstruction rapport = reconstruire(nuit, progresParNuit, jeton);
+                reussies++;
+                sequences += rapport.sequencesRecreees();
+                observations += rapport.observationsImportees();
+                issueParNuit.accept(new IssueNuit.Reconstruite(nuit, rapport));
+            } catch (OperationAnnuleeException annulation) {
+                throw annulation; // geste délibéré : arrête tout le lot
+            } catch (RegleMetierException echecNuit) {
+                ignorees++; // best-effort : cette nuit est sautée, le lot continue
+                issueParNuit.accept(new IssueNuit.Ignoree(nuit, echecNuit.getMessage()));
+            }
+        }
+        progresGlobal.accept(new Progression("Terminé.", 1.0));
+        return new BilanReconstructionGroupe(reussies, ignorees, sequences, observations);
+    }
+
+    /// Bilan d'un import groupé (#1708) : combien de nuits **reconstruites**, combien **ignorées**
+    /// (best-effort : point d'écoute inconnu ici, analyse non terminée), et les totaux de séquences et
+    /// d'observations rapatriées.
+    public record BilanReconstructionGroupe(int reussies, int ignorees, long sequences, long observations) {}
+
+    /// Issue d'**une** nuit dans un import groupé (#1708) : **reconstruite** (avec son rapport) ou
+    /// **ignorée** (best-effort, avec la cause). Permet à chaque surface son rendu - une ligne en CLI, un
+    /// compteur de barre globale en IHM - sans que le service ne connaisse ni l'une ni l'autre.
+    public sealed interface IssueNuit permits IssueNuit.Reconstruite, IssueNuit.Ignoree {
+
+        ParticipationOrpheline nuit();
+
+        record Reconstruite(ParticipationOrpheline nuit, RapportReconstruction rapport) implements IssueNuit {}
+
+        record Ignoree(ParticipationOrpheline nuit, String cause) implements IssueNuit {}
     }
 
     /// Cœur de la reconstruction, une fois carré et localité connus (quelle que soit leur origine). Émet

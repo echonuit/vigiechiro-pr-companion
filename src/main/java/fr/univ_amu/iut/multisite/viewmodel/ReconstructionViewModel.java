@@ -2,7 +2,6 @@ package fr.univ_amu.iut.multisite.viewmodel;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
@@ -63,11 +62,6 @@ public class ReconstructionViewModel {
     public ReconstructionViewModel(Optional<ServiceReconstructionPassages> service) {
         this.service = Objects.requireNonNull(service, "service");
     }
-
-    /// Bilan d'un import groupé (#1708) : combien de nuits **reconstruites**, combien **ignorées**
-    /// (best-effort : point d'écoute inconnu ici, analyse non terminée), et les totaux de séquences et
-    /// d'observations rapatriées.
-    public record BilanReconstructionGroupe(int reussies, int ignorees, long sequences, long observations) {}
 
     /// Vrai si la reconstruction est possible dans ce contexte (connecté à VigieChiro). Faux, l'appelant
     /// **retire** l'action plutôt que d'offrir un bouton qui échouerait.
@@ -161,52 +155,25 @@ public class ReconstructionViewModel {
         erreur.set("");
     }
 
-    /// **Bloquant** (réseau + base) : reconstruit **toutes** les nuits de `aTraiter`, l'une après l'autre.
-    /// Émet une progression **globale** (« Nuit X / N ») sur `progresGlobal` et relaie la progression **de la
-    /// nuit courante** sur `progresNuit` (celle qu'émet déjà [#reconstruire]) ; consulte le **jeton** entre
-    /// chaque nuit et à l'intérieur.
-    ///
-    /// **Best-effort par nuit** : une nuit qui échoue pour une raison métier (point d'écoute inconnu ici,
-    /// analyse non terminée) est **comptée « ignorée » et sautée**, le lot continue - un incident isolé ne
-    /// doit pas priver l'utilisateur des autres reconstructions. Une **annulation** ([OperationAnnuleeException]),
-    /// elle, arrête tout le lot : c'est un geste délibéré.
-    public BilanReconstructionGroupe reconstruireTout(
+    /// **Bloquant** (réseau + base) : reconstruit **toutes** les nuits de `aTraiter`. La boucle et la
+    /// **politique best-effort** vivent au service ([ServiceReconstructionPassages#reconstruireTout],
+    /// harmonisation passe 7) : l'IHM ne fournit que ses **barres** - la progression du lot (`progresGlobal`,
+    /// « Nuit X / N ») et de la nuit courante (`progresNuit`) - et **ignore** l'issue par nuit, car c'est le
+    /// **bilan** renvoyé qui pilote la restitution ([#restituerLot]).
+    public ServiceReconstructionPassages.BilanReconstructionGroupe reconstruireTout(
             List<ParticipationOrpheline> aTraiter,
             Consumer<Progression> progresGlobal,
             Consumer<Progression> progresNuit,
             JetonAnnulation jeton) {
         Objects.requireNonNull(aTraiter, "aTraiter");
-        ServiceReconstructionPassages reconstruction = exiger();
-        int total = aTraiter.size();
-        int reussies = 0;
-        int ignorees = 0;
-        long sequences = 0;
-        long observations = 0;
-        for (int index = 0; index < total; index++) {
-            jeton.leverSiAnnule();
-            ParticipationOrpheline nuit = aTraiter.get(index);
-            progresGlobal.accept(new Progression(
-                    "Nuit " + (index + 1) + " / " + total + "…", total == 0 ? 1.0 : (double) index / total));
-            try {
-                RapportReconstruction rapport = reconstruction.reconstruire(nuit, progresNuit, jeton);
-                reussies++;
-                sequences += rapport.sequencesRecreees();
-                observations += rapport.observationsImportees();
-            } catch (OperationAnnuleeException annulation) {
-                throw annulation; // geste délibéré : arrête tout le lot
-            } catch (RuntimeException echecNuit) {
-                ignorees++; // best-effort : cette nuit est sautée, le lot continue
-            }
-        }
-        progresGlobal.accept(new Progression("Terminé.", 1.0));
-        return new BilanReconstructionGroupe(reussies, ignorees, sequences, observations);
+        return exiger().reconstruireTout(aTraiter, progresGlobal, progresNuit, issue -> {}, jeton);
     }
 
     /// Publie le compte rendu d'un import groupé (**fil JavaFX**) : combien de nuits reconstruites, combien
     /// ignorées, et le rappel que les passages restaurés sont consultables mais pas écoutables. Marque
     /// [#reconstruitProperty] dès qu'au moins une nuit a été reconstruite, pour que l'appelant recharge sa
     /// table. La liste des orphelines restantes est rechargée par l'appelant ([#charger]).
-    public void restituerLot(BilanReconstructionGroupe bilan) {
+    public void restituerLot(ServiceReconstructionPassages.BilanReconstructionGroupe bilan) {
         Objects.requireNonNull(bilan, "bilan");
         reconstruit.set(bilan.reussies() > 0);
         erreur.set("");

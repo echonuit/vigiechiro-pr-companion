@@ -16,6 +16,7 @@ import fr.univ_amu.iut.multisite.viewmodel.ReconstructionViewModel;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
+import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages.BilanReconstructionGroupe;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -152,10 +153,9 @@ class ReconstructionModaleViewTest {
     @DisplayName(
             "#1708 « Reconstruire tout » : hydrate le lot, compte rendu (reconstruites + ignorées), appelant rafraîchi")
     void reconstruire_tout_en_lot(FxRobot robot) {
-        when(service.reconstruire(eq(CONNUE), any(), any()))
-                .thenReturn(new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues()));
-        when(service.reconstruire(eq(INCONNUE), any(), any()))
-                .thenThrow(new RegleMetierException("Le point d'écoute n'existe pas localement."));
+        // La boucle vit au service (harmonisation passe 7) : on mocke son bilan (1 reconstruite, 1 ignorée).
+        when(service.reconstruireTout(any(), any(), any(), any(), any()))
+                .thenReturn(new BilanReconstructionGroupe(1, 1, 10, 20));
 
         Button reconstruireTout = robot.lookup("#boutonReconstruireTout").queryButton();
         assertThat(reconstruireTout.getText())
