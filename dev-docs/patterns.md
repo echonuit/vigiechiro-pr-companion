@@ -251,6 +251,31 @@ refus, un message que l'observateur **croirait envoyé** et que le validateur ne
 
 ---
 
+## Un invariant, deux politiques de surface (l'unification d'un geste, #1656)
+
+Quand un même geste métier vit sur **plusieurs surfaces** (IHM, CLI) et se met à diverger, on ne le
+recopie pas : on remonte la **règle de fond** à un seul endroit (le service), et chaque surface n'en
+porte qu'une **présentation mince**.
+
+Le chantier « importer les observations d'un passage » (#1656) est le cas d'école : la même décision
+« un seul jeu par passage » était réimplémentée **cinq fois**, dont deux qui plantaient sur la contrainte
+`UNIQUE`. Après unification :
+
+- **la règle** vit une seule fois, dans le **noyau de service** (`NoyauImportObservations`) : hors
+  remplacement, refuser **avant l'INSERT** (cf. « Refuser avant de détruire ») ;
+- **la surface IHM** la rend par une **question** (`DecisionRemplacementJeu` : détecter → confirmer →
+  remplacer | abandonner), partagée par les fronts de « Sons & validation » ;
+- **la surface CLI** la rend par un **refus d'usage** (`GardeJeuExistant`, code `2`, « relancez avec
+  `--remplacer` »), partagé par les commandes d'import.
+
+Le test à se poser est celui de la **sur-unification** : fondre les deux présentations en une seule
+serait une erreur (un dialogue interactif et un code de sortie ne sont pas le même objet). Le bon
+découpage : **une règle, deux adaptateurs**. Une capacité présente d'un seul côté (ou rendue
+différemment de chaque côté) est une dette invisible ; la règle centralisée est la garantie qu'elles ne
+redivergeront pas.
+
+---
+
 ## Package-by-feature (tranches verticales)
 
 **Le problème.** Une organisation **par couche** (`controllers/`, `services/`, `dao/`…) éparpille une

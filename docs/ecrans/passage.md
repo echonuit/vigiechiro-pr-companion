@@ -172,26 +172,21 @@ rien** : il serait absurde de recalculer des séquences à partir d'un fichier d
     vous aviez justement demandé de libérer n'aurait aucun sens : le passage redevient **écoutable**,
     sans que ses bruts reviennent occuper la place.
 
-## Modifier le rattachement
+## Modifier le passage
 
-Si une nuit a été rattachée par erreur (mauvaise année ou mauvais numéro de passage), le bouton
-**Modifier le rattachement** ouvre une fenêtre permettant de corriger ces informations.
+Le bouton **Modifier le passage** ouvre une fenêtre pour corriger le **rattachement** (année, numéro de
+passage, si une nuit a été rattachée par erreur) et saisir les **conditions de dépôt** (relevé météo,
+matériel du micro).
 
-![La fenêtre de modification du rattachement : année et numéro de passage.](../assets/captures/apercu-passage-rattachement.png)
+![La fenêtre « Modifier le passage » : rattachement et conditions de dépôt.](../assets/captures/apercu-passage-rattachement.png)
 
-### Importer les observations depuis Vigie-Chiro
+Sur un passage **déjà déposé**, l'année et le numéro sont **verrouillés** (ils forment l'identité de la
+nuit côté Vigie-Chiro), mais la **météo et le micro restent modifiables**. C'est utile, par exemple, pour
+compléter à la main la météo d'un passage **reconstruit** que la plateforme n'a pas rapatriée.
 
-Quand la nuit a été **déposée sur Vigie-Chiro**, cette même fenêtre propose **« Importer les
-observations »** : la plateforme ayant analysé les sons, ce bouton rapatrie les identifications
-Tadarida sans passer par un fichier CSV.
+### Importer les observations
 
-Si l'analyse n'est pas terminée, l'application vous dit **pourquoi** il n'y a rien à importer :
-
-- elle **n'a jamais été lancée** : lancez-la depuis « Préparer le dépôt » (étape ④) ;
-- elle est **planifiée** ou **en cours** : il n'y a qu'à patienter (comptez plusieurs dizaines de
-  minutes), le suivi étant affiché dans « Préparer le dépôt » ;
-- elle a **échoué** : le motif renvoyé par la plateforme est indiqué ;
-- elle est **terminée mais ne renvoie aucune observation** : c'est anormal, vérifiez que les fichiers
-  sont bien arrivés (« Vérifier le dépôt »).
-
-Le même import reste disponible depuis « Sons & validation » (menu ☰).
+L'import des identifications Tadarida ne se fait pas depuis cet écran : il vit dans
+**« Sons & validation »** (menu ☰ « Importer depuis Vigie-Chiro », ou glisser-déposer d'un fichier CSV
+`_Vu`), là où vous écoutez et validez les sons. Si l'analyse n'est pas encore terminée, l'application vous
+dit **pourquoi** il n'y a rien à importer (jamais lancée, planifiée, en cours, ou en échec).
