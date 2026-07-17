@@ -398,6 +398,24 @@ class AnalyseViewTest {
     }
 
     @Test
+    @DisplayName("#1795 : la table des observations propose « Fiche de l'espèce » au clic droit")
+    void fiche_au_clic_droit_des_observations(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        robot.interact(() -> especes.getSelectionModel().select(0)); // charge les observations (Pipistrelle commune)
+        WaitForAsyncUtils.waitForFxEvents();
+
+        TableView<?> observations = robot.lookup("#tableObservations").queryAs(TableView.class);
+        MenuItem fiche = observations.getContextMenu().getItems().get(0);
+        assertThat(fiche.getText()).isEqualTo("Fiche de l'espèce (Pipistrelle commune)");
+        assertThat(fiche.isDisable()).isFalse();
+
+        robot.interact(fiche::fire);
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
+    }
+
+    @Test
     @DisplayName("La bascule « 🗺️ Carte » affiche la carte de répartition à la place des tables")
     void bascule_carte_affiche_la_carte_de_repartition(FxRobot robot) {
         TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);

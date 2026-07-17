@@ -145,8 +145,9 @@ inventaire, qui n'aurait pas de sens sur une sélection hétérogène).
 
 ## Consulter la fiche d'une espèce
 
-En pleine revue, pour **lever un doute** sur une identification, le menu **☰ → Fiche de l'espèce** ouvre
-dans votre **navigateur** une fiche d'information sur la **proposition Tadarida** de la ligne
+En pleine revue, pour **lever un doute** sur une identification, un **double-clic** sur une observation
+(ou un **clic droit → « Fiche de l'espèce »**, ou encore le menu **☰ → Fiche de l'espèce**) ouvre dans
+votre **navigateur** une fiche d'information sur la **proposition Tadarida** de la ligne
 sélectionnée. L'entrée s'**adapte à la sélection** : elle nomme l'espèce (par exemple « Fiche de l'espèce
 (Pipistrelle commune) ») et s'ouvre au clic. Pour une séquence **non identifiée** ou un pseudo-taxon
 (bruit), elle est **grisée** avec la mention « aucune fiche disponible ».

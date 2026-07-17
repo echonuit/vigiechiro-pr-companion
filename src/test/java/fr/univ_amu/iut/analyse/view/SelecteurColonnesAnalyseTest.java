@@ -56,7 +56,7 @@ class SelecteurColonnesAnalyseTest {
             obs.set(tableAvec("Passage", "Statut"));
             SelecteurColonnesAnalyse selecteur =
                     new SelecteurColonnesAnalyse(esp.get(), car.get(), obs.get(), menu, () -> Regroupement.PAR_ESPECE);
-            selecteur.installer(new MenuItem("Fiche de l'espèce"));
+            selecteur.installer(new MenuItem("Fiche de l'espèce"), new MenuItem("Fiche de l'espèce"));
             ref.set(selecteur);
         });
 
@@ -80,7 +80,7 @@ class SelecteurColonnesAnalyseTest {
             TableView<String> obs = tableAvec("Passage", "Statut");
             SelecteurColonnesAnalyse selecteur =
                     new SelecteurColonnesAnalyse(esp, car, obs, new MenuButton("☰"), () -> Regroupement.PAR_ESPECE);
-            selecteur.installer(new MenuItem("Fiche"));
+            selecteur.installer(new MenuItem("Fiche"), new MenuItem("Fiche obs"));
             // Modifie l'inventaire par espèce : masque « Détections », ordre Période, Espèce, Détections.
             esp.getColumns().get(1).setVisible(false);
             esp.getColumns()

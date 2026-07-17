@@ -15,6 +15,10 @@ final class ActionsMenuAudio {
     private final ActionFicheEspece ficheEspece;
     private final ActionDonneesVigieChiro donneesVigieChiro;
 
+    /// Item « Fiche de l'espèce » du **menu contextuel** de la table (#1795), tenu ici — comme l'item du ☰
+    /// est tenu par le controller : instance distincte, un [MenuItem] n'appartenant qu'à un seul menu.
+    private final MenuItem itemFicheContexte = new MenuItem();
+
     @Inject
     ActionsMenuAudio(ActionFicheEspece ficheEspece, ActionDonneesVigieChiro donneesVigieChiro) {
         this.ficheEspece = Objects.requireNonNull(ficheEspece, "ficheEspece");
@@ -25,6 +29,19 @@ final class ActionsMenuAudio {
     /// (désactivé avec explication si aucune ligne, ou pseudo-taxon sans fiche).
     void configurerFiche(MenuItem item, LigneObservationAudio ligne) {
         ficheEspece.configurer(item, especeDe(ligne));
+    }
+
+    /// Item « Fiche de l'espèce » à installer dans le **menu contextuel** de la table (#1795), en plus de
+    /// celui du ☰ (tenu par le controller).
+    MenuItem itemFicheContexte() {
+        return itemFicheContexte;
+    }
+
+    /// Configure sur `ligne` l'item du ☰ (`itemMenu`) **et** l'item du clic droit ([#itemFicheContexte]),
+    /// pour qu'ils ciblent la même proposition Tadarida à chaque changement de sélection.
+    void configurerFiches(MenuItem itemMenu, LigneObservationAudio ligne) {
+        configurerFiche(itemMenu, ligne);
+        configurerFiche(itemFicheContexte, ligne);
     }
 
     /// Ouvre la fiche de la proposition Tadarida de `ligne` dans le navigateur (double-clic, #1794) ;

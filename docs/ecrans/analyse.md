@@ -49,8 +49,9 @@ Sélectionnez une observation, puis :
 
 ## Consulter la fiche d'une espèce
 
-Un **clic droit** sur une espèce de l'inventaire propose **« Fiche de l'espèce »** : elle ouvre dans votre
-**navigateur** la fiche d'information de l'espèce, pratique pour vérifier un critère avant de trancher une
+Un **double-clic** sur une espèce de l'inventaire (ou sur l'une de ses observations dans le détail) ouvre
+directement, dans votre **navigateur**, la fiche d'information de l'espèce ; un **clic droit** propose la
+même **« Fiche de l'espèce »** sur les deux tables. Pratique pour vérifier un critère avant de trancher une
 identification. Comme dans [Sons & validation](validation.md#consulter-la-fiche-dune-espece), la source
 s'adapte au taxon : **Plan National d'Actions Chiroptères** pour les chauves-souris, **GBIF** ou
 **Wikipédia FR** (selon le réglage du menu ☰ du bandeau) pour les autres.
