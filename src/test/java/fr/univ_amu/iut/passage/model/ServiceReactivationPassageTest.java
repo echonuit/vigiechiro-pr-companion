@@ -491,8 +491,13 @@ class ServiceReactivationPassageTest {
         // déclarés « purgés » (connus, prouvés par régénération, mais non stockés localement).
         assertThat(originalDao.findBySession(idSession))
                 .isNotEmpty()
-                .allSatisfy(original ->
-                        assertThat(original.frequenceEchantillonnageHz()).isNotNull())
+                .allSatisfy(original -> {
+                    assertThat(original.frequenceEchantillonnageHz()).isNotNull();
+                    assertThat(original.sha256())
+                            .as("l'empreinte du brut est capturée à la régénération (#1726), plus déférée à null")
+                            .isNotNull()
+                            .matches("[0-9a-fA-F]{64}");
+                })
                 .noneMatch(original -> original.nomFichier().endsWith("reconstruit.wav"));
         assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().originauxPurges())
                 .as("les originaux sont connus mais non stockés localement : déclarés purgés")
