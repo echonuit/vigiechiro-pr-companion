@@ -128,19 +128,35 @@ public class ServiceReactivationPassage {
         return reactiver(idPassage, dossierSource, progres, JetonAnnulation.neutre());
     }
 
-    /// Variante **suivie et annulable** (#1597) : depuis S3 (#1571) la réactivation peut rapatrier tout un
-    /// jeu de `donnees` pour ancrer les observations (~48 pages, plusieurs dizaines de secondes) — assez
-    /// long pour mériter une **modale à barre de progression et un bouton « Annuler »**, comme la
-    /// reconstruction. Le `jeton` est consulté **aux frontières de phase** (avant le rebranchement audio,
-    /// avant l'ancrage) et **page par page** pendant la phase d'ancrage (via le `suivi` construit ici).
+    /// Variante **suivie et annulable** (#1597) à **un seul** consommateur : les deux phases longues (la
+    /// régénération des séquences puis l'ancrage réseau) y sont reportées au **même** `progres` (console,
+    /// journal). L'IHM, elle, préfère la variante à **deux** consommateurs ci-dessous, pour suivre chaque
+    /// phase sur sa propre barre (#1780).
+    public RapportReactivation reactiver(
+            Long idPassage, Path dossierSource, Consumer<Progression> progres, JetonAnnulation jeton) {
+        Objects.requireNonNull(progres, "progres");
+        return reactiver(idPassage, dossierSource, progres, progres, jeton);
+    }
+
+    /// Variante à **deux progressions** (#1780) : depuis S3 (#1571) la réactivation enchaîne deux phases
+    /// longues, désormais suivies **séparément** pour que la modale les montre sur deux barres distinctes -
+    /// `progresRegeneration` pour la **régénération / le rebranchement** des séquences (phase disque, 0 -> 1)
+    /// et `progresAncrage` pour l'**acquisition de l'ancrage** des observations (~48 pages sur VigieChiro,
+    /// phase réseau, 0 -> 1). Le `jeton` est consulté **aux frontières de phase** (avant le rebranchement,
+    /// avant l'ancrage) et **page par page** pendant l'ancrage.
     ///
     /// @param jeton consulté aux points de contrôle ; `annuler()` interrompt à la prochaine frontière /
     ///     page, en levant une [OperationAnnuleeException]
     public RapportReactivation reactiver(
-            Long idPassage, Path dossierSource, Consumer<Progression> progres, JetonAnnulation jeton) {
+            Long idPassage,
+            Path dossierSource,
+            Consumer<Progression> progresRegeneration,
+            Consumer<Progression> progresAncrage,
+            JetonAnnulation jeton) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
         Objects.requireNonNull(dossierSource, "dossierSource");
-        Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(progresRegeneration, "progresRegeneration");
+        Objects.requireNonNull(progresAncrage, "progresAncrage");
         Objects.requireNonNull(jeton, "jeton");
         if (!Files.isDirectory(dossierSource)) {
             throw new RegleMetierException("Dossier introuvable : " + dossierSource + ".");
@@ -160,28 +176,28 @@ public class ServiceReactivationPassage {
         VoieReactivation voie = reconnaitre(sequences, originaux, candidats, prefixe);
         BilanReactivation bilan;
         if (voie == VoieReactivation.BRUTS) {
-            bilan = depuisBruts.appliquer(sequences, originaux, candidats, prefixe, progres);
+            bilan = depuisBruts.appliquer(sequences, originaux, candidats, prefixe, progresRegeneration);
         } else if (voie == VoieReactivation.RECONSTRUIT) {
             // Un passage reconstruit peut être hydraté depuis ses bruts (log + WAV) : si c'est possible, la
             // voie devient BRUTS (les séquences ont été régénérées) et on remplace le placeholder par les
             // vrais originaux (#1651) ; sinon on reste sur le compte rendu honnête (#1648), sans rien inventer.
             Optional<ResultatHydratation> hydrate =
-                    hydratation.appliquer(sequences, dossierSource, prefixe, progres, jeton);
+                    hydratation.appliquer(sequences, dossierSource, prefixe, progresRegeneration, jeton);
             if (hydrate.isPresent()) {
                 voie = VoieReactivation.BRUTS;
                 ResultatHydratation resultat = hydrate.orElseThrow();
                 bilan = resultat.bilan();
                 adopterOriginaux(session, originaux, resultat);
             } else {
-                bilan = rebranchement.rebrancher(sequences, candidats, progres);
+                bilan = rebranchement.rebrancher(sequences, candidats, progresRegeneration);
             }
         } else {
-            bilan = rebranchement.rebrancher(sequences, candidats, progres);
+            bilan = rebranchement.rebrancher(sequences, candidats, progresRegeneration);
         }
 
         RapportReactivation rapport = conclure(idPassage, session, sequences, bilan, voie);
         jeton.leverSiAnnule();
-        acquerirAncrageSiNecessaire(idPassage, rapport, progres, jeton);
+        acquerirAncrageSiNecessaire(idPassage, rapport, progresAncrage, jeton);
         return rapport;
     }
 
@@ -196,7 +212,7 @@ public class ServiceReactivationPassage {
     /// un passage importé normalement porte déjà son ancrage, la phase ne s'y déclenche pas — donc aucune
     /// dépendance réseau n'est imposée à la réactivation d'un passage local ordinaire.
     private void acquerirAncrageSiNecessaire(
-            Long idPassage, RapportReactivation rapport, Consumer<Progression> progres, JetonAnnulation jeton) {
+            Long idPassage, RapportReactivation rapport, Consumer<Progression> progresAncrage, JetonAnnulation jeton) {
         if (importObservations.isEmpty() || rapport.decompte().disponibilite() == DisponibiliteAudio.ABSENTE) {
             return;
         }
@@ -204,13 +220,13 @@ public class ServiceReactivationPassage {
         if (!importateur.estRattache(idPassage) || !importateur.ancrageManquant(idPassage)) {
             return;
         }
-        progres.accept(new Progression("Ancrage des observations sur VigieChiro…", 0.90));
-        // Suivi page par page : la barre avance dans la dernière tranche (0,90 -> 1,00) pendant le
-        // rapatriement des donnees (~48 pages), et « Annuler » s'y honore à chaque page (#1597).
+        progresAncrage.accept(new Progression("Ancrage des observations sur VigieChiro…", 0.0));
+        // Suivi page par page : la barre d'ancrage avance de 0 à 1 pendant le rapatriement des donnees
+        // (~48 pages), et « Annuler » s'y honore à chaque page (#1597).
         SuiviPagination suivi = (page, totalPages) -> {
             jeton.leverSiAnnule();
-            double fraction = 0.90 + 0.10 * Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
-            progres.accept(new Progression(
+            double fraction = Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
+            progresAncrage.accept(new Progression(
                     "Ancrage des observations sur VigieChiro… (page " + page + "/" + totalPages + ")", fraction));
         };
         importateur.importer(idPassage, true, suivi);

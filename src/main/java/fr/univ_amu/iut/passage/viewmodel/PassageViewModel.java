@@ -185,12 +185,22 @@ public class PassageViewModel {
         return reactivation.reactiver(idPassage, dossierSource, progres);
     }
 
-    /// Variante **suivie et annulable** (#1597) : le `jeton` interrompt la phase d'ancrage (le ré-import
-    /// des `donnees` d'un passage reconstruit peut durer plusieurs dizaines de secondes). C'est la modale
-    /// de progression ([fr.univ_amu.iut.commun.view.DialogueProgression]) qui fournit le jeton et le relais
-    /// de progression.
+    /// Variante **suivie et annulable** (#1597) à un seul consommateur : le `jeton` interrompt la phase
+    /// d'ancrage (le ré-import des `donnees` d'un passage reconstruit peut durer plusieurs dizaines de
+    /// secondes). Les deux phases y reportent au même `progres`.
     public RapportReactivation reactiver(Path dossierSource, Consumer<Progression> progres, JetonAnnulation jeton) {
         return reactivation.reactiver(idPassage, dossierSource, progres, jeton);
+    }
+
+    /// Variante à **deux progressions** (#1780) : la modale de réactivation suit séparément la régénération
+    /// des séquences (`progresRegeneration`) et l'acquisition de l'ancrage (`progresAncrage`), chacune sur sa
+    /// barre. Appelée **hors du fil JavaFX** ; le `jeton` interrompt à la prochaine frontière / page.
+    public RapportReactivation reactiver(
+            Path dossierSource,
+            Consumer<Progression> progresRegeneration,
+            Consumer<Progression> progresAncrage,
+            JetonAnnulation jeton) {
+        return reactivation.reactiver(idPassage, dossierSource, progresRegeneration, progresAncrage, jeton);
     }
 
     private void appliquer(DetailPassage detail, ContexteSite contexte) {

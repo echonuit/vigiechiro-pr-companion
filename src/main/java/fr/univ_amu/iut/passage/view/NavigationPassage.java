@@ -29,6 +29,8 @@ import javafx.stage.Window;
 @Singleton
 public class NavigationPassage implements OuvrirPassage {
 
+    private static final String CHARGEMENT_IMPOSSIBLE = "Chargement FXML impossible : ";
+
     private final Injector injector;
     private final Navigateur navigateur;
 
@@ -49,7 +51,7 @@ public class NavigationPassage implements OuvrirPassage {
             controleur.ouvrirSur(idPassage, contexte);
             navigateur.empiler(vue, "passage", controleur.libelleFil(), controleur);
         } catch (IOException echec) {
-            throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
+            throw new UncheckedIOException(CHARGEMENT_IMPOSSIBLE + loader.getLocation(), echec);
         }
     }
 
@@ -86,7 +88,32 @@ public class NavigationPassage implements OuvrirPassage {
             Modales.fermerParEchap(modale);
             modale.show();
         } catch (IOException echec) {
-            throw new UncheckedIOException("Chargement FXML impossible : " + loader.getLocation(), echec);
+            throw new UncheckedIOException(CHARGEMENT_IMPOSSIBLE + loader.getLocation(), echec);
+        }
+    }
+
+    /// Ouvre la modale **« Réactiver ce passage »** (#1780) dans une fenêtre modale appartenant à `parent`.
+    /// `travail` porte l'opération (réseau + base) que la modale exécute **hors du fil JavaFX**, en suivant
+    /// ses deux phases (régénération, ancrage) sur deux barres ; `apresSucces` recharge M-Passage à la
+    /// fermeture si une réactivation s'est conclue (l'audio a pu revenir).
+    public void ouvrirModaleReactivation(
+            Window parent, ReactivationModaleController.Travail travail, Runnable apresSucces) {
+        FXMLLoader loader = ChargeurFxml.chargeur(NavigationPassage.class, "ReactivationModale.fxml");
+        loader.setControllerFactory(injector::getInstance);
+        try {
+            Parent vue = loader.load();
+            ReactivationModaleController controleur = loader.getController();
+            controleur.demarrer(travail, apresSucces);
+            Stage modale = new Stage();
+            modale.initOwner(parent);
+            modale.initModality(Modality.WINDOW_MODAL);
+            modale.setTitle("Réactiver ce passage");
+            modale.setScene(new Scene(vue));
+            modale.setOnHidden(evenement -> controleur.rafraichirSiReactive());
+            Modales.fermerParEchap(modale);
+            modale.show();
+        } catch (IOException echec) {
+            throw new UncheckedIOException(CHARGEMENT_IMPOSSIBLE + loader.getLocation(), echec);
         }
     }
 }

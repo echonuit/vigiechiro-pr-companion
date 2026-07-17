@@ -37,6 +37,7 @@ import fr.univ_amu.iut.passage.view.AppuisPassage;
 import fr.univ_amu.iut.passage.view.NavigationPassage;
 import fr.univ_amu.iut.passage.view.PassageController;
 import fr.univ_amu.iut.passage.view.RattachementModaleController;
+import fr.univ_amu.iut.passage.view.ReactivationModaleController;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -86,6 +87,7 @@ public final class CapturePassage {
     private static final String NUMERO_CARRE = "640380";
     private static final String CODE_POINT = "A1";
     private static final String NOM_SITE = "Étang de la Tuilière";
+    private static final String APERCU_ECRIT = "Apercu ecrit dans ";
     private static final int NB_SEQUENCES = 60;
     private static final long VOLUME_ORIGINAUX_OCTETS = 5L * 1024 * 1024 * 1024; // 5 Go
     private static final long VOLUME_SEQUENCES_OCTETS = 180L * 1024 * 1024; // 180 Mo
@@ -134,6 +136,9 @@ public final class CapturePassage {
         rendrePivot(injecteur, idDepose, sortie.resolve("apercu-passage-depose.png"));
         // Modale « Modifier le rattachement » (année + n° de passage) ouverte sur le passage vérifié.
         rendreRattachement(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement.png"));
+        // Modale « Réactiver ce passage » (#1780) : les deux barres de phase en cours (régénération pleine,
+        // ancrage à mi-course), montrant que la barre ne reste plus figée pendant l'ancrage réseau.
+        rendreModaleReactivation(injecteur, sortie.resolve("apercu-passage-reactivation.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -174,7 +179,7 @@ public final class CapturePassage {
         PassageController controleur = loader.getController();
         controleur.ouvrirSur(idPassage, new ContexteSite(NUMERO_CARRE, CODE_POINT, NOM_SITE));
         ApercuFx.enregistrerPng(new Scene(vue, 1100, 620), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
     /// Contrat [fr.univ_amu.iut.commun.view.OuvrirSite] neutre (no-op) pour la capture : la navigation
@@ -199,7 +204,27 @@ public final class CapturePassage {
         RattachementModaleController controleur = loader.getController();
         controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Charge `ReactivationModale.fxml` (controller injecté par Guice) et la rend hors-écran dans l'état
+    /// « les deux phases en cours » : régénération pleine, ancrage à mi-course. Aucun vrai travail n'est
+    /// lancé - c'est le point de l'aperçu ([ReactivationModaleController#apercuPhasesEnCours], #1780).
+    private static void rendreModaleReactivation(Injector injecteur, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(ReactivationModaleController.class.getResource("ReactivationModale.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ReactivationModaleController controleur = loader.getController();
+        ApercuFx.capturerApresPreparation(
+                new Scene(vue, 600, 340),
+                () -> controleur.apercuPhasesEnCours(
+                        "Étape : ancrage réseau",
+                        "Régénération 30/30",
+                        1.0,
+                        "Ancrage des observations sur VigieChiro… (page 3/12)",
+                        0.25),
+                fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
     /// Seede une nuit complète (chemins sous le `workspace` temporaire) avec le `statut` et le

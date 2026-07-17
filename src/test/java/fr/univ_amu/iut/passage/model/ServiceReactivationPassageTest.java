@@ -221,6 +221,36 @@ class ServiceReactivationPassageTest {
         verify(importObservations, never()).importer(eq(idPassage), eq(true), any());
     }
 
+    @Test
+    @DisplayName("#1780 : deux barres — la régénération et l'ancrage rapportent chacun à son consommateur")
+    void deux_progressions_separent_regeneration_et_ancrage() throws IOException {
+        archiverAvecSauvegarde(true, true); // audio complet -> la phase d'ancrage se déclenche
+        ImportObservations importObservations = mock(ImportObservations.class);
+        when(importObservations.estRattache(idPassage)).thenReturn(true);
+        when(importObservations.ancrageManquant(idPassage)).thenReturn(true);
+        when(importObservations.importer(eq(idPassage), eq(true), any())).thenAnswer(invocation -> {
+            SuiviPagination suivi = invocation.getArgument(2);
+            suivi.surPage(1, 2);
+            suivi.surPage(2, 2);
+            return "";
+        });
+        List<Progression> regeneration = new ArrayList<>();
+        List<Progression> ancrage = new ArrayList<>();
+
+        avecImport(importObservations)
+                .reactiver(idPassage, sauvegarde, regeneration::add, ancrage::add, JetonAnnulation.neutre());
+
+        assertThat(regeneration)
+                .as("la barre de régénération ne reçoit que la phase disque")
+                .isNotEmpty()
+                .noneMatch(point -> point.libelle().startsWith("Ancrage"));
+        assertThat(ancrage)
+                .as("la barre d'ancrage ne reçoit que la phase réseau, et atteint 100 %")
+                .isNotEmpty()
+                .allMatch(point -> point.libelle().startsWith("Ancrage"));
+        assertThat(ancrage.get(ancrage.size() - 1).fraction()).isEqualTo(1.0);
+    }
+
     /// Service muni du port d'import (phase d'ancrage #1571 active), sur la même base et le même workspace.
     private ServiceReactivationPassage avecImport(ImportObservations importObservations) {
         return new ServiceReactivationPassage(
