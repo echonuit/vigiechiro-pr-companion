@@ -46,6 +46,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
@@ -530,7 +531,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 FEATURE,
                 "principale",
                 actionsMenu.itemOuvrirPassage(tableObservations),
-                actionsMenu.itemFicheContexte());
+                actionsMenu.itemFicheContexte(),
+                new SeparatorMenuItem(),
+                MenuValidationAudio.creer(tableObservations, actionsSelection, choixTaxon::getValue));
 
         occupation = new IndicateurOccupation(hoteOccupation, appuis.executeur());
     }
