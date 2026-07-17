@@ -5,8 +5,10 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
@@ -35,10 +37,8 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.Tooltip;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -229,9 +229,16 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     private void initialize() {
         // Densité/habillage de table uniformes (#690) + table navigable au double-clic (#792).
         TableDonnees.uniformiserNavigable(tablePassages);
-        // Sélecteur de colonnes (#921) : clic droit + ☰ « outils » ; disposition retenue par écran (#994).
+        // Sélecteur de colonnes (#921) + menu de ligne « Ouvrir le passage » (#1796) au clic droit ; le ☰
+        // « outils » garde « Colonnes… ». Disposition retenue par écran (#994).
         GestionnaireColonnes.installerEtPersister(
-                tablePassages, menuOutils, colonnesPassages(), depotColonnes, "sites", "principale");
+                tablePassages,
+                menuOutils,
+                colonnesPassages(),
+                depotColonnes,
+                "sites",
+                "principale",
+                MenuLigne.item("Ouvrir le passage", tablePassages, this::ouvrirPassageDeLaLigne));
         // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
         // contexte à gauche, résumé au centre.
         zonesStatut.bind(Bindings.createObjectBinding(
@@ -281,17 +288,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
         boutonImporterNuit.setManaged(importActif);
         configurerColonnes();
         tablePassages.setItems(viewModel.passages());
-        tablePassages.setRowFactory(tableau -> {
-            TableRow<LignePassage> ligne = new TableRow<>();
-            ligne.setOnMouseClicked(evenement -> {
-                if (evenement.getButton() == MouseButton.PRIMARY
-                        && evenement.getClickCount() == 2
-                        && !ligne.isEmpty()) {
-                    ouvrirPassage.ouvrir(ligne.getItem().idPassage(), contexteSite(ligne.getItem()));
-                }
-            });
-            return ligne;
-        });
+        // Double-clic → ouvre le passage ; clic droit sélectionne la ligne pour le menu de ligne (#1796).
+        DoubleClicLigne.installer(tablePassages, this::ouvrirPassageDeLaLigne);
         // Cartes de points d'écoute + repli d'état vide (#791) : câblage extrait dans CartesPointsSite
         // pour alléger ce controller (seuil de cohésion PMD, #1087). Les deux porteurs de dialogue sont
         // ceux de l'écran (#1405) : les cartes fabriquaient jusqu'ici leur propre confirmateur, que
@@ -323,6 +321,11 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     private ContexteSite contexteSite(LignePassage ligne) {
         Site site = viewModel.siteCourant();
         return new ContexteSite(site.numeroCarre(), ligne.codePoint(), site.nomConvivial());
+    }
+
+    /// Ouvre M-Passage sur `ligne` (double-clic et « Ouvrir le passage » du menu de ligne, #1796).
+    private void ouvrirPassageDeLaLigne(LignePassage ligne) {
+        ouvrirPassage.ouvrir(ligne.idPassage(), contexteSite(ligne));
     }
 
     @FXML

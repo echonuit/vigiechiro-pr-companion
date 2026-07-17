@@ -270,6 +270,19 @@ class MultisiteViewTest {
     }
 
     @Test
+    @DisplayName("#1796 : le menu de ligne propose « Ouvrir le passage » (et « Écouter le passage »)")
+    void menu_de_ligne_ouvre_le_passage(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0)); // ligne idPassage 42L
+        var items = table.getContextMenu().getItems();
+        assertThat(items.get(0).getText()).isEqualTo("Ouvrir le passage");
+        assertThat(items.get(1).getText()).isEqualTo("Écouter le passage");
+
+        robot.interact(() -> items.get(0).fire());
+        verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
+    }
+
+    @Test
     @DisplayName("#154 : « Éditer les positions » montre le bouton Enregistrer (inactif), activé par un déplacement")
     void mode_edition_montre_et_active_enregistrer(FxRobot robot) {
         ToggleButton editer = robot.lookup("#boutonEditerPositions").queryAs(ToggleButton.class);

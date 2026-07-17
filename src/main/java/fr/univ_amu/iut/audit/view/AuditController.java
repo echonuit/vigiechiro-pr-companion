@@ -3,7 +3,9 @@ package fr.univ_amu.iut.audit.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.audit.model.ConstatAudit;
 import fr.univ_amu.iut.audit.viewmodel.AuditViewModel;
+import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -16,10 +18,9 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.StackPane;
 
 /// Écran **Audit de cohérence** (feature `audit`) : affiche le résultat de l'audit disque / base global
@@ -94,15 +95,8 @@ public class AuditController {
         // coupable et laissait l'utilisateur le retrouver à la main, alors que partout ailleurs dans
         // l'application une ligne de table s'ouvre au double-clic.
         TableDonnees.uniformiserNavigable(tableConstats);
-        tableConstats.setRowFactory(table -> {
-            TableRow<ConstatAudit> ligne = new TableRow<>();
-            ligne.setOnMouseClicked(clic -> {
-                if (clic.getButton() == MouseButton.PRIMARY && clic.getClickCount() == 2 && !ligne.isEmpty()) {
-                    ouvrirLePassage(ligne.getItem());
-                }
-            });
-            return ligne;
-        });
+        // Double-clic → ouvre le passage cité ; clic droit sélectionne la ligne pour le menu de ligne (#1796).
+        DoubleClicLigne.installer(tableConstats, this::ouvrirLePassage);
         lblResume.textProperty().bind(viewModel.resumeProperty());
         // Le voile bloque déjà l'écran pendant la vérification ; le grisage du bouton rend l'état
         // « en cours » lisible sans setDisable posé à la main (#1254).
@@ -121,6 +115,21 @@ public class AuditController {
                 Bindings.when(sansPassageSelectionne)
                         .then("Sélectionnez un constat qui cite un passage pour n'auditer que celui-ci.")
                         .otherwise("Relance l'audit sur ce seul passage (après l'avoir réparé)."));
+        // Menu de ligne au clic droit (#1796), en miroir du double-clic et du bouton : « Ouvrir le passage »
+        // et « Auditer ce passage », désactivés (affordance #789) quand le constat ne cite aucun passage. La
+        // table reçoit du même coup son sélecteur « Colonnes… » (elle n'en avait pas).
+        MenuItem itemOuvrirPassage = new MenuItem("Ouvrir le passage");
+        itemOuvrirPassage.disableProperty().bind(sansPassageSelectionne);
+        itemOuvrirPassage.setOnAction(
+                evenement -> ouvrirLePassage(tableConstats.getSelectionModel().getSelectedItem()));
+        MenuItem itemAuditerPassage = new MenuItem("Auditer ce passage");
+        itemAuditerPassage.disableProperty().bind(sansPassageSelectionne);
+        itemAuditerPassage.setOnAction(evenement -> auditerLePassageSelectionne());
+        GestionnaireColonnes.installerClicDroit(
+                tableConstats,
+                GestionnaireColonnes.colonnesParDefaut(tableConstats),
+                itemOuvrirPassage,
+                itemAuditerPassage);
         viewModel.rafraichir();
     }
 

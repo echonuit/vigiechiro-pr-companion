@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.AfterEach;
@@ -93,6 +95,20 @@ class SiteDetailVersPassageViewTest {
     @DisplayName("Double-cliquer une ligne de passage ouvre l'écran pivot M-Passage")
     void double_clic_ouvre_m_passage(FxRobot robot) {
         robot.doubleClickOn(DATE);
+
+        HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);
+        assertThat(stepper.getChildren()).isNotEmpty();
+    }
+
+    @Test
+    @DisplayName("#1796 : « Ouvrir le passage » du menu de ligne ouvre l'écran M-Passage")
+    void menu_de_ligne_ouvre_m_passage(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tablePassages").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0));
+        MenuItem ouvrir = table.getContextMenu().getItems().get(0);
+        assertThat(ouvrir.getText()).isEqualTo("Ouvrir le passage");
+
+        robot.interact(ouvrir::fire);
 
         HBox stepper = robot.lookup("#stepper").queryAs(HBox.class);
         assertThat(stepper.getChildren()).isNotEmpty();

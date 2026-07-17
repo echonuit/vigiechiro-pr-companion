@@ -3,11 +3,13 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.RafraichirAuRetour;
@@ -44,11 +46,9 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -257,7 +257,15 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         // Sélecteur de colonnes (#919) : clic droit + ☰ « outils » (réutilise le menu existant). La
         // disposition (ordre + visibilité) est retenue par écran et restaurée à la réouverture (#994).
         var colonnes = colonnesLignes();
-        GestionnaireColonnes.installer(tableLignes, menuActions, colonnes);
+        // Menu de ligne (#1796) : « Ouvrir le passage » et « Écouter le passage » (actions de ligne) devant
+        // « Colonnes… ». « Relever les analyses » reste au ☰ : c'est une action d'écran (toutes les nuits
+        // déposées), pas de ligne.
+        GestionnaireColonnes.installer(
+                tableLignes,
+                menuActions,
+                colonnes,
+                MenuLigne.item("Ouvrir le passage", tableLignes, this::ouvrirPassageDeLaLigne),
+                MenuLigne.item("Écouter le passage", tableLignes, ligne -> ecouterPassage()));
         GestionnaireColonnes.persister(tableLignes, colonnes, depotColonnes, FEATURE, "principale");
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
         // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne
@@ -265,18 +273,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         SortedList<LignePassage> lignesTriees = new SortedList<>(viewModel.lignes());
         lignesTriees.comparatorProperty().bind(tableLignes.comparatorProperty());
         tableLignes.setItems(lignesTriees);
-        // Double-clic sur une ligne → ouvre M-Passage (contrat socle, aucune dépendance vers passage.view).
-        tableLignes.setRowFactory(tableau -> {
-            TableRow<LignePassage> ligne = new TableRow<>();
-            ligne.setOnMouseClicked(evenement -> {
-                if (evenement.getButton() == MouseButton.PRIMARY
-                        && evenement.getClickCount() == 2
-                        && !ligne.isEmpty()) {
-                    ouvrirPassageDeLaLigne(ligne.getItem());
-                }
-            });
-            return ligne;
-        });
+        // Double-clic → ouvre M-Passage ; clic droit sélectionne la ligne survolée pour le menu de ligne
+        // (contrat socle, aucune dépendance vers passage.view).
+        DoubleClicLigne.installer(tableLignes, this::ouvrirPassageDeLaLigne);
 
         // Barre de filtres à puces (#537 étape 6b) : Carré / Statut / Verdict / Année + recherche. Le tri
         // (choixTri) reste un contrôle fixe : c'est un axe d'ordonnancement, pas un filtre.

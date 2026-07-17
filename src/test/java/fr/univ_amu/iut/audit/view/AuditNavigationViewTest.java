@@ -136,6 +136,22 @@ class AuditNavigationViewTest {
     }
 
     @Test
+    @DisplayName("#1796 : « Ouvrir le passage » du menu de ligne ouvre le passage cité par le constat")
+    void menu_de_ligne_ouvre_le_passage(FxRobot robot) {
+        TableView<ConstatAudit> table = robot.lookup("#tableConstats").queryAs(TableView.class);
+        WaitForAsyncUtils.waitForFxEvents();
+        robot.interact(() -> table.getSelectionModel().select(0));
+
+        var items = table.getContextMenu().getItems();
+        assertThat(items.get(0).getText()).isEqualTo("Ouvrir le passage");
+        assertThat(items.get(1).getText()).isEqualTo("Auditer ce passage");
+
+        robot.interact(() -> items.get(0).fire());
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(passageOuvert.get()).isNotNull();
+    }
+
+    @Test
     @DisplayName("#1347 : « Auditer ce passage » reste désactivé tant qu'aucun constat n'est sélectionné")
     void audit_cible_desactive_sans_selection(FxRobot robot) {
         Button bouton = robot.lookup("#boutonAuditerPassage").queryAs(Button.class);
