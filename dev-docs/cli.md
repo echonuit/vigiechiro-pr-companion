@@ -57,6 +57,7 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `lister-sites` | `[--json]` | A10 | `ServiceSites` (lecture) |
 | `lister-passages` | `[--json]` | P5 | `RegistrePassages` (lecture) |
 | `statut-passage` | `--passage <id> [--json]` | M-Passage | `ServicePassage.detailPassage` + `ResultatsIdentificationDao` (lecture) |
+| `diagnostiquer` | `--passage <id> [--json] [--csv <serie\|anomalies>]` | P6, #1672 | `ServiceDiagnostic.diagnostiquer` (lecture seule) : bilan matériel d'une nuit (climat R20, T° début nuit, cohérence horaire #548, GPS du point, anomalies/évènements R19). Parité CLI de M-Diagnostic. `--csv` exporte série ou anomalies via `ExportDiagnostic` (P6-CA6) |
 | `importer` | `--source <dir> --point <id> [--annee N] [--passage N]` | P2 | `ServiceImport` |
 | `importer-tadarida` | `--passage <id> --csv <fichier> [--remplacer]` | P6 | `ServiceValidation.importer` / `reimporter` |
 | `qualifier` | `--passage <id> --verdict <ok\|utilisable\|inexploitable> [--commentaire ..]` | R13 | `ServicePassage.poserVerdict` (alias `douteux`/`a-jeter` rétro-compatibles) |
