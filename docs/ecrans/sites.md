@@ -43,6 +43,13 @@ simplement reliés - vos données locales ne sont **jamais écrasées**. C'est l
 que celle exécutée automatiquement à la connexion ; un message sous le bandeau récapitule ce qui a
 été récupéré (ou signale qu'il n'y avait rien à récupérer, par exemple hors connexion).
 
+La synchronisation rapatrie **tous** les points d'un carré (utile pour importer une nuit sur un point
+pas encore utilisé). Mais un carré Point Fixe en compte des dizaines, dont un seul sert : les vues ne
+**mettent en avant** que les points **utilisés** (au moins un passage) ou que vous avez **ajoutés à la
+main**, et **résument** les autres - « + N rapatriés » sur la carte du site, un lien **« Afficher les
+points non utilisés »** dans son détail. Rien n'est perdu : les points rapatriés restent disponibles,
+juste repliés.
+
 ### Premier lancement
 
 À la toute première ouverture, aucun site n'est déclaré : l'écran vous guide vers la création de

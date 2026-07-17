@@ -320,6 +320,21 @@ public class ReconstructionModaleController {
                 });
     }
 
+    /// **Aperçu de documentation** (#1708) : place la modale dans l'état « import groupé en cours » - les
+    /// **deux** barres de progression (le **lot** « Nuit X / N » et la **nuit courante ») visibles, et
+    /// « Annuler » offert - pour la capture, **sans lancer de vrai lot**. Réservé aux outils de capture
+    /// (`fr.univ_amu.iut.multisite.outils.CaptureMultisite`) : l'application, elle, passe par
+    /// [#reconstruireTout]. Sur le fil JavaFX.
+    public void apercuImportGroupeEnCours(
+            String libelleLot, double fractionLot, String libelleNuit, double fractionNuit) {
+        operationEnCours.set(true);
+        lotEnCours.set(true);
+        viewModel.progressionGlobale().demarrer(libelleLot);
+        viewModel.progressionGlobale().appliquer(new Progression(libelleLot, fractionLot));
+        viewModel.progression().demarrer(libelleNuit);
+        viewModel.progression().appliquer(new Progression(libelleNuit, fractionNuit));
+    }
+
     /// « Annuler » : demande l'arrêt de la reconstruction en cours (#1252). Le travail hors fil s'arrête au
     /// prochain point de contrôle et la compensation défait ce qui a déjà été écrit - aucun passage partiel.
     @FXML

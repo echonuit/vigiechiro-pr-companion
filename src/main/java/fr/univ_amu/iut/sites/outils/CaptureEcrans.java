@@ -259,6 +259,14 @@ public final class CaptureEcrans {
                 service.ajouterPoint(etang.id(), "A1", 43.4010, -1.5740, "Pres du grand chene, a 30 m du chemin");
         PointDEcoute b2 = service.ajouterPoint(etang.id(), "B2", 43.4055, -1.5680, "Lisiere de roseliere");
         service.ajouterPoint(etang.id(), "C3", null, null, "Bord de l'etang - GPS a relever");
+        // Points RAPATRIES de la plateforme mais jamais utilises (#1738) : masques par defaut de la fiche
+        // (un lien « Afficher les points non utilises » les revele) et resumes sur la carte M-Sites
+        // (« + N rapatries »), pour ne pas noyer les points qui servent sous la grille rapatriee.
+        service.ajouterPointSynchronise(etang.id(), "Z10", 43.4020, -1.5730, null);
+        service.ajouterPointSynchronise(etang.id(), "Z11", 43.4030, -1.5720, null);
+        service.ajouterPointSynchronise(etang.id(), "Z12", 43.4040, -1.5710, null);
+        service.ajouterPointSynchronise(etang.id(), "Z13", 43.4050, -1.5700, null);
+        service.ajouterPointSynchronise(etang.id(), "Z14", 43.4060, -1.5690, null);
         passages.insert(passage(2, "2026-08-22", a1.id(), SERIE_PR1, StatutWorkflow.DEPOSE, Verdict.OK, "2026-08-25"));
         passages.insert(passage(1, "2026-06-18", a1.id(), SERIE_PR1, StatutWorkflow.VERIFIE, Verdict.OK, null));
         passages.insert(passage(2, "2026-08-24", b2.id(), SERIE_PR2, StatutWorkflow.TRANSFORME, null, null));

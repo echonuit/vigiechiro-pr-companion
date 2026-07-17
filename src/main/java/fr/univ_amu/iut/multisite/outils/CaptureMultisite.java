@@ -119,6 +119,7 @@ public final class CaptureMultisite {
         rendreEcranEdition(injecteur, sortie.resolve("apercu-multisite-edition.png"));
         rendreEcranCartePleine(injecteur, sortie.resolve("apercu-multisite-carte-pleine.png"));
         rendreModaleReconstruction(injecteur, sortie.resolve("apercu-multisite-reconstruction.png"));
+        rendreImportGroupe(injecteur, sortie.resolve("apercu-multisite-reconstruction-groupe.png"));
     }
 
     /// Rend la **modale « Reconstruire un passage manquant »** (#1396) : les nuits déposées sur
@@ -146,6 +147,38 @@ public final class CaptureMultisite {
                                 "6a53f5faae21902a597394d3", CARRE_DEMO, "A1", "2026-06-18T21:42:00+02:00", true),
                         new ParticipationOrpheline(
                                 "6a53f5faae21902a597394e7", "130711", "Z41", "2026-07-03T22:00:00+02:00", false))),
+                fichier);
+    }
+
+    /// Rend la modale en **import groupé en cours** (#1708) : les **deux** barres de progression - le **lot**
+    /// (« Nuit 2 / 3 ») et la **nuit courante** (« Import des observations… ») - et le bouton **Annuler**.
+    /// L'état est posé par le crochet de capture du controller
+    /// ([ReconstructionModaleController#apercuImportGroupeEnCours]), sans lancer de vrai lot : le rendu reste
+    /// celui de la vue réelle.
+    private static void rendreImportGroupe(Injector injecteur, Path fichier) throws IOException {
+        ReconstructionViewModel viewModel = new ReconstructionViewModel(Optional.empty());
+        ExecuteurTache executeur = injecteur.getInstance(ExecuteurTache.class);
+        FXMLLoader loader = new FXMLLoader(ReconstructionModaleController.class.getResource(FXML_RECONSTRUCTION));
+        loader.setControllerFactory(type -> type == ReconstructionModaleController.class
+                ? new ReconstructionModaleController(viewModel, executeur)
+                : injecteur.getInstance(type));
+        Parent vue = loader.load();
+        ReconstructionModaleController controleur = loader.getController();
+        // Taille explicite (les deux barres de progression ajoutent de la hauteur : sans elle, l'auto-taille
+        // rognait le paragraphe d'explication en tête - « … observations … », défaut vu à la revue visuelle).
+        Scene scene = new Scene(vue, 760, 500);
+        ApercuFx.capturerApresPreparation(
+                scene,
+                () -> {
+                    viewModel.appliquer(List.of(
+                            new ParticipationOrpheline(
+                                    "6a53f5faae21902a597394d3", CARRE_DEMO, "A1", "2026-06-18T21:42:00+02:00", true),
+                            new ParticipationOrpheline(
+                                    "6a53f5faae21902a597394d4", CARRE_DEMO, "B2", "2026-06-19T21:40:00+02:00", true),
+                            new ParticipationOrpheline(
+                                    "6a53f5faae21902a597394d5", CARRE_DEMO, "C3", "2026-06-20T21:38:00+02:00", true)));
+                    controleur.apercuImportGroupeEnCours("Nuit 2 / 3…", 2.0 / 3.0, "Import des observations…", 0.96);
+                },
                 fichier);
     }
 
