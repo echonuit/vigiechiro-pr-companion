@@ -44,6 +44,16 @@ import java.util.function.Consumer;
 /// intacte ; rejouer la réactivation ne casse rien. **Non destructif** : les fichiers sont **copiés**
 /// depuis le dossier source (jamais déplacés), et ni les observations ni les vérifications ne sont
 /// touchées - on rebranche des chemins, on ne recalcule rien.
+///
+/// **Une des trois coutures d'un même concept d'import** (#1662, EPIC B). La reconstruction (#1305,
+/// [ServiceReconstructionPassages], hydratation d'un squelette #1710) et l'import groupé (#1708)
+/// rapatrient les **observations** d'une nuit depuis la plateforme, mais *sans audio ni ancrage*
+/// (`idDonneeVigieChiro` null) : le passage devient **consultable**. La réactivation est la variante
+/// « **observations + audio + ancrage** », celle qui **complète** les deux autres : elle rebranche les
+/// **fichiers** (le passage devient **écoutable**) et, sur un passage reconstruit, rapatrie les `donnees`
+/// pour **acquérir l'ancrage différé** ([#acquerirAncrageSiNecessaire], #1571). Les trois partagent la
+/// même exigence - ne rebrancher que ce qui est **vérifié**, et **dire** ce qui manque - et la même
+/// surface : hors du fil JavaFX, progression, annulation, rapport honnête (jamais un simple « c'est fait »).
 public class ServiceReactivationPassage {
 
     private static final String PARAM_ID_PASSAGE = "idPassage";
