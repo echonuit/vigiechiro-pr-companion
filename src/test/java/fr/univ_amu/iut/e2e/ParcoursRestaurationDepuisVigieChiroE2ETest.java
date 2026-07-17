@@ -30,21 +30,19 @@ import fr.univ_amu.iut.commun.api.TaxonVigieChiro;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.passage.model.DisponibiliteAudio;
-import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
-import fr.univ_amu.iut.passage.model.RapportReconstruction;
-import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
+import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
-import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -68,21 +66,21 @@ import org.junit.jupiter.api.Test;
 /// **Le parcours, sur une base réellement vide** (aucun site, aucun point, aucun passage) :
 ///
 /// 1. **synchroniser** : les rapprocheurs du socle (`Set<RapprochementVigieChiro>`, ceux-là mêmes que
-///    déclenche la connexion) créent les **sites et leurs points** à partir des participations ;
-/// 2. **repérer** : les participations sans équivalent local sont listées (`orphelines`) et leur point
-///    est désormais **connu** — sans l'étape 1, la reconstruction les refuserait ;
-/// 3. **reconstruire** : chaque participation devient un **passage archivé** (lignes de séquences sans
-///    fichier) et ses **observations** sont rapatriées ;
-/// 4. **auditer** : le workspace est **sain**. Un passage sans audio n'est pas un passage cassé — c'est
-///    un passage **archivé** (#1297), et l'audit informe au lieu de crier (#1303).
+///    déclenche la connexion) créent les **sites et leurs points** à partir des participations, puis les
+///    **passages en squelettes** (#1707) : point + date + n°, archivés, sans observations ;
+/// 2. **retrouver** : la nuit déposée sur la plateforme est désormais un **passage local** (elle n'est
+///    plus une « orpheline »), consultable dans l'historique de son carré ;
+/// 3. **auditer** : le workspace, réduit à des squelettes, est **sain**. Un passage sans audio n'est pas
+///    un passage cassé — c'est un passage **archivé** (#1297), et l'audit informe au lieu de crier
+///    (#1303, garde-fou #1719).
 ///
 /// La plateforme est bouchonnée ([ClientVigieChiro] mocké, substitué dans l'injecteur **réel** par
 /// `Modules.override`) : tout le reste est le vrai câblage de l'application.
 ///
-/// ⚠️ Ce que le test **ne** prouve **pas**, parce que c'est faux : que l'audio revienne. Un dépôt ZIP
-/// (le mode par défaut) ne laisse **aucun** audio sur le serveur. Le passage restauré est **ABSENTE** :
-/// consultable, non écoutable, réactivable en réimportant les fichiers d'origine (#1302). C'est
-/// exactement la limite que la doc annonce, et le test la fige.
+/// ⚠️ Ce que le test **ne** prouve **pas**, parce que ce n'est pas encore fait : l'**hydratation** du
+/// squelette (séquences, observations, matériel, météo) à la demande de l'utilisateur — c'est le geste
+/// suivant (#1710). Et ce qu'il ne prouvera jamais, parce que c'est faux : que l'audio revienne d'un
+/// dépôt ZIP (le mode par défaut ne laisse **aucun** audio sur le serveur).
 class ParcoursRestaurationDepuisVigieChiroE2ETest {
 
     private static final String PARTICIPATION = "6a53f5faae21902a597394d3";
@@ -93,7 +91,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
     private static final String SEQ_2 = "Car130711-2026-Pass1-Z41-PaRec_20260703_220534_000";
 
     @Test
-    @DisplayName("Base vierge : la plateforme rend les sites, les points, les passages et leurs observations")
+    @DisplayName("Base vierge : la synchro rapatrie sites, points et passages (en squelettes archivés)")
     void base_vierge_restauree_depuis_la_plateforme() throws Exception {
         ClientVigieChiro client = plateformeBouchonnee();
         Injector injector = injecteurAvec(client);
@@ -105,10 +103,15 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .isEmpty();
 
         // 1. Synchroniser : ce que fait la connexion (ConnexionViewModel#amorcerRapprochements) et la CLI
-        //    `synchroniser-vigiechiro`. Les sites VIENNENT des participations (toutes pages, dédupliquées).
-        for (RapprochementVigieChiro rapprocheur :
-                injector.getInstance(Key.get(new TypeLiteral<Set<RapprochementVigieChiro>>() {}))) {
-            rapprocheur.synchroniser(client);
+        //    `synchroniser-vigiechiro`. Les sites VIENNENT des participations ; les passages en découlent
+        //    (#1707), en SQUELETTE. Les rapprocheurs ne sont pas ordonnés et le squelette exige que son
+        //    point soit déjà local : DEUX passes garantissent l'état final quel que soit l'ordre - c'est
+        //    l'idempotence de la synchro, et le « à la synchro suivante » documenté pour un point tout neuf.
+        for (int passe = 0; passe < 2; passe++) {
+            for (RapprochementVigieChiro rapprocheur :
+                    injector.getInstance(Key.get(new TypeLiteral<Set<RapprochementVigieChiro>>() {}))) {
+                rapprocheur.synchroniser(client);
+            }
         }
 
         ServiceSites serviceSites = injector.getInstance(ServiceSites.class);
@@ -122,60 +125,54 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .as("ses points d'écoute aussi : sans eux, aucune participation ne serait rattachable")
                 .hasSize(1);
 
-        // 2. Repérer : la participation n'a aucun passage local, et son point est maintenant connu.
+        // 2. Retrouver : la nuit déposée sur la plateforme est désormais un PASSAGE LOCAL, en squelette. Elle
+        //    n'est donc plus une « orpheline » (participation sans passage). Son hydratation - séquences,
+        //    observations, matériel, météo - est le geste SUIVANT (#1710), à la demande de l'utilisateur.
         ServiceReconstructionPassages reconstruction = injector.getInstance(
                         Key.get(new TypeLiteral<Optional<ServiceReconstructionPassages>>() {}))
                 .orElseThrow();
-        List<ParticipationOrpheline> orphelines = reconstruction.orphelines();
-        assertThat(orphelines).singleElement().satisfies(orpheline -> {
-            assertThat(orpheline.idParticipation()).isEqualTo(PARTICIPATION);
-            assertThat(orpheline.pointLocalConnu())
-                    .as("l'étape 1 a créé le point : sans elle, la reconstruction refuserait cette nuit")
-                    .isTrue();
-        });
+        assertThat(reconstruction.orphelines())
+                .as("la synchro a consommé l'orpheline : la nuit est un passage local (squelette)")
+                .isEmpty();
 
-        // 3. Reconstruire : passage archivé + séquences (lignes sans fichier) + observations rapatriées.
-        RapportReconstruction rapport = reconstruction.reconstruire(PARTICIPATION);
-
-        assertThat(rapport.sequencesRecreees()).isEqualTo(2);
+        List<Passage> passages = new PassageDao(source).findAll();
+        assertThat(passages)
+                .as("un seul passage : le squelette de la nuit rapatriée")
+                .hasSize(1);
+        Passage squelette = passages.getFirst();
+        assertThat(squelette.statutWorkflow())
+                .as("la participation existe sur la plateforme : le passage est déposé")
+                .isEqualTo(StatutWorkflow.DEPOSE);
+        assertThat(squelette.idEnregistreur())
+                .as("aucun détail téléchargé pour un squelette : enregistreur honnêtement « inconnu »")
+                .isEqualTo("INCONNU");
         SessionDao sessionDao = new SessionDao(source);
         SequenceDao sequenceDao = new SequenceDao(source);
-        Long idSession =
-                sessionDao.trouverParPassage(rapport.idPassage()).orElseThrow().id();
-        ObservationDao observationDao = new ObservationDao(source);
-        long observations = sequenceDao.findBySession(idSession).stream()
-                .mapToLong(
-                        sequence -> observationDao.findBySequence(sequence.id()).size())
-                .sum();
-        assertThat(observations)
-                .as("les observations sont EN BASE, rattachées aux séquences recréées par leur nom")
-                .isEqualTo(3);
+        SessionDEnregistrement session =
+                sessionDao.trouverParPassage(squelette.id()).orElseThrow();
+        assertThat(session.archivee())
+                .as("un squelette naît archivé : rien n'a jamais été importé ici")
+                .isTrue();
+        assertThat(sequenceDao.findBySession(session.id()))
+                .as("un squelette n'a pas encore de séquence : l'hydratation (#1710) les créera")
+                .isEmpty();
         assertThat(new LienVigieChiroDao(source)
-                        .objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(rapport.idPassage())))
-                .as("le passage est ré-ancré sur sa participation : il se re-déposera, se re-vérifiera")
+                        .objectidPour(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(squelette.id())))
+                .as("le passage est ancré sur sa participation : la nuit est reliée à ce qu'en sait le serveur")
                 .contains(PARTICIPATION);
 
-        // La limite, figée : le serveur n'a pas rendu l'audio, et il ne le rendra pas (dépôt ZIP).
-        ServiceDisponibiliteAudio disponibilite = injector.getInstance(ServiceDisponibiliteAudio.class);
-        assertThat(disponibilite.disponibilite(rapport.idPassage()))
-                .as("consultable, pas écoutable : le passage restauré est archivé, pas complet")
-                .isEqualTo(DisponibiliteAudio.ABSENTE);
-        assertThat(rapport.lacunes())
-                .as("ce qui manque est DIT, pas deviné (ni journal, ni relevé, ni non-identifiés, ni empreintes)")
-                .isNotEmpty();
-
-        // 4. Auditer : le workspace restauré est SAIN. C'est la question de fond de l'EPIC #1154 — « chaque
-        //    écart disque / base / serveur est-il visible ? » — et sa réciproque, tout aussi importante :
-        //    un audit qui crie sur un état normal ne vaut rien, car on cesse de l'écouter.
+        // 3. Auditer : le workspace, réduit à un squelette, est SAIN. C'est la question de fond de l'EPIC
+        //    #1154 — « chaque écart disque / base / serveur est-il visible ? » — et sa réciproque, tout
+        //    aussi importante : un audit qui crie sur un état normal ne vaut rien, car on cesse de l'écouter.
         RapportAudit audit = injector.getInstance(ServiceAuditCoherence.class).auditerTout();
         assertThat(audit.constats())
-                .as("aucune ERREUR : un passage restauré est archivé, pas corrompu (#1303)")
+                .as("aucune ERREUR : un squelette est archivé, pas corrompu (#1303, garde-fou #1719)")
                 .noneMatch(constat -> constat.severite() == SeveriteConstat.ERREUR);
         assertThat(audit.constats())
-                .as("le passage restauré porte le VRAI préfixe R6 : un préfixe fabriqué serait signalé à vie")
+                .as("le squelette porte le VRAI préfixe R6 : un préfixe fabriqué serait signalé à vie")
                 .noneMatch(constat -> constat.categorie() == CategorieConstat.PREFIXE_NON_CONFORME);
         assertThat(audit.constats())
-                .as("aucun fichier n'est réclamé : les observations de la plateforme ne viennent d'aucun CSV")
+                .as("aucun fichier n'est réclamé : un squelette n'a aucune séquence sur disque")
                 .noneMatch(constat -> constat.categorie() == CategorieConstat.DISQUE_MANQUANT);
         assertThat(audit.constats())
                 .as("il reste ce qu'il doit rester : UN constat, informatif, qui dit que l'audio est archivé")
