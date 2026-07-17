@@ -341,6 +341,19 @@ class SonsValidationViewTest {
     }
 
     @Test
+    @DisplayName("#1794 : double-clic sur une observation ouvre la fiche de la proposition Tadarida")
+    void double_clic_observation_ouvre_la_fiche(FxRobot robot) {
+        // Première ligne = « Pippip » (Pipistrelle commune), chiroptère à fiche PNA.
+        Node ligne =
+                robot.lookup("#tableObservations").lookup(".table-row-cell").query();
+        robot.doubleClickOn(ligne);
+
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
+    }
+
+    @Test
     @DisplayName("Les puces de filtres s'alignent horizontalement (une seule rangée, pas empilées)")
     void puces_filtres_alignees_horizontalement(FxRobot robot) {
         MenuButton menuAjout = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);

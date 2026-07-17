@@ -364,20 +364,37 @@ class AnalyseViewTest {
     }
 
     @Test
-    @DisplayName("#788 : double-clic sur une observation ouvre l'écoute, pas le passage")
-    void double_clic_observation_ouvre_l_ecoute(FxRobot robot) {
+    @DisplayName("#1794 : double-clic sur une observation ouvre la fiche de l'espèce (ni écoute ni passage)")
+    void double_clic_observation_ouvre_la_fiche(FxRobot robot) {
         TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
-        robot.interact(() -> especes.getSelectionModel().select(0)); // charge une observation
+        robot.interact(() -> especes.getSelectionModel().select(0)); // charge une observation (Pipistrelle commune)
 
-        // Double-clic sur la ligne d'observation : destination naturelle en analyse par espèce = l'écoute
-        // (comme le bouton « Écouter »), et surtout PAS le passage. On type le nœud en Node pour lever
-        // l'ambiguïté entre les surcharges doubleClickOn(Matcher) et doubleClickOn(Predicate).
+        // Double-clic sur la ligne d'observation. On type le nœud en Node pour lever l'ambiguïté entre les
+        // surcharges doubleClickOn(Matcher) et doubleClickOn(Predicate).
         Node ligneObservation =
                 robot.lookup("#tableObservations").lookup(".table-row-cell").query();
         robot.doubleClickOn(ligneObservation);
 
-        verify(ouvrirAudio).ouvrir(any(SourceObservations.class), eq(7L));
+        // Le double-clic ouvre la fiche de l'espèce sélectionnée (#1794). L'écoute reste sur le bouton
+        // « Écouter » et l'ouverture du passage sur son action : aucun des deux n'est déclenché ici.
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
+        verify(ouvrirAudio, never()).ouvrir(any(), any());
         verify(ouvrirPassage, never()).ouvrir(any(), any());
+    }
+
+    @Test
+    @DisplayName("#1794 : double-clic sur une espèce ouvre sa fiche (même cible que le menu contextuel)")
+    void double_clic_espece_ouvre_la_fiche(FxRobot robot) {
+        // Première espèce = Pipistrelle commune, chiroptère à fiche PNA.
+        Node ligneEspece =
+                robot.lookup("#tableEspeces").lookup(".table-row-cell").query();
+        robot.doubleClickOn(ligneEspece);
+
+        assertThat(urlsFiche)
+                .containsExactly(
+                        "https://plan-actions-chiropteres.fr/les-chauves-souris/les-especes/pipistrelle-commune/");
     }
 
     @Test

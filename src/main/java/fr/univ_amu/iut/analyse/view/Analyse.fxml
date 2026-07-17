@@ -113,7 +113,7 @@
         <Label fx:id="lblDetailVide" styleClass="analyse-detail-vide" wrapText="true"
                text="Sélectionnez une espèce dans l'inventaire (regroupement « Par espèce ») pour lister ses observations à travers les passages."/>
       </StackPane>
-      <Label text="Astuce : double-cliquez une ligne pour l'écouter." styleClass="section-sous"/>
+      <Label text="Astuce : double-cliquez une ligne pour ouvrir la fiche de l'espèce." styleClass="section-sous"/>
     </VBox>
 
   </SplitPane>

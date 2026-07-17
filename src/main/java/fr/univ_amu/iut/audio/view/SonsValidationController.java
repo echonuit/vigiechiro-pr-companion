@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DemandeurDeChoixModifiable;
 import fr.univ_amu.iut.commun.view.DialogueProgression;
+import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -408,6 +409,9 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // sélection ; il ne s'ouvre que si la ligne porte réellement des messages. Câblage délégué
         // (PanneauDiscussion.installer), comme MenuCertitude : ce contrôleur est au plafond de NcssCount.
         PanneauDiscussion.installer(hoteDiscussion, tableObservations, viewModel, appuis.executeur());
+        // Double-clic sur une observation → fiche de l'espèce (#1794), même cible que « Fiche de l'espèce »
+        // du menu ☰. Le clic droit sélectionne la ligne survolée sans casser une sélection multiple.
+        DoubleClicLigne.installer(tableObservations, actionsMenu::ouvrirFiche);
 
         tableObservations.getSelectionModel().selectedItemProperty().addListener((obs, ancienne, nouvelle) -> {
             viewModel.selectionProperty().set(nouvelle);

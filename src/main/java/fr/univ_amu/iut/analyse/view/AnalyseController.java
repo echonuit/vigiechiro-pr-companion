@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
+import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -48,10 +49,8 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseButton;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -302,15 +301,9 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 () -> viewModel.regroupementProperty().get());
         selecteurColonnes.installer(itemFicheEspece);
         selecteurColonnes.persister(depotColonnes, FEATURE);
-        tableEspeces.setRowFactory(tableau -> {
-            TableRow<EspeceAgregee> ligne = new TableRow<>();
-            ligne.setOnMousePressed(evenement -> {
-                if (evenement.getButton() == MouseButton.SECONDARY && !ligne.isEmpty()) {
-                    tableEspeces.getSelectionModel().select(ligne.getIndex());
-                }
-            });
-            return ligne;
-        });
+        // Clic droit : sélectionne la ligne (cible du menu contextuel). Double-clic : ouvre la fiche de
+        // l'espèce, même cible que l'item « Fiche de l'espèce » du menu (#1794).
+        DoubleClicLigne.installer(tableEspeces, espece -> actionFicheEspece.ouvrir(especeDe(espece)));
         actionFicheEspece.configurer(itemFicheEspece, especeDe(null));
 
         // Sélecteur de regroupement (pivot espèce ↔ lieu).
@@ -435,19 +428,14 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                         .then("Sélectionnez une observation dans le tableau pour ouvrir son passage.")
                         .otherwise("Ouvrir le passage de l'observation sélectionnée."));
 
-        // Double-clic sur une observation → ouvre l'écoute (comme le bouton « Écouter »), destination
-        // naturelle en analyse par espèce ; « Ouvrir le passage » reste une action explicite du panneau.
-        tableObservations.setRowFactory(tableau -> {
-            TableRow<ObservationEspece> ligne = new TableRow<>();
-            ligne.setOnMouseClicked(evenement -> {
-                if (evenement.getButton() == MouseButton.PRIMARY
-                        && evenement.getClickCount() == 2
-                        && !ligne.isEmpty()) {
-                    ecouter(ligne.getItem());
-                }
-            });
-            return ligne;
-        });
+        // Double-clic sur une observation → fiche de l'espèce (#1794). Toutes les observations du détail
+        // portent la même espèce ; seule l'agrégée sélectionnée porte le nom latin/vernaculaire, donc c'est
+        // elle qu'on ouvre. L'écoute d'une détection reste le bouton « Écouter » et « Ouvrir le passage » le
+        // sien.
+        DoubleClicLigne.installer(
+                tableObservations,
+                observation -> actionFicheEspece.ouvrir(
+                        especeDe(tableEspeces.getSelectionModel().getSelectedItem())));
     }
 
     /// L'espèce ciblée par « Fiche de l'espèce » : code, nom latin et nom vernaculaire de la ligne

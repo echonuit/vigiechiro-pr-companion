@@ -24,10 +24,20 @@ final class ActionsMenuAudio {
     /// Cible l'item « Fiche de l'espèce » (#847) sur la proposition Tadarida de la ligne sélectionnée
     /// (désactivé avec explication si aucune ligne, ou pseudo-taxon sans fiche).
     void configurerFiche(MenuItem item, LigneObservationAudio ligne) {
-        EspeceIdentifiee espece = ligne == null
+        ficheEspece.configurer(item, especeDe(ligne));
+    }
+
+    /// Ouvre la fiche de la proposition Tadarida de `ligne` dans le navigateur (double-clic, #1794) ;
+    /// inerte si `ligne` est nulle ou si le taxon n'a pas de fiche (pseudo-taxon). Même cible que
+    /// l'item « Fiche de l'espèce » du menu ☰.
+    void ouvrirFiche(LigneObservationAudio ligne) {
+        ficheEspece.ouvrir(especeDe(ligne));
+    }
+
+    private static EspeceIdentifiee especeDe(LigneObservationAudio ligne) {
+        return ligne == null
                 ? new EspeceIdentifiee(null, null, null)
                 : new EspeceIdentifiee(ligne.taxonTadarida(), ligne.latinTadarida(), ligne.nomTadarida());
-        ficheEspece.configurer(item, espece);
     }
 
     ActionDonneesVigieChiro donneesVigieChiro() {
