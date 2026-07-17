@@ -1,0 +1,34 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-incoherente
+but: "Journal (série 1925492, nuit 22/04) en désaccord avec les wav (série 1648011, nuit 30/04) -> bandeau « incohérence »."
+
+# Le journal déclare la série 1925492 et la nuit du 22/04.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Les enregistrements portent une AUTRE série (1648011) et une AUTRE nuit (30/04) : la série déclarée
+# est absente des fichiers ET la date du journal ne tombe pas dans leur nuit -> incohérence.
+enregistreurs:
+  - serie: "1648011"
+    horodatages:
+      - "20260430_210000"
+      - "20260430_223000"
+      - "20260430_233000"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: true
+  nuits: 1

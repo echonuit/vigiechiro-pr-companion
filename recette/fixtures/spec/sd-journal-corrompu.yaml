@@ -1,0 +1,30 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-journal-corrompu
+but: "LogPR présent mais illisible -> l'inspection échoue avec un message compréhensible."
+
+# `corrompu: true` écrit un journal sans aucune série extractible (ni motif PR<n> ni « numéro de
+# série ») : AnalyseurLogPR lève une erreur, propagée par l'inspection.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+  corrompu: true
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_210515"
+      - "20260422_223045"
+
+# journalLisible: false -> le garde-fou attend que l'inspection lève une IllegalArgumentException.
+attendu:
+  journalLisible: false

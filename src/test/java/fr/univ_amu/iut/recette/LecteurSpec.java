@@ -3,6 +3,7 @@ package fr.univ_amu.iut.recette;
 import fr.univ_amu.iut.recette.SpecCarteSd.Attendu;
 import fr.univ_amu.iut.recette.SpecCarteSd.Enregistreur;
 import fr.univ_amu.iut.recette.SpecCarteSd.Journal;
+import fr.univ_amu.iut.recette.SpecCarteSd.Prefixe;
 import fr.univ_amu.iut.recette.SpecCarteSd.Thlog;
 import fr.univ_amu.iut.recette.SpecCarteSd.Wav;
 import java.io.IOException;
@@ -11,8 +12,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -28,6 +32,10 @@ final class LecteurSpec {
     private static final int FREQUENCE_PAR_DEFAUT_HZ = 384_000;
     private static final double DUREE_PAR_DEFAUT_SECONDES = 1.5;
     private static final int MESURES_THLOG_PAR_DEFAUT = 6;
+    private static final int INTERVALLE_PAR_DEFAUT_SECONDES = 300;
+
+    private static final DateTimeFormatter FORMAT_HORODATAGE =
+            DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss", Locale.ROOT);
 
     /// Lit et interprète le fichier de spec `fichierYaml`.
     SpecCarteSd lire(Path fichierYaml) throws IOException {
@@ -39,10 +47,20 @@ final class LecteurSpec {
             Thlog thlog = lireThlog(asMap(racine.get("thlog")));
             Wav wav = lireWav(asMap(racine.get("wav")));
             List<Enregistreur> enregistreurs = lireEnregistreurs(asList(racine.get("enregistreurs")));
-            Attendu attendu = lireAttendu(asMap(racine.get("attendu")), journal, thlog);
+            Prefixe prefixe = lirePrefixe(asMap(racine.get("prefixe")));
+            boolean zip = bool(racine, "zip", false);
+            Attendu attendu = lireAttendu(asMap(racine.get("attendu")), journal, thlog, prefixe != null);
 
             return new SpecCarteSd(
-                    str(racine, "fixture"), str(racine, "but", ""), journal, thlog, wav, enregistreurs, attendu);
+                    str(racine, "fixture"),
+                    str(racine, "but", ""),
+                    journal,
+                    thlog,
+                    wav,
+                    enregistreurs,
+                    prefixe,
+                    zip,
+                    attendu);
         }
     }
 
@@ -52,7 +70,8 @@ final class LecteurSpec {
                 bool(map, "present", true),
                 str(map, "serie"),
                 nuit == null ? null : LocalDate.parse(nuit),
-                bool(map, "sondePresente", true));
+                bool(map, "sondePresente", true),
+                bool(map, "corrompu", false));
     }
 
     private static Thlog lireThlog(Map<?, ?> map) {
@@ -69,23 +88,53 @@ final class LecteurSpec {
         List<Enregistreur> enregistreurs = new ArrayList<>();
         for (Object element : liste) {
             Map<?, ?> map = asMap(element);
-            List<String> horodatages = new ArrayList<>();
-            for (Object horodatage : asList(map.get("horodatages"))) {
-                horodatages.add(horodatage.toString());
-            }
-            enregistreurs.add(new Enregistreur(str(map, "serie"), horodatages));
+            enregistreurs.add(new Enregistreur(
+                    str(map, "serie"), lireHorodatages(map.get("horodatages")), lireChaines(map.get("fauxWav"))));
         }
         return enregistreurs;
     }
 
-    private static Attendu lireAttendu(Map<?, ?> map, Journal journal, Thlog thlog) {
+    /// Horodatages soit explicites (liste), soit génératifs (`{debut, nombre, intervalleSecondes}`)
+    /// pour les grosses cartes, expansés de façon déterministe (aucune horloge).
+    private static List<String> lireHorodatages(Object valeur) {
+        if (valeur instanceof Map<?, ?> generatif) {
+            LocalDateTime base = LocalDateTime.parse(str(generatif, "debut"), FORMAT_HORODATAGE);
+            int nombre = intOf(generatif, "nombre", 0);
+            int intervalle = intOf(generatif, "intervalleSecondes", INTERVALLE_PAR_DEFAUT_SECONDES);
+            List<String> horodatages = new ArrayList<>();
+            for (int i = 0; i < nombre; i++) {
+                horodatages.add(base.plusSeconds((long) intervalle * i).format(FORMAT_HORODATAGE));
+            }
+            return horodatages;
+        }
+        return lireChaines(valeur);
+    }
+
+    private static Prefixe lirePrefixe(Map<?, ?> map) {
+        if (map.isEmpty()) {
+            return null;
+        }
+        return new Prefixe(str(map, "carre"), intOf(map, "annee", 2026), intOf(map, "passage", 1), str(map, "point"));
+    }
+
+    private static Attendu lireAttendu(Map<?, ?> map, Journal journal, Thlog thlog, boolean prefixe) {
         return new Attendu(
                 bool(map, "aJournal", journal.present()),
                 bool(map, "aReleve", thlog.present()),
-                bool(map, "journalLisible", true),
+                bool(map, "journalLisible", !journal.corrompu()),
                 bool(map, "plusieursEnregistreurs", false),
                 bool(map, "incoherent", false),
-                intOf(map, "nuits", 1));
+                intOf(map, "nuits", 1),
+                str(map, "etatNommage", prefixe ? "PREFIXE" : "BRUT"),
+                intOf(map, "rejets", 0));
+    }
+
+    private static List<String> lireChaines(Object valeur) {
+        List<String> chaines = new ArrayList<>();
+        for (Object element : asList(valeur)) {
+            chaines.add(element.toString());
+        }
+        return chaines;
     }
 
     private static Map<?, ?> asMap(Object valeur) {

@@ -1,0 +1,40 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-prefixee
+but: "Fichiers déjà préfixés Car... -> état de nommage PREFIXE (discordance de préfixe si mauvais rattachement)."
+
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Préfixe de session R6 appliqué aux noms de bruts :
+# Car130711-2026-Pass1-Z1-PaRecPR1925492_<horodatage>.wav
+prefixe:
+  carre: "130711"
+  annee: 2026
+  passage: 1
+  point: "Z1"
+
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_210515"
+      - "20260422_223045"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1
+  etatNommage: "PREFIXE"

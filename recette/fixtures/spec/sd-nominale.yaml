@@ -23,6 +23,9 @@ wav:
   frequenceHz: 384000
   dureeSecondes: 1.5
 
+# Produit aussi sd-nominale.zip (arbre compressé) pour exercer le chemin de décompression de l'import.
+zip: true
+
 # Enregistreurs présents dans `bruts/`. Un fichier par horodatage : PaRecPR<serie>_<yyyyMMdd>_<HHmmss>.wav.
 # Ici une seule série et une seule nuit (soir du 22/04 -> matin du 23/04).
 enregistreurs:

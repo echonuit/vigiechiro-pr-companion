@@ -1,0 +1,37 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-multi-nuits
+but: "Trois nuits sous un journal unique -> la table des nuits apparaît (3 lignes, n° auto, cases Inclure)."
+
+# Un seul journal (première nuit) : la carte a été laissée tourner plusieurs nuits.
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-07-03"
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# Deux enregistrements par nuit, sur trois nuits consécutives (03, 04, 05/07). La partition détecte
+# trois nuits ; la date du journal n'est PAS jugée incohérente (exception multi-nuits, > 1 jour d'écart).
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260703_210000"
+      - "20260703_233000"
+      - "20260704_210000"
+      - "20260704_233000"
+      - "20260705_210000"
+      - "20260705_233000"
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 3

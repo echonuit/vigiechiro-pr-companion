@@ -1,0 +1,31 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-sans-journal
+but: "Aucun LogPR -> l'absence de journal est signalée, l'import reste possible (mode dégradé)."
+
+# Pas de journal : l'identité (série, nuit) sera reconstituée depuis les noms de fichiers à l'import.
+journal:
+  present: false
+
+# Le relevé climatique est présent (la sonde a bien tourné) : sa série nomme le fichier THLog.
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_210515"
+      - "20260422_223045"
+
+attendu:
+  aJournal: false
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1

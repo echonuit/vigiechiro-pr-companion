@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.recette;
 
 import fr.univ_amu.iut.recette.SpecCarteSd.Enregistreur;
+import fr.univ_amu.iut.recette.SpecCarteSd.Prefixe;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -14,6 +15,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /// Générateur **déterministe** de cartes SD de recette : d'une [SpecCarteSd], il écrit sur disque
 /// l'arbre attendu par l'import (`LogPR<serie>.txt`, `PaRecPR<serie>_THLog.csv`, `bruts/*.wav`).
@@ -33,6 +36,17 @@ public final class GenerateurCartesSD {
     private static final DateTimeFormatter FORMAT_THLOG = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.ROOT);
     private static final DateTimeFormatter FORMAT_HEURE_THLOG = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.ROOT);
     private static final DateTimeFormatter FORMAT_HORODATAGE = DateTimeFormatter.ofPattern("yyyyMMdd", Locale.ROOT);
+
+    /// Journal illisible : aucune ligne ne porte de motif `PR<n>` ni « numéro de série <n> », donc
+    /// l'analyseur ne peut extraire aucune série et l'inspection échoue (cas `sd-journal-corrompu`).
+    private static final List<String> LIGNES_JOURNAL_CORROMPU =
+            List.of("?? bloc illisible ??", "journal corrompu : aucune ligne exploitable");
+
+    /// Octets d'un faux WAV : nom en `.wav` mais contenu non-WAV, rejeté au découpage à l'import.
+    private static final byte[] OCTETS_FAUX_WAV = "pas un WAV".getBytes(StandardCharsets.US_ASCII);
+
+    /// Horodatage figé des entrées ZIP (2020-01-01Z) pour une archive déterministe octet à octet.
+    private static final long HORODATAGE_ZIP_FIXE = 1_577_836_800_000L;
 
     private final LecteurSpec lecteur = new LecteurSpec();
 
@@ -62,6 +76,9 @@ public final class GenerateurCartesSD {
         SpecCarteSd spec = lecteur.lire(fichierSpec);
         Path carte = destParente.resolve(spec.fixture());
         genererVers(spec, carte);
+        if (spec.zip()) {
+            compresserVers(carte, destParente.resolve(spec.fixture() + ".zip"));
+        }
         return carte;
     }
 
@@ -72,7 +89,8 @@ public final class GenerateurCartesSD {
 
         if (spec.journal().present()) {
             Path journal = racineSd.resolve("LogPR" + spec.journal().serie() + ".txt");
-            Files.write(journal, lignesJournal(spec), StandardCharsets.UTF_8);
+            List<String> lignes = spec.journal().corrompu() ? LIGNES_JOURNAL_CORROMPU : lignesJournal(spec);
+            Files.write(journal, lignes, StandardCharsets.UTF_8);
         }
         if (spec.thlog().present()) {
             Path releve = racineSd.resolve("PaRecPR" + serieReleve(spec) + "_THLog.csv");
@@ -84,10 +102,51 @@ public final class GenerateurCartesSD {
     private static void ecrireBruts(SpecCarteSd spec, Path bruts) throws IOException {
         int trames = FabriqueWav.tramesPour(spec.wav().frequenceHz(), spec.wav().dureeSecondes());
         byte[] octets = FabriqueWav.octetsWav(spec.wav().frequenceHz(), trames);
+        String prefixe = prefixeFichier(spec.prefixe());
         for (Enregistreur enregistreur : spec.enregistreurs()) {
             for (String horodatage : enregistreur.horodatages()) {
-                Path fichier = bruts.resolve("PaRecPR" + enregistreur.serie() + "_" + horodatage + ".wav");
-                Files.write(fichier, octets);
+                Files.write(cheminBrut(bruts, prefixe, enregistreur.serie(), horodatage), octets);
+            }
+            for (String horodatage : enregistreur.fauxWav()) {
+                Files.write(cheminBrut(bruts, prefixe, enregistreur.serie(), horodatage), OCTETS_FAUX_WAV);
+            }
+        }
+    }
+
+    private static Path cheminBrut(Path bruts, String prefixe, String serie, String horodatage) {
+        return bruts.resolve(prefixe + "PaRecPR" + serie + "_" + horodatage + ".wav");
+    }
+
+    /// Préfixe R6 appliqué aux noms de bruts (`Car<carre>-<annee>-Pass<passage>-<point>-`), ou chaîne
+    /// vide si la carte reste en fichiers bruts.
+    private static String prefixeFichier(Prefixe prefixe) {
+        if (prefixe == null) {
+            return "";
+        }
+        return "Car" + prefixe.carre() + "-" + prefixe.annee() + "-Pass" + prefixe.passage() + "-" + prefixe.point()
+                + "-";
+    }
+
+    /// Compresse l'arbre `racineSd` dans l'archive `zipCible` (entrées triées, horodatage figé) pour le
+    /// chemin décompression de la recette. Entrées à plat, chemins relatifs en séparateurs `/`.
+    static void compresserVers(Path racineSd, Path zipCible) throws IOException {
+        if (zipCible.getParent() != null) {
+            Files.createDirectories(zipCible.getParent());
+        }
+        List<Path> fichiers;
+        try (Stream<Path> flux = Files.walk(racineSd)) {
+            fichiers = flux.filter(Files::isRegularFile)
+                    .sorted(Comparator.comparing(p -> racineSd.relativize(p).toString()))
+                    .toList();
+        }
+        try (ZipOutputStream sortie = new ZipOutputStream(Files.newOutputStream(zipCible))) {
+            for (Path fichier : fichiers) {
+                ZipEntry entree =
+                        new ZipEntry(racineSd.relativize(fichier).toString().replace('\\', '/'));
+                entree.setTime(HORODATAGE_ZIP_FIXE);
+                sortie.putNextEntry(entree);
+                Files.copy(fichier, sortie);
+                sortie.closeEntry();
             }
         }
     }

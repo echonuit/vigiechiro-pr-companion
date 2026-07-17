@@ -1,0 +1,34 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-grosse
+but: "Volume (60 wav, une nuit) -> test de charge : progression, parallélisme, garde-fou disque."
+
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+
+thlog:
+  present: true
+  mesures: 12
+
+# WAV très courts pour rester léger malgré le volume (le contenu audio n'importe pas pour ce cas).
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 0.1
+
+# 60 enregistrements générés de façon déterministe (un toutes les 5 minutes à partir de 20:30),
+# tous dans la même nuit du 22/04 (soir -> petit matin du 23).
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      debut: "20260422_203000"
+      nombre: 60
+      intervalleSecondes: 300
+
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1

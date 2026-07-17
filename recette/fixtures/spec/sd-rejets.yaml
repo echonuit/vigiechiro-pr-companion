@@ -1,0 +1,42 @@
+# Spec de carte SD de recette (générateur déterministe, cf. dev-docs/recette/fixtures.md).
+fixture: sd-rejets
+but: "Un faux wav parmi 8 valides -> l'import aboutit, la zone des rejets liste « nom - raison »."
+
+journal:
+  present: true
+  serie: "1925492"
+  nuit: "2026-04-22"
+
+thlog:
+  present: true
+  mesures: 6
+
+wav:
+  frequenceHz: 384000
+  dureeSecondes: 1.5
+
+# 8 enregistrements valides + 1 faux wav (nom en .wav mais octets non-WAV) : l'import importe les 8
+# et rejette le faux (rapport « nom - raison »).
+enregistreurs:
+  - serie: "1925492"
+    horodatages:
+      - "20260422_203922"
+      - "20260422_210515"
+      - "20260422_223045"
+      - "20260422_233000"
+      - "20260423_001200"
+      - "20260423_012000"
+      - "20260423_030000"
+      - "20260423_054530"
+    fauxWav:
+      - "20260422_211500"
+
+# rejets: 1 -> déclenche la vérification d'IMPORT réel (headless) : compte(REJETE) == 1.
+attendu:
+  aJournal: true
+  aReleve: true
+  journalLisible: true
+  plusieursEnregistreurs: false
+  incoherent: false
+  nuits: 1
+  rejets: 1
