@@ -47,7 +47,7 @@ issues produites → renvois et décisions → notes de méthode.
 
 - [S1 · Premier contact](sessions/s1-premier-contact.md) : accueil, connexion, sites, points.
 - [S2 · Importer une nuit](sessions/s2-importer.md) : importation, passage, diagnostic (+ cas dégradés).
-- [S3 · Vérifier](sessions/s3-verifier.md) : qualification, raccourcis, écoute.
+- [S3 · Vérifier](sessions/s3-verifier.md) : qualification, raccourcis, écoute *(à rejouer au delta : écran refondu #1524)*.
 - [S4 · Déposer et suivre](sessions/s4-deposer-suivre.md) : lot, dépôt réel, suivi *(à jouer)*.
 
 ## La fiche d'évaluation : six axes

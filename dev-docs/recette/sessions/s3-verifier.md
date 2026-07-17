@@ -1,18 +1,22 @@
 # S3 · Vérifier
 
 > **Écran propriétaire** : qualification (+ raccourcis clavier au complet).
-> **Features** : qualification, audio (volet écoute). · **Jouée** le 2026-07-14, **avec son**.
-> Checklist rejouable + relevé de la dernière passe. Retour à la [méthode](../index.md).
+> **Features** : qualification, audio (volet écoute).
+> **Statut : à rejouer au delta.** Jouée le 2026-07-14 sur l'écran **pré-refonte** ; l'écran a depuis
+> changé de **modèle de verdict** (chantier #1524 : verdict par fichier + verdict global dérivé, barre
+> tricolore), et tous les constats de cette passe ont été corrigés. Ce script cible l'**écran refondu** ;
+> la passe du 14/07 est conservée plus bas comme relevé historique. Retour à la [méthode](../index.md).
 
 ## Objectif
 
-Pré-check consultatif, échantillon d'écoute et modale de sélection (#1462), écoute réelle, pose et
-enregistrement du verdict, et **tous** les raccourcis clavier.
+Pré-check consultatif, échantillon d'écoute et modale de sélection (#1462), écoute réelle, **verdict à
+deux niveaux** (par fichier son puis verdict global du passage, proposé et surchargeable), et **tous** les
+raccourcis clavier.
 
 ## Environnement
 
-- Même lancement que S2 (workspace de recette) ; base issue de S2 (carré 640380, ~10 passages
-  Transformés dont des dégradés : mélange n°4, sans-journal, zip).
+- Même lancement que S2 (workspace de recette) ; base issue de S2 (carré 640380, passages Transformés
+  dont des dégradés : mélange n°4, sans-journal, zip).
 - Session **avec son** (écoute réelle).
 
 ## Raccourcis à exercer (tous)
@@ -20,115 +24,114 @@ enregistrement du verdict, et **tous** les raccourcis clavier.
 | Touche | Action |
 |---|---|
 | `Espace` | Lecture / pause de l'extrait |
-| `O` / `D` / `J` | Verdict OK / Douteux / À jeter |
-| `Entrée` | Enregistrer le verdict |
+| `O` / `D` / `J` | Verdict **global** : OK / Utilisable / Inexploitable |
+| `Entrée` | Enregistrer le verdict global |
 | `↑` / `↓` | Séquence précédente / suivante (liste focalisée) |
-| `Échap` | Fermer la modale (promesse des raccourcis globaux, à vérifier) |
+| `Échap` | Fermer la modale de sélection |
 
 ## Le script (une case = un fait observable)
 
-**Bloc 1 · Pré-check (3 feux, consultatif)**
+**Bloc 1 · Pré-check (3 feux, consultatif et explicatif)**
 
-1. Sur un passage Transformé, le bandeau « Pré-check » affiche 3 feux : Couverture horaire, Nombre de
-   fichiers, Cohérence du renommage.
+1. Sur un passage Transformé, « Pré-check : » affiche 3 feux : Couverture horaire, Nombre de fichiers,
+   Cohérence du renommage.
 2. Chaque feu porte son pictogramme ✓ / ⚠ / ✖.
-3. Chaque feu porte une infobulle (conforme / à surveiller / anomalie).
+3. Chaque feu **explique la mesure et l'écart** (l'infobulle dit le seuil et la valeur, pas juste
+   « à surveiller »).
 4. Sur la nuit réelle (peu de fichiers), « Nombre de fichiers » est orange.
 5. Sur le passage mélange (n°4), « Cohérence du renommage » est rouge.
-6. Avec un feu rouge, la ligne « ⚠ Une anomalie est signalée (consultatif, non bloquant) » s'affiche.
+6. Avec un feu rouge, « Anomalie au pré-check (consultatif, non bloquant). » s'affiche.
 7. Un verdict reste enregistrable malgré un feu rouge (consultatif).
-8. La barre de statut affiche « ⚠ Anomalie au pré-check » (prioritaire sur la progression).
 
 **Bloc 2 · Échantillon + modale de sélection (#1462)**
 
-9. À l'ouverture, la sélection est déjà générée (RéparTemporel, ~20), sans écoute ni verdict.
-10. Le titre de liste donne le compte : « Sélection d'écoute (N séquences) ».
-11. La table liste N° / Fichier / Durée / Écouté (○ / ✓).
-12. « ↺ Régénérer » direct ne demande confirmation que si au moins une séquence a été écoutée.
-13. « ⚙ Personnaliser… » ouvre la modale « Personnaliser la sélection d'écoute ».
-14. La modale propose 2 méthodes : RéparTemporel et Aléatoire.
-15. Le curseur de taille est borné 10→30 par pas de 5.
-16. La modale s'ouvre pré-réglée sur la méthode et la taille courantes.
-17. L'avertissement « Régénérer efface la progression d'écoute (le verdict est conservé) » est visible en
+8. À l'ouverture, la sélection est déjà générée (RéparTemporel), sans écoute ni verdict.
+9. Le titre de liste est « Sélection d'écoute » et donne le compte.
+10. La table liste N° / Fichier / Durée / Écouté (○ / ✓) / **Verdict**.
+11. Les **séquences tronquées** sont **écartées** de l'échantillon (#1507).
+12. « Régénérer » direct ne demande confirmation que si au moins une séquence a été écoutée.
+13. « Personnaliser… » ouvre la modale « Personnaliser la sélection d'écoute » (2 méthodes RéparTemporel
+    / Aléatoire, curseur borné 10→30 par pas de 5, pré-réglée sur l'état courant).
+14. L'avertissement « Régénérer efface la progression d'écoute (le verdict est conservé) » est visible en
     permanence.
-18. « ↺ Régénérer » applique, reconstruit et ferme ; la progression repart à 0.
-19. « Annuler » ne touche rien (méthode, taille, progression) : le test clé de #1462.
-20. `Échap` sur la modale : la ferme, ou pas ? (S3-C06)
+15. « Régénérer » applique, reconstruit et ferme ; la progression repart à 0.
+16. « Annuler » ne touche rien (méthode, taille, progression) : le test clé de #1462.
+17. `Échap` **ferme** la modale (#1505).
 
-**Bloc 3 · Écoute**
+**Bloc 3 · Écoute et verdict par fichier**
 
-21. Sélectionner une séquence affiche son détail (n°, fichier, durée, écoutée).
-22. L'AudioView affiche sonogramme + spectrogramme de la séquence.
-23. Dès le début de lecture, la séquence passe à « ✓ écoutée » et la progression avance.
-24. La progression affiche « n / N écoutées (x %) ».
-25. L'axe des fréquences est en valeurs réelles ×10 (jusqu'à ~192 kHz, pas ~19).
-26. Fenêtre raccourcie en hauteur : le spectrogramme reste rendu malgré le ScrollPane (S3-C02).
-27. Sur un passage sans séquences : message « Aucune séquence d'écoute à échantillonner… ».
-28. Placeholder « Aucune séquence à écouter pour l'instant » quand la liste est vide.
+18. Sélectionner une séquence affiche son détail sous « Séquence sélectionnée ».
+19. « Vue audio (sonogramme + spectrogramme) » affiche la séquence.
+20. Dès le début de lecture, la séquence passe à « ✓ écoutée » (pas de latence au premier clic, #1509).
+21. La section « Votre verdict sur ce fichier » propose **Bon / Mauvais / Inexploitable**.
+22. Juger la séquence courante inscrit son verdict dans la colonne **Verdict** de la liste.
+23. La **barre de répartition** tricolore reflète les verdicts par fichier (segments Bon / Mauvais /
+    Inexploitable + queue grise « non jugé » qui recule), avec un **résumé chiffré** (pas la couleur
+    seule).
+24. L'axe des fréquences du spectrogramme **s'ajuste au contenu** (#1508).
+25. Sur un passage sans séquences : « Aucune séquence à écouter pour l'instant. ».
 
-**Bloc 4 · Verdicts**
+**Bloc 4 · Verdict global du passage (proposé, dérivé, surchargeable)**
 
-29. Les 3 boutons ✓ OK / ⚠ Douteux / ❌ À jeter sont présents.
-30. Cliquer un verdict le met en surbrillance.
-31. Sans verdict choisi, « Enregistrer le verdict » est grisé.
-32. Le bouton grisé a une infobulle explicative (« Choisissez d'abord un verdict… »).
-33. Choisir « À jeter » affiche l'aperçu « exclura ce passage du prochain lot prêt à déposer ».
-34. Enregistrer met à jour VERDICT ACTUEL et STATUT (→ Vérifié).
-35. Le badge « ✓ Verdict enregistré » apparaît et Enregistrer se grise.
-36. Après « À jeter » enregistré, l'avertissement d'exclusion du lot s'affiche.
-37. « À jeter » ne supprime pas le passage (statut Vérifié, verdict À jeter).
-38. Quitter avec un verdict choisi non enregistré déclenche la garde de sortie.
-39. Rouvrir un passage Vérifié : le bandeau montre le verdict persisté, aucun bouton pré-sélectionné
-    (S3-C03).
+26. La section « Verdict global du passage » porte le sous-titre « Décision d'ensemble pour toute la nuit,
+    pas pour un seul fichier ».
+27. Tant qu'aucune séquence n'est jugée, la puce « Verdict proposé » est **masquée**.
+28. Dès qu'une séquence est jugée, la puce affiche « Proposé : X » (OK / Utilisable / Inexploitable),
+    colorée, dérivée des verdicts par fichier.
+29. Le verdict proposé **pré-remplit** le verdict global.
+30. Surcharger le verdict (choisir autre chose que le proposé) affiche la mention « (surchargé) ».
+31. Les 3 boutons du verdict global sont **OK / Utilisable / Inexploitable** (plus « À jeter »).
+32. « Enregistrer le verdict » est grisé tant qu'aucun verdict global n'est posé, avec infobulle.
+33. Enregistrer met à jour VERDICT ACTUEL et STATUT (→ Vérifié) ; badge « Verdict enregistré » + regrisage.
+34. Choisir « Inexploitable » dit son **effet réel** (le passage ne pourra pas être déposé sans
+    requalification), sans le mot « lot » (#1510).
+35. Un passage au verdict **Inexploitable** est **bloqué au dépôt** (garde + affordance).
+36. Quitter avec un verdict non enregistré déclenche la garde de sortie.
+37. Rouvrir un passage Vérifié : le bandeau montre le verdict persisté, la répartition par fichier est
+    rechargée.
 
 **Bloc 5 · Clavier**
 
-40. `↑`/`↓` dans la liste changent de séquence.
-41. `Espace` lance/pause la lecture.
-42. `O`/`D`/`J` posent le verdict.
-43. `Entrée` enregistre (si verdict choisi).
-44. Curseur dans le commentaire : O/D/J tapent la lettre (raccourcis suspendus), noter si
-    `Espace`/`Entrée` sont aussi suspendus (S3-C05).
-45. La légende clavier est visible (footer), noter « O vérifié » vs bouton « OK » (S3-C05).
+38. `↑`/`↓` dans la liste changent de séquence.
+39. `Espace` lance/pause la lecture (#1504 : Espace opérant, ne déclenche pas un bouton focalisé).
+40. `O`/`D`/`J` posent le verdict **global** (OK / Utilisable / Inexploitable).
+41. `Entrée` enregistre (si verdict global choisi).
+42. Curseur dans le commentaire : O/D/J tapent la lettre (raccourcis de verdict suspendus).
+43. La légende clavier est visible (footer) et cohérente avec les libellés à l'écran (#1513).
 
-## Verdict par axe (dernière passe)
+## Corrections à confirmer (constats du 14/07, tous mergés)
+
+Ces constats de la passe pré-refonte sont **corrigés** ; le re-jeu les **confirme** au lieu de les
+trouver : #1504 (Espace opérant), #1505 (Échap ferme les modales), #1506 (pré-check explicatif), #1507
+(séquences tronquées écartées), #1508 (échelle de fréquences auto), #1509 (préchargement audio + retour
+de « Régénérer »), #1510 (« Inexploitable » dit son effet réel), #1511 (emojis → FontIcon), #1514
+(passage déposé figé, pas de régression). Restent ouverts : #1512 (parité CLI sélection/pré-check), #1513
+(fiche/raccourcis, réalignée sur le verdict à deux niveaux).
+
+## Dernière passe (14/07, écran pré-refonte) — relevé historique
+
+Verdict par axe **avant** la refonte #1524 (conservé pour mémoire ; à refaire au delta) :
 
 | Axe | Verdict | Constats |
 |---|---|---|
-| C · Conformité | remarque | `Espace` documenté mais inopérant (#1504) ; `Échap` promis, absent partout (#1505) ; libellés et note de saisie périmés (#1513) |
-| E · États | remarque | pré-check qui signale sans expliquer (#1506) ; séquences tronquées dans l'échantillon (#1507) ; échelle de fréquences incohérente (#1508) |
-| F · Fluidité | remarque | latence au premier clic + « Régénérer » muet (#1509) ; « À jeter » ambigu (#1510) ; emojis non rendus (#1511) |
+| C · Conformité | remarque | `Espace` documenté mais inopérant (#1504) ; `Échap` promis, absent (#1505) ; libellés périmés (#1513) |
+| E · États | remarque | pré-check qui signale sans expliquer (#1506) ; séquences tronquées (#1507) ; échelle de fréquences (#1508) |
+| F · Fluidité | remarque | latence au 1er clic + « Régénérer » muet (#1509) ; « À jeter » ambigu (#1510) ; emojis non rendus (#1511) |
 | R · Clavier | **bloquant** | `Espace` sans effet (#1504) ; `O`/`D`/`J`/`Entrée`/`↑`/`↓` conformes |
-| P · Parité CLI | remarque | sélection d'écoute et pré-check absents de la CLI + divergence de garde sur passage déposé (#1512) |
+| P · Parité CLI | remarque | sélection d'écoute et pré-check absents de la CLI + divergence de garde (#1512) |
 | D · Doc & captures | remarque | fiche à jour de #1462 ✓ ; raccourcis et doc-comment à réaligner (#1513) |
 
-## Issues produites (10)
-
-#1504 (Espace + trou de test), #1505 (Échap transverse), #1506 (pré-check explicatif), #1507 (séquences
-tronquées écartées de l'échantillon), #1508 (échelle de fréquences auto), #1509 (préchargement audio +
-retour de « Régénérer »), #1510 (« À jeter » ambigu), #1511 (emojis non rendus), #1512 (parité CLI +
-divergence de garde à confirmer en S4), #1513 (docs). Constat S3-01 (tri lexicographique de « N°
-passage ») versé à #1379.
-
-## Renvois et décisions
-
-- Constats **infirmés** par la séance : S3-C02 (pas de spectrogramme noir en fenêtre réduite) ; S3-C03
-  (la réouverture d'un passage vérifié, verdict affiché mais boutons non pré-sélectionnés, n'a pas
-  dérouté).
-- **À reprendre en S4** : confirmer la sémantique de « lot » (formulation de #1510) ; vérifier
-  l'atteignabilité de la qualification sur un passage **déposé** (divergence de garde IHM/CLI, #1512 /
-  #1514).
+Constats **infirmés** en séance : S3-C02 (pas de spectrogramme noir en fenêtre réduite) ; S3-C03 (la
+réouverture d'un passage vérifié n'a pas dérouté). Constat S3-01 (tri lexicographique de « N° passage »)
+versé à #1379.
 
 ## Notes de méthode
 
 !!! danger "Faux positif écarté : « QualificationController$1 » = bruit d'environnement"
-    Un premier passage a fait apparaître « Une erreur inattendue est survenue - QualificationController$1 »
-    sur O/D/J, et aucune réaction sur Espace/Entrée. Diagnostic : **pas un défaut produit**. `main` a bougé
-    pendant la séance et un **build concurrent** a régénéré les classes sous la JVM en vol : la classe
-    synthétique du `switch` sur `KeyCode`, chargée à la première frappe, avait disparu de `target/classes`.
-    Après `clean compile` et relance : O/D/J/Entrée fonctionnent (`QualificationViewTest` 15/15). Seul
-    `Espace` restait cassé : le **vrai** bug (#1504), invisible en test parce que `KeyCode.SPACE` n'y était
-    jamais exercé.
+    En séance, « Une erreur inattendue est survenue - QualificationController$1 » sur O/D/J : **pas un
+    défaut produit**. Un **build concurrent** avait régénéré les classes sous la JVM en vol (la classe
+    synthétique du `switch` sur `KeyCode` avait disparu de `target/classes`). Après `clean compile` et
+    relance, tout fonctionnait sauf le vrai bug `Espace` (#1504).
 
     **Règle rejouable** : ne pas lancer de build pendant qu'une instance de recette tourne ; relancer sur
     un `clean compile` frais.
