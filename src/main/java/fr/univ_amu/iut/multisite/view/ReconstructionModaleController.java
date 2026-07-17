@@ -257,14 +257,22 @@ public class ReconstructionModaleController {
         }
     }
 
-    /// Ferme la modale et, **si** une nuit a été reconstruite, rafraîchit l'écran appelant : elle y
-    /// apparaît alors dans la table des passages.
+    /// Ferme la modale. Le rafraîchissement de l'écran appelant n'est **plus** fait ici : il est branché sur
+    /// la **fermeture** de la fenêtre ([#rafraichirSiReconstruit], via `setOnHidden`), pour se déclencher
+    /// quelle que soit la façon de fermer - bouton « Fermer », croix, ou Échap (#1647).
     @FXML
     private void fermer() {
+        ((Stage) racine.getScene().getWindow()).close();
+    }
+
+    /// Rafraîchit l'écran appelant **si** une nuit a été reconstruite : la table des passages se recharge et
+    /// la nuit rapatriée y apparaît. Branché sur `setOnHidden` de la modale ([NavigationMultisite]), il joue
+    /// donc à **toute** fermeture, et non seulement au bouton « Fermer » (#1647 : sinon une fermeture par la
+    /// croix laissait la table périmée).
+    public void rafraichirSiReconstruit() {
         if (viewModel.reconstruitProperty().get()) {
             apresSucces.get().run();
         }
-        ((Stage) racine.getScene().getWindow()).close();
     }
 
     /// Appelé par [NavigationMultisite] juste après le chargement du FXML.
