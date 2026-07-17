@@ -2,7 +2,6 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.Prefixe;
 import java.nio.file.Path;
-import java.util.List;
 
 /// Port de **régénération des séquences d'écoute à partir d'un brut** (#1406, EPIC #1297).
 ///
@@ -42,7 +41,8 @@ public interface RegenerationSequences {
     ///     l'import : c'est elle qui pilote le découpage à 5 s **réelles**, pas l'en-tête du WAV
     /// @param dossierSortie dossier **temporaire** où écrire les tranches (elles ne rejoindront leur
     ///     place définitive qu'une fois **vérifiées**)
-    /// @return les chemins des tranches produites
-    List<Path> regenerer(
+    /// @return les tranches produites **et** l'empreinte SHA-256 du brut source, calculée au passage sans
+    ///     re-lecture ([SequencesRegenerees], #1726)
+    SequencesRegenerees regenerer(
             Path brut, String nomOriginal, Prefixe prefixe, int frequenceAcquisitionHz, Path dossierSortie);
 }

@@ -94,11 +94,11 @@ final class HydratationDepuisBruts {
                     new Progression("Régénération " + traites + "/" + bruts.size(), traites / (double) bruts.size()));
             Path temporaire = DossierTemporaire.creer("vc-hydrate-");
             try {
-                moteur.regenerer(
+                SequencesRegenerees regenerees = moteur.regenerer(
                         brut.source(), brut.nomOriginal(), prefixe, inventorie.frequenceAcquisitionHz(), temporaire);
                 List<SequenceDEcoute> sesSequences = sequencesProduites(temporaire, parNom, restantes);
                 if (!sesSequences.isEmpty()) {
-                    brutsRebranches.add(new BrutRebranche(brut, sesSequences));
+                    brutsRebranches.add(new BrutRebranche(brut, sesSequences, regenerees.empreinteSource()));
                 }
                 bilan.absorber(rebranchement.rebrancher(
                         sesSequences, CandidatsReactivation.dans(temporaire), avancement -> {}));

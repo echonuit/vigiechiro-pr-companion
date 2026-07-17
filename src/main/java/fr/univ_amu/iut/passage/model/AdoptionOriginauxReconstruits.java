@@ -26,8 +26,9 @@ import java.util.Objects;
 /// placeholder, et on ne le supprime que s'il n'en porte plus aucune. Une interruption ne perd donc jamais
 /// de séquence (la suppression `ON DELETE CASCADE` ne s'applique qu'à un placeholder déjà vidé).
 ///
-/// L'empreinte `sha256` des originaux n'est pas recalculée ici (elle demanderait de re-lire tous les bruts)
-/// : un original hydraté est comme un import ancien sans empreinte, ce que [VerificationIdentiteAudio] tolère.
+/// L'empreinte `sha256` des originaux est celle **capturée lors de la régénération** (#1726) : la
+/// transformation ayant déjà lu chaque brut pour la produire, l'inscrire ne coûte aucune re-lecture. Un
+/// original hydraté porte donc son empreinte, comme un import récent (#1299).
 public class AdoptionOriginauxReconstruits {
 
     private static final String SOUS_DOSSIER_BRUTS = "bruts";
@@ -65,7 +66,7 @@ public class AdoptionOriginauxReconstruits {
         Path racineBruts = Path.of(session.cheminRacine()).resolve(SOUS_DOSSIER_BRUTS);
         for (BrutRebranche brut : bruts) {
             Long idReel = originalDao
-                    .insert(construireOriginal(session.id(), racineBruts, brut.brut(), frequenceAcquisitionHz))
+                    .insert(construireOriginal(session.id(), racineBruts, brut, frequenceAcquisitionHz))
                     .id();
             for (SequenceDEcoute sequence : brut.sequences()) {
                 sequenceDao.majOriginal(sequence.id(), idReel);
@@ -80,9 +81,11 @@ public class AdoptionOriginauxReconstruits {
     }
 
     /// Construit l'enregistrement original **réel** d'un brut : nom R6, chemin canonique `bruts/`, taille et
-    /// durée (déduites de la taille : mono 16 bits, en-tête 44 octets), fréquence du log. Pas d'empreinte.
+    /// durée (déduites de la taille : mono 16 bits, en-tête 44 octets), fréquence du log, et **empreinte
+    /// SHA-256** capturée lors de la régénération (#1726).
     private static EnregistrementOriginal construireOriginal(
-            Long idSession, Path racineBruts, BrutInventorie brut, int frequenceAcquisitionHz) {
+            Long idSession, Path racineBruts, BrutRebranche brutRebranche, int frequenceAcquisitionHz) {
+        BrutInventorie brut = brutRebranche.brut();
         long taille = tailleSource(brut.source());
         Double duree = taille > OCTETS_ENTETE_WAV
                 ? (taille - OCTETS_ENTETE_WAV) / (double) OCTETS_PAR_TRAME / frequenceAcquisitionHz
@@ -93,7 +96,7 @@ public class AdoptionOriginauxReconstruits {
                 racineBruts.resolve(brut.nomOriginal()).toString(),
                 duree,
                 frequenceAcquisitionHz,
-                null,
+                brutRebranche.empreinteSource(),
                 idSession,
                 taille);
     }

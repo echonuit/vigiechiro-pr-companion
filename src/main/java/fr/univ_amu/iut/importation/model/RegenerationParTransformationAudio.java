@@ -3,6 +3,7 @@ package fr.univ_amu.iut.importation.model;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
+import fr.univ_amu.iut.passage.model.SequencesRegenerees;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -25,13 +26,12 @@ public class RegenerationParTransformationAudio implements RegenerationSequences
     }
 
     @Override
-    public List<Path> regenerer(
+    public SequencesRegenerees regenerer(
             Path brut, String nomOriginal, Prefixe prefixe, int frequenceAcquisitionHz, Path dossierSortie) {
-        return transformation
-                .transformer(brut, nomOriginal, dossierSortie, prefixe, frequenceAcquisitionHz)
-                .sequences()
-                .stream()
-                .map(SequenceProduite::chemin)
-                .toList();
+        TransformationOriginal resultat =
+                transformation.transformer(brut, nomOriginal, dossierSortie, prefixe, frequenceAcquisitionHz);
+        List<Path> tranches =
+                resultat.sequences().stream().map(SequenceProduite::chemin).toList();
+        return new SequencesRegenerees(tranches, resultat.sha256());
     }
 }

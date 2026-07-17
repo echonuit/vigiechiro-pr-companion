@@ -8,7 +8,9 @@ import java.util.List;
 ///
 /// @param brut le brut inventorié (chemin source + nom R6)
 /// @param sequences les séquences de ce brut (celles dont il a régénéré les tranches)
-record BrutRebranche(BrutInventorie brut, List<SequenceDEcoute> sequences) {
+/// @param empreinteSource empreinte SHA-256 du brut, calculée lors de la régénération sans re-lecture
+///     (#1726) : elle sera inscrite sur le vrai original, comme à l'import (#1299)
+record BrutRebranche(BrutInventorie brut, List<SequenceDEcoute> sequences, String empreinteSource) {
 
     BrutRebranche {
         sequences = List.copyOf(sequences);
