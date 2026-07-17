@@ -149,6 +149,31 @@ class ReconstructionModaleViewTest {
     }
 
     @Test
+    @DisplayName(
+            "#1708 « Reconstruire tout » : hydrate le lot, compte rendu (reconstruites + ignorées), appelant rafraîchi")
+    void reconstruire_tout_en_lot(FxRobot robot) {
+        when(service.reconstruire(eq(CONNUE), any(), any()))
+                .thenReturn(new RapportReconstruction(1L, 10, 20, RapportReconstruction.lacunesConnues()));
+        when(service.reconstruire(eq(INCONNUE), any(), any()))
+                .thenThrow(new RegleMetierException("Le point d'écoute n'existe pas localement."));
+
+        Button reconstruireTout = robot.lookup("#boutonReconstruireTout").queryButton();
+        assertThat(reconstruireTout.getText())
+                .as("le bouton annonce le nombre de nuits à reconstruire")
+                .contains("2");
+        robot.interact(reconstruireTout::fire);
+
+        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
+                .as("le lot reconstruit la nuit située et ignore celle au point inconnu")
+                .contains("1 nuit(s) reconstruite(s)")
+                .contains("1 nuit(s) ignorée(s)");
+        robot.interact(() -> robot.lookup("#boutonFermer").queryButton().fire());
+        assertThat(appelantRafraichi)
+                .as("au moins une nuit reconstruite : la table des passages se recharge")
+                .isTrue();
+    }
+
+    @Test
     @DisplayName("Un refus du service devient un message dans la modale, pas une exception muette")
     void refus_devient_un_message(FxRobot robot) {
         when(service.reconstruire(eq(CONNUE), any(), any()))

@@ -11,6 +11,7 @@ import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.application.Platform;
@@ -114,6 +115,25 @@ public class ReconstructionModaleController {
     @FXML
     private Button boutonAnnuler;
 
+    /// Import groupé (#1708) : reconstruit **toutes** les nuits manquantes en une passe.
+    @FXML
+    private Button boutonReconstruireTout;
+
+    /// Barre + libellé de la progression **globale** de l'import groupé (« Nuit X / N »), au-dessus de la
+    /// progression de la nuit courante ([#zoneProgression]). Visible seulement pendant un lot.
+    @FXML
+    private HBox zoneProgressionGlobale;
+
+    @FXML
+    private ProgressBar barreProgressionGlobale;
+
+    @FXML
+    private Label lblProgressionGlobale;
+
+    /// Vrai pendant un import **groupé** : pilote l'apparition de la barre globale (une reconstruction unique
+    /// n'a pas de niveau « lot »).
+    private final SimpleBooleanProperty lotEnCours = new SimpleBooleanProperty(false);
+
     @Inject
     public ReconstructionModaleController(ReconstructionViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -177,6 +197,22 @@ public class ReconstructionModaleController {
         boutonAnnuler.visibleProperty().bind(operationEnCours);
         boutonAnnuler.managedProperty().bind(operationEnCours);
 
+        // Import groupé (#1708) : barre GLOBALE (« Nuit X / N ») au-dessus de celle de la nuit courante,
+        // visible seulement pendant un lot. Le bouton « Reconstruire tout » compte les nuits listées et se
+        // grise s'il n'y en a aucune (ou pendant une opération en cours).
+        barreProgressionGlobale
+                .progressProperty()
+                .bind(viewModel.progressionGlobale().fractionProperty());
+        lblProgressionGlobale.textProperty().bind(viewModel.progressionGlobale().messageProperty());
+        zoneProgressionGlobale.visibleProperty().bind(lotEnCours);
+        zoneProgressionGlobale.managedProperty().bind(lotEnCours);
+        boutonReconstruireTout
+                .textProperty()
+                .bind(Bindings.concat("Reconstruire tout (", Bindings.size(viewModel.orphelines()), ")"));
+        boutonReconstruireTout
+                .disableProperty()
+                .bind(Bindings.isEmpty(viewModel.orphelines()).or(operationEnCours));
+
         charger();
     }
 
@@ -235,6 +271,51 @@ public class ReconstructionModaleController {
                 erreur -> {
                     operationEnCours.set(false);
                     viewModel.progression().reinitialiser();
+                    viewModel.signalerErreur(erreur);
+                });
+    }
+
+    /// « Reconstruire tout » (#1708) : hydrate **toutes** les nuits manquantes en une passe, hors du fil
+    /// JavaFX. Deux barres suivent l'avancée - la **globale** (« Nuit X / N ») et celle de la **nuit
+    /// courante** - et « Annuler » interrompt le lot proprement (la nuit en cours est compensée). Au retour,
+    /// on recharge la liste : les nuits reconstruites disparaissent, les ignorées (point inconnu, analyse non
+    /// terminée) restent.
+    @FXML
+    private void reconstruireTout() {
+        List<ParticipationOrpheline> aTraiter = List.copyOf(viewModel.orphelines());
+        if (aTraiter.isEmpty()) {
+            return;
+        }
+        operationEnCours.set(true);
+        lotEnCours.set(true);
+        viewModel.progressionGlobale().demarrer("Import groupé en cours…");
+        viewModel.progression().demarrer("Préparation…");
+        JetonAnnulation jeton = new JetonAnnulation();
+        jetonCourant = jeton;
+        Consumer<Progression> progresGlobal = executeur.relaisProgression(
+                point -> viewModel.progressionGlobale().appliquer(point));
+        Consumer<Progression> progresNuit =
+                executeur.relaisProgression(point -> viewModel.progression().appliquer(point));
+        executeur.executer(
+                () -> viewModel.reconstruireTout(aTraiter, progresGlobal, progresNuit, jeton),
+                bilan -> {
+                    operationEnCours.set(false);
+                    lotEnCours.set(false);
+                    viewModel.restituerLot(bilan);
+                    charger(); // recharge : les reconstruites disparaissent, les ignorées restent
+                },
+                () -> {
+                    operationEnCours.set(false);
+                    lotEnCours.set(false);
+                    viewModel.progression().reinitialiser();
+                    viewModel.progressionGlobale().reinitialiser();
+                    viewModel.signalerAnnulation();
+                },
+                erreur -> {
+                    operationEnCours.set(false);
+                    lotEnCours.set(false);
+                    viewModel.progression().reinitialiser();
+                    viewModel.progressionGlobale().reinitialiser();
                     viewModel.signalerErreur(erreur);
                 });
     }

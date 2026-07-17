@@ -2,6 +2,7 @@ package fr.univ_amu.iut.multisite.viewmodel;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
@@ -50,13 +51,23 @@ public class ReconstructionViewModel {
 
     /// Suivi de la **progression déterminée** de la reconstruction (barre + libellé + ETA), via le socle
     /// [ProgressionOperation] partagé avec l'import et le dépôt : la vue lie sa barre à
-    /// `progression().fractionProperty()` et son libellé à `progression().messageProperty()`.
+    /// `progression().fractionProperty()` et son libellé à `progression().messageProperty()`. Pour un import
+    /// groupé (#1708), c'est la progression **de la nuit en cours**.
     private final ProgressionOperation progression = new ProgressionOperation();
+
+    /// Progression **globale** de l'import groupé (#1708) : « Nuit X / N ». Distincte de [#progression] (qui
+    /// suit la nuit courante) pour donner à l'utilisateur les **deux** niveaux d'avancement sur un lot long.
+    private final ProgressionOperation progressionGlobale = new ProgressionOperation();
 
     @Inject
     public ReconstructionViewModel(Optional<ServiceReconstructionPassages> service) {
         this.service = Objects.requireNonNull(service, "service");
     }
+
+    /// Bilan d'un import groupé (#1708) : combien de nuits **reconstruites**, combien **ignorées**
+    /// (best-effort : point d'écoute inconnu ici, analyse non terminée), et les totaux de séquences et
+    /// d'observations rapatriées.
+    public record BilanReconstructionGroupe(int reussies, int ignorees, long sequences, long observations) {}
 
     /// Vrai si la reconstruction est possible dans ce contexte (connecté à VigieChiro). Faux, l'appelant
     /// **retire** l'action plutôt que d'offrir un bouton qui échouerait.
@@ -91,9 +102,16 @@ public class ReconstructionViewModel {
         return reconstruit.getReadOnlyProperty();
     }
 
-    /// Suivi de la progression de l'opération longue, à lier depuis la vue (barre + libellé, #1522).
+    /// Suivi de la progression de l'opération longue, à lier depuis la vue (barre + libellé, #1522). Pour un
+    /// import groupé, c'est la progression **de la nuit en cours**.
     public ProgressionOperation progression() {
         return progression;
+    }
+
+    /// Progression **globale** de l'import groupé (« Nuit X / N »), à lier depuis la vue à une seconde barre
+    /// (#1708) : l'utilisateur suit à la fois où en est le lot **et** où en est la nuit courante.
+    public ProgressionOperation progressionGlobale() {
+        return progressionGlobale;
     }
 
     /// **Bloquant** (réseau) : lit les participations du compte et retient celles qui n'ont pas de passage
@@ -141,6 +159,68 @@ public class ReconstructionViewModel {
                 + "Le passage est consultable mais pas écoutable. Si vous retrouvez les fichiers d'origine,"
                 + " ouvrez-le et utilisez « Réactiver ce passage ».");
         erreur.set("");
+    }
+
+    /// **Bloquant** (réseau + base) : reconstruit **toutes** les nuits de `aTraiter`, l'une après l'autre.
+    /// Émet une progression **globale** (« Nuit X / N ») sur `progresGlobal` et relaie la progression **de la
+    /// nuit courante** sur `progresNuit` (celle qu'émet déjà [#reconstruire]) ; consulte le **jeton** entre
+    /// chaque nuit et à l'intérieur.
+    ///
+    /// **Best-effort par nuit** : une nuit qui échoue pour une raison métier (point d'écoute inconnu ici,
+    /// analyse non terminée) est **comptée « ignorée » et sautée**, le lot continue - un incident isolé ne
+    /// doit pas priver l'utilisateur des autres reconstructions. Une **annulation** ([OperationAnnuleeException]),
+    /// elle, arrête tout le lot : c'est un geste délibéré.
+    public BilanReconstructionGroupe reconstruireTout(
+            List<ParticipationOrpheline> aTraiter,
+            Consumer<Progression> progresGlobal,
+            Consumer<Progression> progresNuit,
+            JetonAnnulation jeton) {
+        Objects.requireNonNull(aTraiter, "aTraiter");
+        ServiceReconstructionPassages reconstruction = exiger();
+        int total = aTraiter.size();
+        int reussies = 0;
+        int ignorees = 0;
+        long sequences = 0;
+        long observations = 0;
+        for (int index = 0; index < total; index++) {
+            jeton.leverSiAnnule();
+            ParticipationOrpheline nuit = aTraiter.get(index);
+            progresGlobal.accept(new Progression(
+                    "Nuit " + (index + 1) + " / " + total + "…", total == 0 ? 1.0 : (double) index / total));
+            try {
+                RapportReconstruction rapport = reconstruction.reconstruire(nuit, progresNuit, jeton);
+                reussies++;
+                sequences += rapport.sequencesRecreees();
+                observations += rapport.observationsImportees();
+            } catch (OperationAnnuleeException annulation) {
+                throw annulation; // geste délibéré : arrête tout le lot
+            } catch (RuntimeException echecNuit) {
+                ignorees++; // best-effort : cette nuit est sautée, le lot continue
+            }
+        }
+        progresGlobal.accept(new Progression("Terminé.", 1.0));
+        return new BilanReconstructionGroupe(reussies, ignorees, sequences, observations);
+    }
+
+    /// Publie le compte rendu d'un import groupé (**fil JavaFX**) : combien de nuits reconstruites, combien
+    /// ignorées, et le rappel que les passages restaurés sont consultables mais pas écoutables. Marque
+    /// [#reconstruitProperty] dès qu'au moins une nuit a été reconstruite, pour que l'appelant recharge sa
+    /// table. La liste des orphelines restantes est rechargée par l'appelant ([#charger]).
+    public void restituerLot(BilanReconstructionGroupe bilan) {
+        Objects.requireNonNull(bilan, "bilan");
+        reconstruit.set(bilan.reussies() > 0);
+        erreur.set("");
+        String rendu = bilan.reussies() + " nuit(s) reconstruite(s) : " + bilan.sequences() + " séquence(s), "
+                + bilan.observations() + " observation(s) rapatriée(s).";
+        if (bilan.ignorees() > 0) {
+            rendu += System.lineSeparator() + bilan.ignorees()
+                    + " nuit(s) ignorée(s) (point d'écoute inconnu ici, ou analyse non terminée) : elles restent"
+                    + " dans la liste.";
+        }
+        rendu += System.lineSeparator()
+                + "Les passages reconstruits sont consultables mais pas écoutables (le dépôt ZIP ne restitue"
+                + " pas l'audio). Réactivez-les si vous retrouvez les fichiers d'origine.";
+        compteRendu.set(rendu);
     }
 
     /// Route un échec vers le message de la modale : un refus (point inconnu, hors connexion, analyse non

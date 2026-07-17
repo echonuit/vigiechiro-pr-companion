@@ -53,9 +53,13 @@
   <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
   <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
 
-  <!-- Progression de l'opération longue (réseau + milliers d'insertions + import). Visible pendant la
-       reconstruction et après un succès (barre à 100 %, « Terminé. ») ; masquée au repos, à l'annulation
-       et sur erreur. -->
+  <!-- Progression de l'opération longue (réseau + milliers d'insertions + import). Deux niveaux pour un
+       import groupé (#1708) : la barre GLOBALE (« Nuit X / N »), visible seulement pendant un lot, au-dessus
+       de la barre de la NUIT COURANTE (visible pendant toute reconstruction et après un succès). -->
+  <HBox fx:id="zoneProgressionGlobale" alignment="CENTER_LEFT" spacing="8.0">
+    <ProgressBar fx:id="barreProgressionGlobale" prefWidth="220.0"/>
+    <Label fx:id="lblProgressionGlobale" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
+  </HBox>
   <HBox fx:id="zoneProgression" alignment="CENTER_LEFT" spacing="8.0">
     <ProgressBar fx:id="barreProgression" prefWidth="220.0"/>
     <Label fx:id="lblProgression" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
@@ -67,6 +71,10 @@
          passage partiel (compensation côté service). -->
     <Button fx:id="boutonAnnuler" text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
     <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-secondaire" onAction="#fermer"/>
+    <!-- Import groupé (#1708) : reconstruit toutes les nuits listées en une passe, avec double barre de
+         progression et annulation. Grisé s'il n'y a aucune nuit à reconstruire. -->
+    <Button fx:id="boutonReconstruireTout" text="Reconstruire tout" styleClass="bouton-secondaire"
+            onAction="#reconstruireTout"/>
     <!-- Enveloppe non désactivée (#789) : un bouton grisé n'affiche aucun tooltip. C'est elle qui porte
          l'explication du blocage (aucune nuit choisie, ou point d'écoute inconnu ici). -->
     <StackPane fx:id="enveloppeReconstruire">
