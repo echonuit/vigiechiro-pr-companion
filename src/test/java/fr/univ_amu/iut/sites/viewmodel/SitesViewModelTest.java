@@ -191,6 +191,40 @@ class SitesViewModelTest {
     }
 
     @Test
+    @DisplayName("#1750 : la carte résume les points rapatriés non utilisés au lieu de les égrener")
+    void carte_resume_les_points_rapatries_non_utilises() {
+        Site site = service.creerSite("130711", "Point Fixe", Protocole.STANDARD, null, ID_USER);
+        PointDEcoute z41 = service.ajouterPoint(site.id(), "Z41", null, null, null); // manuel, utilisé
+        service.ajouterPointSynchronise(site.id(), "Z1", null, null, null); // rapatrié, non utilisé
+        service.ajouterPointSynchronise(site.id(), "Z2", null, null, null); // rapatrié, non utilisé
+        insererPassage(z41, 1, "2026-05-29", Verdict.OK);
+
+        viewModel.rafraichir();
+
+        CarteSite carte = viewModel.cartes().getFirst();
+        assertThat(carte.nombrePoints())
+                .as("le compte total reste factuel : 3 points existent")
+                .isEqualTo(3);
+        assertThat(carte.codesPoints())
+                .as("le point utilisé est mis en avant ; les 2 rapatriés non utilisés sont résumés")
+                .isEqualTo("Z41  (+ 2 rapatriés)");
+    }
+
+    @Test
+    @DisplayName("#1750 : un point ajouté à la main reste égrené même sans passage")
+    void carte_garde_les_points_manuels_meme_sans_passage() {
+        Site site = service.creerSite("130711", "Point Fixe", Protocole.STANDARD, null, ID_USER);
+        service.ajouterPoint(site.id(), "M1", null, null, null); // manuel, non utilisé
+        service.ajouterPointSynchronise(site.id(), "Z1", null, null, null); // rapatrié, non utilisé
+
+        viewModel.rafraichir();
+
+        assertThat(viewModel.cartes().getFirst().codesPoints())
+                .as("M1 (manuel) reste ; seul Z1 (rapatrié) est résumé")
+                .isEqualTo("M1  (+ 1 rapatrié)");
+    }
+
+    @Test
     @DisplayName("La fraîcheur dérive de la date du dernier passage")
     void fraicheur_du_dernier_passage() {
         Site site = service.creerSite("640380", "Étang", Protocole.STANDARD, null, ID_USER);
