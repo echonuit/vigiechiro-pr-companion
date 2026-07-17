@@ -11,18 +11,10 @@ import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
-import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
-import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
-import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
-import fr.univ_amu.iut.passage.model.dao.SequenceDao;
-import fr.univ_amu.iut.passage.model.dao.SessionDao;
-import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeParseException;
@@ -67,16 +59,7 @@ public class ServiceReconstructionPassages {
     /// Carré à six chiffres, extrait du **titre du site** VigieChiro (ex. `Vigiechiro - Point Fixe-130711`).
     private static final Pattern CARRE = Pattern.compile("(\\d{6})");
 
-    /// Numéro de série de repli quand la participation ne dit pas quel enregistreur a produit la nuit :
-    /// le schéma exige un enregistreur, et inventer un vrai numéro serait un mensonge.
-    private static final String ENREGISTREUR_INCONNU = "INCONNU";
-
     private final PassageDao passageDao;
-    private final SessionDao sessionDao;
-    private final SequenceDao sequenceDao;
-    private final EnregistrementOriginalDao originalDao;
-    private final EnregistreurDao enregistreurDao;
-    private final MaterielMicroDao materielDao;
     private final LienVigieChiroDao liens;
 
     /// Toutes les lectures distantes de la reconstruction (participations, détail, source des observations
@@ -90,12 +73,10 @@ public class ServiceReconstructionPassages {
     /// autre feature fournit : l'injecteur ne se construirait plus. Absent, [#reconstruire] le **dit**.
     private final Optional<ImportObservations> importObservations;
 
-    private final Workspace workspace;
-    private final Horloge horloge;
-
-    /// Pour grouper la création des séquences (des milliers) en **une seule transaction** au lieu d'un
-    /// commit par ligne (#1522). Construit depuis la même [SourceDeDonnees] que les DAO.
-    private final UniteDeTravail uniteDeTravail;
+    /// Noyau de **structure** (#1662, EPIC B) : crée le squelette local du passage archivé (passage +
+    /// session archivée + séquences + enregistreur/météo/micro). La reconstruction le **compose** avec
+    /// l'import des observations ; la synchro « mes sites » le réutilisera pour rapatrier la structure.
+    private final CreationPassageArchive creationStructure;
 
     public ServiceReconstructionPassages(
             SourceDeDonnees source,
@@ -106,18 +87,11 @@ public class ServiceReconstructionPassages {
             Horloge horloge) {
         Objects.requireNonNull(source, "source");
         this.passageDao = new PassageDao(source);
-        this.sessionDao = new SessionDao(source);
-        this.sequenceDao = new SequenceDao(source);
-        this.originalDao = new EnregistrementOriginalDao(source);
-        this.enregistreurDao = new EnregistreurDao(source);
-        this.materielDao = new MaterielMicroDao(source);
         this.liens = new LienVigieChiroDao(source);
-        this.uniteDeTravail = new UniteDeTravail(source);
         this.plateforme = new PlateformeReconstruction(client);
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
-        this.workspace = Objects.requireNonNull(workspace, "workspace");
-        this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.creationStructure = new CreationPassageArchive(source, workspace, horloge);
     }
 
     /// Participations de la plateforme **sans équivalent local** : celles dont l'`_id` n'est rattaché à
@@ -222,12 +196,12 @@ public class ServiceReconstructionPassages {
         Long idPassage = null;
         try {
             jeton.leverSiAnnule();
-            progres.accept(new Progression("Création du passage…", 0.90));
-            idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail), meteoDepuis(detail));
-            rapatrierMateriel(idPassage, detail);
-            Long idSession = creerSessionArchivee(idPassage, prefixe);
-            progres.accept(new Progression("Création des séquences…", 0.93));
-            int sequences = creerSequences(idSession, prefixe, observations.nomsFichiers());
+            // Structure locale (passage archivé + session + séquences + enregistreur/météo/micro) : le
+            // noyau réutilisable émet ses propres points de progression (« Création du passage… » puis
+            // « Création des séquences… ») aux mêmes fractions qu'avant.
+            CreationPassageArchive.PassageArchive structure = creationStructure.creer(
+                    idPoint, numeroPassage, debut, fin, prefixe, detail, observations.nomsFichiers(), progres);
+            idPassage = structure.idPassage();
             liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), idParticipation));
 
             // L'import rattache chaque ligne à la séquence de même nom - celles qu'on vient de recréer
@@ -237,7 +211,10 @@ public class ServiceReconstructionPassages {
             observations.importer(idPassage);
             progres.accept(new Progression("Terminé.", 1.0));
             return new RapportReconstruction(
-                    idPassage, sequences, observations.nbObservations(), RapportReconstruction.lacunesConnues());
+                    idPassage,
+                    structure.nbSequences(),
+                    observations.nbObservations(),
+                    RapportReconstruction.lacunesConnues());
         } catch (RuntimeException interruption) {
             if (idPassage != null) {
                 annulerReconstructionPartielle(idPassage, interruption);
@@ -261,100 +238,6 @@ public class ServiceReconstructionPassages {
 
     // --- Création locale ---------------------------------------------------------------------------
 
-    /// Crée le passage, **déposé** (il l'est : la participation existe sur la plateforme) et sans verdict
-    /// local (aucune vérification n'a eu lieu ici). Le numéro de passage est le **premier libre** pour ce
-    /// point et cette année (calculé par l'appelant, qui en a aussi besoin pour le préfixe) : la
-    /// plateforme ne le porte pas, et deviner « 1 ou 2 » selon la date serait une supposition.
-    private Long creerPassage(
-            Long idPoint,
-            int numeroPassage,
-            LocalDateTime debut,
-            LocalDateTime fin,
-            String idEnregistreur,
-            String donneesMeteo) {
-        int annee = debut.getYear();
-        return passageDao
-                .insert(new Passage(
-                        null,
-                        numeroPassage,
-                        annee,
-                        debut.toLocalDate().toString(),
-                        debut.toLocalTime().toString(),
-                        fin.toLocalTime().toString(),
-                        null,
-                        StatutWorkflow.DEPOSE,
-                        null,
-                        null,
-                        donneesMeteo,
-                        debut.toLocalDate().toString(),
-                        idPoint,
-                        idEnregistreur))
-                .id();
-    }
-
-    /// Session **archivée d'emblée** : le passage naît sans audio (rien n'a jamais été importé ici). Le
-    /// marqueur explicite (#1300) le dit, si bien que l'audit informe au lieu de crier (#1303).
-    private Long creerSessionArchivee(Long idPassage, Prefixe prefixe) {
-        Path racine = workspace.dossierSession(prefixe.nomDossierSession());
-        Long idSession = sessionDao
-                .insert(new SessionDEnregistrement(null, racine.toString(), 0L, 0L, idPassage))
-                .id();
-        sessionDao.marquerArchivee(idSession, horloge.maintenant());
-        return idSession;
-    }
-
-    /// Recrée une **ligne** de séquence par donnée distante (nom de fichier), sans fichier sur disque : le
-    /// passage est archivé. Un enregistrement original **porteur** est créé pour satisfaire la clé
-    /// étrangère ; il n'a pas plus de fichier que les séquences, mais il porte le **vrai** préfixe R6 : un
-    /// nom fabriqué ferait échouer le contrôle de préfixe de l'audit (#1050).
-    private int creerSequences(Long idSession, Prefixe prefixe, List<String> nomsFichiers) {
-        Path transformes = workspace.dossierTransformes(prefixe.nomDossierSession());
-        // Des milliers de séquences en UNE transaction (#1522) : un commit par ligne, c'était un fsync par
-        // ligne - plusieurs minutes pour une nuit. L'annulation est consultée AVANT ce bloc (désormais
-        // rapide), pas dedans : l'unité de travail enveloppe les exceptions, ce qui masquerait l'annulation.
-        int[] compte = {0};
-        uniteDeTravail.executer(cx -> {
-            Long idOriginal = originalDao
-                    .insert(
-                            cx,
-                            new EnregistrementOriginal(
-                                    null,
-                                    prefixe.prefixeFichier() + "reconstruit.wav",
-                                    "",
-                                    null,
-                                    null,
-                                    null,
-                                    idSession))
-                    .id();
-            int index = 0;
-            for (String titre : nomsFichiers) {
-                String nom = nomFichier(titre);
-                sequenceDao.insert(
-                        cx,
-                        new SequenceDEcoute(
-                                null,
-                                nom,
-                                idOriginal,
-                                index,
-                                null,
-                                null,
-                                transformes.resolve(nom).toString(),
-                                false,
-                                idSession,
-                                Prefixe.horodatageDe(nom).orElse(null)));
-                index++;
-            }
-            compte[0] = index;
-        });
-        return compte[0];
-    }
-
-    /// Nom de fichier de la séquence : le `titre` distant est **sans extension** (`..._000`), les
-    /// séquences locales portent `.wav`.
-    private static String nomFichier(String titre) {
-        return titre.toLowerCase(java.util.Locale.ROOT).endsWith(".wav") ? titre : titre + ".wav";
-    }
-
     /// Premier numéro de passage libre pour ce point et cette année (contrainte d'unicité du quadruplet).
     private int premierNumeroLibre(Long idPoint, int annee) {
         Set<Integer> pris = passageDao.findAll().stream()
@@ -366,43 +249,6 @@ public class ServiceReconstructionPassages {
             numero++;
         }
         return numero;
-    }
-
-    /// Enregistreur de la nuit : le numéro de série que porte la configuration de la participation, lu par
-    /// [CorrespondanceParticipation#serieDepuis] qui accepte **les deux clés** en circulation (canonique
-    /// VigieChiro `detecteur_enregistreur_numero_serie` du web, et `detecteur_enregistreur_numserie` poussée
-    /// par l'app, #1689). Un enregistreur **« inconnu »** de repli seulement si aucune n'est présente (le
-    /// schéma exige un enregistreur ; inventer un numéro serait pire que de dire qu'on ne le sait pas). Créé
-    /// s'il n'existe pas encore.
-    private String enregistreur(ParticipationDetail detail) {
-        String serie = CorrespondanceParticipation.serieDepuis(detail.configuration());
-        if (serie == null) {
-            serie = ENREGISTREUR_INCONNU;
-        }
-        if (enregistreurDao.findById(serie).isEmpty()) {
-            enregistreurDao.insert(new Enregistreur(serie, null, null));
-        }
-        return serie;
-    }
-
-    /// Météo (vent + couverture) de la nuit, rapatriée de la participation (#1689) via les mêmes mappeurs
-    /// que le « tir » de [SynchronisationParticipation]. `null` si la participation ne porte pas de météo
-    /// (l'API la rend `null`). Les températures ne voyagent pas dans l'API : elles resteront à saisir à la
-    /// main (« Modifier le passage », #1688).
-    private static String meteoDepuis(ParticipationDetail detail) {
-        if (detail.meteo() == null) {
-            return null;
-        }
-        return MeteoPassage.definirReleve(
-                null, CorrespondanceParticipation.fusionnerMeteo(MeteoReleve.VIDE, detail.meteo()));
-    }
-
-    /// Matériel du micro (position, hauteur, type) rapatrié de la participation (#1689) s'il est renseigné,
-    /// via les mêmes clés `micro0_*` que le « tir » de [SynchronisationParticipation].
-    private void rapatrierMateriel(Long idPassage, ParticipationDetail detail) {
-        if (detail.configuration() != null && !detail.configuration().isEmpty()) {
-            materielDao.definir(CorrespondanceParticipation.microDepuis(idPassage, detail.configuration()));
-        }
     }
 
     // --- Lectures distantes et helpers -------------------------------------------------------------
