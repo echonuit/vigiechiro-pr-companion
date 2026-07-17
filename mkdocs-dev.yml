@@ -62,7 +62,12 @@ nav:
   - Injection (Guice): injection.md
   - Ajouter une fonctionnalité: ajouter-une-fonctionnalite.md
   - Cycle de vie d'un chantier: cycle-de-chantier.md
-  - Recette (acceptation): recette/index.md
+  - Recette (acceptation):
+    - Méthode: recette/index.md
+    - S1 · Premier contact: recette/sessions/s1-premier-contact.md
+    - S2 · Importer une nuit: recette/sessions/s2-importer.md
+    - S3 · Vérifier: recette/sessions/s3-verifier.md
+    - S4 · Déposer et suivre: recette/sessions/s4-deposer-suivre.md
   - Interface en ligne de commande (CLI): cli.md
   - Tests et qualité: tests-et-qualite.md
   - Contrat de l'API VigieChiro: api-vigiechiro.md

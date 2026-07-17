@@ -34,6 +34,22 @@ ailleurs il n'est qu'écran de transit (seule la fluidité de la transition est 
 Chaque session se joue en trois temps : une **passe statique** en solo (préparation, postée en
 commentaire), la **session interactive** (pilotage écran par écran), puis un **triage à froid**.
 
+## Les scripts de session
+
+Chaque session a son **script figé**, versionné sous `recette/sessions/`. Un script est à la fois la
+**checklist rejouable** (une case = un fait observable, groupée par étape) et le **relevé** de la dernière
+passe (verdict par axe, issues produites, renvois, notes de méthode). Passer d'une campagne à l'autre,
+c'est re-dérouler la checklist ; ses annotations disent ce qui avait été trouvé la fois d'avant.
+
+Gabarit d'un script : en-tête (écrans propriétaires · features · statut) → objectif → environnement →
+[raccourcis] → **le script** (points numérotés `Sxx-NN`, groupés par étape) → **verdict par axe** →
+issues produites → renvois et décisions → notes de méthode.
+
+- [S1 · Premier contact](sessions/s1-premier-contact.md) : accueil, connexion, sites, points.
+- [S2 · Importer une nuit](sessions/s2-importer.md) : importation, passage, diagnostic (+ cas dégradés).
+- [S3 · Vérifier](sessions/s3-verifier.md) : qualification, raccourcis, écoute.
+- [S4 · Déposer et suivre](sessions/s4-deposer-suivre.md) : lot, dépôt réel, suivi *(à jouer)*.
+
 ## La fiche d'évaluation : six axes
 
 Chaque écran est noté sur **six axes**, verdict trivalué (**OK / remarque / bloquant**). Les axes **P**
@@ -133,6 +149,6 @@ Pour **revalider** aux jalons suivants sans tout re-piloter à la main, on rejou
 ## Où ça vit
 
 - `dev-docs/recette/index.md` : **cette page**, la méthode.
+- `dev-docs/recette/sessions/` : les **scripts de session** figés (S1-S4 ; S5-S7 à venir).
 - L'**EPIC** (label `recette`) : le déroulé vivant, les comptes-rendus, la task-list des issues.
-- *(À venir : `recette/sessions/` pour les scripts de session figés, `recette/fixtures/spec/` pour les
-  specs du générateur de cartes SD.)*
+- *(À venir : `recette/fixtures/spec/` pour les specs du générateur de cartes SD.)*
