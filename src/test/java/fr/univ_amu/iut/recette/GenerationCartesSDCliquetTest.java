@@ -4,9 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
+import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.RapportInspection;
 import fr.univ_amu.iut.recette.SpecCarteSd.Attendu;
+import fr.univ_amu.iut.recette.SpecCarteSd.Enregistreur;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -66,6 +68,12 @@ class GenerationCartesSDCliquetTest {
         assertThat(rapport.aUnReleveClimatique())
                 .as("%s : présence du relevé climatique", spec.fixture())
                 .isEqualTo(attendu.aReleve());
+        assertThat(rapport.nombreOriginaux())
+                .as("%s : nombre d'enregistrements originaux générés", spec.fixture())
+                .isEqualTo(nombreOriginauxAttendu(spec));
+        assertThat(rapport.etatNommage().name())
+                .as("%s : état de nommage des originaux", spec.fixture())
+                .isEqualTo(attendu.etatNommage());
         assertThat(rapport.melange().plusieursEnregistreurs())
                 .as("%s : mélange de plusieurs enregistreurs", spec.fixture())
                 .isEqualTo(attendu.plusieursEnregistreurs());
@@ -75,6 +83,37 @@ class GenerationCartesSDCliquetTest {
         assertThat(rapport.partitionNuits())
                 .as("%s : nombre de nuits détectées", spec.fixture())
                 .hasSize(attendu.nuits());
+
+        if (spec.zip()) {
+            verifierCheminZip(spec, carte, rapport);
+        }
+    }
+
+    /// Vérifie le chemin décompression : l'archive produite est reconnue comme zip, et l'inspection de
+    /// l'arbre extrait retrouve les mêmes originaux et la même présence de journal que l'arbre direct.
+    private void verifierCheminZip(SpecCarteSd spec, Path carte, RapportInspection direct) throws IOException {
+        Path zip = racineTravail.resolve(spec.fixture() + ".zip");
+        GenerateurCartesSD.compresserVers(carte, zip);
+        assertThat(ExtracteurZip.estZip(zip))
+                .as("%s : l'archive est reconnue comme zip", spec.fixture())
+                .isTrue();
+        Path base = Files.createDirectories(racineTravail.resolve(spec.fixture() + "-extrait"));
+        Path extrait = ExtracteurZip.racineEffective(ExtracteurZip.extraireVersDossierTemporaire(zip, base));
+        RapportInspection depuisZip = inspecteur.inspecter(extrait);
+        assertThat(depuisZip.nombreOriginaux())
+                .as("%s : mêmes originaux après décompression", spec.fixture())
+                .isEqualTo(direct.nombreOriginaux());
+        assertThat(depuisZip.aUnJournal())
+                .as("%s : présence du journal après décompression", spec.fixture())
+                .isEqualTo(direct.aUnJournal());
+    }
+
+    private static int nombreOriginauxAttendu(SpecCarteSd spec) {
+        int total = 0;
+        for (Enregistreur enregistreur : spec.enregistreurs()) {
+            total += enregistreur.horodatages().size() + enregistreur.fauxWav().size();
+        }
+        return total;
     }
 
     private static List<Path> specsDeRecette() throws IOException {
