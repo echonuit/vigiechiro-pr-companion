@@ -7,7 +7,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -90,7 +89,7 @@ final class HydratationDepuisBruts {
             traites++;
             progres.accept(
                     new Progression("Régénération " + traites + "/" + bruts.size(), traites / (double) bruts.size()));
-            Path temporaire = temporaire(brut);
+            Path temporaire = DossierTemporaire.creer("vc-hydrate-");
             try {
                 moteur.regenerer(
                         brut.source(), brut.nomOriginal(), prefixe, inventorie.frequenceAcquisitionHz(), temporaire);
@@ -102,7 +101,7 @@ final class HydratationDepuisBruts {
                         sesSequences, CandidatsReactivation.dans(temporaire), avancement -> {}));
                 sesSequences.forEach(sequence -> restantes.remove(sequence.nomFichier()));
             } finally {
-                effacer(temporaire);
+                DossierTemporaire.supprimer(temporaire);
             }
         }
         bilan.manquantes += absentesDuDisque(restantes, parNom);
@@ -139,29 +138,5 @@ final class HydratationDepuisBruts {
                 .map(parNom::get)
                 .filter(sequence -> !Files.exists(Path.of(sequence.cheminFichier())))
                 .count();
-    }
-
-    private static Path temporaire(BrutInventorie brut) {
-        try {
-            return Files.createTempDirectory("vc-hydrate-");
-        } catch (IOException e) {
-            throw new UncheckedIOException("Dossier temporaire impossible pour " + brut.nomOriginal(), e);
-        }
-    }
-
-    /// Efface le temporaire **au mieux** : un reliquat dans le dossier temporaire du système n'est pas une
-    /// raison de faire échouer une réactivation par ailleurs réussie.
-    private static void effacer(Path dossier) {
-        try (Stream<Path> contenu = Files.walk(dossier)) {
-            contenu.sorted(Comparator.reverseOrder()).forEach(chemin -> {
-                try {
-                    Files.deleteIfExists(chemin);
-                } catch (IOException ignore) {
-                    // Reliquat toléré : voir la Javadoc.
-                }
-            });
-        } catch (IOException ignore) {
-            // Idem.
-        }
     }
 }

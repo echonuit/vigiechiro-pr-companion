@@ -5,8 +5,6 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Acceptee;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Refusee;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -14,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /// La voie **« bruts »** de la réactivation (#1406), extraite de [ServiceReactivationPassage] (qui
 /// portait les deux voies et devenait une classe à tout faire).
@@ -110,13 +107,13 @@ final class ReactivationDepuisBruts {
             List<SequenceDEcoute> sesSequences,
             Path brut,
             Prefixe prefixe) {
-        Path temporaire = temporaire(original);
+        Path temporaire = DossierTemporaire.creer("vc-regen-" + original.id() + "-");
         try {
             moteur.regenerer(brut, original.nomFichier(), prefixe, frequenceAcquisition(original), temporaire);
             bilan.absorber(
                     rebranchement.rebrancher(sesSequences, CandidatsReactivation.dans(temporaire), progres -> {}));
         } finally {
-            effacer(temporaire);
+            DossierTemporaire.supprimer(temporaire);
         }
     }
 
@@ -142,29 +139,5 @@ final class ReactivationDepuisBruts {
         return (int) sequences.stream()
                 .filter(sequence -> !Files.exists(Path.of(sequence.cheminFichier())))
                 .count();
-    }
-
-    private static Path temporaire(EnregistrementOriginal original) {
-        try {
-            return Files.createTempDirectory("vc-regen-" + original.id() + "-");
-        } catch (IOException e) {
-            throw new UncheckedIOException("Dossier temporaire impossible pour " + original.nomFichier(), e);
-        }
-    }
-
-    /// Efface le temporaire **au mieux** : un reliquat dans le dossier temporaire du système n'est pas une
-    /// raison de faire échouer une réactivation par ailleurs réussie.
-    private static void effacer(Path dossier) {
-        try (Stream<Path> contenu = Files.walk(dossier)) {
-            contenu.sorted(Comparator.reverseOrder()).forEach(chemin -> {
-                try {
-                    Files.deleteIfExists(chemin);
-                } catch (IOException ignore) {
-                    // Reliquat toléré : voir la Javadoc.
-                }
-            });
-        } catch (IOException ignore) {
-            // Idem.
-        }
     }
 }
