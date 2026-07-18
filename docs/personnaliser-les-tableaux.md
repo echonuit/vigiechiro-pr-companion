@@ -17,6 +17,8 @@ Un **clic droit** sur une ligne ouvre son menu. L'ordre y est **le même d'un é
    n° de carré, motif d'un constat…), pour la recoller dans un tableur ou un courriel ;
 5. **Colonnes…**, toujours en dernier (voir plus bas).
 
+![Le menu de ligne d'une observation, sur Sons & validation : « Ouvrir le passage », « Fiche de l'espèce (Pipistrelle commune) », puis les sous-menus « Validation » et « Copier », et enfin « Colonnes… ».](assets/captures/apercu-menu-ligne.png)
+
 Le **double-clic** est un raccourci vers l'**action principale**, celle qui figure en tête du menu :
 sur un tableau d'espèces il ouvre la **fiche de l'espèce**, sur un tableau de passages il ouvre le
 **passage**. Il ne fait donc jamais rien que le menu ne propose : si vous hésitez, le clic droit montre
