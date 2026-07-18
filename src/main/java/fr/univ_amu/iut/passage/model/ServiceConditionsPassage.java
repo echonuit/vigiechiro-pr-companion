@@ -32,17 +32,23 @@ public class ServiceConditionsPassage {
     private final CoordonneesPoint coordonnees;
     private final FournisseurMeteo fournisseurMeteo;
 
+    /// Ce que les enregistrements de la nuit prouvent de ses horaires (#1878) : quand ils parlent, la
+    /// saisie n'a pas lieu d'être.
+    private final FenetreObserveeNuit fenetreObservee;
+
     public ServiceConditionsPassage(
             PassageDao passageDao,
             MaterielMicroDao materielDao,
             EnregistreurDao enregistreurDao,
             CoordonneesPoint coordonnees,
-            FournisseurMeteo fournisseurMeteo) {
+            FournisseurMeteo fournisseurMeteo,
+            FenetreObserveeNuit fenetreObservee) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.materielDao = Objects.requireNonNull(materielDao, "materielDao");
         this.enregistreurDao = Objects.requireNonNull(enregistreurDao, "enregistreurDao");
         this.coordonnees = Objects.requireNonNull(coordonnees, "coordonnees");
         this.fournisseurMeteo = Objects.requireNonNull(fournisseurMeteo, "fournisseurMeteo");
+        this.fenetreObservee = Objects.requireNonNull(fenetreObservee, "fenetreObservee");
     }
 
     /// Désigne l'**enregistreur** d'un passage (#1828) : le n° de série que l'utilisateur a saisi ou choisi
@@ -176,5 +182,82 @@ public class ServiceConditionsPassage {
         return passageDao
                 .findById(idPassage)
                 .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+    }
+
+    /// Corrige les **heures de la nuit** d'un passage (#1892).
+    ///
+    /// L'application dérive normalement cette fenêtre de la machine : du journal du capteur à l'import,
+    /// ou des enregistrements eux-mêmes (#1878). C'est le bon défaut - une mesure vaut mieux qu'une
+    /// saisie. Mais une nuit **rapatriée en squelette** n'a aucune preuve locale, et jusqu'ici aucun
+    /// recours n'existait : ses heures, une fois fausses, l'étaient à vie. La règle se complète donc :
+    /// les heures viennent des **preuves** quand elles existent, de l'**utilisateur** sinon.
+    ///
+    /// Deux règles de validation, et une seule interdiction :
+    ///  - une fin **antérieure** au début est **normale** : une nuit est à cheval sur minuit, et le mapping
+    ///    VigieChiro le sait déjà (`CorrespondanceParticipation`) ;
+    ///  - une fin **égale** au début est refusée : elle ne délimite aucune nuit, et l'envoi la prendrait
+    ///    pour une nuit de 24 h - le mécanisme observé dans #1860.
+    ///
+    /// @param idPassage passage cible
+    /// @param heureDebut heure de début, format `HH:mm` ou `HH:mm:ss`
+    /// @param heureFin heure de fin (peut précéder le début)
+    /// @return le passage mis à jour
+    /// @throws RegleMetierException si une heure est illisible, ou si la fin égale le début
+    public Passage definirHoraires(Long idPassage, String heureDebut, String heureFin) {
+        Passage passage = charger(idPassage);
+        if (heuresProuvees(idPassage)) {
+            // Accepter la saisie serait la trahir : le premier envoi la remplacerait par les preuves
+            // (#1878). Mieux vaut refuser en le disant que faire semblant d'obéir.
+            throw new RegleMetierException("Les heures de cette nuit sont établies par ses enregistrements :"
+                    + " elles ne se saisissent pas. Elles se réalignent d'elles-mêmes à l'envoi.");
+        }
+        LocalTime debut = heureExigee(heureDebut, "de début");
+        LocalTime fin = heureExigee(heureFin, "de fin");
+        if (debut.equals(fin)) {
+            throw new RegleMetierException("L'heure de fin ne peut pas être identique à l'heure de début :"
+                    + " la nuit ne durerait rien, et serait déposée comme une nuit de 24 heures.");
+        }
+        Passage modifie = avecHoraires(passage, debut.toString(), fin.toString());
+        passageDao.update(modifie);
+        return modifie;
+    }
+
+    /// `true` si les enregistrements de la nuit **attestent** ses horaires : la saisie est alors sans
+    /// objet (et serait écrasée au premier envoi, #1878). Faux pour une nuit squelette, qui n'a rien pour
+    /// se prouver - c'est précisément le cas où l'utilisateur doit pouvoir corriger.
+    public boolean heuresProuvees(Long idPassage) {
+        return fenetreObservee.pour(idPassage).isPresent();
+    }
+
+    /// Heure saisie, ou refus nommant **laquelle** des deux bornes est en cause.
+    private static LocalTime heureExigee(String saisie, String borne) {
+        if (saisie == null || saisie.isBlank()) {
+            throw new RegleMetierException("L'heure " + borne + " est obligatoire (format 21:00).");
+        }
+        try {
+            return LocalTime.parse(saisie.trim());
+        } catch (DateTimeParseException illisible) {
+            throw new RegleMetierException(
+                    "L'heure " + borne + " est illisible : « " + saisie.trim() + " » (format attendu 21:00).");
+        }
+    }
+
+    /// Copie `passage` en ne changeant que ses heures de nuit.
+    private static Passage avecHoraires(Passage passage, String heureDebut, String heureFin) {
+        return new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                heureDebut,
+                heureFin,
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur());
     }
 }

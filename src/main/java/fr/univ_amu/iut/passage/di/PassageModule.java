@@ -24,6 +24,7 @@ import fr.univ_amu.iut.passage.model.AdoptionOriginauxReconstruits;
 import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
 import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.DeclarationPurgeParSessions;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
@@ -315,8 +316,10 @@ public class PassageModule extends ModuleDeFeature {
             MaterielMicroDao materielDao,
             EnregistreurDao enregistreurDao,
             CoordonneesPoint coordonnees,
-            FournisseurMeteo fournisseurMeteo) {
-        return new ServiceConditionsPassage(passageDao, materielDao, enregistreurDao, coordonnees, fournisseurMeteo);
+            FournisseurMeteo fournisseurMeteo,
+            FenetreObserveeNuit fenetreObservee) {
+        return new ServiceConditionsPassage(
+                passageDao, materielDao, enregistreurDao, coordonnees, fournisseurMeteo, fenetreObservee);
     }
 
     /// Rattachement rétroactif (E2.S8), extrait de ServicePassage (#1192).

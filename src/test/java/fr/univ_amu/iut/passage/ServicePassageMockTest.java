@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
@@ -28,6 +29,7 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
@@ -61,6 +63,25 @@ class ServicePassageMockTest {
     @Mock
     private MaterielMicroDao materielDao;
 
+    /// Passage minimal pour exercer une règle de décision : seules ses heures nous intéressent ici.
+    private static Passage passageDeReference() {
+        return new Passage(
+                1L,
+                1,
+                2026,
+                "2026-07-04",
+                "15:00",
+                "16:00",
+                null,
+                StatutWorkflow.IMPORTE,
+                null,
+                null,
+                null,
+                null,
+                7L,
+                "1997632");
+    }
+
     private ServicePassage service() {
         return new ServicePassage(
                 passageDao,
@@ -78,7 +99,33 @@ class ServicePassageMockTest {
                 materielDao,
                 mock(fr.univ_amu.iut.passage.model.dao.EnregistreurDao.class),
                 coordonnees,
-                fournisseurMeteo);
+                fournisseurMeteo,
+                mock(fr.univ_amu.iut.passage.model.FenetreObserveeNuit.class));
+    }
+
+    @Test
+    @DisplayName("#1892 : une nuit que ses enregistrements ATTESTENT refuse la saisie, et le dit")
+    void heures_prouvees_refusent_la_saisie() {
+        FenetreObserveeNuit preuves = mock(FenetreObserveeNuit.class);
+        when(preuves.pour(1L))
+                .thenReturn(Optional.of(new FenetreObserveeNuit.Bornes(
+                        LocalDateTime.of(2026, 7, 4, 21, 0), LocalDateTime.of(2026, 7, 5, 6, 0))));
+        when(passageDao.findById(1L)).thenReturn(Optional.of(passageDeReference()));
+        ServiceConditionsPassage service = new ServiceConditionsPassage(
+                passageDao,
+                materielDao,
+                mock(fr.univ_amu.iut.passage.model.dao.EnregistreurDao.class),
+                coordonnees,
+                fournisseurMeteo,
+                preuves);
+
+        // Accepter la saisie serait la trahir : le premier envoi la remplacerait par les preuves (#1878).
+        // Mieux vaut refuser en le disant que faire semblant d'obéir.
+        assertThatThrownBy(() -> service.definirHoraires(1L, "15:00", "16:00"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("établies par ses enregistrements");
+        verify(passageDao, never()).update(any());
+        assertThat(service.heuresProuvees(1L)).isTrue();
     }
 
     @Test

@@ -9,6 +9,7 @@ import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.PositionMicro;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.passage.viewmodel.RattachementViewModel;
+import fr.univ_amu.iut.passage.viewmodel.SaisiePassageConditions;
 import java.util.Objects;
 import java.util.function.Function;
 import javafx.beans.binding.Bindings;
@@ -118,6 +119,15 @@ public class RattachementModaleController {
     /// propositions - l'utilisateur peut toujours saisir le numéro lu sur l'appareil.
     @FXML
     private ComboBox<String> champEnregistreur;
+
+    @FXML
+    private TextField champHeureDebut;
+
+    @FXML
+    private TextField champHeureFin;
+
+    @FXML
+    private Label aideHeures;
 
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel, ExecuteurTache executeur) {
@@ -240,6 +250,7 @@ public class RattachementModaleController {
         // texte : les deux gestes passent donc par la seule propriété du ViewModel.
         champEnregistreur.setItems(conditions.enregistreursProposes());
         champEnregistreur.getEditor().textProperty().bindBidirectional(conditions.enregistreurSaisieProperty());
+        cablerHeures(conditions);
     }
 
     /// Peuple un `ComboBox` d'énum (avec une entrée « non renseigné » `null` en tête) et le lie en
@@ -267,6 +278,26 @@ public class RattachementModaleController {
     public void demarrer(Long idPassage, String carre, String codePoint, Runnable apresSucces) {
         this.apresSucces = Objects.requireNonNull(apresSucces, "apresSucces");
         viewModel.ouvrirSur(idPassage, carre, codePoint);
+    }
+
+    /// Câble les heures de la nuit (#1892) : saisissables tant qu'aucun enregistrement ne les atteste.
+    ///
+    /// Dès que la nuit se prouve, les champs passent en **lecture seule** et le motif s'affiche : un
+    /// contrôle inerte sans explication laisse croire à une panne (patron « Fiche de l'espèce », #789).
+    private void cablerHeures(SaisiePassageConditions conditions) {
+        champHeureDebut.textProperty().bindBidirectional(conditions.horaires().debutProperty());
+        champHeureFin.textProperty().bindBidirectional(conditions.horaires().finProperty());
+        var prouvees = conditions.horaires().prouveesProperty();
+        champHeureDebut.editableProperty().bind(prouvees.not());
+        champHeureFin.editableProperty().bind(prouvees.not());
+        champHeureDebut.disableProperty().bind(prouvees);
+        champHeureFin.disableProperty().bind(prouvees);
+        aideHeures
+                .textProperty()
+                .bind(Bindings.when(prouvees)
+                        .then("Établies par les enregistrements de la nuit : elles se réalignent d'elles-mêmes.")
+                        .otherwise("Cette nuit n'a ni fichier ni séquence pour l'attester : corrigez-les si besoin."
+                                + " Une fin avant le début est normale (la nuit franchit minuit)."));
     }
 
     @FXML

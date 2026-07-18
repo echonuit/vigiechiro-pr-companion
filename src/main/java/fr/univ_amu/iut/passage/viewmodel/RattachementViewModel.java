@@ -94,7 +94,7 @@ public class RattachementViewModel {
         nombreSequences = detail.nombreSequences();
         renommageVerrouille.set(
                 detail.statut() == StatutWorkflow.DEPOSE || detail.statut() == StatutWorkflow.DEPOT_EN_COURS);
-        conditions.charger(idPassage, detail.meteo(), detail.idEnregistreur());
+        conditions.charger(idPassage, detail.meteo(), detail.idEnregistreur(), detail.heureDebut(), detail.heureFin());
         messageErreur.set("");
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
@@ -137,7 +137,8 @@ public class RattachementViewModel {
     public boolean appliquer() {
         if (!conditions.enregistrerMeteo()
                 || !conditions.enregistrerMateriel()
-                || !conditions.enregistrerEnregistreur()) {
+                || !conditions.enregistrerEnregistreur()
+                || !conditions.horaires().enregistrer()) {
             return false;
         }
         if (renommageVerrouille.get()) {
@@ -267,7 +268,12 @@ public class RattachementViewModel {
         }
         if (recupere) {
             DetailPassage rafraichi = service.detailPassage(idPassage);
-            conditions.charger(idPassage, rafraichi.meteo(), rafraichi.idEnregistreur());
+            conditions.charger(
+                    idPassage,
+                    rafraichi.meteo(),
+                    rafraichi.idEnregistreur(),
+                    rafraichi.heureDebut(),
+                    rafraichi.heureFin());
             messageErreur.set("Métadonnées récupérées depuis Vigie-Chiro.");
         } else {
             messageErreur.set("Aucune participation Vigie-Chiro liée à ce passage (ou hors connexion).");

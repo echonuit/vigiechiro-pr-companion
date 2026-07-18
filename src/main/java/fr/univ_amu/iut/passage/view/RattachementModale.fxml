@@ -114,6 +114,22 @@
 
   <Separator/>
 
+  <!-- Heures de la nuit (#1892) : saisissables SEULEMENT quand aucun enregistrement ne les atteste.
+       Dès que la nuit se prouve (fichiers ou séquences), ce sont eux qui font foi (#1878) et les champs
+       passent en lecture seule - accepter une saisie serait la trahir, l'envoi la remplacerait. -->
+  <Label text="Heures de la nuit" styleClass="section-sous"/>
+  <GridPane hgap="10.0" vgap="8.0">
+    <Label text="Début :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <TextField fx:id="champHeureDebut" promptText="ex. 21:00" prefWidth="90.0"
+               GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+    <Label text="Fin :" GridPane.rowIndex="0" GridPane.columnIndex="2"/>
+    <TextField fx:id="champHeureFin" promptText="ex. 06:00" prefWidth="90.0"
+               GridPane.rowIndex="0" GridPane.columnIndex="3"/>
+  </GridPane>
+  <Label fx:id="aideHeures" styleClass="aide-champ" wrapText="true"/>
+
+  <Separator/>
+
   <!-- Matériel du micro (optionnel, dépôt VigieChiro) : position + type en listes fermées. -->
   <Label text="Matériel du micro (optionnel)" styleClass="section-sous"/>
   <GridPane hgap="10.0" vgap="8.0">

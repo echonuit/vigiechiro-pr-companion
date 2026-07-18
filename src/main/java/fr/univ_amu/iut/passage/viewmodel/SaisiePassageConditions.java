@@ -50,6 +50,10 @@ public class SaisiePassageConditions {
     private final StringProperty typeMicroSaisie = new SimpleStringProperty(this, "typeMicroSaisie", "");
 
     private final StringProperty enregistreurSaisie = new SimpleStringProperty(this, "enregistreurSaisie", "");
+
+    /// Heures de la nuit (#1892), préoccupation à part : elles ne se saisissent que si rien ne les
+    /// prouve. Voir [SaisieHorairesNuit].
+    private final SaisieHorairesNuit horaires;
     private final ObservableList<String> enregistreursProposes = FXCollections.observableArrayList();
 
     SaisiePassageConditions(
@@ -57,16 +61,18 @@ public class SaisiePassageConditions {
         this.service = service;
         this.propositions = propositions;
         this.message = message;
+        this.horaires = new SaisieHorairesNuit(service, message);
     }
 
     /// Charge les conditions du passage `idPassage` : le relevé `meteo` (issu de la projection), le
     /// matériel (relu du service) et l'enregistreur. Tolérant : un relevé/matériel nul donne des champs
     /// vides.
-    void charger(Long idPassage, MeteoReleve meteo, String idEnregistreur) {
+    void charger(Long idPassage, MeteoReleve meteo, String idEnregistreur, String heureDebut, String heureFin) {
         this.idPassage = idPassage;
         appliquerMeteo(meteo);
         appliquerMateriel(service.materiel(idPassage));
         appliquerEnregistreur(idEnregistreur);
+        horaires.charger(idPassage, heureDebut, heureFin);
     }
 
     /// Enregistre le **relevé météo** saisi (grandeur vide = effacer ; saisie non numérique = message
@@ -127,6 +133,11 @@ public class SaisiePassageConditions {
         }
         message.set("");
         return true;
+    }
+
+    /// Saisie des heures de la nuit (#1892), déléguée à son propre ViewModel.
+    public SaisieHorairesNuit horaires() {
+        return horaires;
     }
 
     /// **Récupère** la météo de la nuit via le service (#547) : opération **réseau**, donc appelée par

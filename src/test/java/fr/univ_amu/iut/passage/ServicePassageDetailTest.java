@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -89,7 +90,53 @@ class ServicePassageDetailTest {
                 new MaterielMicroDao(source),
                 enregistreurDao,
                 idPoint -> Optional.empty(),
-                (lat, lon, jour, debut, fin) -> Optional.empty());
+                (lat, lon, jour, debut, fin) -> Optional.empty(),
+                new FenetreObserveeNuit(sessionDao, new EnregistrementOriginalDao(source), sequenceDao));
+    }
+
+    @Test
+    @DisplayName("#1892 definirHoraires : une nuit SANS preuve se corrige à la main")
+    void definir_horaires_nuit_sans_preuve() {
+        Passage passage = insererPassage(1, StatutWorkflow.IMPORTE);
+
+        Passage corrige = conditions.definirHoraires(passage.id(), "21:00", "06:00");
+
+        assertThat(corrige.heureDebut()).isEqualTo("21:00");
+        assertThat(corrige.heureFin()).isEqualTo("06:00");
+    }
+
+    @Test
+    @DisplayName("#1892 definirHoraires : une fin AVANT le début est normale (la nuit franchit minuit)")
+    void definir_horaires_a_cheval_sur_minuit() {
+        Passage passage = insererPassage(2, StatutWorkflow.IMPORTE);
+
+        // C'est le cas nominal d'une nuit : refuser cette saisie interdirait de décrire une vraie nuit.
+        assertThat(conditions.definirHoraires(passage.id(), "21:30", "05:15").heureFin())
+                .isEqualTo("05:15");
+    }
+
+    @Test
+    @DisplayName("#1892 definirHoraires : une fin ÉGALE au début est refusée (elle deviendrait 24 h)")
+    void definir_horaires_fin_egale_debut_refusee() {
+        Passage passage = insererPassage(3, StatutWorkflow.IMPORTE);
+
+        // Deux bornes identiques ne délimitent aucune nuit, et l'envoi y voit une nuit à cheval sur
+        // minuit : la règle « la fin ne suit pas le début » ajoute un jour. C'est ainsi que les nuits de
+        // 24 h de #1860 sont apparues sur la plateforme.
+        assertThatThrownBy(() -> conditions.definirHoraires(passage.id(), "15:00", "15:00"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("24 heures");
+    }
+
+    @Test
+    @DisplayName("#1892 definirHoraires : une heure illisible dit LAQUELLE des deux bornes est en cause")
+    void definir_horaires_heure_illisible() {
+        Passage passage = insererPassage(4, StatutWorkflow.IMPORTE);
+
+        assertThatThrownBy(() -> conditions.definirHoraires(passage.id(), "21:00", "minuit"))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("de fin")
+                .hasMessageContaining("minuit");
     }
 
     private Passage insererPassage(int numero, StatutWorkflow statut) {

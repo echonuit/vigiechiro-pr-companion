@@ -213,6 +213,25 @@ l'import ne l'avait pas retenue.
     supprimer — et « INCONNU » n'est pas une saisie acceptée : c'est ce que l'application affiche
     quand elle ne sait pas, pas une valeur que l'on choisit.
 
+### Corriger les heures de la nuit
+
+Le bloc **Heures de la nuit** affiche le début et la fin de la nuit. Il se comporte de deux façons,
+selon ce que l'application sait :
+
+| Situation | Comportement |
+|---|---|
+| La nuit a des **fichiers** ou des **sons** | Les champs sont **grisés** : ce sont les enregistrements qui font foi, et l'application réaligne les heures dessus toute seule. |
+| La nuit n'a **ni l'un ni l'autre** (récupérée de Vigie-Chiro, jamais reconstruite) | Les champs sont **modifiables** : rien ne peut attester ses heures, c'est à vous de les corriger. |
+
+Dans le second cas, l'application vous dit ce qu'elle fait quand elle corrige : après un envoi, le
+message indique l'ancienne et la nouvelle valeur, afin que vous puissiez la contester si elle vous
+paraît fausse.
+
+!!! note "Une fin avant le début, c'est normal"
+    Une nuit franchit minuit : `21:00 → 06:00` est la forme habituelle, et l'application la comprend.
+    En revanche une fin **identique** au début est refusée - elle ne délimiterait aucune nuit, et la
+    plateforme l'enregistrerait comme une nuit de 24 heures.
+
 ### Récupérer et envoyer
 
 Deux boutons, deux sens :
