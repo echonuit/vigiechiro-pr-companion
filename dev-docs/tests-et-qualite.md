@@ -217,8 +217,44 @@ Deux détails qui comptent :
 - **JaCoCo** : sous `-Pquality-gate`, seuils **bloquants** au niveau `BUNDLE` — **85 % de lignes** et
   **70 % de branches**. Les `**/outils/**` (capture d'écran, bancs de mesure) sont **exclus** : ils
   sont validés par exécution, pas par tests unitaires.
-- **PIT** (`-Pmutation`) évalue si les tests **détectent** des mutations du code. Lent : à lancer à la
-  demande, hors cycle normal.
+- **PIT** (`-Pmutation`) évalue si les tests **détectent** des mutations du code. Lent sur tout le
+  dépôt, mais **rapide ciblé** sur la classe qu'on vient d'écrire - et c'est ainsi qu'il sert le mieux :
+
+    ```bash
+    ./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
+        -DtargetClasses=fr.univ_amu.iut.passage.viewmodel.SaisieHorairesNuit \
+        -DtargetTests=fr.univ_amu.iut.passage.viewmodel.SaisieHorairesNuitTest
+    ```
+
+    Rapport HTML dans `target/pit-reports/`. Un **mutant survivant** désigne une ligne que rien ne
+    vérifie vraiment.
+
+### Un garde-fou de non-régression se vérifie en le voyant rouge
+
+Un test écrit pour empêcher un défaut de revenir ne vaut que si l'on a **constaté qu'il échoue** quand
+le défaut est là. Les suites de l'EPIC #1863 ont produit **quatre** contre-exemples en une seule
+session, tous verts et tous creux :
+
+- un test d'alias CLI qui passait **avec et sans** l'alias (`--help` sur une commande inconnue déclenche
+  l'aide de la **racine**, qui liste justement la commande cherchée) ;
+- une sonde live dont la remise en état allait échouer en silence ;
+- une garde « n'écrire que si la saisie a changé », posée pour corriger un défaut constaté, que rien
+  n'avait jamais verrouillée ;
+- un test de boucle d'horodatage qui refaisait lui-même la moitié du calcul qu'il prétendait vérifier.
+
+**Deux gestes, pas un.** Ils ne couvrent pas la même chose :
+
+| | Ce que ça couvre | Ce que ça ne voit pas |
+|---|---|---|
+| **PIT** (`-Pmutation` ciblé) | l'**espace entier** des mutations d'une classe : conditions inversées, bornes, retours neutralisés | tout ce qui n'est pas du code Java mutable - attribut d'annotation (`aliases`), câblage Guice, FXML, sonde réseau |
+| **La mutation à la main** | n'importe quoi : réintroduire le défaut d'origine, retirer une annotation, casser un binding | une seule hypothèse à la fois, celle qu'on a pensé à tester |
+
+PIT est plus **exhaustif** là où il s'applique ; le geste manuel est plus **large**. Les trois premiers
+contre-exemples ci-dessus sont hors de portée de PIT ; le quatrième, en revanche, était exactement dans
+sa cible - et un `-Pmutation` ciblé l'aurait signalé sans qu'on ait à deviner lequel mutant écrire.
+
+**En pratique** : à la passe 6 d'une clôture, lancer PIT ciblé sur les classes que le chantier a
+introduites, et vérifier à la main les garde-fous que PIT ne peut pas atteindre.
 
 ## Ce qui bloque la CI
 
