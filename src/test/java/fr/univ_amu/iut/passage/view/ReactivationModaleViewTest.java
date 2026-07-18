@@ -8,11 +8,13 @@ import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
+import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
@@ -78,6 +80,41 @@ class ReactivationModaleViewTest {
     /// est terminé et la modale affiche son état final.
     private void lancer(ReactivationModaleController.Travail travail, FxRobot robot) {
         robot.interact(() -> controleur.demarrer(travail, () -> appelantRafraichi.set(true)));
+    }
+
+    @Test
+    @DisplayName("#1943 : ce qui manque est nommé, avec son motif et ce qu'il coûte")
+    void absences_nommees_dans_le_compte_rendu(FxRobot robot) {
+        lancer(
+                (progresRegeneration, progresAncrage, jeton) -> new RapportReactivation(
+                        10,
+                        0,
+                        4,
+                        0,
+                        NiveauConfiance.CERTITUDE,
+                        List.of(),
+                        new DecompteAudio(10, 14),
+                        VoieReactivation.BRUTS,
+                        null,
+                        RapportAncrage.aucun(),
+                        List.of(
+                                new AbsenceReactivation("PaRecPR_20260422_205332.wav", "enregistrement absent", 3),
+                                new AbsenceReactivation(
+                                        "PaRecPR_20260422_205342_001.wav", "tranche non régénérée", 1))),
+                robot);
+
+        String compteRendu =
+                robot.lookup("#lblCompteRendu").queryAs(Label.class).getText();
+        assertThat(compteRendu)
+                .as("un nombre sans nom obligeait à lire la base pour savoir de quoi il parlait")
+                .contains("PaRecPR_20260422_205332.wav")
+                .contains("enregistrement absent")
+                .contains("(3 séquences)")
+                .contains("PaRecPR_20260422_205342_001.wav")
+                .contains("tranche non régénérée");
+        assertThat(compteRendu)
+                .as("une absence isolée ne s'annonce pas « (1 séquences) »")
+                .doesNotContain("(1 séquences)");
     }
 
     @Test

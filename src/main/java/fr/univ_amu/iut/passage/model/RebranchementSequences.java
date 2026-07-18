@@ -45,10 +45,36 @@ final class RebranchementSequences {
         this.regeneration = regeneration;
     }
 
+    /// D'où viennent les candidats, et donc **ce que veut dire leur absence** (#1943).
+    ///
+    /// À ne pas confondre avec le mode `regeneration`, qui pilote l'**acceptation** : la voie « bruts »
+    /// régénère ses candidats tout en exigeant la cascade complète. L'un dit comment juger, l'autre
+    /// comment expliquer.
+    enum OrigineCandidats {
+        /// Les fichiers que l'utilisateur a désignés : leur absence est un fait sur son disque.
+        DOSSIER("aucun fichier de ce nom dans le dossier"),
+
+        /// Les tranches que nous venons de fabriquer : leur absence est un défaut de notre côté.
+        REGENERATION("tranche non régénérée depuis son enregistrement");
+
+        private final String motif;
+
+        OrigineCandidats(String motif) {
+            this.motif = motif;
+        }
+
+        String motifAbsence() {
+            return motif;
+        }
+    }
+
     /// Confronte chaque séquence **absente du disque** aux fichiers candidats de même nom, et rebranche
     /// ce qui est vérifié.
     BilanReactivation rebrancher(
-            List<SequenceDEcoute> sequences, CandidatsReactivation candidats, Consumer<Progression> progres) {
+            List<SequenceDEcoute> sequences,
+            CandidatsReactivation candidats,
+            OrigineCandidats origine,
+            Consumer<Progression> progres) {
         BilanReactivation bilan = new BilanReactivation();
         int traitees = 0;
         for (SequenceDEcoute sequence : sequences) {
@@ -62,7 +88,9 @@ final class RebranchementSequences {
             }
             List<Path> homonymes = candidats.pour(sequence.nomFichier());
             if (homonymes.isEmpty()) {
-                bilan.manquantes++;
+                // Aucun fichier de ce nom parmi les candidats. Ce que cela signifie dépend d'où ils
+                // viennent : dossier de l'utilisateur, ou tranches que nous venons de régénérer (#1943).
+                bilan.absenter(sequence.nomFichier(), origine.motifAbsence(), 1);
                 continue;
             }
             appliquer(bilan, sequence, homonymes, destination);

@@ -107,6 +107,15 @@ public final class Reactiver implements Callable<Integer> {
         if (rapport.manquantes() > 0) {
             texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
         }
+        // Parité avec la modale (ADR 0014) : ce qui manquait est nommé, avec son motif (#1943). En ligne de
+        // commande on ne plafonne pas la liste : la sortie se filtre, une modale non.
+        rapport.absences()
+                .forEach(absence -> texte.append("  • ")
+                        .append(absence.nomFichier())
+                        .append(" : ")
+                        .append(absence.motif())
+                        .append(absence.sequences() > 1 ? " (" + absence.sequences() + " séquences)" : "")
+                        .append('\n'));
         ajouterEcarts(texte, rapport.ecarts());
         IndiceAcoustique indice = rapport.indiceAcoustique();
         if (indice != null && indice.estRenseigne()) {
