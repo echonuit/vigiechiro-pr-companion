@@ -98,6 +98,14 @@ alignés sur l'écran actuel, à confirmer au re-jeu.*
 49. `sd-nominale.zip` : la décompression affiche sa barre et son bouton Annuler avant l'inspection.
 50. Ré-inspection de `sd-nominale` : bandeau « nuit déjà importée », informatif.
 51. Rattachement au même point + année + n° : bandeau « n° déjà pris » avec « Utiliser ce n° » et
+
+**Bloc · Gestes de ligne (EPIC #1792)** — non automatisable (rendu du popup).
+
+52. Pendant un import, clic droit sur une ligne du **suivi des fichiers** : le menu s'ouvre,
+    entièrement lisible.
+53. « Copier ▸ Nom du fichier » place le nom de l'enregistrement dans le presse-papier.
+54. « Colonnes… » y figure **en dernier** ; la disposition choisie n'est **pas** mémorisée
+    d'un import à l'autre (écran transitoire, assumé).
     « 🗑 Écraser et réimporter » ; « Écraser » enchaîne deux confirmations (principe, puis liste de ce
     qui sera supprimé).
 
