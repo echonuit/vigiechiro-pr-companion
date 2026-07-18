@@ -111,6 +111,11 @@ public class RattachementModaleController {
     @FXML
     private ComboBox<String> champTypeMicro;
 
+    /// N° de série de l'enregistreur (#1828) : liste **éditable**, car les propositions ne sont que des
+    /// propositions - l'utilisateur peut toujours saisir le numéro lu sur l'appareil.
+    @FXML
+    private ComboBox<String> champEnregistreur;
+
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -224,6 +229,13 @@ public class RattachementModaleController {
             }
         });
         champTypeMicro.valueProperty().bindBidirectional(conditions.typeMicroSaisieProperty());
+
+        // Enregistreur (#1828) : les propositions alimentent la liste déroulante, mais c'est le TEXTE de
+        // l'éditeur qui fait foi - un ComboBox éditable ne publie sa `value` qu'à la validation, alors
+        // qu'ici une saisie libre doit compter dès la frappe. Choisir dans la liste met à jour ce même
+        // texte : les deux gestes passent donc par la seule propriété du ViewModel.
+        champEnregistreur.setItems(conditions.enregistreursProposes());
+        champEnregistreur.getEditor().textProperty().bindBidirectional(conditions.enregistreurSaisieProperty());
     }
 
     /// Peuple un `ComboBox` d'énum (avec une entrée « non renseigné » `null` en tête) et le lie en

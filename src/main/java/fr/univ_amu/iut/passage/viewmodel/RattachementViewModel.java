@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
@@ -62,11 +63,12 @@ public class RattachementViewModel {
             ServicePassage service,
             ServiceRattachement rattachement,
             ServiceConditionsPassage conditionsPassage,
+            PropositionsEnregistreur propositionsEnregistreur,
             Optional<SynchronisationParticipation> synchronisation) {
         this.service = Objects.requireNonNull(service, "service");
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
-        this.conditions = new SaisiePassageConditions(conditionsPassage, messageErreur);
+        this.conditions = new SaisiePassageConditions(conditionsPassage, propositionsEnregistreur, messageErreur);
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
     }
@@ -88,7 +90,7 @@ public class RattachementViewModel {
         nombreSequences = detail.nombreSequences();
         renommageVerrouille.set(
                 detail.statut() == StatutWorkflow.DEPOSE || detail.statut() == StatutWorkflow.DEPOT_EN_COURS);
-        conditions.charger(idPassage, detail.meteo());
+        conditions.charger(idPassage, detail.meteo(), detail.idEnregistreur());
         messageErreur.set("");
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
@@ -129,7 +131,9 @@ public class RattachementViewModel {
     /// on n'appelle pas [#valider] (aucun renommage). Sinon on délègue à [#valider] (qui renomme les
     /// séquences). Renvoie `true` si **tout** a réussi (la vue peut fermer la modale).
     public boolean appliquer() {
-        if (!conditions.enregistrerMeteo() || !conditions.enregistrerMateriel()) {
+        if (!conditions.enregistrerMeteo()
+                || !conditions.enregistrerMateriel()
+                || !conditions.enregistrerEnregistreur()) {
             return false;
         }
         if (renommageVerrouille.get()) {
@@ -179,7 +183,8 @@ public class RattachementViewModel {
             return;
         }
         if (recupere) {
-            conditions.charger(idPassage, service.detailPassage(idPassage).meteo());
+            DetailPassage rafraichi = service.detailPassage(idPassage);
+            conditions.charger(idPassage, rafraichi.meteo(), rafraichi.idEnregistreur());
             messageErreur.set("Métadonnées récupérées depuis VigieChiro.");
         } else {
             messageErreur.set("Aucune participation VigieChiro liée à ce passage (ou hors connexion).");

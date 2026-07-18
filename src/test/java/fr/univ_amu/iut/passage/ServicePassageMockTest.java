@@ -73,7 +73,12 @@ class ServicePassageMockTest {
 
     /// Conditions de la nuit (météo), extraites de ServicePassage (#1192).
     private ServiceConditionsPassage conditions() {
-        return new ServiceConditionsPassage(passageDao, materielDao, coordonnees, fournisseurMeteo);
+        return new ServiceConditionsPassage(
+                passageDao,
+                materielDao,
+                mock(fr.univ_amu.iut.passage.model.dao.EnregistreurDao.class),
+                coordonnees,
+                fournisseurMeteo);
     }
 
     @Test

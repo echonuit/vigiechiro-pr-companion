@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.time.LocalDate;
@@ -23,18 +24,71 @@ public class ServiceConditionsPassage {
 
     private final PassageDao passageDao;
     private final MaterielMicroDao materielDao;
+
+    /// Pour garantir la ligne `recorder` avant d'y accrocher le passage : `recorder_id` est une clé
+    /// étrangère **non nulle** (#1828).
+    private final EnregistreurDao enregistreurDao;
+
     private final CoordonneesPoint coordonnees;
     private final FournisseurMeteo fournisseurMeteo;
 
     public ServiceConditionsPassage(
             PassageDao passageDao,
             MaterielMicroDao materielDao,
+            EnregistreurDao enregistreurDao,
             CoordonneesPoint coordonnees,
             FournisseurMeteo fournisseurMeteo) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.materielDao = Objects.requireNonNull(materielDao, "materielDao");
+        this.enregistreurDao = Objects.requireNonNull(enregistreurDao, "enregistreurDao");
         this.coordonnees = Objects.requireNonNull(coordonnees, "coordonnees");
         this.fournisseurMeteo = Objects.requireNonNull(fournisseurMeteo, "fournisseurMeteo");
+    }
+
+    /// Désigne l'**enregistreur** d'un passage (#1828) : le n° de série que l'utilisateur a saisi ou choisi
+    /// dans la modale, quand ni l'import ni la plateforme ne l'ont fourni. La ligne `recorder` est créée si
+    /// elle manque (clé étrangère `NOT NULL`), sans écraser les métadonnées d'un enregistreur déjà connu.
+    ///
+    /// Le champ ne peut pas être **vidé** : le schéma exige un enregistreur. Un numéro blanc laisse donc le
+    /// passage inchangé plutôt que de violer la contrainte.
+    ///
+    /// @param idPassage passage cible
+    /// @param numeroSerie n° de série saisi (ignoré s'il est blanc)
+    /// @return le passage mis à jour, ou l'existant si rien n'a changé
+    public Passage definirEnregistreur(Long idPassage, String numeroSerie) {
+        Passage passage = charger(idPassage);
+        if (numeroSerie == null || numeroSerie.isBlank()) {
+            return passage;
+        }
+        String serie = numeroSerie.trim();
+        if (serie.equals(passage.idEnregistreur())) {
+            return passage;
+        }
+        if (enregistreurDao.findById(serie).isEmpty()) {
+            enregistreurDao.insert(new Enregistreur(serie, null, null));
+        }
+        Passage modifie = avecEnregistreur(passage, serie);
+        passageDao.update(modifie);
+        return modifie;
+    }
+
+    /// Copie `passage` en ne changeant que son enregistreur (colonne `recorder_id`).
+    private static Passage avecEnregistreur(Passage passage, String idEnregistreur) {
+        return new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                idEnregistreur);
     }
 
     /// Renseigne le **relevé météo complet** d'un passage (température début/fin, vent, couverture

@@ -79,8 +79,11 @@ class RattachementModaleViewTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Provides
             RattachementViewModel viewModel() {
+                var propositions = mock(fr.univ_amu.iut.passage.model.PropositionsEnregistreur.class);
+                when(propositions.pour(org.mockito.ArgumentMatchers.any()))
+                        .thenReturn(java.util.List.of("1925492", "1997632"));
                 viewModel = new RattachementViewModel(
-                        service, mock(ServiceRattachement.class), conditionsService, Optional.empty());
+                        service, mock(ServiceRattachement.class), conditionsService, propositions, Optional.empty());
                 return viewModel;
             }
         });
@@ -224,6 +227,24 @@ class RattachementModaleViewTest {
         ComboBox<String> typeMicro = robot.lookup("#champTypeMicro").queryAs(ComboBox.class);
         assertThat(typeMicro.getItems()).hasSize(MaterielMicro.TYPES_VIGIECHIRO.size() + 1);
         assertThat(typeMicro.getItems()).contains("SMX-U1", "SPU avec coque de protection");
+    }
+
+    @Test
+    @DisplayName("#1828 : l'enregistreur est une liste ÉDITABLE, garnie des numéros proposés")
+    void champ_enregistreur_editable_et_propose(FxRobot robot) {
+        @SuppressWarnings("unchecked")
+        ComboBox<String> enregistreur = robot.lookup("#champEnregistreur").queryAs(ComboBox.class);
+
+        assertThat(enregistreur.isEditable())
+                .as("les propositions ne sont que des propositions : on doit pouvoir taper le n° lu sur l'appareil")
+                .isTrue();
+        assertThat(enregistreur.getItems())
+                .as("les numéros proposés (noms de fichiers de la nuit, puis appareils connus du poste)")
+                .containsExactly("1925492", "1997632");
+
+        // Le TEXTE de l'éditeur fait foi : une saisie libre doit compter dès la frappe, sans validation.
+        robot.interact(() -> enregistreur.getEditor().setText("1234567"));
+        assertThat(viewModel.conditions().enregistreurSaisieProperty().get()).isEqualTo("1234567");
     }
 
     @Test

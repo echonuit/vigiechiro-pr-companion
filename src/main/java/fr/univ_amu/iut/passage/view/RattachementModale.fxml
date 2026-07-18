@@ -96,6 +96,20 @@
 
   <Separator/>
 
+  <!-- Enregistreur (#1828) : liste ÉDITABLE. Les propositions viennent des noms de fichiers de la nuit
+       (journal LogPR<serie>, originaux PaRecPR<serie>) puis des enregistreurs déjà connus du poste ;
+       l'utilisateur peut aussi taper le numéro lu sur l'appareil. Vide = on ne sait pas. -->
+  <Label text="Enregistreur" styleClass="section-sous"/>
+  <GridPane hgap="10.0" vgap="8.0">
+    <Label text="N° de série :" GridPane.rowIndex="0" GridPane.columnIndex="0"/>
+    <ComboBox fx:id="champEnregistreur" editable="true" prefWidth="220.0"
+              promptText="ex. 1925492" GridPane.rowIndex="0" GridPane.columnIndex="1"/>
+  </GridPane>
+  <Label text="Laissez vide si vous l'ignorez : la nuit restera « inconnue » plutôt que de porter un faux numéro."
+         styleClass="aide-champ" wrapText="true"/>
+
+  <Separator/>
+
   <!-- Matériel du micro (optionnel, dépôt VigieChiro) : position + type en listes fermées. -->
   <Label text="Matériel du micro (optionnel)" styleClass="section-sous"/>
   <GridPane hgap="10.0" vgap="8.0">

@@ -58,6 +58,7 @@ class ServicePassageDetailTest {
     private SessionDao sessionDao;
     private EnregistrementOriginalDao originalDao;
     private SequenceDao sequenceDao;
+    private EnregistreurDao enregistreurDao;
     private Long idPoint;
 
     @BeforeEach
@@ -70,7 +71,8 @@ class ServicePassageDetailTest {
         idPoint = new PointDao(source)
                 .insert(new PointDEcoute(null, "A1", 43.5, 5.4, null, site.id()))
                 .id();
-        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
+        enregistreurDao = new EnregistreurDao(source);
+        enregistreurDao.insert(new Enregistreur(SERIE, "V1.01", null));
         passageDao = new PassageDao(source);
         sessionDao = new SessionDao(source);
         originalDao = new EnregistrementOriginalDao(source);
@@ -85,6 +87,7 @@ class ServicePassageDetailTest {
         conditions = new ServiceConditionsPassage(
                 passageDao,
                 new MaterielMicroDao(source),
+                enregistreurDao,
                 idPoint -> Optional.empty(),
                 (lat, lon, jour, debut, fin) -> Optional.empty());
     }
@@ -112,6 +115,34 @@ class ServicePassageDetailTest {
                 null, "o-" + duree + ".wav", "/ws/bruts/o.wav", duree, 384000, null, idSession));
         sequenceDao.insert(new SequenceDEcoute(
                 null, "s-" + duree + ".wav", original.id(), 0, 0.0, duree, "/ws/x.wav", true, idSession));
+    }
+
+    @Test
+    @DisplayName("#1828 definirEnregistreur : pose le n° saisi et CRÉE la ligne recorder (clé étrangère)")
+    void definir_enregistreur_cree_la_ligne_recorder() {
+        Passage passage = insererPassage(9, StatutWorkflow.DEPOSE);
+
+        Passage modifie = conditions.definirEnregistreur(passage.id(), "  1925492  ");
+
+        assertThat(modifie.idEnregistreur())
+                .as("le numéro saisi est normalisé puis posé sur le passage")
+                .isEqualTo("1925492");
+        assertThat(passageDao.findById(passage.id()).orElseThrow().idEnregistreur())
+                .as("et il est bien persisté")
+                .isEqualTo("1925492");
+        assertThat(enregistreurDao.findById("1925492"))
+                .as("la ligne recorder est créée : sans elle, la clé étrangère NOT NULL refuserait l'écriture")
+                .isPresent();
+    }
+
+    @Test
+    @DisplayName("#1828 definirEnregistreur : un champ laissé vide ne touche à rien (le schéma exige un n°)")
+    void definir_enregistreur_vide_ne_change_rien() {
+        Passage passage = insererPassage(10, StatutWorkflow.DEPOSE);
+
+        assertThat(conditions.definirEnregistreur(passage.id(), "   ").idEnregistreur())
+                .as("vider n'est pas possible : la nuit garde ce qu'elle avait")
+                .isEqualTo(SERIE);
     }
 
     @Test

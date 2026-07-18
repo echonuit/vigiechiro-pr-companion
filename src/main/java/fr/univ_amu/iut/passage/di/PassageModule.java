@@ -28,6 +28,7 @@ import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
+import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
@@ -312,9 +313,10 @@ public class PassageModule extends ModuleDeFeature {
     ServiceConditionsPassage fournirServiceConditionsPassage(
             PassageDao passageDao,
             MaterielMicroDao materielDao,
+            EnregistreurDao enregistreurDao,
             CoordonneesPoint coordonnees,
             FournisseurMeteo fournisseurMeteo) {
-        return new ServiceConditionsPassage(passageDao, materielDao, coordonnees, fournisseurMeteo);
+        return new ServiceConditionsPassage(passageDao, materielDao, enregistreurDao, coordonnees, fournisseurMeteo);
     }
 
     /// Rattachement rétroactif (E2.S8), extrait de ServicePassage (#1192).
@@ -340,6 +342,18 @@ public class PassageModule extends ModuleDeFeature {
         return new PassageViewModel(service, purge, archivage, reactivation);
     }
 
+    /// Numéros de série à proposer quand l'utilisateur doit désigner l'enregistreur lui-même (#1828) :
+    /// ceux lus dans les **noms de fichiers** de la nuit, puis ceux déjà connus du poste.
+    @Provides
+    @Singleton
+    PropositionsEnregistreur fournirPropositionsEnregistreur(
+            EnregistreurDao enregistreurDao,
+            SessionDao sessionDao,
+            JournalDuCapteurDao journauxDao,
+            EnregistrementOriginalDao originauxDao) {
+        return new PropositionsEnregistreur(enregistreurDao, sessionDao, journauxDao, originauxDao);
+    }
+
     /// ViewModel de la modale « Modifier le rattachement » (E2.S8). **Non-singleton** : un VM frais
     /// par ouverture de modale.
     @Provides
@@ -347,7 +361,8 @@ public class PassageModule extends ModuleDeFeature {
             ServicePassage service,
             ServiceRattachement rattachement,
             ServiceConditionsPassage conditions,
+            PropositionsEnregistreur propositionsEnregistreur,
             Optional<SynchronisationParticipation> synchronisation) {
-        return new RattachementViewModel(service, rattachement, conditions, synchronisation);
+        return new RattachementViewModel(service, rattachement, conditions, propositionsEnregistreur, synchronisation);
     }
 }

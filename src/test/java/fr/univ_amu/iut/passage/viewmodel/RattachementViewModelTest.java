@@ -50,11 +50,17 @@ class RattachementViewModelTest {
     @Mock
     ServiceConditionsPassage conditionsPassage;
 
+    @Mock
+    fr.univ_amu.iut.passage.model.PropositionsEnregistreur propositions;
+
     private RattachementViewModel viewModel;
 
     @BeforeEach
     void preparer() {
-        viewModel = new RattachementViewModel(service, rattachement, conditionsPassage, Optional.empty());
+        org.mockito.Mockito.lenient()
+                .when(propositions.pour(org.mockito.ArgumentMatchers.any()))
+                .thenReturn(java.util.List.of());
+        viewModel = new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.empty());
     }
 
     private static DetailPassage detail(int numero, int annee, int nombreSequences) {
@@ -396,7 +402,7 @@ class RattachementViewModelTest {
     void pousser_vers_vigiechiro_delegue() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, Optional.of(sync));
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -411,7 +417,7 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenThrow(new RegleMetierException("pas encore lié"));
         RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, Optional.of(sync));
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -435,7 +441,7 @@ class RattachementViewModelTest {
     void tirer_depuis_vigiechiro_recupere() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, Optional.of(sync));
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID))
                 .thenReturn(detailMeteo(new MeteoReleve(9.0, 3.0, Vent.FORT, CouvertureNuageuse.DE_75_A_100)));
         avecSync.ouvrirSur(ID, "040962", "A1");
@@ -455,7 +461,7 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         doThrow(new RegleMetierException("pas lié")).when(sync).tirerDepuis(ID);
         RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, Optional.of(sync));
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -467,6 +473,32 @@ class RattachementViewModelTest {
     }
 
     @Test
+    @DisplayName("#1828 : saisir une sentinelle est refusé — « INCONNU » n'est pas un numéro de série")
+    void enregistreur_sentinelle_refusee() {
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 0));
+        viewModel.ouvrirSur(ID, "640380", "A1");
+
+        viewModel.conditions().enregistreurSaisieProperty().set("INCONNU");
+
+        assertThat(viewModel.conditions().enregistrerEnregistreur()).isFalse();
+        assertThat(viewModel.messageErreurProperty().get()).contains("pas un numéro de série");
+        verify(conditionsPassage, never()).definirEnregistreur(any(), any());
+    }
+
+    @Test
+    @DisplayName("#1828 : le n° saisi part au service, puis s'affiche normalisé (espaces ôtés)")
+    void enregistreur_saisi_enregistre() {
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 0));
+        viewModel.ouvrirSur(ID, "640380", "A1");
+
+        viewModel.conditions().enregistreurSaisieProperty().set("  1925492 ");
+
+        assertThat(viewModel.conditions().enregistrerEnregistreur()).isTrue();
+        verify(conditionsPassage).definirEnregistreur(ID, "  1925492 ");
+        assertThat(viewModel.conditions().enregistreurSaisieProperty().get()).isEqualTo("1925492");
+    }
+
+    @Test
     @DisplayName("Phase 2b : peutSynchroniser reflète la présence de la passerelle")
     void peut_synchroniser() {
         assertThat(viewModel.peutSynchroniser()).isFalse(); // @BeforeEach : Optional.empty()
@@ -474,6 +506,7 @@ class RattachementViewModelTest {
                                 service,
                                 rattachement,
                                 conditionsPassage,
+                                propositions,
                                 Optional.of(mock(SynchronisationParticipation.class)))
                         .peutSynchroniser())
                 .isTrue();
