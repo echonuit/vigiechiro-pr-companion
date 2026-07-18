@@ -138,7 +138,13 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
 5. **Brief projet** : répercuter dans le **brief projet** (dépôt `IUTInfoAix-S201/brief`, document de
    conception vivant : besoin, parcours utilisateurs, maquettes, MCD - **pas** un sujet pédagogique) les
    évolutions qui changent un de ces **éléments de conception**.
-6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**.
+6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**. L'inventaire
+   se fait **depuis le diff** du chantier, pas de mémoire : pour chaque capacité ajoutée, quel test la
+   couvre et à quel niveau (les angles morts sont les **chemins non nominaux**, la **parité CLI ↔ IHM**
+   et le **cas réel**). Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
+   défaut probable est **entre** eux. Ce qui n'est pas automatisable part en **recette**
+   (`dev-docs/recette/sessions/`, une case = un fait observable), sinon « pas automatisable » devient
+   « pas vérifié ».
 7. **Harmonisation** : prendre du recul sur **l'application entière**, en deux temps. D'abord un
    **audit global**, exhaustif et scrupuleux (qu'est-ce qui **ressemble** au résultat du chantier,
    qu'est-ce qui en **bénéficierait**), pour comprendre ce qui **sous-tend** la demande initiale. Puis

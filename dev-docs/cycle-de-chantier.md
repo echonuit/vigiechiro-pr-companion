@@ -117,6 +117,39 @@ Vérifier que **chaque usage** introduit est couvert :
 Pièges et conventions dans [Tests et qualité](tests-et-qualite.md). Les frontières d'architecture
 sont couvertes automatiquement par `ArchitectureTest`.
 
+**Chercher ce qui manque, pas relire ce qu'on a écrit.** C'est le point qui a le plus souvent failli :
+on relit ses propres tests, on les trouve verts, et on conclut que c'est couvert - alors qu'un pan
+entier n'a jamais été regardé. L'inventaire se fait donc **depuis le diff du chantier**
+(`git diff origin/main...`, toutes les PR confondues), pas depuis sa mémoire. Pour **chaque capacité**
+ajoutée ou changée - un service, un geste d'IHM, une commande CLI, une migration, un port, un état
+persisté - on note **quel test la couvre et à quel niveau**. « Aucun » est une réponse valable, mais
+elle doit être **dite** : un trou assumé devient une issue (passe 9), un trou tacite devient une
+régression. Trois familles concentrent les angles morts :
+
+- **les chemins non nominaux** : le refus, l'erreur, l'annulation, l'état vide, la donnée absente, la
+  **feature désactivée** ([ADR 0003](decisions/0003-feature-plugin-desactivable-ports-optionnels.md)).
+  Le cas nominal est presque toujours testé ; c'est l'autre branche qui manque ;
+- **les surfaces jumelles** : un geste couvert côté IHM mais pas côté **CLI** (ou l'inverse) n'est
+  couvert qu'à moitié - c'est le prolongement de la passe 2
+  ([ADR 0014](decisions/0014-parite-cli-ihm.md)) ;
+- **le cas réel** : un test synthétique vert ne prouve pas que le vrai jeu de données passe. Quand
+  c'est possible, rejouer le geste sur une **vraie nuit** avant de conclure.
+
+**Des E2E qui traversent, quitte à fusionner des scénarios.** Un E2E ne vaut pas par le nombre
+d'assertions mais par ce qu'il **traverse**. Plusieurs parcours courts, qui bouchonnent chacun l'étape
+voisine, prouvent chacun une tranche et **personne ne prouve la chaîne** : les défauts se logent
+précisément dans les **coutures** entre deux étapes. Quand deux scénarios partagent leur amont, les
+**fusionner** en un seul qui va plus loin donne une couverture plus **fidèle**. Le critère de fusion
+est simple : deux étapes se fusionnent quand le défaut probable est **entre** elles. À l'inverse,
+fusionner sans couture à exercer ne produit qu'un test-fleuve illisible - la longueur n'est pas le but.
+
+**Ce qui ne peut pas être automatisé va en recette.** Certaines vérifications ne se scriptent pas :
+finesse du rendu, fluidité perçue, geste qui exige un vrai serveur, une vraie carte SD ou du matériel.
+Elles ne disparaissent pas pour autant : elles s'écrivent dans la [recette](recette/index.md), sur le
+script de la **session propriétaire** de l'écran (`recette/sessions/`), sous forme de **cases
+numérotées `Sxx-NN`** - une case = **un fait observable**, jamais un contrôle groupé. Sans ce report,
+« pas automatisable » devient silencieusement « pas vérifié ».
+
 ### 7. Passe d'harmonisation
 
 **Prendre du recul sur l'application entière**, pas seulement sur les fichiers que le chantier a
@@ -223,7 +256,7 @@ règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan 
 - [ ] 3. Doc développeur (dev-docs) à jour + ADR pour toute décision structurante (dev-docs/decisions/)
 - [ ] 4. Doc utilisateur (docs/) + captures
 - [ ] 5. Brief projet (IUTInfoAix-S201/brief) répercuté si un élément de conception change
-- [ ] 6. Tests d'intégration + E2E couvrant chaque usage
+- [ ] 6. Tests : inventaire des usages **depuis le diff** (chemins non nominaux, parité CLI ↔ IHM), E2E qui **traversent les coutures**, non-automatisable reporté en **recette**
 - [ ] 7. Harmonisation : **audit global** (ce qui ressemble / bénéficierait, exhaustif) puis **refactoring de conceptualisation** (lisibilité ; duplication et abstraction = outils) ; **choix, doutes, conséquences discutés avec l'utilisateur**
 - [ ] 8. Revue visuelle : **toute conséquence visible** couverte par une capture (captures **ajoutées** si besoin), régénérées et ouvertes une par une
 - [ ] 9. Nouveaux chantiers identifiés + issues créées
