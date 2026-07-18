@@ -1,13 +1,18 @@
 package fr.univ_amu.iut.passage.outils;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Provider;
+import com.google.inject.multibindings.OptionalBinder;
+import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
@@ -28,8 +33,10 @@ import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
+import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -59,15 +66,18 @@ import javafx.scene.Scene;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
-/// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, en **trois
-/// états** afin d'en montrer les particularités :
+/// Capture l'écran pivot M-Passage en PNG pour le comparer à la maquette du brief, dans plusieurs
+/// **états** afin d'en montrer les particularités :
 ///
 /// - `apercu-passage.png` : passage **vérifié** — « Préparer le dépôt » actif, validation Tadarida
 ///   verrouillée (le passage n'est pas encore déposé) ;
 /// - `apercu-passage-depose.png` : passage **déposé** — stepper au bout, « Préparer le dépôt »
 ///   désactivé, validation Tadarida déverrouillée ;
-/// - `apercu-passage-rattachement.png` : la **modale « Modifier le rattachement »** (année + n° de
-///   passage).
+/// - `apercu-passage-rattachement.png` : la **modale « Modifier le passage »** (rattachement, météo,
+///   enregistreur, micro) **hors connexion** : la ligne VigieChiro y est masquée ;
+/// - `apercu-passage-rattachement-connecte.png` : la même, **connecté** — « Récupérer depuis
+///   VigieChiro » et « Envoyer vers VigieChiro » apparaissent (#1839) ;
+/// - `apercu-passage-reactivation.png` : la modale « Réactiver ce passage » et ses deux barres (#1780).
 ///
 /// On seede une base SQLite temporaire (un utilisateur, un site/point, deux passages vérifié/déposé
 /// avec leur session de 60 séquences). On fabrique le [ServicePassage] via Guice (socle + passage),
@@ -134,8 +144,12 @@ public final class CapturePassage {
         // quand vérifié ; validation déverrouillée une fois déposé).
         rendrePivot(injecteur, idVerifie, sortie.resolve("apercu-passage.png"));
         rendrePivot(injecteur, idDepose, sortie.resolve("apercu-passage-depose.png"));
-        // Modale « Modifier le rattachement » (année + n° de passage) ouverte sur le passage vérifié.
+        // Modale « Modifier le passage » ouverte sur le passage vérifié, dans ses DEUX états : hors
+        // connexion (la ligne VigieChiro est masquée) puis connecté (elle apparaît). Sans le second, les
+        // deux gestes livrés par #1839 n'étaient montrés nulle part - le harnais n'ayant pas de passerelle,
+        // la capture unique les cachait sans que rien ne le signale.
         rendreRattachement(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement.png"));
+        rendreRattachement(injecteurConnecte(), idVerifie, sortie.resolve("apercu-passage-rattachement-connecte.png"));
         // Modale « Réactiver ce passage » (#1780) : les deux barres de phase en cours (régénération pleine,
         // ancrage à mi-course), montrant que la barre ne reste plus figée pendant l'ancrage réseau.
         rendreModaleReactivation(injecteur, sortie.resolve("apercu-passage-reactivation.png"));
@@ -146,6 +160,41 @@ public final class CapturePassage {
     public static Injector creerInjecteur() {
         return Guice.createInjector(
                 ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new PassageModule());
+    }
+
+    /// Même injecteur, mais **connecté** : la passerelle [SynchronisationParticipation] est posée, ce qui
+    /// fait apparaître la ligne « Récupérer / Envoyer » de la modale (le contrôleur la masque quand
+    /// l'`Optional` est vide). Le client pointe vers une adresse morte : la capture **rend** la vue, elle
+    /// ne clique sur rien - il suffit que la passerelle existe.
+    ///
+    /// Il partage la base de la capture : le workspace est fixé par propriété système avant sa création,
+    /// donc les deux injecteurs ouvrent le même fichier SQLite.
+    private static Injector injecteurConnecte() {
+        return Guice.createInjector(
+                ModuleCaptureCommun.communSynchrone(),
+                new PersistenceModule(),
+                new PassageModule(),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
+                        // Le fournisseur se réclame DANS configure() : `getProvider` hors de cette méthode
+                        // lève « The binder can only be used inside configure() ».
+                        Provider<SourceDeDonnees> source = getProvider(SourceDeDonnees.class);
+                        OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class)
+                                .setBinding()
+                                .toProvider(() -> passerelleDApercu(source.get()));
+                    }
+
+                    private SynchronisationParticipation passerelleDApercu(SourceDeDonnees source) {
+                        return new SynchronisationParticipation(
+                                new ClientVigieChiro("http://localhost:1", Optional::empty),
+                                new LienVigieChiroDao(source),
+                                new PassageDao(source),
+                                new MaterielMicroDao(source),
+                                new EnregistreurDao(source),
+                                idPoint -> Optional.empty());
+                    }
+                });
     }
 
     /// Charge `Passage.fxml` sur `idPassage` (ViewModel connu + contrats de navigation neutres) et

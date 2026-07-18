@@ -222,10 +222,15 @@ Deux boutons, deux sens :
 | **Récupérer depuis VigieChiro** | lit sur la plateforme la météo, le micro et l'enregistreur de cette nuit, et remplit le formulaire |
 | **Envoyer vers VigieChiro** | pousse vers la plateforme ce que vous venez de saisir |
 
+![La fenêtre « Modifier le passage » connectée : les boutons « Récupérer depuis VigieChiro » et « Envoyer vers VigieChiro » apparaissent en haut.](../assets/captures/apercu-passage-rattachement-connecte.png)
+
 **Récupérer** sert quand la nuit a été préparée sur le **site web** : inutile de ressaisir ce qui existe
 déjà. **Envoyer** fait l'inverse, et vous dit s'il a réussi : en cas d'échec (hors connexion, refus du
 serveur), le message le dit et la fenêtre **reste ouverte** pour que vous puissiez réessayer sans
 perdre votre saisie.
+
+Ces deux boutons n'apparaissent que si vous êtes **connecté** à Vigie-Chiro : hors connexion, la
+fenêtre reste utilisable pour tout le reste, elle ne propose simplement pas d'échange.
 
 !!! tip "Vérifier sur la plateforme"
     Après un envoi, le bouton **Voir la participation** (barre du haut de l'écran du passage) ouvre la
