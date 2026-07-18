@@ -71,7 +71,8 @@ class ParticipationsVigieChiroTest {
     void detail_participation() {
         String corps = "{\"_id\":\"6a49\",\"_etag\":\"etag123\",\"point\":\"Z41\","
                 + "\"date_debut\":\"2026-07-03T19:00:00+00:00\",\"date_fin\":\"2026-07-04T04:00:00+00:00\","
-                + "\"meteo\":{\"vent\":\"FAIBLE\",\"couverture\":\"0-25\"},"
+                + "\"meteo\":{\"vent\":\"FAIBLE\",\"couverture\":\"0-25\","
+                + "\"temperature_debut\":18,\"temperature_fin\":11},"
                 + "\"configuration\":{\"detecteur_enregistreur_type\":\"PassiveRecorder\","
                 + "\"micro0_type\":\"ICS\",\"micro0_hauteur\":\"4\"},"
                 + "\"traitement\":{\"etat\":\"FINI\"}}";
@@ -85,6 +86,10 @@ class ParticipationsVigieChiroTest {
         assertThat(detail.dateFin()).isEqualTo("2026-07-04T04:00:00+00:00");
         assertThat(detail.meteo().vent()).isEqualTo("FAIBLE");
         assertThat(detail.meteo().couverture()).isEqualTo("0-25");
+        // #1844 : les températures sont lues comme le reste. « Récupérer depuis VigieChiro » s'en sert -
+        // les oublier ici les ferait disparaître en silence du formulaire.
+        assertThat(detail.meteo().temperatureDebut()).isEqualTo(18);
+        assertThat(detail.meteo().temperatureFin()).isEqualTo(11);
         assertThat(detail.configuration())
                 .containsEntry("detecteur_enregistreur_type", "PassiveRecorder")
                 .containsEntry("micro0_type", "ICS")

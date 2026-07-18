@@ -313,13 +313,6 @@ public class RattachementModaleController {
                 });
     }
 
-    /// Après un enregistrement **local** réussi, **pousse** les métadonnées (météo/micro/dates) vers la
-    /// participation VigieChiro en **tâche de fond** (réseau, hors fil JavaFX via [ExecuteurTache]) :
-    /// best-effort et silencieux (le ViewModel avale un passage non encore lié à une participation). La
-    /// modale se ferme sans attendre le réseau : les callbacks sont volontairement muets - un échec
-    /// inattendu n'a plus de fenêtre où s'afficher (les métadonnées repartiront au prochain dépôt) mais il
-    /// est désormais **journalisé** au point de passage (#1523), donc plus perdu sans trace.
-
     /// « Récupérer la météo » (#547) : l'appel Open-Meteo est **réseau**, donc déporté hors du fil
     /// JavaFX (socle [ExecuteurTache] #1216) ; le bouton suit `operationEnCours` par binding, et le
     /// pré-remplissage des champs (ou le message d'indisponibilité) revient sur le fil JavaFX.
