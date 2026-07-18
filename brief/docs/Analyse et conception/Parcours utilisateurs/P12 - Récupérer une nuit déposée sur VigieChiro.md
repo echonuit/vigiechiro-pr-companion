@@ -8,7 +8,7 @@ Samuel a changé d'ordinateur en cours de saison. Ses nuits sont **déposées su
 
 Récupérer une nuit se décompose en **trois coutures** naturelles, activées dans l'ordre selon le besoin : chacune ajoute une strate à la précédente.
 
-1. **La structure** - *se connecter et synchroniser « mes sites »*. À la connexion, la synchronisation rapatrie non seulement les sites et leurs points, mais aussi l'**historique des nuits** de la plateforme, sous forme de **squelettes** légers : un passage archivé, sans séquences ni audio, réduit à son point d'écoute et sa date. Les nuits manquantes cessent d'être invisibles - elles apparaissent dans les listes de passages, marquées comme archivées.
+1. **La structure et l'identité** - *se connecter et synchroniser « mes sites »*. À la connexion, la synchronisation rapatrie non seulement les sites et leurs points, mais aussi l'**historique des nuits** de la plateforme, sous forme de **squelettes** : un passage archivé, sans séquences ni audio, mais **identifié** - point d'écoute, date, numéro de passage, et aussi l'**enregistreur**, la **météo** et le **micro**. Les nuits manquantes cessent d'être invisibles - elles apparaissent dans les listes de passages, marquées comme archivées, et **lisibles**.
 2. **Les observations** - *reconstruire une nuit, ou toutes en lot*. Depuis la vue multi-sites (menu ☰ « Reconstruire un passage manquant »), Samuel choisit une nuit squelette et la **reconstruit** : l'application rapatrie ses **observations** depuis Vigie-Chiro. Le passage devient **consultable** (les résultats Tadarida sont là), mais **sans audio** - la plateforme ne restitue pas les fichiers. Un bouton « **Reconstruire tout** » traite toutes les nuits manquantes en une passe, avec une **double barre de progression** : la nuit en cours, et le lot « Nuit X / N ».
 3. **L'audio et l'ancrage** - *réactiver*. Quand Samuel **retrouve ses fichiers d'origine** (une sauvegarde, une carte SD), il ouvre le passage et lance « **Réactiver ce passage** » en désignant le dossier. L'application régénère les séquences depuis les bruts, les **vérifie une à une** (jamais de rebranchement en silence), et - pour un passage reconstruit - **rapatrie l'ancrage** des observations, leur lien à la plateforme nécessaire pour publier des corrections. Le passage redevient **écoutable**. C'est la couture la plus complète : *observations + audio + ancrage*.
 
@@ -25,11 +25,19 @@ flowchart LR
 
 Chaque strate a un **coût** et une **utilité** distincts, et l'utilisateur ne veut pas toujours tout ([O6](../../Objectifs%20qualités/Objectifs%20qualités/O6.md)) :
 
-- rapatrier **tout** à la synchro (structure + observations + audio) serait prohibitif - un appel de détail et un import par nuit, pour des nuits qu'on ne consultera peut-être jamais - et **impossible pour l'audio**, que le dépôt par ZIP ne restitue pas ;
+- rapatrier **tout** à la synchro (structure + observations + audio) serait prohibitif - un **import complet** par nuit, pour des nuits qu'on ne consultera peut-être jamais - et **impossible pour l'audio**, que le dépôt par ZIP ne restitue pas ;
 - **consulter** une nuit (couture 2) ne suppose pas d'avoir ses fichiers : les observations suffisent à revoir les résultats ;
 - **écouter et corriger** (couture 3) suppose d'avoir retrouvé les fichiers, ce qui n'arrive pas toujours, et pas tout de suite.
 
 Découper permet donc de n'activer **que** la strate utile, quand elle le devient. Un passage reconstruit est **honnête** sur ce qui lui manque : il annonce « consultable, pas écoutable » et invite à réactiver plutôt que de laisser croire à une équivalence avec un import complet.
+
+La frontière entre les coutures 1 et 2 se place au **coût**, pas à la commodité. La première version de ce parcours arrêtait la synchro au point et à la date, pour qu'elle ne coûte que la liste. À l'usage, l'historique remontait alors en colonnes d'« enregistreur inconnu » - **présent mais illisible**, ce qui ne rend guère service. L'identité d'une nuit (enregistreur, météo, micro) vaut donc **un appel par nuit nouvelle**, payé une seule fois et en parallèle ; le **contenu**, lui, reste derrière la couture 2, parce qu'il se compte en fichiers et non en champs.
+
+## L'échange va dans les deux sens
+
+Récupérer suppose que la plateforme sache. Ce n'est pas toujours le cas : une nuit importée depuis une carte SD peut arriver **sans enregistreur identifié**, et une météo se saisit souvent après coup. La fenêtre de modification d'un passage porte donc les **deux gestes**, nommés par leur sens : **Récupérer depuis VigieChiro** (la plateforme fait foi) et **Envoyer vers VigieChiro** (le poste fait foi). L'utilisateur choisit lequel des deux côtés détient la vérité, plutôt que de subir un « synchroniser » qui déciderait à sa place.
+
+Une règle encadre le sens montant : l'application **ne publie jamais ce qu'elle ignore** (un « inconnu » local ne devient pas une donnée sur la plateforme) et **n'efface jamais** ce qu'elle ne modélise pas (les champs saisis sur le formulaire web survivent à un envoi).
 
 ## Ne pas noyer les vues site
 
