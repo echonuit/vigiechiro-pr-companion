@@ -159,7 +159,7 @@ class SynchronisationParticipationTest {
         ArgumentCaptor<Passage> ecrit = ArgumentCaptor.forClass(Passage.class);
         verify(passageDao).update(ecrit.capture());
         assertThat(ecrit.getValue().idEnregistreur())
-                .as("le bouton « Synchroniser depuis VigieChiro » rattrape enfin l'enregistreur")
+                .as("le bouton « Récupérer depuis VigieChiro » rattrape enfin l'enregistreur")
                 .isEqualTo("1925492");
     }
 

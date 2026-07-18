@@ -20,7 +20,7 @@ import picocli.CommandLine.Spec;
 
 /// `synchroniser-vigiechiro` (#1181) : rejoue les **rapprocheurs** VigieChiro (référentiel des
 /// taxons, sites et points) sans passer par la modale de connexion - l'équivalent scriptable de ce
-/// que l'IHM déclenche à la connexion et du bouton « Synchroniser depuis VigieChiro » de M-Sites.
+/// que l'IHM déclenche à la connexion et du bouton « Récupérer depuis VigieChiro » de M-Sites.
 /// Même sémantique conservatrice : chaque rapprocheur est best-effort et n'écrase jamais de données
 /// locales. Utile avant un `deposer-vigiechiro` (le site doit être rattaché).
 ///

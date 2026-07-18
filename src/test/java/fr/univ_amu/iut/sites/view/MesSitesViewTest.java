@@ -95,7 +95,7 @@ class MesSitesViewTest {
     }
 
     @Test
-    @DisplayName("#1045 : le bouton « Synchroniser depuis VigieChiro » est visible dans l'app complète")
+    @DisplayName("#1045 : le bouton « Récupérer depuis VigieChiro » est visible dans l'app complète")
     void bouton_synchro_visible(FxRobot robot) {
         Button bouton = robot.lookup("#btnSyncVigieChiro").queryAs(Button.class);
 

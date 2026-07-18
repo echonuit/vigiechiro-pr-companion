@@ -122,7 +122,7 @@ public class MesSitesController implements ResumeStatut {
                 "Chargement de vos sites…", viewModel::charger, viewModel::appliquer, viewModel::signalerErreur);
     }
 
-    /// Action « Synchroniser depuis VigieChiro » (#1045, déportée #1212) : pull best-effort puis
+    /// Action « Récupérer depuis VigieChiro » (#1045, déportée #1212) : pull best-effort puis
     /// relecture des cartes hors du fil JavaFX, sous le voile d'occupation ; le résultat (cartes +
     /// message) s'applique sur le fil JavaFX, l'échec rejoint le message de synchronisation.
     @FXML

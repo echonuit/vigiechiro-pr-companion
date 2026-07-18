@@ -216,7 +216,7 @@ public class RattachementViewModel {
     }
 
     /// `true` si la synchronisation VigieChiro est disponible (observateur connecté) : la vue n'affiche
-    /// l'action « Synchroniser depuis VigieChiro » que dans ce cas.
+    /// l'action « Récupérer depuis VigieChiro » que dans ce cas.
     public boolean peutSynchroniser() {
         return synchronisation.isPresent();
     }

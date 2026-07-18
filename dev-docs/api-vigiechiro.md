@@ -315,7 +315,7 @@ démonstration, par l'exemple, de ce que dit l'encadré ci-dessus.
 
 Le cycle est **naturel** depuis la refonte : la participation est **créée à l'import** (best-effort,
 si connecté et site rattaché), **synchronisée** depuis la modale « Modifier le passage » (push
-météo/micro à la validation, pull « Synchroniser depuis VigieChiro »), puis **réutilisée au dépôt**
+météo/micro à la validation, pull « Récupérer depuis VigieChiro »), puis **réutilisée au dépôt**
 via le lien `ENTITE_PASSAGE` (créée en repli si l'import s'est fait hors connexion). La passerelle
 `SynchronisationParticipation` (feature `passage`) porte créer/pousser/tirer ; `DepotVigieChiro`
 (feature `lot`) ne fait que l'upload.
@@ -493,7 +493,7 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
   revenir au WAV.
 - **PATCH `/sites/{id}`** : **HTTP 403** pour un observateur → le **push point→site est abandonné** ;
   le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites — exécuté à la
-  connexion, et rejouable **à la demande** depuis M-Sites (« Synchroniser depuis VigieChiro », #1045,
+  connexion, et rejouable **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045,
   passerelle `SynchronisationSites` activée par `OptionalBinder`).
 
 ### Méthodes autorisées et récupération (exploration du 2026-07-11, lecture seule)

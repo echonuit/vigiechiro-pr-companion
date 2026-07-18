@@ -28,7 +28,7 @@
   -->
   <HBox styleClass="entete-actions" alignment="CENTER_RIGHT" spacing="8.0">
     <!-- Synchronisation à la demande (#1045) : masqué quand la passerelle VigieChiro est absente. -->
-    <Button fx:id="btnSyncVigieChiro" text="Synchroniser depuis VigieChiro" styleClass="bouton-secondaire"
+    <Button fx:id="btnSyncVigieChiro" text="Récupérer depuis VigieChiro" styleClass="bouton-secondaire"
             onAction="#synchroniserVigieChiro"/>
     <Button text="+ Nouveau site" styleClass="bouton-primaire" onAction="#nouveauSite"/>
   </HBox>

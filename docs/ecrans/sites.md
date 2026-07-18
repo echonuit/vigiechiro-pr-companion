@@ -37,7 +37,7 @@ portail, **« Verrouillé sur VigieChiro »** (vert) quand il est en plus verrou
 c'est l'état **favorable**, celui qui autorise le dépôt des nuits. Pas de badge : le site n'est pas
 encore rattaché (connectez-vous ou synchronisez).
 
-Le bouton **Synchroniser depuis VigieChiro** (en haut à droite) récupère à la demande vos sites et
+Le bouton **Récupérer depuis VigieChiro** (en haut à droite) récupère à la demande vos sites et
 points déclarés sur le portail : les sites manquants sont créés localement, ceux déjà présents sont
 simplement reliés - vos données locales ne sont **jamais écrasées**. C'est la même synchronisation
 que celle exécutée automatiquement à la connexion ; un message sous le bandeau récapitule ce qui a

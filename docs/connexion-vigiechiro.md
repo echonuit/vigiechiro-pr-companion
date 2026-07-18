@@ -38,7 +38,7 @@ dossier de travail - jamais dans un dépôt git.
   [Mes sites](ecrans/sites.md) (« Enregistré » / « Verrouillé ») reflète ce rattachement.
 
 Cette synchronisation est ensuite **rejouable à la demande**, sans se reconnecter, avec le bouton
-**Synchroniser depuis VigieChiro** de l'écran Mes sites.
+**Récupérer depuis VigieChiro** de l'écran Mes sites.
 
 ## Jeton expiré ou absent
 

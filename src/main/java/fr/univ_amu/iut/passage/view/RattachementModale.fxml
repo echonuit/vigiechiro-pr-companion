@@ -33,7 +33,7 @@
   <!-- Tirer les métadonnées depuis la participation VigieChiro (cas « préparé sur le site web »).
        Masqué hors connexion (visibilité pilotée par le controller selon la présence de la passerelle). -->
   <HBox fx:id="ligneSyncVigieChiro" alignment="CENTER_LEFT" spacing="8.0">
-    <Button fx:id="boutonTirerVigieChiro" text="Synchroniser depuis VigieChiro"
+    <Button fx:id="boutonTirerVigieChiro" text="Récupérer depuis VigieChiro"
             styleClass="bouton-secondaire" onAction="#tirerDepuisVigieChiro"/>
     <!-- Pendant explicite du bouton précédent (#1839) : deux boutons, deux sens, deux comptes rendus.
          Avant, l'envoi n'était qu'un effet de bord caché d'« Appliquer », qui échouait en silence. -->

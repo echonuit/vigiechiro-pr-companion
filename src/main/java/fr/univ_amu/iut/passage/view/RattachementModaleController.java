@@ -178,7 +178,7 @@ public class RattachementModaleController {
 
         lierConditions();
 
-        // « Synchroniser depuis VigieChiro » n'apparaît que si l'observateur est connecté (passerelle
+        // « Récupérer depuis VigieChiro » n'apparaît que si l'observateur est connecté (passerelle
         // disponible) : inutile de proposer un tir hors connexion.
         boolean peutSynchroniser = viewModel.peutSynchroniser();
         ligneSyncVigieChiro.setVisible(peutSynchroniser);
@@ -289,7 +289,7 @@ public class RattachementModaleController {
         }
     }
 
-    /// Envoi explicite vers VigieChiro (#1839), pendant du « Synchroniser depuis VigieChiro » : la modale
+    /// Envoi explicite vers VigieChiro (#1839), pendant du « Récupérer depuis VigieChiro » : la modale
     /// **reste ouverte** et affiche ce que l'envoi a donné. Rejouable après un échec réseau.
     @FXML
     private void envoyerVersVigieChiro() {
@@ -338,7 +338,7 @@ public class RattachementModaleController {
                 });
     }
 
-    /// « Synchroniser depuis VigieChiro » : **tire** les métadonnées de la participation (réseau) hors
+    /// « Récupérer depuis VigieChiro » : **tire** les métadonnées de la participation (réseau) hors
     /// du fil JavaFX (socle [ExecuteurTache] #1216), puis **recharge** les champs météo/micro et
     /// affiche le message sur le fil JavaFX — même patron que « Récupérer la météo ».
     @FXML

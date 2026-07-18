@@ -42,7 +42,7 @@ distinctes), déclarer un site et un point d'écoute. On valide que le tout prem
 12. Carte de site complète : nom, points, passages, badge fraîcheur, badges « Enregistré / Verrouillé
     sur VigieChiro », chevron ›.
 13. Navigation clavier (Tab / Entrée / Espace) sur les cartes.
-14. « Synchroniser depuis VigieChiro » est présent, et masqué hors connexion.
+14. « Récupérer depuis VigieChiro » est présent, et masqué hors connexion.
 15. Voile d'occupation au chargement.
 
 **Étape 4 · Détail de carré**
