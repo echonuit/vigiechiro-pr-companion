@@ -3,6 +3,7 @@ package fr.univ_amu.iut.sites.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
@@ -72,6 +73,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
     private final OuvrirMultisite ouvrirMultisite;
     private final DepotDispositionColonnes depotColonnes;
     private final OuvreurDeLien ouvreurDeLien;
+
+    /// Action de ligne « Ouvrir sur Vigie-Chiro » (#1799) : page de la participation liée au passage.
+    private final ActionVigieChiroPassage vigieChiro;
 
     /// Contexte du site (nom en zone gauche, commune/protocole en zone centre) déporté en barre de statut
     /// (#693) au lieu d'un en-tête titre/sous-titre.
@@ -186,7 +190,9 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
             Optional<OuvrirImportation> ouvrirImportation,
             OuvrirMultisite ouvrirMultisite,
             DepotDispositionColonnes depotColonnes,
-            OuvreurDeLien ouvreurDeLien) {
+            OuvreurDeLien ouvreurDeLien,
+            ActionVigieChiroPassage vigieChiro) {
+        this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
@@ -240,6 +246,7 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
                 "sites",
                 "principale",
                 MenuLigne.item("Ouvrir le passage", tablePassages, this::ouvrirPassageDeLaLigne),
+                vigieChiro.item(tablePassages, LignePassage::idPassage),
                 MenuCopier.creer(tablePassages, new MenuCopier.Entree<>("Point", LignePassage::codePoint)));
         // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
         // contexte à gauche, résumé au centre.

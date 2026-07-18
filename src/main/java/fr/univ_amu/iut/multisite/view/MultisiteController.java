@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.view.ActionVigieChiroPassage;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
@@ -88,6 +89,9 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private final DepotVues depotVues;
     private final DepotDispositionColonnes depotColonnes;
     private final ExecuteurTache executeur;
+
+    /// Action de ligne « Ouvrir sur Vigie-Chiro » (#1799) : page de la participation liée au passage.
+    private final ActionVigieChiroPassage vigieChiro;
     private IndicateurOccupation occupation;
 
     /// Désignation du fichier d'export : porteur partagé injectable (#1431), double répondant en test.
@@ -233,7 +237,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
             OuvrirAudio ouvrirAudio,
             DepotVues depotVues,
             DepotDispositionColonnes depotColonnes,
-            ExecuteurTache executeur) {
+            ExecuteurTache executeur,
+            ActionVigieChiroPassage vigieChiro) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.reconstruction = Objects.requireNonNull(reconstruction, "reconstruction");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -242,6 +247,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
         this.depotVues = Objects.requireNonNull(depotVues, "depotVues");
         this.depotColonnes = Objects.requireNonNull(depotColonnes, "depotColonnes");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.vigieChiro = Objects.requireNonNull(vigieChiro, "vigieChiro");
     }
 
     @Override
@@ -267,6 +273,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 colonnes,
                 MenuLigne.item("Ouvrir le passage", tableLignes, this::ouvrirPassageDeLaLigne),
                 MenuLigne.item("Écouter le passage", tableLignes, ligne -> ecouterPassage()),
+                vigieChiro.item(tableLignes, LignePassage::idPassage),
                 MenuCopier.creer(tableLignes, new MenuCopier.Entree<>("Carré", LignePassage::numeroCarre)));
         GestionnaireColonnes.persister(tableLignes, colonnes, depotColonnes, FEATURE, "principale");
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus

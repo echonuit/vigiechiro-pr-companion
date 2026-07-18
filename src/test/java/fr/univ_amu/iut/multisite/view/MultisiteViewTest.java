@@ -14,10 +14,12 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.SelecteurFichier;
@@ -65,6 +67,12 @@ import org.testfx.util.WaitForAsyncUtils;
 @ExtendWith(ApplicationExtension.class)
 class MultisiteViewTest {
 
+    /// Lien portail rendu par le mock : « le passage est lié à une participation ».
+    private static final String LIEN_PORTAIL = "https://vigiechiro.herokuapp.com/#/participations/abc123";
+
+    /// URLs ouvertes par le navigateur factice (« Ouvrir sur Vigie-Chiro » de ligne, #1799).
+    private final List<String> urlsOuvertes = new ArrayList<>();
+
     private ServiceMultisite service;
     private MultisiteController controleur;
     private ServiceSites serviceSites;
@@ -96,12 +104,18 @@ class MultisiteViewTest {
         viewModel = new MultisiteViewModel(service, serviceSites, Optional.empty(), "u-1");
         DepotVues depotVues = mock(DepotVues.class);
         when(depotVues.findByFeature(anyString())).thenReturn(List.of());
+        PortailVigieChiro portail = mock(PortailVigieChiro.class);
+        when(portail.pageParticipation(any())).thenReturn(Optional.of(LIEN_PORTAIL));
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 bind(OuvrirAudio.class).toInstance(ouvrirAudio);
                 bind(DepotVues.class).toInstance(depotVues);
+                // « Ouvrir sur Vigie-Chiro » de ligne (#1799) : portail mocké (le passage est lié) et
+                // navigateur factice qui enregistre l'URL ouverte.
+                bind(PortailVigieChiro.class).toInstance(portail);
+                bind(OuvreurDeLien.class).toInstance(urlsOuvertes::add);
                 // La modale de reconstruction (#1396) charge un FXML via NavigationMultisite, qui a besoin
                 // du Navigateur du chrome : ici, un double suffit, aucun test n'ouvre la modale.
                 bind(Navigateur.class).toInstance(mock(Navigateur.class));
@@ -282,6 +296,25 @@ class MultisiteViewTest {
 
         robot.interact(() -> items.get(0).fire());
         verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
+    }
+
+    @Test
+    @DisplayName("#1799 : « Ouvrir sur Vigie-Chiro » de ligne ouvre la participation liée au passage")
+    void ouvrir_sur_vigiechiro_depuis_la_ligne(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        MenuItem vigieChiro = table.getContextMenu().getItems().stream()
+                .filter(i -> "Ouvrir sur Vigie-Chiro".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(vigieChiro.isDisable())
+                .as("le passage est lié : l'item est actif")
+                .isFalse();
+
+        robot.interact(vigieChiro::fire);
+        assertThat(urlsOuvertes).containsExactly(LIEN_PORTAIL);
     }
 
     @Test

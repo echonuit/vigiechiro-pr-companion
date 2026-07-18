@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.multisite.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -11,10 +12,12 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
@@ -81,12 +84,17 @@ class MultisiteReleveViewTest {
                 new MultisiteViewModel(service, mock(ServiceSites.class), Optional.of(suivi), "u-1");
         DepotVues depotVues = mock(DepotVues.class);
         when(depotVues.findByFeature(anyString())).thenReturn(List.of());
+        // « Ouvrir sur Vigie-Chiro » de ligne (#1799) : portail mocké, pas de base ici.
+        PortailVigieChiro portail = mock(PortailVigieChiro.class);
+        when(portail.pageParticipation(any())).thenReturn(Optional.empty());
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(mock(OuvrirPassage.class));
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
+                bind(OuvreurDeLien.class).toInstance(url -> {});
+                bind(PortailVigieChiro.class).toInstance(portail);
                 bind(Navigateur.class).toInstance(mock(Navigateur.class));
             }
 

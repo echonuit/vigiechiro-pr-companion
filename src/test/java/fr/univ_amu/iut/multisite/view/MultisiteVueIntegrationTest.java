@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.multisite.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -10,9 +11,11 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provides;
 import fr.univ_amu.iut.commun.model.DepotVues;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.Navigateur;
+import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
@@ -143,12 +146,18 @@ class MultisiteVueIntegrationTest {
                         "Étang",
                         List.of(new PointAgrege("A1", 43.4010, -1.5740, 2, StatutWorkflow.VERIFIE)),
                         2)));
+        // « Ouvrir sur Vigie-Chiro » de ligne (#1799) : portail mocké (aucun passage lié ici), pas de base.
+        PortailVigieChiro portail = mock(PortailVigieChiro.class);
+        when(portail.pageParticipation(any())).thenReturn(Optional.empty());
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
                 bind(OuvrirPassage.class).toInstance(ouvrirPassage);
                 bind(OuvrirAudio.class).toInstance(source -> {});
                 bind(DepotVues.class).toInstance(depotVues);
+                // « Ouvrir sur Vigie-Chiro » de ligne (#1799) ouvre un lien : navigateur no-op ici.
+                bind(OuvreurDeLien.class).toInstance(url -> {});
+                bind(PortailVigieChiro.class).toInstance(portail);
                 // NavigationMultisite ouvre la modale de reconstruction (#1396) et a besoin du Navigateur
                 // du chrome ; aucun test d'ici ne l'ouvre, un double suffit.
                 bind(Navigateur.class).toInstance(mock(Navigateur.class));
