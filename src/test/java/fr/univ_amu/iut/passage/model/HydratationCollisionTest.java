@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
+import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
@@ -63,9 +64,10 @@ class HydratationCollisionTest {
                 // La perdante : l'import l'a écrite `_001`, c'est sous ce nom que la plateforme la connaît.
                 attendue(4L, "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205342_001.wav", destination));
 
+        // Le nombre de trames vient du **vrai** lecteur d'en-tête, celui que l'inventaire utilise en
+        // production : sans lui, l'arbitrage se désactive et le test mesurerait autre chose.
         InventaireBruts inventaire = new InventaireBruts(
-                FREQUENCE_ACQUISITION,
-                List.of(new BrutInventorie(ancien, nomAncien), new BrutInventorie(recent, nomRecent)));
+                FREQUENCE_ACQUISITION, List.of(inventorie(ancien, nomAncien), inventorie(recent, nomRecent)));
         Optional<ResultatHydratation> resultat = hydratation(inventaire)
                 .appliquer(sequences, bruts, Optional.of(prefixe), progres -> {}, JetonAnnulation.neutre());
 
@@ -80,6 +82,13 @@ class HydratationCollisionTest {
         assertThat(sequences.stream().allMatch(sequence -> Files.exists(Path.of(sequence.cheminFichier()))))
                 .as("chaque séquence est revenue à sa place")
                 .isTrue();
+    }
+
+    /// Un brut tel que l'inventaire le livre depuis #1934 : chemin, nom R6, et nombre de trames lu dans
+    /// l'en-tête seul.
+    private static BrutInventorie inventorie(Path source, String nomOriginal) throws IOException {
+        return new BrutInventorie(
+                source, nomOriginal, FichierWav.lireEntete(source).nombreTrames());
     }
 
     private HydratationDepuisBruts hydratation(InventaireBruts inventaire) {

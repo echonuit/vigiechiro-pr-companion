@@ -2,6 +2,8 @@ package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.NommageSequences;
+import fr.univ_amu.iut.commun.model.NommageSequences.TranchesAttendues;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -104,10 +106,17 @@ final class HydratationDepuisBruts {
         restantes.addAll(parNom.keySet());
         List<BrutInventorie> bruts = nuit(sequences, inventorie.bruts());
 
+        // L'arbitrage des collisions de noms, rejoué comme l'import le fait (#1934). Sans lui, chaque brut
+        // régénéré seul se nomme toujours en `_000`, et la tranche que l'import avait renommée `_001` pour
+        // cause de collision n'est revendiquée par personne - puis son brut, n'ayant rien revendiqué, n'est
+        // pas adopté et disparaît de la base. Le calcul est pur : il ne coûte que des chaînes, et laisse la
+        // régénération parallèle et brut par brut.
+        Map<String, List<String>> nomsArbitres = arbitrer(bruts, inventorie, prefixe);
+
         List<ContributionBrut> contributions = executionParallele.cartographier(
                 bruts,
                 "Régénération",
-                brut -> regenererUn(brut, inventorie, prefixe, parNom, restantes),
+                brut -> regenererUn(brut, inventorie, prefixe, parNom, restantes, nomsArbitres),
                 progres,
                 jeton);
 
@@ -121,6 +130,31 @@ final class HydratationDepuisBruts {
         return new ResultatHydratation(bilan, inventorie.frequenceAcquisitionHz(), brutsRebranches);
     }
 
+    /// Rejoue l'arbitrage des collisions sur la nuit, **exactement** comme l'import (`ReconciliationNoms`),
+    /// à partir des durées lues dans les en-têtes (#1934).
+    ///
+    /// Rend une table **vide** dès qu'un seul brut n'a pas livré sa durée : arbitrer sur un inventaire
+    /// incomplet décalerait les noms de tous les bruts suivants, ce qui produirait des tranches nommées
+    /// comme l'import ne les a jamais écrites. Ne pas arbitrer laisse quelques tranches non revendiquées ;
+    /// arbitrer faux en ferait rebrancher de mauvaises. On préfère le trou au mensonge.
+    ///
+    /// L'arbitrage porte ici sur les bruts **présents dans le dossier**, là où la voie « bruts » (#1932)
+    /// s'appuie sur les originaux connus en base : un passage reconstruit n'en a aucun. Quand l'utilisateur
+    /// redonne la carte entière, les deux retombent sur la liste que l'import avait écrite.
+    private static Map<String, List<String>> arbitrer(
+            List<BrutInventorie> bruts, InventaireBruts inventorie, Prefixe prefixe) {
+        if (bruts.stream().anyMatch(brut -> brut.nombreTrames() == null)) {
+            return Map.of();
+        }
+        List<TranchesAttendues> attendues = bruts.stream()
+                .map(brut -> new TranchesAttendues(
+                        brut.nomOriginal(),
+                        NommageSequences.nombreTranches(
+                                brut.nombreTrames() / (double) inventorie.frequenceAcquisitionHz())))
+                .toList();
+        return NommageSequences.arbitrer(prefixe, attendues);
+    }
+
     /// Régénère **un** brut dans son propre temporaire et rebranche les séquences qu'il revendique. Rend sa
     /// contribution (bilan partiel + brut rebranché éventuel) ; le temporaire est supprimé dans tous les cas.
     /// Exécuté sur un thread de [ExecutionParallele] : ne touche que du local et le `Set` concurrent
@@ -130,7 +164,8 @@ final class HydratationDepuisBruts {
             InventaireBruts inventorie,
             Prefixe prefixe,
             Map<String, SequenceDEcoute> parNom,
-            Set<String> restantes) {
+            Set<String> restantes,
+            Map<String, List<String>> nomsArbitres) {
         RegenerationSequences moteur = regeneration.orElseThrow();
         Path temporaire = DossierTemporaire.creer("vc-hydrate-");
         try {
@@ -144,7 +179,7 @@ final class HydratationDepuisBruts {
                     prefixe,
                     inventorie.frequenceAcquisitionHz(),
                     temporaire,
-                    List.of());
+                    nomsArbitres.getOrDefault(brut.nomOriginal(), List.of()));
             List<SequenceDEcoute> sesSequences = sequencesRevendiquees(temporaire, parNom, restantes);
             Optional<BrutRebranche> rebranche = sesSequences.isEmpty()
                     ? Optional.empty()

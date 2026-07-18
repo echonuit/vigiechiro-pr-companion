@@ -73,6 +73,36 @@ class FichierWavTest {
     }
 
     @Test
+    @DisplayName("#1934 : l'en-tête seul dit la même chose que la lecture complète")
+    void entete_seul_concorde_avec_la_lecture_complete() throws IOException {
+        // Deux tailles de PCM, dont une qui ne tombe pas juste : c'est là qu'un décompte de trames dérape.
+        for (int octets : new int[] {8, 4002}) {
+            Path fichier = ecrire("concordance" + octets + ".wav", construire(octets, new byte[octets]));
+
+            FichierWav complet = FichierWav.lire(fichier);
+            FichierWav.EnteteWav entete = FichierWav.lireEntete(fichier);
+
+            assertThat(entete.nombreCanaux()).isEqualTo(complet.nombreCanaux());
+            assertThat(entete.frequenceEchantillonnageHz()).isEqualTo(complet.frequenceEchantillonnageHz());
+            assertThat(entete.bitsParEchantillon()).isEqualTo(complet.bitsParEchantillon());
+            assertThat(entete.nombreTrames())
+                    .as("le nombre de trames décide du nombre de tranches, donc des noms arbitrés")
+                    .isEqualTo(complet.nombreTrames());
+        }
+    }
+
+    @Test
+    @DisplayName("#1934 : l'en-tête seul ne charge pas le signal (fichier plus grand que la fenêtre lue)")
+    void entete_seul_ne_charge_pas_le_signal() throws IOException {
+        // 64 Kio de PCM, très au-delà de la fenêtre d'en-tête : la lecture doit aboutir quand même, et
+        // compter toutes les trames, pas seulement celles qu'elle a sous les yeux.
+        int octets = 65_536;
+        Path fichier = ecrire("gros.wav", construire(octets, new byte[octets]));
+
+        assertThat(FichierWav.lireEntete(fichier).nombreTrames()).isEqualTo(octets / 2);
+    }
+
+    @Test
     @DisplayName("Un fichier sans en-tête RIFF/WAVE est refusé")
     void riff_absent_est_refuse() throws IOException {
         Path fichier = ecrire("pasunwav.wav", "ceci n'est pas un WAV".getBytes(StandardCharsets.UTF_8));
