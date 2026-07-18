@@ -1,11 +1,14 @@
 package fr.univ_amu.iut.audio.viewmodel;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.TriPublication;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -52,6 +55,20 @@ public class PublicationCorrectionsViewModel {
         return moteur().publier(idPassage);
     }
 
+    /// Variante **suivie et annulable** (#1838) : acquiert d'abord l'**ancrage manquant** (rapatriement
+    /// des `donnees`, page par page) puis publie. Une nuit déjà ancrée n'en paie pas le coût et la
+    /// progression reste muette. **Bloquant** : à appeler hors du fil JavaFX.
+    public BilanPublication publier(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
+        return moteur().publier(idPassage, progres, jeton);
+    }
+
+    /// L'ancrage manquant de ce passage sera-t-il **acquis** par la publication (#1838) ? Lecture
+    /// **locale** (les liens sont en base), donc appelable depuis l'aperçu de la confirmation : c'est
+    /// elle qui distingue « ces corrections seront d'abord ancrées » de « rien à publier ».
+    public boolean ancrageAcquerable(Long idPassage) {
+        return moteur().ancrageAcquerable(idPassage);
+    }
+
     /// Signale le **début** de la publication (au fil JavaFX, avant le travail en arrière-plan).
     public void marquerEnCours() {
         message.set("Publication des corrections vers VigieChiro…");
@@ -81,9 +98,11 @@ public class PublicationCorrectionsViewModel {
             resume.append(", ").append(bilan.sansCertitude()).append(" à compléter (certitude non déclarée)");
         }
         if (bilan.sansAncrage() > 0) {
+            // Depuis #1838 la publication ancre elle-même ce qui peut l'être : ce qui reste ici n'est pas
+            // un oubli de réimport, c'est une nuit sans participation à quoi s'ancrer. Le remède a changé.
             resume.append(", ")
                     .append(bilan.sansAncrage())
-                    .append(" sans ancrage plateforme (réimportez depuis VigieChiro)");
+                    .append(" sans ancrage plateforme (rattachez la nuit à sa participation VigieChiro)");
         }
         if (bilan.horsReferentiel() > 0) {
             resume.append(", ").append(bilan.horsReferentiel()).append(" hors référentiel");

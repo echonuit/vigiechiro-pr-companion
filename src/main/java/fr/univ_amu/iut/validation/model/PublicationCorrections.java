@@ -70,6 +70,21 @@ public class PublicationCorrections {
         return publier(idPassage);
     }
 
+    /// L'ancrage manquant de ce passage peut-il être **acquis** (#1838) ? Vrai quand l'import est
+    /// disponible, la nuit **rattachée** à une participation et l'ancrage effectivement absent.
+    ///
+    /// Lecture **locale** (les liens sont en base) : l'IHM peut donc l'interroger avant de proposer la
+    /// publication, pour annoncer « ces observations seront d'abord ancrées » au lieu de « rien à
+    /// publier ». Sans cela l'aperçu écarterait des corrections que la publication saurait pourtant
+    /// pousser - et la confirmation contredirait le bilan.
+    public boolean ancrageAcquerable(Long idPassage) {
+        Objects.requireNonNull(idPassage, "idPassage");
+        return importateur
+                .filter(import_ -> import_.estRattache(idPassage))
+                .filter(import_ -> import_.ancrageManquant(idPassage))
+                .isPresent();
+    }
+
     /// Acquiert l'ancrage plateforme (`idDonneeVigieChiro` / indice) des observations qui en sont
     /// dépourvues - typiquement une nuit importée par **CSV** (#1565), qui n'en porte pas.
     ///

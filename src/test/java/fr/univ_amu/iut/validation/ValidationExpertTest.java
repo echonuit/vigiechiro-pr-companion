@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -129,7 +130,8 @@ class ValidationExpertTest {
                 new ExportVuCsv(),
                 new UniteDeTravail(source),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                messageDao);
+                messageDao,
+                new LienVigieChiroDao(source));
     }
 
     @Test

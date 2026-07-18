@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -133,7 +134,8 @@ class ServiceValidationTest {
                 new ExportVuCsv(),
                 new UniteDeTravail(source),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                new MessageObservationDao(source));
+                new MessageObservationDao(source),
+                new LienVigieChiroDao(source));
     }
 
     private void insererSequence(EnregistrementOriginalDao originalDao, SequenceDao sequenceDao, String base) {

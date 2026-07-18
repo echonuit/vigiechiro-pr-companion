@@ -709,10 +709,18 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     }
 
     /// Publie les corrections observateur du passage courant vers VigieChiro (#723). Délègue à
-    /// [PublicationCorrectionsUI] (tri hors fil, confirmation récapitulative, envoi hors fil, bilan).
+    /// [PublicationCorrectionsUI] (aperçu hors fil, confirmation récapitulative, envoi suivi, bilan).
+    /// L'envoi peut commencer par rapatrier l'ancrage manquant (#1838) : il reçoit donc le même
+    /// dialogue de progression annulable que l'import ci-dessus, et non le voile d'occupation.
     @FXML
     private void publierCorrections() {
-        PublicationCorrectionsUI.lancer(publicationCorrections, source, occupation, confirmateur());
+        PublicationCorrectionsUI.lancer(
+                publicationCorrections,
+                source,
+                occupation,
+                new DialogueProgression(appuis.executeur()),
+                () -> tableObservations.getScene().getWindow(),
+                confirmateur());
     }
 
     /// « Exporter _Vu » : sélecteur de fichier natif (enregistrement) puis délégation au VM.

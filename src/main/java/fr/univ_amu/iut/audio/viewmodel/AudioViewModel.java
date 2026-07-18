@@ -107,7 +107,8 @@ public class AudioViewModel {
     /// `true` quand le passage courant n'a **aucune observation ancrée** à la plateforme (#1596) : passage
     /// reconstruit par CSV (#1565) tant qu'il n'a pas été réactivé (#1571). L'IHM grise alors « publier les
     /// corrections » (rien n'y est publiable sans ancrage). `false` hors source `ParPassage`.
-    private final ReadOnlyBooleanWrapper aucunAncrage = new ReadOnlyBooleanWrapper(this, "aucunAncrage", false);
+    private final ReadOnlyBooleanWrapper publicationImpossible =
+            new ReadOnlyBooleanWrapper(this, "publicationImpossible", false);
 
     private final ReadOnlyObjectWrapper<ComptageAudio> comptage =
             new ReadOnlyObjectWrapper<>(this, "comptage", ComptageAudio.VIDE);
@@ -195,7 +196,7 @@ public class AudioViewModel {
                 resolveur.idResultats(source),
                 resolveur.lignes(source),
                 disponibiliteEcoute.decompte(source),
-                idPassage != null && service.aucunAncrage(idPassage));
+                idPassage != null && service.publicationImpossible(idPassage));
     }
 
     /// Applique les données d'ouverture (taxons, résultats, table). **Mutations observables** : sur le
@@ -208,7 +209,7 @@ public class AudioViewModel {
         resultatsDisponibles.set(idResultats != null);
         observations.setAll(donnees.lignes());
         bandeauArchive.set(DisponibiliteEcoute.texteBandeau(donnees.decompteAudio()));
-        aucunAncrage.set(donnees.aucunAncrage());
+        publicationImpossible.set(donnees.publicationImpossible());
         filtres.appliquer();
     }
 
@@ -359,7 +360,7 @@ public class AudioViewModel {
         comptage.set(ComptageAudio.VIDE);
         audioManquant.set(false);
         bandeauArchive.set("");
-        aucunAncrage.set(false);
+        publicationImpossible.set(false);
         messages.reinitialiser();
     }
 
@@ -411,8 +412,8 @@ public class AudioViewModel {
     /// pas encore réactivé, donc sans correction publiable. La vue grise « publier les corrections » et en
     /// explique la cause (le libellé de l'item invite à réactiver le passage). `false` dès qu'au moins une
     /// observation est ancrée, ou hors source `ParPassage`.
-    public ReadOnlyBooleanProperty aucunAncrageProperty() {
-        return aucunAncrage.getReadOnlyProperty();
+    public ReadOnlyBooleanProperty publicationImpossibleProperty() {
+        return publicationImpossible.getReadOnlyProperty();
     }
 
     /// Inclure la colonne `validation_mode` (R24) à l'export `_Vu` (case à cocher, vraie par défaut).

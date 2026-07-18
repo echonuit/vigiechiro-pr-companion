@@ -61,7 +61,7 @@ final class MenuAudio {
                 items.publierCorrections(),
                 items.lblPublierCorrections(),
                 publicationCorrections,
-                viewModel.aucunAncrageProperty());
+                viewModel.publicationImpossibleProperty());
         items.exporterVu()
                 .disableProperty()
                 .bind(viewModel.resultatsDisponiblesProperty().not());

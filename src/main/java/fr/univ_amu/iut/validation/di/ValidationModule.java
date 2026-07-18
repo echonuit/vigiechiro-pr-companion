@@ -173,7 +173,8 @@ public class ValidationModule extends ModuleDeFeature {
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
             Horloge horloge,
-            MessageObservationDao messageDao) {
+            MessageObservationDao messageDao,
+            LienVigieChiroDao liens) {
         return new ServiceValidation(
                 resultatsDao,
                 observationDao,
@@ -184,6 +185,7 @@ public class ValidationModule extends ModuleDeFeature {
                 export,
                 uniteDeTravail,
                 horloge,
-                messageDao);
+                messageDao,
+                liens);
     }
 }

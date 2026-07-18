@@ -13,11 +13,13 @@ import fr.univ_amu.iut.commun.api.DonneeVigieChiro;
 import fr.univ_amu.iut.commun.api.ObservationVigieChiro;
 import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
+import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.PositionGeo;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
@@ -84,6 +86,11 @@ class ServiceValidationMockTest {
     @Mock
     PassageDao passageDao;
 
+    /// Liens plateforme : le rattachement de la nuit entre dans le calcul de
+    /// [ServiceValidation#publicationImpossible] (#1838).
+    @Mock
+    LienVigieChiroDao liens;
+
     @Mock
     CoordonneesPoint coordonnees;
 
@@ -101,7 +108,8 @@ class ServiceValidationMockTest {
                 new ExportVuCsv(),
                 uniteDeTravail,
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
-                messageDao);
+                messageDao,
+                liens);
     }
 
     /// Calcul de plage nuit (#549), sorti de ServiceValidation avec les projections audio (#1193).
@@ -347,7 +355,7 @@ class ServiceValidationMockTest {
     }
 
     /// Observation **ancrée** à la plateforme (`idDonneeVigieChiro` renseigné) : le reste est indifférent au
-    /// calcul de [ServiceValidation#aucunAncrage].
+    /// calcul de [ServiceValidation#publicationImpossible].
     private static Observation observationAncree() {
         return new Observation(
                 1L,
@@ -373,30 +381,43 @@ class ServiceValidationMockTest {
     }
 
     @Test
-    @DisplayName("aucunAncrage : passage reconstruit par CSV (aucune observation ancrée) → true (#1596)")
-    void aucun_ancrage_passage_reconstruit() {
+    @DisplayName("publicationImpossible : reconstruit par CSV et nuit non rattachée → true (#1596)")
+    void publication_impossible_passage_reconstruit_non_rattache() {
         when(resultatsDao.findByPassage(7L)).thenReturn(Optional.of(resultats(7L)));
         when(observationDao.findByResults(100L))
                 .thenReturn(List.of(observation("Pippip", "Pippip", 0.9), observation("noise", "Pippip", 0.9)));
 
-        assertThat(service().aucunAncrage(7L)).isTrue();
+        assertThat(service().publicationImpossible(7L)).isTrue();
     }
 
     @Test
-    @DisplayName("aucunAncrage : au moins une observation ancrée → false (publication partielle possible)")
-    void aucun_ancrage_partiel_reste_publiable() {
+    @DisplayName("publicationImpossible : aucun ancrage mais nuit rattachée → false (la publication l'acquerra, #1838)")
+    void publication_impossible_passage_reconstruit_mais_rattache() {
+        when(resultatsDao.findByPassage(7L)).thenReturn(Optional.of(resultats(7L)));
+        when(observationDao.findByResults(100L))
+                .thenReturn(List.of(observation("Pippip", "Pippip", 0.9), observation("noise", "Pippip", 0.9)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "7")).thenReturn(Optional.of("participation-1"));
+
+        // Même état d'ancrage que le test précédent : seul le rattachement change. C'est lui qui décide,
+        // depuis que la publication sait rapatrier l'ancrage manquant — griser ici interdirait le cas.
+        assertThat(service().publicationImpossible(7L)).isFalse();
+    }
+
+    @Test
+    @DisplayName("publicationImpossible : au moins une observation ancrée → false (publication partielle possible)")
+    void publication_impossible_partiel_reste_publiable() {
         when(resultatsDao.findByPassage(7L)).thenReturn(Optional.of(resultats(7L)));
         when(observationDao.findByResults(100L))
                 .thenReturn(List.of(observation("Pippip", "Pippip", 0.9), observationAncree()));
 
-        assertThat(service().aucunAncrage(7L)).isFalse();
+        assertThat(service().publicationImpossible(7L)).isFalse();
     }
 
     @Test
-    @DisplayName("aucunAncrage : passage sans résultats → false (rien à publier)")
-    void aucun_ancrage_sans_resultats() {
+    @DisplayName("publicationImpossible : passage sans résultats → false (rien à publier)")
+    void publication_impossible_sans_resultats() {
         when(resultatsDao.findByPassage(7L)).thenReturn(Optional.empty());
 
-        assertThat(service().aucunAncrage(7L)).isFalse();
+        assertThat(service().publicationImpossible(7L)).isFalse();
     }
 }

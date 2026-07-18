@@ -15,4 +15,4 @@ public record DonneesOuverture(
         Long idResultats,
         List<LigneObservationAudio> lignes,
         DecompteAudio decompteAudio,
-        boolean aucunAncrage) {}
+        boolean publicationImpossible) {}

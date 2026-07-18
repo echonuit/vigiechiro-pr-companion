@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -87,7 +88,8 @@ public class ServiceValidation implements CompteurValidations {
             ExportVuCsv export,
             UniteDeTravail uniteDeTravail,
             Horloge horloge,
-            MessageObservationDao messageDao) {
+            MessageObservationDao messageDao,
+            LienVigieChiroDao liens) {
         this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
         this.observationDao = Objects.requireNonNull(observationDao, "observationDao");
         this.taxonDao = Objects.requireNonNull(taxonDao, "taxonDao");
@@ -97,7 +99,7 @@ public class ServiceValidation implements CompteurValidations {
         this.messageDao = Objects.requireNonNull(messageDao, "messageDao");
         this.preservation = new PreservationValidations(resultatsDao, observationDao);
         this.fils = new FilsDiscussionVigieChiro(observationDao, messageDao, uniteDeTravail);
-        this.ancrage = new EtatAncragePassage(resultatsDao, observationDao);
+        this.ancrage = new EtatAncragePassage(resultatsDao, observationDao, liens);
         this.noyau = new NoyauImportObservations(
                 resultatsDao, observationDao, taxonDao, sessionDao, sequenceDao, uniteDeTravail, horloge, preservation);
     }
@@ -132,13 +134,14 @@ public class ServiceValidation implements CompteurValidations {
         return ancrage.manquant(idPassage);
     }
 
-    /// Le passage n'a-t-il **aucune observation ancrée** à la plateforme (toutes `idDonneeVigieChiro ==
-    /// null`) ? État d'un passage reconstruit par CSV non réactivé, où rien n'est publiable : l'IHM grise
-    /// donc proactivement l'action de publication (#1596). Distinct de [#ancrageManquant] (au moins une
-    /// manquante) : ici il faut qu'**aucune** ne soit ancrée, sinon une publication partielle reste
-    /// possible. Délègue à [EtatAncragePassage].
-    public boolean aucunAncrage(Long idPassage) {
-        return ancrage.aucun(idPassage);
+    /// La publication de corrections est-elle **hors d'atteinte** pour ce passage ? Aucune observation
+    /// ancrée **et** nuit non rattachée : rien n'est publiable et rien ne le deviendra, l'IHM grise donc
+    /// proactivement l'action (#1596, précisé par #1838 - une nuit rattachée n'est plus un cul-de-sac,
+    /// la publication acquiert son ancrage). Distinct de [#ancrageManquant] (au moins une manquante) :
+    /// dès qu'une observation est ancrée, une publication partielle reste possible. Délègue à
+    /// [EtatAncragePassage].
+    public boolean publicationImpossible(Long idPassage) {
+        return ancrage.publicationImpossible(idPassage);
     }
 
     /// Importe les résultats Tadarida d'un passage, **en mode tolérant** : parse le CSV, crée les
