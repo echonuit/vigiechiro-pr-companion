@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 
@@ -46,7 +47,9 @@ public class SynchronisationParticipationModule extends ModuleDeFeature {
             LienVigieChiroDao liens,
             PassageDao passageDao,
             MaterielMicroDao materielDao,
+            EnregistreurDao enregistreurDao,
             ReferentielPoint referentielPoint) {
-        return new SynchronisationParticipation(client, liens, passageDao, materielDao, referentielPoint);
+        return new SynchronisationParticipation(
+                client, liens, passageDao, materielDao, enregistreurDao, referentielPoint);
     }
 }

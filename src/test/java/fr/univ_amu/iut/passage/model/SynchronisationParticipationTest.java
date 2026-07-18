@@ -54,13 +54,17 @@ class SynchronisationParticipationTest {
     MaterielMicroDao materielDao;
 
     @Mock
+    fr.univ_amu.iut.passage.model.dao.EnregistreurDao enregistreurDao;
+
+    @Mock
     fr.univ_amu.iut.commun.model.ReferentielPoint referentielPoint;
 
     private SynchronisationParticipation sync;
 
     @BeforeEach
     void preparer() {
-        sync = new SynchronisationParticipation(client, liens, passageDao, materielDao, referentielPoint);
+        sync = new SynchronisationParticipation(
+                client, liens, passageDao, materielDao, enregistreurDao, referentielPoint);
     }
 
     @Test
@@ -138,6 +142,42 @@ class SynchronisationParticipationTest {
         ArgumentCaptor<MaterielMicro> micro = ArgumentCaptor.forClass(MaterielMicro.class);
         verify(materielDao).definir(micro.capture());
         assertThat(micro.getValue().typeMicro()).isEqualTo("ICS");
+    }
+
+    @Test
+    @DisplayName("#1828 tirerDepuis : le n° de série de la participation est rapatrié quand le passage l'ignore")
+    void tirer_depuis_rapatrie_le_numero_de_serie() {
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passageAvecEnregistreur(Enregistreur.INCONNU)));
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(detailAvecSerie("1925492")));
+        when(enregistreurDao.findById("1925492")).thenReturn(Optional.empty());
+
+        sync.tirerDepuis(42L);
+
+        verify(enregistreurDao)
+                .insert(new Enregistreur("1925492", null, null)); // clé étrangère garantie avant l'accroche
+        ArgumentCaptor<Passage> ecrit = ArgumentCaptor.forClass(Passage.class);
+        verify(passageDao).update(ecrit.capture());
+        assertThat(ecrit.getValue().idEnregistreur())
+                .as("le bouton « Synchroniser depuis VigieChiro » rattrape enfin l'enregistreur")
+                .isEqualTo("1925492");
+    }
+
+    @Test
+    @DisplayName("#1828 tirerDepuis : un « INCONNU » distant n'écrase JAMAIS un n° de série local réel")
+    void tirer_depuis_ne_degrade_pas_un_numero_reel() {
+        when(passageDao.findById(42L)).thenReturn(Optional.of(passage(null))); // porte déjà 1997632
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
+        when(client.participation("part-1")).thenReturn(ReponseApi.succes(detailAvecSerie(Enregistreur.INCONNU)));
+
+        sync.tirerDepuis(42L);
+
+        ArgumentCaptor<Passage> ecrit = ArgumentCaptor.forClass(Passage.class);
+        verify(passageDao).update(ecrit.capture());
+        assertThat(ecrit.getValue().idEnregistreur())
+                .as("le n° lu du journal à l'import prime sur la sentinelle publiée par erreur")
+                .isEqualTo("1997632");
+        verify(enregistreurDao, never()).insert(any());
     }
 
     @Test
@@ -238,6 +278,39 @@ class SynchronisationParticipationTest {
                 new MeteoDepot("FAIBLE", "0-25"),
                 Map.of("micro0_type", "ICS", "micro0_position", "CANOPEE"),
                 traitementFini());
+    }
+
+    /// Détail portant un n° de série sous la clé **canonique** (celle du formulaire web), plus le micro.
+    private static ParticipationDetail detailAvecSerie(String serie) {
+        return new ParticipationDetail(
+                "part-1",
+                "e1",
+                "Z41",
+                "2026-07-03T19:00:00+00:00",
+                "2026-07-04T04:00:00+00:00",
+                new MeteoDepot("FAIBLE", "0-25"),
+                Map.of("micro0_type", "ICS", "detecteur_enregistreur_numero_serie", serie),
+                traitementFini());
+    }
+
+    /// Le même passage que [#passage], mais dont l'enregistreur est celui qu'on veut éprouver.
+    private static Passage passageAvecEnregistreur(String serie) {
+        Passage modele = passage(null);
+        return new Passage(
+                modele.id(),
+                modele.numeroPassage(),
+                modele.annee(),
+                modele.dateEnregistrement(),
+                modele.heureDebut(),
+                modele.heureFin(),
+                modele.parametresAcquisition(),
+                modele.statutWorkflow(),
+                modele.verdictVerification(),
+                modele.commentaire(),
+                modele.donneesMeteo(),
+                modele.deposeLe(),
+                modele.idPoint(),
+                serie);
     }
 
     private static Passage passage(String donneesMeteo) {
