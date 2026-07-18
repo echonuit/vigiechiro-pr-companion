@@ -256,6 +256,40 @@ fenêtre reste utilisable pour tout le reste, elle ne propose simplement pas d'�
     fiche dans votre navigateur : c'est le moyen le plus sûr de confirmer que la plateforme affiche
     bien ce que vous attendiez.
 
+### En ligne de commande
+
+Les mêmes gestes existent en ligne de commande, sous les mêmes mots :
+
+```bash
+./vigiechiro metadonnees-passage --passage 12 --recuperer
+./vigiechiro metadonnees-passage --passage 12 --enregistreur 1925492
+./vigiechiro metadonnees-passage --passage 12 --heure-debut 21:00 --heure-fin 06:00 --envoyer
+```
+
+#### Rattraper toute une saison
+
+Une correction apportée à l'application ne répare que les nuits sur lesquelles vous repassez. Si
+plusieurs de vos nuits portent un enregistreur « INCONNU », ou des heures qui ont dérivé, les reprendre
+une par une n'est pas tenable. `--tout` les traite d'un coup :
+
+```bash
+./vigiechiro metadonnees-passage --tout --recuperer --envoyer              # annonce seulement
+./vigiechiro metadonnees-passage --tout --recuperer --envoyer --confirmer  # écrit
+```
+
+Sans `--confirmer`, **rien n'est écrit** : la commande se contente de lister les nuits qu'elle
+traiterait. C'est volontaire : le rattrapage écrit sur la plateforme pour toute votre saison, vous devez
+pouvoir en mesurer la portée avant de le lancer.
+
+Avec `--confirmer`, chaque nuit donne une ligne, y compris celles dont les heures ont été réalignées et
+celles qui ont échoué. Une nuit qui échoue **n'interrompt pas** les autres, et la commande sort en `1`
+s'il en reste : un script de fin de saison ne conclura donc pas au vert sur un rattrapage incomplet.
+
+!!! warning "Un n° de série ou des heures ne se posent pas en masse"
+    `--tout` n'accepte que `--recuperer` et `--envoyer`. Poser le même enregistreur, ou les mêmes
+    heures, sur toutes les nuits d'une saison n'aurait rien d'un rattrapage : ce serait inventer des
+    données. La commande le refuse.
+
 ### Importer les observations
 
 L'import des identifications Tadarida ne se fait pas depuis cet écran : il vit dans
