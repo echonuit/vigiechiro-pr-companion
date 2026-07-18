@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
@@ -97,7 +98,8 @@ class RattachementModaleFermetureViewTest {
     @Test
     @DisplayName("#1839 : VigieChiro refuse l'envoi → la modale RESTE ouverte, la cause à l'écran")
     void refus_laisse_la_modale_ouverte(FxRobot robot) {
-        when(synchronisation.pousserVers(7L)).thenReturn(ResultatEcriture.echouee("422 champ invalide"));
+        when(synchronisation.pousserVers(7L))
+                .thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.echouee("422 champ invalide")));
 
         robot.clickOn("#boutonAppliquer");
         WaitForAsyncUtils.waitForFxEvents();
@@ -110,9 +112,28 @@ class RattachementModaleFermetureViewTest {
     }
 
     @Test
+    @DisplayName("#1885 : envoi accepté MAIS heures réalignées → la modale reste ouverte pour le dire")
+    void realignement_laisse_la_modale_ouverte(FxRobot robot) {
+        when(synchronisation.pousserVers(7L))
+                .thenReturn(new EnvoiParticipation(
+                        ResultatEcriture.reussie(),
+                        Optional.of(
+                                new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));
+
+        robot.clickOn("#boutonAppliquer");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        // Un succès peut mériter d'être lu : l'application vient de corriger les heures saisies.
+        assertThat(fenetre.isShowing()).isTrue();
+        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        assertThat(message.getText()).contains("réalignées").contains("21:30:00");
+    }
+
+    @Test
     @DisplayName("#1839 : envoi accepté → la modale se ferme (le geste va jusqu'au bout)")
     void succes_ferme_la_modale(FxRobot robot) {
-        when(synchronisation.pousserVers(7L)).thenReturn(ResultatEcriture.reussie("abc123"));
+        when(synchronisation.pousserVers(7L))
+                .thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie("abc123")));
 
         robot.clickOn("#boutonAppliquer");
         WaitForAsyncUtils.waitForFxEvents();

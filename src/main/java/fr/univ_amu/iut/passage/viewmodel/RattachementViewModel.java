@@ -1,10 +1,10 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
-import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -28,6 +28,9 @@ import javafx.beans.property.SimpleIntegerProperty;
 /// carré et le code point (inchangés) sont fournis par la navigation : le `model`/`viewmodel` ne
 /// dépend pas de `sites`. [#valider] délègue à [ServiceRattachement#modifierRattachement].
 public class RattachementViewModel {
+
+    /// Sépare un avant et un après (récapitulatif de rattachement, réalignement d'heures).
+    private static final String VERS = " → ";
 
     private final ServicePassage service;
     private final ServiceRattachement rattachement;
@@ -155,23 +158,30 @@ public class RattachementViewModel {
     /// surcroît confondues sous un seul `catch` commenté « pas encore lié ».
     public CompteRenduEnvoi pousserVersVigieChiro() {
         if (idPassage == null) {
-            return new CompteRenduEnvoi(true, "");
+            return CompteRenduEnvoi.rienAFaire();
         }
         if (synchronisation.isEmpty()) {
-            return new CompteRenduEnvoi(true, "Non connecté à VigieChiro : les métadonnées partiront au dépôt.");
+            return CompteRenduEnvoi.reussi("Non connecté à VigieChiro : les métadonnées partiront au dépôt.");
         }
         try {
-            ResultatEcriture resultat = synchronisation.get().pousserVers(idPassage);
+            EnvoiParticipation envoi = synchronisation.get().pousserVers(idPassage);
             // Le succès se lit sur l'échec, pas sur la présence d'un identifiant : un PATCH ne crée rien.
             // L'ancien test `id().isPresent()` n'était vrai que parce que le client recopiait le paramètre
             // dans le champ `id` pour le satisfaire.
-            return resultat.estReussie()
-                    ? new CompteRenduEnvoi(true, "Métadonnées envoyées à VigieChiro.")
-                    : new CompteRenduEnvoi(false, "VigieChiro a refusé l'envoi : " + resultat.echec());
+            if (!envoi.ecriture().estReussie()) {
+                return CompteRenduEnvoi.echoue(
+                        "VigieChiro a refusé l'envoi : " + envoi.ecriture().echec());
+            }
+            // #1885 : un réalignement a modifié les heures de la nuit. Le taire reviendrait à corriger sa
+            // saisie dans son dos, et à le priver du moyen de contester la correction si elle est fausse.
+            return envoi.realignement()
+                    .map(realignement ->
+                            CompteRenduEnvoi.aSignaler("Métadonnées envoyées à VigieChiro. " + phrase(realignement)))
+                    .orElseGet(() -> CompteRenduEnvoi.reussi("Métadonnées envoyées à VigieChiro."));
         } catch (RegleMetierException empeche) {
             // La cause EST dite (non lié / participation introuvable / point d'écoute introuvable) au lieu
             // d'être supposée bénigne.
-            return new CompteRenduEnvoi(false, "Envoi impossible : " + empeche.getMessage());
+            return CompteRenduEnvoi.echoue("Envoi impossible : " + empeche.getMessage());
         }
     }
 
@@ -182,10 +192,56 @@ public class RattachementViewModel {
         }
     }
 
-    /// Issue d'un envoi vers VigieChiro : `reussi` distingue ce qui **peut être ignoré** (rien à envoyer,
-    /// hors connexion : les métadonnées partiront au dépôt) de ce qui **doit retenir l'utilisateur** (refus
-    /// serveur, empêchement) - c'est ce qui décide si la modale peut se fermer.
-    public record CompteRenduEnvoi(boolean reussi, String message) {}
+    /// Issue d'un envoi vers VigieChiro.
+    ///
+    /// Deux questions distinctes, qu'il ne faut pas confondre :
+    ///  - `reussi` : l'envoi a-t-il abouti ? Distingue ce qui **peut être ignoré** (rien à envoyer, hors
+    ///    connexion : les métadonnées partiront au dépôt) d'un refus serveur ou d'un empêchement ;
+    ///  - `aSignaler` : s'est-il passé quelque chose que l'utilisateur **doit voir** ? Un envoi peut très
+    ///    bien réussir *et* mériter d'être commenté - c'est le cas d'un réalignement d'heures (#1885), qui
+    ///    modifie ses données.
+    ///
+    /// C'est [#peutFermer] qui croise les deux : fermer la modale sur un message non lu l'emporterait avec
+    /// la fenêtre, exactement le défaut que #1839 a corrigé pour les échecs.
+    ///
+    /// @param reussi `true` si l'envoi n'a rien à reprocher
+    /// @param aSignaler `true` si le message doit être lu avant de refermer
+    /// @param message ce qu'il faut dire à l'utilisateur (vide s'il n'y a rien à dire)
+    public record CompteRenduEnvoi(boolean reussi, boolean aSignaler, String message) {
+
+        /// Envoi sans reproche ni commentaire.
+        static CompteRenduEnvoi reussi(String message) {
+            return new CompteRenduEnvoi(true, false, message);
+        }
+
+        /// Envoi abouti, mais dont l'issue **doit être lue** avant de refermer.
+        static CompteRenduEnvoi aSignaler(String message) {
+            return new CompteRenduEnvoi(true, true, message);
+        }
+
+        /// Envoi empêché ou refusé.
+        static CompteRenduEnvoi echoue(String message) {
+            return new CompteRenduEnvoi(false, true, message);
+        }
+
+        /// Aucun envoi n'était nécessaire.
+        static CompteRenduEnvoi rienAFaire() {
+            return new CompteRenduEnvoi(true, false, "");
+        }
+
+        /// `true` si la modale peut se refermer : l'envoi a abouti **et** rien n'attend d'être lu.
+        public boolean peutFermer() {
+            return reussi && !aSignaler;
+        }
+    }
+
+    /// Phrase décrivant un réalignement, avec l'**avant** et l'**après** : dire seulement la nouvelle heure
+    /// n'apprendrait pas ce qui a été corrigé, ni de combien.
+    private static String phrase(EnvoiParticipation.Realignement realignement) {
+        return "Les heures de la nuit ont été réalignées sur ses enregistrements : "
+                + realignement.debutAvant() + VERS + realignement.debutApres() + " (début), "
+                + realignement.finAvant() + VERS + realignement.finApres() + " (fin).";
+    }
 
     /// **Tire** les métadonnées (météo / micro) de la participation VigieChiro vers le passage local (cas
     /// « participation préparée sur le site web »). À appeler **hors du fil JavaFX** (réseau) ; ne touche
@@ -252,7 +308,7 @@ public class RattachementViewModel {
             String apres = new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint).nomDossierSession();
             recap.set("Rattachement : "
                     + avant
-                    + " → "
+                    + VERS
                     + apres
                     + " — "
                     + nombreSequences
