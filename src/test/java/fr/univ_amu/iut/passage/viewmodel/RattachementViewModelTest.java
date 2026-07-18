@@ -9,7 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -402,7 +402,7 @@ class RattachementViewModelTest {
     @DisplayName("Phase 2 : pousserVersVigieChiro délègue à la passerelle et annonce l'envoi")
     void pousser_vers_vigiechiro_delegue() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        when(sync.pousserVers(ID)).thenReturn(ResultatParticipation.reussie("part-1"));
+        when(sync.pousserVers(ID)).thenReturn(ResultatEcriture.reussie("part-1"));
         RattachementViewModel avecSync =
                 new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
@@ -419,7 +419,7 @@ class RattachementViewModelTest {
     @DisplayName("#1839 : un REFUS de VigieChiro est rapporté avec sa cause, plus jamais avalé")
     void pousser_vers_vigiechiro_refus_rapporte() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        when(sync.pousserVers(ID)).thenReturn(ResultatParticipation.echouee("HTTP 412 : etag périmé"));
+        when(sync.pousserVers(ID)).thenReturn(ResultatEcriture.echouee("HTTP 412 : etag périmé"));
         RattachementViewModel avecSync =
                 new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));

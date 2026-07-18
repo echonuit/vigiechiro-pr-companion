@@ -14,7 +14,7 @@ import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.MeteoDepot;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ReponseApi;
-import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -73,9 +73,9 @@ class SynchronisationParticipationTest {
         armerPassageEtPoint();
         when(liens.objectidPour(LienVigieChiro.ENTITE_SITE, "7")).thenReturn(Optional.of(OBJECTID_SITE));
         when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
-        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatParticipation.reussie("part-1"));
+        when(client.creerParticipation(eq(OBJECTID_SITE), any())).thenReturn(ResultatEcriture.reussie("part-1"));
 
-        ResultatParticipation resultat = sync.creerPour(42L);
+        ResultatEcriture resultat = sync.creerPour(42L);
 
         assertThat(resultat.id()).contains("part-1");
         verify(liens).upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, "42", "part-1"));
@@ -111,7 +111,7 @@ class SynchronisationParticipationTest {
         when(client.participation("part-1")).thenReturn(ReponseApi.succes(detail("e-frais")));
         when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
         when(client.modifierParticipation(eq("part-1"), eq("e-frais"), any()))
-                .thenReturn(ResultatParticipation.reussie("part-1"));
+                .thenReturn(ResultatEcriture.reussie("part-1"));
 
         assertThat(sync.pousserVers(42L).id()).contains("part-1");
         verify(client).modifierParticipation(eq("part-1"), eq("e-frais"), any());

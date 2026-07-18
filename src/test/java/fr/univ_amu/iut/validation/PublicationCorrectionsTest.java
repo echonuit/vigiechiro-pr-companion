@@ -14,7 +14,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.ResultatCorrection;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.Certitude;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -105,7 +105,7 @@ class PublicationCorrectionsTest {
         when(observations.revuesDuPassage(7L)).thenReturn(List.of(revue(1L, "Pippip", Certitude.SUR, "d1", 0)));
         when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
         when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, true))
-                .thenReturn(ResultatCorrection.reussie());
+                .thenReturn(ResultatEcriture.reussie());
 
         BilanPublication bilan = publicationAvecImport().publier(7L, progres -> {}, JetonAnnulation.neutre());
 
@@ -124,7 +124,7 @@ class PublicationCorrectionsTest {
         when(observations.revuesDuPassage(7L)).thenReturn(List.of(revue(1L, "Pippip", Certitude.SUR, "d1", 0)));
         when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
         when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, true))
-                .thenReturn(ResultatCorrection.reussie());
+                .thenReturn(ResultatEcriture.reussie());
 
         publicationAvecImport().publier(7L, progres -> {}, JetonAnnulation.neutre());
 
@@ -182,7 +182,7 @@ class PublicationCorrectionsTest {
                         revue(4L, "Barbar", Certitude.SUR, "d2", 0))); // taxon sans objectid
         when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
         when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, true))
-                .thenReturn(ResultatCorrection.reussie());
+                .thenReturn(ResultatEcriture.reussie());
 
         BilanPublication bilan = publication().publier(7L);
 
@@ -232,7 +232,7 @@ class PublicationCorrectionsTest {
                         revue(3L, "Pippip", Certitude.POSSIBLE, "d2", 1)));
         when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
         when(client.corrigerObservation(anyString(), anyInt(), anyString(), any(), anyBoolean()))
-                .thenReturn(ResultatCorrection.reussie());
+                .thenReturn(ResultatEcriture.reussie());
 
         BilanPublication bilan = publication().publier(7L);
 
@@ -250,9 +250,9 @@ class PublicationCorrectionsTest {
                         revue(1L, "Pippip", Certitude.SUR, "d1", 0), revue(2L, "Pippip", Certitude.SUR, "d2", 5)));
         when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
         when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, false))
-                .thenReturn(ResultatCorrection.echouee("HTTP 404 : donnée introuvable"));
+                .thenReturn(ResultatEcriture.echouee("HTTP 404 : donnée introuvable"));
         when(client.corrigerObservation("d2", 5, "obj-pippip", Certitude.SUR, true))
-                .thenReturn(ResultatCorrection.reussie());
+                .thenReturn(ResultatEcriture.reussie());
 
         BilanPublication bilan = publication().publier(7L);
 

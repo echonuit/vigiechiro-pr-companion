@@ -127,9 +127,9 @@ class ClientVigieChiroTest {
     @Test
     @DisplayName("corrigerObservation (#723) : sans token ou hors ligne → échec EXPLIQUÉ, distinct (#1284)")
     void correction_degrade_proprement() {
-        ResultatCorrection sansToken = new ClientVigieChiro("http://localhost:1", SANS_TOKEN)
+        ResultatEcriture sansToken = new ClientVigieChiro("http://localhost:1", SANS_TOKEN)
                 .corrigerObservation("6a4f", 0, "5526", fr.univ_amu.iut.commun.model.Certitude.SUR, true);
-        ResultatCorrection horsLigne = new ClientVigieChiro("http://localhost:1", TOKEN_ABC)
+        ResultatEcriture horsLigne = new ClientVigieChiro("http://localhost:1", TOKEN_ABC)
                 .corrigerObservation("6a4f", 0, "5526", fr.univ_amu.iut.commun.model.Certitude.SUR, false);
 
         // Une écriture refusée est expliquée (jamais un booléen opaque), et depuis #1284 la cause est

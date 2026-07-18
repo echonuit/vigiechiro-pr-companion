@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.passage.model.Enregistreur;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
@@ -23,8 +24,11 @@ import java.util.List;
 final class JournalDeRepli {
 
     /// Série inscrite si aucun nom de WAV n'est exploitable (la colonne `recorder.serial_number` est
-    /// `NOT NULL`). Cas rare : les noms bruts portent presque toujours la série.
-    static final String SERIE_INCONNUE = "PR-INCONNU";
+    /// `NOT NULL`). Cas rare : les noms bruts portent presque toujours la série. La valeur vit chez
+    /// [Enregistreur], **maison canonique** des sentinelles : c'est là que [Enregistreur#estInconnu] les
+    /// reconnaît pour interdire de les publier vers la plateforme (#1828, ADR 0020). La redéclarer ici
+    /// laisserait les deux définitions diverger en silence.
+    static final String SERIE_INCONNUE = Enregistreur.INCONNU_IMPORT;
 
     /// Anomalie inscrite au journal synthétique pour assumer et tracer le mode dégradé (#107).
     static final String ANOMALIE_ABSENCE =

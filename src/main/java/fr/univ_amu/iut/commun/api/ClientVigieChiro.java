@@ -210,20 +210,20 @@ public final class ClientVigieChiro {
     // ---------------------------------------------------------------------------------------------
 
     /// Crée une **participation** sur un site (`POST /sites/#id/participations`, #142) : renvoie l'`_id` créé,
-    /// ou un [ResultatParticipation] portant le **détail de l'échec** (statut HTTP + corps de la réponse
+    /// ou un [ResultatEcriture] portant le **détail de l'échec** (statut HTTP + corps de la réponse
     /// VigieChiro) pour un message exploitable — le dépôt étant une écriture, un refus doit être **expliqué**,
     /// pas silencieusement vide. Prérequis métier : site **verrouillé** côté VigieChiro.
-    public ResultatParticipation creerParticipation(String siteId, ParticipationADeposer participation) {
+    public ResultatEcriture creerParticipation(String siteId, ParticipationADeposer participation) {
         ReponseApi<String> reponse =
                 poster("/sites/" + siteId + "/participations", RequetesVigieChiro.participation(participation));
         String echec = echecDe(reponse);
         if (echec != null) {
-            return ResultatParticipation.echouee(echec);
+            return ResultatEcriture.echouee(echec);
         }
         String corps = reponse.enOptionnel().orElseThrow();
         return ReponsesVigieChiro.idCree(corps)
-                .map(ResultatParticipation::reussie)
-                .orElseGet(() -> ResultatParticipation.echouee("réponse acceptée mais sans identifiant : " + corps));
+                .map(ResultatEcriture::reussie)
+                .orElseGet(() -> ResultatEcriture.echouee("réponse acceptée mais sans identifiant : " + corps));
     }
 
     /// **Met à jour** une participation existante (`PATCH /participations/#id`, axe 4) : n'émet que les
@@ -231,10 +231,10 @@ public final class ClientVigieChiro {
     /// avec l'en-tête `If-Match: <etag>` exigé par Eve (concurrence optimiste). L'`etag` frais se lit via
     /// [#participation]. Renvoie l'`_id` en cas de succès, ou le **détail de l'échec** (statut + corps) — un
     /// refus doit être expliqué. Prérequis : `etag` courant (sinon `412 Precondition Failed`).
-    public ResultatParticipation modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
+    public ResultatEcriture modifierParticipation(String id, String etag, ParticipationADeposer miseAJour) {
         String echec = echecDe(transport.ecrire(
                 "PATCH", CHEMIN_PARTICIPATIONS + id, RequetesVigieChiro.miseAJourParticipation(miseAJour), etag));
-        return echec == null ? ResultatParticipation.reussie(id) : ResultatParticipation.echouee(echec);
+        return echec == null ? ResultatEcriture.reussie() : ResultatEcriture.echouee(echec);
     }
 
     /// **Publie une correction d'observation** (`PATCH /donnees/#id/observations/#indice`, #723,
@@ -244,12 +244,12 @@ public final class ClientVigieChiro {
     /// serveur ne régénère pas le bilan de la participation : levier de rafale, ne mettre `true` que
     /// sur le **dernier** envoi d'un lot). Un `HTTP 404` signale un **ancrage périmé** (la donnée a
     /// été régénérée par un re-compute) ; tout refus revient détaillé (statut + corps).
-    public ResultatCorrection corrigerObservation(
+    public ResultatEcriture corrigerObservation(
             String donneeId, int indice, String objectidTaxon, Certitude certitude, boolean bilan) {
         String chemin = "/donnees/" + donneeId + "/observations/" + indice + (bilan ? "" : "?no_bilan=true");
         String echec = echecDe(
                 transport.ecrire("PATCH", chemin, RequetesVigieChiro.correction(objectidTaxon, certitude), null));
-        return echec == null ? ResultatCorrection.reussie() : ResultatCorrection.echouee(echec);
+        return echec == null ? ResultatEcriture.reussie() : ResultatEcriture.echouee(echec);
     }
 
     /// Poste un **message** dans le fil de discussion d'une observation (#1418, axe 4.4) :

@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.ResultatCorrection;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
@@ -168,7 +168,7 @@ public class PublicationCorrections {
         for (int i = 0; i < poussables.size(); i++) {
             Observation o = poussables.get(i);
             boolean dernier = i == poussables.size() - 1;
-            ResultatCorrection resultat = client.corrigerObservation(
+            ResultatEcriture resultat = client.corrigerObservation(
                     o.idDonneeVigieChiro(),
                     o.indiceVigieChiro(),
                     objectids.get(o.taxonObservateur()),

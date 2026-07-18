@@ -167,19 +167,34 @@ final class CorrespondanceParticipation {
 
     // --- pull : API -> local -----------------------------------------------------------------------
 
-    /// Fusionne une météo **distante** ([MeteoDepot]) dans le relevé local `existant` : ne met à jour que le
-    /// vent et la couverture (les seuls champs portés par l'API), en **préservant les températures** locales.
-    /// `distant` `null` → relevé inchangé.
+    /// Fusionne une météo **distante** ([MeteoDepot]) dans le relevé local `existant` : le bloc météo de la
+    /// plateforme **remplace** le bloc local, températures comprises. `distant` `null` → relevé inchangé
+    /// (il n'y a rien à fusionner ; c'est le seul cas où le local survit).
+    ///
+    /// Cette méthode a longtemps **préservé les températures locales**, au motif que l'API ne portait que le
+    /// vent et la couverture. Le motif était faux : le schéma serveur porte `meteo.temperature_*` depuis
+    /// toujours, c'est l'application qui ne les transportait pas (#1844). Une fois l'envoi corrigé, la
+    /// récupération restait asymétrique - on lisait les températures pour les jeter aussitôt.
+    ///
+    /// La règle retenue est celle qui vaut **déjà** pour le vent et la couverture : quand la plateforme a un
+    /// bloc météo, c'est lui qui fait foi. Conséquence assumée : une température locale est **écrasée** par
+    /// une participation dont le bloc météo existe mais ne porte pas de température (fiche saisie sur le web
+    /// avant #1844). C'est le prix de la cohérence du bloc - le traiter champ par champ ferait cohabiter deux
+    /// règles de fusion dans le même objet.
     static MeteoReleve fusionnerMeteo(MeteoReleve existant, MeteoDepot distant) {
         if (distant == null) {
             return existant;
         }
-        MeteoReleve base = existant == null ? MeteoReleve.VIDE : existant;
         return new MeteoReleve(
-                base.temperatureDebutNuit(),
-                base.temperatureFinNuit(),
+                enCelsius(distant.temperatureDebut()),
+                enCelsius(distant.temperatureFin()),
                 Vent.depuisTexte(distant.vent()),
                 couvertureDepuisCode(distant.couverture()));
+    }
+
+    /// Température locale (décimale) depuis l'entier de l'API, ou `null`.
+    private static Double enCelsius(Integer degres) {
+        return degres == null ? null : degres.doubleValue();
     }
 
     /// Couverture locale depuis le code API (`0-25|…`), ou `null` si absent / inconnu.

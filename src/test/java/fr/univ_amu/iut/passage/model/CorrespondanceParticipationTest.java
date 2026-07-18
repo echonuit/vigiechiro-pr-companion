@@ -137,16 +137,34 @@ class CorrespondanceParticipationTest {
     }
 
     @Test
-    @DisplayName("fusionnerMeteo : met à jour vent/couverture depuis l'API, PRÉSERVE les températures locales")
-    void fusionner_meteo_preserve_temperatures() {
+    @DisplayName("fusionnerMeteo : le bloc météo distant REMPLACE le local, températures comprises")
+    void fusionner_meteo_adopte_le_bloc_distant() {
+        MeteoReleve local = new MeteoReleve(12.0, 8.0, Vent.NUL, CouvertureNuageuse.DE_0_A_25);
+
+        MeteoReleve fusion =
+                CorrespondanceParticipation.fusionnerMeteo(local, new MeteoDepot("FORT", "75-100", 18, 11));
+
+        // #1844 : on lisait les températures de l'API pour les jeter aussitôt. La plateforme fait foi sur
+        // TOUT le bloc météo, comme elle le faisait déjà pour le vent et la couverture.
+        assertThat(fusion.temperatureDebutNuit()).isEqualTo(18.0);
+        assertThat(fusion.temperatureFinNuit()).isEqualTo(11.0);
+        assertThat(fusion.vent()).isEqualTo(Vent.FORT);
+        assertThat(fusion.couvertureNuageuse()).isEqualTo(CouvertureNuageuse.DE_75_A_100);
+    }
+
+    @Test
+    @DisplayName("fusionnerMeteo : un bloc distant SANS température écrase quand même (cohérence du bloc)")
+    void fusionner_meteo_bloc_distant_sans_temperature() {
         MeteoReleve local = new MeteoReleve(12.0, 8.0, Vent.NUL, CouvertureNuageuse.DE_0_A_25);
 
         MeteoReleve fusion = CorrespondanceParticipation.fusionnerMeteo(local, new MeteoDepot("FORT", "75-100"));
 
-        assertThat(fusion.temperatureDebutNuit()).isEqualTo(12.0);
-        assertThat(fusion.temperatureFinNuit()).isEqualTo(8.0);
+        // Conséquence assumée du choix « le bloc distant fait foi » : une fiche saisie sur le web avant que
+        // l'app ne transporte les températures n'en porte pas, et le relevé local est perdu. Traiter les
+        // températures champ par champ ferait cohabiter deux règles de fusion dans le même objet.
+        assertThat(fusion.temperatureDebutNuit()).isNull();
+        assertThat(fusion.temperatureFinNuit()).isNull();
         assertThat(fusion.vent()).isEqualTo(Vent.FORT);
-        assertThat(fusion.couvertureNuageuse()).isEqualTo(CouvertureNuageuse.DE_75_A_100);
     }
 
     @Test

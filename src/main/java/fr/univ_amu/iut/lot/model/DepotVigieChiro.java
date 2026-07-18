@@ -3,8 +3,8 @@ package fr.univ_amu.iut.lot.model;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
-import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -318,7 +318,7 @@ public final class DepotVigieChiro {
     /// Crée la participation (repli lazy quand elle n'a pas été créée à l'import) et renvoie son id, ou lève
     /// avec le détail du refus VigieChiro.
     private String creerParticipation(Long idPassage) {
-        ResultatParticipation creation = participations.creerPour(idPassage);
+        ResultatEcriture creation = participations.creerPour(idPassage);
         return creation.id()
                 .orElseThrow(() -> new RegleMetierException(
                         "Création de la participation refusée par VigieChiro : " + creation.echec()));

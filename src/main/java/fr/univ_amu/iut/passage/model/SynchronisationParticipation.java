@@ -3,7 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ParticipationADeposer;
 import fr.univ_amu.iut.commun.api.ParticipationDetail;
-import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.InfosPoint;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
@@ -69,7 +69,7 @@ public final class SynchronisationParticipation {
 
     /// Crée la participation du passage sur son site rattaché (verrouillé) et **mémorise le lien**
     /// `ENTITE_PASSAGE`. Prérequis (sinon [RegleMetierException]) : passage connu, point résolu, site rattaché.
-    public ResultatParticipation creerPour(Long idPassage) {
+    public ResultatEcriture creerPour(Long idPassage) {
         Passage passage = chargerPassage(idPassage);
         InfosPoint point = infosPoint(passage);
         String objectidSite = liens.objectidPour(LienVigieChiro.ENTITE_SITE, String.valueOf(point.idSite()))
@@ -78,7 +78,7 @@ public final class SynchronisationParticipation {
 
         ParticipationADeposer participation =
                 CorrespondanceParticipation.versParticipation(point.code(), passage, materielDao.pour(idPassage));
-        ResultatParticipation resultat = client.creerParticipation(objectidSite, participation);
+        ResultatEcriture resultat = client.creerParticipation(objectidSite, participation);
         resultat.id()
                 .ifPresent(id ->
                         liens.upsert(new LienVigieChiro(LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), id)));
@@ -87,7 +87,7 @@ public final class SynchronisationParticipation {
 
     /// Pousse les métadonnées locales (météo / config / dates) vers la participation liée (PATCH `If-Match`,
     /// etag relu juste avant). [RegleMetierException] si non lié / introuvable.
-    public ResultatParticipation pousserVers(Long idPassage) {
+    public ResultatEcriture pousserVers(Long idPassage) {
         Passage passage = chargerPassage(idPassage);
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
         ParticipationDetail distant =

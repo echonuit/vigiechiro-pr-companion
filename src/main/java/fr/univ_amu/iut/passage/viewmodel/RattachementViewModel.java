@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
-import fr.univ_amu.iut.commun.api.ResultatParticipation;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -148,7 +148,7 @@ public class RattachementViewModel {
     /// (réseau) ; ne touche aucun contrôle (VM pur) - le compte rendu s'affiche ensuite via
     /// [#signalerEnvoi]. Idempotent : rejouable après un échec réseau.
     ///
-    /// Avant #1839, cette méthode était `void` et avalait tout : le `ResultatParticipation` (qui porte la
+    /// Avant #1839, cette méthode était `void` et avalait tout : le `ResultatEcriture` (qui porte la
     /// **cause** d'un refus) était jeté, l'exception aussi, et l'appelant ignorait ses erreurs. Un envoi
     /// raté était donc indiscernable d'un envoi réussi - ce que l'ADR 0008 interdit. Les trois causes
     /// d'empêchement (passage non lié, participation introuvable, point d'écoute introuvable) étaient de
@@ -161,8 +161,11 @@ public class RattachementViewModel {
             return new CompteRenduEnvoi(true, "Non connecté à VigieChiro : les métadonnées partiront au dépôt.");
         }
         try {
-            ResultatParticipation resultat = synchronisation.get().pousserVers(idPassage);
-            return resultat.id().isPresent()
+            ResultatEcriture resultat = synchronisation.get().pousserVers(idPassage);
+            // Le succès se lit sur l'échec, pas sur la présence d'un identifiant : un PATCH ne crée rien.
+            // L'ancien test `id().isPresent()` n'était vrai que parce que le client recopiait le paramètre
+            // dans le champ `id` pour le satisfaire.
+            return resultat.estReussie()
                     ? new CompteRenduEnvoi(true, "Métadonnées envoyées à VigieChiro.")
                     : new CompteRenduEnvoi(false, "VigieChiro a refusé l'envoi : " + resultat.echec());
         } catch (RegleMetierException empeche) {

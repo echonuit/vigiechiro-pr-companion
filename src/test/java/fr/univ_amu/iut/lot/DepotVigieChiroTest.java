@@ -18,8 +18,8 @@ import fr.univ_amu.iut.commun.api.EtatTraitement;
 import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.IssueLancement;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
-import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -376,7 +376,7 @@ class DepotVigieChiroTest {
     void participation_refusee() {
         when(participations.participationDe(idPassage)).thenReturn(Optional.empty());
         when(participations.creerPour(idPassage))
-                .thenReturn(ResultatParticipation.echouee("HTTP 422 — {\"_errors\":{\"numero\":\"invalid field\"}}"));
+                .thenReturn(ResultatEcriture.echouee("HTTP 422 — {\"_errors\":{\"numero\":\"invalid field\"}}"));
 
         assertThatThrownBy(() -> depot.deposer(idPassage, List.of()))
                 .isInstanceOf(RegleMetierException.class)
