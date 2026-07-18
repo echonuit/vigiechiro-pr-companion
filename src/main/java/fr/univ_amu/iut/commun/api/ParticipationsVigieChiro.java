@@ -109,14 +109,20 @@ final class ParticipationsVigieChiro {
         }
     }
 
-    /// Bloc météo (`meteo.vent` / `meteo.couverture`), ou `null` si le sous-objet est absent.
+    /// Bloc météo (`meteo.vent` / `meteo.couverture` / `meteo.temperature_debut` / `meteo.temperature_fin`),
+    /// ou `null` si le sous-objet est absent. Les températures sont relues depuis #1844, où l'application a
+    /// commencé à les envoyer.
     private static MeteoDepot meteo(JsonObject participation) {
         JsonElement brut = participation.get("meteo");
         if (brut == null || !brut.isJsonObject()) {
             return null;
         }
         JsonObject meteo = brut.getAsJsonObject();
-        return new MeteoDepot(ReponsesVigieChiro.texte(meteo, "vent"), ReponsesVigieChiro.texte(meteo, "couverture"));
+        return new MeteoDepot(
+                ReponsesVigieChiro.texte(meteo, "vent"),
+                ReponsesVigieChiro.texte(meteo, "couverture"),
+                entier(meteo, "temperature_debut"),
+                entier(meteo, "temperature_fin"));
     }
 
     /// Dictionnaire `configuration` (clés → valeurs texte), jamais `null` (vide si absent). Les valeurs

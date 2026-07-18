@@ -33,7 +33,7 @@ class CorrespondanceParticipationTest {
         assertThat(p.meteo().couverture()).isEqualTo("25-50");
         assertThat(p.configuration())
                 .containsEntry("detecteur_enregistreur_type", "PassiveRecorder")
-                .containsEntry("detecteur_enregistreur_numserie", "1997632")
+                .containsEntry("detecteur_enregistreur_numero_serie", "1997632") // clé canonique (#1844)
                 .containsEntry("micro0_type", "ICS")
                 .containsEntry("micro0_position", "CANOPEE")
                 .containsEntry("micro0_hauteur", "4");
@@ -47,7 +47,57 @@ class CorrespondanceParticipationTest {
 
         assertThat(p.meteo()).isNull();
         assertThat(p.configuration())
-                .containsOnlyKeys("detecteur_enregistreur_type", "detecteur_enregistreur_numserie");
+                .containsOnlyKeys("detecteur_enregistreur_type", "detecteur_enregistreur_numero_serie");
+    }
+
+    @Test
+    @DisplayName("#1844 : le n° de série part sous la clé CANONIQUE, celle que lit le formulaire web")
+    void vers_participation_utilise_la_cle_canonique() {
+        ParticipationADeposer p =
+                CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L));
+
+        assertThat(p.configuration())
+                .as("l'app poussait « numserie », que le front ne lie pas : le n° arrivait invisible")
+                .containsEntry("detecteur_enregistreur_numero_serie", "1997632")
+                .doesNotContainKey("detecteur_enregistreur_numserie");
+    }
+
+    @Test
+    @DisplayName("#1844 : la configuration distante est PRÉSERVÉE — un envoi n'efface plus ce qu'on ne modélise pas")
+    void vers_participation_preserve_la_configuration_distante() {
+        Map<String, String> distante = Map.of(
+                "micro0_numero_serie", "M-123",
+                "micro1_type", "SMX-U1",
+                "canal_expansion_temps", "OUI",
+                "detecteur_enregistreur_numserie", "ANCIEN");
+
+        ParticipationADeposer p =
+                CorrespondanceParticipation.versParticipation("Z41", passage(null), MaterielMicro.vide(42L), distante);
+
+        assertThat(p.configuration())
+                .as("les champs du formulaire web que l'app ne modélise pas survivent à l'envoi")
+                .containsEntry("micro0_numero_serie", "M-123")
+                .containsEntry("micro1_type", "SMX-U1")
+                .containsEntry("canal_expansion_temps", "OUI");
+        assertThat(p.configuration())
+                .as("l'ancienne clé est retirée : la participation se répare au premier envoi")
+                .doesNotContainKey("detecteur_enregistreur_numserie")
+                .containsEntry("detecteur_enregistreur_numero_serie", "1997632");
+    }
+
+    @Test
+    @DisplayName("#1844 : les températures partent, ARRONDIES en entiers (le schéma serveur les type integer)")
+    void vers_participation_envoie_les_temperatures_arrondies() {
+        String meteo =
+                MeteoPassage.definirReleve(null, new MeteoReleve(8.6, 5.2, Vent.FAIBLE, CouvertureNuageuse.DE_0_A_25));
+
+        ParticipationADeposer p =
+                CorrespondanceParticipation.versParticipation("Z41", passage(meteo), MaterielMicro.vide(42L));
+
+        assertThat(p.meteo().temperatureDebut())
+                .as("8,6 °C s'arrondit à 9 : un décimal serait refusé par le serveur")
+                .isEqualTo(9);
+        assertThat(p.meteo().temperatureFin()).isEqualTo(5);
     }
 
     @Test

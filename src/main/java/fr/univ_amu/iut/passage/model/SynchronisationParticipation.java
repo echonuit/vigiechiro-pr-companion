@@ -93,8 +93,11 @@ public final class SynchronisationParticipation {
         ParticipationDetail distant =
                 client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
         InfosPoint point = infosPoint(passage);
-        ParticipationADeposer maj =
-                CorrespondanceParticipation.versParticipation(point.code(), passage, materielDao.pour(idPassage));
+        // #1844 : la configuration distante est passée au mapping pour être **préservée**. Le PATCH
+        // remplace le dictionnaire entier ; sans elle, chaque envoi effacerait les champs saisis sur le web
+        // que l'app ne modélise pas (micro0_numero_serie, micro1_*, canal_*).
+        ParticipationADeposer maj = CorrespondanceParticipation.versParticipation(
+                point.code(), passage, materielDao.pour(idPassage), distant.configuration());
         return client.modifierParticipation(objectid, distant.etag(), maj);
     }
 

@@ -36,9 +36,21 @@ final class CorrespondanceParticipation {
 
     /// Corps de participation (push) : `point` = code de la localité, fenêtre de nuit en **RFC 1123 UTC**,
     /// bloc météo (#702) et configuration matérielle (#697). Le commentaire n'est pas synchronisé.
-    static ParticipationADeposer versParticipation(String codePoint, Passage passage, MaterielMicro micro) {
+    static ParticipationADeposer versParticipation(
+            String codePoint, Passage passage, MaterielMicro micro, Map<String, String> configurationDistante) {
         return new ParticipationADeposer(
-                codePoint, debutVc(passage), finVc(passage), meteo(passage), configuration(passage, micro), null);
+                codePoint,
+                debutVc(passage),
+                finVc(passage),
+                meteo(passage),
+                configuration(passage, micro, configurationDistante),
+                null);
+    }
+
+    /// Variante **création** (`POST`) : la participation n'existe pas encore, il n'y a aucune configuration
+    /// distante à préserver.
+    static ParticipationADeposer versParticipation(String codePoint, Passage passage, MaterielMicro micro) {
+        return versParticipation(codePoint, passage, micro, Map.of());
     }
 
     // --- push : local -> API -----------------------------------------------------------------------
@@ -50,7 +62,20 @@ final class CorrespondanceParticipation {
         MeteoReleve releve = MeteoPassage.lire(passage.donneesMeteo());
         String vent = releve.vent() == null ? null : releve.vent().name();
         String couverture = codeCouverture(releve.couvertureNuageuse());
-        return vent == null && couverture == null ? null : new MeteoDepot(vent, couverture);
+        // #1844 : les températures partent enfin. Le schéma serveur les porte depuis toujours ; l'app ne
+        // les transportait pas, si bien qu'une saisie locale n'atteignait jamais la fiche web.
+        Integer debut = enDegresEntiers(releve.temperatureDebutNuit());
+        Integer fin = enDegresEntiers(releve.temperatureFinNuit());
+        return vent == null && couverture == null && debut == null && fin == null
+                ? null
+                : new MeteoDepot(vent, couverture, debut, fin);
+    }
+
+    /// Température en degrés **entiers** : `meteo.temperature_*` est typé `integer` côté serveur (#1844),
+    /// un décimal serait refusé. On **arrondit** au plus proche plutôt que de tronquer - 8,6 °C vaut mieux
+    /// 9 que 8.
+    private static Integer enDegresEntiers(Double celsius) {
+        return celsius == null ? null : (int) Math.round(celsius);
     }
 
     /// Tranche de couverture au format API (`0-25|25-50|50-75|75-100`), ou `null`.
@@ -68,8 +93,13 @@ final class CorrespondanceParticipation {
 
     /// Configuration matérielle (`detecteur_enregistreur_*` + `micro0_*`, #697), ou `null` si rien n'est
     /// renseigné. Dictionnaire libre, sérialisé tel quel.
-    private static Map<String, String> configuration(Passage passage, MaterielMicro micro) {
-        Map<String, String> config = new LinkedHashMap<>();
+    private static Map<String, String> configuration(
+            Passage passage, MaterielMicro micro, Map<String, String> distante) {
+        // #1844 : on PART de la configuration distante. Le PATCH remplace le dictionnaire entier ; n'envoyer
+        // que le nôtre effaçait silencieusement les champs que l'app ne modélise pas mais que le formulaire
+        // web gère (micro0_numero_serie, micro1_*, canal_expansion_temps, canal_enregistrement_direct). Nos
+        // clés écrasent les leurs ; les autres survivent.
+        Map<String, String> config = new LinkedHashMap<>(distante == null ? Map.of() : distante);
         if (passage.idEnregistreur() != null) {
             config.put("detecteur_enregistreur_type", TYPE_DETECTEUR);
             // #1828 : le TYPE est publié (l'app ne pilote que des Passive Recorders : c'est vrai), mais
@@ -78,7 +108,12 @@ final class CorrespondanceParticipation {
             // reliraient ensuite comme si elle était réelle. Ne rien dire vaut mieux que mentir. Comme
             // `recorder_id` est NOT NULL en base, sans cette garde la sentinelle partait à chaque dépôt.
             if (!Enregistreur.estInconnu(passage.idEnregistreur())) {
-                config.put(CLE_SERIE_APP, passage.idEnregistreur());
+                // #1844 : clé **canonique**, celle que lie le formulaire web. L'app poussait la clé
+                // historique `..._numserie`, que le front ne lit pas : le numéro arrivait bien sur la
+                // plateforme, mais **invisible**. On retire au passage l'ancienne clé, pour que les
+                // participations déjà déposées par l'app se réparent au premier envoi.
+                config.remove(CLE_SERIE_APP);
+                config.put(CLE_SERIE_CANONIQUE, passage.idEnregistreur());
             }
         }
         if (micro.typeMicro() != null) {
