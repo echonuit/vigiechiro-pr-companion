@@ -1,10 +1,12 @@
 package fr.univ_amu.iut.importation.model;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.FichierWav;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.passage.model.BrutInventorie;
 import fr.univ_amu.iut.passage.model.InventaireBruts;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
@@ -39,11 +41,26 @@ public class InventaireParInspection implements InventaireBrutsSource {
             return Optional.empty();
         }
         List<BrutInventorie> bruts = rapport.originaux().stream()
-                .map(source -> new BrutInventorie(source, nomOriginal(source, prefixe)))
+                .map(source -> new BrutInventorie(source, nomOriginal(source, prefixe), nombreTrames(source)))
                 .toList();
         return bruts.isEmpty()
                 ? Optional.empty()
                 : Optional.of(new InventaireBruts(journal.frequenceEchantillonnageHz(), bruts));
+    }
+
+    /// Nombre de trames du brut, lu dans son **en-tête seul** (#1934) : c'est ce qui donne sa durée, donc
+    /// le nombre de tranches qu'il produira, donc les noms que l'arbitrage des collisions doit lui réserver.
+    ///
+    /// Quelques kilo-octets par fichier, là où charger le signal complet d'une nuit entière avant même de
+    /// commencer serait absurde. Un en-tête illisible rend `null` plutôt que d'échouer : l'hydratation
+    /// renoncera à arbitrer, ce qu'elle faisait déjà avant, au lieu de refuser tout le dossier pour un
+    /// fichier abîmé.
+    private static Long nombreTrames(Path source) {
+        try {
+            return FichierWav.lireEntete(source).nombreTrames();
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     /// Nom R6 de l'original : le préfixe R6 est ce que l'import **ajoute** au nom d'enregistreur. Une copie

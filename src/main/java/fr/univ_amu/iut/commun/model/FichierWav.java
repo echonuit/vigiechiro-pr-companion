@@ -44,6 +44,10 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
     /// signifie « jusqu'à la fin du fichier », à ne pas confondre avec une troncature (#156).
     private static final long TAILLE_DATA_INCONNUE = 0xFFFFFFFFL;
 
+    /// Fenêtre lue pour un en-tête seul : largement de quoi contenir `fmt`, `data` et les chunks annexes
+    /// (`LIST`, `bext`) que certains enregistreurs intercalent avant les données.
+    private static final int FENETRE_ENTETE = 8192;
+
     /// Octets par trame (échantillon multi-canal) : `canaux * bits/8`.
     public int octetsParTrame() {
         return nombreCanaux * (bitsParEchantillon / 8);
@@ -59,9 +63,70 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
         return nombreTrames() / (double) frequenceEchantillonnageHz;
     }
 
+    /// Ce qu'un WAV dit de lui-même **sans qu'on charge son signal** (#1934) : de quoi calculer une durée,
+    /// donc un nombre de tranches, au prix d'une lecture de quelques kilo-octets.
+    ///
+    /// L'hydratation en a besoin pour **toute une nuit** avant de régénérer quoi que ce soit : sans les
+    /// durées, elle ne peut pas rejouer l'arbitrage des collisions de noms, et perd les tranches perdantes.
+    /// Charger le PCM de 1800 fichiers pour n'en lire que l'en-tête serait absurde.
+    ///
+    /// @param octetsDonnees taille du chunk `data`, en octets
+    public record EnteteWav(
+            int nombreCanaux, int frequenceEchantillonnageHz, int bitsParEchantillon, long octetsDonnees) {
+
+        public int octetsParTrame() {
+            return nombreCanaux * (bitsParEchantillon / 8);
+        }
+
+        public long nombreTrames() {
+            return octetsDonnees / octetsParTrame();
+        }
+
+        /// Durée du signal **au rythme donné**, en secondes. On passe la fréquence plutôt que d'utiliser
+        /// celle de l'en-tête : un brut PR est déjà expansé ×10, et c'est la fréquence d'**acquisition**
+        /// (celle du log) qui donne la durée réelle, donc le découpage (R10).
+        public double dureeSecondes(int frequenceAcquisitionHz) {
+            return nombreTrames() / (double) frequenceAcquisitionHz;
+        }
+    }
+
+    /// Ce que le balayage des chunks a trouvé, avant toute copie de données.
+    private record Zones(int canaux, int frequence, int bits, int dataDebut, long dataLongueur) {}
+
+    /// Lit **seulement l'en-tête** d'un WAV : les premiers kilo-octets suffisent à situer les chunks `fmt`
+    /// et `data`, et la taille du fichier donne la longueur des données quand l'en-tête l'ignore.
+    ///
+    /// @throws IOException si l'en-tête est absent, incomplet, non PCM, ou si les chunks ne tiennent pas
+    ///     dans la fenêtre lue (fichier exotique : l'appelant retombe alors sur [#lire])
+    public static EnteteWav lireEntete(Path fichier) throws IOException {
+        long taille = Files.size(fichier);
+        byte[] debut = new byte[(int) Math.min(taille, FENETRE_ENTETE)];
+        try (var flux = Files.newInputStream(fichier)) {
+            int lus = flux.readNBytes(debut, 0, debut.length);
+            if (lus < debut.length) {
+                throw new IOException("Lecture d'en-tête incomplète : " + fichier);
+            }
+        }
+        Zones zones = analyser(debut, taille, fichier);
+        return new EnteteWav(zones.canaux(), zones.frequence(), zones.bits(), zones.dataLongueur());
+    }
+
     /// Lit un fichier WAV PCM depuis le disque.
     public static FichierWav lire(Path fichier) throws IOException {
         byte[] o = Files.readAllBytes(fichier);
+        Zones zones = analyser(o, o.length, fichier);
+        byte[] pcm = Arrays.copyOfRange(o, zones.dataDebut(), zones.dataDebut() + (int) zones.dataLongueur());
+        return new FichierWav(zones.canaux(), zones.frequence(), zones.bits(), pcm);
+    }
+
+    /// Balaye les chunks RIFF. **Un seul balayage** pour les deux lectures : l'en-tête seul et le fichier
+    /// entier doivent voir exactement la même chose, sans quoi une durée pourrait dire autre chose que le
+    /// signal qu'on découpe ensuite.
+    ///
+    /// @param o les octets disponibles - le fichier entier, ou seulement son début
+    /// @param tailleFichier la taille **réelle** du fichier, qui borne les données quand l'en-tête annonce
+    ///     une taille inconnue ou trop grande
+    private static Zones analyser(byte[] o, long tailleFichier, Path fichier) throws IOException {
         if (o.length < 12 || !tag(o, 0, TAG_RIFF) || !tag(o, 8, TAG_WAVE)) {
             throw new IOException("Fichier WAV invalide (en-tête RIFF/WAVE absent) : " + fichier);
         }
@@ -84,7 +149,7 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
                 bits = lireUint16(o, corps + 14);
             } else if ("data".equals(id)) {
                 dataDebut = corps;
-                long disponible = (long) o.length - corps;
+                long disponible = tailleFichier - corps;
                 if (taille == TAILLE_DATA_INCONNUE) {
                     // Taille inconnue (enregistreur en flux) : les données vont jusqu'à la fin du fichier.
                     // On arrête ici le balayage des chunks : avancer de (int) 0xFFFFFFFF = -1 (+1 de padding)
@@ -106,6 +171,12 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
                 }
                 dataLongueur = (int) Math.min(taille, disponible);
             }
+            if (canaux != null && dataDebut >= 0) {
+                // Tout ce qu'on cherche est trouvé. S'arrêter là est nécessaire pour la lecture d'en-tête
+                // seul - avancer au chunk suivant sortirait de la fenêtre lue - et sans effet sur la
+                // lecture complète, qui n'exploite aucun chunk au-delà.
+                break;
+            }
             // Avance au chunk suivant (taille + padding éventuel pour rester aligné sur un mot).
             pos = corps + (int) taille + (taille % 2 == 1 ? 1 : 0);
         }
@@ -116,8 +187,7 @@ public record FichierWav(int nombreCanaux, int frequenceEchantillonnageHz, int b
         if (formatAudio != FORMAT_PCM) {
             throw new IOException("Seul le PCM non compressé est géré (format=" + formatAudio + ") : " + fichier);
         }
-        byte[] pcm = Arrays.copyOfRange(o, dataDebut, dataDebut + dataLongueur);
-        return new FichierWav(canaux, frequence, bits, pcm);
+        return new Zones(canaux, frequence, bits, dataDebut, dataLongueur);
     }
 
     /// Écrit un WAV canonique (en-tête 44 octets) avec la fréquence et le format donnés, en copiant
