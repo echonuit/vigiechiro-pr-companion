@@ -549,6 +549,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         lblDepotMessage.visibleProperty().bind(depotViewModel.messageProperty().isNotEmpty());
         lblDepotMessage.managedProperty().bind(depotViewModel.messageProperty().isNotEmpty());
         TableSuiviDepot.configurer(tableDepot);
+        // Sélecteur de colonnes (#1800) : la table de dépôt n'avait aucun menu contextuel, alors que sa
+        // voisine (archives) en a un sur le même écran. Disposition retenue par écran (#994), clé « depot ».
+        var colonnesDepot = GestionnaireColonnes.colonnesParDefaut(tableDepot);
+        GestionnaireColonnes.installerClicDroit(tableDepot, colonnesDepot);
+        GestionnaireColonnes.persister(tableDepot, colonnesDepot, depotColonnes, "lot", "depot");
         tableDepot.setItems(depotViewModel.suiviLignes().lignes());
         var depotEntame = Bindings.isNotEmpty(depotViewModel.suiviLignes().lignes());
         tableDepot.visibleProperty().bind(depotEntame);

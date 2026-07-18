@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
+import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
@@ -384,6 +385,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Table de suivi par fichier (#947) : visible seulement quand un plan de nuit est établi (liaison
         // vivante sur la liste, pas un drapeau figé) — donc masquée pendant la décompression d'un .zip.
         TableSuiviFichiers.configurer(tableFichiers);
+        // Sélecteur de colonnes (#1800) : cette table n'avait aucun menu contextuel. Pas de persistance ici,
+        // l'écran d'import étant transitoire (la liste ne survit pas à l'import).
+        GestionnaireColonnes.installerClicDroit(tableFichiers, GestionnaireColonnes.colonnesParDefaut(tableFichiers));
         tableFichiers.setItems(viewModel.suiviFichiers().lignes());
         lierVisibiliteGeree(
                 tableFichiers, Bindings.isNotEmpty(viewModel.suiviFichiers().lignes()));

@@ -335,6 +335,12 @@ class LotVueIntegrationTest {
         TableView<?> table = robot.lookup("#tableDepot").queryAs(TableView.class);
         assertThat(table.isVisible()).isTrue();
         assertThat(table.getItems()).hasSize(2);
+        // #1800 : cette table n'avait aucun menu contextuel ; elle offre désormais « Colonnes… ».
+        assertThat(table.getContextMenu()).isNotNull();
+        assertThat(table.getContextMenu().getItems().stream()
+                        .map(i -> i.getText())
+                        .toList())
+                .contains("Colonnes…");
         // Il reste une unité non déposée : l'action bascule en reprise, active depuis « Dépôt en cours ».
         Button televerser = robot.lookup("#btnTeleverser").queryAs(Button.class);
         assertThat(televerser.getText()).contains("Reprendre le dépôt");

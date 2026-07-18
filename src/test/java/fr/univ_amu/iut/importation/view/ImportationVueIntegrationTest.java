@@ -144,7 +144,14 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#caseConserverOriginaux").queryAs(CheckBox.class))
                 .isNotNull(); // conservation
         assertThat(robot.lookup("#zoneProgression").queryAs(VBox.class)).isNotNull();
-        assertThat(robot.lookup("#tableFichiers").queryAs(TableView.class)).isNotNull(); // #947 (suivi fichiers)
+        TableView<?> tableFichiers = robot.lookup("#tableFichiers").queryAs(TableView.class);
+        assertThat(tableFichiers).isNotNull(); // #947 (suivi fichiers)
+        // #1800 : cette table n'avait aucun menu contextuel ; elle offre désormais « Colonnes… ».
+        assertThat(tableFichiers.getContextMenu()).isNotNull();
+        assertThat(tableFichiers.getContextMenu().getItems().stream()
+                        .map(i -> i.getText())
+                        .toList())
+                .contains("Colonnes…");
         assertThat(robot.lookup("#boutonAnnuler").queryAs(Button.class)).isNotNull(); // #146 (annulation)
         assertThat(robot.lookup("#zoneRejets").queryAs(VBox.class)).isNotNull(); // #155 (rapport d'import)
         assertThat(robot.lookup("#listeRejets").queryAs(ListView.class)).isNotNull(); // #155
