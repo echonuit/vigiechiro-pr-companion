@@ -1,7 +1,13 @@
 # ADR 0016 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
 
-- **Statut** : Accepté — 2026-07-17
+- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814)
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)
+
+> [!NOTE]
+> **Amendement (ADR 0018)** : le squelette n'est plus « sans aucun appel de détail par nuit ». La synchro
+> paie désormais **un** détail par nuit **nouvelle** pour rapatrier son **identité** (enregistreur, météo,
+> micro, fin de nuit) ; les observations et l'audio restent à l'hydratation. Le reste de cette décision
+> (squelette léger, hydratation à la demande, remplacement à la reconstruction) tient toujours.
 
 ## Contexte
 

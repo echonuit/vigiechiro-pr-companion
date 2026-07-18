@@ -64,3 +64,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0015](0015-generateur-deterministe-cartes-sd-recette.md) | Cartes SD de recette : specs déclaratives + générateur déterministe | #1749, #1769 |
 | [0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md) | La synchro rapatrie les nuits en squelettes, hydratés à la demande | EPIC #1662 |
 | [0017](0017-origine-d-un-point-etat-porte-pas-deduit.md) | L'origine d'un point (rapatrié vs manuel) est un état porté, pas déduit | #1738 |
+| [0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) | La synchro rapatrie aussi l'identité de la nuit (amende 0016) | #1814 |

@@ -18,7 +18,10 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /// **Noyau de structure d'un passage archivé** : à partir de ce que la plateforme VigieChiro sait d'une
 /// nuit (un [ParticipationDetail] + les noms de fichiers analysés), crée localement le **squelette** d'un
@@ -66,6 +69,21 @@ public final class CreationPassageArchive {
     /// Résultat de la création : l'identifiant du passage créé et le **nombre de séquences** recréées.
     public record PassageArchive(Long idPassage, int nbSequences) {}
 
+    /// Premier numéro de passage **libre** pour ce point et cette année. La plateforme ne le porte pas, et
+    /// deviner « 1 ou 2 » selon la date serait une supposition : on prend le premier trou. L'appelant en a
+    /// besoin **avant** la création (le préfixe R6 le contient), d'où une méthode à part.
+    public int premierNumeroLibre(Long idPoint, int annee) {
+        Set<Integer> pris = passageDao.findAll().stream()
+                .filter(passage -> idPoint.equals(passage.idPoint()) && passage.annee() == annee)
+                .map(Passage::numeroPassage)
+                .collect(Collectors.toSet());
+        int numero = 1;
+        while (pris.contains(numero)) {
+            numero++;
+        }
+        return numero;
+    }
+
     /// Crée le squelette local du passage archivé (passage + matériel + session archivée + séquences) et
     /// **émet les points de progression** de cette phase (« Création du passage… » puis « Création des
     /// séquences… »), aux mêmes fractions qu'auparavant. N'importe **aucune** observation et ne pose
@@ -101,10 +119,10 @@ public final class CreationPassageArchive {
 
     /// Crée le squelette **minimal** d'un passage archivé : le passage (déposé, enregistreur « inconnu »,
     /// sans météo) et sa session marquée **archivée** (#1300), **sans séquences, sans matériel, sans
-    /// observations**. C'est la forme légère que pose la synchro « mes sites » (#1707) : la nuit connue de
-    /// la plateforme apparaît dans l'historique dès la synchro, sans coûter un appel de détail par nuit ;
-    /// elle sera **hydratée** plus tard (matériel, météo, séquences, observations) par une reconstruction ou
-    /// une réactivation (#1710). N'émet **aucun** point de progression : la synchro en crée beaucoup et
+    /// observations**. C'est le **repli** de la synchro « mes sites » quand le détail d'une nuit est
+    /// indisponible (injoignable, refus) : la nuit apparaît quand même dans l'historique, son identité se
+    /// rattrapera à la reconstruction (#1710) ou à une nouvelle synchro. Le cas nominal passe désormais par
+    /// [#creerAvecIdentite] (#1814). N'émet **aucun** point de progression : la synchro en crée beaucoup et
     /// rythme au niveau du lot, pas de la nuit.
     ///
     /// @param idPoint point d'écoute local (déjà résolu par l'appelant)
@@ -119,6 +137,51 @@ public final class CreationPassageArchive {
                 creerPassage(idPoint, numeroPassage, debut, fin, assurerEnregistreur(ENREGISTREUR_INCONNU), null);
         creerSessionArchivee(idPassage, prefixe);
         return new PassageArchive(idPassage, 0);
+    }
+
+    /// Crée un squelette de passage archivé **portant l'identité de la nuit** : passage déposé avec son
+    /// **enregistreur réel** (lu dans le détail via [CorrespondanceParticipation#serieDepuis]), sa **météo**
+    /// et son **micro**, mais **sans séquences ni observations**. Niveau intermédiaire entre [#creerSquelette]
+    /// (structure nue, enregistreur « inconnu ») et [#creer] (structure + séquences) : la synchro « mes sites »
+    /// paie un appel de détail par nuit nouvelle pour remonter l'identité dès le rapatriement (#1814), tout en
+    /// laissant l'audio et les observations à la reconstruction (#1710). Reste un **squelette** (0 séquence →
+    /// toujours « à reconstruire »). N'émet **aucun** point de progression.
+    ///
+    /// @param idPoint point d'écoute local (déjà résolu par l'appelant)
+    /// @param numeroPassage premier numéro libre pour ce point et cette année
+    /// @param debut début de nuit
+    /// @param fin fin de nuit (issue du détail, ou repli sur le début)
+    /// @param prefixe préfixe R6 réel (carré, année, n°, code point) - celui que recalcule l'audit (#1050)
+    /// @param detail détail de la participation (enregistreur, météo, micro)
+    /// @return l'identifiant du passage créé (nbSequences vaut 0 : un squelette n'a pas encore de séquence)
+    public PassageArchive creerAvecIdentite(
+            Long idPoint,
+            int numeroPassage,
+            LocalDateTime debut,
+            LocalDateTime fin,
+            Prefixe prefixe,
+            ParticipationDetail detail) {
+        Long idPassage = creerPassage(idPoint, numeroPassage, debut, fin, enregistreur(detail), meteoDepuis(detail));
+        rapatrierMateriel(idPassage, detail);
+        creerSessionArchivee(idPassage, prefixe);
+        return new PassageArchive(idPassage, 0);
+    }
+
+    /// Crée une nuit **rapatriée par la synchro** (#1814) : avec son **identité** si son détail a pu être lu
+    /// ([#creerAvecIdentite]), sinon en **squelette nu** ([#creerSquelette], enregistreur « inconnu »). Dans
+    /// les deux cas 0 séquence : la nuit reste « à reconstruire » pour l'audio et les observations.
+    ///
+    /// @param detail détail de la participation, **vide** s'il était indisponible (best-effort par nuit)
+    public PassageArchive creerNuitRapatriee(
+            Long idPoint,
+            int numeroPassage,
+            LocalDateTime debut,
+            LocalDateTime fin,
+            Prefixe prefixe,
+            Optional<ParticipationDetail> detail) {
+        return detail.isPresent()
+                ? creerAvecIdentite(idPoint, numeroPassage, debut, fin, prefixe, detail.get())
+                : creerSquelette(idPoint, numeroPassage, debut, fin, prefixe);
     }
 
     /// Crée le passage, **déposé** (il l'est : la participation existe sur la plateforme) et sans verdict

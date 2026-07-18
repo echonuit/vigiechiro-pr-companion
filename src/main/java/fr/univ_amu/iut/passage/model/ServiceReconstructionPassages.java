@@ -22,18 +22,13 @@ import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Consumer;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /// **Reconstruit un passage jamais importé sur cette machine** (#1305, EPIC #1297), à partir de ce que
 /// la plateforme VigieChiro en sait.
@@ -63,9 +58,6 @@ import java.util.stream.Collectors;
 /// Les DAO sont construits depuis la [SourceDeDonnees] (fins adaptateurs sans état), comme
 /// `ServiceAuditCoherence` : le constructeur reste court et le service testable sur une base jetable.
 public class ServiceReconstructionPassages implements RapprochementVigieChiro {
-
-    /// Carré à six chiffres, extrait du **titre du site** VigieChiro (ex. `Vigiechiro - Point Fixe-130711`).
-    private static final Pattern CARRE = Pattern.compile("(\\d{6})");
 
     private final PassageDao passageDao;
     private final LienVigieChiroDao liens;
@@ -175,16 +167,23 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         return Phase.DEPENDANTE;
     }
 
-    /// Crée un **squelette** de passage pour chaque participation **sans passage local**, dont le point est
-    /// déjà local et la nuit datable ; les autres sont **ignorées** (déjà rapatriées, ou pas encore
-    /// situables). Réutilise la résolution de point, le calcul de numéro et la création de structure de la
-    /// reconstruction : **même geste, mêmes invariants** que la reconstruction d'une nuit unique. La création
-    /// séquentielle donne des numéros de passage successifs pour un même point/année.
+    /// Crée un passage archivé pour chaque participation **sans passage local**, dont le point est déjà
+    /// local et la nuit datable ; les autres sont **ignorées** (déjà rapatriées, ou pas encore situables).
     ///
-    /// @return le nombre de squelettes créés
+    /// Depuis #1814, la synchro remonte l'**identité** de la nuit (enregistreur, météo, micro, dateFin) et
+    /// pas seulement sa structure : elle paie un **appel de détail par nuit nouvelle**. En trois temps :
+    ///
+    /// 1. **candidats** (lectures) : les nuits nouvelles, point + date résolus ;
+    /// 2. **détails** ([PlateformeReconstruction#detailsBestEffort]) : le détail de chaque nuit, best-effort
+    ///    (indisponible → vide, la nuit n'est pas écartée pour autant) ;
+    /// 3. **création** (écritures) : dans l'ordre, pour que [#premierNumeroLibre] s'enchaîne (numéros
+    ///    successifs pour un même point/année), via [CreationPassageArchive#creerNuitRapatriee] : avec
+    ///    identité si le détail est là, repli sur le squelette nu (INCONNU) sinon.
+    ///
+    /// @return le nombre de passages créés
     int synchroniserStructure() {
         Map<String, Long> passageParParticipation = passagesParParticipation();
-        int crees = 0;
+        List<NuitARapatrier> candidats = new ArrayList<>();
         for (ParticipationVigieChiro participation : plateforme.participations()) {
             // Une nuit qui a déjà un passage local (squelette OU hydraté) n'est pas rapatriée une seconde
             // fois : c'est ce qui rend la synchro idempotente (#1707). On n'itère donc pas [#orphelines],
@@ -194,22 +193,46 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             }
             ParticipationOrpheline orpheline = enOrpheline(participation);
             Optional<Long> idPoint = pointParLocalite.pour(orpheline.numeroCarre(), orpheline.codePoint());
-            Optional<LocalDateTime> debut = nuit(orpheline.dateDebut());
+            Optional<LocalDateTime> debut = ParticipationOrpheline.horodatage(orpheline.dateDebut());
             if (idPoint.isEmpty() || debut.isEmpty()) {
                 continue;
             }
-            int numeroPassage = premierNumeroLibre(idPoint.get(), debut.get().getYear());
-            Prefixe prefixe =
-                    new Prefixe(orpheline.numeroCarre(), debut.get().getYear(), numeroPassage, orpheline.codePoint());
+            candidats.add(new NuitARapatrier(orpheline, idPoint.get(), debut.get()));
+        }
+        if (candidats.isEmpty()) {
+            return 0;
+        }
+        List<Optional<ParticipationDetail>> details = plateforme.detailsBestEffort(candidats.stream()
+                .map(candidat -> candidat.orpheline().idParticipation())
+                .toList());
+        int crees = 0;
+        for (int i = 0; i < candidats.size(); i++) {
+            NuitARapatrier candidat = candidats.get(i);
+            Optional<ParticipationDetail> detail = details.get(i);
+            int annee = candidat.debut().getYear();
+            int numeroPassage = creationStructure.premierNumeroLibre(candidat.idPoint(), annee);
+            Prefixe prefixe = new Prefixe(
+                    candidat.orpheline().numeroCarre(),
+                    annee,
+                    numeroPassage,
+                    candidat.orpheline().codePoint());
+            LocalDateTime fin = detail.flatMap(connu -> ParticipationOrpheline.horodatage(connu.dateFin()))
+                    .orElse(candidat.debut());
             Long idPassage = creationStructure
-                    .creerSquelette(idPoint.get(), numeroPassage, debut.get(), debut.get(), prefixe)
+                    .creerNuitRapatriee(candidat.idPoint(), numeroPassage, candidat.debut(), fin, prefixe, detail)
                     .idPassage();
             liens.upsert(new LienVigieChiro(
-                    LienVigieChiro.ENTITE_PASSAGE, String.valueOf(idPassage), orpheline.idParticipation()));
+                    LienVigieChiro.ENTITE_PASSAGE,
+                    String.valueOf(idPassage),
+                    candidat.orpheline().idParticipation()));
             crees++;
         }
         return crees;
     }
+
+    /// Une nuit nouvelle à rapatrier : l'orpheline distante et sa résolution locale (point + début), portées
+    /// de la phase « candidats » (lectures) à la phase « création » (écritures) sans les recalculer.
+    private record NuitARapatrier(ParticipationOrpheline orpheline, Long idPoint, LocalDateTime debut) {}
 
     /// Reconstruit localement la participation `idParticipation` en **passage archivé** : passage, session
     /// (marquée archivée), lignes de séquences sans fichier, puis rapatriement des observations.
@@ -232,7 +255,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
             String idParticipation, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(idParticipation, "idParticipation");
         ParticipationVigieChiro resume = plateforme.resume(idParticipation);
-        return reconstruire(idParticipation, carre(resume), resume.point(), progres, jeton);
+        return reconstruire(idParticipation, ParticipationOrpheline.carreDe(resume), resume.point(), progres, jeton);
     }
 
     /// Variante **suivie et annulable** depuis une [ParticipationOrpheline] déjà en main (chemin IHM) :
@@ -339,11 +362,11 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                         "Le point d'écoute de cette participation (carré " + carre + ", localité " + localite
                                 + ") n'existe pas localement. Créez d'abord le site et le point, puis"
                                 + " recommencez."));
-        LocalDateTime debut = nuit(detail.dateDebut())
+        LocalDateTime debut = ParticipationOrpheline.horodatage(detail.dateDebut())
                 .orElseThrow(() -> new RegleMetierException(
                         "La participation ne porte pas de date de début exploitable : impossible de dater la"
                                 + " nuit."));
-        LocalDateTime fin = nuit(detail.dateFin()).orElse(debut);
+        LocalDateTime fin = ParticipationOrpheline.horodatage(detail.dateFin()).orElse(debut);
 
         // Où trouver les observations : le CSV téléchargé d'un coup (#1565) si la plateforme l'expose,
         // sinon la pagination donnees (repli, l'ancien chemin). Dans les deux cas on récupère les NOMS des
@@ -354,7 +377,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         // Le préfixe R6 RÉEL de la nuit (carré, année, n° de passage, code du point) : c'est celui que
         // l'audit recalcule depuis le passage (`ServiceAuditCoherence#prefixeAttendu`), et il doit être le
         // même, sans quoi le passage reconstruit serait signalé PREFIXE_NON_CONFORME à vie (#1050).
-        int numeroPassage = premierNumeroLibre(idPoint, debut.getYear());
+        int numeroPassage = creationStructure.premierNumeroLibre(idPoint, debut.getYear());
         Prefixe prefixe = new Prefixe(carre, debut.getYear(), numeroPassage, localite);
 
         // À partir d'ici on ÉCRIT. La vraie transaction unique est hors de portée (l'import ouvre la
@@ -403,21 +426,6 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         }
     }
 
-    // --- Création locale ---------------------------------------------------------------------------
-
-    /// Premier numéro de passage libre pour ce point et cette année (contrainte d'unicité du quadruplet).
-    private int premierNumeroLibre(Long idPoint, int annee) {
-        Set<Integer> pris = passageDao.findAll().stream()
-                .filter(passage -> idPoint.equals(passage.idPoint()) && passage.annee() == annee)
-                .map(Passage::numeroPassage)
-                .collect(Collectors.toSet());
-        int numero = 1;
-        while (pris.contains(numero)) {
-            numero++;
-        }
-        return numero;
-    }
-
     // --- Lectures distantes et helpers -------------------------------------------------------------
 
     /// Si la participation est déjà rattachée à un passage local, deux cas (#1710) :
@@ -461,44 +469,13 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
                 .orElse(false);
     }
 
+    /// L'orpheline correspondant à une participation distante, avec la résolution de son point local.
     private ParticipationOrpheline enOrpheline(ParticipationVigieChiro participation) {
-        String carre = carre(participation);
-        return new ParticipationOrpheline(
-                participation.id(),
-                carre,
-                participation.point(),
-                participation.dateDebut(),
-                pointLocal(participation).isPresent());
+        return ParticipationOrpheline.depuis(
+                participation, pointLocal(participation).isPresent());
     }
 
     private Optional<Long> pointLocal(ParticipationVigieChiro participation) {
-        return pointParLocalite.pour(carre(participation), participation.point());
-    }
-
-    /// Numéro de carré, extrait du **titre du site** (ex. `Vigiechiro - Point Fixe-130711` → `130711`) :
-    /// l'API ne l'expose pas autrement dans la liste des participations.
-    private static String carre(ParticipationVigieChiro participation) {
-        if (participation.siteTitre() == null) {
-            return null;
-        }
-        Matcher trouve = CARRE.matcher(participation.siteTitre());
-        return trouve.find() ? trouve.group(1) : null;
-    }
-
-    /// Date/heure d'une borne de nuit, tolérante au format (l'API rend de l'ISO 8601 avec décalage) ; vide
-    /// si la borne est absente ou illisible.
-    private static Optional<LocalDateTime> nuit(String horodatage) {
-        if (horodatage == null || horodatage.isBlank()) {
-            return Optional.empty();
-        }
-        try {
-            return Optional.of(OffsetDateTime.parse(horodatage).toLocalDateTime());
-        } catch (DateTimeParseException premiere) {
-            try {
-                return Optional.of(LocalDateTime.parse(horodatage));
-            } catch (DateTimeParseException seconde) {
-                return Optional.empty();
-            }
-        }
+        return pointParLocalite.pour(ParticipationOrpheline.carreDe(participation), participation.point());
     }
 }

@@ -79,7 +79,8 @@ import org.junit.jupiter.api.Test;
 ///
 /// 1. **synchroniser** : les rapprocheurs du socle (`Set<RapprochementVigieChiro>`, ceux-là mêmes que
 ///    déclenche la connexion) créent les **sites et leurs points** à partir des participations, puis les
-///    **passages en squelettes** (#1707) : point + date + n°, archivés, sans observations ;
+///    **passages archivés** (#1707/#1814) : point + date + n° + **identité** (enregistreur, météo, micro,
+///    lue dans le détail par nuit), mais sans séquences ni observations (elles viennent à la reconstruction) ;
 /// 2. **retrouver** : la nuit déposée sur la plateforme est un **passage local en squelette**, listé
 ///    « à reconstruire » ;
 /// 3. **hydrater** : reconstruire la nuit **remplace** le squelette par un passage complet — séquences
@@ -157,15 +158,15 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .as("la participation existe sur la plateforme : le passage est déposé")
                 .isEqualTo(StatutWorkflow.DEPOSE);
         assertThat(squelette.idEnregistreur())
-                .as("aucun détail téléchargé pour un squelette : enregistreur honnêtement « inconnu »")
-                .isEqualTo("INCONNU");
+                .as("#1814 : l'identité (n° série) est rapatriée depuis le détail dès la synchro, plus « INCONNU »")
+                .isEqualTo("1925492");
         SessionDEnregistrement sessionSquelette =
                 sessionDao.trouverParPassage(squelette.id()).orElseThrow();
         assertThat(sessionSquelette.archivee())
                 .as("un squelette naît archivé : rien n'a jamais été importé ici")
                 .isTrue();
         assertThat(sequenceDao.findBySession(sessionSquelette.id()))
-                .as("un squelette n'a pas encore de séquence")
+                .as("un squelette n'a toujours pas de séquence : identité oui, audio/observations à la reconstruction")
                 .isEmpty();
 
         // 3. Hydrater : reconstruire la nuit REMPLACE le squelette par un passage complet - séquences (lignes
@@ -302,9 +303,14 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .extracting(RapportSynchro::libelle)
                 .contains("sites", "passage(s) rapatrié(s)");
         assertThat(new PassageDao(source).findAll())
-                .as("un squelette de nuit est créé dès ce clic, sur le point tout juste rapatrié")
+                .as("un passage archivé est créé dès ce clic, sur le point tout juste rapatrié")
                 .singleElement()
-                .satisfies(passage -> assertThat(passage.statutWorkflow()).isEqualTo(StatutWorkflow.DEPOSE));
+                .satisfies(passage -> {
+                    assertThat(passage.statutWorkflow()).isEqualTo(StatutWorkflow.DEPOSE);
+                    assertThat(passage.idEnregistreur())
+                            .as("#1814 : son identité (n° série réel) remonte dès la synchro, plus « INCONNU »")
+                            .isEqualTo("1925492");
+                });
     }
 
     // --- Harnais -----------------------------------------------------------------------------------

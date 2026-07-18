@@ -102,4 +102,31 @@ class CreationPassageArchiveTest {
                 .anyMatch(l -> l.contains("Création du passage"))
                 .anyMatch(l -> l.contains("Création des séquences"));
     }
+
+    @Test
+    @DisplayName("creerAvecIdentite (#1814) : passage archivé PORTANT enregistreur/micro réels, mais 0 séquence")
+    void creer_avec_identite_sans_sequence() {
+        LocalDateTime debut = LocalDateTime.of(2026, 7, 3, 21, 0);
+        LocalDateTime fin = LocalDateTime.of(2026, 7, 4, 5, 0);
+        Prefixe prefixe = new Prefixe("130711", 2026, 1, "Z41");
+
+        CreationPassageArchive.PassageArchive r =
+                creation.creerAvecIdentite(idPoint, 1, debut, fin, prefixe, detailComplet());
+
+        assertThat(r.nbSequences())
+                .as("un passage avec identité reste un squelette : aucune séquence")
+                .isZero();
+        assertThat(new EnregistreurDao(source).findById("1997632"))
+                .as("enregistreur réel rapatrié depuis le détail (clé canonique), pas « INCONNU »")
+                .isPresent();
+        assertThat(new MaterielMicroDao(source).pour(r.idPassage()).typeMicro())
+                .as("le micro est rapatrié dès la synchro")
+                .isEqualTo("ICS");
+        SessionDEnregistrement session =
+                new SessionDao(source).trouverParPassage(r.idPassage()).orElseThrow();
+        assertThat(session.archivee()).as("la nuit naît archivée").isTrue();
+        assertThat(new SequenceDao(source).findBySession(session.id()))
+                .as("0 séquence : l'audio et les observations viennent à la reconstruction")
+                .isEmpty();
+    }
 }

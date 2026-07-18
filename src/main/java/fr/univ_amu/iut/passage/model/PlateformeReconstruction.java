@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.api.ParticipationDetail;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
+import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -22,7 +23,16 @@ import java.util.function.Consumer;
 /// vivent ici, sans aucune écriture locale.
 final class PlateformeReconstruction {
 
+    /// Nombre d'appels de détail menés **de front** (#1814). C'est une borne d'**entrée/sortie**, pas de
+    /// calcul : chaque tâche est un GET qui passe son temps à attendre le réseau (fils virtuels). La borne
+    /// sert donc à rester **poli** avec la plateforme, pas à occuper les cœurs.
+    private static final int DETAILS_DE_FRONT = 8;
+
     private final ClientVigieChiro client;
+
+    /// Fan-out borné des appels de détail (moteur de #1779) : la synchro en demande **un par nuit
+    /// nouvelle**, et les mener en série ferait attendre autant d'allers-retours réseau qu'il y a de nuits.
+    private final ExecutionParallele detailsEnParallele = new ExecutionParallele(DETAILS_DE_FRONT);
 
     PlateformeReconstruction(ClientVigieChiro client) {
         this.client = Objects.requireNonNull(client, "client");
@@ -46,6 +56,25 @@ final class PlateformeReconstruction {
     /// Détail d'une participation (`GET /participations/#id` : dates, configuration matérielle).
     ParticipationDetail detail(String idParticipation) {
         return exiger(client.participation(idParticipation), "le détail de cette participation");
+    }
+
+    /// Le détail de **plusieurs** participations, rendu **dans le même ordre**, chacun **best-effort** : une
+    /// nuit dont le détail est indisponible (injoignable, refus) rend un `Optional` vide au lieu de faire
+    /// échouer le lot. C'est ce dont la synchro a besoin (#1814) pour rapatrier l'identité de chaque nuit
+    /// nouvelle sans qu'un accroc sur l'une écarte les autres.
+    List<Optional<ParticipationDetail>> detailsBestEffort(List<String> idsParticipation) {
+        return detailsEnParallele.cartographier(
+                idsParticipation, "Détails", this::detailSiDisponible, progres -> {}, JetonAnnulation.neutre());
+    }
+
+    /// Le détail d'une participation, ou **vide** s'il est indisponible : un détail manquant ne doit ni
+    /// écarter la nuit ni casser le lot.
+    private Optional<ParticipationDetail> detailSiDisponible(String idParticipation) {
+        try {
+            return Optional.of(detail(idParticipation));
+        } catch (RuntimeException detailIndisponible) {
+            return Optional.empty();
+        }
     }
 
     /// La **source des observations** : le CSV téléchargé d'un coup (#1565) si la plateforme l'expose,
