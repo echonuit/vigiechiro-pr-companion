@@ -427,4 +427,24 @@ class CliTest {
         assertThat(injecteur.getInstance(RegistrePassages.class)).isNotNull(); // fourni par CliModule
         assertThat(injecteur.getInstance(ServiceValidation.class)).isNotNull(); // délégué d'exporter-vu
     }
+
+    @Test
+    @DisplayName("#1866/#1905 : l'ancien nom « synchroniser-vigiechiro » répond encore, et mène bien à"
+            + " « recuperer-vigiechiro » - la promesse de ne pas casser les scripts est tenue par un test")
+    void alias_historique_repond_encore() {
+        // L'ADR 0022 renomme la commande MAIS garde l'ancien nom en alias, explicitement « pour ne pas
+        // casser les scripts existants ». Sans ce test, cette promesse ne tient qu'à un attribut
+        // d'annotation que le prochain nettoyage d'imports peut retirer sans que rien ne proteste.
+        // `--help` suffit : il court-circuite la validation des arguments et ne touche pas au réseau.
+        int code = cli.executer(new String[] {"synchroniser-vigiechiro", "--help"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        // L'assertion porte sur la ligne d'usage de la SOUS-COMMANDE, et non sur la simple présence du nom
+        // canonique : sans alias, picocli honore le --help de la RACINE et imprime son aide, laquelle liste
+        // justement « recuperer-vigiechiro ». Un contains("recuperer-vigiechiro") passerait donc dans les
+        // deux cas - c'était la première version de ce test, verte alors que l'alias avait été retiré.
+        assertThat(texteSortie())
+                .as("l'alias doit mener à l'aide de la commande canonique, pas à celle de la racine")
+                .contains("Usage: vigiechiro recuperer-vigiechiro");
+    }
 }
