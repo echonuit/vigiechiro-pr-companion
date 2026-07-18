@@ -11,7 +11,6 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -23,8 +22,8 @@ import org.junit.jupiter.api.Test;
 class SaisieHorairesNuitTest {
 
     private final ServiceConditionsPassage service = mock(ServiceConditionsPassage.class);
-    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper("");
-    private final SaisieHorairesNuit saisie = new SaisieHorairesNuit(service, message);
+    private final MessagesRattachement messages = new MessagesRattachement();
+    private final SaisieHorairesNuit saisie = new SaisieHorairesNuit(service, messages);
 
     private static Passage passage(String debut, String fin) {
         return new Passage(1L, 1, 2026, "2026-07-04", debut, fin, null, null, null, null, null, null, 1L, "1925492");
@@ -79,14 +78,14 @@ class SaisieHorairesNuitTest {
         when(service.heuresProuvees(1L)).thenReturn(false);
         when(service.definirHoraires(1L, "21:00", "06:00")).thenReturn(passage("21:00", "06:00"));
         saisie.charger(1L, "15:00", "15:00");
-        message.set("un reste du geste précédent");
+        messages.erreur("un reste du geste précédent");
 
         saisie.debutProperty().set("21:00");
         saisie.finProperty().set("06:00");
 
         assertThat(saisie.enregistrer()).isTrue();
         verify(service).definirHoraires(1L, "21:00", "06:00");
-        assertThat(message.get()).isEmpty();
+        assertThat(messages.retourProperty().get().texte()).isEmpty();
     }
 
     @Test
@@ -100,7 +99,7 @@ class SaisieHorairesNuitTest {
         saisie.finProperty().set("21:00");
 
         assertThat(saisie.enregistrer()).isFalse();
-        assertThat(message.get()).contains("identique à l'heure de début");
+        assertThat(messages.retourProperty().get().texte()).contains("identique à l'heure de début");
     }
 
     @Test

@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -174,7 +175,7 @@ class RattachementViewModelTest {
         boolean ok = viewModel.valider();
 
         assertThat(ok).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("R5");
+        assertThat(viewModel.retourProperty().get().texte()).contains("R5");
     }
 
     @Test
@@ -187,7 +188,7 @@ class RattachementViewModelTest {
         boolean ok = viewModel.valider();
 
         assertThat(ok).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("numéro de passage");
+        assertThat(viewModel.retourProperty().get().texte()).contains("numéro de passage");
         verify(rattachement, never()).modifierRattachement(any(), any());
     }
 
@@ -204,7 +205,7 @@ class RattachementViewModelTest {
         boolean ok = viewModel.valider();
 
         assertThat(ok).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("Déplacement");
+        assertThat(viewModel.retourProperty().get().texte()).contains("Déplacement");
     }
 
     // --- Conditions de dépôt (météo + matériel du micro), désormais éditées dans cette modale ---
@@ -242,7 +243,7 @@ class RattachementViewModelTest {
         assertThat(viewModel.conditions().enregistrerMeteo()).isTrue();
 
         verify(conditionsPassage).definirMeteo(ID, new MeteoReleve(9.0, null, Vent.FAIBLE, null));
-        assertThat(viewModel.messageErreurProperty().get()).isEmpty();
+        assertThat(viewModel.retourProperty().get()).isEqualTo(RetourOperation.AUCUN);
     }
 
     @Test
@@ -254,7 +255,7 @@ class RattachementViewModelTest {
 
         assertThat(viewModel.conditions().enregistrerMeteo()).isFalse();
 
-        assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        assertThat(viewModel.retourProperty().get().texte()).contains("invalide");
         verify(conditionsPassage, never()).definirMeteo(any(), any());
     }
 
@@ -281,7 +282,7 @@ class RattachementViewModelTest {
         assertThat(viewModel.conditions().enregistrerMateriel()).isTrue();
 
         verify(conditionsPassage).definirMateriel(new MaterielMicro(ID, PositionMicro.SOL, 2.5, "Micro interne"));
-        assertThat(viewModel.messageErreurProperty().get()).isEmpty();
+        assertThat(viewModel.retourProperty().get()).isEqualTo(RetourOperation.AUCUN);
     }
 
     @Test
@@ -293,7 +294,7 @@ class RattachementViewModelTest {
 
         assertThat(viewModel.conditions().enregistrerMateriel()).isFalse();
 
-        assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        assertThat(viewModel.retourProperty().get().texte()).contains("invalide");
         verify(conditionsPassage, never()).definirMateriel(any());
     }
 
@@ -322,7 +323,7 @@ class RattachementViewModelTest {
 
         assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEqualTo("9.0");
         assertThat(viewModel.conditions().ventSaisieProperty().get()).isEqualTo(Vent.FAIBLE);
-        assertThat(viewModel.messageErreurProperty().get()).contains("pré-remplie");
+        assertThat(viewModel.retourProperty().get().texte()).contains("pré-remplie");
     }
 
     @Test
@@ -333,7 +334,7 @@ class RattachementViewModelTest {
 
         viewModel.conditions().appliquerMeteoRecuperee(Optional.empty());
 
-        assertThat(viewModel.messageErreurProperty().get()).contains("indisponible");
+        assertThat(viewModel.retourProperty().get().texte()).contains("indisponible");
         assertThat(viewModel.conditions().temperatureSaisieProperty().get()).isEmpty();
     }
 
@@ -365,7 +366,7 @@ class RattachementViewModelTest {
         boolean ok = viewModel.appliquer();
 
         assertThat(ok).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("invalide");
+        assertThat(viewModel.retourProperty().get().texte()).contains("invalide");
         verify(rattachement, never()).modifierRattachement(any(), any());
     }
 
@@ -478,7 +479,7 @@ class RattachementViewModelTest {
                 .isFalse();
         assertThat(compteRendu.message()).contains("refusé").contains("412");
         avecSync.signalerEnvoi(compteRendu);
-        assertThat(avecSync.messageErreurProperty().get()).contains("412");
+        assertThat(avecSync.retourProperty().get().texte()).contains("412");
     }
 
     @Test
@@ -531,7 +532,10 @@ class RattachementViewModelTest {
         assertThat(recupere).isTrue();
         verify(sync).tirerDepuis(ID);
         assertThat(avecSync.conditions().ventSaisieProperty().get()).isEqualTo(Vent.FORT);
-        assertThat(avecSync.messageErreurProperty().get()).contains("récupérées");
+        assertThat(avecSync.retourProperty().get().texte()).contains("récupérées");
+        assertThat(avecSync.retourProperty().get().severite())
+                .as("#1917 : une récupération réussie était annoncée dans un canal nommé « messageErreur »")
+                .isEqualTo(RetourOperation.Severite.SUCCES);
     }
 
     @Test
@@ -548,7 +552,7 @@ class RattachementViewModelTest {
         avecSync.rechargerApresTir(recupere);
 
         assertThat(recupere).isFalse();
-        assertThat(avecSync.messageErreurProperty().get()).contains("Aucune participation");
+        assertThat(avecSync.retourProperty().get().texte()).contains("Aucune participation");
     }
 
     @Test
@@ -560,7 +564,7 @@ class RattachementViewModelTest {
         viewModel.conditions().enregistreurSaisieProperty().set("INCONNU");
 
         assertThat(viewModel.conditions().enregistrerEnregistreur()).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("pas un numéro de série");
+        assertThat(viewModel.retourProperty().get().texte()).contains("pas un numéro de série");
         verify(conditionsPassage, never()).definirEnregistreur(any(), any());
     }
 

@@ -6,7 +6,6 @@ import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 
@@ -23,7 +22,7 @@ import javafx.beans.property.StringProperty;
 public class SaisieHorairesNuit {
 
     private final ServiceConditionsPassage service;
-    private final ReadOnlyStringWrapper message;
+    private final MessagesRattachement messages;
 
     private final StringProperty debut = new SimpleStringProperty(this, "debut", "");
     private final StringProperty fin = new SimpleStringProperty(this, "fin", "");
@@ -34,9 +33,9 @@ public class SaisieHorairesNuit {
 
     private Long idPassage;
 
-    SaisieHorairesNuit(ServiceConditionsPassage service, ReadOnlyStringWrapper message) {
+    SaisieHorairesNuit(ServiceConditionsPassage service, MessagesRattachement messages) {
         this.service = service;
-        this.message = message;
+        this.messages = messages;
     }
 
     /// Charge les heures du passage et détermine si ses enregistrements les attestent.
@@ -78,10 +77,10 @@ public class SaisieHorairesNuit {
         try {
             service.definirHoraires(idPassage, debut.get(), fin.get());
             chargees = couple();
-            message.set("");
+            messages.effacer();
             return true;
         } catch (RegleMetierException refus) {
-            message.set(refus.getMessage());
+            messages.erreur(refus.getMessage());
             return false;
         }
     }

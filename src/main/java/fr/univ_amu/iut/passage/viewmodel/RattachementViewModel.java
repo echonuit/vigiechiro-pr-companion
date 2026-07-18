@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.viewmodel;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
@@ -15,6 +16,7 @@ import java.util.Optional;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -42,7 +44,8 @@ public class RattachementViewModel {
     private final IntegerProperty annee = new SimpleIntegerProperty(this, "annee");
     private final IntegerProperty numeroPassage = new SimpleIntegerProperty(this, "numeroPassage");
     private final ReadOnlyStringWrapper recap = new ReadOnlyStringWrapper(this, "recap", "");
-    private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
+    /// Canal de retour partagé avec les deux collaborateurs de saisie : voir [MessagesRattachement].
+    private final MessagesRattachement messages = new MessagesRattachement();
 
     /// Le renommage (année + n°) est-il **verrouillé** ? Vrai dès qu'un passage est déposé (ou en cours de
     /// dépôt) : son nom est l'identité de ses fichiers côté serveur (garde #1134). Dans ce cas la modale
@@ -72,7 +75,7 @@ public class RattachementViewModel {
         this.service = Objects.requireNonNull(service, "service");
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
-        this.conditions = new SaisiePassageConditions(conditionsPassage, propositionsEnregistreur, messageErreur);
+        this.conditions = new SaisiePassageConditions(conditionsPassage, propositionsEnregistreur, messages);
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
     }
@@ -95,7 +98,7 @@ public class RattachementViewModel {
         renommageVerrouille.set(
                 detail.statut() == StatutWorkflow.DEPOSE || detail.statut() == StatutWorkflow.DEPOT_EN_COURS);
         conditions.charger(idPassage, detail.meteo(), detail.idEnregistreur(), detail.heureDebut(), detail.heureFin());
-        messageErreur.set("");
+        messages.effacer();
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
         majRecap();
@@ -105,25 +108,25 @@ public class RattachementViewModel {
     ///
     /// @return `true` si l'opération a réussi (la vue peut fermer la modale) ; `false` sinon (saisie
     ///     invalide, ou échec opérationnel — R5, disque, base — dont le motif est dans
-    ///     [#messageErreurProperty])
+    ///     [#retourProperty])
     public boolean valider() {
         if (numeroPassage.get() < 1) {
-            messageErreur.set("Le numéro de passage doit être supérieur ou égal à 1.");
+            messages.info("Le numéro de passage doit être supérieur ou égal à 1.");
             return false;
         }
         if (annee.get() < 1000 || annee.get() > 9999) {
-            messageErreur.set("L'année doit comporter quatre chiffres.");
+            messages.info("L'année doit comporter quatre chiffres.");
             return false;
         }
         try {
             rattachement.modifierRattachement(
                     idPassage, new Prefixe(carre, annee.get(), numeroPassage.get(), codePoint));
-            messageErreur.set("");
+            messages.effacer();
             return true;
         } catch (RuntimeException echec) {
             // Surface toute défaillance opérationnelle dans la modale (règle métier R5, disque, base)
             // plutôt que de la laisser échapper au gestionnaire d'action JavaFX (cf. PassageViewModel).
-            messageErreur.set(echec.getMessage());
+            messages.erreur(echec.getMessage());
             return false;
         }
     }
@@ -189,7 +192,7 @@ public class RattachementViewModel {
     /// Affiche le compte rendu d'un envoi (**sur le fil JavaFX**), jamais un silence.
     public void signalerEnvoi(CompteRenduEnvoi compteRendu) {
         if (!compteRendu.message().isEmpty()) {
-            messageErreur.set(compteRendu.message());
+            messages.publier(compteRendu.retour());
         }
     }
 
@@ -234,6 +237,23 @@ public class RattachementViewModel {
         public boolean peutFermer() {
             return reussi && !aSignaler;
         }
+
+        /// Comment **présenter** cette issue (#1917), dérivé des deux mêmes drapeaux que [#peutFermer]
+        /// sans se confondre avec lui : l'un décide de la **fenêtre**, l'autre de la **couleur**.
+        ///
+        /// Les garder distincts n'est pas de la coquetterie. `peutFermer` n'a de sens que dans une
+        /// modale, alors que [RetourOperation] vit dans `commun` et sert des écrans où « fermer » n'en a
+        /// aucun : y loger la décision salirait le type partagé. Et rien ne garantit que la
+        /// correspondance reste totale - un succès qu'on voudrait laisser lire serait un `SUCCES` qui ne
+        /// ferme pas.
+        RetourOperation retour() {
+            if (!reussi) {
+                return RetourOperation.erreur(message);
+            }
+            // Abouti mais à lire : ni une panne, ni un succès ordinaire (rien à envoyer, hors connexion,
+            // métadonnées qui partiront au dépôt).
+            return aSignaler ? RetourOperation.info(message) : RetourOperation.succes(message);
+        }
     }
 
     /// Phrase décrivant un réalignement, avec l'**avant** et l'**après** : dire seulement la nouvelle heure
@@ -274,9 +294,9 @@ public class RattachementViewModel {
                     rafraichi.idEnregistreur(),
                     rafraichi.heureDebut(),
                     rafraichi.heureFin());
-            messageErreur.set("Métadonnées récupérées depuis Vigie-Chiro.");
+            messages.succes("Métadonnées récupérées depuis Vigie-Chiro.");
         } else {
-            messageErreur.set("Aucune participation Vigie-Chiro liée à ce passage (ou hors connexion).");
+            messages.info("Aucune participation Vigie-Chiro liée à ce passage (ou hors connexion).");
         }
     }
 
@@ -289,7 +309,7 @@ public class RattachementViewModel {
     /// Route l'échec inattendu d'une opération réseau de la modale (météo, tir) vers sa ligne
     /// de message, **sur le fil JavaFX** : jamais un silence, ni un bouton resté figé (#1216).
     public void signalerErreur(Throwable erreur) {
-        messageErreur.set("L'opération Vigie-Chiro a échoué : " + erreur.getMessage());
+        messages.erreur("L'opération Vigie-Chiro a échoué : " + erreur.getMessage());
     }
 
     /// `true` si appliquer le rattachement courant **renommera effectivement** les séquences sur le disque
@@ -340,7 +360,14 @@ public class RattachementViewModel {
         return renommageVerrouille.getReadOnlyProperty();
     }
 
-    public ReadOnlyStringProperty messageErreurProperty() {
-        return messageErreur.getReadOnlyProperty();
+    /// Compte rendu de la dernière opération de la modale, rendu par le bandeau partagé (ADR 0023).
+    /// Alimenté aussi par les deux collaborateurs de saisie. [RetourOperation#AUCUN] en nominal.
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return messages.retourProperty();
+    }
+
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    public void effacerRetour() {
+        messages.effacer();
     }
 }

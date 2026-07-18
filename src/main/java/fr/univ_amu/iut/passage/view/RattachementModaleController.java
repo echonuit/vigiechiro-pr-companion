@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
@@ -77,7 +78,13 @@ public class RattachementModaleController {
     private Label indiceRenommageVerrouille;
 
     @FXML
+    private HBox bandeauRetour;
+
+    @FXML
     private Label messageErreur;
+
+    @FXML
+    private Button btnFermerRetour;
 
     @FXML
     private HBox ligneOccupation;
@@ -168,10 +175,10 @@ public class RattachementModaleController {
 
         labelRecap.textProperty().bind(viewModel.recapProperty());
         labelRecap.setWrapText(true);
-        messageErreur.textProperty().bind(viewModel.messageErreurProperty());
-        var erreurPresente = viewModel.messageErreurProperty().isNotEmpty();
-        messageErreur.visibleProperty().bind(erreurPresente);
-        messageErreur.managedProperty().bind(erreurPresente);
+        // #1917 : bandeau partagé (ADR 0023). Le canal s'appelait « messageErreur » alors qu'il portait
+        // aussi des succès (« Métadonnées récupérées depuis Vigie-Chiro. ») et des guidages de saisie.
+        BandeauRetour.installer(
+                bandeauRetour, messageErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // Validation « en direct » (#790) : « Appliquer » reste désactivé tant que l'année n'a pas 4
         // chiffres et le n° de passage au moins 1 ; chaque spinner rougit sur une valeur hors domaine. Le

@@ -150,7 +150,12 @@
   <Separator/>
 
   <Label fx:id="labelRecap" styleClass="recap-rattachement" wrapText="true"/>
-  <Label fx:id="messageErreur" styleClass="message-erreur" wrapText="true"/>
+  <!-- Bandeau de retour partagé (ADR 0023) : le canal s'appelait « messageErreur » alors qu'il portait
+       aussi des succès et des guidages de saisie (#1917). -->
+  <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
+    <Label fx:id="messageErreur" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+    <Button fx:id="btnFermerRetour" text="✕" styleClass="fermer-retour" accessibleText="Fermer le message"/>
+  </HBox>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>

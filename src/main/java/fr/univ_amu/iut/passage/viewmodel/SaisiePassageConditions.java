@@ -11,7 +11,6 @@ import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.Vent;
 import java.util.Optional;
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -36,7 +35,7 @@ public class SaisiePassageConditions {
     /// Numéros à proposer quand l'utilisateur doit désigner l'enregistreur lui-même (#1828).
     private final PropositionsEnregistreur propositions;
 
-    private final ReadOnlyStringWrapper message;
+    private final MessagesRattachement messages;
     private Long idPassage;
 
     private final StringProperty temperatureSaisie = new SimpleStringProperty(this, "temperatureSaisie", "");
@@ -57,11 +56,11 @@ public class SaisiePassageConditions {
     private final ObservableList<String> enregistreursProposes = FXCollections.observableArrayList();
 
     SaisiePassageConditions(
-            ServiceConditionsPassage service, PropositionsEnregistreur propositions, ReadOnlyStringWrapper message) {
+            ServiceConditionsPassage service, PropositionsEnregistreur propositions, MessagesRattachement messages) {
         this.service = service;
         this.propositions = propositions;
-        this.message = message;
-        this.horaires = new SaisieHorairesNuit(service, message);
+        this.messages = messages;
+        this.horaires = new SaisieHorairesNuit(service, messages);
     }
 
     /// Charge les conditions du passage `idPassage` : le relevé `meteo` (issu de la projection), le
@@ -87,10 +86,10 @@ public class SaisiePassageConditions {
                     couvertureNuageuseSaisie.get());
             service.definirMeteo(idPassage, releve);
             appliquerMeteo(releve);
-            message.set("");
+            messages.effacer();
             return true;
         } catch (NumberFormatException invalide) {
-            message.set("Valeur météo invalide : saisissez des nombres, ou laissez vide.");
+            messages.info("Valeur météo invalide : saisissez des nombres, ou laissez vide.");
             return false;
         }
     }
@@ -107,10 +106,10 @@ public class SaisiePassageConditions {
                     texteOuNull(typeMicroSaisie.get()));
             service.definirMateriel(materiel);
             appliquerMateriel(materiel);
-            message.set("");
+            messages.effacer();
             return true;
         } catch (NumberFormatException invalide) {
-            message.set("Hauteur invalide : saisissez un nombre (m), ou laissez vide.");
+            messages.info("Hauteur invalide : saisissez un nombre (m), ou laissez vide.");
             return false;
         }
     }
@@ -124,14 +123,14 @@ public class SaisiePassageConditions {
     public boolean enregistrerEnregistreur() {
         String saisie = enregistreurSaisie.get();
         if (saisie != null && !saisie.isBlank() && Enregistreur.estInconnu(saisie)) {
-            message.set("« " + saisie.trim() + " » n'est pas un numéro de série : laissez vide si vous l'ignorez.");
+            messages.info("« " + saisie.trim() + " » n'est pas un numéro de série : laissez vide si vous l'ignorez.");
             return false;
         }
         service.definirEnregistreur(idPassage, saisie);
         if (saisie != null) {
             enregistreurSaisie.set(saisie.trim());
         }
-        message.set("");
+        messages.effacer();
         return true;
     }
 
@@ -153,9 +152,9 @@ public class SaisiePassageConditions {
     public void appliquerMeteoRecuperee(Optional<MeteoReleve> releve) {
         if (releve.isPresent()) {
             appliquerMeteo(releve.get());
-            message.set("Météo pré-remplie : vérifiez puis appliquez.");
+            messages.succes("Météo pré-remplie : vérifiez puis appliquez.");
         } else {
-            message.set("Météo indisponible (hors-ligne, pas de GPS ou données manquantes) : saisissez à la main.");
+            messages.info("Météo indisponible (hors-ligne, pas de GPS ou données manquantes) : saisissez à la main.");
         }
     }
 
