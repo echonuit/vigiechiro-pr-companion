@@ -77,6 +77,33 @@ Les enums vivent dans [`commun/model/Verdict`](https://github.com/IUTInfoAix-S20
     `passage.verification_verdict` est réécrit par la migration `V28`. La **garde de dépôt**
     (`Inexploitable` bloque, requalification) est reprise au **lot 7**.
 
+## Les verbes des échanges avec la plateforme
+
+Le verbe qui nomme un geste est la **seule** indication que l'utilisateur a sur ce qui va se passer :
+il ne voit ni la requête, ni la direction, ni ce qui sera écrit chez qui. Deux fois, à deux chantiers
+d'écart, ce mot a menti (#1855, #1838) : d'où la règle de l'[ADR 0022](decisions/0022-le-verbe-dit-le-sens-de-l-echange.md),
+**le verbe dit le sens réel de l'échange**.
+
+| Verbe | Ce qu'il désigne | Exemples |
+|---|---|---|
+| **Importer** | L'**entrée de données dans l'application**, quelle qu'en soit la source. C'est le verbe de l'objet qui **n'existait pas encore** localement. | « Importer une nuit » (carte SD), « Importer depuis VigieChiro… » (observations d'une participation) |
+| **Récupérer** | Le **rapatriement, depuis la plateforme, de ce que l'application connaît déjà** : compléter ou rafraîchir. | « Récupérer depuis VigieChiro » (sites, points, passages ; météo et matériel d'un passage), « Récupération des identifiants depuis VigieChiro… » (ancrage) |
+| **Envoyer** | L'écriture **vers** la plateforme d'un objet déjà rattaché. Fait la paire avec « Récupérer ». | « Envoyer vers VigieChiro » (métadonnées d'un passage) |
+| **Publier** | L'écriture **vers** la plateforme de **corrections** portées sur des observations existantes. | « Publier les corrections vers VigieChiro… » |
+| **Téléverser** / **Déposer** | Le **dépôt** des fichiers d'une nuit vérifiée. Voir l'entrée « Dépôt » du glossaire utilisateur. | « Téléverser sur Vigie-Chiro » |
+
+!!! warning "« Importer » et « Récupérer » ne sont pas interchangeables, et ce n'est pas une incohérence"
+    Le menu ☰ dit « **Importer** depuis VigieChiro… » là où Mes sites dit « **Récupérer** depuis
+    VigieChiro » : même plateforme, même direction, deux verbes. C'est **voulu**, ils ne portent pas le
+    même objet (règle 2 de l'ADR 0022). Aligner les deux reviendrait à écrire « Récupérer depuis la
+    carte SD », ce que personne n'écrirait.
+
+!!! note "« Synchroniser » : réservé à l'interne"
+    Le mot promet un échange **bidirectionnel** et ne doit apparaître dans **aucun** libellé, message
+    de progression ou nom de commande CLI dont le geste ne fait que recevoir. Il reste juste, en
+    revanche, pour les classes qui réconcilient deux états (`RapprochementVigieChiro.synchroniser`,
+    `RapportSynchro`) : elles font bien ce que le mot dit.
+
 ## Autres termes
 
 Les termes du **domaine vus par l'utilisateur** (carré, point d'écoute, préfixe, séquence, sonogramme,

@@ -68,3 +68,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0019](0019-ancrage-acquis-quand-il-sert.md) | L'ancrage s'acquiert quand il sert, pas à un moment décrété (amende 0016) | #1838 |
 | [0020](0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer.md) | Écrire sur la plateforme : ne rien inventer, ne rien effacer, parler la langue du lecteur | #1828, #1844 |
 | [0021](0021-double-clic-miroir-qui-rend-compte.md) | Le double-clic est le miroir de l'action principale, et il rend compte quand il n'aboutit pas | EPIC #1792 |
+| [0022](0022-le-verbe-dit-le-sens-de-l-echange.md) | Le verbe d'un geste dit le sens réel de l'échange | #1855, #1866 |

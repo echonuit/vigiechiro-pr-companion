@@ -92,7 +92,7 @@ site après coup, sans repasser par sa création.
 
 Le bouton **Ouvrir sur Vigie-Chiro** ouvre la page de ce site sur le **portail Vigie-Chiro** dans
 votre navigateur : pratique pour vérifier d'un coup d'œil que le rattachement est le bon. Il reste
-grisé tant que le site n'est pas relié au portail (connectez-vous, ou utilisez « Synchroniser depuis
+grisé tant que le site n'est pas relié au portail (connectez-vous, ou utilisez « Récupérer depuis
 VigieChiro » sur l'écran Mes sites).
 
 ![La fenêtre d'édition de la fiche site : numéro de carré, nom convivial, protocole et commentaire.](../assets/captures/apercu-sites-modale-site.png)
