@@ -66,7 +66,7 @@ class StatutPassageTest {
         ResultatsIdentification resultats =
                 new ResultatsIdentification(9L, "transformes/passage2_Vu.csv", "\"Vu\"", "2026-06-21T08:00:00", 42L);
 
-        String texte = StatutPassage.rendreTexte(42L, passageComplet(), Optional.of(resultats));
+        String texte = StatutPassage.rendreTexte(42L, passageComplet(), Optional.of(resultats), true);
 
         assertThat(texte)
                 .contains("Passage #42")
@@ -79,13 +79,14 @@ class StatutPassageTest {
                 .contains("début 18,5 °C")
                 .contains("vent moyen")
                 .contains("nuages 25 à 50 %")
-                .contains("oui (\"Vu\", importé le 2026-06-21T08:00:00)");
+                .contains("oui (\"Vu\", importé le 2026-06-21T08:00:00)")
+                .contains("[attestées par les enregistrements]");
     }
 
     @Test
     @DisplayName("Texte d'un passage minimal : verdict en attente, non déposé, météo absente, Tadarida non")
     void texte_passage_minimal() {
-        String texte = StatutPassage.rendreTexte(1L, passageMinimal(), Optional.empty());
+        String texte = StatutPassage.rendreTexte(1L, passageMinimal(), Optional.empty(), false);
 
         assertThat(texte)
                 .contains("Passage #1")
@@ -93,6 +94,9 @@ class StatutPassageTest {
                 .contains("non déposé")
                 .contains("bruts 0 Ko, séquences 0 Ko")
                 .contains("non renseignée")
+                // #1878 : une nuit sans preuve annonce que ses heures se corrigent, au lieu de
+                // laisser le lecteur le découvrir en se faisant refuser une saisie.
+                .contains("[déclarées, modifiables]")
                 .doesNotContain("oui (");
     }
 
@@ -102,7 +106,7 @@ class StatutPassageTest {
         ResultatsIdentification resultats =
                 new ResultatsIdentification(9L, "transformes/passage2_Vu.csv", "\"Vu\"", "2026-06-21T08:00:00", 42L);
 
-        Map<String, Object> objet = StatutPassage.projeter(42L, passageComplet(), Optional.of(resultats));
+        Map<String, Object> objet = StatutPassage.projeter(42L, passageComplet(), Optional.of(resultats), true);
 
         assertThat(objet)
                 .containsEntry("passage", 42L)
@@ -112,15 +116,16 @@ class StatutPassageTest {
                 .containsEntry("verdict", "OK")
                 .containsEntry("nombreSequences", 128)
                 .containsEntry("resultatsTadarida", true)
+                .containsEntry("heuresProuvees", true)
                 .containsEntry("cheminResultatsTadarida", "transformes/passage2_Vu.csv");
     }
 
     @Test
     @DisplayName("JSON d'un passage minimal : verdict/dépôt/chemin à null, Tadarida à false")
     void json_passage_minimal() {
-        Map<String, Object> objet = StatutPassage.projeter(1L, passageMinimal(), Optional.empty());
+        Map<String, Object> objet = StatutPassage.projeter(1L, passageMinimal(), Optional.empty(), false);
 
-        assertThat(objet).containsEntry("resultatsTadarida", false);
+        assertThat(objet).containsEntry("resultatsTadarida", false).containsEntry("heuresProuvees", false);
         assertThat(objet.get("verdict")).isNull();
         assertThat(objet.get("deposeLe")).isNull();
         assertThat(objet.get("cheminResultatsTadarida")).isNull();

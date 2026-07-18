@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
+import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.validation.model.ResultatsIdentification;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
@@ -54,10 +55,17 @@ public final class StatutPassage implements Callable<Integer> {
     private final ServicePassage servicePassage;
     private final ResultatsIdentificationDao resultatsDao;
 
+    /// Pour dire si les **heures** de la nuit sont attestées par ses enregistrements (#1878).
+    private final ServiceConditionsPassage conditions;
+
     @Inject
-    public StatutPassage(ServicePassage servicePassage, ResultatsIdentificationDao resultatsDao) {
+    public StatutPassage(
+            ServicePassage servicePassage,
+            ResultatsIdentificationDao resultatsDao,
+            ServiceConditionsPassage conditions) {
         this.servicePassage = Objects.requireNonNull(servicePassage, "servicePassage");
         this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
+        this.conditions = Objects.requireNonNull(conditions, "conditions");
     }
 
     @Override
@@ -66,23 +74,29 @@ public final class StatutPassage implements Callable<Integer> {
         // Lève RegleMetierException si le passage est introuvable → traité en échec d'exécution (code 1).
         DetailPassage detail = servicePassage.detailPassage(idPassage);
         Optional<ResultatsIdentification> tadarida = resultatsDao.findByPassage(idPassage);
+        boolean heuresProuvees = conditions.heuresProuvees(idPassage);
 
         sortie.println(
                 json
-                        ? FormatJson.objet(projeter(idPassage, detail, tadarida))
-                        : rendreTexte(idPassage, detail, tadarida));
+                        ? FormatJson.objet(projeter(idPassage, detail, tadarida, heuresProuvees))
+                        : rendreTexte(idPassage, detail, tadarida, heuresProuvees));
         return 0;
     }
 
     /// Rendu **texte** de la synthèse : une donnée par ligne, libellés alignés. Fonction pure (sans base
     /// ni effet de bord) : construit et renvoie le bloc, sans le retour ligne final (ajouté par l'appelant).
-    static String rendreTexte(Long idPassage, DetailPassage detail, Optional<ResultatsIdentification> tadarida) {
+    static String rendreTexte(
+            Long idPassage, DetailPassage detail, Optional<ResultatsIdentification> tadarida, boolean heuresProuvees) {
         StringBuilder texte = new StringBuilder("Passage #").append(idPassage).append('\n');
         ligne(texte, "Protocole", "année " + detail.annee() + ", passage n°" + detail.numeroPassage());
+        // L'origine des heures est dite ici (#1878/#1892) : l'IHM grise les champs et affiche le motif,
+        // la CLI ne le découvrait qu'en se faisant refuser une saisie. Une affordance qui ne se révèle
+        // que par l'échec n'en est pas une (patron « Fiche de l'espèce », #789).
         ligne(
                 texte,
                 "Nuit",
-                detail.dateEnregistrement() + "  (" + detail.heureDebut() + " → " + detail.heureFin() + ")");
+                detail.dateEnregistrement() + "  (" + detail.heureDebut() + " → " + detail.heureFin() + ")"
+                        + (heuresProuvees ? "  [attestées par les enregistrements]" : "  [déclarées, modifiables]"));
         ligne(texte, "Enregistreur", detail.idEnregistreur());
         ligne(texte, "Statut", detail.statut().libelle());
         ligne(
@@ -149,7 +163,7 @@ public final class StatutPassage implements Callable<Integer> {
     /// Projection JSON (clés stables pour les scripts). Nombres émis sans guillemets, dates/libellés en
     /// chaînes, `verdict`/`deposeLe`/`cheminResultatsTadarida` valant `null` quand la donnée manque.
     static Map<String, Object> projeter(
-            Long idPassage, DetailPassage detail, Optional<ResultatsIdentification> tadarida) {
+            Long idPassage, DetailPassage detail, Optional<ResultatsIdentification> tadarida, boolean heuresProuvees) {
         Map<String, Object> objet = new LinkedHashMap<>();
         objet.put("passage", idPassage);
         objet.put("annee", detail.annee());
@@ -157,6 +171,8 @@ public final class StatutPassage implements Callable<Integer> {
         objet.put("date", detail.dateEnregistrement());
         objet.put("heureDebut", detail.heureDebut());
         objet.put("heureFin", detail.heureFin());
+        // Un script sait ainsi, AVANT d'essayer, si `metadonnees-passage --heure-debut` sera refusé.
+        objet.put("heuresProuvees", heuresProuvees);
         objet.put("enregistreur", detail.idEnregistreur());
         objet.put("statut", detail.statut().libelle());
         objet.put("verdict", detail.verdict() == null ? null : detail.verdict().libelle());
