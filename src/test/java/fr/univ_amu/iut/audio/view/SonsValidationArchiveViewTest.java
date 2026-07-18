@@ -48,7 +48,10 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -245,13 +248,49 @@ class SonsValidationArchiveViewTest {
                 .isFalse();
     }
 
+    /// Double-clic **déterministe** sur la ligne d'index `index` de `idTable`.
+    ///
+    /// Deux fragilités sont évitées ici. Les `TableRow` sont **recyclés** : leur ordre dans le graphe de
+    /// scène ne suit pas celui des lignes affichées, donc la première `.table-row-cell` venue est souvent
+    /// une ligne **vide**. Et en headless, `doubleClickOn(Node)` vise le **centre du nœud en coordonnées
+    /// écran** : il rate sa cible quand la mise en page n'est pas encore stabilisée. On cible donc la ligne
+    /// par son **index réel** et on lui envoie l'événement directement, ce qui exerce le même gestionnaire
+    /// de production (`DoubleClicLigne`) sans dépendre du placement.
+    private static void doubleCliquerLigne(FxRobot robot, String idTable, int index) {
+        Node ligne = robot.lookup(idTable).lookup(".table-row-cell").queryAll().stream()
+                .map(noeud -> (TableRow<?>) noeud)
+                .filter(rangee -> !rangee.isEmpty() && rangee.getIndex() == index)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucune ligne d'index " + index + " dans " + idTable));
+        robot.interact(() -> ligne.fireEvent(new MouseEvent(
+                MouseEvent.MOUSE_CLICKED,
+                0,
+                0,
+                0,
+                0,
+                MouseButton.PRIMARY,
+                2,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                true,
+                false,
+                false,
+                null)));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
     @Test
     @DisplayName("#1834 : double-clic sur un taxon sans fiche : rien ne s'ouvre, et le bandeau dit pourquoi")
     void double_clic_sans_fiche_affiche_le_motif(FxRobot robot) {
         Node bandeau = robot.lookup("#bandeauRetour").query();
         assertThat(bandeau.isVisible()).as("aucun retour au départ").isFalse();
 
-        doubleCliquerLigne(robot, 2); // « Bruit » : pseudo-taxon, aucune fiche à ouvrir
+        doubleCliquerLigne(robot, "#tableObservations", 2); // « Bruit » : pseudo-taxon, aucune fiche
 
         assertThat(urlsOuvertes)
                 .as("un pseudo-taxon n'a pas de fiche : rien ne doit s'ouvrir")
@@ -270,7 +309,7 @@ class SonsValidationArchiveViewTest {
     @Test
     @DisplayName("#1834 : double-clic sur un chiroptère ouvre sa fiche, sans message de refus")
     void double_clic_avec_fiche_ouvre_et_ne_signale_rien(FxRobot robot) {
-        doubleCliquerLigne(robot, 0); // « Pippip » : chiroptère à fiche PNA
+        doubleCliquerLigne(robot, "#tableObservations", 0); // « Pippip » : chiroptère à fiche PNA
 
         assertThat(urlsOuvertes)
                 .containsExactly(
