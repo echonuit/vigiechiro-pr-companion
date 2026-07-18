@@ -4,11 +4,11 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
 import java.util.Objects;
 import java.util.function.Consumer;
-import javafx.application.Platform;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -121,13 +121,11 @@ public class ReactivationModaleController {
         lblCompteRendu.textProperty().bind(viewModel.compteRenduProperty());
         lblCompteRendu.visibleProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
         lblCompteRendu.managedProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
-        // Le compte rendu (avec ses lacunes) est plus haut que la modale initiale : on l'agrandit quand il
-        // paraît, sinon ses dernières lignes passaient sous la ligne de flottaison (cf. reconstruction #1534).
-        viewModel.compteRenduProperty().addListener((observable, avant, apres) -> {
-            if (apres != null && !apres.isBlank()) {
-                Platform.runLater(this::ajusterHauteurModale);
-            }
-        });
+        // La modale est dimensionnée sur le contenu visible à l'ouverture : une seule barre. Ce qui paraît
+        // ensuite la fait grandir - la barre d'ancrage poussait les boutons hors de la fenêtre, et le compte
+        // rendu ses dernières lignes sous la ligne de flottaison (cf. reconstruction #1534). La fenêtre suit
+        // désormais les DEUX révélations, par le patron commun.
+        Modales.suivreLaCroissance(racine, ancrageDemarre, viewModel.compteRenduProperty());
 
         boutonAnnuler.visibleProperty().bind(operationEnCours);
         boutonAnnuler.managedProperty().bind(operationEnCours);
@@ -199,12 +197,6 @@ public class ReactivationModaleController {
     public void rafraichirSiReactive() {
         if (viewModel.reactiveProperty().get()) {
             apresSucces.run();
-        }
-    }
-
-    private void ajusterHauteurModale() {
-        if (racine.getScene() != null && racine.getScene().getWindow() instanceof Stage modale) {
-            modale.sizeToScene();
         }
     }
 

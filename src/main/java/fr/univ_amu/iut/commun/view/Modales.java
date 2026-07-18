@@ -1,8 +1,11 @@
 package fr.univ_amu.iut.commun.view;
 
 import java.util.Objects;
+import javafx.application.Platform;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Region;
 import javafx.stage.Stage;
 
 /// Comportements communs des **fenêtres modales** de l'application.
@@ -12,6 +15,10 @@ import javafx.stage.Stage;
 /// point, site, rattachement, sélection d'écoute…). Plutôt que de recopier un gestionnaire dans
 /// chaque façade de navigation, on pose ici **un seul** patron, appelé à la création de chaque Stage
 /// modal.
+///
+/// **Croissance du contenu ([#suivreLaCroissance]).** Même histoire : une modale dimensionnée à
+/// l'ouverture ne suit pas ce qui paraît ensuite. Chaque modale s'en tirait pour son seul cas connu,
+/// et laissait tomber les autres.
 public final class Modales {
 
     private Modales() {}
@@ -32,5 +39,40 @@ public final class Modales {
                 evenement.consume();
             }
         });
+    }
+
+    /// Fait suivre à la fenêtre la **croissance** de son contenu.
+    ///
+    /// Une modale est dimensionnée à son ouverture, sur le contenu visible **à cet instant**. Tout ce qui
+    /// paraît ensuite - une seconde barre de phase qui se révèle, un compte rendu de fin - agrandit la mise
+    /// en page sans agrandir la fenêtre, et le bas passe sous la ligne de flottaison. Le compte rendu de la
+    /// reconstruction en avait souffert le premier (#1534) ; chaque modale s'était alors rattrapée pour son
+    /// seul cas connu, si bien que la réactivation poussait toujours ses **boutons** hors de la fenêtre dès
+    /// que la barre d'ancrage paraissait.
+    ///
+    /// La fenêtre n'est agrandie que du **manque**, et jamais rétrécie : une fenêtre que l'utilisateur a
+    /// redimensionnée garde sa taille, là où `sizeToScene()` la ramènerait au contenu.
+    ///
+    /// @param racine la racine de la modale, celle que porte la scène
+    /// @param revelations les propriétés dont un changement fait paraître du contenu
+    public static void suivreLaCroissance(Region racine, ObservableValue<?>... revelations) {
+        Objects.requireNonNull(racine, "racine");
+        for (ObservableValue<?> revelation : revelations) {
+            revelation.addListener((observable, avant, apres) -> Platform.runLater(() -> agrandirAuBesoin(racine)));
+        }
+    }
+
+    /// Agrandit la fenêtre de la hauteur qui manque à son contenu, s'il en manque. Différé d'un tour de
+    /// boucle par [#suivreLaCroissance] : un libellé enroulé n'a de hauteur qu'une fois sa largeur connue,
+    /// donc après la passe de mise en page qui suit la révélation.
+    private static void agrandirAuBesoin(Region racine) {
+        if (racine.getScene() == null || !(racine.getScene().getWindow() instanceof Stage modale)) {
+            return;
+        }
+        double largeurAvant = modale.getWidth();
+        double hauteurAvant = modale.getHeight();
+        modale.sizeToScene();
+        modale.setWidth(Math.max(largeurAvant, modale.getWidth()));
+        modale.setHeight(Math.max(hauteurAvant, modale.getHeight()));
     }
 }

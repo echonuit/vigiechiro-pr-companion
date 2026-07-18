@@ -276,15 +276,14 @@ public final class CapturePassage {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ReactivationModaleController controleur = loader.getController();
-        ApercuFx.capturerApresPreparation(
-                new Scene(vue, 600, 340),
-                () -> controleur.apercuPhasesEnCours(
-                        "Étape : ancrage réseau",
-                        "Régénération 30/30",
-                        1.0,
-                        AcquisitionAncrage.LIBELLE + " (page 3/12)",
-                        0.25),
-                fichier);
+        // L'état est posé AVANT la scène, si bien que celle-ci se dimensionne sur le contenu réellement
+        // affiché - exactement ce que fait la vraie fenêtre en s'ouvrant. La hauteur codée en dur de
+        // l'aperçu précédent (340 px pour ~190 px de contenu) ne laissait pas seulement du blanc : elle
+        // donnait à la modale 150 px de marge, de sorte qu'aucune croissance ne pouvait s'y voir. L'aperçu
+        // ne mentait pas sur les pixels, il mentait sur le cadre.
+        controleur.apercuPhasesEnCours(
+                "Étape : ancrage réseau", "Régénération 30/30", 1.0, AcquisitionAncrage.LIBELLE + " (page 3/12)", 0.25);
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 

@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
@@ -30,6 +31,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de la modale **« Réactiver ce passage »** (#1780) : exécuteur **synchrone**,
 /// travail bouchonné (aucun service). On vérifie que les **deux phases** vont sur leurs barres respectives
@@ -38,6 +40,11 @@ import org.testfx.framework.junit5.Start;
 /// est un état neutre. La fermeture rafraîchit l'écran appelant.
 @ExtendWith(ApplicationExtension.class)
 class ReactivationModaleViewTest {
+
+    /// JavaFX cale les enfants d'une `VBox` sur des pixels entiers : la somme des hauteurs calées
+    /// peut dépasser d'un pixel la hauteur *préférée* d'où la fenêtre est dimensionnée. Ce pixel-là
+    /// n'est pas le défaut que ce test garde : celui-ci coupait une ligne entière (107 px mesurés).
+    private static final double CALAGE_PIXEL = 1.0;
 
     private ReactivationModaleController controleur;
     private Stage stage;
@@ -147,6 +154,37 @@ class ReactivationModaleViewTest {
         // n'écrit rien sur la plateforme — « Ancrage … sur VigieChiro » laissait croire l'inverse.
         assertThat(robot.lookup("#lblAncrage").queryAs(Label.class).getText())
                 .contains("Récupération des identifiants et des échanges avec le validateur");
+    }
+
+    @Test
+    @DisplayName("La barre d'ancrage qui paraît ne chasse pas les boutons hors de la fenêtre")
+    void la_seconde_barre_ne_chasse_pas_les_boutons(FxRobot robot) {
+        // Le vrai Stage est ajusté à son contenu en s'ouvrant (`show()` sur une scène non dimensionnée) ;
+        // celui du harnais garde une taille par défaut, avec assez de mou pour absorber une ligne de plus.
+        // Sans ce recadrage, le test ne peut PAS voir le défaut : il serait vert quoi qu'il arrive.
+        robot.interact(stage::sizeToScene);
+        double hauteurALOuverture = stage.getHeight();
+
+        // L'état « les deux phases en cours », SANS compte rendu : c'est le seul moment où le défaut se voit.
+        // Avec l'exécuteur synchrone, tout travail se conclut dans la foulée, et l'agrandissement déclenché
+        // par le compte rendu final rattrape la hauteur - ce qui masquait le défaut à tous les autres tests
+        // de cette classe, y compris à celui qui vérifie que la barre d'ancrage apparaît.
+        robot.interact(() -> controleur.apercuPhasesEnCours(
+                "Étape : ancrage réseau",
+                "Régénération 2042/2042",
+                1.0,
+                "Récupération des identifiants et des échanges avec le validateur… (page 12/49)",
+                0.25));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Button fermer = robot.lookup("#boutonFermer").queryButton();
+        double basDesBoutons = fermer.localToScene(fermer.getBoundsInLocal()).getMaxY();
+        assertThat(basDesBoutons)
+                .as("« Fermer » doit rester au-dessus de la ligne de flottaison")
+                .isLessThanOrEqualTo(stage.getScene().getHeight() + CALAGE_PIXEL);
+        assertThat(stage.getHeight())
+                .as("la fenêtre a suivi la croissance du contenu")
+                .isGreaterThan(hauteurALOuverture);
     }
 
     @Test
