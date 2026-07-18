@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,12 +60,15 @@ class SynchronisationParticipationTest {
     @Mock
     fr.univ_amu.iut.commun.model.ReferentielPoint referentielPoint;
 
+    @Mock
+    FenetreObserveeNuit fenetreObservee;
+
     private SynchronisationParticipation sync;
 
     @BeforeEach
     void preparer() {
         sync = new SynchronisationParticipation(
-                client, liens, passageDao, materielDao, enregistreurDao, referentielPoint);
+                client, liens, passageDao, materielDao, enregistreurDao, referentielPoint, fenetreObservee);
     }
 
     @Test
@@ -106,6 +110,7 @@ class SynchronisationParticipationTest {
     @Test
     @DisplayName("pousserVers : PATCH avec l'etag frais relu ; refus si le passage n'est pas lié")
     void pousser_vers_patch_avec_etag() {
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty()); // squelette : rien a prouver
         armerPassageEtPoint();
         when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of("part-1"));
         when(client.participation("part-1")).thenReturn(ReponseApi.succes(detail("e-frais")));
@@ -115,6 +120,59 @@ class SynchronisationParticipationTest {
 
         assertThat(sync.pousserVers(42L).id()).contains("part-1");
         verify(client).modifierParticipation(eq("part-1"), eq("e-frais"), any());
+    }
+
+    @Test
+    @DisplayName("#1878 : l'envoi part de ce que la nuit PROUVE, et répare ses heures dérivées en base")
+    void pousser_vers_realigne_sur_les_preuves() {
+        armerLienEtDistant(detail("part-1", "Z41", "2026-07-03T19:00:00+00:00"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.modifierParticipation(any(), any(), any())).thenReturn(ResultatEcriture.reussie());
+        // Le passage déclare 21:00 → 05:00 ; ses enregistrements attestent 21:30 → 06:15. Ce sont EUX
+        // qui font foi.
+        when(fenetreObservee.pour(42L))
+                .thenReturn(Optional.of(new FenetreObserveeNuit.Bornes(
+                        LocalDateTime.of(2026, 7, 3, 21, 30), LocalDateTime.of(2026, 7, 4, 6, 15))));
+
+        sync.pousserVers(42L);
+
+        // Réparé en base : sans cela l'IHM afficherait encore 15:00 pendant que la plateforme afficherait
+        // la vérité - l'incohérence serait déplacée, pas résolue.
+        ArgumentCaptor<Passage> ecrit = ArgumentCaptor.forClass(Passage.class);
+        verify(passageDao).update(ecrit.capture());
+        assertThat(ecrit.getValue().heureDebut()).isEqualTo("21:30:00");
+        assertThat(ecrit.getValue().heureFin()).isEqualTo("06:15:00");
+        assertThat(ecrit.getValue().dateEnregistrement()).isEqualTo("2026-07-03");
+    }
+
+    @Test
+    @DisplayName("#1878 : des heures déjà conformes aux preuves n'entraînent AUCUNE écriture")
+    void pousser_vers_ne_reecrit_pas_sans_derive() {
+        armerLienEtDistant(detail("part-1", "Z41", "2026-07-03T19:00:00+00:00"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.modifierParticipation(any(), any(), any())).thenReturn(ResultatEcriture.reussie());
+        // Les preuves confirment ce que le passage déclare (la fixture pose 21:00:00 → 05:00:00).
+        when(fenetreObservee.pour(42L))
+                .thenReturn(Optional.of(new FenetreObserveeNuit.Bornes(
+                        LocalDateTime.of(2026, 7, 3, 21, 0), LocalDateTime.of(2026, 7, 4, 5, 0))));
+
+        sync.pousserVers(42L);
+
+        verify(passageDao, never()).update(any());
+    }
+
+    @Test
+    @DisplayName("#1878 : une nuit squelette n'a aucune preuve → ses heures déclarées sont respectées")
+    void pousser_vers_squelette_intouche() {
+        armerLienEtDistant(detail("part-1", "Z41", "2026-07-03T19:00:00+00:00"));
+        when(materielDao.pour(42L)).thenReturn(MaterielMicro.vide(42L));
+        when(client.modifierParticipation(any(), any(), any())).thenReturn(ResultatEcriture.reussie());
+        when(fenetreObservee.pour(42L)).thenReturn(Optional.empty());
+
+        sync.pousserVers(42L);
+
+        // On ne fabrique rien : sans preuve, la valeur déclarée reste la seule dont on dispose.
+        verify(passageDao, never()).update(any());
     }
 
     @Test

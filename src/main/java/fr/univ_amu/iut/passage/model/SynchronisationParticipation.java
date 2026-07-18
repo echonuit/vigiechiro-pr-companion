@@ -47,19 +47,24 @@ public final class SynchronisationParticipation {
 
     private final ReferentielPoint referentielPoint;
 
+    /// Ce que les enregistrements de la nuit prouvent de ses horaires (#1878).
+    private final FenetreObserveeNuit fenetreObservee;
+
     public SynchronisationParticipation(
             ClientVigieChiro client,
             LienVigieChiroDao liens,
             PassageDao passageDao,
             MaterielMicroDao materielDao,
             EnregistreurDao enregistreurDao,
-            ReferentielPoint referentielPoint) {
+            ReferentielPoint referentielPoint,
+            FenetreObserveeNuit fenetreObservee) {
         this.client = Objects.requireNonNull(client, "client");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.materielDao = Objects.requireNonNull(materielDao, "materielDao");
         this.enregistreurDao = Objects.requireNonNull(enregistreurDao, "enregistreurDao");
         this.referentielPoint = Objects.requireNonNull(referentielPoint, "referentielPoint");
+        this.fenetreObservee = Objects.requireNonNull(fenetreObservee, "fenetreObservee");
     }
 
     /// L'`_id` de la participation liée à `idPassage`, ou vide s'il n'a pas encore été déposé/rattaché.
@@ -92,6 +97,9 @@ public final class SynchronisationParticipation {
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
         ParticipationDetail distant =
                 client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
+        // Réaligné seulement une fois l'envoi acquis (passage lié, participation lisible) : le réalignement
+        // écrit en base, il n'a pas à laisser de trace sur un chemin qui va échouer.
+        passage = realignerSurLesPreuves(passage);
         InfosPoint point = infosPoint(passage);
         // #1844 : la configuration distante est passée au mapping pour être **préservée**. Le PATCH
         // remplace le dictionnaire entier ; sans elle, chaque envoi effacerait les champs saisis sur le web
@@ -99,6 +107,51 @@ public final class SynchronisationParticipation {
         ParticipationADeposer maj = CorrespondanceParticipation.versParticipation(
                 point.code(), passage, materielDao.pour(idPassage), distant.configuration());
         return client.modifierParticipation(objectid, distant.etag(), maj);
+    }
+
+    /// Réaligne les heures du passage sur ce que ses enregistrements **prouvent**, avant de les envoyer
+    /// (#1878).
+    ///
+    /// Les colonnes `start_time` / `end_time` portent une valeur **déclarée**, qui peut avoir dérivé ;
+    /// les fichiers et les séquences, eux, portent la nuit **telle qu'elle a eu lieu**. Envoyer la preuve
+    /// plutôt que la déclaration rend la cohérence structurelle : la nuit se réaligne d'elle-même à chaque
+    /// aller-retour, au lieu de dépendre du fait qu'aucune conversion n'ait jamais fauté (#1860, où
+    /// l'erreur **composait** à chaque cycle).
+    ///
+    /// La correction est **persistée** : sans cela, l'IHM continuerait d'afficher des heures fausses
+    /// pendant que la plateforme afficherait les justes - on aurait déplacé l'incohérence, pas résolue.
+    ///
+    /// Sans preuve locale (nuit **squelette** rapatriée, sans fichier ni séquence), le passage est rendu
+    /// **inchangé** : on ne fabrique rien.
+    private Passage realignerSurLesPreuves(Passage passage) {
+        Optional<FenetreObserveeNuit.Bornes> observee = fenetreObservee.pour(passage.id());
+        if (observee.isEmpty() || !observee.get().contredisent(passage)) {
+            return passage;
+        }
+        FenetreObserveeNuit.Bornes bornes = observee.get();
+        Passage realigne = avecHoraires(
+                passage, bornes.dateEnregistrement(), bornes.heure(bornes.debut()), bornes.heure(bornes.fin()));
+        passageDao.update(realigne);
+        return realigne;
+    }
+
+    /// Copie du passage avec la date et les heures de nuit remplacées.
+    private static Passage avecHoraires(Passage passage, String date, String heureDebut, String heureFin) {
+        return new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                date,
+                heureDebut,
+                heureFin,
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur());
     }
 
     /// Recopie la météo et la configuration micro de la participation vers le passage local (cas « préparé sur

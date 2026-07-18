@@ -27,6 +27,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
@@ -192,7 +193,11 @@ public final class CapturePassage {
                                 new PassageDao(source),
                                 new MaterielMicroDao(source),
                                 new EnregistreurDao(source),
-                                idPoint -> Optional.empty());
+                                idPoint -> Optional.empty(),
+                                new FenetreObserveeNuit(
+                                        new SessionDao(source),
+                                        new EnregistrementOriginalDao(source),
+                                        new SequenceDao(source)));
                     }
                 });
     }
