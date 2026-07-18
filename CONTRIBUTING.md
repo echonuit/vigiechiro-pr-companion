@@ -141,7 +141,10 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
 6. **Tests** : chaque usage couvert par des tests d'**intégration** (TestFX) et **E2E**. L'inventaire
    se fait **depuis le diff** du chantier, pas de mémoire : pour chaque capacité ajoutée, quel test la
    couvre et à quel niveau (les angles morts sont les **chemins non nominaux**, la **parité CLI ↔ IHM**
-   et le **cas réel**). Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
+   et le **cas réel**). ⚠️ Un « aucun test » sorti d'un `grep` n'est qu'une **hypothèse** : l'inventaire
+   par motif se trompe dans les **deux sens** (homonymes, tests qui pilotent le service sans porter la
+   clé de vue, commande invoquée en kebab-case vs classe instanciée). **Confirmer chaque zéro à la
+   main** avant d'en faire une issue. Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
    défaut probable est **entre** eux. Ce qui n'est pas automatisable part en **recette**
    (`dev-docs/recette/sessions/`, une case = un fait observable), sinon « pas automatisable » devient
    « pas vérifié ».
