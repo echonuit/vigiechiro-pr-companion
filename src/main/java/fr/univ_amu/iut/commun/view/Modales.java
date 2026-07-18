@@ -50,8 +50,14 @@ public final class Modales {
     /// seul cas connu, si bien que la réactivation poussait toujours ses **boutons** hors de la fenêtre dès
     /// que la barre d'ancrage paraissait.
     ///
-    /// La fenêtre n'est agrandie que du **manque**, et jamais rétrécie : une fenêtre que l'utilisateur a
-    /// redimensionnée garde sa taille, là où `sizeToScene()` la ramènerait au contenu.
+    /// L'ajustement se fait par `sizeToScene()`, donc la fenêtre est **refaite à la taille de son
+    /// contenu** : une fenêtre que l'utilisateur aurait agrandie à la main y perd sa taille. Une première
+    /// version gardait le maximum entre l'ancienne taille et la nouvelle, pour ne jamais rétrécir. Elle a
+    /// été retirée : `setWidth`/`setHeight` font passer un Stage en dimensionnement **explicite**, et il
+    /// cesse alors définitivement de s'ajuster à ses scènes suivantes. Sans effet pour une modale, que
+    /// l'on jette après usage - mais le Stage du harnais TestFX, lui, est **partagé par toutes les classes
+    /// de test d'un même fork** : figé à 600 px de large, il faisait échouer les classes suivantes sur des
+    /// noeuds « invisibles », très loin de leur cause et seulement selon l'ordre d'exécution.
     ///
     /// @param racine la racine de la modale, celle que porte la scène
     /// @param revelations les propriétés dont un changement fait paraître du contenu
@@ -62,17 +68,13 @@ public final class Modales {
         }
     }
 
-    /// Agrandit la fenêtre de la hauteur qui manque à son contenu, s'il en manque. Différé d'un tour de
-    /// boucle par [#suivreLaCroissance] : un libellé enroulé n'a de hauteur qu'une fois sa largeur connue,
-    /// donc après la passe de mise en page qui suit la révélation.
+    /// Ajuste la fenêtre à son contenu. Différé d'un tour de boucle par [#suivreLaCroissance] : un libellé
+    /// enroulé n'a de hauteur qu'une fois sa largeur connue, donc après la passe de mise en page qui suit
+    /// la révélation.
     private static void agrandirAuBesoin(Region racine) {
         if (racine.getScene() == null || !(racine.getScene().getWindow() instanceof Stage modale)) {
             return;
         }
-        double largeurAvant = modale.getWidth();
-        double hauteurAvant = modale.getHeight();
         modale.sizeToScene();
-        modale.setWidth(Math.max(largeurAvant, modale.getWidth()));
-        modale.setHeight(Math.max(hauteurAvant, modale.getHeight()));
     }
 }
