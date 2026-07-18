@@ -2,9 +2,12 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
@@ -25,6 +28,24 @@ class PublicationCorrectionsViewModelTest {
         assertThat(vm.disponible()).isFalse();
         assertThatThrownBy(() -> vm.publier(7L)).isInstanceOf(RegleMetierException.class);
         assertThatThrownBy(() -> vm.trier(7L)).isInstanceOf(RegleMetierException.class);
+        // Les portes ouvertes par #1838 refusent aussi : une feature coupée ne doit pas laisser passer
+        // une surcharge par la bande (ADR 0003).
+        assertThatThrownBy(() -> vm.publier(7L, progres -> {}, JetonAnnulation.neutre()))
+                .isInstanceOf(RegleMetierException.class);
+        assertThatThrownBy(() -> vm.ancrageAcquerable(7L)).isInstanceOf(RegleMetierException.class);
+    }
+
+    @Test
+    @DisplayName("#1838 : la publication suivie et le prédicat d'ancrage délèguent au service")
+    void delegations_ancrage() {
+        PublicationCorrections moteur = mock(PublicationCorrections.class);
+        BilanPublication bilan = new BilanPublication(1, 0, 0, 0, List.of());
+        when(moteur.publier(eq(7L), any(), any())).thenReturn(bilan);
+        when(moteur.ancrageAcquerable(7L)).thenReturn(true);
+        PublicationCorrectionsViewModel vm = new PublicationCorrectionsViewModel(Optional.of(moteur));
+
+        assertThat(vm.publier(7L, progres -> {}, JetonAnnulation.neutre())).isSameAs(bilan);
+        assertThat(vm.ancrageAcquerable(7L)).isTrue();
     }
 
     @Test

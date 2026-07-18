@@ -148,6 +148,30 @@ longueur des libellés, lisibilité d'un item grisé, position du popup près d'
 59. Clic droit sur une ligne proche du **bord bas** de l'écran : le menu s'ouvre vers le haut et reste
     entièrement visible.
 
+**Bloc C · Import rapide et publication des corrections (#1838, exige le vrai serveur)**
+
+Ce bloc ne s'automatise pas : il mesure des **durées réelles** contre la plateforme et vérifie qu'une
+annulation interrompt vraiment un téléchargement en cours. Les tests couvrent la logique ; ils ne
+peuvent pas dire si le premier import « paraît instantané » ni si « Annuler » rend la main.
+
+60. Sur la nuit analysée, « ☰ → Importer depuis VigieChiro… » ramène les observations **sans fenêtre de
+    progression paginée** (voie CSV) : noter la durée observée.
+61. Les observations sont à l'écran, colonne « Avis validateur » **vide** (le CSV ne la porte pas).
+62. « ☰ → Publier les corrections… » est **actif** (non grisé) sur cette nuit tout juste importée.
+63. Après avoir corrigé une observation et déclaré sa certitude, la confirmation annonce « N prête(s) à
+    partir, et M à ancrer d'abord ».
+64. À l'accord, une fenêtre « Récupération des identifiants depuis VigieChiro… (page x/y) » s'affiche et
+    **progresse** : noter la durée totale.
+65. Le bouton **Annuler** de cette fenêtre rend la main **avant** la fin, et le bandeau n'annonce aucune
+    publication.
+66. Après une publication menée à son terme, le bandeau annonce les corrections envoyées **sans écart
+    « sans ancrage »**.
+67. Sur le portail Vigie-Chiro, l'observation porte le taxon et la certitude déclarés ici.
+68. Republier immédiatement : la publication repart **sans** repasser par la récupération des
+    identifiants (ils sont désormais en base).
+69. « ☰ → Réimporter depuis VigieChiro… » repasse, lui, par la fenêtre **paginée**, et la colonne « Avis
+    validateur » se **remplit** si le MNHN a tranché.
+
 ## Constats candidats (desk-check, à confirmer en séance)
 
 | # | Axe | Constat |

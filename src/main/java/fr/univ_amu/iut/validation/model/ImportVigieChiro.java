@@ -103,14 +103,23 @@ public class ImportVigieChiro {
     /// Le CSV n'est tenté que s'il est **exploitable** (au moins un nom de séquence) : sur le moindre
     /// doute - route absente, refus, contenu inutilisable - on repasse par les `donnees`, qui portent
     /// aussi les diagnostics d'absence (#1264). L'optimisation ne doit jamais coûter le résultat.
+    ///
+    /// **Seul le premier import** emprunte la voie rapide. Un **ré-import** (`remplacer = true`) reste sur
+    /// les `donnees`, car il détruirait sinon ce qu'il est justement censé rafraîchir : le CSV ne porte pas
+    /// l'**avis du validateur** du MNHN (#1417), que le remplacement écraserait donc par du vide, ni les
+    /// **fils de discussion**, que la suppression des observations emporte en cascade. « Réimporter », c'est
+    /// aller chercher ce qui a changé **côté serveur** ; la lenteur y est le prix de ce qu'on vient chercher.
+    /// Au premier import, il n'y a rien à perdre et tout à gagner - c'est là que la voie rapide sert.
     public BilanImport importerRapide(Long idPassage, boolean remplacer, SuiviPagination suivi) {
         Objects.requireNonNull(idPassage, CHAMP_ID_PASSAGE);
         Objects.requireNonNull(suivi, "suivi");
         String participationId = participationOuLever(idPassage);
-        if (client.csvObservations(participationId) instanceof ReponseApi.Succes<Optional<String>>(Optional<String> csv)
+        if (!remplacer
+                && client.csvObservations(participationId)
+                        instanceof ReponseApi.Succes<Optional<String>>(Optional<String> csv)
                 && csv.isPresent()
                 && !service.nomsSequencesCsv(csv.get()).isEmpty()) {
-            return service.importerContenuCsv(idPassage, csv.get(), remplacer);
+            return service.importerContenuCsv(idPassage, csv.get(), false);
         }
         return importer(idPassage, remplacer, suivi);
     }

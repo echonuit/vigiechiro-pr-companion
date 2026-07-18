@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.Certitude;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ModeValidation;
@@ -24,7 +25,6 @@ import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.BilanPublication;
-import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.TriPublication;
@@ -55,7 +55,7 @@ class PublicationCorrectionsTest {
     ObservationDao observations;
 
     @Mock
-    ImportVigieChiro importateur;
+    ImportObservations importateur;
 
     /// Publication **sans** import disponible : l'ancrage manquant reste écarté et compté (comportement
     /// des injecteurs sans `connexion`).
@@ -285,5 +285,29 @@ class PublicationCorrectionsTest {
                 .isInstanceOf(RegleMetierException.class)
                 .hasMessageContaining("Aucune observation revue");
         verify(client, never()).corrigerObservation(anyString(), anyInt(), anyString(), any(), anyBoolean());
+    }
+
+    @Test
+    @DisplayName("ancrageAcquerable : vrai seulement si l'import est là, la nuit rattachée et l'ancrage absent")
+    void ancrage_acquerable_exige_les_trois_conditions() {
+        // C'est ce prédicat que l'IHM interroge pour décider entre « rien à publier » et « on va d'abord
+        // ancrer ». Il était jusqu'ici couvert seulement par un mock côté vue, qui ne prouvait rien de lui.
+        when(importateur.estRattache(7L)).thenReturn(true);
+        when(importateur.ancrageManquant(7L)).thenReturn(true);
+        assertThat(publicationAvecImport().ancrageAcquerable(7L)).isTrue();
+
+        when(importateur.ancrageManquant(7L)).thenReturn(false);
+        assertThat(publicationAvecImport().ancrageAcquerable(7L))
+                .as("déjà ancrée : rien à acquérir")
+                .isFalse();
+
+        when(importateur.estRattache(7L)).thenReturn(false);
+        assertThat(publicationAvecImport().ancrageAcquerable(7L))
+                .as("non rattachée : rien à quoi s'ancrer")
+                .isFalse();
+
+        assertThat(publication().ancrageAcquerable(7L))
+                .as("import indisponible (injecteur sans connexion, ADR 0003) : rien n'est acquérable")
+                .isFalse();
     }
 }

@@ -2,7 +2,8 @@ package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
-import fr.univ_amu.iut.commun.api.SuiviPagination;
+import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Progression;
@@ -35,7 +36,7 @@ import java.util.function.Consumer;
 ///
 /// Orchestration réseau **sans IHM** (règle ArchUnit `model_sans_javafx`), **bloquante** : à appeler
 /// hors du fil JavaFX. Injecté de façon **optionnelle** (module `PublicationCorrectionsModule`,
-/// absent des injecteurs sans `connexion`), comme [ImportVigieChiro].
+/// absent des injecteurs sans `connexion`), comme [ImportObservations].
 public class PublicationCorrections {
 
     private final ClientVigieChiro client;
@@ -44,13 +45,13 @@ public class PublicationCorrections {
 
     /// Import des observations, **optionnel** : il porte l'acquisition de l'ancrage manquant (#1838).
     /// Absent, la publication se comporte comme avant (les non ancrées restent écartées et comptées).
-    private final Optional<ImportVigieChiro> importateur;
+    private final Optional<ImportObservations> importateur;
 
     public PublicationCorrections(
             ClientVigieChiro client,
             LienVigieChiroDao liens,
             ObservationDao observations,
-            Optional<ImportVigieChiro> importateur) {
+            Optional<ImportObservations> importateur) {
         this.client = Objects.requireNonNull(client, "client");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.observations = Objects.requireNonNull(observations, "observations");
@@ -85,33 +86,11 @@ public class PublicationCorrections {
                 .isPresent();
     }
 
-    /// Acquiert l'ancrage plateforme (`idDonneeVigieChiro` / indice) des observations qui en sont
-    /// dépourvues - typiquement une nuit importée par **CSV** (#1565), qui n'en porte pas.
-    ///
-    /// Ne se déclenche que si l'import est disponible, la nuit **rattachée** à une participation et
-    /// l'ancrage **effectivement manquant** : une nuit non rattachée n'a rien à quoi s'ancrer (ses
-    /// observations resteront écartées, et le message le dit), une nuit déjà ancrée ne paie rien.
-    ///
-    /// Le ré-import se fait avec `remplacer = true`, qui rapatrie l'ancrage **en préservant les
-    /// validations** de l'observateur : publier ne doit jamais coûter ses corrections à l'utilisateur.
+    /// Acquiert l'ancrage manquant avant de publier (#1838), en déléguant au geste partagé
+    /// [AcquisitionAncrage] - le même que celui de la réactivation (#1571), qui en a besoin pour une
+    /// autre raison au même endroit du domaine (ADR 0019).
     private void acquerirAncrageSiNecessaire(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
-        if (importateur.isEmpty()) {
-            return;
-        }
-        ImportVigieChiro importVigieChiro = importateur.get();
-        if (!importVigieChiro.estRattache(idPassage) || !importVigieChiro.ancrageManquant(idPassage)) {
-            return;
-        }
-        progres.accept(new Progression("Ancrage des observations sur VigieChiro…", 0.0));
-        // Suivi page par page : le rapatriement des donnees compte des dizaines de pages, et « Annuler »
-        // doit s'honorer à chaque page plutôt qu'après coup (#1597).
-        SuiviPagination suivi = (page, totalPages) -> {
-            jeton.leverSiAnnule();
-            double fraction = Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
-            progres.accept(new Progression(
-                    "Ancrage des observations sur VigieChiro… (page " + page + "/" + totalPages + ")", fraction));
-        };
-        importVigieChiro.importer(idPassage, true, suivi);
+        importateur.ifPresent(import_ -> AcquisitionAncrage.acquerirSiNecessaire(import_, idPassage, progres, jeton));
     }
 
     /// Publie les corrections du passage, **sans toucher à l'ancrage** (celui qui manque restera compté).

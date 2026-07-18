@@ -76,7 +76,7 @@ class PublierCorrectionsVigieChiroTest {
         // faute de quoi rien ne prouverait que la commande le branche réellement.
         when(moteur.publier(eq(42L), any(), any())).thenAnswer(invocation -> {
             Consumer<Progression> progres = invocation.getArgument(1);
-            progres.accept(new Progression("Ancrage des observations sur VigieChiro… (page 3/48)", 0.06));
+            progres.accept(new Progression("Récupération des identifiants depuis VigieChiro… (page 3/48)", 0.06));
             return new BilanPublication(5, 0, 0, 0, List.of());
         });
         StringWriter sortie = new StringWriter();
@@ -85,11 +85,11 @@ class PublierCorrectionsVigieChiroTest {
         int code = ligne(Optional.of(moteur), sortie, erreurs).execute("--passage", "42");
 
         assertThat(code).isZero();
-        assertThat(erreurs.toString()).contains("Ancrage des observations sur VigieChiro… (page 3/48)");
+        assertThat(erreurs.toString()).contains("Récupération des identifiants depuis VigieChiro… (page 3/48)");
         assertThat(sortie.toString())
                 .as("la sortie standard reste exploitable par un script : le bilan, rien d'autre")
                 .contains("5 envoyée(s)")
-                .doesNotContain("Ancrage");
+                .doesNotContain("Récupération");
     }
 
     @Test

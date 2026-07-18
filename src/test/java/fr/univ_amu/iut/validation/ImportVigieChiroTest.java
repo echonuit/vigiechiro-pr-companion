@@ -86,6 +86,23 @@ class ImportVigieChiroTest {
     }
 
     @Test
+    @DisplayName("importerRapide : un RÉimport reste sur les donnees, il ne doit pas effacer l'avis validateur")
+    void importer_rapide_reimport_reste_complet() {
+        List<DonneeVigieChiro> donnees = List.of(new DonneeVigieChiro("d1", "Car-Z41_000", List.of(observation())));
+        BilanImport attendu = new BilanImport(null, 1, 0, 0);
+        when(liens.objectidPour(LienVigieChiro.ENTITE_PASSAGE, "42")).thenReturn(Optional.of(PARTICIPATION));
+        when(client.donnees(eq(PARTICIPATION), any())).thenReturn(ReponseApi.succes(donnees));
+        when(service.importerDepuisVigieChiro(ID_PASSAGE, donnees, true)).thenReturn(attendu);
+
+        assertThat(importateur.importerRapide(ID_PASSAGE, true, (page, total) -> {}))
+                .isSameAs(attendu);
+        // Le CSV n'est même pas demandé : il ne porte ni l'avis du validateur (#1417) — que le remplacement
+        // écraserait par du vide — ni les fils, que la suppression des observations emporte en cascade.
+        // « Réimporter » veut dire « va chercher ce qui a changé côté serveur ».
+        verify(client, never()).csvObservations(any());
+    }
+
+    @Test
     @DisplayName("importerRapide : CSV inexploitable → repli sur les donnees, l'import aboutit quand même")
     void importer_rapide_repli_sur_donnees() {
         List<DonneeVigieChiro> donnees = List.of(new DonneeVigieChiro("d1", "Car-Z41_000", List.of(observation())));

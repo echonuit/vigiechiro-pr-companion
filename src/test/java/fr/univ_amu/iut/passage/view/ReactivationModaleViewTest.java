@@ -126,7 +126,8 @@ class ReactivationModaleViewTest {
         lancer(
                 (progresRegeneration, progresAncrage, jeton) -> {
                     progresRegeneration.accept(new Progression("Vérification 30/30", 1.0));
-                    progresAncrage.accept(new Progression("Ancrage des observations sur VigieChiro… (page 1/2)", 0.5));
+                    progresAncrage.accept(
+                            new Progression("Récupération des identifiants depuis VigieChiro… (page 1/2)", 0.5));
                     return new RapportReactivation(
                             30,
                             0,
@@ -142,7 +143,10 @@ class ReactivationModaleViewTest {
         assertThat(robot.lookup("#zoneAncrage").queryAs(HBox.class).isVisible())
                 .as("la phase réseau a émis : sa barre est révélée")
                 .isTrue();
-        assertThat(robot.lookup("#lblAncrage").queryAs(Label.class).getText()).contains("Ancrage");
+        // Le libellé dit le sens réel de l'échange (#1853) : cette phase *récupère* les identifiants, elle
+        // n'écrit rien sur la plateforme — « Ancrage … sur VigieChiro » laissait croire l'inverse.
+        assertThat(robot.lookup("#lblAncrage").queryAs(Label.class).getText())
+                .contains("Récupération des identifiants depuis VigieChiro");
     }
 
     @Test

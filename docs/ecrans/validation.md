@@ -189,9 +189,20 @@ Plutôt que d'importer le CSV à la main, le menu **☰ → Importer depuis Vigi
 résultats **directement depuis la plateforme** (application [connectée](../connexion-vigiechiro.md),
 passage déposé et traité). Si le passage n'est pas encore relié à une participation, l'application
 propose de choisir la bonne dans la liste de vos participations. L'import CSV reste disponible en
-repli - les deux alimentent le même écran. L'import lui-même - qui peut rapatrier des milliers de
-fichiers - s'affiche dans une **fenêtre de progression** (barre d'avancement page par page) avec un
-bouton **Annuler** : renoncer laisse le passage tel qu'il était, sans demi-import.
+repli - les deux alimentent le même écran.
+
+Le **premier import** est **rapide** : il récupère le fichier d'observations d'un seul coup quand la
+plateforme le propose. Il ne rapatrie alors ni les identifiants de la plateforme, ni l'avis du
+validateur, ni les échanges avec lui : rien de tout cela n'existe encore à ce stade, et les
+identifiants ne servent qu'au moment de **publier vos corrections** - c'est la publication qui va
+les chercher (voir plus bas).
+
+Un **réimport**, lui, prend toujours la voie **complète**, page par page : c'est le geste par lequel
+vous allez chercher ce qui a changé côté plateforme, à commencer par l'**avis du validateur** du
+Muséum et vos échanges avec lui. Il serait absurde qu'il les efface au lieu de les rafraîchir. La
+même voie complète sert de repli quand le fichier d'observations n'est pas disponible. Elle s'affiche
+dans une **fenêtre de progression** avec un bouton **Annuler** : renoncer laisse le passage tel qu'il
+était, sans demi-import.
 
 Si l'analyse de la plateforme n'est pas terminée, l'import vous dit **pourquoi** il n'y a rien à
 récupérer : l'analyse n'a **jamais été lancée** (lancez-la depuis « Préparer le dépôt », étape ④), elle
@@ -211,14 +222,21 @@ Dans l'autre sens, une fois vos observations revues (taxon retenu **et** certitu
 menu **☰ → Publier les corrections vers VigieChiro…** pousse vos décisions vers la plateforme :
 chaque observation publiée y porte alors votre taxon et votre confiance d'observateur, comme si
 vous les aviez saisis sur le site. Une **confirmation récapitule** d'abord ce qui va partir et ce
-qui restera à quai : les observations **sans certitude** (déclarez-la d'abord), celles **sans
-ancrage** plateforme (résultats importés d'un CSV : réimportez depuis VigieChiro pour les ancrer)
-et les taxons **hors référentiel**. La publication est **rejouable sans risque** : republier
-réécrit les mêmes valeurs.
+qui restera à quai : les observations **sans certitude** (déclarez-la d'abord) et les taxons **hors
+référentiel**. La publication est **rejouable sans risque** : republier réécrit les mêmes valeurs.
 
-Si le passage n'a **aucun ancrage** plateforme (il a été *reconstruit* à partir d'un CSV et n'a jamais
-été réactivé), l'entrée de menu est d'emblée **grisée** : réactivez d'abord le passage pour ancrer ses
-observations, sans quoi il n'y aurait rien à publier.
+Vos observations n'ont pas besoin d'être « rattachées » une par une à la plateforme au préalable :
+si ce lien manque, la publication le **récupère elle-même** avant d'envoyer. C'est le cas d'une nuit
+importée rapidement (le fichier d'observations seul) ou reconstruite depuis la plateforme. Une
+fenêtre de progression vous le dit alors (« Récupération des identifiants depuis VigieChiro… »), avec un
+bouton **Annuler** : cette récupération peut prendre quelques minutes. Elle **préserve vos
+validations** - publier ne vous coûtera jamais votre travail de revue. Elle ramène au passage les
+**échanges avec le validateur** du Muséum, s'il y en a. Une nuit déjà rattachée n'en paie pas le
+coût, et le geste part directement.
+
+Une seule situation reste hors d'atteinte : une nuit qui n'a **aucune participation** sur la
+plateforme, donc rien à quoi se rattacher. L'entrée de menu est alors **grisée** et le dit
+(« rattachez la nuit à sa participation VigieChiro »).
 
 À savoir : une correction publiée se **remplace** mais ne se **retire** pas de la plateforme, et
 une **relance du traitement serveur** efface les corrections publiées (republiez alors après le

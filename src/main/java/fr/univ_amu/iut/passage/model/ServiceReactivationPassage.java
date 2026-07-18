@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
-import fr.univ_amu.iut.commun.api.SuiviPagination;
+import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -216,20 +216,7 @@ public class ServiceReactivationPassage {
         if (importObservations.isEmpty() || rapport.decompte().disponibilite() == DisponibiliteAudio.ABSENTE) {
             return;
         }
-        ImportObservations importateur = importObservations.get();
-        if (!importateur.estRattache(idPassage) || !importateur.ancrageManquant(idPassage)) {
-            return;
-        }
-        progresAncrage.accept(new Progression("Ancrage des observations sur VigieChiro…", 0.0));
-        // Suivi page par page : la barre d'ancrage avance de 0 à 1 pendant le rapatriement des donnees
-        // (~48 pages), et « Annuler » s'y honore à chaque page (#1597).
-        SuiviPagination suivi = (page, totalPages) -> {
-            jeton.leverSiAnnule();
-            double fraction = Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
-            progresAncrage.accept(new Progression(
-                    "Ancrage des observations sur VigieChiro… (page " + page + "/" + totalPages + ")", fraction));
-        };
-        importateur.importer(idPassage, true, suivi);
+        AcquisitionAncrage.acquerirSiNecessaire(importObservations.get(), idPassage, progresAncrage, jeton);
     }
 
     /// Reconnaît ce que le dossier contient. Les **séquences** l'emportent sur les **bruts** : quand les

@@ -243,11 +243,11 @@ class ServiceReactivationPassageTest {
         assertThat(regeneration)
                 .as("la barre de régénération ne reçoit que la phase disque")
                 .isNotEmpty()
-                .noneMatch(point -> point.libelle().startsWith("Ancrage"));
+                .noneMatch(point -> point.libelle().startsWith("Récupération des identifiants"));
         assertThat(ancrage)
                 .as("la barre d'ancrage ne reçoit que la phase réseau, et atteint 100 %")
                 .isNotEmpty()
-                .allMatch(point -> point.libelle().startsWith("Ancrage"));
+                .allMatch(point -> point.libelle().startsWith("Récupération des identifiants"));
         assertThat(ancrage.get(ancrage.size() - 1).fraction()).isEqualTo(1.0);
     }
 

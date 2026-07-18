@@ -275,7 +275,7 @@ public final class CapturePassage {
                         "Étape : ancrage réseau",
                         "Régénération 30/30",
                         1.0,
-                        "Ancrage des observations sur VigieChiro… (page 3/12)",
+                        "Récupération des identifiants depuis VigieChiro… (page 3/12)",
                         0.25),
                 fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());

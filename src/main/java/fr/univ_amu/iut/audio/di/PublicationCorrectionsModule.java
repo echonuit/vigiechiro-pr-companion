@@ -10,8 +10,8 @@ import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
+import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
-import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.util.Optional;
@@ -48,7 +48,7 @@ public class PublicationCorrectionsModule extends ModuleDeFeature {
             ClientVigieChiro client,
             LienVigieChiroDao liens,
             ObservationDao observations,
-            Optional<ImportVigieChiro> importateur) {
+            Optional<ImportObservations> importateur) {
         return new PublicationCorrections(client, liens, observations, importateur);
     }
 }
