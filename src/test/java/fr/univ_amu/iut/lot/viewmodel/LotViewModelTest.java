@@ -313,7 +313,9 @@ class LotViewModelTest {
         // Étape posée sur le fil JavaFX avant le calcul hors-thread.
         viewModel.marquerGenerationEnCours();
         assertThat(viewModel.generationEnCoursProperty().get()).isTrue();
-        assertThat(viewModel.messageProperty().get()).contains("en cours");
+        assertThat(viewModel.messageProperty().get())
+                .as("#1886 : démarrer efface le résultat précédent ; le travail en cours s'annonce ailleurs")
+                .isEmpty();
 
         // Calcul hors-thread (aucune mutation observable), puis application sur le fil JavaFX.
         var produites = viewModel.calculerArchivesDepot(progression -> {}, SuiviArchives.inerte());

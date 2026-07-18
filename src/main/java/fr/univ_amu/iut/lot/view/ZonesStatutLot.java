@@ -47,6 +47,11 @@ final class ZonesStatutLot {
     }
 
     private String droiteEtatVivant() {
+        // Le lancement passe AVANT le téléversement : les deux allument `enCours`, mais un lancement n'a
+        // pas de compteur d'archives - annoncer « n/N déposées » pendant un simple appel serait faux.
+        if (depotViewModel.lancementEnCoursProperty().get()) {
+            return FormatsLot.libelleLancementEnCours();
+        }
         if (depotViewModel.enCoursProperty().get()) {
             var suivi = depotViewModel.suiviLignes();
             return FormatsLot.libelleDepotEnCours(
