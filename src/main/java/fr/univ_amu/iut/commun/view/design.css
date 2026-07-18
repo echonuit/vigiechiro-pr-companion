@@ -39,6 +39,17 @@
 }
 
 /*
+ * Nom d'une phase d'opération longue, en tête de son bloc de progression (réactivation, reconstruction).
+ * Même taille que le message qui le suit sur la même ligne, mais en pleine couleur de texte : c'est ce
+ * qui les distingue, le nom nommant la phase et le message disant où elle en est.
+ */
+.nom-de-phase {
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-texte;
+}
+
+/*
  * Échelle de boutons (#689). Trois rôles, une seule définition, jusqu'ici
  * redéclarée dans quatre feuilles de feature (sites, importation, qualification,
  * passage) sous deux noms parallèles (`bouton-*` et `action-*`) aux paddings et

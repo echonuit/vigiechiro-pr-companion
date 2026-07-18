@@ -27,7 +27,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -104,7 +103,7 @@ public class ReconstructionModaleController {
     private StackPane enveloppeReconstruire;
 
     @FXML
-    private HBox zoneProgression;
+    private VBox zoneProgression;
 
     @FXML
     private ProgressBar barreProgression;
@@ -122,7 +121,7 @@ public class ReconstructionModaleController {
     /// Barre + libellé de la progression **globale** de l'import groupé (« Nuit X / N »), au-dessus de la
     /// progression de la nuit courante ([#zoneProgression]). Visible seulement pendant un lot.
     @FXML
-    private HBox zoneProgressionGlobale;
+    private VBox zoneProgressionGlobale;
 
     @FXML
     private ProgressBar barreProgressionGlobale;
