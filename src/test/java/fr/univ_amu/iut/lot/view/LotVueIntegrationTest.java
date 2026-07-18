@@ -340,7 +340,20 @@ class LotVueIntegrationTest {
         assertThat(table.getContextMenu().getItems().stream()
                         .map(i -> i.getText())
                         .toList())
-                .contains("Colonnes…");
+                .contains("Colonnes…", "Copier");
+        // #1798 : la ligne de dépôt ne porte pas de chemin ; son identifiant est la clé qu'on recoupe
+        // côté plateforme, et c'est donc lui que « Copier ▸ » propose.
+        javafx.scene.control.Menu copier = (javafx.scene.control.Menu) table.getContextMenu().getItems().stream()
+                .filter(i -> "Copier".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        robot.interact(() -> table.getSelectionModel().select(0));
+        java.util.concurrent.atomic.AtomicReference<String> copie = new java.util.concurrent.atomic.AtomicReference<>();
+        robot.interact(() -> {
+            copier.getItems().get(0).fire();
+            copie.set(javafx.scene.input.Clipboard.getSystemClipboard().getString());
+        });
+        assertThat(copie.get()).isEqualTo("Car-1.zip");
         // Il reste une unité non déposée : l'action bascule en reprise, active depuis « Dépôt en cours ».
         Button televerser = robot.lookup("#btnTeleverser").queryAs(Button.class);
         assertThat(televerser.getText()).contains("Reprendre le dépôt");

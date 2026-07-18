@@ -11,6 +11,8 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Lieu;
+import fr.univ_amu.iut.commun.view.MenuCopier;
+import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -357,13 +359,24 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Sélecteur de colonnes (#918, EPIC #914) : clic droit + ☰ « outils » offrent « Colonnes… » sur la
         // table de suivi comme sur les autres vues tabulaires. `#` (identité) et « Progression » (l'état) sont
         // verrouillées ; « Fichiers » et « Taille » masquables.
+        // Actions de ligne (#1796, #1798). Les archives d'un dépôt vivent toutes dans le **même** dossier
+        // `depot/` : l'item ouvre donc ce dossier, miroir du bouton « Ouvrir le dossier », et « Copier ▸ »
+        // en donne le chemin. La ligne ne porte pas le chemin de son propre ZIP (LigneArchive = numéro,
+        // nombre de fichiers, taille) : on ne le reconstitue pas à la main, un chemin faux serait pire que
+        // pas de chemin du tout.
         GestionnaireColonnes.installerEtPersister(
                 tableArchives,
                 menuOutils,
                 TableSuiviArchives.configurer(tableArchives),
                 depotColonnes,
                 "lot",
-                "principale");
+                "principale",
+                MenuLigne.item("Ouvrir le dossier", tableArchives, ligne -> ouvrirDossierDepot()),
+                MenuCopier.creer(
+                        tableArchives,
+                        new MenuCopier.Entree<>(
+                                "Chemin du dossier",
+                                ligne -> chemin(viewModel.cheminDepotProperty().get()))));
         tableArchives.setItems(viewModel.suiviLignes().lignes());
 
         // Étape ③ : « Ouvrir le dossier » seulement quand les archives sont réellement prêtes (#259), pas
@@ -552,7 +565,13 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Sélecteur de colonnes (#1800) : la table de dépôt n'avait aucun menu contextuel, alors que sa
         // voisine (archives) en a un sur le même écran. Disposition retenue par écran (#994), clé « depot ».
         var colonnesDepot = GestionnaireColonnes.colonnesParDefaut(tableDepot);
-        GestionnaireColonnes.installerClicDroit(tableDepot, colonnesDepot);
+        GestionnaireColonnes.installerClicDroit(
+                tableDepot,
+                colonnesDepot,
+                // LigneDepot ne porte pas de chemin : son identifiant est la clé qu'on recoupe côté
+                // plateforme, c'est donc lui qu'on offre à la copie.
+                MenuCopier.creer(
+                        tableDepot, new MenuCopier.Entree<>("Identifiant", ligne -> chemin(ligne.identifiant()))));
         GestionnaireColonnes.persister(tableDepot, colonnesDepot, depotColonnes, "lot", "depot");
         tableDepot.setItems(depotViewModel.suiviLignes().lignes());
         var depotEntame = Bindings.isNotEmpty(depotViewModel.suiviLignes().lignes());
@@ -618,6 +637,12 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 filJavaFx.execute(() -> viewModel.suiviLignes().echouer(numero, raison));
             }
         };
+    }
+
+    /// Chemin à copier, ou chaîne vide tant que le dossier de dépôt n'existe pas : on ne met jamais
+    /// « null » dans le presse-papier de l'utilisateur.
+    private static String chemin(String valeur) {
+        return valeur == null ? "" : valeur;
     }
 
     /// Ouvre le sous-dossier `depot/` dans le gestionnaire de fichiers du système (#251), pour aider au

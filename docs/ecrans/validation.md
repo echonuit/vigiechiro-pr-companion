@@ -66,6 +66,12 @@ Comme tous les tableaux de l'application, celui-ci se **trie**, se **réorganise
 colonnes** (clic droit ou menu ☰ « outils ») : le fonctionnement commun est décrit dans
 [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
+Le **clic droit** sur une observation réunit par ailleurs ses actions : **ouvrir le passage**, la
+**fiche de l'espèce**, le sous-menu **Validation ▸** (valider, corriger, certitude, référence, douteux)
+et **Copier ▸** (nom latin, n° de carré). Vous n'êtes donc plus obligé de remonter au menu ☰ ni aux
+boutons pour agir sur la ligne que vous écoutez :
+voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit).
+
 Ici, outre l'espèce, le statut et la proposition Tadarida, la table peut afficher : le **nom de fichier** de la
 séquence, la **date d'enregistrement**, l'**heure de capture**, la **fréquence médiane**, votre
 **certitude**, un **indicateur de commentaire**, et les mesures d'identification **FME** (fréquence de

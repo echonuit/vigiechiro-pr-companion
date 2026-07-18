@@ -35,13 +35,18 @@ Le bandeau du haut résume : *« 5 écarts : 1 erreur, 0 avertissement, 4 infos 
 Un constat **nomme** la nuit fautive. **Double-cliquez** sur la ligne : la fiche du passage s'ouvre, avec
 son contexte (carré, point). Vous n'avez pas à la retrouver à la main.
 
+Un **clic droit** sur le constat propose la même chose sous forme de menu, avec de quoi **copier** le
+n° de passage ou le motif du constat pour les recoller ailleurs. Les entrées sont **grisées** quand le
+constat ne cite aucun passage : voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit).
+
 ## Auditer une seule nuit
 
 Après avoir **réparé** une nuit (réimporté des fichiers, réactivé un passage archivé), vous voulez vérifier
 **celle-là** — pas relancer l'audit de tout un workspace qui en compte des dizaines.
 
 Sélectionnez un constat qui cite un passage, puis **« Auditer ce passage »**. Le bouton reste **désactivé**
-tant qu'aucune nuit n'est sélectionnée, et son infobulle vous dit **pourquoi**.
+tant qu'aucune nuit n'est sélectionnée, et son infobulle vous dit **pourquoi**. La même action figure au
+**clic droit** de la ligne, si vous préférez rester sur le tableau.
 
 ## Vérifier en ligne
 

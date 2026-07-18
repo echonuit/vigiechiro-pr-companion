@@ -274,7 +274,12 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 MenuLigne.item("Ouvrir le passage", tableLignes, this::ouvrirPassageDeLaLigne),
                 MenuLigne.item("Écouter le passage", tableLignes, ligne -> ecouterPassage()),
                 vigieChiro.item(tableLignes, LignePassage::idPassage),
-                MenuCopier.creer(tableLignes, new MenuCopier.Entree<>("Carré", LignePassage::numeroCarre)));
+                MenuCopier.creer(
+                        tableLignes,
+                        new MenuCopier.Entree<>(
+                                "N° de passage",
+                                ligne -> ligne.idPassage() == null ? "" : String.valueOf(ligne.idPassage())),
+                        new MenuCopier.Entree<>("Carré", LignePassage::numeroCarre)));
         GestionnaireColonnes.persister(tableLignes, colonnes, depotColonnes, FEATURE, "principale");
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
         // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne

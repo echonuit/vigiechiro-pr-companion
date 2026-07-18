@@ -51,9 +51,14 @@ passage : le tableau se replie automatiquement pour centrer l'attention sur la c
 **réinitialiser** les filtres ; un menu **☰** à droite de la barre regroupe les actions secondaires
 (**Vues** enregistrées et **export** de la sélection). On **trie** en cliquant l'en-tête d'une
 colonne (Année et N° de passage se trient numériquement), en plus du sélecteur d'ordres. Un
-**double-clic** sur une ligne ouvre l'écran du passage correspondant. Le tableau laisse aussi **choisir
-et réordonner ses colonnes** (clic droit ou entrée « Colonnes… » du menu ☰) :
-voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+**double-clic** sur une ligne ouvre l'écran du passage correspondant.
+
+Un **clic droit** sur une ligne réunit les actions de ce passage : **ouvrir le passage**,
+**écouter le passage**, ouvrir sa page **Vigie-Chiro** (grisée si le passage n'est pas lié à la
+plateforme) et **copier** son n° de carré. Le même menu laisse **choisir et réordonner les colonnes**
+(entrée « Colonnes… », également dans le menu ☰) :
+voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit)
+et [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
 Quand un filtre est actif, le tableau et le résumé se recalculent en conséquence :
 

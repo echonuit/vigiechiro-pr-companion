@@ -247,7 +247,12 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
                 "principale",
                 MenuLigne.item("Ouvrir le passage", tablePassages, this::ouvrirPassageDeLaLigne),
                 vigieChiro.item(tablePassages, LignePassage::idPassage),
-                MenuCopier.creer(tablePassages, new MenuCopier.Entree<>("Point", LignePassage::codePoint)));
+                MenuCopier.creer(
+                        tablePassages,
+                        new MenuCopier.Entree<>(
+                                "N° de passage",
+                                ligne -> ligne.idPassage() == null ? "" : String.valueOf(ligne.idPassage())),
+                        new MenuCopier.Entree<>("Point", LignePassage::codePoint)));
         // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
         // contexte à gauche, résumé au centre.
         zonesStatut.bind(Bindings.createObjectBinding(

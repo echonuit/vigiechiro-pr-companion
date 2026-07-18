@@ -88,6 +88,17 @@ public class MaFeatureController {
     chaque table par `installerClicDroit(table, colonnes, …)` et fait pointer le ☰ vers la table active
     via `GestionnaireColonnes.ouvrir(...)`.
 
+    **Actions de ligne et double-clic (#1792)** : une table de données offre aussi les gestes sous le
+    curseur, dans un **ordre stable d'un écran à l'autre** (action principale, actions secondaires,
+    `Validation ▸`, `Copier ▸`, puis « Colonnes… » toujours en dernier). Le socle fournit
+    `DoubleClicLigne.installer(table, action)` (qui pose du même coup la sélection au clic droit, sans
+    casser une sélection multiple), `MenuLigne.item(libelle, table, action)`,
+    `MenuCopier.creer(table, Entree…)` et `ActionVigieChiroPassage.item(…)`. Le **double-clic reste le
+    miroir de l'action principale** du menu, et toute action qu'il déclenche doit **rendre compte**
+    quand elle n'aboutit pas - un geste sans état visible ne peut pas être muet :
+    voir [ADR 0021](decisions/0021-double-clic-miroir-qui-rend-compte.md) et la section
+    [Actions de ligne d'une table](patterns.md#actions-de-ligne-dune-table-double-clic-et-menu-contextuel-socle-commun).
+
     **Persistance (#994)** : pour retenir la disposition **par écran** (ordre + visibilité restaurés à la
     réouverture), remplacez `installer` par `installerEtPersister(table, menu, colonnes, depotColonnes,
     feature, cle, …)` (le controller injecte `DepotDispositionColonnes`). Pour que les **vues mémorisées**

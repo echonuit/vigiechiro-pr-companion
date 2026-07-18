@@ -45,6 +45,7 @@ MAINS=(
   "fr.univ_amu.iut.audio.outils.CaptureSonsValidationLot"
   "fr.univ_amu.iut.audio.outils.CaptureCommentaireAudio"
   "fr.univ_amu.iut.audio.outils.CaptureValidationTadarida"
+  "fr.univ_amu.iut.audio.outils.CaptureMenuLigne"
   "fr.univ_amu.iut.commun.outils.CaptureFicheEspece"
   "fr.univ_amu.iut.commun.outils.CaptureDialogues"
   "fr.univ_amu.iut.connexion.outils.CaptureConnexion"

@@ -70,12 +70,15 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.DragEvent;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.PickResult;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.FlowPane;
@@ -995,5 +998,67 @@ class SonsValidationViewTest {
         assertThat(voile.isVisible())
                 .as("chargement terminé (exécuteur synchrone) : overlay masqué")
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1792 : un clic droit dans une sélection multiple la préserve (la validation en lot en dépend)")
+    void clic_droit_preserve_une_selection_multiple(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().selectIndices(0, 1));
+        WaitForAsyncUtils.waitForFxEvents();
+        assertThat(table.getSelectionModel().getSelectedIndices()).containsExactly(0, 1);
+
+        // Clic droit sur une ligne DÉJÀ sélectionnée : le menu doit s'ouvrir sur les deux lignes.
+        // Si la sélection retombait à une seule ligne, « Validation ▸ » ne validerait qu'une observation
+        // au lieu du lot que l'utilisateur croit avoir sous le curseur.
+        clicDroitSurLigne(robot, 1);
+
+        assertThat(table.getSelectionModel().getSelectedIndices())
+                .as("le clic droit ne doit pas réduire une sélection multiple existante")
+                .containsExactly(0, 1);
+    }
+
+    @Test
+    @DisplayName("#1792 : un clic droit hors de la sélection cible la ligne survolée")
+    void clic_droit_hors_selection_cible_la_ligne_survolee(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().clearAndSelect(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        clicDroitSurLigne(robot, 1);
+
+        assertThat(table.getSelectionModel().getSelectedIndices())
+                .as("le menu doit porter sur la ligne visée, pas sur l'ancienne sélection")
+                .containsExactly(1);
+    }
+
+    /// Clic droit **déterministe** sur la ligne d'index `index` : l'événement part vers le nœud, sans
+    /// passer par une position de souris (en headless, viser des coordonnées écran est fragile).
+    private static void clicDroitSurLigne(FxRobot robot, int index) {
+        Node ligne = robot.lookup("#tableObservations").lookup(".table-row-cell").queryAll().stream()
+                .map(noeud -> (TableRow<?>) noeud)
+                .filter(rangee -> !rangee.isEmpty() && rangee.getIndex() == index)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucune ligne d'index " + index));
+        robot.interact(() -> ligne.fireEvent(new MouseEvent(
+                MouseEvent.MOUSE_PRESSED,
+                0,
+                0,
+                0,
+                0,
+                MouseButton.SECONDARY,
+                1,
+                false,
+                false,
+                false,
+                false,
+                false,
+                false,
+                true,
+                true,
+                true,
+                false,
+                null)));
+        WaitForAsyncUtils.waitForFxEvents();
     }
 }

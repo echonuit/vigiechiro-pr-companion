@@ -318,6 +318,26 @@ class MultisiteViewTest {
     }
 
     @Test
+    @DisplayName("#1798 : « Copier ▸ N° de passage » place l'identifiant du passage dans le presse-papier")
+    void copier_le_numero_de_passage(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0));
+        Menu copier = (Menu) table.getContextMenu().getItems().stream()
+                .filter(i -> "Copier".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        MenuItem numero = copier.getItems().get(0);
+        assertThat(numero.getText()).isEqualTo("N° de passage");
+
+        java.util.concurrent.atomic.AtomicReference<String> copie = new java.util.concurrent.atomic.AtomicReference<>();
+        robot.interact(() -> {
+            numero.fire();
+            copie.set(Clipboard.getSystemClipboard().getString());
+        });
+        assertThat(copie.get()).isEqualTo("42");
+    }
+
+    @Test
     @DisplayName("#1798 : « Copier ▸ Carré » place le n° de carré dans le presse-papier")
     void copier_le_carre(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
@@ -326,7 +346,7 @@ class MultisiteViewTest {
                 .filter(i -> "Copier".equals(i.getText()))
                 .findFirst()
                 .orElseThrow();
-        MenuItem carre = copier.getItems().get(0);
+        MenuItem carre = copier.getItems().get(1);
         assertThat(carre.getText()).isEqualTo("Carré");
 
         java.util.concurrent.atomic.AtomicReference<String> copie = new java.util.concurrent.atomic.AtomicReference<>();

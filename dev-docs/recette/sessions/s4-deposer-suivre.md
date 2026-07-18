@@ -135,6 +135,19 @@ participation », puis le suivi du traitement. S4 est la première session qui *
 53. **Ouvrir le journal et y chercher le jeton** : il n'y figure ni en clair, ni encodé, ni via une URL S3
     signée (le journal doit pouvoir être joint à un signalement).
 
+**Bloc · Gestes de ligne des tableaux (EPIC #1792)** — le rendu d'un menu contextuel ne se scripte pas :
+longueur des libellés, lisibilité d'un item grisé, position du popup près d'un bord.
+
+54. Clic droit sur une ligne du **suivi des archives** : le menu s'ouvre entièrement lisible, aucun
+    libellé coupé.
+55. L'ordre y est « Ouvrir le dossier », « Copier », puis « Colonnes… » **en dernier**.
+56. « Ouvrir le dossier » ouvre bien le dossier `depot/` dans le gestionnaire de fichiers.
+57. « Copier ▸ Chemin du dossier » place un chemin **collable** dans le presse-papier (vérifier en
+    collant dans une barre d'adresse).
+58. Clic droit sur une ligne de la **table de dépôt** : « Copier ▸ Identifiant » donne le nom du ZIP.
+59. Clic droit sur une ligne proche du **bord bas** de l'écran : le menu s'ouvre vers le haut et reste
+    entièrement visible.
+
 ## Constats candidats (desk-check, à confirmer en séance)
 
 | # | Axe | Constat |

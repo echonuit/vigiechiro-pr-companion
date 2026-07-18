@@ -151,7 +151,8 @@ class ImportationVueIntegrationTest {
         assertThat(tableFichiers.getContextMenu().getItems().stream()
                         .map(i -> i.getText())
                         .toList())
-                .contains("Colonnes…");
+                .as("#1798 : le nom de fichier est la valeur qu'on recopie depuis cet écran")
+                .contains("Colonnes…", "Copier");
         assertThat(robot.lookup("#boutonAnnuler").queryAs(Button.class)).isNotNull(); // #146 (annulation)
         assertThat(robot.lookup("#zoneRejets").queryAs(VBox.class)).isNotNull(); // #155 (rapport d'import)
         assertThat(robot.lookup("#listeRejets").queryAs(ListView.class)).isNotNull(); // #155

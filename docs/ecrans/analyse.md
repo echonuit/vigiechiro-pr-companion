@@ -30,6 +30,12 @@ Les tableaux de cet écran (l'inventaire et le détail des observations) se **tr
 et laissent **choisir leurs colonnes** (clic droit sur le tableau ou menu ☰ « outils ») :
 voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
+Le **clic droit** réunit aussi les actions de la ligne visée : la **fiche de l'espèce**, et sur le détail
+des observations **Écouter** et **Ouvrir le passage**. Un sous-menu **Copier ▸** dépose dans le
+presse-papier le **nom latin** ou le **nom vernaculaire** de l'espèce (le **n° de carré** sur le détail),
+pour les recoller dans un tableur :
+voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit).
+
 ## Le détail : les observations d'une espèce
 
 L'écran est en **maître-détail**. En sélectionnant une espèce dans l'inventaire (mode *Par espèce*), le

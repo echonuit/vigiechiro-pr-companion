@@ -108,6 +108,11 @@ où en est chaque enregistrement : en attente, en cours (avec l'étape — copie
 terminé, ou **rejeté** avec la raison au survol. La copie et la transformation travaillent **en
 parallèle** sur plusieurs fichiers à la fois. En import multi-nuits, la table repart à chaque nuit.
 
+Un **clic droit** sur cette table laisse **choisir et réordonner ses colonnes** (« Colonnes… »), comme
+sur les autres tableaux de l'application. Cet écran étant transitoire (la liste ne survit pas à
+l'import), la disposition n'y est pas mémorisée d'une fois sur l'autre :
+voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
+
 ![Import en cours : barre de progression, formulaire gelé.](../assets/captures/apercu-import-en-cours.png)
 
 ## Rapport d'import

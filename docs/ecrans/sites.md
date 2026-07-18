@@ -81,6 +81,11 @@ création, dernière nuit importée, nombre de passages), ses **points d'écoute
 Le tableau des passages se **trie**, se **réorganise** et laisse **choisir ses colonnes** (clic droit ou
 menu ☰ « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md).
 
+Un **double-clic** sur une ligne ouvre l'écran du passage. Le **clic droit** réunit les actions de cette
+nuit : **ouvrir le passage**, ouvrir sa page **Vigie-Chiro** (grisée si le passage n'est pas lié à la
+plateforme) et **copier** son code de point :
+voir [Agir sur une ligne](../personnaliser-les-tableaux.md#agir-sur-une-ligne-double-clic-et-clic-droit).
+
 Le bouton **Modifier** (bandeau d'identité) ouvre une fenêtre pour **éditer la fiche du site** :
 numéro de carré, nom, protocole et commentaire. Pratique pour corriger une saisie ou compléter le
 site après coup, sans repasser par sa création.

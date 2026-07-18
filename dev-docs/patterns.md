@@ -823,6 +823,65 @@ jamais une densité ni une pastille ad hoc. Un statut de `commun.model` passe pa
 un statut de feature reçoit un `classeBadge`/`classeCss` **côté feature** (jamais une surcharge dans
 `commun`, sous peine de cycle).
 
+## Actions de ligne d'une table : double-clic et menu contextuel (socle `commun`)
+
+**Le problème.** Les neuf tables de l'application ont grandi séparément, et leurs gestes avaient
+divergé. Le **menu contextuel** se réduisait partout à « Colonnes… », sauf la table des espèces de
+l'Inventaire qui y ajoutait « Fiche de l'espèce » ; trois tables (dépôt du Lot, Audit, Importation)
+n'avaient **aucun** menu. Le **double-clic** ouvrait selon l'écran l'écoute, le passage, ou rien. La
+même action s'atteignait par deux gestes différents d'un écran à l'autre, et les actions de ligne
+vivaient en boutons ou dans le ☰, jamais sous le curseur. Le chantier #1792 a unifié tout cela.
+
+**La solution.** Quatre briques de `commun/view`, composables avec le `GestionnaireColonnes` existant :
+
+- `DoubleClicLigne.installer(table, action)` : pose une `rowFactory` qui déclenche `action` au
+  double-clic **sur une ligne remplie**. Le même geste installe aussi la sélection au **clic droit**,
+  qui cible la ligne survolée **sans casser une sélection multiple** en cours ;
+- `MenuLigne.item(libelle, table, action)` : un `MenuItem` lié à la sélection, désactivé quand elle est
+  vide ;
+- `MenuCopier.creer(table, Entree...)` : le sous-menu « Copier ▸ », chaque `Entree(libelle, valeur)`
+  extrayant une chaîne de la ligne, déposée dans le presse-papier système (`PressePapier`) ;
+- `ActionVigieChiroPassage.item(table, idPassage)` : ouvre la page de la participation du passage de la
+  ligne, désactivé avec son motif quand le passage n'est pas lié à la plateforme.
+
+Les items se passent en varargs à `GestionnaireColonnes.installerClicDroit` /
+`installer` / `installerEtPersister`, **seul propriétaire des menus contextuels** de production : il les
+compose et referme toujours la liste par « Colonnes… ».
+
+**La grammaire du menu, stable d'un écran à l'autre.** L'ordre porte du sens ; on ne le réarrange pas
+au gré des écrans :
+
+```
+Action principale de la ligne     (miroir du double-clic)
+Actions secondaires               (Vigie-Chiro, auditer…)
+──────────
+Validation ▸                      (sous-menu, si l'écran valide)
+Copier ▸
+──────────
+Colonnes…                         (toujours en dernier)
+```
+
+**Le double-clic est le miroir de l'action principale**, jamais une action qu'on ne trouve nulle part
+ailleurs : il n'a aucune affordance propre, donc tout ce qu'il déclenche doit rester atteignable par un
+chemin visible.
+
+**Le piège (un geste sans état ne peut pas être muet).** Un `MenuItem` montre son état **avant** le
+clic : indisponible, il se grise et porte le motif dans son libellé (#789). Un double-clic n'a rien à
+montrer avant le geste, donc son silence ne se distingue pas d'une panne - c'est exactement ce qui a
+été remonté de l'usage réel (#1834, #1837). Une action ouverte au double-clic doit donc **rendre
+compte** quand elle n'aboutit pas : `ActionFicheEspece.ouvrir` rend un booléen, et
+`ouvrirOuSignaler(espece, siAucuneFiche)` route le motif vers le canal de l'écran. Voir
+[ADR 0021](decisions/0021-double-clic-miroir-qui-rend-compte.md).
+
+**Le véhicule du motif.** `commun.viewmodel.RetourOperation` (texte + sévérité succès / information /
+erreur) et `commun.view.BandeauRetour.installer(...)` rendent ce retour dans un bandeau **non modal** :
+un double-clic est un geste courant et souvent accidentel, une boîte modale y serait pire que le
+silence. Le style vit dans `design.css` sous `.bandeau-retour`, que tous les écrans chargent déjà.
+
+**La règle.** Une nouvelle table de données pose `DoubleClicLigne.installer` sur son action principale,
+compose son menu par le `GestionnaireColonnes` dans l'ordre ci-dessus, et donne à toute action ouverte
+au double-clic un moyen de dire pourquoi elle n'a rien fait.
+
 ## Unit of Work (`UniteDeTravail`)
 
 **Le problème.** Par défaut, chaque écriture DAO s'auto-commit. Mais « créer un passage **et** sa

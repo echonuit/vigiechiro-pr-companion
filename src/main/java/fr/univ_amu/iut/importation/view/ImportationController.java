@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
@@ -387,7 +388,13 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         TableSuiviFichiers.configurer(tableFichiers);
         // Sélecteur de colonnes (#1800) : cette table n'avait aucun menu contextuel. Pas de persistance ici,
         // l'écran d'import étant transitoire (la liste ne survit pas à l'import).
-        GestionnaireColonnes.installerClicDroit(tableFichiers, GestionnaireColonnes.colonnesParDefaut(tableFichiers));
+        GestionnaireColonnes.installerClicDroit(
+                tableFichiers,
+                GestionnaireColonnes.colonnesParDefaut(tableFichiers),
+                MenuCopier.creer(
+                        tableFichiers,
+                        new MenuCopier.Entree<>(
+                                "Nom du fichier", ligne -> ligne.nomFichier() == null ? "" : ligne.nomFichier())));
         tableFichiers.setItems(viewModel.suiviFichiers().lignes());
         lierVisibiliteGeree(
                 tableFichiers, Bindings.isNotEmpty(viewModel.suiviFichiers().lignes()));
