@@ -13,9 +13,11 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
+import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.multisite.view.NavigationMultisite;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -51,24 +53,33 @@ import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
 import org.testfx.util.WaitForAsyncUtils;
 
-/// Test E2E de **synchronisation au retour de navigation** : M-Passage doit refléter la vérification
-/// dès qu'on y revient depuis M-Qualification, sans qu'il faille ressortir jusqu'au site et rouvrir
-/// le passage.
+/// Test E2E de **propagation d'une vérification** : **une seule** vérification, faite par l'interface,
+/// doit se refléter sur **toutes** les surfaces qui l'affichent, au fur et à mesure qu'on dépile la
+/// navigation (#1822).
 ///
-/// Régression visée : le [fr.univ_amu.iut.commun.view.Navigateur] garde les écrans vivants dans sa
+/// Régression visée : le [fr.univ_amu.iut.commun.view.Navigateur] garde les écrans **vivants** dans sa
 /// pile et les ré-affiche tels quels au retour ; sans le contrat
-/// [fr.univ_amu.iut.commun.view.RafraichirAuRetour], le passage ré-affiché par ← Retour montrait son
-/// état **d'avant** le verdict (statut « Transformé », verdict « non saisi »).
+/// [fr.univ_amu.iut.commun.view.RafraichirAuRetour], l'écran ré-affiché montre son état **d'avant** le
+/// verdict (statut « Transformé », verdict « non saisi », ligne d'agrégat périmée).
 ///
-/// Parcours réel sur de vrais services + base SQLite : ouverture M-Passage → ouverture
-/// M-Qualification → choix du verdict OK + enregistrement → ← Retour. On vérifie qu'au retour le
-/// statut est passé à « Vérifié » et le verdict à « OK ».
+/// **Pourquoi un seul parcours plutôt que deux.** Ce test remplace `RetourPassageApresVerification` et
+/// `RetourAgregatApresVerification`, qui prouvaient chacun une moitié : le premier faisait la vraie
+/// vérification par l'IHM mais ne contrôlait que M-Passage ; les seconds contrôlaient les agrégats mais
+/// court-circuitaient l'interface en appelant `ServiceQualification` directement. Ni l'un ni l'autre ne
+/// prouvait qu'**une** vérification réelle se propage **partout** - or c'est exactement là que le défaut
+/// se loge (cache non invalidé, vue agrégée non rafraîchie), et c'est ce que fait l'utilisateur : il
+/// vérifie **une fois**.
+///
+/// Parcours réel sur de vrais services + base SQLite : écran d'origine (agrégat) → M-Passage →
+/// M-Qualification (verdict OK **par les boutons**) → ← Retour (M-Passage à jour) → ← Retour (l'écran
+/// d'origine à jour).
 @ExtendWith(ApplicationExtension.class)
-class RetourPassageApresVerificationE2ETest {
+class RetourApresVerificationE2ETest {
 
-    private static final String ID_USER = "u-sync";
+    private static final String ID_USER = "u-retour";
     private static final String CARRE = "640380";
     private static final String POINT = "A1";
+    private static final String SITE = "Étang de la Tuilière";
     private static final String ENREGISTREUR = "1925492";
 
     private Injector injector;
@@ -76,7 +87,7 @@ class RetourPassageApresVerificationE2ETest {
 
     @Start
     void start(Stage stage) throws Exception {
-        Path workspace = Files.createTempDirectory("vc-sync-e2e");
+        Path workspace = Files.createTempDirectory("vc-retour-e2e");
         System.setProperty("vigiechiro.workspace", workspace.toString());
         injector = RacineInjecteur.creer();
         SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
@@ -96,20 +107,54 @@ class RetourPassageApresVerificationE2ETest {
     }
 
     @Test
-    @DisplayName("Revenir sur M-Passage après vérification montre le verdict, sans ressortir jusqu'au site")
-    void retour_sur_passage_reflete_la_verification(FxRobot robot) throws TimeoutException {
-        ContexteSite contexteSite = new ContexteSite(CARRE, POINT, "Étang de la Tuilière");
+    @DisplayName("Depuis M-Multisite : une vérification par l'IHM se reflète sur M-Passage PUIS sur l'agrégat")
+    void depuis_multisite_la_verification_se_propage(FxRobot robot) throws TimeoutException {
+        robot.interact(() -> injector.getInstance(NavigationMultisite.class).ouvrirAccueil());
+        TableView<?> agregat = robot.lookup("#tableLignes").queryAs(TableView.class);
+        assertThat(agregat.getItems()).hasSize(1);
+        assertThat(ligneMultisite(agregat).statut()).isEqualTo(StatutWorkflow.TRANSFORME);
 
-        // 1) Ouvrir M-Passage : statut « Transformé », verdict non saisi.
-        robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexteSite));
+        verifierParLInterfaceEtRevenirSurLePassage(robot);
+
+        // Second retour : l'agrégat d'où l'on vient doit refléter la MÊME vérification.
+        robot.interact(robot.lookup("#boutonRetour").queryAs(Button.class)::fire);
+        assertThat(ligneMultisite(agregat).statut())
+                .as("une vérification faite dans M-Qualification doit remonter jusqu'à la vue agrégée")
+                .isEqualTo(StatutWorkflow.VERIFIE);
+        assertThat(ligneMultisite(agregat).verdict()).isEqualTo(Verdict.OK);
+    }
+
+    @Test
+    @DisplayName("Depuis M-Site-detail : une vérification par l'IHM se reflète sur M-Passage PUIS sur la fiche site")
+    void depuis_site_detail_la_verification_se_propage(FxRobot robot) throws TimeoutException {
+        robot.interact(() -> injector.getInstance(OuvrirSite.class).ouvrirDetail(CARRE));
+        TableView<?> passages = robot.lookup("#tablePassages").queryAs(TableView.class);
+        assertThat(passages.getItems()).hasSize(1);
+        assertThat(ligneSite(passages).statut()).isEqualTo(StatutWorkflow.TRANSFORME);
+
+        verifierParLInterfaceEtRevenirSurLePassage(robot);
+
+        robot.interact(robot.lookup("#boutonRetour").queryAs(Button.class)::fire);
+        assertThat(ligneSite(passages).statut())
+                .as("une vérification faite dans M-Qualification doit remonter jusqu'à la fiche du site")
+                .isEqualTo(StatutWorkflow.VERIFIE);
+        assertThat(ligneSite(passages).verdict()).isEqualTo(Verdict.OK);
+    }
+
+    /// Le cœur du parcours, commun aux deux points d'entrée : ouvrir le passage (il est « Transformé »),
+    /// ouvrir M-Qualification, poser le verdict **par les boutons de l'écran** (pas par un appel de
+    /// service), revenir, et vérifier que M-Passage s'est rafraîchi. À la sortie, on est sur M-Passage :
+    /// à l'appelant de dépiler une fois de plus pour contrôler son écran d'origine.
+    private void verifierParLInterfaceEtRevenirSurLePassage(FxRobot robot) throws TimeoutException {
+        ContexteSite contexte = new ContexteSite(CARRE, POINT, SITE);
+        robot.interact(() -> injector.getInstance(OuvrirPassage.class).ouvrir(idPassage, contexte));
         Label lblStatut = robot.lookup("#lblStatut").queryAs(Label.class);
         Label lblVerdict = robot.lookup("#lblVerdict").queryAs(Label.class);
         assertThat(lblStatut.getText()).isEqualTo(StatutWorkflow.TRANSFORME.libelle());
         assertThat(lblVerdict.getText()).isEqualTo("non saisi");
 
-        // 2) Ouvrir M-Qualification sur ce passage (drill-down empilé sur M-Passage).
         robot.interact(() ->
-                injector.getInstance(OuvrirVerification.class).ouvrir(new ContextePassage(idPassage, 2, contexteSite)));
+                injector.getInstance(OuvrirVerification.class).ouvrir(new ContextePassage(idPassage, 2, contexte)));
 
         // M-Qualification se charge **hors du fil JavaFX** (#1210) et, sur le vrai injecteur, l'exécuteur
         // est **asynchrone**. Sans cette attente, le clic ci-dessous part pendant que le chargement est
@@ -124,27 +169,31 @@ class RetourPassageApresVerificationE2ETest {
                         .getItems()
                         .isEmpty());
 
-        // 3) Choisir le verdict OK puis enregistrer (vrai service → base mise à jour).
         robot.interact(robot.lookup("#boutonOk").queryAs(Button.class)::fire);
         robot.interact(robot.lookup("#boutonEnregistrer").queryAs(Button.class)::fire);
 
-        // 4) ← Retour vers M-Passage : il doit se rafraîchir et montrer la vérification.
+        // Premier retour : M-Passage. Mêmes instances de labels (l'écran est ré-affiché, pas reconstruit)
+        // : leur texte doit pourtant refléter le nouvel état.
         robot.interact(robot.lookup("#boutonRetour").queryAs(Button.class)::fire);
-
-        // Mêmes instances de labels (l'écran est ré-affiché, pas reconstruit) : leur texte doit
-        // pourtant refléter le nouvel état — c'est tout l'enjeu du rafraîchissement au retour.
         assertThat(lblStatut.getText()).isEqualTo(StatutWorkflow.VERIFIE.libelle());
         assertThat(lblVerdict.getText()).isEqualTo(Verdict.OK.libelle());
     }
 
-    /// Seede un passage **transformé** complet (site, point, enregistreur, session, trois séquences)
-    /// prêt à être vérifié, et renvoie son identifiant.
+    private static fr.univ_amu.iut.multisite.model.LignePassage ligneMultisite(TableView<?> table) {
+        return (fr.univ_amu.iut.multisite.model.LignePassage) table.getItems().get(0);
+    }
+
+    private static fr.univ_amu.iut.sites.viewmodel.LignePassage ligneSite(TableView<?> table) {
+        return (fr.univ_amu.iut.sites.viewmodel.LignePassage) table.getItems().get(0);
+    }
+
+    /// Seede un passage **transformé** complet (utilisateur courant, site, point, enregistreur, session,
+    /// trois séquences) prêt à être vérifié, et renvoie son identifiant.
     private long seederPassageTransforme(SourceDeDonnees source, Path workspace) {
         new UtilisateurDao(source).insert(new Utilisateur(ID_USER, "Testeur"));
         new EnregistreurDao(source).insert(new Enregistreur(ENREGISTREUR, "V1.01", null));
         Site site = new SiteDao(source)
-                .insert(new Site(
-                        null, CARRE, "Étang de la Tuilière", Protocole.STANDARD, "Aix", "2026-01-01", ID_USER));
+                .insert(new Site(null, CARRE, SITE, Protocole.STANDARD, "Aix", "2026-01-01", ID_USER));
         PointDEcoute point =
                 new PointDao(source).insert(new PointDEcoute(null, POINT, 43.4010, -1.5740, "Chêne", site.id()));
 
