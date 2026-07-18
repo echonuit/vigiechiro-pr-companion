@@ -228,11 +228,16 @@ référentiel**. La publication est **rejouable sans risque** : republier rééc
 Vos observations n'ont pas besoin d'être « rattachées » une par une à la plateforme au préalable :
 si ce lien manque, la publication le **récupère elle-même** avant d'envoyer. C'est le cas d'une nuit
 importée rapidement (le fichier d'observations seul) ou reconstruite depuis la plateforme. Une
-fenêtre de progression vous le dit alors (« Récupération des identifiants depuis Vigie-Chiro… »), avec un
-bouton **Annuler** : cette récupération peut prendre quelques minutes. Elle **préserve vos
-validations** - publier ne vous coûtera jamais votre travail de revue. Elle ramène au passage les
-**échanges avec le validateur** du Muséum, s'il y en a. Une nuit déjà rattachée n'en paie pas le
-coût, et le geste part directement.
+fenêtre de progression vous le dit alors (« Récupération des identifiants et des échanges avec le
+validateur… »), avec un bouton **Annuler** : cette récupération peut prendre quelques minutes. Elle
+**préserve vos validations** - publier ne vous coûtera jamais votre travail de revue. Une nuit déjà
+rattachée n'en paie pas le coût, et le geste part directement.
+
+Le nom de cette étape dit les **deux** choses qu'elle ramène : les identifiants dont la publication a
+besoin, et les **échanges avec le validateur** du Muséum, s'il y en a - les deux voyagent ensemble.
+Au retour, le compte rendu vous dit **sur combien d'observations** le validateur s'est exprimé
+(« Le validateur s'est exprimé sur 3 observation(s). »), plutôt que de vous laisser le découvrir en
+ouvrant la bonne ligne par hasard. Il se tait quand il n'y a rien à dire.
 
 Une seule situation reste hors d'atteinte : une nuit qui n'a **aucune participation** sur la
 plateforme, donc rien à quoi se rattacher. L'entrée de menu est alors **grisée** et le dit

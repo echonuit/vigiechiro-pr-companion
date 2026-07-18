@@ -216,6 +216,10 @@ public class ServiceReactivationPassage {
         if (importObservations.isEmpty() || rapport.decompte().disponibilite() == DisponibiliteAudio.ABSENTE) {
             return;
         }
+        // Le compte rendu du rapatriement (dont les échanges avec le validateur, #1867) est ici
+        // volontairement laissé de côté : la publication l'annonce, la réactivation pas encore. Le porter
+        // demanderait un composant de plus à RapportReactivation et à ses six sites de construction, ce
+        // qui appartient au chantier de son compte rendu, pas à celui-ci.
         AcquisitionAncrage.acquerirSiNecessaire(importObservations.get(), idPassage, progresAncrage, jeton);
     }
 

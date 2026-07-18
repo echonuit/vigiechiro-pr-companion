@@ -210,6 +210,20 @@ class ValidationExpertTest {
         assertThat(messageDao.filDeLObservation(avecFil.id()).get(1).deMoi("u-moi"))
                 .as("« vous » se déduit par comparaison avec l'identifiant du profil connecté, sans appel")
                 .isTrue();
+        assertThat(bilan.observationsAvecEchange())
+                .as("#1867 : le bilan compte les OBSERVATIONS concernées (une seule ici), pas les messages"
+                        + " (deux) : c'est ce compte qui dit à l'observateur où regarder")
+                .isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#1867 : sans le moindre fil, le bilan n'annonce aucun échange (cas courant)")
+    void sans_fil_le_bilan_n_annonce_aucun_echange() {
+        BilanImport bilan = importer(observation(0, "Pipkuh", null, null, null, List.of()));
+
+        assertThat(bilan.observationsAvecEchange())
+                .as("aucune transaction ouverte pour rien, et rien à annoncer au retour")
+                .isZero();
     }
 
     @Test

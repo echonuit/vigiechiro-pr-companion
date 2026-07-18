@@ -160,7 +160,7 @@ peuvent pas dire si le premier import « paraît instantané » ni si « Annuler
 62. « ☰ → Publier les corrections… » est **actif** (non grisé) sur cette nuit tout juste importée.
 63. Après avoir corrigé une observation et déclaré sa certitude, la confirmation annonce « N prête(s) à
     partir, et M à ancrer d'abord ».
-64. À l'accord, une fenêtre « Récupération des identifiants depuis Vigie-Chiro… (page x/y) » s'affiche et
+64. À l'accord, une fenêtre « Récupération des identifiants et des échanges avec le validateur… (page x/y) » s'affiche et
     **progresse** : noter la durée totale.
 65. Le bouton **Annuler** de cette fenêtre rend la main **avant** la fin, et le bandeau n'annonce aucune
     publication.

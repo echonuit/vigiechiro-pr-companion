@@ -57,6 +57,18 @@ public class ImportObservationsVigieChiro implements ImportObservations {
 
     private static String compteRendu(BilanImport bilan) {
         return "Observations importées depuis Vigie-Chiro : " + bilan.importees() + " observation(s)."
-                + (bilan.ignorees() > 0 ? " " + bilan.ignorees() + " ignorée(s)." : "");
+                + (bilan.ignorees() > 0 ? " " + bilan.ignorees() + " ignorée(s)." : "")
+                + echanges(bilan);
+    }
+
+    /// Les **échanges avec le validateur** rapatriés au passage (#1867). Muet quand il n'y en a pas, ce
+    /// qui est le cas courant : une phrase de plus à chaque import n'apprendrait rien. Le compte porte sur
+    /// les **observations** concernées, parce que c'est ce qui dit à l'observateur où regarder.
+    private static String echanges(BilanImport bilan) {
+        int concernees = bilan.observationsAvecEchange();
+        if (concernees == 0) {
+            return "";
+        }
+        return " Le validateur s'est exprimé sur " + concernees + " observation(s).";
     }
 }

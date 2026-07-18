@@ -67,8 +67,8 @@ public class PublicationCorrections {
     public BilanPublication publier(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
-        acquerirAncrageSiNecessaire(idPassage, progres, jeton);
-        return publier(idPassage);
+        String rapatriement = acquerirAncrageSiNecessaire(idPassage, progres, jeton);
+        return publier(idPassage).avecRapatriement(rapatriement);
     }
 
     /// L'ancrage manquant de ce passage peut-il être **acquis** (#1838) ? Vrai quand l'import est
@@ -89,8 +89,10 @@ public class PublicationCorrections {
     /// Acquiert l'ancrage manquant avant de publier (#1838), en déléguant au geste partagé
     /// [AcquisitionAncrage] - le même que celui de la réactivation (#1571), qui en a besoin pour une
     /// autre raison au même endroit du domaine (ADR 0019).
-    private void acquerirAncrageSiNecessaire(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
-        importateur.ifPresent(import_ -> AcquisitionAncrage.acquerirSiNecessaire(import_, idPassage, progres, jeton));
+    private String acquerirAncrageSiNecessaire(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
+        return importateur
+                .map(import_ -> AcquisitionAncrage.acquerirSiNecessaire(import_, idPassage, progres, jeton))
+                .orElse("");
     }
 
     /// Publie les corrections du passage, **sans toucher à l'ancrage** (celui qui manque restera compté).

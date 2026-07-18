@@ -44,21 +44,29 @@ final class FilsDiscussionVigieChiro {
     /// foi (un message n'a pas d'identité stable côté serveur — l'ancrage est positionnel, l'ajout se
     /// fait par `$push` — donc rien ne permettrait de rapprocher deux versions d'un même fil autrement
     /// qu'en inventant une identité).
-    void enregistrer(Long idResultats, List<DonneeVigieChiro> donnees) {
+    ///
+    /// @return le nombre d'**observations** dont un fil a été écrit. C'est ce compte, et non celui des
+    ///     messages, qui sert l'annonce faite à l'observateur (#1867) : il lui dit **où regarder**. Le
+    ///     compte des messages exigerait de savoir lesquels sont les siens, donc de connaître le profil
+    ///     connecté - une dépendance que ce collaborateur n'a pas, pour une information moins utile.
+    int enregistrer(Long idResultats, List<DonneeVigieChiro> donnees) {
         Map<Ancrage, List<MessageVigieChiro>> filsServeur = filsParAncrage(donnees);
         if (filsServeur.isEmpty()) {
-            return;
+            return 0;
         }
         List<Observation> inserees = observationDao.findByResults(idResultats);
+        int[] ecrits = {0};
         uniteDeTravail.executer(connexion -> {
             for (Observation observation : inserees) {
                 List<MessageVigieChiro> fil =
                         filsServeur.get(new Ancrage(observation.idDonneeVigieChiro(), observation.indiceVigieChiro()));
                 if (fil != null && !fil.isEmpty()) {
                     messageDao.remplacerFil(connexion, observation.id(), enMessages(observation.id(), fil));
+                    ecrits[0]++;
                 }
             }
         });
+        return ecrits[0];
     }
 
     /// Fils **non vides** du serveur, indexés par leur ancrage plateforme. Les observations sans message

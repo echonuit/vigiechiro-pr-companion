@@ -7,6 +7,7 @@ import com.google.inject.Provider;
 import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
+import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -275,7 +276,7 @@ public final class CapturePassage {
                         "Étape : ancrage réseau",
                         "Régénération 30/30",
                         1.0,
-                        "Récupération des identifiants depuis Vigie-Chiro… (page 3/12)",
+                        AcquisitionAncrage.LIBELLE + " (page 3/12)",
                         0.25),
                 fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
