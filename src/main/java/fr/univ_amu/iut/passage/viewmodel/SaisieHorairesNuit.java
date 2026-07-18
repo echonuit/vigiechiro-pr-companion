@@ -2,6 +2,8 @@ package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -40,10 +42,28 @@ public class SaisieHorairesNuit {
     /// Charge les heures du passage et détermine si ses enregistrements les attestent.
     void charger(Long idPassage, String heureDebut, String heureFin) {
         this.idPassage = idPassage;
-        debut.set(heureDebut == null ? "" : heureDebut);
-        fin.set(heureFin == null ? "" : heureFin);
+        debut.set(sansSecondes(heureDebut));
+        fin.set(sansSecondes(heureFin));
         chargees = couple();
         prouvees.set(service.heuresProuvees(idPassage));
+    }
+
+    /// Heure affichée au format du champ (`21:00`), quelle que soit sa forme en base.
+    ///
+    /// Les nuits importées portent `HH:mm:ss`, celles saisies ici `HH:mm` (le service normalise à
+    /// l'écriture). Sans cette mise en forme, deux nuits voisines s'affichaient différemment - et un
+    /// « 20:25:00 » démentait le `ex. 21:00` du champ juste à côté.
+    private static String sansSecondes(String heure) {
+        if (heure == null || heure.isBlank()) {
+            return "";
+        }
+        try {
+            return LocalTime.parse(heure.trim()).toString();
+        } catch (DateTimeParseException illisible) {
+            // Une heure qu'on ne sait pas lire est montrée telle quelle : la masquer priverait
+            // l'utilisateur du seul indice lui disant ce qu'il y a à corriger.
+            return heure.trim();
+        }
     }
 
     /// Enregistre les heures saisies, **si** elles sont saisissables et ont effectivement changé.

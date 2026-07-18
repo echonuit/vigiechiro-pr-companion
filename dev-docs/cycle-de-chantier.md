@@ -146,6 +146,13 @@ réponse : sur 41 commandes, **zéro** sans test, là où les greps naïfs en an
 un « aucun test » sorti d'un grep n'est qu'une **hypothèse**, à confirmer en ouvrant les fichiers
 **avant** d'en faire une issue. Une issue fausse coûte plus cher que le trou qu'elle prétend signaler.
 
+**Un garde-fou de non-régression se vérifie en le voyant rouge.** Un test écrit pour empêcher un défaut
+de revenir ne prouve rien tant qu'on ne l'a pas vu **échouer** avec le défaut en place. Deux gestes,
+complémentaires : **PIT ciblé** sur les classes du chantier (`-Pmutation`, exhaustif là où il
+s'applique) et la **mutation à la main** pour ce que PIT ne mute pas - attribut d'annotation, câblage,
+FXML, sonde réseau. Le mode d'emploi et les quatre contre-exemples qui ont motivé la règle sont dans
+[Tests et qualité](tests-et-qualite.md#un-garde-fou-de-non-regression-se-verifie-en-le-voyant-rouge).
+
 **Des E2E qui traversent, quitte à fusionner des scénarios.** Un E2E ne vaut pas par le nombre
 d'assertions mais par ce qu'il **traverse**. Plusieurs parcours courts, qui bouchonnent chacun l'étape
 voisine, prouvent chacun une tranche et **personne ne prouve la chaîne** : les défauts se logent

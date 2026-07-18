@@ -152,6 +152,12 @@ public final class CapturePassage {
         // la capture unique les cachait sans que rien ne le signale.
         rendreRattachement(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement.png"));
         rendreRattachement(injecteurConnecte(), idVerifie, sortie.resolve("apercu-passage-rattachement-connecte.png"));
+        // Troisième état de la modale : une nuit SQUELETTE (rapatriée, sans fichier ni séquence). Ses
+        // heures ne sont attestées par rien, donc saisissables (#1892) - l'inverse des deux captures
+        // ci-dessus, où elles sont grisées. Sans elle, le seul cas où l'utilisateur PEUT corriger ses
+        // heures n'était montré nulle part, alors que c'est le cas qui a motivé le geste.
+        long idSquelette = seederSquelette(source, idPoint);
+        rendreRattachement(injecteur, idSquelette, sortie.resolve("apercu-passage-rattachement-squelette.png"));
         // Modale « Réactiver ce passage » (#1780) : les deux barres de phase en cours (régénération pleine,
         // ancrage à mi-course), montrant que la barre ne reste plus figée pendant l'ancrage réseau.
         rendreModaleReactivation(injecteur, sortie.resolve("apercu-passage-reactivation.png"));
@@ -285,6 +291,33 @@ public final class CapturePassage {
     /// Seede une nuit complète (chemins sous le `workspace` temporaire) avec le `statut` et le
     /// `numero` de passage donnés, et renvoie l'identifiant du passage. Le site/point (FK) est seedé
     /// à part et partagé.
+    /// Nuit **squelette** : rapatriée de la plateforme, elle porte son identité mais **aucun
+    /// enregistrement** - ni session, ni original, ni séquence. Rien n'atteste donc ses heures, et c'est
+    /// exactement la nuit dont l'utilisateur doit pouvoir les corriger à la main (#1892).
+    ///
+    /// Ses bornes sont volontairement **aberrantes** (`15:00 → 15:00`) : c'est l'état réel qu'a produit le
+    /// cliquet de #1860 sur le terrain, celui qu'on vient réparer. Une capture qui montrerait une nuit
+    /// déjà juste n'illustrerait pas le besoin.
+    private static long seederSquelette(SourceDeDonnees source, long idPoint) {
+        return new PassageDao(source)
+                .insert(new Passage(
+                        null,
+                        3,
+                        2026,
+                        "2026-07-04",
+                        "15:00",
+                        "15:00",
+                        null,
+                        StatutWorkflow.DEPOSE,
+                        null,
+                        null,
+                        null,
+                        "2026-07-05",
+                        idPoint,
+                        ENREGISTREUR))
+                .id();
+    }
+
     private static long seederPassage(
             SourceDeDonnees source, Path workspace, long idPoint, StatutWorkflow statut, int numero) {
         PassageDao passageDao = new PassageDao(source);

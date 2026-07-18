@@ -227,9 +227,14 @@ selon ce que l'application sait :
 | La nuit a des **fichiers** ou des **sons** | Les champs sont **grisés** : ce sont les enregistrements qui font foi, et l'application réaligne les heures dessus toute seule. |
 | La nuit n'a **ni l'un ni l'autre** (récupérée de Vigie-Chiro, jamais reconstruite) | Les champs sont **modifiables** : rien ne peut attester ses heures, c'est à vous de les corriger. |
 
-Dans le second cas, l'application vous dit ce qu'elle fait quand elle corrige : après un envoi, le
-message indique l'ancienne et la nouvelle valeur, afin que vous puissiez la contester si elle vous
-paraît fausse.
+Dans le **premier** cas, l'application peut être amenée à corriger les heures d'elle-même : si les
+enregistrements contredisent ce qui est déclaré, ce sont eux qui partent vers Vigie-Chiro. Elle ne le
+fait pas en silence : après l'envoi, le message indique l'**ancienne et la nouvelle valeur**, afin que
+vous puissiez la contester si elle vous paraît fausse.
+
+Dans le **second**, rien ne se corrige tout seul, faute de quoi s'appuyer : c'est vous qui savez.
+
+![La fenêtre « Modifier le passage » sur une nuit récupérée de Vigie-Chiro : les heures y sont modifiables, et affichent ici des bornes aberrantes (15:00 → 15:00) à corriger.](../assets/captures/apercu-passage-rattachement-squelette.png)
 
 !!! note "Une fin avant le début, c'est normal"
     Une nuit franchit minuit : `21:00 → 06:00` est la forme habituelle, et l'application la comprend.
@@ -269,6 +274,16 @@ Les mêmes gestes existent en ligne de commande, sous les mêmes mots :
 ./vigiechiro metadonnees-passage --passage 12 --enregistreur 1925492
 ./vigiechiro metadonnees-passage --passage 12 --heure-debut 21:00 --heure-fin 06:00 --envoyer
 ```
+
+`statut-passage` dit d'où viennent les heures, pour que vous le sachiez **avant** d'essayer de les
+corriger :
+
+```
+Nuit                : 2026-07-04  (21:00 → 06:00)  [attestées par les enregistrements]
+```
+
+Une nuit ainsi marquée refusera `--heure-debut` : ses heures se réalignent seules. Une nuit
+`[déclarées, modifiables]` les accepte.
 
 #### Rattraper toute une saison
 

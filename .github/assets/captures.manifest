@@ -15,7 +15,7 @@ fr/univ_amu/iut/importation/view/Importation.fxml        : apercu-import-assista
 fr/univ_amu/iut/qualification/view/Qualification.fxml    : apercu-qualification.png apercu-qualification-initial.png
 fr/univ_amu/iut/qualification/view/ModaleSelection.fxml  : apercu-qualification-personnaliser.png
 fr/univ_amu/iut/passage/view/Passage.fxml                : apercu-passage.png apercu-passage-depose.png
-fr/univ_amu/iut/passage/view/RattachementModale.fxml     : apercu-passage-rattachement.png apercu-passage-rattachement-connecte.png
+fr/univ_amu/iut/passage/view/RattachementModale.fxml     : apercu-passage-rattachement.png apercu-passage-rattachement-connecte.png apercu-passage-rattachement-squelette.png
 fr/univ_amu/iut/passage/view/ReactivationModale.fxml     : apercu-passage-reactivation.png
 fr/univ_amu/iut/connexion/view/ConnexionModale.fxml      : apercu-connexion.png
 fr/univ_amu/iut/diagnostic/view/Diagnostic.fxml          : apercu-diagnostic.png apercu-diagnostic-sans-releve.png apercu-diagnostic-sans-gps.png
