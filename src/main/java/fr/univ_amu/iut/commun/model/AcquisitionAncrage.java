@@ -21,7 +21,15 @@ import java.util.function.Consumer;
 /// réactivation dans `passage`, et un pont direct entre elles serait un cycle (ADR 0004).
 public final class AcquisitionAncrage {
 
-    private static final String LIBELLE = "Récupération des identifiants depuis Vigie-Chiro…";
+    /// Ce que la phase annonce pendant qu'elle tourne. **Public** parce qu'il est partagé : l'outil de
+    /// capture le rend, la fiche de recette le fait chercher à l'écran, et un libellé recopié se renomme
+    /// une fois sur deux (ADR 0022). Ici, il n'existe qu'une fois.
+    ///
+    /// Il nomme **les deux** choses que le rapatriement ramène : l'ancrage, et les échanges avec le
+    /// validateur (#1417). Ils voyagent dans les mêmes `donnees` et s'écrivent dans le même geste ; ne
+    /// citer que l'ancrage était exact mais incomplet, et l'observateur découvrait un message du
+    /// validateur par hasard (#1867).
+    public static final String LIBELLE = "Récupération des identifiants et des échanges avec le validateur…";
 
     private AcquisitionAncrage() {}
 
@@ -34,17 +42,20 @@ public final class AcquisitionAncrage {
     ///
     /// @param progres avancement du rapatriement (muet si l'ancrage est déjà là)
     /// @param jeton annulation honorée **à chaque page**, et non après coup (#1597)
-    public static void acquerirSiNecessaire(
+    /// @return le compte rendu du rapatriement, **prêt à afficher** - notamment les échanges avec le
+    ///     validateur qu'il a ramenés (#1867). Chaîne **vide** quand il n'y avait rien à acquérir : dire
+    ///     « rien n'a été fait » après un geste qui n'a rien coûté serait du bruit.
+    public static String acquerirSiNecessaire(
             ImportObservations importateur, Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(importateur, "importateur");
         Objects.requireNonNull(idPassage, "idPassage");
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
         if (!importateur.estRattache(idPassage) || !importateur.ancrageManquant(idPassage)) {
-            return;
+            return "";
         }
         progres.accept(new Progression(LIBELLE, 0.0));
-        importateur.importer(idPassage, true, suivi(progres, jeton));
+        return importateur.importer(idPassage, true, suivi(progres, jeton));
     }
 
     /// Suivi **page par page** : le rapatriement des `donnees` compte des dizaines de pages ; sans relais

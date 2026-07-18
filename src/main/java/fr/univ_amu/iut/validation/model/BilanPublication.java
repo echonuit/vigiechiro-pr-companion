@@ -15,8 +15,30 @@ import java.util.List;
 /// @param horsReferentiel taxon observateur **sans objectid** VigieChiro (hors référentiel) : non
 ///     publiable, cas normal à afficher
 /// @param echecs détail des refus, une entrée par observation (identification locale + cause)
+/// @param rapatriement compte rendu, **prêt à afficher**, de la phase d'ancrage qui a précédé l'envoi
+///     (#1838) : elle ramène aussi les **échanges avec le validateur** (#1867). Chaîne **vide** quand la
+///     nuit était déjà ancrée et qu'aucun rapatriement n'a eu lieu, ce qui est le cas courant. Le texte
+///     est celui du port [fr.univ_amu.iut.commun.model.ImportObservations], repris tel quel : le détail
+///     du bilan d'import appartient à l'import, il n'a pas à être re-décrit ici
 public record BilanPublication(
-        int poussees, int sansCertitude, int sansAncrage, int horsReferentiel, List<String> echecs) {
+        int poussees,
+        int sansCertitude,
+        int sansAncrage,
+        int horsReferentiel,
+        List<String> echecs,
+        String rapatriement) {
+
+    /// Bilan d'une publication **sans phase de rapatriement** : la nuit portait déjà son ancrage, ou la
+    /// publication n'était pas suivie. Rien à annoncer au retour.
+    public BilanPublication(
+            int poussees, int sansCertitude, int sansAncrage, int horsReferentiel, List<String> echecs) {
+        this(poussees, sansCertitude, sansAncrage, horsReferentiel, echecs, "");
+    }
+
+    /// Le même bilan, accompagné du compte rendu de la phase d'ancrage qui l'a précédé.
+    public BilanPublication avecRapatriement(String rapatriement) {
+        return new BilanPublication(poussees, sansCertitude, sansAncrage, horsReferentiel, echecs, rapatriement);
+    }
 
     /// `true` si tout ce qui était publiable a été écrit (aucun refus ; il peut rester des écartées).
     public boolean sansEchec() {

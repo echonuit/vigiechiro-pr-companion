@@ -80,6 +80,23 @@ class PublicationCorrectionsViewModelTest {
     }
 
     @Test
+    @DisplayName("#1867 : le résumé annonce ce que la phase d'ancrage a ramené, et se tait sinon")
+    void resume_annonce_le_rapatriement() {
+        BilanPublication sansRapatriement = new BilanPublication(2, 0, 0, 0, List.of());
+        assertThat(PublicationCorrectionsViewModel.resume(sansRapatriement))
+                .as("nuit déjà ancrée : rien ne s'est passé avant l'envoi, rien à en dire")
+                .isEqualTo("Corrections publiées vers Vigie-Chiro : 2 envoyée(s).");
+
+        BilanPublication avecRapatriement =
+                sansRapatriement.avecRapatriement("Observations importées depuis Vigie-Chiro : 40 observation(s)."
+                        + " Le validateur s'est exprimé sur 3 observation(s).");
+        assertThat(PublicationCorrectionsViewModel.resume(avecRapatriement))
+                .as("sans cette phrase, les messages du validateur se découvrent par hasard")
+                .contains("2 envoyée(s)")
+                .contains("Le validateur s'est exprimé sur 3 observation(s).");
+    }
+
+    @Test
     @DisplayName("echec : lève l'état en cours et restitue le message (chaîne vide = annulation)")
     void echec_restitue() {
         PublicationCorrectionsViewModel vm = new PublicationCorrectionsViewModel(Optional.empty());

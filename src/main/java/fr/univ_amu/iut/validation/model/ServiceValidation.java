@@ -206,9 +206,10 @@ public class ServiceValidation implements CompteurValidations {
                 remplacer);
         // Le fil de discussion ne peut pas voyager dans une LigneObservation (1-N) ni être écrit pendant
         // l'insertion en lot (les clés générées ne sont pas récupérées) : il s'écrit ici, une fois les
-        // observations en base, rapprochées du serveur par leur ancrage plateforme (#1417).
-        fils.enregistrer(bilan.resultats().id(), donnees);
-        return bilan;
+        // observations en base, rapprochées du serveur par leur ancrage plateforme (#1417). Le compte
+        // qu'il rend complète le bilan : c'est la seule voie par laquelle des messages du validateur
+        // entrent en base, donc le seul endroit d'où on peut les annoncer (#1867).
+        return bilan.avecEchanges(fils.enregistrer(bilan.resultats().id(), donnees));
     }
 
     /// **Reconstruction instantanée par CSV** (#1565) : importe les observations d'un CSV Tadarida brut
