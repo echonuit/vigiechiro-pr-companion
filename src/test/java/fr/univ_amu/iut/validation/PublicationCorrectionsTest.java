@@ -102,6 +102,9 @@ class PublicationCorrectionsTest {
         // en rendant des observations désormais ancrées.
         when(importateur.estRattache(7L)).thenReturn(true);
         when(importateur.ancrageManquant(7L)).thenReturn(true);
+        // Le port rend « un compte rendu prêt à afficher » : un mock muet renverrait `null` et mentirait
+        // sur son contrat (RapportAncrage le refuse).
+        when(importateur.importer(eq(7L), eq(true), any(SuiviPagination.class))).thenReturn("1 observation importée.");
         when(observations.revuesDuPassage(7L)).thenReturn(List.of(revue(1L, "Pippip", Certitude.SUR, "d1", 0)));
         when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
         when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, true))
@@ -114,6 +117,9 @@ class PublicationCorrectionsTest {
         verify(importateur).importer(eq(7L), eq(true), any(SuiviPagination.class));
         assertThat(bilan.poussees()).isEqualTo(1);
         assertThat(bilan.sansAncrage()).isZero();
+        // Ce que le rapatriement a ramené n'est pas avalé : le bilan le porte jusqu'à l'utilisateur (#1867).
+        assertThat(bilan.rapatriement().estMuet()).isFalse();
+        assertThat(bilan.rapatriement().texte()).isEqualTo("1 observation importée.");
     }
 
     @Test
