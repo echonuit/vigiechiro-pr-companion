@@ -135,6 +135,17 @@ régression. Trois familles concentrent les angles morts :
 - **le cas réel** : un test synthétique vert ne prouve pas que le vrai jeu de données passe. Quand
   c'est possible, rejouer le geste sur une **vraie nuit** avant de conclure.
 
+**Un zéro se confirme à la main.** L'inventaire se mène volontiers à coups de `grep` - bonne amorce,
+mais qui se trompe **dans les deux sens**. Un audit réel de la suite E2E en a produit **quatre** de
+suite : chercher le nom d'un écran remonte un **homonyme** (« recherche » → le protocole
+`PointFixeRecherche`) ; chercher par **clé de vue** rate les parcours qui pilotent les **services**
+(`importation`, `lot`, `qualification` ressortaient à zéro alors qu'ils sont couverts) ; chercher une
+commande CLI par son **nom de classe** la déclare non testée quand le test l'invoque en kebab-case - et
+l'inverse quand le test instancie la classe. Il a fallu **croiser deux signaux** pour obtenir la vraie
+réponse : sur 41 commandes, **zéro** sans test, là où les greps naïfs en annonçaient jusqu'à 20. Donc :
+un « aucun test » sorti d'un grep n'est qu'une **hypothèse**, à confirmer en ouvrant les fichiers
+**avant** d'en faire une issue. Une issue fausse coûte plus cher que le trou qu'elle prétend signaler.
+
 **Des E2E qui traversent, quitte à fusionner des scénarios.** Un E2E ne vaut pas par le nombre
 d'assertions mais par ce qu'il **traverse**. Plusieurs parcours courts, qui bouchonnent chacun l'étape
 voisine, prouvent chacun une tranche et **personne ne prouve la chaîne** : les défauts se logent
