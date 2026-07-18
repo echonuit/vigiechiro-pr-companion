@@ -30,6 +30,7 @@ import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
+import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
@@ -129,6 +130,10 @@ public class PassageModule extends ModuleDeFeature {
         // a besoin de la connexion VigieChiro. ReconstructionModule (chargé avec ConnexionModule) pose le
         // binding ; hors connexion, l'Optional reste vide et l'IHM/CLI le disent.
         OptionalBinder.newOptionalBinder(binder(), ServiceReconstructionPassages.class);
+
+        // Rattrapage des métadonnées en lot (#1861) : même patron, il s'appuie sur la passerelle de
+        // synchronisation. SynchronisationParticipationModule pose le binding avec elle.
+        OptionalBinder.newOptionalBinder(binder(), RattrapageMetadonnees.class);
 
         // Port DeclarationPurgeOriginaux (#1303) : cette feature possède les sessions, elle fournit
         // donc la déclaration réelle de la purge globale (marqueur originals_purged_at posé sur
