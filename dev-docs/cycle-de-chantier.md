@@ -265,6 +265,30 @@ pourquoi. Elle se dépose dans le corps de l'EPIC (au moment de le clore) et, si
 règle du dépôt, se répercute dans `CLAUDE.md` / `CONTRIBUTING.md`. Le bilan **renvoie** aux
 [ADR](decisions/index.md) écrites en passe 3 plutôt que de redérouler le raisonnement des décisions.
 
+## Les suites d'une clôture se closent aussi
+
+La passe 9 crée des issues ; la passe 10 les nomme « dette restante » et clôt l'EPIC. Ces issues, une
+fois livrées, forment un **nouveau delta** - et rien ne les rattrape si l'on considère que le chantier
+est fini.
+
+Le dépôt l'a vécu **trois fois** : les suites de l'EPIC #1662 ont formé l'EPIC #1863, dont les suites
+ont formé le delta clos par #1920 ; les suites de #1838 ont eu leur propre clôture (#1921). Le patron
+est donc régulier, pas accidentel.
+
+**Les suites d'un chantier se closent par les mêmes 10 passes**, appliquées à leur seul delta
+(`git log <sha-de-la-clôture-précédente>..origin/main`, filtré sur les commits du chantier). C'est peu
+coûteux - le périmètre est étroit - et c'est là qu'on trouve ce que le travail de suite a laissé
+derrière lui : une capacité livrée d'un seul côté, un état visuel sans capture, une règle construite par
+quatre PR qu'aucune ADR ne porte.
+
+**Un bilan est une hypothèse, pas un verdict.** Sa section « dette restante » décrit ce qu'on croyait
+comprendre au moment de l'écrire. Le bilan de #1864 affirmait d'un défaut d'horodatage qu'« une
+troncature de fuseau est confirmée, mais elle n'explique pas tout - au moins deux facteurs, dont un qui
+détruit la fin de nuit ». C'était faux : il n'y avait qu'un facteur, mais il **composait** à chaque
+cycle. Ce qui a tranché n'est pas un raisonnement plus fin, c'est d'être allé **lire l'état réel** sur la
+plateforme. Quand une suite est traitée, **relire ce que le bilan en disait** et le corriger s'il s'est
+trompé : une analyse fausse laissée en place oriente le chantier suivant.
+
 ## Modèle de clôture (à coller dans l'EPIC)
 
 ```markdown

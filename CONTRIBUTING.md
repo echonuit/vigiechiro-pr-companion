@@ -147,7 +147,10 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
    main** avant d'en faire une issue. Un E2E vaut par ce qu'il **traverse** : **fusionner** deux scénarios quand le
    défaut probable est **entre** eux. Ce qui n'est pas automatisable part en **recette**
    (`dev-docs/recette/sessions/`, une case = un fait observable), sinon « pas automatisable » devient
-   « pas vérifié ».
+   « pas vérifié ». ⚠️ Un **garde-fou de non-régression se vérifie en le voyant rouge** : **PIT ciblé**
+   (`-Pmutation`, exhaustif sur une classe et rapide) pour le code Java, **mutation à la main** pour ce
+   que PIT ne mute pas (attribut d'annotation, câblage, FXML, sonde réseau). Un test vert n'est qu'une
+   **hypothèse** sur ce qu'il couvre.
 7. **Harmonisation** : prendre du recul sur **l'application entière**, en deux temps. D'abord un
    **audit global**, exhaustif et scrupuleux (qu'est-ce qui **ressemble** au résultat du chantier,
    qu'est-ce qui en **bénéficierait**), pour comprendre ce qui **sous-tend** la demande initiale. Puis
@@ -164,6 +167,11 @@ rédiger un plan, découper en **issues reliées à un EPIC**.
    relecture **juste après** elle.
 9. **Nouveaux chantiers** identifiés + **issues** créées.
 10. **Bilan** : ce qui a été livré, dette restante, décisions (qui **renvoient aux ADR** de la passe 3).
+
+**Les suites se closent aussi.** Les issues créées en passe 9, une fois livrées, forment un **nouveau
+delta** : il se clôt par les **mêmes 10 passes**, appliquées à lui seul. Et un bilan est une
+**hypothèse** : quand une suite est traitée, relire ce que le bilan précédent en disait et le corriger
+s'il s'est trompé.
 
 > 📖 Raison d'être et mode opératoire de chaque passe, avec le **modèle de clôture** à coller dans
 > l'EPIC : [doc dev · Cycle de vie d'un chantier](https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/cycle-de-chantier/).
