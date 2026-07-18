@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.PositionMicro;
@@ -402,7 +403,7 @@ class RattachementViewModelTest {
     @DisplayName("Phase 2 : pousserVersVigieChiro délègue à la passerelle et annonce l'envoi")
     void pousser_vers_vigiechiro_delegue() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        when(sync.pousserVers(ID)).thenReturn(ResultatEcriture.reussie("part-1"));
+        when(sync.pousserVers(ID)).thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie("part-1")));
         RattachementViewModel avecSync =
                 new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
@@ -416,10 +417,55 @@ class RattachementViewModelTest {
     }
 
     @Test
+    @DisplayName("#1885 : un réalignement d'heures est DIT, avec l'avant et l'après, et retient la modale")
+    void realignement_est_signale() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.pousserVers(ID))
+                .thenReturn(new EnvoiParticipation(
+                        ResultatEcriture.reussie(),
+                        Optional.of(
+                                new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));
+        RattachementViewModel avecSync =
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        avecSync.ouvrirSur(ID, "040962", "A1");
+
+        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+
+        // Dire seulement la nouvelle heure n'apprendrait pas CE qui a été corrigé, ni de combien.
+        assertThat(compteRendu.message())
+                .contains("réalignées")
+                .contains("15:00:00")
+                .contains("21:30:00")
+                .contains("06:15:00");
+        assertThat(compteRendu.reussi()).as("l'envoi a bien abouti").isTrue();
+        assertThat(compteRendu.peutFermer())
+                .as("fermer emporterait le message : l'app a modifié des données de l'utilisateur")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("#1885 : sans réalignement, l'envoi reste un succès discret qui laisse fermer")
+    void sans_realignement_la_modale_peut_fermer() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.pousserVers(ID)).thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie()));
+        RattachementViewModel avecSync =
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        avecSync.ouvrirSur(ID, "040962", "A1");
+
+        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+
+        assertThat(compteRendu.message()).isEqualTo("Métadonnées envoyées à VigieChiro.");
+        assertThat(compteRendu.peutFermer()).isTrue();
+    }
+
+    @Test
     @DisplayName("#1839 : un REFUS de VigieChiro est rapporté avec sa cause, plus jamais avalé")
     void pousser_vers_vigiechiro_refus_rapporte() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        when(sync.pousserVers(ID)).thenReturn(ResultatEcriture.echouee("HTTP 412 : etag périmé"));
+        when(sync.pousserVers(ID))
+                .thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.echouee("HTTP 412 : etag périmé")));
         RattachementViewModel avecSync =
                 new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));

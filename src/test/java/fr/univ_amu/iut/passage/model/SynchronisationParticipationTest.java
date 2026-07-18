@@ -118,7 +118,7 @@ class SynchronisationParticipationTest {
         when(client.modifierParticipation(eq("part-1"), eq("e-frais"), any()))
                 .thenReturn(ResultatEcriture.reussie("part-1"));
 
-        assertThat(sync.pousserVers(42L).id()).contains("part-1");
+        assertThat(sync.pousserVers(42L).ecriture().id()).contains("part-1");
         verify(client).modifierParticipation(eq("part-1"), eq("e-frais"), any());
     }
 

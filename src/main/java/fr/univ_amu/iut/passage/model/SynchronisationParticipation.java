@@ -92,21 +92,33 @@ public final class SynchronisationParticipation {
 
     /// Pousse les métadonnées locales (météo / config / dates) vers la participation liée (PATCH `If-Match`,
     /// etag relu juste avant). [RegleMetierException] si non lié / introuvable.
-    public ResultatEcriture pousserVers(Long idPassage) {
-        Passage passage = chargerPassage(idPassage);
+    public EnvoiParticipation pousserVers(Long idPassage) {
+        Passage declare = chargerPassage(idPassage);
         String objectid = participationDe(idPassage).orElseThrow(() -> new RegleMetierException(NON_LIE));
         ParticipationDetail distant =
                 client.participation(objectid).enOptionnel().orElseThrow(() -> new RegleMetierException(INTROUVABLE));
         // Réaligné seulement une fois l'envoi acquis (passage lié, participation lisible) : le réalignement
         // écrit en base, il n'a pas à laisser de trace sur un chemin qui va échouer.
-        passage = realignerSurLesPreuves(passage);
+        Passage passage = realignerSurLesPreuves(declare);
         InfosPoint point = infosPoint(passage);
         // #1844 : la configuration distante est passée au mapping pour être **préservée**. Le PATCH
         // remplace le dictionnaire entier ; sans elle, chaque envoi effacerait les champs saisis sur le web
         // que l'app ne modélise pas (micro0_numero_serie, micro1_*, canal_*).
         ParticipationADeposer maj = CorrespondanceParticipation.versParticipation(
                 point.code(), passage, materielDao.pour(idPassage), distant.configuration());
-        return client.modifierParticipation(objectid, distant.etag(), maj);
+        ResultatEcriture ecriture = client.modifierParticipation(objectid, distant.etag(), maj);
+        // #1885 : le réalignement a modifié les données de l'utilisateur, il ne peut pas rester tacite.
+        return new EnvoiParticipation(ecriture, realignementEntre(declare, passage));
+    }
+
+    /// Le réalignement survenu entre le passage **déclaré** et le passage **envoyé**, ou vide si les heures
+    /// n'ont pas bougé (cas nominal : les preuves confirmaient la déclaration, ou il n'y en avait pas).
+    private static Optional<EnvoiParticipation.Realignement> realignementEntre(Passage declare, Passage envoye) {
+        if (declare == envoye) {
+            return Optional.empty();
+        }
+        return Optional.of(new EnvoiParticipation.Realignement(
+                declare.heureDebut(), declare.heureFin(), envoye.heureDebut(), envoye.heureFin()));
     }
 
     /// Réaligne les heures du passage sur ce que ses enregistrements **prouvent**, avant de les envoyer

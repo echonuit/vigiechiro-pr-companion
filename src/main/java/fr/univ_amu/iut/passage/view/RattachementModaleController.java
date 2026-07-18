@@ -280,9 +280,10 @@ public class RattachementModaleController {
         if (viewModel.appliquer()) {
             pousserPuis(compteRendu -> {
                 apresSucces.run();
-                // #1839 : on ne ferme QUE si l'envoi n'a rien à reprocher. Fermer sur un refus rendrait le
-                // message invisible - c'est précisément ainsi que l'échec passait inaperçu.
-                if (compteRendu.reussi()) {
+                // #1839 puis #1885 : on ne ferme QUE s'il n'y a rien à lire. Fermer sur un refus rendait le
+                // message invisible - c'est ainsi que l'échec passait inaperçu ; fermer sur un réalignement
+                // d'heures ferait de même avec une correction apportée aux données de l'utilisateur.
+                if (compteRendu.peutFermer()) {
                     fermer();
                 }
             });
