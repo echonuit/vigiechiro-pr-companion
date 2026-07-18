@@ -281,8 +281,7 @@ public final class CapturePassage {
         // l'aperçu précédent (340 px pour ~190 px de contenu) ne laissait pas seulement du blanc : elle
         // donnait à la modale 150 px de marge, de sorte qu'aucune croissance ne pouvait s'y voir. L'aperçu
         // ne mentait pas sur les pixels, il mentait sur le cadre.
-        controleur.apercuPhasesEnCours(
-                "Étape : ancrage réseau", "Régénération 30/30", 1.0, AcquisitionAncrage.LIBELLE + " (page 3/12)", 0.25);
+        controleur.apercuPhasesEnCours("Régénération 30/30", 1.0, AcquisitionAncrage.LIBELLE + " (page 3/12)", 0.25);
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }

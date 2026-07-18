@@ -62,3 +62,13 @@
   -fx-text-fill: #ffffff;
   -fx-border-color: #b7860b;
 }
+
+/*
+ * Modale « Reconstruire un passage manquant » (#1396). Comme sa voisine de la réactivation, la classe
+ * était posée dans le FXML et définie nulle part : le titre, la table et les boutons collaient aux bords
+ * de la fenêtre, le Stage ne fournissant aucune marge.
+ */
+.modale-reconstruction {
+  -fx-background-color: white;
+  -fx-padding: 18;
+}

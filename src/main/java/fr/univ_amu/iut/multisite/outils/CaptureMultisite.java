@@ -164,22 +164,20 @@ public final class CaptureMultisite {
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         ReconstructionModaleController controleur = loader.getController();
-        // Taille explicite (les deux barres de progression ajoutent de la hauteur : sans elle, l'auto-taille
-        // rognait le paragraphe d'explication en tête - « … observations … », défaut vu à la revue visuelle).
-        Scene scene = new Scene(vue, 760, 500);
-        ApercuFx.capturerApresPreparation(
-                scene,
-                () -> {
-                    viewModel.appliquer(List.of(
-                            new ParticipationOrpheline(
-                                    "6a53f5faae21902a597394d3", CARRE_DEMO, "A1", "2026-06-18T21:42:00+02:00", true),
-                            new ParticipationOrpheline(
-                                    "6a53f5faae21902a597394d4", CARRE_DEMO, "B2", "2026-06-19T21:40:00+02:00", true),
-                            new ParticipationOrpheline(
-                                    "6a53f5faae21902a597394d5", CARRE_DEMO, "C3", "2026-06-20T21:38:00+02:00", true)));
-                    controleur.apercuImportGroupeEnCours("Nuit 2 / 3…", 2.0 / 3.0, "Import des observations…", 0.96);
-                },
-                fichier);
+        // L'état est posé AVANT la scène, qui se dimensionne alors sur le contenu réellement affiché, les
+        // deux barres comprises. Une taille explicite (760 x 500) tenait ce rôle jusqu'ici, parce que les
+        // barres paraissaient APRÈS le dimensionnement et rognaient le paragraphe d'explication en tête.
+        // Mais une taille en dur doit être ré-ajustée à chaque changement de mise en page : les marges de la
+        // modale l'ont fait déborder d'un coup, et le paragraphe s'est retrouvé rogné à nouveau.
+        viewModel.appliquer(List.of(
+                new ParticipationOrpheline(
+                        "6a53f5faae21902a597394d3", CARRE_DEMO, "A1", "2026-06-18T21:42:00+02:00", true),
+                new ParticipationOrpheline(
+                        "6a53f5faae21902a597394d4", CARRE_DEMO, "B2", "2026-06-19T21:40:00+02:00", true),
+                new ParticipationOrpheline(
+                        "6a53f5faae21902a597394d5", CARRE_DEMO, "C3", "2026-06-20T21:38:00+02:00", true)));
+        controleur.apercuImportGroupeEnCours("Nuit 2 / 3…", 2.0 / 3.0, "Import des observations…", 0.96);
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage

@@ -31,6 +31,27 @@
   -fx-padding: 18;
 }
 
+/*
+ * Modale « Réactiver ce passage » (#1780). La classe était posée dans le FXML mais définie nulle part :
+ * un crochet déclaré, jamais accroché. Sans marges, le titre et les boutons collaient aux bords de la
+ * fenêtre, le Stage n'en fournissant aucune.
+ */
+.modale-reactivation {
+  -fx-background-color: white;
+  -fx-padding: 18;
+}
+
+/*
+ * Nom d'une phase de la réactivation, en tête de son bloc. Même taille que le message qui le suit, mais
+ * en pleine couleur de texte : c'est ce qui les distingue, le nom nommant la phase et le message disant
+ * où elle en est.
+ */
+.modale-reactivation .nom-de-phase {
+  -fx-font-size: 12px;
+  -fx-font-weight: bold;
+  -fx-text-fill: -couleur-texte;
+}
+
 /* Récapitulatif des conséquences (quadruplet X -> Y, nombre de fichiers). */
 .recap-rattachement {
   -fx-font-size: 12px;

@@ -5,6 +5,7 @@
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <!--
@@ -16,6 +17,13 @@
 
   La barre d'ancrage n'apparaît que si la phase se déclenche. Le compte rendu (honnête : ce qui est revenu
   et sur quelle preuve, ce qui a été refusé, ce qui manque) s'affiche à la fin, dans la modale.
+
+  Chaque phase est un BLOC : son nom et son message sur une ligne, sa barre sur toute la largeur en dessous.
+  Le nom, la barre et le message tenaient auparavant sur une même ligne, ce qui coûtait deux fois. Le
+  message y disputait sa largeur à la barre, si bien que les deux barres n'avaient PAS la même longueur :
+  celle dont le message était le plus long se retrouvait la plus courte, et deux barres inégales ne se
+  comparent pas d'un coup d'œil. Et le nom redisait le début du message (« Régénération » à gauche,
+  « Régénération 993/2042 » à droite) au prix de 80 px pris sur la barre.
 -->
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
@@ -28,22 +36,27 @@
 
   <Label text="♻ Réactivation du passage" styleClass="titre-page"/>
 
-  <!-- L'étape en cours, en clair : « Régénération des séquences… » puis « Ancrage… », enfin « Terminé. ». -->
+  <!-- L'issue de l'opération, en clair : « Terminé. », « Annulée. », « Interrompue. ». Les phases en cours
+       se nomment elles-mêmes juste en dessous : cette ligne ne les redit plus. -->
   <Label fx:id="lblEtape" styleClass="section-sous" wrapText="true"/>
 
   <!-- Phase disque : régénération puis rebranchement des séquences (0 -> 1). -->
-  <HBox fx:id="zoneRegeneration" alignment="CENTER_LEFT" spacing="8.0">
-    <Label text="Régénération" minWidth="80.0" styleClass="section-sous"/>
-    <ProgressBar fx:id="barreRegeneration" prefWidth="200.0"/>
-    <Label fx:id="lblRegeneration" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
-  </HBox>
+  <VBox fx:id="zoneRegeneration" spacing="4.0">
+    <HBox alignment="TOP_LEFT" spacing="12.0">
+      <Label text="Régénération des séquences" styleClass="nom-de-phase" minWidth="-Infinity"/>
+      <Label fx:id="lblRegeneration" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
+    </HBox>
+    <ProgressBar fx:id="barreRegeneration" maxWidth="Infinity"/>
+  </VBox>
 
   <!-- Phase réseau : acquisition de l'ancrage (#1571), révélée seulement quand elle démarre. -->
-  <HBox fx:id="zoneAncrage" alignment="CENTER_LEFT" spacing="8.0">
-    <Label text="Ancrage" minWidth="80.0" styleClass="section-sous"/>
-    <ProgressBar fx:id="barreAncrage" prefWidth="200.0"/>
-    <Label fx:id="lblAncrage" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
-  </HBox>
+  <VBox fx:id="zoneAncrage" spacing="4.0">
+    <HBox alignment="TOP_LEFT" spacing="12.0">
+      <Label text="Ancrage réseau" styleClass="nom-de-phase" minWidth="-Infinity"/>
+      <Label fx:id="lblAncrage" styleClass="section-sous" wrapText="true" HBox.hgrow="ALWAYS"/>
+    </HBox>
+    <ProgressBar fx:id="barreAncrage" maxWidth="Infinity"/>
+  </VBox>
 
   <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
   <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
@@ -53,6 +66,11 @@
     <!-- « Annuler » n'apparaît que pendant l'opération : elle interrompt proprement (la réactivation AJOUTE
          de l'audio, elle n'en supprime pas ; rien n'est défait). -->
     <Button fx:id="boutonAnnuler" text="Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
-    <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-primaire" onAction="#fermer"/>
+    <!-- Enveloppe non désactivée (#789) : « Fermer » est neutralisé pendant l'opération, et un bouton grisé
+         n'affiche aucun tooltip. C'est elle qui porte l'explication - sans quoi le seul bouton mis en avant
+         de la modale est aussi le seul sur lequel on ne peut pas cliquer, sans que rien ne le dise. -->
+    <StackPane fx:id="enveloppeFermer">
+      <Button fx:id="boutonFermer" text="Fermer" styleClass="bouton-primaire" onAction="#fermer"/>
+    </StackPane>
   </HBox>
 </VBox>

@@ -23,7 +23,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -122,7 +122,7 @@ class ReactivationModaleViewTest {
                 },
                 robot);
 
-        assertThat(robot.lookup("#zoneAncrage").queryAs(HBox.class).isVisible())
+        assertThat(robot.lookup("#zoneAncrage").queryAs(VBox.class).isVisible())
                 .as("aucun ancrage n'a été émis : la barre d'ancrage n'apparaît pas")
                 .isFalse();
     }
@@ -147,7 +147,7 @@ class ReactivationModaleViewTest {
                 },
                 robot);
 
-        assertThat(robot.lookup("#zoneAncrage").queryAs(HBox.class).isVisible())
+        assertThat(robot.lookup("#zoneAncrage").queryAs(VBox.class).isVisible())
                 .as("la phase réseau a émis : sa barre est révélée")
                 .isTrue();
         // Le libellé dit le sens réel de l'échange (#1853) : cette phase *récupère* les identifiants, elle
@@ -170,7 +170,6 @@ class ReactivationModaleViewTest {
         // par le compte rendu final rattrape la hauteur - ce qui masquait le défaut à tous les autres tests
         // de cette classe, y compris à celui qui vérifie que la barre d'ancrage apparaît.
         robot.interact(() -> controleur.apercuPhasesEnCours(
-                "Étape : ancrage réseau",
                 "Régénération 2042/2042",
                 1.0,
                 "Récupération des identifiants et des échanges avec le validateur… (page 12/49)",

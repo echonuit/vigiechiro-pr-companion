@@ -4,11 +4,13 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
 import java.util.Objects;
 import java.util.function.Consumer;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -16,7 +18,7 @@ import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
@@ -43,7 +45,8 @@ public class ReactivationModaleController {
     /// ordinaire (sans ancrage) ne l'allume jamais.
     private final SimpleBooleanProperty ancrageDemarre = new SimpleBooleanProperty(false);
 
-    /// L'étape courante, en clair, au-dessus des barres.
+    /// L'**issue** de l'opération, en clair, au-dessus des barres : « Terminé. », « Annulée. »,
+    /// « Interrompue. ». Vide pendant l'opération, où les blocs de phase se nomment eux-mêmes.
     private final SimpleStringProperty etape = new SimpleStringProperty("");
 
     /// Jeton de l'opération en cours, câblé sur « Annuler » (#1252). Null hors opération.
@@ -59,7 +62,7 @@ public class ReactivationModaleController {
     private Label lblEtape;
 
     @FXML
-    private HBox zoneRegeneration;
+    private VBox zoneRegeneration;
 
     @FXML
     private ProgressBar barreRegeneration;
@@ -68,7 +71,7 @@ public class ReactivationModaleController {
     private Label lblRegeneration;
 
     @FXML
-    private HBox zoneAncrage;
+    private VBox zoneAncrage;
 
     @FXML
     private ProgressBar barreAncrage;
@@ -87,6 +90,11 @@ public class ReactivationModaleController {
 
     @FXML
     private Button boutonFermer;
+
+    /// Enveloppe non désactivée autour de « Fermer » : c'est elle qui porte le tooltip, un bouton grisé
+    /// n'en affichant aucun (#789).
+    @FXML
+    private StackPane enveloppeFermer;
 
     @Inject
     public ReactivationModaleController(ReactivationModaleViewModel viewModel, ExecuteurTache executeur) {
@@ -130,6 +138,13 @@ public class ReactivationModaleController {
         boutonAnnuler.visibleProperty().bind(operationEnCours);
         boutonAnnuler.managedProperty().bind(operationEnCours);
         boutonFermer.disableProperty().bind(operationEnCours);
+        // Pendant l'opération, le seul bouton mis en avant de la modale est aussi le seul sur lequel on ne
+        // peut pas cliquer. L'enveloppe dit pourquoi, et dit surtout que l'attente a un terme (#789).
+        IndicateurBlocage.expliquer(
+                enveloppeFermer,
+                Bindings.when(operationEnCours)
+                        .then("Disponible à la fin de l'opération. « Annuler » l'interrompt sans rien défaire.")
+                        .otherwise("Ferme la fenêtre et recharge le passage."));
     }
 
     /// Lance la réactivation dès l'ouverture (appelé par [NavigationPassage] après le chargement du FXML).
@@ -142,7 +157,10 @@ public class ReactivationModaleController {
 
     private void lancer(Travail travail) {
         operationEnCours.set(true);
-        etape.set("Étape : régénération des séquences");
+        // Pendant l'opération, la ligne d'étape se tait : les blocs de phase se nomment eux-mêmes, et elle
+        // ne faisait que redire le nom de celui qui venait d'apparaître. Elle reprend la parole à la fin,
+        // pour l'issue - la seule chose que les barres ne disent pas.
+        etape.set("");
         viewModel.progressionRegeneration().demarrer("Régénération…");
         JetonAnnulation jeton = new JetonAnnulation();
         jetonCourant = jeton;
@@ -151,7 +169,6 @@ public class ReactivationModaleController {
         Consumer<Progression> progresAncrage = executeur.relaisProgression(point -> {
             if (!ancrageDemarre.get()) {
                 ancrageDemarre.set(true);
-                etape.set("Étape : ancrage réseau");
                 viewModel.progressionAncrage().demarrer(point.libelle());
             }
             viewModel.progressionAncrage().appliquer(point);
@@ -201,18 +218,15 @@ public class ReactivationModaleController {
     }
 
     /// **Aperçu de documentation** (#1780) : place la modale dans l'état « les deux phases en cours » - la
-    /// barre de régénération pleine, la barre d'ancrage à mi-course, l'étape nommée - pour la capture, **sans
-    /// lancer de vrai travail**. Réservé aux outils de capture
-    /// ([fr.univ_amu.iut.passage.outils.CapturePassage]) : l'application, elle, passe par [#demarrer]. Sur le
-    /// fil JavaFX.
+    /// barre de régénération pleine, la barre d'ancrage à mi-course - **sans lancer de vrai travail**.
+    /// Réservé aux outils de capture ([fr.univ_amu.iut.passage.outils.CapturePassage]) et au **garde-fou de
+    /// dimensionnement** : c'est le seul moyen d'obtenir l'état « deux phases, pas encore de compte rendu »,
+    /// que l'exécuteur synchrone d'un test traverse trop vite. L'application, elle, passe par [#demarrer].
+    /// Sur le fil JavaFX.
     public void apercuPhasesEnCours(
-            String etapeLibelle,
-            String libelleRegeneration,
-            double fractionRegeneration,
-            String libelleAncrage,
-            double fractionAncrage) {
+            String libelleRegeneration, double fractionRegeneration, String libelleAncrage, double fractionAncrage) {
         operationEnCours.set(true);
-        etape.set(etapeLibelle);
+        etape.set("");
         viewModel.progressionRegeneration().demarrer(libelleRegeneration);
         viewModel.progressionRegeneration().appliquer(new Progression(libelleRegeneration, fractionRegeneration));
         ancrageDemarre.set(true);
