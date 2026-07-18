@@ -29,8 +29,8 @@ Toute écriture vers la plateforme respecte trois règles.
 
 - Un champ que l'application ne connaît pas reste **vide** sur la plateforme au lieu d'y porter une sentinelle. C'est un recul apparent de complétude, et un progrès réel de véracité.
 - Une écriture partielle coûte **une lecture préalable** (l'état distant). C'est le prix de la non-destruction ; il est payé une fois par envoi.
-- Les participations déjà polluées par les versions antérieures (sentinelle publiée, clé historique) se **réparent au premier envoi** depuis l'application. En revanche, **aucun rattrapage en masse** n'existe : la réparation est nuit par nuit, par la modale.
-- Ces trois défauts ayant tous **réussi silencieusement**, ils appellent un contrôle qui ne peut pas être un code de retour : la vérification passe par les **sondes live** (`-Papi-live`) et par l'observation de la fiche web, pas par un test unitaire vert.
+- Les participations déjà polluées par les versions antérieures (sentinelle publiée, clé historique) se **réparent au premier envoi** depuis l'application. En revanche, **aucun rattrapage en masse** n'existait à la rédaction de cet ADR : la réparation se faisait nuit par nuit, par la modale. *(Levé depuis : `metadonnees-passage --tout` rejoue la réparation sur toutes les nuits liées, #1861.)*
+- Ces trois défauts ayant tous **réussi silencieusement**, ils appellent un contrôle qui ne peut pas être un code de retour : la vérification passe par les **sondes live** (`-Papi-live`) et par l'observation de la fiche web, pas par un test unitaire vert. Ce contrôle existe désormais : `AllerRetourParticipationLiveTest` (#1862) écrit, **relit**, et compare champ à champ. Chacune de ses probes fixe un **fait de plateforme** dont dépend une règle ci-dessus - si l'une tombe, c'est la règle qu'il faut rouvrir, pas la probe qu'il faut ajuster.
 
 ## Alternatives écartées
 

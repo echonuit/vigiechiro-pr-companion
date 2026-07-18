@@ -15,6 +15,18 @@ compréhension de l'API est **exécutable** : une suite qui tape l'API réelle e
       **exploration/partage** + smoke run headless. Vérifications légères seulement (pas de re-encodage du
       schéma).
 
+!!! danger "Ce qu'un test bouchonné ne peut pas voir (#1862)"
+    Les quatre défauts d'écriture des suites de l'EPIC #1662 (#1828, #1839, #1844, #1845) partagent une
+    propriété : **ils réussissent tous**. Publier une sentinelle « INCONNU » rend `200 OK` ; écrire le n° de
+    série sous une clé que le formulaire web ne lit pas rend `200 OK` ; effacer par `PATCH` les champs
+    distants non modélisés rend `200 OK`.
+
+    Un test qui bouchonne l'API vérifie **ce que nous croyons envoyer**, jamais ce que la plateforme en
+    **fait** : les mocks ont confirmé nos hypothèses fausses avec la même conviction que les justes. D'où la
+    **sonde d'aller-retour** (`AllerRetourParticipationLiveTest`) : elle écrit, **relit**, et compare champ
+    à champ. Elle traverse `CorrespondanceParticipation`, pour garder le mapping et pas seulement le
+    transport.
+
 ## Lancer la vérification
 
 !!! warning "Jamais en CI"
@@ -43,6 +55,12 @@ Récupérer un token : sur le site VigieChiro connecté, exécuter le marque-pag
     # DÉFINITIVE ($push, aucune route ne retire ni ne modifie un message) :
     ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
         -Dvigiechiro.participationEssai=<id-participation> -Dvigiechiro.message=true
+
+    # Sonde d'ALLER-RETOUR (#1862) : écrit, relit, et compare champ à champ. Mêmes
+    # verrous que les probes sur participation ; elle restaure la configuration de départ :
+    ./mvnw -Papi-live test -Dvigiechiro.token=XXXX -Dvigiechiro.write=true \
+        -Dvigiechiro.participationEssai=<id-participation> \
+        -Dtest=AllerRetourParticipationLiveTest
     ```
 
     Sans `-Dvigiechiro.token`, la suite se **skippe** proprement (aucun échec accidentel).
@@ -508,6 +526,19 @@ régénère le CSV côté serveur ; inutile ici, le pipeline le produit déjà a
   le pull (`RapprochementSites`) reste la seule direction de synchronisation des sites — exécuté à la
   connexion, et rejouable **à la demande** depuis M-Sites (« Récupérer depuis VigieChiro », #1045,
   passerelle `SynchronisationSites` activée par `OptionalBinder`).
+- **Aller-retour d'écriture (#1862)** : **quatre verdicts confirmés en réel** (exécutée le 2026-07-18 sur
+  la participation de rebut `6a50f790…`, quatre probes vertes).
+
+    | Fait de plateforme | Observé | Ce qui en dépend |
+    |---|---|---|
+    | Le `PATCH` **remplace** la `configuration` entière | une clé témoin posée puis non renvoyée **disparaît** | oblige `CorrespondanceParticipation` à **partir de la configuration distante** (#1844) |
+    | La clé canonique ressort **verbatim**, l'ancienne disparaît | `detecteur_enregistreur_numero_serie` conservé tel quel | une participation déposée avant #1844 se **répare au premier envoi** |
+    | Une sentinelle ne franchit pas la frontière | **aucune** clé de série après un envoi « INCONNU » | #1828, ne rien inventer |
+    | Les heures ne dérivent pas d'un cycle à l'autre | `21:00 → 06:00` rendus à l'identique sur deux cycles | #1860, le cliquet est bien refermé |
+
+    **Corroboration au passage** : la configuration de la participation de rebut portait
+    `detecteur_enregistreur_numserie` (clé **historique**), preuve de terrain que des participations
+    déposées avant #1844 existent bel et bien avec l'ancienne clé.
 
 ### Méthodes autorisées et récupération (exploration du 2026-07-11, lecture seule)
 

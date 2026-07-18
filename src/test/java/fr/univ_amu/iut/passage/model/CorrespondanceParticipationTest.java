@@ -216,6 +216,68 @@ class CorrespondanceParticipationTest {
     }
 
     @Test
+    @DisplayName("#1860/#1862 : la boucle écriture → plateforme → lecture est un POINT FIXE, sur les deux"
+            + " moitiés de production (le cliquet ne peut pas revenir par un seul des deux côtés)")
+    void boucle_ecriture_lecture_est_un_point_fixe() {
+        // `ParticipationOrphelineTest.aller_retour_stable` couvre déjà le retour, mais il REFAIT l'aller de
+        // son côté : une régression de rfc1123Utc lui échapperait. Ici les deux moitiés sont les vraies,
+        // seule la re-sérialisation d'Eve (même instant, ISO +00:00) est simulée - et ce format-là est
+        // pinné par le contrat live (`date_debut` endsWith "+00:00").
+        //
+        // Vérifié par mutation : en remettant le `toLocalDateTime()` de #1860 dans ParticipationOrpheline,
+        // ce test tombe à 13:00 au lieu de 21:00 (quatre cycles, deux heures perdues à chaque tour). Un
+        // test de non-régression qui n'a jamais été vu rouge ne prouve rien.
+        Passage nuit = passage(null);
+        LocalDateTime attenduDebut = LocalDateTime.of(2026, 7, 3, 21, 0);
+        LocalDateTime attenduFin = LocalDateTime.of(2026, 7, 4, 5, 0);
+
+        LocalDateTime debut = attenduDebut;
+        LocalDateTime fin = attenduFin;
+        for (int cycle = 0; cycle < 4; cycle++) {
+            ParticipationADeposer envoi =
+                    CorrespondanceParticipation.versParticipation("Z41", nuit, MaterielMicro.vide(42L));
+            debut = ParticipationOrpheline.horodatage(commeEve(envoi.dateDebut()))
+                    .orElseThrow();
+            fin = ParticipationOrpheline.horodatage(commeEve(envoi.dateFin())).orElseThrow();
+            nuit = avecHeures(nuit, debut, fin);
+        }
+
+        assertThat(debut)
+                .as("quatre cycles « reconstruire puis envoyer » ne doivent pas plus déplacer la nuit qu'un"
+                        + " seul : c'est exactement ce qui a fait descendre 21:00 à 15:00 (#1860)")
+                .isEqualTo(attenduDebut);
+        assertThat(fin).isEqualTo(attenduFin);
+    }
+
+    /// Ce que la plateforme rend d'un horodatage qu'on lui a envoyé en RFC 1123 : le **même instant**,
+    /// re-sérialisé en ISO 8601 UTC. La seule transformation simulée de cette boucle.
+    private static String commeEve(String rfc1123) {
+        return ZonedDateTime.parse(rfc1123, DateTimeFormatter.RFC_1123_DATE_TIME)
+                .toOffsetDateTime()
+                .toString();
+    }
+
+    /// Le passage, ses bornes remplacées par celles qu'on vient de relire : c'est ce que fait une nuit
+    /// reconstruite avant d'être renvoyée.
+    private static Passage avecHeures(Passage passage, LocalDateTime debut, LocalDateTime fin) {
+        return new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                debut.toLocalDate().toString(),
+                debut.toLocalTime().toString(),
+                fin.toLocalTime().toString(),
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur());
+    }
+
+    @Test
     @DisplayName("#1689 : serieDepuis lit la clé canonique Vigie-Chiro, à défaut la clé de l'app, sinon null")
     void serie_depuis_les_deux_cles() {
         assertThat(CorrespondanceParticipation.serieDepuis(Map.of("detecteur_enregistreur_numero_serie", "1997632")))
