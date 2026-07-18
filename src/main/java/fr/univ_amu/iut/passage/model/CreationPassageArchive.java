@@ -38,7 +38,7 @@ public final class CreationPassageArchive {
 
     /// Numéro de série de repli quand la participation ne dit pas quel enregistreur a produit la nuit :
     /// le schéma exige un enregistreur, et inventer un vrai numéro serait un mensonge.
-    private static final String ENREGISTREUR_INCONNU = "INCONNU";
+    private static final String ENREGISTREUR_INCONNU = Enregistreur.INCONNU;
 
     private final PassageDao passageDao;
     private final SessionDao sessionDao;

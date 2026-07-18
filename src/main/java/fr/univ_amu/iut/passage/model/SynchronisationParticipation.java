@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.time.LocalDate;
@@ -39,6 +40,11 @@ public final class SynchronisationParticipation {
     private final LienVigieChiroDao liens;
     private final PassageDao passageDao;
     private final MaterielMicroDao materielDao;
+
+    /// Pour garantir la ligne `recorder` avant d'y accrocher le passage : `recorder_id` est une clé
+    /// étrangère **non nulle** (#1828).
+    private final EnregistreurDao enregistreurDao;
+
     private final ReferentielPoint referentielPoint;
 
     public SynchronisationParticipation(
@@ -46,11 +52,13 @@ public final class SynchronisationParticipation {
             LienVigieChiroDao liens,
             PassageDao passageDao,
             MaterielMicroDao materielDao,
+            EnregistreurDao enregistreurDao,
             ReferentielPoint referentielPoint) {
         this.client = Objects.requireNonNull(client, "client");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.materielDao = Objects.requireNonNull(materielDao, "materielDao");
+        this.enregistreurDao = Objects.requireNonNull(enregistreurDao, "enregistreurDao");
         this.referentielPoint = Objects.requireNonNull(referentielPoint, "referentielPoint");
     }
 
@@ -101,10 +109,35 @@ public final class SynchronisationParticipation {
 
         MeteoReleve fusion =
                 CorrespondanceParticipation.fusionnerMeteo(MeteoPassage.lire(passage.donneesMeteo()), distant.meteo());
-        passageDao.update(avecMeteo(passage, MeteoPassage.definirReleve(passage.donneesMeteo(), fusion)));
+        passageDao.update(avecMeteoEtEnregistreur(
+                passage,
+                MeteoPassage.definirReleve(passage.donneesMeteo(), fusion),
+                enregistreurATirer(passage, distant)));
         if (distant.configuration() != null && !distant.configuration().isEmpty()) {
             materielDao.definir(CorrespondanceParticipation.microDepuis(idPassage, distant.configuration()));
         }
+    }
+
+    /// Numéro de série à retenir pour ce passage (#1828). Le micro et la météo se lisaient déjà dans la
+    /// `configuration` de la participation ; le **numéro de série y était ignoré**, si bien qu'une nuit
+    /// rapatriée avant #1814 restait « inconnue » alors que la plateforme le portait.
+    ///
+    /// On n'adopte le numéro distant que s'il désigne un **appareil réel** : ni absent, ni sentinelle
+    /// ([Enregistreur#estInconnu]). Sans cette garde, une participation déposée avec un « INCONNU » (le
+    /// défaut que #1828 corrige côté dépôt) **écraserait** un numéro local pourtant juste, lu du journal à
+    /// l'import. Le local, lui, prime toujours dès qu'il est réel.
+    private String enregistreurATirer(Passage passage, ParticipationDetail distant) {
+        if (!Enregistreur.estInconnu(passage.idEnregistreur())) {
+            return passage.idEnregistreur();
+        }
+        String distantSerie = CorrespondanceParticipation.serieDepuis(distant.configuration());
+        if (Enregistreur.estInconnu(distantSerie)) {
+            return passage.idEnregistreur();
+        }
+        if (enregistreurDao.findById(distantSerie).isEmpty()) {
+            enregistreurDao.insert(new Enregistreur(distantSerie, null, null));
+        }
+        return distantSerie;
     }
 
     /// Écarts entre le passage local et la **participation liée** côté VigieChiro (« la bonne nuit au
@@ -168,8 +201,9 @@ public final class SynchronisationParticipation {
                         new RegleMetierException("Point d'écoute introuvable pour le passage " + passage.id() + "."));
     }
 
-    /// Recopie du record `Passage` avec une nouvelle météo (le record n'a pas de `with…`).
-    private static Passage avecMeteo(Passage p, String donneesMeteo) {
+    /// Recopie du record `Passage` avec une nouvelle météo et un nouvel enregistreur (le record n'a pas de
+    /// `with…`).
+    private static Passage avecMeteoEtEnregistreur(Passage p, String donneesMeteo, String idEnregistreur) {
         return new Passage(
                 p.id(),
                 p.numeroPassage(),
@@ -184,6 +218,6 @@ public final class SynchronisationParticipation {
                 donneesMeteo,
                 p.deposeLe(),
                 p.idPoint(),
-                p.idEnregistreur());
+                idEnregistreur);
     }
 }
