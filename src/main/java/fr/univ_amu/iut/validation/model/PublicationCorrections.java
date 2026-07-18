@@ -2,7 +2,10 @@ package fr.univ_amu.iut.validation.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ResultatCorrection;
+import fr.univ_amu.iut.commun.api.SuiviPagination;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -10,6 +13,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Consumer;
 
 /// **Publication des corrections observateur vers VigieChiro** (#723, retour 2 de l'EPIC #1154) :
 /// pousse vers la plateforme, pour un passage, chaque observation **poussable** : taxon observateur
@@ -19,8 +24,12 @@ import java.util.Objects;
 /// serveur), donc rejouable après complément ou coupure, sans mémoire d'état.
 ///
 /// Les observations revues non poussables sont **écartées et comptées** (à compléter / sans ancrage /
-/// hors référentiel), jamais devinées : la certitude n'est pas dérivée, l'ancrage n'est pas
-/// reconstruit ici. Le bilan serveur de la participation n'est régénéré que par le **dernier** envoi
+/// hors référentiel), jamais devinées : la certitude n'est pas dérivée. L'**ancrage**, lui, s'acquiert
+/// **ici quand il manque** (#1838) : c'est le moment où il sert réellement. Une nuit importée par CSV
+/// (#1565) n'a pas d'ancrage ; plutôt que de renvoyer l'utilisateur vers un réimport, la publication le
+/// rapatrie elle-même (`remplacer = true`, qui **préserve les validations**) avant de pousser - même
+/// geste qu'à la réactivation (#1571), déclenché par le besoin plutôt que par une heuristique.
+/// Le bilan serveur de la participation n'est régénéré que par le **dernier** envoi
 /// (`?no_bilan=true` sur les autres) ; si ce dernier envoi échoue, le bilan serveur restera périmé
 /// jusqu'à la prochaine publication ou au prochain traitement.
 ///
@@ -33,15 +42,66 @@ public class PublicationCorrections {
     private final LienVigieChiroDao liens;
     private final ObservationDao observations;
 
-    public PublicationCorrections(ClientVigieChiro client, LienVigieChiroDao liens, ObservationDao observations) {
+    /// Import des observations, **optionnel** : il porte l'acquisition de l'ancrage manquant (#1838).
+    /// Absent, la publication se comporte comme avant (les non ancrées restent écartées et comptées).
+    private final Optional<ImportVigieChiro> importateur;
+
+    public PublicationCorrections(
+            ClientVigieChiro client,
+            LienVigieChiroDao liens,
+            ObservationDao observations,
+            Optional<ImportVigieChiro> importateur) {
         this.client = Objects.requireNonNull(client, "client");
         this.liens = Objects.requireNonNull(liens, "liens");
         this.observations = Objects.requireNonNull(observations, "observations");
+        this.importateur = Objects.requireNonNull(importateur, "importateur");
     }
 
-    /// Publie les corrections du passage. Lève une [RegleMetierException] si **aucune** observation du
-    /// passage n'est revue (rien à publier : valider ou corriger d'abord) ; les autres cas non
-    /// publiables sont comptés dans le bilan, pas levés.
+    /// Variante **suivie et annulable** (#1838) : acquiert d'abord l'**ancrage manquant** (rapatriement
+    /// des `donnees`, page par page, annulable), puis publie. C'est le seul moment où la publication
+    /// touche au réseau avant d'envoyer : une nuit déjà ancrée n'en paie pas le coût.
+    ///
+    /// @param progres avancement de la phase d'ancrage (aucun si l'ancrage est déjà là)
+    /// @param jeton annulation honorée à chaque page rapatriée
+    public BilanPublication publier(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
+        Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(jeton, "jeton");
+        acquerirAncrageSiNecessaire(idPassage, progres, jeton);
+        return publier(idPassage);
+    }
+
+    /// Acquiert l'ancrage plateforme (`idDonneeVigieChiro` / indice) des observations qui en sont
+    /// dépourvues - typiquement une nuit importée par **CSV** (#1565), qui n'en porte pas.
+    ///
+    /// Ne se déclenche que si l'import est disponible, la nuit **rattachée** à une participation et
+    /// l'ancrage **effectivement manquant** : une nuit non rattachée n'a rien à quoi s'ancrer (ses
+    /// observations resteront écartées, et le message le dit), une nuit déjà ancrée ne paie rien.
+    ///
+    /// Le ré-import se fait avec `remplacer = true`, qui rapatrie l'ancrage **en préservant les
+    /// validations** de l'observateur : publier ne doit jamais coûter ses corrections à l'utilisateur.
+    private void acquerirAncrageSiNecessaire(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
+        if (importateur.isEmpty()) {
+            return;
+        }
+        ImportVigieChiro importVigieChiro = importateur.get();
+        if (!importVigieChiro.estRattache(idPassage) || !importVigieChiro.ancrageManquant(idPassage)) {
+            return;
+        }
+        progres.accept(new Progression("Ancrage des observations sur VigieChiro…", 0.0));
+        // Suivi page par page : le rapatriement des donnees compte des dizaines de pages, et « Annuler »
+        // doit s'honorer à chaque page plutôt qu'après coup (#1597).
+        SuiviPagination suivi = (page, totalPages) -> {
+            jeton.leverSiAnnule();
+            double fraction = Math.min(page, totalPages) / (double) Math.max(totalPages, 1);
+            progres.accept(new Progression(
+                    "Ancrage des observations sur VigieChiro… (page " + page + "/" + totalPages + ")", fraction));
+        };
+        importVigieChiro.importer(idPassage, true, suivi);
+    }
+
+    /// Publie les corrections du passage, **sans toucher à l'ancrage** (celui qui manque restera compté).
+    /// Lève une [RegleMetierException] si **aucune** observation du passage n'est revue (rien à publier :
+    /// valider ou corriger d'abord) ; les autres cas non publiables sont comptés dans le bilan, pas levés.
     ///
     /// @param idPassage passage cible
     /// @return le bilan de la publication (poussées, écartées par cause, refus détaillés)
