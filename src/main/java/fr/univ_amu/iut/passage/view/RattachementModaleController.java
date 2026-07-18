@@ -103,6 +103,9 @@ public class RattachementModaleController {
     private Button boutonTirerVigieChiro;
 
     @FXML
+    private Button boutonEnvoyerVigieChiro;
+
+    @FXML
     private ComboBox<PositionMicro> champPosition;
 
     @FXML
@@ -185,6 +188,7 @@ public class RattachementModaleController {
         // main de part et d'autre du travail, plus de bouton figé si l'appel échoue.
         boutonRecupererMeteo.disableProperty().bind(operationEnCours);
         boutonTirerVigieChiro.disableProperty().bind(operationEnCours);
+        boutonEnvoyerVigieChiro.disableProperty().bind(operationEnCours);
         // Repère « en cours » (roue + libellé) visible seulement pendant un aller-retour VigieChiro : le
         // grisage des boutons seul ne suffisait pas à montrer que quelque chose se passe (#1543).
         ligneOccupation.visibleProperty().bind(operationEnCours);
@@ -274,10 +278,39 @@ public class RattachementModaleController {
             return;
         }
         if (viewModel.appliquer()) {
-            pousserVersVigieChiro();
-            apresSucces.run();
-            fermer();
+            pousserPuis(compteRendu -> {
+                apresSucces.run();
+                // #1839 : on ne ferme QUE si l'envoi n'a rien à reprocher. Fermer sur un refus rendrait le
+                // message invisible - c'est précisément ainsi que l'échec passait inaperçu.
+                if (compteRendu.reussi()) {
+                    fermer();
+                }
+            });
         }
+    }
+
+    /// Envoi explicite vers VigieChiro (#1839), pendant du « Synchroniser depuis VigieChiro » : la modale
+    /// **reste ouverte** et affiche ce que l'envoi a donné. Rejouable après un échec réseau.
+    @FXML
+    private void envoyerVersVigieChiro() {
+        pousserPuis(compteRendu -> {});
+    }
+
+    /// Exécute l'envoi hors du fil JavaFX, affiche son compte rendu (succès **comme** échec), puis passe la
+    /// main à `ensuite`. L'occupation grise les commandes le temps de l'aller-retour réseau.
+    private void pousserPuis(java.util.function.Consumer<RattachementViewModel.CompteRenduEnvoi> ensuite) {
+        operationEnCours.set(true);
+        executeur.executer(
+                viewModel::pousserVersVigieChiro,
+                compteRendu -> {
+                    operationEnCours.set(false);
+                    viewModel.signalerEnvoi(compteRendu);
+                    ensuite.accept(compteRendu);
+                },
+                erreur -> {
+                    operationEnCours.set(false);
+                    viewModel.signalerErreur(erreur);
+                });
     }
 
     /// Après un enregistrement **local** réussi, **pousse** les métadonnées (météo/micro/dates) vers la
@@ -286,15 +319,6 @@ public class RattachementModaleController {
     /// modale se ferme sans attendre le réseau : les callbacks sont volontairement muets - un échec
     /// inattendu n'a plus de fenêtre où s'afficher (les métadonnées repartiront au prochain dépôt) mais il
     /// est désormais **journalisé** au point de passage (#1523), donc plus perdu sans trace.
-    private void pousserVersVigieChiro() {
-        executeur.executer(
-                () -> {
-                    viewModel.pousserVersVigieChiro();
-                    return null;
-                },
-                resultat -> {},
-                erreur -> {});
-    }
 
     /// « Récupérer la météo » (#547) : l'appel Open-Meteo est **réseau**, donc déporté hors du fil
     /// JavaFX (socle [ExecuteurTache] #1216) ; le bouton suit `operationEnCours` par binding, et le

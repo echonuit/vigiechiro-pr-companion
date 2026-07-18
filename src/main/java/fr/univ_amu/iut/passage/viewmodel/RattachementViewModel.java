@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
+import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -142,23 +143,46 @@ public class RattachementViewModel {
         return valider();
     }
 
-    /// Pousse les métadonnées du passage (météo / micro / dates) vers sa **participation VigieChiro** (PATCH),
-    /// **au mieux** : silencieux si le passage n'est pas (encore) lié à une participation (import hors-ligne →
-    /// les métadonnées partiront au dépôt) ou si l'API est indisponible. À appeler **hors du fil JavaFX**
-    /// (réseau) ; ne touche aucun contrôle (VM pur). Idempotent — rappelable après chaque validation.
-    public void pousserVersVigieChiro() {
+    /// **Envoie** les métadonnées du passage (météo / micro / enregistreur / dates) vers sa participation
+    /// VigieChiro (PATCH) et **rend compte** de ce qui s'est passé (#1839). À appeler **hors du fil JavaFX**
+    /// (réseau) ; ne touche aucun contrôle (VM pur) - le compte rendu s'affiche ensuite via
+    /// [#signalerEnvoi]. Idempotent : rejouable après un échec réseau.
+    ///
+    /// Avant #1839, cette méthode était `void` et avalait tout : le `ResultatParticipation` (qui porte la
+    /// **cause** d'un refus) était jeté, l'exception aussi, et l'appelant ignorait ses erreurs. Un envoi
+    /// raté était donc indiscernable d'un envoi réussi - ce que l'ADR 0008 interdit. Les trois causes
+    /// d'empêchement (passage non lié, participation introuvable, point d'écoute introuvable) étaient de
+    /// surcroît confondues sous un seul `catch` commenté « pas encore lié ».
+    public CompteRenduEnvoi pousserVersVigieChiro() {
         if (idPassage == null) {
-            return;
+            return new CompteRenduEnvoi(true, "");
         }
-        synchronisation.ifPresent(sync -> {
-            try {
-                sync.pousserVers(idPassage);
-            } catch (RegleMetierException nonLie) {
-                // Passage pas encore lié à une participation, ou participation introuvable : best-effort ;
-                // les métadonnées seront envoyées au dépôt (création à ce moment-là). Silencieux.
-            }
-        });
+        if (synchronisation.isEmpty()) {
+            return new CompteRenduEnvoi(true, "Non connecté à VigieChiro : les métadonnées partiront au dépôt.");
+        }
+        try {
+            ResultatParticipation resultat = synchronisation.get().pousserVers(idPassage);
+            return resultat.id().isPresent()
+                    ? new CompteRenduEnvoi(true, "Métadonnées envoyées à VigieChiro.")
+                    : new CompteRenduEnvoi(false, "VigieChiro a refusé l'envoi : " + resultat.echec());
+        } catch (RegleMetierException empeche) {
+            // La cause EST dite (non lié / participation introuvable / point d'écoute introuvable) au lieu
+            // d'être supposée bénigne.
+            return new CompteRenduEnvoi(false, "Envoi impossible : " + empeche.getMessage());
+        }
     }
+
+    /// Affiche le compte rendu d'un envoi (**sur le fil JavaFX**), jamais un silence.
+    public void signalerEnvoi(CompteRenduEnvoi compteRendu) {
+        if (!compteRendu.message().isEmpty()) {
+            messageErreur.set(compteRendu.message());
+        }
+    }
+
+    /// Issue d'un envoi vers VigieChiro : `reussi` distingue ce qui **peut être ignoré** (rien à envoyer,
+    /// hors connexion : les métadonnées partiront au dépôt) de ce qui **doit retenir l'utilisateur** (refus
+    /// serveur, empêchement) - c'est ce qui décide si la modale peut se fermer.
+    public record CompteRenduEnvoi(boolean reussi, String message) {}
 
     /// **Tire** les métadonnées (météo / micro) de la participation VigieChiro vers le passage local (cas
     /// « participation préparée sur le site web »). À appeler **hors du fil JavaFX** (réseau) ; ne touche

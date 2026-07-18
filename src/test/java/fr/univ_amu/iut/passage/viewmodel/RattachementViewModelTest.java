@@ -9,6 +9,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.api.ResultatParticipation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -398,40 +399,72 @@ class RattachementViewModelTest {
     // --- Phase 2 : pousser les métadonnées vers la participation VigieChiro (à la validation) ---
 
     @Test
-    @DisplayName("Phase 2 : pousserVersVigieChiro délègue à la passerelle pour le passage ouvert")
+    @DisplayName("Phase 2 : pousserVersVigieChiro délègue à la passerelle et annonce l'envoi")
     void pousser_vers_vigiechiro_delegue() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.pousserVers(ID)).thenReturn(ResultatParticipation.reussie("part-1"));
         RattachementViewModel avecSync =
                 new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        avecSync.pousserVersVigieChiro();
+        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
 
         verify(sync).pousserVers(ID);
+        assertThat(compteRendu.reussi()).isTrue();
+        assertThat(compteRendu.message()).contains("envoyées");
     }
 
     @Test
-    @DisplayName("Phase 2 : passage non lié (RegleMetierException) → push silencieux, ne lève pas")
-    void pousser_vers_vigiechiro_silencieux_si_non_lie() {
+    @DisplayName("#1839 : un REFUS de VigieChiro est rapporté avec sa cause, plus jamais avalé")
+    void pousser_vers_vigiechiro_refus_rapporte() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        when(sync.pousserVers(ID)).thenThrow(new RegleMetierException("pas encore lié"));
+        when(sync.pousserVers(ID)).thenReturn(ResultatParticipation.echouee("HTTP 412 : etag périmé"));
         RattachementViewModel avecSync =
                 new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        avecSync.pousserVersVigieChiro(); // best-effort : n'échoue pas
-        verify(sync).pousserVers(ID);
+        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+
+        assertThat(compteRendu.reussi())
+                .as("un refus serveur n'est PAS un succès : la modale doit retenir l'utilisateur")
+                .isFalse();
+        assertThat(compteRendu.message()).contains("refusé").contains("412");
+        avecSync.signalerEnvoi(compteRendu);
+        assertThat(avecSync.messageErreurProperty().get()).contains("412");
     }
 
     @Test
-    @DisplayName("Phase 2 : sans passerelle (hors connexion) → pousserVersVigieChiro ne fait rien")
+    @DisplayName("#1839 : un empêchement DIT sa cause (non lié, participation ou point introuvable)")
+    void pousser_vers_vigiechiro_empechement_dit_sa_cause() {
+        SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
+        when(sync.pousserVers(ID)).thenThrow(new RegleMetierException("Point d'écoute introuvable"));
+        RattachementViewModel avecSync =
+                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        avecSync.ouvrirSur(ID, "040962", "A1");
+
+        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+
+        assertThat(compteRendu.reussi()).isFalse();
+        assertThat(compteRendu.message())
+                .as("les trois causes étaient confondues sous un catch « pas encore lié »")
+                .contains("Point d'écoute introuvable");
+    }
+
+    @Test
+    @DisplayName("Phase 2 : sans passerelle (hors connexion) → rien n'est envoyé, mais on le DIT")
     void pousser_vers_vigiechiro_sans_passerelle() {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         viewModel.ouvrirSur(ID, "040962", "A1"); // viewModel construit avec Optional.empty()
 
-        viewModel.pousserVersVigieChiro(); // no-op, ne lève pas
+        RattachementViewModel.CompteRenduEnvoi compteRendu = viewModel.pousserVersVigieChiro();
+
+        assertThat(compteRendu.reussi())
+                .as("hors connexion n'est pas un échec : les métadonnées partiront au dépôt")
+                .isTrue();
+        assertThat(compteRendu.message()).contains("Non connecté");
     }
 
     // --- Phase 2b : tirer les métadonnées depuis la participation VigieChiro ---

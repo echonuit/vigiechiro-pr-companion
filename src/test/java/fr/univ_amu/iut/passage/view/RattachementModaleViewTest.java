@@ -112,6 +112,21 @@ class RattachementModaleViewTest {
     }
 
     @Test
+    @DisplayName("#1839 : « Envoyer vers VigieChiro » rend compte de l'envoi et relâche le bouton")
+    void envoi_rend_compte(FxRobot robot) {
+        Button envoyer = robot.lookup("#boutonEnvoyerVigieChiro").queryAs(Button.class);
+
+        robot.interact(envoyer::fire);
+
+        // Passerelle absente dans cette fixture : l'envoi le DIT, au lieu de se taire comme avant #1839.
+        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        assertThat(message.getText()).contains("Non connecté");
+        assertThat(envoyer.isDisabled())
+                .as("bouton relâché par binding une fois l'aller-retour terminé")
+                .isFalse();
+    }
+
+    @Test
     @DisplayName("#1216 : un échec de « Récupérer la météo » est routé vers le message, le bouton relâché")
     void echec_meteo_route_et_relache(FxRobot robot) {
         when(conditionsService.recupererMeteo(7L)).thenThrow(new RuntimeException("Open-Meteo injoignable"));
