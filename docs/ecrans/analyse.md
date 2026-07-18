@@ -56,6 +56,11 @@ identification. Comme dans [Sons & validation](validation.md#consulter-la-fiche-
 s'adapte au taxon : **Plan National d'Actions Chiroptères** pour les chauves-souris, **GBIF** ou
 **Wikipédia FR** (selon le réglage du menu ☰ du bandeau) pour les autres.
 
+Toutes les lignes n'ont pas de fiche : un pseudo-taxon (**Bruit**, **Oiseau**) ou un couple d'espèces n'en
+a aucune. Dans le menu, l'entrée est alors **grisée** avec la mention « aucune fiche disponible » ; au
+**double-clic**, rien ne s'ouvre et un **bandeau** vous le dit (« Aucune fiche disponible pour « Bruit » »).
+Le geste ne reste jamais sans réponse.
+
 ## La carte de répartition
 
 Le bouton **« 🗺️ Carte »** bascule la zone du haut entre le **tableau** et une **carte**. Par défaut, la

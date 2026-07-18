@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.ConstructeurLienEspece;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
 import javafx.scene.control.MenuItem;
 
 /// Action IHM **réutilisable** « Fiche de l'espèce » : fabrique l'item de menu contextuel qui ouvre,
@@ -88,6 +89,29 @@ public final class ActionFicheEspece {
         Optional<String> lien = constructeur.lienFiche(espece);
         lien.ifPresent(url -> executeur.resoudrePuisOuvrir(() -> resolveur.resoudre(url), ouvreur::ouvrir));
         return lien.isPresent();
+    }
+
+    /// Ouvre la fiche de `espece` ; à défaut, **signale le motif** à `siAucuneFiche`, que l'écran présente
+    /// comme il l'entend (bandeau, barre de statut…). Forme attendue du **double-clic**, qui n'a pas d'état
+    /// à montrer avant le geste : sans motif, son silence se lit comme une panne (#1834, #1837).
+    ///
+    /// `espece` nulle (aucune ligne sous le curseur) : ni ouverture ni message.
+    public void ouvrirOuSignaler(EspeceIdentifiee espece, Consumer<String> siAucuneFiche) {
+        if (espece != null && !ouvrir(espece)) {
+            siAucuneFiche.accept(motifAucuneFiche(espece));
+        }
+    }
+
+    /// Motif présenté à l'utilisateur, qui **nomme le taxon** tel qu'il le lit dans la table ; à défaut son
+    /// code, et en dernier recours une formule sans nom plutôt que des guillemets vides.
+    private static String motifAucuneFiche(EspeceIdentifiee espece) {
+        String nom = espece.nomVernaculaireFr();
+        if (nom == null || nom.isBlank()) {
+            nom = espece.codeTadarida();
+        }
+        return nom == null || nom.isBlank()
+                ? "Aucune fiche disponible pour ce taxon."
+                : "Aucune fiche disponible pour « " + nom + " ».";
     }
 
     private static String libelle(EspeceIdentifiee espece) {

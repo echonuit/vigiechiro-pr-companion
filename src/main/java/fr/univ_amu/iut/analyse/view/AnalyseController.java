@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.DepotDispositionColonnes;
 import fr.univ_amu.iut.commun.model.DepotVues;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ColonneBadge;
 import fr.univ_amu.iut.commun.view.DescripteurFiltre;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
@@ -54,6 +55,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -166,6 +168,12 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private Label lblExport;
+
+    @FXML
+    private HBox bandeauRetour;
+
+    @FXML
+    private Button btnFermerRetour;
 
     @FXML
     private TableView<EspeceAgregee> tableEspeces;
@@ -322,7 +330,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         selecteurColonnes.persister(depotColonnes, FEATURE);
         // Clic droit : sélectionne la ligne (cible du menu contextuel). Double-clic : ouvre la fiche de
         // l'espèce, même cible que l'item « Fiche de l'espèce » du menu (#1794).
-        DoubleClicLigne.installer(tableEspeces, espece -> actionFicheEspece.ouvrir(especeDe(espece)));
+        // Sur un taxon sans fiche (« Bruit », « Oiseau », couple sans binôme), le motif part dans le bandeau
+        // plutôt que dans le vide : le geste restait muet et passait pour cassé (#1837).
+        DoubleClicLigne.installer(
+                tableEspeces, espece -> actionFicheEspece.ouvrirOuSignaler(especeDe(espece), viewModel::signaler));
         configurerFiches(especeDe(null));
 
         // Sélecteur de regroupement (pivot espèce ↔ lieu).
@@ -350,11 +361,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 CriteresAnalyse.vuesParDefaut(),
                 selecteurColonnes.adaptateur());
 
-        // Message d'export.
-        var exportPresent = viewModel.messageProperty().isNotEmpty();
-        lblExport.textProperty().bind(viewModel.messageProperty());
-        lblExport.visibleProperty().bind(exportPresent);
-        lblExport.managedProperty().bind(exportPresent);
+        // Bandeau de retour (export, échec de chargement, action refusée), mutualisé avec Sons & validation
+        // (#1837) : libellé, visibilité, couleur de sévérité et croix de fermeture.
+        BandeauRetour.installer(
+                bandeauRetour, lblExport, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // En mode Tableau, la table visible suit le regroupement ; en mode Carte, les deux tables
         // s'effacent au profit de la carte de répartition.
@@ -371,9 +381,9 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         zonesStatut.bind(Bindings.createObjectBinding(
                 () -> ZonesStatut.centreEtDroite(
                         viewModel.resumeProperty().get(),
-                        viewModel.messageProperty().get()),
+                        viewModel.retourProperty().get().texte()),
                 viewModel.resumeProperty(),
-                viewModel.messageProperty()));
+                viewModel.retourProperty()));
 
         // Message d'état vide : ni espèce ni carré (aucune observation exploitable).
         var vide = Bindings.createBooleanBinding(
@@ -453,8 +463,8 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         // sien.
         DoubleClicLigne.installer(
                 tableObservations,
-                observation -> actionFicheEspece.ouvrir(
-                        especeDe(tableEspeces.getSelectionModel().getSelectedItem())));
+                observation -> actionFicheEspece.ouvrirOuSignaler(
+                        especeDe(tableEspeces.getSelectionModel().getSelectedItem()), viewModel::signaler));
     }
 
     /// L'espèce ciblée par « Fiche de l'espèce » : code, nom latin et nom vernaculaire de la ligne

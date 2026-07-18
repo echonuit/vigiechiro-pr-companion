@@ -3,6 +3,7 @@ package fr.univ_amu.iut.analyse.viewmodel;
 import fr.univ_amu.iut.analyse.model.AgregationAnalyse;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.CarreEspeces;
 import fr.univ_amu.iut.validation.model.EspeceAgregee;
@@ -13,6 +14,8 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -55,7 +58,10 @@ public class AnalyseViewModel {
     private final ObservableList<EspeceAgregee> especes = FXCollections.observableArrayList();
     private final ObservableList<CarreEspeces> carres = FXCollections.observableArrayList();
     private final ReadOnlyStringWrapper resume = new ReadOnlyStringWrapper(this, "resume", "");
-    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper(this, "message", "");
+    /// Retour de la dernière opération (export, échec de chargement, action refusée), avec sa sévérité :
+    /// rendu dans un bandeau, distinct de l'indice d'état vide de la table.
+    private final ReadOnlyObjectWrapper<RetourOperation> retour =
+            new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     /// Détail de l'espèce sélectionnée : ses observations à travers les passages (vide tant qu'aucune
     /// espèce n'est sélectionnée), et le titre du panneau.
@@ -108,11 +114,24 @@ public class AnalyseViewModel {
         agreger();
     }
 
-    /// Route l'échec d'un chargement vers le message de l'écran (filet #795), à la place d'une exception
+    /// Route l'échec d'un chargement vers le bandeau de l'écran (filet #795), à la place d'une exception
     /// non capturée remontant du fil de fond.
     public void signalerErreur(Throwable erreur) {
         String detail = erreur.getMessage();
-        message.set(detail != null && !detail.isBlank() ? detail : "Chargement des observations impossible.");
+        retour.set(RetourOperation.erreur(
+                detail != null && !detail.isBlank() ? detail : "Chargement des observations impossible."));
+    }
+
+    /// Signale dans le bandeau qu'une action **n'a pas eu lieu**, faute de cible : guidage, pas échec
+    /// technique. Sert au double-clic sur un taxon sans fiche (#1837), dont le silence se lisait comme
+    /// une panne.
+    public void signaler(String texte) {
+        retour.set(RetourOperation.info(texte));
+    }
+
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme). Le bandeau disparaît.
+    public void effacerRetour() {
+        retour.set(RetourOperation.AUCUN);
     }
 
     /// Agrège les observations **filtrées** vers les tables (selon le regroupement), la carte et le résumé.
@@ -169,10 +188,10 @@ public class AnalyseViewModel {
             } else {
                 service.exporterEspeces(destination, List.copyOf(especes));
             }
-            message.set("Inventaire exporté vers " + destination.getFileName() + ".");
+            retour.set(RetourOperation.succes("Inventaire exporté vers " + destination.getFileName() + "."));
             return true;
         } catch (RuntimeException echec) {
-            message.set(echec.getMessage());
+            retour.set(RetourOperation.erreur(echec.getMessage()));
             return false;
         }
     }
@@ -259,7 +278,9 @@ public class AnalyseViewModel {
         return resume.getReadOnlyProperty();
     }
 
-    public ReadOnlyStringProperty messageProperty() {
-        return message.getReadOnlyProperty();
+    /// Retour de la **dernière opération** avec sa sévérité, pour un bandeau de feedback visible.
+    /// [RetourOperation#AUCUN] en nominal.
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return retour.getReadOnlyProperty();
     }
 }

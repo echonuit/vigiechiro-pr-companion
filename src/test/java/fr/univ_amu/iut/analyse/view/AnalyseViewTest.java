@@ -45,8 +45,11 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
@@ -180,6 +183,13 @@ class AnalyseViewTest {
                 "640380",
                 "Étang",
                 1L);
+    }
+
+    /// Variante **sans nom latin** : un pseudo-taxon (« Bruit ») n'a ni code PNA ni binôme sur lequel se
+    /// rabattre, donc aucune fiche n'est constructible, quelle que soit la source universelle préférée.
+    private static ObservationAnalyse obsSansFiche(String taxon, String vern) {
+        return new ObservationAnalyse(
+                taxon, null, vern, "Chiroptères", StatutObservation.VALIDEE, 42L, 2026, "640380", "Étang", 1L);
     }
 
     @Test
@@ -388,9 +398,7 @@ class AnalyseViewTest {
 
         // Double-clic sur la ligne d'observation. On type le nœud en Node pour lever l'ambiguïté entre les
         // surcharges doubleClickOn(Matcher) et doubleClickOn(Predicate).
-        Node ligneObservation =
-                robot.lookup("#tableObservations").lookup(".table-row-cell").query();
-        robot.doubleClickOn(ligneObservation);
+        doubleCliquerLigne(robot, "#tableObservations", 0);
 
         // Le double-clic ouvre la fiche de l'espèce sélectionnée (#1794). L'écoute reste sur le bouton
         // « Écouter » et l'ouverture du passage sur son action : aucun des deux n'est déclenché ici.
@@ -401,13 +409,74 @@ class AnalyseViewTest {
         verify(ouvrirPassage, never()).ouvrir(any(), any());
     }
 
+    /// Double-clic **déterministe** sur la ligne d'index `index` de `idTable`.
+    ///
+    /// Deux fragilités sont évitées ici. Les `TableRow` sont **recyclés** : leur ordre dans le graphe de
+    /// scène ne suit pas celui des lignes affichées, donc la première `.table-row-cell` venue est souvent
+    /// une ligne **vide**. Et en headless, `doubleClickOn(Node)` vise le **centre du nœud en coordonnées
+    /// écran** : il rate sa cible quand la mise en page n'est pas encore stabilisée. On cible donc la ligne
+    /// par son **index réel** et on lui envoie l'événement directement, ce qui exerce le même gestionnaire
+    /// de production (`DoubleClicLigne`) sans dépendre du placement.
+    private static void doubleCliquerLigne(FxRobot robot, String idTable, int index) {
+        Node ligne = robot.lookup(idTable).lookup(".table-row-cell").queryAll().stream()
+                .map(noeud -> (TableRow<?>) noeud)
+                .filter(rangee -> !rangee.isEmpty() && rangee.getIndex() == index)
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("aucune ligne d'index " + index + " dans " + idTable));
+        robot.interact(() -> ligne.fireEvent(new MouseEvent(
+                MouseEvent.MOUSE_CLICKED,
+                0,
+                0,
+                0,
+                0,
+                MouseButton.PRIMARY,
+                2,
+                false,
+                false,
+                false,
+                false,
+                true,
+                false,
+                false,
+                true,
+                false,
+                false,
+                null)));
+        WaitForAsyncUtils.waitForFxEvents();
+    }
+
+    @Test
+    @DisplayName("#1837 : double-clic sur une espèce sans fiche : rien ne s'ouvre, et le bandeau dit pourquoi")
+    void double_clic_espece_sans_fiche_affiche_le_motif(FxRobot robot) {
+        Node bandeau = robot.lookup("#bandeauRetour").query();
+        assertThat(bandeau.isVisible()).as("aucun retour au départ").isFalse();
+
+        // « Bruit » : pseudo-taxon, ni code PNA ni nom latin, donc aucune fiche possible nulle part.
+        when(service.observationsAnalyse(anyString())).thenReturn(List.of(obsSansFiche("noise", "Bruit")));
+        robot.interact(controleur::rafraichirAuRetour);
+        WaitForAsyncUtils.waitForFxEvents(); // la ligne doit être remise en page avant d'être cliquée
+
+        doubleCliquerLigne(robot, "#tableEspeces", 0);
+
+        assertThat(urlsFiche)
+                .as("un pseudo-taxon n'a pas de fiche : rien ne doit s'ouvrir")
+                .isEmpty();
+        assertThat(bandeau.isVisible())
+                .as("le geste ne doit plus rester muet : sans retour, il passe pour cassé")
+                .isTrue();
+        assertThat(robot.lookup("#lblExport").queryAs(Label.class).getText())
+                .as("le motif nomme le taxon tel que l'utilisateur le lit dans la table")
+                .contains("Aucune fiche disponible pour « Bruit »");
+        assertThat(bandeau.getStyleClass())
+                .as("action refusée faute de cible : guidage, pas échec technique")
+                .contains("retour-info");
+    }
+
     @Test
     @DisplayName("#1794 : double-clic sur une espèce ouvre sa fiche (même cible que le menu contextuel)")
     void double_clic_espece_ouvre_la_fiche(FxRobot robot) {
         // Première espèce = Pipistrelle commune, chiroptère à fiche PNA.
-        Node ligneEspece =
-                robot.lookup("#tableEspeces").lookup(".table-row-cell").query();
-        robot.doubleClickOn(ligneEspece);
+        doubleCliquerLigne(robot, "#tableEspeces", 0);
 
         assertThat(urlsFiche)
                 .containsExactly(

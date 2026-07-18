@@ -72,21 +72,9 @@ final class ActionsMenuAudio {
     /// contente de griser son item : il montre son état **avant** le clic, quand le double-clic n'a rien à
     /// montrer et passait donc pour cassé (#1834).
     void ouvrirFiche(LigneObservationAudio ligne, Consumer<String> signaler) {
-        if (ligne != null && !ficheEspece.ouvrir(especeDe(ligne))) {
-            signaler.accept(motifAucuneFiche(ligne));
+        if (ligne != null) {
+            ficheEspece.ouvrirOuSignaler(especeDe(ligne), signaler);
         }
-    }
-
-    /// Motif présenté à l'utilisateur, qui nomme le taxon tel qu'il le lit dans la colonne « Proposition
-    /// Tadarida » ; à défaut son code, et en dernier recours une formule sans nom.
-    private static String motifAucuneFiche(LigneObservationAudio ligne) {
-        String nom = ligne.nomTadarida();
-        if (nom == null || nom.isBlank()) {
-            nom = ligne.taxonTadarida();
-        }
-        return nom == null || nom.isBlank()
-                ? "Aucune fiche disponible pour cette observation."
-                : "Aucune fiche disponible pour « " + nom + " ».";
     }
 
     /// Sous-menu « Copier ▸ » de la ligne audio (#1798) : nom latin de la proposition Tadarida et n° de

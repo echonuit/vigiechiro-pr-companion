@@ -86,7 +86,7 @@
   <!-- Bandeau de retour d'opération (succès / erreur d'import…), juste sous la barre pour être vu tout
        de suite. Masqué (non managé) tant qu'aucun retour n'est présent : il n'occupe alors aucune place.
        Une croix permet de le fermer une fois lu. -->
-  <HBox fx:id="bandeauRetour" styleClass="audio-message" alignment="CENTER_LEFT" spacing="10.0">
+  <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
     <Label fx:id="lblMessage" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
     <Button fx:id="btnFermerRetour" text="✕" styleClass="fermer-retour" accessibleText="Fermer le message"/>
   </HBox>

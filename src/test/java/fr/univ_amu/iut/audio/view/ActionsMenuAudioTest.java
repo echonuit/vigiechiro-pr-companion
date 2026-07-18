@@ -21,8 +21,9 @@ import org.junit.jupiter.api.Test;
 /// reste muet et passe pour cassé, comme constaté sur une nuit réelle où la quasi-totalité des lignes
 /// sont des pseudo-taxons « Bruit ».
 ///
-/// Testé hors JavaFX : [ActionsMenuAudio#ouvrirFiche] n'est que du choix de message. Le fait que ce
-/// message atteigne vraiment le bandeau est couvert, lui, par `SonsValidationArchiveViewTest`.
+/// Testé hors JavaFX : [ActionsMenuAudio#ouvrirFiche] ne fait que fournir la ligne et le canal de
+/// signalement. Le motif lui-même est construit par `ActionFicheEspece` (mutualisé avec l'Inventaire,
+/// #1837) ; qu'il atteigne vraiment le bandeau est couvert par `SonsValidationArchiveViewTest`.
 class ActionsMenuAudioTest {
 
     /// Source universelle **muette** : seule la table PNA embarquée résout un lien, ce qui rend le test
@@ -112,7 +113,7 @@ class ActionsMenuAudioTest {
     void sans_libelle_ni_code_le_motif_reste_lisible() {
         actions.ouvrirFiche(ligne(null, "  "), motifs::add);
 
-        assertThat(motifs).containsExactly("Aucune fiche disponible pour cette observation.");
+        assertThat(motifs).containsExactly("Aucune fiche disponible pour ce taxon.");
     }
 
     @Test

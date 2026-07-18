@@ -39,11 +39,9 @@
   -fx-padding: 16;
 }
 
-/* Bandeau de retour d'opération (import / export / valider / corriger). `.audio-message` porte la mise
-   en forme commune ; la classe de sévérité (ajoutée par le controller) porte les couleurs. Toujours
-   visible quand un retour est présent, contrairement au placeholder gris de l'état vide.
-   Volontairement TRÈS visible (gras, fond saturé, épais filet d'accent à gauche) : c'est le seul
-   retour sur le succès/échec d'un import, il ne doit pas passer inaperçu. */
+/* Encarts de message de l'écran audio (import VigieChiro, publication, passage archivé) : même boîte
+   que le bandeau de retour, sans les couleurs de sévérité. Le bandeau de retour, lui, est mutualisé
+   dans `commun/view/design.css` sous `.bandeau-retour` depuis qu'il sert aussi à l'Inventaire (#1837). */
 .audio-message {
   -fx-font-size: 14px;
   -fx-font-weight: bold;
@@ -51,52 +49,6 @@
   -fx-background-radius: 5;
   -fx-border-radius: 5;
   -fx-border-width: 1 1 1 6;
-}
-
-/* Couleurs par sévérité : fond + filet d'accent sur le conteneur, couleur de texte sur le libellé et la
-   croix (le texte-fill ne s'hérite pas du conteneur de façon fiable). */
-.retour-succes {
-  -fx-background-color: #d4edda;
-  -fx-border-color: #28a745;
-}
-
-.retour-succes .label,
-.retour-succes .fermer-retour {
-  -fx-text-fill: #14532d;
-}
-
-.retour-info {
-  -fx-background-color: #d1ecf1;
-  -fx-border-color: #17a2b8;
-}
-
-.retour-info .label,
-.retour-info .fermer-retour {
-  -fx-text-fill: #0c4a6e;
-}
-
-.retour-erreur {
-  -fx-background-color: #f8d7da;
-  -fx-border-color: #dc3545;
-}
-
-.retour-erreur .label,
-.retour-erreur .fermer-retour {
-  -fx-text-fill: #842029;
-}
-
-/* Croix de fermeture : bouton plat qui hérite de la couleur de sévérité, plus marqué au survol. */
-.fermer-retour {
-  -fx-background-color: transparent;
-  -fx-font-size: 14px;
-  -fx-font-weight: bold;
-  -fx-padding: 1 7;
-  -fx-background-radius: 4;
-  -fx-cursor: hand;
-}
-
-.fermer-retour:hover {
-  -fx-background-color: rgba(0, 0, 0, 0.08);
 }
 
 /* Icônes-indicateurs (Ikonli FontAwesome) : colorées pour être distinctives, en en-tête et en cellule.

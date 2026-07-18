@@ -108,9 +108,9 @@ class AnalyseViewModelTest {
         assertThat(vm.especes()).extracting(EspeceAgregee::code).containsExactly("Pippip");
 
         vm.signalerErreur(new IllegalStateException("base indisponible"));
-        assertThat(vm.messageProperty().get()).isEqualTo("base indisponible");
+        assertThat(vm.retourProperty().get().texte()).contains("base indisponible");
         vm.signalerErreur(new IllegalStateException());
-        assertThat(vm.messageProperty().get()).contains("impossible");
+        assertThat(vm.retourProperty().get().texte()).contains("impossible");
     }
 
     @Test
@@ -221,7 +221,7 @@ class AnalyseViewModelTest {
 
         assertThat(ok).isTrue();
         verify(service).exporterEspeces(eq(cible), anyList());
-        assertThat(vm.messageProperty().get()).contains("exporté");
+        assertThat(vm.retourProperty().get().texte()).contains("exporté");
     }
 
     @Test

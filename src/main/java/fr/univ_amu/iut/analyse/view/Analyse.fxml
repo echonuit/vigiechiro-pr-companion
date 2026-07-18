@@ -118,7 +118,12 @@
 
   </SplitPane>
 
-  <Label fx:id="lblExport" styleClass="analyse-message" wrapText="true"/>
+  <!-- Bandeau de retour d'opération (export, échec de chargement, action refusée), mutualisé avec
+       Sons & validation : style dans commun/view/design.css, câblage dans commun/view/BandeauRetour. -->
+  <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
+    <Label fx:id="lblExport" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+    <Button fx:id="btnFermerRetour" text="✕" styleClass="fermer-retour" accessibleText="Fermer le message"/>
+  </HBox>
   <Label fx:id="lblMessage" styleClass="analyse-vide" wrapText="true"/>
   </VBox>
 </StackPane>
