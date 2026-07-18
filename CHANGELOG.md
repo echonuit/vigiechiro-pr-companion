@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.12.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.12.1...v2.12.2) (2026-07-18)
+
+
+### Bug Fixes
+
+* **audio:** dire pourquoi le double-clic n'ouvre pas de fiche ([#1836](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1836)) ([d066b5a](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/d066b5a32b03ed48fdc982494a947beb2f39eac0)), closes [#789](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/789)
+
 ## [2.12.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.12.0...v2.12.1) (2026-07-17)
 
 
