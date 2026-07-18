@@ -578,16 +578,16 @@ class RattachementViewModelTest {
     }
 
     @Test
-    @DisplayName("Phase 2b : peutSynchroniser reflète la présence de la passerelle")
+    @DisplayName("Phase 2b : peutRecuperer reflète la présence de la passerelle")
     void peut_synchroniser() {
-        assertThat(viewModel.peutSynchroniser()).isFalse(); // @BeforeEach : Optional.empty()
+        assertThat(viewModel.peutRecuperer()).isFalse(); // @BeforeEach : Optional.empty()
         assertThat(new RattachementViewModel(
                                 service,
                                 rattachement,
                                 conditionsPassage,
                                 propositions,
                                 Optional.of(mock(SynchronisationParticipation.class)))
-                        .peutSynchroniser())
+                        .peutRecuperer())
                 .isTrue();
     }
 

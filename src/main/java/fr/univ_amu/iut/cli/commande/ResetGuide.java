@@ -29,7 +29,7 @@ import picocli.CommandLine.Spec;
 /// 1. `sauvegarder --complet` — base **et** audio (#1346) ;
 /// 2. `exporter-observations` — les validations ;
 /// 3. base neuve ;
-/// 4. `synchroniser-vigiechiro` puis `reconstruire-passage` — métadonnées, sites, points, observations
+/// 4. `recuperer-vigiechiro` puis `reconstruire-passage` — métadonnées, sites, points, observations
 ///    reviennent du serveur (#1050, prouvé de bout en bout) ;
 /// 5. réimport de l'audio : depuis le disque (`importer`), ou `reactiver` pour un passage archivé ;
 /// 6. `audit-coherence` — le workspace doit être sain.

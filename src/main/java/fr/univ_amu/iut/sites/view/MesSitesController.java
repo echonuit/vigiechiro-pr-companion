@@ -105,9 +105,9 @@ public class MesSitesController implements ResumeStatut {
         lblErreur.managedProperty().bind(viewModel.messageErreurProperty().isNotEmpty());
         // Synchronisation à la demande (#1045) : bouton masqué quand la passerelle est absente (#937),
         // message de résultat rendu visible seulement quand il est présent.
-        boolean peutSynchroniser = viewModel.peutSynchroniser();
-        btnSyncVigieChiro.setVisible(peutSynchroniser);
-        btnSyncVigieChiro.setManaged(peutSynchroniser);
+        boolean peutRecuperer = viewModel.peutRecuperer();
+        btnSyncVigieChiro.setVisible(peutRecuperer);
+        btnSyncVigieChiro.setManaged(peutRecuperer);
         lblSynchro.textProperty().bind(viewModel.messageSynchroProperty());
         lblSynchro.visibleProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());
         lblSynchro.managedProperty().bind(viewModel.messageSynchroProperty().isNotEmpty());

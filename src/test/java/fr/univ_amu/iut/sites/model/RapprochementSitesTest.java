@@ -127,7 +127,7 @@ class RapprochementSitesTest {
         assertThat(rapprochement.synchroniser(client))
                 .get()
                 .satisfies(rapport -> assertThat(rapport.enClair())
-                        .contains("sites non synchronisés")
+                        .contains("sites non récupérés")
                         .contains("injoignable"));
         assertThat(siteDao.findByUtilisateur(ID_USER)).isEmpty();
 

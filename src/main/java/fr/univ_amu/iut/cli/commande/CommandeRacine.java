@@ -57,7 +57,7 @@ import picocli.CommandLine.Spec;
             ConstituerSelection.class,
             ExporterLot.class,
             Deposer.class,
-            SynchroniserVigieChiro.class,
+            RecupererVigieChiro.class,
             DeposerVigieChiro.class,
             LancerTraitementVigieChiro.class,
             EtatTraitementVigieChiro.class,

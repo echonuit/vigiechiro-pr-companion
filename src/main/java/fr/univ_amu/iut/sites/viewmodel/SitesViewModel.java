@@ -75,7 +75,7 @@ public class SitesViewModel {
 
     /// `true` quand la synchronisation à la demande est disponible (app complète). `false` → la vue
     /// masque le bouton, patron de la modale passage (#937).
-    public boolean peutSynchroniser() {
+    public boolean peutRecuperer() {
         return synchronisation.isPresent();
     }
 

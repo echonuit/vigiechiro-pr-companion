@@ -18,10 +18,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import picocli.CommandLine;
 
-/// `synchroniser-vigiechiro` (#1181) : contrôle d'identité avant synchronisation, agrégation du
+/// `recuperer-vigiechiro` (#1181) : contrôle d'identité avant rapatriement, agrégation du
 /// résumé des rapprocheurs (mockés - leur comportement est couvert par leurs propres tests), jeton
 /// ponctuel `--token`, code retour scriptable.
-class SynchroniserVigieChiroTest {
+class RecupererVigieChiroTest {
 
     private final ClientVigieChiro client = mock(ClientVigieChiro.class);
 
@@ -31,7 +31,7 @@ class SynchroniserVigieChiroTest {
     }
 
     private CommandLine ligne(Set<RapprochementVigieChiro> rapprocheurs, StringWriter sortie) {
-        CommandLine ligne = new CommandLine(new SynchroniserVigieChiro(client, () -> rapprocheurs));
+        CommandLine ligne = new CommandLine(new RecupererVigieChiro(client, () -> rapprocheurs));
         ligne.setOut(new PrintWriter(sortie, true));
         ligne.setErr(new PrintWriter(new StringWriter(), true));
         return ligne;
@@ -39,7 +39,7 @@ class SynchroniserVigieChiroTest {
 
     @Test
     @DisplayName("connecté : identité affichée, rapprocheurs rejoués, résumé agrégé, code 0")
-    void connecte_synchronise_et_resume() {
+    void connecte_recupere_et_resume() {
         when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
         Set<RapprochementVigieChiro> rapprocheurs = Set.of(
                 c -> Optional.of(new RapportSynchro("taxons", 385)), c -> Optional.of(new RapportSynchro("sites", 3)));
@@ -50,25 +50,25 @@ class SynchroniserVigieChiroTest {
         assertThat(code).isZero();
         assertThat(sortie.toString())
                 .contains("Connecté : sebastien.")
-                .contains("Synchronisé : ")
+                .contains("Récupéré : ")
                 .contains("385 taxons")
                 .contains("3 sites");
     }
 
     @Test
     @DisplayName("rien récupéré (rapprocheurs muets) : message explicite, code 0 quand même")
-    void rien_a_synchroniser() {
+    void rien_a_recuperer() {
         when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
         StringWriter sortie = new StringWriter();
 
         int code = ligne(Set.of(c -> Optional.empty()), sortie).execute();
 
         assertThat(code).isZero();
-        assertThat(sortie.toString()).contains("Rien à synchroniser");
+        assertThat(sortie.toString()).contains("Rien à récupérer");
     }
 
     @Test
-    @DisplayName("jeton mort ou hors ligne : refus explicite avant toute synchronisation, code non nul")
+    @DisplayName("jeton mort ou hors ligne : refus explicite avant tout rapatriement, code non nul")
     void non_connecte_code_non_nul() {
         when(client.moi()).thenReturn(ReponseApi.injoignable("délai d'attente dépassé"));
         boolean[] appele = {false};

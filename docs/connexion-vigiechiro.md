@@ -56,7 +56,7 @@ suivi du traitement et la synchronisation des sites indiquent la vraie raison d'
 injoignable, refus du serveur) au lieu d'afficher « aucun résultat ».
 
 !!! tip "En ligne de commande"
-    Les commandes Vigie-Chiro (`synchroniser-vigiechiro`, `deposer-vigiechiro`,
+    Les commandes Vigie-Chiro (`recuperer-vigiechiro`, `deposer-vigiechiro`,
     `verifier-depot-vigiechiro`, `importer-vigiechiro`) acceptent un **jeton ponctuel** : option
     `--token`, ou variable d'environnement `VIGIECHIRO_TOKEN` (préférable : elle ne laisse pas le
     jeton dans l'historique du shell). À défaut, la connexion enregistrée dans l'application est

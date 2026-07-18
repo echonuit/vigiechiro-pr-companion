@@ -46,7 +46,7 @@ demarrer_stub() {
 
   export VIGIECHIRO_URL="http://127.0.0.1:${STUB_PORT}/api/v1"
   export VIGIECHIRO_TOKEN="jeton-bidon"
-  run cli synchroniser-vigiechiro
+  run cli recuperer-vigiechiro
   unset VIGIECHIRO_URL VIGIECHIRO_TOKEN
 
   # L'issue métier importe peu (le référentiel stub est vide) : la preuve recherchée est que la requête

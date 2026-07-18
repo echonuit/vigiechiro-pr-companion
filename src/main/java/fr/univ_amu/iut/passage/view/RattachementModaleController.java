@@ -190,9 +190,9 @@ public class RattachementModaleController {
 
         // « Récupérer depuis VigieChiro » n'apparaît que si l'observateur est connecté (passerelle
         // disponible) : inutile de proposer un tir hors connexion.
-        boolean peutSynchroniser = viewModel.peutSynchroniser();
-        ligneSyncVigieChiro.setVisible(peutSynchroniser);
-        ligneSyncVigieChiro.setManaged(peutSynchroniser);
+        boolean peutRecuperer = viewModel.peutRecuperer();
+        ligneSyncVigieChiro.setVisible(peutRecuperer);
+        ligneSyncVigieChiro.setManaged(peutRecuperer);
 
         // Boutons réseau relâchés par binding (#1216, patron #1254) : plus de setDisable posé à la
         // main de part et d'autre du travail, plus de bouton figé si l'appel échoue.

@@ -4,7 +4,7 @@ package fr.univ_amu.iut.commun.api;
 /// l'utilisateur après une connexion (« référentiel à jour : N taxons »). Renvoyé par
 /// [RapprochementVigieChiro#synchroniser(ClientVigieChiro)] quand il y a quelque chose à dire :
 /// une synchronisation effectuée, **ou, depuis #1284, une synchronisation empêchée avec sa cause**
-/// (« sites non synchronisés : VigieChiro injoignable ») — avant, l'empêchement était omis en silence.
+/// (« sites non récupérés : Vigie-Chiro injoignable ») — avant, l'empêchement était omis en silence.
 ///
 /// @param libelle nature synchronisée, au pluriel (ex. `"taxons"`, `"sites"`)
 /// @param nombre nombre d'éléments synchronisés (0 si la synchronisation a été empêchée)
@@ -23,8 +23,8 @@ public record RapportSynchro(String libelle, int nombre, String souci) {
     }
 
     /// Rendu unique pour le bandeau de connexion, M-Sites et la CLI : « 385 taxons », ou
-    /// « sites non synchronisés (VigieChiro injoignable : ...) ».
+    /// « sites non récupérés (Vigie-Chiro injoignable : ...) ».
     public String enClair() {
-        return souci == null ? nombre + " " + libelle : libelle + " non synchronisés (" + souci + ")";
+        return souci == null ? nombre + " " + libelle : libelle + " non récupérés (" + souci + ")";
     }
 }

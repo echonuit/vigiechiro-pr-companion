@@ -90,7 +90,7 @@ class RapprochementTaxonsTest {
         assertThat(rapprochement.synchroniser(client))
                 .get()
                 .satisfies(rapport -> assertThat(rapport.enClair())
-                        .contains("taxons non synchronisés")
+                        .contains("taxons non récupérés")
                         .contains("injoignable"));
         assertThat(liens.objectidPour(LienVigieChiro.ENTITE_TAXON, "Zzz001"))
                 .as("garde anti-purge : le mapping acquis reste intact")
@@ -99,9 +99,8 @@ class RapprochementTaxonsTest {
         when(client.taxons()).thenReturn(ReponseApi.refuse(500, "boom"));
         assertThat(rapprochement.synchroniser(client))
                 .get()
-                .satisfies(rapport -> assertThat(rapport.enClair())
-                        .contains("non synchronisés")
-                        .contains("HTTP 500"));
+                .satisfies(rapport ->
+                        assertThat(rapport.enClair()).contains("non récupérés").contains("HTTP 500"));
 
         when(client.taxons()).thenReturn(ReponseApi.nonConnecte());
         assertThat(rapprochement.synchroniser(client))

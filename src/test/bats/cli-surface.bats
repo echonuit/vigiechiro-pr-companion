@@ -72,9 +72,17 @@ COMMANDES_LOCALES_SANS_ARG=(audit-coherence sauvegarder reset-guide retro-emprei
   [[ "${output}" == *"aucun écart"* ]]
 }
 
-@test "synchroniser-vigiechiro hors connexion : refus métier explicite (jeton absent), exit 1 (#1592)" {
+@test "recuperer-vigiechiro hors connexion : refus métier explicite (jeton absent), exit 1 (#1592)" {
   # La validation des arguments passe (aucune option requise) : la commande s'exécute puis refuse faute
-  # de jeton, sans jamais joindre le réseau — refus lisible, pas un plantage muet.
+  # de jeton, sans jamais joindre le réseau - refus lisible, pas un plantage muet.
+  run cli recuperer-vigiechiro
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"jeton"* ]]
+}
+
+@test "synchroniser-vigiechiro reste un alias : les scripts existants ne cassent pas (#1866)" {
+  # Le renommage (ADR 0022) ne doit pas rompre un contrat déjà publié : l'ancien nom mène à la même
+  # commande, avec le même refus. Sans ce test, l'alias pourrait disparaître sans que rien ne le dise.
   run cli synchroniser-vigiechiro
   [ "${status}" -eq 1 ]
   [[ "${output}" == *"jeton"* ]]

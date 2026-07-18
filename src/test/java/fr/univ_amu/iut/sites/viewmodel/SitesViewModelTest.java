@@ -72,7 +72,7 @@ class SitesViewModelTest {
     @Test
     @DisplayName("#1045 : passerelle absente → synchronisation indisponible, appel sans effet ni erreur")
     void synchro_indisponible() {
-        assertThat(viewModel.peutSynchroniser()).isFalse();
+        assertThat(viewModel.peutRecuperer()).isFalse();
         assertThat(viewModel.synchroniserDepuisVigieChiro()).isEmpty();
     }
 
@@ -88,7 +88,7 @@ class SitesViewModelTest {
         SitesViewModel vm =
                 new SitesViewModel(service, passageDao, new HorlogeFigee(JOUR_FIXE), liens, ID_USER, Optional.of(sync));
 
-        assertThat(vm.peutSynchroniser()).isTrue();
+        assertThat(vm.peutRecuperer()).isTrue();
         // Parcours du déport #1212 : le travail (pull + relecture) se joue hors du fil JavaFX,
         // l'application des cartes et du message sur le fil JavaFX.
         vm.appliquerSynchro(vm.synchroniserEtRecharger());

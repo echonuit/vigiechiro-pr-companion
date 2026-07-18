@@ -52,7 +52,7 @@ public final class Auditer implements Callable<Integer> {
 
     // Provider, non instance directe : picocli instancie les sous-commandes AVANT la migration du schéma ;
     // résoudre ServiceAuditCoherence ici tirerait AuditPointsServeur → idUtilisateurCourant (requête SQL) sur
-    // une base non migrée. On résout donc paresseusement, à l'exécution de la commande (cf. SynchroniserVigieChiro).
+    // une base non migrée. On résout donc paresseusement, à l'exécution de la commande (cf. RecupererVigieChiro).
     private final Provider<ServiceAuditCoherence> service;
 
     @Inject

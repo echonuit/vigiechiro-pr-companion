@@ -118,7 +118,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .isEmpty();
 
         // 1. Synchroniser : ce que fait la connexion (ConnexionViewModel#amorcerRapprochements) et la CLI
-        //    `synchroniser-vigiechiro`. Les sites VIENNENT des participations ; les passages en découlent
+        //    `recuperer-vigiechiro`. Les sites VIENNENT des participations ; les passages en découlent
         //    (#1707), en SQUELETTE. Les rapprocheurs ne sont pas ordonnés et le squelette exige que son
         //    point soit déjà local : DEUX passes garantissent l'état final quel que soit l'ordre - c'est
         //    l'idempotence de la synchro, et le « à la synchro suivante » documenté pour un point tout neuf.
