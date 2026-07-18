@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import fr.univ_amu.iut.commun.api.ParticipationVigieChiro;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.regex.Matcher;
@@ -47,16 +48,31 @@ public record ParticipationOrpheline(
         return trouve.find() ? trouve.group(1) : null;
     }
 
-    /// Date/heure d'une borne de nuit, tolérante au format (l'API rend de l'ISO 8601 avec décalage) ; vide
-    /// si la borne est absente ou illisible.
+    /// Date/heure **locale** d'une borne de nuit, tolérante au format ; vide si la borne est absente ou
+    /// illisible.
+    ///
+    /// L'API rend un **instant** daté d'un décalage (`2026-07-04T19:00:00+00:00`) ; l'application, elle,
+    /// raisonne en **heure murale locale** — c'est ce que l'observateur a lu sur sa montre en posant
+    /// l'enregistreur, et c'est ce que [CorrespondanceParticipation] reconvertit en UTC à l'envoi. La
+    /// conversion doit donc **préserver l'instant** et changer de repère.
+    ///
+    /// ⚠️ **#1860** : ce code appelait `toLocalDateTime()`, qui **jette le décalage** au lieu de convertir -
+    /// `19:00+00:00` devenait `19:00` local au lieu de `21:00` à Paris. L'erreur ne s'arrêtait pas là :
+    /// l'envoi retraduit ensuite l'heure locale en UTC, si bien que **chaque cycle
+    /// reconstruire → envoyer retranchait un décalage horaire**. Une nuit de 21 h était descendue à
+    /// 15 h en quatre allers-retours, entraînant la météo avec elle (Open-Meteo est interrogé sur la
+    /// fenêtre du passage). Un cliquet, pas un décalage ponctuel.
     static Optional<LocalDateTime> horodatage(String borne) {
         if (borne == null || borne.isBlank()) {
             return Optional.empty();
         }
         try {
-            return Optional.of(OffsetDateTime.parse(borne).toLocalDateTime());
+            return Optional.of(OffsetDateTime.parse(borne)
+                    .atZoneSameInstant(ZoneId.systemDefault())
+                    .toLocalDateTime());
         } catch (DateTimeParseException premiere) {
             try {
+                // Sans décalage, rien à convertir : la borne est déjà une heure murale.
                 return Optional.of(LocalDateTime.parse(borne));
             } catch (DateTimeParseException seconde) {
                 return Optional.empty();
