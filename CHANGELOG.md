@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.14.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.13.0...v2.14.0) (2026-07-18)
+
+
+### Features
+
+* **audio:** câbler l'ancrage à la publication et rouvrir le geste aux nuits CSV ([#1838](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1838)) ([#1848](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1848)) ([815bd78](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/815bd7849d78a6e383a67c34f78d7ca38c46a098)), closes [#1596](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1596)
+
 # [2.13.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.12.2...v2.13.0) (2026-07-18)
 
 
