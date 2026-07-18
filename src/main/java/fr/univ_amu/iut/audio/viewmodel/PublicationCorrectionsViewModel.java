@@ -135,4 +135,71 @@ public class PublicationCorrectionsViewModel {
     public ReadOnlyStringProperty messageProperty() {
         return message.getReadOnlyProperty();
     }
+
+    /// Message de la confirmation : ce qui va partir, ce qui sera d'abord ancré, ce qui restera à quai,
+    /// et le caractère définitif (une correction publiée se remplace côté plateforme, elle ne se retire
+    /// pas).
+    ///
+    /// Vit ici, et non dans la vue : composer une phrase à partir d'un [TriPublication] est de la
+    /// **présentation**, comme [#resume] l'est pour le bilan. La vue s'est contentée de la montrer.
+    ///
+    /// **Public** pour la même raison que [fr.univ_amu.iut.commun.view.ConfirmationNavigation#dialogue]
+    /// (#1468) : la capture de documentation doit obtenir **ce texte-ci**, celui que l'utilisateur
+    /// lira, et non une copie « à l'identique » qui n'engage personne. Le dépôt a déjà vu des dialogues
+    /// documentés dériver du produit, jusqu'à une confirmation entière qui manquait (#1865).
+    ///
+    /// @param ancrageAVenir l'envoi va lui-même acquérir l'ancrage manquant (#1838) : les observations
+    ///     sans ancrage ne « restent pas à quai », elles seront ancrées avant de partir
+    public static String recapitulatif(TriPublication tri, boolean ancrageAVenir) {
+        boolean ancrage = ancrageAVenir && tri.sansAncrage() > 0;
+        StringBuilder message = new StringBuilder();
+        if (ancrage) {
+            // On se garde d'annoncer un total : une observation à ancrer peut aussi manquer de certitude,
+            // et ne partirait donc pas non plus. Promettre un compte que l'envoi démentirait serait pire
+            // que de ne rien promettre.
+            message.append("Publier les corrections de ce passage vers Vigie-Chiro ?")
+                    .append("\n\n")
+                    .append(tri.publiables().size())
+                    .append(" prête(s) à partir, et ")
+                    .append(tri.sansAncrage())
+                    .append(" à ancrer d'abord : leur ancrage sera rapatrié depuis Vigie-Chiro (vos"
+                            + " validations sont préservées), ce qui peut prendre quelques minutes. Seules"
+                            + " celles dont la certitude est déclarée partiront ensuite.");
+        } else {
+            message.append("Publier ")
+                    .append(tri.publiables().size())
+                    .append(" correction(s) de ce passage vers Vigie-Chiro ?");
+        }
+        String quai = ecarts(tri, !ancrage);
+        if (!quai.isEmpty()) {
+            message.append("\n\nResteront à quai : ").append(quai).append('.');
+        }
+        message.append("\n\nLes valeurs déjà publiées seront réécrites ; une correction publiée ne peut"
+                + " pas être retirée de la plateforme.");
+        return message.toString();
+    }
+
+    /// Détail des écartées, par cause (seules les causes présentes sont citées). `inclureSansAncrage`
+    /// est faux quand l'envoi va justement acquérir cet ancrage : ces observations ne restent pas à quai.
+    public static String ecarts(TriPublication tri, boolean inclureSansAncrage) {
+        StringBuilder ecarts = new StringBuilder();
+        if (tri.sansCertitude() > 0) {
+            ecarts.append(tri.sansCertitude()).append(" sans certitude déclarée");
+        }
+        if (inclureSansAncrage && tri.sansAncrage() > 0) {
+            separer(ecarts);
+            ecarts.append(tri.sansAncrage()).append(" sans ancrage plateforme");
+        }
+        if (tri.horsReferentiel() > 0) {
+            separer(ecarts);
+            ecarts.append(tri.horsReferentiel()).append(" hors référentiel");
+        }
+        return ecarts.toString();
+    }
+
+    private static void separer(StringBuilder ecarts) {
+        if (!ecarts.isEmpty()) {
+            ecarts.append(", ");
+        }
+    }
 }

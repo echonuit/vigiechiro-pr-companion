@@ -232,6 +232,12 @@ vous les aviez saisis sur le site. Une **confirmation récapitule** d'abord ce q
 qui restera à quai : les observations **sans certitude** (déclarez-la d'abord) et les taxons **hors
 référentiel**. La publication est **rejouable sans risque** : republier réécrit les mêmes valeurs.
 
+![La confirmation avant publication : ce qui est prêt à partir, ce qui sera d'abord ancré, ce qui reste à quai et pourquoi, et le rappel qu'une correction publiée se remplace mais ne se retire pas.](../assets/captures/apercu-publication-confirmation.png)
+
+Rien n'est envoyé tant que vous n'avez pas accepté. Le récapitulatif distingue ce qui **part**, ce qui
+sera **ancré d'abord** (voir plus bas) et ce qui **reste à quai** avec sa cause : les observations à
+ancrer n'y figurent pas, puisque l'envoi va justement s'en occuper.
+
 Vos observations n'ont pas besoin d'être « rattachées » une par une à la plateforme au préalable :
 si ce lien manque, la publication le **récupère elle-même** avant d'envoyer. C'est le cas d'une nuit
 importée rapidement (le fichier d'observations seul) ou reconstruite depuis la plateforme. Une
@@ -239,6 +245,11 @@ fenêtre de progression vous le dit alors (« Récupération des identifiants et
 validateur… »), avec un bouton **Annuler** : cette récupération peut prendre quelques minutes. Elle
 **préserve vos validations** - publier ne vous coûtera jamais votre travail de revue. Une nuit déjà
 rattachée n'en paie pas le coût, et le geste part directement.
+
+![La fenêtre de progression du rapatriement : le titre de l'opération, une barre d'avancement, l'étape en cours avec son numéro de page, et le bouton Annuler.](../assets/captures/apercu-publication-progression.png)
+
+**Annuler** rend la main immédiatement : l'arrêt est demandé à chaque page rapatriée, pas seulement à
+la fin. Ce que la fenêtre a déjà ramené reste acquis - renoncer ne défait rien.
 
 Le nom de cette étape dit les **deux** choses qu'elle ramène : les identifiants dont la publication a
 besoin, et les **échanges avec le validateur** du Muséum, s'il y en a - les deux voyagent ensemble.

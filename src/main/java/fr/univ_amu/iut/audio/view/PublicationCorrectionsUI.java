@@ -102,12 +102,13 @@ final class PublicationCorrectionsUI {
         // Rien de prêt *et* rien à ancrer : c'est un vrai cul-de-sac. Avec un ancrage à venir, en
         // revanche, l'aperçu ne peut pas conclure — les observations non ancrées deviendront publiables.
         if (tri.publiables().isEmpty() && !apercu.ancrageAVenir()) {
-            publication.echec("Rien à publier : " + ecarts(tri, true)
+            publication.echec("Rien à publier : " + PublicationCorrectionsViewModel.ecarts(tri, true)
                     + ". Déclarez la certitude des observations corrigées, ou rattachez cette nuit à sa"
                     + " participation Vigie-Chiro pour pouvoir les ancrer.");
             return;
         }
-        if (!confirmateur.confirmer(recapitulatif(apercu))) {
+        if (!confirmateur.confirmer(
+                PublicationCorrectionsViewModel.recapitulatif(apercu.tri(), apercu.ancrageAVenir()))) {
             publication.echec(""); // annulé : on efface l'état « en cours »
             return;
         }
@@ -118,62 +119,5 @@ final class PublicationCorrectionsUI {
                 publication::appliquerBilan,
                 () -> publication.echec(""), // renoncé en cours de route : on efface l'état « en cours »
                 erreur -> publication.echec(erreur.getMessage()));
-    }
-
-    /// Message de la confirmation : ce qui va partir, ce qui sera d'abord ancré, ce qui restera à quai,
-    /// et le caractère définitif (une correction publiée se remplace côté plateforme, elle ne se retire
-    /// pas).
-    private static String recapitulatif(Apercu apercu) {
-        TriPublication tri = apercu.tri();
-        boolean ancrage = apercu.ancrageAVenir() && tri.sansAncrage() > 0;
-        StringBuilder message = new StringBuilder();
-        if (ancrage) {
-            // On se garde d'annoncer un total : une observation à ancrer peut aussi manquer de certitude,
-            // et ne partirait donc pas non plus. Promettre un compte que l'envoi démentirait serait pire
-            // que de ne rien promettre.
-            message.append("Publier les corrections de ce passage vers Vigie-Chiro ?")
-                    .append("\n\n")
-                    .append(tri.publiables().size())
-                    .append(" prête(s) à partir, et ")
-                    .append(tri.sansAncrage())
-                    .append(" à ancrer d'abord : leur ancrage sera rapatrié depuis Vigie-Chiro (vos"
-                            + " validations sont préservées), ce qui peut prendre quelques minutes. Seules"
-                            + " celles dont la certitude est déclarée partiront ensuite.");
-        } else {
-            message.append("Publier ")
-                    .append(tri.publiables().size())
-                    .append(" correction(s) de ce passage vers Vigie-Chiro ?");
-        }
-        String quai = ecarts(tri, !ancrage);
-        if (!quai.isEmpty()) {
-            message.append("\n\nResteront à quai : ").append(quai).append('.');
-        }
-        message.append("\n\nLes valeurs déjà publiées seront réécrites ; une correction publiée ne peut"
-                + " pas être retirée de la plateforme.");
-        return message.toString();
-    }
-
-    /// Détail des écartées, par cause (seules les causes présentes sont citées). `inclureSansAncrage`
-    /// est faux quand l'envoi va justement acquérir cet ancrage : ces observations ne restent pas à quai.
-    private static String ecarts(TriPublication tri, boolean inclureSansAncrage) {
-        StringBuilder ecarts = new StringBuilder();
-        if (tri.sansCertitude() > 0) {
-            ecarts.append(tri.sansCertitude()).append(" sans certitude déclarée");
-        }
-        if (inclureSansAncrage && tri.sansAncrage() > 0) {
-            separer(ecarts);
-            ecarts.append(tri.sansAncrage()).append(" sans ancrage plateforme");
-        }
-        if (tri.horsReferentiel() > 0) {
-            separer(ecarts);
-            ecarts.append(tri.horsReferentiel()).append(" hors référentiel");
-        }
-        return ecarts.toString();
-    }
-
-    private static void separer(StringBuilder ecarts) {
-        if (!ecarts.isEmpty()) {
-            ecarts.append(", ");
-        }
     }
 }

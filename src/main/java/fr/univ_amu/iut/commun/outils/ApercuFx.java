@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.scene.Scene;
 import javafx.scene.image.WritableImage;
@@ -76,6 +78,48 @@ public final class ApercuFx {
 
     /// Capture un [javafx.scene.control.DialogPane] hors-ecran en l'enveloppant dans une scene transitoire
     /// et en y appliquant des feuilles de styles (comme palette.css). A appeler sur le thread JavaFX.
+    /// Largeur d'enroulement des messages de dialogue, en caractères.
+    private static final int LARGEUR_LIGNE = 70;
+
+    /// Insère des retours à la ligne dans un message de dialogue, **sans en changer un mot**.
+    ///
+    /// Hors `showAndWait`, un `DialogPane` ne contraint pas sa largeur : son libellé reste sur une ligne
+    /// unique, que le snapshot coupe par une ellipse. L'enroulement automatique de JavaFX n'opère pas dans
+    /// ce contexte - c'est la raison pour laquelle les anciennes captures **réécrivaient** leurs messages,
+    /// retours à la ligne compris. Ici, on part du **vrai** message et on se contente de le **couper aux
+    /// espaces** : aucun mot n'est ajouté, retiré ni modifié.
+    ///
+    /// Les retours à la ligne **déjà présents** sont préservés : chaque paragraphe est enroulé pour lui
+    /// même. Sans cela, un message en plusieurs paragraphes (celui de la publication, #1865) verrait ses
+    /// coupures comptées comme des mots et son découpage partir de travers.
+    ///
+    /// Vit ici plutôt que dans un outil : c'est une contrainte du **harnais de capture**, pas d'un écran,
+    /// et deux outils en ont désormais besoin.
+    public static String enrouler(String message) {
+        List<String> paragraphes = new ArrayList<>();
+        for (String paragraphe : message.split("\n", -1)) {
+            paragraphes.add(enroulerParagraphe(paragraphe));
+        }
+        return String.join("\n", paragraphes);
+    }
+
+    private static String enroulerParagraphe(String paragraphe) {
+        StringBuilder enroule = new StringBuilder();
+        int longueurLigne = 0;
+        for (String mot : paragraphe.split(" ")) {
+            if (longueurLigne > 0 && longueurLigne + mot.length() > LARGEUR_LIGNE) {
+                enroule.append('\n');
+                longueurLigne = 0;
+            } else if (longueurLigne > 0) {
+                enroule.append(' ');
+                longueurLigne++;
+            }
+            enroule.append(mot);
+            longueurLigne += mot.length();
+        }
+        return enroule.toString();
+    }
+
     public static void enregistrerDialogPane(
             javafx.scene.control.DialogPane pane, java.util.List<String> feuillesStyle, Path fichier) {
         javafx.scene.layout.StackPane conteneur = new javafx.scene.layout.StackPane(pane);

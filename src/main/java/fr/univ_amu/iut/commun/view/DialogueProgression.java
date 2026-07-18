@@ -53,6 +53,31 @@ public final class DialogueProgression implements SuiviOperation {
         ProgressionOperation progression = new ProgressionOperation();
         JetonAnnulation jeton = new JetonAnnulation();
 
+        VBox contenu = contenu(titre, progression, jeton);
+
+        Stage modale = new Stage();
+        modale.initOwner(proprietaire);
+        modale.initModality(Modality.WINDOW_MODAL);
+        modale.setTitle(titre);
+        modale.setScene(new Scene(contenu));
+        // Fermer la fenêtre = renoncer : on demande l'annulation plutôt que de laisser le travail orphelin.
+        modale.setOnCloseRequest(evenement -> jeton.annuler());
+        modale.show();
+
+        executer(modale::close, jeton, progression, travail, succes, annule, echec);
+    }
+
+    /// Le **contenu** de la modale, **sans la fenêtre** : titre, barre liée à la progression, libellé
+    /// d'étape et bouton « Annuler ».
+    ///
+    /// Séparé de [#lancer] pour la même raison que [ConfirmationNavigation#dialogue] (#1468) : une capture
+    /// de documentation doit pouvoir montrer **ce contenu-ci**, celui que l'utilisateur verra, sans avoir à
+    /// ouvrir une fenêtre ni à lancer un travail. Reconstruire un fac-similé dans l'outil de capture
+    /// n'engagerait personne - c'est ainsi que des dialogues documentés ont dérivé du produit.
+    ///
+    /// Le contenu est **inerte** tant que rien n'alimente `progression` : c'est l'appelant qui pose l'état,
+    /// que ce soit le travail réel ou une capture qui fige une étape.
+    static VBox contenu(String titre, ProgressionOperation progression, JetonAnnulation jeton) {
         Label lblTitre = new Label(titre);
         lblTitre.setStyle("-fx-font-weight: bold;");
         ProgressBar barre = new ProgressBar();
@@ -69,17 +94,25 @@ public final class DialogueProgression implements SuiviOperation {
         VBox contenu = new VBox(12, lblTitre, barre, lblMessage, actions);
         contenu.setPadding(new Insets(20));
         contenu.setPrefWidth(420);
+        return contenu;
+    }
 
-        Stage modale = new Stage();
-        modale.initOwner(proprietaire);
-        modale.initModality(Modality.WINDOW_MODAL);
-        modale.setTitle(titre);
-        modale.setScene(new Scene(contenu));
-        // Fermer la fenêtre = renoncer : on demande l'annulation plutôt que de laisser le travail orphelin.
-        modale.setOnCloseRequest(evenement -> jeton.annuler());
-        modale.show();
-
-        executer(modale::close, jeton, progression, travail, succes, annule, echec);
+    /// La modale **figée sur une étape**, pour une capture de documentation (#1865) : le vrai contenu, la
+    /// vraie barre, le vrai bouton, à un instant choisi. Aucune fenêtre, aucun travail, aucun réseau.
+    ///
+    /// Elle **délègue** à [#contenu] plutôt que d'assembler un fac-similé : c'est ce qui garantit que
+    /// l'image reste juste quand la modale change. « Annuler » y est présent et cliquable, mais son jeton
+    /// n'est relié à rien - un aperçu n'a rien à interrompre.
+    ///
+    /// Aucune **référence temporelle** n'est posée ([ProgressionOperation#demarrer] n'est pas appelé) :
+    /// l'estimation du temps restant s'extrapole du temps écoulé, qui serait ici nul, et l'image
+    /// annoncerait « ~0 s restant » à un quart d'avancement. L'aperçu montre donc l'état **avant** qu'une
+    /// estimation soit possible - un état réel de l'opération, plutôt qu'une durée inventée.
+    public static VBox apercu(String titre, Progression etape) {
+        Objects.requireNonNull(etape, "etape");
+        ProgressionOperation progression = new ProgressionOperation();
+        progression.appliquer(etape);
+        return contenu(titre, progression, new JetonAnnulation());
     }
 
     /// Orchestration **sans fenêtre** (testable) : démarre le suivi, exécute le `travail` hors fil avec le
