@@ -14,7 +14,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /// La voie **« bruts »** de la réactivation (#1406), extraite de [ServiceReactivationPassage] (qui
 /// portait les deux voies et devenait une classe à tout faire).
@@ -75,7 +77,7 @@ final class ReactivationDepuisBruts {
             traites++;
             progres.accept(new Progression(
                     "Régénération " + traites + "/" + originaux.size(), traites / (double) originaux.size()));
-            List<SequenceDEcoute> sesSequences = sequencesDe(sequences, original);
+            List<SequenceDEcoute> sesSequences = sequencesDe(sequences, original, nomsArbitres);
             Path brut = brutProuve(bilan, original, candidats.brutsDe(original, prefixeSession));
             if (brut == null) {
                 // Aucun brut, ou aucun brut PROUVÉ : dans les deux cas, ces séquences restent absentes.
@@ -158,9 +160,26 @@ final class ReactivationDepuisBruts {
         return frequence;
     }
 
-    private static List<SequenceDEcoute> sequencesDe(List<SequenceDEcoute> sequences, EnregistrementOriginal original) {
+    /// Les séquences que **cet original** produit, revendiquées par leur **nom** avant de l'être par leur
+    /// rattachement en base (#1937).
+    ///
+    /// Le rattachement seul ne suffit pas : une séquence ayant perdu une collision de noms à l'import peut
+    /// se retrouver accrochée au **placeholder** d'un passage reconstruit, et plus à l'enregistrement dont
+    /// elle vient. Personne ne la cherchait alors, et son audio - pourtant régénérable - disparaissait avec
+    /// le temporaire. L'arbitrage sait quel original produit quel nom : c'est donc lui qui tranche.
+    ///
+    /// Le rattachement reste le **filet** : une séquence qu'aucun arbitrage ne revendique (original absent
+    /// de la base, nommage d'une autre époque) suit encore son `idEnregistrementOriginal`. On ne la perd
+    /// pas faute de savoir la nommer.
+    private static List<SequenceDEcoute> sequencesDe(
+            List<SequenceDEcoute> sequences, EnregistrementOriginal original, Map<String, List<String>> nomsArbitres) {
+        Set<String> siens = Set.copyOf(nomsArbitres.getOrDefault(original.nomFichier(), List.of()));
+        Set<String> revendiques =
+                nomsArbitres.values().stream().flatMap(List::stream).collect(Collectors.toUnmodifiableSet());
         return sequences.stream()
-                .filter(sequence -> original.id().equals(sequence.idEnregistrementOriginal()))
+                .filter(sequence -> siens.contains(sequence.nomFichier())
+                        || (original.id().equals(sequence.idEnregistrementOriginal())
+                                && !revendiques.contains(sequence.nomFichier())))
                 .sorted(Comparator.comparing(SequenceDEcoute::nomFichier))
                 .toList();
     }
