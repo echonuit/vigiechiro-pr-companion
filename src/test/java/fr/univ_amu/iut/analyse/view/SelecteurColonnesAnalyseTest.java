@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.analyse.viewmodel.Regroupement;
 import fr.univ_amu.iut.commun.view.DescripteurColonnes;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.Scene;
@@ -56,7 +57,7 @@ class SelecteurColonnesAnalyseTest {
             obs.set(tableAvec("Passage", "Statut"));
             SelecteurColonnesAnalyse selecteur =
                     new SelecteurColonnesAnalyse(esp.get(), car.get(), obs.get(), menu, () -> Regroupement.PAR_ESPECE);
-            selecteur.installer(new MenuItem("Fiche de l'espèce"), new MenuItem("Fiche de l'espèce"));
+            selecteur.installer(List.of(new MenuItem("Fiche de l'espèce")), List.of(new MenuItem("Fiche de l'espèce")));
             ref.set(selecteur);
         });
 
@@ -80,7 +81,7 @@ class SelecteurColonnesAnalyseTest {
             TableView<String> obs = tableAvec("Passage", "Statut");
             SelecteurColonnesAnalyse selecteur =
                     new SelecteurColonnesAnalyse(esp, car, obs, new MenuButton("☰"), () -> Regroupement.PAR_ESPECE);
-            selecteur.installer(new MenuItem("Fiche"), new MenuItem("Fiche obs"));
+            selecteur.installer(List.of(new MenuItem("Fiche")), List.of(new MenuItem("Fiche obs")));
             // Modifie l'inventaire par espèce : masque « Détections », ordre Période, Espèce, Détections.
             esp.getColumns().get(1).setVisible(false);
             esp.getColumns()

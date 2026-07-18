@@ -61,14 +61,15 @@ final class SelecteurColonnesAnalyse {
     }
 
     /// Câble le clic droit des trois tables et l'item « Colonnes… » du ☰, qui ouvre le panneau de la table
-    /// maître **visible**. « Fiche de l'espèce » s'ajoute au clic droit de la table des espèces
-    /// (`itemFicheEspece`, #1795). Le détail des observations reçoit ses propres items de ligne
-    /// (`itemsObservations` : écouter, ouvrir le passage, fiche — #1796), dans l'ordre donné, devant
-    /// « Colonnes… ». La table des carrés n'affiche pas d'espèce, elle garde le seul « Colonnes… ».
-    void installer(MenuItem itemFicheEspece, MenuItem... itemsObservations) {
-        GestionnaireColonnes.installerClicDroit(tableEspeces, colonnesEspeces, itemFicheEspece);
+    /// maître **visible**. La table des espèces (`itemsEspeces` : fiche #1795, copier #1798) et le détail
+    /// des observations (`itemsObservations` : écouter, ouvrir le passage, fiche #1796, copier #1798)
+    /// reçoivent leurs items de ligne, dans l'ordre donné, devant « Colonnes… ». La table des carrés
+    /// n'affiche pas d'espèce, elle garde le seul « Colonnes… ».
+    void installer(List<MenuItem> itemsEspeces, List<MenuItem> itemsObservations) {
+        GestionnaireColonnes.installerClicDroit(tableEspeces, colonnesEspeces, itemsEspeces.toArray(MenuItem[]::new));
         GestionnaireColonnes.installerClicDroit(tableCarres, colonnesCarres);
-        GestionnaireColonnes.installerClicDroit(tableObservations, colonnesObservations, itemsObservations);
+        GestionnaireColonnes.installerClicDroit(
+                tableObservations, colonnesObservations, itemsObservations.toArray(MenuItem[]::new));
         MenuItem itemColonnes = new MenuItem("Colonnes…");
         itemColonnes.setOnAction(e -> ouvrirMaitre());
         // Séparateur seulement si le ☰ porte déjà des actions (#995) : ici il est dédié aux colonnes, donc pas

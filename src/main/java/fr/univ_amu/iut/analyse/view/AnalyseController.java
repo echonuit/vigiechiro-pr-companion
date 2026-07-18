@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -306,10 +307,18 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
                 menuOutils,
                 () -> viewModel.regroupementProperty().get());
         selecteurColonnes.installer(
-                itemFicheEspece,
-                MenuLigne.item("Écouter", tableObservations, this::ecouter),
-                MenuLigne.item("Ouvrir le passage", tableObservations, this::ouvrirPassageDe),
-                itemFicheEspeceObs);
+                List.of(
+                        itemFicheEspece,
+                        MenuCopier.creer(
+                                tableEspeces,
+                                new MenuCopier.Entree<>("Nom latin", EspeceAgregee::nomLatin),
+                                new MenuCopier.Entree<>("Nom vernaculaire", EspeceAgregee::nomVernaculaireFr))),
+                List.of(
+                        MenuLigne.item("Écouter", tableObservations, this::ecouter),
+                        MenuLigne.item("Ouvrir le passage", tableObservations, this::ouvrirPassageDe),
+                        itemFicheEspeceObs,
+                        MenuCopier.creer(
+                                tableObservations, new MenuCopier.Entree<>("Carré", ObservationEspece::numeroCarre))));
         selecteurColonnes.persister(depotColonnes, FEATURE);
         // Clic droit : sélectionne la ligne (cible du menu contextuel). Double-clic : ouvre la fiche de
         // l'espèce, même cible que l'item « Fiche de l'espèce » du menu (#1794).

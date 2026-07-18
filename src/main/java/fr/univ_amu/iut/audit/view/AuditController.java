@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.TableDonnees;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
@@ -129,7 +130,13 @@ public class AuditController {
                 tableConstats,
                 GestionnaireColonnes.colonnesParDefaut(tableConstats),
                 itemOuvrirPassage,
-                itemAuditerPassage);
+                itemAuditerPassage,
+                MenuCopier.creer(
+                        tableConstats,
+                        new MenuCopier.Entree<>(
+                                "N° de passage",
+                                constat -> constat.idPassage() == null ? "" : String.valueOf(constat.idPassage())),
+                        new MenuCopier.Entree<>("Motif", ConstatAudit::detail)));
         viewModel.rafraichir();
     }
 

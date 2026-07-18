@@ -533,7 +533,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 actionsMenu.itemOuvrirPassage(tableObservations),
                 actionsMenu.itemFicheContexte(),
                 new SeparatorMenuItem(),
-                MenuValidationAudio.creer(tableObservations, actionsSelection, choixTaxon::getValue));
+                MenuValidationAudio.creer(tableObservations, actionsSelection, choixTaxon::getValue),
+                actionsMenu.menuCopier(tableObservations));
 
         occupation = new IndicateurOccupation(hoteOccupation, appuis.executeur());
     }

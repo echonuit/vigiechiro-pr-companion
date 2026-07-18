@@ -3,11 +3,13 @@ package fr.univ_amu.iut.audio.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.EspeceIdentifiee;
 import fr.univ_amu.iut.commun.view.ActionFicheEspece;
+import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.validation.model.LigneObservationAudio;
 import java.util.Objects;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 
@@ -66,6 +68,15 @@ final class ActionsMenuAudio {
     /// l'item « Fiche de l'espèce » du menu ☰.
     void ouvrirFiche(LigneObservationAudio ligne) {
         ficheEspece.ouvrir(especeDe(ligne));
+    }
+
+    /// Sous-menu « Copier ▸ » de la ligne audio (#1798) : nom latin de la proposition Tadarida et n° de
+    /// carré, valeurs qu'on recoupe souvent hors de l'application.
+    Menu menuCopier(TableView<LigneObservationAudio> table) {
+        return MenuCopier.creer(
+                table,
+                new MenuCopier.Entree<>("Nom latin", LigneObservationAudio::latinTadarida),
+                new MenuCopier.Entree<>("Carré", LigneObservationAudio::numeroCarre));
     }
 
     private static EspeceIdentifiee especeDe(LigneObservationAudio ligne) {

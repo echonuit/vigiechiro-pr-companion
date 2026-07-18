@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.GestionnaireVues;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
+import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.OuvrirAudio;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -265,7 +266,8 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
                 menuActions,
                 colonnes,
                 MenuLigne.item("Ouvrir le passage", tableLignes, this::ouvrirPassageDeLaLigne),
-                MenuLigne.item("Écouter le passage", tableLignes, ligne -> ecouterPassage()));
+                MenuLigne.item("Écouter le passage", tableLignes, ligne -> ecouterPassage()),
+                MenuCopier.creer(tableLignes, new MenuCopier.Entree<>("Carré", LignePassage::numeroCarre)));
         GestionnaireColonnes.persister(tableLignes, colonnes, depotColonnes, FEATURE, "principale");
         // #145 : tri par clic en-tête. Un SortedList lié au comparateur de la table s'applique par-dessus
         // la liste (déjà filtrée/ordonnée par le VM) ; performant (~4000 lignes) et le tri colonne

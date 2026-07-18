@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.DoubleClicLigne;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.MenuLigne;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
@@ -238,7 +239,8 @@ public class SiteDetailController implements RafraichirAuRetour, ResumeStatut {
                 depotColonnes,
                 "sites",
                 "principale",
-                MenuLigne.item("Ouvrir le passage", tablePassages, this::ouvrirPassageDeLaLigne));
+                MenuLigne.item("Ouvrir le passage", tablePassages, this::ouvrirPassageDeLaLigne),
+                MenuCopier.creer(tablePassages, new MenuCopier.Entree<>("Point", LignePassage::codePoint)));
         // Titre (nom du site) et sous-titre (commune/protocole) déportés en barre de statut (#693) :
         // contexte à gauche, résumé au centre.
         zonesStatut.bind(Bindings.createObjectBinding(

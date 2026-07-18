@@ -40,11 +40,13 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
+import javafx.scene.input.Clipboard;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -280,6 +282,26 @@ class MultisiteViewTest {
 
         robot.interact(() -> items.get(0).fire());
         verify(ouvrirPassage).ouvrir(eq(42L), any(ContexteSite.class));
+    }
+
+    @Test
+    @DisplayName("#1798 : « Copier ▸ Carré » place le n° de carré dans le presse-papier")
+    void copier_le_carre(FxRobot robot) {
+        TableView<?> table = robot.lookup("#tableLignes").queryAs(TableView.class);
+        robot.interact(() -> table.getSelectionModel().select(0)); // carré 640380
+        Menu copier = (Menu) table.getContextMenu().getItems().stream()
+                .filter(i -> "Copier".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        MenuItem carre = copier.getItems().get(0);
+        assertThat(carre.getText()).isEqualTo("Carré");
+
+        java.util.concurrent.atomic.AtomicReference<String> copie = new java.util.concurrent.atomic.AtomicReference<>();
+        robot.interact(() -> {
+            carre.fire();
+            copie.set(Clipboard.getSystemClipboard().getString()); // le presse-papier ne se lit que sur le fil FX
+        });
+        assertThat(copie.get()).isEqualTo("640380");
     }
 
     @Test

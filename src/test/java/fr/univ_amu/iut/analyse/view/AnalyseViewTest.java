@@ -42,6 +42,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.Menu;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
@@ -302,13 +303,29 @@ class AnalyseViewTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         var itemsClicDroit = especes.getContextMenu().getItems();
-        assertThat(itemsClicDroit).hasSize(3);
+        // [Fiche de l'espèce, Copier ▸, séparateur, Colonnes…].
+        assertThat(itemsClicDroit).hasSize(4);
         assertThat(itemsClicDroit.get(0).getText()).as("la fiche vient en tête").startsWith("Fiche de l'espèce");
-        assertThat(itemsClicDroit.get(2).getText()).isEqualTo("Colonnes…");
+        assertThat(itemsClicDroit.get(1).getText()).isEqualTo("Copier");
+        assertThat(itemsClicDroit.get(itemsClicDroit.size() - 1).getText()).isEqualTo("Colonnes…");
 
         MenuButton outils = robot.lookup("#menuOutils").queryAs(MenuButton.class);
         assertThat(outils.getItems())
                 .anySatisfy(item -> assertThat(item.getText()).isEqualTo("Colonnes…"));
+    }
+
+    @Test
+    @DisplayName("#1798 : « Copier ▸ » sur les espèces propose « Nom latin » et « Nom vernaculaire »")
+    void copier_sur_les_especes(FxRobot robot) {
+        TableView<?> especes = robot.lookup("#tableEspeces").queryAs(TableView.class);
+        robot.interact(() -> especes.getSelectionModel().select(0));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Menu copier = (Menu) especes.getContextMenu().getItems().stream()
+                .filter(i -> "Copier".equals(i.getText()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(copier.getItems()).extracting(MenuItem::getText).containsExactly("Nom latin", "Nom vernaculaire");
     }
 
     @Test
