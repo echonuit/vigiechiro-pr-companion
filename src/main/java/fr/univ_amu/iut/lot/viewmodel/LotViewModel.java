@@ -167,7 +167,11 @@ public class LotViewModel {
     /// de l'ETA, et vide la table (#820) que le plan re-remplira de lignes « en attente ».
     public void marquerGenerationEnCours() {
         generationEnCours.set(true);
-        message.set("Génération des archives de dépôt en cours…");
+        // #1886 : l'annonce du travail en cours revient à la barre de progression et à la barre de statut,
+        // pas au retour d'opération. Celui-ci est **effacé** : laisser le résultat de l'opération
+        // précédente (« ✓ Dépôt préparé… ») pendant qu'une nouvelle travaille le ferait passer pour le
+        // compte rendu de celle-ci.
+        message.set("");
         progression.demarrer("Préparation des archives…");
         suiviLignes.reinitialiser();
     }

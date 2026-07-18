@@ -50,6 +50,12 @@ public final class FormatsLot {
     /// Libellé « vivant » d'un dépôt VigieChiro **en cours** (#984) : compteur **honnête** déposées / en
     /// cours / échecs sur le total, pour ne plus laisser croire à un dépôt figé quand seuls les succès
     /// étaient comptés (le dépôt parallèle met plusieurs unités « en cours » à la fois).
+    /// Annonce du **lancement du traitement** (étape ④) dans la barre de statut. Le lancement n'a pas de
+    /// compteur : c'est un appel unique, dont on dit seulement qu'il est parti (#1543, #1886).
+    public static String libelleLancementEnCours() {
+        return "Lancement de l'analyse sur Vigie-Chiro…";
+    }
+
     public static String libelleDepotEnCours(int deposees, int enCours, int echecs, int total) {
         if (total == 0) {
             return "Dépôt en préparation…";

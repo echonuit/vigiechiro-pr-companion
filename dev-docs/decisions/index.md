@@ -69,3 +69,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0020](0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer.md) | Écrire sur la plateforme : ne rien inventer, ne rien effacer, parler la langue du lecteur | #1828, #1844 |
 | [0021](0021-double-clic-miroir-qui-rend-compte.md) | Le double-clic est le miroir de l'action principale, et il rend compte quand il n'aboutit pas | EPIC #1792 |
 | [0022](0022-le-verbe-dit-le-sens-de-l-echange.md) | Le verbe d'un geste dit le sens réel de l'échange | #1855, #1866 |
+| [0023](0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md) | Rendre compte se fait au bandeau ; le modal est réservé à l'irréversible | EPIC #1870 |

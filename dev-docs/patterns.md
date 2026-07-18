@@ -874,7 +874,9 @@ compte** quand elle n'aboutit pas : `ActionFicheEspece.ouvrir` rend un booléen,
 [ADR 0021](decisions/0021-double-clic-miroir-qui-rend-compte.md).
 
 **Le véhicule du motif.** `commun.viewmodel.RetourOperation` (texte + sévérité succès / information /
-erreur) et `commun.view.BandeauRetour.installer(...)` rendent ce retour dans un bandeau **non modal** :
+erreur) et `commun.view.BandeauRetour.installer(...)` rendent ce retour dans un bandeau **non modal** -
+véhicule **par défaut** de tout compte rendu, le modal étant réservé à l'irréversible
+([ADR 0023](decisions/0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md)) :
 un double-clic est un geste courant et souvent accidentel, une boîte modale y serait pire que le
 silence. Le style vit dans `design.css` sous `.bandeau-retour`, que tous les écrans chargent déjà.
 

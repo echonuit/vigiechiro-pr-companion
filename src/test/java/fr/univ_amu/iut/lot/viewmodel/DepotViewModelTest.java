@@ -242,12 +242,25 @@ class DepotViewModelTest {
         assertThat(vm.enCoursProperty().get())
                 .as("le POST de lancement ne part plus sans retour visible")
                 .isTrue();
-        assertThat(vm.messageProperty().get()).contains("Lancement");
+        // #1886 : l'annonce du travail en cours a quitté le retour d'opération (fermable, et réservé aux
+        // résultats) pour un état propre, que la barre de statut rend.
+        assertThat(vm.lancementEnCoursProperty().get())
+                .as("le lancement s'annonce par son état, distinct du téléversement")
+                .isTrue();
+        assertThat(vm.messageProperty().get())
+                .as("un travail en cours n'est pas un résultat : le retour reste vide")
+                .isEmpty();
 
         vm.restituerLancement(ResultatLancement.accepte());
         assertThat(vm.enCoursProperty().get())
                 .as("le lancement abouti relâche le bouton")
                 .isFalse();
+        assertThat(vm.lancementEnCoursProperty().get())
+                .as("l'annonce s'éteint avec le lancement")
+                .isFalse();
+        assertThat(vm.messageProperty().get())
+                .as("le résultat, lui, va bien dans le retour")
+                .isNotEmpty();
     }
 
     /// Traitement serveur dans l'état voulu (les dates n'entrent pas en jeu dans les messages).
@@ -276,7 +289,11 @@ class DepotViewModelTest {
 
         vm.marquerEnCours();
         assertThat(vm.enCoursProperty().get()).isTrue();
-        assertThat(vm.messageProperty().get()).contains("en cours");
+        // #1886 : le téléversement s'annonce par son état (la barre de statut en rend le décompte vivant),
+        // plus par un message de retour - le bandeau est fermable et réservé aux résultats.
+        assertThat(vm.messageProperty().get())
+                .as("un travail en cours n'est pas un résultat")
+                .isEmpty();
 
         vm.appliquerBilan(new BilanDepot("p", 5, List.of()));
         assertThat(vm.enCoursProperty().get()).isFalse();

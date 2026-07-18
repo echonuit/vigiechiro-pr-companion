@@ -35,6 +35,12 @@ public class DepotViewModel {
     /// fichiers).
     private final ReadOnlyBooleanWrapper enCours = new ReadOnlyBooleanWrapper(this, "enCours", false);
 
+    /// **Lancement du traitement** en cours (étape ④), distinct de [#enCours] que le téléversement occupe
+    /// avec ses compteurs d'archives : sans cette distinction, la barre de statut annoncerait un dépôt
+    /// (« n/N déposées ») pendant un simple appel de lancement. Porte l'annonce du travail en cours, là où
+    /// [#message] ne porte plus que des **résultats** (#1886).
+    private final ReadOnlyBooleanWrapper lancementEnCours = new ReadOnlyBooleanWrapper(this, "lancementEnCours", false);
+
     /// Annulation coopérative (#1044, harmonisée #1315) : le [JetonAnnulation] du socle est **lu par le
     /// moteur hors fil JavaFX** (entre deux fichiers, style « retour partiel » via `jeton::estAnnule`) ;
     /// la propriété observable alimente l'IHM (bouton « Annulation… »). Posés au fil JavaFX par
@@ -113,12 +119,24 @@ public class DepotViewModel {
         return participationLiee.getReadOnlyProperty();
     }
 
+    /// Lancement du traitement en cours (étape ④) : la barre de statut l'annonce, distinctement d'un
+    /// téléversement. Voir [#marquerLancementEnCours].
+    public ReadOnlyBooleanProperty lancementEnCoursProperty() {
+        return lancementEnCours.getReadOnlyProperty();
+    }
+
     /// Signale le **début du lancement du traitement** (au fil JavaFX, avant l'appel réseau) : le bouton de
-    /// l'étape ④ se grise (lié à [#enCoursProperty]) et la zone de statut annonce « en cours », faute de
+    /// l'étape ④ se grise (lié à [#enCoursProperty]) et la zone de statut annonce le lancement, faute de
     /// quoi le POST partait sans aucun retour visible (#1543). Contrairement au téléversement, le lancement
     /// n'est pas annulable : pas de jeton à réarmer.
+    ///
+    /// L'annonce passe par [#lancementEnCoursProperty], **pas** par le retour d'opération (#1886) : un
+    /// travail en cours n'est pas un résultat, et le bandeau de retour est fermable - le fermer
+    /// n'interromprait rien et le message serait écrasé à la fin. Le lancement a besoin d'un état
+    /// **distinct** de [#enCoursProperty], que le téléversement occupe déjà avec ses propres compteurs.
     public void marquerLancementEnCours() {
-        message.set("Lancement de l'analyse sur Vigie-Chiro…");
+        message.set("");
+        lancementEnCours.set(true);
         enCours.set(true);
     }
 
@@ -127,6 +145,7 @@ public class DepotViewModel {
     /// d'interrogation (« déjà en cours ? ») : le code ne savait pas, l'utilisateur non plus.
     public void restituerLancement(ResultatLancement resultat) {
         message.set(libelle(resultat));
+        lancementEnCours.set(false);
         enCours.set(false);
     }
 
@@ -170,7 +189,9 @@ public class DepotViewModel {
 
     /// Signale le **début** du téléversement (au fil JavaFX, avant de lancer [#televerser] en arrière-plan).
     public void marquerEnCours() {
-        message.set("Téléversement en cours… (cela peut prendre quelques minutes sur une grosse nuit).");
+        // #1886 : le décompte vivant de la barre de statut annonce le travail ; le retour d'opération est
+        // effacé pour ne pas laisser le bilan du dépôt précédent se lire comme celui-ci.
+        message.set("");
         // Le jeton du socle est volontairement à usage unique : réarmer = repartir d'un jeton neuf.
         jeton = new JetonAnnulation();
         annulationDemandee.set(false);
