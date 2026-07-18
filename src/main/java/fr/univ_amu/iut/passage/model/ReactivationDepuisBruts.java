@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.NommageSequences.TranchesAttendues;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.passage.model.RebranchementSequences.OrigineCandidats;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Acceptee;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Refusee;
 import java.nio.file.Files;
@@ -78,10 +79,17 @@ final class ReactivationDepuisBruts {
             progres.accept(new Progression(
                     "Régénération " + traites + "/" + originaux.size(), traites / (double) originaux.size()));
             List<SequenceDEcoute> sesSequences = sequencesDe(sequences, original, nomsArbitres);
-            Path brut = brutProuve(bilan, original, candidats.brutsDe(original, prefixeSession));
+            List<Path> homonymes = candidats.brutsDe(original, prefixeSession);
+            Path brut = brutProuve(bilan, original, homonymes);
             if (brut == null) {
                 // Aucun brut, ou aucun brut PROUVÉ : dans les deux cas, ces séquences restent absentes.
-                bilan.manquantes += absentesDuDisque(sesSequences);
+                // Un refus a déjà son écart, avec son motif ; une absence, elle, n'avait rien (#1943).
+                int perdues = absentesDuDisque(sesSequences);
+                if (homonymes.isEmpty() && perdues > 0) {
+                    bilan.absenter(original.nomFichier(), "enregistrement absent du dossier", perdues);
+                } else {
+                    bilan.manquantes += perdues;
+                }
                 continue;
             }
             regenererEtRebrancher(
@@ -142,8 +150,11 @@ final class ReactivationDepuisBruts {
         try {
             moteur.regenerer(
                     brut, original.nomFichier(), prefixe, frequenceAcquisition(original), temporaire, nomsArbitres);
-            bilan.absorber(
-                    rebranchement.rebrancher(sesSequences, CandidatsReactivation.dans(temporaire), progres -> {}));
+            bilan.absorber(rebranchement.rebrancher(
+                    sesSequences,
+                    CandidatsReactivation.dans(temporaire),
+                    OrigineCandidats.REGENERATION,
+                    progres -> {}));
         } finally {
             DossierTemporaire.supprimer(temporaire);
         }

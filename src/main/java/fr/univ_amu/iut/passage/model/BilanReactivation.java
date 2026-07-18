@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import java.util.ArrayList;
@@ -19,6 +20,9 @@ final class BilanReactivation {
     int dejaPresentes;
     NiveauConfiance confianceMinimale;
     final List<EcartReactivation> ecarts = new ArrayList<>();
+
+    /// Ce qui manquait, et pourquoi (#1943). `manquantes` en donne le total ; cette liste dit **quoi**.
+    final List<AbsenceReactivation> absences = new ArrayList<>();
 
     /// Indice acoustique **non bloquant** (#1682) : séquences dont les cris étaient mesurables, et parmi
     /// elles celles où les cris ont été retrouvés. Alimenté par la voie hydratation (l'acoustique y est un
@@ -49,6 +53,13 @@ final class BilanReactivation {
     /// Un fichier **refusé**, avec son motif - en disant **combien** de fichiers portaient ce nom :
     /// « aucun des 2 » se comprend, là où un motif au singulier laisserait croire qu'un seul fichier a
     /// été regardé.
+    /// Une absence constatée : ni fichier à vérifier, ni refus à motiver. On dit **quoi** et **combien**,
+    /// pour que « N introuvables » cesse d'être un nombre sans nom (#1943).
+    void absenter(String nomFichier, String motif, int sequences) {
+        manquantes += sequences;
+        absences.add(new AbsenceReactivation(nomFichier, motif, sequences));
+    }
+
     void refuser(String nomFichier, String motif, int nombreHomonymes) {
         String complet = nombreHomonymes <= 1
                 ? motif
@@ -64,6 +75,7 @@ final class BilanReactivation {
         acoustiqueMesurees += partiel.acoustiqueMesurees;
         acoustiqueConcordantes += partiel.acoustiqueConcordantes;
         ecarts.addAll(partiel.ecarts);
+        absences.addAll(partiel.absences);
         if (partiel.confianceMinimale != null) {
             retenirConfiance(partiel.confianceMinimale);
         }

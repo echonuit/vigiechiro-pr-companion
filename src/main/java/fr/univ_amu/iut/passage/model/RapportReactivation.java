@@ -39,10 +39,12 @@ public record RapportReactivation(
         DecompteAudio decompte,
         VoieReactivation voie,
         IndiceAcoustique indiceAcoustique,
-        RapportAncrage rapatriement) {
+        RapportAncrage rapatriement,
+        List<AbsenceReactivation> absences) {
 
     public RapportReactivation {
         ecarts = List.copyOf(ecarts);
+        absences = List.copyOf(absences);
     }
 
     /// Constructeur de **commodité** sans compte rendu de rapatriement : les voies qui n'acquièrent aucun
@@ -67,7 +69,8 @@ public record RapportReactivation(
                 decompte,
                 voie,
                 indiceAcoustique,
-                RapportAncrage.aucun());
+                RapportAncrage.aucun(),
+                List.of());
     }
 
     /// Le même rapport, accompagné du compte rendu de la **phase d'ancrage** qui l'a suivi (#1904).
@@ -82,7 +85,8 @@ public record RapportReactivation(
                 decompte,
                 voie,
                 indiceAcoustique,
-                rapatriement);
+                rapatriement,
+                absences);
     }
 
     /// Constructeur de **commodité** sans indice acoustique (`null`) : préserve les appels des voies qui ne
@@ -106,7 +110,8 @@ public record RapportReactivation(
                 decompte,
                 voie,
                 null,
-                RapportAncrage.aucun());
+                RapportAncrage.aucun(),
+                List.of());
     }
 
     /// Une séquence **refusée** : un fichier homonyme était là, mais la vérification l'a écarté.
@@ -114,6 +119,19 @@ public record RapportReactivation(
     /// @param nomFichier nom de la séquence concernée
     /// @param motif ce qui a divergé, en clair (issu du [VerdictIdentite.Refusee])
     public record EcartReactivation(String nomFichier, String motif) {}
+
+    /// Une **absence** constatée, et ce qu'elle coûte (#1943).
+    ///
+    /// À distinguer d'un [EcartReactivation] : là, un fichier était présent et la vérification l'a refusé ;
+    /// ici, il n'y avait **rien à vérifier**. Les deux tombaient dans le même compteur muet, alors qu'ils
+    /// n'appellent pas la même chose - un enregistrement absent du dossier demande une action de
+    /// l'utilisateur, une tranche non régénérée est un défaut de notre côté.
+    ///
+    /// @param nomFichier l'enregistrement ou la séquence concernés
+    /// @param motif ce qui manque, en clair
+    /// @param sequences nombre de séquences que cette absence coûte (1 pour une séquence isolée, davantage
+    ///     pour un enregistrement entier resté introuvable)
+    public record AbsenceReactivation(String nomFichier, String motif, int sequences) {}
 
     /// L'audio du passage est-il **entièrement** revenu ?
     public boolean complete() {

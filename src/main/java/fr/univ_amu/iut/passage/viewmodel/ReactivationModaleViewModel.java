@@ -5,8 +5,10 @@ import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
+import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
+import java.util.Comparator;
 import java.util.List;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
@@ -28,6 +30,10 @@ public class ReactivationModaleViewModel {
     /// Nombre d'écarts détaillés dans le compte rendu : au-delà, on résume (une nuit peut en compter des
     /// milliers, et la modale doit rester lisible).
     private static final int ECARTS_DETAILLES = 5;
+
+    /// Combien d'absences on nomme avant de résumer : assez pour identifier le motif dominant, pas assez
+    /// pour noyer la modale quand une nuit entière manque.
+    private static final int ABSENCES_DETAILLEES = 5;
 
     /// Progression de la phase **disque** (régénération / rebranchement des séquences), 0 -> 1.
     private final ProgressionOperation progressionRegeneration = new ProgressionOperation();
@@ -130,6 +136,7 @@ public class ReactivationModaleViewModel {
         if (rapport.manquantes() > 0) {
             texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
         }
+        ajouterAbsences(texte, rapport.absences());
         ajouterEcarts(texte, rapport.ecarts());
         ajouterIndiceAcoustique(texte, rapport.indiceAcoustique());
         ajouterRapatriement(texte, rapport.rapatriement());
@@ -184,6 +191,34 @@ public class ReactivationModaleViewModel {
 
     /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif. Au-delà de
     /// [#ECARTS_DETAILLES], on résume pour garder la modale lisible.
+    /// **Ce qui manquait, nommé** (#1943). Le nombre seul obligeait à lire la base et à tracer le code pour
+    /// savoir de quoi il parlait.
+    ///
+    /// Deux situations tombaient dans le même compteur : un enregistrement absent du dossier, qui appelle
+    /// une action de l'utilisateur, et une tranche non régénérée, qui est un défaut de notre côté. Elles
+    /// portent désormais leur motif.
+    private static void ajouterAbsences(StringBuilder texte, List<AbsenceReactivation> absences) {
+        if (absences.isEmpty()) {
+            return;
+        }
+        absences.stream()
+                .sorted(Comparator.comparingInt(AbsenceReactivation::sequences)
+                        .reversed()
+                        .thenComparing(AbsenceReactivation::nomFichier))
+                .limit(ABSENCES_DETAILLEES)
+                .forEach(absence -> texte.append("  • ")
+                        .append(absence.nomFichier())
+                        .append(" : ")
+                        .append(absence.motif())
+                        .append(absence.sequences() > 1 ? " (" + absence.sequences() + " séquences)" : "")
+                        .append('\n'));
+        if (absences.size() > ABSENCES_DETAILLEES) {
+            texte.append("  • … et ")
+                    .append(absences.size() - ABSENCES_DETAILLEES)
+                    .append(" autre(s).\n");
+        }
+    }
+
     private static void ajouterEcarts(StringBuilder texte, List<EcartReactivation> ecarts) {
         if (ecarts.isEmpty()) {
             return;

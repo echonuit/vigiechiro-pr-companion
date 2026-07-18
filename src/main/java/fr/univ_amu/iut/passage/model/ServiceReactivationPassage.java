@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.passage.model.RebranchementSequences.OrigineCandidats;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -190,10 +191,10 @@ public class ServiceReactivationPassage {
                 bilan = resultat.bilan();
                 adopterOriginaux(session, originaux, resultat);
             } else {
-                bilan = rebranchement.rebrancher(sequences, candidats, progresRegeneration);
+                bilan = rebranchement.rebrancher(sequences, candidats, OrigineCandidats.DOSSIER, progresRegeneration);
             }
         } else {
-            bilan = rebranchement.rebrancher(sequences, candidats, progresRegeneration);
+            bilan = rebranchement.rebrancher(sequences, candidats, OrigineCandidats.DOSSIER, progresRegeneration);
         }
 
         RapportReactivation rapport = conclure(idPassage, session, sequences, bilan, voie);
@@ -292,7 +293,9 @@ public class ServiceReactivationPassage {
                 bilan.ecarts,
                 decompte,
                 voie,
-                indiceAcoustique(bilan));
+                indiceAcoustique(bilan),
+                RapportAncrage.aucun(),
+                List.copyOf(bilan.absences));
     }
 
     /// Indice acoustique **non bloquant** (#1682) du bilan, ou `null` s'il n'a rien mesuré (voies autres que

@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.passage.model.RebranchementSequences.OrigineCandidats;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -148,8 +149,11 @@ final class HydratationDepuisBruts {
             Optional<BrutRebranche> rebranche = sesSequences.isEmpty()
                     ? Optional.empty()
                     : Optional.of(new BrutRebranche(brut, sesSequences, regenerees.empreinteSource()));
-            BilanReactivation bilan =
-                    rebranchement.rebrancher(sesSequences, CandidatsReactivation.dans(temporaire), avancement -> {});
+            BilanReactivation bilan = rebranchement.rebrancher(
+                    sesSequences,
+                    CandidatsReactivation.dans(temporaire),
+                    OrigineCandidats.REGENERATION,
+                    avancement -> {});
             return new ContributionBrut(bilan, rebranche);
         } finally {
             DossierTemporaire.supprimer(temporaire);
