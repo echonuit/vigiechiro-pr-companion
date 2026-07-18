@@ -51,10 +51,14 @@ setup() {
   # Le correctif --help (Cli.executer) vaut pour toutes les commandes d'un coup : on le prouve sur
   # CHACUNE. On extrait la liste depuis l'aide générale (1re colonne des lignes de la section Commands,
   # les lignes de description étant bien plus indentées), puis on interroge l'aide de chaque commande.
+  #
+  # La virgule est retirée : picocli rend une commande qui porte un alias sous la forme
+  # « nom-principal, alias » (#1866), et le nom brut emporterait la virgule. On n'interroge que le nom
+  # principal - l'alias a son propre test, dans cli-surface.bats.
   run cli --help
   [ "${status}" -eq 0 ]
   local commandes
-  commandes=$(printf '%s\n' "${output}" | awk '/^Commands:/{f=1} f && /^  [a-z]/{print $1}')
+  commandes=$(printf '%s\n' "${output}" | awk '/^Commands:/{f=1} f && /^  [a-z]/{sub(/,$/, "", $1); print $1}')
   [ -n "${commandes}" ]
 
   local n=0
