@@ -51,6 +51,42 @@ class CorrespondanceParticipationTest {
     }
 
     @Test
+    @DisplayName("#1828 : un n° de série sentinelle n'est PAS publié — le type reste vrai, le mensonge ne part pas")
+    void vers_participation_ne_publie_pas_une_sentinelle() {
+        ParticipationADeposer squelette = CorrespondanceParticipation.versParticipation(
+                "Z41", passageAvecEnregistreur(Enregistreur.INCONNU), MaterielMicro.vide(42L));
+        ParticipationADeposer degrade = CorrespondanceParticipation.versParticipation(
+                "Z41", passageAvecEnregistreur(Enregistreur.INCONNU_IMPORT), MaterielMicro.vide(42L));
+
+        assertThat(squelette.configuration())
+                .as("« INCONNU » est un aveu, pas un numéro : la plateforme ne doit pas le recevoir")
+                .containsOnlyKeys("detecteur_enregistreur_type");
+        assertThat(degrade.configuration())
+                .as("même chose pour la sentinelle de l'import en mode dégradé")
+                .containsOnlyKeys("detecteur_enregistreur_type");
+    }
+
+    /// Le même passage que [#passage], avec l'enregistreur qu'on veut éprouver.
+    private static Passage passageAvecEnregistreur(String serie) {
+        Passage modele = passage(null);
+        return new Passage(
+                modele.id(),
+                modele.numeroPassage(),
+                modele.annee(),
+                modele.dateEnregistrement(),
+                modele.heureDebut(),
+                modele.heureFin(),
+                modele.parametresAcquisition(),
+                modele.statutWorkflow(),
+                modele.verdictVerification(),
+                modele.commentaire(),
+                modele.donneesMeteo(),
+                modele.deposeLe(),
+                modele.idPoint(),
+                serie);
+    }
+
+    @Test
     @DisplayName("fusionnerMeteo : met à jour vent/couverture depuis l'API, PRÉSERVE les températures locales")
     void fusionner_meteo_preserve_temperatures() {
         MeteoReleve local = new MeteoReleve(12.0, 8.0, Vent.NUL, CouvertureNuageuse.DE_0_A_25);

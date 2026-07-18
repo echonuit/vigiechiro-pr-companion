@@ -72,7 +72,14 @@ final class CorrespondanceParticipation {
         Map<String, String> config = new LinkedHashMap<>();
         if (passage.idEnregistreur() != null) {
             config.put("detecteur_enregistreur_type", TYPE_DETECTEUR);
-            config.put(CLE_SERIE_APP, passage.idEnregistreur());
+            // #1828 : le TYPE est publié (l'app ne pilote que des Passive Recorders : c'est vrai), mais
+            // JAMAIS un numéro de série sentinelle. « INCONNU » n'est pas un numéro, c'est un aveu
+            // d'ignorance ; le publier fabriquerait une donnée que l'app - et le prochain poste - se
+            // reliraient ensuite comme si elle était réelle. Ne rien dire vaut mieux que mentir. Comme
+            // `recorder_id` est NOT NULL en base, sans cette garde la sentinelle partait à chaque dépôt.
+            if (!Enregistreur.estInconnu(passage.idEnregistreur())) {
+                config.put(CLE_SERIE_APP, passage.idEnregistreur());
+            }
         }
         if (micro.typeMicro() != null) {
             config.put("micro0_type", micro.typeMicro());
