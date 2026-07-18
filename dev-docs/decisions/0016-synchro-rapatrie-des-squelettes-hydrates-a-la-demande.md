@@ -1,6 +1,6 @@
 # ADR 0016 — La synchro rapatrie les nuits en squelettes, hydratés à la demande
 
-- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814)
+- **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814) et [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838)
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)
 
 > [!NOTE]
@@ -8,6 +8,13 @@
 > paie désormais **un** détail par nuit **nouvelle** pour rapatrier son **identité** (enregistreur, météo,
 > micro, fin de nuit) ; les observations et l'audio restent à l'hydratation. Le reste de cette décision
 > (squelette léger, hydratation à la demande, remplacement à la reconstruction) tient toujours.
+
+> [!NOTE]
+> **Amendement (ADR 0019)** : la réactivation n'est plus le **seul** moment où l'ancrage s'acquiert. La
+> publication des corrections le rapatrie elle-même quand il manque et que la nuit est rattachée : ancrage
+> et audio servent deux gestes différents (publier / écouter), les lier obligeait à réactiver une nuit
+> pour un geste qui ne demande aucun fichier. La couture « audio + ancrage » de la réactivation reste
+> valable, elle n'est plus un passage obligé.
 
 ## Contexte
 

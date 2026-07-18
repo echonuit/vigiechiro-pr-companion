@@ -1,15 +1,19 @@
 package fr.univ_amu.iut.cli.commande;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -37,7 +41,7 @@ class PublierCorrectionsVigieChiroTest {
     @Test
     @DisplayName("publication complète : bilan rendu (envoyées + écartées par cause), code 0")
     void publication_complete_code_zero() {
-        when(moteur.publier(42L)).thenReturn(new BilanPublication(3, 2, 1, 0, List.of()));
+        when(moteur.publier(eq(42L), any(), any())).thenReturn(new BilanPublication(3, 2, 1, 0, List.of()));
         StringWriter sortie = new StringWriter();
 
         int code = ligne(Optional.of(moteur), sortie, new StringWriter()).execute("--passage", "42");
@@ -52,7 +56,7 @@ class PublierCorrectionsVigieChiroTest {
     @Test
     @DisplayName("au moins un refus : détail sur la sortie d'erreur, code 1")
     void refus_code_un() {
-        when(moteur.publier(42L))
+        when(moteur.publier(eq(42L), any(), any()))
                 .thenReturn(
                         new BilanPublication(1, 0, 0, 0, List.of("Observation 7 (donnée d1, indice 2) : HTTP 404")));
         StringWriter sortie = new StringWriter();
@@ -63,6 +67,29 @@ class PublierCorrectionsVigieChiroTest {
         assertThat(code).isEqualTo(1);
         assertThat(sortie.toString()).contains("1 refus");
         assertThat(erreurs.toString()).contains("REFUS : Observation 7");
+    }
+
+    @Test
+    @DisplayName("ancrage acquis avant l'envoi : avancement sur la sortie d'erreur, stdout réservé au bilan (#1838)")
+    void progression_ancrage_sur_sortie_erreur() {
+        // Le moteur relaie sa phase d'ancrage par le consommateur reçu : on le déclenche depuis le mock,
+        // faute de quoi rien ne prouverait que la commande le branche réellement.
+        when(moteur.publier(eq(42L), any(), any())).thenAnswer(invocation -> {
+            Consumer<Progression> progres = invocation.getArgument(1);
+            progres.accept(new Progression("Ancrage des observations sur VigieChiro… (page 3/48)", 0.06));
+            return new BilanPublication(5, 0, 0, 0, List.of());
+        });
+        StringWriter sortie = new StringWriter();
+        StringWriter erreurs = new StringWriter();
+
+        int code = ligne(Optional.of(moteur), sortie, erreurs).execute("--passage", "42");
+
+        assertThat(code).isZero();
+        assertThat(erreurs.toString()).contains("Ancrage des observations sur VigieChiro… (page 3/48)");
+        assertThat(sortie.toString())
+                .as("la sortie standard reste exploitable par un script : le bilan, rien d'autre")
+                .contains("5 envoyée(s)")
+                .doesNotContain("Ancrage");
     }
 
     @Test
@@ -77,7 +104,7 @@ class PublierCorrectionsVigieChiroTest {
     @Test
     @DisplayName("--token : jeton ponctuel posé pour la durée de la commande (propriété système)")
     void token_ponctuel_pose() {
-        when(moteur.publier(42L)).thenReturn(new BilanPublication(0, 0, 0, 0, List.of()));
+        when(moteur.publier(eq(42L), any(), any())).thenReturn(new BilanPublication(0, 0, 0, 0, List.of()));
 
         ligne(Optional.of(moteur), new StringWriter(), new StringWriter())
                 .execute("--passage", "42", "--token", "jeton-x");

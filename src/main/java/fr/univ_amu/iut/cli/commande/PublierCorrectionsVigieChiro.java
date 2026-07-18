@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.cli.commande;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
@@ -19,6 +20,12 @@ import picocli.CommandLine.Spec;
 ///
 /// Contrairement à l'IHM (confirmation récapitulative), la CLI publie **directement** : c'est le
 /// comportement attendu d'une commande scriptable, l'appelant a déjà décidé.
+///
+/// Comme l'IHM, elle **acquiert d'abord l'ancrage** qui manque (#1838) quand la nuit est rattachée à
+/// une participation : une nuit importée par CSV (#1565) n'en porte pas, et ses corrections seraient
+/// sinon toutes écartées. Le rapatriement peut durer (des dizaines de pages) ; son avancement est
+/// relayé sur la **sortie d'erreur**, la sortie standard restant réservée au bilan. Une nuit déjà
+/// ancrée n'en paie pas le coût.
 ///
 /// **Jeton** : `--token`, sinon la variable d'environnement `VIGIECHIRO_TOKEN`, sinon la connexion
 /// enregistrée dans l'application.
@@ -62,7 +69,15 @@ public final class PublierCorrectionsVigieChiro implements Callable<Integer> {
             // persister — la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
-        BilanPublication bilan = moteur.publier(idPassage);
+        // L'ancrage manquant s'acquiert ici comme dans l'IHM (#1838) : sans cela une nuit importée par CSV
+        // verrait ses corrections écartées, et la CLI conseillerait un réimport que la publication sait
+        // faire elle-même. On relaie l'avancement sur la sortie d'erreur (stdout reste réservé au bilan),
+        // comme `importer-observations-vigiechiro`. Jeton neutre : une commande scriptable ne renonce pas
+        // en cours de route, l'appelant a déjà décidé.
+        BilanPublication bilan = moteur.publier(
+                idPassage,
+                progression -> spec.commandLine().getErr().println(progression.libelle()),
+                JetonAnnulation.neutre());
         spec.commandLine().getOut().println(rendre(bilan));
         for (String echec : bilan.echecs()) {
             spec.commandLine().getErr().println("REFUS : " + echec);
