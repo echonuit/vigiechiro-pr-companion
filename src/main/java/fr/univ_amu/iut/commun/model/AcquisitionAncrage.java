@@ -42,20 +42,19 @@ public final class AcquisitionAncrage {
     ///
     /// @param progres avancement du rapatriement (muet si l'ancrage est déjà là)
     /// @param jeton annulation honorée **à chaque page**, et non après coup (#1597)
-    /// @return le compte rendu du rapatriement, **prêt à afficher** - notamment les échanges avec le
-    ///     validateur qu'il a ramenés (#1867). Chaîne **vide** quand il n'y avait rien à acquérir : dire
-    ///     « rien n'a été fait » après un geste qui n'a rien coûté serait du bruit.
-    public static String acquerirSiNecessaire(
+    /// @return ce que la phase a rapporté ([RapportAncrage]), **muet** quand il n'y avait rien à
+    ///     acquérir : dire « rien n'a été fait » après un geste qui n'a rien coûté serait du bruit.
+    public static RapportAncrage acquerirSiNecessaire(
             ImportObservations importateur, Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(importateur, "importateur");
         Objects.requireNonNull(idPassage, "idPassage");
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
         if (!importateur.estRattache(idPassage) || !importateur.ancrageManquant(idPassage)) {
-            return "";
+            return RapportAncrage.aucun();
         }
         progres.accept(new Progression(LIBELLE, 0.0));
-        return importateur.importer(idPassage, true, suivi(progres, jeton));
+        return new RapportAncrage(importateur.importer(idPassage, true, suivi(progres, jeton)));
     }
 
     /// Suivi **page par page** : le rapatriement des `donnees` compte des dizaines de pages ; sans relais

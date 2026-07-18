@@ -103,9 +103,9 @@ public final class PublierCorrectionsVigieChiro implements Callable<Integer> {
             rendu.append(" ; ").append(bilan.echecs().size()).append(" refus (détail sur la sortie d'erreur)");
         }
         rendu.append('.');
-        if (!bilan.rapatriement().isBlank()) {
+        if (!bilan.rapatriement().estMuet()) {
             // Parité avec l'IHM (ADR 0014) : ce que la fenêtre annonce au retour, la CLI l'imprime aussi.
-            rendu.append(' ').append(bilan.rapatriement());
+            rendu.append(' ').append(bilan.rapatriement().texte());
         }
         return rendu.toString();
     }

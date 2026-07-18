@@ -166,6 +166,9 @@ class ServiceReactivationPassageTest {
         ImportObservations importObservations = mock(ImportObservations.class);
         when(importObservations.estRattache(idPassage)).thenReturn(true);
         when(importObservations.ancrageManquant(idPassage)).thenReturn(true);
+        // Le port promet « un compte rendu prêt à afficher » : un mock nu renverrait null, ce que
+        // RapportAncrage refuse à la construction. Honorer le contrat plutôt que tolérer sa violation.
+        when(importObservations.importer(eq(idPassage), eq(true), any())).thenReturn("Observations importées.");
 
         avecImport(importObservations).reactiver(idPassage, sauvegarde, progres -> {});
 
@@ -188,7 +191,7 @@ class ServiceReactivationPassageTest {
 
         RapportReactivation rapport = avecImport(importObservations).reactiver(idPassage, sauvegarde, progres -> {});
 
-        assertThat(rapport.rapatriement())
+        assertThat(rapport.rapatriement().texte())
                 .as("sans cela, les messages du validateur arrivent en base sans que rien ne le dise")
                 .contains("Le validateur s'est exprimé sur 3 observation(s).");
     }
@@ -202,9 +205,9 @@ class ServiceReactivationPassageTest {
 
         RapportReactivation rapport = avecImport(importObservations).reactiver(idPassage, sauvegarde, progres -> {});
 
-        assertThat(rapport.rapatriement())
+        assertThat(rapport.rapatriement().estMuet())
                 .as("une réactivation ordinaire ne doit pas afficher de ligne vide ni de « rien à faire »")
-                .isEmpty();
+                .isTrue();
     }
 
     @Test

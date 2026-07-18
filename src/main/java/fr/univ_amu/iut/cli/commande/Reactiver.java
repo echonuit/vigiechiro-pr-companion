@@ -118,8 +118,8 @@ public final class Reactiver implements Callable<Integer> {
         }
         // Parité avec la modale (ADR 0014) : ce que la phase d'ancrage a rapatrié, dont les échanges avec
         // le validateur (#1867), se dit aussi en ligne de commande.
-        if (!rapport.rapatriement().isBlank()) {
-            texte.append(rapport.rapatriement()).append('\n');
+        if (!rapport.rapatriement().estMuet()) {
+            texte.append(rapport.rapatriement().texte()).append('\n');
         }
         texte.append("Audio : ")
                 .append(rapport.decompte().disponibilite())
@@ -163,7 +163,7 @@ public final class Reactiver implements Callable<Integer> {
         objet.put("sequencesTotal", rapport.decompte().total());
         // Le compte rendu du rapatriement d'ancrage (#1904) : chaîne vide quand la phase ne s'est pas
         // déclenchée. Présent dans la projection pour qu'elle reste le reflet complet du rapport.
-        objet.put("rapatriement", rapport.rapatriement());
+        objet.put("rapatriement", rapport.rapatriement().texte());
         IndiceAcoustique indice = rapport.indiceAcoustique();
         objet.put("acoustiqueMesurees", indice == null ? 0 : indice.mesurees());
         objet.put("acoustiqueConcordantes", indice == null ? 0 : indice.concordantes());

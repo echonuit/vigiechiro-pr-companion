@@ -71,3 +71,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0022](0022-le-verbe-dit-le-sens-de-l-echange.md) | Le verbe d'un geste dit le sens réel de l'échange | #1855, #1866 |
 | [0023](0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md) | Rendre compte se fait au bandeau ; le modal est réservé à l'irréversible | EPIC #1870 |
 | [0024](0024-les-heures-d-une-nuit-viennent-de-ses-preuves.md) | Les heures d'une nuit viennent de ses preuves ; de l'utilisateur seulement à défaut | #1860, #1878, #1892 |
+| [0025](0025-une-capture-passe-par-le-code-de-production.md) | Une capture passe par le code de production, elle ne le reconstruit pas | #1468, #1865 |

@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
@@ -67,7 +68,7 @@ public class PublicationCorrections {
     public BilanPublication publier(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
-        String rapatriement = acquerirAncrageSiNecessaire(idPassage, progres, jeton);
+        RapportAncrage rapatriement = acquerirAncrageSiNecessaire(idPassage, progres, jeton);
         return publier(idPassage).avecRapatriement(rapatriement);
     }
 
@@ -89,10 +90,11 @@ public class PublicationCorrections {
     /// Acquiert l'ancrage manquant avant de publier (#1838), en déléguant au geste partagé
     /// [AcquisitionAncrage] - le même que celui de la réactivation (#1571), qui en a besoin pour une
     /// autre raison au même endroit du domaine (ADR 0019).
-    private String acquerirAncrageSiNecessaire(Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
+    private RapportAncrage acquerirAncrageSiNecessaire(
+            Long idPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
         return importateur
                 .map(import_ -> AcquisitionAncrage.acquerirSiNecessaire(import_, idPassage, progres, jeton))
-                .orElse("");
+                .orElseGet(RapportAncrage::aucun);
     }
 
     /// Publie les corrections du passage, **sans toucher à l'ancrage** (celui qui manque restera compté).

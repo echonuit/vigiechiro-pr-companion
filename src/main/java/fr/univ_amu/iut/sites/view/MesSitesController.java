@@ -133,7 +133,7 @@ public class MesSitesController implements ResumeStatut {
     /// relecture des cartes hors du fil JavaFX, sous le voile d'occupation ; le résultat (cartes +
     /// message) s'applique sur le fil JavaFX, l'échec rejoint le message de synchronisation.
     @FXML
-    private void synchroniserVigieChiro() {
+    private void recupererDepuisVigieChiro() {
         occupation.occuper(
                 "Synchronisation Vigie-Chiro en cours…",
                 viewModel::synchroniserEtRecharger,

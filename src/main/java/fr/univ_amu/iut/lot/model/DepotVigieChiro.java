@@ -310,8 +310,8 @@ public final class DepotVigieChiro {
         if (!ecarts.isEmpty()) {
             throw new RegleMetierException("Dépôt refusé, la participation liée ne correspond pas au passage : "
                     + String.join(" ; ", ecarts)
-                    + ". Vérifiez le rattachement (modale « Modifier le passage », synchronisation) avant de"
-                    + " déposer.");
+                    + ". Vérifiez le rattachement (modale « Modifier le passage », « Récupérer depuis"
+                    + " Vigie-Chiro ») avant de déposer.");
         }
     }
 

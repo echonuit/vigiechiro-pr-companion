@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.validation.model;
 
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import java.util.List;
 
 /// Bilan d'une **publication des corrections** vers VigieChiro (#723) : ce qui a été écrit côté
@@ -26,17 +27,17 @@ public record BilanPublication(
         int sansAncrage,
         int horsReferentiel,
         List<String> echecs,
-        String rapatriement) {
+        RapportAncrage rapatriement) {
 
     /// Bilan d'une publication **sans phase de rapatriement** : la nuit portait déjà son ancrage, ou la
     /// publication n'était pas suivie. Rien à annoncer au retour.
     public BilanPublication(
             int poussees, int sansCertitude, int sansAncrage, int horsReferentiel, List<String> echecs) {
-        this(poussees, sansCertitude, sansAncrage, horsReferentiel, echecs, "");
+        this(poussees, sansCertitude, sansAncrage, horsReferentiel, echecs, RapportAncrage.aucun());
     }
 
     /// Le même bilan, accompagné du compte rendu de la phase d'ancrage qui l'a précédé.
-    public BilanPublication avecRapatriement(String rapatriement) {
+    public BilanPublication avecRapatriement(RapportAncrage rapatriement) {
         return new BilanPublication(poussees, sansCertitude, sansAncrage, horsReferentiel, echecs, rapatriement);
     }
 

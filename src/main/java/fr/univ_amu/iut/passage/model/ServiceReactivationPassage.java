@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -214,10 +215,10 @@ public class ServiceReactivationPassage {
     ///     validateur, #1867), ou une chaîne vide quand il n'y avait rien à acquérir. La réactivation le
     ///     restitue désormais au lieu de le taire (#1904) : c'est justement ici que des messages arrivent,
     ///     puisque la phase ne se déclenche que sur une nuit reconstruite.
-    private String acquerirAncrageSiNecessaire(
+    private RapportAncrage acquerirAncrageSiNecessaire(
             Long idPassage, RapportReactivation rapport, Consumer<Progression> progresAncrage, JetonAnnulation jeton) {
         if (importObservations.isEmpty() || rapport.decompte().disponibilite() == DisponibiliteAudio.ABSENTE) {
-            return "";
+            return RapportAncrage.aucun();
         }
         return AcquisitionAncrage.acquerirSiNecessaire(importObservations.get(), idPassage, progresAncrage, jeton);
     }

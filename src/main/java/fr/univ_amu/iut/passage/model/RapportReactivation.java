@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.passage.model;
 
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
 import java.util.List;
 
@@ -38,7 +39,7 @@ public record RapportReactivation(
         DecompteAudio decompte,
         VoieReactivation voie,
         IndiceAcoustique indiceAcoustique,
-        String rapatriement) {
+        RapportAncrage rapatriement) {
 
     public RapportReactivation {
         ecarts = List.copyOf(ecarts);
@@ -66,11 +67,11 @@ public record RapportReactivation(
                 decompte,
                 voie,
                 indiceAcoustique,
-                "");
+                RapportAncrage.aucun());
     }
 
     /// Le même rapport, accompagné du compte rendu de la **phase d'ancrage** qui l'a suivi (#1904).
-    public RapportReactivation avecRapatriement(String rapatriement) {
+    public RapportReactivation avecRapatriement(RapportAncrage rapatriement) {
         return new RapportReactivation(
                 reactivees,
                 divergentes,
@@ -95,7 +96,17 @@ public record RapportReactivation(
             List<EcartReactivation> ecarts,
             DecompteAudio decompte,
             VoieReactivation voie) {
-        this(reactivees, divergentes, manquantes, dejaPresentes, confianceMinimale, ecarts, decompte, voie, null, "");
+        this(
+                reactivees,
+                divergentes,
+                manquantes,
+                dejaPresentes,
+                confianceMinimale,
+                ecarts,
+                decompte,
+                voie,
+                null,
+                RapportAncrage.aucun());
     }
 
     /// Une séquence **refusée** : un fichier homonyme était là, mais la vérification l'a écarté.

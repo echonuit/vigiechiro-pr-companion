@@ -87,6 +87,7 @@ nav:
     - 0021 · Le double-clic est un miroir qui rend compte: decisions/0021-double-clic-miroir-qui-rend-compte.md
     - 0022 · Le verbe dit le sens de l'échange: decisions/0022-le-verbe-dit-le-sens-de-l-echange.md
     - 0023 · Bandeau par défaut, modal si irréversible: decisions/0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md
+    - 0025 · Une capture passe par le code de production: decisions/0025-une-capture-passe-par-le-code-de-production.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

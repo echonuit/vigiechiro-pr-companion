@@ -8,6 +8,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
@@ -87,9 +88,9 @@ class PublicationCorrectionsViewModelTest {
                 .as("nuit déjà ancrée : rien ne s'est passé avant l'envoi, rien à en dire")
                 .isEqualTo("Corrections publiées vers Vigie-Chiro : 2 envoyée(s).");
 
-        BilanPublication avecRapatriement =
-                sansRapatriement.avecRapatriement("Observations importées depuis Vigie-Chiro : 40 observation(s)."
-                        + " Le validateur s'est exprimé sur 3 observation(s).");
+        BilanPublication avecRapatriement = sansRapatriement.avecRapatriement(
+                new RapportAncrage("Observations importées depuis Vigie-Chiro : 40 observation(s)."
+                        + " Le validateur s'est exprimé sur 3 observation(s)."));
         assertThat(PublicationCorrectionsViewModel.resume(avecRapatriement))
                 .as("sans cette phrase, les messages du validateur se découvrent par hasard")
                 .contains("2 envoyée(s)")

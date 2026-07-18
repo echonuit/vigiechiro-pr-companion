@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
@@ -148,11 +149,11 @@ public class ReactivationModaleViewModel {
     /// C'est ici que ces messages arrivent le plus souvent : la phase ne se déclenche que sur une nuit
     /// **reconstruite**, dont les observations n'en portaient aucun. Les taire laissait l'observateur les
     /// découvrir en ouvrant la bonne ligne, par hasard.
-    private static void ajouterRapatriement(StringBuilder texte, String rapatriement) {
-        if (rapatriement == null || rapatriement.isBlank()) {
+    private static void ajouterRapatriement(StringBuilder texte, RapportAncrage rapatriement) {
+        if (rapatriement == null || rapatriement.estMuet()) {
             return;
         }
-        texte.append(rapatriement).append('\n');
+        texte.append(rapatriement.texte()).append('\n');
     }
 
     /// Concordance acoustique en **indice** (#1682), quand elle a été mesurée (hydratation d'un passage

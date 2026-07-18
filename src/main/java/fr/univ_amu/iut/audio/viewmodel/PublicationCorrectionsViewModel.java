@@ -114,11 +114,11 @@ public class PublicationCorrectionsViewModel {
                     .append(bilan.echecs().getFirst());
         }
         resume.append('.');
-        if (!bilan.rapatriement().isBlank()) {
+        if (!bilan.rapatriement().estMuet()) {
             // Le rapatriement d'ancrage ramène aussi les échanges avec le validateur (#1867). Les taire
             // reviendrait à laisser l'observateur les découvrir en ouvrant la bonne observation, par
             // hasard. Le texte vient du port d'import, qui seul sait ce qu'il a écrit.
-            resume.append(' ').append(bilan.rapatriement());
+            resume.append(' ').append(bilan.rapatriement().texte());
         }
         return resume.toString();
     }
