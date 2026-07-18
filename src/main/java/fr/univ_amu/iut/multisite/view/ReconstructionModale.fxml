@@ -52,9 +52,15 @@
 
   <!-- Constat (« 2 nuits manquent ») et refus sont deux choses : l'un s'affiche en neutre, l'autre en
        rouge. Les confondre ferait passer une information pour un incident. -->
+  <!-- État de la liste chargée : permanent, non fermable. -->
   <Label fx:id="lblMessage" styleClass="section-sous" wrapText="true"/>
-  <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
-  <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
+
+  <!-- Bandeau de retour partagé (ADR 0023) : remplace les libellés d'erreur et de compte rendu, dont les
+       NOMS portaient la sévérité. Elle vit désormais dans la valeur (#1917). -->
+  <HBox fx:id="bandeauRetour" styleClass="bandeau-retour" alignment="CENTER_LEFT" spacing="10.0">
+    <Label fx:id="lblCompteRendu" wrapText="true" HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
+    <Button fx:id="btnFermerRetour" text="✕" styleClass="fermer-retour" accessibleText="Fermer le message"/>
+  </HBox>
 
   <!-- Progression de l'opération longue (réseau + milliers d'insertions + import). Deux niveaux pour un
        import groupé (#1708) : le LOT (« Nuit X / N »), visible seulement pendant un lot, au-dessus de la

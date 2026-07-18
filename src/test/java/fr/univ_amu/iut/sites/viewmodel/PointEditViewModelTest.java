@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -179,7 +180,7 @@ class PointEditViewModelTest {
         boolean ok = viewModel.enregistrer();
 
         assertThat(ok).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("A1");
+        assertThat(viewModel.retourProperty().get().texte()).contains("A1");
         assertThat(service.listerPoints(site.id())).hasSize(1);
     }
 
@@ -213,7 +214,10 @@ class PointEditViewModelTest {
         boolean ok = viewModel.enregistrer();
 
         assertThat(ok).isFalse();
-        assertThat(viewModel.messageErreurProperty().get()).contains("A1").contains("existe déjà");
+        assertThat(viewModel.retourProperty().get().texte()).contains("A1").contains("existe déjà");
+        assertThat(viewModel.retourProperty().get().severite())
+                .as("#1917 : un refus du service est une erreur")
+                .isEqualTo(RetourOperation.Severite.ERREUR);
         assertThat(pointDao.findById(b1.id()))
                 .get()
                 .extracting(PointDEcoute::code)

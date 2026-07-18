@@ -3,6 +3,7 @@ package fr.univ_amu.iut.multisite.view;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
@@ -27,6 +28,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -88,10 +90,13 @@ public class ReconstructionModaleController {
     private Label lblMessage;
 
     @FXML
-    private Label lblErreur;
+    private HBox bandeauRetour;
 
     @FXML
     private Label lblCompteRendu;
+
+    @FXML
+    private Button btnFermerRetour;
 
     @FXML
     private Button boutonReconstruire;
@@ -150,20 +155,19 @@ public class ReconstructionModaleController {
                 cellule -> texte(cellule.getValue().pointLocalConnu() ? POINT_CONNU : POINT_INCONNU));
         tableOrphelines.setItems(viewModel.orphelines());
 
-        lblMessage.textProperty().bind(viewModel.messageProperty());
-        lblMessage.visibleProperty().bind(viewModel.messageProperty().isNotEmpty());
-        lblMessage.managedProperty().bind(viewModel.messageProperty().isNotEmpty());
-        lblErreur.textProperty().bind(viewModel.erreurProperty());
-        lblErreur.visibleProperty().bind(viewModel.erreurProperty().isNotEmpty());
-        lblErreur.managedProperty().bind(viewModel.erreurProperty().isNotEmpty());
-        lblCompteRendu.textProperty().bind(viewModel.compteRenduProperty());
-        lblCompteRendu.visibleProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
-        lblCompteRendu.managedProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
+        // État de la liste : permanent, non fermable (il décrit ce qu'on voit).
+        lblMessage.textProperty().bind(viewModel.etatListeProperty());
+        lblMessage.visibleProperty().bind(viewModel.etatListeProperty().isNotEmpty());
+        lblMessage.managedProperty().bind(viewModel.etatListeProperty().isNotEmpty());
+        // #1917 : les trois libellés empilés (constat / erreur / compte rendu) portaient la sévérité dans
+        // leur NOM. Deux d'entre eux fusionnent dans le bandeau partagé, qui la porte dans sa valeur.
+        BandeauRetour.installer(
+                bandeauRetour, lblCompteRendu, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         // Le compte rendu de fin (avec ses lacunes) est plus haut que la modale dimensionnée pour la table :
         // comme il apparaît APRÈS le dimensionnement d'ouverture, ses dernières lignes passaient sous la
         // ligne de flottaison (#1534). La barre GLOBALE de l'import groupé pose exactement le même problème
         // en cours de lot : les deux révélations passent donc par le patron commun.
-        Modales.suivreLaCroissance(racine, lotEnCours, viewModel.compteRenduProperty());
+        Modales.suivreLaCroissance(racine, lotEnCours, viewModel.retourProperty());
 
         // Le bouton ne s'ouvre que sur une nuit choisie DONT le point est connu ici, et l'enveloppe dit
         // laquelle des deux conditions manque (#789) plutôt que de laisser un bouton gris sans raison.

@@ -2,12 +2,15 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -45,7 +48,11 @@ public class SiteEditViewModel {
 
     private final ReadOnlyStringWrapper titre = new ReadOnlyStringWrapper(this, "titre", "");
     private final ReadOnlyStringWrapper libelleBouton = new ReadOnlyStringWrapper(this, "libelleBouton", "Créer");
-    private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
+    /// Compte rendu de la dernière tentative d'enregistrement, avec sa sévérité (#1917). Il s'appelait
+    /// `messageErreur` : la sévérité vivait dans son **nom**, ce qui l'empêchait de porter autre chose
+    /// qu'un échec. Or un champ mal rempli n'est pas une panne, c'est un guidage.
+    private final ReadOnlyObjectWrapper<RetourOperation> retour =
+            new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     /// Le carré est le **seul** champ obligatoire : six chiffres (R1). Le nom, le protocole et le
     /// commentaire sont facultatifs - un observateur qui déclare un carré à la volée ne doit pas être
@@ -74,7 +81,7 @@ public class SiteEditViewModel {
         nom.set("");
         protocole.set(Protocole.STANDARD);
         commentaire.set("");
-        messageErreur.set("");
+        retour.set(RetourOperation.AUCUN);
         titre.set("Nouveau site de suivi");
         libelleBouton.set("Créer");
     }
@@ -86,7 +93,7 @@ public class SiteEditViewModel {
         nom.set(ouVide(site.nomConvivial()));
         protocole.set(site.protocole());
         commentaire.set(ouVide(site.commentaire()));
-        messageErreur.set("");
+        retour.set(RetourOperation.AUCUN);
         titre.set("Modifier le site · Carré " + site.numeroCarre());
         libelleBouton.set("Enregistrer");
     }
@@ -94,11 +101,11 @@ public class SiteEditViewModel {
     /// Tente d'enregistrer le site (déclaration ou édition).
     ///
     /// @return `true` si l'enregistrement a réussi (la vue peut fermer la modale) ; `false` si une règle
-    ///     métier a refusé - le motif est alors dans [#messageErreurProperty()], **dans la modale**, à
+    ///     métier a refusé - le motif est alors dans [#retourProperty()], **dans la modale**, à
     ///     côté du champ fautif, et non dans une alerte qui s'ouvre après coup par-dessus
     public boolean enregistrer() {
         if (!carreValide.get()) {
-            messageErreur.set("Le numéro de carré doit comporter 6 chiffres.");
+            retour.set(RetourOperation.info("Le numéro de carré doit comporter 6 chiffres."));
             return false;
         }
         try {
@@ -113,10 +120,10 @@ public class SiteEditViewModel {
                         protocole.get(),
                         vide(commentaire.get()));
             }
-            messageErreur.set("");
+            retour.set(RetourOperation.AUCUN);
             return true;
         } catch (RegleMetierException | IllegalArgumentException refus) {
-            messageErreur.set(refus.getMessage());
+            retour.set(RetourOperation.erreur(refus.getMessage()));
             return false;
         }
     }
@@ -145,8 +152,15 @@ public class SiteEditViewModel {
         return libelleBouton.getReadOnlyProperty();
     }
 
-    public ReadOnlyStringProperty messageErreurProperty() {
-        return messageErreur.getReadOnlyProperty();
+    /// Compte rendu de la dernière tentative d'enregistrement, rendu par le bandeau partagé (ADR 0023).
+    /// [RetourOperation#AUCUN] en nominal.
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return retour.getReadOnlyProperty();
+    }
+
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    public void effacerRetour() {
+        retour.set(RetourOperation.AUCUN);
     }
 
     /// Le bouton d'enregistrement n'est ouvert que si le carré est valide (#790) : on **empêche** au lieu

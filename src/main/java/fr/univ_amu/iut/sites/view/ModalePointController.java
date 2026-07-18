@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.carte.CarreGeo;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
@@ -21,6 +22,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -76,7 +78,13 @@ public class ModalePointController {
     private TextField champCode;
 
     @FXML
+    private HBox bandeauRetour;
+
+    @FXML
     private Label messageErreur;
+
+    @FXML
+    private Button btnFermerRetour;
 
     @FXML
     private TextArea champDescription;
@@ -111,9 +119,10 @@ public class ModalePointController {
         champLongitude.textProperty().bindBidirectional(viewModel.longitudeProperty());
         boutonValider.textProperty().bind(viewModel.libelleBoutonProperty());
         boutonValider.disableProperty().bind(viewModel.peutEnregistrer().not());
-        messageErreur.textProperty().bind(viewModel.messageErreurProperty());
-        messageErreur.visibleProperty().bind(viewModel.messageErreurProperty().isNotEmpty());
-        messageErreur.managedProperty().bind(viewModel.messageErreurProperty().isNotEmpty());
+        // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
+        // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
+        BandeauRetour.installer(
+                bandeauRetour, messageErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         viewModel.codeValide().addListener((observable, avant, valide) -> majStyleCode());
         viewModel.codeProperty().addListener((observable, avant, apres) -> majStyleCode());
 

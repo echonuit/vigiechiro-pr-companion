@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
@@ -48,7 +49,7 @@ class ReconstructionViewModelTest {
         viewModel.appliquer(viewModel.charger());
 
         assertThat(viewModel.orphelines()).containsExactly(ORPHELINE);
-        assertThat(viewModel.messageProperty().get()).contains("1 nuit(s)");
+        assertThat(viewModel.etatListeProperty().get()).contains("1 nuit(s)");
     }
 
     @Test
@@ -61,7 +62,7 @@ class ReconstructionViewModelTest {
         viewModel.appliquer(viewModel.charger());
 
         assertThat(viewModel.orphelines()).isEmpty();
-        assertThat(viewModel.messageProperty().get()).contains("Aucune nuit manquante");
+        assertThat(viewModel.etatListeProperty().get()).contains("Aucune nuit manquante");
     }
 
     @Test
@@ -76,13 +77,13 @@ class ReconstructionViewModelTest {
 
         viewModel.restituer(ORPHELINE, viewModel.reconstruire(ORPHELINE, progression -> {}, JetonAnnulation.neutre()));
 
-        assertThat(viewModel.compteRenduProperty().get())
+        assertThat(viewModel.retourProperty().get().texte())
                 .contains("56 séquence(s)")
                 .contains("132 observation(s)")
                 .contains("Réactiver ce passage");
         RapportReconstruction.lacunesConnues()
                 .forEach(lacune ->
-                        assertThat(viewModel.compteRenduProperty().get()).contains(lacune));
+                        assertThat(viewModel.retourProperty().get().texte()).contains(lacune));
         assertThat(viewModel.reconstruitProperty().get())
                 .as("l'appelant doit savoir qu'il faut recharger sa table")
                 .isTrue();
@@ -104,7 +105,7 @@ class ReconstructionViewModelTest {
 
         assertThat(rendu).as("le viewModel renvoie le bilan du service").isSameAs(bilan);
         viewModel.restituerLot(rendu);
-        assertThat(viewModel.compteRenduProperty().get())
+        assertThat(viewModel.retourProperty().get().texte())
                 .contains("2 nuit(s) reconstruite(s)")
                 .contains("1 nuit(s) ignorée(s)");
         assertThat(viewModel.reconstruitProperty().get())
@@ -120,9 +121,10 @@ class ReconstructionViewModelTest {
 
         viewModel.signalerErreur(new RegleMetierException("Le point d'écoute n'existe pas localement."));
 
-        assertThat(viewModel.erreurProperty().get()).isEqualTo("Le point d'écoute n'existe pas localement.");
-        assertThat(viewModel.messageProperty().get())
-                .as("un refus n'efface pas le constat, et le constat ne devient pas un refus")
+        assertThat(viewModel.retourProperty().get().texte()).contains("Le point d'écoute n'existe pas localement.");
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(viewModel.etatListeProperty().get())
+                .as("#1917 : un refus n'efface pas le constat, et le constat ne devient pas un refus")
                 .isEmpty();
     }
 }

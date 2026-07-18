@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.viewmodel;
 
 import fr.univ_amu.iut.commun.model.AnalyseurCoordonnees;
 import fr.univ_amu.iut.commun.model.validation.ValidateurCodePoint;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -13,6 +14,8 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleStringProperty;
@@ -31,7 +34,7 @@ import javafx.beans.property.StringProperty;
 /// La création délègue à [ServiceSites#ajouterPoint] et l'édition à [ServiceSites#modifierPoint] :
 /// tous deux rejouent R2 + l'unicité du code dans le site (en excluant le point courant en
 /// édition), pour ne jamais court-circuiter le service vers le DAO. Les refus métier
-/// (code déjà pris…) sont restitués dans [#messageErreurProperty()] et l'enregistrement renvoie
+/// (code déjà pris…) sont restitués dans [#retourProperty()] et l'enregistrement renvoie
 /// `false` (la modale reste ouverte).
 public class PointEditViewModel {
 
@@ -53,7 +56,11 @@ public class PointEditViewModel {
     private final StringProperty longitude = new SimpleStringProperty(this, "longitude", "");
     private final ReadOnlyStringWrapper titre = new ReadOnlyStringWrapper(this, "titre", "");
     private final ReadOnlyStringWrapper libelleBouton = new ReadOnlyStringWrapper(this, "libelleBouton", "+ Ajouter");
-    private final ReadOnlyStringWrapper messageErreur = new ReadOnlyStringWrapper(this, "messageErreur", "");
+    /// Compte rendu de la dernière tentative d'enregistrement, avec sa sévérité (#1917). Il s'appelait
+    /// `messageErreur` : la sévérité vivait dans son **nom**, ce qui l'empêchait de porter autre chose
+    /// qu'un échec. Or un champ mal rempli n'est pas une panne, c'est un guidage.
+    private final ReadOnlyObjectWrapper<RetourOperation> retour =
+            new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     /// Ce que la grille STOC dit de la position saisie (#733) : vide tant qu'on ne sait rien.
     private final ReadOnlyStringWrapper messageCarre = new ReadOnlyStringWrapper(this, "messageCarre", "");
@@ -105,7 +112,7 @@ public class PointEditViewModel {
         description.set(point.description() == null ? "" : point.description());
         latitude.set(point.latitude() == null ? "" : Double.toString(point.latitude()));
         longitude.set(point.longitude() == null ? "" : Double.toString(point.longitude()));
-        messageErreur.set("");
+        retour.set(RetourOperation.AUCUN);
         titre.set("Modifier le point " + point.code() + " · Carré " + site.numeroCarre());
         libelleBouton.set("Modifier");
     }
@@ -113,10 +120,10 @@ public class PointEditViewModel {
     /// Tente d'enregistrer le point (création ou édition).
     ///
     /// @return `true` si l'enregistrement a réussi (la vue peut fermer la modale) ; `false` si une
-    ///     règle métier a refusé l'opération (le motif est dans [#messageErreurProperty()])
+    ///     règle métier a refusé l'opération (le motif est dans [#retourProperty()])
     public boolean enregistrer() {
         if (!peutEnregistrer.get()) {
-            messageErreur.set("Corrigez les champs en rouge avant d'enregistrer.");
+            retour.set(RetourOperation.info("Corrigez les champs en rouge avant d'enregistrer."));
             return false;
         }
         try {
@@ -128,10 +135,10 @@ public class PointEditViewModel {
             } else {
                 service.modifierPoint(idPointEnEdition, idSite, code.get(), lat, lon, desc);
             }
-            messageErreur.set("");
+            retour.set(RetourOperation.AUCUN);
             return true;
         } catch (RuntimeException refus) {
-            messageErreur.set(refus.getMessage());
+            retour.set(RetourOperation.erreur(refus.getMessage()));
             return false;
         }
     }
@@ -160,8 +167,15 @@ public class PointEditViewModel {
         return libelleBouton.getReadOnlyProperty();
     }
 
-    public ReadOnlyStringProperty messageErreurProperty() {
-        return messageErreur.getReadOnlyProperty();
+    /// Compte rendu de la dernière tentative d'enregistrement, rendu par le bandeau partagé (ADR 0023).
+    /// [RetourOperation#AUCUN] en nominal.
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return retour.getReadOnlyProperty();
+    }
+
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    public void effacerRetour() {
+        retour.set(RetourOperation.AUCUN);
     }
 
     /// Validité du code de point (R2) : pilote le surlignage du champ dans la vue.
@@ -223,7 +237,7 @@ public class PointEditViewModel {
         description.set("");
         latitude.set("");
         longitude.set("");
-        messageErreur.set("");
+        retour.set(RetourOperation.AUCUN);
     }
 
     /// Une coordonnée est valide si elle est vide (GPS optionnel) ou décimale dans `[-borne, borne]`.

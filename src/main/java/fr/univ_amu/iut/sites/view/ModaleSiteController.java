@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.view;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
@@ -13,6 +14,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -54,7 +56,13 @@ public class ModaleSiteController {
     private TextArea champCommentaire;
 
     @FXML
+    private HBox bandeauRetour;
+
+    @FXML
     private Label messageErreur;
+
+    @FXML
+    private Button btnFermerRetour;
 
     @FXML
     private Button boutonValider;
@@ -95,9 +103,10 @@ public class ModaleSiteController {
         boutonValider.disableProperty().bind(viewModel.peutEnregistrer().not());
         ValidationFormulaire.marquerInvalide(champCarre, viewModel.carreInvalideEtSaisi());
 
-        messageErreur.textProperty().bind(viewModel.messageErreurProperty());
-        messageErreur.visibleProperty().bind(viewModel.messageErreurProperty().isNotEmpty());
-        messageErreur.managedProperty().bind(viewModel.messageErreurProperty().isNotEmpty());
+        // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
+        // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
+        BandeauRetour.installer(
+                bandeauRetour, messageErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         viewModel.carreInvalideEtSaisi().addListener((observable, avant, invalide) -> majStyleCarre());
     }
 

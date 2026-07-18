@@ -26,6 +26,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
+import javafx.scene.layout.HBox;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -184,10 +185,14 @@ class ReconstructionModaleViewTest {
 
         robot.interact(() -> robot.lookup("#boutonReconstruire").queryButton().fire());
 
-        Label erreur = robot.lookup("#lblErreur").queryAs(Label.class);
-        assertThat(erreur.getText()).contains("analyse non terminée");
+        HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
+        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
+                .contains("analyse non terminée");
+        assertThat(bandeau.getStyleClass())
+                .as("#1917 : un refus est une erreur, et le bandeau le dit par sa couleur")
+                .contains("retour-erreur");
         assertThat(robot.lookup("#lblMessage").queryAs(Label.class).getText())
-                .as("le constat n'est pas un incident : il ne vire pas au rouge")
+                .as("le constat n'est pas un incident : il reste dans sa ligne d'état, hors du bandeau")
                 .contains("2 nuit(s)");
         assertThat(robot.lookup("#boutonReconstruire").queryButton().isDisabled())
                 .as("bouton relâché après l'échec : l'utilisateur peut réessayer")
@@ -204,10 +209,12 @@ class ReconstructionModaleViewTest {
 
         robot.interact(() -> robot.lookup("#boutonReconstruire").queryButton().fire());
 
-        assertThat(robot.lookup("#lblErreur").queryAs(Label.class).getText())
-                .as("une annulation n'est pas une erreur : rien en rouge")
-                .isEmpty();
-        assertThat(robot.lookup("#lblMessage").queryAs(Label.class).getText()).contains("annulée");
+        assertThat(robot.lookup("#bandeauRetour").queryAs(HBox.class).getStyleClass())
+                .as("une annulation n'est pas une erreur : le bandeau reste neutre")
+                .contains("retour-info")
+                .doesNotContain("retour-erreur");
+        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
+                .contains("annulée");
         assertThat(table.getItems())
                 .as("rien n'a été créé : la nuit manque toujours")
                 .containsExactly(CONNUE, INCONNUE);

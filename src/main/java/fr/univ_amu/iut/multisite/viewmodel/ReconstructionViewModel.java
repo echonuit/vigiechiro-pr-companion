@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
@@ -14,6 +15,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -38,14 +41,17 @@ public class ReconstructionViewModel {
 
     private final ObservableList<ParticipationOrpheline> orphelines = FXCollections.observableArrayList();
 
-    /// Ce que la modale **constate** (combien de nuits manquent) : une information, pas une alerte.
-    private final ReadOnlyStringWrapper message = new ReadOnlyStringWrapper("");
+    /// Ce que la modale **constate** de la liste chargée (combien de nuits manquent) : un **état**, pas
+    /// le compte rendu d'une action. Il décrit ce qu'on voit, il ne se ferme pas, et il survit à la
+    /// fermeture du bandeau.
+    private final ReadOnlyStringWrapper etatListe = new ReadOnlyStringWrapper("");
 
-    /// Ce qui a **échoué ou été refusé**. Distinct de [#messageProperty] : afficher « 2 nuits manquent »
-    /// en rouge ferait passer un constat pour un incident.
-    private final ReadOnlyStringWrapper erreur = new ReadOnlyStringWrapper("");
-
-    private final ReadOnlyStringWrapper compteRendu = new ReadOnlyStringWrapper("");
+    /// Compte rendu de la dernière **opération** (reconstruction réussie, refus, annulation), avec sa
+    /// sévérité (#1917). Il remplace trois propriétés distinctes - `message`, `erreur`, `compteRendu` -
+    /// dont les **noms** portaient la sévérité : elle vit désormais dans la valeur, et les trois cas se
+    /// rendent par un seul bandeau au lieu de trois libellés empilés.
+    private final ReadOnlyObjectWrapper<RetourOperation> retour =
+            new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
     private final ReadOnlyBooleanWrapper reconstruit = new ReadOnlyBooleanWrapper(false);
 
     /// Suivi de la **progression déterminée** de la reconstruction (barre + libellé + ETA), via le socle
@@ -74,21 +80,22 @@ public class ReconstructionViewModel {
         return orphelines;
     }
 
-    /// Constat de la modale : combien de nuits manquent (ou qu'il n'en manque aucune).
-    public ReadOnlyStringProperty messageProperty() {
-        return message.getReadOnlyProperty();
+    /// Constat de la modale : combien de nuits manquent (ou qu'il n'en manque aucune). Un **état** de la
+    /// liste chargée, permanent et non fermable.
+    public ReadOnlyStringProperty etatListeProperty() {
+        return etatListe.getReadOnlyProperty();
     }
 
-    /// Refus ou échec, à afficher comme tel : point d'écoute inconnu ici, analyse non terminée,
-    /// plateforme injoignable.
-    public ReadOnlyStringProperty erreurProperty() {
-        return erreur.getReadOnlyProperty();
+    /// Compte rendu de la dernière opération, avec sa sévérité (ADR 0023) : reconstruction réussie
+    /// (**lacunes comprises** : un passage reconstruit est moins riche qu'un passage archivé par purge,
+    /// et le taire laisserait croire à une équivalence), refus, ou annulation.
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return retour.getReadOnlyProperty();
     }
 
-    /// Compte rendu de la reconstruction, **lacunes comprises** : un passage reconstruit est moins riche
-    /// qu'un passage archivé par purge, et le taire laisserait croire à une équivalence.
-    public ReadOnlyStringProperty compteRenduProperty() {
-        return compteRendu.getReadOnlyProperty();
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    public void effacerRetour() {
+        retour.set(RetourOperation.AUCUN);
     }
 
     /// Vrai dès qu'une nuit a été reconstruite : l'appelant sait alors qu'il doit **recharger** sa table.
@@ -117,8 +124,10 @@ public class ReconstructionViewModel {
     /// Publie la liste chargée (**fil JavaFX**).
     public void appliquer(List<ParticipationOrpheline> chargees) {
         orphelines.setAll(chargees);
-        erreur.set("");
-        message.set(
+        // Ne touche PAS au retour : l'appelant recharge la liste APRÈS une reconstruction, et effacer ici
+        // supprimerait le bilan qu'on vient de produire (le compte rendu survivait déjà au rechargement
+        // avant #1917, puisqu'il vivait dans une propriété distincte).
+        etatListe.set(
                 chargees.isEmpty()
                         ? "Aucune nuit manquante : toutes vos participations Vigie-Chiro ont un passage ici."
                         : chargees.size() + " nuit(s) déposée(s) sur Vigie-Chiro n'existent pas sur cette machine.");
@@ -138,7 +147,7 @@ public class ReconstructionViewModel {
     public void restituer(ParticipationOrpheline orpheline, RapportReconstruction rapport) {
         orphelines.remove(orpheline);
         reconstruit.set(true);
-        compteRendu.set("Nuit du " + orpheline.dateDebut() + " reconstruite (passage archivé) : "
+        String rendu = "Nuit du " + orpheline.dateDebut() + " reconstruite (passage archivé) : "
                 + rapport.sequencesRecreees() + " séquence(s), " + rapport.observationsImportees()
                 + " observation(s) rapatriée(s)."
                 + System.lineSeparator()
@@ -151,8 +160,8 @@ public class ReconstructionViewModel {
                                 .toList())
                 + System.lineSeparator()
                 + "Le passage est consultable mais pas écoutable. Si vous retrouvez les fichiers d'origine,"
-                + " ouvrez-le et utilisez « Réactiver ce passage ».");
-        erreur.set("");
+                + " ouvrez-le et utilisez « Réactiver ce passage ».";
+        retour.set(RetourOperation.succes(rendu));
     }
 
     /// **Bloquant** (réseau + base) : reconstruit **toutes** les nuits de `aTraiter`. La boucle et la
@@ -176,7 +185,6 @@ public class ReconstructionViewModel {
     public void restituerLot(ServiceReconstructionPassages.BilanReconstructionGroupe bilan) {
         Objects.requireNonNull(bilan, "bilan");
         reconstruit.set(bilan.reussies() > 0);
-        erreur.set("");
         String rendu = bilan.reussies() + " nuit(s) reconstruite(s) : " + bilan.sequences() + " séquence(s), "
                 + bilan.observations() + " observation(s) rapatriée(s).";
         if (bilan.ignorees() > 0) {
@@ -187,21 +195,21 @@ public class ReconstructionViewModel {
         rendu += System.lineSeparator()
                 + "Les passages reconstruits sont consultables mais pas écoutables (le dépôt ZIP ne restitue"
                 + " pas l'audio). Réactivez-les si vous retrouvez les fichiers d'origine.";
-        compteRendu.set(rendu);
+        retour.set(RetourOperation.succes(rendu));
     }
 
     /// Route un échec vers le message de la modale : un refus (point inconnu, hors connexion, analyse non
     /// terminée) **dit quoi faire**, il ne doit pas remonter en exception muette depuis le fil de fond.
     public void signalerErreur(Throwable echec) {
         String detail = echec.getMessage();
-        erreur.set(detail != null && !detail.isBlank() ? detail : "Reconstruction impossible.");
+        retour.set(RetourOperation.erreur(detail != null && !detail.isBlank() ? detail : null));
     }
 
     /// Annulation demandée par l'utilisateur : un état **neutre**, pas une erreur. Rien n'a été créé (la
     /// reconstruction se compense côté service), et on le dit plutôt que de laisser un écran figé.
     public void signalerAnnulation() {
-        erreur.set("");
-        message.set("Reconstruction annulée : aucun passage n'a été créé.");
+        // Ni un succès (rien n'a été créé), ni une erreur (rien n'a raté, l'utilisateur a arrêté).
+        retour.set(RetourOperation.info("Reconstruction annulée : aucun passage n'a été créé."));
     }
 
     private ServiceReconstructionPassages exiger() {
