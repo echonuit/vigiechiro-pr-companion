@@ -11,8 +11,10 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
+import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
+import java.util.Optional;
 
 /// Liaison **réelle** de la publication des corrections (#723) : pose la valeur de
 /// l'`OptionalBinder<PublicationCorrections>`. Chargé **uniquement** dans l'injecteur applicatif
@@ -43,7 +45,10 @@ public class PublicationCorrectionsModule extends ModuleDeFeature {
     @Singleton
     @Named(QUALIFIANT)
     PublicationCorrections fournirPublicationCorrections(
-            ClientVigieChiro client, LienVigieChiroDao liens, ObservationDao observations) {
-        return new PublicationCorrections(client, liens, observations);
+            ClientVigieChiro client,
+            LienVigieChiroDao liens,
+            ObservationDao observations,
+            Optional<ImportVigieChiro> importateur) {
+        return new PublicationCorrections(client, liens, observations, importateur);
     }
 }

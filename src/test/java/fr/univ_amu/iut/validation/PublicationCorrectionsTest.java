@@ -5,25 +5,33 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ResultatCorrection;
+import fr.univ_amu.iut.commun.api.SuiviPagination;
 import fr.univ_amu.iut.commun.model.Certitude;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.ModeValidation;
+import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.validation.model.BilanPublication;
+import fr.univ_amu.iut.validation.model.ImportVigieChiro;
 import fr.univ_amu.iut.validation.model.Observation;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.TriPublication;
 import fr.univ_amu.iut.validation.model.dao.ObservationDao;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -46,8 +54,18 @@ class PublicationCorrectionsTest {
     @Mock
     ObservationDao observations;
 
+    @Mock
+    ImportVigieChiro importateur;
+
+    /// Publication **sans** import disponible : l'ancrage manquant reste écarté et compté (comportement
+    /// des injecteurs sans `connexion`).
     private PublicationCorrections publication() {
-        return new PublicationCorrections(client, liens, observations);
+        return new PublicationCorrections(client, liens, observations, Optional.empty());
+    }
+
+    /// Publication **avec** import : elle peut acquérir l'ancrage manquant avant de pousser (#1838).
+    private PublicationCorrections publicationAvecImport() {
+        return new PublicationCorrections(client, liens, observations, Optional.of(importateur));
     }
 
     /// Observation revue (taxon observateur posé), aux champs de publication paramétrables.
@@ -74,6 +92,82 @@ class PublicationCorrectionsTest {
                 certitude,
                 null,
                 null);
+    }
+
+    @Test
+    @DisplayName("#1838 : l'ancrage manquant d'une nuit rattachée est acquis AVANT de pousser")
+    void ancrage_manquant_acquis_avant_de_pousser() {
+        // Nuit importée par CSV (#1565) : rattachée, mais ses observations n'ont pas d'ancrage. Le
+        // ré-import (remplacer = true) le rapatrie en préservant les validations ; on simule ici son effet
+        // en rendant des observations désormais ancrées.
+        when(importateur.estRattache(7L)).thenReturn(true);
+        when(importateur.ancrageManquant(7L)).thenReturn(true);
+        when(observations.revuesDuPassage(7L)).thenReturn(List.of(revue(1L, "Pippip", Certitude.SUR, "d1", 0)));
+        when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
+        when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, true))
+                .thenReturn(ResultatCorrection.reussie());
+
+        BilanPublication bilan = publicationAvecImport().publier(7L, progres -> {}, JetonAnnulation.neutre());
+
+        // remplacer = true : c'est ce qui préserve les validations de l'observateur (publier ne doit
+        // jamais coûter ses corrections à l'utilisateur).
+        verify(importateur).importer(eq(7L), eq(true), any(SuiviPagination.class));
+        assertThat(bilan.poussees()).isEqualTo(1);
+        assertThat(bilan.sansAncrage()).isZero();
+    }
+
+    @Test
+    @DisplayName("#1838 : une nuit déjà ancrée ne paie aucun rapatriement")
+    void ancrage_deja_present_aucun_import() {
+        when(importateur.estRattache(7L)).thenReturn(true);
+        when(importateur.ancrageManquant(7L)).thenReturn(false);
+        when(observations.revuesDuPassage(7L)).thenReturn(List.of(revue(1L, "Pippip", Certitude.SUR, "d1", 0)));
+        when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
+        when(client.corrigerObservation("d1", 0, "obj-pippip", Certitude.SUR, true))
+                .thenReturn(ResultatCorrection.reussie());
+
+        publicationAvecImport().publier(7L, progres -> {}, JetonAnnulation.neutre());
+
+        verify(importateur, never()).importer(anyLong(), anyBoolean(), any(SuiviPagination.class));
+    }
+
+    @Test
+    @DisplayName("#1838 : nuit NON rattachée : rien à ancrer, les observations restent écartées et comptées")
+    void non_rattachee_reste_ecartee() {
+        // Chemin non nominal : sans participation, il n'y a rien à quoi s'ancrer. On ne tente pas un
+        // rapatriement voué à l'échec ; l'utilisateur doit d'abord rattacher la nuit.
+        when(importateur.estRattache(7L)).thenReturn(false);
+        when(observations.revuesDuPassage(7L)).thenReturn(List.of(revue(1L, "Pippip", Certitude.SUR, null, null)));
+        when(liens.tous(LienVigieChiro.ENTITE_TAXON)).thenReturn(Map.of("Pippip", "obj-pippip"));
+
+        BilanPublication bilan = publicationAvecImport().publier(7L, progres -> {}, JetonAnnulation.neutre());
+
+        verify(importateur, never()).importer(anyLong(), anyBoolean(), any(SuiviPagination.class));
+        assertThat(bilan.poussees()).isZero();
+        assertThat(bilan.sansAncrage()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("#1838 : « Annuler » s'honore à chaque page rapatriée, pas seulement à la fin")
+    void annulation_honoree_page_par_page() {
+        when(importateur.estRattache(7L)).thenReturn(true);
+        when(importateur.ancrageManquant(7L)).thenReturn(true);
+        // L'import réel notifie le suivi à CHAQUE page ; on le simule pour vérifier que le jeton y est
+        // honoré - sans quoi « Annuler » ne prendrait effet qu'après les dizaines de pages.
+        doAnswer(invocation -> {
+                    invocation.getArgument(2, SuiviPagination.class).surPage(1, 48);
+                    return null;
+                })
+                .when(importateur)
+                .importer(eq(7L), eq(true), any(SuiviPagination.class));
+        JetonAnnulation jeton = new JetonAnnulation();
+        jeton.annuler();
+
+        assertThatThrownBy(() -> publicationAvecImport().publier(7L, progres -> {}, jeton))
+                .as("annulé dès la première page : rien ne doit partir vers la plateforme")
+                .isInstanceOf(OperationAnnuleeException.class);
+
+        verify(client, never()).corrigerObservation(any(), anyInt(), any(), any(), anyBoolean());
     }
 
     @Test
