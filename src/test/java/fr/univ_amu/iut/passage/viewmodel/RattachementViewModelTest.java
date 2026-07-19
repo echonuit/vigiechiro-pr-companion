@@ -415,11 +415,11 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
 
         verify(sync).pousserVers(ID);
-        assertThat(compteRendu.reussi()).isTrue();
-        assertThat(compteRendu.message()).contains("envoyées");
+        assertThat(issue.reussi()).isTrue();
+        assertThat(issue.message()).contains("envoyées");
     }
 
     @Test
@@ -436,16 +436,16 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
 
         // Dire seulement la nouvelle heure n'apprendrait pas CE qui a été corrigé, ni de combien.
-        assertThat(compteRendu.message())
+        assertThat(issue.message())
                 .contains("réalignées")
                 .contains("15:00:00")
                 .contains("21:30:00")
                 .contains("06:15:00");
-        assertThat(compteRendu.reussi()).as("l'envoi a bien abouti").isTrue();
-        assertThat(compteRendu.peutFermer())
+        assertThat(issue.reussi()).as("l'envoi a bien abouti").isTrue();
+        assertThat(issue.peutFermer())
                 .as("fermer emporterait le message : l'app a modifié des données de l'utilisateur")
                 .isFalse();
     }
@@ -460,10 +460,10 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
 
-        assertThat(compteRendu.message()).isEqualTo("Métadonnées envoyées à Vigie-Chiro.");
-        assertThat(compteRendu.peutFermer()).isTrue();
+        assertThat(issue.message()).isEqualTo("Métadonnées envoyées à Vigie-Chiro.");
+        assertThat(issue.peutFermer()).isTrue();
     }
 
     @Test
@@ -477,13 +477,13 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
 
-        assertThat(compteRendu.reussi())
+        assertThat(issue.reussi())
                 .as("un refus serveur n'est PAS un succès : la modale doit retenir l'utilisateur")
                 .isFalse();
-        assertThat(compteRendu.message()).contains("refusé").contains("412");
-        avecSync.signalerEnvoi(compteRendu);
+        assertThat(issue.message()).contains("refusé").contains("412");
+        avecSync.signalerEnvoi(issue);
         assertThat(avecSync.retourProperty().get().texte()).contains("412");
     }
 
@@ -497,10 +497,10 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.CompteRenduEnvoi compteRendu = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
 
-        assertThat(compteRendu.reussi()).isFalse();
-        assertThat(compteRendu.message())
+        assertThat(issue.reussi()).isFalse();
+        assertThat(issue.message())
                 .as("les trois causes étaient confondues sous un catch « pas encore lié »")
                 .contains("Point d'écoute introuvable");
     }
@@ -511,12 +511,12 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         viewModel.ouvrirSur(ID, "040962", "A1"); // viewModel construit avec Optional.empty()
 
-        RattachementViewModel.CompteRenduEnvoi compteRendu = viewModel.pousserVersVigieChiro();
+        RattachementViewModel.IssueEnvoi issue = viewModel.pousserVersVigieChiro();
 
-        assertThat(compteRendu.reussi())
+        assertThat(issue.reussi())
                 .as("hors connexion n'est pas un échec : les métadonnées partiront au dépôt")
                 .isTrue();
-        assertThat(compteRendu.message()).contains("Non connecté");
+        assertThat(issue.message()).contains("Non connecté");
     }
 
     // --- Phase 2b : tirer les métadonnées depuis la participation VigieChiro ---

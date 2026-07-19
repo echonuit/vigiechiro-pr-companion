@@ -158,12 +158,12 @@ public class RattachementViewModel {
     /// raté était donc indiscernable d'un envoi réussi - ce que l'ADR 0008 interdit. Les trois causes
     /// d'empêchement (passage non lié, participation introuvable, point d'écoute introuvable) étaient de
     /// surcroît confondues sous un seul `catch` commenté « pas encore lié ».
-    public CompteRenduEnvoi pousserVersVigieChiro() {
+    public IssueEnvoi pousserVersVigieChiro() {
         if (idPassage == null) {
-            return CompteRenduEnvoi.rienAFaire();
+            return IssueEnvoi.rienAFaire();
         }
         if (synchronisation.isEmpty()) {
-            return CompteRenduEnvoi.reussi("Non connecté à Vigie-Chiro : les métadonnées partiront au dépôt.");
+            return IssueEnvoi.reussi("Non connecté à Vigie-Chiro : les métadonnées partiront au dépôt.");
         }
         try {
             EnvoiParticipation envoi = synchronisation.get().pousserVers(idPassage);
@@ -171,26 +171,26 @@ public class RattachementViewModel {
             // L'ancien test `id().isPresent()` n'était vrai que parce que le client recopiait le paramètre
             // dans le champ `id` pour le satisfaire.
             if (!envoi.ecriture().estReussie()) {
-                return CompteRenduEnvoi.echoue(
+                return IssueEnvoi.echoue(
                         "Vigie-Chiro a refusé l'envoi : " + envoi.ecriture().echec());
             }
             // #1885 : un réalignement a modifié les heures de la nuit. Le taire reviendrait à corriger sa
             // saisie dans son dos, et à le priver du moyen de contester la correction si elle est fausse.
             return envoi.realignement()
                     .map(realignement ->
-                            CompteRenduEnvoi.aSignaler("Métadonnées envoyées à Vigie-Chiro. " + phrase(realignement)))
-                    .orElseGet(() -> CompteRenduEnvoi.reussi("Métadonnées envoyées à Vigie-Chiro."));
+                            IssueEnvoi.aSignaler("Métadonnées envoyées à Vigie-Chiro. " + phrase(realignement)))
+                    .orElseGet(() -> IssueEnvoi.reussi("Métadonnées envoyées à Vigie-Chiro."));
         } catch (RegleMetierException empeche) {
             // La cause EST dite (non lié / participation introuvable / point d'écoute introuvable) au lieu
             // d'être supposée bénigne.
-            return CompteRenduEnvoi.echoue("Envoi impossible : " + empeche.getMessage());
+            return IssueEnvoi.echoue("Envoi impossible : " + empeche.getMessage());
         }
     }
 
     /// Affiche le compte rendu d'un envoi (**sur le fil JavaFX**), jamais un silence.
-    public void signalerEnvoi(CompteRenduEnvoi compteRendu) {
-        if (!compteRendu.message().isEmpty()) {
-            messages.publier(compteRendu.retour());
+    public void signalerEnvoi(IssueEnvoi issue) {
+        if (!issue.message().isEmpty()) {
+            messages.publier(issue.retour());
         }
     }
 
@@ -209,26 +209,26 @@ public class RattachementViewModel {
     /// @param reussi `true` si l'envoi n'a rien à reprocher
     /// @param aSignaler `true` si le message doit être lu avant de refermer
     /// @param message ce qu'il faut dire à l'utilisateur (vide s'il n'y a rien à dire)
-    public record CompteRenduEnvoi(boolean reussi, boolean aSignaler, String message) {
+    public record IssueEnvoi(boolean reussi, boolean aSignaler, String message) {
 
         /// Envoi sans reproche ni commentaire.
-        static CompteRenduEnvoi reussi(String message) {
-            return new CompteRenduEnvoi(true, false, message);
+        static IssueEnvoi reussi(String message) {
+            return new IssueEnvoi(true, false, message);
         }
 
         /// Envoi abouti, mais dont l'issue **doit être lue** avant de refermer.
-        static CompteRenduEnvoi aSignaler(String message) {
-            return new CompteRenduEnvoi(true, true, message);
+        static IssueEnvoi aSignaler(String message) {
+            return new IssueEnvoi(true, true, message);
         }
 
         /// Envoi empêché ou refusé.
-        static CompteRenduEnvoi echoue(String message) {
-            return new CompteRenduEnvoi(false, true, message);
+        static IssueEnvoi echoue(String message) {
+            return new IssueEnvoi(false, true, message);
         }
 
         /// Aucun envoi n'était nécessaire.
-        static CompteRenduEnvoi rienAFaire() {
-            return new CompteRenduEnvoi(true, false, "");
+        static IssueEnvoi rienAFaire() {
+            return new IssueEnvoi(true, false, "");
         }
 
         /// `true` si la modale peut se refermer : l'envoi a abouti **et** rien n'attend d'être lu.

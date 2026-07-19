@@ -332,12 +332,12 @@ public class RattachementModaleController {
             return;
         }
         if (viewModel.appliquer()) {
-            pousserPuis(compteRendu -> {
+            pousserPuis(issue -> {
                 apresSucces.run();
                 // #1839 puis #1885 : on ne ferme QUE s'il n'y a rien à lire. Fermer sur un refus rendait le
                 // message invisible - c'est ainsi que l'échec passait inaperçu ; fermer sur un réalignement
                 // d'heures ferait de même avec une correction apportée aux données de l'utilisateur.
-                if (compteRendu.peutFermer()) {
+                if (issue.peutFermer()) {
                     fermer();
                 }
             });
@@ -348,19 +348,19 @@ public class RattachementModaleController {
     /// **reste ouverte** et affiche ce que l'envoi a donné. Rejouable après un échec réseau.
     @FXML
     private void envoyerVersVigieChiro() {
-        pousserPuis(compteRendu -> {});
+        pousserPuis(issue -> {});
     }
 
     /// Exécute l'envoi hors du fil JavaFX, affiche son compte rendu (succès **comme** échec), puis passe la
     /// main à `ensuite`. L'occupation grise les commandes le temps de l'aller-retour réseau.
-    private void pousserPuis(java.util.function.Consumer<RattachementViewModel.CompteRenduEnvoi> ensuite) {
+    private void pousserPuis(java.util.function.Consumer<RattachementViewModel.IssueEnvoi> ensuite) {
         operationEnCours.set(true);
         executeur.executer(
                 viewModel::pousserVersVigieChiro,
-                compteRendu -> {
+                issue -> {
                     operationEnCours.set(false);
-                    viewModel.signalerEnvoi(compteRendu);
-                    ensuite.accept(compteRendu);
+                    viewModel.signalerEnvoi(issue);
+                    ensuite.accept(issue);
                 },
                 erreur -> {
                     operationEnCours.set(false);

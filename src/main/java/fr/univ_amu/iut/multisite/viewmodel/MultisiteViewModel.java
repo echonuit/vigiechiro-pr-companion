@@ -124,19 +124,19 @@ public class MultisiteViewModel {
             // Rien à relever n'est pas un échec : c'est un guidage.
             return RetourOperation.info("Aucune nuit déposée : il n'y a pas encore d'analyse à relever.");
         }
-        return compteRenduReleve(moteur.releverTout(nuitsDeposees));
+        return retourReleve(moteur.releverTout(nuitsDeposees));
     }
 
     /// Résultat d'un relevé groupé : le compte rendu à afficher **et** les données rechargées, pour que la
     /// vue applique les deux en une fois (#1338).
-    public record ResultatReleve(RetourOperation compteRendu, DonneesMultisite donnees) {}
+    public record ResultatReleve(RetourOperation retour, DonneesMultisite donnees) {}
 
     /// Relève l'état des analyses **puis relit** l'écran, le tout **hors du fil JavaFX** (#1338) : le
     /// nouvel état du cache doit se voir dans la colonne « Analyse » dès le retour, sans imbriquer une
     /// seconde occupation ni laisser le compte rendu se faire effacer par un rechargement concurrent.
     public ResultatReleve releverPuisCharger(List<Long> nuitsDeposees) {
-        RetourOperation compteRendu = releverAnalyses(nuitsDeposees);
-        return new ResultatReleve(compteRendu, charger());
+        RetourOperation retour = releverAnalyses(nuitsDeposees);
+        return new ResultatReleve(retour, charger());
     }
 
     /// Applique le résultat d'un relevé groupé **sur le fil JavaFX** : recompose le tableau (badges
@@ -144,12 +144,12 @@ public class MultisiteViewModel {
     /// via `publierLignes`, donc le compte rendu est posé **après**.
     public void appliquerReleve(ResultatReleve resultat) {
         appliquer(resultat.donnees());
-        retour.set(resultat.compteRendu());
+        retour.set(resultat.retour());
     }
 
     /// Compte rendu du relevé groupé : ce qui a été rafraîchi, et ce qui a échoué **sans mentir** sur une
     /// fraîcheur non obtenue (les nuits en échec gardent leur dernier état connu).
-    private static RetourOperation compteRenduReleve(SuiviTraitement.BilanReleveGroupe bilan) {
+    private static RetourOperation retourReleve(SuiviTraitement.BilanReleveGroupe bilan) {
         if (bilan.echecs() == 0) {
             return RetourOperation.succes(
                     "État des analyses relevé pour " + bilan.rafraichis() + " nuit(s)" + " déposée(s).");
