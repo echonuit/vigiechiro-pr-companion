@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.AcquisitionAncrage;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -26,16 +27,22 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
+import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.RapportReactivation;
+import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
+import fr.univ_amu.iut.passage.model.VerdictIdentite.NiveauConfiance;
+import fr.univ_amu.iut.passage.model.VoieReactivation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
@@ -58,6 +65,7 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
@@ -170,6 +178,8 @@ public final class CapturePassage {
         // mock. Aucun aperçu ne montrait de bandeau avant cette passe.
         rendrePivot(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-passage-retour.png"));
         rendreRattachementRetour(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement-retour.png"));
+        rendreCompteRenduReactivation(injecteur, sortie.resolve("apercu-passage-reactivation-compte-rendu.png"), true);
+        rendreCompteRenduReactivation(injecteur, sortie.resolve("apercu-passage-reactivation-lacunes.png"), false);
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -307,6 +317,66 @@ public final class CapturePassage {
     /// Charge `ReactivationModale.fxml` (controller injecté par Guice) et la rend hors-écran dans l'état
     /// « les deux phases en cours » : régénération pleine, ancrage à mi-course. Aucun vrai travail n'est
     /// lancé - c'est le point de l'aperçu ([ReactivationModaleController#apercuPhasesEnCours], #1780).
+    /// Les **deux issues** d'une réactivation, que rien ne montrait jusqu'ici (#1943) : celle qui aboutit,
+    /// et celle qui laisse des lacunes **nommées**.
+    ///
+    /// L'état vient d'un vrai [RapportReactivation] passé au ViewModel : la mise en forme est celle de la
+    /// production, pas une reconstitution (ADR 0025). C'est ce qui rend la capture capable de mentir moins
+    /// que le texte qu'on aurait recopié - et de dériver visiblement le jour où le compte rendu changera.
+    private static void rendreCompteRenduReactivation(Injector injecteur, Path fichier, boolean complet)
+            throws IOException {
+        FXMLLoader loader = new FXMLLoader(ReactivationModaleController.class.getResource("ReactivationModale.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        ReactivationModaleController controleur = loader.getController();
+        controleur.apercuCompteRendu(complet ? rapportComplet() : rapportAvecLacunes());
+        ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// La nuit revenue entière : c'est le cas nominal, et il doit se voir aussi.
+    private static RapportReactivation rapportComplet() {
+        return new RapportReactivation(
+                4236,
+                0,
+                0,
+                0,
+                NiveauConfiance.CERTITUDE,
+                List.of(),
+                new DecompteAudio(4236, 4236),
+                VoieReactivation.BRUTS,
+                // (mesurées, concordantes) - dans cet ordre : la phrase rendue dit « concordantes sur
+                // mesurées », et les inverser produit un « 4236 sur 4053 » que seule la capture révèle.
+                new IndiceAcoustique(4236, 4053),
+                RapportAncrage.aucun(),
+                List.of());
+    }
+
+    /// Une nuit incomplète, avec les **deux** motifs d'absence : l'un renvoie l'utilisateur à son dossier,
+    /// l'autre désigne un défaut de notre côté. C'est cette distinction que la capture doit rendre lisible.
+    private static RapportReactivation rapportAvecLacunes() {
+        return new RapportReactivation(
+                4229,
+                0,
+                7,
+                0,
+                NiveauConfiance.FORTE,
+                List.of(),
+                new DecompteAudio(4229, 4236),
+                VoieReactivation.BRUTS,
+                null,
+                RapportAncrage.aucun(),
+                List.of(
+                        new AbsenceReactivation(
+                                "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260704_223507.wav",
+                                "enregistrement absent du dossier",
+                                6),
+                        new AbsenceReactivation(
+                                "Car130711-2026-Pass2-Z41-PaRecPR1997632_20260705_012327_001.wav",
+                                "tranche non régénérée depuis son enregistrement",
+                                1)));
+    }
+
     private static void rendreModaleReactivation(Injector injecteur, Path fichier) throws IOException {
         FXMLLoader loader = new FXMLLoader(ReactivationModaleController.class.getResource("ReactivationModale.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
