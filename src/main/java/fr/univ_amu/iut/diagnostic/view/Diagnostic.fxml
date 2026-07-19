@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import javafx.geometry.Insets?>
 <?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.Button?>
@@ -26,12 +27,6 @@
     l'enregistreur diagnostiqué est déporté en barre de statut par le controller (ResumeStatut).
   -->
 
-  <Label fx:id="lblReleveAbsent" styleClass="encart, encart-avertissement" wrapText="true"
-         text="Relevé climatique absent : la température et l'hygrométrie ne sont pas disponibles pour cette nuit.">
-    <graphic>
-      <FontIcon iconLiteral="fas-exclamation-triangle"/>
-    </graphic>
-  </Label>
 
   <!-- Résumé « N mesures » déporté en zone centre de la barre de statut (#1498, piste B) : plus de
        label empilé ici. L'absence de relevé (R20) reste portée par lblReleveAbsent + la zone droite. -->
@@ -40,6 +35,18 @@
     <graphic>
       <FontIcon iconLiteral="fas-thermometer-half"/>
     </graphic>
+  </Label>
+  <!-- Annotation du bloc climatique, en retrait sous son en-tete : elle dit pourquoi le graphe est
+       vide. Elle ouvrait l'ecran, au meme fer que les titres de section, ce qui la faisait lire comme
+       un avis general plutot que comme un commentaire de ce qui suit (#1974). -->
+  <Label fx:id="lblReleveAbsent" styleClass="encart, encart-avertissement" wrapText="true"
+         text="Relevé climatique absent : la température et l'hygrométrie ne sont pas disponibles pour cette nuit.">
+    <graphic>
+      <FontIcon iconLiteral="fas-exclamation-triangle"/>
+    </graphic>
+    <VBox.margin>
+      <Insets left="22.0"/>
+    </VBox.margin>
   </Label>
   <!-- Axe X temporel (#1498) : NumberAxis en minutes depuis la 1re mesure, étiqueté HH:mm par le
        controller (6 à 8 repères). Remplace un CategoryAxis qui affichait un libellé par mesure. -->
@@ -85,10 +92,15 @@
       <FontIcon iconLiteral="fas-moon"/>
     </graphic>
   </Label>
+  <!-- Annotation de la fenetre de nuit ci-dessus, en retrait sous elle : le lien entre les deux ne se
+       lisait pas, les deux partant du meme fer que les titres (#1974). -->
   <Label fx:id="lblAlerteHorsNuit" styleClass="encart, encart-avertissement" wrapText="true">
     <graphic>
       <FontIcon iconLiteral="fas-exclamation-triangle"/>
     </graphic>
+    <VBox.margin>
+      <Insets left="22.0"/>
+    </VBox.margin>
   </Label>
 
   <!--
