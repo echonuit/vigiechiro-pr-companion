@@ -111,6 +111,9 @@ public final class CaptureDiagnostic {
         System.exit(0);
     }
 
+    /// Identifiant volontairement absent de la base : le chargement échoue et l'écran rend son bandeau.
+    private static final long PASSAGE_INEXISTANT = 999_999L;
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-diagnostic");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -125,6 +128,10 @@ public final class CaptureDiagnostic {
         rendre(injecteur, graine.idAvecReleve(), sortie.resolve("apercu-diagnostic.png"));
         rendre(injecteur, graine.idSansReleve(), sortie.resolve("apercu-diagnostic-sans-releve.png"));
         rendre(injecteur, graine.idSansGps(), sortie.resolve("apercu-diagnostic-sans-gps.png"));
+        // Bandeau de retour (#1917) : jusqu'ici AUCUN aperçu ne montrait de bandeau sur AUCUN écran migré
+        // - on ne vérifiait que « rien n'est déplacé » quand il est absent. Ouvrir sur un passage
+        // inexistant produit le cas réel sans mock : le chargement échoue et l'écran le dit.
+        rendre(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-diagnostic-retour.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage

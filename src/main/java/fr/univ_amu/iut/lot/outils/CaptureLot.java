@@ -147,6 +147,9 @@ public final class CaptureLot {
         System.exit(0);
     }
 
+    /// Identifiant volontairement absent de la base : l'ouverture échoue et l'écran rend son bandeau.
+    private static final long PASSAGE_INEXISTANT = 999_999L;
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-lot");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -200,6 +203,9 @@ public final class CaptureLot {
         rendre(connecte, idCoherent, sortie.resolve("apercu-lot-participation.png"));
         // Cas bloquant : Vérifié incohérent → zone d'alertes (R14), « Préparer » désactivé.
         rendre(injecteur, idIncoherent, sortie.resolve("apercu-lot-alertes.png"));
+        // Bandeau en ERREUR (#1917) : le succès est déjà couvert par apercu-lot-archives.png, produit par
+        // la génération. Ouvrir sur un passage inexistant donne l'autre extrémité de l'échelle.
+        rendre(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-lot-retour.png"));
     }
 
     /// Mémorise un lien `passage → participation` (#1890) : c'est ce que lit `participationLiee`, et

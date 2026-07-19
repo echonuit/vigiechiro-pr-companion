@@ -65,6 +65,8 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.TextField;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -127,6 +129,9 @@ public final class CapturePassage {
         System.exit(0);
     }
 
+    /// Identifiant volontairement absent de la base : la fiche échoue à charger et rend son bandeau.
+    private static final long PASSAGE_INEXISTANT = 999_999L;
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-passage");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -161,6 +166,10 @@ public final class CapturePassage {
         // Modale « Réactiver ce passage » (#1780) : les deux barres de phase en cours (régénération pleine,
         // ancrage à mi-course), montrant que la barre ne reste plus figée pendant l'ancrage réseau.
         rendreModaleReactivation(injecteur, sortie.resolve("apercu-passage-reactivation.png"));
+        // Bandeau de retour en erreur (#1917) : ouvrir sur un passage inexistant produit le cas réel sans
+        // mock. Aucun aperçu ne montrait de bandeau avant cette passe.
+        rendrePivot(injecteur, PASSAGE_INEXISTANT, sortie.resolve("apercu-passage-retour.png"));
+        rendreRattachementRetour(injecteur, idVerifie, sortie.resolve("apercu-passage-rattachement-retour.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
@@ -265,6 +274,33 @@ public final class CapturePassage {
         RattachementModaleController controleur = loader.getController();
         controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+    }
+
+    /// Modale « Modifier le passage » avec son **bandeau de retour** en severite INFO (#1917).
+    ///
+    /// La temperature est le bon vecteur : sa validation se declenche a l'« Appliquer », qui reste
+    /// cliquable meme avec une saisie invalide. Plusieurs guidages voisins sont au contraire
+    /// **inatteignables par l'IHM**, leur bouton etant grise tant que la saisie est invalide (« on
+    /// empeche au lieu d'avertir apres coup », #790) : leur message ne peut pas etre montre ici, ni
+    /// d'ailleurs jamais etre lu par un utilisateur.
+    ///
+    /// INFO et non ERREUR : un champ mal rempli n'est pas une panne. C'est exactement la nuance que le
+    /// canal, nomme « messageErreur », ne pouvait pas porter avant ce chantier.
+    private static void rendreRattachementRetour(Injector injecteur, long idPassage, Path fichier) throws IOException {
+        FXMLLoader loader = new FXMLLoader(NavigationPassage.class.getResource("RattachementModale.fxml"));
+        loader.setControllerFactory(injecteur::getInstance);
+        Parent vue = loader.load();
+        RattachementModaleController controleur = loader.getController();
+        controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
+        Scene scene = new Scene(vue);
+        // On passe par le CHAMP et non par le ViewModel : c'est ce que fait l'utilisateur, et cela evite
+        // d'ouvrir une couture d'apercu dans le controleur pour les besoins d'une capture.
+        ((TextField) scene.lookup("#champTemperature")).setText("huit degres");
+        // La validation vit dans « Appliquer », pas dans un ecouteur de frappe : c'est le clic qui la
+        // declenche, et donc lui qui fait paraitre le bandeau.
+        ((Button) scene.lookup("#boutonAppliquer")).fire();
+        ApercuFx.enregistrerPng(scene, fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
