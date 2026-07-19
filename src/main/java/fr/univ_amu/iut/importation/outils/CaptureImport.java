@@ -38,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Group;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 
@@ -190,7 +191,29 @@ public final class CaptureImport {
                         "Fréquence source 44100 Hz non divisible par 10"),
                 new LigneRapport("notes-terrain.txt", StatutImportFichier.IGNORE, "fichier non pertinent")));
         vm.marquerTermine(new ResultatImport(null, null, "1925492", 1, 3, List.of(), rapport));
-        rendre(scene, sortie.resolve("apercu-import-rejets.png"));
+        rendreEnPied(scene, sortie.resolve("apercu-import-rejets.png"));
+    }
+
+    /// Hauteur du gabarit « pied de formulaire » : le bas de l'assistant (bouton, barre de statut,
+    /// compte rendu d'import, liste des rejets) tombe sous les 860 px de la scène commune.
+    private static final int HAUTEUR_PIED = 1290;
+
+    /// Rend le **bas** du formulaire, que le gabarit commun coupe.
+    ///
+    /// La capture nommée `apercu-import-rejets.png` ne montrait aucun rejet : le contenu s'arrêtait bien
+    /// au-dessus. Une capture qui ne montre pas ce que son nom annonce ne valide rien, et personne ne le
+    /// voyait puisque personne n'avait de raison de l'ouvrir.
+    ///
+    /// On reparente la racine dans une scène plus haute le temps du cliché, puis on la rend à la scène
+    /// d'origine : un nœud n'appartient qu'à une scène, et les captures suivantes réutilisent celle-ci.
+    private static void rendreEnPied(Scene scene, Path fichier) {
+        Parent racine = scene.getRoot();
+        scene.setRoot(new Group());
+        Scene haute = new Scene(racine, scene.getWidth(), HAUTEUR_PIED);
+        haute.getStylesheets().setAll(scene.getStylesheets());
+        rendre(haute, fichier);
+        haute.setRoot(new Group());
+        scene.setRoot(racine);
     }
 
     /// Rend `scene` hors-écran en PNG et journalise (helper : évite la répétition du libellé de log,
