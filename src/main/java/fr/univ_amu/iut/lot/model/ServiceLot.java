@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -64,6 +65,10 @@ public class ServiceLot {
     /// assemblés par [fr.univ_amu.iut.lot.di.LotModule], s’appliquent sans redémarrage.
     private final Supplier<CompacteurDepot> compacteur;
     private final DepotUniteDao depotUnites;
+    private final DepotPlanDao depotPlans;
+
+    /// Politique ZIP / WAV du depot, extraite pour la cohesion (#1994) : voir [ChoixSourceDepot].
+    private final ChoixSourceDepot choixSource;
 
     public ServiceLot(
             PassageDao passageDao,
@@ -73,7 +78,8 @@ public class ServiceLot {
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge,
             Supplier<CompacteurDepot> compacteur,
-            DepotUniteDao depotUnites) {
+            DepotUniteDao depotUnites,
+            DepotPlanDao depotPlans) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
@@ -82,6 +88,8 @@ public class ServiceLot {
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.compacteur = Objects.requireNonNull(compacteur, "compacteur");
         this.depotUnites = Objects.requireNonNull(depotUnites, "depotUnites");
+        this.depotPlans = Objects.requireNonNull(depotPlans, "depotPlans");
+        this.choixSource = new ChoixSourceDepot(repertoireDepot, this.compacteur);
     }
 
     /// Suivi de dépôt **persisté** du passage (#981), dans l'ordre du plan : réhydrate la table de
@@ -122,35 +130,7 @@ public class ServiceLot {
     ///     disque permettrait de les générer (invitation à lancer l'étape 2)
     public List<Path> fichiersDepotParDefaut(Long idPassage) {
         Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
-        EtatLot lot = consulterLot(idPassage);
-        List<Path> archives = lot.cheminDossier() == null
-                ? List.of()
-                : archivesDepot(lot.cheminDossier()).stream()
-                        .map(ArchiveDepot::chemin)
-                        .toList();
-        if (!archives.isEmpty()) {
-            return archives;
-        }
-        List<Path> sequences = sequencesADeposer(idPassage);
-        if (sequences.isEmpty()) {
-            throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage.");
-        }
-        if (disquePermetArchives(lot)) {
-            throw new RegleMetierException("Générez d'abord les archives de dépôt (étape 2) : le dépôt ZIP"
-                    + " est privilégié et l'espace disque le permet.");
-        }
-        return sequences; // repli WAV : l'espace disque ne permet pas de créer les archives ZIP
-    }
-
-    /// `true` si l'espace disque du dossier de session permet de générer les archives ZIP (estimation
-    /// compression comprise ≤ disponible). Faux si session / volume / disque inconnus (impossible de créer
-    /// des archives → repli WAV assumé).
-    private boolean disquePermetArchives(EtatLot lot) {
-        if (lot.cheminDossier() == null || lot.volumeSequencesOctets() == null) {
-            return false;
-        }
-        long disponible = espaceDisqueDisponible(lot.cheminDossier());
-        return disponible > 0 && estimationTailleDepotOctets(lot.volumeSequencesOctets()) <= disponible;
+        return choixSource.fichiers(consulterLot(idPassage), sequencesADeposer(idPassage));
     }
 
     /// Consulte l'état de dépôt d'un passage **sans le transitionner** (lecture pour l'IHM M-Lot) :
@@ -231,6 +211,9 @@ public class ServiceLot {
     public void reinitialiserDepot(Long idPassage) {
         Passage passage = chargerPassage(idPassage);
         depotUnites.supprimerPlan(idPassage);
+        // Le plan repart a neuf : oublier son empreinte evite que le prochain depot se compare a un lot
+        // revolu et se croie incoherent (#1994).
+        depotPlans.supprimerPlan(idPassage);
         if (passage.statutWorkflow() == StatutWorkflow.DEPOSE
                 || passage.statutWorkflow() == StatutWorkflow.DEPOT_EN_COURS) {
             // Réinitialisation délibérée : le moteur interdit les transitions arrière, on repose donc le
@@ -297,6 +280,24 @@ public class ServiceLot {
         return compacteur
                 .get()
                 .compacter(fichiers, prefixe, repertoireDepot.dossier(session.cheminRacine()), progres, suivi);
+    }
+
+    /// La [SourceDepot] du dépôt **par défaut** du passage (#1994), remplaçante de
+    /// [#fichiersDepotParDefaut] pour les appelants qui téléversent.
+    ///
+    /// Même politique qu'avant : les archives ZIP sont privilégiées, le repli WAV n'intervient que si le
+    /// disque ne permet pas de les créer. Une différence, et c'est tout l'objet du lot : quand le mode
+    /// ZIP s'applique, la source est **régénérable** ([SourceArchivesRegenerables]). Ses identifiants
+    /// viennent de la partition et non du contenu du dossier, donc des archives effacées ne font plus
+    /// basculer le dépôt en mode WAV ni perdre la progression déjà acquise : elles sont reproduites.
+    ///
+    /// @throws RegleMetierException si le passage n'a aucune séquence transformée à déposer
+    public SourceDepot sourceDepotParDefaut(Long idPassage) {
+        Objects.requireNonNull(idPassage, PARAM_ID_PASSAGE);
+        return choixSource.pour(
+                consulterLot(idPassage),
+                sequencesADeposer(idPassage),
+                Path.of(chargerSession(idPassage).cheminRacine()));
     }
 
     /// Espace disque **disponible** (octets) sur le système de fichiers de la session, pour anticiper (avant

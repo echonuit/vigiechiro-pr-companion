@@ -92,10 +92,9 @@ public final class DeposerVigieChiro implements Callable<Integer> {
             // persister — la connexion enregistrée de l'application n'est pas modifiée.
             System.setProperty("vigiechiro.token", token);
         }
-        List<Path> fichiers = choisirFichiers();
+        SourceDepot source = choisirSource();
         PrintWriter sortie = spec.commandLine().getOut();
-        BilanDepot bilan =
-                moteur.deposer(idPassage, SourceDepot.desFichiers(fichiers), () -> false, new SuiviConsole(sortie));
+        BilanDepot bilan = moteur.deposer(idPassage, source, () -> false, new SuiviConsole(sortie));
         sortie.println(rendreBilan(bilan));
         return bilan.estComplet() ? 0 : 1;
     }
@@ -105,14 +104,14 @@ public final class DeposerVigieChiro implements Callable<Integer> {
     /// - `--wav` : force les séquences WAV une à une (échoue si le dépôt n'est pas préparé) ;
     /// - sans option : le **défaut du service** (`fichiersDepotParDefaut`) — ZIP si présentes, invite à
     ///   générer les archives (étape 2) si l'espace disque le permet, repli WAV sinon.
-    private List<Path> choisirFichiers() {
+    private SourceDepot choisirSource() {
         if (archives) {
             List<Path> zips = cheminsDesArchives();
             if (zips.isEmpty()) {
                 throw new RegleMetierException(
                         "Aucune archive de dépôt sur le disque : générez-les d'abord (M-Lot, étape 2).");
             }
-            return zips;
+            return SourceDepot.desFichiers(zips);
         }
         if (wav) {
             List<Path> sequences = serviceLot.sequencesADeposer(idPassage);
@@ -120,9 +119,9 @@ public final class DeposerVigieChiro implements Callable<Integer> {
                 throw new RegleMetierException("Aucune séquence transformée à déposer pour ce passage"
                         + " (préparez d'abord le dépôt : statut « Prêt à déposer »).");
             }
-            return sequences;
+            return SourceDepot.desFichiers(sequences);
         }
-        return serviceLot.fichiersDepotParDefaut(idPassage);
+        return serviceLot.sourceDepotParDefaut(idPassage);
     }
 
     /// Archives ZIP du lot présentes sur le disque (`depot/*.zip`), dans l'ordre des numéros. Le moteur

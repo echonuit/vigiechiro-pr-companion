@@ -168,6 +168,44 @@ class DepotVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#1994 : reprendre un dépôt dont le lot a changé est refusé si des fichiers sont en ligne")
+    void reprise_sur_lot_modifie_refusee(@TempDir Path dossier) throws IOException {
+        // Un dépôt partiel : « ok.wav » passe, « ko.wav » échoue. Le passage reste « Dépôt en cours ».
+        Path ok = fichier(dossier, "ok.wav");
+        Path ko = fichier(dossier, "ko.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(eq("ok.wav"), anyString()))
+                .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
+        when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+                .thenReturn(true);
+        when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
+        depot.deposer(idPassage, List.of(ok, ko));
+
+        // Le lot change entre-temps : une archive régénérée ne contiendrait plus la même chose que celle
+        // déjà en ligne. On refuse plutôt que d'écraser en silence côté serveur.
+        assertThatThrownBy(() -> depot.deposer(idPassage, List.of(ok, ko, fichier(dossier, "tard.wav"))))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Le lot a changé")
+                .hasMessageContaining("Réinitialisez");
+    }
+
+    @Test
+    @DisplayName("#1994 : un lot modifié avant tout téléversement repart simplement à neuf")
+    void lot_modifie_sans_rien_en_ligne_repart_a_neuf(@TempDir Path dossier) throws IOException {
+        // Rien n'est acquis : changer d'avis est légitime, le plan se repose sans refus.
+        Path a = fichier(dossier, "a.wav");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
+        depot.deposer(idPassage, List.of(a));
+
+        BilanDepot bilan = depot.deposer(idPassage, List.of(a, fichier(dossier, "b.wav")));
+
+        assertThat(bilan.echecs()).containsExactlyInAnyOrder("a.wav", "b.wav");
+        assertThat(depotUnites.parPassage(idPassage)).hasSize(2);
+    }
+
+    @Test
     @DisplayName("dépôt complet : plan persisté, unités « depose » avec id distant, passage « Déposé »")
     void depot_complet_bascule_depose(@TempDir Path dossier) throws IOException {
         Path a = fichier(dossier, "Car-1.zip");

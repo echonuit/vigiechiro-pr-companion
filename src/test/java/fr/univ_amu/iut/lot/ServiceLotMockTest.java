@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -75,7 +76,8 @@ class ServiceLotMockTest {
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)),
                 CompacteurDepot::new,
-                mock(DepotUniteDao.class));
+                mock(DepotUniteDao.class),
+                mock(DepotPlanDao.class));
         when(passageDao.findById(1L)).thenReturn(Optional.of(passageAJeter(1L)));
 
         assertThatThrownBy(() -> service.preparerLot(1L))

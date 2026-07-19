@@ -14,6 +14,7 @@ import fr.univ_amu.iut.lot.model.CompacteurDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.lot.view.NavigationLot;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
@@ -106,7 +107,8 @@ public class LotModule extends ModuleDeFeature {
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge,
             Reglages reglages,
-            DepotUniteDao depotUnites) {
+            DepotUniteDao depotUnites,
+            DepotPlanDao depotPlans) {
         return new ServiceLot(
                 passageDao,
                 sessionDao,
@@ -115,7 +117,8 @@ public class LotModule extends ModuleDeFeature {
                 moteurWorkflow,
                 horloge,
                 () -> new CompacteurDepot(plafondArchiveOctets(reglages)),
-                depotUnites);
+                depotUnites,
+                depotPlans);
     }
 
     /// ViewModel de M-Lot. **Non-singleton** (un VM frais par chargement FXML).

@@ -268,6 +268,14 @@ public final class CaptureLot {
             return new DepotUniteDao(source);
         }
 
+        /// Le DAO du plan de dépôt (#1993), pour la même raison que [#depotUniteDao] : l'injecteur de
+        /// capture n'a pas `DepotVigieChiroModule`, qui le fournit dans l'application.
+        @Provides
+        @Singleton
+        DepotPlanDao depotPlanDao(SourceDeDonnees source) {
+            return new DepotPlanDao(source);
+        }
+
         @Provides
         @Singleton
         ClientVigieChiro clientSansReseau() {

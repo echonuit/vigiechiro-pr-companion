@@ -229,6 +229,51 @@ public final class CompacteurDepot {
         return String.format(Locale.FRENCH, "%.1f", octets / 1_000_000_000.0);
     }
 
+    /// **Planifie sans rien ecrire** (#1994) : la partition des `fichiers` en lots, dont chacun deviendra
+    /// l'archive `<prefixe>-N.zip` avec `N` = son rang, a partir de 1.
+    ///
+    /// Cette partition est le **glouton a ordre preserve** de [PlanificateurArchives] : elle est donc
+    /// deterministe **a liste source inchangee**, ce qui permet de connaitre les noms d'archives avant
+    /// toute ecriture (#1993) et de reproduire a l'identique l'archive `N` qu'on aurait liberee (#1995).
+    /// L'[EmpreinteLot] persistee avec le plan est ce qui garantit que la condition est remplie.
+    ///
+    /// @throws RegleMetierException si un fichier depasse a lui seul le plafond (indecoupable)
+    public List<List<Path>> planifier(List<Path> fichiers) {
+        Objects.requireNonNull(fichiers, "fichiers");
+        try {
+            return planificateur.partitionner(fichiers);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Planification des archives de dépôt impossible", e);
+        }
+    }
+
+    /// Ecrit **une seule** archive du plan : le lot de rang `numero` (1..N) tel que [#planifier] l'a
+    /// decoupe. Utilisee pour regenerer a la demande une archive absente du disque (#1994) sans avoir a
+    /// reproduire tout le lot.
+    ///
+    /// Le garde-fou d'espace disque global de [#compacter] ne s'applique pas ici : on n'ecrit qu'une
+    /// archive, et c'est precisement ce que la fenetre bornee de #1995 exploite.
+    public ArchiveDepot compacterUne(List<Path> lot, String prefixe, Path dossierSortie, int numero) {
+        Objects.requireNonNull(lot, "lot");
+        Objects.requireNonNull(prefixe, "prefixe");
+        Objects.requireNonNull(dossierSortie, "dossierSortie");
+        try {
+            Files.createDirectories(dossierSortie);
+            return ecrireArchive(
+                    lot,
+                    prefixe,
+                    dossierSortie,
+                    numero,
+                    progression -> {},
+                    SuiviArchives.inerte(),
+                    lot.size(),
+                    new AtomicInteger(0));
+        } catch (IOException e) {
+            throw new UncheckedIOException(
+                    "Génération de l'archive de dépôt " + prefixe + "-" + numero + ".zip impossible", e);
+        }
+    }
+
     private ArchiveDepot ecrireArchive(
             List<Path> fichiers,
             String prefixe,

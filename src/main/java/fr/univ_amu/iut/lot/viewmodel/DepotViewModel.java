@@ -9,8 +9,6 @@ import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
-import java.nio.file.Path;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -100,9 +98,11 @@ public class DepotViewModel {
         DepotVigieChiro depotVigieChiro =
                 depot.orElseThrow(() -> new RegleMetierException("Dépôt Vigie-Chiro indisponible dans ce contexte."));
         // Dépôt ZIP par défaut (#984), comme le web : une archive = une unité. Repli WAV seulement si le
-        // disque ne permet pas de créer les archives ; sinon invitation à générer d'abord (étape 2).
-        List<Path> fichiers = service.fichiersDepotParDefaut(idPassage);
-        return depotVigieChiro.deposer(idPassage, SourceDepot.desFichiers(fichiers), jeton::estAnnule, suivi);
+        // disque ne permet pas de créer les archives. La source est **régénérable** (#1994) : une archive
+        // effacée est reproduite au lieu de faire basculer le dépôt en mode WAV et de perdre sa
+        // progression.
+        SourceDepot source = service.sourceDepotParDefaut(idPassage);
+        return depotVigieChiro.deposer(idPassage, source, jeton::estAnnule, suivi);
     }
 
     /// Lance le **traitement serveur** (compute, #984) de la participation liée au passage : équivalent

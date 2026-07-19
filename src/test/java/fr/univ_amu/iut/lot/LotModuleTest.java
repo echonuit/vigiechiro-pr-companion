@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
@@ -59,6 +60,7 @@ class LotModuleTest {
                 bind(ReleveClimatiqueDao.class).toInstance(new ReleveClimatiqueDao(source));
                 bind(PassageDao.class).toInstance(new PassageDao(source));
                 bind(DepotUniteDao.class).toInstance(new DepotUniteDao(source));
+                bind(DepotPlanDao.class).toInstance(new DepotPlanDao(source));
                 bind(MoteurWorkflowPassage.class).toInstance(new MoteurWorkflowPassage());
                 bind(Horloge.class).toInstance(new HorlogeFigee(LocalDate.of(2026, 5, 31)));
                 // ServiceLot lit désormais le plafond d’archive dans les réglages (#1047).

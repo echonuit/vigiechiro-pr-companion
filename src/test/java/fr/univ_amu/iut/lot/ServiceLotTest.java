@@ -23,6 +23,7 @@ import fr.univ_amu.iut.lot.model.Lot;
 import fr.univ_amu.iut.lot.model.ServiceLot;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.VerificationCoherence;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
@@ -105,7 +106,8 @@ class ServiceLotTest {
                 new MoteurWorkflowPassage(),
                 horloge,
                 CompacteurDepot::new,
-                new DepotUniteDao(source));
+                new DepotUniteDao(source),
+                new DepotPlanDao(source));
     }
 
     private Passage creerPassage(Verdict verdict) {

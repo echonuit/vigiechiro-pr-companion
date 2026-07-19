@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -193,6 +194,7 @@ public final class DepotVigieChiro {
         // mauvais endroit » (participations héritées du bug de date, rattachement manuel erroné…).
         verifierCorrespondance(idPassage);
 
+        exigerLotInchange(idPassage, source);
         depotUnites.synchroniserPlan(idPassage, plan(idPassage, source.identifiants()));
         // Empreinte de la liste source (#1993) : posée avec le plan, relue à la reprise pour établir que
         // les mêmes identifiants désignent bien le même contenu (les archives sont nommées par leur rang
@@ -267,6 +269,33 @@ public final class DepotVigieChiro {
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.ECHEC, null, resultat.raison(), maintenant());
         suivi.uniteEchouee(unite.identifiantUnite(), resultat.raison());
         return false;
+    }
+
+    /// Refuse de reprendre un dépôt dont la **liste source a changé** depuis que le plan a été posé
+    /// (#1994), quand quelque chose est déjà en ligne.
+    ///
+    /// Les archives sont nommées par leur rang dans une partition qui dépend de la liste source. Si
+    /// celle-ci change (séquence ajoutée, retirée, re-transformée), l'archive `N` régénérée ne contient
+    /// plus la même chose que celle déjà déposée sous ce nom : reprendre écraserait en ligne une archive
+    /// par une autre, **sans que rien ne le signale**. On refuse donc explicitement.
+    ///
+    /// Le refus ne vaut que si des unités sont **déjà déposées** : tant que rien n'est acquis, changer
+    /// d'avis est légitime et le plan repart simplement à neuf.
+    private void exigerLotInchange(Long idPassage, SourceDepot source) {
+        Optional<DepotPlan> planPose = depotPlans.parPassage(idPassage);
+        if (planPose.isEmpty() || planPose.get().empreinte().equals(source.empreinte())) {
+            return;
+        }
+        long dejaEnLigne = depotUnites.parPassage(idPassage).stream()
+                .filter(unite -> unite.statut() == StatutDepotUnite.DEPOSE)
+                .count();
+        if (dejaEnLigne == 0) {
+            return;
+        }
+        throw new RegleMetierException("Le lot a changé depuis le début de ce dépôt (" + dejaEnLigne
+                + " fichier(s) déjà en ligne) : les archives régénérées ne contiendraient plus la même"
+                + " chose que celles déjà déposées. Réinitialisez le dépôt pour repartir d'un plan"
+                + " cohérent.");
     }
 
     /// Plan de dépôt dérivé des **identifiants** de la source : une unité « à déposer » par identifiant,

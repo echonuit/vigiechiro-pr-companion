@@ -47,7 +47,7 @@ class DeposerVigieChiroTest {
     @Test
     @DisplayName("dépôt complet : une ligne « + » par fichier, bilan « complet », code retour 0")
     void depot_complet_code_zero() {
-        when(serviceLot.fichiersDepotParDefaut(42L)).thenReturn(List.of(Path.of("/ws/a.wav")));
+        when(serviceLot.sourceDepotParDefaut(42L)).thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav"))));
         when(depot.deposer(eq(42L), any(), any(), any())).thenAnswer(invocation -> {
             SuiviDepot suivi = invocation.getArgument(3);
             suivi.planEtabli(List.of(unite("a.wav", StatutDepotUnite.A_DEPOSER)));
@@ -69,7 +69,8 @@ class DeposerVigieChiroTest {
     @Test
     @DisplayName("dépôt incomplet : ligne « ! » avec la raison, bilan « INCOMPLET », code retour 1")
     void depot_incomplet_code_un() {
-        when(serviceLot.fichiersDepotParDefaut(42L)).thenReturn(List.of(Path.of("/ws/a.wav"), Path.of("/ws/b.wav")));
+        when(serviceLot.sourceDepotParDefaut(42L))
+                .thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav"), Path.of("/ws/b.wav"))));
         when(depot.deposer(eq(42L), any(), any(), any())).thenAnswer(invocation -> {
             SuiviDepot suivi = invocation.getArgument(3);
             suivi.uniteEchouee("b.wav", "coupure réseau");
@@ -89,7 +90,7 @@ class DeposerVigieChiroTest {
     @Test
     @DisplayName("--token pose le jeton ponctuel (propriété système), sans toucher à la connexion enregistrée")
     void option_token_pose_le_jeton_ponctuel() {
-        when(serviceLot.fichiersDepotParDefaut(42L)).thenReturn(List.of(Path.of("/ws/a.wav")));
+        when(serviceLot.sourceDepotParDefaut(42L)).thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav"))));
         when(depot.deposer(eq(42L), any(), any(), any())).thenReturn(new BilanDepot("part-1", 1, List.of()));
 
         ligne(Optional.of(depot), new StringWriter()).execute("--passage", "42", "--token", "jeton-essai");
@@ -160,7 +161,8 @@ class DeposerVigieChiroTest {
     @Test
     @DisplayName("#984 : sans option, le choix des fichiers est celui de M-Lot (ZIP d'abord, repli WAV)")
     void defaut_delegue_le_choix_au_service() {
-        when(serviceLot.fichiersDepotParDefaut(42L)).thenReturn(List.of(Path.of("/ws/session-42/depot/Car-1.zip")));
+        when(serviceLot.sourceDepotParDefaut(42L))
+                .thenReturn(SourceDepot.desFichiers(List.of(Path.of("/ws/session-42/depot/Car-1.zip"))));
         when(depot.deposer(eq(42L), any(), any(), any())).thenReturn(new BilanDepot("part-1", 1, List.of()));
 
         int code = ligne(Optional.of(depot), new StringWriter()).execute("--passage", "42");
@@ -186,7 +188,7 @@ class DeposerVigieChiroTest {
         assertThat(code).isZero();
         org.mockito.Mockito.verify(depot)
                 .deposer(eq(42L), eq(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav")))), any(), any());
-        org.mockito.Mockito.verify(serviceLot, org.mockito.Mockito.never()).fichiersDepotParDefaut(42L);
+        org.mockito.Mockito.verify(serviceLot, org.mockito.Mockito.never()).sourceDepotParDefaut(42L);
     }
 
     @Test
