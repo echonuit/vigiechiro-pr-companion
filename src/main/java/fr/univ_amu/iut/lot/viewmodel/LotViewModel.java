@@ -41,6 +41,10 @@ public class LotViewModel {
     /// d'archives (qui ne recharge pas l'état). `null` tant qu'aucun lot n'est ouvert.
     private StatutWorkflow statutCourant;
 
+    /// `true` quand le téléversement automatique est disponible (application connectée) : l'étape ② de
+    /// génération n'est alors plus un passage obligé (#1998).
+    private boolean depotAutomatiqueDisponible;
+
     private final ReadOnlyStringWrapper statut = new ReadOnlyStringWrapper(this, "statut", "");
     private final ReadOnlyStringWrapper cheminDossier = new ReadOnlyStringWrapper(this, "cheminDossier", "");
     private final ReadOnlyStringWrapper cheminDepot = new ReadOnlyStringWrapper(this, "cheminDepot", "");
@@ -271,8 +275,18 @@ public class LotViewModel {
 
     /// Recompose le stepper du dépôt (#251) depuis [EtapesDepot], selon le statut et la génération
     /// d'archives. Appelé à chaque (re)chargement d'état et après une génération.
+    /// `true` quand l'application est connectée : l'étape ③ devient alors atteignable directement, le
+    /// téléversement générant lui-même ses archives (#1998). Posé par le controller, qui est le seul à
+    /// connaître les deux ViewModels.
+    public void declarerDepotAutomatiqueDisponible(boolean disponible) {
+        this.depotAutomatiqueDisponible = disponible;
+        if (statutCourant != null) {
+            majEtapes(statutCourant);
+        }
+    }
+
     private void majEtapes(StatutWorkflow statut) {
-        etapes.setAll(EtapesDepot.calculer(statut, !suiviLignes.lignes().isEmpty()));
+        etapes.setAll(EtapesDepot.calculer(statut, !suiviLignes.lignes().isEmpty(), depotAutomatiqueDisponible));
     }
 
     private void reinitialiser() {

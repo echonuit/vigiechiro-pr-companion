@@ -319,8 +319,17 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
         // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
         // sans `connexion`). Actif une fois le dépôt préparé, hors génération et hors téléversement en cours.
+        //
+        // Le grisage pendant la génération (#1998) : il pourrait sembler que le pipeline le rend inutile,
+        // puisqu'il n'y a plus à attendre l'étape ② pour téléverser. Il reste **nécessaire**, mais pour une
+        // autre raison que l'attente : les deux opérations écrivent le MÊME fichier `<préfixe>-N.zip`
+        // (CompacteurDepot.ecrireArchive et SourceArchivesRegenerables.resoudre), donc les laisser se
+        // recouvrir corromprait des archives. Ce qui a disparu, c'est l'obligation de lancer ② d'abord.
         // Un libellé restitue l'avancement puis le bilan (ou l'erreur). La visibilité porte sur l'ENVELOPPE
         // (et non le bouton), pour que l'infobulle du grisage (#789) et le bouton disparaissent ensemble.
+        // L'étape ② n'est plus un passage obligé quand on est connecté (#1998) : le stepper doit le
+        // savoir, et seul le controller connaît les deux ViewModels.
+        viewModel.declarerDepotAutomatiqueDisponible(depotViewModel.disponible());
         enveloppeTeleverser.setVisible(depotViewModel.disponible());
         enveloppeTeleverser.setManaged(depotViewModel.disponible());
         btnTeleverser
@@ -337,7 +346,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                         .then("Passage déjà déposé sur Vigie-Chiro : le téléversement est terminé.")
                         .otherwise(Bindings.when(btnTeleverser.disableProperty())
                                 .then("Téléversement possible une fois le dépôt préparé (statut « Prêt à"
-                                        + " déposer »), génération et envoi précédent terminés.")
+                                        + " déposer »), et hors génération ou envoi en cours. Générer les"
+                                        + " archives n'est pas un préalable : le téléversement produit"
+                                        + " lui-même ce dont il a besoin.")
                                 .otherwise("Téléverser la nuit sur Vigie-Chiro (marque ensuite le passage"
                                         + " déposé).")));
         lierTableDepot();
