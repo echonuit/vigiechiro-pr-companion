@@ -226,6 +226,25 @@ Deux détails qui comptent :
         -DtargetTests=fr.univ_amu.iut.passage.viewmodel.SaisieHorairesNuitTest
     ```
 
+**Sur une classe de vue (TestFX), passer les options de la JVM headless.** Le profil `mutation` ne
+reprend pas l'`argLine` de Surefire : sans elles, PIT lance ses minions sans `glass.platform=Headless`,
+la suite ne démarre pas et l'outil s'arrête sur « *tests did not pass without mutation* ». On les lui
+donne à la main :
+
+```bash
+./mvnw -Pmutation test-compile org.pitest:pitest-maven:mutationCoverage \
+    -DtargetClasses=fr.univ_amu.iut.commun.view.Modales \
+    -DtargetTests=fr.univ_amu.iut.commun.view.ModalesTest \
+    -DjvmArgs="-Dglass.platform=Headless,-Dprism.order=sw,-Djava.awt.headless=true,-Dtestfx.robot=glass,--enable-native-access=ALL-UNNAMED"
+```
+
+PIT couvre donc aussi la couche `view`, ce que l'échec brut laissait croire impossible.
+
+⚠️ **Lire le rapport, pas le résumé.** `target/pit-reports/mutations.xml` écrit ses attributs en
+**apostrophes simples** (`status='SURVIVED'`). Un filtre écrit en guillemets doubles ne matche rien et
+annonce « 0 survivant » sur n'importe quel rapport - y compris sur une classe dont sept mutants
+survivaient. Le résumé imprimé en fin de course (`Generated N Killed M`) est la référence à recouper.
+
     Rapport HTML dans `target/pit-reports/`. Un **mutant survivant** désigne une ligne que rien ne
     vérifie vraiment.
 

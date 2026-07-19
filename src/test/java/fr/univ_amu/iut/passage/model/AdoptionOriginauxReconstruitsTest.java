@@ -2,6 +2,7 @@ package fr.univ_amu.iut.passage.model;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.within;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Workspace;
@@ -37,6 +38,9 @@ import org.junit.jupiter.api.io.TempDir;
 class AdoptionOriginauxReconstruitsTest {
 
     private static final int FREQUENCE_HZ = 384_000;
+
+    /// Assez d'octets pour que la durée déduite ne soit pas nulle : l'en-tête WAV en fait 44.
+    private static final int TAILLE_BRUT = 4096;
 
     @TempDir
     Path dossier;
@@ -99,6 +103,61 @@ class AdoptionOriginauxReconstruitsTest {
                 .containsExactlyInAnyOrder("PaRec_001.wav", "PaRec_002.wav");
     }
 
+    @Test
+    @DisplayName("L'original adopté porte ce que le brut prouve : chemin, taille, durée, fréquence, empreinte")
+    void l_original_adopte_porte_ce_que_le_brut_prouve() throws IOException {
+        List<BrutRebranche> rebranches = List.of(brutAvecSaSequence("PaRec_001.wav"));
+        assertThat(session.originauxPurges())
+                .as("la nuit semée ne déclare pas encore ses originaux purgés : sinon l'assertion finale"
+                        + " serait vraie sans que l'adoption y soit pour rien")
+                .isFalse();
+
+        adoptionAvec(sequenceDao).adopter(session, placeholders(), rebranches, FREQUENCE_HZ);
+
+        EnregistrementOriginal adopte = originalDao.findBySession(session.id()).stream()
+                .filter(original -> "PaRec_001.wav".equals(original.nomFichier()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(adopte.cheminFichier())
+                .as("le chemin canonique est celui des bruts de la session, pas celui du dossier source")
+                .isEqualTo(Path.of(session.cheminRacine())
+                        .resolve("bruts")
+                        .resolve("PaRec_001.wav")
+                        .toString());
+        assertThat(adopte.tailleOctets())
+                .as("la taille est relevée sur le fichier réel")
+                .isEqualTo(TAILLE_BRUT);
+        assertThat(adopte.dureeSecondes())
+                .as("la durée se déduit de la taille : (octets - en-tête) / 2 octets par trame / fréquence")
+                .isCloseTo((TAILLE_BRUT - 44) / 2.0 / FREQUENCE_HZ, within(1e-9));
+        assertThat(adopte.frequenceEchantillonnageHz()).isEqualTo(FREQUENCE_HZ);
+        assertThat(adopte.sha256())
+                .as("l'empreinte capturée à la régénération est inscrite, sans re-lecture (#1726)")
+                .isEqualTo("empreinte-PaRec_001.wav");
+        assertThat(sessionDao
+                        .trouverParPassage(session.idPassage())
+                        .orElseThrow()
+                        .originauxPurges())
+                .as("les originaux sont connus mais non stockés : déclarés purgés, sinon l'audit les"
+                        + " signalerait absents du disque")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("Un brut réduit à son en-tête n'a pas de durée : on ne l'invente pas")
+    void un_brut_sans_echantillon_n_a_pas_de_duree() throws IOException {
+        List<BrutRebranche> rebranches = List.of(brutDeTaille("PaRec_003.wav", 44));
+
+        adoptionAvec(sequenceDao).adopter(session, placeholders(), rebranches, FREQUENCE_HZ);
+
+        assertThat(originalDao.findBySession(session.id()))
+                .filteredOn(original -> "PaRec_003.wav".equals(original.nomFichier()))
+                .singleElement()
+                .extracting(EnregistrementOriginal::dureeSecondes)
+                .as("44 octets, c'est l'en-tête et rien d'autre : aucune trame, donc aucune durée")
+                .isNull();
+    }
+
     // --- Fixture ---------------------------------------------------------------------------------
 
     private AdoptionOriginauxReconstruits adoptionAvec(SequenceDao dao) {
@@ -119,8 +178,12 @@ class AdoptionOriginauxReconstruitsTest {
     /// Un brut sur disque, et **sa** séquence en base, rattachée au placeholder comme après une
     /// reconstruction.
     private BrutRebranche brutAvecSaSequence(String nomBrut) throws IOException {
+        return brutDeTaille(nomBrut, TAILLE_BRUT);
+    }
+
+    private BrutRebranche brutDeTaille(String nomBrut, int octets) throws IOException {
         Files.createDirectories(bruts);
-        Path source = Files.write(bruts.resolve(nomBrut), new byte[4096]);
+        Path source = Files.write(bruts.resolve(nomBrut), new byte[octets]);
         SequenceDEcoute sequence = sequenceDao.insert(new SequenceDEcoute(
                 null,
                 nomBrut.replace(".wav", "_000.wav"),
