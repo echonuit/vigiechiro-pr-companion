@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.VerificationDepot;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
@@ -71,6 +72,14 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
         return new VerificationDepot(participations, client, depotUnites);
     }
 
+    /// DAO du plan de dépôt au niveau du passage (#1993) : l'empreinte de la liste source qui a servi à
+    /// le poser. Fourni ici pour la même raison que [#fournirDepotUniteDao] : il exige `SourceDeDonnees`.
+    @Provides
+    @Singleton
+    DepotPlanDao fournirDepotPlanDao(SourceDeDonnees source) {
+        return new DepotPlanDao(source);
+    }
+
     @Provides
     @Singleton
     @Named(QUALIFIANT)
@@ -79,10 +88,11 @@ public class DepotVigieChiroModule extends ModuleDeFeature {
             ClientVigieChiro client,
             TraitementVigieChiro traitement,
             DepotUniteDao depotUnites,
+            DepotPlanDao depotPlans,
             PassageDao passageDao,
             MoteurWorkflowPassage moteurWorkflow,
             Horloge horloge) {
         return new DepotVigieChiro(
-                participations, client, traitement, depotUnites, passageDao, moteurWorkflow, horloge);
+                participations, client, traitement, depotUnites, depotPlans, passageDao, moteurWorkflow, horloge);
     }
 }

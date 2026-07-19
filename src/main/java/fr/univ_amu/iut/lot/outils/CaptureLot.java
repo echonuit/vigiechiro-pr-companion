@@ -38,6 +38,7 @@ import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.lot.view.LotController;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
@@ -309,6 +310,7 @@ public final class CaptureLot {
                 ClientVigieChiro client,
                 TraitementVigieChiro traitement,
                 DepotUniteDao depotUnites,
+                DepotPlanDao depotPlans,
                 PassageDao passageDao,
                 MoteurWorkflowPassage moteurWorkflow,
                 Horloge horloge) {
@@ -318,9 +320,18 @@ public final class CaptureLot {
                     client,
                     traitement,
                     depotUnites,
+                    depotPlans,
                     passageDao,
                     moteurWorkflow,
                     horloge);
+        }
+
+        /// Le DAO du plan de dépôt (#1993) : fourni ici comme `DepotUniteDao` l'est par
+        /// [ModuleCaptureLot], l'injecteur de capture n'ayant pas `DepotVigieChiroModule`.
+        @Provides
+        @Singleton
+        DepotPlanDao depotPlanDeCapture(SourceDeDonnees source) {
+            return new DepotPlanDao(source);
         }
     }
 

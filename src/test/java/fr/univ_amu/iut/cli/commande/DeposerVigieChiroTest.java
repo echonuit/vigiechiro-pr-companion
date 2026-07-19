@@ -10,6 +10,7 @@ import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
@@ -130,8 +131,8 @@ class DeposerVigieChiroTest {
         org.mockito.Mockito.verify(depot)
                 .deposer(
                         eq(42L),
-                        eq(List.of(
-                                Path.of("/ws/session-42/depot/Car-1.zip"), Path.of("/ws/session-42/depot/Car-2.zip"))),
+                        eq(SourceDepot.desFichiers(List.of(
+                                Path.of("/ws/session-42/depot/Car-1.zip"), Path.of("/ws/session-42/depot/Car-2.zip")))),
                         any(),
                         any());
         org.mockito.Mockito.verify(serviceLot, org.mockito.Mockito.never()).sequencesADeposer(42L);
@@ -166,7 +167,11 @@ class DeposerVigieChiroTest {
 
         assertThat(code).isZero();
         org.mockito.Mockito.verify(depot)
-                .deposer(eq(42L), eq(List.of(Path.of("/ws/session-42/depot/Car-1.zip"))), any(), any());
+                .deposer(
+                        eq(42L),
+                        eq(SourceDepot.desFichiers(List.of(Path.of("/ws/session-42/depot/Car-1.zip")))),
+                        any(),
+                        any());
         org.mockito.Mockito.verify(serviceLot, org.mockito.Mockito.never()).sequencesADeposer(42L);
     }
 
@@ -179,7 +184,8 @@ class DeposerVigieChiroTest {
         int code = ligne(Optional.of(depot), new StringWriter()).execute("--passage", "42", "--wav");
 
         assertThat(code).isZero();
-        org.mockito.Mockito.verify(depot).deposer(eq(42L), eq(List.of(Path.of("/ws/a.wav"))), any(), any());
+        org.mockito.Mockito.verify(depot)
+                .deposer(eq(42L), eq(SourceDepot.desFichiers(List.of(Path.of("/ws/a.wav")))), any(), any());
         org.mockito.Mockito.verify(serviceLot, org.mockito.Mockito.never()).fichiersDepotParDefaut(42L);
     }
 

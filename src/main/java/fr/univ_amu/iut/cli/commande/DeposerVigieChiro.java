@@ -6,6 +6,7 @@ import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
 import java.io.PrintWriter;
@@ -93,7 +94,8 @@ public final class DeposerVigieChiro implements Callable<Integer> {
         }
         List<Path> fichiers = choisirFichiers();
         PrintWriter sortie = spec.commandLine().getOut();
-        BilanDepot bilan = moteur.deposer(idPassage, fichiers, () -> false, new SuiviConsole(sortie));
+        BilanDepot bilan =
+                moteur.deposer(idPassage, SourceDepot.desFichiers(fichiers), () -> false, new SuiviConsole(sortie));
         sortie.println(rendreBilan(bilan));
         return bilan.estComplet() ? 0 : 1;
     }

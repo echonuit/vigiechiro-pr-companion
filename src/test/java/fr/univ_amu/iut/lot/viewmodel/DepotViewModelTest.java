@@ -18,6 +18,7 @@ import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import java.nio.file.Path;
@@ -62,7 +63,7 @@ class DepotViewModelTest {
 
         assertThat(bilan.participationId()).isEqualTo("part-1");
         assertThat(bilan.deposees()).isEqualTo(2);
-        verify(depot).deposer(eq(ID_PASSAGE), eq(archives), any(), any());
+        verify(depot).deposer(eq(ID_PASSAGE), eq(SourceDepot.desFichiers(archives)), any(), any());
     }
 
     @Test

@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
 import java.nio.file.Path;
 import java.util.List;
@@ -101,7 +102,7 @@ public class DepotViewModel {
         // Dépôt ZIP par défaut (#984), comme le web : une archive = une unité. Repli WAV seulement si le
         // disque ne permet pas de créer les archives ; sinon invitation à générer d'abord (étape 2).
         List<Path> fichiers = service.fichiersDepotParDefaut(idPassage);
-        return depotVigieChiro.deposer(idPassage, fichiers, jeton::estAnnule, suivi);
+        return depotVigieChiro.deposer(idPassage, SourceDepot.desFichiers(fichiers), jeton::estAnnule, suivi);
     }
 
     /// Lance le **traitement serveur** (compute, #984) de la participation liée au passage : équivalent

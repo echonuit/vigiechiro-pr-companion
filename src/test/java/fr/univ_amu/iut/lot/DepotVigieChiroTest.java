@@ -34,8 +34,11 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
+import fr.univ_amu.iut.lot.model.EmpreinteLot;
+import fr.univ_amu.iut.lot.model.SourceDepot;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.SuiviDepot;
+import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
@@ -76,6 +79,7 @@ class DepotVigieChiroTest {
     private ClientVigieChiro client;
     private TraitementVigieChiro traitementServeur;
     private DepotUniteDao depotUnites;
+    private DepotPlanDao depotPlans;
     private PassageDao passageDao;
     private DepotVigieChiro depot;
     private Long idPassage;
@@ -116,14 +120,51 @@ class DepotVigieChiroTest {
                         "1925492"))
                 .id();
         depotUnites = new DepotUniteDao(source);
+        depotPlans = new DepotPlanDao(source);
         depot = new DepotVigieChiro(
                 participations,
                 client,
                 traitementServeur,
                 depotUnites,
+                depotPlans,
                 passageDao,
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(LocalDate.of(2026, 7, 11)));
+    }
+
+    @Test
+    @DisplayName("#1993 : l'empreinte de la liste source est posée avec le plan")
+    void empreinte_posee_avec_le_plan(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "Car-1.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+
+        depot.deposer(idPassage, List.of(a));
+
+        assertThat(depotPlans.parPassage(idPassage))
+                .get()
+                .extracting(fr.univ_amu.iut.lot.model.DepotPlan::empreinte)
+                .isEqualTo(EmpreinteLot.de(List.of(a)));
+    }
+
+    @Test
+    @DisplayName("#1993 : un lot modifié entre deux tentatives change l'empreinte enregistrée")
+    void empreinte_suit_le_lot(@TempDir Path dossier) throws IOException {
+        // Première tentative en échec : le passage reste « Dépôt en cours », donc reprenable. Un dépôt
+        // complet basculerait « Déposé » et la reprise serait alors refusée par le workflow — ce qui
+        // n'est pas le cas qu'on veut décrire ici.
+        Path a = fichier(dossier, "Car-1.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
+        depot.deposer(idPassage, List.of(a));
+        String empreinteInitiale =
+                depotPlans.parPassage(idPassage).orElseThrow().empreinte();
+
+        // Une séquence de plus : la partition en archives se décalerait, donc l'empreinte doit bouger.
+        // C'est ce que #1994 comparera avant d'accepter de régénérer une archive libérée.
+        depot.deposer(idPassage, List.of(a, fichier(dossier, "Car-2.zip")));
+
+        assertThat(depotPlans.parPassage(idPassage).orElseThrow().empreinte()).isNotEqualTo(empreinteInitiale);
     }
 
     @Test
@@ -203,7 +244,7 @@ class DepotVigieChiroTest {
                 });
         SuiviDepot suivi = mock(SuiviDepot.class);
 
-        depot.deposer(idPassage, List.of(fichier(dossier, "Car-1.zip")), () -> false, suivi);
+        depot.deposer(idPassage, SourceDepot.desFichiers(List.of(fichier(dossier, "Car-1.zip"))), () -> false, suivi);
 
         verify(suivi).uniteProgresse("Car-1.zip", 0.5);
         verify(suivi).uniteProgresse("Car-1.zip", 1.0);
@@ -344,7 +385,8 @@ class DepotVigieChiroTest {
 
         // En parallèle, chaque worker consulte le garde AVANT de démarrer son upload. Annulation déjà
         // demandée → aucune unité n'est entamée, le passage reste « Dépôt en cours » (reprenable).
-        BilanDepot bilan = depot.deposer(idPassage, List.of(a, b), () -> true, SuiviDepot.inerte());
+        BilanDepot bilan =
+                depot.deposer(idPassage, SourceDepot.desFichiers(List.of(a, b)), () -> true, SuiviDepot.inerte());
 
         assertThat(bilan.deposees()).isZero();
         assertThat(statutPassage()).isEqualTo(StatutWorkflow.DEPOT_EN_COURS);
