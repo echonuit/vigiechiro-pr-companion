@@ -55,7 +55,11 @@
 
   <VBox fx:id="etatVide" styleClass="etat-vide" alignment="CENTER" spacing="10.0"
         VBox.vgrow="ALWAYS">
-    <Label text="🌐" styleClass="etat-vide-icone"/>
+    <Label  styleClass="etat-vide-icone">
+      <graphic>
+        <FontIcon iconLiteral="fas-globe"/>
+      </graphic>
+    </Label>
     <Label text="Bienvenue ! Commencez par déclarer votre premier site."
            styleClass="etat-vide-titre"/>
     <Label text="Un site = un carré Vigie-Chiro (6 chiffres) avec un ou plusieurs points d'écoute."
@@ -63,8 +67,12 @@
     <Button text="+ Ajouter mon premier site de suivi" styleClass="bouton-primaire-grand"
             onAction="#nouveauSite"/>
     <VBox styleClass="hint-box" maxWidth="660.0" spacing="4.0">
-      <Label text="💡 Vous n'avez pas encore créé votre site sur Vigie-Chiro ?"
-             styleClass="hint-titre"/>
+      <Label text="Vous n'avez pas encore créé votre site sur Vigie-Chiro ?"
+             styleClass="hint-titre">
+        <graphic>
+          <FontIcon iconLiteral="fas-lightbulb"/>
+        </graphic>
+      </Label>
       <Label wrapText="true" styleClass="hint-txt"
              text="Le carré et les points doivent d'abord être déclarés sur le portail web
                    vigiechiro.herokuapp.com, puis saisis ici (n° de carré + codes points)."/>

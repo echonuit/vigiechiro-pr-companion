@@ -113,7 +113,11 @@
   </HBox>
 
   <HBox alignment="CENTER_LEFT" spacing="12.0">
-    <Label text="📍 Points d'écoute" styleClass="section-titre" HBox.hgrow="ALWAYS"/>
+    <Label text="Points d'écoute" styleClass="section-titre" HBox.hgrow="ALWAYS">
+      <graphic>
+        <FontIcon iconLiteral="fas-map-marker-alt"/>
+      </graphic>
+    </Label>
     <Button text="+ Ajouter un point" styleClass="bouton-primaire" onAction="#ajouterPoint"/>
   </HBox>
   <FlowPane fx:id="cartesPoints" styleClass="cartes-points" hgap="12.0" vgap="12.0"/>
@@ -126,7 +130,11 @@
   <Label fx:id="lblAucunPoint" styleClass="section-sous" wrapText="true" managed="false" visible="false"
          text="Aucun point d'écoute déclaré. Cliquez « + Ajouter un point » pour en créer un."/>
 
-  <Label text="📅 Passages enregistrés sur ce site" styleClass="section-titre"/>
+  <Label text="Passages enregistrés sur ce site" styleClass="section-titre">
+    <graphic>
+      <FontIcon iconLiteral="fas-calendar-alt"/>
+    </graphic>
+  </Label>
   <TableView fx:id="tablePassages" prefHeight="320.0" VBox.vgrow="ALWAYS">
     <columns>
       <TableColumn fx:id="colDate" text="Date" prefWidth="110.0"/>

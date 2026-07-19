@@ -130,6 +130,6 @@ final class ColonnesAudio {
 
         // Indicateurs référence / commentaire : en-tête et cellule rendus par une icône Ikonli colorée,
         // un id stable pour les retrouver, cellules dédiées (icône + infobulle), et non triables.
-        CellulesAudio.configurerIndicateurs(col.reference(), col.commentaire(), enregistrerCommentaire);
+        CellulesAudio.configurerIndicateurs(col.reference(), col.commentaire(), col.fil(), enregistrerCommentaire);
     }
 }

@@ -21,6 +21,9 @@ final class CellulesAudio {
     /// Icônes FontAwesome 5 (Ikonli) des indicateurs, réutilisées pour l'en-tête et la cellule.
     static final String ICONE_REFERENCE = "fas-star";
     static final String ICONE_COMMENTAIRE = "fas-comment-dots";
+
+    /// Fil de discussion avec le validateur : plusieurs voix, là où le commentaire n'en porte qu'une.
+    static final String ICONE_FIL = "fas-comments";
     /// Icône du drapeau **douteux** (#160) : point d'interrogation, pour le bouton de bascule de la barre.
     static final String ICONE_DOUTEUX = "fas-question-circle";
 
@@ -54,17 +57,26 @@ final class CellulesAudio {
             String iconeLiteral,
             String libelle,
             Supplier<TableCell<LigneObservationAudio, String>> fournisseurCellule) {
+        poserEnTeteIcone(colonne, id, iconeLiteral, libelle);
+        colonne.setSortable(false);
+        colonne.setCellFactory(c -> fournisseurCellule.get());
+    }
+
+    /// Donne à une colonne un **en-tête réduit à une icône**, avec ce qu'il faut pour rester
+    /// compréhensible : libellé accessible (un lecteur d'écran n'annonce sinon que le glyphe) et infobulle
+    /// au survol (#794).
+    ///
+    /// Séparé du reste parce qu'un en-tête à icône ne dit rien du **comportement** de la colonne : les deux
+    /// indicateurs ne se trient pas, le fil de discussion si - c'est un compte.
+    static void poserEnTeteIcone(
+            TableColumn<LigneObservationAudio, String> colonne, String id, String iconeLiteral, String libelle) {
         String classeCss = ICONE_REFERENCE.equals(iconeLiteral) ? STYLE_REFERENCE : STYLE_COMMENTAIRE;
-        // En-tête réduit à une icône : sans libellé accessible ni infobulle, un lecteur d'écran n'annonce
-        // que le glyphe et le survol n'explique rien (#794).
         FontIcon enTete = icone(iconeLiteral, classeCss);
         enTete.setAccessibleText(libelle);
         Tooltip.install(enTete, new Tooltip(libelle));
         colonne.setText("");
         colonne.setGraphic(enTete);
         colonne.setId(id);
-        colonne.setSortable(false);
-        colonne.setCellFactory(c -> fournisseurCellule.get());
     }
 
     /// Configure les **deux colonnes-indicateurs** (référence ⭐ et commentaire 💬) via
@@ -72,6 +84,7 @@ final class CellulesAudio {
     static void configurerIndicateurs(
             TableColumn<LigneObservationAudio, String> colReference,
             TableColumn<LigneObservationAudio, String> colCommentaire,
+            TableColumn<LigneObservationAudio, String> colFil,
             BiConsumer<Long, String> enregistrerCommentaire) {
         configurerColonne(colReference, "colReference", ICONE_REFERENCE, "Référence", CellulesAudio::reference);
         configurerColonne(
@@ -80,6 +93,10 @@ final class CellulesAudio {
                 ICONE_COMMENTAIRE,
                 "Commentaire",
                 () -> commentaire(enregistrerCommentaire));
+        // Le fil gardait un glyphe littéral en en-tête : ni annoncé par un lecteur d'écran, ni expliqué au
+        // survol, et absent des machines dont la police ne le porte pas. Seul son EN-TÊTE change : ses
+        // cellules portent un compte de messages, et cette colonne reste triable.
+        poserEnTeteIcone(colFil, "colFil", ICONE_FIL, "Discussion");
     }
 
     /// Cellule texte qui **élide** un contenu long et en expose la valeur complète via une infobulle au

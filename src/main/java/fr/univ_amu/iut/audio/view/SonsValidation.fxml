@@ -169,9 +169,12 @@
           <TableColumn fx:id="colDebut" text="Début" prefWidth="80.0"/>
           <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
           <TableColumn fx:id="colStatut" text="Statut" prefWidth="110.0"/>
-          <TableColumn fx:id="colReference" text="⭐" prefWidth="50.0"/>
-          <TableColumn fx:id="colCommentaire" text="💬" prefWidth="50.0"/>
-          <TableColumn fx:id="colFil" text="🗣" prefWidth="50.0"/>
+          <!-- Les trois colonnes-indicateurs portent une ICÔNE en en-tête, posée par CellulesAudio
+               avec son libellé accessible et son infobulle : un glyphe seul n'annonce rien à un
+               lecteur d'écran, et n'explique rien au survol (#794). -->
+          <TableColumn fx:id="colReference" prefWidth="50.0"/>
+          <TableColumn fx:id="colCommentaire" prefWidth="50.0"/>
+          <TableColumn fx:id="colFil" prefWidth="50.0"/>
         </columns>
       </TableView>
       <Label fx:id="lblVide" styleClass="audio-vide" wrapText="true"/>

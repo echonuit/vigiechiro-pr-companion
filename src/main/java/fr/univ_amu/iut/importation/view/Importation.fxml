@@ -112,12 +112,20 @@
     </HBox>
     <!-- Carte de confirmation (#154, lecture seule) : carré du site + ses points, le point choisi en
          surbrillance. Remplie en code par le controller (CarteRattachement) à chaque changement. -->
-    <Label text="📍 Vérifiez l'emplacement : carré du site et point choisi (en indigo)."
-           styleClass="section-sous"/>
+    <Label text="Vérifiez l'emplacement : carré du site et point choisi (en indigo)."
+           styleClass="section-sous">
+      <graphic>
+        <FontIcon iconLiteral="fas-map-marker-alt"/>
+      </graphic>
+    </Label>
     <StackPane fx:id="zoneCarteRattachement" styleClass="zone-carte-rattachement"
                minHeight="170.0" prefHeight="190.0"/>
     <VBox styleClass="apercu-box" spacing="4.0">
-      <Label text="📝 Aperçu du préfixe appliqué aux fichiers :" styleClass="apercu-label"/>
+      <Label text="Aperçu du préfixe appliqué aux fichiers :" styleClass="apercu-label">
+        <graphic>
+          <FontIcon iconLiteral="fas-file-alt"/>
+        </graphic>
+      </Label>
       <Label fx:id="labelApercu" styleClass="apercu-valeur" wrapText="true"/>
     </VBox>
     <!-- Discordance de préfixe (#111) : fichiers déjà préfixés ne correspondant pas au rattachement. -->
@@ -177,7 +185,11 @@
   <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>
   <!-- Rapport d'import (#155) : fichiers rejetés (nom — raison), visible seulement s'il y en a. -->
   <VBox fx:id="zoneRejets" spacing="3.0" visible="false" managed="false">
-    <Label text="⚠ Fichiers rejetés (non importés) :" styleClass="message-erreur"/>
+    <Label text="Fichiers rejetés (non importés) :" styleClass="message-erreur">
+      <graphic>
+        <FontIcon iconLiteral="fas-exclamation-triangle"/>
+      </graphic>
+    </Label>
     <ListView fx:id="listeRejets" prefHeight="110.0"/>
   </VBox>
 </VBox>

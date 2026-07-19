@@ -42,8 +42,12 @@
           majorTickUnit="5.0" minorTickCount="0" snapToTicks="true"/>
 
   <!-- Ce que l'utilisateur PERD s'il régénère : c'est le seul avertissement qu'il recevra. -->
-  <Label text="⚠ Régénérer efface la progression d'écoute (le verdict est conservé)."
-         styleClass="message-erreur" wrapText="true"/>
+  <Label text="Régénérer efface la progression d'écoute (le verdict est conservé)."
+         styleClass="message-erreur" wrapText="true">
+    <graphic>
+      <FontIcon iconLiteral="fas-exclamation-triangle"/>
+    </graphic>
+  </Label>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>
