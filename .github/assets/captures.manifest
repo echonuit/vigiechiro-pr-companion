@@ -20,7 +20,7 @@ fr/univ_amu/iut/passage/view/ReactivationModale.fxml     : apercu-passage-reacti
 fr/univ_amu/iut/connexion/view/ConnexionModale.fxml      : apercu-connexion.png
 fr/univ_amu/iut/diagnostic/view/Diagnostic.fxml          : apercu-diagnostic.png apercu-diagnostic-sans-releve.png apercu-diagnostic-sans-gps.png apercu-diagnostic-retour.png
 fr/univ_amu/iut/audit/view/Audit.fxml                    : apercu-audit.png
-fr/univ_amu/iut/lot/view/Lot.fxml                        : apercu-lot-preparer.png apercu-lot-deposer.png apercu-lot-generation.png apercu-lot-archives.png apercu-lot-televerser.png apercu-lot-depose.png apercu-lot-participation.png apercu-lot-alertes.png apercu-lot-retour.png
+fr/univ_amu/iut/lot/view/Lot.fxml                        : apercu-lot-preparer.png apercu-lot-deposer.png apercu-lot-generation.png apercu-lot-archives.png apercu-lot-televerser.png apercu-lot-televerser-sans-archives.png apercu-lot-depose.png apercu-lot-participation.png apercu-lot-alertes.png apercu-lot-retour.png
 fr/univ_amu/iut/multisite/view/Multisite.fxml            : apercu-multisite.png apercu-multisite-filtre.png apercu-multisite-edition.png apercu-multisite-carte-pleine.png
 fr/univ_amu/iut/multisite/view/ReconstructionModale.fxml : apercu-multisite-reconstruction.png apercu-multisite-reconstruction-groupe.png
 fr/univ_amu/iut/analyse/view/Analyse.fxml                : apercu-analyse.png apercu-analyse-carre.png apercu-analyse-carte.png apercu-analyse-colonnes.png

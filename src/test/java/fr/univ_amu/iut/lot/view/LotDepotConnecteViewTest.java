@@ -120,6 +120,25 @@ class LotDepotConnecteViewTest {
     }
 
     @Test
+    @DisplayName("#1998 : connecté et sans archives, un SEUL bouton primaire — « Téléverser », pas « Générer »")
+    void un_seul_bouton_primaire_quand_connecte_sans_archives(FxRobot robot) {
+        // Défaut trouvé en REGARDANT la capture, pas par un test : depuis que le téléversement produit
+        // ses propres archives, « connecté sans archives » est devenu un état courant, et « Générer »
+        // y reprenait le rôle primaire face à « Téléverser » qui le porte en FXML. Deux boutons mis en
+        // avant, l'utilisateur ne sait plus lequel est la marche suivante.
+        Button generer = robot.lookup("#btnGenererArchives").queryAs(Button.class);
+        Button televerser = robot.lookup("#btnTeleverser").queryAs(Button.class);
+
+        assertThat(televerser.getStyleClass())
+                .as("l'action de la marche courante")
+                .contains("bouton-primaire");
+        assertThat(generer.getStyleClass())
+                .as("générer n'est plus qu'une option pour le dépôt manuel")
+                .contains("bouton-secondaire")
+                .doesNotContain("bouton-primaire");
+    }
+
+    @Test
     @DisplayName("#984 : participation liée → l'étape ④ devient « Lancer la participation », cliquable même"
             + " en « Dépôt en cours »")
     void participation_liee_bascule_le_bouton_et_le_garde_actif(FxRobot robot) {

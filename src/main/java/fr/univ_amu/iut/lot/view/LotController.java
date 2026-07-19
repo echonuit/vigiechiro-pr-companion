@@ -453,15 +453,25 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     /// Met en avant l'action **actionnable** du dépôt (#689) : `.bouton-primaire` sur l'unique étape
     /// courante parmi Préparer / Générer / Marquer déposé, `.bouton-secondaire` sur les autres. L'étape ③
-    /// « Téléverser » est manuelle (« Ouvrir le dossier », toujours secondaire) : une fois les archives
-    /// générées, c'est « Marquer déposé » qui devient primaire. Plus aucun primaire une fois le passage
-    /// déposé. Le gating du VM garantit qu'au plus une des trois est actionnable à la fois.
+    /// « Téléverser » porte son rôle primaire depuis le FXML : hors connexion elle est masquée, et
+    /// connectée elle EST l'action de la marche courante — « Générer » lui cède donc la place plutôt que
+    /// de la concurrencer. Une fois les archives générées, c'est « Marquer déposé » qui devient primaire.
+    /// Plus aucun primaire une fois le passage déposé. Le gating du VM garantit qu'au plus une des trois
+    /// est actionnable à la fois.
     private void majRolesEtapes() {
         boolean archivesGenerees = !viewModel.suiviLignes().lignes().isEmpty();
         boolean deposeFait = viewModel.deposeProperty().get();
+        // Connecté, « Téléverser » (primaire en FXML) est l'action de la marche courante : générer n'est
+        // plus qu'une option pour le dépôt manuel (#1998). Sans cette condition, l'écran affiche DEUX
+        // boutons primaires dès qu'aucune archive n'est sur le disque - état devenu courant depuis que le
+        // téléversement produit les siennes. Défaut trouvé en regardant la capture, pas par un test.
+        boolean genererEstLaMarcheCourante =
+                viewModel.peutGenererArchivesProperty().get()
+                        && !archivesGenerees
+                        && !deposeFait
+                        && !depotViewModel.disponible();
         appliquerRolePrimaire(btnPreparer, viewModel.peutPreparerProperty().get());
-        appliquerRolePrimaire(
-                btnGenererArchives, viewModel.peutGenererArchivesProperty().get() && !archivesGenerees && !deposeFait);
+        appliquerRolePrimaire(btnGenererArchives, genererEstLaMarcheCourante);
         appliquerRolePrimaire(btnDeposer, viewModel.peutDeposerProperty().get() && archivesGenerees);
     }
 

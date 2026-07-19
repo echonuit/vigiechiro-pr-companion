@@ -87,6 +87,9 @@ import javafx.scene.Scene;
 ///   active ;
 /// - `apercu-lot-deposer.png` : passage **Prêt à déposer** (après préparation) — étape ② « Générer les
 ///   archives » active ;
+/// - `apercu-lot-televerser-sans-archives.png` : passage **Prêt à déposer**, application **connectée**,
+///   **aucune archive** sur le disque — l'étape ③ « Téléverser » est courante et l'étape ② n'est plus un
+///   passage obligé (#1998) ;
 /// - `apercu-lot-generation.png` : **génération en cours** — indicateur d'activité, bouton désactivé ;
 /// - `apercu-lot-archives.png` : **archives générées** — liste des ZIP (redimensionnée à son contenu),
 ///   « Ouvrir le dossier » et « Supprimer les archives » actifs, étape ③ « Téléverser » courante ;
@@ -176,6 +179,11 @@ public final class CaptureLot {
         // Après préparation : Prêt à déposer (étape ② à faire), « Générer les archives » actif.
         service.preparerLot(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-deposer.png"));
+        // ② bis (#1998) : **connecté et sans archives**. C'est l'état neuf du chantier — le téléversement
+        // produisant lui-même ce dont il a besoin, l'étape ③ est courante alors qu'aucune archive n'existe
+        // sur le disque. Aucun aperçu ne le montrait : les deux rendus connectés existants partaient tous
+        // d'archives déjà générées, donc de l'ancien flux.
+        rendre(connecte, idCoherent, sortie.resolve("apercu-lot-televerser-sans-archives.png"));
         // ② Génération des archives en cours : indicateur d'activité, bouton désactivé.
         rendrePilote(
                 injecteur,
@@ -332,14 +340,6 @@ public final class CaptureLot {
                     passageDao,
                     moteurWorkflow,
                     horloge);
-        }
-
-        /// Le DAO du plan de dépôt (#1993) : fourni ici comme `DepotUniteDao` l'est par
-        /// [ModuleCaptureLot], l'injecteur de capture n'ayant pas `DepotVigieChiroModule`.
-        @Provides
-        @Singleton
-        DepotPlanDao depotPlanDeCapture(SourceDeDonnees source) {
-            return new DepotPlanDao(source);
         }
     }
 
