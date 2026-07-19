@@ -349,7 +349,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Table + avertissement de blocage de la numérotation multi-nuits (#801), délégués à un helper
         // dédié pour garder ce contrôleur sous le plafond de taille.
         ZoneNuits.remplir(
-                zoneNuits, inspection.nuits(), viewModel.coordinationNuits().avertissementProperty());
+                zoneNuits, inspection.nuits(), viewModel.coordinationNuits().blocageProperty());
     }
 
     /// Section 3 : combos site/point, champs année/n° de passage, aperçu du préfixe et avertissement de

@@ -17,7 +17,11 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
@@ -849,5 +853,71 @@ class ImportationViewModelTest {
 
     private static PointDEcoute point(Long id, String code, Long idSite) {
         return new PointDEcoute(id, code, null, null, null, idSite);
+    }
+
+    @Test
+    @DisplayName("#2050 : le blocage nomme LES numéros déjà pris et leur nuit, pas « un ou plusieurs »")
+    void multi_nuits_blocage_nomme_les_numeros_pris() throws IOException {
+        Path multi = carteMultiNuits();
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
+        // Le premier et le troisième numéro proposés sont pris, le deuxième est libre.
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 4)).thenReturn(true);
+        when(serviceImport.numeroPassageDejaUtilise(10L, 2026, 6)).thenReturn(true);
+        viewModel.inspection().dossierSourceProperty().set(multi);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+
+        CompteRendu blocage = viewModel.coordinationNuits().blocageProperty().get();
+
+        assertThat(viewModel.coordinationNuits().numerotationValideProperty().get())
+                .as("des numéros pris interdisent l'import")
+                .isFalse();
+        Constat constat = blocage.constats().getFirst();
+        assertThat(constat.fait()).isEqualTo("2 numéro(s) de passage déjà utilisé(s) pour ce point.");
+        assertThat(constat.severite())
+                .as("l'import n'a pas échoué : il n'est pas encore parti")
+                .isEqualTo(Severite.AVERTISSEMENT);
+        // La boucle teste chaque numéro, donc elle SAIT lesquels sont pris. Elle n'en gardait qu'un
+        // booléen, et l'utilisateur devait deviner quelle ligne de la table renuméroter.
+        assertThat(constat.details())
+                .extracting(Detail::sujet)
+                .containsExactly("n° 4 - nuit du 22/04/2026", "n° 6 - nuit du 24/04/2026");
+    }
+
+    @Test
+    @DisplayName("#2050 : aucune nuit incluse est un blocage à part, et tout libre n'en laisse aucun")
+    void multi_nuits_blocage_aucune_nuit_puis_plus_rien() throws IOException {
+        Path multi = carteMultiNuits();
+        Site site = site(1L, "640380");
+        PointDEcoute point = point(10L, "A1", site.id());
+        when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
+        when(serviceImport.inspecter(multi)).thenReturn(inspecteur.inspecter(multi));
+        when(serviceImport.prochainBlocPassagesLibre(10L, 2026, 3)).thenReturn(4);
+        when(serviceImport.numeroPassageDejaUtilise(eq(10L), eq(2026), anyInt()))
+                .thenReturn(false);
+        viewModel.inspection().dossierSourceProperty().set(multi);
+        viewModel.inspecter();
+        viewModel.rattachement().siteSelectionneProperty().set(site);
+        viewModel.rattachement().pointSelectionneProperty().set(point);
+
+        assertThat(viewModel.coordinationNuits().blocageProperty().get().estVide())
+                .as("tous les numéros libres : rien ne bloque, rien ne s'affiche")
+                .isTrue();
+
+        viewModel.inspection().nuits().forEach(nuit -> nuit.inclureProperty().set(false));
+
+        CompteRendu blocage = viewModel.coordinationNuits().blocageProperty().get();
+        assertThat(blocage.constats())
+                .extracting(Constat::fait)
+                .containsExactly("Incluez au moins une nuit à importer.");
+        assertThat(viewModel.coordinationNuits().numerotationValideProperty().get())
+                .isFalse();
     }
 }
