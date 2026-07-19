@@ -353,7 +353,7 @@ public class RattachementModaleController {
 
     /// Exécute l'envoi hors du fil JavaFX, affiche son compte rendu (succès **comme** échec), puis passe la
     /// main à `ensuite`. L'occupation grise les commandes le temps de l'aller-retour réseau.
-    private void pousserPuis(java.util.function.Consumer<RattachementViewModel.IssueEnvoi> ensuite) {
+    private void pousserPuis(java.util.function.Consumer<RattachementViewModel.Envoi> ensuite) {
         operationEnCours.set(true);
         executeur.executer(
                 viewModel::pousserVersVigieChiro,

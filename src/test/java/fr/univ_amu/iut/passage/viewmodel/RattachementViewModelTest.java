@@ -415,11 +415,14 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
 
         verify(sync).pousserVers(ID);
-        assertThat(issue.reussi()).isTrue();
-        assertThat(issue.message()).contains("envoyées");
+        assertThat(issue)
+                .as("abouti sans rien à signaler : la modale peut refermer")
+                .isInstanceOfSatisfying(
+                        RattachementViewModel.Envoi.Abouti.class,
+                        abouti -> assertThat(abouti.message()).contains("envoyées"));
     }
 
     @Test
@@ -436,15 +439,17 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
 
         // Dire seulement la nouvelle heure n'apprendrait pas CE qui a été corrigé, ni de combien.
-        assertThat(issue.message())
+        assertThat(issue.retour().texte())
                 .contains("réalignées")
                 .contains("15:00:00")
                 .contains("21:30:00")
                 .contains("06:15:00");
-        assertThat(issue.reussi()).as("l'envoi a bien abouti").isTrue();
+        assertThat(issue)
+                .as("abouti, mais l'heure réalignée doit être lue avant de refermer")
+                .isInstanceOf(RattachementViewModel.Envoi.ALire.class);
         assertThat(issue.peutFermer())
                 .as("fermer emporterait le message : l'app a modifié des données de l'utilisateur")
                 .isFalse();
@@ -460,9 +465,14 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
 
-        assertThat(issue.message()).isEqualTo("Métadonnées envoyées à Vigie-Chiro.");
+        // Le message brut, sans la décoration de sévérité que `RetourOperation.succes` ajoute : c'est
+        // l'absence de mention du réalignement qu'on vérifie ici, pas la mise en forme.
+        assertThat(issue)
+                .isInstanceOfSatisfying(
+                        RattachementViewModel.Envoi.Abouti.class,
+                        abouti -> assertThat(abouti.message()).isEqualTo("Métadonnées envoyées à Vigie-Chiro."));
         assertThat(issue.peutFermer()).isTrue();
     }
 
@@ -477,12 +487,12 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
 
-        assertThat(issue.reussi())
+        assertThat(issue.peutFermer())
                 .as("un refus serveur n'est PAS un succès : la modale doit retenir l'utilisateur")
                 .isFalse();
-        assertThat(issue.message()).contains("refusé").contains("412");
+        assertThat(issue.retour().texte()).contains("refusé").contains("412");
         avecSync.signalerEnvoi(issue);
         assertThat(avecSync.retourProperty().get().texte()).contains("412");
     }
@@ -497,10 +507,10 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
-        RattachementViewModel.IssueEnvoi issue = avecSync.pousserVersVigieChiro();
+        RattachementViewModel.Envoi issue = avecSync.pousserVersVigieChiro();
 
-        assertThat(issue.reussi()).isFalse();
-        assertThat(issue.message())
+        assertThat(issue).isInstanceOf(RattachementViewModel.Envoi.Empeche.class);
+        assertThat(issue.retour().texte())
                 .as("les trois causes étaient confondues sous un catch « pas encore lié »")
                 .contains("Point d'écoute introuvable");
     }
@@ -511,12 +521,15 @@ class RattachementViewModelTest {
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         viewModel.ouvrirSur(ID, "040962", "A1"); // viewModel construit avec Optional.empty()
 
-        RattachementViewModel.IssueEnvoi issue = viewModel.pousserVersVigieChiro();
+        RattachementViewModel.Envoi issue = viewModel.pousserVersVigieChiro();
 
-        assertThat(issue.reussi())
+        assertThat(issue)
                 .as("hors connexion n'est pas un échec : les métadonnées partiront au dépôt")
+                .isInstanceOf(RattachementViewModel.Envoi.Abouti.class);
+        assertThat(issue.peutFermer())
+                .as("rien ne retient l'utilisateur : il peut refermer")
                 .isTrue();
-        assertThat(issue.message()).contains("Non connecté");
+        assertThat(issue.retour().texte()).contains("Non connecté");
     }
 
     // --- Phase 2b : tirer les métadonnées depuis la participation VigieChiro ---

@@ -158,12 +158,12 @@ public class RattachementViewModel {
     /// raté était donc indiscernable d'un envoi réussi - ce que l'ADR 0008 interdit. Les trois causes
     /// d'empêchement (passage non lié, participation introuvable, point d'écoute introuvable) étaient de
     /// surcroît confondues sous un seul `catch` commenté « pas encore lié ».
-    public IssueEnvoi pousserVersVigieChiro() {
+    public Envoi pousserVersVigieChiro() {
         if (idPassage == null) {
-            return IssueEnvoi.rienAFaire();
+            return new Envoi.SansObjet();
         }
         if (synchronisation.isEmpty()) {
-            return IssueEnvoi.reussi("Non connecté à Vigie-Chiro : les métadonnées partiront au dépôt.");
+            return new Envoi.Abouti("Non connecté à Vigie-Chiro : les métadonnées partiront au dépôt.");
         }
         try {
             EnvoiParticipation envoi = synchronisation.get().pousserVers(idPassage);
@@ -171,86 +171,114 @@ public class RattachementViewModel {
             // L'ancien test `id().isPresent()` n'était vrai que parce que le client recopiait le paramètre
             // dans le champ `id` pour le satisfaire.
             if (!envoi.ecriture().estReussie()) {
-                return IssueEnvoi.echoue(
+                return new Envoi.Empeche(
                         "Vigie-Chiro a refusé l'envoi : " + envoi.ecriture().echec());
             }
             // #1885 : un réalignement a modifié les heures de la nuit. Le taire reviendrait à corriger sa
             // saisie dans son dos, et à le priver du moyen de contester la correction si elle est fausse.
+            // Le témoin <Envoi> est nécessaire : sans lui, l'inférence retient `ALire` et refuse le
+            // `Abouti` du repli, alors que les deux sont des `Envoi`.
             return envoi.realignement()
-                    .map(realignement ->
-                            IssueEnvoi.aSignaler("Métadonnées envoyées à Vigie-Chiro. " + phrase(realignement)))
-                    .orElseGet(() -> IssueEnvoi.reussi("Métadonnées envoyées à Vigie-Chiro."));
+                    .<Envoi>map(realignement ->
+                            new Envoi.ALire("Métadonnées envoyées à Vigie-Chiro. " + phrase(realignement)))
+                    .orElseGet(() -> new Envoi.Abouti("Métadonnées envoyées à Vigie-Chiro."));
         } catch (RegleMetierException empeche) {
             // La cause EST dite (non lié / participation introuvable / point d'écoute introuvable) au lieu
             // d'être supposée bénigne.
-            return IssueEnvoi.echoue("Envoi impossible : " + empeche.getMessage());
+            return new Envoi.Empeche("Envoi impossible : " + empeche.getMessage());
         }
     }
 
     /// Affiche le compte rendu d'un envoi (**sur le fil JavaFX**), jamais un silence.
-    public void signalerEnvoi(IssueEnvoi issue) {
-        if (!issue.message().isEmpty()) {
-            messages.publier(issue.retour());
+    public void signalerEnvoi(Envoi issue) {
+        RetourOperation retour = issue.retour();
+        // Un envoi sans objet n'a rien à dire : publier un retour vide effacerait le bandeau précédent
+        // sans rien y mettre.
+        if (!retour.texte().isEmpty()) {
+            messages.publier(retour);
         }
     }
-
-    /// Issue d'un envoi vers VigieChiro.
+    /// L'**issue d'un envoi** vers Vigie-Chiro, et ce que la modale en fait.
     ///
-    /// Deux questions distinctes, qu'il ne faut pas confondre :
-    ///  - `reussi` : l'envoi a-t-il abouti ? Distingue ce qui **peut être ignoré** (rien à envoyer, hors
-    ///    connexion : les métadonnées partiront au dépôt) d'un refus serveur ou d'un empêchement ;
-    ///  - `aSignaler` : s'est-il passé quelque chose que l'utilisateur **doit voir** ? Un envoi peut très
-    ///    bien réussir *et* mériter d'être commenté - c'est le cas d'un réalignement d'heures (#1885), qui
-    ///    modifie ses données.
+    /// Quatre dénouements, quatre variantes. Ils vivaient jusqu'ici dans un record à deux drapeaux
+    /// (`reussi`, `aSignaler`) dont `peutFermer()` se dérivait par `reussi && !aSignaler` : une
+    /// recombinaison qu'il fallait décoder, et deux booléens qui ne disaient ni à qui ni pourquoi. Le
+    /// dépôt exprime ce genre de chose par un **type scellé** ([VerdictIdentite], [ReponseApi],
+    /// [ResultatReset]…) : chaque variante répond pour elle-même, et le compilateur vérifie qu'aucune
+    /// n'est oubliée.
     ///
-    /// C'est [#peutFermer] qui croise les deux : fermer la modale sur un message non lu l'emporterait avec
-    /// la fenêtre, exactement le défaut que #1839 a corrigé pour les échecs.
+    /// Deux questions, et elles restent distinctes :
     ///
-    /// @param reussi `true` si l'envoi n'a rien à reprocher
-    /// @param aSignaler `true` si le message doit être lu avant de refermer
-    /// @param message ce qu'il faut dire à l'utilisateur (vide s'il n'y a rien à dire)
-    public record IssueEnvoi(boolean reussi, boolean aSignaler, String message) {
+    /// - **[#peutFermer]** décide de la fenêtre. Elle n'a de sens que dans une modale.
+    /// - **[#retour]** décide de ce qu'on affiche. [RetourOperation] vit dans `commun` et sert des
+    ///   écrans où « fermer » n'a aucun sens : y loger la décision de fermeture salirait un type partagé.
+    ///
+    /// Rien ne garantit d'ailleurs que les deux coïncident toujours - un succès qu'on voudrait laisser
+    /// lire serait un `SUCCES` qui ne ferme pas.
+    public sealed interface Envoi {
 
-        /// Envoi sans reproche ni commentaire.
-        static IssueEnvoi reussi(String message) {
-            return new IssueEnvoi(true, false, message);
-        }
+        /// Ce que l'utilisateur lit.
+        RetourOperation retour();
 
-        /// Envoi abouti, mais dont l'issue **doit être lue** avant de refermer.
-        static IssueEnvoi aSignaler(String message) {
-            return new IssueEnvoi(true, true, message);
-        }
+        /// La modale peut-elle se refermer, ou quelque chose attend-il d'être lu ?
+        boolean peutFermer();
 
-        /// Envoi empêché ou refusé.
-        static IssueEnvoi echoue(String message) {
-            return new IssueEnvoi(false, true, message);
-        }
+        /// Envoi abouti, sans rien à signaler : on peut refermer.
+        record Abouti(String message) implements Envoi {
 
-        /// Aucun envoi n'était nécessaire.
-        static IssueEnvoi rienAFaire() {
-            return new IssueEnvoi(true, false, "");
-        }
-
-        /// `true` si la modale peut se refermer : l'envoi a abouti **et** rien n'attend d'être lu.
-        public boolean peutFermer() {
-            return reussi && !aSignaler;
-        }
-
-        /// Comment **présenter** cette issue (#1917), dérivé des deux mêmes drapeaux que [#peutFermer]
-        /// sans se confondre avec lui : l'un décide de la **fenêtre**, l'autre de la **couleur**.
-        ///
-        /// Les garder distincts n'est pas de la coquetterie. `peutFermer` n'a de sens que dans une
-        /// modale, alors que [RetourOperation] vit dans `commun` et sert des écrans où « fermer » n'en a
-        /// aucun : y loger la décision salirait le type partagé. Et rien ne garantit que la
-        /// correspondance reste totale - un succès qu'on voudrait laisser lire serait un `SUCCES` qui ne
-        /// ferme pas.
-        RetourOperation retour() {
-            if (!reussi) {
-                return RetourOperation.erreur(message);
+            @Override
+            public RetourOperation retour() {
+                return RetourOperation.succes(message);
             }
-            // Abouti mais à lire : ni une panne, ni un succès ordinaire (rien à envoyer, hors connexion,
-            // métadonnées qui partiront au dépôt).
-            return aSignaler ? RetourOperation.info(message) : RetourOperation.succes(message);
+
+            @Override
+            public boolean peutFermer() {
+                return true;
+            }
+        }
+
+        /// Envoi abouti, mais dont l'issue **doit être lue** avant de refermer : ni une panne, ni un
+        /// succès ordinaire (hors connexion, métadonnées qui partiront au dépôt, heures réalignées).
+        record ALire(String message) implements Envoi {
+
+            @Override
+            public RetourOperation retour() {
+                return RetourOperation.info(message);
+            }
+
+            @Override
+            public boolean peutFermer() {
+                return false;
+            }
+        }
+
+        /// Envoi **empêché** ou refusé : la cause est dite, et la modale **retient** - l'utilisateur croit
+        /// avoir envoyé, il faut le détromper avant qu'il ne referme.
+        record Empeche(String motif) implements Envoi {
+
+            @Override
+            public RetourOperation retour() {
+                return RetourOperation.erreur(motif);
+            }
+
+            @Override
+            public boolean peutFermer() {
+                return false;
+            }
+        }
+
+        /// Aucun envoi n'était nécessaire : rien à dire, rien à retenir.
+        record SansObjet() implements Envoi {
+
+            @Override
+            public RetourOperation retour() {
+                return RetourOperation.AUCUN;
+            }
+
+            @Override
+            public boolean peutFermer() {
+                return true;
+            }
         }
     }
 
