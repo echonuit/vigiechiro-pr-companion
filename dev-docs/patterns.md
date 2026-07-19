@@ -854,6 +854,50 @@ jamais une densité ni une pastille ad hoc. Un statut de `commun.model` passe pa
 un statut de feature reçoit un `classeBadge`/`classeCss` **côté feature** (jamais une surcharge dans
 `commun`, sous peine de cycle).
 
+## Icônes d'IHM : un pictogramme se pose, il ne s'écrit pas
+
+**Le problème.** Les libellés portaient leurs pictogrammes **en toutes lettres** dans le `text` des
+FXML : `♻ Réactivation`, `☰`, `📤 Exporter…`. Un caractère dépend des **polices installées** sur la
+machine : selon le système il tombe en rectangle vide, en noir et blanc, ou en emoji couleur pleine
+taille qui déséquilibre la ligne. Il ne se **teinte** pas non plus avec le texte, donc il ne peut
+suivre aucun état. #700 avait posé la règle ; l'usage littéral était revenu, jusqu'à **35 glyphes sur
+17 vues** au moment de #1933.
+
+Le rendu est correct sur la machine qui écrit le code. C'est précisément pourquoi le défaut ne se
+signale pas tout seul : il se voit sur les **aperçus régénérés en CI**, où plusieurs pictogrammes du
+produit ne s'affichent pas du tout.
+
+**La solution.** Un [`FontIcon`](https://kordamp.org/ikonli/) (pack FontAwesome 5) dans le `<graphic>`
+du nœud, et le texte reste du texte :
+
+```xml
+<Label text="Reconstruire un passage manquant" styleClass="titre-page">
+  <graphic><FontIcon iconLiteral="fas-cloud" styleClass="titre-page-icone"/></graphic>
+</Label>
+```
+
+**Où passe la frontière.** Ce qui **désigne une action ou un objet** est une icône ; ce qui **vit dans
+une phrase** reste un caractère. Mécaniquement, par bloc Unicode : les flèches (U+2190-U+21FF) et les
+opérateurs mathématiques (U+2200-U+22FF) sont de la typographie (`A → B`, `≥ 1 mois`), tout le reste
+est un pictogramme. Un signe typographique **seul** sur un nœud retombe du côté icône : c'est un
+bouton à icône qui n'a pas dit son nom. Le raisonnement complet est dans
+[ADR 0035](decisions/0035-un-pictogramme-est-une-icone-pas-un-caractere.md).
+
+**Trois pièges.**
+
+- **`-fx-font-size` n'atteint pas un `FontIcon`.** C'est `-fx-icon-size` et `-fx-icon-color`. La
+  substitution compile, les tests passent, et l'icône se retrouve à la taille par défaut sans que rien
+  ne le dise.
+- **Une icône se réévalue comme son libellé.** Une entrée de menu dont le texte change d'état (« Se
+  connecter… » / « Vigie-Chiro : pseudo ») doit changer d'icône avec lui. `ConstructeurMenuOutils`
+  réévalue les deux à chaque `setOnShowing`, en réutilisant le `FontIcon` en place.
+- **Un `promptText` est une chaîne**, il n'accueille pas de nœud. Une loupe dans un champ de recherche
+  se pose **à côté** du champ, ou pas du tout.
+
+**La règle.** Aucun pictogramme littéral dans un FXML : `PictogrammesFxmlTest` échoue dessus. La
+**CLI** est hors sujet — une console ne rend pas de `FontIcon`, `⚠` y est le seul moyen d'écrire un
+avertissement. Les libellés bâtis en Java restent à traiter (#1564).
+
 ## Actions de ligne d'une table : double-clic et menu contextuel (socle `commun`)
 
 **Le problème.** Les neuf tables de l'application ont grandi séparément, et leurs gestes avaient
