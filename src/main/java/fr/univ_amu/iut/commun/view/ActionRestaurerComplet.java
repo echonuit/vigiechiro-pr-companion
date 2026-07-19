@@ -31,7 +31,12 @@ public final class ActionRestaurerComplet implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "↩ Restaurer une sauvegarde complète…";
+        return "Restaurer une sauvegarde complète…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-undo";
     }
 
     @Override

@@ -49,7 +49,12 @@ public final class ActionPurger implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "🧹 Purger les originaux importés…";
+        return "Purger les originaux importés…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-broom";
     }
 
     @Override

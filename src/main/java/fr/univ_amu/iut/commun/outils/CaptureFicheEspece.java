@@ -21,6 +21,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javax.imageio.ImageIO;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -71,12 +72,25 @@ public final class CaptureFicheEspece {
         ContextMenu menu = new ContextMenu();
         menu.getItems()
                 .addAll(
-                        new MenuItem("🗺 Voir sur la carte"),
+                        itemIcone("fas-map", "Voir sur la carte"),
                         new MenuItem("Fiche de l'espèce (Pipistrelle commune)"),
                         new SeparatorMenuItem(),
-                        new MenuItem("📥 Importer un CSV Tadarida…"),
-                        new MenuItem("📤 Exporter les observations (CSV)…"));
+                        itemIcone("fas-file-import", "Importer un CSV Tadarida…"),
+                        itemIcone("fas-file-export", "Exporter les observations (CSV)…"));
         return menu;
+    }
+
+    /// Item de menu avec son icône, comme le socle en construit.
+    ///
+    /// ⚠️ Ces deux menus sont **reconstruits** ici, ce que l'ADR 0025 proscrit : ils dérivent
+    /// du produit sans que rien ne rougisse.
+    /// C'est exactement ce qui vient de se produire : le passage des pictogrammes aux
+    /// icônes (#1933) a laissé ici des libellés qui n'existent plus. Remis d'aplomb faute de
+    /// mieux ; le vrai remède est de bâtir ces menus depuis les `ActionMenu` du socle.
+    private static MenuItem itemIcone(String iconeLiteral, String libelle) {
+        MenuItem item = new MenuItem(libelle);
+        item.setGraphic(new FontIcon(iconeLiteral));
+        return item;
     }
 
     /// Le menu ☰ du bandeau (extrait) : la préférence de source des fiches, parmi les outils.
@@ -84,12 +98,12 @@ public final class CaptureFicheEspece {
         ContextMenu menu = new ContextMenu();
         menu.getItems()
                 .addAll(
-                        new MenuItem("💾 Sauvegarder la base…"),
-                        new MenuItem("🧹 Purger les originaux importés…"),
+                        itemIcone("fas-save", "Sauvegarder la base…"),
+                        itemIcone("fas-broom", "Purger les originaux importés…"),
                         new SeparatorMenuItem(),
                         new CheckMenuItem("Fiches espèces sur Wikipédia (sinon GBIF)"),
                         new SeparatorMenuItem(),
-                        new MenuItem("🔌 Se connecter à Vigie-Chiro…"));
+                        itemIcone("fas-plug", "Se connecter à Vigie-Chiro…"));
         return menu;
     }
 

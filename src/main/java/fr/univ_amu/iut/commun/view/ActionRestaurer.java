@@ -29,7 +29,12 @@ public final class ActionRestaurer implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "↩ Restaurer une sauvegarde…";
+        return "Restaurer une sauvegarde…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-undo";
     }
 
     @Override

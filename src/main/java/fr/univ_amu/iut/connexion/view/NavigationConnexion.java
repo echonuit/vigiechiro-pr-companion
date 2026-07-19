@@ -52,12 +52,19 @@ public final class NavigationConnexion {
     }
 
     /// Libellé de l'entrée de menu selon l'état stocké (sans réseau) : identité si connecté, invite
-    /// sinon. Emoji cohérent avec les autres entrées du menu ☰ (💾 / ↩ / 🧹).
+    /// sinon. Son **icône** suit le même état ([#iconeMenu()]) : elle est portée par le contrat
+    /// `ActionMenu`, plus par le libellé (#1933).
     public String libelleMenu() {
         return stockage.profil()
-                .map(profil -> "✅ Vigie-Chiro : "
+                .map(profil -> "Vigie-Chiro : "
                         + (profil.pseudo() == null ? "?" : profil.pseudo())
                         + (profil.role() == null ? "" : " (" + profil.role() + ")"))
-                .orElse("🔌 Se connecter à Vigie-Chiro…");
+                .orElse("Se connecter à Vigie-Chiro…");
+    }
+
+    /// Icône de l'entrée de menu : une prise quand il reste à se brancher, une coche une fois l'identité
+    /// connue. Une icône figée dirait le contraire du libellé une fois sur deux.
+    public String iconeMenu() {
+        return stockage.profil().isPresent() ? "fas-check-circle" : "fas-plug";
     }
 }

@@ -27,7 +27,12 @@ public final class ActionOuvrirReglages implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "⚙ Réglages…";
+        return "Réglages…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-cog";
     }
 
     @Override

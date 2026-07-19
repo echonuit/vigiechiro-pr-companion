@@ -29,7 +29,12 @@ public final class ActionSauvegarder implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "💾 Sauvegarder la base…";
+        return "Sauvegarder la base…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-save";
     }
 
     @Override

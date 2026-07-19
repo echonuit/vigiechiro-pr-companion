@@ -44,8 +44,13 @@ final class ConstructeurMenuOutils {
             groupePrecedent = action.groupe();
         }
 
-        // Libellés dynamiques : réévalués à chaque ouverture (sans effet pour les libellés fixes).
-        menu.setOnShowing(evenement -> parItem.forEach((item, action) -> item.setText(action.libelle())));
+        // Libellés ET icônes dynamiques : réévalués à chaque ouverture (sans effet pour les entrées fixes).
+        // L'icône suivait jusqu'ici la seule construction : une entrée dont l'état change - la connexion -
+        // aurait gardé l'icône de son premier état, à contre-sens de son libellé (#1933).
+        menu.setOnShowing(evenement -> parItem.forEach((item, action) -> {
+            item.setText(action.libelle());
+            appliquerIcone(item, action);
+        }));
     }
 
     private static MenuItem construire(ActionMenu action, Supplier<Window> fenetre) {
@@ -58,9 +63,20 @@ final class ConstructeurMenuOutils {
             item = new MenuItem(action.libelle());
             item.setOnAction(evenement -> action.executer(fenetre.get()));
         }
-        if (!action.iconeLiteral().isBlank()) {
-            item.setGraphic(new FontIcon(action.iconeLiteral()));
-        }
+        appliquerIcone(item, action);
         return item;
+    }
+
+    /// Pose (ou retire) l'icône de l'entrée. Réutilise le [FontIcon] déjà en place quand il y en a un :
+    /// une entrée dont l'icône change à chaque ouverture n'a pas besoin d'un noeud neuf à chaque fois.
+    private static void appliquerIcone(MenuItem item, ActionMenu action) {
+        String literal = action.iconeLiteral();
+        if (literal.isBlank()) {
+            item.setGraphic(null);
+        } else if (item.getGraphic() instanceof FontIcon icone) {
+            icone.setIconLiteral(literal);
+        } else {
+            item.setGraphic(new FontIcon(literal));
+        }
     }
 }

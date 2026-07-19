@@ -37,6 +37,11 @@ public final class ActionConnexion implements ActionMenu {
     }
 
     @Override
+    public String iconeLiteral() {
+        return navigation.iconeMenu();
+    }
+
+    @Override
     public void executer(Window proprietaire) {
         navigation.ouvrir();
     }

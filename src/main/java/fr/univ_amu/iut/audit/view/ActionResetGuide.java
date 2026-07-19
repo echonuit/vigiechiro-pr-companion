@@ -57,7 +57,12 @@ public final class ActionResetGuide implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "♻ Repartir d'une base neuve…";
+        return "Repartir d'une base neuve…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-recycle";
     }
 
     @Override

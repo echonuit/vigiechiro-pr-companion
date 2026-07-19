@@ -37,7 +37,12 @@ public final class ActionSauvegarderComplet implements ActionMenu {
 
     @Override
     public String libelle() {
-        return "🗄 Sauvegarde complète (base + audio)…";
+        return "Sauvegarde complète (base + audio)…";
+    }
+
+    @Override
+    public String iconeLiteral() {
+        return "fas-archive";
     }
 
     @Override
