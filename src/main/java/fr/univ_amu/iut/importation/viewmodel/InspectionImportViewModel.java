@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.viewmodel;
 
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.importation.model.AnalyseMelange;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.JournalParse;
@@ -51,16 +52,16 @@ public class InspectionImportViewModel {
     private final ReadOnlyObjectWrapper<EtatNommage> etatNommage =
             new ReadOnlyObjectWrapper<>(this, "etatNommage", null);
     private final ReadOnlyStringWrapper resumeJournal = new ReadOnlyStringWrapper(this, "resumeJournal", "");
-    private final ReadOnlyStringWrapper avertissementMelange =
-            new ReadOnlyStringWrapper(this, "avertissementMelange", "");
-    private final ReadOnlyStringWrapper avertissementIncoherence =
-            new ReadOnlyStringWrapper(this, "avertissementIncoherence", "");
+    /// Ce que l'inspection a relevé : mélange d'enregistreurs, désaccord journal/fichiers, nuit déjà
+    /// importée. **Un** compte rendu là où il y avait trois libellés, parce que les trois décrivent le
+    /// même dossier au même instant et se lisent ensemble (#2050).
+    private final ReadOnlyObjectWrapper<CompteRendu> avertissements =
+            new ReadOnlyObjectWrapper<>(this, "avertissements", CompteRendu.de("", List.of()));
 
-    /// Avertissement **« nuit déjà importée »** (#147) : non vide quand un passage existe déjà en base
-    /// pour le même enregistreur et la même date que la nuit inspectée (détection de doublon, non
-    /// bloquante). Recalculé à chaque inspection.
-    private final ReadOnlyStringWrapper avertissementNuitExistante =
-            new ReadOnlyStringWrapper(this, "avertissementNuitExistante", "");
+    /// Les passages déjà en base pour la nuit inspectée (#147). Retenus **en donnée** et non en phrase :
+    /// la vue en tire une confirmation, le compte rendu en tire des détails, chacun avec la place dont il
+    /// dispose.
+    private List<PassageExistant> passagesDejaImportes = List.of();
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après une
     /// inspection réussie. L'orchestrateur le compose avec l'erreur d'exécution dans son message unifié.
@@ -105,9 +106,9 @@ public class InspectionImportViewModel {
                     .journalOptionnel()
                     .map(journal -> "PR n° " + journal.numeroSerie())
                     .orElse(""));
-            avertissementMelange.set(AvertissementMelange.rediger(inspection.melange()));
-            avertissementIncoherence.set(AvertissementIncoherence.rediger(inspection.coherence()));
-            avertissementNuitExistante.set(detecterNuitExistante(inspection));
+            passagesDejaImportes = passagesDeLaNuit(inspection);
+            avertissements.set(AvertissementsInspection.rediger(
+                    inspection.melange(), inspection.coherence(), passagesDejaImportes));
             peuplerNuits(inspection);
             inspecte.set(true);
             messageErreur.set("");
@@ -129,9 +130,8 @@ public class InspectionImportViewModel {
         nombreOriginaux.set(0);
         etatNommage.set(null);
         resumeJournal.set("");
-        avertissementMelange.set("");
-        avertissementIncoherence.set("");
-        avertissementNuitExistante.set("");
+        avertissements.set(CompteRendu.de("", List.of()));
+        passagesDejaImportes = List.of();
         messageErreur.set("");
         nuits.clear();
         plusieursNuits.set(false);
@@ -182,9 +182,9 @@ public class InspectionImportViewModel {
     /// Détecte (lecture base via le service) si la nuit inspectée a déjà été importée (#147) : même
     /// enregistreur + même date. L'identité vient du **journal** s'il est présent, sinon — mode dégradé
     /// (#107) — elle est **reconstituée des noms de WAV** (comme à l'import), pour que la détection couvre
-    /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. Mise en phrase
-    /// déléguée à [AvertissementNuitExistante].
-    private String detecterNuitExistante(RapportInspection rapport) {
+    /// aussi les réimports sans journal. Sans identité exploitable, rien à signaler. La mise en forme
+    /// est déléguée à [AvertissementsInspection].
+    private List<PassageExistant> passagesDeLaNuit(RapportInspection rapport) {
         String serie;
         String date;
         JournalParse journal =
@@ -195,13 +195,13 @@ public class InspectionImportViewModel {
         } else {
             AnalyseMelange analyse = AnalyseMelange.depuis(rapport.originaux());
             if (analyse.series().isEmpty() || analyse.nuits().isEmpty()) {
-                return "";
+                return List.of();
             }
             serie = analyse.series().first();
             date = analyse.nuits().first().toString();
         }
         List<PassageExistant> existants = serviceImport.nuitDejaImportee(serie, date);
-        return AvertissementNuitExistante.rediger(serie, date, existants == null ? List.of() : existants);
+        return existants == null ? List.of() : existants;
     }
 
     /// Recalcule l'avertissement « nuit déjà importée » (#147) depuis la **dernière inspection**, sans
@@ -210,7 +210,12 @@ public class InspectionImportViewModel {
     /// non l'instantané figé à l'inspection (sinon réimporter la même nuit sur un n° libre passerait sans
     /// confirmation). Sans inspection courante, l'avertissement reste vide.
     public void rafraichirNuitExistante() {
-        avertissementNuitExistante.set(rapport == null ? "" : detecterNuitExistante(rapport));
+        passagesDejaImportes = rapport == null ? List.of() : passagesDeLaNuit(rapport);
+        avertissements.set(
+                rapport == null
+                        ? CompteRendu.de("", List.of())
+                        : AvertissementsInspection.rediger(
+                                rapport.melange(), rapport.coherence(), passagesDejaImportes));
         if (rapport != null) {
             // Rafraîchit les badges par nuit **en place** (sans reconstruire la table, pour préserver les
             // cases « inclure » cochées par l'utilisateur).
@@ -299,20 +304,17 @@ public class InspectionImportViewModel {
         return resumeJournal.getReadOnlyProperty();
     }
 
-    /// Avertissement « mélange » (#33), vide si le dossier paraît homogène (une nuit, un enregistreur).
-    public ReadOnlyStringProperty avertissementMelangeProperty() {
-        return avertissementMelange.getReadOnlyProperty();
+    /// Ce que l'inspection a relevé (mélange, incohérence journal/fichiers, nuit déjà importée), à rendre
+    /// par [fr.univ_amu.iut.commun.view.VueCompteRendu]. Compte rendu **vide** si le dossier ne pose
+    /// aucune question.
+    public ReadOnlyObjectProperty<CompteRendu> avertissementsProperty() {
+        return avertissements.getReadOnlyProperty();
     }
 
-    /// Avertissement « incohérence » (#33), vide si l'identité déclarée concorde avec les enregistrements.
-    public ReadOnlyStringProperty avertissementIncoherenceProperty() {
-        return avertissementIncoherence.getReadOnlyProperty();
-    }
-
-    /// Avertissement « nuit déjà importée » (#147), vide si aucun passage n'existe en base pour cet
-    /// enregistreur à cette date (détection de doublon, non bloquante).
-    public ReadOnlyStringProperty avertissementNuitExistanteProperty() {
-        return avertissementNuitExistante.getReadOnlyProperty();
+    /// La question à poser avant d'importer une nuit déjà présente (#147), **vide** s'il n'y a rien à
+    /// confirmer. Elle liste les passages un par ligne, là où le libellé d'écran les joint en détails.
+    public String questionNuitDejaImportee() {
+        return AvertissementsInspection.question(passagesDejaImportes);
     }
 
     /// Message d'erreur **propre à l'inspection** (dossier non choisi, chemin invalide), vide après un

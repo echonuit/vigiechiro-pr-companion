@@ -102,13 +102,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private Label labelNommage;
 
     @FXML
-    private Label labelMelange;
-
-    @FXML
-    private Label labelIncoherence;
-
-    @FXML
-    private Label labelNuitExistante;
+    private VBox zoneAvertissements;
 
     @FXML
     private ComboBox<Site> comboSites;
@@ -329,19 +323,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                                 + FormatsImport.libelleNommage(
                                         inspection.etatNommageProperty().get()),
                         inspection.etatNommageProperty()));
-        // Avertissement « mélange » (#33) : visible seulement s'il y a un message.
-        labelMelange.textProperty().bind(inspection.avertissementMelangeProperty());
-        var aUnMelange = inspection.avertissementMelangeProperty().isNotEmpty();
-        lierVisibiliteGeree(labelMelange, aUnMelange);
-
-        labelIncoherence.textProperty().bind(inspection.avertissementIncoherenceProperty());
-        var aUneIncoherence = inspection.avertissementIncoherenceProperty().isNotEmpty();
-        lierVisibiliteGeree(labelIncoherence, aUneIncoherence);
-
-        // Détection « nuit déjà importée » (#147) : même patron, visible seulement s'il y a un message.
-        labelNuitExistante.textProperty().bind(inspection.avertissementNuitExistanteProperty());
-        var nuitExistante = inspection.avertissementNuitExistanteProperty().isNotEmpty();
-        lierVisibiliteGeree(labelNuitExistante, nuitExistante);
+        // Ce que l'inspection a relevé (#33, #147) : mélange d'enregistreurs, désaccord journal/fichiers,
+        // nuit déjà importée. Trois libellés jusqu'ici, un compte rendu désormais - ils décrivent le même
+        // dossier au même instant, et chacun joignait ses listes dans une phrase (#2050).
+        inspection.avertissementsProperty().addListener((observable, avant, rendu) -> afficherAvertissements(rendu));
+        afficherAvertissements(inspection.avertissementsProperty().get());
 
         // Table des nuits (#…) : construite par programme ([TableNuits]) et insérée dans sa zone, visible
         // seulement quand la carte contient plusieurs nuits.
@@ -473,6 +459,19 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         lierVisibiliteGeree(zoneRejets, aDesRejets);
     }
 
+    /// Remplace les avertissements d'inspection affichés. Tous les détails sont montrés : ils nomment des
+    /// séries, des dates et des passages, tous en petit nombre, et il n'y a pas de liste voisine vers
+    /// laquelle renvoyer.
+    private void afficherAvertissements(CompteRendu rendu) {
+        zoneAvertissements
+                .getChildren()
+                .setAll(VueCompteRendu.rendre(rendu, VueCompteRendu.SANS_PLAFOND)
+                        .getChildren());
+        zoneAvertissements.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
+        zoneAvertissements.setVisible(!rendu.estVide());
+        zoneAvertissements.setManaged(!rendu.estVide());
+    }
+
     /// Nombre de détails montrés par constat avant de résumer. L'écran en décide, pas le compte rendu
     /// (ADR 0031) : la place sous la barre de statut est comptée.
     private static final int DETAILS_MONTRES = 5;
@@ -561,7 +560,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // passerait sans confirmation. L'écrasement d'un passage au quadruplet choisi reste distinct (#279).
         viewModel.inspection().rafraichirNuitExistante();
         if (!confirmations.confirmerImportNuitDejaImportee(
-                viewModel.inspection().avertissementNuitExistanteProperty().get())) {
+                viewModel.inspection().questionNuitDejaImportee())) {
             return;
         }
         // Carte laissée tourner plusieurs nuits (#…) : un passage par nuit incluse (chemin multi-nuits),

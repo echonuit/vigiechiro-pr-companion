@@ -449,7 +449,8 @@ class ImportationViewModelTest {
 
         viewModel.inspecter();
 
-        assertThat(viewModel.inspection().avertissementMelangeProperty().get()).contains("plusieurs enregistreurs");
+        assertThat(faits(viewModel.inspection().avertissementsProperty().get()))
+                .anySatisfy(fait -> assertThat(fait).contains("plusieurs enregistreurs"));
     }
 
     @Test
@@ -481,10 +482,15 @@ class ImportationViewModelTest {
 
         viewModel.inspecter();
 
-        assertThat(viewModel.inspection().avertissementIncoherenceProperty().get())
-                .contains("la série déclarée (1925492)");
-        assertThat(viewModel.inspection().avertissementMelangeProperty().get())
-                .isEmpty(); // un seul enregistreur côté WAV
+        List<Constat> constats =
+                viewModel.inspection().avertissementsProperty().get().constats();
+        assertThat(constats).singleElement().satisfies(constat -> {
+            assertThat(constat.fait()).contains("ne correspond pas aux enregistrements");
+            assertThat(constat.details())
+                    .extracting(Detail::precision)
+                    .anySatisfy(precision -> assertThat(precision).contains("1925492"));
+        });
+        // Un seul enregistreur côté WAV : pas de constat « mélange » - il n'y a QUE l'incohérence.
     }
 
     @Test
@@ -853,6 +859,12 @@ class ImportationViewModelTest {
 
     private static PointDEcoute point(Long id, String code, Long idSite) {
         return new PointDEcoute(id, code, null, null, null, idSite);
+    }
+
+    /// Les faits du compte rendu d'inspection, pour vérifier ce qui est signalé sans dépendre du détail
+    /// de la rédaction.
+    private static List<String> faits(CompteRendu rendu) {
+        return rendu.constats().stream().map(Constat::fait).toList();
     }
 
     @Test

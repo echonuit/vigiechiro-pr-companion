@@ -81,9 +81,11 @@ class CompteRenduImportTest {
         Constat constat = rendu.constats().getFirst();
         assertThat(constat.fait()).isEqualTo("Doublon : cette nuit était déjà importée.");
         assertThat(constat.severite()).isEqualTo(Severite.ERREUR);
+        // Rédaction partagée avec l'avertissement d'inspection (#2050) : la même donnée était mise en
+        // forme deux fois, avant l'import et après, avec deux libellés différents. La plus riche l'emporte.
         assertThat(constat.details())
                 .extracting(Detail::sujet)
-                .containsExactly("n° 2 au carré 640380", "n° 7 au carré 130711");
+                .containsExactly("n° 2 (2026) au carré 640380, point Z1", "n° 7 (2026) au carré 130711, point Z4");
     }
 
     @Test

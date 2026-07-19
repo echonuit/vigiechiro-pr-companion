@@ -68,15 +68,9 @@
     <Label fx:id="labelReleve" styleClass="insp-detail"/>
     <Label fx:id="labelOriginaux" styleClass="insp-detail"/>
     <Label fx:id="labelNommage" styleClass="insp-detail"/>
-    <!-- Avertissement « mélange » (#33), affiché seulement si plusieurs enregistreurs/nuits. -->
-    <Label fx:id="labelMelange" styleClass="insp-avertissement" wrapText="true"
-           visible="false" managed="false"/>
-    <!-- Avertissement « incohérence » (#33) : journal/relevé en désaccord avec les WAV (série/date). -->
-    <Label fx:id="labelIncoherence" styleClass="insp-incoherence" wrapText="true"
-           visible="false" managed="false"/>
-    <!-- Avertissement « nuit déjà importée » (#147) : un passage existe déjà pour cet enregistreur/date. -->
-    <Label fx:id="labelNuitExistante" styleClass="insp-incoherence" wrapText="true"
-           visible="false" managed="false"/>
+    <!-- Ce que l'inspection a relevé (#33, #147) : mélange d'enregistreurs, désaccord entre le journal
+         et les fichiers, nuit déjà importée. Un compte rendu, dont la vue compose le contenu. -->
+    <VBox fx:id="zoneAvertissements" visible="false" managed="false"/>
     <!-- Découpage par nuit (#…) : une carte laissée tourner plusieurs nuits produit une ligne par nuit
          (chacune deviendra un passage). Visible seulement s'il y a plus d'une nuit. Décochez celles à
          exclure (ex. une nuit tronquée). -->

@@ -20,9 +20,10 @@ public final class ConfirmationsImport {
 
     /// `true` si l'import peut se poursuivre : soit la nuit n'a jamais été importée (`avertissement` vide),
     /// soit l'utilisateur confirme explicitement « importer quand même » comme nouveau passage (#147).
-    public boolean confirmerImportNuitDejaImportee(String avertissement) {
-        return avertissement.isEmpty()
-                || confirmateur.confirmer(avertissement + "\n\nImporter quand même comme nouveau passage ?");
+    public boolean confirmerImportNuitDejaImportee(String question) {
+        // La question est rédigée par le ViewModel, qui détient les passages concernés : la vue ne
+        // recompose plus une phrase à partir d'un avertissement d'écran (#2050).
+        return question.isEmpty() || confirmateur.confirmer(question);
     }
 
     /// `true` si l'utilisateur confirme l'**écrasement** destructif d'un passage existant (#279) : **double

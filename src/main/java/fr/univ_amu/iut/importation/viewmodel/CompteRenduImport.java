@@ -109,10 +109,13 @@ public final class CompteRenduImport {
     /// Doublon de nuit (#214/#147) : la nuit était déjà en base, l'utilisateur a choisi d'importer quand
     /// même. Chaque passage déjà présent est un détail - ils tenaient auparavant dans la phrase, joints
     /// par des virgules, sans que rien ne borne leur nombre.
+    ///
+    /// Le libellé d'un passage vient de [AvertissementsInspection#detail] : la même donnée était mise en
+    /// forme deux fois, avant l'import et après, avec deux rédactions différentes (#2050).
     private static void ajouterDoublons(List<Constat> constats, List<RapportImport> rapports) {
         List<Detail> doublons = rapports.stream()
                 .flatMap(rapport -> rapport.doublonsDeNuit().stream())
-                .map(passage -> Detail.de(String.format("n° %d au carré %s", passage.numeroPassage(), passage.carre())))
+                .map(AvertissementsInspection::detail)
                 .toList();
         if (!doublons.isEmpty()) {
             constats.add(new Constat("Doublon : cette nuit était déjà importée.", Severite.ERREUR, doublons));

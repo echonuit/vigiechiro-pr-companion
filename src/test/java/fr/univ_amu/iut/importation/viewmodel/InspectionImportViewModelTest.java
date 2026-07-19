@@ -3,6 +3,8 @@ package fr.univ_amu.iut.importation.viewmodel;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.PassageExistant;
@@ -97,11 +99,11 @@ class InspectionImportViewModelTest {
 
         vm.inspecter();
 
-        assertThat(vm.avertissementNuitExistanteProperty().get())
-                .contains("déjà été importée")
-                .contains("n° 2")
-                .contains("carré 640380")
-                .contains("point Z1");
+        Constat constat = vm.avertissementsProperty().get().constats().getFirst();
+        assertThat(constat.fait()).contains("déjà été importée");
+        assertThat(constat.details())
+                .extracting(Detail::sujet)
+                .containsExactly("n° 2 (2026) au carré 640380, point Z1");
     }
 
     @Test
@@ -116,10 +118,14 @@ class InspectionImportViewModelTest {
         vm.inspecter();
 
         assertThat(vm.aUnJournalProperty().get()).isFalse();
-        assertThat(vm.avertissementNuitExistanteProperty().get())
+        assertThat(vm.avertissementsProperty().get().constats())
                 .as("le doublon est détecté même sans journal (identité reconstituée des noms de WAV)")
-                .contains("déjà été importée")
-                .contains("n° 2");
+                .anySatisfy(constat -> {
+                    assertThat(constat.fait()).contains("déjà été importée");
+                    assertThat(constat.details())
+                            .extracting(Detail::sujet)
+                            .anySatisfy(sujet -> assertThat(sujet).contains("n° 2"));
+                });
     }
 
     @Test
@@ -131,7 +137,9 @@ class InspectionImportViewModelTest {
 
         vm.inspecter();
 
-        assertThat(vm.avertissementNuitExistanteProperty().get()).isEmpty();
+        assertThat(vm.avertissementsProperty().get().estVide())
+                .as("nuit inédite : rien à signaler")
+                .isTrue();
     }
 
     @Test

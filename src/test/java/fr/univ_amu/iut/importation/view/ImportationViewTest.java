@@ -152,13 +152,16 @@ class ImportationViewTest {
     }
 
     @Test
-    @DisplayName("Les avertissements mélange et incohérence sont masqués avant toute inspection")
+    @DisplayName("Ce que l'inspection relève est masqué avant toute inspection")
     void avertissements_caches_au_depart(FxRobot robot) {
-        Label labelMelange = robot.lookup("#labelMelange").queryAs(Label.class);
-        Label labelIncoherence = robot.lookup("#labelIncoherence").queryAs(Label.class);
+        // Trois libellés jusqu'à #2050 (mélange, incohérence, nuit déjà importée), un compte rendu
+        // désormais : ils décrivent le même dossier au même instant.
+        VBox zone = robot.lookup("#zoneAvertissements").queryAs(VBox.class);
 
-        assertThat(labelMelange.isVisible()).isFalse();
-        assertThat(labelIncoherence.isVisible()).isFalse();
+        assertThat(zone.isVisible()).isFalse();
+        assertThat(zone.isManaged())
+                .as("une zone vide qui garderait sa place laisserait un trou dans la section")
+                .isFalse();
     }
 
     @Test

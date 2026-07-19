@@ -139,7 +139,7 @@ class ImportationVueIntegrationTest {
         assertThat(robot.lookup("#champPassage").queryAs(TextField.class)).isNotNull();
         assertThat(robot.lookup("#labelApercu").queryAs(Label.class)).isNotNull();
         assertThat(robot.lookup("#labelPrefixeDiscordant").queryAs(Label.class)).isNotNull(); // #111
-        assertThat(robot.lookup("#labelNuitExistante").queryAs(Label.class)).isNotNull(); // #147
+        assertThat(robot.lookup("#zoneAvertissements").queryAs(VBox.class)).isNotNull(); // #33/#147
         assertThat(robot.lookup("#boutonImporter").queryAs(Button.class)).isNotNull();
         assertThat(robot.lookup("#caseConserverOriginaux").queryAs(CheckBox.class))
                 .isNotNull(); // conservation
