@@ -18,8 +18,14 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.SuiviOperation;
+import fr.univ_amu.iut.commun.view.VueCompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.Observation;
@@ -30,11 +36,13 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleStringProperty;
+import javafx.scene.Parent;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Window;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -175,12 +183,15 @@ class PublicationCorrectionsUITest {
     @Test
     @DisplayName("garde : item grisé + libellé explicite quand la publication est hors d'atteinte (#1596)")
     void garde_avant_publication() {
+        ReadOnlyObjectWrapper<RetourOperation> retour = new ReadOnlyObjectWrapper<>(RetourOperation.AUCUN);
+        ReadOnlyObjectWrapper<CompteRendu> compteRendu = new ReadOnlyObjectWrapper<>(CompteRendu.de("", List.of()));
         when(publication.enCoursProperty()).thenReturn(new SimpleBooleanProperty(false));
-        when(publication.messageProperty()).thenReturn(new SimpleStringProperty(""));
+        when(publication.retourProperty()).thenReturn(retour.getReadOnlyProperty());
+        when(publication.compteRenduProperty()).thenReturn(compteRendu.getReadOnlyProperty());
         MenuItem item = new MenuItem();
         BooleanProperty publicationImpossible = new SimpleBooleanProperty(false);
 
-        PublicationCorrectionsUI.cabler(item, new Label(), publication, publicationImpossible);
+        PublicationCorrectionsUI.cabler(item, new VBox(), publication, publicationImpossible);
 
         assertThat(item.isDisable()).as("publication atteignable : offerte").isFalse();
         assertThat(item.getText()).doesNotContain("rattachez");
@@ -217,5 +228,53 @@ class PublicationCorrectionsUITest {
                 .doesNotContain("Resteront à quai");
         verify(publication).publier(eq(7L), any(), any());
         verify(publication).appliquerBilan(bilan);
+    }
+
+    @Test
+    @DisplayName("#2004 : le compte rendu publié atteint la zone dédiée, le libellé garde le retour")
+    void compte_rendu_rendu_dans_la_zone() {
+        ReadOnlyObjectWrapper<RetourOperation> retour = new ReadOnlyObjectWrapper<>(RetourOperation.AUCUN);
+        ReadOnlyObjectWrapper<CompteRendu> compteRendu = new ReadOnlyObjectWrapper<>(CompteRendu.de("", List.of()));
+        when(publication.enCoursProperty()).thenReturn(new SimpleBooleanProperty(false));
+        when(publication.retourProperty()).thenReturn(retour.getReadOnlyProperty());
+        when(publication.compteRenduProperty()).thenReturn(compteRendu.getReadOnlyProperty());
+        VBox zone = new VBox();
+
+        PublicationCorrectionsUI.cabler(new MenuItem(), zone, publication, new SimpleBooleanProperty(false));
+        VBox compteRenduAffiche = PublicationCorrectionsUI.zoneDuCompteRendu(zone);
+
+        assertThat(zone.isVisible())
+                .as("rien publié : la zone ne prend pas de place")
+                .isFalse();
+
+        // Monté ici plutôt qu'appelé sur le ViewModel : ce test porte sur le CÂBLAGE, pas sur la
+        // fabrication du compte rendu, que PublicationCorrectionsViewModelTest tient déjà.
+        compteRendu.set(CompteRendu.de(
+                "Corrections publiées vers Vigie-Chiro",
+                List.of(new Constat(
+                        "2 refus de la plateforme.",
+                        Severite.ERREUR,
+                        List.of(Detail.de("Observation 7 : HTTP 404"), Detail.de("Observation 12 : HTTP 500"))))));
+
+        assertThat(zone.isVisible()).isTrue();
+        assertThat(compteRenduAffiche.getStyleClass()).contains(VueCompteRendu.CLASSE_RACINE);
+        // Les DEUX refus sont à l'écran : c'est la reprise que #2004 cherchait. La version en phrase
+        // n'en montrait qu'un, et rien ne disait à l'observateur qu'il en manquait.
+        assertThat(textes(zone)).contains("Observation 7 : HTTP 404", "Observation 12 : HTTP 500");
+        Label message = (Label) zone.getChildren().getFirst();
+        assertThat(message.isVisible())
+                .as("aucun échec : le canal du retour reste muet")
+                .isFalse();
+
+        retour.set(RetourOperation.erreur("Vigie-Chiro injoignable."));
+        assertThat(message.isVisible()).isTrue();
+        assertThat(message.getText()).isEqualTo("Vigie-Chiro injoignable.");
+    }
+
+    /// Tous les libellés du sous-arbre, pour lire ce que la zone montre réellement.
+    private static List<String> textes(Parent racine) {
+        return racine.lookupAll(".label").stream()
+                .map(noeud -> ((Label) noeud).getText())
+                .toList();
     }
 }

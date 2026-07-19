@@ -239,7 +239,7 @@ public class ReactivationModaleController {
     }
 
     /// Nombre de détails montrés par constat avant de résumer. La **modale** en décide : elle doit rester
-    /// lisible, là où la sortie de  les rend tous parce qu'elle se filtre (ADR 0031).
+    /// lisible, là où la sortie de la CLI les rend tous parce qu'elle se filtre (ADR 0031).
     private static final int DETAILS_MONTRES = 5;
 
     /// Remplace le compte rendu affiché. On reconstruit plutôt qu'on ne met à jour : un compte rendu est

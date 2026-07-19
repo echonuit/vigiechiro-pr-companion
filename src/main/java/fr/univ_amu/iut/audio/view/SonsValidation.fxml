@@ -135,9 +135,11 @@
   <Label fx:id="lblImportVigieChiro" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
          visible="false" managed="false"/>
 
-  <!-- Avancement / bilan de la publication des corrections (#723), masqué tant que rien n'a été lancé. -->
-  <Label fx:id="lblPublierCorrections" styleClass="audio-message" wrapText="true" maxWidth="Infinity"
-         visible="false" managed="false"/>
+  <!-- Restitution de la publication des corrections (#723), masquée tant que rien n'a été lancé. Un seul
+       emplacement, dont PublicationCorrectionsUI compose le contenu : le compte rendu structuré (ADR 0031)
+       et, au-dessus, le retour d'opération borné (refus, annulation). Deux natures, deux nœuds - mais que
+       la vue fabrique, pour ne pas alourdir le contrôleur d'un champ par nœud. -->
+  <VBox fx:id="zonePublierCorrections" visible="false" managed="false"/>
 
   <!-- Disponibilité de l'audio du passage (#1301) : « passage archivé » ou « audio partiel n/total »,
        avec la voie de retour (réimport). Masqué (non managé) quand l'audio est complet. -->

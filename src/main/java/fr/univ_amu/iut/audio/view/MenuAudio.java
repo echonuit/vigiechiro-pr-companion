@@ -10,6 +10,7 @@ import javafx.beans.binding.Bindings;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.layout.VBox;
 
 /// Câblage des items du menu « ☰ » de « Sons & validation » **propres au workflow et à la source**
 /// (#1194) : libellés dynamiques Importer/Réimporter, activation des exports, case « inclure
@@ -26,7 +27,7 @@ final class MenuAudio {
             MenuItem importerVigieChiro,
             Label lblImportVigieChiro,
             MenuItem publierCorrections,
-            Label lblPublierCorrections,
+            VBox zonePublierCorrections,
             CheckMenuItem inclureMode,
             MenuItem exporterVu,
             MenuItem exporterObservations,
@@ -59,7 +60,7 @@ final class MenuAudio {
         // passage n'a aucun ancrage plateforme (#1596). Restitution dédiée.
         PublicationCorrectionsUI.cabler(
                 items.publierCorrections(),
-                items.lblPublierCorrections(),
+                items.zonePublierCorrections(),
                 publicationCorrections,
                 viewModel.publicationImpossibleProperty());
         items.exporterVu()

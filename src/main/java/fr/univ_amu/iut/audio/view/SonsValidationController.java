@@ -173,7 +173,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private Label lblImportVigieChiro;
 
     @FXML
-    private Label lblPublierCorrections;
+    private VBox zonePublierCorrections;
 
     @FXML
     private CheckMenuItem itemInclureMode;
@@ -488,7 +488,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
                 itemImporterVigieChiro,
                 lblImportVigieChiro,
                 itemPublierCorrections,
-                lblPublierCorrections,
+                zonePublierCorrections,
                 itemInclureMode,
                 itemExporterVu,
                 itemExporterObservations,
