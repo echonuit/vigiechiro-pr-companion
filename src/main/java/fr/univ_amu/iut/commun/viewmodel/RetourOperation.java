@@ -19,8 +19,34 @@ package fr.univ_amu.iut.commun.viewmodel;
 /// polices de la machine - sur celles qui ne le portent pas, il ne s'affichait pas du tout.
 ///
 /// @param texte message présenté à l'utilisateur (vide = aucun retour à afficher)
-/// @param severite niveau d'affichage (succès / information / erreur)
+/// @param severite niveau d'affichage (succès / information / avertissement / erreur)
 public record RetourOperation(String texte, Severite severite) {
+
+    /// Glyphes de sévérité, **refusés en tête de message**. Cf. le contrôle du constructeur compact.
+    private static final String GLYPHES_DE_SEVERITE = "⚠✓✗❌⛔✅❗";
+
+    /// Refuse un message qui **ouvre par un glyphe de sévérité**.
+    ///
+    /// La sévérité est portée par [#severite()], et la vue la rend deux fois - en couleur et en icône
+    /// ([fr.univ_amu.iut.commun.view.BandeauRetour], [fr.univ_amu.iut.commun.view.LibelleRetour]). Un
+    /// « ⚠ » dans la chaîne la dirait une troisième fois, sans que rien ne garantisse l'accord entre les
+    /// trois : un message « ⚠ … » posé en `Severite.ERREUR` s'afficherait en rouge avec un cercle barré
+    /// et un triangle dans le texte.
+    ///
+    /// Ce n'est pas une précaution théorique. Avant #2052, faute d'un niveau `AVERTISSEMENT`, huit
+    /// propriétés avaient **quitté ce type** pour redevenir des chaînes libres portant leur glyphe
+    /// (#2050) - et une fois dehors, plus rien ne bornait leur longueur : trois y joignaient des listes.
+    /// La garde ferme la porte par laquelle elles sont sorties.
+    ///
+    /// Elle ne couvre **que** ce type. Les propriétés `String` ad hoc restent libres d'écrire ce qu'elles
+    /// veulent : c'est le trou que #2050 achève de combler, propriété par propriété.
+    public RetourOperation {
+        if (texte != null && !texte.isEmpty() && GLYPHES_DE_SEVERITE.indexOf(texte.charAt(0)) >= 0) {
+            throw new IllegalArgumentException(
+                    "La sévérité d'un retour est portée par son niveau, pas par un glyphe en tête de"
+                            + " message. Message refusé : " + texte);
+        }
+    }
 
     /// Niveau d'affichage d'un [RetourOperation], piloté côté vue par une classe CSS dédiée.
     ///

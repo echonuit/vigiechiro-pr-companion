@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
@@ -57,5 +58,32 @@ class SeveriteTest {
         // Le point de tout l'exercice : le message ne porte plus de marqueur. La vue rend la sévérité
         // deux fois (couleur et icône) depuis la valeur, et ne peut donc pas se contredire.
         assertThat(retour.texte()).doesNotContain("⚠");
+    }
+
+    @Test
+    @DisplayName("#2050 : un message ouvrant par un glyphe de sévérité est refusé")
+    void glyphe_en_tete_refuse() {
+        // La vue rend déjà la sévérité deux fois, en couleur et en icône. Un glyphe dans la chaîne la
+        // dirait une troisième fois sans garantie d'accord : « ⚠ … » en ERREUR donnerait un cercle barré
+        // rouge ET un triangle dans le texte.
+        assertThatThrownBy(() -> RetourOperation.avertissement("⚠ Le passage n° 3 existe déjà."))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("portée par son niveau");
+
+        assertThatThrownBy(() -> RetourOperation.succes("✓ Import terminé."))
+                .isInstanceOf(IllegalArgumentException.class);
+        assertThatThrownBy(() -> RetourOperation.erreur("✗ Échec.")).isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    @DisplayName("La garde ne mord qu'en TÊTE, et laisse passer le vide")
+    void garde_ciblee() {
+        // Un glyphe au milieu d'une phrase n'usurpe pas la sévérité : il illustre. Refuser tout glyphe
+        // interdirait par exemple de citer le nom d'une colonne qui en porte un.
+        assertThat(RetourOperation.info("Les lignes marquées ✓ ont été écoutées.")
+                        .present())
+                .isTrue();
+        assertThat(RetourOperation.AUCUN.present()).isFalse();
+        assertThat(new RetourOperation("", Severite.INFO).texte()).isEmpty();
     }
 }
