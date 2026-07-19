@@ -50,8 +50,8 @@ final class MenuAudio {
         items.importer()
                 .textProperty()
                 .bind(Bindings.when(viewModel.resultatsDisponiblesProperty())
-                        .then("🔁 Réimporter un CSV Tadarida…")
-                        .otherwise("📥 Importer un CSV Tadarida…"));
+                        .then("Réimporter un CSV Tadarida…")
+                        .otherwise("Importer un CSV Tadarida…"));
         // Import VigieChiro (axe 4.2) : câblage (libellé Importer/Réimporter, désactivation, restitution)
         // délégué à ImportVigieChiroUI. Sa visibilité (workflow + connexion) est gérée dans [#adapter].
         ImportVigieChiroUI.cabler(items.importerVigieChiro(), items.lblImportVigieChiro(), importVigieChiro, viewModel);
@@ -74,8 +74,8 @@ final class MenuAudio {
         items.exporterObservations()
                 .textProperty()
                 .bind(Bindings.when(Bindings.isEmpty(viewModel.observationsFiltrees()))
-                        .then("📤 Exporter les observations (CSV)… (aucune observation à exporter)")
-                        .otherwise("📤 Exporter les observations (CSV)…"));
+                        .then("Exporter les observations (CSV)… (aucune observation à exporter)")
+                        .otherwise("Exporter les observations (CSV)…"));
         // Inclure (ou non) la colonne validation_mode dans l'export _Vu (R24). Persisté (#1006) : le VM
         // (recréé à chaque chargement) suit le réglage partagé avec l'onglet « Audio », puis la case du ☰
         // suit le VM. Ordre important pour l'initialisation depuis la valeur persistée.

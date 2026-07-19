@@ -51,9 +51,9 @@ final class PublicationCorrectionsUI {
         item.disableProperty().bind(publication.enCoursProperty().or(publicationImpossible));
         item.textProperty()
                 .bind(Bindings.when(publicationImpossible)
-                        .then("☁ Publier les corrections vers Vigie-Chiro…"
+                        .then("Publier les corrections vers Vigie-Chiro…"
                                 + " (rattachez la nuit à sa participation Vigie-Chiro)")
-                        .otherwise("☁ Publier les corrections vers Vigie-Chiro…"));
+                        .otherwise("Publier les corrections vers Vigie-Chiro…"));
         message.textProperty().bind(publication.messageProperty());
         message.visibleProperty().bind(publication.messageProperty().isNotEmpty());
         message.managedProperty().bind(publication.messageProperty().isNotEmpty());

@@ -66,8 +66,12 @@
     <VBox fx:id="checklist" spacing="3.0"/>
     <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
     <StackPane fx:id="enveloppePreparer" alignment="CENTER_LEFT">
-      <Button fx:id="btnPreparer" text="📦 Vérifier et préparer le dépôt"
-              styleClass="bouton-primaire" onAction="#preparer"/>
+      <Button fx:id="btnPreparer" text="Vérifier et préparer le dépôt"
+              styleClass="bouton-primaire" onAction="#preparer">
+        <graphic>
+          <FontIcon iconLiteral="fas-box"/>
+        </graphic>
+      </Button>
     </StackPane>
   </VBox>
 
@@ -85,8 +89,12 @@
     <Label text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser, écrites dans le sous-dossier « depot/ » de la session."
            styleClass="section-sous" wrapText="true"/>
     <HBox spacing="8.0" alignment="CENTER_LEFT">
-      <Button fx:id="btnGenererArchives" text="🗜 Générer les archives de dépôt"
-              styleClass="bouton-secondaire" onAction="#genererArchives"/>
+      <Button fx:id="btnGenererArchives" text="Générer les archives de dépôt"
+              styleClass="bouton-secondaire" onAction="#genererArchives">
+        <graphic>
+          <FontIcon iconLiteral="fas-file-archive"/>
+        </graphic>
+      </Button>
       <!-- Progression déterminée (#769) : barre + estimation de durée, visibles pendant la génération. -->
       <ProgressBar fx:id="barreGeneration" prefWidth="220.0" maxWidth="Infinity" progress="0.0"
                    visible="false" managed="false" HBox.hgrow="ALWAYS"/>
@@ -115,12 +123,20 @@
          enveloppe pour expliquer le grisage au survol. -->
     <HBox spacing="8.0" alignment="CENTER_LEFT">
       <StackPane fx:id="enveloppeTeleverser" alignment="CENTER_LEFT">
-        <Button fx:id="btnTeleverser" text="☁ Téléverser sur Vigie-Chiro"
-                styleClass="bouton-primaire" onAction="#televerserVigieChiro"/>
+        <Button fx:id="btnTeleverser" text="Téléverser sur Vigie-Chiro"
+                styleClass="bouton-primaire" onAction="#televerserVigieChiro">
+          <graphic>
+            <FontIcon fx:id="iconeTeleverser" iconLiteral="fas-cloud"/>
+          </graphic>
+        </Button>
       </StackPane>
       <StackPane fx:id="enveloppeOuvrirDepot" alignment="CENTER_LEFT">
-        <Button fx:id="btnOuvrirDepot" text="📂 Ouvrir le dossier (dépôt manuel)"
-                styleClass="bouton-secondaire" onAction="#ouvrirDossierDepot"/>
+        <Button fx:id="btnOuvrirDepot" text="Ouvrir le dossier (dépôt manuel)"
+                styleClass="bouton-secondaire" onAction="#ouvrirDossierDepot">
+          <graphic>
+            <FontIcon iconLiteral="fas-folder-open"/>
+          </graphic>
+        </Button>
       </StackPane>
       <!-- Annulation coopérative du dépôt (#1044) : visible seulement pendant un téléversement. Le
            fichier en cours se termine d'abord (jamais d'arrêt au milieu d'un fichier) ; « Reprendre le
@@ -133,8 +149,11 @@
       </Button>
       <!-- Réinitialiser le dépôt (#984) : efface le suivi local pour forcer un nouveau téléversement.
            Visible dès qu'un plan de dépôt existe (câblé par le contrôleur). -->
-      <Button fx:id="btnReinitialiserDepot" text="🔄 Réinitialiser le dépôt"
+      <Button fx:id="btnReinitialiserDepot" text="Réinitialiser le dépôt"
               styleClass="bouton-secondaire" onAction="#reinitialiserDepot" visible="false" managed="false">
+        <graphic>
+          <FontIcon iconLiteral="fas-sync-alt"/>
+        </graphic>
         <tooltip>
           <Tooltip text="Efface le suivi local de dépôt pour permettre un nouveau téléversement. Les archives ZIP sur disque et la participation Vigie-Chiro sont conservées."/>
         </tooltip>
@@ -152,8 +171,12 @@
     <Label text="Une fois le téléversement effectué sur Vigie-Chiro, enregistrez le dépôt."
            styleClass="section-sous" wrapText="true"/>
     <StackPane fx:id="enveloppeDeposer" alignment="CENTER_LEFT">
-      <Button fx:id="btnDeposer" text="✅ Marquer déposé"
-              styleClass="bouton-secondaire" onAction="#deposer"/>
+      <Button fx:id="btnDeposer" text="Marquer déposé"
+              styleClass="bouton-secondaire" onAction="#deposer">
+        <graphic>
+          <FontIcon fx:id="iconeDeposer" iconLiteral="fas-check"/>
+        </graphic>
+      </Button>
     </StackPane>
   </VBox>
 
@@ -166,7 +189,11 @@
     <Label fx:id="lblEtatTraitement" styleClass="section-sous" wrapText="true"/>
     <Label fx:id="lblFraicheurTraitement" styleClass="section-sous" wrapText="true"/>
     <Label fx:id="lblAlerteTraitement" styleClass="message-lot" wrapText="true"/>
-    <Button fx:id="btnActualiserTraitement" text="🔄 Actualiser" styleClass="bouton-secondaire"/>
+    <Button fx:id="btnActualiserTraitement" text="Actualiser" styleClass="bouton-secondaire">
+      <graphic>
+        <FontIcon iconLiteral="fas-sync-alt"/>
+      </graphic>
+    </Button>
   </VBox>
 
   <!-- Nettoyage optionnel - libérer l'espace disque (#…) : actif dès qu'il existe des archives ZIP dans
@@ -176,8 +203,12 @@
     <Label text="Libérer l'espace disque" styleClass="section-titre"/>
     <Label text="Après les avoir téléversées, vous pouvez supprimer les archives ZIP locales (dans depot/) pour libérer de l'espace : elles restent régénérables à l'identique via « Générer les archives »."
            styleClass="section-sous" wrapText="true"/>
-    <Button fx:id="btnSupprimerArchives" text="🗑 Supprimer les archives de dépôt"
-            styleClass="bouton-secondaire" onAction="#supprimerArchives"/>
+    <Button fx:id="btnSupprimerArchives" text="Supprimer les archives de dépôt"
+            styleClass="bouton-secondaire" onAction="#supprimerArchives">
+      <graphic>
+        <FontIcon iconLiteral="fas-trash"/>
+      </graphic>
+    </Button>
   </VBox>
 
 </VBox>

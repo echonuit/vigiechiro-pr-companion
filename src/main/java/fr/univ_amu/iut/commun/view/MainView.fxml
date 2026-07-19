@@ -46,7 +46,11 @@
              reçoit le survol) pour expliquer le grisage du retour pendant un import (#789). L'enveloppe
              suit la visibilité du bouton (présent hors accueil). -->
         <StackPane fx:id="enveloppeRetour">
-          <Button fx:id="boutonRetour" styleClass="bouton-retour" text="← Retour" onAction="#revenir"/>
+          <Button fx:id="boutonRetour" styleClass="bouton-retour" text="Retour" onAction="#revenir">
+            <graphic>
+              <FontIcon iconLiteral="fas-arrow-left"/>
+            </graphic>
+          </Button>
         </StackPane>
         <HBox fx:id="filAriane" styleClass="fil-ariane" alignment="CENTER_LEFT" spacing="4.0"
               HBox.hgrow="ALWAYS"/>

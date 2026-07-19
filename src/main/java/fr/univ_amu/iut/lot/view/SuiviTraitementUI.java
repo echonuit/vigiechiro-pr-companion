@@ -69,7 +69,7 @@ final class SuiviTraitementUI {
                 .textProperty()
                 .bind(Bindings.when(viewModel.enCoursProperty())
                         .then("Relevé en cours…")
-                        .otherwise("🔄 Actualiser"));
+                        .otherwise("Actualiser"));
         actualiser.setOnAction(evenement -> actualiser());
         zone.setVisible(false);
         zone.setManaged(false);

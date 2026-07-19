@@ -71,17 +71,49 @@
           <Tooltip text="Actions : voir sur la carte, importer, exporter"/>
         </tooltip>
         <items>
-          <MenuItem fx:id="itemVoirCarte" text="🗺 Voir sur la carte" onAction="#voirSurCarte"/>
+          <MenuItem fx:id="itemVoirCarte" text="Voir sur la carte" onAction="#voirSurCarte">
+            <graphic>
+              <FontIcon iconLiteral="fas-map"/>
+            </graphic>
+          </MenuItem>
           <MenuItem fx:id="itemFicheEspece" text="Fiche de l'espèce"/>
           <SeparatorMenuItem/>
-          <MenuItem fx:id="itemImporter" text="📥 Importer un CSV Tadarida…" onAction="#importer"/>
-          <MenuItem fx:id="itemImporterVigieChiro" text="☁ Importer depuis Vigie-Chiro…" onAction="#importerDepuisVigieChiro"/>
-          <MenuItem fx:id="itemPublierCorrections" text="☁ Publier les corrections vers Vigie-Chiro…" onAction="#publierCorrections"/>
-          <MenuItem fx:id="itemOuvrirVigieChiro" text="🌐 Ouvrir les données sur Vigie-Chiro" onAction="#ouvrirDonneesVigieChiro"/>
+          <MenuItem fx:id="itemImporter" text="Importer un CSV Tadarida…" onAction="#importer">
+            <graphic>
+              <FontIcon iconLiteral="fas-file-import"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemImporterVigieChiro" text="Importer depuis Vigie-Chiro…" onAction="#importerDepuisVigieChiro">
+            <graphic>
+              <FontIcon iconLiteral="fas-cloud"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemPublierCorrections" text="Publier les corrections vers Vigie-Chiro…" onAction="#publierCorrections">
+            <graphic>
+              <FontIcon iconLiteral="fas-cloud"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemOuvrirVigieChiro" text="Ouvrir les données sur Vigie-Chiro" onAction="#ouvrirDonneesVigieChiro">
+            <graphic>
+              <FontIcon iconLiteral="fas-globe"/>
+            </graphic>
+          </MenuItem>
           <CheckMenuItem fx:id="itemInclureMode" text="Inclure le mode de validation à l'export _Vu"/>
-          <MenuItem fx:id="itemExporterVu" text="📤 Exporter _Vu…" onAction="#exporterVu"/>
-          <MenuItem fx:id="itemExporterObservations" text="📤 Exporter les observations (CSV)…" onAction="#exporterObservations"/>
-          <MenuItem fx:id="itemExporterBiblio" text="📤 Exporter la bibliothèque…" onAction="#exporterBibliotheque"/>
+          <MenuItem fx:id="itemExporterVu" text="Exporter _Vu…" onAction="#exporterVu">
+            <graphic>
+              <FontIcon iconLiteral="fas-file-export"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemExporterObservations" text="Exporter les observations (CSV)…" onAction="#exporterObservations">
+            <graphic>
+              <FontIcon iconLiteral="fas-file-export"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemExporterBiblio" text="Exporter la bibliothèque…" onAction="#exporterBibliotheque">
+            <graphic>
+              <FontIcon iconLiteral="fas-file-export"/>
+            </graphic>
+          </MenuItem>
         </items>
       </MenuButton>
     </right>
@@ -175,12 +207,20 @@
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">
         <ComboBox fx:id="choixMode" accessibleText="Mode de revue" promptText="Mode de revue"/>
         <StackPane fx:id="enveloppeValider">
-          <Button fx:id="btnValider" text="✔ Valider" onAction="#valider"/>
+          <Button fx:id="btnValider" text="Valider" onAction="#valider">
+            <graphic>
+              <FontIcon iconLiteral="fas-check"/>
+            </graphic>
+          </Button>
         </StackPane>
         <Region prefWidth="12.0"/>
         <ComboBox fx:id="choixTaxon" promptText="Choisir un taxon…"/>
         <StackPane fx:id="enveloppeCorriger">
-          <Button fx:id="btnCorriger" text="✎ Corriger" onAction="#corriger"/>
+          <Button fx:id="btnCorriger" text="Corriger" onAction="#corriger">
+            <graphic>
+              <FontIcon iconLiteral="fas-pen"/>
+            </graphic>
+          </Button>
         </StackPane>
         <StackPane fx:id="enveloppeCertitude">
           <MenuButton fx:id="menuCertitude" text="Certitude"/>

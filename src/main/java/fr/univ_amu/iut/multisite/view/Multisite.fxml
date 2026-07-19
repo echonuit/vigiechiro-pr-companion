@@ -74,18 +74,38 @@
           <Tooltip text="Actions : écouter le passage ou la sélection filtrée, exporter"/>
         </tooltip>
         <items>
-          <MenuItem fx:id="itemEcouterPassage" text="🎧 Écouter le passage sélectionné" onAction="#ecouterPassage"/>
-          <MenuItem fx:id="itemEcouterLot" text="🎧 Écouter la sélection filtrée" onAction="#ecouterLot"/>
-          <MenuItem fx:id="itemExporter" text="📤 Exporter…" onAction="#exporter"/>
+          <MenuItem fx:id="itemEcouterPassage" text="Écouter le passage sélectionné" onAction="#ecouterPassage">
+            <graphic>
+              <FontIcon iconLiteral="fas-headphones"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemEcouterLot" text="Écouter la sélection filtrée" onAction="#ecouterLot">
+            <graphic>
+              <FontIcon iconLiteral="fas-headphones"/>
+            </graphic>
+          </MenuItem>
+          <MenuItem fx:id="itemExporter" text="Exporter…" onAction="#exporter">
+            <graphic>
+              <FontIcon iconLiteral="fas-file-export"/>
+            </graphic>
+          </MenuItem>
           <!-- #1396 : les nuits déposées depuis un autre poste n'apparaissent dans AUCUNE ligne de cette
                table. C'est ici qu'on s'en aperçoit, c'est donc ici qu'on les rapatrie. Retiré hors
                connexion VigieChiro (la reconstruction lit la plateforme). -->
-          <MenuItem fx:id="itemReconstruire" text="☁ Reconstruire un passage manquant…"
-                    onAction="#reconstruirePassage"/>
+          <MenuItem fx:id="itemReconstruire" text="Reconstruire un passage manquant…"
+                    onAction="#reconstruirePassage">
+            <graphic>
+              <FontIcon iconLiteral="fas-cloud"/>
+            </graphic>
+          </MenuItem>
           <!-- #1338 : relève l'état des analyses de toutes les nuits déposées, À LA DEMANDE (aucun
                sondage automatique). Retiré hors connexion VigieChiro (il interroge la plateforme). -->
-          <MenuItem fx:id="itemReleverAnalyses" text="☁ Relever l'état des analyses"
-                    onAction="#releverAnalyses"/>
+          <MenuItem fx:id="itemReleverAnalyses" text="Relever l'état des analyses"
+                    onAction="#releverAnalyses">
+            <graphic>
+              <FontIcon iconLiteral="fas-cloud"/>
+            </graphic>
+          </MenuItem>
         </items>
       </MenuButton>
     </right>

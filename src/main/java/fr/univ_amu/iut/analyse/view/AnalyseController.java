@@ -59,6 +59,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **« Espèces & observations »** (`Analyse.fxml`). Pur câblage : lie les deux
 /// tables (inventaire par espèce / par carré), le sélecteur de regroupement et le filtre de statut à
@@ -118,7 +119,6 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// [CarteRepartition], installée **paresseusement** au premier affichage (`null` tant qu'on reste en
     /// tableau).
     private final BooleanProperty carteAffichee = new SimpleBooleanProperty(this, "carteAffichee", false);
-    private CarteRepartition carteRepartition;
 
     /// Richesse (nombre d'espèces distinctes) par numéro de carré, tenue à jour depuis l'inventaire par
     /// carré, pour afficher la richesse du carré de chaque observation du détail (lien avec la carte).
@@ -129,6 +129,10 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
 
     @FXML
     private Button boutonCarte;
+
+    /// Icône du bouton de bascule : carte quand la table est affichée, table quand la carte l'est.
+    @FXML
+    private FontIcon iconeCarte;
 
     @FXML
     private Label lblResume;
@@ -499,18 +503,13 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     /// composant carte (et sa dépendance Gluon Maps) n'est créé/installé qu'au **premier** passage en mode
     /// Carte, pour garder l'écran d'inventaire léger tant qu'on reste en tableau.
     private void configurerCarte() {
-        // Le libellé du bouton suit l'état d'affichage : robuste à une bascule **programmatique** (« Voir sur
-        // la carte » depuis l'audio, #476), pas seulement au clic sur le bouton lui-même.
-        boutonCarte
-                .textProperty()
-                .bind(Bindings.when(carteAffichee).then("📋 Tableau").otherwise("🗺️ Carte"));
-        carteAffichee.addListener((obs, ancien, affichee) -> {
-            if (Boolean.TRUE.equals(affichee) && carteRepartition == null) {
-                carteRepartition = new CarteRepartition(
-                        viewModel.carresCarte(), viewModel.carresEspeceSelectionnee(), carteAffichee);
-                carteRepartition.installerDans(zoneCarte);
-            }
-        });
+        BasculeCarteUI.cabler(
+                boutonCarte,
+                iconeCarte,
+                carteAffichee,
+                zoneCarte,
+                () -> new CarteRepartition(
+                        viewModel.carresCarte(), viewModel.carresEspeceSelectionnee(), carteAffichee));
     }
 
     /// « 🗺️ Carte » / « 📋 Tableau » : bascule l'affichage de la zone maître entre l'inventaire et la carte

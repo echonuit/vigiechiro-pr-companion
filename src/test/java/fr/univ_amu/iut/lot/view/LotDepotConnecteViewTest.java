@@ -125,7 +125,7 @@ class LotDepotConnecteViewTest {
     void participation_liee_bascule_le_bouton_et_le_garde_actif(FxRobot robot) {
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
 
-        assertThat(deposer.getText()).isEqualTo("🚀 Lancer la participation");
+        assertThat(deposer.getText()).isEqualTo("Lancer la participation");
         // Régression : la garde « Marquer déposé » (statut « Prêt à déposer ») désactivait le bouton dès la
         // fin de l'upload — or c'est justement là qu'il faut pouvoir lancer le traitement.
         assertThat(deposer.isDisabled()).isFalse();
@@ -160,7 +160,7 @@ class LotDepotConnecteViewTest {
         when(depot.participationLiee(ID_PASSAGE)).thenReturn(false);
         robot.interact(() -> controleur.ouvrirSur(CONTEXTE)); // réhydrate depuis le lien local
 
-        assertThat(robot.lookup("#btnDeposer").queryAs(Button.class).getText()).isEqualTo("✅ Marquer déposé");
+        assertThat(robot.lookup("#btnDeposer").queryAs(Button.class).getText()).isEqualTo("Marquer déposé");
     }
 
     @Test

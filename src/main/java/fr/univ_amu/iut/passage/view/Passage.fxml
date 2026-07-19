@@ -29,42 +29,74 @@
       <!-- En-tête réduit à ses actions (#693) : le contexte (carré / point / N°) est déporté en zone
            gauche de la barre de statut ; le bandeau d'identité ci-dessous reste. -->
       <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
-        <Button fx:id="boutonVoirCarte" text="🗺 Voir sur la carte"
-                styleClass="bouton-secondaire" onAction="#voirSurCarte"/>
+        <Button fx:id="boutonVoirCarte" text="Voir sur la carte"
+                styleClass="bouton-secondaire" onAction="#voirSurCarte">
+          <graphic>
+            <FontIcon iconLiteral="fas-map"/>
+          </graphic>
+        </Button>
         <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton. -->
         <StackPane fx:id="enveloppeOuvrirPortail">
-          <Button fx:id="boutonOuvrirPortail" text="🌐 Voir la participation"
-                  styleClass="bouton-secondaire" onAction="#ouvrirSurVigieChiro"/>
+          <Button fx:id="boutonOuvrirPortail" text="Voir la participation"
+                  styleClass="bouton-secondaire" onAction="#ouvrirSurVigieChiro">
+            <graphic>
+              <FontIcon iconLiteral="fas-globe"/>
+            </graphic>
+          </Button>
         </StackPane>
         <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton
              (un passage déposé n'est plus renommable). -->
         <StackPane fx:id="enveloppeRattachement">
-          <Button fx:id="boutonRattachement" text="✏ Modifier le passage"
-                  styleClass="bouton-secondaire" onAction="#modifierRattachement"/>
+          <Button fx:id="boutonRattachement" text="Modifier le passage"
+                  styleClass="bouton-secondaire" onAction="#modifierRattachement">
+            <graphic>
+              <FontIcon iconLiteral="fas-pen"/>
+            </graphic>
+          </Button>
         </StackPane>
-        <Button fx:id="boutonAnnulerDepot" text="↩ Annuler le dépôt"
-                styleClass="bouton-secondaire" onAction="#annulerDepot"/>
-        <Button fx:id="boutonPurger" text="🧹 Purger les originaux"
+        <Button fx:id="boutonAnnulerDepot" text="Annuler le dépôt"
+                styleClass="bouton-secondaire" onAction="#annulerDepot">
+          <graphic>
+            <FontIcon iconLiteral="fas-undo"/>
+          </graphic>
+        </Button>
+        <Button fx:id="boutonPurger" text="Purger les originaux"
                 styleClass="bouton-secondaire" onAction="#purgerOriginaux"
-                visible="false" managed="false"/>
+                visible="false" managed="false">
+          <graphic>
+            <FontIcon iconLiteral="fas-broom"/>
+          </graphic>
+        </Button>
         <!-- Enveloppe (#789) : le tooltip explique pourquoi l'archivage est bloqué (passage non déposé,
              ou déjà archivé) et survit à la désactivation du bouton (#1300). -->
         <StackPane fx:id="enveloppeArchiver">
-          <Button fx:id="boutonArchiver" text="📦 Archiver ce passage"
-                  styleClass="bouton-secondaire" onAction="#archiver"/>
+          <Button fx:id="boutonArchiver" text="Archiver ce passage"
+                  styleClass="bouton-secondaire" onAction="#archiver">
+            <graphic>
+              <FontIcon iconLiteral="fas-box"/>
+            </graphic>
+          </Button>
         </StackPane>
         <!-- Enveloppe (#789) : le tooltip explique pourquoi la réactivation est bloquée (rien à
              réactiver : audio déjà là, ou aucune séquence importée) et survit à la désactivation (#1302). -->
         <StackPane fx:id="enveloppeReactiver">
-          <Button fx:id="boutonReactiver" text="♻ Réactiver ce passage"
-                  styleClass="bouton-secondaire" onAction="#reactiver"/>
+          <Button fx:id="boutonReactiver" text="Réactiver ce passage"
+                  styleClass="bouton-secondaire" onAction="#reactiver">
+            <graphic>
+              <FontIcon iconLiteral="fas-recycle"/>
+            </graphic>
+          </Button>
         </StackPane>
         <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe sur ce
              StackPane (qui, lui, reçoit le survol) pour expliquer pourquoi la suppression est bloquée
              sur un passage déposé (#789). -->
         <StackPane fx:id="enveloppeSupprimer">
-          <Button fx:id="boutonSupprimer" text="🗑 Supprimer" styleClass="bouton-danger"
-                  onAction="#supprimer"/>
+          <Button fx:id="boutonSupprimer" text="Supprimer" styleClass="bouton-danger"
+                  onAction="#supprimer">
+            <graphic>
+              <FontIcon iconLiteral="fas-trash"/>
+            </graphic>
+          </Button>
         </StackPane>
       </HBox>
 

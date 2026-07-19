@@ -51,8 +51,16 @@
          FlowPane se limite à sa largeur préférée et les empile). Carte/Exporter s'ancrent à droite. -->
     <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
               HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-    <Button fx:id="boutonCarte" text="🗺️ Carte" onAction="#basculerCarte"/>
-    <Button fx:id="boutonExporter" text="📤 Exporter…" onAction="#exporter"/>
+    <Button fx:id="boutonCarte" text="Carte" onAction="#basculerCarte">
+      <graphic>
+        <FontIcon fx:id="iconeCarte" iconLiteral="fas-map"/>
+      </graphic>
+    </Button>
+    <Button fx:id="boutonExporter" text="Exporter…" onAction="#exporter">
+      <graphic>
+        <FontIcon iconLiteral="fas-file-export"/>
+      </graphic>
+    </Button>
     <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
       <graphic>
         <FontIcon iconLiteral="fas-bars"/>
@@ -97,10 +105,18 @@
         <Region HBox.hgrow="ALWAYS"/>
         <!-- Enveloppes : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
         <StackPane fx:id="enveloppeEcouter">
-          <Button fx:id="boutonEcouter" text="🎧 Écouter / valider" onAction="#ecouterValider"/>
+          <Button fx:id="boutonEcouter" text="Écouter / valider" onAction="#ecouterValider">
+            <graphic>
+              <FontIcon iconLiteral="fas-headphones"/>
+            </graphic>
+          </Button>
         </StackPane>
         <StackPane fx:id="enveloppeOuvrirPassage">
-          <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage →" onAction="#ouvrirPassage"/>
+          <Button fx:id="boutonOuvrirPassage" text="Ouvrir le passage" onAction="#ouvrirPassage">
+            <graphic>
+              <FontIcon iconLiteral="fas-arrow-right"/>
+            </graphic>
+          </Button>
         </StackPane>
       </HBox>
       <StackPane VBox.vgrow="ALWAYS">

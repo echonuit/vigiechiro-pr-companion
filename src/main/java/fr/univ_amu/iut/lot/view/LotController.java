@@ -52,6 +52,7 @@ import javafx.scene.control.TableView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'écran **M-Lot** (`Lot.fxml`).
 ///
@@ -118,6 +119,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     @FXML
     private Button btnDeposer;
 
+    /// Icône du bouton de dépôt : elle suit son libellé, qui change de sens (marquer / lancer).
+    @FXML
+    private FontIcon iconeDeposer;
+
     /// Enveloppes (non désactivées) des boutons d'étape : portent le tooltip d'explication du blocage,
     /// qu'un Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
     @FXML
@@ -152,6 +157,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private Button btnTeleverser;
+
+    /// Icône du bouton de téléversement : elle suit son libellé, qui change de sens (téléverser / reprendre).
+    @FXML
+    private FontIcon iconeTeleverser;
 
     @FXML
     private TableView<LigneDepot> tableDepot;
@@ -305,7 +314,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                                 + " de cohérence au vert."));
         // Bouton de l'étape ④ : trois règles (libellé qui change de sens, cliquable après un dépôt
         // partiel, verrouillé si la nuit est déjà analysée), câblées à part (#1263).
-        EtapeDeposerUI.cabler(btnDeposer, enveloppeDeposer, viewModel, depotViewModel, traitementViewModel);
+        EtapeDeposerUI.cabler(
+                btnDeposer, iconeDeposer, enveloppeDeposer, viewModel, depotViewModel, traitementViewModel);
 
         // Téléversement VigieChiro (#142), étape ③ : masqué hors application connectée (contexte de capture
         // sans `connexion`). Actif une fois le dépôt préparé, hors génération et hors téléversement en cours.
@@ -589,21 +599,8 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         btnReinitialiserDepot.visibleProperty().bind(depotEntame);
         btnReinitialiserDepot.managedProperty().bind(depotEntame);
         btnReinitialiserDepot.disableProperty().bind(depotViewModel.enCoursProperty());
-        btnTeleverser
-                .textProperty()
-                .bind(Bindings.when(depotViewModel.suiviLignes().resteAReprendreProperty())
-                        .then("↻ Reprendre le dépôt")
-                        .otherwise("☁ Téléverser sur Vigie-Chiro"));
-        // Annulation coopérative (#1044) : bouton visible pendant le dépôt seulement ; une fois demandée,
-        // il se fige sur « Annulation… » le temps que le fichier en vol se termine.
-        btnAnnulerDepot.visibleProperty().bind(depotViewModel.enCoursProperty());
-        btnAnnulerDepot.managedProperty().bind(depotViewModel.enCoursProperty());
-        btnAnnulerDepot.disableProperty().bind(depotViewModel.annulationDemandeeProperty());
-        btnAnnulerDepot
-                .textProperty()
-                .bind(Bindings.when(depotViewModel.annulationDemandeeProperty())
-                        .then("Annulation…")
-                        .otherwise("✖ Annuler le dépôt"));
+        // Étape 3 (téléverser / reprendre, et l'annulation coopérative) : câblage déporté, comme l'étape 4.
+        EtapeTeleverserUI.cabler(btnTeleverser, iconeTeleverser, btnAnnulerDepot, depotViewModel);
     }
 
     /// Demande l'annulation coopérative du dépôt en cours (#1044) : délégué au ViewModel, le moteur

@@ -11,6 +11,7 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
   M-Import - assistant « Importer une nuit » (parcours P2), en page unique à 4 sections :
@@ -43,10 +44,18 @@
     <HBox spacing="10.0" alignment="CENTER_LEFT">
       <TextField fx:id="champDossier" editable="false" promptText="Aucun dossier sélectionné"
                  styleClass="champ-lecture-seule" HBox.hgrow="ALWAYS"/>
-      <Button fx:id="boutonParcourir" text="📂 Parcourir…" styleClass="bouton-secondaire"
-              onAction="#parcourir"/>
-      <Button fx:id="boutonZip" text="🗜 Choisir un .zip…" styleClass="bouton-secondaire"
-              onAction="#parcourirZip"/>
+      <Button fx:id="boutonParcourir" text="Parcourir…" styleClass="bouton-secondaire"
+              onAction="#parcourir">
+        <graphic>
+          <FontIcon iconLiteral="fas-folder-open"/>
+        </graphic>
+      </Button>
+      <Button fx:id="boutonZip" text="Choisir un .zip…" styleClass="bouton-secondaire"
+              onAction="#parcourirZip">
+        <graphic>
+          <FontIcon iconLiteral="fas-file-archive"/>
+        </graphic>
+      </Button>
     </HBox>
   </VBox>
 
@@ -119,8 +128,12 @@
           visible="false" managed="false">
       <Label fx:id="labelPassageExistant" styleClass="insp-incoherence" wrapText="true" HBox.hgrow="ALWAYS"/>
       <Button fx:id="boutonNumeroLibre" text="Utiliser ce n°" onAction="#utiliserNumeroLibre"/>
-      <Button fx:id="boutonEcraser" text="🗑 Écraser et réimporter" styleClass="bouton-danger"
-              onAction="#ecraserEtReimporter"/>
+      <Button fx:id="boutonEcraser" text="Écraser et réimporter" styleClass="bouton-danger"
+              onAction="#ecraserEtReimporter">
+        <graphic>
+          <FontIcon iconLiteral="fas-trash"/>
+        </graphic>
+      </Button>
     </HBox>
   </VBox>
 
@@ -135,8 +148,12 @@
   <HBox spacing="14.0" alignment="CENTER_LEFT">
     <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->
     <StackPane fx:id="enveloppeImporter">
-      <Button fx:id="boutonImporter" text="📥 Importer cette nuit" styleClass="bouton-primaire"
-              onAction="#importer"/>
+      <Button fx:id="boutonImporter" text="Importer cette nuit" styleClass="bouton-primaire"
+              onAction="#importer">
+        <graphic>
+          <FontIcon iconLiteral="fas-file-import"/>
+        </graphic>
+      </Button>
     </StackPane>
     <Label fx:id="labelMessage" styleClass="message-erreur" wrapText="true" HBox.hgrow="ALWAYS"/>
   </HBox>
@@ -145,7 +162,11 @@
   <VBox fx:id="zoneProgression" spacing="3.0" visible="false" managed="false">
     <HBox spacing="10.0" alignment="CENTER_LEFT">
       <ProgressBar fx:id="barreProgression" maxWidth="Infinity" progress="0.0" HBox.hgrow="ALWAYS"/>
-      <Button fx:id="boutonAnnuler" text="✖ Annuler" styleClass="bouton-secondaire" onAction="#annuler"/>
+      <Button fx:id="boutonAnnuler" text="Annuler" styleClass="bouton-secondaire" onAction="#annuler">
+        <graphic>
+          <FontIcon iconLiteral="fas-times"/>
+        </graphic>
+      </Button>
     </HBox>
     <Label fx:id="labelProgression" styleClass="insp-detail"/>
     <!-- Table de suivi par fichier (#947) : une ligne par original (copie -> transformation -> terminé /

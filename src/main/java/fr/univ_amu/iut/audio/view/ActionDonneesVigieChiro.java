@@ -16,7 +16,7 @@ import javafx.scene.control.MenuItem;
 /// « Fiche de l’espèce »). Collaborateur extrait de [SonsValidationController] (plafond NcssCount).
 final class ActionDonneesVigieChiro {
 
-    private static final String LIBELLE = "🌐 Ouvrir les données sur Vigie-Chiro";
+    private static final String LIBELLE = "Ouvrir les données sur Vigie-Chiro";
 
     private final PortailVigieChiro portail;
     private final OuvreurDeLien ouvreurDeLien;

@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.view;
 
+import fr.univ_amu.iut.commun.view.IconeSelonEtat;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
@@ -8,6 +9,8 @@ import java.util.Objects;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Button;
 import javafx.scene.layout.StackPane;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Câblage du **bouton de l'étape ④** de M-Lot, extrait de [LotController] (#1263) : à lui seul, il porte
 /// trois règles qui ont chacune leur histoire, et le contrôleur n'a pas à les héberger.
@@ -26,12 +29,17 @@ final class EtapeDeposerUI {
 
     static void cabler(
             Button bouton,
+            FontIcon icone,
             StackPane enveloppe,
             LotViewModel lot,
             DepotViewModel depot,
             TraitementViewModel traitement) {
         Objects.requireNonNull(bouton, "bouton");
+        Objects.requireNonNull(icone, "icone");
         Objects.requireNonNull(enveloppe, "enveloppe");
+        // L'icône suit le sens du bouton : une fusée quand il lance la participation, une coche quand il
+        // marque le dépôt à la main. Une icône figée dirait le contraire du mot une fois sur deux.
+        IconeSelonEtat.lier(icone, depot.participationLieeProperty(), FontAwesomeSolid.ROCKET, FontAwesomeSolid.CHECK);
         bouton.disableProperty()
                 .bind(Bindings.when(depot.participationLieeProperty())
                         // Mode « Lancer la participation » : cliquable quel que soit le statut de dépôt (même
@@ -47,8 +55,8 @@ final class EtapeDeposerUI {
                                 .or(depot.enCoursProperty())));
         bouton.textProperty()
                 .bind(Bindings.when(depot.participationLieeProperty())
-                        .then("🚀 Lancer la participation")
-                        .otherwise("✅ Marquer déposé"));
+                        .then("Lancer la participation")
+                        .otherwise("Marquer déposé"));
         IndicateurBlocage.expliquer(
                 enveloppe,
                 Bindings.when(traitement.relanceBloqueeProperty())

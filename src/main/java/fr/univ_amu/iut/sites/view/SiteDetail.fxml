@@ -33,26 +33,44 @@
     le carré ; les actions restent en tête d'écran.
   -->
   <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
-    <Button fx:id="boutonImporterNuit" text="📥 Importer une nuit" styleClass="bouton-primaire"
+    <Button fx:id="boutonImporterNuit" text="Importer une nuit" styleClass="bouton-primaire"
             onAction="#importerNuit">
+      <graphic>
+        <FontIcon iconLiteral="fas-file-import"/>
+      </graphic>
       <tooltip><Tooltip text="Ouvre l'assistant d'import avec ce site déjà pré-rattaché."/></tooltip>
     </Button>
-    <Button fx:id="boutonVoirCarte" text="🗺 Voir sur la carte" styleClass="bouton-secondaire"
+    <Button fx:id="boutonVoirCarte" text="Voir sur la carte" styleClass="bouton-secondaire"
             onAction="#voirSurCarte">
+      <graphic>
+        <FontIcon iconLiteral="fas-map"/>
+      </graphic>
       <tooltip><Tooltip text="Ouvre la carte multi-sites centrée sur ce carré."/></tooltip>
     </Button>
     <!-- Enveloppe (#789) : le tooltip d'explication doit survivre à la désactivation du bouton. -->
     <StackPane fx:id="enveloppeOuvrirPortail">
-      <Button fx:id="boutonOuvrirPortail" text="🌐 Ouvrir sur Vigie-Chiro" styleClass="bouton-secondaire"
-              onAction="#ouvrirSurVigieChiro"/>
+      <Button fx:id="boutonOuvrirPortail" text="Ouvrir sur Vigie-Chiro" styleClass="bouton-secondaire"
+              onAction="#ouvrirSurVigieChiro">
+        <graphic>
+          <FontIcon iconLiteral="fas-globe"/>
+        </graphic>
+      </Button>
     </StackPane>
-    <Button fx:id="boutonModifier" text="✏ Modifier" styleClass="bouton-secondaire"
-            onAction="#modifierSite"/>
+    <Button fx:id="boutonModifier" text="Modifier" styleClass="bouton-secondaire"
+            onAction="#modifierSite">
+      <graphic>
+        <FontIcon iconLiteral="fas-pen"/>
+      </graphic>
+    </Button>
     <!-- Enveloppe : un Tooltip ne s'affiche pas sur un Button désactivé ; on l'installe donc sur ce
          conteneur (qui, lui, reçoit le survol) pour expliquer pourquoi la suppression est bloquée. -->
     <StackPane fx:id="enveloppeSupprimer">
-      <Button fx:id="boutonSupprimer" text="🗑 Supprimer" styleClass="bouton-danger"
-              onAction="#supprimerSite"/>
+      <Button fx:id="boutonSupprimer" text="Supprimer" styleClass="bouton-danger"
+              onAction="#supprimerSite">
+        <graphic>
+          <FontIcon iconLiteral="fas-trash"/>
+        </graphic>
+      </Button>
     </StackPane>
     <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
       <graphic>

@@ -287,7 +287,7 @@ public class MainController {
         // fil d'Ariane montre l'emplacement (« Mes sites › Carré N ») plutôt que la route suivie.
         if (peutRevenir) {
             String destination = navigateur.libelleRetour();
-            boutonRetour.setText(destination != null ? "← " + destination : "← Retour");
+            boutonRetour.setText(destination != null ? destination : "Retour");
         }
 
         filAriane.getChildren().clear();

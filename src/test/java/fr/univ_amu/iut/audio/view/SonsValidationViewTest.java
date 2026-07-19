@@ -314,7 +314,7 @@ class SonsValidationViewTest {
     @DisplayName("#476 : « Voir sur la carte » rouvre l'analyse sur la carte avec les filtres courants")
     void voir_sur_la_carte_ouvre_l_analyse_avec_carte(FxRobot robot) {
         MenuButton menuActions = robot.lookup("#menuActions").queryAs(MenuButton.class);
-        MenuItem voirCarte = itemParLibelle(menuActions, "🗺 Voir sur la carte");
+        MenuItem voirCarte = itemParLibelle(menuActions, "Voir sur la carte");
 
         robot.interact(voirCarte::fire);
 
@@ -791,10 +791,10 @@ class SonsValidationViewTest {
         // Les MenuItem ne sont pas des Node : on passe par le MenuButton et ses items, repérés par leur
         // libellé (robuste à l'ordre / aux ajouts, comme « Voir sur la carte » en tête, #476).
         MenuButton menu = robot.lookup("#menuActions").queryAs(MenuButton.class);
-        MenuItem importer = itemParLibelle(menu, "📥 Importer un CSV Tadarida…");
+        MenuItem importer = itemParLibelle(menu, "Importer un CSV Tadarida…");
         MenuItem inclureMode = itemParLibelle(menu, "Inclure le mode de validation à l'export _Vu");
-        MenuItem exporterVu = itemParLibelle(menu, "📤 Exporter _Vu…");
-        MenuItem exporterBiblio = itemParLibelle(menu, "📤 Exporter la bibliothèque…");
+        MenuItem exporterVu = itemParLibelle(menu, "Exporter _Vu…");
+        MenuItem exporterBiblio = itemParLibelle(menu, "Exporter la bibliothèque…");
 
         assertThat(menu.isVisible()).isTrue();
         assertThat(exporterBiblio.isVisible()).isTrue();

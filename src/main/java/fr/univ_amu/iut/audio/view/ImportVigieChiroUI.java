@@ -31,8 +31,8 @@ final class ImportVigieChiroUI {
             MenuItem item, Label message, ImportVigieChiroViewModel importVigieChiro, AudioViewModel viewModel) {
         item.textProperty()
                 .bind(Bindings.when(viewModel.resultatsDisponiblesProperty())
-                        .then("🔁 Réimporter depuis Vigie-Chiro…")
-                        .otherwise("☁ Importer depuis Vigie-Chiro…"));
+                        .then("Réimporter depuis Vigie-Chiro…")
+                        .otherwise("Importer depuis Vigie-Chiro…"));
         item.disableProperty().bind(importVigieChiro.enCoursProperty());
         message.textProperty().bind(importVigieChiro.messageProperty());
         message.visibleProperty().bind(importVigieChiro.messageProperty().isNotEmpty());
