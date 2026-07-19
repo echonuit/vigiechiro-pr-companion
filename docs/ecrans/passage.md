@@ -150,6 +150,29 @@ l'application n'a pas su en reproduire cette séquence : c'est un défaut de not
 La modale en détaille les premières et résume le reste, pour rester lisible. La commande
 `vigiechiro reactiver` en donne la **liste complète**, si vous avez besoin de tout voir.
 
+### Suivre l'avancement
+
+Une réactivation peut durer plusieurs minutes sur une grosse nuit : elle relit des milliers de
+fichiers. La fenêtre dit **où elle en est**, et chaque étape porte son nom :
+
+| Ce qui s'affiche | Ce qui se passe |
+|---|---|
+| **Régénération des séquences** | vos enregistrements sont relus et redécoupés, séquence par séquence |
+| Enregistrement des fichiers retrouvés… | ce que l'application vient de retrouver est inscrit dans sa base |
+| Vérification de l'audio disponible… | elle recompte ce qui est désormais écoutable |
+| Recherche de ce qu'il reste à récupérer… | elle établit s'il faut encore interroger Vigie-Chiro |
+| **Ancrage réseau** | les identifiants et les échanges avec le validateur sont rapatriés, page par page |
+
+![La fenêtre de réactivation pendant ses deux phases : la régénération des séquences terminée, l'ancrage réseau en cours, page 3 sur 12.](../assets/captures/apercu-passage-reactivation.png)
+
+Les deux étapes en gras ont leur propre barre, parce qu'on peut en mesurer l'avancement ; les autres
+défilent sur le libellé de l'étape en cours. **Aucun moment ne reste muet** : si la fenêtre n'affiche
+rien de nouveau pendant longtemps, c'est un défaut, et cela vaut la peine de le signaler.
+
+**Annuler** interrompt proprement à l'étape suivante : rien n'est défait, puisque la réactivation
+ajoute de l'audio sans jamais en retirer. **Fermer** n'est disponible qu'une fois l'opération terminée
+— survolez le bouton pour savoir pourquoi il attend.
+
 !!! tip "Les fichiers de votre sauvegarde ne sont jamais touchés"
     La réactivation **copie** : votre dossier source reste intact, et vos observations comme vos
     validations ne sont jamais recalculées — on rebranche des chemins, rien d'autre.

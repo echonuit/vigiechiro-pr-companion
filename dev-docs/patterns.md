@@ -650,6 +650,37 @@ socle, tout nouvel écran naît avec ce patron.
 le voile « Chargement… » à la place du contenu. Le garde-fou `CablageInjecteursCaptureTest` casse la
 CI si un injecteur de capture résout un exécuteur asynchrone.
 
+## Une modale de progression : suivre son contenu, et ne jamais se taire (socle `commun`)
+
+**Le problème.** Une modale est dimensionnée **à son ouverture**, sur le contenu visible à cet instant.
+Tout ce qui paraît ensuite - une seconde barre de phase, un compte rendu de fin, un bandeau - agrandit la
+mise en page sans agrandir la fenêtre : le bas passe sous la ligne de flottaison. Chaque modale s'en était
+tirée pour son seul cas connu, si bien que la réactivation poussait toujours ses **boutons** hors de la
+fenêtre dès que la barre d'ancrage paraissait (#1931).
+
+**La solution.** `Modales.suivreLaCroissance(racine, revelations…)` prend la racine et les propriétés dont
+un changement fait paraître du contenu ; la fenêtre s'ajuste à chacune. À poser à côté de
+`Modales.fermerParEchap`, qui répond à la même histoire (un comportement transverse que chaque modale
+réinventait).
+
+⚠️ **Ajuster, oui ; figer, non.** L'implémentation appelle `sizeToScene()` et **rien d'autre**. Une version
+qui gardait `max(taille avant, taille après)` pour « ne jamais rétrécir » a fait passer le `Stage` en
+dimensionnement **explicite** : il cesse alors définitivement de s'ajuster à ses scènes suivantes. Sans
+effet pour une modale que l'on jette après usage - mais le `Stage` du harnais TestFX est **partagé par
+toutes les classes de test d'un même fork**, et il est resté figé à 600 px pour toutes les suivantes, dont
+les noeuds tombaient « hors de la fenêtre » très loin de la cause (#1940).
+
+**Les phases sont des blocs.** Quand une opération enchaîne plusieurs phases, chacune est un bloc : son nom
+(`.nom-de-phase`) et son message sur une ligne, sa barre sur **toute la largeur** en dessous. Le nom, la
+barre et le message sur une même ligne ont deux défauts : le message dispute sa largeur à la barre, si bien
+que la phase au message le plus long se retrouve avec la barre la plus **courte** - or empiler deux barres,
+c'est demander à l'oeil de les comparer ; et le nom redit le début du message au prix de la place prise à la
+barre (#1935, #1946).
+
+**Et la modale ne se tait jamais.** Un intervalle où le travail continue sans qu'aucune barre ne bouge est
+un défaut au même titre qu'une barre figée à 100 % : nommer chaque étape, et **poser le libellé avant** le
+geste qu'il annonce, jamais après. Raison d'être et cas vécu : [ADR 0027](decisions/0027-une-attente-porte-toujours-un-nom.md).
+
 ## Les dialogues d'une action sont des ports (socle `commun`)
 
 **Le problème.** Un `showAndWait()` **fige** un test TestFX headless (piège connu depuis #798). Toute

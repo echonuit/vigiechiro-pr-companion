@@ -73,3 +73,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0024](0024-les-heures-d-une-nuit-viennent-de-ses-preuves.md) | Les heures d'une nuit viennent de ses preuves ; de l'utilisateur seulement à défaut | #1860, #1878, #1892 |
 | [0025](0025-une-capture-passe-par-le-code-de-production.md) | Une capture passe par le code de production, elle ne le reconstruit pas | #1468, #1865 |
 | [0026](0026-le-nommage-des-tranches-est-une-etape-du-pipeline.md) | Le nommage des tranches est une étape du pipeline, pas un détail de la découpe | EPIC #1944 |
+| [0027](0027-une-attente-porte-toujours-un-nom.md) | Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose | #1931, #1951, #1959 |

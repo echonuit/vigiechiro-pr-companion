@@ -77,3 +77,27 @@ ramènent la progression. Le README du banc donne une procédure semi-manuelle p
     socle `ExecuteurTache`, cf. [Patterns](patterns.md)) est la même que celle décrite côté
     [Navigation et chrome](navigation.md) et appliquée à toutes les tâches longues : c'est un
     **invariant** de l'application, pas une optimisation ponctuelle.
+
+## Les écritures de masse passent par une unité de travail
+
+Chaque appel DAO **auto-commit** par défaut. Sur SQLite, un commit est un `fsync` : une boucle qui écrit
+ligne par ligne paie donc un aller-retour disque **par ligne**, et le coût ne se voit pas en test, où les
+jeux d'essai comptent quelques unités.
+
+Mesuré sur une réactivation réelle (#1959) : l'adoption des originaux d'une nuit reconstruite faisait un
+`INSERT` par brut (~2042) et un rattachement par séquence (~4626), soit près de **6700 commits**, pour
+**plus de deux minutes** d'attente muette. La même écriture, groupée dans une `UniteDeTravail`, tient dans
+une seule transaction.
+
+**La règle.** Toute boucle d'écriture dont le nombre d'itérations suit les données (séquences, observations,
+originaux) passe par `UniteDeTravail.executer(connexion -> …)` et les variantes transactionnelles des DAO
+(`insert(Connection, …)`, `executerMaj(Connection, …)`). C'est ce que fait `MoteurImport` depuis l'origine
+pour la même masse.
+
+Deux nuances utiles :
+
+- **Ce qui doit lire ce que la transaction vient de valider reste dehors.** Le nettoyage des placeholders
+  de l'adoption compte une poignée d'ordres et lit les rattachements tout juste commités : l'inclure
+  demanderait des lectures sur la connexion transactionnelle, pour un gain nul.
+- **L'atomicité est un effet de bord bienvenu, pas le motif.** Le motif est le coût ; mais une écriture de
+  masse groupée ne laisse plus, en cas d'interruption, un état à moitié écrit.
