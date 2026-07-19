@@ -212,7 +212,7 @@ dans une **fenêtre de progression** avec un bouton **Annuler** : renoncer laiss
 était, sans demi-import.
 
 Si l'analyse de la plateforme n'est pas terminée, l'import vous dit **pourquoi** il n'y a rien à
-récupérer : l'analyse n'a **jamais été lancée** (lancez-la depuis « Préparer le dépôt », étape ④), elle
+récupérer : l'analyse n'a **jamais été lancée** (lancez-la depuis « Préparer le dépôt », étape 4), elle
 est **planifiée** ou **en cours** (patientez : comptez plusieurs dizaines de minutes), elle a **échoué**
 (le motif est indiqué), ou - cas anormal - elle est **terminée sans renvoyer la moindre observation**,
 et c'est alors le dépôt qu'il faut vérifier. Le suivi de l'analyse est affiché dans

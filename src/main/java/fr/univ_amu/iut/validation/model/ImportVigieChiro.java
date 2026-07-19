@@ -206,7 +206,7 @@ public class ImportVigieChiro {
         }
         if (traitement.estInconnu()) {
             return "L'analyse n'a jamais été lancée sur Vigie-Chiro pour cette nuit."
-                    + " Lancez-la depuis « Préparer le dépôt », étape ④.";
+                    + " Lancez-la depuis « Préparer le dépôt », étape 4.";
         }
         return switch (traitement.etat()) {
             case PLANIFIE ->

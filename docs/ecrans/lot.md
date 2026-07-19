@@ -4,9 +4,10 @@ L'écran **Préparer le dépôt** prépare et trace le **dépôt** d'une nuit v�
 plateforme Vigie-Chiro. Le dépôt suit un **flux ordonné en quatre étapes**, rappelé en haut de l'écran
 par un fil d'étapes (l'étape courante est mise en avant) :
 
-**① Préparer · ② Générer les archives · ③ Téléverser · ④ Marquer déposé.**
+**« 1 · Préparer »**, **« 2 · Générer les archives »**, **« 3 · Téléverser »**,
+**« 4 · Marquer déposé »**.
 
-## ① Vérifier et préparer le dépôt
+## 1. Vérifier et préparer le dépôt
 
 ![L'écran Préparer le dépôt : récapitulatif du dépôt et première étape « Vérifier et préparer le dépôt ».](../assets/captures/apercu-lot-preparer.png)
 
@@ -18,7 +19,7 @@ climatique absent). « Vérifier et préparer le dépôt » **verrouille** ensui
 partiront. Vos fichiers d'origine ne sont pas modifiés. Le passage passe alors au statut « Prêt à
 déposer ».
 
-## ② Générer les archives de dépôt
+## 2. Générer les archives de dépôt
 
 ![L'état « Prêt à déposer » : l'étape « Générer les archives » devient active.](../assets/captures/apercu-lot-deposer.png)
 
@@ -28,7 +29,7 @@ sur une grosse nuit : elle s'exécute en arrière-plan, avec un indicateur d'act
 sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une archive incomplète).
 
 !!! tip "Si vous êtes connecté, cette étape est facultative"
-    Le téléversement de l'étape ③ **produit lui-même les archives dont il a besoin**, au fur et à
+    Le téléversement de l'étape 3 **produit lui-même les archives dont il a besoin**, au fur et à
     mesure, et les efface du disque dès qu'elles sont en ligne. Vous pouvez donc passer directement de
     la préparation au téléversement : le stepper indique d'ailleurs « 3 · Téléverser » comme étape
     courante, sans archive sur le disque.
@@ -43,16 +44,16 @@ sont neutralisées le temps de l'écriture (on ne risque pas de téléverser une
 
 Le tableau de suivi des archives laisse **choisir et réordonner ses colonnes** (clic droit ou menu ☰
 « outils ») : voir [Personnaliser les tableaux](../personnaliser-les-tableaux.md). La **table de dépôt**
-de l'étape ③ offre le même réglage, mémorisé séparément.
+de l'étape 3 offre le même réglage, mémorisé séparément.
 
-## ③ Téléverser sur Vigie-Chiro
+## 3. Téléverser sur Vigie-Chiro
 
 ![Archives générées : la liste des ZIP s'affiche et « Ouvrir le dossier » s'active.](../assets/captures/apercu-lot-archives.png)
 
-Connecté, vous pouvez téléverser **sans avoir rien généré** : l'étape ③ est déjà l'étape courante, et
+Connecté, vous pouvez téléverser **sans avoir rien généré** : l'étape 3 est déjà l'étape courante, et
 la table des archives est vide.
 
-![L'étape ③ courante sans archives : le téléversement produit lui-même ce dont il a besoin.](../assets/captures/apercu-lot-televerser-sans-archives.png)
+![L'étape 3 courante sans archives : le téléversement produit lui-même ce dont il a besoin.](../assets/captures/apercu-lot-televerser-sans-archives.png)
 
 Deux chemins s'offrent à vous :
 
@@ -80,7 +81,7 @@ réouverture de l'écran, la table de dépôt réaffiche l'état exact de chaque
 alors « **Retenter les échecs** » : seuls les fichiers manquants sont re-téléversés — jamais ceux déjà
 en ligne. Le passage ne devient « Déposé » que lorsque **tous** les fichiers sont en ligne.
 
-## ④ Lancer la participation (ou marquer le passage déposé)
+## 4. Lancer la participation (ou marquer le passage déposé)
 
 ![L'état « Déposé » : toutes les étapes sont franchies.](../assets/captures/apercu-lot-depose.png)
 
