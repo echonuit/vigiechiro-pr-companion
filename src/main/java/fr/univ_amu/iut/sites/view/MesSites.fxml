@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -27,12 +28,12 @@
     En-tête réduit à son slot d'actions (#693) : le titre « Mes sites de suivi » est redondant avec le
     fil d'Ariane et le résumé (« N sites déclarés… ») est déporté en barre de statut par le controller.
   -->
-  <HBox styleClass="entete-actions" alignment="CENTER_RIGHT" spacing="8.0">
+  <FlowPane styleClass="entete-actions" alignment="CENTER_RIGHT">
     <!-- Synchronisation à la demande (#1045) : masqué quand la passerelle VigieChiro est absente. -->
     <Button fx:id="btnSyncVigieChiro" text="Récupérer depuis Vigie-Chiro" styleClass="bouton-secondaire"
             onAction="#recupererDepuisVigieChiro"/>
     <Button text="+ Nouveau site" styleClass="bouton-primaire" onAction="#nouveauSite"/>
-  </HBox>
+  </FlowPane>
 
   <!-- Erreur de chargement (#795) : affichée en rouge et masquée tant qu'il n'y a pas d'erreur (un échec
        de lecture des sites restait auparavant silencieux). -->

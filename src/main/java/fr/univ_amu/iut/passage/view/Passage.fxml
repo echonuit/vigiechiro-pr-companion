@@ -3,6 +3,7 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
@@ -28,7 +29,7 @@
     <VBox spacing="12.0" styleClass="entete">
       <!-- En-tête réduit à ses actions (#693) : le contexte (carré / point / N°) est déporté en zone
            gauche de la barre de statut ; le bandeau d'identité ci-dessous reste. -->
-      <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
+      <FlowPane styleClass="entete-actions" alignment="CENTER_RIGHT">
         <Button fx:id="boutonVoirCarte" text="Voir sur la carte"
                 styleClass="bouton-secondaire" onAction="#voirSurCarte">
           <graphic>
@@ -98,7 +99,7 @@
             </graphic>
           </Button>
         </StackPane>
-      </HBox>
+      </FlowPane>
 
       <!-- Bandeau d'identité du passage (composant partagé bandeau-infos, #694) -->
       <HBox spacing="0.0" styleClass="bandeau-infos">

@@ -457,9 +457,15 @@
  * En-tête d'écran réduit à ses actions (#693) : le titre redondant avec le fil d'Ariane est retiré et le
  * résumé déporté en barre de statut ; ne reste qu'une barre d'actions alignée à droite en tête de contenu
  * (ex. « + Nouveau site »). Slot partagé pour uniformiser le placement des actions d'écran.
+ *
+ * FlowPane et non HBox (#2012) : une HBox ne renvoie jamais à la ligne, elle rétrécit ses enfants, et un
+ * Button trop étroit ellipse son texte. La fiche passage y montrait huit boutons dont AUCUN ne s'affichait
+ * en entier (« Supp… » pour une action destructrice). Le nombre d'actions d'un écran grandit au fil des
+ * fonctionnalités : le slot doit donc plier, pas tronquer.
  */
 .entete-actions {
-    -fx-spacing: 8;
+    -fx-hgap: 8;
+    -fx-vgap: 8;
     -fx-padding: 0 0 4 0;
 }
 

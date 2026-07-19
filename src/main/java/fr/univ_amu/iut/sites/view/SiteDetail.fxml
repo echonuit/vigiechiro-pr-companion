@@ -32,7 +32,7 @@
     sont déportés en barre de statut par le controller (zones gauche/centre). Le fil d'Ariane porte déjà
     le carré ; les actions restent en tête d'écran.
   -->
-  <HBox styleClass="entete-actions" alignment="CENTER_RIGHT">
+  <FlowPane styleClass="entete-actions" alignment="CENTER_RIGHT">
     <Button fx:id="boutonImporterNuit" text="Importer une nuit" styleClass="bouton-primaire"
             onAction="#importerNuit">
       <graphic>
@@ -77,7 +77,7 @@
         <FontIcon iconLiteral="fas-bars"/>
       </graphic>
     </MenuButton>
-  </HBox>
+  </FlowPane>
 
   <HBox styleClass="bandeau-infos" spacing="0.0">
     <VBox styleClass="bandeau-cellule" HBox.hgrow="ALWAYS">
