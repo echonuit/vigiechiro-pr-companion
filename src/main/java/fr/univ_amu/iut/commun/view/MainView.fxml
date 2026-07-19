@@ -54,7 +54,11 @@
         </StackPane>
         <HBox fx:id="filAriane" styleClass="fil-ariane" alignment="CENTER_LEFT" spacing="4.0"
               HBox.hgrow="ALWAYS"/>
-        <TextField fx:id="champRecherche" styleClass="champ-recherche" promptText="🔍 Rechercher (Ctrl+F)"
+        <!-- Pas de pictogramme dans le promptText : un promptText est une CHAÎNE, il n'accueille pas de
+             <FontIcon> (#1933). Le 🔍 qui s'y trouvait ne s'affichait déjà plus sur les aperçus régénérés
+             en CI, et le mot « Rechercher » le disait déjà. Les trois autres champs de recherche de
+             l'application (analyse, multisite, sons & validation) n'en portent pas non plus. -->
+        <TextField fx:id="champRecherche" styleClass="champ-recherche" promptText="Rechercher (Ctrl+F)"
                    prefWidth="240.0"/>
         <!-- Menu ☰ (outils) peuplé en CODE par MainController depuis les ActionMenu contribuées (#930) :
              sauvegarde/restauration, purge, préférences, réglages, connexion, plus toute entrée future
