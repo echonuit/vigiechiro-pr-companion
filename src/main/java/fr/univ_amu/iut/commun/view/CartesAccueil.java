@@ -21,6 +21,11 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// (NcssCount) (#789).
 final class CartesAccueil {
 
+    /// Largeur d'enroulement du texte d'une carte d'activité, en pixels. Partagée par le titre et la
+    /// description : deux valeurs distinctes donneraient deux colonnes de texte désalignées dans une
+    /// même carte.
+    private static final double LARGEUR_TEXTE = 164;
+
     private CartesAccueil() {}
 
     /// Pastille d'un indicateur d'accueil (icône teintée + compteur + libellé) posée sur le hero
@@ -68,15 +73,19 @@ final class CartesAccueil {
         chip.getStyleClass().add("carte-chip");
         chip.setStyle("-fx-background-color: " + couleur + ";");
 
-        Label titre = new Label(activite.titre());
+        // Titre et description en nœuds `Text` (et non `Label`) : `wrappingWidth` enroule de façon
+        // fiable, là où le `wrapText` d'un `Label` posé dans une VBox de largeur fixe se contente
+        // d'une ligne tronquée (« … ») selon le calcul de hauteur préférée. Le titre était resté un
+        // `Label`, et coupait donc « Espèces & obser… » et « Audit de cohére… » (#2046) - sur le
+        // premier écran de l'application, et sur le nom même de ses entrées.
+        // Attention : un `Text` se colore par `-fx-fill`, jamais par `-fx-text-fill`.
+        Text titre = new Text(activite.titre());
         titre.getStyleClass().add("carte-activite-titre");
-        titre.setStyle("-fx-text-fill: " + couleur + ";");
-        // Description en nœud `Text` (et non `Label`) : `wrappingWidth` enroule de façon fiable, là
-        // où le `wrapText` d'un `Label` posé dans une VBox de largeur fixe se contente d'une ligne
-        // tronquée (« … ») selon le calcul de hauteur préférée.
+        titre.setStyle("-fx-fill: " + couleur + ";");
+        titre.setWrappingWidth(LARGEUR_TEXTE);
         Text description = new Text(activite.description());
         description.getStyleClass().add("carte-activite-desc");
-        description.setWrappingWidth(164);
+        description.setWrappingWidth(LARGEUR_TEXTE);
 
         // Chevron d'invite, masqué au repos et révélé au survol/focus (cf. base.css).
         FontIcon chevron = new FontIcon("fas-chevron-right");
