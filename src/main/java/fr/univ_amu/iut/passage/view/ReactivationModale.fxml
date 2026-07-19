@@ -59,7 +59,9 @@
   </VBox>
 
   <Label fx:id="lblErreur" styleClass="message-erreur" wrapText="true"/>
-  <Label fx:id="lblCompteRendu" styleClass="message-synchro" wrapText="true"/>
+  <!-- Le compte rendu est CONSTRUIT (VueCompteRendu) : sa forme depend de ce qu il y a a dire,
+       donc il ne peut pas etre declare ici. Ce conteneur l accueille. -->
+  <VBox fx:id="zoneCompteRendu"/>
 
   <HBox alignment="CENTER_RIGHT" spacing="8.0">
     <Region HBox.hgrow="ALWAYS"/>

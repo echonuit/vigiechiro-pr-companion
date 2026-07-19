@@ -2,16 +2,23 @@ package fr.univ_amu.iut.passage.viewmodel;
 
 import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.AbsenceReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.VoieReactivation;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 
@@ -29,11 +36,9 @@ public class ReactivationModaleViewModel {
 
     /// Nombre d'écarts détaillés dans le compte rendu : au-delà, on résume (une nuit peut en compter des
     /// milliers, et la modale doit rester lisible).
-    private static final int ECARTS_DETAILLES = 5;
 
     /// Combien d'absences on nomme avant de résumer : assez pour identifier le motif dominant, pas assez
     /// pour noyer la modale quand une nuit entière manque.
-    private static final int ABSENCES_DETAILLEES = 5;
 
     /// Progression de la phase **disque** (régénération / rebranchement des séquences), 0 -> 1.
     private final ProgressionOperation progressionRegeneration = new ProgressionOperation();
@@ -42,7 +47,8 @@ public class ReactivationModaleViewModel {
     /// bouge que sur un passage reconstruit dont l'audio est revenu : sinon la phase ne se déclenche pas.
     private final ProgressionOperation progressionAncrage = new ProgressionOperation();
 
-    private final ReadOnlyStringWrapper compteRendu = new ReadOnlyStringWrapper("");
+    private final ReadOnlyObjectWrapper<CompteRendu> compteRendu =
+            new ReadOnlyObjectWrapper<>(CompteRendu.de("", List.of()));
     private final ReadOnlyStringWrapper erreur = new ReadOnlyStringWrapper("");
 
     /// Vrai dès qu'une réactivation s'est **conclue** : l'écran appelant recharge alors ses volumes et
@@ -67,7 +73,7 @@ public class ReactivationModaleViewModel {
     }
 
     /// Compte rendu de fin, lacunes comprises. Vide tant que l'opération n'est pas conclue.
-    public ReadOnlyStringProperty compteRenduProperty() {
+    public ReadOnlyObjectProperty<CompteRendu> compteRenduProperty() {
         return compteRendu.getReadOnlyProperty();
     }
 
@@ -85,7 +91,7 @@ public class ReactivationModaleViewModel {
     /// Publie le compte rendu (**fil JavaFX**) et marque [#reactiveProperty] : l'opération s'est conclue,
     /// l'écran appelant se rechargera à la fermeture.
     public void restituer(RapportReactivation rapport) {
-        compteRendu.set(titre(rapport) + System.lineSeparator() + System.lineSeparator() + texte(rapport));
+        compteRendu.set(construire(rapport));
         erreur.set("");
         reactive.set(true);
     }
@@ -101,7 +107,36 @@ public class ReactivationModaleViewModel {
     /// **ajoute** de l'audio, elle n'en retire pas), et on le dit.
     public void signalerAnnulation() {
         erreur.set("");
-        compteRendu.set("Réactivation annulée : aucun fichier n'a été modifié.");
+        compteRendu.set(CompteRendu.de(
+                "Réactivation annulée", List.of(Constat.de("Aucun fichier n'a été modifié.", Severite.INFO))));
+    }
+
+    /// Le compte rendu, **structuré** (ADR 0031) : un titre, une mise en contexte, les faits avec leurs
+    /// détails, ce qu'il faut retenir.
+    ///
+    /// Il était jusqu'ici assemblé au `StringBuilder` et rendu dans un `Label` unique. La structure permet
+    /// à chaque surface de décider ce qu'elle montre - la modale résume au-delà de cinq détails, la ligne
+    /// de commande les rend tous - sans que la mise en forme ait à être écrite deux fois.
+    private static CompteRendu construire(RapportReactivation rapport) {
+        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
+            return reconstruit(rapport);
+        }
+        List<Constat> constats = new ArrayList<>();
+        constats.add(Constat.de(faitReactivees(rapport), Severite.SUCCES));
+        if (rapport.dejaPresentes() > 0) {
+            constats.add(
+                    Constat.de(rapport.dejaPresentes() + " séquence(s) étaient déjà sur le disque.", Severite.INFO));
+        }
+        if (rapport.manquantes() > 0) {
+            constats.add(new Constat(
+                    rapport.manquantes() + " séquence(s) restent introuvables dans ce dossier.",
+                    Severite.ERREUR,
+                    detailsAbsences(rapport.absences())));
+        }
+        ajouterEcarts(constats, rapport.ecarts());
+        ajouterIndiceAcoustique(constats, rapport.indiceAcoustique());
+        ajouterRapatriement(constats, rapport.rapatriement());
+        return new CompteRendu(titre(rapport), preambule(rapport), constats, conclusion(rapport));
     }
 
     /// Titre du compte rendu : honnête aussi quand rien n'a pu être tenté (passage reconstruit, #1648).
@@ -112,133 +147,95 @@ public class ReactivationModaleViewModel {
         return rapport.complete() ? "Passage réactivé" : "Réactivation partielle";
     }
 
-    /// Compte rendu : ce qui est revenu et sur quelle preuve, ce qui a été refusé et pourquoi, ce qui
-    /// manque encore.
-    private static String texte(RapportReactivation rapport) {
-        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
-            return texteReconstruit(rapport);
-        }
-        StringBuilder texte = new StringBuilder();
-        if (rapport.voie() == VoieReactivation.BRUTS) {
-            texte.append("Ce dossier ne contenait que vos enregistrements bruts : les séquences d'écoute")
-                    .append(" ont été régénérées à partir d'eux, puis vérifiées une à une.\n\n");
-        }
-        texte.append(rapport.reactivees()).append(" séquence(s) réactivée(s)");
-        if (rapport.confianceMinimale() != null) {
-            texte.append(" (identité vérifiée : ")
-                    .append(libelleConfiance(rapport))
-                    .append(')');
-        }
-        texte.append(".\n");
-        if (rapport.dejaPresentes() > 0) {
-            texte.append(rapport.dejaPresentes()).append(" séquence(s) étaient déjà sur le disque.\n");
-        }
-        if (rapport.manquantes() > 0) {
-            texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
-        }
-        ajouterAbsences(texte, rapport.absences());
-        ajouterEcarts(texte, rapport.ecarts());
-        ajouterIndiceAcoustique(texte, rapport.indiceAcoustique());
-        ajouterRapatriement(texte, rapport.rapatriement());
-        texte.append('\n')
-                .append(
-                        rapport.complete()
-                                ? "L'audio est de nouveau complet : le passage est écoutable."
-                                : "L'audio reste incomplet : "
-                                        + rapport.decompte().presentes() + " séquence(s) sur "
-                                        + rapport.decompte().total() + " présentes.");
-        return texte.toString();
+    private static String preambule(RapportReactivation rapport) {
+        return rapport.voie() == VoieReactivation.BRUTS
+                ? "Ce dossier ne contenait que vos enregistrements bruts : les séquences d'écoute ont été"
+                        + " régénérées à partir d'eux, puis vérifiées une à une."
+                : "";
     }
 
-    /// Ce que la **phase d'ancrage** a rapatrié (#1904), quand elle s'est déclenchée : les identifiants
-    /// plateforme, et avec eux les **échanges avec le validateur** (#1867). Muet sinon.
+    private static String faitReactivees(RapportReactivation rapport) {
+        String preuve =
+                rapport.confianceMinimale() == null ? "" : " (identité vérifiée : " + libelleConfiance(rapport) + ")";
+        return rapport.reactivees() + " séquence(s) réactivée(s)" + preuve + ".";
+    }
+
+    private static String conclusion(RapportReactivation rapport) {
+        return rapport.complete()
+                ? "L'audio est de nouveau complet : le passage est écoutable."
+                : "L'audio reste incomplet : " + rapport.decompte().presentes() + " séquence(s) sur "
+                        + rapport.decompte().total() + " présentes.";
+    }
+
+    /// **Ce qui manquait, nommé** (#1943). Deux situations tombaient dans le même compteur : un
+    /// enregistrement absent du dossier, qui appelle une action de l'utilisateur, et une tranche non
+    /// régénérée, qui est un défaut de notre côté.
     ///
-    /// C'est ici que ces messages arrivent le plus souvent : la phase ne se déclenche que sur une nuit
-    /// **reconstruite**, dont les observations n'en portaient aucun. Les taire laissait l'observateur les
-    /// découvrir en ouvrant la bonne ligne, par hasard.
-    private static void ajouterRapatriement(StringBuilder texte, RapportAncrage rapatriement) {
-        if (rapatriement == null || rapatriement.estMuet()) {
+    /// Les plus coûteuses d'abord : c'est par elles qu'on commence à chercher. Le **plafond d'affichage**
+    /// n'est plus ici - il appartient à la surface (ADR 0031).
+    private static List<Detail> detailsAbsences(List<AbsenceReactivation> absences) {
+        return absences.stream()
+                .sorted(Comparator.comparingInt(AbsenceReactivation::sequences)
+                        .reversed()
+                        .thenComparing(AbsenceReactivation::nomFichier))
+                .map(absence -> new Detail(
+                        absence.nomFichier(),
+                        absence.motif() + (absence.sequences() > 1 ? " (" + absence.sequences() + " séquences)" : "")))
+                .toList();
+    }
+
+    /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif.
+    private static void ajouterEcarts(List<Constat> constats, List<EcartReactivation> ecarts) {
+        if (ecarts.isEmpty()) {
             return;
         }
-        texte.append(rapatriement.texte()).append('\n');
+        constats.add(new Constat(
+                ecarts.size() + " fichier(s) portaient le bon nom mais n'étaient pas le bon audio : ils n'ont"
+                        + " pas été rebranchés (les observations auraient pointé sur le mauvais son).",
+                Severite.ERREUR,
+                ecarts.stream()
+                        .map(ecart -> new Detail(ecart.nomFichier(), ecart.motif()))
+                        .toList()));
     }
 
-    /// Concordance acoustique en **indice** (#1682), quand elle a été mesurée (hydratation d'un passage
-    /// reconstruit) : purement informatif. Les tranches régénérées sont acceptées sur preuve structurelle ;
-    /// cet indice dit seulement à quel point les cris attendus s'y retrouvent.
-    private static void ajouterIndiceAcoustique(StringBuilder texte, IndiceAcoustique indice) {
+    /// Concordance acoustique en **indice** (#1682) : purement informatif. Les tranches régénérées sont
+    /// acceptées sur preuve structurelle ; cet indice dit seulement à quel point les cris attendus s'y
+    /// retrouvent.
+    private static void ajouterIndiceAcoustique(List<Constat> constats, IndiceAcoustique indice) {
         if (indice == null || !indice.estRenseigne()) {
             return;
         }
-        texte.append("Concordance acoustique (indice, non bloquant) : ")
-                .append(indice.concordantes())
-                .append(" séquence(s) sur ")
-                .append(indice.mesurees())
-                .append(" présentent les cris attendus.\n");
+        constats.add(Constat.de(
+                "Concordance acoustique (indice, non bloquant) : " + indice.concordantes() + " séquence(s) sur "
+                        + indice.mesurees() + " présentent les cris attendus.",
+                Severite.INFO));
+    }
+
+    /// Ce que la **phase d'ancrage** a rapatrié (#1904) : les identifiants plateforme, et avec eux les
+    /// **échanges avec le validateur** (#1867). Muet sinon.
+    private static void ajouterRapatriement(List<Constat> constats, RapportAncrage rapatriement) {
+        if (rapatriement == null || rapatriement.estMuet()) {
+            return;
+        }
+        constats.add(Constat.de(rapatriement.texte(), Severite.INFO));
     }
 
     /// Compte rendu **honnête** d'un passage reconstruit (#1648) : ni « introuvables », ni fausse promesse.
     /// On explique pourquoi rien n'a pu être relié, et que ce n'est pas la faute des fichiers de l'utilisateur.
-    private static String texteReconstruit(RapportReactivation rapport) {
-        return "Ce passage a été reconstruit depuis Vigie-Chiro : l'application connaît le nom de ses "
-                + rapport.decompte().total()
-                + " séquence(s), mais pas la correspondance avec vos fichiers d'origine, ni les empreintes"
-                + " nécessaires pour les régénérer.\n\n"
-                + "Vos fichiers ne sont pas en cause : ils n'ont simplement pas pu être reliés. La"
-                + " réactivation depuis les enregistrements bruts n'est pas encore disponible pour ce type de"
-                + " passage.";
+    private static CompteRendu reconstruit(RapportReactivation rapport) {
+        return new CompteRendu(
+                titre(rapport),
+                "Ce passage a été reconstruit depuis Vigie-Chiro : l'application connaît le nom de ses "
+                        + rapport.decompte().total()
+                        + " séquence(s), mais pas la correspondance avec vos fichiers d'origine, ni les"
+                        + " empreintes nécessaires pour les régénérer.",
+                List.of(Constat.de(
+                        "Vos fichiers ne sont pas en cause : ils n'ont simplement pas pu être reliés. La"
+                                + " réactivation depuis les enregistrements bruts n'est pas encore disponible"
+                                + " pour ce type de passage.",
+                        Severite.INFO)),
+                "");
     }
-
-    /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif. Au-delà de
-    /// [#ECARTS_DETAILLES], on résume pour garder la modale lisible.
-    /// **Ce qui manquait, nommé** (#1943). Le nombre seul obligeait à lire la base et à tracer le code pour
-    /// savoir de quoi il parlait.
-    ///
-    /// Deux situations tombaient dans le même compteur : un enregistrement absent du dossier, qui appelle
-    /// une action de l'utilisateur, et une tranche non régénérée, qui est un défaut de notre côté. Elles
-    /// portent désormais leur motif.
-    private static void ajouterAbsences(StringBuilder texte, List<AbsenceReactivation> absences) {
-        if (absences.isEmpty()) {
-            return;
-        }
-        absences.stream()
-                .sorted(Comparator.comparingInt(AbsenceReactivation::sequences)
-                        .reversed()
-                        .thenComparing(AbsenceReactivation::nomFichier))
-                .limit(ABSENCES_DETAILLEES)
-                .forEach(absence -> texte.append("  • ")
-                        .append(absence.nomFichier())
-                        .append(" : ")
-                        .append(absence.motif())
-                        .append(absence.sequences() > 1 ? " (" + absence.sequences() + " séquences)" : "")
-                        .append('\n'));
-        if (absences.size() > ABSENCES_DETAILLEES) {
-            texte.append("  • … et ")
-                    .append(absences.size() - ABSENCES_DETAILLEES)
-                    .append(" autre(s).\n");
-        }
-    }
-
-    private static void ajouterEcarts(StringBuilder texte, List<EcartReactivation> ecarts) {
-        if (ecarts.isEmpty()) {
-            return;
-        }
-        texte.append('\n')
-                .append(ecarts.size())
-                .append(" fichier(s) portaient le bon nom mais n'étaient pas le bon audio :")
-                .append(" ils n'ont pas été rebranchés (les observations auraient pointé sur le mauvais son).\n");
-        ecarts.stream()
-                .limit(ECARTS_DETAILLES)
-                .forEach(ecart -> texte.append("  • ")
-                        .append(ecart.nomFichier())
-                        .append(" : ")
-                        .append(ecart.motif())
-                        .append('\n'));
-        if (ecarts.size() > ECARTS_DETAILLES) {
-            texte.append("  • … et ").append(ecarts.size() - ECARTS_DETAILLES).append(" autre(s).\n");
-        }
-    }
-
     /// Libellé du niveau de confiance **le plus faible** obtenu : c'est lui qui qualifie honnêtement la
     /// réactivation entière.
     private static String libelleConfiance(RapportReactivation rapport) {
