@@ -103,15 +103,15 @@ class ReactivationModaleViewTest {
                                         "PaRecPR_20260422_205342_001.wav", "tranche non régénérée", 1))),
                 robot);
 
-        String compteRendu =
-                robot.lookup("#lblCompteRendu").queryAs(Label.class).getText();
-        assertThat(compteRendu)
-                .as("un nombre sans nom obligeait à lire la base pour savoir de quoi il parlait")
-                .contains("PaRecPR_20260422_205332.wav")
-                .contains("enregistrement absent")
-                .contains("(3 séquences)")
-                .contains("PaRecPR_20260422_205342_001.wav")
-                .contains("tranche non régénérée");
+        String compteRendu = compteRendu(robot);
+        assertThat(details(robot))
+                .as("chaque absence est un noeud distinct, avec son sujet et son motif (ADR 0031)")
+                .anySatisfy(ligne -> assertThat(ligne)
+                        .contains("PaRecPR_20260422_205332.wav")
+                        .contains("enregistrement absent")
+                        .contains("(3 séquences)"))
+                .anySatisfy(ligne -> assertThat(ligne).contains("PaRecPR_20260422_205342_001.wav"));
+        assertThat(compteRendu).contains("tranche non régénérée");
         assertThat(compteRendu)
                 .as("une absence isolée ne s'annonce pas « (1 séquences) »")
                 .doesNotContain("(1 séquences)");
@@ -132,10 +132,7 @@ class ReactivationModaleViewTest {
                         VoieReactivation.TRANSFORMES),
                 robot);
 
-        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
-                .contains("réactivée(s)")
-                .contains("30")
-                .contains("écoutable");
+        assertThat(compteRendu(robot)).contains("réactivée(s)").contains("30").contains("écoutable");
         assertThat(robot.lookup("#boutonFermer").queryButton().isDisabled())
                 .as("l'opération est terminée : « Fermer » redevient actif")
                 .isFalse();
@@ -231,8 +228,7 @@ class ReactivationModaleViewTest {
                         0, 0, 30, 0, null, List.of(), new DecompteAudio(0, 30), VoieReactivation.RECONSTRUIT),
                 robot);
 
-        String compteRendu =
-                robot.lookup("#lblCompteRendu").queryAs(Label.class).getText();
+        String compteRendu = compteRendu(robot);
         assertThat(compteRendu).contains("reconstruit depuis Vigie-Chiro");
         assertThat(compteRendu)
                 .as("les fichiers peuvent être présents : ne pas prétendre le contraire")
@@ -260,8 +256,7 @@ class ReactivationModaleViewTest {
                 },
                 robot);
 
-        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
-                .contains("annulée");
+        assertThat(compteRendu(robot)).contains("annulée");
         assertThat(robot.lookup("#lblErreur").queryAs(Label.class).getText())
                 .as("une annulation n'est pas une erreur : rien en rouge")
                 .isEmpty();
@@ -287,5 +282,31 @@ class ReactivationModaleViewTest {
         assertThat(appelantRafraichi)
                 .as("M-Passage se recharge : le passage redevenu écoutable apparaît")
                 .isTrue();
+    }
+
+    /// Le compte rendu **rendu**, à plat : la concaténation de ses lignes. Sert aux assertions qui
+    /// portent sur le fond ; celles qui portent sur la **structure** passent par [#details].
+    private static String compteRendu(FxRobot robot) {
+        return String.join("\n", lignes(robot));
+    }
+
+    /// Les seules lignes de détail, chacune étant un nœud distinct depuis #2001 - ce qui permet de
+    /// vérifier qu'un sujet et son motif voyagent ensemble, et non qu'ils apparaissent quelque part
+    /// dans un pavé.
+    private static List<String> details(FxRobot robot) {
+        return robot.lookup("#zoneCompteRendu").queryAs(VBox.class).getChildren().stream()
+                .filter(Label.class::isInstance)
+                .map(Label.class::cast)
+                .filter(l -> l.getStyleClass().contains("compte-rendu-detail"))
+                .map(Label::getText)
+                .toList();
+    }
+
+    private static List<String> lignes(FxRobot robot) {
+        return robot.lookup("#zoneCompteRendu").queryAs(VBox.class).getChildren().stream()
+                .filter(Label.class::isInstance)
+                .map(Label.class::cast)
+                .map(Label::getText)
+                .toList();
     }
 }

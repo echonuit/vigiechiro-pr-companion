@@ -776,7 +776,7 @@
 /* Mise en contexte : elle explique ce qui a ete tente, elle n'est pas un resultat. Moins appuyee que
    les faits, pour ne pas se disputer leur attention. */
 .compte-rendu-preambule {
-    -fx-text-fill: #4b5563;
+    -fx-text-fill: -couleur-texte-discret;
     -fx-padding: 0 0 4 0;
 }
 
@@ -787,15 +787,15 @@
 /* Les trois severites teintent le TEXTE du fait, pas un fond : un compte rendu en compte plusieurs a la
    fois, et autant de pastilles colorees le rendraient illisible. Le bandeau, lui, n'en porte qu'une. */
 .compte-rendu-succes {
-    -fx-text-fill: #14532d;
+    -fx-text-fill: -couleur-succes;
 }
 
 .compte-rendu-info {
-    -fx-text-fill: #1f2937;
+    -fx-text-fill: -couleur-texte;
 }
 
 .compte-rendu-erreur {
-    -fx-text-fill: #7f1d1d;
+    -fx-text-fill: -couleur-danger;
 }
 
 /* Le retrait vit ici, pas dans le texte : la continuation d'une ligne longue s'aligne donc sous le
@@ -803,7 +803,7 @@
 .compte-rendu-detail {
     -fx-padding: 0 0 0 18;
     -fx-font-size: 12px;
-    -fx-text-fill: #4b5563;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 /* Le resume des details masques : meme retrait, en retrait de ton. */

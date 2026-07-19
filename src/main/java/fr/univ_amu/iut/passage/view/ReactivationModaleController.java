@@ -6,6 +6,8 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
+import fr.univ_amu.iut.commun.view.VueCompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.viewmodel.ReactivationModaleViewModel;
 import java.util.Objects;
@@ -83,7 +85,7 @@ public class ReactivationModaleController {
     private Label lblErreur;
 
     @FXML
-    private Label lblCompteRendu;
+    private VBox zoneCompteRendu;
 
     @FXML
     private Button boutonAnnuler;
@@ -126,9 +128,11 @@ public class ReactivationModaleController {
         lblErreur.textProperty().bind(viewModel.erreurProperty());
         lblErreur.visibleProperty().bind(viewModel.erreurProperty().isNotEmpty());
         lblErreur.managedProperty().bind(viewModel.erreurProperty().isNotEmpty());
-        lblCompteRendu.textProperty().bind(viewModel.compteRenduProperty());
-        lblCompteRendu.visibleProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
-        lblCompteRendu.managedProperty().bind(viewModel.compteRenduProperty().isNotEmpty());
+        // Le compte rendu se **construit** : sa forme dépend de ce qu'il y a à dire (ADR 0031), donc il ne
+        // peut pas être lié comme un libellé. La modale plafonne ses détails pour rester lisible ; la ligne
+        // de commande, elle, les rend tous.
+        viewModel.compteRenduProperty().addListener((obs, avant, apres) -> afficherCompteRendu(apres));
+        afficherCompteRendu(viewModel.compteRenduProperty().get());
         // La modale est dimensionnée sur le contenu visible à l'ouverture : une seule barre. Ce qui paraît
         // ensuite la fait grandir - la barre d'ancrage poussait les boutons hors de la fenêtre, et le compte
         // rendu ses dernières lignes sous la ligne de flottaison (cf. reconstruction #1534). La fenêtre suit
@@ -232,6 +236,21 @@ public class ReactivationModaleController {
         ancrageDemarre.set(true);
         viewModel.progressionAncrage().demarrer(libelleAncrage);
         viewModel.progressionAncrage().appliquer(new Progression(libelleAncrage, fractionAncrage));
+    }
+
+    /// Nombre de détails montrés par constat avant de résumer. La **modale** en décide : elle doit rester
+    /// lisible, là où la sortie de  les rend tous parce qu'elle se filtre (ADR 0031).
+    private static final int DETAILS_MONTRES = 5;
+
+    /// Remplace le compte rendu affiché. On reconstruit plutôt qu'on ne met à jour : un compte rendu est
+    /// immuable et publié d'un bloc, il n'y a rien à rafraîchir en place.
+    private void afficherCompteRendu(CompteRendu rendu) {
+        zoneCompteRendu
+                .getChildren()
+                .setAll(VueCompteRendu.rendre(rendu, DETAILS_MONTRES).getChildren());
+        zoneCompteRendu.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
+        zoneCompteRendu.setVisible(!rendu.estVide());
+        zoneCompteRendu.setManaged(!rendu.estVide());
     }
 
     /// **Aperçu de documentation** (#1943) : place la modale dans son état **final**, compte rendu affiché,
