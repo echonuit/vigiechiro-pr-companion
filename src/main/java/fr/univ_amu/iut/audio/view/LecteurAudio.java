@@ -7,6 +7,7 @@ import java.util.List;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.SeparatorMenuItem;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Options de **lecture** de la vue audio (#483), ajoutées en tête du menu « ☰ » et câblées sur l'[AudioView] :
 ///
@@ -31,12 +32,14 @@ final class LecteurAudio {
     /// branche sur `audioView` : boucle liée à sa case ; auto-lecture déclenchée à chaque clip prêt si sa
     /// case est cochée.
     static void installer(AudioView audioView, MenuButton menu, ReglagesReactifs reactifs) {
-        CheckMenuItem lectureAuto = new CheckMenuItem("🔊 Lecture automatique à la sélection");
+        CheckMenuItem lectureAuto = new CheckMenuItem("Lecture automatique à la sélection");
+        lectureAuto.setGraphic(new FontIcon("fas-volume-up"));
         lectureAuto
                 .selectedProperty()
                 .bindBidirectional(reactifs.proprieteBooleen(
                         OngletReglagesAudio.CLE_LECTURE_AUTO, OngletReglagesAudio.DEFAUT_LECTURE_AUTO));
-        CheckMenuItem boucle = new CheckMenuItem("🔁 Lecture en boucle");
+        CheckMenuItem boucle = new CheckMenuItem("Lecture en boucle");
+        boucle.setGraphic(new FontIcon("fas-redo"));
         boucle.selectedProperty()
                 .bindBidirectional(
                         reactifs.proprieteBooleen(OngletReglagesAudio.CLE_BOUCLE, OngletReglagesAudio.DEFAUT_BOUCLE));

@@ -19,6 +19,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Câblage des **cartes de points d'écoute** de la fiche site (`cartesPoints`), extrait de
 /// [SiteDetailController] pour l'alléger (pur câblage, seuil de cohésion PMD, #1087). Reconstruit une
@@ -146,10 +147,12 @@ final class CartesPointsSite {
     }
 
     private HBox actionsPoint(CartePoint carte) {
-        Hyperlink editer = new Hyperlink("✏ Modifier");
+        Hyperlink editer = new Hyperlink("Modifier");
+        editer.setGraphic(new FontIcon("fas-pen"));
         editer.setOnAction(evenement -> navigation.ouvrirModaleEditionPoint(
                 fenetre(), viewModel.siteCourant(), carte.point(), viewModel::rafraichir));
-        Hyperlink supprimer = new Hyperlink("🗑 Supprimer");
+        Hyperlink supprimer = new Hyperlink("Supprimer");
+        supprimer.setGraphic(new FontIcon("fas-trash"));
         supprimer.setOnAction(evenement -> supprimerPoint(carte));
         // Gating destructif (#789) : un point qui porte des passages n'est pas supprimable (le service le
         // refuse). On grise le lien et on l'enrobe d'une enveloppe porteuse du tooltip d'explication, au lieu

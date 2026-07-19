@@ -85,7 +85,7 @@ public class LotViewModel {
         // Titre reflétant le **plafond configuré** (#110) : en Mo base 1000 (cohérent avec la contrainte
         // « 700 Mo » Tadarida), et non Formats.octetsLisibles qui raisonne en base 1024.
         long plafondMo = service.plafondArchiveOctets() / 1_000_000;
-        titreArchives.set("🗜 Archives de dépôt Tadarida (≤ " + plafondMo + " Mo)");
+        titreArchives.set("Archives de dépôt Tadarida (≤ " + plafondMo + " Mo)");
     }
 
     /// Ouvre l'écran de dépôt du passage `idPassage`. Une erreur (passage introuvable) est restituée

@@ -85,7 +85,14 @@
         </graphic>
       </MenuButton>
     </HBox>
-    <Label fx:id="lblTitreArchives" styleClass="section-sous"/>
+    <!-- L'icone se pose ICI et non dans le viewmodel : un viewmodel ne connait que javafx.beans,
+         jamais javafx.scene (regle ArchUnit viewmodel_sans_javafx_ui). Il fournit le texte, la vue
+         le decore (#1564). -->
+    <Label fx:id="lblTitreArchives" styleClass="section-sous">
+      <graphic>
+        <FontIcon iconLiteral="fas-file-archive"/>
+      </graphic>
+    </Label>
     <Label text="Découpe les séquences en archives ZIP « préfixe-N.zip » prêtes à téléverser, écrites dans le sous-dossier « depot/ » de la session."
            styleClass="section-sous" wrapText="true"/>
     <HBox spacing="8.0" alignment="CENTER_LEFT">

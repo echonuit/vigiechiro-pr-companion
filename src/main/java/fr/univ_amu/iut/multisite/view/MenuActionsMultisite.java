@@ -11,6 +11,7 @@ import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TableView;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// État et gestes du menu **☰ actions** de la vue multi-sites, extraits de [MultisiteController] : le
 /// controller y avait accumulé le câblage des quatre entrées et le sélecteur de fichier de l'export,
@@ -43,15 +44,17 @@ final class MenuActionsMultisite {
             boolean peutReconstruire,
             boolean peutRelever) {
         exporter.disableProperty().bind(Bindings.not(nonVide));
+        exporter.setGraphic(new FontIcon("fas-file-export"));
         exporter.textProperty()
-                .bind(Bindings.when(nonVide).then("📤 Exporter…").otherwise("📤 Exporter… (aucune ligne à exporter)"));
+                .bind(Bindings.when(nonVide).then("Exporter…").otherwise("Exporter… (aucune ligne à exporter)"));
         // Écoute : la sélection filtrée suit la présence de lignes filtrées ; un passage exige une ligne sélectionnée.
         ecouterLot.disableProperty().bind(Bindings.not(nonVide));
+        ecouterLot.setGraphic(new FontIcon("fas-headphones"));
         ecouterLot
                 .textProperty()
                 .bind(Bindings.when(nonVide)
-                        .then("🎧 Écouter la sélection filtrée")
-                        .otherwise("🎧 Écouter la sélection filtrée (aucune ligne)"));
+                        .then("Écouter la sélection filtrée")
+                        .otherwise("Écouter la sélection filtrée (aucune ligne)"));
         ecouterPassage.disableProperty().bind(Bindings.isNull(selection));
         // Un item qui ne peut rien faire ne vaut pas mieux qu'un item absent : il vaut moins.
         reconstruire.setVisible(peutReconstruire);
