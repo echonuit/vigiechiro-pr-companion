@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -21,6 +22,7 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -44,6 +46,7 @@ final class MoteurImport {
     private final AgregatImportDao agregatDao;
     private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
+    private final Horloge horloge;
 
     MoteurImport(
             CopieProtegee copie,
@@ -52,7 +55,8 @@ final class MoteurImport {
             FabriqueEntitesImport fabriqueEntites,
             AgregatImportDao agregatDao,
             UniteDeTravail uniteDeTravail,
-            Workspace workspace) {
+            Workspace workspace,
+            Horloge horloge) {
         this.copie = Objects.requireNonNull(copie, "copie");
         this.preparation = Objects.requireNonNull(preparation, "preparation");
         this.decoupage = Objects.requireNonNull(decoupage, "decoupage");
@@ -60,6 +64,7 @@ final class MoteurImport {
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
+        this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
     /// Importe **plusieurs nuits** d'une même carte en **un passage par nuit** (même point, n° de passage
@@ -226,7 +231,7 @@ final class MoteurImport {
                 .mapToLong(SequenceProduite::octets)
                 .sum();
         SessionDEnregistrement session =
-                new SessionDEnregistrement(null, dossierSession.toString(), volumeOriginaux, volumeSequences, null);
+                sessionDe(dossierSession, volumeOriginaux, volumeSequences, ctx.conserverOriginaux());
         // Entité journal **uniforme** : en mode dégradé, le journal de repli porte déjà des évènements
         // vides et l'anomalie « import dégradé », donc on construit la trace de la même façon (#107).
         // Journal restreint à CETTE nuit (#1696) : sur une carte multi-nuits à log unique, les
@@ -298,8 +303,16 @@ final class MoteurImport {
         });
 
         Passage passagePersiste = avecId(passage, ids[0]);
-        SessionDEnregistrement sessionPersistee =
-                new SessionDEnregistrement(ids[1], session.cheminRacine(), volumeOriginaux, volumeSequences, ids[0]);
+        // L'écho persisté reprend le marqueur de la session construite : sans lui, `resultat.session()`
+        // dirait « non déclaré » alors que la base porte la déclaration (#2062).
+        SessionDEnregistrement sessionPersistee = new SessionDEnregistrement(
+                ids[1],
+                session.cheminRacine(),
+                volumeOriginaux,
+                volumeSequences,
+                ids[0],
+                session.horodatageArchivage(),
+                session.horodatagePurgeOriginaux());
         int nombreSequences =
                 transformations.stream().mapToInt(t -> t.sequences().size()).sum();
         return new ResultatImport(
@@ -323,6 +336,26 @@ final class MoteurImport {
     /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)
     /// laissée par un import **annulé** (#146), pour ne pas accumuler des fichiers à moitié copiés.
     /// Best-effort (cf. [ExtracteurZip#supprimerRecursivement]).
+    /// La session d'une nuit importée, et **l'état de ses originaux**.
+    ///
+    /// Import **sans copie** : les originaux sont connus et prouvés (leur `sha256` est capturé dans les
+    /// deux modes) mais **non stockés localement** — l'utilisateur garde ses fichiers. C'est exactement
+    /// ce que `originals_purged_at` déclare, et il faut le poser **dès l'import** (#2062).
+    ///
+    /// Sans cette déclaration, `originauxPurges()` reste faux : l'audit balaie alors les `file_path` des
+    /// originaux — qui pointent sur la carte SD ([SourceOriginal]) — et signale une **erreur par
+    /// original** dès qu'elle est retirée. Un fait **voulu** passerait pour une corruption, ce que la
+    /// déclaration de #1303 existe précisément pour éviter.
+    ///
+    /// La migration V25 avait rétro-déclaré les sessions à volume nul, donc les imports sans copie
+    /// **antérieurs** : c'est le chemin d'import qui n'avait jamais suivi.
+    private SessionDEnregistrement sessionDe(
+            Path dossierSession, Long volumeOriginaux, long volumeSequences, boolean conserverOriginaux) {
+        LocalDateTime nonStockeLocalement = conserverOriginaux ? null : horloge.maintenant();
+        return new SessionDEnregistrement(
+                null, dossierSession.toString(), volumeOriginaux, volumeSequences, null, null, nonStockeLocalement);
+    }
+
     private static void supprimerSessionPartielle(Path dossierSession) {
         ExtracteurZip.supprimerRecursivement(dossierSession);
     }

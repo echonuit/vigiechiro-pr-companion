@@ -37,8 +37,12 @@ public final class OngletReglagesImport implements OngletReglages {
     public List<DescripteurReglage> reglages() {
         return List.of(new DescripteurReglage.Booleen(
                 PreferenceConservation.CLE,
-                "Conserver les originaux importés",
-                "Copie les WAV bruts dans bruts/ avant transformation (désactivé : transformation directe depuis la source).",
-                true));
+                "Conserver les originaux pour ré-analyse ultérieure",
+                "Copie les WAV bruts dans bruts/ avant transformation. Utile si vous comptez ré-analyser vos"
+                        + " enregistrements avec d'autres réglages : l'application n'en a pas besoin, et vos"
+                        + " fichiers d'origine ne sont jamais modifiés. Coûte plusieurs Go par nuit et rend"
+                        + " l'import environ trois fois plus long (désactivé : transformation directe depuis"
+                        + " la source).",
+                false));
     }
 }

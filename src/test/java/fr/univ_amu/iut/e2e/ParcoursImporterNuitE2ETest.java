@@ -3,6 +3,7 @@ package fr.univ_amu.iut.e2e;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.audit.model.ServiceAuditCoherence;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -15,9 +16,11 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
+import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
+import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -96,6 +99,59 @@ class ParcoursImporterNuitE2ETest {
     @AfterEach
     void nettoyer() {
         System.clearProperty("vigiechiro.workspace");
+    }
+
+    @Test
+    @DisplayName("#2062 : importer SANS copie puis retirer la carte → l'audit reste sain (la couture)")
+    void parcours_import_sans_copie_puis_carte_retiree() throws Exception {
+        // Le défaut vivait ENTRE l'import et l'audit : chaque côté fonctionnait, leur couture non.
+        // L'import sans copie persiste des `file_path` pointant sur la carte SD, et ne déclarait pas
+        // l'état « non stocké localement » — l'audit prenait donc chaque original devenu introuvable
+        // pour une corruption. Un test de chaque côté n'aurait rien vu.
+        ImportationViewModel vm = injector.getInstance(ImportationViewModel.class);
+        vm.inspection().dossierSourceProperty().set(dossierSource);
+        vm.inspecter();
+        vm.chargerSites();
+        vm.rattachement().siteSelectionneProperty().set(site);
+        vm.rattachement().pointSelectionneProperty().set(point);
+        vm.rattachement().anneeProperty().set(ANNEE);
+        vm.rattachement().numeroPassageProperty().set(1);
+
+        injector.getInstance(PreferenceConservation.class)
+                .conserverOriginauxProperty()
+                .set(false);
+        vm.importer();
+
+        Long idPassage = new PassageDao(source).findAll().getFirst().id();
+        assertThat(Files.exists(Path.of(new SessionDao(source)
+                                .trouverParPassage(idPassage)
+                                .orElseThrow()
+                                .cheminRacine())
+                        .resolve("bruts")))
+                .as("mode sans copie : aucun bruts/ dans l'espace de travail")
+                .isFalse();
+
+        // La carte est retirée : les chemins des originaux ne désignent plus rien.
+        supprimerRecursivement(dossierSource);
+
+        ServiceAuditCoherence audit = injector.getInstance(ServiceAuditCoherence.class);
+
+        assertThat(audit.auditerPassage(idPassage).sain())
+                .as("les originaux sont connus et prouvés, mais volontairement non stockés")
+                .isTrue();
+    }
+
+    /// Supprime un arbre de fichiers : simule le retrait de la carte SD.
+    private static void supprimerRecursivement(Path racine) throws Exception {
+        try (var chemins = Files.walk(racine)) {
+            chemins.sorted(java.util.Comparator.reverseOrder()).forEach(c -> {
+                try {
+                    Files.delete(c);
+                } catch (java.io.IOException echec) {
+                    throw new java.io.UncheckedIOException(echec);
+                }
+            });
+        }
     }
 
     @Test

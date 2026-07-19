@@ -9,7 +9,12 @@ package fr.univ_amu.iut.passage.model;
 ///
 /// @param id clé technique, `null` avant insertion
 /// @param nomFichier nom de fichier (préfixe R6 + suffixe enregistreur R7)
-/// @param cheminFichier chemin sur disque, sous-dossier `bruts/` (R22)
+/// @param cheminFichier d'où vient le fichier : le sous-dossier `bruts/` (R22) quand l'import l'a
+///     copié, **le chemin sur la carte SD** quand il ne l'a pas fait. Dans ce second cas c'est une
+///     **provenance, pas un localisateur** : le montage aura disparu. Aucun parcours de récupération
+///     ne s'en sert — la réactivation apparie par [#nomFichier], jamais par ce chemin — et l'audit
+///     l'ignore dès lors que la session déclare « non stocké localement » (#2062). Ne pas écrire de
+///     code qui suppose ce fichier ouvrable.
 /// @param dureeSecondes durée en secondes (optionnel, typiquement 2-30 s)
 /// @param frequenceEchantillonnageHz fréquence d'échantillonnage en Hz (optionnel, ex. 384000)
 /// @param sha256 empreinte SHA-256 hexadécimale (optionnel, intégrité bit-à-bit)

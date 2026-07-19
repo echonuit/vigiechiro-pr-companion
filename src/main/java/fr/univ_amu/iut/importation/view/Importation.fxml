@@ -139,13 +139,6 @@
     </HBox>
   </VBox>
 
-  <!-- Option d'espace disque (#…) : conserver ou non une copie des originaux dans « bruts/ ». -->
-  <VBox styleClass="carte-section" spacing="4.0">
-    <CheckBox fx:id="caseConserverOriginaux" text="Conserver les originaux sur le disque"/>
-    <Label styleClass="section-sous" wrapText="true"
-           text="Décochez pour économiser l'espace disque : les enregistrements sont transformés directement depuis la carte SD, sans en copier une archive dans le dossier « bruts ». Les séquences d'écoute et le journal sont produits normalement ; seuls les fichiers d'origine ne sont pas conservés."/>
-  </VBox>
-
   <!-- 4. Action -->
   <HBox spacing="14.0" alignment="CENTER_LEFT">
     <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip, on le pose sur ce StackPane (#789). -->

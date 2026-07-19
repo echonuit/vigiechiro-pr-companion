@@ -20,12 +20,18 @@ public final class PreferenceConservation {
     static final String CLE = "import.conserver-originaux";
 
     private final Reglages reglages;
-    private final BooleanProperty conserverOriginaux = new SimpleBooleanProperty(this, "conserverOriginaux", true);
+    private final BooleanProperty conserverOriginaux = new SimpleBooleanProperty(this, "conserverOriginaux", false);
 
     public PreferenceConservation(Reglages reglages) {
         this.reglages = Objects.requireNonNull(reglages, "reglages");
-        // Restaure le dernier choix (défaut : conservation activée, comportement historique).
-        conserverOriginaux.set(reglages.lireBooleen(CLE, true));
+        // Restaure le dernier choix. Défaut : **ne pas conserver** (#2063). Copier les bruts coûte
+        // plusieurs Go et les deux tiers du temps d'import, pour un service dont rien dans
+        // l'application ne dépend : c'est une option de ré-analyse, pas un dû.
+        //
+        // Une installation qui a déjà importé porte sa valeur en base : `lireBooleen` ne retombe sur le
+        // défaut que si la clé est absente. On ne change donc pas dans son dos le choix de quelqu'un
+        // qui l'a déjà fait — seules les installations neuves basculent.
+        conserverOriginaux.set(reglages.lireBooleen(CLE, false));
     }
 
     /// Propriété **éditable** : la vue y lie bidirectionnellement sa case à cocher (`true` = copie dans

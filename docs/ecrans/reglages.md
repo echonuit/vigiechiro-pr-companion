@@ -11,7 +11,8 @@ ce domaine propose. Aujourd'hui :
 - **Général** : la **source des fiches espèces** hors chiroptères (Wikipédia FR ou, par défaut, GBIF).
   Le Plan National d'Actions reste prioritaire pour les chauves-souris. L'effet est immédiat sur les
   prochaines fiches ouvertes.
-- **Import** : **conserver les originaux importés** (copie des WAV bruts avant transformation).
+- **Import** : **conserver les originaux pour ré-analyse ultérieure** (copie des WAV bruts avant
+  transformation ; désactivé par défaut, cf. [Importer une nuit](importation.md)).
 - **Dépôt** : la **forme du dépôt** et la **taille maximale d'une archive**.
 
     La **forme du dépôt** décide de ce qui part sur Vigie-Chiro, et ce choix a une conséquence qu'il
@@ -38,8 +39,11 @@ ce domaine propose. Aujourd'hui :
 Une modification est **enregistrée immédiatement** et **conservée d'une session à l'autre**. Seul
 l'**effet** des bascules de l'onglet « Fonctionnalités » s'applique au **prochain démarrage**.
 
-!!! note "Les mêmes réglages, à deux endroits"
+!!! note "Un réglage, parfois à deux endroits"
     Certains réglages restent aussi accessibles là où on en a besoin : la source des fiches espèces
-    figure également dans le menu ☰, et « conserver les originaux » sur l'écran
-    [Importation](importation.md). Les deux emplacements pilotent le **même** réglage et restent
+    figure également dans le menu ☰. Les deux emplacements pilotent le **même** réglage et restent
     synchronisés.
+
+    « Conserver les originaux » figurait aussi sur l'écran d'import ; il n'y est plus. C'est une option
+    de ré-analyse, dont l'immense majorité des imports n'a pas à se soucier : elle vit désormais ici,
+    où on la trouve quand on la cherche.

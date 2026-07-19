@@ -395,23 +395,47 @@ class ImportationViewModelTest {
     }
 
     @Test
+    @DisplayName("#2063 : une installation qui a déjà choisi garde son choix — le nouveau défaut ne la retourne pas")
+    void installation_existante_garde_son_choix() {
+        // `lireBooleen` ne retombe sur le défaut que si la clé est ABSENTE. Une installation qui a déjà
+        // importé porte sa valeur en base : basculer le défaut ne doit pas revenir sur un choix
+        // explicite fait par quelqu'un d'autre. Seules les installations neuves basculent.
+        when(reglages.lireBooleen(PreferenceConservation.CLE, false)).thenReturn(true);
+
+        assertThat(new PreferenceConservation(reglages).valeur())
+                .as("le choix persisté prime sur le nouveau défaut")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("#2063 : une installation neuve ne conserve pas les originaux")
+    void installation_neuve_ne_conserve_pas() {
+        // Rien en base : c'est le défaut qui s'applique, et il a changé de sens.
+        when(reglages.lireBooleen(PreferenceConservation.CLE, false)).thenReturn(false);
+
+        assertThat(new PreferenceConservation(reglages).valeur()).isFalse();
+    }
+
+    @Test
     @DisplayName(
             "« Conserver les originaux » lit le réglage persisté (défaut activé) et le mémorise au lancement de l'import")
     void conserver_originaux_lit_et_persiste_le_reglage() {
-        // À la construction, le défaut (conservation activée) est lu depuis Reglages.
-        assertThat(conservation.conserverOriginauxProperty().get()).isTrue();
+        // À la construction, le défaut est lu depuis Reglages : **ne pas conserver** (#2063). Copier les
+        // bruts est une option de ré-analyse, pas un dû — rien dans l'application n'en dépend.
+        assertThat(conservation.conserverOriginauxProperty().get()).isFalse();
 
-        // L'utilisateur décoche puis lance l'import : le choix est mémorisé au moment de préparer la demande.
+        // L'utilisateur active l'option puis lance l'import : le choix est mémorisé au moment de
+        // préparer la demande.
         Site site = site(1L, "640380");
         PointDEcoute point = point(10L, "A1", site.id());
         when(serviceSites.listerPoints(site.id())).thenReturn(List.of(point));
         when(serviceImport.inspecter(sd)).thenReturn(inspecteur.inspecter(sd));
         prepareRattachement(site, point);
-        conservation.conserverOriginauxProperty().set(false);
+        conservation.conserverOriginauxProperty().set(true);
 
         viewModel.preparerImport();
 
-        verify(reglages).ecrireBooleen(PreferenceConservation.CLE, false);
+        verify(reglages).ecrireBooleen(PreferenceConservation.CLE, true);
     }
 
     @Test

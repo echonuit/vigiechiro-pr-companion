@@ -38,6 +38,7 @@ import fr.univ_amu.iut.importation.model.TransformationAudio;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
@@ -275,6 +276,37 @@ class ServiceImportTest {
         assertThat(sequenceDao.findBySession(idSession))
                 .singleElement()
                 .satisfies(s -> assertThat(s.dureeSecondes()).isEqualTo(1.5));
+    }
+
+    @Test
+    @DisplayName("#2062 : sans conservation, la session déclare « non stocké localement » dès l'import")
+    void import_sans_conservation_declare_l_etat_non_stocke() {
+        // Sans cette déclaration, l'audit balaie les `file_path` des originaux — qui pointent sur la
+        // carte SD — et signale une ERREUR par original dès qu'elle est retirée. Un fait voulu passerait
+        // pour une corruption, ce que `originals_purged_at` existe précisément pour éviter (#1303).
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe, p -> {}, JetonAnnulation.neutre(), false);
+
+        SessionDEnregistrement session =
+                sessionDao.trouverParPassage(resultat.passage().id()).orElseThrow();
+
+        assertThat(session.originauxPurges())
+                .as("les originaux sont connus et prouvés, mais non stockés localement")
+                .isTrue();
+        assertThat(session.horodatagePurgeOriginaux()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("#2062 : AVEC conservation, rien n'est déclaré — un brut disparu reste une anomalie")
+    void import_avec_conservation_ne_declare_rien() {
+        // Le pendant du test précédent : on n'a pas éteint le contrôle, on l'a informé. Un import qui
+        // copie vraiment ses bruts doit continuer à faire crier l'audit s'ils s'évaporent.
+        ResultatImport resultat = service.importer(sd, idPoint, prefixe);
+
+        SessionDEnregistrement session =
+                sessionDao.trouverParPassage(resultat.passage().id()).orElseThrow();
+
+        assertThat(session.originauxPurges()).isFalse();
+        assertThat(session.horodatagePurgeOriginaux()).isNull();
     }
 
     @Test

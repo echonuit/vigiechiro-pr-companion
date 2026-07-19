@@ -102,8 +102,8 @@ public class ServiceImport {
         PreparationOriginaux preparation = new PreparationOriginaux(copie, renommeur, PARALLELISME_FICHIERS);
         DecoupageParallele decoupage = new DecoupageParallele(transformation, PARALLELISME_FICHIERS);
         FabriqueEntitesImport fabriqueEntites = new FabriqueEntitesImport(horloge);
-        this.moteur =
-                new MoteurImport(copie, preparation, decoupage, fabriqueEntites, agregatDao, uniteDeTravail, workspace);
+        this.moteur = new MoteurImport(
+                copie, preparation, decoupage, fabriqueEntites, agregatDao, uniteDeTravail, workspace, horloge);
     }
 
     /// Inspecte (lecture seule) le dossier SD sans rien importer : utile pour prévisualiser le

@@ -66,6 +66,10 @@ Deux niveaux, du plus anodin au plus engageant.
    validation, qui s'appuient sur les séquences transformées. Vous pouvez les supprimer pour une nuit
    (écran [Passage](ecrans/passage.md)) ou pour toutes (menu « ☰ »), sans aucune conséquence sur
    votre travail.
+
+    L'application ne conserve plus ces copies par défaut : vous n'aurez donc rien à purger sur vos
+    imports récents, et ces boutons n'apparaissent que s'il reste effectivement des originaux à
+    supprimer. Voir [Importer une nuit](ecrans/importation.md).
 2. **Archiver un passage** : supprime aussi les **séquences d'écoute**. Vos observations et vos
    validations restent consultables, mais vous ne pouvez plus **écouter** ce passage. Ne le faites que
    sur un passage **déposé**, et de préférence si vous avez une **sauvegarde** des fichiers.

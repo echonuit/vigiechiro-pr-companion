@@ -40,7 +40,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -148,9 +147,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// qu'un Button désactivé n'affiche pas. Cf. [IndicateurBlocage] (#789).
     @FXML
     private StackPane enveloppeImporter;
-
-    @FXML
-    private CheckBox caseConserverOriginaux;
 
     @FXML
     private VBox zoneProgression;
@@ -268,7 +264,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         lierAction();
         // Option « conserver les originaux » : la case reflète le choix persisté (défaut : conservation
         // activée) et le met à jour dans les deux sens ; il est mémorisé au lancement de l'import.
-        caseConserverOriginaux.selectedProperty().bindBidirectional(conservation.conserverOriginauxProperty());
         // Glisser-déposer (#139) d'un dossier/.zip sur tout l'écran, gelé pendant un traitement.
         GlisserDeposerImport.installer(racineImport, this::traitementEnCours, this::chargerSource);
         viewModel.chargerSites();

@@ -24,23 +24,26 @@ de 5 s devient 50 s à l'écoute, dans la bande audible). Un enregistrement de p
 `…_225854`, `…_225859`…) : c'est ce qui permet de retrouver, pour chaque observation Tadarida, la
 séquence audio correspondante.
 
-## Conserver ou non les originaux (espace disque)
+## Conserver les originaux pour ré-analyse (option)
 
-Par défaut, l'import **conserve une copie des enregistrements d'origine** dans un dossier `bruts` de la
-session (les fichiers de la carte SD, eux, ne sont jamais modifiés). Ces originaux ne servent **pas** à
-l'écoute ni à la validation : celles-ci s'appuient sur les **séquences transformées**. Ils constituent
-une archive de sécurité, qui peut peser **plusieurs gigaoctets par nuit**.
+L'import lit les enregistrements de la carte SD, les transforme en séquences d'écoute, et **n'en garde
+pas de copie**. Vos fichiers d'origine restent sur votre carte, intacts : l'application ne les modifie
+jamais, et n'a pas besoin de les dupliquer pour travailler.
 
-La case **« Conserver les originaux sur le disque »**, sous le bouton d'import, permet de **désactiver**
-cette copie :
+L'écoute, la validation et le dépôt s'appuient tous sur les **séquences transformées**. Et si vous devez
+un jour récupérer une nuit archivée, l'application sait repartir de votre carte SD ou de votre
+sauvegarde : elle reconnaît vos fichiers à leur empreinte, qu'elle a relevée à l'import.
 
-- **cochée** (par défaut) : les originaux sont copiés dans `bruts`, comme précédemment ;
-- **décochée** : les enregistrements sont transformés **directement depuis la carte SD**, sans copie
-  intermédiaire. Le dossier `bruts` n'est pas créé, ce qui **économise l'espace disque**. Les séquences
-  d'écoute et le journal sont produits normalement ; seuls les fichiers d'origine ne sont pas archivés.
+Si vous comptez **ré-analyser** vos enregistrements plus tard, avec d'autres réglages ou un autre outil,
+vous pouvez demander à l'application d'en conserver une copie : **Réglages ▸ Import ▸ « Conserver les
+originaux pour ré-analyse ultérieure »**.
 
-Votre choix est **mémorisé** d'un import à l'autre. Décochez cette case si l'espace disque devient
-limité au fil des nuits importées.
+!!! warning "Ce que coûte cette option"
+    Une nuit d'enregistrements pèse **plusieurs gigaoctets**, et la copie représente environ les **deux
+    tiers du temps d'import**. Activée, l'option rend donc l'import nettement plus long et remplit le
+    disque bien plus vite. Ne l'activez que si vous savez que vous en aurez l'usage.
+
+Votre choix est **mémorisé** d'un import à l'autre.
 
 ## Source compressée (.zip)
 

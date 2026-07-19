@@ -296,13 +296,22 @@ public class AgregatImportDao {
     public long insererSession(Connection cx, long idPassage, SessionDEnregistrement session) throws SQLException {
         try (PreparedStatement ps = cx.prepareStatement(
                 "INSERT INTO recording_session"
-                        + " (root_path, originals_total_bytes, sequences_total_bytes, passage_id)"
-                        + " VALUES (?, ?, ?, ?)",
+                        + " (root_path, originals_total_bytes, sequences_total_bytes, passage_id,"
+                        + " originals_purged_at)"
+                        + " VALUES (?, ?, ?, ?, ?)",
                 Statement.RETURN_GENERATED_KEYS)) {
             ps.setString(1, session.cheminRacine());
             ps.setObject(2, session.volumeOriginauxOctets());
             ps.setObject(3, session.volumeSequencesOctets());
             ps.setLong(4, idPassage);
+            // « Non stocké localement », déclaré dès l'import quand les bruts ne sont pas copiés (#2062).
+            // Sans cette colonne, l'objet construit en amont portait bien le marqueur et l'INSERT le
+            // jetait : la déclaration n'existait que dans la mémoire de l'orchestrateur.
+            ps.setString(
+                    5,
+                    session.horodatagePurgeOriginaux() == null
+                            ? null
+                            : session.horodatagePurgeOriginaux().toString());
             return executerEtRecupererCle(ps, "recording_session");
         }
     }
