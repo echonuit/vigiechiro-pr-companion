@@ -57,7 +57,7 @@ class NavigationDiagnosticViewTest {
     @Test
     @DisplayName("ouvrir(idPassage) charge l'écran M-Diagnostic via Guice")
     void ouvrir_affiche_l_ecran(FxRobot robot) {
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         HBox ligneGps = robot.lookup("#ligneGps").queryAs(HBox.class);
 
         assertThat(message.getText()).contains("introuvable");

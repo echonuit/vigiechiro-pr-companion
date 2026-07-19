@@ -139,7 +139,7 @@ class LotViewTest {
 
         // #1890 : les deux ViewModels de l'écran partagent un bandeau unique ; le bilan du dépôt y arrive
         // comme n'importe quel autre compte rendu.
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
         verify(depot).deposer(eq(42L), any(), any(), any());
         assertThat(message.getText()).contains("1 fichier(s) téléversé(s)");
@@ -171,7 +171,7 @@ class LotViewTest {
 
         robot.interact(() -> robot.lookup("#btnTeleverser").queryButton().fire());
 
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
         assertThat(message.getText()).contains("interrompu").contains("Reprendre le dépôt");
         assertThat(bandeau.getStyleClass())
@@ -221,7 +221,7 @@ class LotViewTest {
 
         // Compte rendu du DEPOT (DepotViewModel), puis compte rendu du LOT (LotViewModel).
         robot.interact(() -> robot.lookup("#btnTeleverser").queryButton().fire());
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(message.getText()).contains("téléversé");
 
         // Sans stub, la confirmation ouvre un Alert.showAndWait() qui fige TestFX en headless.

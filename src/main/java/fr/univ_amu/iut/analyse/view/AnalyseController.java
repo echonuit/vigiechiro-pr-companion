@@ -167,7 +167,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
     private Button boutonExporter;
 
     @FXML
-    private Label lblExport;
+    private Label lblRetour;
 
     @FXML
     private HBox bandeauRetour;
@@ -364,7 +364,7 @@ public class AnalyseController implements RafraichirAuRetour, ResumeStatut {
         // Bandeau de retour (export, échec de chargement, action refusée), mutualisé avec Sons & validation
         // (#1837) : libellé, visibilité, couleur de sévérité et croix de fermeture.
         BandeauRetour.installer(
-                bandeauRetour, lblExport, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // En mode Tableau, la table visible suit le regroupement ; en mode Carte, les deux tables
         // s'effacent au profit de la carte de répartition.

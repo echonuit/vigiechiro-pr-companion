@@ -81,7 +81,7 @@ public class RattachementModaleController {
     private HBox bandeauRetour;
 
     @FXML
-    private Label messageErreur;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -175,10 +175,10 @@ public class RattachementModaleController {
 
         labelRecap.textProperty().bind(viewModel.recapProperty());
         labelRecap.setWrapText(true);
-        // #1917 : bandeau partagé (ADR 0023). Le canal s'appelait « messageErreur » alors qu'il portait
+        // #1917 : bandeau partagé (ADR 0023). Le canal s'appelait « lblRetour » alors qu'il portait
         // aussi des succès (« Métadonnées récupérées depuis Vigie-Chiro. ») et des guidages de saisie.
         BandeauRetour.installer(
-                bandeauRetour, messageErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // Validation « en direct » (#790) : « Appliquer » reste désactivé tant que l'année n'a pas 4
         // chiffres et le n° de passage au moins 1 ; chaque spinner rougit sur une valeur hors domaine. Le

@@ -706,7 +706,7 @@ class SonsValidationViewTest {
     void echec_affiche_puis_ferme_le_bandeau(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableObservations").queryAs(TableView.class);
         Node bandeau = robot.lookup("#bandeauRetour").query();
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
 
         assertThat(bandeau.isVisible()).as("aucun retour au départ").isFalse();
 

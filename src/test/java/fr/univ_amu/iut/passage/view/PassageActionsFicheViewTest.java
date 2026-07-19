@@ -286,7 +286,7 @@ class PassageActionsFicheViewTest {
         cliquer(robot, "#boutonAnnulerDepot");
 
         HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(bandeau.isVisible()).isTrue();
         assertThat(bandeau.getStyleClass()).contains("retour-erreur");
         assertThat(message.getText()).contains("n'est pas déposé");

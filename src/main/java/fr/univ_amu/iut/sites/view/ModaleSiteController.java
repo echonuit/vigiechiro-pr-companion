@@ -59,7 +59,7 @@ public class ModaleSiteController {
     private HBox bandeauRetour;
 
     @FXML
-    private Label messageErreur;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -103,10 +103,10 @@ public class ModaleSiteController {
         boutonValider.disableProperty().bind(viewModel.peutEnregistrer().not());
         ValidationFormulaire.marquerInvalide(champCarre, viewModel.carreInvalideEtSaisi());
 
-        // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
+        // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « lblRetour » et ne pouvait
         // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
         BandeauRetour.installer(
-                bandeauRetour, messageErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         viewModel.carreInvalideEtSaisi().addListener((observable, avant, invalide) -> majStyleCarre());
     }
 

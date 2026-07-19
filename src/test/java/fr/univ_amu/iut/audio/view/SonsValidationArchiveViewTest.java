@@ -298,7 +298,7 @@ class SonsValidationArchiveViewTest {
         assertThat(bandeau.isVisible())
                 .as("le geste ne doit plus rester muet : sans retour, il passe pour cassé")
                 .isTrue();
-        assertThat(robot.lookup("#lblMessage").queryAs(Label.class).getText())
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
                 .as("le motif nomme le taxon tel que l'utilisateur le lit dans la table")
                 .contains("Aucune fiche disponible pour « Bruit »");
         assertThat(bandeau.getStyleClass())

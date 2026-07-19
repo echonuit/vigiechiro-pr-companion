@@ -162,7 +162,7 @@ class LotVueIntegrationTest {
 
         Label chemin = robot.lookup("#lblCheminDepot").queryAs(Label.class);
         VBox checklist = robot.lookup("#checklist").queryAs(VBox.class);
-        // #1890 : l'état du lot a son propre libellé, permanent ; #lblMessage porte les comptes rendus.
+        // #1890 : l'état du lot a son propre libellé, permanent ; #lblRetour porte les comptes rendus.
         Label message = robot.lookup("#lblEtatLot").queryAs(Label.class);
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);
@@ -199,7 +199,7 @@ class LotVueIntegrationTest {
                         null));
 
         VBox checklist = robot.lookup("#checklist").queryAs(VBox.class);
-        // #1890 : l'état du lot a son propre libellé, permanent ; #lblMessage porte les comptes rendus.
+        // #1890 : l'état du lot a son propre libellé, permanent ; #lblRetour porte les comptes rendus.
         Label message = robot.lookup("#lblEtatLot").queryAs(Label.class);
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
         Button genererArchives = robot.lookup("#btnGenererArchives").queryAs(Button.class);
@@ -255,7 +255,7 @@ class LotVueIntegrationTest {
     void statut_depose_affiche_message_et_desactive_actions(FxRobot robot) {
         reouvrirAvec(robot, new EtatLot(StatutWorkflow.DEPOSE, "/ws/session-42", 2, 8192L, List.of(), "2026-06-18"));
 
-        // #1890 : l'état du lot a son propre libellé, permanent ; #lblMessage porte les comptes rendus.
+        // #1890 : l'état du lot a son propre libellé, permanent ; #lblRetour porte les comptes rendus.
         Label message = robot.lookup("#lblEtatLot").queryAs(Label.class);
         Button preparer = robot.lookup("#btnPreparer").queryAs(Button.class);
         Button deposer = robot.lookup("#btnDeposer").queryAs(Button.class);

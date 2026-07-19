@@ -238,7 +238,7 @@ class SonsValidationDepotViewTest {
     @DisplayName("Déposer un CSV sur un passage déclenche l'import et affiche le bandeau de succès")
     void depot_csv_declenche_import(FxRobot robot) {
         Node bandeau = robot.lookup("#bandeauRetour").query();
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
 
         robot.interact(() -> assertThat(controleur.deposerFichiers(List.of(new File("obs.csv"))))
                 .isTrue());

@@ -152,7 +152,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private HBox bandeauRetour;
 
     @FXML
-    private Label lblMessage;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -298,7 +298,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
 
         // Bandeau de retour partagé (ADR 0023) : libellé, visibilité, sévérité et croix de fermeture.
         BandeauRetour.installer(
-                bandeauRetour, lblMessage, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // Résumé de la nuit (stats) + cartes d'actions.
         lblVolBruts.textProperty().bind(viewModel.volumeBrutsProperty());

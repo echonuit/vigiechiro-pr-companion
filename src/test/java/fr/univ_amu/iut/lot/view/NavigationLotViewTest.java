@@ -56,7 +56,7 @@ class NavigationLotViewTest {
     @Test
     @DisplayName("ouvrir(idPassage) charge l'écran M-Lot via Guice")
     void ouvrir_affiche_l_ecran(FxRobot robot) {
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
 
         assertThat(message.getText()).contains("introuvable");
     }

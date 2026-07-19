@@ -58,7 +58,7 @@ class NavigationPassageViewTest {
     @Test
     @DisplayName("ouvrir(idPassage, contexte) charge l'écran M-Passage via Guice")
     void ouvrir_affiche_l_ecran(FxRobot robot) {
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         // #1889 : le libellé vit désormais DANS le bandeau de retour ; c'est le conteneur qui porte la
         // visibilité et la sévérité.
         HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);

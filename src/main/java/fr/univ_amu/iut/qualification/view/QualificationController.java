@@ -205,7 +205,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
     private Label lblAvertissement;
 
     @FXML
-    private Label lblMessage;
+    private Label lblRetour;
 
     @FXML
     private HBox bandeauRetour;
@@ -430,7 +430,7 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         // Bandeau de retour partagé (ADR 0023). Le compte rendu de régénération, lui, RESTE modal : il
         // suit une action irréversible (régénérer efface la progression d'écoute, d'où sa confirmation).
         BandeauRetour.installer(
-                bandeauRetour, lblMessage, btnFermerRetour, verdictVm.retourProperty(), verdictVm::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, verdictVm.retourProperty(), verdictVm::effacerRetour);
         lblSelectionMessage.textProperty().bind(selectionVm.messageProperty());
         lblSelectionMessage.visibleProperty().bind(selectionVm.messageProperty().isNotEmpty());
         lblSelectionMessage.managedProperty().bind(selectionVm.messageProperty().isNotEmpty());

@@ -116,7 +116,7 @@ class DiagnosticVueIntegrationTest {
         assertThat(robot.lookup("#ligneGps").tryQuery()).isPresent();
         assertThat(robot.lookup("#iconeGps").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblGps").tryQuery()).isPresent();
-        assertThat(robot.lookup("#lblMessage").tryQuery()).isPresent();
+        assertThat(robot.lookup("#lblRetour").tryQuery()).isPresent();
         assertThat(robot.lookup("#lblTemperature").tryQuery()).isPresent(); // #106
     }
 
@@ -243,7 +243,7 @@ class DiagnosticVueIntegrationTest {
         // Interaction : le service lève, le ViewModel doit neutraliser l'erreur dans son message.
         robot.interact(() -> controleur.ouvrirSur(ctx(999L)));
 
-        Label message = robot.lookup("#lblMessage").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         HBox ligneGps = robot.lookup("#ligneGps").queryAs(HBox.class);
         ListView<?> anomalies = robot.lookup("#listeAnomalies").queryAs(ListView.class);
         ListView<?> evenements = robot.lookup("#listeEvenements").queryAs(ListView.class);

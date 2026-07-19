@@ -104,7 +104,7 @@ class RattachementModaleViewTest {
         robot.interact(tirer::fire);
 
         // Passerelle absente dans cette fixture : le tir répond « rien récupéré », jamais un silence.
-        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(message.getText()).contains("Aucune participation Vigie-Chiro");
         assertThat(tirer.isDisabled())
                 .as("bouton relâché par binding une fois l'opération finie (exécuteur synchrone)")
@@ -119,7 +119,7 @@ class RattachementModaleViewTest {
         robot.interact(envoyer::fire);
 
         // Passerelle absente dans cette fixture : l'envoi le DIT, au lieu de se taire comme avant #1839.
-        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(message.getText()).contains("Non connecté");
         assertThat(envoyer.isDisabled())
                 .as("bouton relâché par binding une fois l'aller-retour terminé")
@@ -136,7 +136,7 @@ class RattachementModaleViewTest {
 
         // L'échec inattendu rejoint la ligne de message (#795) au lieu de mourir dans le fil de fond
         // en laissant le bouton grisé pour toujours.
-        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(message.getText()).contains("a échoué").contains("Open-Meteo injoignable");
         assertThat(meteo.isDisabled()).isFalse();
     }

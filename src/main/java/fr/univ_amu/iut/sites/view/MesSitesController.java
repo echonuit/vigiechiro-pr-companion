@@ -71,7 +71,7 @@ public class MesSitesController implements ResumeStatut {
     private VBox etatVide;
 
     @FXML
-    private Label lblErreur;
+    private Label lblRetour;
 
     @FXML
     private HBox bandeauRetour;
@@ -109,7 +109,7 @@ public class MesSitesController implements ResumeStatut {
         // Erreur de chargement (#795) : rendue visible seulement quand un message est présent.
         // Bandeau de retour partagé (ADR 0023) : libellé, visibilité, sévérité et croix de fermeture.
         BandeauRetour.installer(
-                bandeauRetour, lblErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         // Synchronisation à la demande (#1045) : bouton masqué quand la passerelle est absente (#937),
         // message de résultat rendu visible seulement quand il est présent.
         boolean peutRecuperer = viewModel.peutRecuperer();

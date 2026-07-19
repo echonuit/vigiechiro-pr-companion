@@ -139,6 +139,6 @@ class MultisiteReleveViewTest {
 
         // Seules les deux nuits déposées (42, 3), pas la nuit vérifiée (7).
         verify(suivi).releverTout(List.of(42L, 3L));
-        assertThat(robot.lookup("#lblMessage").queryAs(Label.class).getText()).contains("2 nuit(s)");
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("2 nuit(s)");
     }
 }

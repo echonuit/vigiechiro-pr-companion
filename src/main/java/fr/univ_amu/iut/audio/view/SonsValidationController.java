@@ -308,7 +308,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     private HBox bandeauRetour;
 
     @FXML
-    private Label lblMessage;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -506,7 +506,7 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         // couleur de sévérité et croix de fermeture, décorrélés de l'état vide pour qu'une erreur d'import
         // ne soit plus noyée dans le placeholder gris. Câblage isolé dans BandeauRetour.
         BandeauRetour.installer(
-                bandeauRetour, lblMessage, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // Disponibilité de l'audio (#1301) : bandeau « passage archivé / audio partiel n/total » en tête
         // d'écran (masqué quand tout est là), et encart d'explication à la place du lecteur quand le

@@ -178,7 +178,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private HBox bandeauRetour;
 
     @FXML
-    private Label lblMessage;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -427,7 +427,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         lblEtatLot.visibleProperty().bind(etatPresent);
         lblEtatLot.managedProperty().bind(etatPresent);
 
-        BandeauLotUI.cabler(bandeauRetour, lblMessage, btnFermerRetour, viewModel, depotViewModel);
+        BandeauLotUI.cabler(bandeauRetour, lblRetour, btnFermerRetour, viewModel, depotViewModel);
     }
 
     /// Met en avant l'action **actionnable** du dépôt (#689) : `.bouton-primaire` sur l'unique étape

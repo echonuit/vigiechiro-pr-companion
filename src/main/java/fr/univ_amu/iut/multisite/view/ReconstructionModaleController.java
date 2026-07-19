@@ -93,7 +93,7 @@ public class ReconstructionModaleController {
     private HBox bandeauRetour;
 
     @FXML
-    private Label lblCompteRendu;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -162,7 +162,7 @@ public class ReconstructionModaleController {
         // #1917 : les trois libellés empilés (constat / erreur / compte rendu) portaient la sévérité dans
         // leur NOM. Deux d'entre eux fusionnent dans le bandeau partagé, qui la porte dans sa valeur.
         BandeauRetour.installer(
-                bandeauRetour, lblCompteRendu, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         // Le compte rendu de fin (avec ses lacunes) est plus haut que la modale dimensionnée pour la table :
         // comme il apparaît APRÈS le dimensionnement d'ouverture, ses dernières lignes passaient sous la
         // ligne de flottaison (#1534). La barre GLOBALE de l'import groupé pose exactement le même problème

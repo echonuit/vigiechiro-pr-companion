@@ -88,7 +88,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private Label lblGps;
 
     @FXML
-    private Label lblMessage;
+    private Label lblRetour;
 
     @FXML
     private HBox bandeauRetour;
@@ -180,7 +180,7 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
 
         // Bandeau de retour partagé (ADR 0023) : libellé, visibilité, sévérité et croix de fermeture.
         BandeauRetour.installer(
-                bandeauRetour, lblMessage, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
     }
 
     /// Ouvre le diagnostic du passage `passage`. Appelée par [NavigationDiagnostic] après le chargement

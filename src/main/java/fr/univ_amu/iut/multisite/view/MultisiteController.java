@@ -177,7 +177,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
     private TableColumn<LignePassage, String> colAnalyse;
 
     @FXML
-    private Label lblMessage;
+    private Label lblRetour;
 
     @FXML
     private HBox bandeauRetour;
@@ -356,7 +356,7 @@ public class MultisiteController implements RafraichirAuRetour, ResumeStatut {
 
         // Bandeau de retour partagé (ADR 0023) : libellé, visibilité, sévérité et croix de fermeture.
         BandeauRetour.installer(
-                bandeauRetour, lblMessage, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
 
         // Carte (#152) : le composant réutilisable affiche sites + points. On le remplit en traduisant
         // l'agrégat carte (non filtré) en DonneesCarte à chaque mise à jour. La carte ne dépend pas des

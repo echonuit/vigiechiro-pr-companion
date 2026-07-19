@@ -81,7 +81,7 @@ public class ModalePointController {
     private HBox bandeauRetour;
 
     @FXML
-    private Label messageErreur;
+    private Label lblRetour;
 
     @FXML
     private Button btnFermerRetour;
@@ -119,10 +119,10 @@ public class ModalePointController {
         champLongitude.textProperty().bindBidirectional(viewModel.longitudeProperty());
         boutonValider.textProperty().bind(viewModel.libelleBoutonProperty());
         boutonValider.disableProperty().bind(viewModel.peutEnregistrer().not());
-        // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « messageErreur » et ne pouvait
+        // #1917 : bandeau partagé (ADR 0023). Le libellé s'appelait « lblRetour » et ne pouvait
         // donc rien porter d'autre qu'un échec ; la sévérité vit maintenant dans la valeur.
         BandeauRetour.installer(
-                bandeauRetour, messageErreur, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
         viewModel.codeValide().addListener((observable, avant, valide) -> majStyleCode());
         viewModel.codeProperty().addListener((observable, avant, apres) -> majStyleCode());
 

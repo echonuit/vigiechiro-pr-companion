@@ -119,7 +119,7 @@ class ReconstructionModaleViewTest {
 
         robot.interact(() -> robot.lookup("#boutonReconstruire").queryButton().fire());
 
-        Label compteRendu = robot.lookup("#lblCompteRendu").queryAs(Label.class);
+        Label compteRendu = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(compteRendu.getText())
                 .contains("56 séquence(s)")
                 .contains("132 observation(s)")
@@ -164,7 +164,7 @@ class ReconstructionModaleViewTest {
                 .contains("2");
         robot.interact(reconstruireTout::fire);
 
-        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText())
                 .as("le lot reconstruit la nuit située et ignore celle au point inconnu")
                 .contains("1 nuit(s) reconstruite(s)")
                 .contains("1 nuit(s) ignorée(s)");
@@ -186,8 +186,7 @@ class ReconstructionModaleViewTest {
         robot.interact(() -> robot.lookup("#boutonReconstruire").queryButton().fire());
 
         HBox bandeau = robot.lookup("#bandeauRetour").queryAs(HBox.class);
-        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
-                .contains("analyse non terminée");
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("analyse non terminée");
         assertThat(bandeau.getStyleClass())
                 .as("#1917 : un refus est une erreur, et le bandeau le dit par sa couleur")
                 .contains("retour-erreur");
@@ -213,8 +212,7 @@ class ReconstructionModaleViewTest {
                 .as("une annulation n'est pas une erreur : le bandeau reste neutre")
                 .contains("retour-info")
                 .doesNotContain("retour-erreur");
-        assertThat(robot.lookup("#lblCompteRendu").queryAs(Label.class).getText())
-                .contains("annulée");
+        assertThat(robot.lookup("#lblRetour").queryAs(Label.class).getText()).contains("annulée");
         assertThat(table.getItems())
                 .as("rien n'a été créé : la nuit manque toujours")
                 .containsExactly(CONNUE, INCONNUE);

@@ -107,7 +107,7 @@ class RattachementModaleFermetureViewTest {
         assertThat(fenetre.isShowing())
                 .as("fermer sur un refus emporterait le message : l'échec redeviendrait invisible")
                 .isTrue();
-        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(message.getText()).contains("refusé").contains("422 champ invalide");
     }
 
@@ -125,7 +125,7 @@ class RattachementModaleFermetureViewTest {
 
         // Un succès peut mériter d'être lu : l'application vient de corriger les heures saisies.
         assertThat(fenetre.isShowing()).isTrue();
-        Label message = robot.lookup("#messageErreur").queryAs(Label.class);
+        Label message = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(message.getText()).contains("réalignées").contains("21:30:00");
     }
 

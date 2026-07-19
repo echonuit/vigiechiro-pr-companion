@@ -140,7 +140,7 @@ class ModaleSiteViewTest {
 
         // L'alerte d'après coup obligeait à tout ressaisir. Ici le motif s'affiche à côté du champ fautif,
         // la modale reste ouverte, et la saisie est intacte.
-        Label erreur = robot.lookup("#messageErreur").queryAs(Label.class);
+        Label erreur = robot.lookup("#lblRetour").queryAs(Label.class);
         assertThat(erreur.getText()).contains("déjà déclaré");
         assertThat(erreur.isVisible()).isTrue();
         assertThat(robot.lookup("#champCarre").queryAs(TextField.class).getText())
