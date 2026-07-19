@@ -14,6 +14,25 @@ package fr.univ_amu.iut.passage.model;
 /// @param concordantes parmi elles, celles où les cris attendus ont été retrouvés (majorité présente)
 public record IndiceAcoustique(int mesurees, int concordantes) {
 
+    /// Refuse un indice **impossible** (#1963) : on ne peut pas retrouver les cris attendus dans plus de
+    /// séquences qu'on n'en a mesurées.
+    ///
+    /// Deux `int` de même type, et une phrase rendue qui les cite dans l'ordre **inverse** de la
+    /// déclaration (« *concordantes* séquence(s) sur *mesurées* ») : l'inversion est facile et
+    /// silencieuse. Elle s'est produite, et seule l'ouverture d'une capture l'a montrée - « 4236
+    /// séquence(s) sur 4053 ». Le type l'interdit désormais, à la construction.
+    public IndiceAcoustique {
+        if (mesurees < 0 || concordantes < 0) {
+            throw new IllegalArgumentException(
+                    "Indice acoustique négatif : mesurees=" + mesurees + ", concordantes=" + concordantes);
+        }
+        if (concordantes > mesurees) {
+            throw new IllegalArgumentException("Indice acoustique impossible : " + concordantes
+                    + " séquence(s) concordantes pour seulement " + mesurees
+                    + " mesurée(s). Les arguments sont-ils inversés ? L'ordre est (mesurees, concordantes).");
+        }
+    }
+
     /// `true` s'il y a au moins une séquence mesurée : sinon il n'y a rien à afficher.
     public boolean estRenseigne() {
         return mesurees > 0;

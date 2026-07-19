@@ -79,6 +79,17 @@ final class ReactivationDepuisBruts {
             progres.accept(new Progression(
                     "Régénération " + traites + "/" + originaux.size(), traites / (double) originaux.size()));
             List<SequenceDEcoute> sesSequences = sequencesDe(sequences, original, nomsArbitres);
+            if (absentesDuDisque(sesSequences) == 0) {
+                // Rien à récupérer pour cet original : ses tranches sont déjà toutes en place (#1962). On
+                // évite de prouver son brut par SHA-256 puis de le redécouper en entier pour ne rien
+                // rebrancher. Le rebranchement les aurait comptées « déjà présentes » : on le fait ici.
+                //
+                // Ce n'est pas une optimisation de confort : une relance après correctif - le cas normal
+                // quand on revérifie - passait 4 min 31 à redécouper 1815 enregistrements pour en rebrancher
+                // 117.
+                bilan.dejaPresentes += sesSequences.size();
+                continue;
+            }
             List<Path> homonymes = candidats.brutsDe(original, prefixeSession);
             Path brut = brutProuve(bilan, original, homonymes);
             if (brut == null) {

@@ -98,6 +98,48 @@ class ReliquatPlaceholderTest {
                 .isTrue();
     }
 
+    /// **Une relance ne redécoupe pas ce qui est déjà là** (#1962). Prouver un brut par SHA-256 puis le
+    /// redécouper en entier pour ne rien rebrancher coûtait 4 min 31 sur une nuit réelle, alors que 4
+    /// séquences seulement manquaient.
+    ///
+    /// Le brut est **retiré du dossier** après la première réactivation : s'il était encore lu, le test
+    /// échouerait. C'est ce qui prouve qu'on ne le touche plus.
+    @Test
+    @DisplayName("#1962 : une relance ne régénère pas un original dont tout est déjà en place")
+    void relance_ne_regenere_pas_ce_qui_est_deja_la(@TempDir Path tmp) throws IOException {
+        Path bruts = Files.createDirectories(tmp.resolve("bruts"));
+        String nomAncien = "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205332.wav";
+        Path ancien = ecrireWav(bruts.resolve(nomAncien), secondes(15), 1);
+
+        Path transformes = Files.createDirectories(tmp.resolve("transformes"));
+        Map<String, List<String>> arbitrage = NommageSequences.arbitrer(
+                prefixe, List.of(new TranchesAttendues(nomAncien, NommageSequences.nombreTranches(15))));
+        List<SequenceDEcoute> lignes = tranchesDe(ancien, nomAncien, arbitrage, transformes, ID_ANCIEN, 1L);
+        Path destination = Files.createDirectories(tmp.resolve("destination"));
+        List<SequenceDEcoute> attendues = lignes.stream()
+                .map(sequence -> deplacerVers(sequence, destination))
+                .toList();
+        List<EnregistrementOriginal> originaux = List.of(original(ID_ANCIEN, nomAncien, ancien, 15.0));
+
+        // Première passe : tout revient.
+        reactivation()
+                .appliquer(attendues, originaux, CandidatsReactivation.dans(bruts), Optional.of(prefixe), p -> {});
+
+        // Le brut disparaît du dossier : une relance qui le lirait encore échouerait ici.
+        Files.delete(ancien);
+        BilanReactivation relance = reactivation()
+                .appliquer(
+                        attendues, originaux, CandidatsReactivation.dans(bruts), Optional.of(prefixe), progres -> {});
+
+        assertThat(relance.dejaPresentes)
+                .as("les tranches en place sont comptées sans que leur brut soit relu")
+                .isEqualTo(attendues.size());
+        assertThat(relance.reactivees).isZero();
+        assertThat(relance.manquantes)
+                .as("rien ne manque : le brut absent n'est même pas cherché")
+                .isZero();
+    }
+
     private static ReactivationDepuisBruts reactivation() {
         VerificationIdentiteAudio verification = new VerificationIdentiteAudio();
         return new ReactivationDepuisBruts(
