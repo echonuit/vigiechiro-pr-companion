@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -9,6 +10,8 @@ import java.util.List;
 import java.util.Objects;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -44,8 +47,10 @@ public class RattachementImportViewModel {
     /// Avertissement **non bloquant** (#33, #111) : non vide quand le dossier contient des originaux déjà
     /// préfixés dont le préfixe **ne concorde pas** avec le rattachement choisi (leurs noms seront
     /// conservés). Recalculé à chaque changement de rattachement ou de dossier inspecté.
-    private final ReadOnlyStringWrapper avertissementPrefixe =
-            new ReadOnlyStringWrapper(this, "avertissementPrefixe", "");
+    /// La discordance de prefixe (#111), **typee** : les fichiers deja prefixes gardent leur nom, rien
+    /// n'echoue. Le « ⚠ » de tete a disparu avec l'arrivee du niveau AVERTISSEMENT (#2045).
+    private final ReadOnlyObjectWrapper<RetourOperation> avertissementPrefixe =
+            new ReadOnlyObjectWrapper<>(this, "avertissementPrefixe", RetourOperation.AUCUN);
 
     /// Noms de **tous** les originaux inspectés, **fournis par l'orchestrateur** (dérivés de l'inspection).
     /// Servent à l'aperçu (le premier nom comme gabarit) **et** à la détection de discordance de préfixe
@@ -155,7 +160,7 @@ public class RattachementImportViewModel {
     /// Avertissement **non bloquant** de discordance de préfixe (#111) : non vide quand des originaux déjà
     /// préfixés ne correspondent pas au rattachement choisi (leurs noms seront conservés). La vue s'y lie
     /// directement (label dédié), comme aux avertissements « mélange »/« incohérence » de l'inspection.
-    public ReadOnlyStringProperty avertissementPrefixeProperty() {
+    public ReadOnlyObjectProperty<RetourOperation> avertissementPrefixeProperty() {
         return avertissementPrefixe.getReadOnlyProperty();
     }
 
@@ -179,7 +184,7 @@ public class RattachementImportViewModel {
         Site site = siteSelectionne.get();
         PointDEcoute point = pointSelectionne.get();
         if (site == null || point == null || nomsOriginaux.isEmpty()) {
-            avertissementPrefixe.set("");
+            avertissementPrefixe.set(RetourOperation.AUCUN);
             return;
         }
         String attendu = prefixeCourant().prefixeFichier();
@@ -187,8 +192,9 @@ public class RattachementImportViewModel {
                 nomsOriginaux.stream().filter(Prefixe::estNomPrefixe).anyMatch(nom -> !nom.startsWith(attendu));
         avertissementPrefixe.set(
                 discordant
-                        ? "⚠ Certains fichiers sont déjà préfixés mais ne correspondent pas au rattachement"
-                                + " choisi (préfixe attendu : " + attendu + "). Leurs noms seront conservés."
-                        : "");
+                        ? RetourOperation.avertissement("Certains fichiers sont déjà préfixés mais ne"
+                                + " correspondent pas au rattachement choisi (préfixe attendu : " + attendu
+                                + "). Leurs noms seront conservés.")
+                        : RetourOperation.AUCUN);
     }
 }

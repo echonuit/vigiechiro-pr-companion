@@ -123,12 +123,12 @@
       <Label fx:id="labelApercu" styleClass="apercu-valeur" wrapText="true"/>
     </VBox>
     <!-- Discordance de préfixe (#111) : fichiers déjà préfixés ne correspondant pas au rattachement. -->
-    <Label fx:id="labelPrefixeDiscordant" styleClass="insp-incoherence" wrapText="true"
+    <Label fx:id="labelPrefixeDiscordant" styleClass="libelle-retour" wrapText="true"
            visible="false" managed="false"/>
     <!-- Pré-contrôle R5 (#108) : avertit d'un n° de passage déjà pris et propose le prochain libre. -->
     <HBox fx:id="zonePassageExistant" spacing="10.0" alignment="CENTER_LEFT"
           visible="false" managed="false">
-      <Label fx:id="labelPassageExistant" styleClass="insp-incoherence" wrapText="true" HBox.hgrow="ALWAYS"/>
+      <Label fx:id="labelPassageExistant" styleClass="libelle-retour" wrapText="true" HBox.hgrow="ALWAYS"/>
       <Button fx:id="boutonNumeroLibre" text="Utiliser ce n°" onAction="#utiliserNumeroLibre"/>
       <Button fx:id="boutonEcraser" text="Écraser et réimporter" styleClass="bouton-danger"
               onAction="#ecraserEtReimporter">

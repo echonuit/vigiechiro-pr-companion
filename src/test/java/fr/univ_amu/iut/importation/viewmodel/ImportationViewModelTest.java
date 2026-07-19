@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.EtatNommage;
@@ -281,10 +282,16 @@ class ImportationViewModelTest {
         viewModel.rattachement().pointSelectionneProperty().set(point);
         viewModel.rattachement().numeroPassageProperty().set(2);
 
-        assertThat(viewModel.avertissementNumeroPassageProperty().get())
-                .as("doublon détecté : avertissement non vide proposant le n° libre")
+        RetourOperation doublon = viewModel.avertissementNumeroPassageProperty().get();
+        assertThat(doublon.texte())
+                .as("doublon détecté : avertissement proposant le n° libre")
                 .contains("existe déjà")
                 .contains("3");
+        assertThat(doublon.severite())
+                .as("l'import reste possible : ce n'est pas un échec")
+                .isEqualTo(Severite.AVERTISSEMENT);
+        // Le « ⚠ » qui ouvrait cette phrase a disparu : la sévérité est portée par la valeur (#2045).
+        assertThat(doublon.texte()).doesNotContain("⚠");
         assertThat(viewModel.peutImporter().get())
                 .as("import bloqué tant que le n° est en doublon (R5)")
                 .isFalse();
@@ -319,9 +326,9 @@ class ImportationViewModelTest {
         viewModel.controleNumero().utiliserProchainNumeroLibre();
 
         assertThat(viewModel.rattachement().numeroPassageProperty().get()).isEqualTo(3);
-        assertThat(viewModel.avertissementNumeroPassageProperty().get())
+        assertThat(viewModel.avertissementNumeroPassageProperty().get().present())
                 .as("n° libre adopté : plus aucun avertissement")
-                .isEmpty();
+                .isFalse();
         assertThat(viewModel.peutImporter().get()).isTrue();
     }
 

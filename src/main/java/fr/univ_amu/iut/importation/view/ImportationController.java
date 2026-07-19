@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GardeQuitter;
 import fr.univ_amu.iut.commun.view.GestionnaireColonnes;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
@@ -356,9 +357,8 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 champPassage.textProperty(), rattachement.numeroPassageProperty(), new NumberStringConverter("0"));
         labelApercu.textProperty().bind(rattachement.apercuPrefixeProperty());
         // Discordance de préfixe (#111) : déjà-préfixés ne correspondant pas au rattachement (non bloquant).
-        labelPrefixeDiscordant.textProperty().bind(rattachement.avertissementPrefixeProperty());
-        var aDiscordance = rattachement.avertissementPrefixeProperty().isNotEmpty();
-        lierVisibiliteGeree(labelPrefixeDiscordant, aDiscordance);
+        // La visibilité est portée par le composant : un retour absent retire le libellé de la mise en page.
+        LibelleRetour.installer(labelPrefixeDiscordant, rattachement.avertissementPrefixeProperty());
     }
 
     /// Section 4 : pendant l'import (EN_COURS), la barre de progression s'affiche (avancement réel
@@ -414,8 +414,10 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Pré-contrôle R5 (#108) : la zone n'apparaît qu'en cas de doublon de n° de passage (avertissement
         // non vide) ; elle porte l'avertissement + un bouton pour adopter le prochain n° libre (gelé
         // pendant l'import). Même patron que les avertissements « mélange »/« incohérence » ci-dessus.
-        labelPassageExistant.textProperty().bind(viewModel.avertissementNumeroPassageProperty());
-        var aUnDoublon = viewModel.avertissementNumeroPassageProperty().isNotEmpty();
+        LibelleRetour.installer(labelPassageExistant, viewModel.avertissementNumeroPassageProperty());
+        var aUnDoublon = Bindings.createBooleanBinding(
+                () -> viewModel.avertissementNumeroPassageProperty().get().present(),
+                viewModel.avertissementNumeroPassageProperty());
         lierVisibiliteGeree(zonePassageExistant, aUnDoublon);
         boutonNumeroLibre.disableProperty().bind(traitement);
         // « Écraser et réimporter » (#214) : possible seulement si une nuit est inspectée (sinon rien à
@@ -579,7 +581,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private void ecraserEtReimporter() {
         // Disponible seulement si le n° choisi est déjà pris (avertissement R5 non vide, #108) et une nuit
         // est inspectée. L'avertissement sert de signal de doublon, déjà exposé à la vue.
-        if (viewModel.avertissementNumeroPassageProperty().get().isEmpty()
+        if (!viewModel.avertissementNumeroPassageProperty().get().present()
                 || !viewModel.inspection().estInspecte()) {
             return;
         }

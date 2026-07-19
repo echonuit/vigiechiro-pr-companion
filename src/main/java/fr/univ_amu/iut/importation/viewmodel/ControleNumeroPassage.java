@@ -2,6 +2,7 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -12,8 +13,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 
 /// Pré-contrôle d'unicité R5 **proactif** (#108) du rattachement de l'assistant M-Import.
 ///
@@ -35,7 +36,10 @@ public final class ControleNumeroPassage {
     private final ReadOnlyBooleanWrapper dejaUtilise = new ReadOnlyBooleanWrapper(this, "dejaUtilise", false);
 
     /// Avertissement lisible (vide si le n° est libre) : explique le doublon et propose le n° libre.
-    private final ReadOnlyStringWrapper avertissement = new ReadOnlyStringWrapper(this, "avertissement", "");
+    /// Le pre-controle R5 (#108), **type** : l'import reste possible, c'est un avertissement et non un
+    /// echec. Le « ⚠ » qui ouvrait la phrase a disparu - la severite est portee par la valeur (#2045).
+    private final ReadOnlyObjectWrapper<RetourOperation> avertissement =
+            new ReadOnlyObjectWrapper<>(this, "avertissement", RetourOperation.AUCUN);
 
     /// Dernier « prochain n° libre » calculé, proposé en un clic. Sur le seul fil JavaFX (renseigné par
     /// [#verifier()]) : un simple champ suffit.
@@ -60,17 +64,18 @@ public final class ControleNumeroPassage {
         int numero = rattachement.numeroPassageProperty().get();
         if (point == null || numero < 1) {
             dejaUtilise.set(false);
-            avertissement.set("");
+            avertissement.set(RetourOperation.AUCUN);
             return;
         }
         if (serviceImport.numeroPassageDejaUtilise(point.id(), annee, numero)) {
             prochainNumeroLibre = serviceImport.prochainNumeroPassageLibre(point.id(), annee);
             dejaUtilise.set(true);
-            avertissement.set("⚠ Le passage n° " + numero + " existe déjà pour ce point en " + annee
-                    + ". Prochain n° libre : " + prochainNumeroLibre + ".");
+            avertissement.set(RetourOperation.avertissement(String.format(
+                    "Le passage n° %d existe déjà pour ce point en %d. Prochain n° libre : %d.",
+                    numero, annee, prochainNumeroLibre)));
         } else {
             dejaUtilise.set(false);
-            avertissement.set("");
+            avertissement.set(RetourOperation.AUCUN);
         }
     }
 
@@ -126,14 +131,14 @@ public final class ControleNumeroPassage {
     /// s'il y en a un (cause précise), sinon le message générique fourni (rattachement incomplet). Évite
     /// le message trompeur « Complétez le rattachement » alors que la vraie cause est un n° déjà pris.
     String messageBlocage(String messageRattachementIncomplet) {
-        return dejaUtilise.get() ? avertissement.get() : messageRattachementIncomplet;
+        return dejaUtilise.get() ? avertissement.get().texte() : messageRattachementIncomplet;
     }
 
     ReadOnlyBooleanProperty dejaUtiliseProperty() {
         return dejaUtilise.getReadOnlyProperty();
     }
 
-    ReadOnlyStringProperty avertissementProperty() {
+    ReadOnlyObjectProperty<RetourOperation> avertissementProperty() {
         return avertissement.getReadOnlyProperty();
     }
 }

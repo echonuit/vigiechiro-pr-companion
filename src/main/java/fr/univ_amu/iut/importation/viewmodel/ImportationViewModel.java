@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -209,7 +210,7 @@ public class ImportationViewModel {
     /// propose le prochain n° libre (délégué à [ControleNumeroPassage], collaborateur **possédé par**
     /// l'orchestrateur — il dépend de `ServiceImport`). Sa non-vacuité signale à la fois l'avertissement à
     /// afficher et l'import bloqué (cf. `peutImporter`).
-    public ReadOnlyStringProperty avertissementNumeroPassageProperty() {
+    public ReadOnlyObjectProperty<RetourOperation> avertissementNumeroPassageProperty() {
         return controleNumeroPassage.avertissementProperty();
     }
 

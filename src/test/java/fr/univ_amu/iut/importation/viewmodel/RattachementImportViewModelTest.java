@@ -5,6 +5,8 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -127,11 +129,11 @@ class RattachementImportViewModelTest {
 
         // Fichiers bruts : rien à signaler.
         vm.definirOriginaux(List.of("PaRecPR1925492_20260422_203922.wav"));
-        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+        assertThat(vm.avertissementPrefixeProperty().get().present()).isFalse();
 
         // Déjà préfixés mais concordants avec le rattachement : rien à signaler non plus.
         vm.definirOriginaux(List.of("Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav"));
-        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+        assertThat(vm.avertissementPrefixeProperty().get().present()).isFalse();
     }
 
     @Test
@@ -146,15 +148,20 @@ class RattachementImportViewModelTest {
                 "Car640380-2026-Pass1-A1-PaRecPR1925492_20260422_203922.wav",
                 "Car999999-2025-Pass3-B2-PaRecPR1648011_20260430_210000.wav"));
 
-        assertThat(vm.avertissementPrefixeProperty().get())
+        RetourOperation discordance = vm.avertissementPrefixeProperty().get();
+        assertThat(discordance.texte())
                 .as("discordance détectée sur l'ensemble du dossier")
                 .contains("ne correspondent pas")
                 .contains("Car640380-2026-Pass1-A1-"); // préfixe attendu rappelé
+        assertThat(discordance.severite())
+                .as("les noms sont conservés, rien n'échoue")
+                .isEqualTo(Severite.AVERTISSEMENT);
+        assertThat(discordance.texte()).doesNotContain("⚠");
 
         // Corriger le n° de passage vers celui des fichiers ne suffit pas (carré/point/année diffèrent).
         // En revanche, vider le dossier efface l'avertissement.
         vm.definirOriginaux(List.of());
-        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+        assertThat(vm.avertissementPrefixeProperty().get().present()).isFalse();
     }
 
     @Test
@@ -162,6 +169,6 @@ class RattachementImportViewModelTest {
     void prefixe_pas_d_avertissement_sans_rattachement() {
         vm.definirOriginaux(List.of("Car999999-2025-Pass3-B2-PaRec_x.wav"));
 
-        assertThat(vm.avertissementPrefixeProperty().get()).isEmpty();
+        assertThat(vm.avertissementPrefixeProperty().get().present()).isFalse();
     }
 }

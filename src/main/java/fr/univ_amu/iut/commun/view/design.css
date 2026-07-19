@@ -786,6 +786,39 @@
     -fx-icon-color: #842029;
 }
 
+/* ----- Libelle de retour inline (#2050) : jumeau du bandeau, pose a cote de ce qu'il commente ----- */
+/* La forme est commune ; seule la couleur dit la severite, comme dans le bandeau. */
+.libelle-retour {
+    -fx-font-size: 13px;
+    -fx-border-radius: 4;
+    -fx-background-radius: 4;
+    -fx-padding: 6 10 6 10;
+}
+
+.libelle-succes {
+    -fx-text-fill: #14532d;
+    -fx-background-color: #d4edda;
+    -fx-border-color: #28a745;
+}
+
+.libelle-info {
+    -fx-text-fill: #0c4a6e;
+    -fx-background-color: #d1ecf1;
+    -fx-border-color: #17a2b8;
+}
+
+.libelle-avertissement {
+    -fx-text-fill: #8a6d3b;
+    -fx-background-color: #fcf3e3;
+    -fx-border-color: #e8a838;
+}
+
+.libelle-erreur {
+    -fx-text-fill: #a4413a;
+    -fx-background-color: #fdecea;
+    -fx-border-color: #e74c3c;
+}
+
 /* Croix de fermeture : bouton plat qui herite de la couleur de severite, plus marque au survol. */
 .fermer-retour {
     -fx-background-color: transparent;

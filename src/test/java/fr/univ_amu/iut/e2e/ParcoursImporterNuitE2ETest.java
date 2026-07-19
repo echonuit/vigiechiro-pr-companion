@@ -291,7 +291,7 @@ class ParcoursImporterNuitE2ETest {
         second.rattachement().anneeProperty().set(ANNEE);
         second.rattachement().numeroPassageProperty().set(1);
 
-        assertThat(second.avertissementNumeroPassageProperty().get())
+        assertThat(second.avertissementNumeroPassageProperty().get().texte())
                 .as("doublon détecté dès le rattachement")
                 .containsIgnoringCase("existe déjà");
         assertThat(second.peutImporter().get())
