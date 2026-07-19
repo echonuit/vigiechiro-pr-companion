@@ -57,6 +57,34 @@ réelles de 21 h à 15 h en quatre allers-retours, entraînant la météo avec e
 35 °C à 6 h du matin. Faire porter l'autorité par la preuve rend la cohérence **structurelle** au lieu
 de la faire reposer sur l'absence de bug.
 
+### Réactiver, c'est refaire l'import à l'identique
+
+La couture 3 ne se contente pas de **retrouver** des fichiers. Quand l'utilisateur n'a gardé que ses
+**enregistrements bruts** - la copie de sa carte, ce qu'il garde le plus volontiers - l'application
+**régénère** les séquences d'écoute à partir d'eux.
+
+Ce que cela suppose n'est pas anodin. Une séquence d'écoute porte les observations : c'est son **nom**
+qui les y rattache, puisque c'est lui que porte l'`observations.csv` de la plateforme. Deux fichiers
+aux octets identiques mais aux noms différents ne sont donc **pas** interchangeables. La garantie du
+produit s'écrit ainsi : *la réactivation reproduit exactement ce que l'import avait écrit, noms
+compris*.
+
+Elle ne va pas de soi, parce que le nom d'une séquence ne se déduit pas d'un enregistrement isolé.
+Deux enregistrements consécutifs se **chevauchent** volontiers sur la grille de découpe : la fin de
+l'un porte l'heure de début du suivant, et les deux réclament le même nom. Il faut alors arbitrer, et
+arbitrer suppose de voir la nuit **entière** - ce qu'un traitement fichier par fichier ne peut pas
+faire.
+
+Ce n'est pas une subtilité d'implémentation. Une nuit réelle a rendu **163 séquences de moins** que
+son import, emportant **417 observations** devenues muettes alors que leur audio était sur la carte :
+les tranches ayant perdu un arbitrage étaient régénérées sous un nom que personne n'attendait, puis
+jetées. Le produit doit donc dire, et tenir, que **réactiver n'est pas approximer**.
+
+Corollaire pour l'utilisateur : ce qui manque encore lui est **nommé**, avec sa raison. Un
+enregistrement absent du dossier qu'il a désigné l'appelle à chercher ailleurs ; une tranche que
+l'application n'a pas su reproduire est un défaut de notre côté, à signaler. Les deux se ressemblaient
+autrefois sous un même décompte muet, qui ne disait à personne quoi faire.
+
 ## Ne pas noyer les vues site
 
 La synchro rapatrie **tous** les points du carré Vigie-Chiro (la grille STOC peut en compter des dizaines), pas seulement ceux que l'utilisateur exploite. Pour ne pas noyer les points **réellement utilisés** sous cette grille ([O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md)), les vues site distinguent l'origine d'un point : [M-Site-detail](../Maquettes/M-Site-detail.md) masque par défaut les points rapatriés **sans passage** (repliés derrière un « + N rapatrié(s) »), et [M-Sites](../Maquettes/M-Sites.md) résume de même le bandeau des points. Un point rapatrié réapparaît dès qu'on s'en sert (un passage l'y rattache).
@@ -65,4 +93,4 @@ La synchro rapatrie **tous** les points du carré Vigie-Chiro (la grille STOC pe
 
 - La **synchronisation** (couture 1) prolonge [P1 - Déclarer un site](P1%20-%20Déclarer%20un%20site%20de%20suivi.md) : le même geste qui rafraîchit les sites ramène désormais leur historique de nuits.
 - La **reconstruction** (couture 2) est un import **allégé** - observations seules - complémentaire de [P2 - Importer une nuit](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), qui part, lui, des fichiers bruts.
-- La **réactivation** (couture 3) est la variante **audio** de l'import : elle rebranche les fichiers retrouvés sur un passage archivé, et se prête au traitement de volume de [P5 - Naviguer multi-sites](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md).
+- La **réactivation** (couture 3) est la variante **audio** de l'import : elle rebranche les fichiers retrouvés sur un passage archivé - et les **régénère** depuis les bruts quand ce sont les seuls que l'utilisateur a gardés, à l'identique de l'import. Elle se prête au traitement de volume de [P5 - Naviguer multi-sites](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md).
