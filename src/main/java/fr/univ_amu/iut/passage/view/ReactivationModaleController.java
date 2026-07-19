@@ -234,6 +234,16 @@ public class ReactivationModaleController {
         viewModel.progressionAncrage().appliquer(new Progression(libelleAncrage, fractionAncrage));
     }
 
+    /// **Aperçu de documentation** (#1943) : place la modale dans son état **final**, compte rendu affiché,
+    /// à partir d'un vrai [RapportReactivation]. Le texte n'est pas fabriqué ici - il passe par le
+    /// ViewModel, donc par la mise en forme réelle (ADR 0025). Sur le fil JavaFX.
+    public void apercuCompteRendu(RapportReactivation rapport) {
+        operationEnCours.set(false);
+        etape.set("");
+        viewModel.progressionRegeneration().appliquer(new Progression("Régénération 1815/1815", 1.0));
+        viewModel.restituer(rapport);
+    }
+
     /// Le travail de réactivation, fourni par l'appelant : il reçoit les deux relais de progression
     /// (régénération puis ancrage) et le jeton d'annulation, s'exécute **hors du fil JavaFX**, et rend le
     /// rapport. La modale ne connaît ainsi ni le service ni l'`idPassage` - seulement comment présenter.

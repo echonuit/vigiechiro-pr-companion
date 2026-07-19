@@ -84,6 +84,49 @@ class HydratationCollisionTest {
                 .isTrue();
     }
 
+    /// **On préfère le trou au mensonge** (ADR 0026). Un inventaire dont un seul brut n'a pas livré sa
+    /// durée ne permet plus d'arbitrer juste : les noms de tous les bruts suivants se décaleraient, et des
+    /// tranches se rebrancheraient sous des noms que l'import n'a jamais écrits - une observation pointant
+    /// sur le mauvais son, en silence.
+    ///
+    /// L'arbitrage se désactive alors pour la nuit entière. La tranche perdante reste non revendiquée, ce
+    /// qui se voit et se dit ; aucune n'est mal appariée.
+    @Test
+    @DisplayName("ADR 0026 : une durée manquante désactive l'arbitrage plutôt que de le fausser")
+    void duree_manquante_desactive_l_arbitrage(@TempDir Path tmp) throws IOException {
+        Path bruts = Files.createDirectories(tmp.resolve("bruts"));
+        String nomAncien = "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205332.wav";
+        String nomRecent = "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205342.wav";
+        Path ancien = ecrireWav(bruts.resolve(nomAncien), secondes(15), 1);
+        Path recent = ecrireWav(bruts.resolve(nomRecent), secondes(5), 2);
+
+        Path destination = Files.createDirectories(tmp.resolve("transformes"));
+        List<SequenceDEcoute> sequences = List.of(
+                attendue(1L, "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205332_000.wav", destination),
+                attendue(2L, "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205337_000.wav", destination),
+                attendue(3L, "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205342_000.wav", destination),
+                attendue(4L, "Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205342_001.wav", destination));
+
+        // Le second brut ne livre pas sa durée : l'inventaire n'a pas pu lire son en-tête.
+        InventaireBruts inventaire = new InventaireBruts(
+                FREQUENCE_ACQUISITION,
+                List.of(inventorie(ancien, nomAncien), new BrutInventorie(recent, nomRecent, null)));
+        BilanReactivation bilan = hydratation(inventaire)
+                .appliquer(sequences, bruts, Optional.of(prefixe), progres -> {}, JetonAnnulation.neutre())
+                .orElseThrow()
+                .bilan();
+
+        assertThat(bilan.reactivees)
+                .as("les trois tranches sans ambiguïté reviennent")
+                .isEqualTo(3);
+        assertThat(bilan.manquantes)
+                .as("la perdante reste non revendiquée : un trou, pas un mauvais appariement")
+                .isEqualTo(1);
+        assertThat(Files.exists(destination.resolve("Car640380-2026-Pass2-Z1-PaRecPR1925492_20260422_205342_001.wav")))
+                .as("rien n'a été écrit sous le nom de la perdante")
+                .isFalse();
+    }
+
     /// Un brut tel que l'inventaire le livre depuis #1934 : chemin, nom R6, et nombre de trames lu dans
     /// l'en-tête seul.
     private static BrutInventorie inventorie(Path source, String nomOriginal) throws IOException {

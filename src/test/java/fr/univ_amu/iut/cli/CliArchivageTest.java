@@ -158,6 +158,26 @@ class CliArchivageTest {
     }
 
     @Test
+    @DisplayName("#1943 : reactiver nomme ce qui manque, avec son motif (parité avec la modale)")
+    void reactiver_nomme_ce_qui_manque() throws IOException {
+        semerPassage(StatutWorkflow.DEPOSE);
+        cli.executer(new String[] {"archiver", "--passage", idPassage.toString(), "--confirmer"}, sortie, erreur);
+        tamponSortie.reset();
+
+        // Sauvegarde vide : la séquence n'est ni refusée ni retrouvée, elle est simplement absente.
+        int code = cli.executer(
+                new String[] {"reactiver", "--passage", idPassage.toString(), "--source", sauvegarde.toString()},
+                sortie,
+                erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texte())
+                .as("un nombre sans nom oblige à lire la base pour savoir de quoi il parle")
+                .contains(SEQ)
+                .contains("aucun fichier de ce nom dans le dossier");
+    }
+
+    @Test
     @DisplayName("reactiver avec un fichier homonyme d'un autre audio : refusé, motivé, sortie 1")
     void reactiver_homonyme_different_refuse() throws IOException {
         semerPassage(StatutWorkflow.DEPOSE);
