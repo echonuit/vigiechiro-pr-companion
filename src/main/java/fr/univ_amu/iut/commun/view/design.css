@@ -20,6 +20,13 @@
 }
 
 /* Sous-titre / résumé placé sous le titre de page. */
+/* Icone d'un titre de page ou de modale (#1933) : a la taille du titre, dans sa couleur. Un glyphe
+   litteral suivait la police du Label ; une icone a besoin qu'on le lui dise. */
+.titre-page-icone {
+    -fx-icon-size: 20px;
+    -fx-icon-color: -couleur-texte;
+}
+
 .sous-titre-page {
     -fx-font-size: 13px;
     -fx-text-fill: -couleur-texte-discret;
@@ -708,6 +715,13 @@
     -fx-border-width: 1 1 1 6;
 }
 
+/* Icone de severite, posee par le cablage en tete du bandeau (#1933) : le marqueur etait auparavant
+   colle dans le TEXTE du message, ce qui le disait deux fois et dependait des polices de la machine.
+   Sa couleur suit celle du texte de sa severite, plus bas. */
+.bandeau-retour-icone {
+    -fx-icon-size: 15px;
+}
+
 /* Couleurs par severite : fond + filet d'accent sur le conteneur, couleur de texte sur le libelle et la
    croix (le texte-fill ne s'herite pas du conteneur de facon fiable). */
 .retour-succes {
@@ -720,6 +734,10 @@
     -fx-text-fill: #14532d;
 }
 
+.retour-succes .bandeau-retour-icone {
+    -fx-icon-color: #14532d;
+}
+
 .retour-info {
     -fx-background-color: #d1ecf1;
     -fx-border-color: #17a2b8;
@@ -730,6 +748,10 @@
     -fx-text-fill: #0c4a6e;
 }
 
+.retour-info .bandeau-retour-icone {
+    -fx-icon-color: #0c4a6e;
+}
+
 .retour-erreur {
     -fx-background-color: #f8d7da;
     -fx-border-color: #dc3545;
@@ -738,6 +760,10 @@
 .retour-erreur .label,
 .retour-erreur .fermer-retour {
     -fx-text-fill: #842029;
+}
+
+.retour-erreur .bandeau-retour-icone {
+    -fx-icon-color: #842029;
 }
 
 /* Croix de fermeture : bouton plat qui herite de la couleur de severite, plus marque au survol. */

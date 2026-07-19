@@ -32,7 +32,11 @@
        prennent sur la largeur utile, et les colonnes de la table débordaient d'une poignée de pixels -
        assez pour faire paraître une barre de défilement horizontale sous la table. -->
 
-  <Label text="☁ Reconstruire un passage manquant" styleClass="titre-page"/>
+  <Label text="Reconstruire un passage manquant" styleClass="titre-page">
+    <graphic>
+      <FontIcon iconLiteral="fas-cloud" styleClass="titre-page-icone"/>
+    </graphic>
+  </Label>
 
   <!-- Texte sur UNE ligne : en FXML, un attribut multi-lignes conserve les retours et l'indentation,
        ce qui trouait le paragraphe au rendu. -->

@@ -30,7 +30,11 @@
       prefWidth="560.0"
       spacing="12.0">
 
-  <Label text="✏ Modifier le passage" styleClass="titre-page"/>
+  <Label text="Modifier le passage" styleClass="titre-page">
+    <graphic>
+      <FontIcon iconLiteral="fas-pen" styleClass="titre-page-icone"/>
+    </graphic>
+  </Label>
 
   <!-- Tirer les métadonnées depuis la participation VigieChiro (cas « préparé sur le site web »).
        Masqué hors connexion (visibilité pilotée par le controller selon la présence de la passerelle). -->

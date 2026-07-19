@@ -14,6 +14,10 @@ package fr.univ_amu.iut.commun.viewmodel;
 /// « rendre compte sans bloquer » n'a rien de propre à un écran. Se rend avec
 /// [fr.univ_amu.iut.commun.view.BandeauRetour].
 ///
+/// La sévérité ne s'écrit **pas** dans le texte : elle se rend une fois, par le composant, en couleur
+/// et en icône (#1933). Un pictogramme collé au message le disait une seconde fois, et dépendait des
+/// polices de la machine - sur celles qui ne le portent pas, il ne s'affichait pas du tout.
+///
 /// @param texte message présenté à l'utilisateur (vide = aucun retour à afficher)
 /// @param severite niveau d'affichage (succès / information / erreur)
 public record RetourOperation(String texte, Severite severite) {
@@ -30,18 +34,17 @@ public record RetourOperation(String texte, Severite severite) {
 
     /// Retour de **succès** (vert) : opération réussie, avec un bilan.
     public static RetourOperation succes(String texte) {
-        return new RetourOperation("✅ " + texte, Severite.SUCCES);
+        return new RetourOperation(texte, Severite.SUCCES);
     }
 
-    /// Retour d'**information** (neutre) : action refusée ou guidage, sans échec technique. Le sélecteur
-    /// de variante (U+FE0F) force la **présentation emoji** de l'icône (sinon « ℹ » s'affiche en texte « i »).
+    /// Retour d'**information** (neutre) : action refusée ou guidage, sans échec technique.
     public static RetourOperation info(String texte) {
-        return new RetourOperation("ℹ️ " + texte, Severite.INFO);
+        return new RetourOperation(texte, Severite.INFO);
     }
 
     /// Retour d'**erreur** (rouge) : l'opération a échoué.
     public static RetourOperation erreur(String texte) {
-        return new RetourOperation("⚠️ " + (texte == null ? "Une erreur est survenue." : texte), Severite.ERREUR);
+        return new RetourOperation(texte == null ? "Une erreur est survenue." : texte, Severite.ERREUR);
     }
 
     /// `true` s'il y a un texte à présenter (bandeau visible).

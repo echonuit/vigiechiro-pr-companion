@@ -7,6 +7,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Câble le **bandeau de retour d'opération** (import / export / valider / corriger, action refusée) à
 /// la propriété [RetourOperation] du ViewModel : le libellé, la visibilité (présent / absent), la
@@ -25,6 +26,13 @@ public final class BandeauRetour {
             RetourOperation.Severite.INFO, "retour-info",
             RetourOperation.Severite.ERREUR, "retour-erreur");
 
+    /// Icône par sévérité, pendant de [#CLASSE] : le bandeau dit la même chose en couleur et en forme,
+    /// pour qui distingue mal les couleurs comme pour qui lit vite.
+    private static final Map<RetourOperation.Severite, String> ICONE = Map.of(
+            RetourOperation.Severite.SUCCES, "fas-check-circle",
+            RetourOperation.Severite.INFO, "fas-info-circle",
+            RetourOperation.Severite.ERREUR, "fas-exclamation-triangle");
+
     private BandeauRetour() {}
 
     /// Installe le bandeau : `conteneur` (couleur + visibilité), `texte` (libellé), `fermer` (la croix,
@@ -40,13 +48,19 @@ public final class BandeauRetour {
         var present = Bindings.createBooleanBinding(() -> retour.getValue().present(), retour);
         conteneur.visibleProperty().bind(present);
         conteneur.managedProperty().bind(present);
-        retour.addListener((obs, avant, apres) -> colorer(conteneur, apres));
-        colorer(conteneur, retour.getValue());
+        FontIcon icone = new FontIcon();
+        icone.getStyleClass().add("bandeau-retour-icone");
+        conteneur.getChildren().add(0, icone);
+        retour.addListener((obs, avant, apres) -> rendreSeverite(conteneur, icone, apres));
+        rendreSeverite(conteneur, icone, retour.getValue());
         fermer.setOnAction(evenement -> surFermeture.run());
     }
 
-    private static void colorer(HBox conteneur, RetourOperation retour) {
+    /// Rend la sévérité **une fois pour deux canaux** : la couleur du bandeau et son icône. Elles ne
+    /// peuvent donc pas se contredire, et le message n'a plus à porter de marqueur.
+    private static void rendreSeverite(HBox conteneur, FontIcon icone, RetourOperation retour) {
         conteneur.getStyleClass().removeAll(CLASSE.values());
         conteneur.getStyleClass().add(CLASSE.get(retour.severite()));
+        icone.setIconLiteral(ICONE.get(retour.severite()));
     }
 }
