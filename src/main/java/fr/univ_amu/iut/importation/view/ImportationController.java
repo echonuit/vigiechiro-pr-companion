@@ -14,6 +14,8 @@ import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.VueCompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -175,6 +177,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
 
     @FXML
     private Button boutonAnnuler;
+
+    @FXML
+    private VBox zoneCompteRenduImport;
 
     @FXML
     private VBox zoneRejets;
@@ -456,10 +461,31 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 viewModel.resultatNuitsProperty(),
                 viewModel.progression().messageProperty()));
 
+        // Compte rendu d'import (#2004) : ce que le statut ne peut pas porter - doublon de nuit, fichiers
+        // ignorés, cardinal des rejets, anomalies du journal. Reconstruit à chaque publication : un compte
+        // rendu est immuable et publié d'un bloc.
+        viewModel.compteRenduProperty().addListener((observable, avant, rendu) -> afficherCompteRenduImport(rendu));
+        afficherCompteRenduImport(viewModel.compteRenduProperty().get());
+
         // Rapport d'import (#155) : la liste des fichiers rejetés n'apparaît que s'il y en a.
         listeRejets.setItems(viewModel.rejetsImport());
         var aDesRejets = Bindings.isNotEmpty(viewModel.rejetsImport());
         lierVisibiliteGeree(zoneRejets, aDesRejets);
+    }
+
+    /// Nombre de détails montrés par constat avant de résumer. L'écran en décide, pas le compte rendu
+    /// (ADR 0031) : la place sous la barre de statut est comptée.
+    private static final int DETAILS_MONTRES = 5;
+
+    /// Remplace le compte rendu d'import affiché. On reconstruit plutôt qu'on ne met à jour : un compte
+    /// rendu est immuable et publié d'un bloc, il n'y a rien à rafraîchir en place.
+    private void afficherCompteRenduImport(CompteRendu rendu) {
+        zoneCompteRenduImport
+                .getChildren()
+                .setAll(VueCompteRendu.rendre(rendu, DETAILS_MONTRES).getChildren());
+        zoneCompteRenduImport.getStyleClass().setAll(VueCompteRendu.CLASSE_RACINE);
+        zoneCompteRenduImport.setVisible(!rendu.estVide());
+        zoneCompteRenduImport.setManaged(!rendu.estVide());
     }
 
     /// « Parcourir » : demande le **dossier** de la nuit puis charge la source.

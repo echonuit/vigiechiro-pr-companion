@@ -41,29 +41,6 @@ public record RapportImport(List<LigneRapport> lignes, List<PassageExistant> dou
                 .toList();
     }
 
-    /// Avertissements lisibles à accoler au récap d'un import réussi : doublon de nuit (#214/#147),
-    /// fichiers non pertinents ignorés et fichiers rejetés (#155). Chaîne **vide** si l'import est nominal
-    /// (nuit neuve, aucun rejet, aucun fichier ignoré).
-    public String avertissements() {
-        StringBuilder sb = new StringBuilder();
-        if (aDoublonDeNuit()) {
-            sb.append(" ⚠ Doublon : cette nuit était déjà importée (")
-                    .append(doublonsDeNuit.stream()
-                            .map(p -> "n° " + p.numeroPassage() + " au carré " + p.carre())
-                            .collect(java.util.stream.Collectors.joining(", ")))
-                    .append(").");
-        }
-        long ignores = compte(StatutImportFichier.IGNORE);
-        if (ignores > 0) {
-            sb.append(" ").append(ignores).append(" fichier(s) non pertinent(s) ignoré(s).");
-        }
-        long rejetes = compte(StatutImportFichier.REJETE);
-        if (rejetes > 0) {
-            sb.append(" ⚠ ").append(rejetes).append(" fichier(s) rejeté(s) : détail ci-dessous.");
-        }
-        return sb.toString();
-    }
-
     /// Résumé compact « N importés · M ignorés · K rejetés ».
     public String resume() {
         return compte(StatutImportFichier.IMPORTE)

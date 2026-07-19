@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.commun.viewmodel.ProgressionOperation;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
@@ -119,6 +120,11 @@ public class ImportationViewModel {
 
     /// Fichiers **rejetés** par le dernier import (#155), « nom — raison », pour les afficher dans M-Import.
     private final ObservableList<String> rejetsImport = FXCollections.observableArrayList();
+
+    /// Compte rendu du dernier import abouti (doublon de nuit, ignorés, rejetés, anomalies du journal).
+    /// **Extensible** par nature, il vit à part de la phrase de statut, qui est bornée (ADR 0028 / 0031).
+    private final ReadOnlyObjectWrapper<CompteRendu> compteRendu =
+            new ReadOnlyObjectWrapper<>(this, "compteRendu", CompteRendu.de("", List.of()));
 
     public ImportationViewModel(
             ServiceImport serviceImport,
@@ -416,6 +422,7 @@ public class ImportationViewModel {
         messageExecution.set("");
         // Rapport (#155) : on expose la liste des fichiers rejetés (« nom — raison ») pour M-Import.
         rejetsImport.setAll(resultatImport.rapport().rejetsFormates());
+        compteRendu.set(CompteRenduImport.de(resultatImport));
         resultatNuits.set(null); // import mono-nuit : pas de résultat agrégé
         etat.set(EtatImport.TERMINE);
         navigation.setOperationCritique(""); // l'import est fini : on peut de nouveau naviguer (#54)
@@ -430,12 +437,18 @@ public class ImportationViewModel {
         resultat.set(resultatMultiNuits.premier()); // compatibilité : le mono-résultat pointe la 1re nuit
         messageExecution.set("");
         rejetsImport.setAll(resultatMultiNuits.rejetsFormates()); // rejets cumulés de toutes les nuits (#155)
+        compteRendu.set(CompteRenduImport.de(resultatMultiNuits)); // agrégé sur toutes les nuits, pas la 1re
         etat.set(EtatImport.TERMINE);
         navigation.setOperationCritique(""); // l'import est fini : on peut de nouveau naviguer (#54)
         nettoyerTemporaireZip();
     }
 
     /// Fichiers rejetés (« nom — raison ») par le dernier import (#155), pour affichage dans M-Import.
+    /// Le compte rendu du dernier import, à rendre par [fr.univ_amu.iut.commun.view.VueCompteRendu].
+    public ReadOnlyObjectProperty<CompteRendu> compteRenduProperty() {
+        return compteRendu.getReadOnlyProperty();
+    }
+
     public ObservableList<String> rejetsImport() {
         return rejetsImport;
     }
@@ -507,6 +520,7 @@ public class ImportationViewModel {
         resultat.set(null);
         resultatNuits.set(null);
         rejetsImport.clear(); // #155
+        compteRendu.set(CompteRendu.de("", List.of()));
         progressionOperation.reinitialiser();
         messageExecution.set("");
         // Fin de toute opération longue : on lève le verrou de navigation posé par marquerExtractionEnCours

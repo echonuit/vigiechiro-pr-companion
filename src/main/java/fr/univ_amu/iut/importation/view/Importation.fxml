@@ -183,6 +183,10 @@
     <TableView fx:id="tableFichiers" prefHeight="190.0" visible="false" managed="false"/>
   </VBox>
   <Label fx:id="labelStatut" styleClass="message-succes" wrapText="true"/>
+  <!-- Compte rendu d'import (#2004) : ce que la barre de statut ne peut pas porter sans se tronquer -
+       doublon de nuit, fichiers ignorés, cardinal des rejets, anomalies du journal du capteur. -->
+  <VBox fx:id="zoneCompteRenduImport" visible="false" managed="false"/>
+
   <!-- Rapport d'import (#155) : fichiers rejetés (nom — raison), visible seulement s'il y en a. -->
   <VBox fx:id="zoneRejets" spacing="3.0" visible="false" managed="false">
     <Label text="Fichiers rejetés (non importés) :" styleClass="message-erreur">

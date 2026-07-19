@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
 import fr.univ_amu.iut.importation.model.EtatNommage;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
+import fr.univ_amu.iut.importation.viewmodel.CompteRenduImport;
 import fr.univ_amu.iut.importation.viewmodel.EtatImport;
 import fr.univ_amu.iut.sites.model.Site;
 
@@ -33,9 +34,10 @@ final class FormatsImport {
         };
     }
 
-    /// Phrase de statut du wizard (issue de l'import : annulé / mono-nuit / multi-nuits), via [RecapImport].
+    /// Phrase de statut du wizard (annulé / mono-nuit / multi-nuits). Bornée : les avertissements
+    /// (doublon, rejets, anomalies) relèvent du compte rendu, pas de la barre de statut.
     static String libelle(EtatImport etat, ResultatImport resultat, ResultatImportMultiNuits resultatNuits) {
-        return RecapImport.libelle(etat, resultat, resultatNuits);
+        return CompteRenduImport.statut(etat, resultat, resultatNuits);
     }
 
     /// Zones de la barre de statut : statut du wizard au **centre**, progression + ETA à droite pendant un

@@ -55,7 +55,7 @@ class RapportImportTest {
     }
 
     @Test
-    @DisplayName("#214/#147 : dimension doublon de nuit (aDoublonDeNuit + avertissements)")
+    @DisplayName("#214/#147 : dimension doublon de nuit (prédicat et passages portés)")
     void doublon_de_nuit() {
         RapportImport neuf = rapport();
         assertThat(neuf.aDoublonDeNuit()).as("nuit neuve : pas de doublon").isFalse();
@@ -64,24 +64,10 @@ class RapportImportTest {
                 List.of(new LigneRapport("a.wav", StatutImportFichier.IMPORTE, "3 séquence(s)")),
                 List.of(new PassageExistant(2, 2026, "640380", "Z1")));
         assertThat(doublon.aDoublonDeNuit()).isTrue();
-        assertThat(doublon.avertissements())
-                .contains("Doublon")
-                .contains("n° 2")
-                .contains("carré 640380");
-    }
-
-    @Test
-    @DisplayName("avertissements : fichiers ignorés et rejetés signalés, vide si import nominal")
-    void avertissements_ignores_et_rejets() {
-        assertThat(rapport().avertissements())
-                .as("1 ignoré (non pertinent) + 1 rejeté sont signalés")
-                .contains("non pertinent(s) ignoré(s)")
-                .contains("rejeté(s)");
-        RapportImport nominal =
-                new RapportImport(List.of(new LigneRapport("a.wav", StatutImportFichier.IMPORTE, "3 séquence(s)")));
-        assertThat(nominal.avertissements())
-                .as("import nominal (rien d'anormal) : aucun avertissement")
-                .isEmpty();
+        assertThat(doublon.doublonsDeNuit())
+                .extracting(PassageExistant::numeroPassage)
+                .containsExactly(2);
+        // La MISE EN FORME de ce doublon est éprouvée par CompteRenduImportTest : elle a quitté le modèle.
     }
 
     @Test
