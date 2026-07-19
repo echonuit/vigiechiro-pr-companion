@@ -7,6 +7,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
   Modale « Réactiver ce passage » (#1780), ouverte depuis M-Passage dans un Stage modal. La réactivation
@@ -34,7 +35,11 @@
       prefWidth="600.0"
       spacing="12.0">
 
-  <Label text="♻ Réactivation du passage" styleClass="titre-page"/>
+  <Label text="Réactivation du passage" styleClass="titre-page">
+    <graphic>
+      <FontIcon iconLiteral="fas-recycle" styleClass="titre-page-icone"/>
+    </graphic>
+  </Label>
 
   <!-- L'issue de l'opération, en clair : « Terminé. », « Annulée. », « Interrompue. ». Les phases en cours
        se nomment elles-mêmes juste en dessous : cette ligne ne les redit plus. -->
