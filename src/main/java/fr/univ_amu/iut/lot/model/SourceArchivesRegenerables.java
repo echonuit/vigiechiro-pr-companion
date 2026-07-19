@@ -1,11 +1,14 @@
 package fr.univ_amu.iut.lot.model;
 
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /// [SourceDepot] des **archives ZIP**, capable de **regenerer a la demande** une archive absente du
 /// disque (#1994).
@@ -33,6 +36,30 @@ public final class SourceArchivesRegenerables implements SourceDepot {
 
     /// Extension des archives de depot, en facteur : elle sert a la fois a nommer et a relire un rang.
     private static final String EXTENSION = ".zip";
+
+    /// **Fenetre** : combien d'archives peuvent exister en meme temps sur le disque (#1995).
+    ///
+    /// Le depot generait auparavant **toutes** les archives avant d'en televerser une seule, d'ou un pic
+    /// d'occupation egal a la totalite du lot - la raison d'etre du garde-fou disque de #769. En
+    /// produisant au fil de l'eau et en liberant chaque archive des qu'elle est en ligne, ce pic retombe
+    /// a la fenetre : deux archives, soit ~1,4 Go au plafond par defaut.
+    ///
+    /// **Deux et non une.** Un pipeline strictement unitaire serialiserait compression et televersement,
+    /// alors que c'est precisement leur recouvrement qu'on cherche : pendant qu'une archive part sur le
+    /// reseau, la suivante se compresse. Deux suffit a ce recouvrement ; au-dela on paierait du disque
+    /// sans rien gagner, le reseau restant le goulot.
+    ///
+    /// **Constante et non reglage** : un curseur de plus demanderait sa persistance, sa documentation et
+    /// un axe de variation en test, pour un arbitrage que l'utilisateur n'a pas les elements de trancher.
+    /// Si le besoin d'ajuster apparait, il deviendra une issue.
+    private static final int FENETRE = 2;
+
+    /// Archives que **cette source a produites**, et qu'elle peut donc liberer.
+    ///
+    /// Une archive deja presente a la construction a ete generee deliberement par l'utilisateur (etape
+    /// ②) : elle lui appartient, elle sert au depot manuel, et ce n'est pas au televersement de la
+    /// supprimer dans son dos. L'ecran a une action dediee pour ca (« Liberer l'espace disque »).
+    private final Set<String> produites = ConcurrentHashMap.newKeySet();
 
     private final List<Path> sequences;
     private final List<List<Path>> lots;
@@ -77,9 +104,37 @@ public final class SourceArchivesRegenerables implements SourceDepot {
         if (Files.isRegularFile(archive)) {
             return Optional.of(archive);
         }
-        return Optional.of(compacteur
+        Path produite = compacteur
                 .compacterUne(lots.get(numero - 1), prefixe, dossierDepot, numero)
-                .chemin());
+                .chemin();
+        produites.add(nomArchive(numero));
+        return Optional.of(produite);
+    }
+
+    /// Supprime l'archive **si cette source l'a produite**, une fois l'unite prouvee en ligne (#1995) :
+    /// c'est ce qui ramene l'occupation disque a la fenetre.
+    ///
+    /// Sans effet sur une archive preexistante (cf. [#produites]), et sans effet si la suppression
+    /// echoue : ne pas avoir pu liberer de la place n'est pas une raison de faire echouer un depot
+    /// reussi, et l'archive reste de toute facon regenerable.
+    @Override
+    public void liberer(String identifiant) {
+        if (!produites.remove(identifiant)) {
+            return;
+        }
+        try {
+            Files.deleteIfExists(dossierDepot.resolve(identifiant));
+        } catch (IOException echecDeLiberation) {
+            // Volontairement ignore : l'unite est en ligne, c'est ce qui compte. Le dossier gardera une
+            // archive de trop, que « Liberer l'espace disque » saura enlever.
+        }
+    }
+
+    /// Le nombre d'archives tolerees en meme temps sur le disque borne aussi le nombre de televersements
+    /// de front : une archive en vol occupe le disque jusqu'a sa liberation (#1995).
+    @Override
+    public int parallelismeMax() {
+        return FENETRE;
     }
 
     /// L'empreinte porte sur les **sequences source**, pas sur les archives : ce sont elles qui

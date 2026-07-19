@@ -210,7 +210,10 @@ public final class DepotVigieChiro {
 
         AtomicInteger deposees = new AtomicInteger();
         List<String> echecs = Collections.synchronizedList(new ArrayList<>());
-        int parallelisme = Math.max(1, Math.min(NB_UPLOADS_PARALLELES, restantes.size()));
+        // La source peut brider ce parallelisme (#1995) : une source qui **produit** ses fichiers borne
+        // ainsi ce qui existe sur le disque a un instant donne. Le mode WAV, lui, garde les 5 envois.
+        int plafond = Math.min(NB_UPLOADS_PARALLELES, source.parallelismeMax());
+        int parallelisme = Math.max(1, Math.min(plafond, restantes.size()));
         try (ExecutorService executeur = Executors.newFixedThreadPool(parallelisme)) {
             for (DepotUnite unite : restantes) {
                 executeur.submit(
@@ -242,7 +245,7 @@ public final class DepotVigieChiro {
         }
         try {
             Path fichier = source.resoudre(unite.identifiantUnite()).orElse(null);
-            if (televerserUne(unite, fichier, participationId, suivi)) {
+            if (televerserUne(unite, fichier, participationId, suivi, source)) {
                 deposees.incrementAndGet();
             } else {
                 echecs.add(unite.identifiantUnite());
@@ -254,7 +257,8 @@ public final class DepotVigieChiro {
 
     /// Téléverse une unité en persistant son avancement au fil de l'eau : `en_cours` avant l'envoi,
     /// `depose` (avec l'id distant) ou `echec` (avec la raison) après. `false` en cas d'échec.
-    private boolean televerserUne(DepotUnite unite, Path fichier, String participationId, SuiviDepot suivi) {
+    private boolean televerserUne(
+            DepotUnite unite, Path fichier, String participationId, SuiviDepot suivi, SourceDepot source) {
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.EN_COURS, unite.fichierIdDistant(), null, maintenant());
         suivi.uniteDemarree(unite.identifiantUnite());
         Televersement resultat = fichier == null
@@ -264,6 +268,10 @@ public final class DepotVigieChiro {
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
+            // L'unite est prouvee en ligne : la source peut liberer ce qu'elle avait materialise (#1995).
+            // Apres le commit et jamais avant, sinon une coupure laisserait une unite ni en ligne ni sur
+            // le disque - la reprise la regenererait, mais on aurait perdu la preuve de l'envoi.
+            source.liberer(unite.identifiantUnite());
             return true;
         }
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.ECHEC, null, resultat.raison(), maintenant());

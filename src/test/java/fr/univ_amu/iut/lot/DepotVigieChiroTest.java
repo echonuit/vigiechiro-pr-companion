@@ -55,6 +55,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.DoubleConsumer;
@@ -203,6 +204,35 @@ class DepotVigieChiroTest {
 
         assertThat(bilan.echecs()).containsExactlyInAnyOrder("a.wav", "b.wav");
         assertThat(depotUnites.parPassage(idPassage)).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("#1995 : le moteur libère chaque unité une fois qu'elle est prouvée en ligne")
+    void unite_liberee_apres_depot(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "Car-1.zip");
+        Path b = fichier(dossier, "Car-2.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        armerUploadOk();
+        List<String> liberees = Collections.synchronizedList(new ArrayList<>());
+        SourceDepot tracante = tracer(SourceDepot.desFichiers(List.of(a, b)), liberees);
+
+        depot.deposer(idPassage, tracante, () -> false, SuiviDepot.inerte());
+
+        assertThat(liberees).containsExactlyInAnyOrder("Car-1.zip", "Car-2.zip");
+    }
+
+    @Test
+    @DisplayName("#1995 : une unité en échec n'est PAS libérée (la reprise en aura besoin)")
+    void unite_en_echec_non_liberee(@TempDir Path dossier) throws IOException {
+        Path a = fichier(dossier, "Car-1.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
+        List<String> liberees = Collections.synchronizedList(new ArrayList<>());
+        SourceDepot tracante = tracer(SourceDepot.desFichiers(List.of(a)), liberees);
+
+        depot.deposer(idPassage, tracante, () -> false, SuiviDepot.inerte());
+
+        assertThat(liberees).isEmpty();
     }
 
     @Test
@@ -570,6 +600,32 @@ class DepotVigieChiroTest {
         when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
+    }
+
+    /// Enveloppe une source en consignant les identifiants qu'on lui demande de **liberer** (#1995) :
+    /// c'est le seul point qu'on veut observer, le reste est delegue tel quel.
+    private static SourceDepot tracer(SourceDepot reelle, List<String> liberees) {
+        return new SourceDepot() {
+            @Override
+            public List<String> identifiants() {
+                return reelle.identifiants();
+            }
+
+            @Override
+            public Optional<Path> resoudre(String identifiant) {
+                return reelle.resoudre(identifiant);
+            }
+
+            @Override
+            public String empreinte() {
+                return reelle.empreinte();
+            }
+
+            @Override
+            public void liberer(String identifiant) {
+                liberees.add(identifiant);
+            }
+        };
     }
 
     private static Path fichier(Path dossier, String nom) throws IOException {

@@ -41,6 +41,26 @@ public interface SourceDepot {
     /// se trouve apres l'ecriture.
     String empreinte();
 
+    /// **Libere** ce que la resolution de cet identifiant avait materialise, une fois l'unite prouvee
+    /// en ligne (#1995).
+    ///
+    /// Par defaut **sans effet** : une source adossee a des fichiers preexistants ne possede rien.
+    /// C'est capital pour le mode WAV, ou les identifiants designent les **sequences d'origine** : les
+    /// effacer detruirait la nuit.
+    default void liberer(String identifiant) {
+        // Rien a liberer : la source ne possede pas les fichiers qu'elle designe.
+    }
+
+    /// Nombre maximal d'unites que le moteur peut traiter **de front** pour cette source.
+    ///
+    /// Par defaut illimite : c'est le moteur qui plafonne (5 televersements paralleles, calques sur le
+    /// front web). Une source qui **produit** ses fichiers s'en sert pour borner ce qui existe sur le
+    /// disque a un instant donne : on ne peut pas televerser cinq archives de front si on n'en tolere
+    /// que deux a la fois (#1995).
+    default int parallelismeMax() {
+        return Integer.MAX_VALUE;
+    }
+
     /// Source adossee a des fichiers **deja presents** sur le disque : le comportement d'origine.
     ///
     /// Les identifiants sont les noms de fichiers, la resolution est immediate, et l'empreinte porte
