@@ -2,6 +2,10 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -9,14 +13,16 @@ import fr.univ_amu.iut.importation.model.SuiviFichiers;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel.DemandeImportNuits;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyStringProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.ListChangeListener;
 
 /// Coordination de l'import **multi-nuits** côté ViewModel (#…), extraite de [ImportationViewModel]
@@ -36,6 +42,8 @@ import javafx.collections.ListChangeListener;
 /// `javafx.collections` sont importés, jamais `javafx.scene`.
 public final class CoordinationNuits {
 
+    private static final DateTimeFormatter JOUR = DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
+
     private final ServiceImport serviceImport;
     private final InspectionImportViewModel inspection;
     private final RattachementImportViewModel rattachement;
@@ -44,7 +52,14 @@ public final class CoordinationNuits {
     /// Non pertinente hors multi-nuits (`true`).
     private final ReadOnlyBooleanWrapper numerotationValide =
             new ReadOnlyBooleanWrapper(this, "numerotationValide", true);
-    private final ReadOnlyStringWrapper avertissement = new ReadOnlyStringWrapper(this, "avertissement", "");
+    /// Ce qui empêche la numérotation multi-nuits d'aboutir, **détaillé** : quelles nuits, quels numéros.
+    ///
+    /// C'était une phrase - « Un ou plusieurs numéros de passage proposés sont déjà utilisés » - alors que
+    /// la boucle qui la produit teste **chaque** numéro et sait donc exactement lesquels sont pris. Elle
+    /// n'en gardait qu'un booléen, et l'utilisateur devait deviner quelle nuit renuméroter dans une table
+    /// qui peut en compter une dizaine (#2050).
+    private final ReadOnlyObjectWrapper<CompteRendu> blocage =
+            new ReadOnlyObjectWrapper<>(this, "blocage", CompteRendu.de("", List.of()));
 
     CoordinationNuits(
             ServiceImport serviceImport,
@@ -108,10 +123,9 @@ public final class CoordinationNuits {
     }
 
     /// Motif de blocage (#801) à afficher sous la table des nuits quand la numérotation multi-nuits est
-    /// invalide (« aucune nuit incluse » ou « n° déjà pris »), sur le modèle de l'avertissement mono-nuit.
-    /// Vide quand tout va bien.
-    public ReadOnlyStringProperty avertissementProperty() {
-        return avertissement.getReadOnlyProperty();
+    /// invalide. Compte rendu **vide** quand tout va bien.
+    public ReadOnlyObjectProperty<CompteRendu> blocageProperty() {
+        return blocage.getReadOnlyProperty();
     }
 
     /// Recalcule les **n° de passage proposés** : la nuit **incluse** (ordre des dates) part du **n° de
@@ -121,26 +135,27 @@ public final class CoordinationNuits {
     private void renumeroter() {
         if (!inspection.plusieursNuits()) {
             numerotationValide.set(true); // non pertinent : le pré-contrôle mono-nuit (#108) fait foi
-            avertissement.set("");
+            blocage.set(CompteRendu.de("", List.of()));
             return;
         }
         if (!rattachement.estComplet()) {
             inspection.nuits().forEach(nuit -> nuit.definirNumeroPassagePropose(0));
             numerotationValide.set(false);
             // Le rattachement incomplet est déjà signalé par sa propre section : pas de doublon ici.
-            avertissement.set("");
+            blocage.set(CompteRendu.de("", List.of()));
             return;
         }
         Long idPoint = rattachement.idPointSelectionne();
         int annee = rattachement.prefixeCourant().annee();
         int numero = rattachement.numeroPassageProperty().get(); // base = n° du formulaire (la table le suit)
         int incluses = 0;
-        boolean tousLibres = true;
+        List<Detail> pris = new ArrayList<>();
         for (NuitVM nuit : inspection.nuits()) {
             if (nuit.estIncluse()) {
                 nuit.definirNumeroPassagePropose(numero);
                 if (serviceImport.numeroPassageDejaUtilise(idPoint, annee, numero)) {
-                    tousLibres = false;
+                    // On retient LEQUEL, et pour quelle nuit : c'est ce que l'utilisateur doit corriger.
+                    pris.add(Detail.de(String.format("n° %d - nuit du %s", numero, JOUR.format(nuit.date()))));
                 }
                 numero++;
                 incluses++;
@@ -148,14 +163,24 @@ public final class CoordinationNuits {
                 nuit.definirNumeroPassagePropose(0);
             }
         }
+        blocage.set(rediger(incluses, pris));
+        numerotationValide.set(incluses >= 1 && pris.isEmpty());
+    }
+
+    /// Met en phrase ce qui bloque. Aucun blocage rend un compte rendu **vide** : rien à afficher, et
+    /// l'import est offert.
+    private static CompteRendu rediger(int incluses, List<Detail> pris) {
+        List<Constat> constats = new ArrayList<>();
         if (incluses < 1) {
-            avertissement.set("Incluez au moins une nuit à importer.");
-        } else if (!tousLibres) {
-            avertissement.set("Un ou plusieurs numéros de passage proposés sont déjà utilisés.");
-        } else {
-            avertissement.set("");
+            constats.add(Constat.de("Incluez au moins une nuit à importer.", Severite.AVERTISSEMENT));
         }
-        numerotationValide.set(incluses >= 1 && tousLibres);
+        if (!pris.isEmpty()) {
+            constats.add(new Constat(
+                    String.format("%d numéro(s) de passage déjà utilisé(s) pour ce point.", pris.size()),
+                    Severite.AVERTISSEMENT,
+                    pris));
+        }
+        return constats.isEmpty() ? CompteRendu.de("", List.of()) : CompteRendu.de("", constats);
     }
 
     /// Capture les nuits **incluses** (avec leur n° de passage proposé) et le préfixe de base commun dans
