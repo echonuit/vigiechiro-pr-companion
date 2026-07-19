@@ -261,7 +261,7 @@ final class HydratationDepuisBruts {
     private static int absentesDuDisque(Set<String> restantes, Map<String, SequenceDEcoute> parNom) {
         return (int) restantes.stream()
                 .map(parNom::get)
-                .filter(sequence -> !Files.exists(Path.of(sequence.cheminFichier())))
+                .filter(sequence -> !sequence.estSurLeDisque())
                 .count();
     }
 }

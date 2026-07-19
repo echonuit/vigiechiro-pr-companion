@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.passage.model;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 /// Séquence d'écoute : fichier dérivé d'un enregistrement original par expansion de temps ×10 et
@@ -94,5 +96,18 @@ public record SequenceDEcoute(
                 horodatageCapture,
                 null,
                 null);
+    }
+
+    /// Son fichier est-il **là** ? (EPIC #1944, passe 7)
+    ///
+    /// La question se posait à trois endroits - la voie « bruts », l'hydratation, le rebranchement - et
+    /// s'écrivait de trois façons : sur une liste, sur un ensemble de noms croisé avec un index, ou en
+    /// testant directement un chemin de destination. Trois formulations pour une seule idée, qu'aucune
+    /// ne nommait.
+    ///
+    /// C'est la séquence qui connaît son chemin : c'est donc elle qui répond. Une réactivation ne
+    /// travaille que sur ce qui **manque**, et « ce qui manque » méritait mieux qu'un prédicat recopié.
+    public boolean estSurLeDisque() {
+        return Files.exists(Path.of(cheminFichier));
     }
 }

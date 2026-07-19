@@ -8,7 +8,6 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.RebranchementSequences.OrigineCandidats;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Acceptee;
 import fr.univ_amu.iut.passage.model.VerdictIdentite.Refusee;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
@@ -208,7 +207,7 @@ final class ReactivationDepuisBruts {
 
     private static int absentesDuDisque(List<SequenceDEcoute> sequences) {
         return (int) sequences.stream()
-                .filter(sequence -> !Files.exists(Path.of(sequence.cheminFichier())))
+                .filter(sequence -> !sequence.estSurLeDisque())
                 .count();
     }
 }

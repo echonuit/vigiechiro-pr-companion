@@ -81,11 +81,11 @@ final class RebranchementSequences {
             traitees++;
             progres.accept(new Progression(
                     "Vérification " + traitees + "/" + sequences.size(), traitees / (double) sequences.size()));
-            Path destination = Path.of(sequence.cheminFichier());
-            if (Files.exists(destination)) {
+            if (sequence.estSurLeDisque()) {
                 bilan.dejaPresentes++;
                 continue;
             }
+            Path destination = Path.of(sequence.cheminFichier());
             List<Path> homonymes = candidats.pour(sequence.nomFichier());
             if (homonymes.isEmpty()) {
                 // Aucun fichier de ce nom parmi les candidats. Ce que cela signifie dépend d'où ils
