@@ -2,6 +2,8 @@ package fr.univ_amu.iut.audio.viewmodel;
 
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.validation.model.BilanImport;
+import java.util.ArrayList;
+import java.util.List;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -57,22 +59,26 @@ final class MessagesAudio {
     /// Retour de succès d'un import tolérant : nombre d'observations chargées, et le cas échéant le
     /// nombre de lignes ignorées (audio absent) et de taxons hors référentiel auto-créés.
     void succesImport(BilanImport bilan) {
-        StringBuilder resume = new StringBuilder("Import réussi : " + bilan.importees() + " observation(s) chargée(s)");
-        if (bilan.ignorees() > 0) {
-            resume.append(SEPARATEUR).append(bilan.ignorees()).append(" ignorée(s) (audio absent)");
-        }
-        if (bilan.taxonsHorsReferentiel() > 0) {
-            resume.append(SEPARATEUR).append(bilan.taxonsHorsReferentiel()).append(" taxon(s) hors référentiel");
-        }
+        List<String> clauses = new ArrayList<>();
+        clauses.add(String.format("%d observation(s) chargée(s)", bilan.importees()));
+        siNonNul(clauses, bilan.ignorees(), "%d ignorée(s) (audio absent)");
+        siNonNul(clauses, bilan.taxonsHorsReferentiel(), "%d taxon(s) hors référentiel");
         // Réimport : rend compte des validations observateur réattachées (préservées) et de celles
         // définitivement perdues faute d'observation correspondante dans le nouveau CSV.
-        if (bilan.validationsPreservees() > 0) {
-            resume.append(SEPARATEUR).append(bilan.validationsPreservees()).append(" validation(s) conservée(s)");
+        siNonNul(clauses, bilan.validationsPreservees(), "%d validation(s) conservée(s)");
+        siNonNul(clauses, bilan.validationsPerdues(), "%d validation(s) perdue(s)");
+        succes("Import réussi : " + String.join(SEPARATEUR, clauses) + ".");
+    }
+
+    /// Ajoute une clause **si elle a lieu d'être** : annoncer « 0 ignorée(s) » serait du bruit.
+    ///
+    /// La condition est nommée une fois plutôt que recopiée à chaque clause, et le gabarit rend visible
+    /// ce qui varie - un `%d`, donc un nombre, donc une clause de longueur bornée. Un `StringBuilder`
+    /// enchaînant des `append` ne disait ni l'un ni l'autre.
+    private static void siNonNul(List<String> clauses, int combien, String gabarit) {
+        if (combien > 0) {
+            clauses.add(String.format(gabarit, combien));
         }
-        if (bilan.validationsPerdues() > 0) {
-            resume.append(SEPARATEUR).append(bilan.validationsPerdues()).append(" validation(s) perdue(s)");
-        }
-        succes(resume.append('.').toString());
     }
 
     void info(String texte) {

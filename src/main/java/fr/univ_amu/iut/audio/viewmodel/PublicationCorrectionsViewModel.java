@@ -6,6 +6,8 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.validation.model.BilanPublication;
 import fr.univ_amu.iut.validation.model.PublicationCorrections;
 import fr.univ_amu.iut.validation.model.TriPublication;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -91,27 +93,26 @@ public class PublicationCorrectionsViewModel {
     /// Résumé lisible d'un bilan : envoyées, écartées par cause, refus (avec la première cause en
     /// exemple : le détail complet vit dans le bilan, la CLI l'imprime intégralement).
     static String resume(BilanPublication bilan) {
-        StringBuilder resume = new StringBuilder("Corrections publiées vers Vigie-Chiro : ")
-                .append(bilan.poussees())
-                .append(" envoyée(s)");
-        if (bilan.sansCertitude() > 0) {
-            resume.append(", ").append(bilan.sansCertitude()).append(" à compléter (certitude non déclarée)");
-        }
-        if (bilan.sansAncrage() > 0) {
-            // Depuis #1838 la publication ancre elle-même ce qui peut l'être : ce qui reste ici n'est pas
-            // un oubli de réimport, c'est une nuit sans participation à quoi s'ancrer. Le remède a changé.
-            resume.append(", ")
-                    .append(bilan.sansAncrage())
-                    .append(" sans ancrage plateforme (rattachez la nuit à sa participation Vigie-Chiro)");
-        }
-        if (bilan.horsReferentiel() > 0) {
-            resume.append(", ").append(bilan.horsReferentiel()).append(" hors référentiel");
-        }
+        List<String> clauses = new ArrayList<>();
+        clauses.add(String.format("%d envoyée(s)", bilan.poussees()));
+        siNonNul(clauses, bilan.sansCertitude(), "%d à compléter (certitude non déclarée)");
+        // Depuis #1838 la publication ancre elle-même ce qui peut l'être : ce qui reste ici n'est pas un
+        // oubli de réimport, c'est une nuit sans participation à quoi s'ancrer. Le remède a changé.
+        siNonNul(
+                clauses,
+                bilan.sansAncrage(),
+                "%d sans ancrage plateforme (rattachez la nuit à sa participation Vigie-Chiro)");
+        siNonNul(clauses, bilan.horsReferentiel(), "%d hors référentiel");
+
+        StringBuilder resume =
+                new StringBuilder("Corrections publiées vers Vigie-Chiro : ").append(String.join(", ", clauses));
         if (!bilan.sansEchec()) {
-            resume.append(" ; ")
-                    .append(bilan.echecs().size())
-                    .append(" refus, dont : ")
-                    .append(bilan.echecs().getFirst());
+            // ⚠️ Une seule cause sur N est montrée : ce résumé est un compte rendu tronqué en phrase, et
+            // c'est un frontalier au sens de l'ADR 0031 (le bilan porte la liste, la phrase n'en dit qu'un).
+            // Traité par le sous-EPIC #2004, pas ici : ce lot ne change que la façon d'assembler.
+            resume.append(String.format(
+                    " ; %d refus, dont : %s",
+                    bilan.echecs().size(), bilan.echecs().getFirst()));
         }
         resume.append('.');
         if (!bilan.rapatriement().estMuet()) {
@@ -121,6 +122,16 @@ public class PublicationCorrectionsViewModel {
             resume.append(' ').append(bilan.rapatriement().texte());
         }
         return resume.toString();
+    }
+
+    /// Ajoute une clause **si elle a lieu d'être** : annoncer « 0 hors référentiel » serait du bruit.
+    ///
+    /// La condition est nommée une fois au lieu d'être recopiée, et le `%d` dit que la clause est bornée -
+    /// deux choses qu'une chaîne d'`append` taisait.
+    private static void siNonNul(List<String> clauses, int combien, String gabarit) {
+        if (combien > 0) {
+            clauses.add(String.format(gabarit, combien));
+        }
     }
 
     private PublicationCorrections moteur() {

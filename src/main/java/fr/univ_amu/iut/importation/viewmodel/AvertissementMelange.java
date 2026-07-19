@@ -23,15 +23,15 @@ final class AvertissementMelange {
         if (!melange.plusieursEnregistreurs()) {
             return "";
         }
-        StringBuilder message = new StringBuilder("⚠ Ce dossier mélange plusieurs enregistreurs (séries ")
-                .append(String.join(", ", melange.series()))
-                .append(")");
-        if (melange.plusieursNuits()) {
-            message.append(", sur plusieurs nuits (")
-                    .append(melange.nuits().size())
-                    .append(" dates)");
-        }
-        return message.append(" : un import correspond à un seul enregistreur, vérifiez la source avant d'importer.")
-                .toString();
+        // La phrase se lit d'un bloc plutôt que par morceaux : ce qui varie est visible à sa place, et
+        // le seul fragment optionnel est nommé au lieu d'être un `append` conditionnel au milieu.
+        String surPlusieursNuits = melange.plusieursNuits()
+                ? String.format(
+                        ", sur plusieurs nuits (%d dates)", melange.nuits().size())
+                : "";
+        return String.format(
+                "⚠ Ce dossier mélange plusieurs enregistreurs (séries %s)%s : un import correspond à un seul"
+                        + " enregistreur, vérifiez la source avant d'importer.",
+                String.join(", ", melange.series()), surPlusieursNuits);
     }
 }

@@ -11,8 +11,11 @@ import fr.univ_amu.iut.commun.view.SuiviOperation;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javafx.beans.binding.Bindings;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -165,13 +168,13 @@ final class ImportVigieChiroUI {
 
     /// Libellé lisible d'une participation pour le choix : `localité · date · titre du site`.
     private static String libelle(ParticipationVigieChiro participation) {
-        StringBuilder libelle = new StringBuilder(participation.point() != null ? participation.point() : "?");
-        if (participation.dateDebut() != null) {
-            libelle.append(" · ").append(participation.dateDebut());
-        }
-        if (participation.siteTitre() != null) {
-            libelle.append(" · ").append(participation.siteTitre());
-        }
-        return libelle.toString();
+        // Les parties absentes disparaissent, séparateur compris : un « ? · · Étang » trahirait un trou
+        // que l'utilisateur ne peut pas combler. Le point garde son « ? » parce qu'il identifie la ligne.
+        return Stream.of(
+                        participation.point() != null ? participation.point() : "?",
+                        participation.dateDebut(),
+                        participation.siteTitre())
+                .filter(Objects::nonNull)
+                .collect(Collectors.joining(" · "));
     }
 }

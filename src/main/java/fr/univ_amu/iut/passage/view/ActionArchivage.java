@@ -59,19 +59,22 @@ final class ActionArchivage {
     /// retour. Mentionne la capture d'empreintes quand des séquences n'en ont pas encore (#1299) :
     /// c'est elle qui garantira l'identité des fichiers réimportés.
     private String messageConfirmation(long recuperable) {
-        StringBuilder message = new StringBuilder("Archiver ce passage et libérer environ "
-                + Formats.octetsLisibles(recuperable)
-                + " ? L'audio (séquences et bruts) sera supprimé du disque ; les observations, les"
-                + " validations, le journal et le relevé restent consultables. Pour réécouter un jour,"
-                + " il faudra réimporter les mêmes fichiers : la plateforme Vigie-Chiro ne rend pas"
-                + " l'audio d'un dépôt ZIP, sans eux la perte est définitive.");
         int sansEmpreinte = viewModel.sequencesSansEmpreinte();
-        if (sansEmpreinte > 0) {
-            message.append("\n\nL'empreinte de ")
-                    .append(sansEmpreinte)
-                    .append(" séquence(s) sera capturée avant la suppression, pour reconnaître à coup"
-                            + " sûr les fichiers réimportés.");
-        }
-        return message.toString();
+        String empreintesACapturer = sansEmpreinte > 0
+                // `\n` littéral et non `%n` : le second rendrait le séparateur de la plateforme, donc
+                // « \r\n » sous Windows. Ce message est comparé tel quel par les tests, et rien ne justifie
+                // de le faire dépendre du système.
+                ? String.format(
+                        "\n\nL'empreinte de %d séquence(s) sera capturée avant la suppression, pour reconnaître"
+                                + " à coup sûr les fichiers réimportés.",
+                        sansEmpreinte)
+                : "";
+        return String.format(
+                "Archiver ce passage et libérer environ %s ? L'audio (séquences et bruts) sera supprimé du"
+                        + " disque ; les observations, les validations, le journal et le relevé restent"
+                        + " consultables. Pour réécouter un jour, il faudra réimporter les mêmes fichiers :"
+                        + " la plateforme Vigie-Chiro ne rend pas l'audio d'un dépôt ZIP, sans eux la perte"
+                        + " est définitive.%s",
+                Formats.octetsLisibles(recuperable), empreintesACapturer);
     }
 }
