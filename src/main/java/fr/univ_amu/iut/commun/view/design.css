@@ -758,6 +758,20 @@
     -fx-icon-color: #0c4a6e;
 }
 
+.retour-avertissement {
+    -fx-background-color: #fff3cd;
+    -fx-border-color: #ffc107;
+}
+
+.retour-avertissement .label,
+.retour-avertissement .fermer-retour {
+    -fx-text-fill: #664d03;
+}
+
+.retour-avertissement .bandeau-retour-icone {
+    -fx-icon-color: #664d03;
+}
+
 .retour-erreur {
     -fx-background-color: #f8d7da;
     -fx-border-color: #dc3545;
@@ -830,7 +844,7 @@
     -fx-font-size: 13px;
 }
 
-/* Les trois severites teintent le TEXTE du fait, pas un fond : un compte rendu en compte plusieurs a la
+/* Les quatre severites teintent le TEXTE du fait, pas un fond : un compte rendu en compte plusieurs a la
    fois, et autant de pastilles colorees le rendraient illisible. Le bandeau, lui, n'en porte qu'une. */
 .compte-rendu-succes {
     -fx-text-fill: -couleur-succes;
@@ -838,6 +852,10 @@
 
 .compte-rendu-info {
     -fx-text-fill: -couleur-texte;
+}
+
+.compte-rendu-avertissement {
+    -fx-text-fill: -couleur-avertissement;
 }
 
 .compte-rendu-erreur {

@@ -37,6 +37,7 @@ public final class VueCompteRendu {
     private static final Map<Severite, String> CLASSE_CONSTAT = Map.of(
             Severite.SUCCES, "compte-rendu-succes",
             Severite.INFO, "compte-rendu-info",
+            Severite.AVERTISSEMENT, "compte-rendu-avertissement",
             Severite.ERREUR, "compte-rendu-erreur");
 
     private VueCompteRendu() {}

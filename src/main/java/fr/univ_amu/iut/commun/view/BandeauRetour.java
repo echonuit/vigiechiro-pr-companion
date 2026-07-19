@@ -20,18 +20,24 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// Né dans la vue audio, remonté dans `commun` quand l'Inventaire a eu besoin du même bandeau (#1837).
 public final class BandeauRetour {
 
-    /// Classe CSS du bandeau selon la sévérité (succès vert / info neutre / erreur rouge).
+    /// Classe CSS du bandeau selon la sévérité (succès vert / info neutre / avertissement ambre /
+    /// erreur rouge).
     private static final Map<RetourOperation.Severite, String> CLASSE = Map.of(
             RetourOperation.Severite.SUCCES, "retour-succes",
             RetourOperation.Severite.INFO, "retour-info",
+            RetourOperation.Severite.AVERTISSEMENT, "retour-avertissement",
             RetourOperation.Severite.ERREUR, "retour-erreur");
 
     /// Icône par sévérité, pendant de [#CLASSE] : le bandeau dit la même chose en couleur et en forme,
     /// pour qui distingue mal les couleurs comme pour qui lit vite.
+    /// L'erreur a **cédé le triangle** à l'avertissement, dont c'est le glyphe usuel, et pris le cercle
+    /// barré. Les faire cohabiter sur la même forme aurait vidé la promesse ci-dessus de son sens : deux
+    /// niveaux distincts qui se ressemblent ne se distinguent plus quand la couleur manque.
     private static final Map<RetourOperation.Severite, String> ICONE = Map.of(
             RetourOperation.Severite.SUCCES, "fas-check-circle",
             RetourOperation.Severite.INFO, "fas-info-circle",
-            RetourOperation.Severite.ERREUR, "fas-exclamation-triangle");
+            RetourOperation.Severite.AVERTISSEMENT, "fas-exclamation-triangle",
+            RetourOperation.Severite.ERREUR, "fas-times-circle");
 
     private BandeauRetour() {}
 

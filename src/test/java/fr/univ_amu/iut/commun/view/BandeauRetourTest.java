@@ -3,6 +3,9 @@ package fr.univ_amu.iut.commun.view;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Set;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.control.Button;
@@ -12,6 +15,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.framework.junit5.ApplicationExtension;
 
 /// Contrat du [BandeauRetour], **composant partagé par douze écrans et modales** depuis l'EPIC #1870.
@@ -113,5 +117,48 @@ class BandeauRetourTest {
 
         assertThat(conteneur.isVisible()).isTrue();
         assertThat(conteneur.getStyleClass()).contains("retour-erreur");
+    }
+    /// L'icône installée par [BandeauRetour], retrouvée dans le conteneur (elle y est insérée en tête).
+    private String icone() {
+        return conteneur.getChildren().stream()
+                .filter(FontIcon.class::isInstance)
+                .map(noeud -> ((FontIcon) noeud).getIconLiteral())
+                .findFirst()
+                .orElseThrow();
+    }
+
+    @Test
+    @DisplayName("chaque sévérité a sa propre forme, pas seulement sa propre couleur")
+    void chaque_severite_a_sa_forme() {
+        installer();
+
+        // La promesse est écrite dans le composant : « le bandeau dit la même chose en couleur et en
+        // forme, pour qui distingue mal les couleurs comme pour qui lit vite ». Elle n'était vérifiée
+        // par aucun test - la table des icônes pouvait être modifiée ou dégarnie sans rien faire rougir.
+        Map<RetourOperation, String> attendu = new LinkedHashMap<>();
+        attendu.put(RetourOperation.succes("fait"), "fas-check-circle");
+        attendu.put(RetourOperation.info("à savoir"), "fas-info-circle");
+        attendu.put(RetourOperation.avertissement("attention"), "fas-exclamation-triangle");
+        attendu.put(RetourOperation.erreur("raté"), "fas-times-circle");
+
+        attendu.forEach((valeur, glyphe) -> {
+            retour.set(valeur);
+            assertThat(icone()).as("sévérité %s", valeur.severite()).isEqualTo(glyphe);
+        });
+
+        assertThat(Set.copyOf(attendu.values()))
+                .as("deux sévérités qui partagent une forme ne se distinguent plus quand la couleur manque")
+                .hasSize(attendu.size());
+    }
+
+    @Test
+    @DisplayName("#2045 : l'avertissement a sa classe propre, entre l'information et l'erreur")
+    void avertissement_a_sa_classe() {
+        installer();
+
+        retour.set(RetourOperation.avertissement("Cette nuit a déjà été importée."));
+
+        assertThat(conteneur.getStyleClass()).contains("retour-avertissement");
+        assertThat(conteneur.getStyleClass()).doesNotContain("retour-info", "retour-erreur");
     }
 }

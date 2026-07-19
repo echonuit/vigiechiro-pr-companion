@@ -23,9 +23,14 @@ package fr.univ_amu.iut.commun.viewmodel;
 public record RetourOperation(String texte, Severite severite) {
 
     /// Niveau d'affichage d'un [RetourOperation], piloté côté vue par une classe CSS dédiée.
+    ///
+    /// ⚠ **L'ordre de déclaration porte la sévérité** : [CompteRendu#severite()] prend le maximum par
+    /// `ordinal()`. Réordonner ces constantes changerait silencieusement quel constat qualifie un compte
+    /// rendu entier. `SeveriteTest` épingle l'ordre pour que ce ne soit pas une convention tacite.
     public enum Severite {
         SUCCES,
         INFO,
+        AVERTISSEMENT,
         ERREUR
     }
 
@@ -40,6 +45,15 @@ public record RetourOperation(String texte, Severite severite) {
     /// Retour d'**information** (neutre) : action refusée ou guidage, sans échec technique.
     public static RetourOperation info(String texte) {
         return new RetourOperation(texte, Severite.INFO);
+    }
+
+    /// Retour d'**avertissement** (ambre) : l'opération a abouti, mais quelque chose mérite l'attention.
+    ///
+    /// Le niveau manquait, et son absence ne s'est pas traduite par des avertissements mal classés : ils
+    /// ont **quitté le type** pour redevenir des chaînes libres portant un « ⚠ » en tête (huit propriétés
+    /// recensées, #2050). Une fois dehors, plus rien ne bornait leur longueur.
+    public static RetourOperation avertissement(String texte) {
+        return new RetourOperation(texte, Severite.AVERTISSEMENT);
     }
 
     /// Retour d'**erreur** (rouge) : l'opération a échoué.
