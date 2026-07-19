@@ -58,6 +58,34 @@ de **validation** des espèces et de **diagnostic**.
 La barre du haut affiche un fil d'Ariane qui rappelle où vous vous trouvez et permet de revenir en
 arrière.
 
+## Comment l'application vous répond
+
+Quand vous lancez une action - préparer un dépôt, enregistrer un site, corriger un rattachement -
+l'application vous dit ce qu'elle a fait, dans un bandeau qui paraît sur l'écran concerné.
+
+![Un bandeau de compte rendu sur l'écran Diagnostic](assets/captures/apercu-diagnostic-retour.png)
+
+La **couleur** dit de quoi il s'agit, sans qu'il faille lire le message en entier :
+
+| Couleur | Ce que ça veut dire |
+|---|---|
+| **Vert** | l'opération a abouti |
+| **Bleu** | il y a quelque chose à savoir, mais rien n'a échoué : une saisie à compléter, une action sans objet, un résultat partiel |
+| **Rouge** | l'opération a échoué ou a été refusée |
+
+Le bleu mérite un mot : il ne signale **pas** un problème. « Le traitement est déjà en cours », « aucune
+nuit à relever », « dépôt interrompu : 12 fichiers sur 20 sont en ligne » sont des informations utiles,
+pas des pannes.
+
+La **croix** à droite referme le bandeau quand vous l'avez lu. Il repart aussi de lui-même dès que vous
+lancez l'action suivante : ce que vous voyez concerne toujours votre dernier geste.
+
+Deux exceptions volontaires. Les actions **irréversibles** - supprimer un passage, purger des
+enregistrements, archiver une nuit - rendent compte dans une fenêtre qui **bloque** tant que vous ne
+l'avez pas lue, parce qu'il serait fâcheux de manquer le résultat d'une destruction. Et ce qui décrit
+l'**état** d'une nuit (« Passage déposé le… ») n'est pas un compte rendu : ce libellé-là reste affiché
+et ne se ferme pas.
+
 ## Et ensuite ?
 
 - [Parcours métier](parcours/index.md) : le déroulé complet d'une nuit, de la carte SD au dépôt.

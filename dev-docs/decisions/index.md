@@ -74,3 +74,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0025](0025-une-capture-passe-par-le-code-de-production.md) | Une capture passe par le code de production, elle ne le reconstruit pas | #1468, #1865 |
 | [0026](0026-le-nommage-des-tranches-est-une-etape-du-pipeline.md) | Le nommage des tranches est une étape du pipeline, pas un détail de la découpe | EPIC #1944 |
 | [0027](0027-une-attente-porte-toujours-un-nom.md) | Une attente porte toujours un nom, et c'est l'étape qui va attendre qui le pose | #1931, #1951, #1959 |
+| [0028](0028-un-etat-n-est-pas-un-compte-rendu.md) | Un état n'est pas un compte rendu, et ils ne partagent pas de canal | EPIC #1870 |

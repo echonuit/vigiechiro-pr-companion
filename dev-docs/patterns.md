@@ -915,6 +915,48 @@ silence. Le style vit dans `design.css` sous `.bandeau-retour`, que tous les éc
 compose son menu par le `GestionnaireColonnes` dans l'ordre ci-dessus, et donne à toute action ouverte
 au double-clic un moyen de dire pourquoi elle n'a rien fait.
 
+## Rendre compte d'une opération
+
+**Le problème.** « Message » est un mot commode qui recouvre trois choses différentes, et un écran qui
+les mélange finit par mentir. L'EPIC #1870 a migré onze écrans et en a trouvé les trois formes.
+
+**Les trois natures, et leur véhicule.**
+
+| Nature | Ce que c'est | Véhicule | Se ferme ? |
+|---|---|---|---|
+| **État** | ce qui *est* (« Passage déposé le… », « Cohérence : corrigez les contrôles ») | libellé permanent, adossé à ce qu'il décrit | non |
+| **Compte rendu** | ce qui *vient de se passer* (résultat d'une action de l'utilisateur) | `RetourOperation` + `BandeauRetour` | oui |
+| **Travail en cours** | ce qui *se passe* | barre de progression, `IndicateurOccupation`, barre de statut | sans objet |
+
+Un état et un compte rendu ne partagent **jamais** de propriété, et un compte rendu ne se **déduit**
+jamais d'un statut : le même statut est atteint en agissant *et* en ouvrant un écran déjà dans cet
+état, et seul le premier mérite d'être rapporté. Voir
+[ADR 0028](decisions/0028-un-etat-n-est-pas-un-compte-rendu.md).
+
+**Les sévérités.** `SUCCES` quand l'opération a abouti. `ERREUR` quand elle a échoué ou a été refusée
+par un service. `INFO` pour tout le reste, et ce « reste » est plus large qu'il n'y paraît :
+
+- un **guidage** : l'utilisateur a quelque chose à faire, rien n'est cassé (« saisissez des nombres ») ;
+- une **absence d'objet** : « rien à relever », « traitement déjà lancé » - rien n'a raté ;
+- un **résultat partiel** : relevé incomplet, dépôt interrompu. Annoncer un succès mentirait sur ce
+  qui est acquis, annoncer une erreur nierait ce qui est passé.
+
+**Le patron `Messages<Ecran>`.** Quand un écran porte un état **et** un compte rendu, les deux vivent
+dans une petite classe dédiée plutôt que dans le ViewModel : `MessagesAudio`, `MessagesLot`,
+`MessagesRattachement`. Elle expose les propriétés en lecture et des méthodes qui **nomment la
+sévérité** (`succes`, `info`, `erreur`, `effacer`). Le ViewModel garde sa responsabilité d'orchestrer,
+et le plafond `GodClass` du portail qualité s'en trouve mieux.
+
+**Un collaborateur qui n'émet que des échecs** peut rester agnostique et recevoir un `Consumer<String>`,
+la sévérité se décidant au point de jonction. **Un collaborateur qui émet plusieurs natures** reçoit la
+messagerie et choisit lui-même : la lui faire deviner ailleurs reviendrait à réinterpréter ses messages
+d'après leur texte.
+
+**Le piège à connaître.** Un message de garde placé derrière un contrôle **grisé sur la même condition**
+n'est jamais lu par personne. Cinq cas de ce genre existent dans l'application (#1970) : la garde et le
+`disableProperty().bind(…)` testent le même prédicat. Aucun test ne le signale - c'est en essayant de
+**produire une capture** du message qu'on s'en aperçoit.
+
 ## Unit of Work (`UniteDeTravail`)
 
 **Le problème.** Par défaut, chaque écriture DAO s'auto-commit. Mais « créer un passage **et** sa

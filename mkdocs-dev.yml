@@ -90,6 +90,8 @@ nav:
     - 0024 · Les heures d'une nuit viennent de ses preuves: decisions/0024-les-heures-d-une-nuit-viennent-de-ses-preuves.md
     - 0025 · Une capture passe par le code de production: decisions/0025-une-capture-passe-par-le-code-de-production.md
     - 0026 · Le nommage des tranches est une étape du pipeline: decisions/0026-le-nommage-des-tranches-est-une-etape-du-pipeline.md
+    - 0027 · Une attente porte toujours un nom: decisions/0027-une-attente-porte-toujours-un-nom.md
+    - 0028 · Un état n'est pas un compte rendu: decisions/0028-un-etat-n-est-pas-un-compte-rendu.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
