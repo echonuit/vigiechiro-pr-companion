@@ -745,6 +745,12 @@
                                         <argument>VigieChiro</argument>
                                         <argument>--app-version</argument>
                                         <argument>${jpackage.appVersion}</argument>
+                                        <!-- Description : sans elle, jpackage recopie le NOM dans le
+                                             champ Comment du .desktop, et l'infobulle du menu répète
+                                             « VigieChiro » au lieu de dire ce que fait le logiciel
+                                             (#2180). -->
+                                        <argument>--description</argument>
+                                        <argument>Préparer et déposer les nuits d'enregistrement de chiroptères</argument>
                                         <argument>--vendor</argument>
                                         <!-- Éditeur du produit, affiché dans les propriétés de
                                              l'installeur Windows et les métadonnées du paquet
@@ -789,6 +795,44 @@
              macOS, d'où l'activation par OS). L'exécution `jpackage` (sans phase ni goals propres)
              se fusionne avec celle du profil `installer` ; combine.children=append ajoute ces deux
              arguments à la fin de la liste. Inerte hors profil installer (rien à empaqueter). -->
+        <!-- Profil jpackage-linux : activé automatiquement sous Linux, pour donner à l'entrée de
+             menu une catégorie VALIDE. Sans cette option, jpackage écrit `Categories=Unknown` dans le
+             .desktop du paquet : valeur que `desktop-file-validate` refuse, et qui range l'application
+             nulle part dans le menu des environnements de bureau (#2180, trouvé en empaquetant le
+             Flatpak, qui échouait sur ce fichier).
+             L'option linux-app-category est autre chose : c'est la Section du paquet Debian, pas
+             la catégorie du menu. Les deux sont renseignées, elles ne se remplacent pas.
+             Déclaré après le profil `installer`, dont il complète les arguments. -->
+        <profile>
+            <id>jpackage-linux</id>
+            <activation>
+                <os>
+                    <name>Linux</name>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <configuration>
+                                    <arguments combine.children="append">
+                                        <argument>--linux-menu-group</argument>
+                                        <argument>Science;Biology;</argument>
+                                        <argument>--linux-app-category</argument>
+                                        <argument>science</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
         <!-- Profil jpackage-windows : activé automatiquement sous Windows, pour n'y changer que le
              format d'icône. Windows exige un ICO (et non un PNG), sans quoi jpackage échoue.
              Déclaré après le profil `installer`, dont il remplace la propriété. Inerte hors profil
