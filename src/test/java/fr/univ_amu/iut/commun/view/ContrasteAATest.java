@@ -29,13 +29,22 @@ import org.junit.jupiter.api.Test;
 /// se voit ni à la compilation ni à l'exécution sur la machine qui l'écrit, c'est justement pourquoi
 /// il a besoin d'un test.*
 ///
-/// ## Pourquoi un cliquet et non une exigence sèche
+/// ## Un cliquet qui a fini de cliqueter
 ///
-/// **Trois jetons échouent aujourd'hui.** Exiger la conformité tout de suite rendrait la suite rouge
-/// sans que personne n'ait rien cassé, et le test serait désactivé avant d'avoir servi. On fixe donc
-/// l'état actuel : toute **nouvelle** violation échoue, et chaque correction se solde en retirant sa
-/// ligne de [#SOUS_LE_SEUIL_AA]. C'est le geste qui rend le progrès visible, comme pour la dette de
-/// fixtures.
+/// Trois jetons échouaient quand ce test a été écrit. Exiger la conformité d'un coup aurait rendu la
+/// suite rouge sans que personne n'ait rien cassé, et le test aurait été désactivé avant d'avoir
+/// servi : on a donc figé l'état, chaque correction se soldant en retirant sa ligne de
+/// [#SOUS_LE_SEUIL_AA].
+///
+/// **La liste est vide depuis #2115.** Le cliquet est devenu une exigence sèche, ce qui était son but :
+/// il n'autorise plus aucune violation, et la mécanique de dette ne reste que pour le jour où une
+/// correction demanderait à nouveau plusieurs étapes.
+///
+/// ## Deux seuils, et pourquoi le second n'est pas une porte de sortie
+///
+/// WCAG demande 4,5:1 pour du petit texte et 3:1 pour un **élément d'interface**. Un jeton ne bénéficie
+/// du second qu'à la condition de **n'habiller aucun texte** — c'est ce qui a fait dédoubler l'ambre en
+/// #2115 plutôt que de le déclarer « icône » pour s'épargner l'assombrissement.
 ///
 /// ## Ce qu'il couvre, et ce qu'il ne couvre pas
 ///
@@ -51,6 +60,14 @@ class ContrasteAATest {
     /// de l'application est à 12 ou 13px : c'est ce seuil qui s'applique.
     private static final double SEUIL_AA = 4.5;
 
+    /// Seuil WCAG AA pour un **élément d'interface** — icône, trait, bordure porteuse de sens. Il est
+    /// plus bas parce qu'une forme se distingue à moins de contraste qu'une lettre.
+    ///
+    /// Il n'est pas une facilité : un jeton ne s'y range que s'il **n'habille plus aucun texte**. C'est
+    /// le cas de `-couleur-avertissement` depuis #2115, où l'ambre a été dédoublé — l'icône garde la
+    /// teinte qui la fait repérer, le texte prend `-couleur-avertissement-texte`, plus sombre.
+    private static final double SEUIL_AA_ELEMENT = 3.0;
+
     /// Couples texte / fond **attestés dans les feuilles de style**, pas imaginés. Chaque entrée
     /// renvoie à un usage réel, cité en commentaire.
     private static final Map<String, String> COUPLES = new LinkedHashMap<>();
@@ -64,8 +81,8 @@ class ContrasteAATest {
                 "-couleur-texte-discret sur -couleur-primaire-voile", "-couleur-texte-discret|-couleur-primaire-voile");
         // diagnostic.css:25, sites.css:204/216, design.css:599 — libellés d'état en vert sur fond clair.
         COUPLES.put("-couleur-succes sur -couleur-fond", "-couleur-succes|-couleur-fond");
-        // diagnostic.css:31 — « GPS absent », en ambre sur fond clair.
-        COUPLES.put("-couleur-avertissement sur -couleur-fond", "-couleur-avertissement|-couleur-fond");
+        // diagnostic.css:31, design.css:960 — « GPS absent », libellé d'avertissement sur fond clair.
+        COUPLES.put("-couleur-avertissement-texte sur -couleur-fond", "-couleur-avertissement-texte|-couleur-fond");
         COUPLES.put("-couleur-danger sur -couleur-fond", "-couleur-danger|-couleur-fond");
         COUPLES.put("-couleur-texte-clair sur -couleur-primaire", "-couleur-texte-clair|-couleur-primaire");
         COUPLES.put("-couleur-texte-clair sur -couleur-nuit", "-couleur-texte-clair|-couleur-nuit");
@@ -76,15 +93,24 @@ class ContrasteAATest {
         COUPLES.put("badge info", "-badge-info-texte|-badge-info-fond");
     }
 
-    /// **La dette, et elle ne peut que rétrécir.** Quatre couples au moment d'écrire ce test ; **deux
-    /// soldés par #2102**, qui a assombri `-couleur-texte-discret` de cinq points — un seul jeton
-    /// portait les deux lignes. Retirer une ligne d'ici est le geste qui solde une correction.
+    /// Couples **icône / fond**, vérifiés à [#SEUIL_AA_ELEMENT]. Un jeton n'entre ici que s'il
+    /// n'habille plus aucun texte : sinon c'est le seuil du texte qui s'applique, et l'y ranger
+    /// reviendrait à se donner raison en changeant la règle.
+    private static final Map<String, String> COUPLES_ELEMENT = new LinkedHashMap<>();
+
+    static {
+        // diagnostic.css:32, design.css:961 — le triangle d'avertissement, seul usage restant du jeton.
+        COUPLES_ELEMENT.put("-couleur-avertissement (icône) sur -couleur-fond", "-couleur-avertissement|-couleur-fond");
+    }
+
+    /// **La dette, et elle est soldée.** Quatre couples au moment d'écrire ce test, zéro aujourd'hui :
+    /// deux par #2102 (`-couleur-texte-discret`, un seul jeton portait les deux lignes) et deux par
+    /// #2115 (le vert et l'ambre). Une liste vide est le seul état où ce test dit ce qu'il promet.
     ///
-    /// Les deux qui restent sont d'une autre nature : `-couleur-succes` et `-couleur-avertissement`
-    /// sont des jetons **sémantiques**, dont l'assombrissement change la lecture (un vert « succès »
-    /// plus sombre se rapproche du texte normal). Ils demandent un arbitrage, pas un calcul.
-    private static final List<String> SOUS_LE_SEUIL_AA =
-            List.of("-couleur-succes sur -couleur-fond", "-couleur-avertissement sur -couleur-fond");
+    /// **Elle doit le rester.** Toute couleur qui repasserait sous son seuil allonge cette liste et
+    /// fait échouer ce test : la corriger dans `palette.css` est la réponse, l'inscrire ici n'en est
+    /// pas une.
+    private static final List<String> SOUS_LE_SEUIL_AA = List.of();
 
     @Test
     @DisplayName("La dette de contraste ne peut que rétrécir : aucun nouveau couple sous le seuil AA")
@@ -118,6 +144,32 @@ class ContrasteAATest {
                         Ce test ne voit que les JETONS. Les 218 couleurs littérales des feuilles de
                         features (#1974) définissent des couples qu'il ne mesure pas.
                         """).containsExactlyInAnyOrderElementsOf(SOUS_LE_SEUIL_AA);
+    }
+
+    @Test
+    @DisplayName("Une couleur qui n'habille que des icônes tient son propre seuil (3:1)")
+    void les_elements_d_interface_tiennent_leur_seuil() {
+        Map<String, String> jetons = jetonsDeLaPalette();
+        List<String> sousLeSeuil = new ArrayList<>();
+
+        for (Map.Entry<String, String> couple : COUPLES_ELEMENT.entrySet()) {
+            String[] cotes = couple.getValue().split("\\|");
+            if (contraste(resoudre(jetons, cotes[0]), resoudre(jetons, cotes[1])) < SEUIL_AA_ELEMENT) {
+                sousLeSeuil.add(couple.getKey());
+            }
+        }
+
+        assertThat(sousLeSeuil).as("""
+                        Une couleur d'élément d'interface est passée sous 3:1.
+
+                        Ces jetons bénéficient d'un seuil plus bas que le texte parce qu'ils
+                        n'habillent AUCUN texte : une forme se distingue à moins de contraste qu'une
+                        lettre. Le jour où l'un d'eux recolore un libellé, il repasse sous le seuil
+                        du texte — déplacez-le dans COUPLES plutôt que de garder l'exemption.
+
+                        C'est le sens du dédoublement de l'ambre (#2115) : l'icône garde la teinte
+                        qui la fait repérer, le texte prend un jeton plus sombre.
+                        """).isEmpty();
     }
 
     @Test

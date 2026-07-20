@@ -26,7 +26,9 @@
     -couleur-primaire-fond: #c5cae9;
     -couleur-primaire-voile: #eef0fa;
     /* Vert succès : couleur sémantique (validation / actions positives). */
-    -couleur-succes: #1e8449;
+    /* #1b8146 et pas plus clair (#2115) : a #1e8449 ce vert etait a 4,36:1 sur -couleur-fond,
+       pour un seuil AA de 4,5. Trois points de moins par canal suffisent (4,54) - imperceptibles. */
+    -couleur-succes: #1b8146;
     -couleur-nuit: #1a237e;
     -couleur-fond: #f5f6f8;
     -couleur-texte: #2c3e50;
@@ -39,7 +41,14 @@
        ContrasteAATest garde la règle. */
     -couleur-texte-discret: #656e78;
     /* Statut sémantique (jusqu'ici en littéral dans les feuilles des features). */
+    /* Ambre d'avertissement, DEDOUBLE (#2115). Le jeton d'origine est a 3,40:1 sur -couleur-fond :
+       conforme pour une icone (WCAG demande 3:1 pour un element d'interface), insuffisant pour du
+       petit texte (4,5). L'assombrir jusqu'a 4,5 le faisait virer au brun et lui faisait perdre ce
+       qui le fait reperer du coin de l'oeil - arbitre a la capture.
+       L'icone garde donc sa teinte, le texte prend la sienne. Meme partage que les pastilles
+       (-badge-avertissement-texte / -badge-avertissement-fond) plus bas dans ce fichier. */
     -couleur-avertissement: #b9770e;
+    -couleur-avertissement-texte: #a36100;
     -couleur-danger: #a93226;
     -couleur-neutre: #6a737d;
 
