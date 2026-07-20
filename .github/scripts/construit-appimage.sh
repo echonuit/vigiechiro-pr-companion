@@ -22,6 +22,17 @@ if [ ! -d "${SOURCE}" ]; then
     exit 1
 fi
 
+# appimagetool valide le .desktop avec `desktop-file-validate` et s'arrête net s'il ne le trouve pas,
+# sur un message qui ne dit pas quel paquet installer. Le contrôle est fait ICI pour que l'échec
+# nomme sa solution - et parce que la dépendance est invisible autrement : l'outil est présent sur la
+# plupart des postes de développement (paquet desktop-file-utils, tiré par les environnements de
+# bureau) et absent des runners GitHub. C'est exactement l'écart qui a fait échouer la release
+# v2.21.0 alors que la construction passait en local.
+if ! command -v desktop-file-validate >/dev/null; then
+    echo "::error::desktop-file-validate est requis (paquet desktop-file-utils)" >&2
+    exit 1
+fi
+
 # 1. L'AppDir. La convention AppImage veut l'application sous usr/, et à la RACINE de l'AppDir :
 #    AppRun (le point d'entrée), le .desktop et l'icône nommée d'après la clé Icon= du .desktop.
 rm -rf "${APPDIR}"

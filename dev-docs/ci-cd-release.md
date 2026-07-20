@@ -153,6 +153,20 @@ L'étape est placée **avant** l'empaquetage de l'archive portable, qui supprime
 il lui faut FUSE pour se monter, ce dont les conteneurs CI ne disposent pas toujours, avec un échec
 obscur à la clé.
 
+!!! danger "La dépendance invisible : `desktop-file-validate`"
+    appimagetool valide le `.desktop` avec cet outil et **s'arrête** s'il ne le trouve pas. Il est
+    fourni par le paquet **`desktop-file-utils`**, présent sur la plupart des postes de développement
+    (les environnements de bureau le tirent) et **absent des runners GitHub**.
+
+    C'est exactement le genre d'écart qu'une vérification locale ne peut pas voir : la construction
+    passait ici et **a fait échouer la release v2.21.0**, laissant la Release en brouillon. Le
+    workflow l'installe donc explicitement, et le script **contrôle sa présence** pour que l'échec
+    nomme le paquet au lieu de renvoyer le message d'appimagetool, qui ne le dit pas.
+
+    Leçon plus générale pour ce dépôt : un outil de build appelé **indirectement** par un autre outil
+    est une dépendance qu'il faut déclarer, parce que rien ne la rend visible tant que le poste qui
+    construit la possède.
+
 ### Les empreintes SHA-256 (#2107)
 
 Les installeurs ne sont **pas signés**. Sans empreinte, un utilisateur n'a donc **aucun moyen** de

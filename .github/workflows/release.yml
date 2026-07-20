@@ -146,6 +146,11 @@ jobs:
         if: matrix.portable == 'linux'
         shell: bash
         run: |
+          # desktop-file-utils fournit `desktop-file-validate`, dont appimagetool se sert pour valider
+          # le .desktop. Absent des runners GitHub, alors qu'il est présent sur la plupart des postes
+          # de développement (tiré par les environnements de bureau) : d'où une construction qui
+          # passait en local et échouait ici, sur la release v2.21.0.
+          sudo apt-get update && sudo apt-get install -y desktop-file-utils
           TAG="${{ needs.release.outputs.tag }}"
           chmod +x .github/scripts/construit-appimage.sh
           ./.github/scripts/construit-appimage.sh "${TAG#v}" x86_64
