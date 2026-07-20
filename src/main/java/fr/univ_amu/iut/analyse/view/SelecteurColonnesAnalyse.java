@@ -12,6 +12,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.TableView;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Sélecteur de colonnes de l'écran « Espèces & observations » (EPIC #914, #994), **extrait** du controller
 /// (God-class) pour concentrer le câblage des colonnes de ses **trois** tables : l'inventaire par espèce,
@@ -70,7 +71,7 @@ final class SelecteurColonnesAnalyse {
         GestionnaireColonnes.installerClicDroit(tableCarres, colonnesCarres);
         GestionnaireColonnes.installerClicDroit(
                 tableObservations, colonnesObservations, itemsObservations.toArray(MenuItem[]::new));
-        MenuItem itemColonnes = new MenuItem("Colonnes…");
+        MenuItem itemColonnes = new MenuItem("Colonnes…", new FontIcon(GestionnaireColonnes.ICONE_COLONNES));
         itemColonnes.setOnAction(e -> ouvrirMaitre());
         // Séparateur seulement si le ☰ porte déjà des actions (#995) : ici il est dédié aux colonnes, donc pas
         // de trait parasite en tête.

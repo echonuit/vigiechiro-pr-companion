@@ -51,6 +51,10 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// écraser.
 public final class GestionnaireColonnes {
 
+    /// Icône de l'entrée « Colonnes… », partagée par le socle et le sélecteur de l'analyse : deux
+    /// entrées de même libellé qui n'auraient pas la même icône rétabliraient l'écart qu'on corrige.
+    public static final String ICONE_COLONNES = "fas-table";
+
     private GestionnaireColonnes() {}
 
     /// Une colonne proposée au panneau, avec son **libellé lisible** (les colonnes-icônes ont un en-tête
@@ -111,7 +115,7 @@ public final class GestionnaireColonnes {
     /// Un item « Colonnes… » qui ouvre le panneau ancré sous `ancre` (la table pour le clic droit, le ☰
     /// pour le menu).
     private static MenuItem itemColonnes(TableView<?> table, List<Colonne> colonnes, Node ancre) {
-        MenuItem item = new MenuItem("Colonnes…");
+        MenuItem item = new MenuItem("Colonnes…", new FontIcon(ICONE_COLONNES));
         item.setOnAction(e -> ouvrir(table, colonnes, ancre));
         return item;
     }
