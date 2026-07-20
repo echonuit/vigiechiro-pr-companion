@@ -50,7 +50,8 @@ class OngletReglagesFonctionnalitesRenduTest {
         VBox formulaire = (VBox) ControleursReglages.formulaire(onglet, reactifs);
 
         // 1re ligne : la case de la feature (cochée = active par défaut).
-        CheckBox caseFeature = (CheckBox) formulaire.getChildren().get(0);
+        // Par type, pas par position : chaque réglage est enveloppé dans sa ligne depuis #2085.
+        CheckBox caseFeature = (CheckBox) formulaire.lookup(".check-box");
         assertThat(caseFeature.getText()).isEqualTo("Import depuis Vigie-Chiro");
         assertThat(caseFeature.isSelected()).isTrue();
 

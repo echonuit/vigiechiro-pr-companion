@@ -56,6 +56,14 @@ public final class CaptureEcranReglages {
         System.exit(0);
     }
 
+    /// Rend un onglet nommé dans son propre PNG.
+    private static void rendreOnglet(Injector injecteur, String titre, Path fichier) throws IOException {
+        Parent ecran = chargerFxml(injecteur, ECRAN);
+        Scene scene = new Scene(ecran, 760, 520);
+        selectionnerOnglet(ecran, titre);
+        ApercuFx.enregistrerPng(scene, fichier);
+    }
+
     /// Sélectionne l'onglet portant ce titre, pour qu'un aperçu montre autre chose que le premier.
     private static void selectionnerOnglet(Parent ecran, String titre) {
         TabPane onglets = (TabPane) ecran.lookup("#onglets");
@@ -83,10 +91,10 @@ public final class CaptureEcranReglages {
         // onglets n'étaient donc **documentés nulle part** (#2061). On rend aussi l'onglet « Import »,
         // dont l'option de conservation des originaux porte une conséquence que l'utilisateur doit
         // pouvoir lire avant de l'activer.
-        Parent ecranImport = chargerFxml(injecteur, ECRAN);
-        Scene sceneImport = new Scene(ecranImport, 760, 520);
-        selectionnerOnglet(ecranImport, "Import");
-        ApercuFx.enregistrerPng(sceneImport, sortie.resolve("apercu-reglages-import.png"));
+        // Les onglets qui portent une aide : c'est elle qui dit ce que le réglage engage (#2085), et un
+        // aperçu qui ne montre que le premier onglet ne la documente nulle part.
+        rendreOnglet(injecteur, "Import", sortie.resolve("apercu-reglages-import.png"));
+        rendreOnglet(injecteur, "Dépôt", sortie.resolve("apercu-reglages-depot.png"));
 
         System.out.println("Apercu des reglages ecrit dans " + sortie.toAbsolutePath());
     }

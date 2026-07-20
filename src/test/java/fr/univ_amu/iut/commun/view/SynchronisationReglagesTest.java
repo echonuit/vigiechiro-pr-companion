@@ -13,7 +13,6 @@ import fr.univ_amu.iut.commun.viewmodel.ReglagesReactifs;
 import java.nio.file.Path;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.CheckMenuItem;
-import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -51,9 +50,10 @@ class SynchronisationReglagesTest {
         item.selectedProperty().bindBidirectional(reactifs.proprieteBooleen(PreferenceSourceEspece.CLE, false));
 
         // Case de l'onglet « Général » : bâtie comme par l'écran Réglages (même réactif, même clé).
-        CheckBox caseOnglet = (CheckBox) ((VBox) ControleursReglages.formulaire(new OngletReglagesGeneral(), reactifs))
-                .getChildren()
-                .get(0);
+        // Recherche par TYPE plutôt que par position : depuis #2085 chaque réglage est enveloppé dans sa
+        // ligne (contrôle + aide visible), et un test qui compte les enfants casse au prochain habillage.
+        CheckBox caseOnglet = (CheckBox) ControleursReglages.formulaire(new OngletReglagesGeneral(), reactifs)
+                .lookup(".check-box");
 
         assertThat(item.isSelected()).isFalse();
         assertThat(caseOnglet.isSelected()).isFalse();
