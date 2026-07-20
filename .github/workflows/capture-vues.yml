@@ -26,7 +26,8 @@ permissions:
   pull-requests: write
   # `checks: write` sert à publier le check `titre` sur la PR d'aperçus : GitHub ne déclenche
   # aucun workflow pour un événement produit avec le GITHUB_TOKEN, donc titre-pr.yml ne peut
-  # pas s'exécuter ici. Cf. l'étape « Valider le titre » plus bas.
+  # pas s'exécuter ici et cette PR ne serait validée par rien. Cf. l'étape « Valider le titre »
+  # plus bas, et l'ADR 0041.
   checks: write
 
 # Évite que deux régénérations de main (pushes rapprochés) se marchent dessus. Le groupe inclut la
@@ -89,10 +90,13 @@ jobs:
 
           # Valider le titre, et publier le résultat comme check `titre`.
           #
-          # `titre` est un check REQUIS (ruleset `titre-de-pr-conforme`), mais titre-pr.yml ne peut
-          # pas s'exécuter sur cette PR : GitHub ne déclenche aucun workflow pour un événement
-          # produit avec le GITHUB_TOKEN (garde-fou anti-récursion). Un check requis qui ne rapporte
-          # jamais bloque la fusion indéfiniment - c'est exactement ce qui est arrivé à la PR #2124.
+          # titre-pr.yml ne peut PAS s'exécuter sur cette PR : GitHub ne déclenche aucun workflow
+          # pour un événement produit avec le GITHUB_TOKEN (garde-fou anti-récursion). Sans ce
+          # passage, une PR d'aperçus ne serait donc validée par RIEN.
+          #
+          # Ce mécanisme est né d'un besoin plus dur - `titre` était alors un check REQUIS, et son
+          # silence a bloqué la PR #2124 indéfiniment. Le contrôle est depuis redevenu informatif
+          # (cf. ADR 0041), mais on le garde : il reste le seul regard porté sur ces titres.
           #
           # On exécute donc ICI la MÊME validation, avec le MÊME script : seul le transport du
           # résultat change, le contrôle reste réel. Publier un succès en dur reviendrait à faire

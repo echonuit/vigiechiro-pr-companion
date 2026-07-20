@@ -102,6 +102,7 @@ nav:
     - 0038 · Quatre niveaux de sévérité: decisions/0038-l-echelle-de-severite-a-quatre-niveaux.md
     - 0039 · Une barre de statut est neutre: decisions/0039-une-barre-de-statut-est-neutre.md
     - 0040 · Le sujet de commit est une syntaxe: decisions/0040-le-sujet-de-commit-est-une-syntaxe.md
+    - 0041 · Un check requis gouverne la branche: decisions/0041-un-check-requis-gouverne-la-branche.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
