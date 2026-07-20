@@ -37,6 +37,7 @@ import picocli.CommandLine.Spec;
             ListerPassages.class,
             StatutPassage.class,
             Diagnostiquer.class,
+            VerifierMiseAJour.class,
             Auditer.class,
             RetroEmpreintes.class,
             Archiver.class,
