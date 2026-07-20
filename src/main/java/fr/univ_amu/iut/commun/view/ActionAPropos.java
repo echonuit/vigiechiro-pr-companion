@@ -23,6 +23,19 @@ import javafx.stage.Window;
 /// alors couverte nulle part (cf. ADR 0010).
 public final class ActionAPropos implements ActionMenu {
 
+    /// Mentions conventionnelles d'un « À propos ». Elles vivent ici plutôt que dans le manifeste :
+    /// ce sont des constantes de produit, pas des propriétés d'empaquetage, et les inscrire au
+    /// manifeste ferait dépendre l'affichage d'un jar - donc les rendrait vides en développement,
+    /// exactement là où on relit ce dialogue le plus souvent.
+    private static final String EDITEUR = "Sébastien Nedjar";
+
+    /// GPLv3 : conséquence de la dépendance Gluon Maps (carte interactive), elle-même GPL. La citer
+    /// n'est pas une politesse - la licence impose que le destinataire d'un binaire sache sous
+    /// quelles conditions il le reçoit et où en obtenir les sources.
+    private static final String LICENCE = "GNU General Public License v3.0";
+
+    private static final String DEPOT = "https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion";
+
     /// Fenêtre propriétaire du dialogue, posée au clic : l'action la lit **paresseusement**, car elle
     /// n'existe pas encore quand l'entrée de menu est construite (même montage qu'[ActionPurger]).
     private Window proprietaire;
@@ -60,7 +73,10 @@ public final class ActionAPropos implements ActionMenu {
 
     @Override
     public String iconeLiteral() {
-        return "fas-circle-info";
+        // `fas-info-circle` et non `fas-circle-info` : le second est le nom FontAwesome **6**, et le
+        // dépôt embarque le pack Ikonli FontAwesome **5**. Un nom absent du pack ne fait pas rougir
+        // la compilation - il lève au chargement du FXML, donc à l'ouverture de l'écran.
+        return "fas-info-circle";
     }
 
     @Override
@@ -69,12 +85,22 @@ public final class ActionAPropos implements ActionMenu {
         notificateur.notifier(NiveauNotification.INFORMATION, "VigieChiro - compagnon PR", """
                 Version : %s
 
+                Compagnon du protocole Vigie-Chiro : préparation et dépôt des nuits
+                d'enregistrement acoustique de chiroptères.
+
+                %s
+                Licence : %s
+                Code source : %s
+
                 Java %s
                 Système : %s (%s)
                 Dossier de travail : %s
 
-                Ces informations sont utiles pour signaler une anomalie.""".formatted(
+                Les quatre dernières lignes sont utiles pour signaler une anomalie.""".formatted(
                         version.libelle(),
+                        EDITEUR,
+                        LICENCE,
+                        DEPOT,
                         System.getProperty("java.version"),
                         System.getProperty("os.name"),
                         System.getProperty("os.arch"),
