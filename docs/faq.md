@@ -1,6 +1,6 @@
 # FAQ et dépannage
 
-Les questions les plus fréquentes lors de l'utilisation de VigieChiro.
+Les questions les plus fréquentes lors de l'utilisation de VigieChiro PR Companion.
 
 ## Installation et lancement
 

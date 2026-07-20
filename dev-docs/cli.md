@@ -1,6 +1,6 @@
 # Interface en ligne de commande (CLI)
 
-À côté de l'IHM JavaFX, VigieChiro expose un **point d'entrée sans interface graphique** :
+À côté de l'IHM JavaFX, VigieChiro PR Companion expose un **point d'entrée sans interface graphique** :
 [`fr.univ_amu.iut.cli.Cli`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/cli/Cli.java).
 Il répond au besoin de **scriptabilité** (parcours A10 : enchaîner des imports/exports sans clics,
 pour les utilisateurs avancés). La CLI **n'a pas de logique propre** : elle orchestre les **services

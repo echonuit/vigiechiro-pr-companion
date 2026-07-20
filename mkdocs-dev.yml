@@ -7,7 +7,7 @@
 #
 # Build :   mkdocs build -f mkdocs-dev.yml --strict
 # Aperçu :  mkdocs serve -f mkdocs-dev.yml
-site_name: VigieChiro · Doc développeur
+site_name: VigieChiro PR Companion · Doc développeur
 site_description: >-
   Documentation développeur de VigieChiro PR Companion : architecture, conventions,
   et comment contribuer au code.

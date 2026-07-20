@@ -1,6 +1,6 @@
 # 🙌 Remerciements
 
-Le projet **Vigie-Chiro PR Companion** a été construit dans le cadre de la **SAÉ 2.01** du **BUT Informatique** de l'**IUT d'Aix-Marseille** (promo 2026).
+Le projet **VigieChiro PR Companion** a été construit dans le cadre de la **SAÉ 2.01** du **BUT Informatique** de l'**IUT d'Aix-Marseille** (promo 2026).
 
 Il est le fruit du travail de **21 équipes** (**92 étudiantes et étudiants**) qui ont contribué au fil du semestre : conception, développement de l'interface, tests, revues de code et gestion de projet.
 

@@ -6,7 +6,7 @@
 
     <groupId>fr.univ_amu.iut</groupId>
     <artifactId>vigiechiro</artifactId>
-    <name>SAÉ 2.01 - VigieChiro PR Companion</name>
+    <name>VigieChiro PR Companion</name>
 
     <packaging>jar</packaging>
     <version>1.0-SNAPSHOT</version>

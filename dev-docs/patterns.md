@@ -24,7 +24,7 @@ rend le code **intestable** (il faut une fenêtre) et **non réutilisable** (tou
 logique de présentation), la `view` (FXML + controller) qui **observe** le viewmodel par *data
 binding*. Le flux de dépendances va de la vue vers le modèle, jamais l'inverse.
 
-**Dans VigieChiro.** Chaque feature suit ce découpage. La vue ne fait que **lier** des contrôles à des
+**Dans cette application.** Chaque feature suit ce découpage. La vue ne fait que **lier** des contrôles à des
 propriétés ; elle ne calcule rien et ne touche pas la base.
 
 ```mermaid
@@ -59,7 +59,7 @@ accidentel d'une instance et aux bugs d'égalité (comparaison par référence).
 **La solution.** Modéliser le domaine en **`record` immuables** : champs finaux, égalité **par
 valeur**, aucun setter. Pour « modifier », on **crée** une nouvelle instance.
 
-**Dans VigieChiro.** Le domaine est quasi entièrement en records (**≈ 70** : `Passage`, `Site`,
+**Dans cette application.** Le domaine est quasi entièrement en records (**≈ 70** : `Passage`, `Site`,
 `SequenceDEcoute`, `Observation`…). Les DAO **construisent** ces records ligne par ligne via un
 `RowMapper`, et les ViewModels les exposent dans des `ObservableList`.
 
@@ -80,7 +80,7 @@ transition locale. Le statut du domaine continue de dire ce que **nous** avons f
 dit ce que **l'autre** en a fait. Et comme une lecture réseau coûte cher, on **persiste le dernier
 relevé** avec sa date : l'écran affiche alors un souvenir, en le disant.
 
-**Dans VigieChiro.** `EtatTraitement` (EPIC #1259) suit l'analyse Tadarida côté serveur (`PLANIFIE →
+**Dans cette application.** `EtatTraitement` (EPIC #1259) suit l'analyse Tadarida côté serveur (`PLANIFIE →
 EN_COURS → FINI/ERREUR/RETRY`) **sans** étendre `StatutWorkflow` : une relance ramène `FINI` à
 `PLANIFIE`, si bien qu'un statut local « Traité » deviendrait faux. `DEPOSE` reste terminal (« ma part
 est faite »). Le dernier relevé est mis en cache (`participation_traitement`), et `SuiviTraitement` est
@@ -134,7 +134,7 @@ Le verdict est un type scellé (`VerdictIdentite` = `Acceptee(NiveauConfiance, p
 d'indices », et le **niveau de confiance minimal** atteint remonte jusqu'au rapport, donc jusqu'à
 l'utilisateur.
 
-**Dans VigieChiro** (#1309, consommé par #1302 et #1305). `VerificationIdentiteAudio` porte la cascade ;
+**Dans cette application** (#1309, consommé par #1302 et #1305). `VerificationIdentiteAudio` porte la cascade ;
 `ServiceReactivationPassage` ne copie **que** les fichiers acceptés, laisse les divergents de côté et les
 **énumère** ; un passage sans empreinte reste donc réactivable, mais par la preuve acoustique, pas par la
 confiance dans un nom.
@@ -187,7 +187,7 @@ personne n'a pensé ». Le comportement commun vit dans les variantes par **over
 `transformer`, `lireAvec`, `puis`, `echec`), jamais par `switch (this)`. Là où le silence reste le
 comportement **voulu**, c'est l'appelant qui le choisit, explicitement : `enOptionnel()`.
 
-**Dans VigieChiro** (#1284). `TransportVigieChiro` émet et trie ; `ClientVigieChiro` nomme les
+**Dans cette application** (#1284). `TransportVigieChiro` émet et trie ; `ClientVigieChiro` nomme les
 endpoints ; `PaginationEve` est **tout-ou-rien** (l'issue de la page fautive, jamais un préfixe).
 Conséquences : la modale de connexion distingue « jeton refusé (401) » de « plateforme injoignable » ;
 l'import et le suivi du traitement disent pourquoi ; la **garde anti-purge** des rapprocheurs est
@@ -226,7 +226,7 @@ public sealed interface ResultatReset {
 L'IHM **affiche** `enClair()`, la CLI **affiche** `enClair()` et sort sur `codeSortie()`. Aucune des deux
 ne traduit un état en phrase : la parité CLI ↔ IHM est **structurelle**, pas maintenue à la main.
 
-**Dans VigieChiro.** `VerdictCarre` (#733 : `Concorde` / `Diverge` / `HorsGrille` / `Indisponible` — dont
+**Dans cette application.** `VerdictCarre` (#733 : `Concorde` / `Diverge` / `HorsGrille` / `Indisponible` — dont
 le message **vide** exprime le silence hors ligne) et `ResultatReset` (#1419). Même famille que
 [l'issue d'appel triée](#issue-dappel-triee-le-transport-ne-parle-plus-par-silence), appliquée aux
 **opérations locales** plutôt qu'au transport : exhaustivité par le compilateur, comportement par
@@ -302,7 +302,7 @@ même fonctionnalité dans tout le projet : pour modifier un écran, on touche p
 **La solution.** Regrouper le code **par fonctionnalité** : `sites/`, `passage/`… chacun contenant ses
 4 couches. Une feature devient une **tranche verticale** autonome.
 
-**Dans VigieChiro.** Les 10 features sont des paquets autonomes ; le socle `commun/` porte le partagé
+**Dans cette application.** Les 10 features sont des paquets autonomes ; le socle `commun/` porte le partagé
 (chrome, persistance, DI). On ouvre, modifie ou supprime une feature sans naviguer ailleurs.
 
 **Principes.** **Forte cohésion / faible couplage** ; **OCP** à l'échelle du produit (ajouter une
@@ -319,7 +319,7 @@ impossible à substituer en test, et le câblage est dispersé partout.
 **La solution.** Les objets **reçoivent** leurs dépendances (constructeur), et **un seul** endroit, la
 *Composition Root*, assemble le graphe complet.
 
-**Dans VigieChiro.** [`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
+**Dans cette application.** [`RacineInjecteur`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
 installe le socle + les 10 modules de feature (Guice). Même les controllers FXML sont injectés (cf.
 *Factory* plus bas). En test, on substitue une base jetable sans changer le code de production.
 
@@ -347,7 +347,7 @@ historiques).
 **La solution.** Plutôt que le Singleton « maison » (constructeur privé + champ statique, difficile à
 tester et à substituer), on **délègue l'unicité au conteneur** : `@Singleton` Guice.
 
-**Dans VigieChiro.** `SourceDeDonnees`, `Navigateur`, les `Navigation*` et la **plupart des providers
+**Dans cette application.** `SourceDeDonnees`, `Navigateur`, les `Navigation*` et la **plupart des providers
 de DAO et de services** des features sont `@Singleton` (~70 bindings) : une seule instance par
 injecteur, mais **toujours injectée** (donc remplaçable en test).
 
@@ -365,7 +365,7 @@ ArchUnit l'interdit).
 **La solution.** Publier une **interface dans le socle**, l'implémenter dans la feature cible :
 l'appelant dépend de l'**abstraction**, jamais de l'implémentation. La dépendance est **inversée**.
 
-**Dans VigieChiro.** [`OuvrirPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/OuvrirPassage.java)
+**Dans cette application.** [`OuvrirPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/view/OuvrirPassage.java)
 (socle) est implémenté par
 [`NavigationPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java)
 (feature `passage`) et **bindé** par `PassageModule`. `sites` injecte `OuvrirPassage`.
@@ -398,7 +398,7 @@ quels chez chaque appelant, ils seraient verbeux et fragiles.
 **La solution.** Une **façade** par feature expose une opération **simple** (`ouvrir(...)`) qui
 orchestre ces gestes en interne.
 
-**Dans VigieChiro.** [`NavigationPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java)
+**Dans cette application.** [`NavigationPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/view/NavigationPassage.java)
 (et ses homologues `Navigation*`) implémente le contrat `Ouvrir*` en **cachant** le `FXMLLoader` et le
 `Navigateur` : l'appelant ne voit qu'`ouvrir(idPassage, contexte)`. Le `Navigateur` lui-même est une
 façade sur la zone centrale du chrome + l'historique.
@@ -417,7 +417,7 @@ bord pour d'autres). Si le `MainController` connaissait chacune, ajouter une con
 **La solution.** Le socle déclare un `Set<T>` que **les features intéressées alimentent** (multibinding
 Guice), sans que le socle connaisse les contributeurs. Il injecte l'ensemble et l'agrège.
 
-**Dans VigieChiro.** Quatre points d'extension suivent ce patron, chacun avec un helper du DSL
+**Dans cette application.** Quatre points d'extension suivent ce patron, chacun avec un helper du DSL
 [`ModuleDeFeature`](injection.md#ce-que-publie-un-module-de-feature) : `ActiviteAccueil` (carte
 d'accueil, `activite(...)`), `IndicateurAccueil` (compteur, `indicateur(...)`), `OngletReglages`
 (onglet de l'écran Réglages, `ongletReglages(...)`) et `ActionMenu` (entrée du menu ☰, `actionMenu(...)`).
@@ -458,7 +458,7 @@ racine de composition** — juste un `XxxModule extends ModuleDeFeature` déclar
 **La solution.** De petites interfaces **optionnelles**, à responsabilité unique, qu'un écran
 implémente **seulement si** la capacité le concerne. Le `Navigateur` les détecte par `instanceof`.
 
-**Dans VigieChiro.**
+**Dans cette application.**
 
 | Interface (1 rôle) | Implémentée par les écrans qui… |
 |---|---|
@@ -481,7 +481,7 @@ tester, à réutiliser, et viole la séparation des couches.
 **La solution.** Isoler l'accès aux données derrière des objets dédiés ; le reste du code ignore JDBC
 et dialogue avec des **services**.
 
-**Dans VigieChiro.** Chaque entité a son DAO dans `*/model/dao/`. La règle ArchUnit `view_sans_jdbc`
+**Dans cette application.** Chaque entité a son DAO dans `*/model/dao/`. La règle ArchUnit `view_sans_jdbc`
 **interdit** à l'IHM de toucher `model.dao` ou `java.sql`.
 
 **Principes.** **SRP** (la persistance est une responsabilité à part) et **DIP** (le métier dépend
@@ -497,7 +497,7 @@ le `ResultSet`, fermer. Beaucoup de **duplication**.
 **La solution.** Une classe de base fixe le **squelette** de l'algorithme (`findAll`, `findById`,
 `delete`) et **délègue** les détails variables à des méthodes que les sous-classes remplissent.
 
-**Dans VigieChiro.** [`DaoGenerique<T, ID>`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/DaoGenerique.java)
+**Dans cette application.** [`DaoGenerique<T, ID>`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/DaoGenerique.java)
 fournit les opérations communes ; un DAO concret donne seulement `table()`, `colonneCle()` et son
 `RowMapper`.
 
@@ -531,7 +531,7 @@ séquences ?) alors que le reste est stable. Un `if/else` géant serait fragile 
 **La solution.** Encapsuler la partie variable derrière une **abstraction interchangeable**, injectée
 ou passée au client.
 
-**Dans VigieChiro.** Deux usages :
+**Dans cette application.** Deux usages :
 
 - [`RowMapper<T>`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/RowMapper.java)
   (`@FunctionalInterface`) : « transformer **une** ligne en entité » varie par DAO (souvent une
@@ -1012,7 +1012,7 @@ session » doit être **atomique** : si la 2ᵉ échoue, la 1ʳᵉ ne doit pas r
 **La solution.** Regrouper les écritures dans **une transaction** : tout réussit (commit), ou tout est
 annulé (rollback).
 
-**Dans VigieChiro.** [`UniteDeTravail`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/UniteDeTravail.java)
+**Dans cette application.** [`UniteDeTravail`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/persistence/UniteDeTravail.java)
 exécute un bloc sur **une seule connexion** :
 
 ```java
@@ -1059,7 +1059,7 @@ des widgets qu'il ne devrait pas connaître ?
 **La solution.** Le sujet (une `Property` / `ObservableList`) **notifie** ses observateurs au
 changement ; la vue **s'abonne** par *binding*. Le sujet ignore qui l'observe.
 
-**Dans VigieChiro.** Le viewmodel expose des propriétés ; la vue s'y lie. Quand l'état change, l'IHM se
+**Dans cette application.** Le viewmodel expose des propriétés ; la vue s'y lie. Quand l'état change, l'IHM se
 met à jour **toute seule** : la vue *observe*, elle ne *tire* pas. C'est le moteur de MVVM.
 
 ```mermaid
@@ -1091,7 +1091,7 @@ peuvent **pas** recevoir de dépendances injectées.
 
 **La solution.** Fournir au loader une **fabrique** qui délègue la création à Guice.
 
-**Dans VigieChiro.** `loader.setControllerFactory(injector::getInstance)` : chaque controller est
+**Dans cette application.** `loader.setControllerFactory(injector::getInstance)` : chaque controller est
 instancié **par le conteneur**, donc reçoit ses ViewModels/services par constructeur (cf.
 [`App`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/App.java)).
 Diagramme de séquence du bootstrap : [Injection](injection.md#des-controllers-fxml-injectes).
@@ -1109,7 +1109,7 @@ services serait fragile.
 **La solution.** Centraliser les **transitions autorisées** dans un objet dédié : depuis un état, une
 seule cible permise (le successeur immédiat).
 
-**Dans VigieChiro.** [`MoteurWorkflowPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/MoteurWorkflowPassage.java)
+**Dans cette application.** [`MoteurWorkflowPassage`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/MoteurWorkflowPassage.java)
 porte l'ordre et expose `suivant(...)` / `estTransitionAutorisee(...)` / `exigerTransitionAutorisee(...)`.
 La logique est **isolée** de l'énum
 [`StatutWorkflow`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/StatutWorkflow.java)

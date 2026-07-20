@@ -1,6 +1,6 @@
 # Raccourcis clavier
 
-VigieChiro se pilote aussi bien au clavier qu'à la souris. Cette page récapitule les raccourcis
+VigieChiro PR Companion se pilote aussi bien au clavier qu'à la souris. Cette page récapitule les raccourcis
 disponibles : ceux qui marchent partout, puis ceux propres aux écrans de validation et de qualification.
 
 ## Partout dans l'application
