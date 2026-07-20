@@ -746,7 +746,12 @@
                                         <argument>--app-version</argument>
                                         <argument>${jpackage.appVersion}</argument>
                                         <argument>--vendor</argument>
-                                        <argument>IUT d'Aix-Marseille</argument>
+                                        <!-- Éditeur du produit, affiché dans les propriétés de
+                                             l'installeur Windows et les métadonnées du paquet
+                                             Debian. C'est une personne, non l'établissement :
+                                             ce dépôt est né d'une SAÉ mais n'en est plus le
+                                             dépôt (#2108). -->
+                                        <argument>Sébastien Nedjar</argument>
                                         <argument>--input</argument>
                                         <argument>${project.build.directory}/jpackage-input</argument>
                                         <argument>--main-jar</argument>

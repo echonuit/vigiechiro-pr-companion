@@ -258,5 +258,5 @@ travail vivent dans l'organisation [IUTInfoAix-S201-2026](https://github.com/IUT
 ---
 
 <p align="center"><sub>
-  SAÉ 2.01 · BUT Informatique · IUT d'Aix-Marseille, sous licence <a href="LICENSE">GPLv3</a>.
+  © 2024-2026 Sébastien Nedjar, sous licence <a href="LICENSE">GPLv3</a>. Né de la SAÉ 2.01, BUT Informatique.
 </sub></p>
