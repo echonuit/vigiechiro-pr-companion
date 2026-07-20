@@ -88,3 +88,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0041](0041-un-check-requis-gouverne-la-branche.md) | Un check requis ne gouverne pas les PR, il gouverne la branche : le contrôle du titre reste informatif | EPIC #2104, #2106 |
 | [0042](0042-un-apercu-qui-ment-est-refuse.md) | Un aperçu qui ment est refusé, et l'exception se déclare dans la vue | #2049, #1641, #1873, #1579 |
 | [0043](0043-la-mesure-fait-foi-en-ci.md) | La mesure fait foi en CI, pas sur le poste (amende 0037) | #1873, #2129 |
+| [0044](0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md) | Le mécanisme de parallélisme se choisit sur la nature de l'attente, la borne se chiffre sur autre chose | #2040 (EPIC #2116) |

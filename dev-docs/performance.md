@@ -62,6 +62,21 @@ par enregistrement), empreinte ~600-700 Mo.
     La règle du banc : **première utilisation du jour** (JIT + cache disque froids) pour la valeur
     « à froid » qui fait foi, puis relancer 2-3 fois et garder l'ordre de grandeur.
 
+### Choisir un mécanisme de parallélisme
+
+Deux questions distinctes, qu'il est tentant de confondre :
+
+- **Quel mécanisme ?** La nature de l'attente décide. La tâche **attend** (réseau, disque) → fil
+  virtuel + `Semaphore`. Elle **calcule** (DEFLATE, transformation audio) → `newFixedThreadPool`
+  dimensionné sur `availableProcessors()`, parce que des fils virtuels ne multiplient pas les cœurs.
+- **Quelle borne ?** Elle se chiffre sur **ce qu'elle protège**, pas sur le mécanisme : la politesse
+  envers la plateforme (5 ou 8), le pic disque (fenêtre 2), les cœurs, ou le débit du support source.
+
+Le socle est [`ExecutionParallele`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/model/ExecutionParallele.java) :
+fils virtuels bornés, ordre préservé, progression monotone, annulation coopérative. Le détail et la
+seule exception tolérée sont dans
+l'[ADR 0044](decisions/0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md).
+
 ## Réactivité de l'IHM (pas de freeze)
 
 Au-delà des chiffres, la perception d'efficience tient à **l'absence de gel** de l'interface. Dans

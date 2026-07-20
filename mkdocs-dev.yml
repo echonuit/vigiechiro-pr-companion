@@ -105,6 +105,7 @@ nav:
     - 0041 · Un check requis gouverne la branche: decisions/0041-un-check-requis-gouverne-la-branche.md
     - 0042 · Un aperçu qui ment est refusé: decisions/0042-un-apercu-qui-ment-est-refuse.md
     - 0043 · La mesure fait foi en CI: decisions/0043-la-mesure-fait-foi-en-ci.md
+    - 0044 · Le mécanisme de parallélisme suit la nature de l'attente: decisions/0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
