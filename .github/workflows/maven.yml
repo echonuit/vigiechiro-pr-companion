@@ -1,6 +1,25 @@
-# Build et tests Maven : sur chaque PR et sur les pushes vers la branche par défaut.
-# C'est ici (seule exécution des tests en CI) que le seuil de couverture JaCoCo est
-# bloquant ; lint.yml ne fait plus que l'analyse statique (Spotless, captures, PMD).
+# Build Java : sur chaque PR et sur les pushes vers la branche par défaut.
+#
+# DEUX jobs parallèles, séparés par ce dont ils dépendent (#2106) :
+#
+# - `build`  : compilation, suite de tests, seuil de couverture JaCoCo bloquant. C'est la seule
+#              exécution des tests en CI ; lint.yml ne fait que l'analyse statique (Spotless,
+#              captures, PMD).
+# - `paquet` : tout ce qui ne dépend que de l'ASSEMBLAGE du fat-jar - smoke-test, E2E CLI bats,
+#              idempotence du packaging. Ces étapes n'ont pas besoin de la suite de tests ni de la
+#              couverture, seulement d'un `package`.
+#
+# Pourquoi les séparer. Elles étaient auparavant quatre étapes à la file dans un seul job, ce qui
+# avait deux coûts. Le premier, mesuré sur le run 29728409116 : 449 s de tests + 148 s de bats + 9 s
+# d'idempotence en série, soit ~10 min avant le moindre verdict. Le second, plus gênant, est une
+# DÉPENDANCE fausse : les étapes de packaging ne s'exécutaient qu'après le succès des tests, donc une
+# suite rouge cachait l'état du packaging et on ne l'apprenait qu'au tour suivant. Séparés, les deux
+# rendent leur verdict indépendamment, et le chemin critique se ramène au plus long des deux.
+#
+# Ce qui NE gagne rien à être déplacé : l'installation de bats coûte 9 s, pas plus (vérifié) ; les
+# ~140 s du harnais sont les 21 tests eux-mêmes, qui lancent chacun un JVM sur le fat-jar. Inutile
+# d'y chercher un cache apt.
+#
 # `solution` est conservée pendant la transition (avant la consolidation en `main`).
 name: Java CI with Maven
 
@@ -20,6 +39,7 @@ permissions:
 
 jobs:
   build:
+    name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -39,16 +59,36 @@ jobs:
         # Tests UI en headless via la Headless Platform JavaFX 26 (glass.platform=Headless,
         # cf. pom.xml) : aucun display X11 requis, plus besoin de xvfb.
         # jacoco.haltOnFailure=true rend le seuil de couverture bloquant (85 % lignes,
-        # 70 % branches, cf. pom.xml) : les tests ne s'exécutant plus que dans ce job,
-        # le gate de couverture doit vivre ici et non dans lint.yml.
+        # 70 % branches, cf. pom.xml) : les tests ne s'exécutant que dans ce job, le gate de
+        # couverture doit vivre ici et non dans lint.yml.
         run: ./mvnw -B verify -Djacoco.haltOnFailure=true --file pom.xml
 
+  paquet:
+    name: paquet
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up JDK 25
+        uses: actions/setup-java@v5
+        with:
+          java-version: '25'
+          distribution: 'temurin'
+          check-latest: false
+          cache: maven
+
+      - name: Assembler le fat-jar (sans les tests)
+        # `-DskipTests` (et non `-Dmaven.test.skip`) : les tests ne s'EXÉCUTENT pas ici - c'est le
+        # travail du job `build` - mais ils se COMPILENT quand même, ce qui garde ce job sensible à
+        # une rupture d'API côté test. Le shade est bindé sur `package`, d'où l'absence de `verify`.
+        run: ./mvnw -B -DskipTests package --file pom.xml
+
       - name: Smoke-test du fat-jar (démarrage depuis le jar packagé)
-        # Le profil `installer` (jpackage) empaquette ce fat-jar shadé. Les tests unitaires
-        # tournent sur le classpath Maven, jamais sur le jar assemblé : ce smoke-test lance le
-        # CLI DEPUIS le jar shadé (même jar, entrée headless) pour prouver que l'assemblage
-        # démarre (Guice + picocli + services fusionnés + natif SQLite), sans ClassNotFound ni
-        # module-info cassé. Détecte les régressions de shade que la compilation ne voit pas.
+        # Le profil `installer` (jpackage) empaquette ce fat-jar shadé. Les tests unitaires tournent
+        # sur le classpath Maven, jamais sur le jar assemblé : ce smoke-test lance le CLI DEPUIS le
+        # jar shadé (même jar, entrée headless) pour prouver que l'assemblage démarre (Guice +
+        # picocli + services fusionnés + natif SQLite), sans ClassNotFound ni module-info cassé.
+        # Détecte les régressions de shade que la compilation ne voit pas.
         run: |
           set -euo pipefail
           jar=$(ls target/vigiechiro-*-shaded.jar | head -1)
