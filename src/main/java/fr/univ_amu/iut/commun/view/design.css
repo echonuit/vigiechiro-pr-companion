@@ -957,7 +957,8 @@
 }
 
 .compte-rendu-avertissement {
-    -fx-text-fill: -couleur-avertissement;
+    /* Le texte prend le jeton assombri, l'icone garde l'ambre : 4,5 pour l'un, 3 pour l'autre (#2115). */
+    -fx-text-fill: -couleur-avertissement-texte;
     -fx-icon-color: -couleur-avertissement;
 }
 
