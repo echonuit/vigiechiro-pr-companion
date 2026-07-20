@@ -73,16 +73,21 @@ jobs:
         # macOS Intel (`macos-13`) est volontairement écarté : les runners Intel GitHub sont en fin
         # de vie (migration annoncée de `macos-latest` vers macOS 26 sur Apple Silicon) et un job
         # Intel en attente de runner bloquerait la publication atomique.
+        # `portable` nomme le système dans l'archive autonome (#2107) : l'utilisateur qui télécharge
+        # doit reconnaître SA plateforme, pas le nom du runner GitHub.
         include:
           - os: ubuntu-latest
             type: deb
             arch: x64
+            portable: linux
           - os: macos-latest
             type: dmg
             arch: arm64
+            portable: macos
           - os: windows-latest
             type: msi
             arch: x64
+            portable: windows
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v7
@@ -113,6 +118,47 @@ jobs:
             mv -- "$f" "${base}-${{ matrix.arch }}.${ext}"
           done
           ls -l
+      - name: Construire l'archive portable (ni installation, ni droits administrateur)
+        # Deuxième passage de jpackage, en `app-image` : le MÊME profil `installer` sait produire
+        # cette forme, seul le type change. On obtient un dossier autonome (lanceur natif + runtime +
+        # fat-jar) qui se décompresse et se lance, sans installateur ni droits admin - la marche du bas
+        # qui manquait pour essayer le produit ou l'utiliser sur une machine non administrée (#2107).
+        #
+        # Pas de `clean` ici : on réutilise le build du pas précédent. L'app-image sort dans
+        # target/dist/, APRÈS l'étape de renommage, pour ne pas se faire renommer par elle.
+        shell: bash
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          VERSION="${TAG#v}"
+          ./mvnw -B -Pinstaller \
+            -Djpackage.type=app-image \
+            -Djpackage.appVersion="$VERSION" \
+            -DskipTests -Dpmd.skip=true -Djacoco.skip=true \
+            verify
+
+      - name: Empaqueter et nommer l'archive portable
+        # Un format par système, choisi pour ce qu'il PRÉSERVE :
+        # - tar.gz (Linux) garde le bit exécutable du lanceur ;
+        # - ditto (macOS) est le seul outil qui préserve un bundle .app intact (un `zip -r` casse
+        #   ses liens symboliques et ses permissions, et l'app ne s'ouvre plus) ;
+        # - zip (Windows), où la notion de bit exécutable n'existe pas.
+        # Le dossier d'origine est retiré ensuite : `gh release upload` échoue sur un répertoire.
+        shell: bash
+        run: |
+          set -euo pipefail
+          TAG="${{ needs.release.outputs.tag }}"
+          VERSION="${TAG#v}"
+          BASE="VigieChiro-${VERSION}-${{ matrix.portable }}-${{ matrix.arch }}-portable"
+          cd target/dist
+          case "${RUNNER_OS}" in
+            Linux)   tar -czf "${BASE}.tar.gz" VigieChiro ;;
+            macOS)   ditto -c -k --sequesterRsrc --keepParent VigieChiro.app "${BASE}.zip" ;;
+            Windows) 7z a -tzip "${BASE}.zip" VigieChiro > /dev/null ;;
+            *)       echo "::error::Système non pris en charge : ${RUNNER_OS}" && exit 1 ;;
+          esac
+          rm -rf VigieChiro VigieChiro.app
+          ls -l
+
       - name: Téléverser l'installeur sur la Release (brouillon), avant publication
         shell: bash
         env:
