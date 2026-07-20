@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.21.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.21.0...v2.21.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **release:** déclarer desktop-file-validate, sans quoi l'AppImage ne se construit qu'en local ([#2149](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2149)) ([56f02c4](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/56f02c4ad89ca2e139ca5d33dd73102cf15754fc)), closes [#2107](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2107) [#2104](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2104)
+
 # [2.21.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.20.2...v2.21.0) (2026-07-20)
 
 
