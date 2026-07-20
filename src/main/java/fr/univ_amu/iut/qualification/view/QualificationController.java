@@ -615,9 +615,11 @@ public class QualificationController implements GardeQuitter, EmplacementNavigat
         if (ligne == null) {
             return "Sélectionnez une séquence dans la liste pour l'écouter.";
         }
-        return "Fichier "
-                + ligne.sequence().nomFichier()
-                + " · durée "
+        // Sans les étiquettes « Fichier » et « durée » : la carte s'intitule déjà « Séquence
+        // sélectionnée », le « s » dit l'unité, et cette ligne était la plus longue de la colonne - il lui
+        // manquait 60 px, elle se terminait donc par une ellipse qui mangeait la fin du nom de fichier.
+        return ligne.sequence().nomFichier()
+                + " · "
                 + Formats.dureeSecondes(ligne.sequence().dureeSecondes())
                 + (ligne.ecoutee() ? " · ✓ écoutée" : " · ○ non écoutée");
     }

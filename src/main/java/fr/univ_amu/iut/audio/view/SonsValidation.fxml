@@ -167,7 +167,7 @@
           <TableColumn fx:id="colValidateur" text="Avis du validateur" prefWidth="180.0"/>
           <TableColumn fx:id="colFrequence" text="Fréquence" prefWidth="100.0"/>
           <TableColumn fx:id="colFme" text="FME" prefWidth="90.0"/>
-          <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="100.0"/>
+          <TableColumn fx:id="colFreqTerminale" text="Fréq. term." prefWidth="120.0"/>
           <TableColumn fx:id="colDebut" text="Début" prefWidth="80.0"/>
           <TableColumn fx:id="colDuree" text="Durée" prefWidth="80.0"/>
           <TableColumn fx:id="colStatut" text="Statut" prefWidth="110.0"/>
@@ -210,8 +210,12 @@
       <!-- Chaque bouton d'action est enrobé d'un StackPane : un Button désactivé n'affiche pas de Tooltip,
            on pose donc l'explication du blocage sur l'enveloppe qui, elle, reçoit le survol (#789). -->
       <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-actions">
-        <ComboBox fx:id="choixMode" accessibleText="Mode de revue" promptText="Mode de revue"/>
-        <StackPane fx:id="enveloppeValider">
+        <!-- « abregeable » : c'est CE controle qui porte le deficit de la barre, assume. Le figer aussi ne
+             supprimerait pas le manque, il le rendrait invisible en debordant. Un mode raccourci se relit
+             au deroule ; un libelle d'action coupe ne se relit nulle part. -->
+        <ComboBox fx:id="choixMode" styleClass="abregeable" accessibleText="Mode de revue"
+                  promptText="Mode de revue"/>
+        <StackPane fx:id="enveloppeValider" minWidth="-Infinity">
           <Button fx:id="btnValider" text="Valider" onAction="#valider">
             <graphic>
               <FontIcon iconLiteral="fas-check"/>
@@ -220,21 +224,21 @@
         </StackPane>
         <Region prefWidth="12.0"/>
         <ComboBox fx:id="choixTaxon" promptText="Choisir un taxon…"/>
-        <StackPane fx:id="enveloppeCorriger">
+        <StackPane fx:id="enveloppeCorriger" minWidth="-Infinity">
           <Button fx:id="btnCorriger" text="Corriger" onAction="#corriger">
             <graphic>
               <FontIcon iconLiteral="fas-pen"/>
             </graphic>
           </Button>
         </StackPane>
-        <StackPane fx:id="enveloppeCertitude">
+        <StackPane fx:id="enveloppeCertitude" minWidth="-Infinity">
           <MenuButton fx:id="menuCertitude" text="Certitude"/>
         </StackPane>
         <Region HBox.hgrow="ALWAYS"/>
-        <StackPane fx:id="enveloppeDouteux">
+        <StackPane fx:id="enveloppeDouteux" minWidth="-Infinity">
           <Button fx:id="btnDouteux" onAction="#basculerDouteux"/>
         </StackPane>
-        <StackPane fx:id="enveloppeReference">
+        <StackPane fx:id="enveloppeReference" minWidth="-Infinity">
           <Button fx:id="btnReference" onAction="#basculerReference"/>
         </StackPane>
       </HBox>

@@ -42,21 +42,21 @@
        actifs, puis les actions carte/export. Le regroupement n'est PAS un filtre : il change l'agrégation,
        pas le sous-ensemble affiché, d'où sa place à part (contrôle fixe). -->
   <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
-    <ComboBox fx:id="choixRegroupement" accessibleText="Regrouper par espèce ou par carré"/>
+    <ComboBox fx:id="choixRegroupement" minWidth="-Infinity" accessibleText="Regrouper par espèce ou par carré"/>
     <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)"
                accessibleText="Rechercher dans l'inventaire" prefWidth="200.0"/>
-    <MenuButton fx:id="menuAjoutFiltre" text="+ Filtre" styleClass="menu-ajout-filtre"
+    <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"
                 accessibleText="Ajouter un filtre"/>
     <!-- hgrow + maxWidth : les puces occupent la largeur restante et s'alignent horizontalement (sinon le
          FlowPane se limite à sa largeur préférée et les empile). Carte/Exporter s'ancrent à droite. -->
     <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT"
               HBox.hgrow="ALWAYS" maxWidth="Infinity"/>
-    <Button fx:id="boutonCarte" text="Carte" onAction="#basculerCarte">
+    <Button fx:id="boutonCarte" minWidth="-Infinity" text="Carte" onAction="#basculerCarte">
       <graphic>
         <FontIcon fx:id="iconeCarte" iconLiteral="fas-map"/>
       </graphic>
     </Button>
-    <Button fx:id="boutonExporter" text="Exporter…" onAction="#exporter">
+    <Button fx:id="boutonExporter" minWidth="-Infinity" text="Exporter…" onAction="#exporter">
       <graphic>
         <FontIcon iconLiteral="fas-file-export"/>
       </graphic>
@@ -76,7 +76,7 @@
         <columns>
           <TableColumn fx:id="colEspece" text="Espèce" prefWidth="240.0"/>
           <TableColumn fx:id="colGroupe" text="Taxon parent" prefWidth="140.0"/>
-          <TableColumn fx:id="colDetections" text="Détections" prefWidth="95.0"/>
+          <TableColumn fx:id="colDetections" text="Détections" prefWidth="105.0"/>
           <TableColumn fx:id="colPassages" text="Passages" prefWidth="90.0"/>
           <TableColumn fx:id="colCarres" text="Carrés" prefWidth="80.0"/>
           <TableColumn fx:id="colPoints" text="Points" prefWidth="80.0"/>
@@ -87,7 +87,7 @@
         <columns>
           <TableColumn fx:id="colCarre" text="Carré" prefWidth="120.0"/>
           <TableColumn fx:id="colSite" text="Site" prefWidth="240.0"/>
-          <TableColumn fx:id="colRichesse" text="Richesse (espèces)" prefWidth="150.0"/>
+          <TableColumn fx:id="colRichesse" text="Richesse (espèces)" prefWidth="170.0"/>
           <TableColumn fx:id="colDetectionsCarre" text="Détections" prefWidth="100.0"/>
           <TableColumn fx:id="colPeriodeCarre" text="Période" prefWidth="110.0"/>
         </columns>
@@ -124,7 +124,7 @@
           <columns>
             <TableColumn fx:id="colObsPassage" text="Passage" prefWidth="160.0"/>
             <TableColumn fx:id="colObsCarre" text="Carré" prefWidth="90.0"/>
-            <TableColumn fx:id="colObsRichesse" text="Espèces du carré" prefWidth="115.0"/>
+            <TableColumn fx:id="colObsRichesse" text="Espèces du carré" prefWidth="155.0"/>
             <TableColumn fx:id="colObsPoint" text="Point" prefWidth="70.0"/>
             <TableColumn fx:id="colObsTadarida" text="Proposition Tadarida" prefWidth="180.0"/>
             <TableColumn fx:id="colObsObservateur" text="Votre taxon" prefWidth="150.0"/>

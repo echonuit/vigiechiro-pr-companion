@@ -89,16 +89,17 @@
       <!-- ============ Colonne gauche : sélection d'écoute ============ -->
       <VBox spacing="10.0" styleClass="colonne-liste">
         <HBox spacing="10.0" alignment="CENTER_LEFT">
-          <Label fx:id="lblListeTitre" text="Sélection d'écoute" styleClass="colonne-titre">
+          <Label fx:id="lblListeTitre" text="Sélection d'écoute" styleClass="colonne-titre"
+                 minWidth="-Infinity">
             <graphic><FontIcon iconLiteral="fas-list-ul"/></graphic>
           </Label>
           <Region HBox.hgrow="ALWAYS"/>
           <Button fx:id="boutonPersonnaliser" text="Personnaliser…" styleClass="bouton-secondaire"
-                  onAction="#personnaliser">
+                  minWidth="-Infinity" onAction="#personnaliser">
             <graphic><FontIcon iconLiteral="fas-sliders-h"/></graphic>
           </Button>
           <Button fx:id="boutonRegenerer" text="Régénérer" styleClass="bouton-secondaire"
-                  onAction="#regenerer">
+                  minWidth="-Infinity" onAction="#regenerer">
             <graphic><FontIcon iconLiteral="fas-sync-alt"/></graphic>
           </Button>
           <MenuButton fx:id="menuOutils" styleClass="menu-actions" accessibleText="Outils : colonnes">
@@ -152,7 +153,11 @@
           </Label>
           <VBox spacing="2.0" styleClass="seq-carte">
             <Label fx:id="lblSeqNumero" styleClass="seq-numero"/>
-            <Label fx:id="lblSeqMeta" styleClass="seq-meta"/>
+            <!-- « abregeable » : ligne de métadonnées secondaire, porteuse assumée du résidu. Retirer les
+                 étiquettes redondantes (« Fichier », « durée ») a rendu 51 des 60 px qui manquaient ; les
+                 9 derniers ne se gagnent qu'en élargissant la colonne, au détriment de la liste. Le nom
+                 de fichier reste lisible en entier dans le tableau juste à gauche. -->
+            <Label fx:id="lblSeqMeta" styleClass="seq-meta,abregeable"/>
           </VBox>
         </VBox>
 

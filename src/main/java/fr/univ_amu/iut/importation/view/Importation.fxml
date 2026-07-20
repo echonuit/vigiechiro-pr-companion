@@ -93,7 +93,10 @@
       </VBox>
       <VBox spacing="4.0">
         <Label text="Point d'écoute" styleClass="field-label"/>
-        <ComboBox fx:id="comboPoints" prefWidth="150.0" promptText="Choisissez d'abord un site"/>
+        <!-- 210 px, et non 150 : le promptText porte l'explication du grisage (aucun point tant qu'aucun
+             site n'est choisi) et manquait 55 px, donc s'affichait tronqué - l'explication disparaissait
+             juste quand elle servait. Les valeurs, elles, sont des codes courts (« A1 »). -->
+        <ComboBox fx:id="comboPoints" prefWidth="230.0" promptText="Choisissez d'abord un site"/>
       </VBox>
       <VBox spacing="4.0">
         <Label text="Année" styleClass="field-label"/>
