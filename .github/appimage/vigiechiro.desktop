@@ -1,0 +1,11 @@
+[Desktop Entry]
+Type=Application
+Name=VigieChiro
+GenericName=Préparation de données acoustiques
+Comment=Préparer et déposer les enregistrements du protocole Vigie-Chiro
+Exec=VigieChiro
+Icon=vigiechiro
+Categories=Science;Biology;
+Keywords=chiroptère;chauve-souris;acoustique;Vigie-Chiro;naturaliste;
+Terminal=false
+StartupWMClass=VigieChiro

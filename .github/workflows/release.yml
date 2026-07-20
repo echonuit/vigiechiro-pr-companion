@@ -136,6 +136,20 @@ jobs:
             -DskipTests -Dpmd.skip=true -Djacoco.skip=true \
             verify
 
+      - name: Construire l'AppImage (Linux)
+        # Un fichier unique et exécutable : l'utilisateur le rend exécutable et le lance, sans rien
+        # décompresser. Complément de l'archive portable pour qui préfère un fichier à un dossier, et
+        # seul format des deux à s'intégrer au menu des applications (via le .desktop).
+        #
+        # Placée AVANT l'empaquetage de l'archive portable, qui supprime target/dist/VigieChiro : les
+        # deux formats partent de la même app-image, il ne faut donc pas la retirer entre-temps.
+        if: matrix.portable == 'linux'
+        shell: bash
+        run: |
+          TAG="${{ needs.release.outputs.tag }}"
+          chmod +x .github/scripts/construit-appimage.sh
+          ./.github/scripts/construit-appimage.sh "${TAG#v}" x86_64
+
       - name: Empaqueter et nommer l'archive portable
         # Un format par système, choisi pour ce qu'il PRÉSERVE :
         # - tar.gz (Linux) garde le bit exécutable du lanceur ;

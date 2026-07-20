@@ -1,0 +1,12 @@
+#!/bin/sh
+# Point d'entrée d'une AppImage : appelé après montage de l'image, depuis un répertoire temporaire.
+#
+# `$0` peut être un lien symbolique et le répertoire courant n'a aucune raison d'être celui de
+# l'application : on résout donc le chemin réel pour retrouver le lanceur natif de jpackage, qui vit
+# sous usr/bin/ dans l'AppDir.
+#
+# `exec` remplace le processus au lieu d'en créer un fils : l'AppImage rend ainsi le vrai code de
+# sortie de l'application, et les signaux (Ctrl+C, arrêt de session) lui parviennent directement.
+set -eu
+ICI="$(dirname "$(readlink -f "$0")")"
+exec "${ICI}/usr/bin/VigieChiro" "$@"
