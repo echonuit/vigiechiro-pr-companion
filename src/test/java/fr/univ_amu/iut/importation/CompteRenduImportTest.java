@@ -47,7 +47,10 @@ class CompteRenduImportTest {
 
         // Le défaut d'origine : cette phrase se terminait par `rapport().avertissements()`, de longueur
         // non bornée, dans la barre de statut. Un doublon y déversait la liste des passages existants.
-        assertThat(phrase).isEqualTo("✓ Import terminé : 3 séquence(s) produite(s) à partir de 1 original(aux).");
+        assertThat(phrase).isEqualTo("Import terminé : 3 séquence(s) produite(s) à partir de 1 original(aux).");
+        // La coche a quitté la phrase (ADR 0035) : un pictogramme d'IHM est une icône, et une barre de
+        // statut n'a pas de canal de sévérité. « terminé » se suffit.
+        assertThat(phrase).doesNotContain("✓");
         assertThat(phrase).doesNotContain("Doublon", "ignoré", "rejeté", "Tension");
     }
 

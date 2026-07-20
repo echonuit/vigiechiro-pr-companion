@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -128,6 +129,18 @@ public final class Importer implements Callable<Integer> {
 
         RapportImport rapport = resultat.rapport();
         sortie.println("  Rapport     : " + rapport.resume());
+        // Parité avec l'IHM (clôture #2004) : l'écran d'import rend ces deux points depuis #2044, la
+        // ligne de commande les taisait. Le doublon de nuit change ce que l'utilisateur croit avoir
+        // importé, et les anomalies du journal étaient transportées jusqu'ici sans être montrées nulle
+        // part - une capacité livrée d'un seul côté est à moitié livrée.
+        for (PassageExistant doublon : rapport.doublonsDeNuit()) {
+            sortie.println("  Doublon     : nuit déjà importée en passage n° " + doublon.numeroPassage()
+                    + " (" + doublon.annee() + ") au carré " + doublon.carre() + ", point "
+                    + doublon.codePoint());
+        }
+        for (String anomalie : resultat.anomalies()) {
+            sortie.println("  Anomalie    : " + anomalie);
+        }
         Path rapportCsv = Path.of(resultat.session().cheminRacine()).resolve("rapport-import.csv");
         try {
             Files.writeString(rapportCsv, rapport.versCsv());

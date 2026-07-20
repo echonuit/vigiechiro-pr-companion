@@ -46,7 +46,7 @@ public final class CompteRenduImport {
             return "";
         }
         return String.format(
-                "✓ Import terminé : %d séquence(s) produite(s) à partir de %d original(aux).",
+                "Import terminé : %d séquence(s) produite(s) à partir de %d original(aux).",
                 resultatMono.nombreSequences(), resultatMono.nombreOriginaux());
     }
 
@@ -57,7 +57,7 @@ public final class CompteRenduImport {
         String derniere = passages.getLast().passage().dateEnregistrement();
         String plage = premiere.equals(derniere) ? "nuit du " + premiere : "nuits du " + premiere + " au " + derniere;
         return String.format(
-                "✓ Import terminé : %d passage(s) créé(s) (%s), %d séquence(s) produite(s).",
+                "Import terminé : %d passage(s) créé(s) (%s), %d séquence(s) produite(s).",
                 resultat.nombrePassages(), plage, resultat.nombreSequencesTotal());
     }
 
