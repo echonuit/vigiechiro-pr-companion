@@ -1,7 +1,8 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.EchelleProgression;
+import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
-import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import java.io.IOException;
@@ -11,55 +12,41 @@ import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /// Découpe (#12) en **parallèle** la transformation R10/R11 des originaux d'une nuit, extraite de
-/// [ServiceImport]. Un thread virtuel par fichier (Java 25), la concurrence étant **bornée** par un
-/// [Semaphore] : `transformer` charge tout le PCM en mémoire puis écrit sur disque, donc sans plafond
-/// une grosse nuit (~1572 fichiers) tiendrait trop de WAV en vol → saturation mémoire. Pic mémoire
-/// borné ≈ nbCœurs PCM, sans brider le débit CPU.
+/// [ServiceImport].
 ///
-/// **Résilience (#155)** : un original illisible ou de format invalide n'**abat plus** l'import — il est
-/// capturé en [ResultatDecoupage] rejeté (avec sa raison) et le découpage se poursuit sur les autres.
-/// Seule une **annulation** ([OperationAnnuleeException], #146) interrompt l'ensemble.
+/// Le moteur parallèle est celui du socle, [ExecutionParallele] (#2039) : threads virtuels, borne de
+/// concurrence, ordre des résultats, progression monotone, annulation coopérative. Cette classe est
+/// l'**ancêtre** dont ce socle a été extrait (#1779) ; elle en gardait une copie complète, que la
+/// migration supprime.
 ///
-/// L'**ordre d'origine est préservé** (Future récupérés dans l'ordre de soumission) → résultat
-/// déterministe. La progression (#33) est émise **sous verrou + compteur** pour rester appelée un à un,
-/// libellés « k/N · fichier » monotones (#146), un point par fichier traité (réussi **ou** rejeté). Le
-/// suivi **par fichier** ([SuiviFichiers], #947) est émis hors verrou : chaque événement cible sa ligne
-/// par le numéro de plan de la source, l'ordre d'arrivée n'importe pas.
+/// Ce qui lui appartient en propre :
+///
+/// - **la raison de sa borne** : `transformer` charge tout le PCM en mémoire puis écrit sur disque ;
+///   sans plafond, une grosse nuit (~1572 fichiers) tiendrait trop de WAV en vol → saturation mémoire ;
+/// - **la résilience (#155)** : un original illisible n'abat plus l'import, il devient un
+///   [ResultatDecoupage] rejeté **à l'intérieur de la tâche**. C'est là ce qui a rendu la migration
+///   possible : le socle n'a jamais d'exception à propager pour ce cas. Une erreur d'écriture workspace
+///   reste fatale et le traverse ;
+/// - **l'isolation des écritures** dans un temporaire indexé, puis la réconciliation des noms en
+///   séquentiel déterministe ;
+/// - **l'échelle** : la transformation est la seconde phase de l'import, sa barre reprend là où la copie
+///   s'est arrêtée (cf. [EchelleProgression]).
+///
+/// Le suivi **par fichier** ([SuiviFichiers], #947) est émis hors verrou : chaque événement cible sa
+/// ligne par le numéro de plan de la source, l'ordre d'arrivée n'importe pas.
 final class DecoupageParallele {
 
     private final TransformationAudio transformation;
-    private final int parallelisme;
+    private final ExecutionParallele moteur;
 
     DecoupageParallele(TransformationAudio transformation, int parallelisme) {
         this.transformation = Objects.requireNonNull(transformation, "transformation");
-        this.parallelisme = parallelisme;
+        this.moteur = new ExecutionParallele(parallelisme);
     }
-
-    /// Invariants d'**une** campagne de découpage, partagés par tous les threads : cadence globale
-    /// (compteur + verrou de progression + sémaphore), callbacks et paramètres de nommage. Objet-paramètre
-    /// pour garder [#decouperUn] lisible (PMD `ExcessiveParameterList`).
-    private record CampagneDecoupage(
-            Prefixe prefixe,
-            Integer frequenceAcquisitionLogHz,
-            int nbOriginaux,
-            int totalEtapes,
-            Consumer<Progression> progres,
-            SuiviFichiers suivi,
-            JetonAnnulation jeton,
-            AtomicInteger traites,
-            Object verrouProgression,
-            Semaphore creneaux) {}
 
     List<ResultatDecoupage> decouper(
             List<SourceOriginal> originaux,
@@ -71,41 +58,39 @@ final class DecoupageParallele {
             Consumer<Progression> progres,
             JetonAnnulation jeton,
             SuiviFichiers suivi) {
-        CampagneDecoupage campagne = new CampagneDecoupage(
-                prefixe,
-                frequenceAcquisitionLogHz,
-                nbOriginaux,
-                totalEtapes,
-                progres,
-                suivi,
-                jeton,
-                new AtomicInteger(0),
-                new Object(),
-                new Semaphore(parallelisme));
         // Chaque original écrit ses tranches dans un sous-dossier temporaire PROPRE (indexé) : cela évite les
         // écrasements entre écritures parallèles quand deux tranches d'originaux différents visent le même nom
         // horodaté. Les noms définitifs (et la résolution des collisions) sont attribués APRÈS, en séquentiel
         // déterministe, par ReconciliationNoms, qui déplace les fichiers vers `transformes/`.
         Path dossierTemporaire = dossierTransformes.resolve(".tmp-decoupage");
-        try (ExecutorService executeur = Executors.newVirtualThreadPerTaskExecutor()) {
-            List<Future<ResultatDecoupage>> decoupagesEnCours = IntStream.range(0, originaux.size())
-                    .mapToObj(i -> executeur.submit(() ->
-                            decouperUn(originaux.get(i), dossierTemporaire.resolve(Integer.toString(i)), campagne)))
-                    .toList();
-            try {
-                List<ResultatDecoupage> bruts = decoupagesEnCours.stream()
-                        .map(DecoupageParallele::resultat)
-                        .toList();
-                List<ResultatDecoupage> reconcilies = ReconciliationNoms.reconcilier(bruts, dossierTransformes);
-                supprimerRecursif(dossierTemporaire);
-                return reconcilies;
-            } catch (OperationAnnuleeException annulation) {
-                // Annulation (#146) : on arrête les découpages restants au lieu d'attendre la fin de tous
-                // les originaux déjà soumis, puis on propage pour que l'appelant nettoie la session.
-                decoupagesEnCours.forEach(decoupage -> decoupage.cancel(true));
-                throw annulation;
-            }
-        }
+
+        // Le libellé compte en `nbOriginaux` (les originaux de la NUIT), pas en `originaux.size()` (les
+        // sources préparées). L'appelant passe les deux séparément, et rien ne garantit qu'ils coïncident :
+        // en mode conservation, les sources viennent d'un rescan de `bruts/`. On ne se sert donc pas de
+        // `termine.total()`, qui vaut la taille de la liste traitée.
+        //
+        // Les étapes précédant la transformation (les copies, en mode conservation) valent
+        // `totalEtapes - nbOriginaux` : 0 en mode sans copie. La barre reprend là où la copie s'est arrêtée.
+        List<ResultatDecoupage> bruts = moteur.cartographier(
+                originaux,
+                termine -> "Transformation " + termine.faits() + "/" + nbOriginaux + " · "
+                        + termine.element().chemin().getFileName(),
+                new EchelleProgression(totalEtapes - nbOriginaux, totalEtapes),
+                (index, source) -> decouperUn(
+                        source,
+                        dossierTemporaire.resolve(Integer.toString(index)),
+                        prefixe,
+                        frequenceAcquisitionLogHz,
+                        suivi),
+                progres,
+                jeton);
+
+        // Nettoyage sur le seul chemin nominal, volontairement : une annulation traverse `cartographier`
+        // sans passer ici, et c'est `MoteurImport` qui supprime alors la session entière. Un `finally`
+        // effacerait le temporaire d'une session que l'appelant s'apprête à effacer de toute façon.
+        List<ResultatDecoupage> reconcilies = ReconciliationNoms.reconcilier(bruts, dossierTransformes);
+        supprimerRecursif(dossierTemporaire);
+        return reconcilies;
     }
 
     /// Supprime récursivement un dossier (nettoyage du temporaire de découpage). Sans échec si absent.
@@ -126,68 +111,38 @@ final class DecoupageParallele {
         }
     }
 
-    private ResultatDecoupage decouperUn(SourceOriginal source, Path dossierSortieOriginal, CampagneDecoupage campagne)
-            throws InterruptedException {
-        campagne.creneaux().acquire();
+    /// Transforme **un** original, sur un thread virtuel du socle, qui a déjà acquis le créneau et vérifié
+    /// l'annulation.
+    ///
+    /// La **résilience #155 vit ici**, et c'est ce qui rend la migration possible : un original illisible
+    /// devient un [ResultatDecoupage] rejeté **à l'intérieur de la tâche**, si bien que le socle n'a jamais
+    /// d'exception à propager pour ce cas. Seule une erreur d'écriture workspace
+    /// ([UncheckedIOException]) reste fatale et le traverse.
+    private ResultatDecoupage decouperUn(
+            SourceOriginal source,
+            Path dossierSortieOriginal,
+            Prefixe prefixe,
+            Integer frequenceAcquisitionLogHz,
+            SuiviFichiers suivi) {
+        suivi.transformationDemarree(source.numero());
+        Path original = source.chemin();
         try {
-            campagne.jeton().leverSiAnnule(); // l'annulation (#146) interrompt ; un rejet, lui, est capturé
-            campagne.suivi().transformationDemarree(source.numero());
-            Path original = source.chemin();
-            ResultatDecoupage resultat;
-            try {
-                // Nommage des séquences d'après le nom logique R6 (source.nomR6()), découplé du chemin lu :
-                // en mode « sans copie » on lit la source SD mais on nomme comme si elle était renommée R6.
-                TransformationOriginal t = transformation.transformer(
-                        original,
-                        source.nomR6(),
-                        dossierSortieOriginal,
-                        campagne.prefixe(),
-                        campagne.frequenceAcquisitionLogHz());
-                resultat = new ResultatDecoupage(original, t, null);
-                campagne.suivi().fichierTermine(source.numero());
-            } catch (OriginalIllisibleException rejet) {
-                // Résilience (#155) : une erreur de lecture/format SOURCE est consignée en rejet et l'import
-                // continue. Une erreur d'écriture workspace (UncheckedIOException) reste fatale et se propage.
-                resultat = new ResultatDecoupage(original, null, raison(rejet));
-                campagne.suivi().fichierRejete(source.numero(), raison(rejet));
-            }
-            synchronized (campagne.verrouProgression()) {
-                int faits = campagne.traites().incrementAndGet();
-                // Les étapes précédant la transformation (les copies, en mode conservation) valent
-                // `totalEtapes - nbOriginaux` : 0 en mode sans copie (total = nbOriginaux). La fraction
-                // reprend donc là où la phase de copie s'est arrêtée.
-                int etapesDejaFaites = campagne.totalEtapes() - campagne.nbOriginaux();
-                campagne.progres()
-                        .accept(new Progression(
-                                "Transformation " + faits + "/" + campagne.nbOriginaux() + " · "
-                                        + original.getFileName(),
-                                (double) (etapesDejaFaites + faits) / campagne.totalEtapes()));
-            }
-            return resultat;
-        } finally {
-            campagne.creneaux().release();
+            // Nommage des séquences d'après le nom logique R6 (source.nomR6()), découplé du chemin lu :
+            // en mode « sans copie » on lit la source SD mais on nomme comme si elle était renommée R6.
+            TransformationOriginal t = transformation.transformer(
+                    original, source.nomR6(), dossierSortieOriginal, prefixe, frequenceAcquisitionLogHz);
+            suivi.fichierTermine(source.numero());
+            return new ResultatDecoupage(original, t, null);
+        } catch (OriginalIllisibleException rejet) {
+            // Résilience (#155) : une erreur de lecture/format SOURCE est consignée en rejet et l'import
+            // continue. Une erreur d'écriture workspace (UncheckedIOException) reste fatale et se propage.
+            suivi.fichierRejete(source.numero(), raison(rejet));
+            return new ResultatDecoupage(original, null, raison(rejet));
         }
     }
 
     private static String raison(RuntimeException echec) {
         String message = echec.getMessage();
         return message == null || message.isBlank() ? echec.getClass().getSimpleName() : message;
-    }
-
-    /// Récupère le résultat d'un découpage lancé sur un thread virtuel (#12). Une erreur par fichier est
-    /// déjà capturée dans le [ResultatDecoupage] ; ici on ne propage que l'**annulation** (et on restaure
-    /// le drapeau d'interruption le cas échéant).
-    private static ResultatDecoupage resultat(Future<ResultatDecoupage> decoupage) {
-        try {
-            return decoupage.get();
-        } catch (InterruptedException interruption) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("Découpage audio interrompu.", interruption);
-        } catch (ExecutionException echec) {
-            if (echec.getCause() instanceof RuntimeException relancable) {
-                throw relancable;
-            }
-            throw new IllegalStateException("Échec du découpage audio.", echec.getCause());
-        }
     }
 }
