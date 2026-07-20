@@ -55,8 +55,11 @@ public final class ApercuFx {
         collecterComprimes(scene.getRoot(), comprimes);
         if (!comprimes.isEmpty()) {
             throw new IllegalStateException("Capture tronquee : " + comprimes.size()
-                    + " libelle(s) comprime(s) par une scene trop courte, donc rendus avec une ellipse."
-                    + " Augmenter la hauteur de cette scene. En cause : " + String.join(" | ", comprimes));
+                    + " libelle(s) rendu(s) avec une ellipse, donc illisibles. « manque N px » = la scene"
+                    + " est trop courte pour un libelle enroulable ; « tronque » = le controle est trop"
+                    + " etroit pour son texte (le figer par minWidth=\"-Infinity\", elargir la colonne, ou"
+                    + " assumer l'abregement par la classe CSS « " + ABREGEABLE + " »). En cause : "
+                    + String.join(" | ", comprimes));
         }
     }
 
@@ -73,9 +76,73 @@ public final class ApercuFx {
                 comprimes.add(resumer(libelle) + " (manque " + Math.round(manque) + " px)");
             }
         }
+        if (noeud instanceof Labeled large && estTronqueEnLargeur(large)) {
+            comprimes.add(resumer(large) + " (tronque, manque " + Math.round(largeurManquante(large)) + " px)");
+        }
         if (noeud instanceof Parent parent) {
             parent.getChildrenUnmodifiable().forEach(enfant -> collecterComprimes(enfant, comprimes));
         }
+    }
+
+    /// Classe CSS par laquelle un FXML **assume** qu'un libelle se raccourcisse quand la place manque.
+    ///
+    /// Le deficit d'une barre doit bien tomber quelque part : figer tous ses controles ne le supprime pas,
+    /// il le deplace. Cette classe designe celui qui le porte - typiquement un selecteur, dont la valeur
+    /// se relit au deroule, plutot qu'un libelle d'action, qui ne se relit nulle part.
+    ///
+    /// Elle vit dans le FXML et non dans une liste tenue ici : l'exception se lit a l'endroit ou elle
+    /// s'applique, par celui qui modifie la vue.
+    public static final String ABREGEABLE = "abregeable";
+
+    /// Vrai si le texte de `libelle` ne tient pas dans sa largeur, donc s'affiche avec une ellipse.
+    ///
+    /// Pendant longtemps rien ne l'a signale : c'est le mecanisme derriere cinq issues nees d'une revue a
+    /// l'oeil (#1641, #1701, #1873, #1579, #2012). Un test verifie qu'un bouton **fait** ce qu'il doit ;
+    /// il ne verifie pas qu'on puisse **lire** ce qu'il dit.
+    private static boolean estTronqueEnLargeur(Labeled libelle) {
+        // Un libelle enroulable ne s'ellipse pas horizontalement : il passe a la ligne, et c'est la
+        // compression VERTICALE qui le guette - deja couverte plus haut.
+        return !libelle.isWrapText()
+                && libelle.getWidth() > 0
+                && libelle.getText() != null
+                && !libelle.getText().isBlank()
+                && !libelle.getStyleClass().contains(ABREGEABLE)
+                && !dansUnParentAbregeable(libelle)
+                && !dansUnComposantTiers(libelle)
+                && largeurManquante(libelle) > TOLERANCE_PX;
+    }
+
+    /// Nom du composant audio embarque, dont les controles ne se corrigent pas depuis ce depot.
+    private static final String COMPOSANT_TIERS = "AudioView";
+
+    /// Vrai si `libelle` appartient a un composant que ce depot ne peut pas modifier.
+    ///
+    /// `AudioView` vient d'un artefact separe : ses boutons de transport (« Temps + », « Freq. - »,
+    /// l'horloge) tronquent en CI, et aucun FXML d'ici ne peut y remedier. Un verrou qui exige une
+    /// correction impossible ne protege rien, il bloque. Ces troncatures se traitent en amont, dans le
+    /// depot du composant.
+    private static boolean dansUnComposantTiers(Labeled libelle) {
+        for (Node parent = libelle.getParent(); parent != null; parent = parent.getParent()) {
+            if (COMPOSANT_TIERS.equals(parent.getClass().getSimpleName())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// Un controle compose (`ComboBox`, `MenuButton`) rend son texte dans un libelle **interne**, que le
+    /// FXML ne peut pas marquer. La tolerance posee sur le controle vaut donc pour sa doublure.
+    private static boolean dansUnParentAbregeable(Labeled libelle) {
+        for (Node parent = libelle.getParent(); parent != null; parent = parent.getParent()) {
+            if (parent.getStyleClass().contains(ABREGEABLE)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static double largeurManquante(Labeled libelle) {
+        return libelle.prefWidth(-1) - libelle.getWidth();
     }
 
     /// De quoi retrouver le libelle fautif : son identifiant s'il en a un, sinon le debut de son texte.

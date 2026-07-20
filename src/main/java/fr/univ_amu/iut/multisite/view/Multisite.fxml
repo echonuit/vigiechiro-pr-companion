@@ -124,7 +124,7 @@
               <TableColumn fx:id="colCarre" text="Carré" prefWidth="90.0"/>
               <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
               <TableColumn fx:id="colAnnee" text="Année" prefWidth="70.0"/>
-              <TableColumn fx:id="colNumero" text="N° passage" prefWidth="90.0"/>
+              <TableColumn fx:id="colNumero" text="N° passage" prefWidth="115.0"/>
               <TableColumn fx:id="colDate" text="Date" prefWidth="120.0"/>
               <TableColumn fx:id="colStatut" text="Statut" prefWidth="120.0"/>
               <TableColumn fx:id="colVerdict" text="Verdict" prefWidth="100.0"/>
