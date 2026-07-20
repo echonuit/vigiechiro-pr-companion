@@ -122,6 +122,32 @@ principal `vigiechiro-*.jar` reste **mince**. jpackage empaquette donc le `-shad
     mais le garde-fou reste le contrôle du titre. Cf.
     [ADR 0040](decisions/0040-le-sujet-de-commit-est-une-syntaxe.md).
 
+### Le cas des PR ouvertes par un bot
+
+`titre` est un check **requis** (ruleset `titre-de-pr-conforme`). Or **GitHub ne déclenche aucun
+workflow pour un événement produit avec le `GITHUB_TOKEN`** - c'est son garde-fou anti-récursion, sans
+lequel une action pourrait se relancer indéfiniment. Une PR ouverte par le bot n'exécute donc **jamais**
+`titre-pr.yml`, et un check requis qui ne rapporte rien **bloque la fusion pour toujours**. La PR
+d'aperçus #2124 l'a vécu le jour même de la mise en place.
+
+La dérogation qu'on attendrait est fermée : ajouter `github-actions` aux contournements du ruleset
+échoue en **422** (`Actor GitHub Actions integration must be part of the ruleset source or owner
+organization`) - l'application n'appartient ni à la source du ruleset ni à l'organisation.
+
+[capture-vues.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml)
+exécute donc **lui-même** la validation, avec le **même script**
+(`.github/scripts/verifie-titre-pr.sh`), et publie le résultat comme **check run** nommé `titre`. Seul
+le **transport** du résultat change ; le contrôle reste réel.
+
+!!! tip "Pourquoi pas un `success` en dur"
+    Ce serait plus court, et cela ferait croire à une vérification qui n'a pas eu lieu - un garde-fou
+    qui ne sait que réussir ne garde rien. L'étape sait publier un `failure`, et c'est vérifié dans
+    les deux sens. Effet de bord bienvenu : les PR d'aperçus sont désormais **validées**, alors
+    qu'elles ne l'étaient pas du tout auparavant.
+
+**Ce qu'il faut retenir pour la suite.** Tout nouveau check **requis** doit se demander comment il
+rapportera sur les PR de bot. C'est le piège de ce dépôt : il en produit à chaque push sur `main`.
+
 ## Dépendances
 
 Les mises à jour sont proposées par **Dependabot**
