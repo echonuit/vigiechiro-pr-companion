@@ -261,6 +261,24 @@ Une seule situation reste hors d'atteinte : une nuit qui n'a **aucune participat
 plateforme, donc rien à quoi se rattacher. L'entrée de menu est alors **grisée** et le dit
 (« rattachez la nuit à sa participation Vigie-Chiro »).
 
+## Ce que la publication vous rend
+
+À la fin, un **rapport** s'affiche sous l'entrée de menu. Il dit ce qui est parti, et surtout ce qui
+n'est **pas** parti :
+
+- les corrections **envoyées** ;
+- celles **à compléter**, dont la certitude n'a pas été déclarée ;
+- celles **sans ancrage plateforme**, avec le remède : rattacher la nuit à sa participation ;
+- celles **hors référentiel** ;
+- les **refus de la plateforme** - et ils sont **tous** listés, chacun avec sa cause.
+
+Ce dernier point mérite d'être souligné : la version précédente n'en montrait **qu'un seul sur N**
+(« 3 refus, dont : … »). Les autres causes existaient et ne vous étaient jamais dites. Si une
+observation part et qu'une autre est refusée, vous savez maintenant laquelle et pourquoi.
+
+Chaque ligne porte une **icône** en plus de sa couleur, pour rester lisible si vous distinguez mal les
+couleurs.
+
 À savoir : une correction publiée se **remplace** mais ne se **retire** pas de la plateforme, et
 une **relance du traitement serveur** efface les corrections publiées (republiez alors après le
 nouveau traitement). L'export `_Vu` reste disponible en repli hors connexion.

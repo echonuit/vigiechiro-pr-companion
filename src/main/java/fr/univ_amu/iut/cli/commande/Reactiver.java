@@ -3,11 +3,12 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
+import fr.univ_amu.iut.passage.model.CompteRenduReactivation;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
-import fr.univ_amu.iut.passage.model.VoieReactivation;
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.LinkedHashMap;
@@ -75,71 +76,6 @@ public final class Reactiver implements Callable<Integer> {
         return rapport.complete() ? 0 : 1;
     }
 
-    /// Rendu **texte** : ce qui est revenu et sur quelle preuve, ce qui a été refusé et pourquoi, ce qui
-    /// manque encore.
-    private static String enTexte(RapportReactivation rapport) {
-        if (rapport.voie() == VoieReactivation.RECONSTRUIT) {
-            // Passage reconstruit depuis la plateforme (#1648) : ni empreinte ni fréquence d'acquisition en
-            // base, donc rien à apparier ni à régénérer. On le DIT au lieu de prétendre « introuvables ».
-            return "Passage reconstruit depuis Vigie-Chiro : le nom des "
-                    + rapport.decompte().total()
-                    + " séquence(s) est connu, mais pas la correspondance avec les fichiers d'origine ni les"
-                    + " empreintes nécessaires pour les régénérer. La réactivation depuis les bruts n'est pas"
-                    + " encore disponible pour ce type de passage.";
-        }
-        StringBuilder texte = new StringBuilder();
-        if (rapport.voie() == VoieReactivation.BRUTS) {
-            // L'utilisateur a le droit de savoir ce qu'on a fait de son dossier : ses tranches n'ont pas
-            // été retrouvées, elles ont été RECALCULÉES depuis ses bruts (puis vérifiées comme les autres).
-            texte.append("Ce dossier ne contenait que les enregistrements bruts : les séquences ont été")
-                    .append(" régénérées à partir d'eux, puis vérifiées.\n");
-        }
-        texte.append(rapport.reactivees()).append(" séquence(s) réactivée(s)");
-        if (rapport.confianceMinimale() != null) {
-            texte.append(" (identité vérifiée, confiance ")
-                    .append(rapport.confianceMinimale().name().toLowerCase(java.util.Locale.FRANCE))
-                    .append(')');
-        }
-        texte.append(".\n");
-        if (rapport.dejaPresentes() > 0) {
-            texte.append(rapport.dejaPresentes()).append(" séquence(s) étaient déjà sur le disque.\n");
-        }
-        if (rapport.manquantes() > 0) {
-            texte.append(rapport.manquantes()).append(" séquence(s) restent introuvables dans ce dossier.\n");
-        }
-        // Parité avec la modale (ADR 0014) : ce qui manquait est nommé, avec son motif (#1943). En ligne de
-        // commande on ne plafonne pas la liste : la sortie se filtre, une modale non.
-        rapport.absences()
-                .forEach(absence -> texte.append("  • ")
-                        .append(absence.nomFichier())
-                        .append(" : ")
-                        .append(absence.motif())
-                        .append(absence.sequences() > 1 ? " (" + absence.sequences() + " séquences)" : "")
-                        .append('\n'));
-        ajouterEcarts(texte, rapport.ecarts());
-        IndiceAcoustique indice = rapport.indiceAcoustique();
-        if (indice != null && indice.estRenseigne()) {
-            texte.append("Concordance acoustique (indice, non bloquant) : ")
-                    .append(indice.concordantes())
-                    .append('/')
-                    .append(indice.mesurees())
-                    .append(" séquence(s) présentent les cris attendus.\n");
-        }
-        // Parité avec la modale (ADR 0014) : ce que la phase d'ancrage a rapatrié, dont les échanges avec
-        // le validateur (#1867), se dit aussi en ligne de commande.
-        if (!rapport.rapatriement().estMuet()) {
-            texte.append(rapport.rapatriement().texte()).append('\n');
-        }
-        texte.append("Audio : ")
-                .append(rapport.decompte().disponibilite())
-                .append(" (")
-                .append(rapport.decompte().presentes())
-                .append('/')
-                .append(rapport.decompte().total())
-                .append(" séquence(s) sur disque).");
-        return texte.toString();
-    }
-
     /// Les fichiers **refusés** : jamais rebranchés en silence, chacun avec son motif.
     private static void ajouterEcarts(StringBuilder texte, List<EcartReactivation> ecarts) {
         if (ecarts.isEmpty()) {
@@ -152,6 +88,23 @@ public final class Reactiver implements Callable<Integer> {
                 .append(" : ")
                 .append(ecart.motif())
                 .append('\n'));
+    }
+
+    /// Le compte rendu partagé avec la modale, **suivi d'une ligne lisible par une machine**.
+    ///
+    /// Les deux tiennent parce qu'ils s'adressent à deux lecteurs. Le compte rendu est pour l'humain, et
+    /// il vient de [CompteRenduReactivation] - le même que l'écran, donc les mêmes mots des deux côtés.
+    /// La dernière ligne est pour le **script** : elle porte le nom de l'énumération (`COMPLETE`,
+    /// `PARTIELLE`…), qui se grep et ne change pas quand une phrase est réécrite.
+    ///
+    /// La perdre en migrant vers le compte rendu aurait cassé le contrat scriptable sans qu'une phrase
+    /// française y paraisse : « L'audio est de nouveau complet » ne se grep pas. `CliArchivageTest` l'a
+    /// signalé (clôture #1990).
+    private static String enTexte(RapportReactivation rapport) {
+        String compteRendu = TexteCompteRendu.rendre(CompteRenduReactivation.de(rapport));
+        return compteRendu + "\nAudio : " + rapport.decompte().disponibilite() + " ("
+                + rapport.decompte().presentes() + "/" + rapport.decompte().total()
+                + " séquence(s) sur disque).";
     }
 
     /// Projection JSON (clés stables pour les scripts).

@@ -951,8 +951,8 @@ compte** quand elle n'aboutit pas : `ActionFicheEspece.ouvrir` rend un booléen,
 `ouvrirOuSignaler(espece, siAucuneFiche)` route le motif vers le canal de l'écran. Voir
 [ADR 0021](decisions/0021-double-clic-miroir-qui-rend-compte.md).
 
-**Le véhicule du motif.** `commun.viewmodel.RetourOperation` (texte + sévérité succès / information /
-erreur) et `commun.view.BandeauRetour.installer(...)` rendent ce retour dans un bandeau **non modal** -
+**Le véhicule du motif.** `commun.viewmodel.RetourOperation` (texte + `commun.model.Severite`) et
+`commun.view.BandeauRetour.installer(...)` rendent ce retour dans un bandeau **non modal** -
 véhicule **par défaut** de tout compte rendu, le modal étant réservé à l'irréversible
 ([ADR 0023](decisions/0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md)) :
 un double-clic est un geste courant et souvent accidentel, une boîte modale y serait pire que le
@@ -972,21 +972,41 @@ les mélange finit par mentir. L'EPIC #1870 a migré onze écrans et en a trouv�
 | Nature | Ce que c'est | Véhicule | Se ferme ? |
 |---|---|---|---|
 | **État** | ce qui *est* (« Passage déposé le… », « Cohérence : corrigez les contrôles ») | libellé permanent, adossé à ce qu'il décrit | non |
-| **Compte rendu** | ce qui *vient de se passer* (résultat d'une action de l'utilisateur) | `RetourOperation` + `BandeauRetour` | oui |
+| **Retour d'opération** | ce qui *vient de se passer*, en **une phrase bornée** | `RetourOperation` + `BandeauRetour` ou `LibelleRetour` | oui |
+| **Compte rendu** | ce qui *vient de se passer*, de manière **extensible** : des constats, leurs détails | `CompteRendu` + `VueCompteRendu`, dans sa propre zone | non, il se remplace |
 | **Travail en cours** | ce qui *se passe* | barre de progression, `IndicateurOccupation`, barre de statut | sans objet |
+
+⚠ **Le mot « compte rendu » a changé de sens** avec l'[ADR 0031](decisions/0031-un-retour-n-est-pas-un-compte-rendu.md). Il désignait ici ce qui s'appelle désormais **retour d'opération**. Le critère qui les sépare n'est pas la longueur actuelle mais l'**extensibilité** : un message qui concatène une partie variable est déjà un compte rendu, et un compte rendu n'a **jamais** sa place dans un bandeau - l'y loger revient à le tronquer.
+
+**Comment choisir.** Si ce qu'il y a à dire peut grandir - une liste de refus, de fichiers, de passages -
+c'est un compte rendu. Si c'est une phrase dont la forme est connue d'avance, c'est un retour.
 
 Un état et un compte rendu ne partagent **jamais** de propriété, et un compte rendu ne se **déduit**
 jamais d'un statut : le même statut est atteint en agissant *et* en ouvrant un écran déjà dans cet
 état, et seul le premier mérite d'être rapporté. Voir
 [ADR 0028](decisions/0028-un-etat-n-est-pas-un-compte-rendu.md).
 
-**Les sévérités.** `SUCCES` quand l'opération a abouti. `ERREUR` quand elle a échoué ou a été refusée
-par un service. `INFO` pour tout le reste, et ce « reste » est plus large qu'il n'y paraît :
+**Les sévérités.** Elles vivent dans `commun.model.Severite` - le **modèle**, pas la vue : un constat
+d'audit qualifie sa gravité sans rien savoir de l'affichage ([ADR 0038](decisions/0038-l-echelle-de-severite-a-quatre-niveaux.md), amendée par #2159).
+
+`SUCCES` quand l'opération a abouti. `ERREUR` quand elle a échoué ou a été refusée par un service.
+`AVERTISSEMENT` quand elle a **abouti** mais que quelque chose mérite l'attention : une nuit déjà
+importée qu'on réimporte quand même, un dossier mélangeant deux enregistreurs. `INFO` pour tout le
+reste, et ce « reste » est plus large qu'il n'y paraît :
 
 - un **guidage** : l'utilisateur a quelque chose à faire, rien n'est cassé (« saisissez des nombres ») ;
 - une **absence d'objet** : « rien à relever », « traitement déjà lancé » - rien n'a raté ;
 - un **résultat partiel** : relevé incomplet, dépôt interrompu. Annoncer un succès mentirait sur ce
   qui est acquis, annoncer une erreur nierait ce qui est passé.
+
+**La sévérité ne s'écrit jamais dans le texte.** Le constructeur compact de `RetourOperation` refuse un
+message ouvrant par `⚠ ✓ ✗`. La vue la rend **deux fois** - couleur et icône - depuis la valeur, par
+`IconesSeverite`, table unique partagée par le bandeau, le compte rendu et le libellé inline. Un glyphe
+dans la chaîne la dirait une troisième fois sans garantie d'accord ([ADR 0035](decisions/0035-un-pictogramme-est-une-icone-pas-un-caractere.md) point 5).
+
+**Une barre de statut est neutre.** Elle dit *où l'on en est*, pas si c'est bien ou mal : ses phrases
+s'écrivent sans marqueur, et ce qui doit alerter passe par un bandeau ou un encart
+([ADR 0039](decisions/0039-une-barre-de-statut-est-neutre.md)).
 
 **Le patron `Messages<Ecran>`.** Quand un écran porte un état **et** un compte rendu, les deux vivent
 dans une petite classe dédiée plutôt que dans le ViewModel : `MessagesAudio`, `MessagesLot`,

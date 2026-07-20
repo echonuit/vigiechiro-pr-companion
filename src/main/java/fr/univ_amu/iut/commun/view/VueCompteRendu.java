@@ -47,8 +47,12 @@ public final class VueCompteRendu {
     /// @param rendu ce qu'il y a à dire ; un compte rendu vide rend un conteneur vide, que l'appelant
     ///     peut masquer - mieux vaut ne rien afficher qu'un cadre sans contenu
     /// @param plafondDetails nombre de détails montrés par constat avant de résumer (« … et N autre(s) »).
-    ///     La **surface** en décide : une modale doit rester lisible, une sortie de commande se filtre et
-    ///     n'en veut aucun. Utiliser [#SANS_PLAFOND] pour tout montrer.
+    ///     La **surface** en décide : une modale doit rester lisible, une zone déjà bornée par ce qui
+    ///     l'entoure peut tout montrer. Utiliser [#SANS_PLAFOND] dans ce second cas.
+    ///
+    ///     La ligne de commande, elle, ne passe pas par ici : elle rend le même compte rendu par
+    ///     [fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu], qui n'a pas de plafond du tout - une
+    ///     sortie de commande se filtre et se redirige.
     public static VBox rendre(CompteRendu rendu, int plafondDetails) {
         VBox racine = new VBox();
         racine.getStyleClass().add(CLASSE_RACINE);
