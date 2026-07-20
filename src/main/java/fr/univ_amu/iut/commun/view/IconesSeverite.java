@@ -2,6 +2,8 @@ package fr.univ_amu.iut.commun.view;
 
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import java.util.Map;
+import org.kordamp.ikonli.Ikon;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 /// La **forme** d'une sévérité : un glyphe Ikonli par niveau, source unique pour toutes les surfaces.
@@ -19,17 +21,26 @@ import org.kordamp.ikonli.javafx.FontIcon;
 /// couleur manque (#2052).
 public final class IconesSeverite {
 
-    private static final Map<Severite, String> GLYPHE = Map.of(
-            Severite.SUCCES, "fas-check-circle",
-            Severite.INFO, "fas-info-circle",
-            Severite.AVERTISSEMENT, "fas-exclamation-triangle",
-            Severite.ERREUR, "fas-times-circle");
+    private static final Map<Severite, Ikon> GLYPHE = Map.of(
+            Severite.SUCCES, FontAwesomeSolid.CHECK_CIRCLE,
+            Severite.INFO, FontAwesomeSolid.INFO_CIRCLE,
+            Severite.AVERTISSEMENT, FontAwesomeSolid.EXCLAMATION_TRIANGLE,
+            Severite.ERREUR, FontAwesomeSolid.TIMES_CIRCLE);
 
     private IconesSeverite() {}
 
-    /// Le glyphe Ikonli d'une sévérité.
-    public static String glyphe(Severite severite) {
+    /// L'icône Ikonli d'une sévérité, comme **valeur typée**.
+    ///
+    /// C'est la forme qu'attend [IconeSelonEtat], qui lie un glyphe par `Bindings.when` plutôt que par
+    /// un écouteur. Les deux composants partagent donc la même table, ce qui n'était pas le cas quand
+    /// celle-ci ne parlait qu'en littéraux : `DetailInspection` avait dû poser ses icônes à la main.
+    public static Ikon ikon(Severite severite) {
         return GLYPHE.get(severite);
+    }
+
+    /// Le littéral du glyphe, pour les surfaces qui construisent leur icône elles-mêmes.
+    public static String glyphe(Severite severite) {
+        return ikon(severite).getDescription();
     }
 
     /// Une icône dont la couleur vient du **conteneur** : dans un encart, la règle
@@ -45,7 +56,7 @@ public final class IconesSeverite {
     /// et ne peuvent pas diverger. Un `FontIcon` ne suit pas `-fx-text-fill` : sans classe, il prend
     /// celle du conteneur ou reste au défaut, et peut alors contredire le texte au lieu de le confirmer.
     public static FontIcon icone(Severite severite, String... classes) {
-        FontIcon icone = new FontIcon(glyphe(severite));
+        FontIcon icone = new FontIcon(ikon(severite));
         icone.getStyleClass().addAll(classes);
         return icone;
     }

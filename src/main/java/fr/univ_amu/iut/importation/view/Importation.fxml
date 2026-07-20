@@ -64,9 +64,15 @@
     <Label text="2. Inspection du dossier" styleClass="section-titre"/>
     <Label text="Lecture seule : aucun fichier n'est modifié pour l'instant."
            styleClass="section-sous"/>
-    <Label fx:id="labelJournal" styleClass="insp-detail"/>
-    <Label fx:id="labelReleve" styleClass="insp-detail"/>
-    <Label fx:id="labelOriginaux" styleClass="insp-detail"/>
+    <Label fx:id="labelJournal" styleClass="insp-detail">
+      <graphic><FontIcon fx:id="iconeJournal" styleClass="insp-icone"/></graphic>
+    </Label>
+    <Label fx:id="labelReleve" styleClass="insp-detail">
+      <graphic><FontIcon fx:id="iconeReleve" styleClass="insp-icone"/></graphic>
+    </Label>
+    <Label fx:id="labelOriginaux" styleClass="insp-detail">
+      <graphic><FontIcon fx:id="iconeOriginaux" styleClass="insp-icone"/></graphic>
+    </Label>
     <Label fx:id="labelNommage" styleClass="insp-detail"/>
     <!-- Ce que l'inspection a relevé (#33, #147) : mélange d'enregistreurs, désaccord entre le journal
          et les fichiers, nuit déjà importée. Un compte rendu, dont la vue compose le contenu. -->

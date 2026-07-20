@@ -26,39 +26,41 @@ import org.testfx.framework.junit5.ApplicationExtension;
 class DetailInspectionTest {
 
     private Label label;
+    private FontIcon icone;
     private SimpleBooleanProperty present;
     private SimpleStringProperty texte;
 
     @BeforeEach
     void monterLesNoeuds() {
         label = new Label();
+        icone = new FontIcon();
         present = new SimpleBooleanProperty(false);
         texte = new SimpleStringProperty("Aucun journal LogPR");
     }
 
     private String glypheAffiche() {
-        return ((FontIcon) label.getGraphic()).getIconLiteral();
+        return icone.getIconLiteral();
     }
 
     @Test
     @DisplayName("Absent : triangle ambre ; présent : coche verte")
     void l_icone_et_la_classe_suivent_la_presence() {
-        DetailInspection.lier(label, present, texte);
+        DetailInspection.lier(label, icone, present, texte);
 
         assertThat(glypheAffiche()).isEqualTo(IconesSeverite.glyphe(Severite.AVERTISSEMENT));
-        assertThat(label.getStyleClass()).containsExactly("insp-absent");
+        assertThat(label.getStyleClass()).containsExactlyInAnyOrder("insp-detail", "insp-absent");
 
         present.set(true);
         texte.set("Journal du capteur : PR n° 1925492");
 
         assertThat(glypheAffiche()).isEqualTo(IconesSeverite.glyphe(Severite.SUCCES));
-        assertThat(label.getStyleClass()).containsExactly("insp-ok");
+        assertThat(label.getStyleClass()).containsExactlyInAnyOrder("insp-detail", "insp-ok");
     }
 
     @Test
     @DisplayName("Le changement APRÈS liaison est celui qui comptait : l'écouteur doit survivre")
     void l_ecouteur_survit_a_l_appel() {
-        DetailInspection.lier(label, present, texte);
+        DetailInspection.lier(label, icone, present, texte);
 
         // Le bug d'origine ne se voyait pas au premier rendu : l'icône initiale était juste, et c'est
         // le second passage qui restait figé. Forcer une collecte rend le test représentatif de ce que
@@ -74,16 +76,16 @@ class DetailInspectionTest {
     @Test
     @DisplayName("Toujours présent : la coche, sans branche « absent »")
     void toujours_present() {
-        DetailInspection.lierPresent(label, texte);
+        DetailInspection.lierPresent(label, icone, texte);
 
         assertThat(glypheAffiche()).isEqualTo(IconesSeverite.glyphe(Severite.SUCCES));
-        assertThat(label.getStyleClass()).containsExactly("insp-ok");
+        assertThat(label.getStyleClass()).containsExactlyInAnyOrder("insp-detail", "insp-ok");
     }
 
     @Test
     @DisplayName("Le texte ne porte plus de marqueur : il est dans l'icône")
     void le_texte_ne_porte_plus_de_glyphe() {
-        DetailInspection.lier(label, present, texte);
+        DetailInspection.lier(label, icone, present, texte);
         present.set(true);
         texte.set("Journal du capteur : PR n° 1925492");
 
