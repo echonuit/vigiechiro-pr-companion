@@ -14,7 +14,7 @@
 /* Fil d'Ariane (#32) : breadcrumb d'affichage + lien de retour cliquable vers M-Passage. */
 .fil-ariane {
   -fx-font-size: 12px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 .lien-retour {
@@ -33,7 +33,7 @@
 /* ---- Pré-check (R13, consultatif) ---- */
 .precheck-intro {
   -fx-font-size: 12px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 .feu {
@@ -41,7 +41,7 @@
   -fx-padding: 2 8 2 8;
   -fx-background-radius: 10;
   -fx-background-color: #eef2f5;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 /* L'icone d'un feu (#2036) : sa couleur vient de la classe du feu, portee en commun avec le texte. Un
@@ -149,7 +149,7 @@
 
 .progression-hint {
   -fx-font-size: 11px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 /* ---- Détail séquence ---- */
@@ -169,7 +169,7 @@
 
 .seq-meta {
   -fx-font-size: 12px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 /* ---- Boutons de verdict ---- */
@@ -274,7 +274,7 @@
 
 .badge-verdict-non-juge {
   -fx-background-color: #eef2f5;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 /*

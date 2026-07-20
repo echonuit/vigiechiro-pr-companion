@@ -11,7 +11,7 @@
  * Rôles : primaire = indigo (identité / barre de navigation, aligné sur le brief SAE 2.01),
  * succès = vert (validation / actions positives), nuit = indigo foncé (hero « une nuit de capture »).
  * Les autres couleurs de statut vivent en littéral dans les feuilles des features : avertissement
- * = ambre (#b9770e), danger = rouge (#a93226), neutre = gris (#6a737d).
+ * = ambre (#b9770e), danger = rouge (#a93226), neutre = gris (-badge-neutre-texte).
  *
  * Note de cohérence brief/app : le thème Material de la documentation déclare `accent: deep orange`,
  * qui y sert de couleur de lien/surbrillance. L'application ne reprend PAS ce deep orange : sa bande
@@ -50,7 +50,11 @@
     -couleur-avertissement: #b9770e;
     -couleur-avertissement-texte: #a36100;
     -couleur-danger: #a93226;
-    -couleur-neutre: #6a737d;
+    /* -couleur-neutre a ete retire (#322) : aucun usage, et il portait #6a737d, la valeur que #2102
+       a ecartee pour insuffisance de contraste (4,45:1). Un jeton que personne n'emploie et qui
+       porte une valeur non conforme ne protege rien : il attend celui qui le trouvera. Le gris du
+       texte secondaire, c'est -couleur-texte-discret ; celui d'une pastille neutre,
+       -badge-neutre-texte sur -badge-neutre-fond. */
 
     /*
      * Badges de statut (#691) : paires fond pastel / texte pour les pastilles de statut et de verdict.

@@ -17,7 +17,7 @@
 
 .message-lot {
   -fx-font-size: 12px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 /* ---- Étape 1 : contrôles effectués par « Préparer » (#251) ---- */
