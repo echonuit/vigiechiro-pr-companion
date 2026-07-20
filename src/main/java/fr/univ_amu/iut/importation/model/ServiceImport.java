@@ -142,6 +142,11 @@ public class ServiceImport {
     }
 
     /// Variante **annulable** (#146) : `jeton` est vérifié entre chaque fichier copié puis transformé ;
+    /// **Conserve les originaux** (copie dans `bruts/`) : ce n'est pas « le défaut », c'est un **choix
+    /// explicite** porté par cette variante. Le défaut de l'application vit dans le réglage
+    /// `import.conserver-originaux`, que ses appelants (IHM, CLI) lisent eux-mêmes — un service du
+    /// modèle n'a pas à connaître les préférences d'interface (#2064).
+    ///
     /// une annulation lève [OperationAnnuleeException] et **nettoie la session partielle** sur disque
     /// (aucun passage n'est persisté tant que la transformation n'est pas finie, persistance atomique O7
     /// → pas de demi-état en base). Même contrat transactionnel et mêmes règles que les autres variantes.

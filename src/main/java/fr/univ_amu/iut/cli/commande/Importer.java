@@ -3,10 +3,14 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
 import fr.univ_amu.iut.commun.model.Horloge;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Prefixe;
+import fr.univ_amu.iut.commun.model.Reglages;
+import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -55,6 +59,19 @@ public final class Importer implements Callable<Integer> {
             description = "Numéro de passage. Défaut : prochain numéro libre pour ce point.")
     private Integer numeroPassage;
 
+    @Option(
+            names = "--conserver-originaux",
+            description = "Copie les WAV bruts dans bruts/ avant transformation (option de ré-analyse :"
+                    + " plusieurs Go par nuit, import environ trois fois plus long). Par défaut, le réglage"
+                    + " « Conserver les originaux pour ré-analyse ultérieure ».")
+    private Boolean conserverOriginaux;
+
+    @Option(
+            names = "--sans-originaux",
+            description = "Force la transformation directe depuis la source, sans copier les bruts, quel que"
+                    + " soit le réglage. Incompatible avec --conserver-originaux.")
+    private boolean sansOriginaux;
+
     @Spec
     private CommandSpec spec;
 
@@ -64,13 +81,23 @@ public final class Importer implements Callable<Integer> {
     private final ServiceImport service;
     private final Horloge horloge;
 
+    /// Réglages : la commande y lit le mode de conservation par défaut, comme l'IHM (#2064).
+    private final Reglages reglages;
+
     @Inject
-    public Importer(PointDao pointDao, SiteDao siteDao, PassageDao passageDao, ServiceImport service, Horloge horloge) {
+    public Importer(
+            PointDao pointDao,
+            SiteDao siteDao,
+            PassageDao passageDao,
+            ServiceImport service,
+            Horloge horloge,
+            Reglages reglages) {
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.service = Objects.requireNonNull(service, "service");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.reglages = Objects.requireNonNull(reglages, "reglages");
     }
 
     @Override
@@ -87,7 +114,7 @@ public final class Importer implements Callable<Integer> {
         int numeroEffectif = numeroPassage != null ? numeroPassage : prochainNumero(passageDao, point);
         Prefixe prefixe = new Prefixe(site.numeroCarre(), anneeEffective, numeroEffectif, pointDEcoute.code());
 
-        ResultatImport resultat = service.importer(source, point, prefixe);
+        ResultatImport resultat = importerSelonLeMode(source, point, prefixe);
 
         sortie.println("Import réussi.");
         sortie.println("  Passage     : #" + resultat.passage().id());
@@ -109,6 +136,28 @@ public final class Importer implements Callable<Integer> {
             sortie.println("  (rapport CSV non écrit : " + echec.getMessage() + ")");
         }
         return 0;
+    }
+
+    /// Lance l'import dans le mode demandé : les options priment sur le **réglage**, qui sert de défaut.
+    ///
+    /// La commande lit le réglage **elle-même**, comme l'IHM. Auparavant elle passait par une variante
+    /// courte du service qui conservait en **dur** : la CLI gardait donc toujours les originaux quel que
+    /// soit le réglage, et le même geste ne faisait pas la même chose des deux côtés (#2064,
+    /// [ADR 0014]). Le service, lui, n'a pas à connaître une préférence d'interface.
+    private ResultatImport importerSelonLeMode(Path source, long point, Prefixe prefixe) {
+        if (conserverOriginaux != null && sansOriginaux) {
+            throw new RegleMetierException("--conserver-originaux et --sans-originaux s'excluent :"
+                    + " choisissez l'un ou l'autre, ou aucun pour suivre le réglage.");
+        }
+        boolean conserver;
+        if (sansOriginaux) {
+            conserver = false;
+        } else if (conserverOriginaux != null) {
+            conserver = conserverOriginaux;
+        } else {
+            conserver = reglages.lireBooleen(PreferenceConservation.CLE_PUBLIQUE, false);
+        }
+        return service.importer(source, point, prefixe, p -> {}, JetonAnnulation.neutre(), conserver);
     }
 
     private static int prochainNumero(PassageDao passageDao, long idPoint) {

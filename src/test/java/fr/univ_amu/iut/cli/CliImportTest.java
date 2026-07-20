@@ -85,6 +85,78 @@ class CliImportTest {
     }
 
     @Test
+    @DisplayName("#2064 : sans option, `importer` suit le réglage — il ne conserve plus en dur")
+    void importer_suit_le_reglage() {
+        // Avant #2064, la variante courte du service passait `true` en dur : la CLI conservait toujours
+        // les originaux, quel que soit le réglage, alors que l'IHM ne les conserve plus par défaut. Le
+        // même geste ne faisait pas la même chose des deux côtés (ADR 0014).
+        assertThat(importerAvec()).isEqualTo(Cli.CODE_SUCCES);
+
+        assertThat(dossierBrutsDuPassage())
+                .as("le défaut du réglage : pas de copie")
+                .doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#2064 : --conserver-originaux force la copie, quel que soit le réglage")
+    void option_conserver_force_la_copie() {
+        assertThat(importerAvec("--conserver-originaux")).isEqualTo(Cli.CODE_SUCCES);
+
+        assertThat(dossierBrutsDuPassage()).as("l'option prime sur le réglage").isDirectory();
+    }
+
+    @Test
+    @DisplayName("#2064 : les deux options s'excluent, et le disent")
+    void options_incompatibles() {
+        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
+        int code = cli.executer(
+                argsImport("--conserver-originaux", "--sans-originaux"),
+                new PrintStream(sortie, true, StandardCharsets.UTF_8),
+                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+
+        assertThat(code).isNotEqualTo(Cli.CODE_SUCCES);
+        assertThat(sortie.toString(StandardCharsets.UTF_8)).contains("s'excluent");
+    }
+
+    private int importerAvec(String... options) {
+        ByteArrayOutputStream sortie = new ByteArrayOutputStream();
+        return cli.executer(
+                argsImport(options),
+                new PrintStream(sortie, true, StandardCharsets.UTF_8),
+                new PrintStream(sortie, true, StandardCharsets.UTF_8));
+    }
+
+    private String[] argsImport(String... options) {
+        List<String> args = new java.util.ArrayList<>(List.of(
+                "importer",
+                "--source",
+                sd.toString(),
+                "--point",
+                String.valueOf(idPoint),
+                "--annee",
+                "2026",
+                "--passage",
+                "3"));
+        args.addAll(List.of(options));
+        return args.toArray(String[]::new);
+    }
+
+    /// Le dossier `bruts/` de la session du passage importé (existe seulement si la copie a eu lieu).
+    private Path dossierBrutsDuPassage() {
+        Long idPassage = injecteur
+                .getInstance(PassageDao.class)
+                .findByPoint(idPoint)
+                .getFirst()
+                .id();
+        return Path.of(injecteur
+                        .getInstance(fr.univ_amu.iut.passage.model.dao.SessionDao.class)
+                        .trouverParPassage(idPassage)
+                        .orElseThrow()
+                        .cheminRacine())
+                .resolve("bruts");
+    }
+
+    @Test
     @DisplayName("importer puis lister-passages : passage Transformé persisté, codes de sortie 0")
     void importer_puis_lister() {
         ByteArrayOutputStream sortieImport = new ByteArrayOutputStream();

@@ -19,6 +19,10 @@ public final class PreferenceConservation {
     /// Clé du réglage persisté (cf. [Reglages]).
     static final String CLE = "import.conserver-originaux";
 
+    /// La même clé, lisible hors du paquet : `ImportationModule` en fait le défaut du service, pour que
+    /// la CLI et les variantes courtes suivent le réglage au lieu de conserver en dur (#2064).
+    public static final String CLE_PUBLIQUE = CLE;
+
     private final Reglages reglages;
     private final BooleanProperty conserverOriginaux = new SimpleBooleanProperty(this, "conserverOriginaux", false);
 
