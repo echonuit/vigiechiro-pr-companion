@@ -188,6 +188,10 @@ class DocumentationAJourTest {
 
     private static final Path INDEX_ADR = DECISIONS.resolve("index.md");
 
+    /// Navigation du site **développeur**, distincte de celle du site produit ([#NAV]) : c'est elle qui
+    /// publie les ADR.
+    private static final Path NAV_DEV = Path.of("mkdocs-dev.yml");
+
     /// Un fichier d'ADR : quatre chiffres, un tiret, un titre en kebab-case.
     private static final Pattern FICHIER_ADR = Pattern.compile("^(\\d{4})-[a-z0-9-]+\\.md$");
 
@@ -247,6 +251,33 @@ class DocumentationAJourTest {
                     .isEqualTo(nom.group(1));
         }
         verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#2082 : chaque ADR est atteignable dans la nav du site dev, pas seulement au journal")
+    void chaque_adr_est_dans_la_nav() {
+        // Le journal (`index.md`) et la nav (`mkdocs-dev.yml`) sont **deux listes** pour une seule
+        // vérité, et seule la première était gardée. C'est ainsi que cinq ADR se sont retrouvées
+        // publiées mais introuvables autrement qu'en devinant leur URL : leur ligne de journal existait,
+        // leur entrée de nav non. MkDocs ne se plaint que de l'inverse (une entrée sans fichier).
+        String nav = lire(NAV_DEV);
+        List<String> fichiers = fichiersAdr();
+
+        assertThat(fichiers)
+                .as("aucune ADR trouvée : le test ne prouverait rien")
+                .isNotEmpty();
+
+        List<String> horsNav = fichiers.stream()
+                .filter(fichier -> !nav.contains("decisions/" + fichier))
+                .toList();
+
+        assertThat(horsNav)
+                .as(
+                        "Ces ADR existent et sont au journal, mais n'apparaissent dans aucune entrée `nav` de "
+                                + "%s : le site dev les publie sans qu'aucun lien n'y mène. Ajoutez-les sous "
+                                + "« Décisions », dans l'ordre de leur numéro.",
+                        NAV_DEV)
+                .isEmpty();
     }
 
     @Test
