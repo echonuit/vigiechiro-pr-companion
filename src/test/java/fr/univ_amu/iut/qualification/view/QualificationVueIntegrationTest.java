@@ -17,11 +17,13 @@ import fr.univ_amu.iut.commun.model.MethodeSelection;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.VerdictFichier;
+import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import fr.univ_amu.iut.qualification.model.ContexteVerification;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
@@ -45,6 +47,7 @@ import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -183,13 +186,22 @@ class QualificationVueIntegrationTest {
         assertThat(feuCouverture.getText()).contains("Couverture");
         assertThat(feuNombre.getText()).contains("Nombre");
         assertThat(feuRenommage.getText()).contains("renommage");
-        // #801 : différenciateur NON chromatique (pictogramme distinct par état) + infobulle explicative,
-        // pour ne pas encoder l'état par la seule couleur.
-        assertThat(feuCouverture.getText()).startsWith("✖");
-        assertThat(feuNombre.getText()).startsWith("⚠");
-        assertThat(feuRenommage.getText()).startsWith("✓");
+        // #801 : différenciateur NON chromatique + infobulle explicative, pour ne pas encoder l'état par
+        // la seule couleur. Le pictogramme était un caractère dans le libellé ; depuis #2036 c'est une
+        // icône, donc un nœud qui se teinte avec le texte et ne dépend plus des polices installées.
+        assertThat(glyphe(feuCouverture)).isEqualTo(IconesSeverite.glyphe(Severite.ERREUR));
+        assertThat(glyphe(feuNombre)).isEqualTo(IconesSeverite.glyphe(Severite.AVERTISSEMENT));
+        assertThat(glyphe(feuRenommage)).isEqualTo(IconesSeverite.glyphe(Severite.SUCCES));
+        // Trois états, trois formes : c'est ce qui rend le différenciateur non chromatique effectif.
+        assertThat(List.of(glyphe(feuCouverture), glyphe(feuNombre), glyphe(feuRenommage)))
+                .doesNotHaveDuplicates();
         assertThat(feuCouverture.getTooltip()).isNotNull();
         assertThat(feuCouverture.getTooltip().getText()).contains("anomalie");
+    }
+
+    /// Le glyphe d'un feu. Depuis #2036 il vit dans le `graphic` et non plus en tête du libellé.
+    private static String glyphe(Label feu) {
+        return ((FontIcon) feu.getGraphic()).getIconLiteral();
     }
 
     @Test

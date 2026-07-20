@@ -44,6 +44,24 @@
   -fx-text-fill: #6a737d;
 }
 
+/* L'icone d'un feu (#2036) : sa couleur vient de la classe du feu, portee en commun avec le texte. Un
+   FontIcon ne descend pas de -fx-text-fill, d'ou ces trois regles. */
+.feu-icone {
+  -fx-icon-size: 12px;
+}
+
+.feu-vert .ikonli-font-icon {
+  -fx-icon-color: #0e5128;
+}
+
+.feu-orange .ikonli-font-icon {
+  -fx-icon-color: #7e5109;
+}
+
+.feu-rouge .ikonli-font-icon {
+  -fx-icon-color: #6e2c00;
+}
+
 .feu-vert {
   -fx-background-color: #d5f0de;
   -fx-text-fill: #0e5128;
