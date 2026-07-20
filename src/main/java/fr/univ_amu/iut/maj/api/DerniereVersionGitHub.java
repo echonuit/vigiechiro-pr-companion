@@ -60,11 +60,7 @@ public final class DerniereVersionGitHub implements DerniereVersionPubliee {
                     .GET()
                     .build();
             HttpResponse<String> reponse = client.send(requete, HttpResponse.BodyHandlers.ofString());
-            if (reponse.statusCode() != 200) {
-                LOG.fine(() -> "Consultation des versions : code " + reponse.statusCode());
-                return Optional.empty();
-            }
-            return lire(reponse.body());
+            return interpreter(reponse.statusCode(), reponse.body());
         } catch (InterruptedException interruption) {
             // Rétablir le drapeau : l'appelant (une tâche de fond au démarrage) doit pouvoir s'arrêter.
             Thread.currentThread().interrupt();
@@ -75,13 +71,27 @@ public final class DerniereVersionGitHub implements DerniereVersionPubliee {
         }
     }
 
-    /// Extrait le numéro et l'adresse de la réponse, ou rend vide si elle n'a pas la forme attendue.
+    /// Décide ce que vaut une réponse : son **code**, puis son **corps** (#2193).
     ///
-    /// Visible du test à dessein : c'est ici que vivent tous les cas de réponse inattendue, et le
-    /// dépôt ne peut pas monter de serveur local en test - `jdk.httpserver` n'est pas lisible depuis
-    /// ce module (contrainte JPMS connue). Les exercer directement vaut mieux que de ne pas les
-    /// exercer.
-    Optional<VersionDisponible> lire(String corps) {
+    /// Séparée de l'envoi pour être testable. Le dépôt ne peut pas monter de serveur local en test -
+    /// `jdk.httpserver` n'est pas lisible depuis ce module (contrainte JPMS connue) - et l'issue
+    /// envisageait pour cela d'amender le descripteur de module ou d'injecter le `HttpClient`. Extraire
+    /// la décision coûte moins que les deux : elle ne dépend ni du réseau, ni de l'assemblage.
+    ///
+    /// Un code autre que 200 se tait, sans distinguer lequel : limite de débit (l'API anonyme de
+    /// GitHub plafonne à 60 requêtes par heure et par IP), panne du service, dépôt renommé. Aucun de
+    /// ces cas ne change ce que l'utilisateur peut faire.
+    Optional<VersionDisponible> interpreter(int codeHttp, String corps) {
+        if (codeHttp != 200) {
+            LOG.fine(() -> "Consultation des versions : code " + codeHttp);
+            return Optional.empty();
+        }
+        return lire(corps);
+    }
+
+    /// Extrait le numéro et l'adresse d'un corps de réponse, ou rend vide s'il n'a pas la forme
+    /// attendue.
+    private Optional<VersionDisponible> lire(String corps) {
         JsonObject json = JsonParser.parseString(corps).getAsJsonObject();
         if (!json.has("tag_name") || !json.has("html_url")) {
             return Optional.empty();

@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Test;
 /// panne à volonté.
 ///
 /// Le dépôt ne peut pas non plus monter un serveur local : `jdk.httpserver` n'est pas lisible depuis
-/// ce module (contrainte JPMS connue). On exerce donc l'**analyse de la réponse** directement, là où
-/// vivent tous les cas inattendus, plus le **hors-ligne** qui ne demande aucun serveur. Reste non
-/// couvert le seul aiguillage sur le code HTTP, qui est un `if` sur `statusCode != 200`.
+/// ce module (contrainte JPMS connue). On exerce donc l'**interprétation de la réponse** - code puis
+/// corps - directement, plus le **hors-ligne** qui ne demande aucun serveur. Depuis #2193, cela
+/// couvre aussi l'aiguillage sur le code HTTP, qui échappait au test.
 class DerniereVersionGitHubTest {
 
     private final DerniereVersionGitHub adaptateur = new DerniereVersionGitHub();
@@ -25,7 +25,7 @@ class DerniereVersionGitHubTest {
     @Test
     @DisplayName("une réponse conforme donne le numéro et l'adresse de la page")
     void reponseConforme() {
-        Optional<VersionDisponible> lue = adaptateur.lire("""
+        Optional<VersionDisponible> lue = adaptateur.interpreter(200, """
                 {"tag_name": "v2.26.0",
                  "html_url": "https://github.com/exemple/releases/tag/v2.26.0"}""");
 
@@ -39,8 +39,8 @@ class DerniereVersionGitHubTest {
     @Test
     @DisplayName("une réponse sans les champs attendus se tait")
     void reponseIncompleteSeTait() {
-        assertThat(adaptateur.lire("{\"message\": \"Not Found\"}")).isEmpty();
-        assertThat(adaptateur.lire("{\"tag_name\": \"v2.26.0\"}"))
+        assertThat(adaptateur.interpreter(200, "{\"message\": \"Not Found\"}")).isEmpty();
+        assertThat(adaptateur.interpreter(200, "{\"tag_name\": \"v2.26.0\"}"))
                 .as("un numéro sans adresse ne permet pas d'agir")
                 .isEmpty();
     }
@@ -48,11 +48,32 @@ class DerniereVersionGitHubTest {
     @Test
     @DisplayName("un tag qui n'est pas un numéro se tait")
     void tagNonNumeriqueSeTait() {
-        assertThat(adaptateur.lire("{\"tag_name\": \"nightly\", \"html_url\": \"https://exemple\"}"))
+        assertThat(adaptateur.interpreter(200, "{\"tag_name\": \"nightly\", \"html_url\": \"https://exemple\"}"))
                 .isEmpty();
-        assertThat(adaptateur.lire("{\"tag_name\": \"v2.26.0-rc.1\", \"html_url\": \"https://exemple\"}"))
+        assertThat(adaptateur.interpreter(200, "{\"tag_name\": \"v2.26.0-rc.1\", \"html_url\": \"https://exemple\"}"))
                 .as("une pré-version ne se propose pas à un naturaliste")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("un code autre que 200 se tait, quel qu'il soit")
+    void codeNonSuccesSeTait() {
+        // Le corps est volontairement VALIDE : c'est le code seul qui doit faire renoncer. Sans quoi
+        // le test passerait pour la mauvaise raison.
+        String corpsValide = "{\"tag_name\": \"v2.26.0\", \"html_url\": \"https://exemple\"}";
+
+        // 403 : la limite de débit anonyme de GitHub, le cas le plus probable en usage réel.
+        assertThat(adaptateur.interpreter(403, corpsValide)).isEmpty();
+        // 404 : dépôt renommé ou release retirée.
+        assertThat(adaptateur.interpreter(404, corpsValide)).isEmpty();
+        // 500 : panne du service.
+        assertThat(adaptateur.interpreter(500, corpsValide)).isEmpty();
+
+        // Contre-épreuve : le MÊME corps passe en 200. Sans elle, les trois cas ci-dessus seraient
+        // verts même si l'analyse était cassée.
+        assertThat(adaptateur.interpreter(200, corpsValide))
+                .as("le corps est bon : seul le code devait faire renoncer")
+                .isPresent();
     }
 
     @Test
