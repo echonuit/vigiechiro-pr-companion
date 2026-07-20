@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.26.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.25.0...v2.26.0) (2026-07-20)
+
+
+### Features
+
+* **flatpak:** manifeste Flathub, éprouvé sur une vraie carte SD ([#2178](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2178)) ([f66e833](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/f66e833ccd1bd4b3e7f1c80521e66445327ed76e)), closes [#2107](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2107) [#2111](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2111) [#2104](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2104)
+
 # [2.25.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.24.0...v2.25.0) (2026-07-20)
 
 
