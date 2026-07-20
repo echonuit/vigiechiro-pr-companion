@@ -51,6 +51,10 @@ Avant de cartographier quoi que ce soit, donc :
 3. **Décider des rattachements** : une issue appartient au chantier qui traite sa **cause**, pas celui
    qui a remarqué son symptôme. Quand deux chantiers se recoupent, **découper le périmètre
    explicitement** et l'écrire dans les deux, plutôt que de laisser la fusion arbitrer.
+   **Vérifier ce qui est déjà pris** : `gh issue list --assignee "*"` donne la liste, et le commentaire
+   de prise dit le chantier, la branche et le remède envisagé (voir ci-dessous). Une revendication
+   **ancienne se vérifie** au lieu de se croire — branche vivante ? PR ouverte ? — parce qu'une
+   revendication oubliée fait passer une issue libre pour prise.
 4. **Recadrer titre et corps** des issues déplacées. Un recadrage laissé en commentaire sous un corps
    périmé ne recadre rien : qui lit en diagonale retient la première version.
 
@@ -79,6 +83,38 @@ sans savoir ce qu'ils construisent.
 
 Le troisième point est celui qu'on saute, et c'est le seul qui ne se retrouve pas après coup. Une issue
 sans continuité écrite devient un correctif isolé dont personne ne sait s'il a été fini.
+
+### Et se signaler : dire qu'on la prend, et ce qu'on va faire
+
+Ces trois phrases ne servent pas qu'à soi. **Elles se déposent en commentaire sur l'issue**, et l'issue
+est **assignée** à qui la prend.
+
+Les deux ensemble, pas l'un ou l'autre, parce qu'ils ne servent pas à la même chose :
+
+- **l'assignee est le signal machine.** `gh issue list --assignee "*"` répond « voici tout ce qui est
+  pris » en une commande. Un commentaire, lui, oblige à ouvrir chaque issue pour savoir ;
+- **le commentaire porte ce que l'assignee ne dit pas** : de quel **chantier** l'issue relève, sur quelle
+  **branche** le travail se fait, et surtout **quel remède est envisagé**.
+
+Ce dernier point est le vrai gain, et il dépasse la simple réservation. Deux personnes peuvent voir le
+même défaut et imaginer deux corrections dont l'une est meilleure ; si chacune est annoncée, le
+désaccord se règle **avant** le code. Sinon il se règle au moment de choisir laquelle des deux branches
+on jette.
+
+**Un signalement se relâche.** Quand on s'arrête — reporté, bloqué, abandonné — on **retire l'assignee et
+on le dit**. Une revendication oubliée depuis trois semaines est **pire que rien** : elle fait passer une
+issue libre pour prise, et personne ne la reprendra. Au triage (étape 0), une revendication ancienne se
+**vérifie** — branche vivante ? PR ouverte ? — au lieu de se croire.
+
+!!! warning "Ce que le signalement ne couvre pas"
+    Il répond à « **cette issue est-elle prise ?** ». Il ne répond **pas** à « **cette issue est-elle la
+    même que celle-là, sous d'autres mots ?** » — et c'est cette seconde question qui a produit le
+    doublon le plus coûteux du dépôt : deux issues sur le même sujet, écrites depuis deux angles, ne se
+    ressemblent pas, et aucune n'était assignée.
+
+    Le signalement est un **filet**, pas une garantie : il repose sur la discipline, et la discipline
+    lâche exactement quand ça va vite, c'est-à-dire quand les collisions arrivent. Il complète l'étape 0,
+    il ne la remplace pas.
 
 ## À la clôture : les 10 passes
 
@@ -397,10 +433,20 @@ trompé : une analyse fausse laissée en place oriente le chantier suivant.
 - [ ] 10. Bilan (livré / dette / décisions) **+ artefact visuel avant/après soumis avant de clore**
 ```
 
-## Modèle de commencement d'issue (à écrire avant la première ligne de code)
+## Modèle de commencement d'issue (à **commenter sur l'issue**, avant la première ligne de code)
+
+À déposer en commentaire, **et assigner l'issue** dans la foulée.
 
 ```markdown
+**Pris par** : chantier <EPIC ou thème> · branche `<nom-de-branche>`
 **Ce qu'il y a à faire** : <une phrase, dans les termes du problème>
 **Pourquoi maintenant** : <ce qui la rend traitable ou urgente>
 **Dans quelle continuité** : <le chantier d'où elle vient, l'issue qu'elle suit, ce qu'elle permet ensuite>
+**Remède envisagé** : <la piste retenue, pour qu'un désaccord se voie avant le code>
+```
+
+Et quand on s'arrête sans avoir fini — reporté, bloqué, abandonné :
+
+```markdown
+**Reposée** : <ce qui a été fait, ce qui bloque, ce qu'il reste>. Assignee retiré.
 ```
