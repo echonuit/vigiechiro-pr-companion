@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.26.3](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.26.2...v2.26.3) (2026-07-20)
+
+
+### Bug Fixes
+
+* **accessibilite:** rattraper les gris littéraux et dériver les couples ([#2197](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2197)) ([3bb4b99](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/3bb4b99741a29b2e472077e357dd5871bb352407)), closes [#2102](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2102) [#2102](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2102) [#6a737d](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/6a737d) [#656e78](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/656e78) [#1537](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1537) [#2042](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2042) [#322](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/322) [#2102](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2102)
+
 ## [2.26.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.26.1...v2.26.2) (2026-07-20)
 
 
