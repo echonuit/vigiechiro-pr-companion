@@ -20,6 +20,7 @@ import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.InventaireParInspection;
+import fr.univ_amu.iut.importation.model.OutilsImport;
 import fr.univ_amu.iut.importation.model.RegenerationParTransformationAudio;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
@@ -124,13 +125,18 @@ public class ImportationModule extends ModuleDeFeature {
         return new AgregatImportDao(source);
     }
 
+    /// Les moyens d'écriture de l'import (#2041), avec la lecture disque réelle.
+    @Provides
+    @Singleton
+    OutilsImport fournirOutilsImport(CopieProtegee copie, Renommeur renommeur, TransformationAudio transformation) {
+        return OutilsImport.reels(copie, renommeur, transformation);
+    }
+
     @Provides
     @Singleton
     ServiceImport fournirServiceImport(
             InspecteurDossier inspecteur,
-            CopieProtegee copie,
-            Renommeur renommeur,
-            TransformationAudio transformation,
+            OutilsImport outils,
             AgregatImportDao agregatDao,
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
@@ -140,9 +146,7 @@ public class ImportationModule extends ModuleDeFeature {
             Optional<SynchronisationParticipation> synchronisation) {
         return new ServiceImport(
                 inspecteur,
-                copie,
-                renommeur,
-                transformation,
+                outils,
                 agregatDao,
                 uniteDeTravail,
                 workspace,

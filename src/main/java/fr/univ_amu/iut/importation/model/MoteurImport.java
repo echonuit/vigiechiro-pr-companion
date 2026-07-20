@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
+import fr.univ_amu.iut.commun.model.EspaceDisque;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
@@ -39,6 +40,11 @@ import java.util.function.Consumer;
 /// pas allonger les signatures.
 final class MoteurImport {
 
+    /// Marge du garde-fou d'espace disque (#2041) : en-têtes des tranches, journal, relevé climatique,
+    /// et de quoi ne pas remplir le disque au dernier octet. Même ordre de grandeur que la marge du
+    /// dépôt (`CompacteurDepot.MARGE_SECURITE_OCTETS`).
+    private static final long MARGE_ESPACE_DISQUE_OCTETS = 100L * 1000 * 1000;
+
     private final CopieProtegee copie;
     private final PreparationOriginaux preparation;
     private final DecoupageParallele decoupage;
@@ -48,6 +54,10 @@ final class MoteurImport {
     private final Workspace workspace;
     private final Horloge horloge;
 
+    /// Lecture de l'espace disque, injectée pour que le garde-fou soit testable sans dépendre de la
+    /// machine (#2041). Par défaut la lecture réelle.
+    private final EspaceDisque espaceDisque;
+
     MoteurImport(
             CopieProtegee copie,
             PreparationOriginaux preparation,
@@ -56,7 +66,8 @@ final class MoteurImport {
             AgregatImportDao agregatDao,
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
-            Horloge horloge) {
+            Horloge horloge,
+            EspaceDisque espaceDisque) {
         this.copie = Objects.requireNonNull(copie, "copie");
         this.preparation = Objects.requireNonNull(preparation, "preparation");
         this.decoupage = Objects.requireNonNull(decoupage, "decoupage");
@@ -65,6 +76,7 @@ final class MoteurImport {
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+        this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
     }
 
     /// Importe **plusieurs nuits** d'une même carte en **un passage par nuit** (même point, n° de passage
@@ -128,10 +140,12 @@ final class MoteurImport {
         Path dossierBruts = workspace.dossierBruts(nomSession);
         Path dossierTransformes = workspace.dossierTransformes(nomSession);
 
-        // Progression déterminée (#33) : N transformations, précédées de N copies UNIQUEMENT quand on
-        // conserve les originaux (mode sans copie → pas de phase de copie, la source est lue en place).
-        int nbOriginaux = originauxNuit.size();
-        int totalEtapes = (conserverOriginaux ? nbOriginaux : 0) + nbOriginaux;
+        int totalEtapes = totalEtapes(originauxNuit.size(), conserverOriginaux);
+
+        // Garde-fou d'espace disque (#2041), AVANT toute écriture : on refuse tôt et proprement plutôt
+        // que d'échouer à mi-import en laissant une session partielle. Le contrôle est **par nuit** :
+        // sur une carte multi-nuits, une nuit qui ne tient pas n'invalide pas celles déjà importées.
+        verifierEspaceDisque(originauxNuit, dossierSession.getParent(), conserverOriginaux);
 
         // Suivi par fichier (#947) : le plan de la nuit est annoncé AVANT toute écriture, une entrée par
         // original (l'ordre du plan fixe les numéros 1..N que copies et transformations cibleront). En
@@ -186,7 +200,7 @@ final class MoteurImport {
                     dossierTransformes,
                     prefixe,
                     journal.frequenceEchantillonnageHz(),
-                    nbOriginaux,
+                    originauxNuit.size(),
                     totalEtapes,
                     progres,
                     jeton,
@@ -354,6 +368,50 @@ final class MoteurImport {
         LocalDateTime nonStockeLocalement = conserverOriginaux ? null : horloge.maintenant();
         return new SessionDEnregistrement(
                 null, dossierSession.toString(), volumeOriginaux, volumeSequences, null, null, nonStockeLocalement);
+    }
+
+    /// Refuse l'import d'une nuit qui ne tiendrait manifestement pas sur le disque (#2041), **avant**
+    /// d'écrire quoi que ce soit — plutôt que d'échouer à mi-parcours en laissant une session partielle,
+    /// ce que `ExtracteurZip` avait constaté en `ENOSPC` sans pouvoir le prévenir.
+    ///
+    /// ## Ce que l'import écrit vraiment
+    ///
+    /// Les séquences pèsent **autant que leurs sources** : la transformation réécrit l'en-tête WAV à
+    /// `Fe/10` **sans recalculer aucun échantillon** ([TransformationAudio]), donc les octets audio sont
+    /// recopiés tels quels. L'estimation n'est pas un pari, elle se déduit du traitement.
+    ///
+    /// En mode **conservation**, les bruts sont copiés en plus : il faut donc **deux fois** le volume
+    /// source. Sans copie, une seule. La marge absorbe les en-têtes des tranches, le journal et le
+    /// relevé.
+    private void verifierEspaceDisque(List<Path> originaux, Path dossierCible, boolean conserverOriginaux) {
+        try {
+            long volume = volumeTotal(originaux);
+            long requis = (conserverOriginaux ? 2 * volume : volume) + MARGE_ESPACE_DISQUE_OCTETS;
+            long disponible = espaceDisque.disponibleOctets(dossierCible);
+            if (disponible < requis) {
+                throw new RegleMetierException("Espace disque insuffisant pour importer cette nuit : besoin"
+                        + " d'environ " + enGigaoctets(requis) + " Go, seulement " + enGigaoctets(disponible)
+                        + " Go disponibles. Libérez de l'espace"
+                        + (conserverOriginaux
+                                ? ", ou désactivez « Conserver les originaux pour ré-analyse ultérieure »"
+                                        + " dans Réglages ▸ Import (divise par deux la place nécessaire)."
+                                : "."));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Espace disque illisible pour " + dossierCible, e);
+        }
+    }
+
+    /// Volume en gigaoctets (base 1000), arrondi au dixième, pour un message lisible.
+    private static String enGigaoctets(long octets) {
+        return String.format(java.util.Locale.FRANCE, "%.1f", octets / 1_000_000_000.0);
+    }
+
+    /// Nombre d'étapes de progression d'une nuit (#33) : N transformations, précédées de N copies
+    /// **uniquement** quand on conserve les originaux — en mode sans copie il n'y a pas de phase de
+    /// copie, la source étant lue en place.
+    private static int totalEtapes(int nbOriginaux, boolean conserverOriginaux) {
+        return (conserverOriginaux ? nbOriginaux : 0) + nbOriginaux;
     }
 
     private static void supprimerSessionPartielle(Path dossierSession) {

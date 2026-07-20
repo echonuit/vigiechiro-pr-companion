@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.lot.model;
 
+import fr.univ_amu.iut.commun.model.EspaceDisque;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
@@ -69,11 +70,11 @@ final class RepertoireDepot {
     /// **`0` veut dire « inconnu », pas « plein »** : chemin absent, dossier introuvable, système de
     /// fichiers illisible. Les appelants doivent le traiter comme une absence d'information et non
     /// comme un refus - `ChoixSourceDepot` et `AnticipationEspaceDisque` le font tous deux
-    /// explicitement. C'est l'inverse de la convention de [CompacteurDepot.EspaceDisque], qui laisse
+    /// explicitement. C'est l'inverse de la convention de [EspaceDisque], qui laisse
     /// remonter l'échec pour que la génération **refuse** plutôt que de parier : là-bas on est sur le
     /// point d'écrire, ici on ne fait qu'anticiper.
     ///
-    /// La lecture physique elle-même est déléguée à [CompacteurDepot.EspaceDisque#reel] : c'est le seul
+    /// La lecture physique elle-même est déléguée à [EspaceDisque#reel] : c'est le seul
     /// endroit de l'application qui appelle `getUsableSpace`, et il n'y a aucune raison d'en avoir deux.
     long espaceDisponible(String cheminRacineSession) {
         if (cheminRacineSession == null) {
@@ -82,7 +83,7 @@ final class RepertoireDepot {
         try {
             Path racine = Path.of(cheminRacineSession);
             Path reference = Files.isDirectory(racine) ? racine : racine.getParent();
-            return reference == null ? 0L : CompacteurDepot.EspaceDisque.reel().disponibleOctets(reference);
+            return reference == null ? 0L : EspaceDisque.reel().disponibleOctets(reference);
         } catch (IOException e) {
             return 0L;
         }

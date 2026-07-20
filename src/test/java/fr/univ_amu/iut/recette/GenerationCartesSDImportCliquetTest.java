@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.AnalyseurLogPR;
 import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
+import fr.univ_amu.iut.importation.model.OutilsImport;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -102,9 +103,7 @@ class GenerationCartesSDImportCliquetTest {
 
         return new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                new CopieProtegee(),
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 workspace,

@@ -45,6 +45,19 @@ originaux pour ré-analyse ultérieure »**.
 
 Votre choix est **mémorisé** d'un import à l'autre.
 
+## Si le disque n'a pas la place
+
+Avant d'écrire quoi que ce soit, l'application vérifie qu'il reste assez de place pour la nuit à
+importer. Si ce n'est pas le cas, elle **refuse** et vous dit combien il manque, plutôt que de
+s'arrêter à mi-parcours en laissant un import incomplet.
+
+Le contrôle se fait **nuit par nuit** : sur une carte qui en contient plusieurs, celles déjà importées
+restent acquises.
+
+Quand l'option « conserver les originaux » est active, il faut **deux fois** la place — une fois pour
+la copie des enregistrements, une fois pour les séquences d'écoute. Le message vous propose alors de la
+désactiver, ce qui divise le besoin par deux.
+
 ## Source compressée (.zip)
 
 Vous pouvez aussi désigner une **archive `.zip`** (ou la glisser-déposer) plutôt qu'un dossier :

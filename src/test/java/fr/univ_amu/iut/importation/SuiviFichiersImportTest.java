@@ -18,6 +18,7 @@ import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
+import fr.univ_amu.iut.importation.model.OutilsImport;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.SuiviFichiers;
@@ -87,9 +88,7 @@ class SuiviFichiersImportTest {
         HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
         service = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                new CopieProtegee(),
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 workspace,

@@ -35,7 +35,7 @@ final class ChoixSourceDepot {
     private final Supplier<CompacteurDepot> compacteur;
 
     /// Espace disque disponible dans le dossier de session, isole pour rendre le seuil **testable** sans
-    /// dependre de l'etat reel de la machine - meme raison que [CompacteurDepot.EspaceDisque], dont c'est
+    /// dependre de l'etat reel de la machine - meme raison que [EspaceDisque], dont c'est
     /// ici le pendant au niveau du lot.
     private final ToLongFunction<String> espaceDisponible;
 

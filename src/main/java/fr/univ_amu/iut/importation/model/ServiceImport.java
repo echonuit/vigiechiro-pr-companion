@@ -83,9 +83,7 @@ public class ServiceImport {
 
     public ServiceImport(
             InspecteurDossier inspecteur,
-            CopieProtegee copie,
-            Renommeur renommeur,
-            TransformationAudio transformation,
+            OutilsImport outils,
             AgregatImportDao agregatDao,
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
@@ -99,11 +97,20 @@ public class ServiceImport {
         this.compteurValidations = Objects.requireNonNull(compteurValidations, "compteurValidations");
         this.serviceSauvegarde = Objects.requireNonNull(serviceSauvegarde, "serviceSauvegarde");
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
-        PreparationOriginaux preparation = new PreparationOriginaux(copie, renommeur, PARALLELISME_FICHIERS);
-        DecoupageParallele decoupage = new DecoupageParallele(transformation, PARALLELISME_FICHIERS);
+        PreparationOriginaux preparation =
+                new PreparationOriginaux(outils.copie(), outils.renommeur(), PARALLELISME_FICHIERS);
+        DecoupageParallele decoupage = new DecoupageParallele(outils.transformation(), PARALLELISME_FICHIERS);
         FabriqueEntitesImport fabriqueEntites = new FabriqueEntitesImport(horloge);
         this.moteur = new MoteurImport(
-                copie, preparation, decoupage, fabriqueEntites, agregatDao, uniteDeTravail, workspace, horloge);
+                outils.copie(),
+                preparation,
+                decoupage,
+                fabriqueEntites,
+                agregatDao,
+                uniteDeTravail,
+                workspace,
+                horloge,
+                outils.espaceDisque());
     }
 
     /// Inspecte (lecture seule) le dossier SD sans rien importer : utile pour prévisualiser le

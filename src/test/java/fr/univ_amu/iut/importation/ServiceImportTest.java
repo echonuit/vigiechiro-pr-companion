@@ -28,6 +28,7 @@ import fr.univ_amu.iut.importation.model.CopieProtegee;
 import fr.univ_amu.iut.importation.model.InspecteurDossier;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.NuitDetectee;
+import fr.univ_amu.iut.importation.model.OutilsImport;
 import fr.univ_amu.iut.importation.model.RapportImport;
 import fr.univ_amu.iut.importation.model.Renommeur;
 import fr.univ_amu.iut.importation.model.ResultatImport;
@@ -78,6 +79,10 @@ import org.junit.jupiter.api.io.TempDir;
 /// Les WAV source sont synthétiques ; c'est la **fréquence d'acquisition du journal** (`Fe384kHz`) qui
 /// pilote la transformation, pas l'en-tête WAV (cf. `FrequenceAcquisition`).
 class ServiceImportTest {
+
+    /// Marge du garde-fou d'espace disque de l'import (#2041), reprise de `MoteurImport` : les tests de
+    /// seuil doivent viser **entre** les deux besoins, pas à côté.
+    private static final long MARGE_GARDE_OCTETS = 100L * 1000 * 1000;
 
     private static final String ID_USER = "u-1";
     // En-tête des fixtures « directes » : égal à la Fe du log (384 kHz). Un vrai brut PR aurait l'en-tête à
@@ -135,9 +140,7 @@ class ServiceImportTest {
 
         service = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                new CopieProtegee(),
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 workspace,
@@ -230,9 +233,7 @@ class ServiceImportTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         ServiceImport avecSync = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                new CopieProtegee(),
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
@@ -276,6 +277,88 @@ class ServiceImportTest {
         assertThat(sequenceDao.findBySession(idSession))
                 .singleElement()
                 .satisfies(s -> assertThat(s.dureeSecondes()).isEqualTo(1.5));
+    }
+
+    @Test
+    @DisplayName("#2041 : un disque trop plein refuse l'import AVANT d'écrire, et dit combien il manque")
+    void disque_insuffisant_refuse_avant_ecriture() {
+        // Refuser tôt plutôt qu'échouer à mi-import en laissant une session partielle : c'est ce que
+        // `ExtracteurZip` constatait en ENOSPC sans pouvoir le prévenir.
+        ServiceImport serre = serviceAvecDisque(dossier -> 1L);
+
+        assertThatThrownBy(() -> serre.importer(sd, idPoint, prefixe))
+                .isInstanceOf(RegleMetierException.class)
+                .hasMessageContaining("Espace disque insuffisant")
+                .hasMessageContaining("Go disponibles");
+
+        assertThat(racine.resolve("ws").resolve(prefixe.nomDossierSession()))
+                .as("aucune session partielle n'a été écrite")
+                .doesNotExist();
+    }
+
+    @Test
+    @DisplayName("#2041 : le refus propose de désactiver la conservation, qui divise le besoin par deux")
+    void refus_en_conservation_propose_l_option() {
+        // En conservation il faut deux fois le volume source (les bruts copiés, puis les séquences qui
+        // pèsent autant — la transformation ne recalcule aucun échantillon). L'utilisateur a donc une
+        // issue autre que « libérez de l'espace », et le message la lui donne.
+        ServiceImport serre = serviceAvecDisque(dossier -> 1L);
+
+        assertThatThrownBy(() -> serre.importer(sd, idPoint, prefixe)).hasMessageContaining("Conserver les originaux");
+    }
+
+    @Test
+    @DisplayName("#2041 : sans conservation, le besoin est moitié moindre — un disque juste suffisant passe")
+    void sans_conservation_le_besoin_est_moitie_moindre() {
+        // Le même disque qui refuse en conservation accepte sans copie : c'est exactement ce que
+        // l'option fait gagner, et le garde-fou doit le refléter.
+        // Fenêtre calculée sur le volume réel, pas sur un ordre de grandeur deviné : les WAV de la
+        // fixture sont minuscules, un écart fixe de 150 Mo couvrait les deux seuils à la fois.
+        // conservation exige 2V + marge, sans copie V + marge : on vise entre les deux.
+        long volumeSource = volumeDe(sd);
+        long presqueJuste = MARGE_GARDE_OCTETS + volumeSource + volumeSource / 2;
+        ServiceImport serre = serviceAvecDisque(dossier -> presqueJuste);
+
+        assertThatThrownBy(() -> serre.importer(sd, idPoint, prefixe))
+                .as("en conservation, il faut le double")
+                .isInstanceOf(RegleMetierException.class);
+
+        assertThat(serre.importer(sd, idPoint, prefixe, p -> {}, JetonAnnulation.neutre(), false)
+                        .nombreSequences())
+                .as("sans copie, le même disque suffit")
+                .isPositive();
+    }
+
+    /// Un service dont la lecture d'espace disque est pilotée par le test (#2041).
+    private ServiceImport serviceAvecDisque(fr.univ_amu.iut.commun.model.EspaceDisque espace) {
+        return new ServiceImport(
+                new InspecteurDossier(new AnalyseurLogPR()),
+                new OutilsImport(new CopieProtegee(), new Renommeur(), new TransformationAudio(), espace),
+                new AgregatImportDao(source),
+                new UniteDeTravail(source),
+                new Workspace(racine.resolve("ws")),
+                new HorlogeFigee(LocalDate.of(2026, 5, 31)),
+                idPassage -> 0,
+                new ServiceSauvegarde(source, new HorlogeFigee(LocalDate.of(2026, 5, 31))),
+                Optional.empty());
+    }
+
+    /// Volume total des WAV d'un dossier source, base du besoin estimé.
+    private static long volumeDe(Path dossierSource) {
+        try (var chemins = Files.walk(dossierSource)) {
+            return chemins.filter(Files::isRegularFile)
+                    .filter(c -> c.toString().endsWith(".wav"))
+                    .mapToLong(c -> {
+                        try {
+                            return Files.size(c);
+                        } catch (IOException e) {
+                            throw new java.io.UncheckedIOException(e);
+                        }
+                    })
+                    .sum();
+        } catch (IOException e) {
+            throw new java.io.UncheckedIOException(e);
+        }
     }
 
     @Test
@@ -448,9 +531,7 @@ class ServiceImportTest {
         };
         ServiceImport reprise = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                copieComptee,
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(copieComptee, new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
@@ -494,9 +575,7 @@ class ServiceImportTest {
         };
         ServiceImport reprise = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                copieComptee,
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(copieComptee, new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
@@ -793,9 +872,7 @@ class ServiceImportTest {
         // Compteur de validations doublé : renvoie 3 pour tout passage résolu (id non nul).
         ServiceImport avecCompteur = new ServiceImport(
                 new InspecteurDossier(new AnalyseurLogPR()),
-                new CopieProtegee(),
-                new Renommeur(),
-                new TransformationAudio(),
+                OutilsImport.reels(new CopieProtegee(), new Renommeur(), new TransformationAudio()),
                 new AgregatImportDao(source),
                 new UniteDeTravail(source),
                 new Workspace(racine.resolve("ws")),
