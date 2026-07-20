@@ -24,6 +24,10 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # `checks: write` sert à publier le check `titre` sur la PR d'aperçus : GitHub ne déclenche
+  # aucun workflow pour un événement produit avec le GITHUB_TOKEN, donc titre-pr.yml ne peut
+  # pas s'exécuter ici. Cf. l'étape « Valider le titre » plus bas.
+  checks: write
 
 # Évite que deux régénérations de main (pushes rapprochés) se marchent dessus. Le groupe inclut la
 # ref : une PR n'annule jamais le run de `main`, ni celui d'une autre PR.
@@ -82,6 +86,33 @@ jobs:
 
           gh pr create --base main --head "$BRANCH" --title "$MSG" \
             --body "Mise à jour automatique de la galerie d'aperçus (.github/assets/apercu-*.png). PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
+
+          # Valider le titre, et publier le résultat comme check `titre`.
+          #
+          # `titre` est un check REQUIS (ruleset `titre-de-pr-conforme`), mais titre-pr.yml ne peut
+          # pas s'exécuter sur cette PR : GitHub ne déclenche aucun workflow pour un événement
+          # produit avec le GITHUB_TOKEN (garde-fou anti-récursion). Un check requis qui ne rapporte
+          # jamais bloque la fusion indéfiniment - c'est exactement ce qui est arrivé à la PR #2124.
+          #
+          # On exécute donc ICI la MÊME validation, avec le MÊME script : seul le transport du
+          # résultat change, le contrôle reste réel. Publier un succès en dur reviendrait à faire
+          # croire à une vérification qui n'a pas eu lieu.
+          chmod +x .github/scripts/verifie-titre-pr.sh
+          if ./.github/scripts/verifie-titre-pr.sh "$MSG"; then
+            VERDICT=success
+            RESUME="Titre conforme à Conventional Commits."
+          else
+            VERDICT=failure
+            RESUME="Titre non conforme : la PR d'aperçus ne sera pas fusionnée."
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/check-runs" \
+            -f name=titre \
+            -f head_sha="$(git rev-parse HEAD)" \
+            -f status=completed \
+            -f conclusion="$VERDICT" \
+            -f 'output[title]=Titre de PR' \
+            -f "output[summary]=${RESUME}" >/dev/null
+          echo "Check titre publié : ${VERDICT}"
 
           # Merge LINÉAIRE (compatible required_linear_history) : squash si autorisé, sinon rebase.
           # Retry : l'état « mergeable » est parfois calculé en asynchrone juste après l'ouverture.
