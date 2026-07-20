@@ -1051,6 +1051,85 @@ sequenceDiagram
 
 ---
 
+## Matérialiser tard, consommer, libérer aussitôt
+
+**Le problème.** Certaines étapes ont besoin de fichiers qui **n'existent pas encore** : les tranches
+régénérées d'un brut, les archives ZIP d'un dépôt. Tout produire d'abord, tout consommer ensuite est la
+lecture naturelle - et c'est celle qui fait exploser le disque, précisément sur les nuits volumineuses
+que ces opérations visent. Régénérer une nuit entière pour libérer de la place commencerait par doubler
+l'occupation qu'on cherchait à réduire.
+
+**La solution.** Ne matérialiser qu'**au moment de consommer**, et libérer **dès que la consommation
+est acquise**. Le pic n'est plus la somme des ressources produites, mais le nombre de ressources
+vivantes à un instant donné - un nombre que l'on **borne explicitement**.
+
+La libération n'est donc pas de l'hygiène : **c'est elle qui borne le pic**. C'est ce qui distingue ce
+patron d'un simple `try`/`finally` de nettoyage.
+
+**Dans cette application.** Le patron est écrit quatre fois, dans trois features :
+
+| Où | Matérialise | Libère | Ce qui borne le pic |
+|---|---|---|---|
+| [`DecoupageParallele`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/importation/model/DecoupageParallele.java) | un sous-dossier `.tmp-decoupage/<i>` par original | après le nommage définitif | le `Semaphore` de la campagne |
+| [`ReactivationDepuisBruts`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/ReactivationDepuisBruts.java) | `DossierTemporaire.creer("vc-regen-…")` | en `finally`, après rebranchement | **un brut à la fois** |
+| [`HydratationDepuisBruts`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/HydratationDepuisBruts.java) | un temporaire par brut, sur un fil d'`ExecutionParallele` | en `finally` | le `Semaphore` d'`ExecutionParallele` |
+| [`SourceArchivesRegenerables`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/lot/model/SourceArchivesRegenerables.java) | une archive ZIP à la résolution | après le commit `DEPOSE` | la fenêtre 2, relayée par `parallelismeMax()` |
+
+```mermaid
+sequenceDiagram
+    participant M as Moteur
+    participant S as Source / temporaire
+    participant C as Consommateur
+    loop dans la limite de la borne
+        M->>S: matérialiser (tard, faillible)
+        S-->>M: chemin
+        M->>C: consommer
+        alt consommation prouvée
+            M->>S: libérer
+        else échec
+            Note over S: reste sur le disque,<br/>la reprise le retrouve
+        end
+    end
+```
+
+**La libération suit la preuve, jamais la tentative.** Dans le dépôt, `source.liberer` est appelé
+*après* le commit qui marque l'unité `DEPOSE`, jamais avant : une coupure entre les deux laisserait une
+unité ni en ligne ni sur le disque. La reprise la régénérerait, mais on aurait perdu la preuve de
+l'envoi.
+
+**Principes.** **SRP** (qui produit la ressource sait la libérer) ; borne le pic disque, objectif O3.
+
+!!! note "Deux politiques d'échec de libération, et c'est voulu"
+    Trois des quatre occurrences **avalent** l'échec de libération : ne pas avoir pu rendre de la place
+    n'est pas une raison de faire échouer une opération par ailleurs réussie. Le reliquat sera repris
+    par « Libérer l'espace disque ». C'est le contrat que portent
+    [`DossierTemporaire.supprimer`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/passage/model/DossierTemporaire.java)
+    (« efface **au mieux** ») et `SourceDepot.liberer`, formulé deux fois de façon indépendante.
+
+    `DecoupageParallele` **échoue dur**, et c'est la bonne asymétrie : son temporaire n'est pas un
+    reliquat mais une **étape du pipeline**. Le nommage définitif lit ce dossier
+    ([ADR 0026](decisions/0026-le-nommage-des-tranches-est-une-etape-du-pipeline.md)) ; un temporaire
+    survivant fausserait la découpe suivante au lieu de simplement occuper de la place.
+
+    La règle : **avaler si la ressource n'est qu'un coût, échouer si elle porte du sens.**
+
+!!! warning "Ce qui n'est pas ce patron : la ressource de session"
+    `ImportationViewModel` extrait aussi un ZIP dans un temporaire, mais celui-ci est un **champ** qui
+    survit à plusieurs interactions, se libère sur des **transitions d'écran** et non à la fin d'une
+    consommation, et s'accompagne d'un filet anti-fuite balayant les résidus au démarrage.
+
+    C'est une **ressource de session**, gouvernée par le cycle de vie d'un écran. Lui appliquer ce
+    patron-ci la libérerait sous les pieds de l'utilisateur. Un patron sans frontière se fait invoquer
+    à tort.
+
+Trois ADR décidaient déjà ce patron, chacune pour sa feature et sans se citer :
+[0026](decisions/0026-le-nommage-des-tranches-est-une-etape-du-pipeline.md) (temporaire vidé après
+chaque brut), [0032](decisions/0032-le-plan-precede-l-ecriture.md) (résolution tardive et faillible,
+`liberer` no-op par défaut), [0033](decisions/0033-la-fenetre-borne-le-disque.md) (fenêtre bornée, la
+libération suit la preuve). Cette section est ce qui les relie.
+
+---
+
 ## Observer (propriétés et *binding* JavaFX)
 
 **Le problème.** Comment garder l'IHM **synchronisée** avec l'état sans que le modèle « pousse » vers
