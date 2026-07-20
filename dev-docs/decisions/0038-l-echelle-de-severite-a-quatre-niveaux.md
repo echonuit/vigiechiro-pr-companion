@@ -3,6 +3,7 @@
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : EPIC #1990 / sous-EPIC #2004 (#2045, #2050)
 - **Applique** : [ADR 0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) point 5, dont elle fournit le garde-fou.
+- **Amendée le 2026-07-20** (#2159) : le contexte ci-dessous était écrit depuis **une** des deux échelles de sévérité de l'application. Voir « Ce que cette ADR ignorait ».
 
 ## Contexte
 
@@ -21,6 +22,32 @@ avertissement.set("⚠ Le passage n° " + numero + " existe déjà pour ce point
 Une fois dehors, plus rien ne bornait leur forme. Trois d'entre elles y joignaient des **listes entières** ; une quatrième réduisait une collection à un booléen (« un ou plusieurs numéros sont déjà utilisés », alors que la boucle savait lesquels).
 
 Le besoin était par ailleurs déjà inscrit **dans la feuille de style** avant de l'être dans le type : `importation.css` définissait `.insp-avertissement` en ambre à côté de `.insp-incoherence` en rouge. La distinction existait, elle ne pouvait simplement pas se dire.
+
+## Ce que cette ADR ignorait
+
+Le contexte ci-dessus dit qu'un niveau `AVERTISSEMENT` **manquait**. C'était vrai de
+`RetourOperation.Severite`, et **faux de l'application** : `audit.model.SeveriteConstat` portait
+`ERREUR`, `AVERTISSEMENT`, `INFO` depuis sa création.
+
+Deux échelles coexistaient donc, l'une en `model`, l'autre en `viewmodel`, sans conversion, sans renvoi
+documentaire, sans mention de l'une dans l'autre. Cette ADR a été écrite depuis un seul des deux angles,
+faute d'avoir cherché l'autre — et son auteur venait pourtant de passer un chantier entier à traquer
+exactement ce motif : **deux vocabulaires pour un concept**.
+
+Découvert le lendemain, en préparant le lot 3 de #2036 : `VerdictCarre` devait porter sa sévérité, et le
+choix fait pour lui décidait laquelle des deux échelles faisait autorité.
+
+**Ce que la décision devient.** #2159 a posé `commun.model.Severite` comme échelle unique : les deux
+précédentes s'y adossent, et plus aucun `model` ne cite `viewmodel`. Les quatre points ci-dessous
+restent entièrement valables — ils portaient sur la **forme** de l'échelle (ses niveaux, son ordre, ses
+glyphes), pas sur sa localisation.
+
+**Ce que ça n'invalide pas.** Le mécanisme décrit — huit propriétés sorties du type faute de pouvoir s'y
+ranger — est exact et documenté par #2050. Le niveau manquait bien *là où elles vivaient*.
+
+**La leçon, qui vaut au-delà de ce cas.** Chercher ce qui manque à un type demande de chercher d'abord
+s'il est seul de son espèce. Une analyse menée depuis un seul angle produit un constat vrai et une
+conclusion incomplète — et rien, dans le constat, ne signale qu'il manque un angle.
 
 ## Décision
 
@@ -47,3 +74,5 @@ Les neuf propriétés hors du type reviennent une par une (#2050). Quatre l'ont 
 ## Ce que la mise en œuvre a appris
 
 Le niveau manquant ne s'est pas signalé par des messages mal classés, mais par une **fuite hors du système**. Quand un type ne sait pas exprimer un cas, le cas ne se plie pas au type : il en sort, et ce qui l'en empêchait cesse de s'appliquer. Chercher les niveaux manquants d'une énumération revient donc à chercher ce qui a **contourné** l'énumération, pas ce qui s'y est mal rangé.
+
+Et — leçon ajoutée par l'amendement — la fuite ne va pas toujours vers des chaînes libres. Elle peut aller vers **une seconde énumération**, dans une autre couche, qui règle le même problème sans le savoir. Celle-là ne se trouve pas en cherchant des glyphes : elle se trouve en cherchant des **synonymes**.

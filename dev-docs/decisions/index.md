@@ -82,7 +82,7 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) | Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère | #1933, #700 |
 | [0036](0036-la-copie-des-bruts-est-une-option.md) | La copie des enregistrements bruts est une option de ré-analyse, pas un défaut | EPIC #2061 |
 | [0037](0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md) | Une barre d'actions plie ; et tout texte coupé n'est pas une barre qui ne plie pas | #2012, #1641, #1873 |
-| [0038](0038-l-echelle-de-severite-a-quatre-niveaux.md) | L'échelle de sévérité compte quatre niveaux, et son ordre de déclaration porte la sémantique | #1990, #2004 |
+| [0038](0038-l-echelle-de-severite-a-quatre-niveaux.md) | L'échelle de sévérité compte quatre niveaux, et son ordre de déclaration porte la sémantique *(amendée : elle en ignorait une seconde)* | #1990, #2004, #2159 |
 | [0039](0039-une-barre-de-statut-est-neutre.md) | Une barre de statut dit où l'on en est, pas si c'est bien ou mal | #1990, #2004 |
 | [0040](0040-le-sujet-de-commit-est-une-syntaxe.md) | Le sujet d'un commit est une syntaxe, pas une phrase française : le `:` ne prend pas d'espace | EPIC #2104, #2105 |
 | [0041](0041-un-check-requis-gouverne-la-branche.md) | Un check requis ne gouverne pas les PR, il gouverne la branche : le contrôle du titre reste informatif | EPIC #2104, #2106 |
