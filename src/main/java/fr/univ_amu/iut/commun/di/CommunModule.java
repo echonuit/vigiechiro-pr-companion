@@ -30,6 +30,7 @@ import fr.univ_amu.iut.commun.view.ActionRestaurerComplet;
 import fr.univ_amu.iut.commun.view.ActionSauvegarder;
 import fr.univ_amu.iut.commun.view.ActionSauvegarderComplet;
 import fr.univ_amu.iut.commun.view.ActionSourceEspece;
+import fr.univ_amu.iut.commun.view.AnnonceChrome;
 import fr.univ_amu.iut.commun.view.DescripteurReglage;
 import fr.univ_amu.iut.commun.view.ExecuteurFiche;
 import fr.univ_amu.iut.commun.view.ExecuteurFicheAsynchrone;
@@ -93,6 +94,10 @@ public class CommunModule extends AbstractModule {
         // `Set<ActionMenu>`. Le socle contribue les entrées transverses (sauvegarde / restauration /
         // purge / source des fiches / réglages) ; les features en ajoutent via leur module (ex.
         // l'entrée « Connexion » vient de `connexion`, #931).
+        // Annonces du chrome (#2109) : Multibinder déclaré VIDE ici, pour que le socle démarre
+        // même si aucune feature n'en contribue - c'est le cas quand `maj` est désactivée.
+        Multibinder.newSetBinder(binder(), AnnonceChrome.class);
+
         Multibinder<ActionMenu> actions = Multibinder.newSetBinder(binder(), ActionMenu.class);
         actions.addBinding().to(ActionSauvegarder.class);
         // Sauvegarde/restauration COMPLETES (base + audio, #1346) : le moteur existait depuis #1142 sans

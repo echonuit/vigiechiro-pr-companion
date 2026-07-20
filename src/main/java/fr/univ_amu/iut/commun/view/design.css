@@ -806,7 +806,12 @@
    de l'etat vide. Volontairement TRES visible (gras, fond sature, epais filet d'accent a gauche) :
    c'est parfois le seul retour sur le succes ou l'echec d'une operation, il ne doit pas passer
    inapercu. */
-.bandeau-retour {
+/* `.bandeau-annonce` partage l'apparence sans etre un bandeau de retour : c'est une ANNONCE du
+   chrome (#2109), portee par un autre composant. Elle a sa propre classe pour que le garde-fou
+   structurel de BandeauRetourStructureTest continue de reconnaitre les vrais bandeaux de retour
+   a leur classe, sans confondre les deux. */
+.bandeau-retour,
+.bandeau-annonce {
     -fx-font-size: 14px;
     -fx-font-weight: bold;
     -fx-padding: 12 16;

@@ -5,7 +5,7 @@
 # une capture, et chaque capture listée doit exister dans .github/assets/. But : aucune vue livrée
 # sans capture de référence, et plusieurs états par vue quand ils sont pertinents.
 
-fr/univ_amu/iut/commun/view/MainView.fxml                : apercu-accueil.png apercu-recherche.png apercu-navigation-garde-saisie.png apercu-recherche-especes.png apercu-fiche-espece-source.png apercu-menu-outils.png
+fr/univ_amu/iut/commun/view/MainView.fxml                : apercu-accueil.png apercu-recherche.png apercu-navigation-garde-saisie.png apercu-recherche-especes.png apercu-fiche-espece-source.png apercu-menu-outils.png apercu-annonce-maj.png
 fr/univ_amu/iut/commun/view/EcranReglages.fxml           : apercu-reglages.png apercu-reglages-import.png apercu-reglages-depot.png
 fr/univ_amu/iut/sites/view/MesSites.fxml                 : apercu-sites-mes-sites.png apercu-sites-mes-sites-vide.png
 fr/univ_amu/iut/sites/view/SiteDetail.fxml               : apercu-sites-detail.png apercu-sites-detail-sans-passage.png

@@ -53,6 +53,7 @@ public class MainController {
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
     private final Set<ActionMenu> actionsMenu;
+    private final BandeauAnnonce bandeau;
     private final OccupationChrome occupationChrome;
 
     /// Racine `StackPane` de la fenêtre : hôte du voile d'occupation du chrome (#1215).
@@ -108,6 +109,18 @@ public class MainController {
     private MenuButton menuOutils;
 
     @FXML
+    private HBox bandeauAnnonce;
+
+    @FXML
+    private Label texteAnnonce;
+
+    @FXML
+    private Hyperlink lienAnnonce;
+
+    @FXML
+    private Button fermerAnnonce;
+
+    @FXML
     private VBox panneauResultats;
 
     @FXML
@@ -132,7 +145,8 @@ public class MainController {
             OuvrirSite ouvrirSite,
             OuvrirPassage ouvrirPassage,
             Set<ActionMenu> actionsMenu,
-            OccupationChrome occupationChrome) {
+            OccupationChrome occupationChrome,
+            BandeauAnnonce bandeau) {
         this.navigation = navigation;
         this.navigateur = navigateur;
         this.activites = activites;
@@ -141,6 +155,7 @@ public class MainController {
         this.ouvrirSite = ouvrirSite;
         this.ouvrirPassage = ouvrirPassage;
         this.actionsMenu = actionsMenu;
+        this.bandeau = bandeau;
         this.occupationChrome = occupationChrome;
     }
 
@@ -157,6 +172,11 @@ public class MainController {
         // restauration, purge, préférences, réglages, connexion — sans que ce controller connaisse
         // chaque entrée. `this::fenetre` fournit la fenêtre propriétaire des dialogues au clic.
         ConstructeurMenuOutils.peupler(menuOutils, actionsMenu, this::fenetre);
+
+        // Bandeau d'annonce (#2109) : ce que l'application a à dire au démarrage, cherché hors du
+        // fil JavaFX. Le socle ne connaît aucune feature - il affiche ce que les AnnonceChrome
+        // contribuées lui donnent, et reste invisible quand elles n'ont rien à dire.
+        bandeau.installer(bandeauAnnonce, texteAnnonce, lienAnnonce, fermerAnnonce);
 
         // Voile d'occupation du chrome (#1215) : les traitements longs du menu ☰ (sauvegarde,
         // restauration, purge) voilent toute la fenêtre pendant leur travail hors du fil JavaFX.

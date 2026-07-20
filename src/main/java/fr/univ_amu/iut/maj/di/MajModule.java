@@ -2,13 +2,16 @@ package fr.univ_amu.iut.maj.di;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.Multibinder;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.VersionApplication;
+import fr.univ_amu.iut.commun.view.AnnonceChrome;
 import fr.univ_amu.iut.maj.api.DerniereVersionGitHub;
 import fr.univ_amu.iut.maj.model.DerniereVersionPubliee;
 import fr.univ_amu.iut.maj.model.VerificateurMiseAJour;
+import fr.univ_amu.iut.maj.view.AnnonceMiseAJour;
 
 /// Module Guice de la feature `maj` : savoir qu'une version plus récente existe (#2109).
 ///
@@ -20,6 +23,11 @@ import fr.univ_amu.iut.maj.model.VerificateurMiseAJour;
 ///
 /// Rien d'autre dans l'application ne dépend de cette feature : la désactiver n'enlève qu'un message.
 public class MajModule extends ModuleDeFeature {
+
+    @Override
+    protected void configure() {
+        Multibinder.newSetBinder(binder(), AnnonceChrome.class).addBinding().to(AnnonceMiseAJour.class);
+    }
 
     @Override
     public Fonctionnalite fonctionnalite() {

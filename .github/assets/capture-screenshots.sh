@@ -27,6 +27,7 @@ cd "$RACINE"
 MAINS=(
   "fr.univ_amu.iut.commun.outils.CaptureAccueil"
   "fr.univ_amu.iut.commun.outils.CaptureMenuOutils"
+  "fr.univ_amu.iut.commun.outils.CaptureBandeauAnnonce"
   "fr.univ_amu.iut.commun.outils.CaptureEcranReglages"
   "fr.univ_amu.iut.recherche.outils.CaptureRecherche"
   "fr.univ_amu.iut.sites.outils.CaptureEcrans"
