@@ -6,7 +6,7 @@
 # sans capture de référence, et plusieurs états par vue quand ils sont pertinents.
 
 fr/univ_amu/iut/commun/view/MainView.fxml                : apercu-accueil.png apercu-recherche.png apercu-navigation-garde-saisie.png apercu-recherche-especes.png apercu-fiche-espece-source.png
-fr/univ_amu/iut/commun/view/EcranReglages.fxml           : apercu-reglages.png
+fr/univ_amu/iut/commun/view/EcranReglages.fxml           : apercu-reglages.png apercu-reglages-import.png
 fr/univ_amu/iut/sites/view/MesSites.fxml                 : apercu-sites-mes-sites.png apercu-sites-mes-sites-vide.png
 fr/univ_amu/iut/sites/view/SiteDetail.fxml               : apercu-sites-detail.png apercu-sites-detail-sans-passage.png
 fr/univ_amu/iut/sites/view/ModalePoint.fxml              : apercu-sites-modale-point.png apercu-sites-modale-point-creation.png

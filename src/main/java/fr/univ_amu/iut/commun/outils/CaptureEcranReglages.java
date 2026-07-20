@@ -14,6 +14,7 @@ import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.TabPane;
 
 /// Outil de capture/mesure, utilisable tel quel.
 ///
@@ -55,6 +56,15 @@ public final class CaptureEcranReglages {
         System.exit(0);
     }
 
+    /// Sélectionne l'onglet portant ce titre, pour qu'un aperçu montre autre chose que le premier.
+    private static void selectionnerOnglet(Parent ecran, String titre) {
+        TabPane onglets = (TabPane) ecran.lookup("#onglets");
+        onglets.getTabs().stream()
+                .filter(onglet -> titre.equals(onglet.getText()))
+                .findFirst()
+                .ifPresent(onglet -> onglets.getSelectionModel().select(onglet));
+    }
+
     private static void capturer() throws IOException {
         Path workspace = Files.createTempDirectory("vc-capture-reglages");
         System.setProperty("vigiechiro.workspace", workspace.toString());
@@ -68,6 +78,15 @@ public final class CaptureEcranReglages {
 
         Parent ecran = chargerFxml(injecteur, ECRAN);
         ApercuFx.enregistrerPng(new Scene(ecran, 760, 520), sortie.resolve("apercu-reglages.png"));
+
+        // Un onglet par domaine, et l'aperçu n'en montrait qu'un : le premier. Les réglages des autres
+        // onglets n'étaient donc **documentés nulle part** (#2061). On rend aussi l'onglet « Import »,
+        // dont l'option de conservation des originaux porte une conséquence que l'utilisateur doit
+        // pouvoir lire avant de l'activer.
+        Parent ecranImport = chargerFxml(injecteur, ECRAN);
+        Scene sceneImport = new Scene(ecranImport, 760, 520);
+        selectionnerOnglet(ecranImport, "Import");
+        ApercuFx.enregistrerPng(sceneImport, sortie.resolve("apercu-reglages-import.png"));
 
         System.out.println("Apercu des reglages ecrit dans " + sortie.toAbsolutePath());
     }

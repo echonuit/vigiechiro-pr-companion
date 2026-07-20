@@ -5,6 +5,10 @@ accessible à tout moment depuis le menu **☰** (en haut à droite) → **Régl
 
 ![L'écran Réglages : un onglet par domaine (Général, Import, Fonctionnalités).](../assets/captures/apercu-reglages.png)
 
+L'onglet **Import** porte l'option de conservation des originaux, décochée par défaut :
+
+![L'onglet Import des Réglages : « Conserver les originaux pour ré-analyse ultérieure », décoché.](../assets/captures/apercu-reglages-import.png)
+
 Chaque **onglet** correspond à un domaine de l'application ; il se remplit tout seul des réglages que
 ce domaine propose. Aujourd'hui :
 
