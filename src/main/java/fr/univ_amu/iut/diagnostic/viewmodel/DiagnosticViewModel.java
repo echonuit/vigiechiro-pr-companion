@@ -53,8 +53,13 @@ public class DiagnosticViewModel {
     /// L'icône lune est posée par la vue (FontIcon), pas ici (le VM ignore l'IHM).
     private final ReadOnlyStringWrapper fenetreNuit = new ReadOnlyStringWrapper(this, "fenetreNuit", "");
 
-    /// Alerte « hors nuit » (démarrage/arrêt diurne), vide si les horaires sont cohérents.
-    private final ReadOnlyStringWrapper alerteHorsNuit = new ReadOnlyStringWrapper(this, "alerteHorsNuit", "");
+    /// Alerte « hors nuit » (démarrage/arrêt diurne), [RetourOperation#AUCUN] si les horaires sont
+    /// cohérents. Un [RetourOperation] plutôt qu'une chaîne : sa sévérité (AVERTISSEMENT) est portée par la
+    /// **donnée** et non par une classe CSS figée dans le FXML (#2050). Le label inline la rend via
+    /// [LibelleRetour][fr.univ_amu.iut.commun.view.LibelleRetour] ; la barre de statut, neutre (ADR 0039),
+    /// n'en consomme que le texte.
+    private final ReadOnlyObjectWrapper<RetourOperation> alerteHorsNuit =
+            new ReadOnlyObjectWrapper<>(this, "alerteHorsNuit", RetourOperation.AUCUN);
 
     public DiagnosticViewModel(ServiceDiagnostic service) {
         this.service = Objects.requireNonNull(service, "service");
@@ -88,7 +93,7 @@ public class DiagnosticViewModel {
         coherenceHoraireDisponible.set(coherence.disponible());
         if (!coherence.disponible()) {
             fenetreNuit.set("");
-            alerteHorsNuit.set("");
+            alerteHorsNuit.set(RetourOperation.AUCUN);
             return;
         }
         fenetreNuit.set("Nuit : coucher " + HEURE.format(coherence.coucherSoleil()) + " · lever "
@@ -96,9 +101,9 @@ public class DiagnosticViewModel {
         alerteHorsNuit.set(libelleEcart(coherence));
     }
 
-    private static String libelleEcart(CoherenceHoraire coherence) {
+    private static RetourOperation libelleEcart(CoherenceHoraire coherence) {
         if (!coherence.aUnEcart()) {
-            return "";
+            return RetourOperation.AUCUN;
         }
         String detail;
         if (coherence.demarrageHorsNuit() && coherence.arretHorsNuit()) {
@@ -108,7 +113,7 @@ public class DiagnosticViewModel {
         } else {
             detail = "arrêt après le lever du soleil";
         }
-        return "Hors nuit : " + detail + " (une partie de l'enregistrement est diurne).";
+        return RetourOperation.avertissement("Hors nuit : " + detail + " (une partie de l'enregistrement est diurne).");
     }
 
     private void reinitialiser() {
@@ -121,7 +126,7 @@ public class DiagnosticViewModel {
         temperature.set("—");
         coherenceHoraireDisponible.set(false);
         fenetreNuit.set("");
-        alerteHorsNuit.set("");
+        alerteHorsNuit.set(RetourOperation.AUCUN);
     }
 
     /// Enregistreur de la nuit (`PR <n° de série>`).
@@ -155,8 +160,9 @@ public class DiagnosticViewModel {
         return fenetreNuit.getReadOnlyProperty();
     }
 
-    /// Alerte « hors nuit » quand l'enregistrement déborde de la fenêtre nocturne, vide sinon (#548).
-    public ReadOnlyStringProperty alerteHorsNuitProperty() {
+    /// Alerte « hors nuit » quand l'enregistrement déborde de la fenêtre nocturne, [RetourOperation#AUCUN]
+    /// sinon (#548).
+    public ReadOnlyObjectProperty<RetourOperation> alerteHorsNuitProperty() {
         return alerteHorsNuit.getReadOnlyProperty();
     }
 

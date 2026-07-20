@@ -94,10 +94,9 @@
   </Label>
   <!-- Annotation de la fenetre de nuit ci-dessus, en retrait sous elle : le lien entre les deux ne se
        lisait pas, les deux partant du meme fer que les titres (#1974). -->
-  <Label fx:id="lblAlerteHorsNuit" styleClass="encart, encart-avertissement" wrapText="true">
-    <graphic>
-      <FontIcon iconLiteral="fas-exclamation-triangle"/>
-    </graphic>
+  <!-- Sévérité (couleur + icône) posée à l'exécution par LibelleRetour, depuis le RetourOperation du
+       ViewModel (#2050) : ni encart-avertissement ni FontIcon figé ici, ils seraient écrasés. -->
+  <Label fx:id="lblAlerteHorsNuit" styleClass="encart" wrapText="true">
     <VBox.margin>
       <Insets left="22.0"/>
     </VBox.margin>

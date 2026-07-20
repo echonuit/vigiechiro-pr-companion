@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -113,8 +114,10 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
     private ZonesStatut calculerZonesStatut() {
         String gauche = contexte == null ? "" : contexte.identiteStatut();
         String releveAbsent = viewModel.releveClimatiqueAbsentProperty().get() ? "Relevé climatique absent" : "";
-        String droite =
-                ZonesStatut.premierNonVide(viewModel.alerteHorsNuitProperty().get(), releveAbsent);
+        // La barre de statut est neutre (ADR 0039) : elle n'affiche que le TEXTE de l'alerte, sa sévérité
+        // restant portée par le label inline. `AUCUN` a un texte vide, que `premierNonVide` saute.
+        String droite = ZonesStatut.premierNonVide(
+                viewModel.alerteHorsNuitProperty().get().texte(), releveAbsent);
         return new ZonesStatut(gauche, materielCentre(), droite);
     }
 
@@ -156,11 +159,9 @@ public class DiagnosticController implements EmplacementNavigation, ResumeStatut
         lblFenetreNuit.visibleProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
         lblFenetreNuit.managedProperty().bind(viewModel.coherenceHoraireDisponibleProperty());
 
-        // Alerte « hors nuit » : visible seulement quand un écart est détecté (texte non vide).
-        lblAlerteHorsNuit.textProperty().bind(viewModel.alerteHorsNuitProperty());
-        var horsNuit = viewModel.alerteHorsNuitProperty().isNotEmpty();
-        lblAlerteHorsNuit.visibleProperty().bind(horsNuit);
-        lblAlerteHorsNuit.managedProperty().bind(horsNuit);
+        // Alerte « hors nuit » : texte, visibilité (présent/absent) et sévérité (couleur + icône) posés
+        // par LibelleRetour depuis le RetourOperation du ViewModel (#2050).
+        LibelleRetour.installer(lblAlerteHorsNuit, viewModel.alerteHorsNuitProperty());
 
         // Disponibilité GPS du point d'écoute (#1497) : ligne d'état permanente, affichée dès qu'un
         // diagnostic est chargé et découplée de la cohérence horaires (le repère ne disparaît plus

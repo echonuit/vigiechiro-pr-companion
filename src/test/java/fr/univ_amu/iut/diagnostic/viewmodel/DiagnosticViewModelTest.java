@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.diagnostic.model.AnalyseAnomalies;
 import fr.univ_amu.iut.diagnostic.model.CoherenceHoraire;
 import fr.univ_amu.iut.diagnostic.model.Diagnostic;
@@ -119,7 +121,7 @@ class DiagnosticViewModelTest {
 
         assertThat(viewModel.coherenceHoraireDisponibleProperty().get()).isTrue();
         assertThat(viewModel.fenetreNuitProperty().get()).contains("21:58").contains("05:48");
-        assertThat(viewModel.alerteHorsNuitProperty().get()).isEmpty();
+        assertThat(viewModel.alerteHorsNuitProperty().get()).isEqualTo(RetourOperation.AUCUN);
     }
 
     @Test
@@ -130,9 +132,11 @@ class DiagnosticViewModelTest {
 
         viewModel.ouvrirSur(ID_PASSAGE);
 
-        assertThat(viewModel.alerteHorsNuitProperty().get())
+        assertThat(viewModel.alerteHorsNuitProperty().get().texte())
                 .contains("Hors nuit")
                 .contains("diurne");
+        // #2050 : la sévérité est portée par la donnée, plus par la classe CSS ni le FontIcon figés du FXML.
+        assertThat(viewModel.alerteHorsNuitProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
     }
 
     @Test
@@ -145,7 +149,7 @@ class DiagnosticViewModelTest {
 
         assertThat(viewModel.coherenceHoraireDisponibleProperty().get()).isFalse();
         assertThat(viewModel.fenetreNuitProperty().get()).isEmpty();
-        assertThat(viewModel.alerteHorsNuitProperty().get()).isEmpty();
+        assertThat(viewModel.alerteHorsNuitProperty().get()).isEqualTo(RetourOperation.AUCUN);
     }
 
     @Test
