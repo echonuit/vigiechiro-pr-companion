@@ -81,3 +81,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0034](0034-la-forme-du-depot-se-choisit.md) | La forme du dépôt se choisit, elle ne se déduit pas de la place disponible | EPIC #1991 |
 | [0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) | Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère | #1933, #700 |
 | [0036](0036-la-copie-des-bruts-est-une-option.md) | La copie des enregistrements bruts est une option de ré-analyse, pas un défaut | EPIC #2061 |
+| [0037](0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md) | Une barre d'actions plie ; et tout texte coupé n'est pas une barre qui ne plie pas | #2012, #1641, #1873 |
