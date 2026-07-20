@@ -2,7 +2,7 @@
  * sites.css - feuille de style de la feature « sites » (M-Sites + M-Site-detail + modale point).
  *
  * Palette sémantique : primaire via le token -couleur-primaire (indigo, palette.css), succès vert
- * #1e8449, warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Les couleurs de
+ * #1e8449, warning orange #b9770e, danger rouge #a93226, neutre gris -couleur-texte-discret. Les couleurs de
  * statut restent en dur ; palette.css est jointe au FXML pour fournir les tokens même quand une
  * vue est chargée isolément (tests TestFX, captures, modales), hors du chrome principal.
  *
@@ -75,17 +75,17 @@
 
 .carte-sous-titre {
     -fx-font-size: 13px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .carte-detail {
     -fx-font-size: 12px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .carte-chevron {
     -fx-font-size: 20px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
     -fx-cursor: hand;
 }
 
@@ -97,7 +97,7 @@
 
 .carte-site-libelle {
     -fx-font-size: 11px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 /* ----- État vide (premier lancement) ----- */
@@ -118,7 +118,7 @@
 
 .etat-vide-sous {
     -fx-font-size: 13px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .hint-box {
@@ -166,7 +166,7 @@
 
 .carte-point-desc {
     -fx-font-size: 12px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 /* #154 : deux points trop proches (sous le seuil) - avertissement orange, non bloquant. */

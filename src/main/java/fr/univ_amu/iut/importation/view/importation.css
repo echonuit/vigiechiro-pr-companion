@@ -3,7 +3,7 @@
  *
  * Assistant en page unique, 4 sections (dossier source / inspection / rattachement / action).
  * Palette sémantique : primaire via le token -couleur-primaire (indigo, palette.css), succès vert
- * #1e8449, warning orange #b9770e, danger rouge #a93226, neutre gris #6a737d. Les couleurs de
+ * #1e8449, warning orange #b9770e, danger rouge #a93226, neutre gris -couleur-texte-discret. Les couleurs de
  * statut restent en dur pour que la vue reste stylée même chargée isolément (tests TestFX,
  * captures, modales) ; palette.css est jointe au FXML pour fournir les tokens dans ces contextes.
  */
@@ -24,7 +24,7 @@
 
 .field-hint {
     -fx-font-size: 12px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .champ-lecture-seule {

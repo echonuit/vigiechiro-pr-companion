@@ -10,12 +10,12 @@
 
 .analyse-resume {
     -fx-font-size: 13px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .analyse-vide {
     -fx-font-size: 13px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
     -fx-padding: 8 0 0 0;
 }
 
@@ -37,7 +37,7 @@
 
 .analyse-detail-vide {
     -fx-font-size: 13px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
     -fx-padding: 12;
     -fx-text-alignment: center;
 }
@@ -59,7 +59,7 @@
 
 .carte-legende-borne {
     -fx-font-size: 10px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .carte-recadrer {

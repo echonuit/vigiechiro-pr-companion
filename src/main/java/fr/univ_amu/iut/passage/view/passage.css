@@ -80,6 +80,6 @@
 
 .carte-action-sous {
   -fx-font-size: 11px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
   -fx-text-alignment: center;
 }

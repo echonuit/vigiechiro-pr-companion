@@ -642,7 +642,7 @@
 
 .etape-a_venir {
   -fx-background-color: #eef2f5;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
 }
 
 
@@ -774,7 +774,7 @@
 .section-label {
     -fx-font-size: 11px;
     -fx-font-weight: bold;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .field-label {
@@ -785,7 +785,7 @@
 
 .field-hint {
     -fx-font-size: 12px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 /* Texte d'erreur simple, SANS encart : un libelle rouge adosse a son champ ou a sa section, la ou

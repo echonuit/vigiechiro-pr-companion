@@ -35,7 +35,7 @@
 /* État vide superposé à la table (aucune observation pour la source courante). */
 .audio-vide {
   -fx-font-size: 13px;
-  -fx-text-fill: #6a737d;
+  -fx-text-fill: -couleur-texte-discret;
   -fx-padding: 16;
 }
 

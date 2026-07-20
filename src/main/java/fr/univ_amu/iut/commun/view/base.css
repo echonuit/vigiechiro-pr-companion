@@ -281,7 +281,7 @@
     -fx-background-color: rgba(255, 255, 255, 0.92);
     -fx-background-radius: 16;
     -fx-padding: 4 12 4 12;
-    -fx-prompt-text-fill: #6a737d;
+    -fx-prompt-text-fill: -couleur-texte-discret;
 }
 
 .champ-recherche:focused {
@@ -311,7 +311,7 @@
 .recherche-groupe {
     -fx-font-size: 10px;
     -fx-font-weight: bold;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
 
 .recherche-libelle {
@@ -321,5 +321,5 @@
 
 .recherche-details {
     -fx-font-size: 11px;
-    -fx-text-fill: #6a737d;
+    -fx-text-fill: -couleur-texte-discret;
 }
