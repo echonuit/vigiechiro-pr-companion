@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.28.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.27.1...v2.28.0) (2026-07-20)
+
+
+### Features
+
+* **diagnostic:** l’alerte « hors nuit » porte sa sévérité, plus un triangle figé dans le FXML ([#2203](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2203)) ([ca50255](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/ca502552f1b3848ba1dbf03deb5275c09f4b016e)), closes [#1990](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1990) [#2050](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2050) [#2050](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2050) [#2188](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2188)
+
 ## [2.27.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.27.0...v2.27.1) (2026-07-20)
 
 
