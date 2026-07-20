@@ -170,21 +170,27 @@ obscur à la clé.
 ### Les empreintes SHA-256 (#2107)
 
 Les installeurs ne sont **pas signés**. Sans empreinte, un utilisateur n'a donc **aucun moyen** de
-vérifier ce qu'il télécharge. Chaque version porte un fichier `SHA256SUMS.txt` unique, qui permet la
-vérification d'un seul geste (`sha256sum -c`) plutôt qu'un fichier par artefact.
+vérifier ce qu'il télécharge. Chaque artefact est accompagné d'un fichier `<nom>.sha256`, produit par
+le job `installers` **juste avant le téléversement**.
 
-Il est produit par le job `publish`, et deux détails de ce choix comptent :
+!!! danger "Une empreinte atteste la source, pas ce que le canal en a fait"
+    La première version calculait les empreintes sur les artefacts **re-téléchargés** depuis la
+    Release, au motif que « le transfert se trouve ainsi couvert ». C'était **faux, et dangereux** :
+    une corruption survenue au téléversement se serait retrouvée **certifiée conforme**, et
+    l'utilisateur aurait vérifié un binaire abîmé **avec succès**.
 
-- **les empreintes portent sur les artefacts téléchargés depuis la Release**, pas sur ceux sortis du
-  build. C'est ce que l'utilisateur recevra qui est haché, donc le **transfert lui-même** se trouve
-  couvert. Le coût est un aller-retour de quelques centaines de mégaoctets, dans le réseau GitHub ;
-- **l'étape précède la publication.** La Release est encore un brouillon quand les empreintes sont
-  calculées : personne ne peut donc télécharger un artefact avant que son empreinte n'existe.
+    L'empreinte doit porter sur la **sortie de build**. Alors une corruption du canal fait échouer la
+    vérification - ce qui est précisément le service attendu.
 
-!!! danger "Le fichier ne doit pas figurer dans sa propre liste"
-    Un `SHA256SUMS.txt` laissé par une exécution précédente serait re-téléchargé puis haché avec les
-    autres, produisant une ligne qui ne peut jamais être vraie. L'étape le supprime donc avant de
-    lister. C'est vérifié par répétition sur les artefacts réels d'une version publiée.
+**Un fichier par artefact, et non une liste unique.** L'utilisateur télécharge **un** fichier : lui
+demander de récupérer en plus une liste de sept empreintes dont six ne le concernent pas, puis d'y
+filtrer sa ligne, est une friction que `sha256sum -c mon-fichier.sha256` supprime. Ce choix a de plus
+retiré de la chaîne un aller-retour de plusieurs centaines de mégaoctets, et le piège de
+l'auto-exclusion qu'imposait une liste (le fichier ne devait pas figurer dans sa propre liste).
+
+!!! tip "macOS n'a pas `sha256sum`"
+    L'étape bascule sur `shasum -a 256`, qui produit exactement le **même format** : un `.sha256`
+    généré sous macOS se vérifie sous Linux, et réciproquement. C'est vérifié dans les deux sens.
 
 **Ce qu'une empreinte prouve, et ce qu'elle ne prouve pas.** Elle atteste que le fichier est
 **identique** à celui publié : elle détecte un téléchargement corrompu ou tronqué. Elle ne remplace

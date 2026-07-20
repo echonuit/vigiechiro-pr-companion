@@ -55,33 +55,29 @@ Dans tous les cas, tout le nécessaire est embarqué : **aucune installation de 
 ### Vérifier ce que vous avez téléchargé
 
 Faute de signature, c'est **l'empreinte** qui atteste qu'un fichier est bien celui publié et qu'il est
-arrivé entier. Chaque version porte un fichier `SHA256SUMS.txt` listant l'empreinte de tous ses
-artefacts.
+arrivé entier. Chaque artefact est accompagné, sur la page des Releases, d'un petit fichier portant le
+même nom suivi de **`.sha256`**.
 
-Téléchargez-le à côté de votre fichier, puis, **dans le dossier de téléchargement**, en remplaçant le
-nom par celui que vous avez pris :
+Téléchargez-le à côté du vôtre, puis, **dans le dossier de téléchargement** :
 
 === "Linux"
 
     ```bash
-    grep 'VigieChiro-2.18.0-linux-x64-portable.tar.gz' SHA256SUMS.txt | sha256sum -c
+    sha256sum -c VigieChiro-2.21.1-linux-x64-portable.tar.gz.sha256
     ```
 
 === "macOS"
 
     ```bash
-    grep 'VigieChiro-2.18.0-arm64.dmg' SHA256SUMS.txt | shasum -a 256 -c
+    shasum -a 256 -c VigieChiro-2.21.1-arm64.dmg.sha256
     ```
 
 === "Windows (PowerShell)"
 
     ```powershell
-    (Get-FileHash .\VigieChiro-2.18.0-x64.msi -Algorithm SHA256).Hash.ToLower()
-    Select-String -Path .\SHA256SUMS.txt -Pattern 'VigieChiro-2.18.0-x64.msi'
+    (Get-FileHash .\VigieChiro-2.21.1-x64.msi -Algorithm SHA256).Hash.ToLower()
+    Get-Content .\VigieChiro-2.21.1-x64.msi.sha256
     ```
-
-Le `grep` isole la ligne du fichier que vous avez réellement téléchargé : inutile de récupérer les six
-artefacts pour en contrôler un.
 
 Une réponse `OK` (ou, sous Windows, deux empreintes identiques) signifie que le fichier est intact. Un
 `FAILED` signifie qu'il **ne correspond pas** : ne l'ouvrez pas, retéléchargez-le.
