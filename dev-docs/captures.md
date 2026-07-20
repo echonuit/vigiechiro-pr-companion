@@ -59,9 +59,10 @@ sequenceDiagram
     Docs->>Docs: rebuild + republie le site
 ```
 
-## Les deux garde-fous
+## Les garde-fous de présence
 
-Deux scripts protègent la cohérence (lancés en CI) :
+Deux scripts vérifient qu'aucune vue ne vit sans aperçu, et qu'aucune page ne pointe une image
+absente (lancés en CI) :
 
 | Garde | Vérifie |
 |---|---|
@@ -70,6 +71,54 @@ Deux scripts protègent la cohérence (lancés en CI) :
 
 Le [`captures.manifest`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/assets/captures.manifest)
 associe chaque vue FXML à ses aperçus.
+
+## Le garde-fou de fidélité : un aperçu qui ment est refusé
+
+Les garde-fous ci-dessus vérifient qu'une capture **existe**. Celui-ci vérifie qu'elle **ne ment
+pas**. Il vit dans `ApercuFx`, au moment du rendu, et **interrompt** la chaîne : un aperçu déformé
+n'est pas écrit.
+
+L'application monte ses vues dans un `ScrollPane` permanent — ce qui déborde **défile**. La capture
+rend une scène de taille fixe et n'a pas ce recours : ce qui déborde se **déforme**, de deux façons
+que le message d'erreur distingue.
+
+| Dans le message | Ce qui se passe | Remèdes |
+|---|---|---|
+| `manque N px` | La scène est trop **courte** : un libellé `wrapText` se rabat sur une ligne et s'ellipse | Augmenter la hauteur de cette scène |
+| `tronque, manque N px` | Le contrôle est trop **étroit** pour son texte | Figer par `minWidth="-Infinity"`, élargir la colonne, ou assumer par `abregeable` |
+
+**`minWidth="-Infinity"`** est le remède le plus fréquent. La largeur *minimale* d'un `Labeled`
+autorise la troncature : une `HBox` en déficit rogne donc les libellés d'action plutôt que les
+sélecteurs et champs de recherche qui les entourent. Le figer inverse cette priorité — le déficit se
+reporte sur les voisins souples, qui se resserrent sans rien perdre de lisible.
+
+L'attribut se pose **dans le FXML**, sur le nœud qui est enfant direct du conteneur qui rogne (donc
+sur l'enveloppe `StackPane` quand le bouton en porte une). C'est un idiome répandu dans le dépôt,
+notamment dans les modales.
+
+!!! note "Pourquoi pas une classe CSS ?"
+    On ne peut pas. `-fx-min-width: -Infinity` **parse sans erreur** mais donne `-1.0`, c'est-à-dire
+    `USE_COMPUTED_SIZE` — exactement le comportement qu'on cherche à éviter — au lieu de
+    `USE_PREF_SIZE`. Mesuré. L'attribut FXML est le seul moyen d'exprimer cette contrainte.
+
+**`abregeable`** est une classe CSS **marqueur**, sans règle de style — ne pas la supprimer comme
+CSS morte. Elle déclare, *dans la vue*, quel libellé porte le déficit : le figer partout ne fait pas
+rentrer le contenu d'une barre, cela le fait déborder. La règle est de désigner un sélecteur ou une
+métadonnée (qui se relisent ailleurs) plutôt qu'un libellé d'action (qui ne se relit nulle part). La
+tolérance s'hérite jusqu'aux libellés internes des contrôles composés (`ComboBox`, `MenuButton`).
+
+Le sous-arbre d'`AudioView` est **hors du contrôle** : le composant vient d'un artefact séparé, ses
+défauts se traitent en amont.
+
+!!! warning "Le poste de développement sous-mesure"
+    Les polices d'un poste et celles d'un runner de CI **ne mesurent pas le texte à l'identique** :
+    l'écart va jusqu'à 6 px, soit l'ordre de grandeur des défauts eux-mêmes. Une chaîne verte en local
+    peut être rouge en CI, et l'a été. Deux conséquences pratiques : une correction de dimension prend
+    une **marge d'une dizaine de pixels** plutôt que le chiffre mesuré ; et pour inventorier, rendre le
+    contrôle **non bloquant** le temps d'un seul passage de CI vaut mieux qu'une série d'allers-retours,
+    puisqu'il s'arrête au premier écran fautif. Voir
+    [ADR 0043](decisions/0043-la-mesure-fait-foi-en-ci.md) et
+    [ADR 0042](decisions/0042-un-apercu-qui-ment-est-refuse.md).
 
 ## Ajouter une capture
 

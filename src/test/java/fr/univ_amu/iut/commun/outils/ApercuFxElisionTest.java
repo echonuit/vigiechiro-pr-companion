@@ -174,6 +174,39 @@ class ApercuFxElisionTest {
     }
 
     @Test
+    @DisplayName("Un libellé d'un composant TIERS est hors du contrôle : on ne peut pas le corriger d'ici")
+    void libelle_de_composant_tiers_ignore(@TempDir Path dossier) throws InterruptedException {
+        // `AudioView` vient d'un artefact séparé : ses boutons de transport tronquent (audio-view#56) et
+        // aucun FXML d'ici n'y peut rien. Un verrou qui exige une correction impossible ne protège pas, il
+        // bloque.
+        //
+        // L'exclusion a été mise à l'épreuve avant d'être admise : on a d'abord soupçonné notre propre
+        // capture, qui comprimait le composant au point d'en escamoter la barre de transport (#2129).
+        // Hauteur corrigée, composant pleinement rendu, la CI a mesuré le même manque - le défaut est bien
+        // en amont.
+        Button interne = new Button("Retirer la référence");
+        interne.setMinWidth(0);
+        AudioView tiers = new AudioView(interne);
+        tiers.setMaxWidth(40);
+        Path fichier = dossier.resolve("apercu.png");
+
+        assertThat(executerSurLeFilFx(() -> ApercuFx.enregistrerPng(new Scene(new VBox(tiers), 40, 200), fichier)))
+                .isNull();
+    }
+
+    /// Doublure portant le **nom** du composant tiers, puisque c'est sur ce nom que porte l'exclusion.
+    ///
+    /// Le vrai `fr.nedjar.vigiechiro.audio.AudioView` charge un WAV : l'instancier ici ferait dépendre un
+    /// test de mise en page d'un décodeur audio. Ce que l'on vérifie est le **critère**, pas le composant.
+    /// Corollaire assumé : remplacer la reconnaissance par nom par un `instanceof` ferait rougir ce test,
+    /// et c'est voulu - le critère aurait changé.
+    private static final class AudioView extends HBox {
+        private AudioView(javafx.scene.Node contenu) {
+            super(contenu);
+        }
+    }
+
+    @Test
     @DisplayName("Un libellé NON enroulable échappe au contrôle de HAUTEUR : il ne demande qu'une ligne")
     void libelle_non_enroulable_hors_du_controle_de_hauteur(@TempDir Path dossier) throws InterruptedException {
         // Texte volontairement COURT : il tient en largeur, donc seul le contrôle de hauteur peut parler.

@@ -34,6 +34,8 @@ C'est le cas de la barre de filtres de l'inventaire (#1873) et de la barre d'act
 - Un `hgrow` dans une barre qui tronque est un **signal d'arrêt** : ce n'est pas ce défaut-là.
 - Effet de bord observé, et qui vaut avertissement : en convertissant `entete-actions`, le **bandeau d'identité** de la fiche site a cessé de tronquer ses cellules (« N° DE CA… » redevenu « N° DE CARRÉ »). La `HBox` imposait au conteneur une largeur minimale égale à la somme de ses boutons, qui débordait la fenêtre et rognait ce qui suivait. Un défaut de troncature peut donc venir d'**un autre bloc que celui où il se voit**.
 
+    > **Amendé le 2026-07-20 par [ADR 0043](0043-la-mesure-fait-foi-en-ci.md).** Ce constat était **vrai en local et faux en CI** : mesuré sur un runner, le bandeau coupait encore ses sept cellules, libellés comme valeurs, de 4 à 6 px. Il a fallu resserrer leur marge intérieure (16 → 12 px) pour qu'il soit vrai partout. Le mécanisme décrit ci-dessus reste exact ; c'est la conclusion « a cessé de tronquer » qui était prématurée, faute d'avoir vérifié là où la mesure fait foi. Le reste de cette ADR est inchangé.
+
 ## Ce qui a été écarté
 
 **Verser les actions secondaires dans un menu ☰** (c'était la piste que je recommandais en ouvrant #2012). Elle **détruit** l'affordance construite par #789, #1300 et #1302 : un `MenuItem` désactivé ne reçoit pas le survol, donc pas d'infobulle, et l'idiome du projet veut alors que le motif passe **dans le libellé**. Or ces motifs sont des phrases entières (« Suppression impossible : ce passage est déposé sur Vigie-Chiro. Annulez d'abord le dépôt. »). Six actions déplacées, c'étaient six explications à réécrire en suffixes courts, avec perte.

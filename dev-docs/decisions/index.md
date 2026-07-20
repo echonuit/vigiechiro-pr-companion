@@ -86,3 +86,5 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0039](0039-une-barre-de-statut-est-neutre.md) | Une barre de statut dit où l'on en est, pas si c'est bien ou mal | #1990, #2004 |
 | [0040](0040-le-sujet-de-commit-est-une-syntaxe.md) | Le sujet d'un commit est une syntaxe, pas une phrase française : le `:` ne prend pas d'espace | EPIC #2104, #2105 |
 | [0041](0041-un-check-requis-gouverne-la-branche.md) | Un check requis ne gouverne pas les PR, il gouverne la branche : le contrôle du titre reste informatif | EPIC #2104, #2106 |
+| [0042](0042-un-apercu-qui-ment-est-refuse.md) | Un aperçu qui ment est refusé, et l'exception se déclare dans la vue | #2049, #1641, #1873, #1579 |
+| [0043](0043-la-mesure-fait-foi-en-ci.md) | La mesure fait foi en CI, pas sur le poste (amende 0037) | #1873, #2129 |
