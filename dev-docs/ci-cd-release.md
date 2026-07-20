@@ -11,7 +11,7 @@ publication.
 | [maven.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/maven.yml) · job `paquet` | push `main` + PR | Assemblage du fat-jar (`package -DskipTests`) puis smoke-test, **E2E CLI bats** et idempotence du packaging. **En parallèle** de `build` | **Oui** |
 | [lint.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/lint.yml) | push `main` + PR | « Quality gate » (statique) : `spotless:check` + complétude des captures + `./mvnw -Pquality-gate compile pmd:check` (**PMD bloquant**) | **Oui** |
 | [docs.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/docs.yml) | push/PR sur la doc | Construit les **deux** sites MkDocs (`--strict`) ; déploie Pages (dormant tant que `ENABLE_PAGES` ≠ true) | Build oui |
-| [titre-pr.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | **Oui** |
+| [titre-pr.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
 | [capture-vues.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
 | [release.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | push `main` | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true) | — |
 | [devcontainer-image.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/devcontainer-image.yml) | push `solution` | Build/push de l'image devcontainer | — |
@@ -148,31 +148,42 @@ principal `vigiechiro-*.jar` reste **mince**. jpackage empaquette donc le `-shad
     mais le garde-fou reste le contrôle du titre. Cf.
     [ADR 0040](decisions/0040-le-sujet-de-commit-est-une-syntaxe.md).
 
-### Le cas des PR ouvertes par un bot
+### Pourquoi `titre` informe au lieu de bloquer
 
-`titre` est un check **requis** (ruleset `titre-de-pr-conforme`). Or **GitHub ne déclenche aucun
-workflow pour un événement produit avec le `GITHUB_TOKEN`** - c'est son garde-fou anti-récursion, sans
-lequel une action pourrait se relancer indéfiniment. Une PR ouverte par le bot n'exécute donc **jamais**
-`titre-pr.yml`, et un check requis qui ne rapporte rien **bloque la fusion pour toujours**. La PR
-d'aperçus #2124 l'a vécu le jour même de la mise en place.
+Le contrôle a **été** rendu obligatoire (ruleset `titre-de-pr-conforme`), le temps d'une heure, et
+cette heure a suffi à casser **deux** automatismes. Le retour en arrière est délibéré, et vaut d'être
+expliqué : c'est exactement le genre de décision qu'on retente sans en connaître les raisons.
 
-La dérogation qu'on attendrait est fermée : ajouter `github-actions` aux contournements du ruleset
-échoue en **422** (`Actor GitHub Actions integration must be part of the ruleset source or owner
-organization`) - l'application n'appartient ni à la source du ruleset ni à l'organisation.
+**Un check requis ne gouverne pas « les PR », il gouverne la branche** - donc *tout* ce qui y écrit.
+Ce dépôt y écrit par deux chemins automatisés, et les deux se sont cassés :
 
-[capture-vues.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml)
-exécute donc **lui-même** la validation, avec le **même script**
-(`.github/scripts/verifie-titre-pr.sh`), et publie le résultat comme **check run** nommé `titre`. Seul
-le **transport** du résultat change ; le contrôle reste réel.
+| Chemin | Ce qui s'est passé |
+|---|---|
+| PR d'aperçus (`capture-vues.yml`) | `BLOCKED`, **aucun check rapporté** : GitHub ne déclenche aucun workflow pour un événement produit avec le `GITHUB_TOKEN` (garde-fou anti-récursion), donc `titre-pr.yml` ne s'exécute jamais - et un check requis muet bloque la fusion **pour toujours** |
+| Push du CHANGELOG (`semantic-release`) | `GH013 … Required status check "titre" is expected` : un **push direct** est soumis aux mêmes règles, et un commit poussé n'a évidemment aucun check |
 
-!!! tip "Pourquoi pas un `success` en dur"
-    Ce serait plus court, et cela ferait croire à une vérification qui n'a pas eu lieu - un garde-fou
-    qui ne sait que réussir ne garde rien. L'étape sait publier un `failure`, et c'est vérifié dans
-    les deux sens. Effet de bord bienvenu : les PR d'aperçus sont désormais **validées**, alors
-    qu'elles ne l'étaient pas du tout auparavant.
+Le second a **arrêté la publication**, c'est-à-dire précisément ce que le chantier #2104 venait de
+réparer. Trois releases ont échoué d'affilée avant que la règle ne soit retirée.
 
-**Ce qu'il faut retenir pour la suite.** Tout nouveau check **requis** doit se demander comment il
-rapportera sur les PR de bot. C'est le piège de ce dépôt : il en produit à chaque push sur `main`.
+La dérogation qu'on attendrait est fermée : ajouter `github-actions` aux contournements d'un ruleset
+**de dépôt** échoue en **422** (`Actor GitHub Actions integration must be part of the ruleset source
+or owner organization`). Seul un ruleset **d'organisation** l'accepterait.
+
+**La décision** : `titre` reste **informatif**. Il rougit sur un mauvais titre - c'est ainsi qu'il a
+attrapé la PR #2122 le jour même - et cette information suffit. Le bénéfice du blocage était faible
+(un seul mainteneur, qui dispose de toute façon du contournement administrateur) ; son coût a été
+mesuré. Cf. [ADR 0041](decisions/0041-un-check-requis-gouverne-la-branche.md).
+
+!!! note "Le check publié par le bot des captures est resté"
+    [capture-vues.yml](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml)
+    exécute lui-même la validation, avec le **même script**, et publie le résultat comme check run.
+    Ce mécanisme est né du besoin de débloquer, mais il se justifie encore sans lui : sans ce
+    passage, une PR d'aperçus ne serait validée par **rien du tout**. Il ne publie jamais un succès
+    en dur - un garde-fou qui ne sait que réussir ne garde rien.
+
+**Ce qu'il faut retenir pour la suite.** Avant de rendre un check obligatoire, inventorier **tous les
+chemins d'écriture vers `main`**, pas seulement les PR humaines - et se demander pour chacun comment
+le check y rapportera.
 
 ## Dépendances
 
