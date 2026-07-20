@@ -13,9 +13,9 @@ import fr.univ_amu.iut.audio.viewmodel.DiscussionValidateur;
 import fr.univ_amu.iut.bibliotheque.model.ExportBiblioSons;
 import fr.univ_amu.iut.bibliotheque.model.ServiceBibliotheque;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.commun.viewmodel.SourceObservations;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.validation.model.BilanImport;
@@ -163,7 +163,7 @@ class AudioViewModelTest {
             assertThat(vm.resultatsDisponiblesProperty().get()).isTrue();
 
             vm.signalerErreur(source(), new IllegalStateException("base indisponible"));
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
             assertThat(vm.retourProperty().get().texte()).contains("base indisponible");
         }
 
@@ -342,7 +342,7 @@ class AudioViewModelTest {
             assertThat(vm.importer(Path.of("obs.csv"), false)).isTrue();
             verify(service).importer(7L, Path.of("obs.csv"));
             assertThat(vm.resultatsDisponiblesProperty().get()).isTrue();
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
             assertThat(vm.retourProperty().get().texte())
                     .contains("Import réussi")
                     .contains("1 observation");
@@ -361,7 +361,7 @@ class AudioViewModelTest {
             vm.ouvrirSur(source());
 
             assertThat(vm.importer(Path.of("obs.csv"), false)).isFalse();
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
             assertThat(vm.retourProperty().get().texte()).contains("Séquence d'écoute introuvable");
         }
 
@@ -377,7 +377,7 @@ class AudioViewModelTest {
 
             assertThat(vm.importer(Path.of("obs.csv"), false)).isFalse();
             verify(service, never()).importer(any(), any());
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.INFO);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.INFO);
         }
 
         @Test
@@ -404,7 +404,7 @@ class AudioViewModelTest {
             // Remplacement atomique : un seul appel reimporter, pas de suppression hors transaction.
             verify(service).reimporter(7L, Path.of("neuf.csv"));
             verify(service, never()).importer(any(), any());
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
             assertThat(vm.retourProperty().get().texte())
                     .contains("2 validation(s) conservée(s)")
                     .contains("1 validation(s) perdue(s)");
@@ -504,7 +504,7 @@ class AudioViewModelTest {
             assertThat(vm.exporterBibliotheque(Path.of("/sortie"))).isTrue();
             verify(bibliotheque).exporterBibliotheque();
             assertThat(vm.retourProperty().get().texte()).contains("3 fichier(s)");
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
         }
 
         @Test
@@ -564,7 +564,7 @@ class AudioViewModelTest {
                     .isFalse();
             verify(service, never()).corriger(any(), any(), any());
             assertThat(vm.retourProperty().get().texte()).contains("Valider");
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.INFO);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.INFO);
         }
 
         @Test
@@ -629,7 +629,7 @@ class AudioViewModelTest {
             // Rechargement post-lot (2e lecture) + retour de succès « N validée(s) ».
             verify(projections, times(2)).lignesAudioReferences("u-1");
             assertThat(vm.retourProperty().get().texte()).contains("2 observation(s) validée(s)");
-            assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
         }
 
         @Test

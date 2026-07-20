@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
+import fr.univ_amu.iut.commun.model.Severite;
+
 /// Retour d'une **opération** d'un écran (import CSV, export, valider, corriger, action refusée…) :
 /// un texte + une **sévérité**, exposé par le ViewModel dans une propriété distincte du message
 /// d'**état vide** de la table.
@@ -19,7 +21,7 @@ package fr.univ_amu.iut.commun.viewmodel;
 /// polices de la machine - sur celles qui ne le portent pas, il ne s'affichait pas du tout.
 ///
 /// @param texte message présenté à l'utilisateur (vide = aucun retour à afficher)
-/// @param severite niveau d'affichage (succès / information / avertissement / erreur)
+/// @param severite gravité du message, portée par [Severite] (socle, #2159)
 public record RetourOperation(String texte, Severite severite) {
 
     /// Glyphes de sévérité, **refusés en tête de message**. Cf. le contrôle du constructeur compact.
@@ -46,18 +48,6 @@ public record RetourOperation(String texte, Severite severite) {
                     "La sévérité d'un retour est portée par son niveau, pas par un glyphe en tête de"
                             + " message. Message refusé : " + texte);
         }
-    }
-
-    /// Niveau d'affichage d'un [RetourOperation], piloté côté vue par une classe CSS dédiée.
-    ///
-    /// ⚠ **L'ordre de déclaration porte la sévérité** : [CompteRendu#severite()] prend le maximum par
-    /// `ordinal()`. Réordonner ces constantes changerait silencieusement quel constat qualifie un compte
-    /// rendu entier. `SeveriteTest` épingle l'ordre pour que ce ne soit pas une convention tacite.
-    public enum Severite {
-        SUCCES,
-        INFO,
-        AVERTISSEMENT,
-        ERREUR
     }
 
     /// Aucun retour à afficher (état nominal).

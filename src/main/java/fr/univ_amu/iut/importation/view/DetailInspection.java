@@ -1,8 +1,8 @@
 package fr.univ_amu.iut.importation.view;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.IconeSelonEtat;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.control.Label;

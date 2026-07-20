@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.qualification.view;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.qualification.model.PreCheckNuit;
 import java.util.Locale;
 import javafx.beans.property.ReadOnlyObjectProperty;

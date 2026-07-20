@@ -4,12 +4,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -63,10 +63,10 @@ class PointEditViewModelTest {
 
         viewModel.appliquerControleCarre(viewModel.controlerCarre());
 
-        assertThat(viewModel.messageCarreProperty().get())
+        assertThat(viewModel.retourCarreProperty().get().texte())
                 .as("le contrôle est un confort : sans plateforme, il ne dit rien plutôt que de se plaindre")
                 .isEmpty();
-        assertThat(viewModel.alerteCarreProperty().get()).isFalse();
+        assertThat(viewModel.retourCarreProperty().get().severite()).isEqualTo(Severite.INFO);
         assertThat(viewModel.peutEnregistrer().get())
                 .as("et il n'a jamais eu le pouvoir de bloquer l'enregistrement")
                 .isTrue();
@@ -217,7 +217,7 @@ class PointEditViewModelTest {
         assertThat(viewModel.retourProperty().get().texte()).contains("A1").contains("existe déjà");
         assertThat(viewModel.retourProperty().get().severite())
                 .as("#1917 : un refus du service est une erreur")
-                .isEqualTo(RetourOperation.Severite.ERREUR);
+                .isEqualTo(Severite.ERREUR);
         assertThat(pointDao.findById(b1.id()))
                 .get()
                 .extracting(PointDEcoute::code)

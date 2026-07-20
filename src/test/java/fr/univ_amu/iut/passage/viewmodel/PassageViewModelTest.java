@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
@@ -241,7 +242,7 @@ class PassageViewModelTest {
         viewModel.ouvrirSur(99L, CONTEXTE);
 
         assertThat(viewModel.retourProperty().get().texte()).contains("introuvable");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
         assertThat(viewModel.statutProperty().get()).isNull();
         assertThat(viewModel.etapes()).isEmpty();
     }

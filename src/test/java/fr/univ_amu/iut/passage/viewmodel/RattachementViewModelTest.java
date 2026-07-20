@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -531,7 +532,7 @@ class RattachementViewModelTest {
                 .isFalse();
         assertThat(issue.retour().severite())
                 .as("un guidage est une INFO, pas un succès vert (ADR 0028)")
-                .isEqualTo(RetourOperation.Severite.INFO);
+                .isEqualTo(Severite.INFO);
         assertThat(issue.retour().texte()).contains("Non connecté").doesNotContain("✅");
     }
 
@@ -556,7 +557,7 @@ class RattachementViewModelTest {
         assertThat(avecSync.retourProperty().get().texte()).contains("récupérées");
         assertThat(avecSync.retourProperty().get().severite())
                 .as("#1917 : une récupération réussie était annoncée dans un canal nommé « messageErreur »")
-                .isEqualTo(RetourOperation.Severite.SUCCES);
+                .isEqualTo(Severite.SUCCES);
     }
 
     @Test

@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.EtatEtape;
 import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
@@ -94,7 +95,7 @@ class LotViewModelTest {
 
         verify(service).supprimerArchivesDepot(ID_PASSAGE);
         assertThat(viewModel.retourProperty().get().texte()).contains("libérés");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
         // Après recharge (plus d'archives), le bouton se désactive de lui-même.
         assertThat(viewModel.peutSupprimerArchivesProperty().get()).isFalse();
     }
@@ -231,7 +232,7 @@ class LotViewModelTest {
                 .contains("Dépôt préparé")
                 .contains("2 séquence")
                 .contains("verrouillée");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
     }
 
     @Test
@@ -318,7 +319,7 @@ class LotViewModelTest {
 
         assertThat(viewModel.preparer()).isFalse();
         assertThat(viewModel.retourProperty().get().texte()).contains("impossible");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
         assertThat(viewModel.statutProperty().get()).isEqualTo("Vérifié"); // état non vidé
     }
 
@@ -340,7 +341,7 @@ class LotViewModelTest {
         assertThat(ligne.nombreFichiers()).isEqualTo(2);
         assertThat(ligne.etatProperty().get()).isEqualTo(EtatUnite.TERMINEE);
         assertThat(viewModel.retourProperty().get().texte()).contains("1 archive");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
         assertThat(viewModel.generationEnCoursProperty().get()).isFalse(); // état « en cours » levé en fin
     }
 
@@ -379,7 +380,7 @@ class LotViewModelTest {
 
         assertThat(viewModel.generationEnCoursProperty().get()).isFalse();
         assertThat(viewModel.retourProperty().get().texte()).contains("Disque plein.");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
     }
 
     @Test

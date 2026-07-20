@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.commun.viewmodel;
 
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
+import fr.univ_amu.iut.commun.model.Severite;
 import java.util.List;
 import java.util.Objects;
 

@@ -12,8 +12,6 @@ import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
@@ -63,11 +61,12 @@ public class PointEditViewModel {
             new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     /// Ce que la grille STOC dit de la position saisie (#733) : vide tant qu'on ne sait rien.
-    private final ReadOnlyStringWrapper messageCarre = new ReadOnlyStringWrapper(this, "messageCarre", "");
+    /// Ce que la grille STOC dit de la position, avec sa gravité (#733, #2159).
+    private final ReadOnlyObjectWrapper<RetourOperation> retourCarre =
+            new ReadOnlyObjectWrapper<>(this, "retourCarre", RetourOperation.AUCUN);
 
     /// Vrai quand [#messageCarre] est une **alerte** (carré divergent, position hors grille) plutôt qu'une
     /// confirmation : la vue le colore en conséquence.
-    private final ReadOnlyBooleanWrapper alerteCarre = new ReadOnlyBooleanWrapper(this, "alerteCarre", false);
 
     private final BooleanBinding codeValide;
     private final BooleanBinding latitudeValide;
@@ -204,18 +203,17 @@ public class PointEditViewModel {
 
     /// Applique un verdict de [#controlerCarre] aux propriétés observables, **sur le fil JavaFX**.
     public void appliquerControleCarre(VerdictCarre verdict) {
-        messageCarre.set(verdict.message());
-        alerteCarre.set(verdict.alerte());
+        retourCarre.set(new RetourOperation(verdict.message(), verdict.severite()));
     }
 
-    /// Ce que la grille STOC dit de la position saisie, vide s'il n'y a rien à dire.
-    public ReadOnlyStringProperty messageCarreProperty() {
-        return messageCarre.getReadOnlyProperty();
-    }
-
-    /// Vrai si [#messageCarreProperty] est une alerte (divergence, hors grille) plutôt qu'une confirmation.
-    public ReadOnlyBooleanProperty alerteCarreProperty() {
-        return alerteCarre.getReadOnlyProperty();
+    /// Ce que la grille STOC dit de la position saisie, **avec sa gravité**. Retour vide s'il n'y a rien
+    /// à dire (hors ligne, contrôle indisponible).
+    ///
+    /// Remplace un couple `message` + `alerte` : le booléen ne distinguait pas une **confirmation** d'un
+    /// **silence**, donc la vue peignait « ce point tombe bien dans le carré » du même gris qu'une absence
+    /// de réponse. La sévérité vient du modèle (#2159), la vue la rend par [LibelleRetour].
+    public ReadOnlyObjectProperty<RetourOperation> retourCarreProperty() {
+        return retourCarre.getReadOnlyProperty();
     }
 
     /// Coordonnées GPS saisies **uniquement si les deux champs sont renseignés et valides** (bornes

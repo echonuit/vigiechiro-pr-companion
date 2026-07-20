@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
@@ -108,7 +109,7 @@ class QualificationViewModelTest {
         assertThat(viewModel.retourProperty().get().texte()).contains("passage introuvable");
         assertThat(viewModel.retourProperty().get().severite())
                 .as("un chargement qui échoue est une erreur, pas un guidage")
-                .isEqualTo(RetourOperation.Severite.ERREUR);
+                .isEqualTo(Severite.ERREUR);
         viewModel.signalerErreur(ID_PASSAGE, new IllegalStateException());
         assertThat(viewModel.retourProperty().get().texte()).contains("impossible");
     }
