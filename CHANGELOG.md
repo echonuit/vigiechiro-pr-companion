@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.21.4](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.21.3...v2.21.4) (2026-07-20)
+
+
+### Bug Fixes
+
+* **qualification:** les feux du pré-check portent une icône, pas un caractère ([#2156](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2156)) ([5609585](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/5609585ae7346ea4843be22677d71fec082b89dd)), closes [#2036](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2036) [#2113](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2113) [#801](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/801) [#801](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/801) [#2036](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2036)
+
 ## [2.21.3](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.21.2...v2.21.3) (2026-07-20)
 
 
