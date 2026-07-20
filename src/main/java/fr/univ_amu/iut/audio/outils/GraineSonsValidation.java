@@ -221,7 +221,12 @@ final class GraineSonsValidation {
         Parent vue = charger(loader);
         SonsValidationController controleur = loader.getController();
         controleur.ouvrirSur(new SourceObservations.References(ID_UTILISATEUR));
-        Scene scene = new Scene(vue, largeur, 720);
+        // 860 px et non 720 : a 720, l'`AudioView` etait comprime au point que sa barre de transport
+        // (Pause, Temps +/-, Freq. +/-, l'horloge) disparaissait entierement de l'apercu, et que ses
+        // graduations, peintes a la taille naturelle du composant, se retrouvaient DERRIERE la barre
+        // d'actions - la legende des raccourcis clavier finissant coupee par le bord (#2129). Un
+        // composant qui peint hors de la boite qu'on lui laisse ne se comprime pas, il deborde.
+        Scene scene = new Scene(vue, largeur, 860);
 
         ApercuFx.capturerApresPreparation(
                 scene,
