@@ -98,6 +98,8 @@ nav:
     - 0034 · La forme du dépôt se choisit: decisions/0034-la-forme-du-depot-se-choisit.md
     - 0035 · Un pictogramme est une icône: decisions/0035-un-pictogramme-est-une-icone-pas-un-caractere.md
     - 0036 · La copie des bruts est une option: decisions/0036-la-copie-des-bruts-est-une-option.md
+    - 0037 · Une barre d'actions plie: decisions/0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md
+    - 0038 · Quatre niveaux de sévérité: decisions/0038-l-echelle-de-severite-a-quatre-niveaux.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

@@ -82,3 +82,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) | Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère | #1933, #700 |
 | [0036](0036-la-copie-des-bruts-est-une-option.md) | La copie des enregistrements bruts est une option de ré-analyse, pas un défaut | EPIC #2061 |
 | [0037](0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md) | Une barre d'actions plie ; et tout texte coupé n'est pas une barre qui ne plie pas | #2012, #1641, #1873 |
+| [0038](0038-l-echelle-de-severite-a-quatre-niveaux.md) | L'échelle de sévérité compte quatre niveaux, et son ordre de déclaration porte la sémantique | #1990, #2004 |

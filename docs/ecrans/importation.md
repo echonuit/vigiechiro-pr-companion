@@ -67,6 +67,10 @@ correspondent pas) est signalée plus fermement :
 
 ![Cas « incohérence » : le journal ne correspond pas aux enregistrements (série et date).](../assets/captures/apercu-import-incoherence.png)
 
+Chaque avertissement **détaille ce qui cloche** : les numéros de série trouvés pour un mélange, la
+série et la date en désaccord pour une incohérence, les passages déjà en base pour une nuit déjà
+importée. Vous n'avez pas à rouvrir le dossier pour savoir de quoi il s'agit.
+
 Dans les deux cas, l'import reste possible : à vous de vérifier que le dossier correspond bien à ce
 que vous attendez avant de continuer. Le cas de **plusieurs nuits** d'un même enregistreur, lui, n'est
 pas un simple avertissement : il est **pris en charge** par le découpage décrit ci-dessous.
@@ -125,7 +129,18 @@ Les enregistrements exploitables sont importés, et un **rapport** récapitule �
 importé, **ignoré** (fichier non pertinent) ou **rejeté** (avec la raison). Les fichiers rejetés sont
 listés directement sous le message de fin d'import.
 
-![Import terminé avec rapport : la liste des fichiers rejetés et leur raison s'affiche sous le message de succès.](../assets/captures/apercu-import-rejets.png)
+![Import terminé avec rapport : le bilan structuré puis la liste des fichiers rejetés et leur raison.](../assets/captures/apercu-import-rejets.png)
+
+Le rapport signale aussi, quand il y a lieu :
+
+- le **doublon de nuit** - si vous avez choisi d'importer une nuit déjà présente, il rappelle quels
+  passages existaient déjà, avec leur année et leur point ;
+- les **anomalies du journal du capteur** - réveil non programmé, batterie faible, horloge
+  resynchronisée. Le capteur les enregistre dans son journal ; elles n'expliquent pas toujours un
+  problème, mais elles éclairent une nuit qui semble incomplète.
+
+Chaque ligne du rapport porte une **icône** en plus de sa couleur, pour rester lisible si vous
+distinguez mal les couleurs.
 
 ## Sécurités et cas particuliers
 
