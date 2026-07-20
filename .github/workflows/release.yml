@@ -178,6 +178,38 @@ jobs:
           rm -rf VigieChiro VigieChiro.app
           ls -l
 
+      - name: Calculer l'empreinte SHA-256 de chaque artefact
+        # Les installeurs ne sont pas signés : l'empreinte est le seul moyen, pour l'utilisateur, de
+        # vérifier ce qu'il a téléchargé.
+        #
+        # Un fichier PAR artefact, et non une liste unique. Deux raisons.
+        #
+        # 1. L'utilisateur télécharge UN fichier. Lui demander de récupérer en plus une liste de sept
+        #    empreintes dont six ne le concernent pas, puis d'y filtrer sa ligne, est une friction
+        #    inutile : `sha256sum -c mon-fichier.sha256` se passe d'explication.
+        # 2. Surtout, l'empreinte est ici calculée sur la SORTIE DE BUILD, avant téléversement. La
+        #    version précédente la calculait sur les artefacts re-téléchargés depuis la Release :
+        #    une corruption survenue au téléversement s'y serait retrouvée CERTIFIÉE conforme, et
+        #    l'utilisateur aurait vérifié un binaire abîmé avec succès. Une empreinte doit attester
+        #    la source, pas ce que le canal de distribution en a fait.
+        #
+        # macOS n'a pas `sha256sum` ; `shasum -a 256` produit le même format, lisible par les deux.
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd target/dist
+          if command -v sha256sum >/dev/null; then
+            empreinte() { sha256sum "$1"; }
+          else
+            empreinte() { shasum -a 256 "$1"; }
+          fi
+          for artefact in *; do
+            [ -f "${artefact}" ] || continue
+            case "${artefact}" in *.sha256) continue ;; esac
+            empreinte "${artefact}" > "${artefact}.sha256"
+          done
+          cat ./*.sha256
+
       - name: Téléverser l'installeur sur la Release (brouillon), avant publication
         shell: bash
         env:
@@ -194,35 +226,6 @@ jobs:
     if: needs.release.outputs.tag != ''
     runs-on: ubuntu-latest
     steps:
-      - name: Publier les empreintes SHA-256 des artefacts
-        # Les installeurs ne sont PAS signés (la doc utilisateur le dit) : sans empreinte, personne
-        # ne peut vérifier ce qu'il télécharge. Un fichier unique `SHA256SUMS.txt` permet la
-        # vérification d'un seul geste (`sha256sum -c`), plutôt qu'un fichier par artefact.
-        #
-        # Les empreintes sont calculées sur les artefacts TÉLÉCHARGÉS depuis la Release, et non sur
-        # ceux produits par le build : c'est ce que l'utilisateur recevra qui est haché, donc le
-        # transfert lui-même se trouve couvert. Le coût est un aller-retour de quelques centaines de
-        # mégaoctets, à l'intérieur du réseau GitHub.
-        #
-        # Cette étape précède la publication : la Release est encore un brouillon, donc personne ne
-        # peut télécharger un artefact avant que son empreinte n'existe.
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
-        run: |
-          set -euo pipefail
-          TAG="${{ needs.release.outputs.tag }}"
-          mkdir -p empreintes
-          cd empreintes
-          gh release download "$TAG" --clobber
-          # Une exécution précédente a pu déposer ce fichier sur la Release : il ne doit pas
-          # figurer dans sa propre liste d'empreintes.
-          rm -f SHA256SUMS.txt
-          sha256sum -- * > ../SHA256SUMS.txt
-          cd ..
-          cat SHA256SUMS.txt
-          gh release upload "$TAG" SHA256SUMS.txt --clobber
-
       - name: Publier la Release (retirer le brouillon)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
