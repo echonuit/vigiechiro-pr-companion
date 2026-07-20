@@ -264,6 +264,29 @@ mesuré. Cf. [ADR 0041](decisions/0041-un-check-requis-gouverne-la-branche.md).
 chemins d'écriture vers `main`**, pas seulement les PR humaines - et se demander pour chacun comment
 le check y rapportera.
 
+## Flatpak (#2111)
+
+Le manifeste vit dans [`flatpak/`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/tree/main/flatpak),
+qui porte aussi le mode d'emploi de construction et de soumission. Trois points valent d'être connus
+d'ici :
+
+**Il extrait le `.deb` publié**, il ne construit pas depuis les sources. Les builds Flathub n'ont
+**aucun réseau**, donc une résolution Maven y est impossible sans vendorer chaque dépendance
+transitive. Même choix que Gluon Scene Builder, pour la même raison - et plus simple chez nous, le
+fat-jar embarquant déjà JavaFX.
+
+**Il consomme donc directement le travail de #2107** : le `.deb` **et son empreinte SHA-256** publiée
+sont exactement ce que la source du manifeste demande.
+
+**La montée de version est automatique** : `x-checker-data` fait ouvrir la PR de mise à jour par le
+robot de Flathub. Publier une version ne demande aucun geste côté paquet.
+
+!!! tip "Le `.desktop` de jpackage est invalide"
+    jpackage écrit `Categories=Unknown`, valeur que `desktop-file-validate` refuse. Le manifeste la
+    corrige au build - et c'est la **première** édition qu'il fait, car `desktop-file-edit` valide le
+    fichier à chaque appel et échouerait avant d'y arriver. Le `.deb` installé normalement, lui, garde
+    cette catégorie fautive.
+
 ## Dépendances
 
 Les mises à jour sont proposées par **Dependabot**
