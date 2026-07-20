@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <title>VigieChiro PR Companion</title>
+  <!-- Icône de l'application (#2144).
+       Le sujet est l'ENREGISTREUR PASSIF, pas la chauve-souris : c'est lui que le logiciel
+       accompagne, et son nom le dit (« PR companion »). Un boîtier posé en forêt, son micro, son
+       témoin de veille, et les ondes qu'il capte.
+       Le dimensionnement est dicté par le 16 px, pas par le 512 : c'est en tout petit que cette
+       icône passe l'essentiel de sa vie (barre de titre, Alt-Tab, listes de fenêtres). Un boîtier
+       rectangulaire y résiste bien mieux qu'une silhouette d'animal, dont les ailes se brouillent.
+       Le fond est un carré plein opaque : une icône transparente devient illisible dès que le thème
+       du bureau change. -->
+
+  <rect width="512" height="512" rx="96" fill="#10323f"/>
+
+  <!-- Ondes captées, de part et d'autre. Symétriques : à 16 px, une composition centrée survit à la
+       réduction là où un décalage se lit comme un défaut. Épaisses et pleinement opaques, pour
+       rester des arcs et non une poussière de pixels. -->
+  <g fill="none" stroke="#0096c9" stroke-width="26" stroke-linecap="round">
+    <path d="M92 214a132 132 0 0 0 0 104"/>
+    <path d="M420 214a132 132 0 0 1 0 104"/>
+  </g>
+
+  <!-- Micro, au sommet du boîtier : le petit cylindre sombre qui dépasse, signe distinctif de ces
+       appareils. Dessiné avant le corps pour que celui-ci recouvre proprement sa base. -->
+  <rect x="240" y="96" width="32" height="52" rx="16" fill="#7fb2c4"/>
+
+  <!-- Corps du boîtier : la forme qui porte l'icône. Volontairement massive et bien centrée. -->
+  <rect x="176" y="140" width="160" height="248" rx="34" fill="#f2f7f9"/>
+
+  <!-- Fenêtre translucide de la face avant, comme sur les boîtiers réels : elle donne de la
+       profondeur au grand format et disparaît sans dommage au petit. -->
+  <rect x="206" y="188" width="100" height="152" rx="18" fill="#cfe0e7"/>
+
+  <!-- Témoin de veille : la seule touche de couleur chaude, elle dit que l'appareil écoute. -->
+  <circle cx="256" cy="228" r="19" fill="#3ecf6d"/>
+
+  <!-- Les deux piles, suggérées par deux barres. Détail de grand format assumé. -->
+  <g fill="#8fa9b3">
+    <rect x="222" y="270" width="68" height="20" rx="10"/>
+    <rect x="222" y="300" width="68" height="20" rx="10"/>
+  </g>
+</svg>

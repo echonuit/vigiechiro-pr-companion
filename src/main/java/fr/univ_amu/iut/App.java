@@ -10,6 +10,8 @@ import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
 import fr.univ_amu.iut.importation.model.ExtracteurZip;
 import fr.univ_amu.iut.passage.model.BackfillHorodatageCapture;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -18,6 +20,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
+import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
 /// Point d'entrée JavaFX du SAÉ 2.01 - VigieChiro PR Companion.
@@ -76,6 +79,7 @@ public class App extends Application {
 
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle("VigieChiro PR Companion");
+        chargerIcones(primaryStage);
 
         // Garde-fou de fermeture (#906) : si une opération critique est en cours (import, génération
         // d'archives, dépôt) ou une saisie non enregistrée est en attente, on demande confirmation avant de
@@ -88,6 +92,32 @@ public class App extends Application {
         });
 
         primaryStage.show();
+    }
+
+    /// Donne à la fenêtre l'icône de l'application, en plusieurs tailles (#2144).
+    ///
+    /// L'empaquetage (jpackage) et l'exécution sont deux chemins **distincts** : une icône correcte
+    /// dans l'installeur laisserait quand même la fenêtre, la barre des tâches et l'Alt-Tab avec
+    /// l'icône Duke générique. C'est ici que ce second chemin est traité.
+    ///
+    /// Plusieurs tailles sont fournies plutôt qu'une seule : JavaFX choisit alors la plus proche du
+    /// contexte, au lieu de réduire une grande image et d'en faire une bouillie aux petites tailles.
+    ///
+    /// Une icône manquante ne doit **pas** empêcher l'application de démarrer : c'est une perte
+    /// cosmétique, pas fonctionnelle. Elle est donc journalisée, jamais propagée.
+    private void chargerIcones(Stage fenetre) {
+        for (int taille : new int[] {16, 32, 48, 128, 256}) {
+            String chemin = "/icones/vigiechiro-" + taille + ".png";
+            try (InputStream flux = App.class.getResourceAsStream(chemin)) {
+                if (flux == null) {
+                    LOG.warning(() -> "Icône absente des ressources : " + chemin);
+                    continue;
+                }
+                fenetre.getIcons().add(new Image(flux));
+            } catch (IOException e) {
+                LOG.log(Level.WARNING, e, () -> "Icône illisible : " + chemin);
+            }
+        }
     }
 
     public static void main(String[] args) {

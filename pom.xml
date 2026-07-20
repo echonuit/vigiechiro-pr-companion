@@ -655,6 +655,10 @@
             <properties>
                 <jpackage.type>deb</jpackage.type>
                 <jpackage.appVersion>1.0.0</jpackage.appVersion>
+                <!-- Icône par défaut (Linux) ; les profils jpackage-mac et jpackage-windows,
+                     déclarés APRÈS celui-ci, la remplacent par le format attendu de leur système.
+                     Sans l'option icon, jpackage retombe sur son icône Duke générique (#2144). -->
+                <jpackage.icon>${project.basedir}/icone/derive/vigiechiro.png</jpackage.icon>
             </properties>
             <build>
                 <plugins>
@@ -713,6 +717,8 @@
                                         <argument>${project.build.finalName}-shaded.jar</argument>
                                         <argument>--main-class</argument>
                                         <argument>fr.univ_amu.iut.Launcher</argument>
+                                        <argument>--icon</argument>
+                                        <argument>${jpackage.icon}</argument>
                                         <!-- Accès natif (JavaFX + JNI SQLite) et Unsafe (Guice/Guava)
                                              autorisés, comme pour javafx:run : sinon avertissements,
                                              puis blocage dans un futur JDK. -->
@@ -742,6 +748,22 @@
              macOS, d'où l'activation par OS). L'exécution `jpackage` (sans phase ni goals propres)
              se fusionne avec celle du profil `installer` ; combine.children=append ajoute ces deux
              arguments à la fin de la liste. Inerte hors profil installer (rien à empaqueter). -->
+        <!-- Profil jpackage-windows : activé automatiquement sous Windows, pour n'y changer que le
+             format d'icône. Windows exige un ICO (et non un PNG), sans quoi jpackage échoue.
+             Déclaré après le profil `installer`, dont il remplace la propriété. Inerte hors profil
+             installer (aucun empaquetage à faire). -->
+        <profile>
+            <id>jpackage-windows</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <properties>
+                <jpackage.icon>${project.basedir}/icone/derive/vigiechiro.ico</jpackage.icon>
+            </properties>
+        </profile>
+
         <profile>
             <id>jpackage-mac</id>
             <activation>
@@ -749,6 +771,11 @@
                     <family>mac</family>
                 </os>
             </activation>
+            <properties>
+                <!-- macOS exige un ICNS. Cf. icone/ecrit-icns.py : ImageMagick écrit un PNG déguisé
+                     sous ce nom, que jpackage refuse. -->
+                <jpackage.icon>${project.basedir}/icone/derive/vigiechiro.icns</jpackage.icon>
+            </properties>
             <build>
                 <plugins>
                     <plugin>
