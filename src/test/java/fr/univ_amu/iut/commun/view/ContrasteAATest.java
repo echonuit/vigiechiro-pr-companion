@@ -76,13 +76,15 @@ class ContrasteAATest {
         COUPLES.put("badge info", "-badge-info-texte|-badge-info-fond");
     }
 
-    /// **La dette, et elle ne peut que rétrécir.** Trois couples sous le seuil au moment d'écrire ce
-    /// test (#2102 traite le premier). Retirer une ligne d'ici est le geste qui solde une correction.
-    private static final List<String> SOUS_LE_SEUIL_AA = List.of(
-            "-couleur-texte-discret sur -couleur-fond",
-            "-couleur-texte-discret sur -couleur-primaire-voile",
-            "-couleur-succes sur -couleur-fond",
-            "-couleur-avertissement sur -couleur-fond");
+    /// **La dette, et elle ne peut que rétrécir.** Quatre couples au moment d'écrire ce test ; **deux
+    /// soldés par #2102**, qui a assombri `-couleur-texte-discret` de cinq points — un seul jeton
+    /// portait les deux lignes. Retirer une ligne d'ici est le geste qui solde une correction.
+    ///
+    /// Les deux qui restent sont d'une autre nature : `-couleur-succes` et `-couleur-avertissement`
+    /// sont des jetons **sémantiques**, dont l'assombrissement change la lecture (un vert « succès »
+    /// plus sombre se rapproche du texte normal). Ils demandent un arbitrage, pas un calcul.
+    private static final List<String> SOUS_LE_SEUIL_AA =
+            List.of("-couleur-succes sur -couleur-fond", "-couleur-avertissement sur -couleur-fond");
 
     @Test
     @DisplayName("La dette de contraste ne peut que rétrécir : aucun nouveau couple sous le seuil AA")

@@ -31,8 +31,13 @@
     -couleur-fond: #f5f6f8;
     -couleur-texte: #2c3e50;
     -couleur-texte-clair: #ffffff;
-    /* Texte discret : sous-titres, libellés secondaires. */
-    -couleur-texte-discret: #6a737d;
+    /* Texte discret : sous-titres, libellés secondaires.
+       #656e78 et pas plus clair (#2102) : à #6a737d, ce jeton était à 4,45:1 sur -couleur-fond et à
+       4,24:1 sur -couleur-primaire-voile, pour un seuil WCAG AA de 4,5. Cinq points de moins sur
+       chaque canal suffisent à franchir le seuil sur les deux fonds (4,79 et 4,56) - le minimum,
+       parce que « discret » est une intention de design qu'un gris plus sombre trahirait.
+       ContrasteAATest garde la règle. */
+    -couleur-texte-discret: #656e78;
     /* Statut sémantique (jusqu'ici en littéral dans les feuilles des features). */
     -couleur-avertissement: #b9770e;
     -couleur-danger: #a93226;
