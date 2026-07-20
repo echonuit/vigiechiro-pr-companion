@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.27.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.27.0...v2.27.1) (2026-07-20)
+
+
+### Bug Fixes
+
+* **accessibilite:** rattraper vert et ambre littéraux, cliquet dédié ([#2201](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2201)) ([3768893](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/3768893d7f7e38305686514e368bd0c5f24e34f5)), closes [#2197](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2197) [#1e8449](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1e8449) [#1b8146](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1b8146) [#2115](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2115) [#2115](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2115) [#b9770e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/b9770e) [#a36100](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/a36100) [#b9770e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/b9770e) [#b7950b](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/b7950b) [#2115](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2115) [#322](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/322) [#2102](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2102) [#322](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/322) [#b9770e](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/b9770e) [#1974](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1974) [#2c3e50](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2c3e50) [#ffffff](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/ffffff) [#2c3e50](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2c3e50) [#322](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/322)
+
 # [2.27.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.26.3...v2.27.0) (2026-07-20)
 
 
