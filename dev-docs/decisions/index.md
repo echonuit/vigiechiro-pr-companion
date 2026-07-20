@@ -80,3 +80,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0033](0033-la-fenetre-borne-le-disque.md) | Une fenêtre bornée, pas un pipeline unitaire, et deux seuils disque au lieu d'un | EPIC #1991 |
 | [0034](0034-la-forme-du-depot-se-choisit.md) | La forme du dépôt se choisit, elle ne se déduit pas de la place disponible | EPIC #1991 |
 | [0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) | Un pictogramme d'IHM est une icône ; un caractère dans une phrase reste un caractère | #1933, #700 |
+| [0036](0036-la-copie-des-bruts-est-une-option.md) | La copie des enregistrements bruts est une option de ré-analyse, pas un défaut | EPIC #2061 |

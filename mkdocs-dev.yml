@@ -93,6 +93,11 @@ nav:
     - 0027 · Une attente porte toujours un nom: decisions/0027-une-attente-porte-toujours-un-nom.md
     - 0028 · Un état n'est pas un compte rendu: decisions/0028-un-etat-n-est-pas-un-compte-rendu.md
     - 0031 · Un retour n'est pas un compte rendu: decisions/0031-un-retour-n-est-pas-un-compte-rendu.md
+    - 0032 · Le plan précède l'écriture: decisions/0032-le-plan-precede-l-ecriture.md
+    - 0033 · La fenêtre borne le disque: decisions/0033-la-fenetre-borne-le-disque.md
+    - 0034 · La forme du dépôt se choisit: decisions/0034-la-forme-du-depot-se-choisit.md
+    - 0035 · Un pictogramme est une icône: decisions/0035-un-pictogramme-est-une-icone-pas-un-caractere.md
+    - 0036 · La copie des bruts est une option: decisions/0036-la-copie-des-bruts-est-une-option.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
