@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.inject.Injector;
 import fr.univ_amu.iut.cli.model.RegistrePassages;
+import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.validation.model.ServiceValidation;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -114,6 +115,31 @@ class CliTest {
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
         assertThat(texteSortie()).contains("Usage").contains("lister-passages").contains("Codes de sortie");
+    }
+
+    @Test
+    @DisplayName("--version : annonce un vrai numéro, pas un libellé figé")
+    void version_annonce_un_numero() {
+        int code = cli.executer(new String[] {"--version"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        // L'option existait avant #2108 mais rendait une chaîne SANS numéro : elle répondait sans rien
+        // apprendre. Hors artefact publié, le repli doit rester lisible plutôt que vide.
+        assertThat(texteSortie())
+                .contains("VigieChiro")
+                .contains(VersionApplication.INCONNUE)
+                .contains("Java ");
+    }
+
+    @Test
+    @DisplayName("verifier-maj hors artefact publié : dit pourquoi il ne peut pas comparer, code 1")
+    void verifier_maj_sans_version_locale() {
+        // La suite tourne sur les classes Maven : aucune version au manifeste, donc aucune référence à
+        // comparer. Se taire en rendant 0 laisserait croire que l'application est à jour.
+        int code = cli.executer(new String[] {"verifier-maj"}, sortie, erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_ERREUR_EXECUTION);
+        assertThat(texteErreur()).contains("Version locale inconnue");
     }
 
     @Test

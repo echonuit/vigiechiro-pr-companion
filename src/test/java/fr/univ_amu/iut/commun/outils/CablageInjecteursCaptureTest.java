@@ -124,6 +124,11 @@ class CablageInjecteursCaptureTest {
                 injecteursPartiels(),
                 Stream.of(
                         Arguments.of("CaptureAccueil", (Supplier<Injector>) CaptureAccueil::creerInjecteur),
+                        // #2109 : injecteur PROPRE, dont les AnnonceChrome sont remplacées par une
+                        // annonce figée. CaptureMenuOutils, lui, réutilise celui de CaptureAccueil
+                        // et n'a donc rien à garder ici.
+                        Arguments.of(
+                                "CaptureBandeauAnnonce", (Supplier<Injector>) CaptureBandeauAnnonce::creerInjecteur),
                         Arguments.of("CaptureRecherche", (Supplier<Injector>) CaptureRecherche::creerInjecteur),
                         Arguments.of("CaptureEcrans", (Supplier<Injector>) CaptureEcrans::creerInjecteur)));
     }

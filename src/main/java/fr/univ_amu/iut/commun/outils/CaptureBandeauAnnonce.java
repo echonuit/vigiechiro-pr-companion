@@ -71,7 +71,7 @@ public final class CaptureBandeauAnnonce {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
 
-        Injector injecteur = injecteurAvecAnnonce();
+        Injector injecteur = creerInjecteur();
         new MigrationSchema(injecteur.getInstance(SourceDeDonnees.class)).migrer();
 
         FXMLLoader loader = new FXMLLoader(CaptureBandeauAnnonce.class.getResource(CHROME));
@@ -84,7 +84,11 @@ public final class CaptureBandeauAnnonce {
 
     /// L'injecteur applicatif, dont l'ensemble des [AnnonceChrome] est **remplacé** par une annonce
     /// figée : la feature `maj` peut être active ou non, l'aperçu ne dépend pas d'elle.
-    private static Injector injecteurAvecAnnonce() {
+    ///
+    /// Exposé pour le garde-fou de câblage (`CablageInjecteursCaptureTest`) : un injecteur de
+    /// capture auquel il manque une liaison ne casse ni la compilation ni aucun test, et ne se
+    /// voit qu'au rendu - donc en CI, sur le dos du push suivant.
+    public static Injector creerInjecteur() {
         Module annonceFigee = new AbstractModule() {
             @Override
             protected void configure() {

@@ -76,7 +76,12 @@ public final class DerniereVersionGitHub implements DerniereVersionPubliee {
     }
 
     /// Extrait le numéro et l'adresse de la réponse, ou rend vide si elle n'a pas la forme attendue.
-    private Optional<VersionDisponible> lire(String corps) {
+    ///
+    /// Visible du test à dessein : c'est ici que vivent tous les cas de réponse inattendue, et le
+    /// dépôt ne peut pas monter de serveur local en test - `jdk.httpserver` n'est pas lisible depuis
+    /// ce module (contrainte JPMS connue). Les exercer directement vaut mieux que de ne pas les
+    /// exercer.
+    Optional<VersionDisponible> lire(String corps) {
         JsonObject json = JsonParser.parseString(corps).getAsJsonObject();
         if (!json.has("tag_name") || !json.has("html_url")) {
             return Optional.empty();
