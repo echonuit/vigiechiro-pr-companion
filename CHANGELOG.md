@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.21.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.21.1...v2.21.2) (2026-07-20)
+
+
+### Bug Fixes
+
+* **captures:** donner sa hauteur à « Sons & validation », dont l AudioView débordait ([#2141](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2141)) ([25b41aa](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/25b41aac6dc5ca30dacadcf1d58d7459498484b7)), closes [#2127](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2127) [audio-view#56](https://github.com/audio-view/issues/56) [#2129](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2129)
+
 ## [2.21.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.21.0...v2.21.1) (2026-07-20)
 
 
