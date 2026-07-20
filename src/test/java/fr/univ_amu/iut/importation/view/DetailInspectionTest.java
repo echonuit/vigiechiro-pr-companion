@@ -2,8 +2,8 @@ package fr.univ_amu.iut.importation.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.scene.control.Label;

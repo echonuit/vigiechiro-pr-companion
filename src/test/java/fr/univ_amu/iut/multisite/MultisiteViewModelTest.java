@@ -11,10 +11,10 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.SuiviTraitement;
 import fr.univ_amu.iut.commun.model.Verdict;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.multisite.model.CarreAgrege;
 import fr.univ_amu.iut.multisite.model.EtatAnalyse;
 import fr.univ_amu.iut.multisite.model.LignePassage;
@@ -102,7 +102,7 @@ class MultisiteViewModelTest {
         assertThat(compteRendu.texte()).contains("2 nuit(s)");
         assertThat(compteRendu.severite())
                 .as("#1888 : un relevé complet est un succès, ce que le canal String ne disait pas")
-                .isEqualTo(RetourOperation.Severite.SUCCES);
+                .isEqualTo(Severite.SUCCES);
     }
 
     @Test
@@ -114,7 +114,7 @@ class MultisiteViewModelTest {
         assertThat(vm.releverAnalyses(List.of()).texte()).contains("Aucune nuit déposée");
         assertThat(vm.releverAnalyses(List.of()).severite())
                 .as("rien à relever est un guidage, pas un échec")
-                .isEqualTo(RetourOperation.Severite.INFO);
+                .isEqualTo(Severite.INFO);
         verify(suivi, never()).releverTout(anyList());
     }
 
@@ -128,7 +128,7 @@ class MultisiteViewModelTest {
         assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L)).severite())
                 .as("#1888 : un relevé PARTIEL n'est ni un succès (ce serait mentir sur la fraîcheur),"
                         + " ni une erreur (les données restent affichées)")
-                .isEqualTo(RetourOperation.Severite.INFO);
+                .isEqualTo(Severite.INFO);
         assertThat(vm.releverAnalyses(List.of(1L, 2L, 3L)).texte())
                 .contains("1 nuit(s) sur 3")
                 .contains("2 injoignable(s)")

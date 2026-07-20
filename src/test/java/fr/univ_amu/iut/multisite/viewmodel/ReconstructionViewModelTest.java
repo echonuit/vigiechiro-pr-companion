@@ -9,7 +9,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.passage.model.ParticipationOrpheline;
 import fr.univ_amu.iut.passage.model.RapportReconstruction;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
@@ -122,7 +122,7 @@ class ReconstructionViewModelTest {
         viewModel.signalerErreur(new RegleMetierException("Le point d'écoute n'existe pas localement."));
 
         assertThat(viewModel.retourProperty().get().texte()).contains("Le point d'écoute n'existe pas localement.");
-        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(viewModel.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
         assertThat(viewModel.etatListeProperty().get())
                 .as("#1917 : un refus n'efface pas le constat, et le constat ne devient pas un refus")
                 .isEmpty();

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
+import fr.univ_amu.iut.commun.model.Severite;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -38,7 +39,9 @@ class ControleCarreStocTest {
         VerdictCarre verdict = controle.confronter(CARRE_DECLARE, LATITUDE, LONGITUDE);
 
         assertThat(verdict).isInstanceOf(VerdictCarre.Concorde.class);
-        assertThat(verdict.alerte()).isFalse();
+        // Une confirmation est un SUCCÈS, pas une absence d'alerte : le booléen d'avant la
+        // confondait avec le silence de `Indisponible` (#2159).
+        assertThat(verdict.severite()).isEqualTo(Severite.SUCCES);
         assertThat(verdict.message()).contains(CARRE_DECLARE);
     }
 
@@ -50,10 +53,10 @@ class ControleCarreStocTest {
         VerdictCarre verdict = controle.confronter(CARRE_DECLARE, LATITUDE, LONGITUDE);
 
         assertThat(verdict).isEqualTo(new VerdictCarre.Diverge("130712", CARRE_DECLARE));
-        assertThat(verdict.alerte())
+        assertThat(verdict.severite())
                 .as("c'est le cas qui justifie toute l'issue : une faute de frappe sur le carré contamine"
                         + " ensuite le préfixe de tous les fichiers")
-                .isTrue();
+                .isEqualTo(Severite.AVERTISSEMENT);
         assertThat(verdict.message()).contains("130712").contains(CARRE_DECLARE);
     }
 
@@ -65,7 +68,7 @@ class ControleCarreStocTest {
         VerdictCarre verdict = controle.confronter(CARRE_DECLARE, LATITUDE, LONGITUDE);
 
         assertThat(verdict).isInstanceOf(VerdictCarre.HorsGrille.class);
-        assertThat(verdict.alerte()).isTrue();
+        assertThat(verdict.severite()).isEqualTo(Severite.AVERTISSEMENT);
     }
 
     @Test
@@ -79,7 +82,7 @@ class ControleCarreStocTest {
         assertThat(verdict.message())
                 .as("travailler hors ligne est normal : le dire à chaque frappe serait du bruit")
                 .isEmpty();
-        assertThat(verdict.alerte()).isFalse();
+        assertThat(verdict.severite()).isEqualTo(Severite.INFO);
     }
 
     @Test

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.LibelleRetour;
 import fr.univ_amu.iut.commun.view.carte.CarreGeo;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
@@ -42,11 +43,6 @@ import javafx.stage.Stage;
 public class ModalePointController {
 
     private static final String STYLE_CHAMP_INVALIDE = "champ-invalide";
-
-    /// Message du carré STOC (#733) : alerte (divergence, hors grille) ou confirmation discrète.
-    private static final String STYLE_CARRE_ALERTE = "message-carre-alerte";
-
-    private static final String STYLE_CARRE_CONFIRME = "message-carre-confirme";
 
     /// Couleur du marqueur du point en cours d'édition (indigo de l'application).
     private static final Color COULEUR_POINT = Color.web("#3f51b5");
@@ -156,12 +152,10 @@ public class ModalePointController {
 
         // Contrôle du carré STOC (#733) : ce que la grille officielle dit de la position saisie. Message
         // affiché seulement quand il y a quelque chose à dire (hors ligne, on se tait).
-        messageCarre.textProperty().bind(viewModel.messageCarreProperty());
-        messageCarre.visibleProperty().bind(viewModel.messageCarreProperty().isNotEmpty());
-        messageCarre.managedProperty().bind(viewModel.messageCarreProperty().isNotEmpty());
-        viewModel
-                .alerteCarreProperty()
-                .addListener((observable, avant, alerte) -> majStyleMessageCarre(Boolean.TRUE.equals(alerte)));
+        // Texte, visibilité, couleur ET icône : le composant du socle fait les quatre depuis la valeur
+        // (#2159). La confirmation se peint désormais en succès, là où le booléen la confondait avec un
+        // silence.
+        LibelleRetour.installer(messageCarre, viewModel.retourCarreProperty());
         viewModel.latitudeProperty().addListener((observable, avant, apres) -> controlerCarre());
         viewModel.longitudeProperty().addListener((observable, avant, apres) -> controlerCarre());
     }
@@ -182,11 +176,6 @@ public class ModalePointController {
     }
 
     /// Colore le message du carré : alerte (divergence, hors grille) ou simple confirmation.
-    private void majStyleMessageCarre(boolean alerte) {
-        messageCarre.getStyleClass().removeAll(STYLE_CARRE_ALERTE, STYLE_CARRE_CONFIRME);
-        messageCarre.getStyleClass().add(alerte ? STYLE_CARRE_ALERTE : STYLE_CARRE_CONFIRME);
-    }
-
     /// Prépare la modale en mode création et mémorise l'action de succès.
     public void demarrerCreation(Site site, Runnable apresSucces) {
         this.apresSucces = Objects.requireNonNull(apresSucces, "apresSucces");

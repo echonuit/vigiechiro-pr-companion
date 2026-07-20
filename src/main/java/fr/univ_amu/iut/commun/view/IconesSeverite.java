@@ -1,6 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
+import fr.univ_amu.iut.commun.model.Severite;
 import java.util.Map;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;

@@ -2,10 +2,10 @@ package fr.univ_amu.iut.importation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.importation.model.LigneRapport;
 import fr.univ_amu.iut.importation.model.PassageExistant;
 import fr.univ_amu.iut.importation.model.RapportImport;

@@ -1,7 +1,7 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import java.util.Map;
 import javafx.beans.binding.Bindings;
 import javafx.beans.value.ObservableValue;

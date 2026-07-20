@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.view;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.util.Map;
 import javafx.beans.binding.Bindings;
@@ -22,11 +23,11 @@ public final class BandeauRetour {
 
     /// Classe CSS du bandeau selon la sévérité (succès vert / info neutre / avertissement ambre /
     /// erreur rouge).
-    private static final Map<RetourOperation.Severite, String> CLASSE = Map.of(
-            RetourOperation.Severite.SUCCES, "retour-succes",
-            RetourOperation.Severite.INFO, "retour-info",
-            RetourOperation.Severite.AVERTISSEMENT, "retour-avertissement",
-            RetourOperation.Severite.ERREUR, "retour-erreur");
+    private static final Map<Severite, String> CLASSE = Map.of(
+            Severite.SUCCES, "retour-succes",
+            Severite.INFO, "retour-info",
+            Severite.AVERTISSEMENT, "retour-avertissement",
+            Severite.ERREUR, "retour-erreur");
 
     /// Icône par sévérité, pendant de [#CLASSE] : le bandeau dit la même chose en couleur et en forme,
     /// pour qui distingue mal les couleurs comme pour qui lit vite.

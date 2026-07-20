@@ -13,7 +13,7 @@ import fr.univ_amu.iut.commun.api.IssueLancement;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.lot.model.BilanDepot;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
@@ -220,7 +220,7 @@ class DepotViewModelTest {
 
         vm.restituerLancement(ResultatLancement.accepte());
         assertThat(vm.retourProperty().get().texte()).contains("Traitement lancé");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
 
         // « Déjà en cours » n'est PAS un échec : le serveur travaille, il n'y a qu'à attendre. Avant
         // #1261, ce cas s'affichait comme un échec, avec un point d'interrogation en prime.
@@ -228,17 +228,17 @@ class DepotViewModelTest {
         assertThat(vm.retourProperty().get().texte()).contains("déjà en cours").doesNotContain("Échec");
         assertThat(vm.retourProperty().get().severite())
                 .as("#1890 : un traitement déjà lancé n'est pas un échec, il n'y a rien à faire")
-                .isEqualTo(RetourOperation.Severite.INFO);
+                .isEqualTo(Severite.INFO);
 
         vm.restituerLancement(ResultatLancement.relanceBloquee(traitement(EtatTraitement.FINI)));
         assertThat(vm.retourProperty().get().texte()).contains("déjà été analysée", "effacerait");
         assertThat(vm.retourProperty().get().severite())
                 .as("#1890 : la relance bloquée protège les observations, elle ne rapporte pas une panne")
-                .isEqualTo(RetourOperation.Severite.INFO);
+                .isEqualTo(Severite.INFO);
 
         vm.restituerLancement(ResultatLancement.refuse(403, "interdit"));
         assertThat(vm.retourProperty().get().texte()).contains("refusé");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
 
         vm.restituerLancement(ResultatLancement.injoignable());
         assertThat(vm.retourProperty().get().texte()).contains("injoignable");
@@ -309,17 +309,17 @@ class DepotViewModelTest {
         vm.appliquerBilan(new BilanDepot("p", 5, List.of()));
         assertThat(vm.enCoursProperty().get()).isFalse();
         assertThat(vm.retourProperty().get().texte()).contains("5 fichier");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
 
         vm.appliquerBilan(new BilanDepot("p", 3, List.of("x.wav")));
         assertThat(vm.retourProperty().get().texte()).contains("échec");
         assertThat(vm.retourProperty().get().severite())
                 .as("#1890 : un dépôt partiel ne ment ni dans un sens ni dans l'autre")
-                .isEqualTo(RetourOperation.Severite.INFO);
+                .isEqualTo(Severite.INFO);
 
         vm.echec("Token expiré");
         assertThat(vm.enCoursProperty().get()).isFalse();
         assertThat(vm.retourProperty().get().texte()).contains("Token expiré");
-        assertThat(vm.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
     }
 }

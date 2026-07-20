@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.sites.model;
 
+import fr.univ_amu.iut.commun.model.Severite;
+
 /// Ce que la **grille STOC officielle** dit d'une position, confrontée au carré que le site déclare (#733).
 ///
 /// Le n° de carré est saisi à la main, une fois, à la création du site — et il conditionne ensuite *tout* :
@@ -14,16 +16,24 @@ public sealed interface VerdictCarre {
     /// Message à afficher, vide s'il n'y a rien à dire.
     String message();
 
-    /// `true` si le message est une **alerte** (à afficher comme tel), `false` s'il rassure ou se tait.
-    default boolean alerte() {
-        return false;
-    }
+    /// La **gravité** de ce que ce verdict dit. Portée en donnée : c'est la vue qui décide comment la
+    /// rendre (couleur, icône), pas le modèle.
+    ///
+    /// Remplace un `boolean alerte()` qui ne distinguait pas « rassure » de « se tait » - `Concorde` et
+    /// `Indisponible` rendaient tous deux `false`, donc la vue ne pouvait pas afficher une confirmation
+    /// en succès. L'information était perdue avant d'arriver à l'écran (#2036, #2159).
+    Severite severite();
 
     /// Le point tombe bien dans le carré déclaré par le site : la saisie est confirmée.
     record Concorde(String numero) implements VerdictCarre {
         @Override
         public String message() {
-            return "✓ Ce point tombe bien dans le carré " + numero + " de la grille STOC.";
+            return "Ce point tombe bien dans le carré " + numero + " de la grille STOC.";
+        }
+
+        @Override
+        public Severite severite() {
+            return Severite.SUCCES;
         }
     }
 
@@ -33,14 +43,14 @@ public sealed interface VerdictCarre {
     record Diverge(String numeroOfficiel, String numeroDeclare) implements VerdictCarre {
         @Override
         public String message() {
-            return "⚠ Ce point tombe dans le carré " + numeroOfficiel + " de la grille STOC, alors que ce site"
+            return "Ce point tombe dans le carré " + numeroOfficiel + " de la grille STOC, alors que ce site"
                     + " déclare le carré " + numeroDeclare + ". Vérifiez les coordonnées, ou le n° de carré du"
                     + " site.";
         }
 
         @Override
-        public boolean alerte() {
-            return true;
+        public Severite severite() {
+            return Severite.AVERTISSEMENT;
         }
     }
 
@@ -49,12 +59,12 @@ public sealed interface VerdictCarre {
     record HorsGrille() implements VerdictCarre {
         @Override
         public String message() {
-            return "⚠ Aucun carré STOC ne couvre cette position. Vérifiez la latitude et la longitude.";
+            return "Aucun carré STOC ne couvre cette position. Vérifiez la latitude et la longitude.";
         }
 
         @Override
-        public boolean alerte() {
-            return true;
+        public Severite severite() {
+            return Severite.AVERTISSEMENT;
         }
     }
 
@@ -65,6 +75,12 @@ public sealed interface VerdictCarre {
         @Override
         public String message() {
             return "";
+        }
+
+        /// Sans message, la sévérité ne sert à rien - `INFO` est le niveau qui ne dit rien de particulier.
+        @Override
+        public Severite severite() {
+            return Severite.INFO;
         }
     }
 }

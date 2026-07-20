@@ -2,10 +2,10 @@ package fr.univ_amu.iut.commun.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import java.util.List;
 import java.util.stream.IntStream;
 import javafx.scene.control.Label;

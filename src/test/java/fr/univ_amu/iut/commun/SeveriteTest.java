@@ -3,10 +3,10 @@ package fr.univ_amu.iut.commun;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

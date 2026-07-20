@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -30,10 +31,10 @@ class MessagesLotTest {
         // Pas d'`info` ici : l'écran du lot n'émet que des succès et des échecs, les guidages venant du
         // dépôt (`DepotViewModel`). Une fabrique qu'aucun appelant n'utilise serait du code mort.
         messages.succes("Archives générées.");
-        assertThat(messages.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.SUCCES);
+        assertThat(messages.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
 
         messages.erreur("Disque plein.");
-        assertThat(messages.retourProperty().get().severite()).isEqualTo(RetourOperation.Severite.ERREUR);
+        assertThat(messages.retourProperty().get().severite()).isEqualTo(Severite.ERREUR);
         assertThat(messages.retourProperty().get().texte()).contains("Disque plein.");
     }
 

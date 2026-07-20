@@ -2,10 +2,10 @@ package fr.univ_amu.iut.importation.viewmodel;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.Progression;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
-import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
