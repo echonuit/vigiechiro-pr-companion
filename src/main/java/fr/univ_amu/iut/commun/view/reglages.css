@@ -59,9 +59,19 @@
     -fx-max-width: 620;
 }
 
-/* Une ligne = libellé au-dessus de son contrôle (les cases portent déjà leur libellé). */
+/* Une ligne = libellé au-dessus de son contrôle (les cases portent déjà leur libellé), puis l'aide
+   en dessous. Le libellé dit CE QUE fait le réglage, l'aide dit CE QU'IL ENGAGE (#2085). */
 .reglage-ligne {
     -fx-spacing: 6;
+}
+
+/* L'aide, sous son contrôle : discrète mais LUE. Elle était en infobulle, donc jamais lue - or
+   plusieurs réglages y portent un arbitrage (l'audio récupérable ou non, plusieurs Go par nuit).
+   Même registre que `.section-sous` du socle, dont c'est le pendant dans les Réglages. */
+.reglage-aide {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-texte-discret;
+    -fx-padding: 2 0 0 0;
 }
 
 .reglage-libelle {

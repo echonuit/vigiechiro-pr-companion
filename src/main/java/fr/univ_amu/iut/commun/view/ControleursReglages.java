@@ -13,7 +13,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
@@ -44,20 +43,48 @@ final class ControleursReglages {
     }
 
     /// Une ligne de réglage : la case à cocher porte déjà son libellé ; les autres contrôles sont
-    /// précédés d'un libellé sur une ligne dédiée.
+    /// précédés d'un libellé sur une ligne dédiée. **L'aide suit le contrôle, visible** (#2085).
+    ///
+    /// Elle n'était rendue qu'en infobulle : le libellé s'affichait, la conséquence non. Or plusieurs
+    /// réglages portent dans leur aide un **arbitrage** que l'utilisateur doit connaître avant de
+    /// choisir — la forme du dépôt décide si l'audio reste récupérable côté serveur
+    /// ([ADR 0034](../../../../../../dev-docs/decisions/0034-la-forme-du-depot-se-choisit.md)), la
+    /// conservation des originaux coûte plusieurs Go par nuit
+    /// ([ADR 0036](../../../../../../dev-docs/decisions/0036-la-copie-des-bruts-est-une-option.md)).
+    /// Un texte qu'il faut survoler pour lire n'est pas lu : c'est un geste qu'on ne fait pas si on
+    /// ignore qu'il y a quelque chose à lire, et qui n'existe pas au tactile.
+    ///
+    /// **Visible pour tous les réglages, pas seulement ceux qu'on juge importants** : cette sélection
+    /// demanderait d'arbitrer réglage par réglage et dériverait. Une aide qui ne mérite pas d'être
+    /// montrée ne mérite pas d'être écrite.
     private static Node ligne(DescripteurReglage descripteur, ReglagesReactifs reactifs) {
         Control controle = controle(descripteur, reactifs);
-        if (descripteur instanceof DescripteurReglage.Booleen) {
-            return controle;
-        }
-        Label libelle = new Label(descripteur.libelle());
-        libelle.getStyleClass().add("reglage-libelle");
-        VBox ligne = new VBox(libelle, controle);
+        VBox ligne = new VBox();
         ligne.getStyleClass().add("reglage-ligne");
+        if (!(descripteur instanceof DescripteurReglage.Booleen)) {
+            Label libelle = new Label(descripteur.libelle());
+            libelle.getStyleClass().add("reglage-libelle");
+            ligne.getChildren().add(libelle);
+        }
+        ligne.getChildren().add(controle);
+        aide(descripteur).ifPresent(ligne.getChildren()::add);
         return ligne;
     }
 
-    /// Contrôle câblé (bidirectionnel) au réglage décrit, avec tooltip d'aide si fournie.
+    /// L'aide d'un réglage, rendue sous son contrôle. Vide quand le réglage n'en déclare pas.
+    private static Optional<Node> aide(DescripteurReglage descripteur) {
+        if (descripteur.aide().isBlank()) {
+            return Optional.empty();
+        }
+        Label aide = new Label(descripteur.aide());
+        aide.setWrapText(true);
+        aide.getStyleClass().add("reglage-aide");
+        return Optional.of(aide);
+    }
+
+    /// Contrôle câblé (bidirectionnel) au réglage décrit. L'aide n'est plus une infobulle : elle est
+    /// rendue sous le contrôle par [#ligne] (#2085), et deux canaux pour le même texte n'en valent
+    /// pas un.
     static Control controle(DescripteurReglage descripteur, ReglagesReactifs reactifs) {
         Control controle =
                 switch (descripteur) {
@@ -75,9 +102,6 @@ final class ControleursReglages {
                     case DescripteurReglage.Entier entier -> spinner(entier, reactifs);
                     case DescripteurReglage.Enumeration enumeration -> liste(enumeration, reactifs);
                 };
-        if (!descripteur.aide().isBlank()) {
-            controle.setTooltip(new Tooltip(descripteur.aide()));
-        }
         controle.getStyleClass().add("reglage-controle");
         return controle;
     }

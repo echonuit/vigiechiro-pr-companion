@@ -57,19 +57,47 @@ class ControleursReglagesTest {
         CheckBox coche = (CheckBox) controle;
         assertThat(coche.getText()).isEqualTo("Conserver les originaux");
         assertThat(coche.isSelected()).isFalse();
-        assertThat(coche.getTooltip()).isNotNull();
+        assertThat(coche.getTooltip())
+                .as("l'aide n'est plus une infobulle : elle est rendue sous le contrôle (#2085)")
+                .isNull();
 
         coche.setSelected(true);
         assertThat(reglages.lireBooleen("t.bool", false)).isTrue();
     }
 
     @Test
-    @DisplayName("sans aide, la case n'a pas de tooltip")
-    void sans_aide_pas_de_tooltip() {
-        Control controle = ControleursReglages.controle(
-                new DescripteurReglage.Booleen("t.bool2", "Sans aide", "", false), reactifs);
+    @DisplayName("#2085 : l'aide est rendue VISIBLE sous le contrôle, plus en infobulle")
+    void l_aide_est_visible_sous_le_controle() {
+        // Un texte qu'il faut survoler pour lire n'est pas lu : c'est un geste qu'on ne fait pas si on
+        // ignore qu'il y a quelque chose à lire, et qui n'existe pas au tactile. Or plusieurs réglages
+        // portent dans leur aide un arbitrage (ADR 0034, ADR 0036) que l'utilisateur doit connaître
+        // AVANT de choisir.
+        OngletReglages onglet =
+                onglet(List.of(new DescripteurReglage.Booleen("a.bool", "Case", "Ce que ça engage.", false)));
 
-        assertThat(((CheckBox) controle).getTooltip()).isNull();
+        VBox ligne = (VBox) ControleursReglages.formulaire(onglet, reactifs)
+                .getChildrenUnmodifiable()
+                .get(0);
+
+        assertThat(ligne.getChildren()).as("la case, puis son aide").hasSize(2);
+        Label aide = (Label) ligne.getChildren().get(1);
+        assertThat(aide.getText()).isEqualTo("Ce que ça engage.");
+        assertThat(aide.isWrapText())
+                .as("une aide se lit en entier, elle ne s'élide pas")
+                .isTrue();
+        assertThat(aide.getStyleClass()).contains("reglage-aide");
+    }
+
+    @Test
+    @DisplayName("#2085 : sans aide déclarée, aucune ligne vide n'est ajoutée")
+    void sans_aide_aucun_libelle_vide() {
+        OngletReglages onglet = onglet(List.of(new DescripteurReglage.Booleen("t.bool2", "Sans aide", "", false)));
+
+        VBox ligne = (VBox) ControleursReglages.formulaire(onglet, reactifs)
+                .getChildrenUnmodifiable()
+                .get(0);
+
+        assertThat(ligne.getChildren()).hasSize(1);
     }
 
     @Test
@@ -127,7 +155,10 @@ class ControleursReglagesTest {
         Region formulaire = ControleursReglages.formulaire(onglet, reactifs);
 
         assertThat(((VBox) formulaire).getChildren()).hasSize(2);
-        assertThat(((VBox) formulaire).getChildren().get(0)).isInstanceOf(CheckBox.class);
+        // Chaque réglage est désormais enveloppé dans sa ligne, y compris la case : c'est elle qui porte
+        // l'aide sous le contrôle (#2085).
+        VBox premiere = (VBox) ((VBox) formulaire).getChildren().get(0);
+        assertThat(premiere.getChildren()).singleElement().isInstanceOf(CheckBox.class);
     }
 
     @Test

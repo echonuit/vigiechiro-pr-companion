@@ -5,9 +5,14 @@ accessible à tout moment depuis le menu **☰** (en haut à droite) → **Régl
 
 ![L'écran Réglages : un onglet par domaine (Général, Import, Fonctionnalités).](../assets/captures/apercu-reglages.png)
 
-L'onglet **Import** porte l'option de conservation des originaux, décochée par défaut :
+Sous chaque réglage, une ligne dit **ce qu'il engage** — pas seulement ce qu'il fait. L'onglet
+**Import** porte l'option de conservation des originaux, décochée par défaut :
 
 ![L'onglet Import des Réglages : « Conserver les originaux pour ré-analyse ultérieure », décoché.](../assets/captures/apercu-reglages-import.png)
+
+L'onglet **Dépôt** porte le choix qui décide si vos sons restent téléchargeables depuis Vigie-Chiro :
+
+![L'onglet Dépôt des Réglages : « Forme du dépôt », avec la conséquence de chaque mode sur l'audio conservé en ligne.](../assets/captures/apercu-reglages-depot.png)
 
 Chaque **onglet** correspond à un domaine de l'application ; il se remplit tout seul des réglages que
 ce domaine propose. Aujourd'hui :
