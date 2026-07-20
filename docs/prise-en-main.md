@@ -32,7 +32,15 @@ prêtée.
 | macOS | `…-macos-arm64-portable.zip` | décompressez, puis ouvrez `VigieChiro.app` |
 | Linux | `…-linux-x64-portable.tar.gz` | `tar -xzf …tar.gz` puis `VigieChiro/bin/VigieChiro` |
 
-Dans les deux cas, tout le nécessaire est embarqué : **aucune installation de Java** n'est requise.
+**Sous Linux, une troisième forme** existe : l'**AppImage**, un fichier unique et exécutable. Rien à
+décompresser, et elle s'ajoute au menu des applications.
+
+```bash
+chmod +x VigieChiro-2.20.0-linux-x86_64.AppImage
+./VigieChiro-2.20.0-linux-x86_64.AppImage
+```
+
+Dans tous les cas, tout le nécessaire est embarqué : **aucune installation de Java** n'est requise.
 
 !!! tip "Et pour mettre à jour ?"
     Avec l'archive portable, remplacez simplement le dossier décompressé par celui de la nouvelle

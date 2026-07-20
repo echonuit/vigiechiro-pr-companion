@@ -118,6 +118,41 @@ Le **format d'archive** est choisi pour ce qu'il préserve, et ce n'est pas inte
     `gh release upload` échoue sur un répertoire. L'étape supprime donc `VigieChiro/` (ou
     `VigieChiro.app`) une fois l'archive faite, sans quoi le téléversement casse toute la publication.
 
+### L'AppImage (#2107)
+
+Sous Linux uniquement, la même app-image donne aussi une **AppImage** : un **fichier unique et
+exécutable**, qu'on rend exécutable et qu'on lance, sans rien décompresser. C'est le complément de
+l'archive portable pour qui préfère un fichier à un dossier, et le seul des deux formats à
+**s'intégrer au menu des applications**, grâce à son `.desktop`.
+
+Elle est construite par
+[`.github/scripts/construit-appimage.sh`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/blob/main/.github/scripts/construit-appimage.sh),
+à partir de trois éléments versionnés dans `.github/appimage/` (le point d'entrée `AppRun`, le
+`.desktop`, et l'icône reprise de celle que jpackage dépose dans `lib/`). Le script est **lançable à
+la main**, ce qui permet de le vérifier sans passer par une release :
+
+```bash
+./mvnw -Pinstaller -Djpackage.type=app-image -DskipTests verify
+./.github/scripts/construit-appimage.sh 2.20.0 x86_64      # -> target/dist/*.AppImage
+```
+
+L'étape est placée **avant** l'empaquetage de l'archive portable, qui supprime
+`target/dist/VigieChiro` : les deux formats partent de la même app-image.
+
+!!! danger "Deux pièges rencontrés à la construction, tous deux silencieux à la lecture"
+    **Ne pas définir `SOURCE_DATE_EPOCH`.** L'idée d'un artefact reproductible est tentante, mais
+    appimagetool passe déjà ses propres options de date à `mksquashfs`, qui refuse alors les deux
+    ensemble : `SOURCE_DATE_EPOCH and command line options can't be used at the same time to set
+    timestamp(s)`. Le script le neutralise s'il vient de l'environnement.
+
+    **Une seule catégorie principale dans le `.desktop`.** `Categories=Science;Biology;Education;`
+    en déclare deux (`Science` et `Education`), et l'application **apparaît deux fois** dans le menu.
+    Seul `Science` est principal ici, `Biology` en étant une sous-catégorie.
+
+`--appimage-extract-and-run` est passé à appimagetool parce que celui-ci est lui-même une AppImage :
+il lui faut FUSE pour se monter, ce dont les conteneurs CI ne disposent pas toujours, avec un échec
+obscur à la clé.
+
 ### Les empreintes SHA-256 (#2107)
 
 Les installeurs ne sont **pas signés**. Sans empreinte, un utilisateur n'a donc **aucun moyen** de
