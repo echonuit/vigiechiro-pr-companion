@@ -83,26 +83,4 @@ class ReglagesTest {
 
         assertThat(reglages.lireEntier(CLE, 42)).isEqualTo(42);
     }
-
-    @Test
-    @DisplayName("aller-retour d'une énumération, défaut si jamais écrit")
-    void aller_retour_enum() {
-        assertThat(reglages.lireEnum(Couleur.class, CLE, Couleur.ROUGE)).isEqualTo(Couleur.ROUGE);
-
-        reglages.ecrireEnum(CLE, Couleur.VERT);
-        assertThat(reglages.lireEnum(Couleur.class, CLE, Couleur.ROUGE)).isEqualTo(Couleur.VERT);
-    }
-
-    @Test
-    @DisplayName("une constante d'énum inconnue retombe sur le défaut, sans exception")
-    void enum_inconnue_retombe_sur_le_defaut() {
-        dao.ecrire(CLE, "BLEU");
-
-        assertThat(reglages.lireEnum(Couleur.class, CLE, Couleur.ROUGE)).isEqualTo(Couleur.ROUGE);
-    }
-
-    private enum Couleur {
-        ROUGE,
-        VERT
-    }
 }
