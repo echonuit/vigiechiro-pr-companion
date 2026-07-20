@@ -50,6 +50,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.util.converter.NumberStringConverter;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Controller de l'assistant **M-Import** (`Importation.fxml`).
 ///
@@ -93,10 +94,19 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     private Label labelJournal;
 
     @FXML
+    private FontIcon iconeJournal;
+
+    @FXML
     private Label labelReleve;
 
     @FXML
+    private FontIcon iconeReleve;
+
+    @FXML
     private Label labelOriginaux;
+
+    @FXML
+    private FontIcon iconeOriginaux;
 
     @FXML
     private Label labelNommage;
@@ -295,6 +305,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Présence dite par l'icône et la couleur, plus par un glyphe dans le texte (#2099, ADR 0035).
         DetailInspection.lier(
                 labelJournal,
+                iconeJournal,
                 inspection.aUnJournalProperty(),
                 Bindings.createStringBinding(
                         () -> inspection.aUnJournalProperty().get()
@@ -306,6 +317,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         inspection.resumeJournalProperty()));
         DetailInspection.lier(
                 labelReleve,
+                iconeReleve,
                 inspection.aUnReleveClimatiqueProperty(),
                 Bindings.createStringBinding(
                         () -> inspection.aUnReleveClimatiqueProperty().get()
@@ -313,7 +325,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                                 : "Relevé climatique absent",
                         inspection.aUnReleveClimatiqueProperty()));
         DetailInspection.lierPresent(
-                labelOriginaux, inspection.nombreOriginauxProperty().asString("%d enregistrement(s) WAV détecté(s)"));
+                labelOriginaux,
+                iconeOriginaux,
+                inspection.nombreOriginauxProperty().asString("%d enregistrement(s) WAV détecté(s)"));
         labelNommage
                 .textProperty()
                 .bind(Bindings.createStringBinding(

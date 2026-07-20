@@ -1,10 +1,12 @@
 package fr.univ_amu.iut.importation.view;
 
+import fr.univ_amu.iut.commun.view.IconeSelonEtat;
 import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation.Severite;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.control.Label;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 /// Une ligne d'inspection : ce que le dossier contient, et si c'est **présent ou absent**.
 ///
@@ -24,28 +26,30 @@ final class DetailInspection {
 
     /// Lie le libellé à son texte, son icône de présence et sa couleur.
     ///
-    /// `present` pilote les trois d'un coup : ils ne peuvent donc pas se contredire, ce qu'un glyphe
-    /// recopié dans deux branches d'un ternaire ne garantissait pas.
+    /// Le **glyphe** est délégué à [IconeSelonEtat], le composant du socle né de #1933 : il le lie par
+    /// `Bindings.when`, donc l'icône suit l'état sans qu'aucun écouteur ait à survivre. La première
+    /// version posait l'icône à la main sur un écouteur branché à `propriete.asObject()` - enveloppe que
+    /// plus rien ne retenait après l'appel, donc collectée, donc figée : un journal **présent**
+    /// s'affichait avec le triangle de l'absence. Une liaison ne peut pas avoir ce défaut.
     ///
-    /// Le paramètre est un [ObservableBooleanValue] et **non** un `ObservableValue<Boolean>` : passer
-    /// `propriete.asObject()` fabriquerait une liaison intermédiaire que plus rien ne retient une fois
-    /// l'appel terminé. Elle est alors collectée, l'écouteur ne se déclenche plus, et l'icône reste
-    /// figée sur sa valeur initiale - un journal présent s'affichait avec le triangle de l'absence.
-    static void lier(Label label, ObservableBooleanValue present, ObservableStringValue texte) {
+    /// Reste ici ce que le socle ne fait pas : le texte, et la **couleur** portée par la classe. Celle-ci
+    /// garde un écouteur, mais sur la propriété réelle - jamais sur une enveloppe temporaire.
+    static void lier(Label label, FontIcon icone, ObservableBooleanValue present, ObservableStringValue texte) {
         label.textProperty().bind(texte);
-        rendre(label, present.get());
-        present.addListener((observable, avant, apres) -> rendre(label, apres));
+        IconeSelonEtat.lier(
+                icone, present, IconesSeverite.ikon(Severite.SUCCES), IconesSeverite.ikon(Severite.AVERTISSEMENT));
+        colorer(label, present.get());
+        present.addListener((observable, avant, apres) -> colorer(label, apres));
     }
 
     /// Lie un libellé dont l'objet est **toujours** présent : il n'a pas de branche « absent ».
-    static void lierPresent(Label label, ObservableStringValue texte) {
+    static void lierPresent(Label label, FontIcon icone, ObservableStringValue texte) {
         label.textProperty().bind(texte);
-        rendre(label, true);
+        icone.setIconCode(IconesSeverite.ikon(Severite.SUCCES));
+        colorer(label, true);
     }
 
-    private static void rendre(Label label, boolean present) {
-        Severite severite = present ? Severite.SUCCES : Severite.AVERTISSEMENT;
-        label.getStyleClass().setAll(present ? "insp-ok" : "insp-absent");
-        label.setGraphic(IconesSeverite.icone(severite, "insp-icone"));
+    private static void colorer(Label label, boolean present) {
+        label.getStyleClass().setAll("insp-detail", present ? "insp-ok" : "insp-absent");
     }
 }
