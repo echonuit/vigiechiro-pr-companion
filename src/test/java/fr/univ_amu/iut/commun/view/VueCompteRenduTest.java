@@ -13,6 +13,7 @@ import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.framework.junit5.ApplicationExtension;
 
 /// Le rendu d'un [CompteRendu] (ADR 0031) : ce qui le rend **reconnaissable** et ce que la structure
@@ -109,5 +110,46 @@ class VueCompteRenduTest {
                 .map(Label.class::cast)
                 .filter(l -> l.getStyleClass().contains(classe))
                 .count();
+    }
+
+    @Test
+    @DisplayName("Chaque constat porte l'icône de sa sévérité, et la même que le bandeau")
+    void chaque_constat_porte_son_icone() {
+        VBox rendu = VueCompteRendu.rendre(REACTIVATION, VueCompteRendu.SANS_PLAFOND);
+
+        // Le compte rendu ne disait sa sévérité qu'en COULEUR, alors que BandeauRetour promet couleur
+        // ET forme « pour qui distingue mal les couleurs ». La migration des avertissements d'import a
+        // rendu le manque visible : trois signaux réduits à un seul (clôture #2004).
+        List<String> glyphes = rendu.getChildren().stream()
+                .filter(Label.class::isInstance)
+                .map(noeud -> ((Label) noeud).getGraphic())
+                .filter(FontIcon.class::isInstance)
+                .map(graphic -> ((FontIcon) graphic).getIconLiteral())
+                .toList();
+
+        assertThat(glyphes)
+                .as("un glyphe par constat, dans l'ordre : succès puis erreur")
+                .containsExactly(IconesSeverite.glyphe(Severite.SUCCES), IconesSeverite.glyphe(Severite.ERREUR));
+    }
+
+    @Test
+    @DisplayName("L'icône porte la classe de sévérité du texte, sans quoi elle le contredirait")
+    void l_icone_partage_la_classe_du_texte() {
+        VBox rendu = VueCompteRendu.rendre(
+                CompteRendu.de("Bilan", List.of(Constat.de("un fichier rejeté", Severite.ERREUR))),
+                VueCompteRendu.SANS_PLAFOND);
+
+        Label fait = rendu.getChildren().stream()
+                .filter(Label.class::isInstance)
+                .map(Label.class::cast)
+                .filter(label -> label.getGraphic() != null)
+                .findFirst()
+                .orElseThrow();
+
+        // Un FontIcon ne suit pas `-fx-text-fill` : c'est la classe de sévérité, portée en commun avec
+        // le texte, qui lui donne `-fx-icon-color` depuis la MÊME règle. Sans elle, l'icône se rendrait
+        // au défaut et dirait autre chose que la phrase qu'elle accompagne.
+        assertThat(fait.getGraphic().getStyleClass()).contains("compte-rendu-erreur");
+        assertThat(fait.getStyleClass()).contains("compte-rendu-erreur");
     }
 }

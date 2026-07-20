@@ -100,6 +100,7 @@ nav:
     - 0036 · La copie des bruts est une option: decisions/0036-la-copie-des-bruts-est-une-option.md
     - 0037 · Une barre d'actions plie: decisions/0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md
     - 0038 · Quatre niveaux de sévérité: decisions/0038-l-echelle-de-severite-a-quatre-niveaux.md
+    - 0039 · Une barre de statut est neutre: decisions/0039-une-barre-de-statut-est-neutre.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
