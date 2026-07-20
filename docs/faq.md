@@ -112,7 +112,15 @@ séquence.
 
 ### L'application a eu un comportement inattendu, comment le signaler ?
 
-L'application tient un **journal** de son activité et de ses erreurs. Le menu **☰ → « Ouvrir le dossier
-des journaux »** ouvre le dossier `logs/` de votre espace de travail : joignez le fichier
-`vigiechiro-*.log` le plus récent à votre signalement. Il aide à comprendre ce qui s'est passé, même
-quand l'erreur n'affichait aucun message à l'écran.
+Deux entrées du menu **☰** préparent un signalement utile.
+
+![Le menu ☰ déployé : sauvegardes, purge, journaux, « À propos », réglages et connexion.](assets/captures/apercu-menu-outils.png)
+
+**☰ → « À propos »** donne la **version** que vous utilisez, ainsi que votre système et votre dossier
+de travail. Sans la version, un défaut est difficile à reproduire : la même manipulation peut très
+bien fonctionner sur une version voisine.
+
+**☰ → « Ouvrir le dossier des journaux »** ouvre le dossier `logs/` de votre espace de travail :
+joignez le fichier `vigiechiro-*.log` le plus récent. L'application y tient un **journal** de son
+activité et de ses erreurs, qui aide à comprendre ce qui s'est passé même quand l'erreur n'affichait
+aucun message à l'écran.
