@@ -1,5 +1,6 @@
 package fr.univ_amu.iut.commun.model;
 
+import com.google.inject.Inject;
 import java.util.Optional;
 
 /// La version de l'application, telle qu'elle a été **empaquetée** (#2108).
@@ -35,6 +36,12 @@ public final class VersionApplication {
     }
 
     /// Service tel qu'injecté en production : la version lue depuis le paquet de l'application.
+    ///
+    /// L'annotation est nécessaire, et son absence ne se voit pas à la compilation : la classe expose
+    /// **deux** constructeurs publics (celui-ci et celui qui prend une classe de référence, pour les
+    /// tests), et Guice refuse alors de choisir. L'échec ne survient qu'à la construction de
+    /// l'injecteur, donc à l'ouverture d'un écran.
+    @Inject
     public VersionApplication() {
         this(VersionApplication.class);
     }
