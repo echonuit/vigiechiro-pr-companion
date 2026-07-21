@@ -2,10 +2,14 @@ package fr.univ_amu.iut.passage.view;
 
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.LongSupplier;
 
@@ -61,8 +65,7 @@ final class ActionsFichePassage {
     /// « Supprimer » : après confirmation (avec l'avertissement des validations menacées), supprime le
     /// passage et toute sa nuit, puis revient à l'accueil.
     void supprimer() {
-        if (!confirmateur.confirmer("Supprimer définitivement ce passage et toute sa nuit (séquences, relevés) ?"
-                + alerteValidationsMenacees())) {
+        if (!confirmateur.confirmer(demandeSuppression())) {
             return;
         }
         try {
@@ -109,17 +112,25 @@ final class ActionsFichePassage {
         }
     }
 
-    /// Complément d'avertissement pour la confirmation de suppression : si le passage porte des
-    /// validations observateur (taxon corrigé, référence, commentaire), elles seront **définitivement
-    /// perdues** avec la cascade. Chaîne vide sinon. Contrairement à une ré-importation de CSV, la
-    /// suppression ne permet aucune préservation.
-    private String alerteValidationsMenacees() {
+    /// La demande de confirmation de suppression, en **compte rendu** structuré (#2223) : la question, et -
+    /// si le passage porte des validations observateur (taxon corrigé, référence, commentaire) - un constat
+    /// **erreur** au-dessus, car elles seront **définitivement perdues** avec la cascade (contrairement à une
+    /// ré-importation de CSV, la suppression ne préserve rien).
+    ///
+    /// C'était une chaîne où un « ⚠ » ouvrait le complément. La modale rend désormais la sévérité en icône
+    /// (`ConfirmationNavigation` via [CompteRendu]), le port `Confirmateur` transportant la structure
+    /// depuis #2060 - et le porteur injectable la déléguant tel quel depuis #2223.
+    private CompteRendu demandeSuppression() {
         int menacees = compteurValidations.menaceesPourPassage(idPassage.getAsLong());
-        if (menacees == 0) {
-            return "";
-        }
-        return "\n\n⚠ " + menacees
-                + " validation(s) Tadarida (correction, référence, commentaire) seront définitivement perdues.";
+        List<Constat> constats = menacees == 0
+                ? List.of()
+                : List.of(Constat.de(
+                        menacees
+                                + " validation(s) Tadarida (correction, référence, commentaire) seront"
+                                + " définitivement perdues.",
+                        Severite.ERREUR));
+        return new CompteRendu(
+                "", "", constats, "Supprimer définitivement ce passage et toute sa nuit (séquences, relevés) ?");
     }
 
     /// L'action n'a pas eu lieu : l'écran ne bouge pas, et l'utilisateur sait pourquoi.

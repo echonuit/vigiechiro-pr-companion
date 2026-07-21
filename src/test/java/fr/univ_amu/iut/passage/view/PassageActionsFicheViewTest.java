@@ -16,9 +16,11 @@ import com.google.inject.multibindings.OptionalBinder;
 import fr.univ_amu.iut.commun.model.CompteurValidations;
 import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.ServicePurgeOriginaux;
+import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
@@ -27,6 +29,7 @@ import fr.univ_amu.iut.commun.view.OuvrirMultisite;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.view.OuvrirValidation;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -73,8 +76,12 @@ class PassageActionsFicheViewTest {
     private static final ContexteSite CONTEXTE = new ContexteSite("640380", "A1", "Étang de la Tuilière");
     private static final Path SESSION = Path.of("/data/Car640380-2026-Pass2-A1");
 
-    /// Ce que le confirmateur a **demandé** : sur une cascade, le message est le seul avertissement.
+    /// Ce que le confirmateur a **demandé** en chaîne (annuler dépôt, purge).
     private final List<String> confirmations = new ArrayList<>();
+
+    /// Ce qu'il a **demandé en compte rendu structuré** (la suppression, #2223) : capturé tel quel, sans le
+    /// laisser retomber sur l'aplatissement textuel du port.
+    private final List<CompteRendu> comptesRendus = new ArrayList<>();
 
     /// Ce que le notificateur a **dit**, au lieu de l'afficher.
     private final List<String> annonces = new ArrayList<>();
@@ -159,9 +166,18 @@ class PassageActionsFicheViewTest {
         loader.setControllerFactory(injector::getInstance);
         Parent vue = loader.load();
         controleur = loader.getController();
-        controleur.confirmateur().definir(message -> {
-            confirmations.add(message);
-            return confirme;
+        controleur.confirmateur().definir(new Confirmateur() {
+            @Override
+            public boolean confirmer(String message) {
+                confirmations.add(message);
+                return confirme;
+            }
+
+            @Override
+            public boolean confirmer(CompteRendu compteRendu) {
+                comptesRendus.add(compteRendu);
+                return confirme;
+            }
         });
         controleur.notificateur().definir((niveau, entete, message) -> {
             niveaux.add(niveau);
@@ -208,12 +224,17 @@ class PassageActionsFicheViewTest {
     void suppression_confirmee_supprime_et_quitte_l_ecran(FxRobot robot) {
         cliquer(robot, "#boutonSupprimer");
 
-        assertThat(confirmations)
+        // #2223 : la suppression demande confirmation par un COMPTE RENDU (pas une chaîne à glyphe), rendu
+        // en structure par la modale. La question est sa conclusion.
+        assertThat(comptesRendus)
                 .singleElement()
-                .satisfies(message -> assertThat(message)
+                .satisfies(rendu -> assertThat(rendu.conclusion())
                         .contains("Supprimer définitivement")
                         .as("la cascade emporte toute la nuit, pas seulement la fiche")
                         .contains("toute sa nuit"));
+        assertThat(confirmations)
+                .as("la suppression ne passe plus par une chaîne")
+                .isEmpty();
         verify(service).supprimer(ID_PASSAGE);
     }
 
@@ -224,11 +245,16 @@ class PassageActionsFicheViewTest {
 
         cliquer(robot, "#boutonSupprimer");
 
-        // Ces validations sont un travail humain : contrairement à un CSV, rien ne les régénère.
-        assertThat(confirmations)
+        // Ces validations sont un travail humain : contrairement à un CSV, rien ne les régénère. #2223 :
+        // c'est un CONSTAT d'erreur du compte rendu, plus un « ⚠ » écrit dans la chaîne.
+        assertThat(comptesRendus)
                 .singleElement()
-                .satisfies(message ->
-                        assertThat(message).contains("7 validation(s)").contains("définitivement perdues"));
+                .satisfies(rendu -> assertThat(rendu.constats()).singleElement().satisfies(constat -> {
+                    assertThat(constat.fait()).contains("7 validation(s)").contains("définitivement perdues");
+                    assertThat(constat.severite())
+                            .as("une perte définitive est une erreur, pas un simple avertissement")
+                            .isEqualTo(Severite.ERREUR);
+                }));
         verify(service).supprimer(ID_PASSAGE);
     }
 
