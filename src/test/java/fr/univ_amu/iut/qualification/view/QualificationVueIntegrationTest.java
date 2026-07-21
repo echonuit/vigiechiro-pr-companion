@@ -214,6 +214,12 @@ class QualificationVueIntegrationTest {
         assertThat(anomalie.isManaged()).isTrue();
         // #1506 : la barre nomme le feu en cause plutôt qu'un « anomalie » anonyme.
         assertThat(anomalie.getText()).contains("couverture horaire");
+
+        // #2221 : la même anomalie occupe la zone droite de la barre de statut, mais **sans** glyphe de
+        // sévérité - une barre de statut est neutre (ADR 0039), la gravité est portée par l'encart ci-dessus.
+        assertThat(controleur.zonesStatutProperty().get().droite())
+                .isEqualTo("Anomalie au pré-check")
+                .doesNotContain("⚠");
     }
 
     @Test
