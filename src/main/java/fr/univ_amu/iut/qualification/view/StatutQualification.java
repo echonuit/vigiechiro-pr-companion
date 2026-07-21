@@ -34,9 +34,14 @@ final class StatutQualification {
 
     /// Zone droite = une seule information vivante à la fois : une **anomalie** de pré-check (R13) prime,
     /// sinon la **progression d'écoute** (« N / M écoutées »).
+    ///
+    /// Sans le « ⚠ » d'antan (#2221) : une barre de statut est **neutre** (ADR 0039), elle dit *où l'on en
+    /// est*, pas si c'est bien ou mal. La sévérité de l'anomalie est déjà portée, ailleurs et pleinement,
+    /// par l'encart `lblAnomalie` qui nomme le feu en cause (#1506) ; l'écrire une seconde fois ici, en
+    /// glyphe, la disait à un endroit qui n'a pas à la porter.
     private static String droite(QualificationViewModel verdict, SelectionEcouteViewModel selection) {
         if (verdict.preCheckAnomalieProperty().get()) {
-            return "⚠ Anomalie au pré-check";
+            return "Anomalie au pré-check";
         }
         return selection.progressionTexteProperty().get();
     }
