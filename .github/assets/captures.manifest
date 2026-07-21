@@ -11,7 +11,7 @@ fr/univ_amu/iut/sites/view/MesSites.fxml                 : apercu-sites-mes-site
 fr/univ_amu/iut/sites/view/SiteDetail.fxml               : apercu-sites-detail.png apercu-sites-detail-sans-passage.png
 fr/univ_amu/iut/sites/view/ModalePoint.fxml              : apercu-sites-modale-point.png apercu-sites-modale-point-creation.png
 fr/univ_amu/iut/sites/view/ModaleSite.fxml               : apercu-sites-modale-site.png apercu-sites-modale-site-creation.png
-fr/univ_amu/iut/importation/view/Importation.fxml        : apercu-import-assistant.png apercu-import-en-cours.png apercu-import-melange.png apercu-import-incoherence.png apercu-import-multi-nuits.png apercu-import-decompression.png apercu-import-rejets.png apercu-import-doublon.png apercu-import-ecrasement-principe.png apercu-import-ecrasement.png
+fr/univ_amu/iut/importation/view/Importation.fxml        : apercu-import-assistant.png apercu-import-en-cours.png apercu-import-melange.png apercu-import-incoherence.png apercu-import-multi-nuits.png apercu-import-rattachement-avertissements.png apercu-import-decompression.png apercu-import-rejets.png apercu-import-doublon.png apercu-import-ecrasement-principe.png apercu-import-ecrasement.png
 fr/univ_amu/iut/qualification/view/Qualification.fxml    : apercu-qualification.png apercu-qualification-initial.png
 fr/univ_amu/iut/qualification/view/ModaleSelection.fxml  : apercu-qualification-personnaliser.png
 fr/univ_amu/iut/passage/view/Passage.fxml                : apercu-passage.png apercu-passage-depose.png apercu-passage-retour.png

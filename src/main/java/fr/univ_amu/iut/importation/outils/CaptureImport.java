@@ -9,7 +9,9 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.Protocole;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Utilisateur;
+import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
@@ -25,6 +27,10 @@ import fr.univ_amu.iut.importation.view.ImportationController;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.io.IOException;
@@ -72,6 +78,15 @@ public final class CaptureImport {
                     + " les 600s\n"
                     + "22/04/26 - 16:02:21 PR1925492 Parametres : Acquisi. 20:25-07:47, Fe384kHz, Bd. Freq."
                     + " 8-120kHz\n";
+
+    /// Série de l'enregistreur de démonstration (celui du journal `LOG`), partagée par le seed et les
+    /// scénarios pour rester cohérente d'un état à l'autre.
+    private static final String SERIE = "1925492";
+
+    /// Les deux WAV standard d'une nuit de démonstration (série 1925492, nuit du 22/04), réutilisés par
+    /// plusieurs dossiers d'échantillon.
+    private static final String WAV_NUIT_A = "PaRecPR1925492_20260422_203922.wav";
+    private static final String WAV_NUIT_B = "PaRecPR1925492_20260422_204326.wav";
 
     private CaptureImport() {}
 
@@ -175,6 +190,8 @@ public final class CaptureImport {
         vm.inspecter();
         rendre(scene, sortie.resolve("apercu-import-multi-nuits.png"));
 
+        capturerAvertissementsRattachement(vm, scene, sortie);
+
         // État « import terminé AVEC rapport » (#155) : import résilient — la liste des fichiers rejetés
         // (illisible, format invalide) et leur raison s'affiche sous le message de succès.
         vm.inspection().dossierSourceProperty().set(dossierSd);
@@ -193,8 +210,33 @@ public final class CaptureImport {
                         StatutImportFichier.REJETE,
                         "Fréquence source 44100 Hz non divisible par 10"),
                 new LigneRapport("notes-terrain.txt", StatutImportFichier.IGNORE, "fichier non pertinent")));
-        vm.marquerTermine(new ResultatImport(null, null, "1925492", 1, 3, List.of(), rapport));
+        vm.marquerTermine(new ResultatImport(null, null, SERIE, 1, 3, List.of(), rapport));
         rendre(scene, sortie.resolve("apercu-import-rejets.png"));
+    }
+
+    /// État « avertissements de rattachement » (#108/#111) : deux encarts AMBRE non bloquants, restylés du
+    /// rouge `.insp-*` vers la famille `.encart` par #2072, et que rien ne montrait (#2097).
+    ///
+    /// Le dossier inspecte proprement (deux WAV normaux → une nuit détectée) mais contient AUSSI un fichier
+    /// déjà préfixé pour un AUTRE point (B2) : d'où la discordance de préfixe (#111), sans perturber la
+    /// détection de nuit. Le rattachement A1 sélectionné, on re-choisit le n°1 - déjà pris par le passage
+    /// seedé - d'où le doublon de passage (#108). Les deux encarts co-existent dans un même rendu.
+    private static void capturerAvertissementsRattachement(ImportationViewModel vm, Scene scene, Path sortie)
+            throws IOException {
+        vm.inspection().dossierSourceProperty().set(creerDossierAvertissements());
+        vm.inspecter();
+        if (!vm.rattachement().sites().isEmpty()) {
+            vm.rattachement()
+                    .siteSelectionneProperty()
+                    .set(vm.rattachement().sites().get(0));
+        }
+        if (!vm.rattachement().points().isEmpty()) {
+            vm.rattachement()
+                    .pointSelectionneProperty()
+                    .set(vm.rattachement().points().get(0));
+        }
+        vm.rattachement().numeroPassageProperty().set(1);
+        rendreAvecCarte(scene, sortie.resolve("apercu-import-rattachement-avertissements.png"));
     }
 
     /// Rend le contenu **à sa hauteur naturelle**, quel que soit l'état de l'assistant à cet instant.
@@ -272,9 +314,7 @@ public final class CaptureImport {
     /// deux WAV de **deux enregistreurs** distincts → l'inspection lève l'avertissement « mélange ».
     private static Path creerDossierMelange() throws IOException {
         return creerDossier(
-                "vigiechiro-sd-melange",
-                "PaRecPR1925492_20260422_203922.wav",
-                "PaRecPR1648011_20260422_204326.wav"); // 2e enregistreur
+                "vigiechiro-sd-melange", WAV_NUIT_A, "PaRecPR1648011_20260422_204326.wav"); // 2e enregistreur
     }
 
     /// Dossier d'exemple **incohérent** (chemin déterministe) : journal et relevé de la série 1925492
@@ -325,6 +365,17 @@ public final class CaptureImport {
         return creerDossierAvecWav(nom, LOG, List.of(wavA, wavB));
     }
 
+    /// Dossier pour la capture des **avertissements de rattachement** (#2097) : une nuit standard (deux
+    /// WAV normaux, donc détection de nuit propre) **plus** un fichier déjà préfixé pour un autre point
+    /// (`Car640380-2026-Pass2-B2-…`), qui ne correspond pas au rattachement A1 choisi → avertissement de
+    /// discordance de préfixe (#111). Le journal reste celui de la série 1925492, nuit du 22/04.
+    private static Path creerDossierAvertissements() throws IOException {
+        return creerDossierAvecWav(
+                "vigiechiro-sd-avertissements",
+                LOG,
+                List.of(WAV_NUIT_A, WAV_NUIT_B, "Car640380-2026-Pass2-B2-PaRecPR1925492_20260422_205000.wav"));
+    }
+
     /// Dossier d'exemple **multi-nuits** (chemin déterministe) : trois soirées distinctes (2 WAV chacune)
     /// du même enregistreur, avec un journal daté de la première nuit → l'inspection détecte 3 nuits et
     /// affiche la table des nuits, sans avertissement de non-correspondance.
@@ -359,13 +410,33 @@ public final class CaptureImport {
         new UtilisateurDao(source).insert(new Utilisateur(ID_UTILISATEUR, "Capitaine Chiro (demo)"));
         ServiceSites service = injecteur.getInstance(ServiceSites.class);
         var site = service.creerSite("640380", "Etang de la Tuiliere", Protocole.STANDARD, "Ahetze", ID_UTILISATEUR);
-        service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Pres du grand chene");
+        var point = service.ajouterPoint(site.id(), "A1", 43.4010, -1.5740, "Pres du grand chene");
+        // Un passage n°1 DEJA en base pour ce point (#108) : re-choisir le n°1 dans l'assistant fait
+        // apparaitre l'avertissement « passage deja existant ». Restyle en ambre par #2072 et jamais
+        // capture (#2097), c'est ce que montre apercu-import-rattachement-avertissements. Le passage
+        // reference son enregistreur (contrainte de cle etrangere), qu'on seme d'abord.
+        new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
+        new PassageDao(source)
+                .insert(new Passage(
+                        null,
+                        1,
+                        2026,
+                        "2026-04-22",
+                        "20:25:00",
+                        "07:47:00",
+                        null,
+                        StatutWorkflow.TRANSFORME,
+                        Verdict.OK,
+                        null,
+                        null,
+                        null,
+                        point.id(),
+                        SERIE));
     }
 
     /// Dossier d'exemple **standard** (chemin déterministe) : journal + relevé + deux WAV cohérents
     /// (même série 1925492, même nuit) → inspection sans avertissement.
     private static Path creerDossierEchantillon() throws IOException {
-        return creerDossier(
-                "vigiechiro-sd-demo", "PaRecPR1925492_20260422_203922.wav", "PaRecPR1925492_20260422_204326.wav");
+        return creerDossier("vigiechiro-sd-demo", WAV_NUIT_A, WAV_NUIT_B);
     }
 }

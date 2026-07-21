@@ -215,3 +215,7 @@ l'indique explicitement et les **fichiers temporaires sont purgés** pour ne pas
 - **Enregistrements déjà ralentis** : un fichier dont le son a **déjà** subi l'expansion temporelle ×10 est
   **rejeté** (avec explication dans le rapport), pour éviter une **double expansion** qui rendrait les
   fréquences dix fois trop basses. Importez toujours les **fichiers bruts** issus du capteur.
+
+Ces avertissements sont **non bloquants** : ils vous alertent en ambre sans vous empêcher d'importer.
+
+![Deux avertissements de rattachement en ambre : le numéro de passage choisi est déjà pris (avec le prochain numéro libre proposé), et certains fichiers portent un préfixe qui ne correspond pas au rattachement demandé. Ni l'un ni l'autre ne bloque l'import.](../assets/captures/apercu-import-rattachement-avertissements.png)
