@@ -92,11 +92,12 @@ public final class CaptureConfirmationsImport {
         ConfirmateurCapturant ecrasement = new ConfirmateurCapturant(true);
         new ConfirmationsImport(ecrasement).confirmerEcrasement(ECRASEMENT);
 
-        // Le doublon est désormais un compte rendu structuré (#2060) : le dialogue l'aligne par
-        // VueCompteRendu, sans enroulement manuel. L'écrasement reste une phrase.
+        // Doublon (#2060) et 2ᵉ confirmation d'écrasement (#2223) sont des comptes rendus structurés : le
+        // dialogue les aligne par VueCompteRendu, sans enroulement manuel. La 1ʳᵉ d'écrasement (le principe)
+        // reste une phrase.
         enregistrerCompteRendu(doublon.comptesRendus().get(0), sortie.resolve("apercu-import-doublon.png"));
         enregistrer(ecrasement.messages().get(0), sortie.resolve("apercu-import-ecrasement-principe.png"));
-        enregistrer(ecrasement.messages().get(1), sortie.resolve("apercu-import-ecrasement.png"));
+        enregistrerCompteRendu(ecrasement.comptesRendus().get(0), sortie.resolve("apercu-import-ecrasement.png"));
     }
 
     /// Rend le dialogue **de production** portant un **compte rendu structuré** (#2060), tel qu'il sera
@@ -104,6 +105,10 @@ public final class CaptureConfirmationsImport {
     private static void enregistrerCompteRendu(CompteRendu compteRendu, Path fichier) {
         Alert alerte = new ConfirmationNavigation().dialogue(compteRendu);
         alerte.getDialogPane().setPrefWidth(540);
+        // Limite connue (#2243) : hors `showAndWait`, un détail **long** de `VueCompteRendu` ne s'enroule
+        // pas au snapshot et se coupe par une ellipse - les libellés texte le contournent par `enrouler`,
+        // sans équivalent structuré. En production le dialogue s'enroule ; la capture d'un détail court
+        // (le doublon) est fidèle, celle d'un détail long (l'écrasement) est tronquée.
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }

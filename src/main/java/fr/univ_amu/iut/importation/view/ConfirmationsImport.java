@@ -1,8 +1,12 @@
 package fr.univ_amu.iut.importation.view;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
+import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
 import fr.univ_amu.iut.importation.model.ApercuEcrasement;
+import java.util.List;
 import java.util.Objects;
 
 /// Centralise les **confirmations** de l'assistant d'import (#214) : importer une nuit **déjà importée**
@@ -34,13 +38,27 @@ public final class ConfirmationsImport {
     /// définitivement perdues (aucune préservation possible, contrairement à une ré-importation de CSV) : la
     /// seconde confirmation le mentionne alors explicitement.
     public boolean confirmerEcrasement(ApercuEcrasement apercu) {
-        String alerteValidations = apercu.validations() == 0
-                ? ""
-                : " Dont " + apercu.validations()
-                        + " validation(s) Tadarida (correction, référence, commentaire) définitivement perdue(s).";
         return confirmateur.confirmer("Le n° de passage choisi est déjà utilisé. Écraser le passage existant et le"
                         + " remplacer par cette nuit ?")
-                && confirmateur.confirmer("⚠ Suppression DÉFINITIVE du passage existant et de ses " + apercu.sequences()
-                        + " séquence(s)." + alerteValidations + " Action irréversible. Confirmer l'écrasement ?");
+                && confirmateur.confirmer(ecrasementDefinitif(apercu));
+    }
+
+    /// La seconde confirmation d'écrasement, en **compte rendu** (#2223) : un constat **erreur** (la
+    /// suppression définitive et son nombre de séquences), suivi le cas échéant du détail des validations
+    /// perdues, et la question en conclusion.
+    ///
+    /// C'était une chaîne ouvrant par « ⚠ ». La modale rend désormais la sévérité en icône
+    /// ([ConfirmationNavigation] via [CompteRendu]), le port `Confirmateur` transportant la structure
+    /// depuis #2060 et le porteur injectable la déléguant depuis #2223.
+    private static CompteRendu ecrasementDefinitif(ApercuEcrasement apercu) {
+        List<Detail> details = apercu.validations() == 0
+                ? List.of()
+                : List.of(Detail.de("Dont " + apercu.validations()
+                        + " validation(s) Tadarida (correction, référence, commentaire) définitivement perdue(s)."));
+        Constat perte = new Constat(
+                "Suppression DÉFINITIVE du passage existant et de ses " + apercu.sequences() + " séquence(s).",
+                Severite.ERREUR,
+                details);
+        return new CompteRendu("", "", List.of(perte), "Action irréversible. Confirmer l'écrasement ?");
     }
 }
