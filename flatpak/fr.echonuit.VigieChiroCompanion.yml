@@ -5,7 +5,7 @@ sdk: org.freedesktop.Sdk
 sdk-extensions:
   - org.freedesktop.Sdk.Extension.openjdk
 command: vigiechiro-runner
-rename-desktop-file: VigieChiro.desktop
+rename-desktop-file: VigieChiroCompanion.desktop
 
 finish-args:
   # Affichage. Wayland en premier, X11 en repli : le parc des naturalistes est hétérogène.
@@ -48,29 +48,29 @@ modules:
       - ar p vigiechiro.deb data.tar.zst | tar --use-compress-program=unzstd -xf - -C paquet
       # Le fat-jar embarque déjà JavaFX et ses natifs Linux : contrairement à Scene Builder, aucun
       # SDK JavaFX séparé n'est nécessaire.
-      - install -Dm644 paquet/opt/vigiechiro/lib/app/vigiechiro-*-shaded.jar /app/lib/vigiechiro.jar
-      - install -Dm644 paquet/opt/vigiechiro/lib/VigieChiro.png
+      - install -Dm644 paquet/opt/vigiechirocompanion/lib/app/vigiechiro-*-shaded.jar /app/lib/vigiechiro.jar
+      - install -Dm644 paquet/opt/vigiechirocompanion/lib/VigieChiroCompanion.png
         /app/share/icons/hicolor/256x256/apps/fr.echonuit.VigieChiroCompanion.png
       - install -Dm755 vigiechiro-runner /app/bin/vigiechiro-runner
       - install -Dm644 fr.echonuit.VigieChiroCompanion.metainfo.xml -t /app/share/metainfo/
-      - install -Dm644 paquet/opt/vigiechiro/lib/vigiechiro-VigieChiro.desktop /app/lib/VigieChiro.desktop
+      - install -Dm644 paquet/opt/vigiechirocompanion/lib/vigiechirocompanion-VigieChiroCompanion.desktop /app/lib/VigieChiroCompanion.desktop
       # `Categories` d'abord : jpackage écrit `Categories=Unknown`, valeur INVALIDE que
       # desktop-file-edit refuse - il valide le fichier à chaque appel, donc toute autre édition
       # échouerait avant d'y arriver. (Défaut présent aussi dans le .deb installé normalement.)
-      - desktop-file-edit --remove-key=Categories /app/lib/VigieChiro.desktop
-      - desktop-file-edit --set-key=Categories --set-value='Science;Biology;' /app/lib/VigieChiro.desktop
-      - desktop-file-edit --remove-key=Comment /app/lib/VigieChiro.desktop
+      - desktop-file-edit --remove-key=Categories /app/lib/VigieChiroCompanion.desktop
+      - desktop-file-edit --set-key=Categories --set-value='Science;Biology;' /app/lib/VigieChiroCompanion.desktop
+      - desktop-file-edit --remove-key=Comment /app/lib/VigieChiroCompanion.desktop
       - desktop-file-edit --set-key=Comment --set-value='Préparer et déposer les nuits de chiroptères'
-        /app/lib/VigieChiro.desktop
-      - desktop-file-edit --set-key=Exec --set-value='vigiechiro-runner' /app/lib/VigieChiro.desktop
-      - desktop-file-edit --set-icon=fr.echonuit.VigieChiroCompanion /app/lib/VigieChiro.desktop
-      - desktop-file-install /app/lib/VigieChiro.desktop --dir=/app/share/applications
+        /app/lib/VigieChiroCompanion.desktop
+      - desktop-file-edit --set-key=Exec --set-value='vigiechiro-runner' /app/lib/VigieChiroCompanion.desktop
+      - desktop-file-edit --set-icon=fr.echonuit.VigieChiroCompanion /app/lib/VigieChiroCompanion.desktop
+      - desktop-file-install /app/lib/VigieChiroCompanion.desktop --dir=/app/share/applications
 
     sources:
       - type: file
         dest-filename: vigiechiro.deb
-        url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.26.0/vigiechiro_2.26.0_amd64-x64.deb
-        sha256: 391595b095d82fa825eaa8bbf6c3c59666a081970a2b480a376e75402a8e32ab
+        url: https://github.com/echonuit/vigiechiro-pr-companion/releases/download/v2.32.3/vigiechirocompanion_2.32.3_amd64-x64.deb
+        sha256: 3e0071c81603da387191da24d85b97bd59c8a0da9e9be50ae88479e0a82830c6
         # Le robot de Flathub détecte les nouvelles versions et ouvre la mise à jour tout seul :
         # c'est ce qui rend la maintenance quasi nulle une fois le paquet accepté.
         x-checker-data:
@@ -78,7 +78,7 @@ modules:
           url: https://api.github.com/repos/echonuit/vigiechiro-pr-companion/releases/latest
           version-query: .tag_name | ltrimstr("v")
           timestamp-query: .published_at
-          url-query: .assets[] | select(.name=="vigiechiro_" + $version + "_amd64-x64.deb")
+          url-query: .assets[] | select(.name=="vigiechirocompanion_" + $version + "_amd64-x64.deb")
             | .browser_download_url
 
       - type: file
