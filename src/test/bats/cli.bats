@@ -154,3 +154,18 @@ setup() {
   [[ "${output}" == *"130711"* ]]
   [[ "${output}" == *"A1"* ]]
 }
+
+@test "importer : --conserver-originaux et --sans-originaux s'excluent, exit 1 (#2181)" {
+  # Contrat HORS-LIGNE : le conflit de flags est vérifié dès le lancement, AVANT toute lecture de la
+  # source ou accès réseau. On sème un point (creer-site -> ajouter-point, qui écrit l'id sur stdout),
+  # puis on passe les deux flags contradictoires avec une source qui n'a même pas besoin d'exister.
+  local site point
+  site=$(cli creer-site --carre 130711 --protocole STANDARD 2>/dev/null)
+  point=$(cli ajouter-point --site "${site}" --code A1 2>/dev/null)
+  [[ "${point}" =~ ^[0-9]+$ ]]
+
+  run cli importer --point "${point}" --source "${BATS_TEST_TMPDIR}/carte-sd-absente" \
+    --conserver-originaux --sans-originaux
+  [ "${status}" -eq 1 ]
+  [[ "${output}" == *"s'excluent"* ]]
+}
