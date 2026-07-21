@@ -791,13 +791,16 @@
 /* Texte d'erreur simple, SANS encart : un libelle rouge adosse a son champ ou a sa section, la ou
    `.encart` porte une note encadree et `.bandeau-retour` un retour d'operation fermable.
 
-   Cette regle etait recopiee a l'identique dans cinq feuilles de feature (#1974), qui la surchargeaient
-   donc sans rien changer. Une sixieme copie subsiste dans `importation.css` : elle a DERIVE (13px gras
-   contre 12px normal) et la retirer changerait le rendu de l'import - elle se traite avec #2004, qui
-   revoit precisement les messages de cet ecran. */
+   Definition UNIQUE (#1974) : cette regle etait recopiee a l'identique dans plusieurs feuilles de
+   feature qui la surchargeaient sans rien changer. La derniere copie (multisite.css, inutilisee de
+   surcroit) est retiree ici ; toutes les vues qui posent `message-erreur` chargent design.css. La
+   variante DIVERGENTE de l'import (13px gras) a ete traitee a part avec #2004.
+
+   Couleur par le jeton `-couleur-danger`, pas par un litteral : une valeur definie une fois se
+   corrige une fois (meme discipline que #322). */
 .message-erreur {
     -fx-font-size: 12px;
-    -fx-text-fill: #a93226;
+    -fx-text-fill: -couleur-danger;
 }
 
 /* Bandeau de retour d'operation, partage par les ecrans (cable par commun/view/BandeauRetour).

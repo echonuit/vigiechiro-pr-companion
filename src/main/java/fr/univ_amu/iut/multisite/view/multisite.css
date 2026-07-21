@@ -8,11 +8,6 @@
   -fx-padding: 18;
 }
 
-.message-erreur {
-  -fx-font-size: 12px;
-  -fx-text-fill: #a93226;
-}
-
 /* #370 : menu « ☰ » des actions secondaires (Vues, Exporter), pour alléger la barre de filtres. */
 .menu-actions {
   -fx-font-size: 14px;
