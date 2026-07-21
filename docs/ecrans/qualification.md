@@ -46,6 +46,12 @@ votre choix, que vous pouvez **surcharger** (le changement est alors signalé «
     Le verdict **Inexploitable** est **bloquant** pour le dépôt : il faut d'abord **requalifier** la nuit
     (poser un autre verdict) pour pouvoir la déposer.
 
+Une fois le verdict **Inexploitable** enregistré, un avertissement le rappelle sous les boutons de
+verdict : le passage ne pourra pas être déposé tant qu'il n'est pas requalifié. La couleur et le
+pictogramme sont ceux d'un avertissement.
+
+![L'écran de qualification après enregistrement d'un verdict « Inexploitable » : l'avertissement rappelle que le passage ne pourra pas être déposé.](../assets/captures/apercu-qualification-a-jeter.png)
+
 ## État initial
 
 À l'ouverture de l'écran, la sélection de séquences est déjà générée, mais rien n'a encore été

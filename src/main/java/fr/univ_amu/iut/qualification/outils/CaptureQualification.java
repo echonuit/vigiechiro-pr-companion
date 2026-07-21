@@ -69,6 +69,11 @@ import javafx.scene.Scene;
 ///    ensuite (ouverture, sélection de 30, marquage de 12 écoutées, verdict OK) avant le rendu
 ///    hors-écran par [ApercuFx].
 ///
+/// Une **cinquième** capture (`apercu-qualification-a-jeter.png`, #2222) reprend le même écran mais
+/// surcharge le verdict en « Inexploitable » puis l'**enregistre** : le passage devient `estAJeter`
+/// et le label migré `lblAvertissement` ([fr.univ_amu.iut.commun.view.LibelleRetour], #2050) affiche
+/// l'alerte, couleur et icône posées depuis la sévérité - un état que rien ne montrait jusqu'ici.
+///
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureQualification {
 
@@ -81,6 +86,7 @@ public final class CaptureQualification {
     private static final int NB_ENREGISTREMENTS = 60;
     private static final int TAILLE_SELECTION = 30;
     private static final int NB_ECOUTEES = 12;
+    private static final String APERCU_ECRIT = "Apercu ecrit dans ";
 
     private CaptureQualification() {}
 
@@ -140,7 +146,7 @@ public final class CaptureQualification {
         // État initial : sélection générée, aucune séquence écoutée, aucun verdict posé.
         Path initial = sortie.resolve("apercu-qualification-initial.png");
         ApercuFx.enregistrerPng(scene, initial);
-        System.out.println("Apercu ecrit dans " + initial.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + initial.toAbsolutePath());
 
         // État avancé : quelques séquences écoutées (progression), un MÉLANGE de verdicts par fichier
         // (#1524 : 7 Bon, 3 Mauvais, 2 Inexploitable → colonne tricolore) et le verdict global posé.
@@ -170,7 +176,17 @@ public final class CaptureQualification {
         } else {
             ApercuFx.enregistrerPng(scene, fichier);
         }
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+        System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
+
+        // État « à jeter » (#2222) : on surcharge en « Inexploitable » puis on enregistre. Le passage
+        // devient `estAJeter`, l'écran passe en mode enregistré et le label migré `lblAvertissement`
+        // (LibelleRetour, #2050) affiche l'alerte - couleur et icône posées depuis la sévérité. Aucune
+        // capture ne montrait cet état jusqu'ici (les précédentes posent un verdict OK non enregistré).
+        verdictVm.choisirVerdict(Verdict.A_JETER);
+        verdictVm.enregistrer();
+        Path aJeter = sortie.resolve("apercu-qualification-a-jeter.png");
+        ApercuFx.enregistrerPng(scene, aJeter);
+        System.out.println(APERCU_ECRIT + aJeter.toAbsolutePath());
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage

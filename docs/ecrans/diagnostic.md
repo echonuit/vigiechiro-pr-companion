@@ -21,6 +21,15 @@ L'écran réunit :
 L'enregistreur diagnostiqué et le nombre de mesures climatiques figurent dans la **barre de statut**
 en bas de la fenêtre.
 
+## Alerte « hors nuit »
+
+Quand l'enregistrement déborde de la fenêtre nocturne (démarrage **avant** le coucher du soleil ou
+arrêt **après** le lever), une alerte le signale sous la cohérence horaire : une partie du son est
+diurne, donc peu susceptible de contenir des cris de chauves-souris. La couleur et le pictogramme de
+l'alerte sont ceux d'un avertissement.
+
+![L'écran de diagnostic avec l'alerte « hors nuit » : l'enregistrement déborde de la fenêtre nocturne.](../assets/captures/apercu-diagnostic-hors-nuit.png)
+
 ## Sans relevé climatique
 
 Si la nuit ne comporte pas de relevé climatique, l'absence est signalée et seules les anomalies et
