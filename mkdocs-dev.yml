@@ -107,6 +107,7 @@ nav:
     - 0043 · La mesure fait foi en CI: decisions/0043-la-mesure-fait-foi-en-ci.md
     - 0044 · Le mécanisme de parallélisme suit la nature de l'attente: decisions/0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md
     - 0045 · L'UpgradeCode Windows est une constante d'identité: decisions/0045-l-upgradecode-windows-est-une-constante-d-identite.md
+    - 0046 · Une classe CSS a une seule feuille: decisions/0046-une-classe-css-a-une-seule-feuille.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md
