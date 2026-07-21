@@ -1,4 +1,4 @@
-/// Module JavaFX de VigieChiro PR Companion.
+/// Module JavaFX de VigieChiro Companion.
 ///
 /// `open module` (et non `module` + `opens fr.univ_amu.iut to javafx.fxml`) : choix volontaire
 /// d'ouvrir tout le module à la réflexion. Plus permissif, mais plus simple : FXML et Guice

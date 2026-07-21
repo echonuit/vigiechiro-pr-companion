@@ -1,6 +1,6 @@
 # Politique de sécurité
 
-VigieChiro PR Companion est une application **locale** de traitement de données naturalistes. Cette
+VigieChiro Companion est une application **locale** de traitement de données naturalistes. Cette
 politique couvre le **signalement**, la **gestion des secrets**, la **sensibilité des données**
 manipulées, et l'**hygiène de la chaîne logicielle**.
 

@@ -1,4 +1,4 @@
-# Contribuer à VigieChiro PR Companion
+# Contribuer à VigieChiro Companion
 
 Merci de votre intérêt ! Ce document explique comment proposer une évolution : mettre en place
 l'environnement, respecter l'architecture, et soumettre une Pull Request.

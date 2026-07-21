@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// ## Pourquoi ce test existe
 ///
-/// L'application s'appelle **VigieChiro PR Companion** — c'est ce que son bandeau affiche. La
+/// L'application s'appelle **VigieChiro Companion** — c'est ce que son bandeau affiche. La
 /// plateforme nationale à laquelle elle se connecte s'appelle **Vigie-Chiro**. La documentation
 /// écrivait « VigieChiro » pour les deux, jusque dans le `site_name` du site produit.
 ///
@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test;
 ///
 /// **Le tiret est le signal.** « Vigie-Chiro » avec tiret désigne la plateforme — c'est déjà la forme
 /// employée par l'IHM (« Téléverser sur Vigie-Chiro », « Se connecter à Vigie-Chiro… »). « VigieChiro »
-/// sans tiret ne doit apparaître qu'accompagné de « PR Companion ».
+/// sans tiret ne doit apparaître qu'accompagné de « Companion ».
 ///
 /// Ce test ne couvre que `docs/`, le site **utilisateur**. `dev-docs/` parle abondamment de la
 /// plateforme, à juste titre, et les [ADR](../../../../../../dev-docs/decisions) sont immuables.
@@ -46,9 +46,9 @@ class NomDeLApplicationTest {
 
     private static final Path DOCS = Path.of("docs");
 
-    /// « VigieChiro » **non** suivi de « PR Companion », et **non** précédé d'un tiret (ce qui en
+    /// « VigieChiro » **non** suivi de « Companion », et **non** précédé d'un tiret (ce qui en
     /// ferait la plateforme).
-    private static final Pattern NOM_NU = Pattern.compile("(?<!-)\\bVigieChiro\\b(?!\\s+PR\\s+Companion)");
+    private static final Pattern NOM_NU = Pattern.compile("(?<!-)\\bVigieChiro\\b(?!\\s+Companion)");
 
     /// Un nom de fichier produit par le build, reconnu **des deux côtés** : le séparateur peut suivre
     /// (`VigieChiro.exe`, `VigieChiro-2.20.0-…`, `VigieChiro/bin/…`) **ou précéder**
@@ -68,7 +68,7 @@ class NomDeLApplicationTest {
     private static final Pattern ARTEFACT_PRECEDE = Pattern.compile("[/\\\\]$");
 
     @Test
-    @DisplayName("Le site utilisateur nomme l'application « VigieChiro PR Companion », pas « VigieChiro »")
+    @DisplayName("Le site utilisateur nomme l'application « VigieChiro Companion », pas « VigieChiro »")
     void la_doc_utilisateur_nomme_l_application_en_entier() {
         List<String> fautifs = new ArrayList<>();
 
@@ -96,7 +96,7 @@ class NomDeLApplicationTest {
                         La documentation utilisateur appelle l'application « VigieChiro », qui est le
                         nom de la PLATEFORME à laquelle elle se connecte.
 
-                        • L'application : « VigieChiro PR Companion » à la première mention d'une page,
+                        • L'application : « VigieChiro Companion » à la première mention d'une page,
                           « l'application » ensuite.
                         • La plateforme : « Vigie-Chiro », avec le tiret — c'est la forme qu'emploie
                           l'IHM (« Téléverser sur Vigie-Chiro »).

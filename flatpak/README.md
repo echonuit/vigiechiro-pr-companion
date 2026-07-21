@@ -3,7 +3,7 @@
 Manifeste de l'application pour [Flathub](https://flathub.org), le canal de distribution Linux du
 produit (#2111).
 
-Flathub exige que le manifeste vive dans **son propre dépôt** (`flathub/io.github.iutinfoaix_s201.VigieChiro`),
+Flathub exige que le manifeste vive dans **son propre dépôt** (`flathub/fr.echonuit.VigieChiroCompanion`),
 créé à l'acceptation de la soumission. Cette copie est la **source** : elle évolue avec le produit, et
 c'est elle qu'on recopie vers le dépôt Flathub. Sans elle, le manifeste dériverait en silence à la
 première évolution du packaging.
@@ -54,9 +54,9 @@ flatpak install --user flathub org.flatpak.Builder
 
 cd flatpak
 flatpak run --filesystem="$PWD" --cwd="$PWD" org.flatpak.Builder \
-    --user --force-clean --install build-dir io.github.iutinfoaix_s201.VigieChiro.yml
+    --user --force-clean --install build-dir fr.echonuit.VigieChiroCompanion.yml
 
-flatpak run io.github.iutinfoaix_s201.VigieChiro
+flatpak run fr.echonuit.VigieChiroCompanion
 ```
 
 Ajouter `--disable-rofiles-fuse` si l'environnement n'a pas FUSE (conteneurs, certaines CI) : le build
@@ -65,7 +65,7 @@ Ajouter `--disable-rofiles-fuse` si l'environnement n'a pas FUSE (conteneurs, ce
 Inspecter ce que le bac à sable voit réellement, ce qui est le seul moyen de vérifier une permission :
 
 ```bash
-flatpak run --command=sh io.github.iutinfoaix_s201.VigieChiro -c 'ls -A "$HOME"; ls /media/*/'
+flatpak run --command=sh fr.echonuit.VigieChiroCompanion -c 'ls -A "$HOME"; ls /media/*/'
 ```
 
 ## Monter de version

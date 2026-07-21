@@ -1,6 +1,6 @@
 # Prise en main
 
-Cette page explique comment **installer**, **lancer** VigieChiro PR Companion, puis **situer les écrans** au
+Cette page explique comment **installer**, **lancer** VigieChiro Companion, puis **situer les écrans** au
 premier démarrage. En quelques minutes, vous êtes prêt à traiter votre première nuit
 d'enregistrement.
 
@@ -106,7 +106,7 @@ Au lancement, l'application ouvre son **écran d'accueil**. Le bandeau vous invi
 « sélectionner une activité pour traiter une nuit d'enregistrement », et propose quatre points
 d'entrée :
 
-![L'écran d'accueil de VigieChiro PR Companion et ses quatre activités.](assets/captures/apercu-accueil.png)
+![L'écran d'accueil de VigieChiro Companion et ses quatre activités.](assets/captures/apercu-accueil.png)
 
 | Activité | À quoi elle sert |
 |---|---|

@@ -1,5 +1,5 @@
 /*
- * palette.css — tokens de couleur PARTAGÉS de VigieChiro PR Companion.
+ * palette.css — tokens de couleur PARTAGÉS de VigieChiro Companion.
  *
  * Source unique des couleurs "looked-up" du module. Chargée sur TOUTES les scènes (chrome,
  * écrans, modales, et harnais de capture) via l'attribut `stylesheets` de chaque FXML : ainsi

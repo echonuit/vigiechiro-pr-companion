@@ -1,6 +1,6 @@
 # Galerie des captures d'écran (références UI)
 
-Captures de **référence** des écrans de VigieChiro PR Companion, à comparer aux
+Captures de **référence** des écrans de VigieChiro Companion, à comparer aux
 maquettes du brief SAÉ 2.01. Chaque image est rendue **hors-écran** et de façon
 **déterministe** via la *Headless Platform* de JavaFX 26 (`glass.platform=Headless`,
 rendu logiciel) : aucune fenêtre ni serveur d'affichage requis (utilisable en CI,

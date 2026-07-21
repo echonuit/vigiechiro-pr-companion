@@ -1,4 +1,4 @@
-# Documentation DÉVELOPPEUR de VigieChiro PR Companion.
+# Documentation DÉVELOPPEUR de VigieChiro Companion.
 #
 # Site MkDocs **autonome**, volontairement séparé du site utilisateur (mkdocs.yml + docs/) :
 # la doc dev vit près du code et pourra rester ici si la doc utilisateur déménage un jour dans
@@ -7,9 +7,9 @@
 #
 # Build :   mkdocs build -f mkdocs-dev.yml --strict
 # Aperçu :  mkdocs serve -f mkdocs-dev.yml
-site_name: VigieChiro PR Companion · Doc développeur
+site_name: VigieChiro Companion · Doc développeur
 site_description: >-
-  Documentation développeur de VigieChiro PR Companion : architecture, conventions,
+  Documentation développeur de VigieChiro Companion : architecture, conventions,
   et comment contribuer au code.
 site_url: https://iutinfoaix-s201.github.io/vigiechiro-pr-companion/dev/
 repo_url: https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion
@@ -108,6 +108,7 @@ nav:
     - 0044 · Le mécanisme de parallélisme suit la nature de l'attente: decisions/0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md
     - 0045 · L'UpgradeCode Windows est une constante d'identité: decisions/0045-l-upgradecode-windows-est-une-constante-d-identite.md
     - 0046 · Une classe CSS a une seule feuille: decisions/0046-une-classe-css-a-une-seule-feuille.md
+    - 0047 · L'identité de distribution est le projet Echonuit: decisions/0047-l-identite-de-distribution-est-le-projet-echonuit.md
   - Recette (acceptation):
     - Méthode: recette/index.md
     - Fixtures (générateur de cartes SD): recette/fixtures.md

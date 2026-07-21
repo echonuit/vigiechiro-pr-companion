@@ -1,4 +1,4 @@
-# Tester VigieChiro PR Companion
+# Tester VigieChiro Companion
 
 Ce document décrit la **suite de tests** : comment l'exécuter, ce qu'elle contient, et ce qui bloque
 (ou non) l'intégration continue. Il complète [CONTRIBUTING.md](CONTRIBUTING.md) (workflow général) et

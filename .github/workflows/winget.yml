@@ -57,9 +57,9 @@ jobs:
         if: steps.garde.outputs.present == 'true'
         uses: vedantmgoyal9/winget-releaser@v2
         with:
-          # Identifiant stable, à vie (cohérent avec le --vendor de l'installeur,
-          # « Sébastien Nedjar » : l'éditeur est une personne, pas l'IUT, #2108).
-          identifier: SebastienNedjar.VigieChiro
+          # Identifiant stable, à vie. Éditeur = le projet Echonuit (cohérent avec le
+          # --vendor de l'installeur et l'app-id Flatpak fr.echonuit.* ; ADR 0047).
+          identifier: Echonuit.VigieChiroCompanion
           # Un seul installeur Windows : le MSI x64. Le `.sha256` joint finit par
           # « .sha256 », l'ancre `$` l'exclut donc.
           installers-regex: '\.msi$'
