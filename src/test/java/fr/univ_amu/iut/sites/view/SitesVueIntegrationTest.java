@@ -128,6 +128,23 @@ class SitesVueIntegrationTest {
         assertThat(etatVide.isManaged()).isFalse();
     }
 
+    @Test
+    @DisplayName("Le chevron d'invite « › » est VISIBLE sur chaque carte (non éteint par une collision de nom)")
+    void chevron_de_carte_est_visible(FxRobot robot) {
+        // Garde-fou du correctif #1974 : la classe `carte-chevron` de la feature sites entrait en
+        // collision avec celle de base.css (`-fx-opacity: 0`, révélée au survol des cartes d'accueil).
+        // La carte de site n'étant jamais une `.carte-activite`, le chevron restait invisible. Renommé
+        // `.chevron-site`, il retrouve son opacité par défaut. Rien ne testait cette visibilité - c'est
+        // pour cela que le défaut a vécu depuis la création de la feature.
+        var chevrons = robot.lookup(".chevron-site").queryAll();
+
+        assertThat(chevrons).as("un chevron d'invite par carte de site").hasSize(2);
+        assertThat(chevrons)
+                .allSatisfy(chevron -> assertThat(chevron.getOpacity())
+                        .as("le chevron ne doit pas être éteint (opacity 0 = invisible)")
+                        .isEqualTo(1.0));
+    }
+
     // ----- Écran de détail M-Site-detail -------------------------------------------------------
 
     @Test

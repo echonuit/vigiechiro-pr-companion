@@ -239,7 +239,7 @@ public class MesSitesController implements ResumeStatut {
         // site, où se trouve l'action « Importer une nuit » (pré-rattachée au site). Pas de handler
         // propre sur le chevron (la propagation au parent déclencherait une double navigation).
         Label chevron = new Label("›");
-        chevron.getStyleClass().add("carte-chevron");
+        chevron.getStyleClass().add("chevron-site");
         return colonne(chevron);
     }
 

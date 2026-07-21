@@ -83,7 +83,12 @@
     -fx-text-fill: -couleur-texte-discret;
 }
 
-.carte-chevron {
+/* Chevron « › » d'invite sur une carte de site : renomme depuis `.carte-chevron` (#1974). Ce nom
+   entrait en COLLISION avec `.carte-chevron` de base.css, qui vaut `-fx-opacity: 0` et n'est revele
+   qu'au survol d'une `.carte-activite` (accueil). La carte de site est une `.carte-site`, jamais
+   revelee : le chevron heritait donc `opacity: 0` et restait INVISIBLE depuis la creation de la
+   feature. Un nom propre suffit a le rendre visible - c'est ce que ces trois proprietes voulaient. */
+.chevron-site {
     -fx-font-size: 20px;
     -fx-text-fill: -couleur-texte-discret;
     -fx-cursor: hand;
