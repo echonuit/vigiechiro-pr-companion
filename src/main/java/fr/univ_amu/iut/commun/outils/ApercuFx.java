@@ -100,8 +100,19 @@ public final class ApercuFx {
     /// l'oeil (#1641, #1701, #1873, #1579, #2012). Un test verifie qu'un bouton **fait** ce qu'il doit ;
     /// il ne verifie pas qu'on puisse **lire** ce qu'il dit.
     private static boolean estTronqueEnLargeur(Labeled libelle) {
-        // Un libelle enroulable ne s'ellipse pas horizontalement : il passe a la ligne, et c'est la
-        // compression VERTICALE qui le guette - deja couverte plus haut.
+        // Un libelle enroulable ne s'ellipse pas horizontalement : il passe a la ligne - JavaFX coupe meme
+        // un mot insecable caractere par caractere - et c'est la compression VERTICALE qui le guette, deja
+        // couverte plus haut.
+        //
+        // LIMITE CONNUE (#2265). Cette mesure verticale peut mentir dans un cas : rendu HORS d'une fenetre
+        // montree (le snapshot d'un `DialogPane`), un libelle enroulable dont la largeur est contrainte
+        // sous ce qu'il faudrait peut rester haut d'une SEULE ligne, `prefHeight` retombant sur cette meme
+        // hauteur - l'ecart mesure vaut alors zero et la troncature passe inapercue (#2243).
+        //
+        // Aucun controle geometrique ne referme ce trou de facon fiable : toute construction reproductible
+        // s'enroule correctement, ou declenche deja la mesure verticale. Un controle de plus serait donc du
+        // code qu'aucun test ne peut voir echouer. La parade est A LA SOURCE - pre-enrouler les textes
+        // d'une capture, cf. `CaptureConfirmationsImport#enrouler(CompteRendu)`.
         return !libelle.isWrapText()
                 && libelle.getWidth() > 0
                 && libelle.getText() != null
