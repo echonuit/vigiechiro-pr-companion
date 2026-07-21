@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.32.2](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.32.1...v2.32.2) (2026-07-21)
+
+
+### Bug Fixes
+
+* **captures:** réenrouler le compte rendu d'un dialogue avant le snapshot ([#2243](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2243)) ([#2263](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2263)) ([14fee19](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/14fee1989d45267ad06b2c19bc6aab99f161fef9)), closes [#2223](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2223) [#2225](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2225)
+
 ## [2.32.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.32.0...v2.32.1) (2026-07-21)
 
 
