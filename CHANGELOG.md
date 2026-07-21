@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.30.1](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.30.0...v2.30.1) (2026-07-21)
+
+
+### Bug Fixes
+
+* **sites:** rendre visible le chevron d’invite des cartes (collision de nom) ([#2217](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2217)) ([93fd54b](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/93fd54b6cd9efda3a4e1b9d401928d571416fb7c)), closes [#1974](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1974)
+
 # [2.30.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.29.0...v2.30.0) (2026-07-21)
 
 
