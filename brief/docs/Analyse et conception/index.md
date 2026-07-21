@@ -1,4 +1,4 @@
-# Analyse et conception - VigieChiro PR Companion
+# Analyse et conception - VigieChiro Companion
 
 Ce dossier rassemble la **conception** du produit, à partir de l'[expression du besoin](../Expression%20du%20besoin.md) : le vocabulaire et le modèle de données, les utilisateurs cibles, leurs trajectoires d'usage, les écrans, et la décomposition en épopées et stories.
 

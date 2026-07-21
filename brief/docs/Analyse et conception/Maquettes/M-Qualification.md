@@ -8,7 +8,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
 
 > **Patron d'écoute partagé avec [M-SonsValidation](M-SonsValidation.md)** : les deux écrans réutilisent le **même composant d'écoute** (`AudioView` : sonogramme + spectrogramme) sous un squelette « liste ↔ écoute » commun. La différence porte sur le **mode métier** : ici un **verdict par fichier son** puis un **verdict final du passage** (mode *Vérification* par échantillonnage), là un **verdict par observation** (mode *Validation* taxonomique).
 
-> ✅ **Écran implémenté (chantier [#1524](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/1524), lot 6).** Le modèle **cible** est en place : un **verdict par fichier son** (`Bon` / `Mauvais` / `Inexploitable`) saisi séquence par séquence, une **barre tricolore** qui en donne la répartition d'un coup d'œil, et un **verdict final du passage dérivé** et surchargeable (`OK` / `Utilisable` / `Inexploitable`, état initial `Non vérifié`) - cf. [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [R13/R14](../Modèle%20conceptuel/Règles%20métier.md#r13) et le [glossaire](../Modèle%20conceptuel/Glossaire%20métier.md).
+> ✅ **Écran implémenté (chantier [#1524](https://github.com/echonuit/vigiechiro-pr-companion/issues/1524), lot 6).** Le modèle **cible** est en place : un **verdict par fichier son** (`Bon` / `Mauvais` / `Inexploitable`) saisi séquence par séquence, une **barre tricolore** qui en donne la répartition d'un coup d'œil, et un **verdict final du passage dérivé** et surchargeable (`OK` / `Utilisable` / `Inexploitable`, état initial `Non vérifié`) - cf. [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [R13/R14](../Modèle%20conceptuel/Règles%20métier.md#r13) et le [glossaire](../Modèle%20conceptuel/Glossaire%20métier.md).
 
 ## Maquette principale - 12 séquences sur 30 écoutées, quelques verdicts par fichier posés
 
@@ -112,7 +112,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
   <!-- Bandeau du chrome : titre + fil d'Ariane + recherche -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="210" y="38" class="breadcrumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="642" y="38" class="breadcrumb-curr">Vérifier</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>

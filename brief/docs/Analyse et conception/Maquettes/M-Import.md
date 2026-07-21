@@ -55,7 +55,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
   <rect x="10" y="10" width="1180" height="1000" rx="4" class="frame"/>
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="332" y="38" class="crumb-active">Importer une nuit</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -144,7 +144,7 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
   <text x="1040" y="853" class="btn-txt" text-anchor="middle">📥 Importer cette nuit</text>
 
   <rect x="10" y="980" width="1180" height="30" class="footer"/>
-  <text x="40" y="1000" class="footer-txt">VigieChiro PR Companion · la copie est vérifiée bit-à-bit (SHA-256, R9)</text>
+  <text x="40" y="1000" class="footer-txt">VigieChiro Companion · la copie est vérifiée bit-à-bit (SHA-256, R9)</text>
 </svg>
 </div>
 

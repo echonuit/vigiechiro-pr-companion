@@ -46,7 +46,7 @@ L'écran présente, pour le passage courant, un **bilan technique** de la nuit :
 
   <rect x="0" y="0" width="1000" height="660" fill="#f7f9fb"/>
   <rect x="0" y="0" width="1000" height="44" class="chrome"/>
-  <text x="20" y="28" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="20" y="28" class="chrometxt">VigieChiro Companion</text>
   <text x="210" y="28" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="600" y="28" class="crumb-curr">Diagnostic</text>
   <rect x="780" y="12" width="200" height="22" rx="11" class="search"/>

@@ -58,7 +58,7 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
         ...
     ```
 - [ ] Les WAV exportés sont **copies** des séquences ralenties ×10 (lisibles directement par tout lecteur audio).
-- [ ] **Variante** : option « Document récapitulatif » pour produire en plus un PDF/HTML par espèce avec spectrogrammes et métadonnées (à arbitrer en équipe étudiante selon la complexité, [E6.S5](E6%20-%20Diagnostiquer%20le%20matériel.md#e6s5) peut servir de base technique).
+- [ ] **Variante** : option « Document récapitulatif » pour produire en plus un PDF/HTML par espèce avec spectrogrammes et métadonnées (à arbitrer selon la complexité, [E6.S5](E6%20-%20Diagnostiquer%20le%20matériel.md#e6s5) peut servir de base technique).
 - [ ] L'utilisateur choisit le dossier de destination ; un bouton « Zipper le dossier » est proposé après export pour partage.
 - [ ] La sélection « référence » est persistée en BD ([E0.S5](E0%20-%20Fondations%20de%20persistance.md#e0s5)) et réutilisable d'une session à l'autre.
 

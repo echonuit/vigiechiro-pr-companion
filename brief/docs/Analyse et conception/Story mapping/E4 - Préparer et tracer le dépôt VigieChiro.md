@@ -50,7 +50,7 @@
 - [ ] Le chemin du dossier est aussi affiché sous forme **copiable** (clic icône « copier ») pour les cas où le bouton « Ouvrir » ne fonctionne pas (ex. environnement sans bureau graphique).
 - [ ] Un rappel explicite indique que l'application **ne dialogue pas** avec Vigie-Chiro : « Téléversez ces fichiers manuellement sur https://vigiechiro.herokuapp.com/ depuis votre navigateur. »
 - [ ] Un lien direct vers le portail Vigie-Chiro est mis à disposition (s'ouvre dans le navigateur par défaut).
-- [ ] Tests d'intégration : le bouton « Ouvrir le dossier » se résout-il correctement sur Linux/macOS/Windows ? (à arbitrer côté équipe étudiante selon l'OS de référence)
+- [ ] Tests d'intégration : le bouton « Ouvrir le dossier » se résout-il correctement sur Linux/macOS/Windows ? (à arbitrer selon l'OS de référence)
 
 **Parcours rattaché** : [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md), étapes 3-4<br>
 **Maquettes cibles** : [M-Lot](../Maquettes/M-Lot.md) (récapitulatif + bouton « Ouvrir le dossier » + lien externe Vigie-Chiro)<br>

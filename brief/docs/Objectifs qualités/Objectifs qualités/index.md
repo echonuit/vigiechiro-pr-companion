@@ -1,6 +1,6 @@
 # Objectifs qualités
 
-Les objectifs qualités du *VigieChiro PR Companion* ordonnent les critères qualités les plus importants au regard du besoin exprimé par le client. Ils servent de boussole tout au long du développement.
+Les objectifs qualités du *VigieChiro Companion* ordonnent les critères qualités les plus importants au regard du besoin exprimé par le client. Ils servent de boussole tout au long du développement.
 
 | Id | Description | Scénario | Critère de qualité | Catégorie |
 |---|---|---|---|---|

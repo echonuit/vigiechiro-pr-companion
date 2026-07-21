@@ -87,7 +87,7 @@
 **Afin de** vérifier de mes propres oreilles ET de mes propres yeux que la nuit est exploitable
 
 !!! info "Composant fourni"
-    Le composant de vue audio (sonogramme + spectrogramme avec contrôles de lecture et zoom) est **fourni par l'équipe pédagogique**. Le même composant est utilisé dans [E7.S3](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s3) pour la validation Tadarida. Cette story se concentre sur l'**intégration** dans M-Qualification.
+    Le composant de vue audio (sonogramme + spectrogramme avec contrôles de lecture et zoom) est **fourni**. Le même composant est utilisé dans [E7.S3](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s3) pour la validation Tadarida. Cette story se concentre sur l'**intégration** dans M-Qualification.
 
 **Critères d'acceptation** :
 

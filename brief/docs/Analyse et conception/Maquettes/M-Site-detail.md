@@ -55,7 +55,7 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
   <rect x="10" y="10" width="1180" height="800" rx="4" class="frame"/>
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="260" y="38" class="crumb-link">Accueil  ›  Mes sites  ›  </text>
   <text x="430" y="38" class="crumb-active">Carré 640380</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -181,7 +181,7 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 
   <!-- Footer -->
   <rect x="10" y="780" width="1180" height="30" class="footer"/>
-  <text x="40" y="800" class="footer-txt">VigieChiro PR Companion · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
+  <text x="40" y="800" class="footer-txt">VigieChiro Companion · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
 </svg>
 </div>
 

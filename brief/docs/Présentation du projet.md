@@ -50,7 +50,7 @@ L'application doit également :
 
 Une précédente campagne expérimentale, liée à un autre projet, s'est appuyée sur 13 secteurs de Seine-et-Marne et a généré **plus de 560 000 contacts chiroptères** validés via Tadarida. Pour avaler ce volume, Samuel a dû développer avec ses collègues informaticiens des scripts R / Bash de pré-traitement - efficaces mais impossibles à transmettre.
 
-Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire : le *VigieChiro PR Companion* **est l'outil qui manque** à Samuel et à la communauté pour exploiter sereinement le PR. Voir sa fiche persona détaillée : [Samuel](Analyse%20et%20conception/Personas/Samuel.md).
+Pour ses **futures campagnes**, Samuel pivote vers le **Passive Recorder Teensy** ([PiBatRecorderProjects/TeensyRecorders](https://framagit.org/PiBatRecorderProjects/TeensyRecorders)), qu'il a choisi pour sa **qualité** d'acquisition, son **ouverture** open-source et son **accessibilité** à la communauté scientifique. Mais l'écosystème logiciel du PR est rudimentaire : le *VigieChiro Companion* **est l'outil qui manque** à Samuel et à la communauté pour exploiter sereinement le PR. Voir sa fiche persona détaillée : [Samuel](Analyse%20et%20conception/Personas/Samuel.md).
 
 ## Parties prenantes
 

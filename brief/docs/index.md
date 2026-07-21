@@ -1,4 +1,4 @@
-# VigieChiro PR Companion - Brief projet
+# VigieChiro Companion - Brief projet
 
 <div markdown="0" style="margin: 1rem 0 2rem 0;">
   <img src="assets/illustrations/hero-bandeau.webp"
@@ -6,16 +6,15 @@
        style="width: 100%; height: auto; display: block; border-radius: 4px;">
 </div>
 
-> **Dossier de conception** et documentation produit de *VigieChiro PR Companion*, le logiciel open
+> **Dossier de conception** et documentation produit de *VigieChiro Companion*, le logiciel open
 > source qui accompagne les naturalistes utilisant un **Passive Recorder** pour le protocole Vigie-Chiro.
-> Né d'une commande réelle de Samuel Busson (CEREMA), construit dans le cadre de la SAÉ 2.01 du BUT
-> Informatique de l'IUT d'Aix-Marseille.
+> Né d'une commande réelle de Samuel Busson (CEREMA).
 
 !!! info "Un brief aligné sur le produit"
     Ce dossier décrit l'application **telle qu'elle est construite** : le besoin, le modèle de données,
     les parcours utilisateurs et les écrans réels. C'est un document de conception **vivant**, qui évolue
     avec le produit - pas un énoncé figé. Le code est public :
-    [IUTInfoAix-S201/vigiechiro-pr-companion](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion)
+    [echonuit/vigiechiro-pr-companion](https://github.com/echonuit/vigiechiro-pr-companion)
     (documentation utilisateur et d'architecture séparées).
 
 ## Sommaire

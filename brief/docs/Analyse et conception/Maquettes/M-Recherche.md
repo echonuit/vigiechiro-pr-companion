@@ -36,7 +36,7 @@ La recherche globale permet de **sauter directement** à un site, un point ou un
   <!-- Bandeau (chrome) avec champ de recherche actif -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="332" y="38" class="crumb-active">Mes sites</text>
   <rect x="820" y="20" width="340" height="26" rx="13" class="search-active"/>

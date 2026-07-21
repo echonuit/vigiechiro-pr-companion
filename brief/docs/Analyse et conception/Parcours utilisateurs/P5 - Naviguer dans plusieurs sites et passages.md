@@ -21,6 +21,6 @@ Karim revient d'une semaine de chantier sur 3 carrés différents avec 5 enregis
 
 Avec ses 24 enregistreurs en parallèle pendant 40-50 nuits par saison, Samuel a en pratique **plus de 1 000 passages par saison**. La vue tabulaire doit donc :
 
-- supporter des filtres multi-critères performants (R&D potentielle, à arbitrer en équipe étudiante)
+- supporter des filtres multi-critères performants (R&D potentielle, à arbitrer)
 - permettre des actions de masse (changement de verdict, suppression, export)
 - rester réactive même à plusieurs centaines de lignes (cf. [O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md))

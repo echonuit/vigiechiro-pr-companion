@@ -21,4 +21,4 @@ Samuel a validé plusieurs centaines d'observations sur la saison. Il veut **con
 
 ## Variante
 
-Au lieu d'un dossier de fichiers WAV, l'application peut produire un **document récapitulatif** (HTML ou PDF) avec, par espèce : nom latin, nom vernaculaire, exemples de spectrogrammes, lien vers les fichiers WAV correspondants. Plus utile pour la transmission pédagogique. À arbitrer en équipe étudiante selon la complexité.
+Au lieu d'un dossier de fichiers WAV, l'application peut produire un **document récapitulatif** (HTML ou PDF) avec, par espèce : nom latin, nom vernaculaire, exemples de spectrogrammes, lien vers les fichiers WAV correspondants. Plus utile pour la transmission pédagogique. À arbitrer selon la complexité.

@@ -1,8 +1,10 @@
-site_name: SAE 2.01 - VigieChiro PR Companion
-site_description: Énoncé pédagogique de la SAE 2.01 - BUT Informatique IUT Aix-Marseille
-site_url: https://iutinfoaix-s201.github.io/brief/
-repo_url: https://github.com/IUTInfoAix-S201/brief
-repo_name: IUTInfoAix-S201/brief
+site_name: VigieChiro Companion · Brief projet
+site_description: >-
+  Dossier de conception de VigieChiro Companion : besoin, modèle de données,
+  parcours utilisateurs, maquettes et story mapping.
+site_url: https://brief.echonuit.fr/
+repo_url: https://github.com/echonuit/brief
+repo_name: echonuit/brief
 edit_uri: edit/main/
 
 docs_dir: docs

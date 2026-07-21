@@ -1,6 +1,6 @@
 # Objectifs qualités
 
-Cette section formalise la **boussole qualité** du *VigieChiro PR Companion* : huit objectifs prioritaires qui guident les arbitrages tout au long du développement et quatre scénarios qui les concrétisent dans des situations d'usage. Ils s'appuient sur le référentiel **ISO/IEC 25010**, dont les deux pages de référence (catégories, critères) donnent le détail.
+Cette section formalise la **boussole qualité** du *VigieChiro Companion* : huit objectifs prioritaires qui guident les arbitrages tout au long du développement et quatre scénarios qui les concrétisent dans des situations d'usage. Ils s'appuient sur le référentiel **ISO/IEC 25010**, dont les deux pages de référence (catégories, critères) donnent le détail.
 
 ## Les 8 objectifs du projet
 

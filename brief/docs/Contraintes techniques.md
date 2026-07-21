@@ -95,7 +95,7 @@ concentrer le développement sur la chaîne métier :
 
 - **Licence GPLv3** : le code et ses composants restent librement réutilisables par la communauté
   VigieChiro.
-- Code source hébergé sur **GitHub** ([IUTInfoAix-S201/vigiechiro-pr-companion](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion)),
+- Code source hébergé sur **GitHub** ([echonuit/vigiechiro-pr-companion](https://github.com/echonuit/vigiechiro-pr-companion)),
   documentation publiée sur **GitHub Pages**, jeu de données d'exemple archivé sur **Zenodo**.
 
 ## Données

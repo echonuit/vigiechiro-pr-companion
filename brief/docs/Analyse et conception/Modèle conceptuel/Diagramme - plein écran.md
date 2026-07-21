@@ -17,7 +17,7 @@ hide:
 </style>
 
 <figure markdown="span">
-  ![Modèle conceptuel de données (MCD Merise) de VigieChiro PR Companion](../../assets/diagrammes/modele-conceptuel.svg)
+  ![Modèle conceptuel de données (MCD Merise) de VigieChiro Companion](../../assets/diagrammes/modele-conceptuel.svg)
 </figure>
 
 [← Retour au modèle conceptuel](index.md)

@@ -60,7 +60,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
   <!-- Bandeau du chrome : titre + ← Retour (historique) + fil d'Ariane (emplacement) + recherche -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <rect x="226" y="22" width="96" height="22" rx="5" class="backbtn"/>
   <text x="274" y="38" class="backtxt" text-anchor="middle">← Mes sites</text>
   <text x="338" y="38" class="crumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  </text>

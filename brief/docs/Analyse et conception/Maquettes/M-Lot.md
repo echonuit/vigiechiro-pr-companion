@@ -59,7 +59,7 @@ Cette vue affiche un **rapport de cohérence** (toutes les vérifications préal
   <!-- Bandeau du chrome : titre + fil d'Ariane (emplacement complet du passage) + recherche -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="210" y="38" class="breadcrumb">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="642" y="38" class="breadcrumb-curr">Préparer le dépôt</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>

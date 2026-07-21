@@ -47,7 +47,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
   <!-- Chrome -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="210" y="38" class="retour">← Retour</text>
   <text x="290" y="38" class="crumb-active">Accueil</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -56,7 +56,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
   <!-- Hero nocturne -->
   <rect x="10" y="54" width="1180" height="220" fill="url(#nuit)"/>
   <text x="1120" y="190" class="moon" text-anchor="middle">🌙</text>
-  <text x="600" y="106" class="hero-titre" text-anchor="middle">Bienvenue dans VigieChiro PR Companion</text>
+  <text x="600" y="106" class="hero-titre" text-anchor="middle">Bienvenue dans VigieChiro Companion</text>
   <text x="600" y="138" class="hero-sous" text-anchor="middle">Deux entrées : collecter vos nuits d'enregistrement (sites &amp; passages)</text>
   <text x="600" y="158" class="hero-sous" text-anchor="middle">et exploiter vos espèces observées (biodiversité).</text>
 
@@ -133,7 +133,7 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 
   <!-- Footer -->
   <rect x="10" y="656" width="1180" height="34" class="footer"/>
-  <text x="40" y="677" class="footer-txt">VigieChiro PR Companion</text>
+  <text x="40" y="677" class="footer-txt">VigieChiro Companion</text>
 </svg>
 </div>
 

@@ -6,7 +6,7 @@
 
 Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothèque de sons de référence : c'est **le même écran** qui écoute un spectrogramme, décide d'un taxon et marque des références. Il se **décline selon sa source** : le contexte affiché (fil d'Ariane, colonnes) et les actions disponibles (import/export) changent, mais le squelette reste identique.
 
-> **Patron partagé** : ce « lieu d'écoute » partage son squelette (liste ↔ panneau d'écoute `AudioView`) avec [M-Qualification](M-Qualification.md) (mode **Vérification par échantillonnage**). Les deux écrans sont les **deux manières** d'écouter les enregistrements : *valider une observation* (ici) et *vérifier la qualité d'une nuit* (M-Qualification). L'étudiant n'implémente qu'**un seul** composant d'écoute, réutilisé dans les deux.
+> **Patron partagé** : ce « lieu d'écoute » partage son squelette (liste ↔ panneau d'écoute `AudioView`) avec [M-Qualification](M-Qualification.md) (mode **Vérification par échantillonnage**). Les deux écrans sont les **deux manières** d'écouter les enregistrements : *valider une observation* (ici) et *vérifier la qualité d'une nuit* (M-Qualification). Il n’y a donc qu’**un seul** composant d’écoute à implémenter, réutilisé dans les deux.
 
 ## Maquette principale - source « passage » (validation Tadarida)
 
@@ -83,7 +83,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
   <!-- Chrome -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="230" y="38" class="crumb-link">Accueil  ›  Mes sites  ›  Carré 640380  ›  Passage N° 2  ›  </text>
   <text x="628" y="38" class="crumb-active">Sons &amp; validation</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -295,7 +295,7 @@ Ouvert depuis la carte d'accueil **« Sons & validation »** (prisme *Espèces &
   <rect x="10" y="10" width="1180" height="230" rx="4" class="frame"/>
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="230" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="302" y="38" class="crumb-active">Sons de référence</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -357,7 +357,7 @@ Ouvert depuis la carte d'accueil **« Sons & validation »** (prisme *Espèces &
 ### Notes pour l'implémentation
 
 - **Un écran, plusieurs sources** : la source est décrite par un type scellé (`SourceObservations` : `ParPassage` / `ParPassages` / `ParEspece` / `References`) porté par le **socle**. Le filtre de statut éventuel voyage **en texte** (pas de dépendance socle → validation, sinon cycle de tranches ArchUnit). L'écran adapte fil d'Ariane, colonnes visibles et actions ☰ selon cette source.
-- **Composant d'écoute partagé** : l'`AudioView` (sonogramme + spectrogramme + lecteur, expansion ×10) est **fourni**. Il est réutilisé tel quel par [M-Qualification](M-Qualification.md) : l'étudiant n'implémente **qu'un seul** patron « lieu d'écoute ».
+- **Composant d'écoute partagé** : l'`AudioView` (sonogramme + spectrogramme + lecteur, expansion ×10) est **fourni**. Il est réutilisé tel quel par [M-Qualification](M-Qualification.md) : il n’y a **qu’un seul** patron « lieu d'écoute ».
 - **Actions immédiates, revue au clavier** : Valider / Corriger / Référence agissent tout de suite (pas de brouillon). Le workflow « sans souris » (Entrée / R / N / ↑↓) vise la **productivité** sur des centaines d'observations.
 - **Filtres = état du sous-ensemble affiché** : les compteurs de la barre de statut portent sur le **sous-ensemble filtré**, pas sur la source entière.
 - **Bibliothèque = source, pas écran séparé** : « Sons de référence » n'est **pas** un écran distinct mais la source `References` de cet écran ; l'export bibliothèque (récapitulatif CSV + copie des `.wav` par espèce, cf. [P10](../Parcours%20utilisateurs/P10%20-%20Exporter%20une%20bibliothèque%20de%20sons%20de%20référence.md)) s'y fait via le menu **☰**.

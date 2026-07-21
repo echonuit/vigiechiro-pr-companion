@@ -1,6 +1,6 @@
 # Maquettes
 
-Cette section regroupe les **maquettes basse fidélité** de l'application *VigieChiro PR Companion*. Chaque maquette est décrite par :
+Cette section regroupe les **maquettes basse fidélité** de l'application *VigieChiro Companion*. Chaque maquette est décrite par :
 
 - une **maquette SVG** présentant l’agencement final attendu (cadre fenêtre, barre de navigation, contenu, pied de page) ;
 - la liste des **composants** affichés et leurs **données** d'exemple ;
@@ -95,10 +95,10 @@ flowchart TB
 
 Toutes les maquettes reprennent le **cadre fenêtre** du chrome (`MainView.fxml`) :
 
-- **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro PR Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, et le champ de **recherche globale** (`Ctrl+F`) aligné à droite.
+- **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, et le champ de **recherche globale** (`Ctrl+F`) aligné à droite.
 - **En-tête de page** avec titre principal et sous-titre éventuel, juste sous le bandeau.
 - **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou **panneau de détail** « liste + détail » (M-Qualification, M-SonsValidation).
-- **Pied de page** discret (`VigieChiro PR Companion`).
+- **Pied de page** discret (`VigieChiro Companion`).
 
 L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titre, invite, tableau de bord de compteurs) puis deux **sections-prismes** de cartes d'activité.
 
@@ -115,7 +115,7 @@ L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titr
 
 **Cohérence entre écrans similaires** :
 
-- [M-Qualification](M-Qualification.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même squelette « liste + écoute »** (une liste pilote un panneau d'écoute `AudioView` commun). Les étudiants n'implémentent qu'un seul patron de « lieu d'écoute » qui se décline pour les deux modes : **vérification** par échantillonnage d'une part, **validation** taxonomique d'autre part.
+- [M-Qualification](M-Qualification.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même squelette « liste + écoute »** (une liste pilote un panneau d'écoute `AudioView` commun). Il n’y a qu’un seul patron de « lieu d’écoute » à implémenter, qui se décline pour les deux modes : **vérification** par échantillonnage d'une part, **validation** taxonomique d'autre part.
 - [M-Sites](M-Sites.md) et [M-Site-detail](M-Site-detail.md) utilisent le **même style de cards** pour les sites et les points d'écoute.
 
 ## Cas non maquettés (documentés textuellement)

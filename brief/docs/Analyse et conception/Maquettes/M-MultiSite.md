@@ -52,7 +52,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <rect x="10" y="10" width="1180" height="680" rx="4" class="frame"/>
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="332" y="38" class="crumb-active">Vue multi-sites</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -156,7 +156,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <text x="1105" y="618" class="btn-txt-dark" text-anchor="middle">Tableau ▶</text>
 
   <rect x="10" y="660" width="1180" height="30" class="footer"/>
-  <text x="40" y="680" class="footer-txt">VigieChiro PR Companion · la carte montre TOUS les sites (non restreinte par les filtres du tableau)</text>
+  <text x="40" y="680" class="footer-txt">VigieChiro Companion · la carte montre TOUS les sites (non restreinte par les filtres du tableau)</text>
 </svg>
 </div>
 

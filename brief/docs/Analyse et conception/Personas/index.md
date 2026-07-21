@@ -1,6 +1,6 @@
 # Personas
 
-Trois personas de référence représentent les utilisateurs cibles du *VigieChiro PR Companion*. Marie et Karim sont composés à partir d'utilisateurs réels du programme VigieChiro pour rendre lisibles des différences d'usage. **Samuel correspond au client réel de cette SAE**.
+Trois personas de référence représentent les utilisateurs cibles du *VigieChiro Companion*. Marie et Karim sont composés à partir d'utilisateurs réels du programme VigieChiro pour rendre lisibles des différences d'usage. **Samuel correspond au client réel de cette SAE**.
 
 | | [Marie](Marie.md) | [Karim](Karim.md) | [Samuel](Samuel.md) ⭐ |
 |---|---|---|---|

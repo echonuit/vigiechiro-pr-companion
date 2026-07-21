@@ -2,9 +2,9 @@
 
 ## Contexte
 
-*VigieChiro PR Companion* est un **compagnon logiciel** destiné aux possesseurs de Passive Recorder, né d'un besoin exprimé par un chercheur du CEREMA. Aujourd'hui, ces utilisateurs jonglent entre l'explorateur de fichiers, un tableur, un lecteur audio et la plateforme web VigieChiro pour gérer leurs campagnes - et passent un temps important en manipulations répétitives à chaque nuit traitée.
+*VigieChiro Companion* est un **compagnon logiciel** destiné aux possesseurs de Passive Recorder, né d'un besoin exprimé par un chercheur du CEREMA. Aujourd'hui, ces utilisateurs jonglent entre l'explorateur de fichiers, un tableur, un lecteur audio et la plateforme web VigieChiro pour gérer leurs campagnes - et passent un temps important en manipulations répétitives à chaque nuit traitée.
 
-Plusieurs scripts ad hoc circulent dans la communauté (Python, R), et il existe des outils commerciaux comme [Kaleidoscope Pro](https://www.wildlifeacoustics.com/products/kaleidoscope-pro), mais aucune application gratuite et open-source dédiée au pipeline VigieChiro / PR Teensy n'est disponible. C'est cette lacune que *VigieChiro PR Companion* comble - un logiciel libre que la communauté peut reprendre et faire évoluer.
+Plusieurs scripts ad hoc circulent dans la communauté (Python, R), et il existe des outils commerciaux comme [Kaleidoscope Pro](https://www.wildlifeacoustics.com/products/kaleidoscope-pro), mais aucune application gratuite et open-source dédiée au pipeline VigieChiro / PR Teensy n'est disponible. C'est cette lacune que *VigieChiro Companion* comble - un logiciel libre que la communauté peut reprendre et faire évoluer.
 
 ## Données fournies
 

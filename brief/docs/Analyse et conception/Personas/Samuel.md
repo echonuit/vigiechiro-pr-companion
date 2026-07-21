@@ -41,7 +41,7 @@ Pour ses **futures campagnes**, Samuel a choisi le projet **Passive Recorder Tee
 - **Ouverture** : firmware open-source, schémas électroniques publics, format de sortie documenté - condition *sine qua non* de la reproductibilité scientifique et de l'évolution à long terme du matériel.
 - **Accessibilité** : coût modéré, assemblage à la portée d'un laboratoire ou d'une association naturaliste, communauté active autour de framagit.
 
-L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : pas d'outil de validation des observations VigieChiro, pas d'IHM de suivi de campagne, pas de moyen propre d'exporter aux formats attendus. **C'est là que *VigieChiro PR Companion* intervient.**
+L'écosystème **logiciel** autour du PR est en revanche encore rudimentaire : pas d'outil de validation des observations VigieChiro, pas d'IHM de suivi de campagne, pas de moyen propre d'exporter aux formats attendus. **C'est là que *VigieChiro Companion* intervient.**
 
 ## Compétences techniques
 

@@ -46,7 +46,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <!-- Bandeau (chrome) : titre + fil d'Ariane + recherche globale -->
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="300" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="372" y="38" class="crumb-active">Mes sites</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -110,7 +110,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 
   <!-- Footer -->
   <rect x="10" y="660" width="1180" height="30" class="footer"/>
-  <text x="40" y="680" class="footer-txt">VigieChiro PR Companion · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
+  <text x="40" y="680" class="footer-txt">VigieChiro Companion · base locale : &lt;Documents&gt;/VigieChiro-Companion/vigiechiro.db</text>
 </svg>
 </div>
 
@@ -162,7 +162,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <rect x="10" y="10" width="1180" height="680" rx="4" class="frame"/>
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
-  <text x="28" y="38" class="chrometxt">VigieChiro PR Companion</text>
+  <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="300" y="38" class="crumb-link">Accueil  ›  </text>
   <text x="372" y="38" class="crumb-active">Mes sites</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
@@ -187,7 +187,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <text x="300" y="624" class="hint-txt">🔗 https://vigiechiro.herokuapp.com (s'ouvre dans le navigateur)</text>
 
   <rect x="10" y="660" width="1180" height="30" class="footer"/>
-  <text x="40" y="680" class="footer-txt">VigieChiro PR Companion · base locale initialisée</text>
+  <text x="40" y="680" class="footer-txt">VigieChiro Companion · base locale initialisée</text>
 </svg>
 </div>
 
