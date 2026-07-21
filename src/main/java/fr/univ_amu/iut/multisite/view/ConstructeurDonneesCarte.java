@@ -164,6 +164,12 @@ final class ConstructeurDonneesCarte {
 
     /// Info-bulle d'un point **sans GPS** : les mêmes mini-stats, suivies d'un avertissement explicite que
     /// la position affichée est approchée (centre du carré), pour ne pas l'interpréter comme un GPS mesuré.
+    ///
+    /// Le « ⚠ » reste un caractère, et c'est **assumé** (#2036) : une info-bulle est une surface de
+    /// **texte**. `Tooltip` accepte bien un `graphic`, mais **un seul, en tête** - alors qu'ici
+    /// l'avertissement ouvre la *dernière* ligne d'une info-bulle multi-lignes. Aucune icône ne peut s'y
+    /// poser. C'est la même exception que le terminal (ADR 0035, décision 6) : le pictogramme se rend en
+    /// icône **là où un composant le rend**, pas sur une surface qui n'a que du texte.
     private static String infobullePointApproche(CarreAgrege carre, PointAgrege point) {
         return infobullePoint(carre, point) + SAUT + "⚠ Position approximative (centre du carré, GPS manquant)";
     }

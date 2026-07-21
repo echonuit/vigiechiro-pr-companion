@@ -182,7 +182,10 @@ class SiteDetailViewModelTest {
         assertThat(premiere.codePoint()).isEqualTo("A1");
         assertThat(premiere.verdictLibelle()).isEqualTo("— à vérifier");
         assertThat(premiere.enregistreur()).isEqualTo("PR 1925492");
-        assertThat(viewModel.passagesDeLAnneeProperty().get()).contains("dont 1 à vérifier");
+        assertThat(viewModel.passagesDeLAnneeProperty().get())
+                .as("#2036 : le ViewModel dit « à vérifier » mais ne décide plus du rendu - pas de glyphe")
+                .contains("dont 1 à vérifier")
+                .doesNotContain("⚠");
     }
 
     @Test

@@ -341,7 +341,11 @@ public class SiteDetailViewModel {
                 .filter(p -> p.annee() == annee)
                 .filter(p -> p.verdictVerification() == null)
                 .count();
-        return aVerifier > 0 ? total + " (dont " + aVerifier + " à vérifier ⚠)" : Long.toString(total);
+        // Sans le « ⚠ » d'antan (#2036) : un ViewModel ne décide pas comment une sévérité s'affiche, or
+        // c'est ce que faisait ce glyphe préfixé. Les mots « à vérifier » portent déjà l'avertissement ;
+        // s'il fallait un jour une pastille, elle serait posée par la vue (cf. ColonneBadge, #2056), pas
+        // écrite ici.
+        return aVerifier > 0 ? total + " (dont " + aVerifier + " à vérifier)" : Long.toString(total);
     }
 
     private static ReadOnlyStringWrapper wrapper(String nom) {
