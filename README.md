@@ -6,7 +6,7 @@
 
 <h1 align="center">
   <img src=".github/assets/logo.png" alt="" width="84" valign="middle"/>
-  VigieChiro PR Companion
+  VigieChiro Companion
 </h1>
 
 <p align="center">
@@ -34,7 +34,7 @@
 ---
 
 Des enregistreurs autonomes (*Passive Recorder*) posés en forêt captent les ultrasons des
-chauves-souris pendant une nuit entière. **VigieChiro PR Companion** accompagne l'observateur depuis
+chauves-souris pendant une nuit entière. **VigieChiro Companion** accompagne l'observateur depuis
 la **carte SD** de l'enregistreur jusqu'au **dépôt** des données sur la plateforme nationale
 **Vigie-Chiro**, puis la **validation** des espèces identifiées : le tout dans un outil **local**
 unique, sans serveur ni compte à créer.
@@ -44,7 +44,7 @@ unique, sans serveur ni compte à créer.
 
 <p align="center">
   <img src=".github/assets/apercu-accueil.png" width="720"
-       alt="Écran d'accueil de VigieChiro PR Companion : tableau de bord et cartes d'activités.">
+       alt="Écran d'accueil de VigieChiro Companion : tableau de bord et cartes d'activités.">
 </p>
 
 ## 🦇 Le parcours d'une nuit
@@ -125,7 +125,7 @@ cd vigiechiro-pr-companion
 
 ## 🌐 L'écosystème Vigie-Chiro
 
-VigieChiro PR Companion est le **chaînon logiciel** entre un capteur de terrain et une base
+VigieChiro Companion est le **chaînon logiciel** entre un capteur de terrain et une base
 scientifique nationale. Il s'appuie sur, et complète, plusieurs projets ouverts :
 
 | Projet | Rôle dans la chaîne | Lien |

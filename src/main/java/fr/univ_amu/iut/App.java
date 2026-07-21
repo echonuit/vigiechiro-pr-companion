@@ -23,7 +23,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.image.Image;
 import javafx.stage.Stage;
 
-/// Point d'entrée JavaFX du SAÉ 2.01 - VigieChiro PR Companion.
+/// Point d'entrée JavaFX du SAÉ 2.01 - VigieChiro Companion.
 ///
 /// Bootstrap (patron CM4) : construit la racine de composition Guice, puis charge le chrome
 /// principal (`commun/view/MainView.fxml`) en branchant la `controllerFactory` du `FXMLLoader`
@@ -78,7 +78,7 @@ public class App extends Application {
         Parent root = loader.load();
 
         primaryStage.setScene(new Scene(root));
-        primaryStage.setTitle("VigieChiro PR Companion");
+        primaryStage.setTitle("VigieChiro Companion");
         chargerIcones(primaryStage);
 
         // Garde-fou de fermeture (#906) : si une opération critique est en cours (import, génération

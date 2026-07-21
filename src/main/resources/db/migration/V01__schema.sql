@@ -1,5 +1,5 @@
 -- ============================================================================
--- VigieChiro PR Companion - Schema complet (MCD section 3 du draft architecture).
+-- VigieChiro Companion - Schema complet (MCD section 3 du draft architecture).
 -- Cible : SQLite. Dates/heures = TEXT ISO-8601, booleens = INTEGER 0/1,
 -- UUID = TEXT, structures serialisees = TEXT JSON.
 -- ON DELETE CASCADE sur les entites faibles dependantes d'une session.

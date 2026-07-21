@@ -1,6 +1,6 @@
 [Desktop Entry]
 Type=Application
-Name=VigieChiro
+Name=VigieChiro Companion
 GenericName=Préparation de données acoustiques
 Comment=Préparer et déposer les enregistrements du protocole Vigie-Chiro
 Exec=VigieChiro

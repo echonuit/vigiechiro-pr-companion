@@ -1,4 +1,4 @@
-# VigieChiro PR Companion
+# VigieChiro Companion
 
 <div markdown="0" style="margin: 1rem 0 2rem 0;">
   <img src="assets/illustrations/hero-bandeau.webp"
@@ -6,7 +6,7 @@
        style="width: 100%; height: auto; display: block; border-radius: 4px;">
 </div>
 
-**VigieChiro PR Companion** est une application de bureau qui accompagne l'observateur dans le traitement
+**VigieChiro Companion** est une application de bureau qui accompagne l'observateur dans le traitement
 d'une **nuit de capture acoustique de chauves-souris**, depuis la **carte SD** de l'enregistreur
 de terrain jusqu'au **dépôt** des données sur la plateforme nationale Vigie-Chiro.
 
@@ -14,7 +14,7 @@ Des enregistreurs autonomes posés sur le terrain captent les ultrasons d'une nu
 L'application vous aide ensuite à importer ces enregistrements, à les préparer, à en vérifier la
 qualité, à constituer le dépôt, puis à relire les espèces identifiées.
 
-![L'écran d'accueil de VigieChiro PR Companion, d'où vous accédez aux différentes activités.](assets/captures/apercu-accueil.png)
+![L'écran d'accueil de VigieChiro Companion, d'où vous accédez aux différentes activités.](assets/captures/apercu-accueil.png)
 
 ## Le parcours en bref
 

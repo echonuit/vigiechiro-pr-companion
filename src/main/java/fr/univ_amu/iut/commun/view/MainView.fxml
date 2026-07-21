@@ -17,7 +17,7 @@
 <?import org.kordamp.ikonli.javafx.FontIcon?>
 
 <!--
-  Chrome principal de VigieChiro PR Companion (socle IHM).
+  Chrome principal de VigieChiro Companion (socle IHM).
   - top    : barre de navigation (titre application + fil d'Ariane + recherche globale)
   - center : zone d'accueil (placeholder ; échangée par les features via le Navigateur)
   - bottom : pied de page
@@ -43,7 +43,7 @@
            peuplé par MainController, et le champ de recherche globale (#144) aligné à droite. -->
       <HBox styleClass="barre-navigation" alignment="CENTER_LEFT" spacing="14.0">
         <Label fx:id="titreApplication" styleClass="titre-application"
-               text="VigieChiro PR Companion"/>
+               text="VigieChiro Companion"/>
         <!-- Enveloppe : un Button désactivé n'affiche pas de Tooltip ; on le pose sur ce StackPane (qui
              reçoit le survol) pour expliquer le grisage du retour pendant un import (#789). L'enveloppe
              suit la visibilité du bouton (présent hors accueil). -->
@@ -103,7 +103,7 @@
         <StackPane fx:id="hero" styleClass="hero-nocturne">
           <FontIcon iconLiteral="fas-moon" styleClass="hero-filigrane" StackPane.alignment="TOP_RIGHT"/>
           <VBox styleClass="hero-contenu" alignment="CENTER" spacing="14.0">
-            <Label styleClass="titre-accueil" text="Bienvenue dans VigieChiro PR Companion"/>
+            <Label styleClass="titre-accueil" text="Bienvenue dans VigieChiro Companion"/>
             <Label styleClass="sous-titre-accueil" wrapText="true" textAlignment="CENTER"
                    text="Deux entrées : collecter vos nuits d'enregistrement (sites &amp; passages) et exploiter vos espèces observées (biodiversité)."/>
             <!-- Bandeau de compteurs (tableau de bord) peuplé par MainController à partir des

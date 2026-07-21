@@ -27,6 +27,6 @@ class AppTest {
     void le_chrome_principal_est_affiche(FxRobot robot) {
         Label titre = robot.lookup("#titreApplication").queryAs(Label.class);
         assertThat(titre).isNotNull();
-        assertThat(titre.getText()).isEqualTo("VigieChiro PR Companion");
+        assertThat(titre.getText()).isEqualTo("VigieChiro Companion");
     }
 }

@@ -30,7 +30,7 @@ public class NavigationViewModel {
     public static final ZonesStatut ZONES_DEFAUT = ZonesStatut.VIDE;
 
     private final StringProperty titreApplication =
-            new SimpleStringProperty(this, "titreApplication", "VigieChiro PR Companion");
+            new SimpleStringProperty(this, "titreApplication", "VigieChiro Companion");
     private final StringProperty vueCourante = new SimpleStringProperty(this, "vueCourante", "accueil");
     private final StringProperty filAriane = new SimpleStringProperty(this, "filAriane", "Accueil");
     private final ObjectProperty<ZonesStatut> zonesStatut =

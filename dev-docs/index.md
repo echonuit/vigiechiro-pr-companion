@@ -1,6 +1,6 @@
 # Documentation développeur
 
-Bienvenue dans la doc **technique** de VigieChiro PR Companion. Elle s'adresse à qui veut **lire,
+Bienvenue dans la doc **technique** de VigieChiro Companion. Elle s'adresse à qui veut **lire,
 modifier ou étendre le code** (humain comme assistant IA).
 
 !!! tip "Vous cherchez plutôt à *utiliser* l'application ?"
