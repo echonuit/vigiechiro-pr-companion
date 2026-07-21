@@ -1,0 +1,75 @@
+# Soumission automatique à winget (Windows Package Manager).
+#
+# À chaque release publiée, ce workflow ouvre une pull request sur
+# `microsoft/winget-pkgs` pour y déclarer la nouvelle version. L'utilisateur
+# Windows n'a alors plus qu'à faire `winget upgrade`.
+#
+# Déclencheur : `release: released`. C'est l'événement émis quand une release
+# NON brouillon et NON pré-version devient publique. Il colle exactement à notre
+# publication atomique (release.yml crée un brouillon, y attache les installeurs,
+# puis le dé-brouillonne) : la soumission ne part donc jamais sur une release
+# incomplète. `released` est aussi l'événement attendu par winget-releaser, car
+# les assets ne sont téléchargeables qu'une fois la release publiée.
+#
+# PRÉREQUIS DE CONFIGURATION (deux gestes manuels, cf. #2213) :
+#   1. Un FORK de `microsoft/winget-pkgs` sous le propriétaire du dépôt
+#      (IUTInfoAix-S201 par défaut, cf. `fork-user` ci-dessous). C'est depuis ce
+#      fork que la PR est proposée au dépôt communautaire.
+#   2. Un SECRET de dépôt `WINGET_TOKEN` : un PAT « classic » avec le scope
+#      `public_repo`, appartenant à un compte ayant accès en écriture au fork.
+#      Le GITHUB_TOKEN par défaut ne convient PAS : il ne peut pas pousser sur un
+#      dépôt tiers (le fork winget-pkgs).
+#
+# Tant que `WINGET_TOKEN` n'est pas défini, le workflow reste INERTE : il se
+# déclenche mais s'arrête proprement (vert, avec une note), au lieu de rougir à
+# chaque release. Le retirer suffit à re-neutraliser le canal.
+
+name: winget
+
+on:
+  release:
+    types: [released]
+
+# Le travail réel passe par WINGET_TOKEN (PAT), pas par le GITHUB_TOKEN de ce
+# job : ses droits restent donc minimaux.
+permissions:
+  contents: read
+
+jobs:
+  publier:
+    name: Soumettre le MSI à winget-pkgs
+    runs-on: ubuntu-latest
+    steps:
+      # Garde d'inertie : sans le secret, on s'arrête ici, en vert.
+      - name: Vérifier la présence du secret WINGET_TOKEN
+        id: garde
+        env:
+          WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+        run: |
+          if [ -z "$WINGET_TOKEN" ]; then
+            echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::WINGET_TOKEN absent : soumission winget ignorée. Voir le workflow et #2213 pour la configuration (fork + PAT)."
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Soumettre à winget-pkgs
+        if: steps.garde.outputs.present == 'true'
+        uses: vedantmgoyal9/winget-releaser@v2
+        with:
+          # Identifiant stable, à vie (cohérent avec le --vendor de l'installeur,
+          # « Sébastien Nedjar » : l'éditeur est une personne, pas l'IUT, #2108).
+          identifier: SebastienNedjar.VigieChiro
+          # Un seul installeur Windows : le MSI x64. Le `.sha256` joint finit par
+          # « .sha256 », l'ancre `$` l'exclut donc.
+          installers-regex: '\.msi$'
+          # Ne garder que les dernières versions dans winget-pkgs : le dépôt
+          # communautaire n'a pas vocation à archiver tout l'historique.
+          max-versions-to-keep: 5
+          # Lien vers les notes de version (déjà rédigées par semantic-release).
+          release-notes-url: ${{ github.event.release.html_url }}
+          # fork-user vaut par défaut ${{ github.repository_owner }} =
+          # IUTInfoAix-S201. Si le fork winget-pkgs vit sous un autre compte
+          # (celui du PAT), décommenter et renseigner :
+          # fork-user: <compte-du-fork>
+          token: ${{ secrets.WINGET_TOKEN }}
