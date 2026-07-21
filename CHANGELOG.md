@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.30.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.29.0...v2.30.0) (2026-07-21)
+
+
+### Features
+
+* **sites:** trancher les deux cas-limites de sévérité dans le texte ([#2036](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2036) lot 4) ([#2216](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2216)) ([a41138d](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/commit/a41138d6e61c59c68ed611cbb91575bd15dc8271)), closes [#2056](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2056) [#2056](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2056) [#2188](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/issues/2188)
+
 # [2.29.0](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion/compare/v2.28.0...v2.29.0) (2026-07-21)
 
 
