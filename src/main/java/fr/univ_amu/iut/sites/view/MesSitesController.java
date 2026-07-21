@@ -265,7 +265,9 @@ public class MesSitesController implements ResumeStatut {
 
     private static String libelleComplementPassages(CarteSite carte) {
         if (carte.aDesPassagesAVerifier()) {
-            return "dont " + carte.passagesAVerifier() + " à vérifier ⚠";
+            // Sans le « ⚠ » d'antan (#2221) : les mots « à vérifier » portent déjà l'avertissement, et un
+            // libellé de synthèse n'a pas à décider de son rendu (même geste que SiteDetailViewModel, #2036).
+            return "dont " + carte.passagesAVerifier() + " à vérifier";
         }
         return carte.passagesDeLAnnee() == 0 ? "jamais utilisé" : "tous vérifiés";
     }

@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.sites.view;
 
+import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
+import fr.univ_amu.iut.commun.view.IconesSeverite;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
@@ -104,12 +106,17 @@ final class CartesPointsSite {
         return boite;
     }
 
-    /// Étiquette « à … du point le plus proche » (#154). Passe en **alerte** (⚠, style dédié) quand la
-    /// distance est sous le seuil de proximité, pour signaler des points anormalement rapprochés.
+    /// Étiquette « à … du point le plus proche » (#154). Passe en **alerte** quand la distance est sous le
+    /// seuil de proximité, pour signaler des points anormalement rapprochés.
+    ///
+    /// L'alerte est une **icône** (#2221), plus un « ⚠ » écrit dans le texte : la sévérité se pose, elle ne
+    /// s'écrit pas ([IconesSeverite]), et la couleur de l'icône vient de la même classe que le texte.
     private static Label etiquetteProximite(double metres, boolean tropProche) {
-        Label proximite =
-                new Label((tropProche ? "⚠ " : "") + "à " + distanceLisible(metres) + " du point le plus proche");
+        Label proximite = new Label("à " + distanceLisible(metres) + " du point le plus proche");
         proximite.getStyleClass().add(tropProche ? "carte-point-alerte" : STYLE_DESC);
+        if (tropProche) {
+            proximite.setGraphic(IconesSeverite.icone(Severite.AVERTISSEMENT, "carte-point-alerte"));
+        }
         proximite.setWrapText(true);
         return proximite;
     }
@@ -130,15 +137,17 @@ final class CartesPointsSite {
         if (!carte.gpsPresent()) {
             // Sans GPS : le point est affiché au centre de son carré sur LA carte de référence. Le lien y
             // mène, mode édition activé, pour le glisser à sa vraie position (comme un point géolocalisé).
-            Hyperlink placer = new Hyperlink("⚠ GPS manquant — placer sur la carte");
+            Hyperlink placer = new Hyperlink("GPS manquant — placer sur la carte");
             placer.getStyleClass().add("gps-manquant");
+            placer.setGraphic(IconesSeverite.icone(Severite.AVERTISSEMENT, "gps-manquant"));
             placer.setOnAction(evenement -> ouvrirMultisite.ouvrirSurCarrePourPlacer(
                     viewModel.siteCourant().numeroCarre()));
             placer.setTooltip(new Tooltip("Ouvrir la carte multi-sites pour placer ce point (mode édition)"));
             return placer;
         }
-        Hyperlink lien = new Hyperlink("✓ GPS — voir sur la carte");
+        Hyperlink lien = new Hyperlink("GPS — voir sur la carte");
         lien.getStyleClass().add("gps-ok");
+        lien.setGraphic(IconesSeverite.icone(Severite.SUCCES, "gps-ok"));
         lien.setOnAction(evenement -> ouvrirMultisite.ouvrirSurPoint(
                 viewModel.siteCourant().numeroCarre(), point.latitude(), point.longitude()));
         lien.setTooltip(

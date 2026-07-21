@@ -30,6 +30,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -94,7 +95,9 @@ class SiteDetailVoirCarteViewTest {
     @DisplayName("#154 : « voir sur la carte » d'un point ouvre le multi-sites centré sur ce point")
     void voir_sur_la_carte_focalise_le_point(FxRobot robot) {
         Hyperlink badge = robot.lookup(".gps-ok").queryAs(Hyperlink.class);
-        assertThat(badge.getText()).contains("voir sur la carte");
+        assertThat(badge.getText()).contains("voir sur la carte").doesNotContain("✓");
+        // #2221 : le « ✓ » d'antan est une icône, plus un caractère dans le texte.
+        assertThat(badge.getGraphic()).isInstanceOf(FontIcon.class);
 
         robot.interact(badge::fire);
 
@@ -107,7 +110,9 @@ class SiteDetailVoirCarteViewTest {
     @DisplayName("Un point sans GPS propose « placer sur la carte » qui ouvre le carré en mode édition")
     void point_sans_gps_propose_placer_sur_la_carte(FxRobot robot) {
         Hyperlink placer = robot.lookup(".gps-manquant").queryAs(Hyperlink.class);
-        assertThat(placer.getText()).contains("placer sur la carte");
+        assertThat(placer.getText()).contains("placer sur la carte").doesNotContain("⚠");
+        // #2221 : le « ⚠ » d'antan est une icône, plus un caractère dans le texte.
+        assertThat(placer.getGraphic()).isInstanceOf(FontIcon.class);
 
         robot.interact(placer::fire);
 
