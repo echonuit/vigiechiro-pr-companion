@@ -156,16 +156,20 @@ class ServiceAuditCoherenceTest {
     }
 
     @Test
-    @DisplayName("Séquence manquante sur disque : une erreur DISQUE_MANQUANT")
-    void sequence_manquante_erreur() throws IOException {
+    @DisplayName("ADR 0048 : séquence manquante = disponibilité PARTIELLE observée (INFO), pas une erreur")
+    void sequence_manquante_est_partielle_observee() throws IOException {
         Long idPassage = creerSessionCoherente(1);
         Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 0)));
 
-        List<ConstatAudit> constats = service.auditerPassage(idPassage).constats();
+        RapportAudit rapport = service.auditerPassage(idPassage);
 
-        assertThat(constats).singleElement().satisfies(c -> {
-            assertThat(c.severite()).isEqualTo(Severite.ERREUR);
-            assertThat(c.categorie()).isEqualTo(CategorieConstat.DISQUE_MANQUANT);
+        assertThat(rapport.aDesErreurs())
+                .as("une séquence absente n'est pas une corruption : l'utilisateur possède ses fichiers")
+                .isFalse();
+        assertThat(rapport.constats()).singleElement().satisfies(c -> {
+            assertThat(c.severite()).isEqualTo(Severite.INFO);
+            assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
+            assertThat(c.detail()).contains("PARTIELLE").contains("1/2 séquence(s)");
         });
     }
 
@@ -186,35 +190,53 @@ class ServiceAuditCoherenceTest {
             assertThat(c.severite()).isEqualTo(Severite.INFO);
             assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
             assertThat(c.detail())
-                    .as("#1304 : le constat porte la disponibilité et le décompte (parité CLI)")
-                    .contains("archivé")
+                    .as("#1304 : le constat porte la disponibilité observée et le décompte (parité CLI)")
                     .contains("ABSENTE")
                     .contains("0/2 séquence(s)");
         });
     }
 
     @Test
-    @DisplayName(
-            "#1719 : squelette synchronisé (archivé, 0 séquence, 0 résultat) est bénin : un seul INFO, zéro erreur")
+    @DisplayName("ADR 0048 : audio absent SANS marqueur d'archivage = un seul INFO observé, zéro erreur")
+    void audio_absent_observe_sans_marqueur_est_un_info() throws IOException {
+        Long idPassage = creerSessionCoherente(1);
+        // Les séquences sont supprimées, mais AUCUN marqueur n'est posé : dans le modèle « observé »
+        // (ADR 0048), l'absence de l'audio est un ÉTAT (l'utilisateur possède ses fichiers), pas une
+        // corruption. Les bruts restent en place : seule la disponibilité des séquences est en jeu.
+        Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 0)));
+        Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 1)));
+
+        RapportAudit rapport = service.auditerPassage(idPassage);
+
+        assertThat(rapport.aDesErreurs())
+                .as("audio absent observé n'est pas une corruption : zéro erreur")
+                .isFalse();
+        assertThat(rapport.constats()).singleElement().satisfies(c -> {
+            assertThat(c.severite()).isEqualTo(Severite.INFO);
+            assertThat(c.detail())
+                    .as("le constat porte la disponibilité observée et le décompte")
+                    .contains("ABSENTE")
+                    .contains("0/2 séquence(s)");
+        });
+    }
+
+    @Test
+    @DisplayName("#1719 : squelette synchronisé (0 séquence) est bénin : aucun constat d'audio, zéro erreur")
     void passage_squelette_non_hydrate_est_benin() {
-        // Ce que la synchro « mes sites » (#1707) créera : un passage rattaché, archivé, SANS séquence ni
-        // résultat (« nuit connue, pas encore importée »). Le patron « archivé » (#1300) le rend déjà bénin.
+        // Ce que la synchro « mes sites » (#1707) crée : un passage rattaché, SANS séquence ni résultat
+        // (« nuit connue, pas encore importée »). Sans séquence, il n'y a pas d'audio à décrire (ADR 0048) :
+        // le squelette est bénin par observation, sans qu'aucun marqueur ne soit nécessaire.
         Long idPassage = creerPassage(1);
-        Long idSession = sessionDao
-                .insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage))
-                .id();
-        sessionDao.marquerArchivee(idSession, java.time.LocalDateTime.of(2026, 7, 17, 10, 0));
+        sessionDao.insert(new SessionDEnregistrement(null, racineSession.toString(), 0L, 0L, idPassage));
 
         RapportAudit rapport = service.auditerPassage(idPassage);
 
         assertThat(rapport.aDesErreurs())
                 .as("un squelette (synchronisé, pas encore importé) n'est pas corrompu")
                 .isFalse();
-        assertThat(rapport.constats()).singleElement().satisfies(c -> {
-            assertThat(c.severite()).isEqualTo(Severite.INFO);
-            assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
-            assertThat(c.detail()).contains("0/0 séquence(s)");
-        });
+        assertThat(rapport.constats())
+                .as("sans séquence, aucun constat de disponibilité audio n'est émis (ADR 0048)")
+                .noneMatch(c -> c.categorie() == CategorieConstat.AUDIO_ARCHIVE);
     }
 
     @Test
