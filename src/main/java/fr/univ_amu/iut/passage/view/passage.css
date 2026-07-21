@@ -7,7 +7,9 @@
   -fx-background-color: -couleur-fond;
 }
 
-.entete {
+/* En-tete propre a l'ecran M-Passage. Nom desambigue depuis `.entete` (#1974) : ce nom generique
+   existait aussi dans qualification.css, avec un padding different. */
+.entete-passage {
   -fx-padding: 18;
 }
 

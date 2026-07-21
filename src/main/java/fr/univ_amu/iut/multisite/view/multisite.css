@@ -9,10 +9,6 @@
 }
 
 /* #370 : menu « ☰ » des actions secondaires (Vues, Exporter), pour alléger la barre de filtres. */
-.menu-actions {
-  -fx-font-size: 14px;
-}
-
 /* #370 : barre du bas portant les replis carte/tableau, chacun à une extrémité (sous son panneau). */
 .barre-replis {
   -fx-padding: 2 0 0 0;
@@ -75,4 +71,3 @@
   -fx-background-color: #e8a838;
   -fx-border-color: #b7860b;
 }
-

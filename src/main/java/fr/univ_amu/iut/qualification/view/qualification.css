@@ -7,14 +7,11 @@
   -fx-background-color: -couleur-fond;
 }
 
-.entete {
+/* En-tete propre a l'ecran de qualification. Nom desambigue depuis `.entete` (#1974) : ce nom
+   generique existait aussi dans passage.css, avec un padding different - deux concepts distincts
+   sous un meme nom. */
+.entete-qualification {
   -fx-padding: 18 18 10 18;
-}
-
-/* Fil d'Ariane (#32) : breadcrumb d'affichage + lien de retour cliquable vers M-Passage. */
-.fil-ariane {
-  -fx-font-size: 12px;
-  -fx-text-fill: -couleur-texte-discret;
 }
 
 .lien-retour {

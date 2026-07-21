@@ -1003,3 +1003,12 @@
     -fx-icon-color: -couleur-texte;
     -fx-icon-size: 14px;
 }
+
+/* Taille du menu deroulant du ☰ d'actions (#1974) : definition UNIQUE. Cette regle etait
+   recopiee a l'identique dans multisite.css et sons-validation.css, alors que six ecrans posent la
+   classe menu-actions. Le bouton n'affiche qu'une icone : ce font-size habille surtout les items du
+   menu ouvert, et decale la hauteur du bouton d'environ 1px - imperceptible, verifie a la capture. */
+.menu-actions {
+    -fx-font-size: 14px;
+}
+

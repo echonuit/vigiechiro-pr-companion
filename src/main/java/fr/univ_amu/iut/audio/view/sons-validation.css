@@ -11,10 +11,6 @@
   -fx-padding: 8 14;
 }
 
-.menu-actions {
-  -fx-font-size: 14px;
-}
-
 /* Panneau d'écoute (bas du SplitPane) : fond clair, et surtout une hauteur minimale pour que
    l'AudioView ne soit jamais aplati par la table quand on tire le diviseur (incident #329). */
 .panneau-ecoute {

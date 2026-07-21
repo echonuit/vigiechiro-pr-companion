@@ -37,7 +37,7 @@
   <BorderPane fx:id="racine" styleClass="ecran-qualification">
 
   <top>
-    <VBox spacing="12.0" styleClass="entete">
+    <VBox spacing="12.0" styleClass="entete-qualification">
       <!-- Fil d'Ariane et retour : portés par le chrome (commun), via EmplacementNavigation. -->
       <!--
         Titre « Vérifier l'enregistrement par échantillonnage » retiré (#693) : redondant avec le fil
