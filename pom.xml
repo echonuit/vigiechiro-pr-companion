@@ -833,10 +833,12 @@
             </build>
         </profile>
 
-        <!-- Profil jpackage-windows : activé automatiquement sous Windows, pour n'y changer que le
-             format d'icône. Windows exige un ICO (et non un PNG), sans quoi jpackage échoue.
-             Déclaré après le profil `installer`, dont il remplace la propriété. Inerte hors profil
-             installer (aucun empaquetage à faire). -->
+        <!-- Profil jpackage-windows : activé automatiquement sous Windows. Il change le format d'icône
+             (Windows exige un ICO, non un PNG, sans quoi jpackage échoue) ET complète l'appel jpackage
+             avec les options propres à l'installeur MSI (voir ADR 0045). Déclaré après le profil
+             `installer`, dont il remplace la propriété d'icône et dont il APPEND les arguments
+             (combine.children="append", même patron que jpackage-linux). Inerte hors profil installer
+             (aucun empaquetage à faire). -->
         <profile>
             <id>jpackage-windows</id>
             <activation>
@@ -847,6 +849,44 @@
             <properties>
                 <jpackage.icon>${project.basedir}/icone/derive/vigiechiro.ico</jpackage.icon>
             </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <configuration>
+                                    <arguments combine.children="append">
+                                        <!-- UpgradeCode FIGÉ. Sans cette option, jpackage tire un UUID
+                                             ALÉATOIRE à chaque build (JDK-8214564) : chaque version
+                                             devient un produit Windows distinct, et `winget upgrade`
+                                             installerait la nouvelle À CÔTÉ de l'ancienne au lieu de la
+                                             remplacer. Ce GUID est une CONSTANTE d'identité : ne jamais
+                                             le régénérer (cf. ADR 0045). Il déclenche aussi l'élément
+                                             WiX <MajorUpgrade> qui retire l'ancienne version. -->
+                                        <argument>--win-upgrade-uuid</argument>
+                                        <argument>0328d083-bdf7-4e84-95bf-918249478c00</argument>
+                                        <!-- Installation PER-USER (%LOCALAPPDATA%), sans UAC ni droits
+                                             administrateur : le public visé est un observateur de
+                                             terrain sur un poste institutionnel non-administrateur. Le
+                                             scope fait partie de l'identité vue par winget, il se fige
+                                             donc en même temps que l'UpgradeCode. -->
+                                        <argument>--win-per-user-install</argument>
+                                        <!-- Entrée dans le menu Démarrer : sans elle, l'installeur
+                                             dépose les fichiers mais n'offre aucun moyen de lancer
+                                             l'application. -->
+                                        <argument>--win-menu</argument>
+                                        <argument>--win-menu-group</argument>
+                                        <argument>VigieChiro</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
 
         <profile>
