@@ -9,6 +9,7 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
@@ -159,6 +160,23 @@ public class PassageViewModel {
             Consumer<Progression> progresAncrage,
             JetonAnnulation jeton) {
         return reactivation.reactiver(idPassage, dossierSource, progresRegeneration, progresAncrage, jeton);
+    }
+
+    /// Variante à **mode** (#2255) : copier les fichiers vérifiés dans l'espace de travail, ou laisser
+    /// l'audio où il vit et faire suivre la base.
+    public RapportReactivation reactiver(
+            Path dossierSource,
+            ModeRebranchement mode,
+            Consumer<Progression> progresRegeneration,
+            Consumer<Progression> progresAncrage,
+            JetonAnnulation jeton) {
+        return reactivation.reactiver(idPassage, dossierSource, mode, progresRegeneration, progresAncrage, jeton);
+    }
+
+    /// Ce dossier appartient-il à l'utilisateur plutôt qu'à l'application (#2255) ? Sert à **proposer**
+    /// le bon mode sans l'imposer.
+    public boolean horsEspaceDeTravail(Path dossier) {
+        return reactivation.horsEspaceDeTravail(dossier);
     }
 
     private void appliquer(DetailPassage detail, ContexteSite contexte) {

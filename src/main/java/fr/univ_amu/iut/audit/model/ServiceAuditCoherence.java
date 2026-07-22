@@ -45,7 +45,8 @@ import java.util.Set;
 public class ServiceAuditCoherence {
 
     private static final String DETAIL_ABSENT = "Fichier attendu absent du disque.";
-    private static final String DETAIL_EXTERNE = "Fichier externe (hors workspace) introuvable : carte SD non montée ?";
+    private static final String DETAIL_EXTERNE =
+            "Fichier situé hors du dossier de travail, introuvable pour le moment : le support n'est peut-être pas branché ou pas accessible (carte SD, disque externe, dossier réseau).";
 
     private final PassageDao passageDao;
     private final SessionDao sessionDao;

@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.RapportAncrage;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.passage.model.RebranchementSequences.OrigineCandidats;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -101,7 +102,12 @@ public class ServiceReactivationPassage {
     /// (#1565) a des observations sans ancrage plateforme, acquis à la réactivation quand l'audio revient.
     private final Optional<ImportObservations> importObservations;
 
+    /// L'espace de travail, pour savoir si un dossier désigné **nous appartient** ou appartient à
+    /// l'utilisateur : c'est cette question qui décide du mode proposé (#2255).
+    private final Workspace workspace;
+
     public ServiceReactivationPassage(
+            Workspace workspace,
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             EnregistrementOriginalDao originalDao,
@@ -112,6 +118,7 @@ public class ServiceReactivationPassage {
             Optional<InventaireBrutsSource> inventaireBruts,
             AdoptionOriginauxReconstruits adoption,
             Optional<ImportObservations> importObservations) {
+        this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.originalDao = Objects.requireNonNull(originalDao, "originalDao");
@@ -139,6 +146,19 @@ public class ServiceReactivationPassage {
     ///     avec empreinte, ~3,4 ms sans, cf. #1309)
     /// @throws RegleMetierException si le passage est introuvable, jamais importé, ou si le dossier
     ///     source n'existe pas
+    /// Ce dossier est-il **hors** de l'espace de travail (#2255) ? Autrement dit : appartient-il à
+    /// l'utilisateur plutôt qu'à l'application ?
+    ///
+    /// C'est la question qui décide du mode **proposé** - référencer un NAS ou un disque externe,
+    /// copier depuis une carte SD qu'on va rendre - sans jamais l'imposer : le choix reste offert.
+    /// La règle est métier (« à qui sont ces fichiers ? »), pas de présentation : elle vit donc ici.
+    public boolean horsEspaceDeTravail(Path dossier) {
+        Objects.requireNonNull(dossier, "dossier");
+        return !dossier.toAbsolutePath()
+                .normalize()
+                .startsWith(workspace.racine().toAbsolutePath().normalize());
+    }
+
     public RapportReactivation reactiver(Long idPassage, Path dossierSource, Consumer<Progression> progres) {
         return reactiver(idPassage, dossierSource, progres, JetonAnnulation.neutre());
     }

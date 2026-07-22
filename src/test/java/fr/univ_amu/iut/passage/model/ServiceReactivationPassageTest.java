@@ -132,6 +132,7 @@ class ServiceReactivationPassageTest {
                 new UniteDeTravail(source),
                 new HorlogeFigee(LocalDateTime.of(2026, 7, 16, 20, 0)));
         service = new ServiceReactivationPassage(
+                new Workspace(dossier),
                 sessionDao,
                 sequenceDao,
                 originalDao,
@@ -368,6 +369,7 @@ class ServiceReactivationPassageTest {
     /// Service muni du port d'import (phase d'ancrage #1571 active), sur la même base et le même workspace.
     private ServiceReactivationPassage avecImport(ImportObservations importObservations) {
         return new ServiceReactivationPassage(
+                new Workspace(dossier),
                 sessionDao,
                 sequenceDao,
                 originalDao,
@@ -461,6 +463,7 @@ class ServiceReactivationPassageTest {
         archiverAvecSauvegarde(false, true); // sans empreinte : la cascade descend jusqu'à l'acoustique
         List<Long> sequencesInterrogees = new ArrayList<>();
         ServiceReactivationPassage avecCris = new ServiceReactivationPassage(
+                new Workspace(dossier),
                 sessionDao,
                 sequenceDao,
                 originalDao,
@@ -552,6 +555,7 @@ class ServiceReactivationPassageTest {
     void regeneration_indisponible_refuse() throws IOException {
         archiverAvecBrutSauvegarde(NOM_R6_BRUT, true);
         ServiceReactivationPassage sansRegeneration = new ServiceReactivationPassage(
+                new Workspace(dossier),
                 sessionDao,
                 sequenceDao,
                 originalDao,
@@ -641,6 +645,7 @@ class ServiceReactivationPassageTest {
         // discordera. Avec un veto (ancien comportement), tout serait REFUSÉ ; ici, les tranches sont des
         // extraits verbatim du brut désigné → acceptées sur structurel, l'acoustique n'étant qu'un indice.
         ServiceReactivationPassage avecCris = new ServiceReactivationPassage(
+                new Workspace(dossier),
                 sessionDao,
                 sequenceDao,
                 originalDao,

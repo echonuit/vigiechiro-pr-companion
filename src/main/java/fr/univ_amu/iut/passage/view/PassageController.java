@@ -513,6 +513,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         navigation,
                         () -> racine.getScene().getWindow(),
                         selecteur,
+                        confirmateur,
                         () -> viewModel.ouvrirSur(idPassage, contexte))
                 .reactiver();
     }

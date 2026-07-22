@@ -215,6 +215,7 @@ public class PassageModule extends ModuleDeFeature {
     @Provides
     @Singleton
     ServiceReactivationPassage fournirServiceReactivationPassage(
+            Workspace workspace,
             SessionDao sessionDao,
             SequenceDao sequenceDao,
             EnregistrementOriginalDao originalDao,
@@ -226,6 +227,7 @@ public class PassageModule extends ModuleDeFeature {
             AdoptionOriginauxReconstruits adoption,
             Optional<ImportObservations> importObservations) {
         return new ServiceReactivationPassage(
+                workspace,
                 sessionDao,
                 sequenceDao,
                 originalDao,

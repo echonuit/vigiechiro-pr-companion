@@ -1,6 +1,8 @@
 package fr.univ_amu.iut.passage.view;
 
+import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.InstanceOfAssertFactories.STRING;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
@@ -31,6 +33,7 @@ import fr.univ_amu.iut.commun.view.SelecteurFichier;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
+import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -73,6 +76,13 @@ class PassageReactivationViewTest {
 
     /// Ce que le double de sélection répondra : `Optional.empty()` = l'utilisateur a **annulé**.
     private Optional<Path> choix = Optional.of(DOSSIER);
+
+    /// Les questions posées avant le rebranchement (#2255), capturées pour être vérifiées.
+    private final List<String> questions = new ArrayList<>();
+
+    /// Réponse du double : « non » par défaut, soit le geste historique (copier). Les tests qui
+    /// veulent le mode référence la basculent explicitement.
+    private boolean laisserSurPlace;
 
     private ServiceReactivationPassage reactivation;
     private NavigationPassage navigation;
@@ -179,6 +189,12 @@ class PassageReactivationViewTest {
                 throw new AssertionError("la réactivation lit un dossier, elle n'écrit aucun fichier");
             }
         });
+        // Même raison que ci-dessus : la question « laisser les fichiers où ils sont ? » (#2255) passe
+        // par un dialogue qui figerait le test. Le double la capture, ce qui la rend vérifiable.
+        controleur.confirmateur().definir(question -> {
+            questions.add(question);
+            return laisserSurPlace;
+        });
         controleur.ouvrirSur(ID_PASSAGE, new ContexteSite("640380", "A1", "Étang de la Tuilière"));
         stage.setScene(new Scene(vue, 1100, 700));
         stage.show();
@@ -196,6 +212,10 @@ class PassageReactivationViewTest {
                 .as("séquences importées, audio absent du disque : le geste est ouvert")
                 .isFalse();
 
+        // Sans ce stub, le mock répondrait « false » et l'on testerait la formulation courte en croyant
+        // tester l'autre : le dossier désigné ici est CELUI DE L'UTILISATEUR (NAS, disque externe).
+        when(reactivation.horsEspaceDeTravail(DOSSIER)).thenReturn(true);
+
         cliquerReactiver(robot);
 
         assertThat(demandes).containsExactly("Dossier des fichiers d'origine à réimporter");
@@ -204,7 +224,27 @@ class PassageReactivationViewTest {
         verify(navigation).ouvrirModaleReactivation(any(), travail.capture(), any());
         // Le travail confié à la modale réactive le PASSAGE COURANT depuis le DOSSIER DÉSIGNÉ.
         travail.getValue().executer(point -> {}, point -> {}, new JetonAnnulation());
-        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(DOSSIER), any(), any(), any());
+        verify(reactivation).reactiver(eq(ID_PASSAGE), eq(DOSSIER), eq(ModeRebranchement.COPIE), any(), any(), any());
+        assertThat(questions)
+                .as("#2255 : le choix est proposé, et sa conséquence dite avant de choisir")
+                .singleElement(as(STRING))
+                .contains("Les laisser où ils sont")
+                .contains("plus écoutable si ce support n'est pas accessible");
+    }
+
+    @Test
+    @DisplayName("#2255 : répondre « oui » laisse l'audio où il est - la base suivra, rien ne sera copié")
+    void repondre_oui_reactive_par_reference(FxRobot robot) {
+        laisserSurPlace = true;
+
+        cliquerReactiver(robot);
+
+        ArgumentCaptor<ReactivationModaleController.Travail> travail =
+                ArgumentCaptor.forClass(ReactivationModaleController.Travail.class);
+        verify(navigation).ouvrirModaleReactivation(any(), travail.capture(), any());
+        travail.getValue().executer(point -> {}, point -> {}, new JetonAnnulation());
+        verify(reactivation)
+                .reactiver(eq(ID_PASSAGE), eq(DOSSIER), eq(ModeRebranchement.REFERENCE), any(), any(), any());
     }
 
     @Test
