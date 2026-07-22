@@ -776,9 +776,25 @@
                                         <argument>--java-options</argument>
                                         <argument>--sun-misc-unsafe-memory-access=allow</argument>
                                         <!-- Runtime : modules JDK nommés uniquement (JavaFX vient du
-                                             fat-jar, sur le classpath). -->
+                                             fat-jar, sur le classpath).
+                                             Cette liste est le SEUL contrat entre le code et le runtime
+                                             livré : le fat-jar s'exécute sur le classpath, donc
+                                             module-info.java est ignoré à l'exécution et ne compense
+                                             RIEN d'oublié ici. Un module absent ne casse pas le build,
+                                             il casse l'application chez l'utilisateur, à l'instant où
+                                             elle touche la classe manquante.
+                                             C'est arrivé : java.net.http est entré dans le code début
+                                             juillet 2026 (clients Open-Meteo puis Vigie-Chiro) sans être
+                                             ajouté ici, et tous les paquets ont démarré puis planté sur
+                                             NoClassDefFoundError HttpClient - message affiché « Failed
+                                             to launch JVM » sous Windows, où le lanceur jpackage n'a pas
+                                             de console pour montrer la trace (#2299).
+                                             La liste se recalcule en passant le fat-jar à `jdeps` avec
+                                             ses options print-module-deps et ignore-missing-deps, et le
+                                             job `paquet` DÉMARRE le paquet construit pour vérifier que
+                                             cette liste suffit vraiment. -->
                                         <argument>--add-modules</argument>
-                                        <argument>java.base,java.desktop,java.logging,java.sql,java.naming,java.scripting,jdk.crypto.ec,jdk.localedata,jdk.unsupported</argument>
+                                        <argument>java.base,java.desktop,java.logging,java.net.http,java.sql,java.naming,java.scripting,jdk.crypto.ec,jdk.jfr,jdk.localedata,jdk.unsupported,jdk.unsupported.desktop</argument>
                                         <argument>--dest</argument>
                                         <argument>${project.build.directory}/dist</argument>
                                     </arguments>
