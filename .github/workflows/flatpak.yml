@@ -1,0 +1,172 @@
+# Mise à jour automatique du manifeste Flatpak, après vérification qu'il démarre.
+#
+# POURQUOI CE WORKFLOW EXISTE
+#
+# Le manifeste épingle un `.deb` publié : son URL, son empreinte SHA-256 et
+# l'entrée <release> du fichier AppStream doivent suivre chaque publication.
+# Ces trois faits ont dérivé sur huit versions (#2247) : le manifeste pointait
+# une version retirée, et l'AppStream annonçait une version encore plus vieille.
+#
+# Le manifeste porte pourtant DÉJÀ la description de cette mise à jour, dans son
+# bloc `x-checker-data`. C'est le mécanisme officiel de Flathub : leur robot le
+# lit et ouvre la mise à jour tout seul. Mais il ne tourne que sur
+# l'infrastructure Flathub, contre le manifeste du dépôt Flathub. Tant que le
+# paquet n'y est pas accepté (#2191), PERSONNE n'exécute ce bloc.
+#
+# Ce workflow est donc l'exécutant manquant, et il rend un second service :
+# il consomme exactement la même configuration que le robot de Flathub. Si notre
+# `x-checker-data` est mal écrit, on l'apprend ici, tout de suite, au lieu de le
+# découvrir après acceptation en constatant que le robot officiel ne s'est jamais
+# déclenché.
+#
+# DEUX PARTIS PRIS
+#
+# 1. `--edit-only` plutôt que de laisser l'outil ouvrir la PR lui-même. On veut
+#    CONSTRUIRE et DÉMARRER le Flatpak avant de proposer quoi que ce soit. Une
+#    mise à jour automatique qui propose un paquet incapable de démarrer serait
+#    pire que pas d'automatisation : elle donnerait l'illusion du contrôle. C'est
+#    exactement le piège de #2299, où un paquet mort a été publié parce que la CI
+#    vérifiait la présence du lanceur sans jamais l'exécuter.
+#
+# 2. La vérification a lieu ICI, pas dans un job `pull_request`. Une PR ouverte
+#    avec le GITHUB_TOKEN ne déclenche AUCUN autre workflow (garde-fou anti-boucle
+#    de GitHub) : la PR arriverait donc sans le moindre check. Reporter la
+#    vérification à la PR reviendrait à ne pas vérifier du tout.
+
+name: flatpak
+
+on:
+  # `released` : émis quand une release non brouillon devient publique, soit
+  # exactement le moment où le `.deb` devient téléchargeable. Même déclencheur
+  # que la soumission winget, pour la même raison.
+  release:
+    types: [released]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  mettre-a-jour:
+    name: Aligner le manifeste, après l'avoir éprouvé
+    runs-on: ubuntu-latest
+    env:
+      APP_ID: fr.echonuit.VigieChiroCompanion
+      MANIFESTE: flatpak/fr.echonuit.VigieChiroCompanion.yml
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      # Met à jour l'URL, l'empreinte et l'entrée <release> AppStream d'après le
+      # bloc x-checker-data. `--edit-only` : modifie les fichiers, ne commite pas,
+      # n'ouvre pas de PR. La suite du job décide si ça mérite d'être proposé.
+      - name: Recalculer le manifeste depuis la dernière release
+        uses: docker://ghcr.io/flathub/flatpak-external-data-checker:latest
+        with:
+          args: --update --edit-only flatpak/fr.echonuit.VigieChiroCompanion.yml
+
+      - name: Y a-t-il quelque chose à proposer ?
+        id: diff
+        run: |
+          set -euo pipefail
+          # Le conteneur tourne en root : les fichiers qu'il réécrit lui
+          # appartiennent, et la suite du job ne pourrait plus les modifier.
+          sudo chown -R "$(id -u):$(id -g)" flatpak/
+          if git diff --quiet -- flatpak/; then
+            echo "change=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Le manifeste Flatpak est déjà à jour."
+          else
+            echo "change=true" >> "$GITHUB_OUTPUT"
+            git diff --stat -- flatpak/
+          fi
+
+      - name: Installer flatpak et son constructeur
+        if: steps.diff.outputs.change == 'true'
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y flatpak flatpak-builder
+          flatpak remote-add --if-not-exists --user \
+            flathub https://dl.flathub.org/repo/flathub.flatpakrepo
+
+      - name: Construire le Flatpak
+        if: steps.diff.outputs.change == 'true'
+        working-directory: flatpak
+        # --disable-rofiles-fuse : le runner n'expose pas FUSE.
+        # --install-deps-from : tire la Platform, le SDK et l'extension openjdk.
+        run: |
+          set -euo pipefail
+          flatpak-builder --disable-rofiles-fuse --install-deps-from=flathub \
+            --user --install --force-clean builddir "${APP_ID}.yml"
+
+      - name: Démarrage réel du Flatpak
+        if: steps.diff.outputs.change == 'true'
+        # Mêmes deux conditions que le job `paquet` de maven.yml : tenir debout ET
+        # n'avoir levé aucune erreur de chargement. Une exception sur un fil de
+        # fond ne tue pas le processus ; se fier à la seule survie fabriquerait un
+        # vert creux. Le code 124 est celui de `timeout` : il signe la survie.
+        run: |
+          set -euo pipefail
+          journal=$(mktemp)
+          set +e
+          timeout 45 flatpak run --env=JAVA_TOOL_OPTIONS=-Dglass.platform=Headless \
+            "$APP_ID" >"$journal" 2>&1
+          code=$?
+          set -e
+
+          if [ "$code" -ne 124 ]; then
+            echo "::error::Le Flatpak s'est arrêté seul (code ${code}) : il ne démarre pas."
+            sed -n '1,120p' "$journal"
+            exit 1
+          fi
+
+          if grep -qE 'NoClassDefFoundError|ClassNotFoundException|Exception in Application start method' "$journal"; then
+            echo "::error::Le Flatpak reste en vie mais son démarrage a levé une erreur de chargement."
+            sed -n '1,120p' "$journal"
+            exit 1
+          fi
+
+          echo "Le Flatpak démarre et tient 45 s, sans erreur de chargement."
+
+      - name: Proposer la mise à jour
+        if: steps.diff.outputs.change == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          version=$(sed -n 's|.*/download/v\([^/]*\)/.*|\1|p' "$MANIFESTE" | head -1)
+          branche="flatpak/maj-${version}"
+
+          if git ls-remote --exit-code --heads origin "$branche" >/dev/null 2>&1; then
+            echo "::notice::La branche ${branche} existe déjà : mise à jour déjà proposée."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branche"
+          git add flatpak/
+          git commit \
+            -m "build(flatpak): aligner le manifeste sur la v${version}" \
+            -m "Mise à jour produite par flatpak-external-data-checker depuis le bloc x-checker-data du manifeste, puis éprouvée : le Flatpak a été construit et démarré (45 s debout, sans erreur de chargement) avant d'être proposé." \
+            -m "Refs #2247"
+          git push origin "$branche"
+
+          corps=$(mktemp)
+          {
+            echo "Mise à jour automatique du manifeste Flatpak vers la **v${version}**."
+            echo
+            echo "Produite par \`flatpak-external-data-checker\` à partir du bloc \`x-checker-data\` du manifeste, c'est-à-dire par le mécanisme même qu'emploiera le robot de Flathub."
+            echo
+            echo "Le paquet a été **construit et démarré** avant l'ouverture de cette PR : 45 s debout, sans erreur de chargement."
+            echo
+            echo "La vérification a lieu dans le workflow et non sur cette PR, car une PR ouverte avec le \`GITHUB_TOKEN\` ne déclenche aucun autre workflow."
+            echo
+            echo "Refs #2247"
+          } > "$corps"
+
+          gh pr create --base main --head "$branche" \
+            --title "build(flatpak): aligner le manifeste sur la v${version}" \
+            --body-file "$corps"

@@ -75,6 +75,11 @@ modules:
         # c'est ce qui rend la maintenance quasi nulle une fois le paquet accepté.
         x-checker-data:
           type: json
+          # `is-main-source` : désigne ce .deb comme LA source qui porte la version de
+          # l'application. Sans cette marque, le vérificateur met à jour l'URL et
+          # l'empreinte mais laisse l'entrée <release> du fichier AppStream figée -
+          # c'est ainsi qu'elle est restée bloquée sur la 2.26.0 pendant huit versions.
+          is-main-source: true
           url: https://api.github.com/repos/echonuit/vigiechiro-pr-companion/releases/latest
           version-query: .tag_name | ltrimstr("v")
           timestamp-query: .published_at
