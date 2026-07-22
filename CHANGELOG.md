@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.33.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.32.3...v2.33.0) (2026-07-22)
+
+
+### Features
+
+* **cli:** supprimer un passage en ligne de commande, derrière un drapeau ([#2278](https://github.com/echonuit/vigiechiro-pr-companion/issues/2278)) ([#2288](https://github.com/echonuit/vigiechiro-pr-companion/issues/2288)) ([3435c36](https://github.com/echonuit/vigiechiro-pr-companion/commit/3435c3639f444526e140561dbdfd001126684088))
+
 ## [2.32.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.32.2...v2.32.3) (2026-07-21)
 
 
