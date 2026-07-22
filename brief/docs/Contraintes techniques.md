@@ -65,7 +65,9 @@ d'architecture** qui structurent son code.
 - **Tests automatisés** avec **JUnit 5**, **AssertJ**, **TestFX** (IHM, headless), **Mockito** et
   **ApprovalTests**. Des tests **end-to-end** rejouent les parcours métier de bout en bout.
 - **Qualité de code** outillée et **bloquante en CI** : **Spotless** (Palantir Java Format, déclenché
-  en *pre-commit*), **PMD**, et couverture **JaCoCo** sous seuils (≈ 85 % lignes / 70 % branches).
+  en *pre-commit*), **PMD**, et une **couverture minimale** vérifiée par **JaCoCo**. Les valeurs de
+  ces seuils, et la justification de chacune, vivent dans le `pom.xml` du dépôt applicatif : les
+  répéter ici les ferait diverger au premier ajustement.
 - **Intégration continue** sur **GitHub Actions** : à chaque *push*, build + tests + portail qualité ;
   une CI rouge interdit la fusion. Les captures d'écran de référence de la documentation sont
   régénérées automatiquement.
