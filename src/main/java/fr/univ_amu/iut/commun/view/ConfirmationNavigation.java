@@ -12,6 +12,11 @@ import javafx.scene.control.ButtonType;
 /// archives de dépôt ? ») quand le message seul manquerait de contexte.
 public final class ConfirmationNavigation implements Confirmateur {
 
+    /// Classe posée sur un compte rendu **porté par un dialogue** : elle lui rend la marge que le
+    /// `DialogPane` ne donne pas, là où une modale FXML l'obtient de sa racine. Définie dans
+    /// `design.css`, à côté des autres `compte-rendu-*`.
+    static final String CLASSE_DANS_UN_DIALOGUE = "compte-rendu-dialogue";
+
     private final String titre;
 
     /// Dialogue au titre système par défaut.
@@ -66,11 +71,37 @@ public final class ConfirmationNavigation implements Confirmateur {
     /// **code de production** pour que la capture montre ce que l'utilisateur verra (ADR 0025).
     public Alert dialogue(CompteRendu compteRendu) {
         Alert alerte = new Alert(AlertType.CONFIRMATION, "", ButtonType.OK, ButtonType.CANCEL);
-        alerte.getDialogPane().setContent(VueCompteRendu.rendre(compteRendu, VueCompteRendu.SANS_PLAFOND));
+        var contenu = VueCompteRendu.rendre(compteRendu, VueCompteRendu.SANS_PLAFOND);
+        // Le `DialogPane` ne rembourre presque pas son contenu, là où une modale FXML s'en charge par sa
+        // racine : sans cette classe, le bloc touche le bord du dialogue (revue visuelle de #2225).
+        contenu.getStyleClass().add(CLASSE_DANS_UN_DIALOGUE);
+        alerte.getDialogPane().setContent(contenu);
+        habiller(alerte);
         if (titre != null) {
             alerte.setTitle(titre);
             alerte.setHeaderText(null);
         }
         return alerte;
+    }
+
+    /// Attache au dialogue les feuilles qui **colorent la sévérité** d'un compte rendu.
+    ///
+    /// Un `Alert` vit dans sa **propre scène** : il n'hérite pas des feuilles de la fenêtre principale, où
+    /// `MainView.fxml` attache `design.css`. Sans ce geste, les classes `compte-rendu-*` ne s'appliquent
+    /// pas et l'icône de sévérité retombe au **noir** - la forme survit, la couleur se perd, alors que
+    /// l'application promet de dire une sévérité **deux fois**, en couleur *et* en forme.
+    ///
+    /// Le défaut se voyait sur les aperçus, où les mêmes constats sont **verts et bleus** dans la modale de
+    /// réactivation (qui attache ses feuilles depuis son FXML) et **noirs** dans ces dialogues-ci. Relevé à
+    /// la passe de revue visuelle de la clôture du parapluie #2225.
+    ///
+    /// `palette.css` fournit les jetons de couleur que `design.css` consomme : les deux vont ensemble.
+    private static void habiller(Alert alerte) {
+        for (String feuille : new String[] {"palette.css", "design.css"}) {
+            var url = ConfirmationNavigation.class.getResource(feuille);
+            if (url != null) {
+                alerte.getDialogPane().getStylesheets().add(url.toExternalForm());
+            }
+        }
     }
 }

@@ -123,12 +123,43 @@ vaut la garder voyante : une régression amont se signale alors d'elle-même.
     [ADR 0043](decisions/0043-la-mesure-fait-foi-en-ci.md) et
     [ADR 0042](decisions/0042-un-apercu-qui-ment-est-refuse.md).
 
+### Capturer un dialogue : pré-enrouler les textes longs
+
+Un dialogue se capture **hors `showAndWait`** — on veut l'image, pas la modale bloquante. Dans cet
+état, **rien ne borne la largeur du contenu** d'un `DialogPane` : un libellé `wrapText` long y garde
+sa largeur d'une ligne, déborde, et se fait couper par une ellipse. La mise en page ne le rattrape pas
+— imposer la largeur du dialogue ne se propage pas à son contenu, et la hauteur d'un libellé
+enroulable se calcule à sa largeur *préférée*, pas à sa largeur réelle (mesuré en #2243).
+
+Le remède est **à la source** : pré-découper le texte aux espaces avant de rendre, sans en changer un
+mot.
+
+- **message texte** : `CaptureConfirmationsImport#enrouler(String)` ;
+- **compte rendu structuré** : `CaptureConfirmationsImport#enrouler(CompteRendu)`, qui réenroule le
+  fait de chaque constat, ses détails, le préambule et la conclusion.
+
+!!! danger "Le garde-fou ne voit pas cette troncature-là"
+    Le contrôle de fidélité ci-dessus **ne l'attrape pas** : sa mesure verticale retombe sur la même
+    hauteur d'une ligne (l'écart vaut zéro), et sa mesure horizontale exclut par principe les libellés
+    enroulables. Aucun contrôle géométrique ne referme ce trou de façon fiable — toute construction
+    reproductible s'enroule correctement, ou déclenche déjà la mesure verticale (six essais instrumentés
+    en #2265). **Une capture de dialogue vert ne prouve donc pas que son texte long est lisible** :
+    l'ouvrir reste le seul contrôle, ce que fait la passe de revue visuelle.
+
 ## Ajouter une capture
 
 La marche à suivre (nouvel écran) est dans
 **[Ajouter une fonctionnalité §7](ajouter-une-fonctionnalite.md#7-ajouter-un-apercu-capture-decran)** :
 écrire `CaptureMaFeature` sur le patron existant, l'ajouter à `capture-screenshots.sh`, et déclarer
 l'aperçu au `captures.manifest`.
+
+**La capture principale montre le cas nominal ; chaque état particulier a la sienne.** Une vue en a
+souvent plusieurs (donnée absente, GPS non renseigné, alerte levée…). Le seed de la capture principale
+doit produire l'état **ordinaire**, et chaque écart obtenir sa capture **dédiée**, avec sa section dans
+la doc utilisateur. Sinon un état particulier s'installe **par accident** dans l'image de référence : le
+Diagnostic illustrait sa page avec une nuit *hors nuit*, l'alerte y était visible sans être ni nommée ni
+documentée, et un simple ajustement des horaires du seed l'aurait fait disparaître sans que personne ne
+le voie (#2222). Un état montré **incidemment** est presque aussi fragile qu'un état montré nulle part.
 
 !!! note "Exposées au site via un hook"
     Les PNG vivent dans `.github/assets/` ; le hook

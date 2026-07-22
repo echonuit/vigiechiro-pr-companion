@@ -899,7 +899,16 @@ bouton à icône qui n'a pas dit son nom. Le raisonnement complet est dans
 
 **La règle.** Aucun pictogramme littéral dans un FXML : `PictogrammesFxmlTest` échoue dessus. La
 **CLI** est hors sujet — une console ne rend pas de `FontIcon`, `⚠` y est le seul moyen d'écrire un
-avertissement. Les libellés bâtis en Java restent à traiter (#1564).
+avertissement. Les libellés bâtis **en Java** (#1564) ont été repris depuis : les glyphes de
+**sévérité** par #2036 puis #2188/#2221, qui les font dériver du type plutôt que de les écrire.
+
+**Un pictogramme d'état n'est pas une sévérité, mais il se pose pareil.** La colonne « Écouté » de la
+qualification rendait `ecoutee() ? "✓" : "○"` — deux pictogrammes dans une chaîne, qui ne disent
+pourtant aucune sévérité (ce ✓ veut dire « écouté », pas « succès »). `MarqueurEcoute` les **pose** par
+un `cellFactory`, comme la colonne badge de verdict : la **forme** distingue les deux états (un `CHECK`
+plein, un cercle creux), la couleur reste neutre. Choisir un glyphe **différent** de celui de la
+sévérité est délibéré — réutiliser `CHECK_CIRCLE` aurait fait lire « succès » là où on dit « fait »
+(#2237).
 
 ## Actions de ligne d'une table : double-clic et menu contextuel (socle `commun`)
 

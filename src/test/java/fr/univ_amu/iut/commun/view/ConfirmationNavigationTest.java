@@ -11,9 +11,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.kordamp.ikonli.javafx.FontIcon;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 
@@ -61,5 +63,53 @@ class ConfirmationNavigationTest {
         assertThat(details)
                 .as("chaque passage est un détail sur sa propre ligne alignée")
                 .hasSize(2);
+    }
+
+    @Test
+    @DisplayName("La sévérité du compte rendu se COLORE dans le dialogue, elle ne retombe pas au noir")
+    void severite_coloree_dans_le_dialogue(FxRobot robot) {
+        // Un `Alert` vit dans sa PROPRE scène : il n'hérite pas de `design.css`, attachée par MainView à la
+        // fenêtre principale. Sans feuille sur le dialogue, les classes `compte-rendu-*` ne s'appliquent
+        // pas et l'icône retombe au noir - la forme survit, la couleur se perd, alors que l'application
+        // promet de dire une sévérité DEUX fois. Le défaut se voyait sur les aperçus : mêmes constats verts
+        // et bleus dans la modale de réactivation, noirs ici (revue visuelle de la clôture de #2225).
+        AtomicReference<FontIcon> icone = new AtomicReference<>();
+        robot.interact(() -> {
+            // L'Alert a déjà sa propre scène, dont le DialogPane est la racine : c'est justement pourquoi
+            // il n'hérite de rien et qu'il faut lui attacher ses feuilles.
+            DialogPane pane = new ConfirmationNavigation().dialogue(DOUBLON).getDialogPane();
+            pane.applyCss();
+            VBox contenu = (VBox) pane.getContent();
+            icone.set(contenu.getChildren().stream()
+                    .filter(Label.class::isInstance)
+                    .map(Label.class::cast)
+                    .filter(label -> label.getStyleClass().contains("compte-rendu-fait"))
+                    .map(label -> (FontIcon) label.getGraphic())
+                    .findFirst()
+                    .orElseThrow());
+        });
+
+        assertThat(icone.get().getIconColor())
+                .as("l'ambre de l'avertissement doit s'appliquer : au noir, la couleur ne dit plus rien")
+                .isNotEqualTo(Color.BLACK);
+    }
+
+    @Test
+    @DisplayName("Le compte rendu garde une marge dans le dialogue : il ne touche pas le bord")
+    void compte_rendu_garde_sa_marge_dans_le_dialogue(FxRobot robot) {
+        // `.compte-rendu` n'a volontairement AUCUNE marge horizontale : c'est au conteneur de la donner, et
+        // une modale FXML le fait par sa racine (`.modale-saisie`). Un `DialogPane`, lui, ne rembourre
+        // presque pas son contenu - le bloc touchait donc le bord du dialogue (revue visuelle de #2225).
+        AtomicReference<VBox> contenu = new AtomicReference<>();
+        robot.interact(() -> {
+            DialogPane pane = new ConfirmationNavigation().dialogue(DOUBLON).getDialogPane();
+            pane.applyCss();
+            contenu.set((VBox) pane.getContent());
+        });
+
+        assertThat(contenu.get().getStyleClass()).contains(ConfirmationNavigation.CLASSE_DANS_UN_DIALOGUE);
+        assertThat(contenu.get().getPadding().getLeft())
+                .as("sans marge gauche effective, le compte rendu se colle au bord du dialogue")
+                .isGreaterThan(0);
     }
 }

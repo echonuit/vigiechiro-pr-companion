@@ -45,10 +45,6 @@ import javafx.scene.control.Alert;
 /// Lancement headless : `.github/assets/capture-screenshots.sh` (Headless Platform JavaFX 26).
 public final class CaptureConfirmationsImport {
 
-    /// Largeur d'enroulement des messages, en caractères : le snapshot d'un dialogue n'enroule pas tout
-    /// seul (cf. [#enrouler]).
-    private static final int LARGEUR_LIGNE = 70;
-
     /// Nuit de démonstration déjà importée (#147) : **les passages**, et non une phrase. La question est
     /// composée par le code de production, comme le dialogue qui la porte.
     ///
@@ -120,19 +116,26 @@ public final class CaptureConfirmationsImport {
     /// Réenroule tous les textes d'un compte rendu (mêmes mots, retours à la ligne insérés aux espaces),
     /// pour le snapshot (#2243). Localisé à la capture : la production s'enroule d'elle-même. Le sujet et
     /// la précision d'un détail sont enroulés séparément - [VueCompteRendu] les rejoint au rendu.
-    private static CompteRendu enrouler(CompteRendu rendu) {
+    ///
+    /// Chaque texte passe par [ApercuFx#enrouler], le découpage **du socle**, que les autres outils de
+    /// capture utilisent déjà : cette classe en gardait une copie privée, désormais retirée.
+    ///
+    /// Visible du paquet pour être testée : c'est la **seule** protection de #2243, puisque le garde-fou
+    /// de fidélité ne voit pas cette troncature-là (#2265).
+    static CompteRendu enrouler(CompteRendu rendu) {
         List<Constat> constats = rendu.constats().stream()
                 .map(CaptureConfirmationsImport::enrouler)
                 .toList();
-        return new CompteRendu(rendu.titre(), enrouler(rendu.preambule()), constats, enrouler(rendu.conclusion()));
+        return new CompteRendu(
+                rendu.titre(), ApercuFx.enrouler(rendu.preambule()), constats, ApercuFx.enrouler(rendu.conclusion()));
     }
 
     /// Réenroule le fait d'un constat et chacun de ses détails (sujet et précision).
     private static Constat enrouler(Constat constat) {
         List<Detail> details = constat.details().stream()
-                .map(detail -> new Detail(enrouler(detail.sujet()), enrouler(detail.precision())))
+                .map(detail -> new Detail(ApercuFx.enrouler(detail.sujet()), ApercuFx.enrouler(detail.precision())))
                 .toList();
-        return new Constat(enrouler(constat.fait()), constat.severite(), details);
+        return new Constat(ApercuFx.enrouler(constat.fait()), constat.severite(), details);
     }
 
     /// Rend le dialogue **de production** ([ConfirmationNavigation#dialogue]) portant le message réel.
@@ -141,35 +144,11 @@ public final class CaptureConfirmationsImport {
     /// le texte s'étalerait sur une seule ligne interminable. On ne touche pas au texte.
     private static void enregistrer(String message, Path fichier) {
         // Le dialogue est celui de la PRODUCTION ([ConfirmationNavigation#dialogue]) : même type, mêmes
-        // boutons, même titre. Seul le message est enroulé (cf. [#enrouler]).
-        Alert alerte = new ConfirmationNavigation().dialogue(enrouler(message));
+        // boutons, même titre. Seul le message est enroulé, par le socle ([ApercuFx#enrouler]).
+        Alert alerte = new ConfirmationNavigation().dialogue(ApercuFx.enrouler(message));
         alerte.getDialogPane().setPrefWidth(540);
         ApercuFx.enregistrerDialogPane(alerte.getDialogPane(), styles(), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
-    }
-
-    /// Insère des retours à la ligne dans le message, **sans en changer un mot**.
-    ///
-    /// Hors `showAndWait`, un `DialogPane` ne contraint pas sa largeur : son libellé reste sur une ligne
-    /// unique, que le snapshot coupe par une ellipse. L'enroulement automatique de JavaFX n'opère pas dans
-    /// ce contexte - c'est la raison pour laquelle les anciennes captures **réécrivaient** leurs messages,
-    /// retours à la ligne compris. Ici, on part du **vrai** message et on se contente de le **couper aux
-    /// espaces** : aucun mot n'est ajouté, retiré ni modifié.
-    private static String enrouler(String message) {
-        StringBuilder enroule = new StringBuilder();
-        int longueurLigne = 0;
-        for (String mot : message.split(" ")) {
-            if (longueurLigne > 0 && longueurLigne + mot.length() > LARGEUR_LIGNE) {
-                enroule.append('\n');
-                longueurLigne = 0;
-            } else if (longueurLigne > 0) {
-                enroule.append(' ');
-                longueurLigne++;
-            }
-            enroule.append(mot);
-            longueurLigne += mot.length();
-        }
-        return enroule.toString();
     }
 
     /// Feuilles de style partagées (palette + base) : le même thème indigo que l'application.

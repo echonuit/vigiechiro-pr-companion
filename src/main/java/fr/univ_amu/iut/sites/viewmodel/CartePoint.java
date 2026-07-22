@@ -6,7 +6,8 @@ import java.util.Optional;
 /// Données de présentation d'une carte de point d'écoute sur l'écran M-Site-detail.
 ///
 /// Enveloppe le [PointDEcoute] d'origine (conservé pour l'édition/suppression) et des valeurs utiles à
-/// l'affichage : la présence de coordonnées GPS (badge `✓ GPS` ou `⚠ GPS manquant`), le nombre de passages
+/// l'affichage : la présence de coordonnées GPS (badge « GPS » ou « GPS manquant », dont l'icône est
+/// posée depuis la sévérité et non écrite dans le libellé, #2221), le nombre de passages
 /// rattachés (qui bloque la suppression du point quand il est non nul) et la **distance au point le plus
 /// proche** du même site (#154), pour repérer des points anormalement rapprochés.
 ///
