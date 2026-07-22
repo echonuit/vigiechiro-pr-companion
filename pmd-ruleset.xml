@@ -15,6 +15,13 @@
         trace, un seuil finit par protéger une situation qui n'existe plus. Les
         modifier suppose donc de rouvrir la justification, pas seulement le chiffre.
 
+        Revérifier les chiffres cités : rejouer les mêmes règles avec leurs seuils
+        au plancher (methodReportLevel et classReportLevel à 1), depuis un pom
+        jetable hors dépôt pointant sur src/main/java, puis lire les métriques dans
+        target/pmd.xml. Attention, -Dpmd.rulesets n'existe pas comme propriété
+        utilisateur : la passer laisse le ruleset du pom en place et produit un
+        rapport qui ressemble à un succès.
+
         Usage :
           ./mvnw verify           # PMD en warning, ne bloque pas
           ./mvnw pmd:check        # rapport console seul
@@ -35,12 +42,19 @@
             <!-- 50 lignes de code non-comment effectif. Les mêmes parseurs/lecteurs
                  déterministes que ceux tolérés par CyclomaticComplexity sont aussi
                  longs par nature (balayage caractère par caractère) : lecteur CSV de
-                 commun/** (gelé, 44), lecteur de tableau JSON (45), parseur LogPR (44).
+                 commun/** (gelé, 44), lecteur de tableau JSON (45), parseur LogPR (45).
                  50 les couvre sans découpage artificiel d'une logique cohésive ;
-                 plus bas pénaliserait du code d'infrastructure, plus haut serait laxiste. -->
+                 plus bas pénaliserait du code d'infrastructure, plus haut serait laxiste.
+                 ⚠ Ce n'est plus un parseur qui approche le plafond, mais
+                 MoteurImport.importerUneNuit, à 49. La marge est d'une ligne : l'y
+                 ajouter fera rougir lint.yml. Constaté et assumé, pas un oubli. -->
             <property name="methodReportLevel" value="50"/>
             <!-- 200 lignes par classe = God Class détectable en dernier recours,
-                 avant même que GodClass ne s'active. -->
+                 avant même que GodClass ne s'active.
+                 ⚠ Quatre contrôleurs vivent dans les huit derniers points :
+                 SonsValidationController 199, AnalyseController et LotController 197,
+                 ImportationController 193. Le prochain ajout dans l'un d'eux demandera
+                 un Extract Class, pas un relèvement du seuil. -->
             <property name="classReportLevel" value="200"/>
         </properties>
     </rule>
@@ -51,11 +65,13 @@
 
     <rule ref="category/java/design.xml/ExcessiveParameterList">
         <properties>
-            <!-- Seuil relevé de 6 à 11. Les services métier et leurs méthodes
-                 @Provides Guice agrègent légitimement plusieurs DAO/collaborateurs
-                 par injection de dépendances (ServiceQualification orchestre 10
-                 collaborateurs ; son @Provides miroir aussi). Un param-objet y
-                 nuirait à la clarté : c'est inhérent à la DI, pas un smell.
+            <!-- Seuil relevé de 10 (défaut PMD) à 11. Les services métier, leurs
+                 méthodes @Provides Guice et les contrôleurs agrègent légitimement
+                 plusieurs DAO/collaborateurs par injection de dépendances. Quatre
+                 sites sont à 11 et justifient à eux seuls ce point d'écart :
+                 ServiceValidation, son @Provides miroir dans ValidationModule,
+                 AudioViewModel et SonsValidationController. Un param-objet y nuirait
+                 à la clarté : c'est inhérent à la DI, pas un smell.
                  11 reste un garde-fou : au-delà, un Parameter Object est attendu. -->
             <property name="minimum" value="11"/>
         </properties>
@@ -70,8 +86,8 @@
             <!-- Seuil 24 (au-dessus du défaut PMD 10). Les parseurs déterministes
                  écrits à la main (sans dépendance tierce) sont intrinsèquement
                  branchus : le lecteur de tableau JSON (LectureJsonTableau, switch
-                 d'échappement) atteint 23, le lecteur CSV de commun/** (gelé) 15,
-                 le parseur de log LogPR 16, l'en-tête WAV 17, les filtres JSON 18.
+                 d'échappement) atteint 23, l'en-tête WAV (FichierWav.analyser) 22,
+                 le parseur de log LogPR 16, le lecteur CSV de commun/** (gelé) 15.
                  Ce sont des machines à états cohésives, pas des smells à découper.
                  24 laisse passer ces parseurs tout en gardant un garde-fou. -->
             <property name="methodReportLevel" value="24"/>
