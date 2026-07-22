@@ -14,6 +14,12 @@
     "github.copilot.enable": {
         "*": false
     },
+    // SonarQube for IDE : sans ce motif (défaut vide), les tests sont analysés avec
+    // les règles du code de production, alors que PMD les ignore (includeTests=false).
+    // Le réglage des règles, lui, ne peut pas vivre ici : « sonarlint.rules » est de
+    // scope « application », donc lu uniquement depuis les réglages utilisateur.
+    // Le bloc à y recopier est dans dev-docs/tests-et-qualite.md.
+    "sonarlint.testFilePattern": "**/src/test/**",
     "chat.tools.terminal.outputLocation": "terminal",
     "chat.tools.terminal.autoApprove": {
         "./mvnw": true,

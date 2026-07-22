@@ -4,6 +4,7 @@
         "redhat.java",
         "redhat.vscode-xml",
         "eamodio.gitlens",
-        "GitHub.copilot-chat"
+        "GitHub.copilot-chat",
+        "SonarSource.sonarlint-vscode"
     ]
 }
