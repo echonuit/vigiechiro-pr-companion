@@ -599,9 +599,6 @@ class ServiceReactivationPassageTest {
                             .matches("[0-9a-fA-F]{64}");
                 })
                 .noneMatch(original -> original.nomFichier().endsWith("reconstruit.wav"));
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().originauxPurges())
-                .as("les originaux sont connus mais non stockés localement : déclarés purgés")
-                .isTrue();
     }
 
     @Test

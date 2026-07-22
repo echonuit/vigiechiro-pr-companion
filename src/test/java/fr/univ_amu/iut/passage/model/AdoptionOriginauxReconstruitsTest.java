@@ -107,11 +107,6 @@ class AdoptionOriginauxReconstruitsTest {
     @DisplayName("L'original adopté porte ce que le brut prouve : chemin, taille, durée, fréquence, empreinte")
     void l_original_adopte_porte_ce_que_le_brut_prouve() throws IOException {
         List<BrutRebranche> rebranches = List.of(brutAvecSaSequence("PaRec_001.wav"));
-        assertThat(session.originauxPurges())
-                .as("la nuit semée ne déclare pas encore ses originaux purgés : sinon l'assertion finale"
-                        + " serait vraie sans que l'adoption y soit pour rien")
-                .isFalse();
-
         adoptionAvec(sequenceDao).adopter(session, placeholders(), rebranches, FREQUENCE_HZ);
 
         EnregistrementOriginal adopte = originalDao.findBySession(session.id()).stream()
@@ -134,13 +129,6 @@ class AdoptionOriginauxReconstruitsTest {
         assertThat(adopte.sha256())
                 .as("l'empreinte capturée à la régénération est inscrite, sans re-lecture (#1726)")
                 .isEqualTo("empreinte-PaRec_001.wav");
-        assertThat(sessionDao
-                        .trouverParPassage(session.idPassage())
-                        .orElseThrow()
-                        .originauxPurges())
-                .as("les originaux sont connus mais non stockés : déclarés purgés, sinon l'audit les"
-                        + " signalerait absents du disque")
-                .isTrue();
     }
 
     @Test

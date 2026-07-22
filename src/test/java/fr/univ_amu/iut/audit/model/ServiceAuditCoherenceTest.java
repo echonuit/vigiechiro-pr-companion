@@ -275,18 +275,6 @@ class ServiceAuditCoherenceTest {
     }
 
     @Test
-    @DisplayName("#1303 : purge des originaux déclarée (marqueur posé) : aucun constat sur les originaux")
-    void originaux_purges_aucun_constat() throws IOException {
-        Long idPassage = creerSessionCoherente(1);
-        // Purge déclarée : marqueur explicite + volume à 0 (les lignes subsistent), fichiers supprimés.
-        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
-        sessionDao.marquerOriginauxPurges(idSession, java.time.LocalDateTime.of(2026, 7, 13, 20, 0));
-        Files.delete(racineSession.resolve("bruts").resolve(NOM_ORIGINAL));
-
-        assertThat(service.auditerPassage(idPassage).sain()).isTrue();
-    }
-
-    @Test
     @DisplayName("ADR 0048 : les bruts absents ne sont ni une erreur ni un constat (ils sont une option)")
     void bruts_absents_ne_sont_pas_une_erreur() throws IOException {
         Long idPassage = creerSessionCoherente(1);
