@@ -18,9 +18,24 @@ On écrit une ADR quand un chantier prend une décision qu'un développeur futur
 
 Au fil d'un chantier, à la **passe 3 (doc développeur)** de sa [clôture](../cycle-de-chantier.md) : chaque décision structurante prise pendant le chantier donne une ADR. La **passe 10 (bilan)** s'y réfère plutôt que de dupliquer le raisonnement.
 
+## Le numéro d'une ADR est celui de son chantier
+
+**Le numéro d'une ADR est le numéro de l'issue du chantier qui l'a décidée** (l'EPIC quand il y en a un). Il ne se choisit pas : il est déjà attribué quand on s'assoit pour écrire.
+
+Ce n'était pas le cas avant : le numéro était pris au compteur, « le premier libre dans le dossier ». Ce compteur était une ressource partagée sans verrou, et deux chantiers parallèles prenaient régulièrement le même. Sur les quatre dernières ADR numérotées ainsi, **trois** ont dû être renumérotées, et la dernière collision a coûté bien plus que le renommage d'un fichier (#1881). Réserver le numéro à l'avance a été essayé, et démenti en trente minutes ; un script de balayage des branches a été écrit, et sa sortie s'est survolée. Un numéro d'issue, lui, ne peut pas entrer en collision : personne ne le choisit.
+
+Comme les numéros d'issue croissent avec le temps, le dossier reste dans l'ordre chronologique.
+
+!!! note "Le compteur est clos à 0048"
+    Les ADR **0001 à 0048** gardent leur numéro de compteur : elles ne bougent pas. Les renuméroter toucherait 288 citations dans 154 fichiers, dont 93 fichiers Java, et surtout les discussions GitHub déjà closes, qu'on ne peut pas réécrire. **0049 n'existera jamais** : une ADR numérotée sous 1000 est une ADR d'avant la bascule.
+
+    Deux trous subsistent dans cette série, **0029 et 0030** : ce sont les numéros qu'une résolution de collision a libérés. Ils restent vides, parce que les combler ferait pointer vers un numéro qui a déjà voulu dire autre chose dans une PR et une discussion.
+
+`DocumentationAJourTest` garde la règle : numéros uniques, en-tête d'accord avec le nom de fichier, ligne de journal et entrée de nav pour chaque ADR, et pour toute ADR postérieure à la bascule, un numéro qui figure bien dans sa ligne « Chantier ».
+
 ## Format
 
-Copier le squelette suivant dans `NNNN-titre-court.md` (numéro à 4 chiffres, incrémental) :
+Copier le squelette suivant dans `NNNN-titre-court.md`, où `NNNN` est le numéro de l'issue du chantier :
 
 ```markdown
 # ADR NNNN — La décision, formulée comme une affirmation
@@ -93,3 +108,4 @@ Les premières entrées sont **rétroactives** : elles consignent, à partir des
 | [0046](0046-une-classe-css-a-une-seule-feuille.md) | Une classe CSS a une seule feuille pour maison ; un cliquet refuse tout nom en double | #1974 |
 | [0047](0047-l-identite-de-distribution-est-le-projet-echonuit.md) | L'identité de distribution est le projet Echonuit : produit « VigieChiro Companion », app-id `fr.echonuit`, éditeur Echonuit (fait évoluer #2108) | #2240, #2213, #2111 |
 | [0048](0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md) | L'utilisateur possède ses fichiers : l'application observe la disponibilité de l'audio au lieu de l'archiver, et peut le référencer en place (reformule #1038) | #1038, #2028, EPIC #1297 |
+| [1881](1881-l-identifiant-d-une-adr-est-le-numero-de-son-chantier.md) | Le numéro d'une ADR est celui de son chantier, pas un compteur : le compteur est clos à 0048 | #1881 |

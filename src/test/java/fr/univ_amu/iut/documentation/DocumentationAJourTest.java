@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -192,15 +193,32 @@ class DocumentationAJourTest {
     /// publie les ADR.
     private static final Path NAV_DEV = Path.of("mkdocs-dev.yml");
 
-    /// Un fichier d'ADR : quatre chiffres, un tiret, un titre en kebab-case.
-    private static final Pattern FICHIER_ADR = Pattern.compile("^(\\d{4})-[a-z0-9-]+\\.md$");
+    /// Un fichier d'ADR : au moins quatre chiffres, un tiret, un titre en kebab-case.
+    ///
+    /// **Au moins** quatre, et non exactement : depuis l'[ADR 1881] le numéro est celui de l'issue du
+    /// chantier, qui passera un jour à cinq chiffres. Un motif strict laisserait alors ces ADR
+    /// **silencieusement hors de portée** de tous les tests ci-dessous, y compris celui des doublons.
+    private static final Pattern FICHIER_ADR = Pattern.compile("^(\\d{4,})-[a-z0-9-]+\\.md$");
+
+    /// Dernier numéro attribué par le compteur global, clos par l'[ADR 1881]. Les ADR 0001 à 0048 le
+    /// gardent ; au-delà, le numéro est celui de l'issue du chantier.
+    private static final int DERNIER_NUMERO_DE_COMPTEUR = 48;
+
+    /// Les deux numéros qu'une résolution de collision a libérés, et qui restent vides : les combler
+    /// ferait pointer vers un numéro qui a déjà voulu dire autre chose dans une PR et une discussion.
+    private static final Set<Integer> TROUS_DU_COMPTEUR = Set.of(29, 30);
+
+    /// Plancher des numéros d'issue : aucune issue du dépôt n'est descendue sous ce seuil depuis
+    /// longtemps, et le compteur, lui, n'ira jamais jusque-là. Il sépare donc sans ambiguïté les deux
+    /// régimes de numérotation.
+    private static final int PLANCHER_NUMERO_D_ISSUE = 1000;
 
     /// L'en-tête d'une ADR, qui doit porter le même numéro que son nom de fichier.
     ///
     /// Deux formes coexistent dans le journal (`# ADR 0035 — …` et `# 0026 - …`) et le test **tolère les
     /// deux** : il garde le **numéro**, pas le style de titre. Le rendre strict sur la forme le ferait
     /// rougir sur une variation de rédaction, ce qui est le meilleur moyen de le faire désactiver.
-    private static final Pattern ENTETE_ADR = Pattern.compile("^#\\s+(?:ADR\\s+)?(\\d{4})\\b");
+    private static final Pattern ENTETE_ADR = Pattern.compile("^#\\s+(?:ADR\\s+)?(\\d{4,})\\b");
 
     @Test
     @DisplayName("Deux ADR ne portent jamais le même numéro")
@@ -296,7 +314,7 @@ class DocumentationAJourTest {
                     .contains(fichier);
         }
 
-        Matcher lien = Pattern.compile("\\((\\d{4}-[a-z0-9-]+\\.md)\\)").matcher(journal);
+        Matcher lien = Pattern.compile("\\((\\d{4,}-[a-z0-9-]+\\.md)\\)").matcher(journal);
         while (lien.find()) {
             verifs.assertThat(fichiers)
                     .as(
@@ -304,6 +322,63 @@ class DocumentationAJourTest {
                                     + "sa ligne derrière elle.",
                             lien.group(1))
                     .contains(lien.group(1));
+        }
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#1881 : le compteur d'ADR reste clos, personne ne reprend « le premier numéro libre »")
+    void le_compteur_d_adr_reste_clos() {
+        Set<Integer> attendus = new TreeSet<>();
+        for (int numero = 1; numero <= DERNIER_NUMERO_DE_COMPTEUR; numero++) {
+            if (!TROUS_DU_COMPTEUR.contains(numero)) {
+                attendus.add(numero);
+            }
+        }
+
+        Set<Integer> presents = new TreeSet<>();
+        for (String fichier : fichiersAdr()) {
+            Matcher nom = FICHIER_ADR.matcher(fichier);
+            if (nom.matches() && Integer.parseInt(nom.group(1)) < PLANCHER_NUMERO_D_ISSUE) {
+                presents.add(Integer.parseInt(nom.group(1)));
+            }
+        }
+
+        assertThat(presents)
+                .as("la série numérotée au compteur a bougé. Elle est close depuis l'ADR 1881 : une ADR"
+                        + " neuve prend le numéro de l'issue de son chantier, pas « le premier numéro"
+                        + " libre ». Un numéro en trop, c'est le compteur qui rouvre, et avec lui les"
+                        + " collisions entre chantiers parallèles ; un numéro en moins, c'est une ADR"
+                        + " effacée ou un des deux trous (0029, 0030) comblé, alors qu'ils désignent"
+                        + " déjà autre chose dans une PR et une discussion.")
+                .isEqualTo(attendus);
+    }
+
+    @Test
+    @DisplayName("#1881 : une ADR postérieure à la bascule porte le numéro de son chantier")
+    void une_adr_recente_porte_le_numero_de_son_chantier() {
+        SoftAssertions verifs = new SoftAssertions();
+        for (String fichier : fichiersAdr()) {
+            Matcher nom = FICHIER_ADR.matcher(fichier);
+            if (!nom.matches()) {
+                continue;
+            }
+            int numero = Integer.parseInt(nom.group(1));
+            if (numero < PLANCHER_NUMERO_D_ISSUE) {
+                continue;
+            }
+            String chantier = lire(DECISIONS.resolve(fichier))
+                    .lines()
+                    .filter(ligne -> ligne.startsWith("- **Chantier**"))
+                    .findFirst()
+                    .orElse("");
+            verifs.assertThat(chantier)
+                    .as(
+                            "%s : sa ligne « Chantier » ne cite pas #%d. Depuis l'ADR 1881, le numéro d'une"
+                                    + " ADR n'est pas un rang mais une référence : il doit désigner l'issue qui"
+                                    + " porte la décision, sans quoi il ne renvoie à aucune discussion.",
+                            fichier, numero)
+                    .contains("#" + numero);
         }
         verifs.assertAll();
     }
