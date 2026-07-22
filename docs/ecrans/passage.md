@@ -99,6 +99,26 @@ Le bouton **Réactiver ce passage** remet l'audio en place à partir d'un dossie
 (votre sauvegarde, un disque externe, la carte d'origine…). L'exploration est **récursive** : vous
 pouvez pointer la racine d'une sauvegarde.
 
+### Copier, ou laisser vos fichiers où ils sont
+
+Une fois le dossier désigné, l'application demande **ce qu'elle doit en faire**. La question est
+toujours posée, mais elle n'est pas formulée de la même façon selon l'endroit que vous avez choisi :
+
+- **hors de votre dossier de travail** - un serveur de fichiers, un disque externe, votre arborescence
+  habituelle : ces fichiers sont **les vôtres**, et en faire une copie créerait un doublon que vous
+  n'avez pas demandé. L'application propose donc de **les laisser où ils sont** et de s'y référer ;
+- **une sauvegarde ponctuelle** dont vous ne voulez pas dépendre : répondez **non**, et l'application
+  en garde sa propre copie, comme elle l'a toujours fait.
+
+Laisser les fichiers sur place a une conséquence, et elle vous est dite **avant** le choix, pas
+découverte après : cette nuit n'est plus écoutable tant que ce support n'est pas accessible - disque
+débranché, dossier réseau hors ligne. Elle le redevient **d'elle-même** dès qu'il revient, sans qu'il
+faille rien réactiver une seconde fois.
+
+Ce choix ne concerne que les fichiers **que vous désignez**. Les séquences que l'application
+**régénère** elle-même à partir de vos enregistrements bruts sont, elles, toujours écrites dans votre
+dossier de travail : elles n'existaient nulle part ailleurs, il n'y a donc rien à référencer.
+
 **Chaque fichier est vérifié avant d'être rebranché.** C'est le cœur de l'affaire : deux jeux de
 fichiers peuvent porter **les mêmes noms** sans être les mêmes (une redécoupe, une autre expansion,
 une autre nuit du même carré). Rebrancher vos observations sur le mauvais audio produirait un
@@ -156,9 +176,10 @@ rien de nouveau pendant longtemps, c'est un défaut, et cela vaut la peine de le
 ajoute de l'audio sans jamais en retirer. **Fermer** n'est disponible qu'une fois l'opération terminée
 — survolez le bouton pour savoir pourquoi il attend.
 
-!!! tip "Les fichiers de votre sauvegarde ne sont jamais touchés"
-    La réactivation **copie** : votre dossier source reste intact, et vos observations comme vos
-    validations ne sont jamais recalculées — on rebranche des chemins, rien d'autre.
+!!! tip "Les fichiers que vous désignez ne sont jamais touchés"
+    Que vous ayez demandé la copie ou la référence, votre dossier source reste **intact** : rien n'y
+    est déplacé, renommé ni supprimé. Vos observations et vos validations ne sont pas davantage
+    recalculées : on rebranche des chemins, rien d'autre.
 
 !!! info "Un passage reconstruit depuis Vigie-Chiro"
     Si ce passage avait été **reconstruit** (récupéré depuis la plateforme sans que vous ayez conservé

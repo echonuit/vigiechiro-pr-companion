@@ -28,7 +28,7 @@ ici.
 | Permission | Ce qu'elle sert |
 |---|---|
 | `--filesystem=~/Documents/VigieChiro-Companion:create` | l'espace de travail, **et rien d'autre** |
-| `--filesystem=/media`, `--filesystem=/run/media` | les **cartes SD** des enregistreurs |
+| `--filesystem=/media`, `--filesystem=/run/media` | les **cartes SD** des enregistreurs, et l'audio **référencé** qui y vit |
 | `--share=network` | API Vigie-Chiro, et consultation des versions publiées |
 | `--socket=pulseaudio` | écoute des séquences |
 | `--socket=wayland`, `--socket=fallback-x11`, `--share=ipc`, `--device=dri` | affichage |
@@ -45,6 +45,20 @@ parc ne peut rien importer.
 **Conséquence assumée** : la surcharge `-Dvigiechiro.workspace` ne fonctionne pas dans le bac à sable,
 puisque seul le chemin par défaut est accordé. Déplacer son espace de travail demande d'accorder le
 nouveau chemin (`flatpak override --user --filesystem=…`), ou d'utiliser le `.deb`.
+
+**Seconde conséquence, depuis l'[ADR 0048](../dev-docs/decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)** :
+l'audio peut désormais être **référencé** là où il vit, sans copie. Il n'est alors écoutable que si son
+emplacement compte parmi les chemins accordés. L'espace de travail et les points de montage le sont,
+donc un disque externe ou une carte SD conviennent. Un partage réseau ouvert depuis le gestionnaire de
+fichiers ne convient **pas** : GNOME et KDE le montent sous `/run/user/<utilisateur>/gvfs/`, hors de
+tout chemin accordé. Une nuit référencée là se présente comme non écoutable, exactement comme un
+support débranché - et le réveil décrit par l'ADR la rend écoutable dès qu'elle redevient joignable,
+sans rien redemander à l'utilisateur.
+
+Référencer un NAS sous Flatpak demande donc d'accorder ce que le gestionnaire de fichiers utilise
+(`flatpak override --user --filesystem=xdg-run/gvfs`), ou de monter le partage soi-même
+(`/etc/fstab`, `systemd.mount`) puis d'accorder son point de montage. Le `.deb` n'a aucune de ces
+limites.
 
 ## Construire et essayer en local
 

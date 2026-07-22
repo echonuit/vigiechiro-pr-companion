@@ -71,12 +71,17 @@ probablement rien à supprimer. Voir [Importer une nuit](ecrans/importation.md).
 !!! note "L'application ne supprime jamais vos fichiers"
     Vous en gardez la maîtrise : il n'y a pas de bouton qui efface votre audio. Si vous rangez ou
     effacez des fichiers, l'application s'en aperçoit et le dit, sans jamais crier à la corruption.
+
 ### L'audio d'une nuit a disparu, puis-je le récupérer ?
 
 Oui, **si vous avez encore les fichiers** : le bouton **Réactiver ce passage** les rebranche depuis un
 dossier que vous désignez, après avoir **vérifié** que ce sont bien les mêmes (voir
 [Passage](ecrans/passage.md)). C'est la marche à suivre quand vous avez déplacé vos dossiers ou changé
 de point de montage.
+
+Vous n'êtes pas obligé de les rapatrier : l'application demande si elle doit les **copier** ou les
+**laisser où ils sont**. Sur un serveur de fichiers ou un disque externe, la seconde réponse évite un
+doublon, au prix d'une nuit muette quand le support n'est pas branché.
 
 En revanche, **la plateforme Vigie-Chiro ne vous rendra pas cet audio** si votre dépôt a été fait au
 format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable. Sans vos
