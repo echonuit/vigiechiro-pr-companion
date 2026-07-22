@@ -135,7 +135,7 @@ public class ServiceAuditCoherence {
         Optional<ResultatsIdentification> resultats =
                 resultatsDao.findByPassage(passage.id()).filter(ResultatsIdentification::issuDunFichier);
 
-        controleExistence(constats, passage, session, originaux, sequences, journal, releve, resultats);
+        controleExistence(constats, passage, sequences, journal, releve, resultats);
         controlePrefixe(constats, passage, originaux, sequences);
         constats.addAll(balayage.orphelinsDeSession(
                 passage.id(),
@@ -155,28 +155,22 @@ public class ServiceAuditCoherence {
     /// Une séquence manquante n'est jamais une erreur (l'utilisateur possède ses fichiers) ; l'audio
     /// absent ou partiel donne **un seul constat** [Severite#INFO] ([CategorieConstat#AUDIO_INDISPONIBLE]).
     /// Le journal, le relevé et les résultats Tadarida, eux, restent contrôlés : leur absence est un
-    /// vrai problème. Les originaux suivent encore le marqueur de purge déclaré (#1303) ; leur bascule
-    /// vers l'observé est le lot #2262.
+    /// vrai problème. Les **bruts** ne sont plus contrôlés : copies optionnelles de ré-analyse
+    /// (ADR 0036), leur absence est le cas courant, donc silencieuse.
     private void controleExistence(
             List<ConstatAudit> constats,
             Passage passage,
-            SessionDEnregistrement session,
-            List<EnregistrementOriginal> originaux,
             List<SequenceDEcoute> sequences,
             Optional<JournalDuCapteur> journal,
             Optional<ReleveClimatique> releve,
             Optional<ResultatsIdentification> resultats) {
         Long idPassage = passage.id();
-        // Les originaux restent gouvernés par le marqueur de purge déclaré (#1303) : leur bascule vers
-        // l'observé est le lot #2262. L'AUDIO (séquences) ne se contrôle plus par le marqueur
-        // d'archivage : son absence est un ÉTAT observé (ADR 0048), rapporté une fois, jamais une erreur.
-        boolean originauxAudites = !session.originauxPurges();
+        // Les BRUTS ne sont plus contrôlés du tout : ce sont des copies **optionnelles** de ré-analyse
+        // (ADR 0036), absentes de la plupart des nuits. Leur absence est donc l'état normal, et un état
+        // normal reste silencieux (ADR 0012) - la signaler, même en INFO, ferait un constat par fichier
+        // sur des milliers de fichiers. Les séquences, elles, entrent toujours dans le balayage : leur
+        // décompte (présentes / total) donne la disponibilité observée (#1304, parité CLI).
         List<String> chemins = new ArrayList<>();
-        if (originauxAudites) {
-            originaux.forEach(o -> chemins.add(o.cheminFichier()));
-        }
-        // Les séquences entrent TOUJOURS dans le balayage : leur décompte (présentes / total) donne la
-        // disponibilité observée (#1304, parité CLI). Coût nul : même listage de dossier, groupé.
         sequences.forEach(s -> chemins.add(s.cheminFichier()));
         journal.ifPresent(j -> chemins.add(j.cheminFichier()));
         releve.ifPresent(r -> chemins.add(r.cheminFichier()));
@@ -184,11 +178,6 @@ public class ServiceAuditCoherence {
         Map<String, Presence> presences = presenceFichiers.evaluer(chemins);
 
         constatDisponibiliteAudio(idPassage, sequences, presences).ifPresent(constats::add);
-        if (originauxAudites) {
-            for (EnregistrementOriginal original : originaux) {
-                signalerAbsence(constats, idPassage, original.cheminFichier(), Severite.ERREUR, presences);
-            }
-        }
         journal.ifPresent(j -> signalerAbsence(constats, idPassage, j.cheminFichier(), Severite.ERREUR, presences));
         releve.ifPresent(
                 r -> signalerAbsence(constats, idPassage, r.cheminFichier(), Severite.AVERTISSEMENT, presences));

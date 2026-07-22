@@ -10,12 +10,12 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
-import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
+import fr.univ_amu.iut.passage.model.JournalDuCapteur;
 import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
-import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
+import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -90,7 +90,7 @@ class CliAuditTest {
     @Test
     @DisplayName("Fichier attendu absent : code d'échec (1), constat DISQUE_MANQUANT en texte")
     void audit_erreur_code_1_texte() {
-        semerOriginalManquant();
+        semerJournalManquant();
 
         int code = cli.executer(new String[] {"audit-coherence"}, sortie, erreur);
 
@@ -101,7 +101,7 @@ class CliAuditTest {
     @Test
     @DisplayName("Fichier attendu absent : --json contient la gravité ERREUR")
     void audit_erreur_json() {
-        semerOriginalManquant();
+        semerJournalManquant();
 
         int code = cli.executer(new String[] {"audit-coherence", "--json"}, sortie, erreur);
 
@@ -109,9 +109,10 @@ class CliAuditTest {
         assertThat(texteSortie()).contains("ERREUR").contains("DISQUE_MANQUANT");
     }
 
-    /// Sème un passage dont l'original pointe vers un fichier sous le workspace mais **absent** : le seul
-    /// écart attendu est une erreur `DISQUE_MANQUANT`.
-    private void semerOriginalManquant() {
+    /// Sème un passage dont le journal du capteur pointe vers un fichier sous le workspace mais
+    /// **absent** : le seul écart attendu est une erreur `DISQUE_MANQUANT`. Les bruts ne conviennent
+    /// plus : ce sont des copies optionnelles, dont l'absence est silencieuse (ADR 0048).
+    private void semerJournalManquant() {
         injecteur.getInstance(UtilisateurDao.class).insert(new Utilisateur("u-1", "Testeur"));
         Site site = injecteur
                 .getInstance(SiteDao.class)
@@ -145,11 +146,9 @@ class CliAuditTest {
                 .getInstance(SessionDao.class)
                 .insert(new SessionDEnregistrement(null, racineSession.toString(), 4096L, 4096L, idPassage))
                 .id();
-        String nomOriginal = prefixe.nommerOriginal("PaRecPR" + SERIE + "_20260620_213000.wav");
-        String cheminManquant =
-                racineSession.resolve("bruts").resolve(nomOriginal).toString();
+        String cheminManquant = racineSession.resolve("LogPR" + SERIE + ".txt").toString();
         injecteur
-                .getInstance(EnregistrementOriginalDao.class)
-                .insert(new EnregistrementOriginal(null, nomOriginal, cheminManquant, 12.0, 384_000, null, idSession));
+                .getInstance(JournalDuCapteurDao.class)
+                .insert(new JournalDuCapteur(null, cheminManquant, null, null, idSession));
     }
 }

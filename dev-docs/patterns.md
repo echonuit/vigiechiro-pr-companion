@@ -98,10 +98,13 @@ informe au lieu de crier, la réactivation s'offre.
 Un geste **déclaré** est autre chose qu'un état **observé**. Le projet est passé des premiers au
 second : l'audio absent ne se **déclare** plus, il s'**observe**
 ([ADR 0048](decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)) - l'utilisateur
-possède ses fichiers, et son absence n'est jamais une corruption. Il reste un marqueur déclaré,
-`recording_session.originals_purged_at` : il dit « l'utilisateur a purgé les bruts, tel jour », ce qui
-permet à l'audit de distinguer *purgé exprès* (silence) de *disparu* (ERREUR), là où le disque rend le
-même verdict dans les deux cas.
+possède ses fichiers, et son absence n'est jamais une corruption.
+
+Ce basculement a rendu les marqueurs inutiles l'un après l'autre. `archived_at` a disparu du code ;
+`originals_purged_at` ne gouverne plus l'audit, qui ne contrôle **plus du tout** les bruts : ce sont
+des copies **optionnelles** de ré-analyse ([ADR 0036](decisions/0036-la-copie-des-bruts-est-une-option.md)),
+absentes de la plupart des nuits, donc leur absence est l'état normal - et un état normal reste
+silencieux. Il n'y avait plus rien à distinguer : le disque et la base disent la même chose.
 
 **Principes.** SSOT (la source de vérité reste distante : on ne la copie pas, on la **date**),
 **honnêteté de l'IHM** (« dernier état connu le… » plutôt qu'une fraîcheur feinte) et **KISS** (pas de

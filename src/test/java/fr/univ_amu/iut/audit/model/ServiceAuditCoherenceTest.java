@@ -287,33 +287,30 @@ class ServiceAuditCoherenceTest {
     }
 
     @Test
-    @DisplayName("#1303 : volume à zéro SANS marqueur : les bruts manquants restent une erreur (fini l'heuristique)")
-    void volume_zero_sans_marqueur_reste_une_erreur() throws IOException {
+    @DisplayName("ADR 0048 : les bruts absents ne sont ni une erreur ni un constat (ils sont une option)")
+    void bruts_absents_ne_sont_pas_une_erreur() throws IOException {
         Long idPassage = creerSessionCoherente(1);
-        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
-        SessionDEnregistrement session = sessionDao.findById(idSession).orElseThrow();
-        // Volume erroné à 0 sans geste déclaré : la disparition des bruts reste un vrai problème.
-        sessionDao.update(new SessionDEnregistrement(
-                session.id(), session.cheminRacine(), 0L, session.volumeSequencesOctets(), session.idPassage()));
+        // Les bruts sont une OPTION de ré-analyse (ADR 0036) : la plupart des nuits n'en gardent
+        // aucun. Leur absence est donc l'état normal, pas une corruption (ADR 0048) - et un état
+        // normal reste silencieux (ADR 0012).
         Files.delete(racineSession.resolve("bruts").resolve(NOM_ORIGINAL));
 
-        List<ConstatAudit> constats = service.auditerPassage(idPassage).constats();
-
-        assertThat(constats).singleElement().satisfies(c -> {
-            assertThat(c.severite()).isEqualTo(Severite.ERREUR);
-            assertThat(c.categorie()).isEqualTo(CategorieConstat.DISQUE_MANQUANT);
-        });
+        assertThat(service.auditerPassage(idPassage).constats())
+                .as("des bruts absents ne produisent ni erreur ni constat : c'est le cas courant")
+                .isEmpty();
     }
 
     @Test
-    @DisplayName("Original externe (hors workspace) absent : INFO, pas ERREUR")
-    void original_externe_absent_info() {
+    @DisplayName("Fichier externe (hors workspace) absent : INFO, pas ERREUR (média peut-être non monté)")
+    void fichier_externe_absent_info() {
         Long idPassage = creerPassage(1);
         Long idSession = creerSession(idPassage, 4096L);
+        // Le journal du capteur porte la règle depuis que les bruts ne sont plus contrôlés : un chemin
+        // hors workspace absent reste un INFO (la carte n'est peut-être pas montée), là où le même
+        // fichier sous le workspace serait une ERREUR.
         String cheminExterne =
-                Path.of("/media", "carte-sd-absente", NOM_ORIGINAL).toString();
-        originalDao.insert(
-                new EnregistrementOriginal(null, NOM_ORIGINAL, cheminExterne, 12.0, 384_000, null, idSession));
+                Path.of("/media", "carte-sd-absente", "LogPR" + SERIE + ".txt").toString();
+        journalDao.insert(new JournalDuCapteur(null, cheminExterne, null, null, idSession));
 
         List<ConstatAudit> constats = service.auditerPassage(idPassage).constats();
 
