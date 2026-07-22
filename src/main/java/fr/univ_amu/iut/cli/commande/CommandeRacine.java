@@ -66,6 +66,7 @@ import picocli.CommandLine.Spec;
             LancerTraitementVigieChiro.class,
             EtatTraitementVigieChiro.class,
             ReinitialiserDepot.class,
+            SupprimerPassage.class,
             VerifierDepotVigieChiro.class,
             ExporterVu.class,
             ExporterObservations.class,
