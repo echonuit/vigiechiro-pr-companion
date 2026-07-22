@@ -93,4 +93,23 @@ class ConfirmationNavigationTest {
                 .as("l'ambre de l'avertissement doit s'appliquer : au noir, la couleur ne dit plus rien")
                 .isNotEqualTo(Color.BLACK);
     }
+
+    @Test
+    @DisplayName("Le compte rendu garde une marge dans le dialogue : il ne touche pas le bord")
+    void compte_rendu_garde_sa_marge_dans_le_dialogue(FxRobot robot) {
+        // `.compte-rendu` n'a volontairement AUCUNE marge horizontale : c'est au conteneur de la donner, et
+        // une modale FXML le fait par sa racine (`.modale-saisie`). Un `DialogPane`, lui, ne rembourre
+        // presque pas son contenu - le bloc touchait donc le bord du dialogue (revue visuelle de #2225).
+        AtomicReference<VBox> contenu = new AtomicReference<>();
+        robot.interact(() -> {
+            DialogPane pane = new ConfirmationNavigation().dialogue(DOUBLON).getDialogPane();
+            pane.applyCss();
+            contenu.set((VBox) pane.getContent());
+        });
+
+        assertThat(contenu.get().getStyleClass()).contains(ConfirmationNavigation.CLASSE_DANS_UN_DIALOGUE);
+        assertThat(contenu.get().getPadding().getLeft())
+                .as("sans marge gauche effective, le compte rendu se colle au bord du dialogue")
+                .isGreaterThan(0);
+    }
 }

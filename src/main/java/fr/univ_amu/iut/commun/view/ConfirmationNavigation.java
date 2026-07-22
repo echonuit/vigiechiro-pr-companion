@@ -12,6 +12,11 @@ import javafx.scene.control.ButtonType;
 /// archives de dépôt ? ») quand le message seul manquerait de contexte.
 public final class ConfirmationNavigation implements Confirmateur {
 
+    /// Classe posée sur un compte rendu **porté par un dialogue** : elle lui rend la marge que le
+    /// `DialogPane` ne donne pas, là où une modale FXML l'obtient de sa racine. Définie dans
+    /// `design.css`, à côté des autres `compte-rendu-*`.
+    static final String CLASSE_DANS_UN_DIALOGUE = "compte-rendu-dialogue";
+
     private final String titre;
 
     /// Dialogue au titre système par défaut.
@@ -66,7 +71,11 @@ public final class ConfirmationNavigation implements Confirmateur {
     /// **code de production** pour que la capture montre ce que l'utilisateur verra (ADR 0025).
     public Alert dialogue(CompteRendu compteRendu) {
         Alert alerte = new Alert(AlertType.CONFIRMATION, "", ButtonType.OK, ButtonType.CANCEL);
-        alerte.getDialogPane().setContent(VueCompteRendu.rendre(compteRendu, VueCompteRendu.SANS_PLAFOND));
+        var contenu = VueCompteRendu.rendre(compteRendu, VueCompteRendu.SANS_PLAFOND);
+        // Le `DialogPane` ne rembourre presque pas son contenu, là où une modale FXML s'en charge par sa
+        // racine : sans cette classe, le bloc touche le bord du dialogue (revue visuelle de #2225).
+        contenu.getStyleClass().add(CLASSE_DANS_UN_DIALOGUE);
+        alerte.getDialogPane().setContent(contenu);
         habiller(alerte);
         if (titre != null) {
             alerte.setTitle(titre);

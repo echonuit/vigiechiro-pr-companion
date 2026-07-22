@@ -929,6 +929,13 @@
     -fx-padding: 4 0;
 }
 
+/* Un compte rendu porte par un `Alert` : le `DialogPane` ne rembourre presque pas son contenu, la ou
+   une modale FXML s'en charge par sa racine (`.modale-saisie`). Sans cette marge, le bloc TOUCHE le bord
+   du dialogue et se colle au separateur. Releve a la revue visuelle de la cloture de #2225. */
+.compte-rendu-dialogue {
+    -fx-padding: 10 12 6 12;
+}
+
 .compte-rendu-titre {
     -fx-font-size: 15px;
     -fx-font-weight: bold;
