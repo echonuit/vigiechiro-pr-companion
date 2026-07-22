@@ -100,3 +100,9 @@ Marie clique sur « Vérifier et préparer le dépôt ». L'application vérifie
 ## Et après ?
 
 24-48 h après le dépôt, Marie recevra un fichier de résultats Tadarida sur le portail Vigie-Chiro. La validation de ces résultats est documentée comme **cible étirable** - voir [P7 - Valider les résultats Tadarida](P7%20-%20Valider%20les%20résultats%20Tadarida.md).
+
+## Enrichissements prévus
+
+> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+
+- **La nuit de Marie gagne une conclusion.** Le fil rouge s'arrête aujourd'hui au dépôt, puis renvoie à la validation. Il lui manque la réponse à la question que Marie se pose vraiment une fois ses résultats revenus : *et alors, qu'est-ce que ma nuit contient ?* La [synthèse de la nuit](../Maquettes/M-Synthese.md) et la [courbe d'activité](../Maquettes/M-Activite.md) ferment cette boucle (#2351, #2352).

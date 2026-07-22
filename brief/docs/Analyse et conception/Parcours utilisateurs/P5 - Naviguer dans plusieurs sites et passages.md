@@ -24,3 +24,11 @@ Avec ses 24 enregistreurs en parallèle pendant 40-50 nuits par saison, Samuel a
 - supporter des filtres multi-critères performants (R&D potentielle, à arbitrer)
 - permettre des actions de masse (changement de verdict, suppression, export)
 - rester réactive même à plusieurs centaines de lignes (cf. [O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md))
+
+## Enrichissements prévus
+
+> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+
+- **Un solde de saison, point par point.** La navigation multi-sites répond à *où en sont mes passages* ; elle ne répond pas à *qu'est-ce qu'il me reste à faire*. [M-Saison](../Maquettes/M-Saison.md) restitue les règles de protocole R3 et R4, déjà vérifiées par l'application, sous forme d'un reste à faire par point (#2356).
+- **Une campagne pour regrouper les passages d'un même suivi**, en dimension de regroupement, de filtre et d'export. Le rattachement reste facultatif (#2355).
+- **Des actions groupées sur plusieurs passages** : préparer, téléverser, importer les résultats, sur une sélection plutôt qu'un par un (#2357). C'est l'attente déjà exprimée plus haut par « permettre des actions de masse ».

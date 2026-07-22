@@ -31,3 +31,10 @@
     - **Mode activité** : Samuel cherche à quantifier l'activité. Toutes les observations doivent être passées en revue pour produire des statistiques d'activité fiables.
 
   L'utilisateur choisit le mode au démarrage du parcours (configurable par passage).
+
+## Enrichissements prévus
+
+> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+
+- **Les espèces à enjeu se distinguent dans la table.** Un repère de ligne, un critère de filtre et un compteur dédié permettent d'aller droit aux observations qui comptent, au lieu de les retrouver une par une dans plusieurs milliers de contacts (#2353).
+- **Le mode activité devient mesurable.** Le parcours distingue déjà un mode *inventaire* et un mode *activité* ; ce second mode n'a aujourd'hui aucune restitution. La [synthèse de la nuit](../Maquettes/M-Synthese.md) lui en donne une, et sa bascule « identifications validées seulement » fait apparaître ce que la validation a changé (#2351).

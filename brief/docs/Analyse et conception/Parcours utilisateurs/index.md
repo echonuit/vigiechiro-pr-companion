@@ -9,6 +9,26 @@ Cette section présente les **parcours d'usage** de l'application, organisés en
 
 Tous les parcours reposent sur le vocabulaire posé dans le [Modèle conceptuel](../Modèle%20conceptuel/index.md).
 
+!!! info "Enrichissements décidés, pas encore livrés"
+    Neuf parcours portent en fin de fiche une section **« Enrichissements prévus »**, qui les
+    prolonge sans modifier leurs étapes actuelles. Ils viennent des chantiers #2348 (lire ce que la
+    nuit contient), #2349 (du passage à la saison) et #2350 (les opérations longues), et sont
+    maquettés dans [M-Synthese](../Maquettes/M-Synthese.md),
+    [M-Activite](../Maquettes/M-Activite.md), [M-Saison](../Maquettes/M-Saison.md) et
+    [M-CompteRendu](../Maquettes/M-CompteRendu.md).
+
+    | Parcours enrichi | Ce qui s'y ajoute |
+    |---|---|
+    | [P0](P0%20-%20Première%20nuit%20de%20Marie.md) | une conclusion au fil rouge : ce que la nuit contient |
+    | [P2](P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md) | un compte rendu d'import chiffré |
+    | [P4](P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) | un téléversement qui encaisse une coupure, et un compte rendu de dépôt |
+    | [P5](P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md) | le solde de saison, la campagne, les actions groupées |
+    | [P6](P6%20-%20Diagnostiquer%20le%20matériel.md) | l'activité horaire comme signal de dispositif |
+    | [P7](P7%20-%20Valider%20les%20résultats%20Tadarida.md) | les espèces à enjeu, et un mode activité enfin mesurable |
+    | [P9](P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) | le point comme ligne de solde annuel |
+    | [P11](P11%20-%20Inventaire%20des%20espèces%20détectées.md) | ce que l'activité vaut, et la forme de la nuit |
+    | [P12](P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md) | un compte rendu de réactivation |
+
 ## Topologie des parcours
 
 [🖼️ Voir le diagramme en plein écran ↗](Topologie%20-%20plein%20écran.md){ .md-button }

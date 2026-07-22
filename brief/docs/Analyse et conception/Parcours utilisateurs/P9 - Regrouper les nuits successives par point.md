@@ -19,3 +19,9 @@ Samuel a déployé un enregistreur sur le même point pendant **4 nuits successi
 ## Productivité
 
 Ce parcours **conditionne la productivité** des utilisateurs qui traitent beaucoup de passages (Karim, Samuel) : regrouper les nuits successives d'un même point évite de re-valider espèce par espèce sur chaque nuit. Il prolonge la validation Tadarida ([P7](P7%20-%20Valider%20les%20résultats%20Tadarida.md)) - d'autant plus utile que celle-ci est déjà bien avancée.
+
+## Enrichissements prévus
+
+> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+
+- **Le point devient une ligne de solde.** Le regroupement des nuits par point sert aujourd'hui la validation conjointe ; le même axe sert à savoir combien de passages attendus ont été réalisés pour ce point, et lequel manque. Voir [M-Saison](../Maquettes/M-Saison.md) (#2356).

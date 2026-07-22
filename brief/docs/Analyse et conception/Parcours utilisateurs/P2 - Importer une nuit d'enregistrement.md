@@ -32,3 +32,9 @@ Marie vient de récupérer la carte SD de son enregistreur après une nuit d'enr
 - L'application doit **tenir des nuits jusqu'à 40 Go** sans freezer l'IHM (cas Samuel en haute saison). L'import et la transformation se font de préférence en arrière-plan, avec possibilité de fermer la fenêtre de progression sans annuler l'opération.
 - Si l'utilisateur lance un import alors qu'un autre est en cours, l'application le met en file d'attente plutôt que de refuser ou de paralléliser (préservation des perfs).
 - Les **identifiants observateur et participation** présents dans les noms de fichiers ou les CSV sont conservés en local mais ne sont jamais transmis à un service distant (R8 implicite, [SC2](../../Objectifs%20qualités/Scénario/SC2.md)).
+
+## Enrichissements prévus
+
+> Ces évolutions sont **décidées et maquettées, pas encore livrées**. Elles prolongent ce parcours sans en modifier les étapes actuelles.
+
+- **La fin d'import rend des comptes en chiffres.** Le rapport final énumère aujourd'hui ce qui est passé et ce qui a été écarté ; le [compte rendu chiffré](../Maquettes/M-CompteRendu.md) le restitue en proportions (part importée, part ignorée, part rejetée avec ses motifs), annonce le volume écrit sur le disque, et se termine par l'action suivante plutôt que par un acquittement (#2358).
