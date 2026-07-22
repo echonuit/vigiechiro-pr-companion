@@ -68,16 +68,6 @@
             <FontIcon iconLiteral="fas-broom"/>
           </graphic>
         </Button>
-        <!-- Enveloppe (#789) : le tooltip explique pourquoi l'archivage est bloqué (passage non déposé,
-             ou déjà archivé) et survit à la désactivation du bouton (#1300). -->
-        <StackPane fx:id="enveloppeArchiver">
-          <Button fx:id="boutonArchiver" text="Archiver ce passage"
-                  styleClass="bouton-secondaire" onAction="#archiver">
-            <graphic>
-              <FontIcon iconLiteral="fas-box"/>
-            </graphic>
-          </Button>
-        </StackPane>
         <!-- Enveloppe (#789) : le tooltip explique pourquoi la réactivation est bloquée (rien à
              réactiver : audio déjà là, ou aucune séquence importée) et survit à la désactivation (#1302). -->
         <StackPane fx:id="enveloppeReactiver">

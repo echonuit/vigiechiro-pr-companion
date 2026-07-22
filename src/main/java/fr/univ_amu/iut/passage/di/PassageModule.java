@@ -21,7 +21,6 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.passage.model.AdoptionOriginauxReconstruits;
-import fr.univ_amu.iut.passage.model.BackfillEmpreintes;
 import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.DeclarationPurgeParSessions;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
@@ -33,7 +32,6 @@ import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
-import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -250,22 +248,6 @@ public class PassageModule extends ModuleDeFeature {
                 importObservations);
     }
 
-    /// Archivage d'un passage (#1300) : purge volontaire de l'audio, marqueur explicite, capture
-    /// des empreintes in extremis.
-    @Provides
-    @Singleton
-    ServiceArchivagePassage fournirServiceArchivagePassage(
-            PassageDao passageDao,
-            SessionDao sessionDao,
-            SequenceDao sequenceDao,
-            BackfillEmpreintes backfillEmpreintes,
-            ServicePurgeOriginaux purgeOriginaux,
-            ServiceDisponibiliteAudio disponibilite,
-            Horloge horloge) {
-        return new ServiceArchivagePassage(
-                passageDao, sessionDao, sequenceDao, backfillEmpreintes, purgeOriginaux, disponibilite, horloge);
-    }
-
     /// Moteur (pur) des transitions de workflow d'un passage.
     @Provides
     @Singleton
@@ -343,11 +325,8 @@ public class PassageModule extends ModuleDeFeature {
     /// autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
     @Provides
     PassageViewModel fournirPassageViewModel(
-            ServicePassage service,
-            ServicePurgeOriginaux purge,
-            ServiceArchivagePassage archivage,
-            ServiceReactivationPassage reactivation) {
-        return new PassageViewModel(service, purge, archivage, reactivation);
+            ServicePassage service, ServicePurgeOriginaux purge, ServiceReactivationPassage reactivation) {
+        return new PassageViewModel(service, purge, reactivation);
     }
 
     /// Numéros de série à proposer quand l'utilisateur doit désigner l'enregistreur lui-même (#1828) :

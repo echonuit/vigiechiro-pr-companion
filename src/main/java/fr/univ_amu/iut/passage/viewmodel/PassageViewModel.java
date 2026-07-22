@@ -11,7 +11,6 @@ import fr.univ_amu.iut.commun.viewmodel.Formats;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
-import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.nio.file.Path;
@@ -39,7 +38,6 @@ public class PassageViewModel {
 
     private final ServicePassage service;
     private final ServicePurgeOriginaux purge;
-    private final ServiceArchivagePassage archivage;
     private final ServiceReactivationPassage reactivation;
 
     private final ReadOnlyStringWrapper titreContexte = new ReadOnlyStringWrapper(this, "titreContexte", "");
@@ -64,10 +62,6 @@ public class PassageViewModel {
     private final ReadOnlyBooleanWrapper renommagePossible =
             new ReadOnlyBooleanWrapper(this, "renommagePossible", false);
     private final ReadOnlyBooleanWrapper purgeDisponible = new ReadOnlyBooleanWrapper(this, "purgeDisponible", false);
-    private final ReadOnlyBooleanWrapper archivagePossible =
-            new ReadOnlyBooleanWrapper(this, "archivagePossible", false);
-    private final ReadOnlyStringWrapper motifBlocageArchivage =
-            new ReadOnlyStringWrapper(this, "motifBlocageArchivage", "");
     private final ReadOnlyBooleanWrapper reactivationPossible =
             new ReadOnlyBooleanWrapper(this, "reactivationPossible", false);
     private final ReadOnlyStringWrapper motifBlocageReactivation =
@@ -89,13 +83,9 @@ public class PassageViewModel {
     private int numeroPassage;
 
     public PassageViewModel(
-            ServicePassage service,
-            ServicePurgeOriginaux purge,
-            ServiceArchivagePassage archivage,
-            ServiceReactivationPassage reactivation) {
+            ServicePassage service, ServicePurgeOriginaux purge, ServiceReactivationPassage reactivation) {
         this.service = Objects.requireNonNull(service, "service");
         this.purge = Objects.requireNonNull(purge, "purge");
-        this.archivage = Objects.requireNonNull(archivage, "archivage");
         this.reactivation = Objects.requireNonNull(reactivation, "reactivation");
     }
 
@@ -157,25 +147,6 @@ public class PassageViewModel {
     public void purgerOriginaux() {
         service.cheminSession(idPassage).ifPresent(purge::purgerSession);
         service.marquerOriginauxPurges(idPassage);
-    }
-
-    /// Espace récupérable par l'archivage du passage courant (annonce avant confirmation, #1300).
-    public long volumeArchivable() {
-        return archivage.volumeRecuperable(idPassage);
-    }
-
-    /// Séquences du passage courant encore sans empreinte (#1299) : annoncé avant la confirmation,
-    /// leur identité sera capturée in extremis par l'archivage.
-    public int sequencesSansEmpreinte() {
-        return archivage.sequencesSansEmpreinte(idPassage);
-    }
-
-    /// Archive le passage courant (action « Archiver » de M-Passage, #1300) : purge l'audio, garde
-    /// observations et validations. Délègue à [ServiceArchivagePassage#archiver] ; la
-    /// [fr.univ_amu.iut.commun.model.RegleMetierException] d'un passage non déposé remonte à la vue,
-    /// qui l'affiche. Le rechargement de l'affichage est à la charge de l'appelant.
-    public ServiceArchivagePassage.BilanArchivage archiver() {
-        return archivage.archiver(idPassage);
     }
 
     /// Réactive le passage courant depuis `dossierSource` (action « Réactiver » de M-Passage, #1302) :
@@ -244,12 +215,10 @@ public class PassageViewModel {
                 detail.statut() != StatutWorkflow.DEPOSE && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
         // Purge possible tant qu'il reste des originaux sur disque (volume > 0) ; après purge, il tombe à 0.
         purgeDisponible.set(detail.volumeOriginauxOctets() > 0);
-        // Archivage (#1300) et réactivation (#1302) : gating en amont (#789), le motif alimente le
-        // tooltip de l'enveloppe. Règles pures extraites dans GatingArchive.
-        archivagePossible.set(GatingArchive.archivagePossible(detail));
-        motifBlocageArchivage.set(GatingArchive.motifArchivage(detail));
-        reactivationPossible.set(GatingArchive.reactivationPossible(detail));
-        motifBlocageReactivation.set(GatingArchive.motifReactivation(detail));
+        // Réactivation (#1302) : gating en amont (#789), le motif alimente le tooltip de
+        // l'enveloppe. Règles pures extraites dans GatingReactivation.
+        reactivationPossible.set(GatingReactivation.reactivationPossible(detail));
+        motifBlocageReactivation.set(GatingReactivation.motifReactivation(detail));
         actionRecommandee.set(EtapesWorkflow.prochaineAction(detail.statut()));
     }
 
@@ -273,8 +242,6 @@ public class PassageViewModel {
         suppressionPossible.set(false);
         renommagePossible.set(false);
         purgeDisponible.set(false);
-        archivagePossible.set(false);
-        motifBlocageArchivage.set("");
         reactivationPossible.set(false);
         motifBlocageReactivation.set("");
         actionRecommandee.set(ActionRecommandee.AUCUNE);
@@ -377,14 +344,6 @@ public class PassageViewModel {
         return purgeDisponible.getReadOnlyProperty();
     }
 
-    public ReadOnlyBooleanProperty archivagePossibleProperty() {
-        return archivagePossible.getReadOnlyProperty();
-    }
-
-    public ReadOnlyStringProperty motifBlocageArchivageProperty() {
-        return motifBlocageArchivage.getReadOnlyProperty();
-    }
-
     public ReadOnlyBooleanProperty reactivationPossibleProperty() {
         return reactivationPossible.getReadOnlyProperty();
     }
@@ -411,7 +370,7 @@ public class PassageViewModel {
 
     /// Publie le refus d'une action **réversible** dans le bandeau de l'écran (ADR 0023) : rien n'a été
     /// détruit, donc rien ne justifie de bloquer l'utilisateur. Les refus d'actions irréversibles
-    /// (suppression, purge, archivage) restent modaux et ne passent pas par ici.
+    /// (suppression, purge) restent modaux et ne passent pas par ici.
     public void signalerRefus(String motif) {
         retour.set(RetourOperation.erreur(motif));
     }

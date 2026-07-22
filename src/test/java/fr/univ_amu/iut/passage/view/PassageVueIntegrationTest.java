@@ -25,7 +25,6 @@ import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -209,8 +208,6 @@ class PassageVueIntegrationTest {
         // Déposé : « Modifier le passage » reste ACTIF (météo + micro restent éditables). Le renommage
         // (année/n°), lui, est verrouillé DANS la modale (#1134), plus sur le bouton (#1688).
         assertThat(bouton(vue, "#boutonRattachement").isDisabled()).isFalse();
-        // Déposé avec audio conservé (volumes > 0 dans la fixture) : l'archivage devient possible (#1300).
-        assertThat(bouton(vue, "#boutonArchiver").isDisabled()).isFalse();
         // Déposé → la mise en avant est passée à la carte « Sons & validation » (le dépôt n'est plus recommandé).
         assertThat(estRecommandee(bouton(vue, "#boutonValidation"))).isTrue();
         assertThat(estRecommandee(bouton(vue, "#boutonDepot"))).isFalse();
@@ -269,7 +266,6 @@ class PassageVueIntegrationTest {
     private Parent charger(StatutWorkflow statut, int numero) {
         ServicePassage service = mock(ServicePassage.class);
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
-        ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
         ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
         when(service.detailPassage(anyLong())).thenReturn(detail(statut, numero));
         Injector injector = Guice.createInjector(new AbstractModule() {
@@ -288,7 +284,7 @@ class PassageVueIntegrationTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage, reactivation);
+                return new PassageViewModel(service, purge, reactivation);
             }
 
             @Provides

@@ -105,7 +105,7 @@ complet dans le tableau, avec ses observations : vous le consultez comme n'impor
 
 !!! note "Ce qu'une nuit reconstruite ne contient pas"
     La plateforme ne rend pas tout. Un passage reconstruit arrive donc **sans audio** (c'est un
-    [passage archivé](passage.md#archiver-un-passage-consulter-sans-ecouter) : consultable, pas
+    [passage sans audio](passage.md) : consultable, pas
     écoutable), **sans** journal du capteur ni relevé climatique, et **sans** les séquences que
     Tadarida n'a pas identifiées : le serveur ne les connaît pas. Ces manques sont **affichés** à la
     fin de la reconstruction, pas passés sous silence.

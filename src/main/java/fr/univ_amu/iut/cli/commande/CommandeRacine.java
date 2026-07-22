@@ -40,7 +40,6 @@ import picocli.CommandLine.Spec;
             VerifierMiseAJour.class,
             Auditer.class,
             RetroEmpreintes.class,
-            Archiver.class,
             Reactiver.class,
             ReconstruirePassage.class,
             MetadonneesPassage.class,

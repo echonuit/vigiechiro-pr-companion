@@ -33,7 +33,6 @@ import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -103,7 +102,6 @@ class PassageActionsFicheViewTest {
         service = mock(ServicePassage.class);
         purge = mock(ServicePurgeOriginaux.class);
         when(service.detailPassage(anyLong())).thenReturn(detail(StatutWorkflow.VERIFIE));
-        ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
         ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
 
         Injector injector = Guice.createInjector(new AbstractModule() {
@@ -123,7 +121,7 @@ class PassageActionsFicheViewTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage, reactivation);
+                return new PassageViewModel(service, purge, reactivation);
             }
 
             @Provides

@@ -25,7 +25,6 @@ import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
-import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import fr.univ_amu.iut.passage.viewmodel.PassageViewModel;
@@ -69,7 +68,6 @@ class PassageViewTest {
     void start(Stage stage) throws Exception {
         ServicePassage service = mock(ServicePassage.class);
         ServicePurgeOriginaux purge = mock(ServicePurgeOriginaux.class);
-        ServiceArchivagePassage archivage = mock(ServiceArchivagePassage.class);
         ServiceReactivationPassage reactivation = mock(ServiceReactivationPassage.class);
         when(service.detailPassage(anyLong()))
                 .thenReturn(new DetailPassage(
@@ -104,7 +102,7 @@ class PassageViewTest {
 
             @Provides
             PassageViewModel viewModel() {
-                return new PassageViewModel(service, purge, archivage, reactivation);
+                return new PassageViewModel(service, purge, reactivation);
             }
 
             @Provides
@@ -270,18 +268,6 @@ class PassageViewTest {
 
         assertThat(reactiver.isVisible()).isTrue();
         assertThat(reactiver.isDisabled()).isTrue();
-    }
-
-    @Test
-    @DisplayName("#1300 : « Archiver ce passage » est grisé tant que le passage n'est pas déposé")
-    void bouton_archiver_grise_avant_depot(FxRobot robot) {
-        // Le passage de la fixture est « Vérifié » (≠ Déposé) → archivage bloqué, gaté en amont (#789).
-        Button archiver = robot.lookup("#boutonArchiver").queryAs(Button.class);
-
-        assertThat(archiver.isVisible()).isTrue();
-        assertThat(archiver.isDisabled())
-                .as("l'audio est nécessaire jusqu'au dépôt : archivage bloqué avant")
-                .isTrue();
     }
 
     @Test

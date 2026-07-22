@@ -100,7 +100,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
 
     /// Porteur de compte rendu de l'écran : le pendant du confirmateur pour ce qui est **dit** après
     /// l'action. Exposé aux tests (`notificateur().definir(double)`), sans quoi le `showAndWait` du
-    /// dialogue figerait TestFX headless - et le clic sur « Archiver » resterait à jamais non testé.
+    /// dialogue figerait TestFX headless - et le clic sur « Réactiver » resterait à jamais non testé.
     private final NotificateurModifiable notificateur = new NotificateurModifiable();
 
     /// Porteur de confirmation exposé aux tests (#1013) : `confirmateur().definir(stub)`.
@@ -186,14 +186,6 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
 
     @FXML
     private Button boutonPurger;
-
-    @FXML
-    private Button boutonArchiver;
-
-    /// Enveloppe (non désactivée) du bouton « Archiver » : porte le tooltip expliquant le blocage
-    /// (passage non déposé, ou déjà archivé), cf. [IndicateurBlocage] (#1300).
-    @FXML
-    private StackPane enveloppeArchiver;
 
     @FXML
     private Button boutonReactiver;
@@ -365,19 +357,8 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         // « Purger les originaux » n'apparaît que si des originaux sont encore stockés (volume bruts > 0).
         boutonPurger.visibleProperty().bind(viewModel.purgeDisponibleProperty());
         boutonPurger.managedProperty().bind(viewModel.purgeDisponibleProperty());
-        // « Archiver ce passage » (#1300) : gaté en amont (#789), le tooltip de l'enveloppe explique le
-        // blocage (non déposé, ou déjà archivé) ou décrit l'action quand elle est possible.
-        boutonArchiver
-                .disableProperty()
-                .bind(viewModel.archivagePossibleProperty().not());
-        IndicateurBlocage.expliquer(
-                enveloppeArchiver,
-                Bindings.when(viewModel.archivagePossibleProperty())
-                        .then("Archiver ce passage : libère l'espace de son audio (séquences et bruts) en"
-                                + " gardant observations et validations consultables.")
-                        .otherwise(viewModel.motifBlocageArchivageProperty()));
-        // « Réactiver ce passage » (#1302) : même gating amont. L'action n'apparaît utile que s'il
-        // manque de l'audio (passage archivé, ou disque incomplet).
+        // « Réactiver ce passage » (#1302) : gaté en amont (#789). L'action n'apparaît utile que s'il
+        // manque de l'audio (fichiers déplacés ou supprimés, disque incomplet).
         boutonReactiver
                 .disableProperty()
                 .bind(viewModel.reactivationPossibleProperty().not());
@@ -545,14 +526,6 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
                         selecteur,
                         () -> viewModel.ouvrirSur(idPassage, contexte))
                 .reactiver();
-    }
-
-    /// « Archiver ce passage » (#1300) : confirmation, purge de l'audio et bilan, délégués à
-    /// [ActionArchivage] (le contrôleur reste du pur câblage).
-    @FXML
-    private void archiver() {
-        new ActionArchivage(viewModel, confirmateur, notificateur, () -> viewModel.ouvrirSur(idPassage, contexte))
-                .archiver();
     }
 
     /// « Modifier le passage » : ouvre la modale E2.S8 en fenêtre modale. Elle édite d'un bloc le

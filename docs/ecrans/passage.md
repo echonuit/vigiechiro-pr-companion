@@ -71,44 +71,31 @@ conserve encore des originaux. Cette suppression est **définitive**.
 > Pour purger **toutes les nuits** d'un coup, utilisez le menu « ☰ → Purger les originaux importés… »
 > (voir [Accueil et navigation](index.md)).
 
-## Archiver un passage : consulter sans écouter
+## Quand l'audio n'est plus là
 
-Une nuit d'enregistrement pèse lourd : sur un carré complet, les séquences d'écoute se comptent en
-milliers de fichiers. Une fois le passage **déposé** et analysé par la plateforme, vous n'avez plus
-forcément besoin de garder cet audio sur votre disque.
+L'application ne supprime **jamais** vos fichiers : vous en gardez la maîtrise. Si vous déplacez,
+rangez ou effacez l'audio d'une nuit, le passage cesse simplement d'être **écoutable** - il reste
+**consultable**.
 
-Le bouton **Archiver ce passage** supprime, après confirmation, **l'audio local** de ce passage
-(séquences d'écoute **et** bruts encore présents). Ce qui fait l'intérêt de la nuit **reste
-consultable** :
+Ce qui fait l'intérêt de la nuit ne bouge pas :
 
 - les **observations** et vos **validations** (taxons corrigés, références, commentaires, marquages
   « douteux ») ;
 - les **résultats Tadarida** (le CSV), le **journal du capteur** et le **relevé climatique** ;
-- l'historique du passage : vous voyez toujours vos nuits, même sans en avoir gardé les données
-  d'origine.
+- l'historique du passage : vous voyez toujours vos nuits, même sans en avoir gardé l'audio.
 
-Ce que vous perdez, c'est **l'écoute** : le passage devient un **passage archivé**.
+Dans **Sons & validation**, un bandeau l'annonce et le lecteur audio est remplacé par une
+explication. **Tout le reste continue de fonctionner** : la liste des observations, les filtres, le
+tri, les colonnes, les vues mémorisées, les commentaires, le marquage « douteux », les corrections et
+les exports. Vous ne pouvez simplement plus **écouter**.
 
-!!! warning "Ce que la confirmation vous dit, et pourquoi elle insiste"
-    L'espace récupéré est **annoncé avant** que vous ne confirmiez. Surtout : pour **réécouter** un
-    jour, il faudra **réimporter les mêmes fichiers**. La plateforme Vigie-Chiro **ne rend pas**
-    l'audio d'un dépôt au format ZIP (le mode par défaut) : sans vos fichiers d'origine, la perte est
-    **définitive**. Archivez donc un passage dont vous avez une **sauvegarde**, ou dont l'audio ne
-    vous sert plus.
+L'**audit de cohérence** ne s'en alarme pas : un audio absent est un **état**, pas une corruption. Il
+apparaît en simple **information**, avec le décompte des séquences encore présentes.
 
-Le bouton n'est actif que sur un passage **déposé** (avant le dépôt, l'audio est nécessaire à
-l'analyse) et qui conserve encore de l'audio. Sinon, il est grisé : **survolez-le**, l'infobulle dit
-pourquoi.
-
-### Ce que devient un passage archivé
-
-Dans **Sons & validation**, un bandeau annonce que le passage est archivé, et le lecteur audio est
-remplacé par une explication. **Tout le reste continue de fonctionner** : la liste des observations,
-les filtres, le tri, les colonnes, les vues mémorisées, les commentaires, le marquage « douteux »,
-les corrections et les exports. Vous ne pouvez simplement plus **écouter**.
-
-L'**audit de cohérence** ne s'en alarme pas : un passage archivé volontairement n'est pas un passage
-corrompu. Il apparaît en simple **information**, avec le décompte des séquences encore présentes.
+!!! warning "La plateforme ne vous rendra pas l'audio d'un dépôt ZIP"
+    Pour réécouter, il faut **vos** fichiers. La plateforme Vigie-Chiro **ne rend pas** l'audio d'un
+    dépôt au format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable.
+    Gardez donc une **sauvegarde** de ce à quoi vous tenez.
 
 ## Réactiver un passage : réimporter les fichiers d'origine
 

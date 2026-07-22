@@ -17,7 +17,6 @@ import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
-import fr.univ_amu.iut.passage.model.ServiceArchivagePassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.nio.file.Path;
@@ -46,16 +45,13 @@ class PassageViewModelTest {
     private ServicePurgeOriginaux purge;
 
     @Mock
-    private ServiceArchivagePassage archivage;
-
-    @Mock
     private ServiceReactivationPassage reactivation;
 
     private PassageViewModel viewModel;
 
     @BeforeEach
     void preparer() {
-        viewModel = new PassageViewModel(service, purge, archivage, reactivation);
+        viewModel = new PassageViewModel(service, purge, reactivation);
     }
 
     private static DetailPassage detail(StatutWorkflow statut) {
@@ -367,50 +363,6 @@ class PassageViewModelTest {
 
         verify(purge).purgerSession(racineSession);
         verify(service).marquerOriginauxPurges(ID_PASSAGE);
-    }
-
-    @Test
-    @DisplayName("#1300 : l'archivage est possible sur un passage déposé qui conserve encore de l'audio")
-    void archivage_possible_sur_depose_avec_audio() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        assertThat(viewModel.archivagePossibleProperty().get()).isTrue();
-        assertThat(viewModel.motifBlocageArchivageProperty().get()).isEmpty();
-    }
-
-    @Test
-    @DisplayName("#1300 : l'archivage est bloqué avant le dépôt, avec le motif affiché")
-    void archivage_bloque_avant_depot() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.VERIFIE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        assertThat(viewModel.archivagePossibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageArchivageProperty().get()).contains("pas encore déposé");
-    }
-
-    @Test
-    @DisplayName("#1300 : un passage déjà archivé (plus d'audio) est bloqué avec le motif « déjà archivé »")
-    void archivage_bloque_si_deja_archive() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailSansAudio(StatutWorkflow.DEPOSE));
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        assertThat(viewModel.archivagePossibleProperty().get()).isFalse();
-        assertThat(viewModel.motifBlocageArchivageProperty().get()).contains("Déjà archivé");
-    }
-
-    @Test
-    @DisplayName("#1300 : archiver, volumeArchivable et sequencesSansEmpreinte délèguent au service d'archivage")
-    void archiver_delegue_au_service() {
-        when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
-        when(archivage.volumeRecuperable(ID_PASSAGE)).thenReturn(42L);
-        when(archivage.sequencesSansEmpreinte(ID_PASSAGE)).thenReturn(3);
-        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
-
-        assertThat(viewModel.volumeArchivable()).isEqualTo(42L);
-        assertThat(viewModel.sequencesSansEmpreinte()).isEqualTo(3);
-        viewModel.archiver();
-        verify(archivage).archiver(ID_PASSAGE);
     }
 
     @Test

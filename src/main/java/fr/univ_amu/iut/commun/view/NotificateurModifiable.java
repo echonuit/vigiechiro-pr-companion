@@ -7,7 +7,7 @@ import java.util.Objects;
 /// un `showAndWait` natif figerait TestFX headless.
 ///
 /// Le contrôleur en détient une instance `final` et l'expose à ses tests, comme il le fait déjà du
-/// confirmateur : c'est ce qui permet de cliquer réellement sur « Archiver ce passage » dans un test et
+/// confirmateur : c'est ce qui permet de cliquer réellement sur « Réactiver ce passage » dans un test et
 /// de vérifier **ce qui a été fait** autant que **ce qui a été dit**.
 public final class NotificateurModifiable implements Notificateur {
 

@@ -70,26 +70,24 @@ Deux niveaux, du plus anodin au plus engageant.
     L'application ne conserve plus ces copies par défaut : vous n'aurez donc rien à purger sur vos
     imports récents, et ces boutons n'apparaissent que s'il reste effectivement des originaux à
     supprimer. Voir [Importer une nuit](ecrans/importation.md).
-2. **Archiver un passage** : supprime aussi les **séquences d'écoute**. Vos observations et vos
-   validations restent consultables, mais vous ne pouvez plus **écouter** ce passage. Ne le faites que
-   sur un passage **déposé**, et de préférence si vous avez une **sauvegarde** des fichiers.
+### L'audio d'une nuit a disparu, puis-je le récupérer ?
 
-### J'ai archivé un passage, puis-je récupérer le son ?
-
-Oui, **si vous avez encore les fichiers** : le bouton **Réactiver ce passage** les réimporte depuis un
+Oui, **si vous avez encore les fichiers** : le bouton **Réactiver ce passage** les rebranche depuis un
 dossier que vous désignez, après avoir **vérifié** que ce sont bien les mêmes (voir
-[Passage](ecrans/passage.md)).
+[Passage](ecrans/passage.md)). C'est la marche à suivre quand vous avez déplacé vos dossiers ou changé
+de point de montage.
 
 En revanche, **la plateforme Vigie-Chiro ne vous rendra pas cet audio** si votre dépôt a été fait au
 format ZIP (le mode par défaut) : le serveur n'en conserve pas de copie téléchargeable. Sans vos
 fichiers d'origine, la perte est **définitive** — c'est exactement ce que la confirmation vous
-rappelle avant d'archiver.
+rappelle.
 
-### L'audit de cohérence signale-t-il un passage archivé comme une erreur ?
+### L'audit de cohérence signale-t-il un audio absent comme une erreur ?
 
-Non. Un passage archivé **volontairement** apparaît en simple **information**, avec le décompte des
-séquences encore présentes. En revanche, des fichiers qui disparaissent **sans** que vous ayez archivé
-restent signalés en **erreur** : c'est justement ce qu'on veut voir.
+Non. Un audio absent est un **état**, pas une corruption : vous êtes maître de vos fichiers, et
+l'application n'a pas à s'alarmer que vous les ayez rangés ailleurs. Le passage apparaît en simple
+**information**, avec le décompte des séquences encore présentes. Pour le réécouter, désignez le
+dossier où ils se trouvent désormais : voir **Réactiver ce passage**.
 
 ## Divers
 
