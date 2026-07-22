@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.38.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.37.0...v2.38.0) (2026-07-22)
+
+
+### Features
+
+* **reactivation:** offrir le choix copier / laisser sur place à l'écran (ADR 0048) ([#2361](https://github.com/echonuit/vigiechiro-pr-companion/issues/2361)) ([385956b](https://github.com/echonuit/vigiechiro-pr-companion/commit/385956b36eda20a8789fd900ca64a215303f9da5)), closes [#2255](https://github.com/echonuit/vigiechiro-pr-companion/issues/2255) [#2258](https://github.com/echonuit/vigiechiro-pr-companion/issues/2258) [#2255](https://github.com/echonuit/vigiechiro-pr-companion/issues/2255) [#2258](https://github.com/echonuit/vigiechiro-pr-companion/issues/2258)
+
 # [2.37.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.36.0...v2.37.0) (2026-07-22)
 
 
