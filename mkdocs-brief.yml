@@ -3,12 +3,17 @@ site_description: >-
   Dossier de conception de VigieChiro Companion : besoin, modèle de données,
   parcours utilisateurs, maquettes et story mapping.
 site_url: https://brief.echonuit.fr/
-repo_url: https://github.com/echonuit/brief
-repo_name: echonuit/brief
-edit_uri: edit/main/
+repo_url: https://github.com/echonuit/vigiechiro-pr-companion
+repo_name: echonuit/vigiechiro-pr-companion
+edit_uri: edit/main/brief/docs/
 
-docs_dir: docs
-site_dir: site
+# Les sources du brief vivent désormais dans ce dépôt, aux côtés de `docs/` (guide
+# utilisateur) et `dev-docs/` (documentation développeur) : une conception qui bouge
+# en même temps que le produit ne demande plus deux mises à jour dans deux dépôts.
+# `echonuit/brief` ne reçoit plus que le site construit, comme `companion` et
+# `companion-dev`. L'historique des 129 commits d'origine a été greffé sous `brief/`.
+docs_dir: brief/docs
+site_dir: site-brief
 
 theme:
   name: material
