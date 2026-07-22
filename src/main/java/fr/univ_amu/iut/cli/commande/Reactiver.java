@@ -3,9 +3,11 @@ package fr.univ_amu.iut.cli.commande;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import fr.univ_amu.iut.cli.FormatJson;
+import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.viewmodel.TexteCompteRendu;
 import fr.univ_amu.iut.passage.model.CompteRenduReactivation;
 import fr.univ_amu.iut.passage.model.IndiceAcoustique;
+import fr.univ_amu.iut.passage.model.ModeRebranchement;
 import fr.univ_amu.iut.passage.model.RapportReactivation;
 import fr.univ_amu.iut.passage.model.RapportReactivation.EcartReactivation;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
@@ -52,6 +54,13 @@ public final class Reactiver implements Callable<Integer> {
             description = "Dossier contenant les fichiers d'origine (exploré récursivement).")
     private Path source;
 
+    @Option(
+            names = "--referencer",
+            description = "Ne copie rien : la base pointe les fichiers là où ils sont (NAS, disque externe, "
+                    + "dossier de travail). La nuit devient muette si ce support n'est plus joignable, et "
+                    + "redevient écoutable quand il revient. Sans cette option, les fichiers sont copiés.")
+    private boolean referencer;
+
     @Option(names = "--json", description = "Émet le rapport au format JSON plutôt qu'en texte.")
     private boolean json;
 
@@ -71,7 +80,14 @@ public final class Reactiver implements Callable<Integer> {
     public Integer call() {
         PrintWriter sortie = spec.commandLine().getOut();
         // Lève RegleMetierException (passage inconnu, jamais importé, dossier introuvable) → code 1.
-        RapportReactivation rapport = service.get().reactiver(idPassage, source, progres -> {});
+        RapportReactivation rapport = service.get()
+                .reactiver(
+                        idPassage,
+                        source,
+                        referencer ? ModeRebranchement.REFERENCE : ModeRebranchement.COPIE,
+                        progres -> {},
+                        progres -> {},
+                        JetonAnnulation.neutre());
         sortie.println(json ? FormatJson.objet(projeter(rapport)) : enTexte(rapport));
         return rapport.complete() ? 0 : 1;
     }

@@ -68,12 +68,32 @@ final class RebranchementSequences {
         }
     }
 
+    /// Ce qu'on fait d'un candidat **vérifié**. Deux gestes possibles, et le choix appartient à
+    /// l'appelant :
+    ///
+    /// - **copier** ([#COPIE]) : le fichier rejoint l'emplacement que la base attend. L'audio devient
+    ///   *possédé* par l'espace de travail ;
+    /// - **référencer** (#2255) : rien n'est déplacé, c'est la **base** qui pointe désormais le fichier
+    ///   là où il vit. L'audio reste *à l'utilisateur* - sur son NAS, son disque externe, son dossier.
+    ///
+    /// Cette classe ignore la persistance : elle sait vérifier et déléguer, pas écrire. Le geste qui
+    /// touche la base est fourni par [ServiceReactivationPassage], qui, lui, tient les DAO.
+    @FunctionalInterface
+    interface PoseurCandidat {
+        void poser(SequenceDEcoute sequence, Path candidat, Path destination);
+    }
+
+    /// Le geste historique : copier (**jamais** déplacer, la sauvegarde de l'utilisateur reste intacte)
+    /// le fichier vérifié à l'emplacement que la base attend.
+    static final PoseurCandidat COPIE = (sequence, candidat, destination) -> copier(candidat, destination);
+
     /// Confronte chaque séquence **absente du disque** aux fichiers candidats de même nom, et rebranche
-    /// ce qui est vérifié.
+    /// ce qui est vérifié, par le geste que `poseur` décide (copie ou référence).
     BilanReactivation rebrancher(
             List<SequenceDEcoute> sequences,
             CandidatsReactivation candidats,
             OrigineCandidats origine,
+            PoseurCandidat poseur,
             Consumer<Progression> progres) {
         BilanReactivation bilan = new BilanReactivation();
         int traitees = 0;
@@ -93,7 +113,7 @@ final class RebranchementSequences {
                 bilan.absenter(sequence.nomFichier(), origine.motifAbsence(), 1);
                 continue;
             }
-            appliquer(bilan, sequence, homonymes, destination);
+            appliquer(bilan, sequence, homonymes, destination, poseur);
         }
         return bilan;
     }
@@ -107,14 +127,19 @@ final class RebranchementSequences {
     ///
     /// Aucun risque ajouté : chaque candidat passe la cascade complète. Si **tous** échouent, l'écart
     /// rapporté est celui du premier, et il dit combien de fichiers portaient ce nom.
-    private void appliquer(BilanReactivation bilan, SequenceDEcoute sequence, List<Path> homonymes, Path destination) {
+    private void appliquer(
+            BilanReactivation bilan,
+            SequenceDEcoute sequence,
+            List<Path> homonymes,
+            Path destination,
+            PoseurCandidat poseur) {
         List<CriAttendu> cris =
                 crisAttendus.map(port -> port.pour(sequence.id())).orElseGet(List::of);
         String premierMotif = null;
         for (Path candidat : homonymes) {
             VerdictRegenere resultat = verifier(sequence, candidat, cris);
             if (resultat.verdict() instanceof Acceptee acceptee) {
-                copier(candidat, destination);
+                poseur.poser(sequence, candidat, destination);
                 bilan.accepter(acceptee.niveau());
                 bilan.noterAcoustique(resultat.concordanceCris());
                 return;

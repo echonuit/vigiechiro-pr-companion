@@ -167,6 +167,17 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
     }
 
     /// Renseigne l'horodatage de capture d'une séquence (backfill ciblé, sans réécrire les autres colonnes).
+    /// Fait pointer une séquence sur un **autre fichier** (#2255) : c'est le geste de la réactivation
+    /// « par référence », où rien n'est copié et où la base suit l'audio là où l'utilisateur le garde.
+    /// Le fichier a été **vérifié** avant d'arriver ici (cascade #1309) : on ne réécrit jamais un chemin
+    /// sur la foi d'un nom.
+    public void majChemin(long idSequence, java.nio.file.Path chemin) {
+        executerMaj(
+                "UPDATE listening_sequence SET file_path = ? WHERE id = ?",
+                chemin.toAbsolutePath().toString(),
+                idSequence);
+    }
+
     public void majHorodatage(long idSequence, LocalDateTime horodatage) {
         executerMaj(
                 "UPDATE listening_sequence SET recorded_at = ? WHERE id = ?", texteHorodatage(horodatage), idSequence);

@@ -150,7 +150,7 @@ public class ServiceReactivationPassage {
     public RapportReactivation reactiver(
             Long idPassage, Path dossierSource, Consumer<Progression> progres, JetonAnnulation jeton) {
         Objects.requireNonNull(progres, "progres");
-        return reactiver(idPassage, dossierSource, progres, progres, jeton);
+        return reactiver(idPassage, dossierSource, ModeRebranchement.COPIE, progres, progres, jeton);
     }
 
     /// Variante à **deux progressions** (#1780) : depuis S3 (#1571) la réactivation enchaîne deux phases
@@ -162,9 +162,21 @@ public class ServiceReactivationPassage {
     ///
     /// @param jeton consulté aux points de contrôle ; `annuler()` interrompt à la prochaine frontière /
     ///     page, en levant une [OperationAnnuleeException]
+    /// Variante à deux progressions **sans mode** : rebranche en **copiant**, le geste historique
+    /// (#1302). L'IHM l'utilise tant qu'elle n'offre pas le choix ; la CLI, elle, passe le mode.
     public RapportReactivation reactiver(
             Long idPassage,
             Path dossierSource,
+            Consumer<Progression> progresRegeneration,
+            Consumer<Progression> progresAncrage,
+            JetonAnnulation jeton) {
+        return reactiver(idPassage, dossierSource, ModeRebranchement.COPIE, progresRegeneration, progresAncrage, jeton);
+    }
+
+    public RapportReactivation reactiver(
+            Long idPassage,
+            Path dossierSource,
+            ModeRebranchement mode,
             Consumer<Progression> progresRegeneration,
             Consumer<Progression> progresAncrage,
             JetonAnnulation jeton) {
@@ -181,6 +193,11 @@ public class ServiceReactivationPassage {
                 .orElseThrow(() -> new RegleMetierException(
                         "Passage jamais importé localement : rien à réactiver pour " + idPassage + "."));
 
+        // #2255 : copier ou référencer. En référence, aucun fichier ne bouge - c'est la base qui suit
+        // l'audio là où l'utilisateur le garde. Le candidat a été vérifié avant d'arriver ici.
+        RebranchementSequences.PoseurCandidat poseur = mode == ModeRebranchement.REFERENCE
+                ? (sequence, candidat, destination) -> sequenceDao.majChemin(sequence.id(), candidat)
+                : RebranchementSequences.COPIE;
         List<SequenceDEcoute> sequences = sequenceDao.findBySession(session.id());
         List<EnregistrementOriginal> originaux = originalDao.findBySession(session.id());
         CandidatsReactivation candidats = CandidatsReactivation.dans(dossierSource);
@@ -207,10 +224,12 @@ public class ServiceReactivationPassage {
                 progresRegeneration.accept(new Progression(ADOPTION_ORIGINAUX, 1.0));
                 adopterOriginaux(session, originaux, resultat);
             } else {
-                bilan = rebranchement.rebrancher(sequences, candidats, OrigineCandidats.DOSSIER, progresRegeneration);
+                bilan = rebranchement.rebrancher(
+                        sequences, candidats, OrigineCandidats.DOSSIER, poseur, progresRegeneration);
             }
         } else {
-            bilan = rebranchement.rebrancher(sequences, candidats, OrigineCandidats.DOSSIER, progresRegeneration);
+            bilan = rebranchement.rebrancher(
+                    sequences, candidats, OrigineCandidats.DOSSIER, poseur, progresRegeneration);
         }
 
         // Entre la dernière séquence traitée et la première page d'ancrage, le travail continue sans qu'aucune

@@ -188,6 +188,7 @@ final class HydratationDepuisBruts {
                     sesSequences,
                     CandidatsReactivation.dans(temporaire),
                     OrigineCandidats.REGENERATION,
+                    RebranchementSequences.COPIE,
                     avancement -> {});
             return new ContributionBrut(bilan, rebranche);
         } finally {

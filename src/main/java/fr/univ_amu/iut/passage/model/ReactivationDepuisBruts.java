@@ -164,6 +164,7 @@ final class ReactivationDepuisBruts {
                     sesSequences,
                     CandidatsReactivation.dans(temporaire),
                     OrigineCandidats.REGENERATION,
+                    RebranchementSequences.COPIE,
                     progres -> {}));
         } finally {
             DossierTemporaire.supprimer(temporaire);

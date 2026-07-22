@@ -145,6 +145,38 @@ class ServiceReactivationPassageTest {
     }
 
     @Test
+    @DisplayName("#2255 : en mode RÉFÉRENCE, rien n'est copié - la base suit l'audio là où il vit")
+    void reference_ne_copie_rien_et_fait_suivre_la_base() throws IOException {
+        archiverAvecSauvegarde(true, true);
+        long fichiersAvant;
+        try (var flux = java.nio.file.Files.walk(sauvegarde)) {
+            fichiersAvant = flux.filter(java.nio.file.Files::isRegularFile).count();
+        }
+
+        RapportReactivation rapport = service.reactiver(
+                idPassage,
+                sauvegarde,
+                ModeRebranchement.REFERENCE,
+                progres -> {},
+                progres -> {},
+                JetonAnnulation.neutre());
+
+        assertThat(rapport.complete())
+                .as("les mêmes fichiers sont vérifiés, quel que soit le geste qui suit")
+                .isTrue();
+        assertThat(sequenceDao.findBySession(idSession))
+                .as("la base pointe désormais le dossier de l'utilisateur, pas l'espace de travail")
+                .isNotEmpty()
+                .allSatisfy(sequence -> assertThat(java.nio.file.Path.of(sequence.cheminFichier()))
+                        .startsWithRaw(sauvegarde));
+        try (var flux = java.nio.file.Files.walk(sauvegarde)) {
+            assertThat(flux.filter(java.nio.file.Files::isRegularFile).count())
+                    .as("le dossier de l'utilisateur est laissé intact : ni copie ni déplacement")
+                    .isEqualTo(fichiersAvant);
+        }
+    }
+
+    @Test
     @DisplayName("Les bons fichiers réimportés réactivent le passage : COMPLETE, marqueur d'archivage effacé")
     void bons_fichiers_reactivent() throws IOException {
         archiverAvecSauvegarde(true, true);
