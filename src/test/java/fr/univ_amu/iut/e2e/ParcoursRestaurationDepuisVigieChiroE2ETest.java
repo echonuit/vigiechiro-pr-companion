@@ -162,9 +162,6 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .isEqualTo("1925492");
         SessionDEnregistrement sessionSquelette =
                 sessionDao.trouverParPassage(squelette.id()).orElseThrow();
-        assertThat(sessionSquelette.archivee())
-                .as("un squelette naît archivé : rien n'a jamais été importé ici")
-                .isTrue();
         assertThat(sequenceDao.findBySession(sessionSquelette.id()))
                 .as("un squelette n'a toujours pas de séquence : identité oui, audio/observations à la reconstruction")
                 .isEmpty();
@@ -217,7 +214,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
                 .singleElement()
                 .satisfies(constat -> {
                     assertThat(constat.severite()).isEqualTo(Severite.INFO);
-                    assertThat(constat.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
+                    assertThat(constat.categorie()).isEqualTo(CategorieConstat.AUDIO_INDISPONIBLE);
                 });
     }
 
@@ -270,9 +267,6 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         SessionDao sessionDao = new SessionDao(source);
         SessionDEnregistrement session =
                 sessionDao.trouverParPassage(rapport.idPassage()).orElseThrow();
-        assertThat(session.archivee())
-                .as("l'audio revenu : le passage n'est plus archivé")
-                .isFalse();
         assertThat(new EnregistrementOriginalDao(source).findBySession(session.id()))
                 .as("le placeholder a cédé la place aux vrais originaux, porteurs de leur fréquence d'acquisition")
                 .isNotEmpty()

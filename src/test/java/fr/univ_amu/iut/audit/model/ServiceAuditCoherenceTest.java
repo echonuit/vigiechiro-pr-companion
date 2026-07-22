@@ -168,31 +168,8 @@ class ServiceAuditCoherenceTest {
                 .isFalse();
         assertThat(rapport.constats()).singleElement().satisfies(c -> {
             assertThat(c.severite()).isEqualTo(Severite.INFO);
-            assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
+            assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_INDISPONIBLE);
             assertThat(c.detail()).contains("PARTIELLE").contains("1/2 séquence(s)");
-        });
-    }
-
-    @Test
-    @DisplayName("#1348 : passage archivé (marqueur posé) : un seul constat INFO, zéro erreur")
-    void passage_archive_un_seul_constat_informatif() throws IOException {
-        Long idPassage = creerSessionCoherente(1);
-        supprimerAudio();
-        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
-        sessionDao.marquerArchivee(idSession, java.time.LocalDateTime.of(2026, 7, 13, 18, 30));
-
-        RapportAudit rapport = service.auditerPassage(idPassage);
-
-        assertThat(rapport.aDesErreurs())
-                .as("archivé volontairement n'est pas corrompu : code de sortie CLI 0")
-                .isFalse();
-        assertThat(rapport.constats()).singleElement().satisfies(c -> {
-            assertThat(c.severite()).isEqualTo(Severite.INFO);
-            assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_ARCHIVE);
-            assertThat(c.detail())
-                    .as("#1304 : le constat porte la disponibilité observée et le décompte (parité CLI)")
-                    .contains("ABSENTE")
-                    .contains("0/2 séquence(s)");
         });
     }
 
@@ -203,8 +180,7 @@ class ServiceAuditCoherenceTest {
         // Les séquences sont supprimées, mais AUCUN marqueur n'est posé : dans le modèle « observé »
         // (ADR 0048), l'absence de l'audio est un ÉTAT (l'utilisateur possède ses fichiers), pas une
         // corruption. Les bruts restent en place : seule la disponibilité des séquences est en jeu.
-        Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 0)));
-        Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 1)));
+        supprimerSequences();
 
         RapportAudit rapport = service.auditerPassage(idPassage);
 
@@ -236,34 +212,31 @@ class ServiceAuditCoherenceTest {
                 .isFalse();
         assertThat(rapport.constats())
                 .as("sans séquence, aucun constat de disponibilité audio n'est émis (ADR 0048)")
-                .noneMatch(c -> c.categorie() == CategorieConstat.AUDIO_ARCHIVE);
+                .noneMatch(c -> c.categorie() == CategorieConstat.AUDIO_INDISPONIBLE);
     }
 
     @Test
-    @DisplayName("#1348 : archivé n'exempte que l'audio : un journal manquant reste une erreur")
-    void passage_archive_journal_manquant_reste_une_erreur() throws IOException {
+    @DisplayName("ADR 0048 : l'audio absent n'exempte que lui : un journal manquant reste une erreur")
+    void audio_absent_journal_manquant_reste_une_erreur() throws IOException {
         Long idPassage = creerSessionCoherente(1);
-        supprimerAudio();
+        supprimerSequences();
         Files.delete(racineSession.resolve("LogPR" + SERIE + ".txt"));
-        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
-        sessionDao.marquerArchivee(idSession, java.time.LocalDateTime.of(2026, 7, 13, 18, 30));
 
         RapportAudit rapport = service.auditerPassage(idPassage);
 
         assertThat(rapport.aDesErreurs())
-                .as("le journal survit à l'archivage : son absence est un vrai problème")
+                .as("le journal ne suit pas le sort de l'audio : son absence est un vrai problème")
                 .isTrue();
         assertThat(rapport.constats())
                 .extracting(ConstatAudit::categorie)
-                .containsExactlyInAnyOrder(CategorieConstat.AUDIO_ARCHIVE, CategorieConstat.DISQUE_MANQUANT);
+                .containsExactlyInAnyOrder(CategorieConstat.AUDIO_INDISPONIBLE, CategorieConstat.DISQUE_MANQUANT);
     }
 
-    /// Supprime tout l'audio de la session cohérente (les 2 séquences et le brut) : l'état d'un
-    /// passage réellement archivé (#1300).
-    private void supprimerAudio() throws IOException {
+    /// Supprime les 2 séquences d'écoute de la session cohérente, en laissant les bruts : l'audio
+    /// devient observé ABSENT sans toucher au chemin des originaux (encore gouverné par #1303).
+    private void supprimerSequences() throws IOException {
         Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 0)));
         Files.delete(racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 1)));
-        Files.delete(racineSession.resolve("bruts").resolve(NOM_ORIGINAL));
     }
 
     @Test

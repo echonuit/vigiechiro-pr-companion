@@ -90,9 +90,9 @@ class CreationPassageArchiveTest {
                 .isPresent();
         SessionDEnregistrement session =
                 new SessionDao(source).trouverParPassage(r.idPassage()).orElseThrow();
-        assertThat(session.archivee())
-                .as("le passage naît archivé (aucun audio)")
-                .isTrue();
+        assertThat(session.volumeSequencesOctets())
+                .as("le passage naît sans audio : aucun octet de séquence")
+                .isZero();
         assertThat(new SequenceDao(source).findBySession(session.id()))
                 .as("une ligne de séquence par fichier distant, sans fichier sur disque")
                 .hasSize(2);
@@ -124,7 +124,9 @@ class CreationPassageArchiveTest {
                 .isEqualTo("ICS");
         SessionDEnregistrement session =
                 new SessionDao(source).trouverParPassage(r.idPassage()).orElseThrow();
-        assertThat(session.archivee()).as("la nuit naît archivée").isTrue();
+        assertThat(session.volumeSequencesOctets())
+                .as("la nuit naît sans audio")
+                .isZero();
         assertThat(new SequenceDao(source).findBySession(session.id()))
                 .as("0 séquence : l'audio et les observations viennent à la reconstruction")
                 .isEmpty();

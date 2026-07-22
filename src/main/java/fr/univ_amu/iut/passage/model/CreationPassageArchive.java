@@ -215,15 +215,14 @@ public final class CreationPassageArchive {
                 .id();
     }
 
-    /// Session **archivée d'emblée** : le passage naît sans audio (rien n'a jamais été importé ici). Le
-    /// marqueur explicite (#1300) le dit, si bien que l'audit informe au lieu de crier (#1303).
+    /// Session **sans audio d'emblée** : le passage naît sans fichier (rien n'a jamais été importé
+    /// ici). Rien à déclarer - la disponibilité est **observée** sur le disque (ADR 0048) : sans
+    /// fichier, elle vaut ABSENTE, et l'audit informe au lieu de crier.
     private Long creerSessionArchivee(Long idPassage, Prefixe prefixe) {
         Path racine = workspace.dossierSession(prefixe.nomDossierSession());
-        Long idSession = sessionDao
+        return sessionDao
                 .insert(new SessionDEnregistrement(null, racine.toString(), 0L, 0L, idPassage))
                 .id();
-        sessionDao.marquerArchivee(idSession, horloge.maintenant());
-        return idSession;
     }
 
     /// Recrée une **ligne** de séquence par donnée distante (nom de fichier), sans fichier sur disque : le

@@ -156,9 +156,6 @@ class ServiceReactivationPassageTest {
         assertThat(rapport.manquantes()).isZero();
         assertThat(rapport.complete()).isTrue();
         assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.COMPLETE);
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
-                .as("l'audio est revenu : le passage n'est plus archivé")
-                .isFalse();
         assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().volumeSequencesOctets())
                 .as("la fiche du passage retrouve son volume")
                 .isPositive();
@@ -368,8 +365,6 @@ class ServiceReactivationPassageTest {
         assertThat(disponibilite.disponibilite(idPassage))
                 .as("aucun fichier douteux n'est rebranché en silence")
                 .isEqualTo(DisponibiliteAudio.ABSENTE);
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
-                .isTrue();
     }
 
     @Test
@@ -383,9 +378,6 @@ class ServiceReactivationPassageTest {
         assertThat(rapport.manquantes()).isEqualTo(1);
         assertThat(rapport.decompte()).isEqualTo(new DecompteAudio(1, 2));
         assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.PARTIELLE);
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
-                .as("les absences restantes sont toujours expliquées par l'archivage")
-                .isTrue();
     }
 
     @Test
@@ -488,9 +480,6 @@ class ServiceReactivationPassageTest {
                 .isEqualTo(NiveauConfiance.CERTITUDE);
         assertThat(rapport.complete()).isTrue();
         assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.COMPLETE);
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
-                .as("l'audio est revenu : le passage n'est plus archivé")
-                .isFalse();
         assertThat(noms).allSatisfy(nom -> assertThat(transformes.resolve(nom)).exists());
     }
 
@@ -577,9 +566,6 @@ class ServiceReactivationPassageTest {
         assertThat(disponibilite.disponibilite(idPassage))
                 .as("rien n'a été rebranché : l'audio reste absent")
                 .isEqualTo(DisponibiliteAudio.ABSENTE);
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
-                .as("le passage reste archivé : l'audio n'est pas revenu")
-                .isTrue();
     }
 
     @Test
@@ -599,9 +585,6 @@ class ServiceReactivationPassageTest {
                 .isEqualTo(NiveauConfiance.FORTE);
         assertThat(rapport.complete()).isTrue();
         assertThat(disponibilite.disponibilite(idPassage)).isEqualTo(DisponibiliteAudio.COMPLETE);
-        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().archivee())
-                .as("l'audio est revenu : le passage n'est plus archivé")
-                .isFalse();
         assertThat(noms).allSatisfy(nom -> assertThat(transformes.resolve(nom)).exists());
 
         // #1651 : le placeholder est remplacé par de vrais originaux (avec fréquence), et les originaux sont
@@ -815,10 +798,9 @@ class ServiceReactivationPassageTest {
                     null,
                     avecEmpreinte ? Files.size(fichier) : null,
                     avecEmpreinte ? Empreintes.empreinteCourte(fichier) : null));
-            Files.delete(fichier); // archivage : l'audio quitte le workspace
+            Files.delete(fichier); // l'audio quitte le workspace : absence observee
             index++;
         }
-        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
     }
 
     /// WAV synthétique écrit comme le pipeline (en-tête à Fe/10, durée réelle [#DUREE_REELLE_S]) ; la
@@ -922,7 +904,6 @@ class ServiceReactivationPassageTest {
             ecrireBrut(garde, 99); // même nom, autre contenu : l'imposteur
         }
         Files.delete(brut); // archivage : les bruts aussi ont été purgés
-        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
         return noms;
     }
 
@@ -979,7 +960,6 @@ class ServiceReactivationPassageTest {
                     null));
             index++;
         }
-        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
 
         // Les bruts sont bien là, sous leur nom de carte SD : c'est tout l'objet du bug.
         ecrireBrut(sauvegarde.resolve(NOM_SD_BRUT), 42);
@@ -1046,7 +1026,6 @@ class ServiceReactivationPassageTest {
             Files.delete(produite.chemin()); // archivage : les tranches quittent le disque
             index++;
         }
-        sessionDao.marquerArchivee(idSession, LocalDateTime.of(2026, 7, 13, 18, 30));
 
         // Ce que l'utilisateur a gardé : son brut (nom de carte SD) et le log de l'enregistreur.
         Files.copy(brut, sauvegarde.resolve(NOM_SD_BRUT));

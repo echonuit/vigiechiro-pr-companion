@@ -123,10 +123,12 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
       une nuit de 4806 séquences, contre plusieurs minutes pour une empreinte complète - et elle
       suffit à distinguer deux WAV différents, dont les en-têtes et les premières trames diffèrent.
       Elle est posée **à l'import** (`TransformationAudio`) ; les nuits déjà importées se rattrapent
-      avec `retro-empreintes` (`BackfillEmpreintes`), et l'archivage la pose **avant** de supprimer.
-    - **`V24__archivage_passage.sql`** : `recording_session.archived_at`. Un **geste déclaré**, pas un
-      état : « l'utilisateur a archivé cette nuit, tel jour ». L'état, lui, s'**observe** sur le disque
+      avec `retro-empreintes` (`BackfillEmpreintes`).
+    - **`V24__archivage_passage.sql`** : `recording_session.archived_at`. **Colonne vestigiale** : le
+      geste d'archivage a été retiré ([ADR 0048](decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)),
+      plus personne ne l'écrit ni ne la lit. La disponibilité de l'audio s'**observe** sur le disque
       (`DisponibiliteAudio`, cf. [patterns](patterns.md#etat-observe-un-statut-distant-nest-pas-un-statut-du-domaine)).
+      Son retrait effectif est une migration à venir.
     - **`V25__purge_originaux_declaree.sql`** : `recording_session.originals_purged_at`, et
       **rétro-déclaration** des sessions dont le volume de bruts est déjà à zéro. Elle répare un
       défaut latent : la purge globale des originaux n'écrivait **rien** en base, si bien que l'audit

@@ -87,23 +87,6 @@ class SessionDaoTest {
     }
 
     @Test
-    @DisplayName("#1300 : le marqueur d'archivage est posé, relu, et absent par défaut")
-    void marqueur_archivage_pose_et_relu() {
-        long idSession = dao.insert(new SessionDEnregistrement(null, "racine", null, null, idPassage))
-                .id();
-        assertThat(dao.findById(idSession).orElseThrow().archivee())
-                .as("jamais archivée par défaut (marqueur explicite, pas d'heuristique)")
-                .isFalse();
-
-        java.time.LocalDateTime geste = java.time.LocalDateTime.of(2026, 7, 13, 18, 30, 0);
-        dao.marquerArchivee(idSession, geste);
-
-        SessionDEnregistrement relu = dao.findById(idSession).orElseThrow();
-        assertThat(relu.archivee()).isTrue();
-        assertThat(relu.horodatageArchivage()).isEqualTo(geste);
-    }
-
-    @Test
     @DisplayName("#1303 : la purge des originaux est déclarée (marqueur + volume à zéro), relisible")
     void purge_originaux_declaree_et_relue() {
         long idSession = dao.insert(new SessionDEnregistrement(null, "racine", 4096L, null, idPassage))

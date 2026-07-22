@@ -153,7 +153,7 @@ public class ServiceAuditCoherence {
     ///
     /// **Audio absent** (ADR 0048) : la disponibilité des séquences est **observée**, pas déclarée.
     /// Une séquence manquante n'est jamais une erreur (l'utilisateur possède ses fichiers) ; l'audio
-    /// absent ou partiel donne **un seul constat** [Severite#INFO] ([CategorieConstat#AUDIO_ARCHIVE]).
+    /// absent ou partiel donne **un seul constat** [Severite#INFO] ([CategorieConstat#AUDIO_INDISPONIBLE]).
     /// Le journal, le relevé et les résultats Tadarida, eux, restent contrôlés : leur absence est un
     /// vrai problème. Les originaux suivent encore le marqueur de purge déclaré (#1303) ; leur bascule
     /// vers l'observé est le lot #2262.
@@ -170,7 +170,7 @@ public class ServiceAuditCoherence {
         // Les originaux restent gouvernés par le marqueur de purge déclaré (#1303) : leur bascule vers
         // l'observé est le lot #2262. L'AUDIO (séquences) ne se contrôle plus par le marqueur
         // d'archivage : son absence est un ÉTAT observé (ADR 0048), rapporté une fois, jamais une erreur.
-        boolean originauxAudites = !session.archivee() && !session.originauxPurges();
+        boolean originauxAudites = !session.originauxPurges();
         List<String> chemins = new ArrayList<>();
         if (originauxAudites) {
             originaux.forEach(o -> chemins.add(o.cheminFichier()));
@@ -211,7 +211,7 @@ public class ServiceAuditCoherence {
         }
         return Optional.of(new ConstatAudit(
                 Severite.INFO,
-                CategorieConstat.AUDIO_ARCHIVE,
+                CategorieConstat.AUDIO_INDISPONIBLE,
                 idPassage,
                 ciblePassage(idPassage),
                 "Audio " + (presentes == 0 ? "ABSENTE" : "PARTIELLE") + " (" + presentes + "/" + sequences.size()

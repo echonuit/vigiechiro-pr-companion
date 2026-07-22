@@ -95,11 +95,13 @@ regardant le disque (un `Files.list` par dossier, pas un `exists` par fichier), 
 invalidé aux gestes qui le changent. Toute l'IHM se règle **là-dessus** : l'écoute se voile, l'audit
 informe au lieu de crier, la réactivation s'offre.
 
-Un geste **déclaré** est autre chose qu'un état **observé**, et les deux coexistent :
-`recording_session.archived_at` et `originals_purged_at` disent « l'utilisateur a demandé ça, tel
-jour » ; c'est ce qui permet à l'audit de distinguer *purgé exprès* (INFO) de *corrompu* (ERREUR),
-alors que le disque, lui, rend le même verdict dans les deux cas : « absent ». **Le marqueur explique,
-l'observation décide.**
+Un geste **déclaré** est autre chose qu'un état **observé**. Le projet est passé des premiers au
+second : l'audio absent ne se **déclare** plus, il s'**observe**
+([ADR 0048](decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)) - l'utilisateur
+possède ses fichiers, et son absence n'est jamais une corruption. Il reste un marqueur déclaré,
+`recording_session.originals_purged_at` : il dit « l'utilisateur a purgé les bruts, tel jour », ce qui
+permet à l'audit de distinguer *purgé exprès* (silence) de *disparu* (ERREUR), là où le disque rend le
+même verdict dans les deux cas.
 
 **Principes.** SSOT (la source de vérité reste distante : on ne la copie pas, on la **date**),
 **honnêteté de l'IHM** (« dernier état connu le… » plutôt qu'une fraîcheur feinte) et **KISS** (pas de

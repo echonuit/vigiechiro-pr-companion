@@ -24,7 +24,6 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
             lireLongNullable(rs, "originals_total_bytes"),
             lireLongNullable(rs, "sequences_total_bytes"),
             rs.getLong("passage_id"),
-            lireHorodatage(rs, "archived_at"),
             lireHorodatage(rs, "originals_purged_at"));
 
     /// Lit une colonne `INTEGER` nullable en [Long], en préservant le `null`.
@@ -75,45 +74,23 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
                 idSession);
     }
 
-    /// Met à **zéro** le volume des séquences (`sequences_total_bytes`) d'une session, après purge de
-    /// son audio par l'archivage (#1300) : la fiche du passage reflète alors que les séquences ne
-    /// sont plus conservées (miroir de [#marquerOriginauxPurges]).
-    public void marquerSequencesPurgees(Long idSession) {
-        executerMaj("UPDATE recording_session SET sequences_total_bytes = 0 WHERE id = ?", idSession);
-    }
-
     /// Réécrit le volume des séquences (`sequences_total_bytes`) d'une session, après une
-    /// **réactivation** (#1302) : la fiche du passage reflète l'audio revenu sur disque (l'archivage
-    /// l'avait mis à zéro).
+    /// **réactivation** (#1302) : la fiche du passage reflète l'audio revenu sur disque.
     public void majVolumeSequences(Long idSession, long octets) {
         executerMaj("UPDATE recording_session SET sequences_total_bytes = ? WHERE id = ?", octets, idSession);
-    }
-
-    /// Pose le marqueur **explicite** d'archivage (#1300) : enregistre le geste volontaire, ce qui
-    /// distingue un passage archivé d'un passage corrompu aux yeux de l'audit (#1303, #1348). Un
-    /// horodatage `null` **efface** le marqueur : c'est ce que fait une réactivation complète
-    /// (#1302), le passage n'étant alors plus archivé.
-    public void marquerArchivee(Long idSession, LocalDateTime horodatage) {
-        executerMaj(
-                "UPDATE recording_session SET archived_at = ? WHERE id = ?",
-                horodatage == null ? null : horodatage.toString(),
-                idSession);
     }
 
     @Override
     public SessionDEnregistrement insert(SessionDEnregistrement session) {
         long id = insererEtRecupererCle(
                 "INSERT INTO recording_session"
-                        + " (root_path, originals_total_bytes, sequences_total_bytes, passage_id, archived_at,"
+                        + " (root_path, originals_total_bytes, sequences_total_bytes, passage_id,"
                         + " originals_purged_at)"
-                        + " VALUES (?, ?, ?, ?, ?, ?)",
+                        + " VALUES (?, ?, ?, ?, ?)",
                 session.cheminRacine(),
                 session.volumeOriginauxOctets(),
                 session.volumeSequencesOctets(),
                 session.idPassage(),
-                session.horodatageArchivage() == null
-                        ? null
-                        : session.horodatageArchivage().toString(),
                 session.horodatagePurgeOriginaux() == null
                         ? null
                         : session.horodatagePurgeOriginaux().toString());
@@ -123,7 +100,6 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
                 session.volumeOriginauxOctets(),
                 session.volumeSequencesOctets(),
                 session.idPassage(),
-                session.horodatageArchivage(),
                 session.horodatagePurgeOriginaux());
     }
 
@@ -132,15 +108,12 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
         executerMaj(
                 "UPDATE recording_session SET"
                         + " root_path = ?, originals_total_bytes = ?, sequences_total_bytes = ?, passage_id = ?,"
-                        + " archived_at = ?, originals_purged_at = ?"
+                        + " originals_purged_at = ?"
                         + " WHERE id = ?",
                 session.cheminRacine(),
                 session.volumeOriginauxOctets(),
                 session.volumeSequencesOctets(),
                 session.idPassage(),
-                session.horodatageArchivage() == null
-                        ? null
-                        : session.horodatageArchivage().toString(),
                 session.horodatagePurgeOriginaux() == null
                         ? null
                         : session.horodatagePurgeOriginaux().toString(),

@@ -305,9 +305,6 @@ public class ServiceReactivationPassage {
         disponibilite.invalider(idPassage);
         DecompteAudio decompte = disponibilite.decompte(idPassage);
         sessionDao.majVolumeSequences(session.id(), volumeSequences(sequences));
-        if (decompte.disponibilite() == DisponibiliteAudio.COMPLETE) {
-            sessionDao.marquerArchivee(session.id(), null);
-        }
         return new RapportReactivation(
                 bilan.reactivees,
                 bilan.ecarts.size(),

@@ -325,7 +325,6 @@ final class MoteurImport {
                 volumeOriginaux,
                 volumeSequences,
                 ids[0],
-                session.horodatageArchivage(),
                 session.horodatagePurgeOriginaux());
         int nombreSequences =
                 transformations.stream().mapToInt(t -> t.sequences().size()).sum();
@@ -367,7 +366,7 @@ final class MoteurImport {
             Path dossierSession, Long volumeOriginaux, long volumeSequences, boolean conserverOriginaux) {
         LocalDateTime nonStockeLocalement = conserverOriginaux ? null : horloge.maintenant();
         return new SessionDEnregistrement(
-                null, dossierSession.toString(), volumeOriginaux, volumeSequences, null, null, nonStockeLocalement);
+                null, dossierSession.toString(), volumeOriginaux, volumeSequences, null, nonStockeLocalement);
     }
 
     /// Refuse l'import d'une nuit qui ne tiendrait manifestement pas sur le disque (#2041), **avant**
