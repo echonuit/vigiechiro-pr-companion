@@ -87,10 +87,12 @@ logs/
 ci-summary.json
 
 # ========== Documentation (MkDocs) ==========
-# Sorties de build des DEUX sites, régénérées par mkdocs / la CI. Depuis la publication
-# symétrique, la doc dev ne sort plus dans site/dev/ mais dans son propre dossier.
+# Sorties de build des TROIS sites, régénérées par mkdocs / la CI. Depuis la publication
+# symétrique, chacun sort dans son propre dossier et part vers son propre dépôt de
+# publication : site/ vers companion, site-dev/ vers companion-dev, site-brief/ vers brief.
 site/
 site-dev/
+site-brief/
 
 # ========== Agents IA (instructions locales, non versionnées) ==========
 # CLAUDE.md contient les consignes agent (cf. CONTRIBUTING.md + dev-docs pour la

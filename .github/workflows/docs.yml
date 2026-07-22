@@ -27,6 +27,8 @@ on:
       - "mkdocs.yml"
       - "dev-docs/**"
       - "mkdocs-dev.yml"
+      - "brief/**"
+      - "mkdocs-brief.yml"
       - "scripts/mkdocs_hooks.py"
       - ".github/assets/apercu-*.png"
       - ".github/assets/captures.manifest"
@@ -38,6 +40,8 @@ on:
       - "mkdocs.yml"
       - "dev-docs/**"
       - "mkdocs-dev.yml"
+      - "brief/**"
+      - "mkdocs-brief.yml"
       - "scripts/mkdocs_hooks.py"
       - ".github/assets/apercu-*.png"
       - ".github/assets/captures.manifest"
@@ -87,6 +91,12 @@ jobs:
       - name: Construire le site développeur (strict)
         run: mkdocs build -f mkdocs-dev.yml --strict
 
+      # Le brief a rejoint ce dépôt : ses sources vivent sous `brief/`, sa construction
+      # et sa publication suivent donc exactement le même chemin que les deux autres
+      # sites, au lieu d'un dépôt et d'un workflow séparés à tenir à jour.
+      - name: Construire le brief projet (strict)
+        run: mkdocs build -f mkdocs-brief.yml --strict
+
       # Publication SYMÉTRIQUE : chaque site est poussé dans son propre dépôt de publication,
       # qui porte son domaine custom. Conséquences voulues :
       #   - les sources des DEUX docs restent près du code (l'injection des captures par
@@ -130,4 +140,18 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./site-dev
           cname: companion-dev.echonuit.fr
+
+      # `echonuit/brief` portait jusqu'ici ses propres sources ET son propre workflow de
+      # publication. Il ne reçoit plus que le site construit, exactement comme les deux
+      # dépôts ci-dessus : trois documentations, un seul mécanisme.
+      # Le PAT DOCS_DEPLOY_TOKEN doit donc aussi porter `contents:write` sur ce dépôt.
+      - name: Publier le brief projet (brief.echonuit.fr)
+        if: github.event_name != 'pull_request' && vars.ENABLE_PAGES == 'true' && steps.garde.outputs.present == 'true'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.DOCS_DEPLOY_TOKEN }}
+          external_repository: echonuit/brief
+          publish_branch: gh-pages
+          publish_dir: ./site-brief
+          cname: brief.echonuit.fr
           full_commit_message: "docs(dev): publication depuis ${{ github.sha }}"

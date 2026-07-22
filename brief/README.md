@@ -31,16 +31,20 @@ Il est conçu pour être lu en ligne. Les sections principales :
 <details>
 <summary>🔧 Pour les mainteneurs du brief</summary>
 
+Les sources du brief vivent dans le dépôt du produit, sous `brief/`, aux côtés de `docs/` (guide utilisateur) et `dev-docs/` (documentation développeur). Une conception qui bouge en même temps que le produit ne demande donc plus deux mises à jour dans deux dépôts. Les 129 commits d'origine ont été conservés : `git log -- brief/` les montre tous.
+
 ### Construire le site localement
+
+Depuis la racine du dépôt :
 
 ```bash
 python -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-mkdocs serve  # http://localhost:8000
+pip install -r docs/requirements.txt
+mkdocs serve -f mkdocs-brief.yml  # http://localhost:8000
 ```
 
 ### Publication
 
-Tout push sur `main` déclenche le workflow [`deploy-pages.yml`](.github/workflows/deploy-pages.yml) qui reconstruit et publie le site sur GitHub Pages (`brief.echonuit.fr`).
+Tout push sur `main` touchant `brief/` ou `mkdocs-brief.yml` déclenche [`docs.yml`](../.github/workflows/docs.yml), qui construit les trois sites et pousse celui-ci vers le dépôt `echonuit/brief`, servi sur `brief.echonuit.fr`. Ce dépôt ne contient plus que le site construit, comme `companion` et `companion-dev`.
 
 </details>
