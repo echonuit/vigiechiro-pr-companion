@@ -85,12 +85,14 @@
 
     <rule ref="category/java/design.xml/AvoidDeeplyNestedIfStmts">
         <properties>
-            <!-- 4 niveaux d'imbrication ou plus. C'est le seuil le moins tendu du
-                 fichier : au défaut PMD (3), le dépôt ne compte qu'un seul site,
-                 AnalyseurLogPR:175, où la machine à états du parseur de log teste
-                 une ligne dans son cycle courant. Le jour où ce site est repris en
-                 clauses gardes, ce seuil doit redescendre à 3. -->
-            <property name="problemDepth" value="4"/>
+            <!-- 3 niveaux d'imbrication, la valeur par défaut de PMD. Le seuil a été
+                 tenu à 4 pour un unique site, la détection de batterie faible
+                 d'AnalyseurLogPR, depuis réécrite en clauses gardes. Plus aucun code
+                 ne réclame de tolérance ici : au-delà de deux niveaux, une clause
+                 garde ou une extraction de méthode se lit mieux que l'imbrication.
+                 La valeur est écrite explicitement pour la figer si le défaut de PMD
+                 venait à bouger. -->
+            <property name="problemDepth" value="3"/>
         </properties>
     </rule>
 
