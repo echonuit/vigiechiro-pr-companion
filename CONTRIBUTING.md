@@ -28,6 +28,15 @@ Au **premier `./mvnw`**, le plugin `git-build-hook` configure silencieusement
 `core.hooksPath=.githooks`, ce qui active le hook **pre-commit** ([.githooks/pre-commit](.githooks/pre-commit)).
 Ce hook **formate les `.java` stagés** avec **Spotless** (Palantir Java Format) avant chaque commit.
 
+Si VS Code vous propose **SonarQube for IDE** (l'extension est recommandée dans
+[.vscode/extensions.json](.vscode/extensions.json)), **réglez-la avant de vous y fier** : laissée par
+défaut, elle applique 542 règles Java et en contredit trois qui sont délibérément arbitrées dans
+[pmd-ruleset.xml](pmd-ruleset.xml), ce qui produit une soixantaine de remontées sur du code conforme.
+Le bloc à recopier tient en dix lignes ; il vit dans vos réglages **utilisateur** et non dans le dépôt,
+pour une raison expliquée avec lui dans
+[dev-docs/tests-et-qualite.md](dev-docs/tests-et-qualite.md#sonarqube-for-ide-facultatif-à-configurer).
+C'est **PMD qui fait foi** : lui seul bloque la CI.
+
 ---
 
 ## 2. L'architecture : package-by-feature + MVVM
