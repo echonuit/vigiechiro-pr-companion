@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.34.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.34.2...v2.34.3) (2026-07-22)
+
+
+### Bug Fixes
+
+* **tests:** calibrer les butoirs TestFX sur la variation réelle du runner ([#2307](https://github.com/echonuit/vigiechiro-pr-companion/issues/2307)) ([a39d031](https://github.com/echonuit/vigiechiro-pr-companion/commit/a39d0311b079c7d6d810bf40bc915364e7f7a152)), closes [#2120](https://github.com/echonuit/vigiechiro-pr-companion/issues/2120)
+
 ## [2.34.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.34.1...v2.34.2) (2026-07-22)
 
 
