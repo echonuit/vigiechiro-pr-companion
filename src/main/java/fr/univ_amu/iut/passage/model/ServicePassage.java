@@ -132,17 +132,6 @@ public class ServicePassage {
         return sessionDao.trouverParPassage(idPassage).map(s -> Path.of(s.cheminRacine()));
     }
 
-    /// Marque les originaux d'un passage **purgés** en base (volume des originaux → 0), après suppression
-    /// de ses `bruts/` sur disque : la fiche du passage reflète alors que les originaux ne sont plus
-    /// conservés (l'écoute et la validation s'appuient sur les séquences, inchangées). Sans session, sans
-    /// effet.
-    public void marquerOriginauxPurges(Long idPassage) {
-        Objects.requireNonNull(idPassage, ID_PASSAGE);
-        sessionDao
-                .trouverParPassage(idPassage)
-                .ifPresent(s -> sessionDao.marquerOriginauxPurges(s.id(), horloge.maintenant()));
-    }
-
     /// Crée un passage à l'état initial [StatutWorkflow#IMPORTE], sans verdict.
     ///
     /// - R5 (dur) : refuse si le quadruplet `(point, année, n° de passage)` existe déjà —

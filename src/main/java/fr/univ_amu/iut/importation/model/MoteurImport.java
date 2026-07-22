@@ -23,7 +23,6 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -244,8 +243,7 @@ final class MoteurImport {
                 .flatMap(t -> t.sequences().stream())
                 .mapToLong(SequenceProduite::octets)
                 .sum();
-        SessionDEnregistrement session =
-                sessionDe(dossierSession, volumeOriginaux, volumeSequences, ctx.conserverOriginaux());
+        SessionDEnregistrement session = sessionDe(dossierSession, volumeOriginaux, volumeSequences);
         // Entité journal **uniforme** : en mode dégradé, le journal de repli porte déjà des évènements
         // vides et l'anomalie « import dégradé », donc on construit la trace de la même façon (#107).
         // Journal restreint à CETTE nuit (#1696) : sur une carte multi-nuits à log unique, les
@@ -317,15 +315,8 @@ final class MoteurImport {
         });
 
         Passage passagePersiste = avecId(passage, ids[0]);
-        // L'écho persisté reprend le marqueur de la session construite : sans lui, `resultat.session()`
-        // dirait « non déclaré » alors que la base porte la déclaration (#2062).
-        SessionDEnregistrement sessionPersistee = new SessionDEnregistrement(
-                ids[1],
-                session.cheminRacine(),
-                volumeOriginaux,
-                volumeSequences,
-                ids[0],
-                session.horodatagePurgeOriginaux());
+        SessionDEnregistrement sessionPersistee =
+                new SessionDEnregistrement(ids[1], session.cheminRacine(), volumeOriginaux, volumeSequences, ids[0]);
         int nombreSequences =
                 transformations.stream().mapToInt(t -> t.sequences().size()).sum();
         return new ResultatImport(
@@ -349,24 +340,11 @@ final class MoteurImport {
     /// Supprime la **session partielle** (dossier `bruts/`+`transformes/` en cours de constitution)
     /// laissée par un import **annulé** (#146), pour ne pas accumuler des fichiers à moitié copiés.
     /// Best-effort (cf. [ExtracteurZip#supprimerRecursivement]).
-    /// La session d'une nuit importée, et **l'état de ses originaux**.
-    ///
-    /// Import **sans copie** : les originaux sont connus et prouvés (leur `sha256` est capturé dans les
-    /// deux modes) mais **non stockés localement** — l'utilisateur garde ses fichiers. C'est exactement
-    /// ce que `originals_purged_at` déclare, et il faut le poser **dès l'import** (#2062).
-    ///
-    /// Sans cette déclaration, `originauxPurges()` reste faux : l'audit balaie alors les `file_path` des
-    /// originaux — qui pointent sur la carte SD ([SourceOriginal]) — et signale une **erreur par
-    /// original** dès qu'elle est retirée. Un fait **voulu** passerait pour une corruption, ce que la
-    /// déclaration de #1303 existe précisément pour éviter.
-    ///
-    /// La migration V25 avait rétro-déclaré les sessions à volume nul, donc les imports sans copie
-    /// **antérieurs** : c'est le chemin d'import qui n'avait jamais suivi.
-    private SessionDEnregistrement sessionDe(
-            Path dossierSession, Long volumeOriginaux, long volumeSequences, boolean conserverOriginaux) {
-        LocalDateTime nonStockeLocalement = conserverOriginaux ? null : horloge.maintenant();
-        return new SessionDEnregistrement(
-                null, dossierSession.toString(), volumeOriginaux, volumeSequences, null, nonStockeLocalement);
+    /// La session d'une nuit importée. Rien n'y déclare l'état des originaux : qu'ils aient été copiés
+    /// ou laissés sur la carte, leur présence est **observée** sur le disque (ADR 0048), et leur absence
+    /// n'est pas une anomalie - la copie des bruts est une option de ré-analyse (ADR 0036).
+    private SessionDEnregistrement sessionDe(Path dossierSession, Long volumeOriginaux, long volumeSequences) {
+        return new SessionDEnregistrement(null, dossierSession.toString(), volumeOriginaux, volumeSequences, null);
     }
 
     /// Refuse l'import d'une nuit qui ne tiendrait manifestement pas sur le disque (#2041), **avant**

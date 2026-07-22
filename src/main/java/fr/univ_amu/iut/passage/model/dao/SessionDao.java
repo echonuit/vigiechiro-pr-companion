@@ -23,8 +23,7 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
             rs.getString("root_path"),
             lireLongNullable(rs, "originals_total_bytes"),
             lireLongNullable(rs, "sequences_total_bytes"),
-            rs.getLong("passage_id"),
-            lireHorodatage(rs, "originals_purged_at"));
+            rs.getLong("passage_id"));
 
     /// Lit une colonne `INTEGER` nullable en [Long], en préservant le `null`.
     private static Long lireLongNullable(ResultSet rs, String colonne) throws SQLException {
@@ -63,17 +62,6 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
         return queryUnique("SELECT * FROM recording_session WHERE passage_id = ?", MAPPER, idPassage);
     }
 
-    /// Déclare la purge des `bruts/` d'une session (#1303) : met le volume des originaux à **zéro**
-    /// (la fiche du passage reflète que les originaux ne sont plus conservés) et pose le marqueur
-    /// **explicite** `originals_purged_at` : c'est le fait déclaré qui fait taire le contrôle
-    /// d'existence des originaux dans l'audit, plus une heuristique de volume.
-    public void marquerOriginauxPurges(Long idSession, LocalDateTime horodatage) {
-        executerMaj(
-                "UPDATE recording_session SET originals_total_bytes = 0, originals_purged_at = ? WHERE id = ?",
-                horodatage == null ? null : horodatage.toString(),
-                idSession);
-    }
-
     /// Réécrit le volume des séquences (`sequences_total_bytes`) d'une session, après une
     /// **réactivation** (#1302) : la fiche du passage reflète l'audio revenu sur disque.
     public void majVolumeSequences(Long idSession, long octets) {
@@ -84,39 +72,30 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
     public SessionDEnregistrement insert(SessionDEnregistrement session) {
         long id = insererEtRecupererCle(
                 "INSERT INTO recording_session"
-                        + " (root_path, originals_total_bytes, sequences_total_bytes, passage_id,"
-                        + " originals_purged_at)"
-                        + " VALUES (?, ?, ?, ?, ?)",
+                        + " (root_path, originals_total_bytes, sequences_total_bytes, passage_id)"
+                        + " VALUES (?, ?, ?, ?)",
                 session.cheminRacine(),
                 session.volumeOriginauxOctets(),
                 session.volumeSequencesOctets(),
-                session.idPassage(),
-                session.horodatagePurgeOriginaux() == null
-                        ? null
-                        : session.horodatagePurgeOriginaux().toString());
+                session.idPassage());
         return new SessionDEnregistrement(
                 id,
                 session.cheminRacine(),
                 session.volumeOriginauxOctets(),
                 session.volumeSequencesOctets(),
-                session.idPassage(),
-                session.horodatagePurgeOriginaux());
+                session.idPassage());
     }
 
     @Override
     public void update(SessionDEnregistrement session) {
         executerMaj(
                 "UPDATE recording_session SET"
-                        + " root_path = ?, originals_total_bytes = ?, sequences_total_bytes = ?, passage_id = ?,"
-                        + " originals_purged_at = ?"
+                        + " root_path = ?, originals_total_bytes = ?, sequences_total_bytes = ?, passage_id = ?"
                         + " WHERE id = ?",
                 session.cheminRacine(),
                 session.volumeOriginauxOctets(),
                 session.volumeSequencesOctets(),
                 session.idPassage(),
-                session.horodatagePurgeOriginaux() == null
-                        ? null
-                        : session.horodatagePurgeOriginaux().toString(),
                 session.id());
     }
 }

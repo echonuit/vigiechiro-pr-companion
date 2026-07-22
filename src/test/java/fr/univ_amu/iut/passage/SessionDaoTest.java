@@ -87,22 +87,6 @@ class SessionDaoTest {
     }
 
     @Test
-    @DisplayName("#1303 : la purge des originaux est déclarée (marqueur + volume à zéro), relisible")
-    void purge_originaux_declaree_et_relue() {
-        long idSession = dao.insert(new SessionDEnregistrement(null, "racine", 4096L, null, idPassage))
-                .id();
-        assertThat(dao.findById(idSession).orElseThrow().originauxPurges()).isFalse();
-
-        java.time.LocalDateTime geste = java.time.LocalDateTime.of(2026, 7, 13, 20, 0);
-        dao.marquerOriginauxPurges(idSession, geste);
-
-        SessionDEnregistrement relu = dao.findById(idSession).orElseThrow();
-        assertThat(relu.originauxPurges()).isTrue();
-        assertThat(relu.horodatagePurgeOriginaux()).isEqualTo(geste);
-        assertThat(relu.volumeOriginauxOctets()).isZero();
-    }
-
-    @Test
     @DisplayName("relation 1:1 : deux sessions pour le même passage sont interdites")
     void unicite_passage_id_est_garantie() {
         dao.insert(new SessionDEnregistrement(null, "racine-1", null, null, idPassage));

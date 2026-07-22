@@ -98,7 +98,6 @@ public class AdoptionOriginauxReconstruits {
                 originalDao.delete(placeholder.id());
             }
         }
-        sessionDao.marquerOriginauxPurges(session.id(), horloge.maintenant());
     }
 
     /// Construit l'enregistrement original **réel** d'un brut : nom R6, chemin canonique `bruts/`, taille et

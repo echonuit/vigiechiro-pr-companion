@@ -129,13 +129,15 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
       plus personne ne l'écrit ni ne la lit. La disponibilité de l'audio s'**observe** sur le disque
       (`DisponibiliteAudio`, cf. [patterns](patterns.md#etat-observe-un-statut-distant-nest-pas-un-statut-du-domaine)).
       Son retrait effectif est une migration à venir.
-    - **`V25__purge_originaux_declaree.sql`** : `recording_session.originals_purged_at`, et
-      **rétro-déclaration** des sessions dont le volume de bruts est déjà à zéro. Elle répare un
-      défaut latent : la purge globale des originaux n'écrivait **rien** en base, si bien que l'audit
-      aurait signalé comme *corruption* des fichiers supprimés **exprès**.
+    - **`V25__purge_originaux_declaree.sql`** : `recording_session.originals_purged_at`, également
+      **vestigiale**. Le geste de purge a été retiré et l'audit ne contrôle plus les bruts : ce sont
+      des copies **optionnelles** de ré-analyse
+      ([ADR 0036](decisions/0036-la-copie-des-bruts-est-une-option.md)), absentes de la plupart des
+      nuits, donc leur absence est l'état normal.
 
-    Les deux marqueurs répondent à la même question : *pourquoi* l'audio manque. Sans eux, le disque
-    dit « absent » de la même façon pour une purge volontaire et pour un disque en train de mourir.
+    Ces deux marqueurs répondaient à la même question : *pourquoi* l'audio manque. La réponse ne
+    change plus rien - **l'utilisateur possède ses fichiers**, leur absence n'est jamais une
+    corruption. Ils ne sont plus ni écrits ni lus ; leur retrait effectif est une migration à venir.
 
 !!! note "Validation d'expert (V26, EPIC #1154)"
     **`V26__validation_expert.sql`** fait entrer en base le **troisième avis** — et la discussion qui
