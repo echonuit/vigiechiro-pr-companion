@@ -68,6 +68,55 @@ headless vient de `glass.platform=Headless`, pas de TestFX. Le `argLine` ajoute 
     export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
     ```
 
+### Les butoirs TestFX sont des coupe-circuits, pas des budgets
+
+`FxToolkit` borne deux attentes : le démarrage du toolkit JavaFX (`testfx.launch.timeout`) et la mise
+en place d'un test, c'est-à-dire l'exécution de la méthode `@Start` par
+`ApplicationExtension.beforeEach` (`testfx.setup.timeout`). Leur seul rôle est d'empêcher un fil FX
+bloqué de figer le build indéfiniment. **Ils ne mesurent rien** : dépasser un butoir ne dit pas que le
+code est lent, seulement que la machine n'a pas rendu la main à temps.
+
+Les deux valeurs sont posées dans le `pom.xml` à **120 s**, et non laissées aux défauts de TestFX
+(30 s et 60 s) :
+
+```xml
+<testfx.setup.timeout>120000</testfx.setup.timeout>
+<testfx.launch.timeout>120000</testfx.launch.timeout>
+```
+
+Ce n'est pas un confort. Les défauts de TestFX supposent une JVM seule sur sa machine, alors que la
+suite lance **une JVM par coeur** (`surefire.forkCount=1C`) sur un runner partagé. Les deux décisions
+avaient été prises séparément, et le calcul ne tombait pas juste (#2120) :
+
+| Grandeur | Mesure |
+|---|---|
+| Mise en place la plus lente de la suite, 4 coeurs / 4 forks, machine au repos | **6,9 s** (`SonsValidationViewTest#basculer_reference`) |
+| Marge sous l'ancien butoir de 30 s | **4,3x** |
+| Durée du job `build` sur 27 runs CI consécutifs | de **370 s à 2260 s**, soit **5,4x** |
+
+La marge était **plus petite que la variation de la machine**. Le butoir vivait donc dans le bruit, et
+expirait au hasard des runs. À 120 s, la marge est de 17x sur le nominal, soit 3x au-delà de la pire
+dégradation observée, et un vrai interblocage est toujours coupé en deux minutes.
+
+!!! warning "Un `» Timeout` en CI ne se lit pas comme un échec de test"
+    Surefire l'affiche sous cette forme, sans distinguer une assertion fausse d'une attente expirée :
+
+    ```
+    SonsValidationViewTest.basculer_reference » Timeout
+    ```
+
+    La trace le tranche en trois lignes : `ApplicationExtension.beforeEach` puis
+    `FxToolkit.setupApplication` puis `WaitForAsyncUtils.waitFor` signifient que **le test n'a jamais
+    commencé**. Le premier réflexe est alors de regarder la **durée du job**, pas le diff : si le build
+    a mis trois fois son temps habituel, c'est le runner qu'on observe, pas le code.
+
+    Le piège est ailleurs : un rouge intermittent qu'on prend l'habitude d'écarter finit par couvrir
+    celui qui compte. C'est ce précédent, et non le temps perdu, qui a motivé #2120.
+
+`ButoirsTestFxTest` vérifie que ces deux valeurs atteignent bien la JVM **forkée**. Elles passent par
+`systemPropertyVariables` : posées sur la JVM de Maven, elles n'auraient aucun effet, et TestFX
+retomberait **en silence** sur ses défauts.
+
 ## La taxonomie des tests
 
 Les tests vivent sous `src/test/java/fr/univ_amu/iut/`, en **miroir** des paquets de production.

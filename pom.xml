@@ -100,6 +100,28 @@
              isolés par @TempDir (aucune base SQLite ni port partagés). Revenir en séquentiel
              au besoin : ./mvnw test -Dsurefire.forkCount=1. -->
         <surefire.forkCount>1C</surefire.forkCount>
+
+        <!-- Butoirs TestFX (#2120). Ce ne sont PAS des budgets de performance : ce sont des
+             coupe-circuits d'interblocage, qui existent pour qu'un fil FX bloqué ne fige pas le
+             build indéfiniment. Rien ne se mesure ici, on borne seulement une attente.
+
+             Les valeurs par défaut de TestFX (30 s pour la mise en place d'un test, 60 s pour le
+             démarrage du toolkit) supposent une JVM seule sur sa machine. Nous lançons une JVM par
+             coeur (cf. surefire.forkCount ci-dessus) sur un runner partagé : ces deux décisions ont
+             été prises séparément et étaient incohérentes.
+
+             Mesure du 2026-07-22, 4 coeurs et 4 forks (la condition CI), machine au repos : la mise
+             en place la plus lente de la suite est celle de SonsValidationViewTest#basculer_reference,
+             à 6,9 s. Sous un butoir de 30 s, la marge n'était donc que de 4,3x. Or la durée du job
+             `build` sur les 27 derniers runs va de 370 s à 2260 s : le runner varie d'un facteur
+             5,4. Le butoir se trouvait DANS le bruit de la machine, d'où des expirations
+             intermittentes sans qu'aucune assertion ne soit fausse.
+
+             120 s laisse 17x de marge sur le nominal, soit 3x au-delà de la pire dégradation
+             observée, tout en coupant un vrai interblocage en deux minutes. Garde-fou :
+             ButoirsTestFxTest vérifie que ces valeurs atteignent bien la JVM forkée. -->
+        <testfx.setup.timeout>120000</testfx.setup.timeout>
+        <testfx.launch.timeout>120000</testfx.launch.timeout>
     </properties>
 
     <dependencies>
@@ -486,6 +508,11 @@
                         <prism.order>sw</prism.order>
                         <java.awt.headless>true</java.awt.headless>
                         <testfx.robot>glass</testfx.robot>
+                        <!-- Coupe-circuits d'interblocage TestFX, calibrés en propriétés plus haut
+                             (#2120). TestFX les lit via Long.getLong au premier FxToolkitContext :
+                             ils doivent donc être posés sur la JVM FORKÉE, pas sur celle de Maven. -->
+                        <testfx.setup.timeout>${testfx.setup.timeout}</testfx.setup.timeout>
+                        <testfx.launch.timeout>${testfx.launch.timeout}</testfx.launch.timeout>
                         <!-- Config JUL de test : coupe le logger JournalisationTache, dont les SEVERE
                              + traces (voulus en prod, #1538) sont NORMAUX quand un test exerce un chemin
                              d'échec et noieraient le journal de CI. Prod inchangée (App/Cli installent
