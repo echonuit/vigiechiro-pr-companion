@@ -1,57 +1,158 @@
-# Soumission automatique à winget (Windows Package Manager).
+# Soumission d'une version à winget (Windows Package Manager).
 #
-# À chaque release publiée, ce workflow ouvre une pull request sur
-# `microsoft/winget-pkgs` pour y déclarer la nouvelle version. L'utilisateur
-# Windows n'a alors plus qu'à faire `winget upgrade`.
+# DÉCLENCHEMENT MANUEL, ET C'EST UN CHOIX
 #
-# Déclencheur : `release: released`. C'est l'événement émis quand une release
-# NON brouillon et NON pré-version devient publique. Il colle exactement à notre
-# publication atomique (release.yml crée un brouillon, y attache les installeurs,
-# puis le dé-brouillonne) : la soumission ne part donc jamais sur une release
-# incomplète. `released` est aussi l'événement attendu par winget-releaser, car
-# les assets ne sont téléchargeables qu'une fois la release publiée.
+# Ce workflow se déclenchait auparavant sur `release: released`, c'est-à-dire à
+# chaque publication. Deux raisons de ne plus le faire.
 #
-# PRÉREQUIS DE CONFIGURATION (deux gestes manuels, cf. #2213) :
-#   1. Un FORK de `microsoft/winget-pkgs` sous le propriétaire du dépôt
-#      (echonuit par défaut, cf. `fork-user` ci-dessous). C'est depuis ce
-#      fork que la PR est proposée au dépôt communautaire.
-#   2. Un SECRET de dépôt `WINGET_TOKEN` : un PAT « classic » avec le scope
-#      `public_repo`, appartenant à un compte ayant accès en écriture au fork.
-#      Le GITHUB_TOKEN par défaut ne convient PAS : il ne peut pas pousser sur un
-#      dépôt tiers (le fork winget-pkgs).
+# La première est qu'il ne se déclenchait jamais : la release est dé-brouillonnée
+# par `release.yml` avec le GITHUB_TOKEN, et GitHub ne déclenche AUCUN workflow
+# pour un événement produit avec ce jeton. Le canal était mort sans que rien ne le
+# signale.
 #
-# Tant que `WINGET_TOKEN` n'est pas défini, le workflow reste INERTE : il se
-# déclenche mais s'arrête proprement (vert, avec une note), au lieu de rougir à
-# chaque release. Le retirer suffit à re-neutraliser le canal.
+# La seconde est plus importante : ce dépôt publie entre 3 et 37 fois par jour.
+# Réparer le déclencheur aurait ouvert autant de pull requests par jour sur
+# `microsoft/winget-pkgs`, un dépôt communautaire à modération humaine dont chaque
+# PR déclenche une validation en machine virtuelle. Toutes les versions n'ont pas
+# à être distribuées : on pousse celles qui apportent quelque chose à l'utilisateur.
+#
+# PRÉREQUIS
+#
+#   1. Le paquet doit DÉJÀ exister dans winget-pkgs. winget-releaser refuse
+#      explicitement la première soumission (« Please add atleast one version of
+#      the package before using this action ») : elle se fait à la main, une fois.
+#   2. Un FORK de `microsoft/winget-pkgs` sous `echonuit`.
+#   3. Un SECRET `WINGET_TOKEN` : un PAT « classic » avec le scope `public_repo`.
+#      Le GITHUB_TOKEN ne convient pas, il ne peut pas pousser sur un dépôt tiers.
+#
+# Sans le secret, le workflow s'arrête proprement, en vert, au lieu de rougir.
 
 name: winget
 
 on:
-  release:
-    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Version à soumettre (ex. v2.36.0). Vide = la dernière publiée."
+        required: false
+        type: string
 
-# Le travail réel passe par WINGET_TOKEN (PAT), pas par le GITHUB_TOKEN de ce
-# job : ses droits restent donc minimaux.
 permissions:
   contents: read
 
 jobs:
-  publier:
-    name: Soumettre le MSI à winget-pkgs
-    runs-on: ubuntu-latest
+  soumettre:
+    name: Vérifier le MSI, puis le soumettre à winget-pkgs
+    # Runner Windows : c'est le seul endroit où l'on peut INSTALLER puis LANCER le
+    # MSI que les utilisateurs recevront.
+    runs-on: windows-latest
     steps:
-      # Garde d'inertie : sans le secret, on s'arrête ici, en vert.
       - name: Vérifier la présence du secret WINGET_TOKEN
         id: garde
+        shell: bash
         env:
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
         run: |
           if [ -z "$WINGET_TOKEN" ]; then
             echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::WINGET_TOKEN absent : soumission winget ignorée. Voir le workflow et #2213 pour la configuration (fork + PAT)."
+            echo "::notice::WINGET_TOKEN absent : soumission ignorée. Voir l'en-tête de ce workflow."
           else
             echo "present=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Résoudre la version à soumettre
+        id: version
+        if: steps.garde.outputs.present == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="${{ inputs.tag }}"
+          if [ -z "$tag" ]; then
+            tag=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName --jq .tagName)
+            echo "::notice::Aucune version demandée : la dernière publiée est ${tag}."
+          fi
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Version à soumettre : $tag"
+
+      - name: Récupérer le MSI et vérifier son empreinte
+        if: steps.garde.outputs.present == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.version.outputs.tag }}
+        # L'empreinte publiée à côté de l'artefact est recalculée ici : soumettre un
+        # manifeste qui décrit un fichier différent de celui servi ferait échouer la
+        # validation de winget, après coup et chez eux.
+        run: |
+          set -euo pipefail
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --pattern '*x64.msi*' --dir msi
+          calculee=$(sha256sum msi/*.msi | awk '{print $1}')
+          publiee=$(awk '{print $1}' msi/*.msi.sha256)
+          echo "  calculée : $calculee"
+          echo "  publiée  : $publiee"
+          if [ "$calculee" != "$publiee" ]; then
+            echo "::error::L'empreinte du MSI ne correspond pas à celle publiée avec la release."
+            exit 1
+          fi
+
+      - name: Installer le MSI, puis le LANCER
+        if: steps.garde.outputs.present == 'true'
+        shell: pwsh
+        # Le contrôle qui manquait. La validation automatique de Microsoft installe le
+        # paquet et vérifie le manifeste, mais ne lance pas l'application : leur propre
+        # documentation le dit pour Flathub, et notre v2.32.3 en a fait la démonstration
+        # (paquet installable, validé par leur pipeline, incapable de démarrer).
+        #
+        # Deux limites assumées. Le lanceur jpackage est en sous-système graphique : il
+        # n'écrit sur aucune console, on ne peut donc pas lire sa sortie. On s'appuie
+        # sur deux signaux : le processus doit TENIR (un plantage sort immédiatement,
+        # c'était le cas de la 2.32.3), et le JOURNAL que l'application écrit elle-même
+        # ne doit contenir aucune erreur de chargement.
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $msi = (Get-ChildItem msi -Filter *.msi)[0].FullName
+          Write-Output "Installation de $msi"
+          $p = Start-Process msiexec.exe -ArgumentList "/i `"$msi`" /qn /norestart" -Wait -PassThru
+          if ($p.ExitCode -ne 0) {
+            Write-Output "::error::L'installation du MSI a échoué (code $($p.ExitCode))."
+            exit 1
+          }
+
+          $exe = Join-Path $env:LOCALAPPDATA 'VigieChiroCompanion\VigieChiroCompanion.exe'
+          if (-not (Test-Path $exe)) {
+            Write-Output "::error::Installé, mais $exe est introuvable."
+            Get-ChildItem $env:LOCALAPPDATA -Depth 2 -Filter '*VigieChiro*' | ForEach-Object { Write-Output $_.FullName }
+            exit 1
+          }
+
+          $env:JAVA_TOOL_OPTIONS = '-Dglass.platform=Headless'
+          $proc = Start-Process $exe -PassThru
+          Start-Sleep -Seconds 45
+
+          if ($proc.HasExited) {
+            Write-Output "::error::L'application s'est arrêtée seule (code $($proc.ExitCode)) : elle ne démarre pas."
+            exit 1
+          }
+          Stop-Process -Id $proc.Id -Force
+          Write-Output "L'application a démarré et tenu 45 s."
+
+          # Second signal : le journal que l'application écrit dans son espace de travail.
+          $journaux = Join-Path $env:USERPROFILE 'Documents\VigieChiro-Companion\logs'
+          if (-not (Test-Path $journaux)) {
+            Write-Output "::error::Aucun journal écrit : l'application n'a pas atteint son initialisation."
+            exit 1
+          }
+          $fautes = Select-String -Path (Join-Path $journaux '*') `
+            -Pattern 'NoClassDefFoundError|ClassNotFoundException|Exception in Application start method' `
+            -ErrorAction SilentlyContinue
+          if ($fautes) {
+            Write-Output "::error::Le démarrage a levé une erreur de chargement."
+            $fautes | Select-Object -First 20 | ForEach-Object { Write-Output $_.Line }
+            exit 1
+          }
+          Write-Output "Journal présent, aucune erreur de chargement."
 
       - name: Soumettre à winget-pkgs
         if: steps.garde.outputs.present == 'true'
@@ -60,16 +161,12 @@ jobs:
           # Identifiant stable, à vie. Éditeur = le projet Echonuit (cohérent avec le
           # --vendor de l'installeur et l'app-id Flatpak fr.echonuit.* ; ADR 0047).
           identifier: Echonuit.VigieChiroCompanion
+          release-tag: ${{ steps.version.outputs.tag }}
           # Un seul installeur Windows : le MSI x64. Le `.sha256` joint finit par
           # « .sha256 », l'ancre `$` l'exclut donc.
           installers-regex: '\.msi$'
           # Ne garder que les dernières versions dans winget-pkgs : le dépôt
           # communautaire n'a pas vocation à archiver tout l'historique.
           max-versions-to-keep: 5
-          # Lien vers les notes de version (déjà rédigées par semantic-release).
-          release-notes-url: ${{ github.event.release.html_url }}
-          # fork-user vaut par défaut ${{ github.repository_owner }} =
-          # echonuit. Si le fork winget-pkgs vit sous un autre compte
-          # (celui du PAT), décommenter et renseigner :
-          # fork-user: <compte-du-fork>
+          release-notes-url: ${{ github.server_url }}/${{ github.repository }}/releases/tag/${{ steps.version.outputs.tag }}
           token: ${{ secrets.WINGET_TOKEN }}
