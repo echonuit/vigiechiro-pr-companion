@@ -6,7 +6,6 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 /// DAO de l'entité [SessionDEnregistrement] (table `recording_session`).
@@ -29,13 +28,6 @@ public class SessionDao extends DaoGenerique<SessionDEnregistrement, Long> {
     private static Long lireLongNullable(ResultSet rs, String colonne) throws SQLException {
         Object valeur = rs.getObject(colonne);
         return valeur == null ? null : ((Number) valeur).longValue();
-    }
-
-    /// Lit une colonne `TEXT` ISO-8601 nullable en [LocalDateTime] (image d'`archived_at`), `null` si
-    /// absente.
-    private static LocalDateTime lireHorodatage(ResultSet rs, String colonne) throws SQLException {
-        String valeur = rs.getString(colonne);
-        return valeur == null ? null : LocalDateTime.parse(valeur);
     }
 
     public SessionDao(SourceDeDonnees source) {

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.Empreintes;
 import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Severite;
@@ -38,6 +39,7 @@ import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -372,6 +374,90 @@ class ServiceAuditCoherenceTest {
                         idPoint,
                         SERIE))
                 .id();
+    }
+
+    @Test
+    @DisplayName("ADR 0048 : un fichier présent mais d'empreinte divergente est un conflit, pas une absence")
+    void fichier_present_mais_divergent_est_un_conflit() throws IOException {
+        Long idPassage = creerSessionAvecEmpreintes();
+        // Le fichier est toujours là, au même chemin et sous le même nom - mais ce n'est plus le même
+        // enregistrement : redécoupe, autre nuit du même carré, sauvegarde restaurée d'une autre version.
+        Path sequence = racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 0));
+        Files.write(sequence, "un tout autre enregistrement".getBytes(StandardCharsets.UTF_8));
+
+        List<ConstatAudit> constats = service.auditerPassage(idPassage).constats();
+
+        assertThat(constats)
+                .as("un homonyme divergent ne doit pas passer pour l'audio attendu : on validerait une espèce dessus")
+                .anySatisfy(c -> {
+                    assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_DIVERGENT);
+                    assertThat(c.severite()).isEqualTo(Severite.ERREUR);
+                    assertThat(c.cible()).endsWith(PREFIXE.nommerSequence(NOM_ORIGINAL, 0));
+                });
+    }
+
+    @Test
+    @DisplayName("ADR 0048 : contenu différent à taille IDENTIQUE : c'est l'empreinte qui doit l'attraper")
+    void divergence_a_taille_identique_est_attrapee_par_l_empreinte() throws IOException {
+        Long idPassage = creerSessionAvecEmpreintes();
+        Path sequence = racineSession.resolve("transformes").resolve(PREFIXE.nommerSequence(NOM_ORIGINAL, 0));
+        long tailleInitiale = Files.size(sequence);
+        // Même nombre d'octets, contenu différent : la comparaison de taille passe, seule l'empreinte
+        // peut trancher. Sans ce cas, le contrôle serait vert en ne testant jamais que la taille.
+        Files.write(sequence, "SEQUENCE-X".getBytes(StandardCharsets.UTF_8));
+        assertThat(Files.size(sequence))
+                .as("le test ne prouverait rien si la taille avait changé")
+                .isEqualTo(tailleInitiale);
+
+        assertThat(service.auditerPassage(idPassage).constats())
+                .anySatisfy(c -> assertThat(c.categorie()).isEqualTo(CategorieConstat.AUDIO_DIVERGENT));
+    }
+
+    @Test
+    @DisplayName("ADR 0048 : des fichiers intacts et porteurs d'empreinte ne produisent aucun conflit")
+    void fichiers_intacts_aucun_conflit() throws IOException {
+        Long idPassage = creerSessionAvecEmpreintes();
+
+        assertThat(service.auditerPassage(idPassage).constats())
+                .as("l'empreinte concorde : rien à signaler")
+                .noneMatch(c -> c.categorie() == CategorieConstat.AUDIO_DIVERGENT);
+    }
+
+    /// Session cohérente dont les séquences portent leur **vraie** empreinte (#1299) : sans elle, le
+    /// contrôle d'identité n'a rien à confronter et le test serait vert sans rien prouver.
+    private Long creerSessionAvecEmpreintes() throws IOException {
+        Long idPassage = creerPassage(1);
+        Long idSession = creerSession(idPassage, 4096L);
+        Path bruts = Files.createDirectories(racineSession.resolve("bruts"));
+        Path transformes = Files.createDirectories(racineSession.resolve("transformes"));
+        Path original = Files.write(bruts.resolve(NOM_ORIGINAL), new byte[16]);
+        Long idOriginal = originalDao
+                .insert(new EnregistrementOriginal(
+                        null, NOM_ORIGINAL, original.toString(), 12.0, 384_000, null, idSession))
+                .id();
+        for (int index = 0; index < 2; index++) {
+            String nomSequence = PREFIXE.nommerSequence(NOM_ORIGINAL, index);
+            Path fichier = Files.write(
+                    transformes.resolve(nomSequence), ("sequence-" + index).getBytes(StandardCharsets.UTF_8));
+            sequenceDao.insert(new SequenceDEcoute(
+                    null,
+                    nomSequence,
+                    idOriginal,
+                    index,
+                    index * 5.0,
+                    5.0,
+                    fichier.toString(),
+                    true,
+                    idSession,
+                    null,
+                    Files.size(fichier),
+                    Empreintes.empreinteCourte(fichier)));
+        }
+        Path journal = Files.write(racineSession.resolve("LogPR" + SERIE + ".txt"), new byte[16]);
+        journalDao.insert(new JournalDuCapteur(null, journal.toString(), null, null, idSession));
+        Path releve = Files.write(racineSession.resolve("PaRecPR" + SERIE + "_THLog.csv"), new byte[16]);
+        releveDao.insert(new ReleveClimatique(null, releve.toString(), null, idSession));
+        return idPassage;
     }
 
     private Long creerSession(Long idPassage, Long volumeOriginaux) {

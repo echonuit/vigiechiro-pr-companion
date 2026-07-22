@@ -20,6 +20,12 @@ public enum CategorieConstat {
     /// constat informatif portant le décompte `présentes / total`, jamais une erreur par fichier.
     /// L'absence est un **état observé**, pas une corruption : l'utilisateur possède ses fichiers.
     AUDIO_INDISPONIBLE,
+    /// Un fichier est **présent** au chemin attendu, mais son contenu n'est **pas celui que la base
+    /// décrit** : empreinte divergente (#1299). Ce n'est pas une absence, c'est un **conflit** - une
+    /// redécoupe, une autre nuit du même carré, une sauvegarde restaurée d'une autre version. Le
+    /// laisser passer ferait **valider une espèce sur le mauvais audio**, en silence : c'est le seul
+    /// écart de disponibilité qui reste une **erreur**.
+    AUDIO_DIVERGENT,
     /// Une unité déposée est absente côté serveur (non traitée ou non déposée) : constat **en ligne**.
     SERVEUR_MANQUANT,
     /// Le journal de traitement du serveur est indisponible (hors connexion, ou traitement non terminé) :

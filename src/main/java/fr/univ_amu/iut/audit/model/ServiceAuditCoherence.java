@@ -178,6 +178,7 @@ public class ServiceAuditCoherence {
         Map<String, Presence> presences = presenceFichiers.evaluer(chemins);
 
         constatDisponibiliteAudio(idPassage, sequences, presences).ifPresent(constats::add);
+        constats.addAll(ControleIdentiteAudio.conflits(idPassage, sequences, presences));
         journal.ifPresent(j -> signalerAbsence(constats, idPassage, j.cheminFichier(), Severite.ERREUR, presences));
         releve.ifPresent(
                 r -> signalerAbsence(constats, idPassage, r.cheminFichier(), Severite.AVERTISSEMENT, presences));
