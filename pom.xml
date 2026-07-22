@@ -654,6 +654,18 @@
                             <excludes>
                                 <exclude>**/outils/**</exclude>
                             </excludes>
+                            <!-- D'où viennent ces deux valeurs (76dc24cf, 2026-06-04) : chacune a été
+                                 posée environ 4 points SOUS la couverture mesurée ce jour-là (89,6 %
+                                 de lignes, 74 % de branches). Le seuil des branches est plus bas que
+                                 celui des lignes parce que la couverture des branches l'était déjà,
+                                 pas par convention. L'écart volontaire devait servir de cliquet, à
+                                 resserrer à mesure que la couverture monte.
+                                 Le cliquet n'a jamais été resserré. Mesure du 2026-07-22 : 90,91 %
+                                 de lignes et 78,75 % de branches, soit 5,9 et 8,8 points de marge.
+                                 Re-mesurer avant de toucher à ces chiffres : ./mvnw verify, puis
+                                 target/site/jacoco/jacoco.csv, LINE_COVERED / (COVERED + MISSED).
+                                 Le rapport applique déjà l'exclusion **/outils/** ci-dessus, ses
+                                 ratios sont donc directement ceux que ce portail compare. -->
                             <rules>
                                 <rule>
                                     <element>BUNDLE</element>
