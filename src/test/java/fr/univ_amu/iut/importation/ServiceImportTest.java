@@ -361,6 +361,31 @@ class ServiceImportTest {
     }
 
     @Test
+    @DisplayName("#2255 : la source est un dossier quelconque - un NAS aussi bien qu'une carte SD")
+    void import_sans_conservation_reference_un_dossier_quelconque() throws IOException {
+        // Le test frère nomme sa source « sd », ce qui laisse croire à une spécificité carte SD. Rien ne
+        // l'impose : l'import lit un DOSSIER, et sans conservation il y laisse les originaux. C'est ce qui
+        // permet d'importer une nuit dont les bruts vivent sur un NAS, sans rien rapatrier (ADR 0048).
+        Path nas = preparerCarteSD(racine.resolve("nas").resolve("captures-2026"));
+
+        ResultatImport resultat = service.importer(nas, idPoint, prefixe, p -> {}, JetonAnnulation.neutre(), false);
+
+        Path session = racine.resolve("ws").resolve(prefixe.nomDossierSession());
+        assertThat(originalDao.findBySession(resultat.session().id()))
+                .hasSize(2)
+                .allSatisfy(o -> assertThat(o.cheminFichier())
+                        .as("les bruts restent chez l'utilisateur, et la base les y suit")
+                        .startsWith(nas.toString()));
+        assertThat(session.resolve("bruts"))
+                .as("rien n'est rapatrié dans l'espace de travail")
+                .doesNotExist();
+        assertThat(session.resolve("transformes"))
+                .as("les séquences, elles, sont PRODUITES par l'application : on ne référence que ce qui"
+                        + " appartient à l'utilisateur")
+                .isDirectory();
+    }
+
+    @Test
     @DisplayName(
             "Sans conservation : aucun dossier bruts/, mais séquences produites et originaux tracés vers la source (SD)")
     void import_sans_conservation_ne_cree_pas_bruts() {
