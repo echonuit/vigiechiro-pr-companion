@@ -149,4 +149,23 @@ class PersistenceInfraTest {
                 .extracting(Site::numeroCarre)
                 .containsExactly("111111");
     }
+
+    @Test
+    @DisplayName("#1038 : base hors du dossier de travail - c'est SON dossier qui est créé, pas la racine")
+    void base_hors_workspace_cree_son_propre_dossier() {
+        // La création paresseuse visait la racine du workspace. Depuis que la base peut vivre ailleurs,
+        // créer la racine n'ouvre plus rien : c'est le dossier de la BASE qu'il faut, et lui seul suffit.
+        Path coffre = dossier.resolve("coffre").resolve("archives");
+        Workspace workspace = new Workspace(dossier.resolve("travail"), coffre.resolve("vigiechiro.db"));
+
+        SourceDeDonnees source = new SourceDeDonnees(workspace);
+        new MigrationSchema(source).migrer();
+
+        assertThat(coffre.resolve("vigiechiro.db"))
+                .as("la base s'ouvre dans un dossier qui n'existait pas : il a fallu le créer")
+                .isRegularFile();
+        assertThat(dossier.resolve("travail").resolve("vigiechiro.db"))
+                .as("et rien n'est écrit à l'ancien emplacement")
+                .doesNotExist();
+    }
 }

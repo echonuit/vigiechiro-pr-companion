@@ -518,6 +518,10 @@
                              d'échec et noieraient le journal de CI. Prod inchangée (App/Cli installent
                              leur propre config). Cf. src/test/resources/logging-tests.properties. -->
                         <java.util.logging.config.file>${project.basedir}/src/test/resources/logging-tests.properties</java.util.logging.config.file>
+                        <!-- Configuration d'amorçage (#1038) détournée vers target/ : sans cela, la suite
+                             lirait celle de qui lance le build, et passerait ou échouerait selon la machine.
+                             Le dossier n'a pas besoin d'exister : une configuration absente est vide. -->
+                        <vigiechiro.config>${project.build.directory}/config-amorcage-test</vigiechiro.config>
                     </systemPropertyVariables>
                     <!-- Tests en mode CLASSPATH (useModulePath=false, requis par TestFX) : JavaFX est
                          chargé dans le module SANS NOM, il n'existe donc aucun module nommé `javafx.graphics`
