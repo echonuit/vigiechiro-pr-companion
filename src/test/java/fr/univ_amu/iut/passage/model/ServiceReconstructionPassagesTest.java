@@ -164,9 +164,9 @@ class ServiceReconstructionPassagesTest {
 
         SessionDEnregistrement session =
                 sessionDao.trouverParPassage(rapport.idPassage()).orElseThrow();
-        assertThat(session.archivee())
-                .as("le passage naît archivé : aucun fichier n'a jamais été importé ici")
-                .isTrue();
+        assertThat(session.volumeSequencesOctets())
+                .as("le passage naît sans audio : aucun fichier n'a jamais été importé ici")
+                .isZero();
         assertThat(sequenceDao.findBySession(session.id()))
                 .as("les lignes de séquences existent (sans fichier) : sans elles, aucune observation ne se rattache")
                 .extracting(SequenceDEcoute::nomFichier)
@@ -463,9 +463,9 @@ class ServiceReconstructionPassagesTest {
 
         SessionDEnregistrement session =
                 sessionDao.trouverParPassage(passage.id()).orElseThrow();
-        assertThat(session.archivee())
-                .as("la nuit naît archivée : rien n'a jamais été importé ici")
-                .isTrue();
+        assertThat(session.volumeSequencesOctets())
+                .as("la nuit naît sans audio : rien n'a jamais été importé ici")
+                .isZero();
         assertThat(sequenceDao.findBySession(session.id()))
                 .as("elle reste un squelette : 0 séquence, l'audio et les observations viennent à la reconstruction")
                 .isEmpty();

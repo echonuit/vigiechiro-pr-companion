@@ -16,10 +16,10 @@ public enum CategorieConstat {
     DEPOT_DIVERGENT,
     /// Un passage n'a aucune session d'enregistrement (jamais importé).
     SESSION_ABSENTE,
-    /// L'audio d'un passage **archivé volontairement** (#1300) n'est plus sur disque : un seul
-    /// constat informatif, jamais une erreur par fichier. Le marqueur explicite (`archived_at`)
-    /// distingue ce geste d'une disparition subie, qui, elle, reste une erreur (#1303, #1348).
-    AUDIO_ARCHIVE,
+    /// L'audio d'un passage n'est **pas entièrement présent** sur disque (ADR 0048) : un seul
+    /// constat informatif portant le décompte `présentes / total`, jamais une erreur par fichier.
+    /// L'absence est un **état observé**, pas une corruption : l'utilisateur possède ses fichiers.
+    AUDIO_INDISPONIBLE,
     /// Une unité déposée est absente côté serveur (non traitée ou non déposée) : constat **en ligne**.
     SERVEUR_MANQUANT,
     /// Le journal de traitement du serveur est indisponible (hors connexion, ou traitement non terminé) :
