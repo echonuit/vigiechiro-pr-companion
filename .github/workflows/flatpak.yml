@@ -42,11 +42,21 @@
 name: flatpak
 
 on:
-  # `released` : émis quand une release non brouillon devient publique, soit
-  # exactement le moment où le `.deb` devient téléchargeable. Même déclencheur
-  # que la soumission winget, pour la même raison.
-  release:
-    types: [released]
+  # DÉCLENCHEMENT MANUEL, comme la soumission winget et pour les mêmes deux raisons.
+  #
+  # Ce workflow portait `release: released`, qui ne s'est JAMAIS déclenché : la
+  # release est dé-brouillonnée par release.yml avec le GITHUB_TOKEN, et GitHub ne
+  # déclenche aucun workflow pour un événement produit avec ce jeton. Le vérifier :
+  # `gh run list --event release` ne renvoie rien, sur tout l'historique du dépôt.
+  #
+  # Et le rebrancher aurait coûté cher : ce dépôt publie entre 3 et 37 fois par
+  # jour, soit autant de constructions complètes du SDK Flathub et autant de
+  # commits de mise à jour sur main, pour un manifeste que personne ne lit encore
+  # tant que le paquet n'est pas accepté sur Flathub (#2191).
+  #
+  # Après acceptation, ce sont de toute façon les robots de Flathub qui prendront
+  # le relais des montées de version, toutes les deux heures. Ce workflow restera
+  # utile pour ce que ces robots ne font pas : attester que le paquet DÉMARRE.
   workflow_dispatch:
 
 permissions:
