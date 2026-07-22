@@ -32,6 +32,12 @@
 #    avec le GITHUB_TOKEN ne déclenche AUCUN autre workflow (garde-fou anti-boucle
 #    de GitHub) : la PR arriverait donc sans le moindre check. Reporter la
 #    vérification à la PR reviendrait à ne pas vérifier du tout.
+#
+# 3. La PR est ouverte PUIS fusionnée dans la foulée, comme capture-vues.yml le fait
+#    pour la galerie d'aperçus : `main` impose le passage par une PR, la PR n'est donc
+#    pas un point de relecture mais le seul transport disponible. Ce qui autorise cette
+#    fusion sans regard humain, c'est que le paquet vient d'être construit et DÉMARRÉ :
+#    la mise à jour est dérivée d'une release, pas une décision de conception.
 
 name: flatpak
 
@@ -46,6 +52,10 @@ on:
 permissions:
   contents: write
   pull-requests: write
+  # `checks: write` sert à publier le check `titre` sur la PR de mise à jour, pour la
+  # même raison qu'en 2. : rien ne se déclenche sur une PR ouverte au GITHUB_TOKEN,
+  # donc titre-pr.yml ne peut pas s'y exécuter. Même mécanisme que capture-vues.yml.
+  checks: write
 
 jobs:
   mettre-a-jour:
@@ -136,7 +146,7 @@ jobs:
 
           echo "Le Flatpak démarre et tient 45 s, sans erreur de chargement."
 
-      - name: Proposer la mise à jour
+      - name: Proposer la mise à jour, puis la fusionner
         if: steps.diff.outputs.change == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -173,11 +183,54 @@ jobs:
             echo
             echo "Le paquet a été **construit et démarré** avant l'ouverture de cette PR : 45 s debout, sans erreur de chargement."
             echo
-            echo "La vérification a lieu dans le workflow et non sur cette PR, car une PR ouverte avec le \`GITHUB_TOKEN\` ne déclenche aucun autre workflow."
+            echo "La vérification a lieu dans le workflow et non sur cette PR, car une PR ouverte avec le \`GITHUB_TOKEN\` ne déclenche aucun autre workflow. PR ouverte par le bot car \`main\` impose le passage par une PR ; squash-mergée automatiquement."
             echo
             echo "Refs #2247"
           } > "$corps"
 
-          gh pr create --base main --head "$branche" \
-            --title "build(flatpak): aligner le manifeste sur la v${version}" \
-            --body-file "$corps"
+          titre="build(flatpak): aligner le manifeste sur la v${version}"
+          gh pr create --base main --head "$branche" --title "$titre" --body-file "$corps"
+
+          # Valider le titre et publier le résultat comme check `titre`, exactement
+          # comme le fait capture-vues.yml : titre-pr.yml ne peut PAS s'exécuter sur
+          # cette PR (aucun workflow n'est déclenché par un événement produit avec le
+          # GITHUB_TOKEN), donc sans ce passage elle ne serait validée par rien. On
+          # exécute le MÊME script : seul le transport du résultat change. Publier un
+          # succès en dur reviendrait à faire croire à une vérification inexistante.
+          chmod +x .github/scripts/verifie-titre-pr.sh
+          if ./.github/scripts/verifie-titre-pr.sh "$titre"; then
+            verdict=success
+            resume="Titre conforme à Conventional Commits."
+          else
+            verdict=failure
+            resume="Titre non conforme : la PR de mise à jour ne sera pas fusionnée."
+          fi
+          gh api --method POST "repos/${GITHUB_REPOSITORY}/check-runs" \
+            -f name=titre \
+            -f head_sha="$(git rev-parse HEAD)" \
+            -f status=completed \
+            -f conclusion="$verdict" \
+            -f 'output[title]=Titre de PR' \
+            -f "output[summary]=${resume}" >/dev/null
+
+          if [ "$verdict" != "success" ]; then
+            echo "::error::${resume}"
+            exit 1
+          fi
+
+          # Merge LINÉAIRE (compatible required_linear_history) : squash si autorisé,
+          # sinon rebase. Retry : l'état « mergeable » est parfois calculé en asynchrone
+          # juste après l'ouverture. `[skip ci]` sur le sujet du squash : un changement
+          # de manifeste Flatpak n'a pas de code à valider sur main, et le paquet vient
+          # d'être construit ET démarré quelques pas plus haut.
+          for i in 1 2 3 4 5; do
+            if gh pr merge "$branche" --squash --delete-branch --subject "$titre [skip ci]" --body "" 2>/dev/null \
+               || gh pr merge "$branche" --rebase --delete-branch 2>/dev/null; then
+              echo "Mise à jour Flatpak fusionnée."
+              exit 0
+            fi
+            echo "Merge pas encore possible (tentative $i/5), nouvelle tentative dans 5 s..."
+            sleep 5
+          done
+          echo "::error::Échec du merge de la PR de mise à jour Flatpak après 5 tentatives."
+          exit 1
