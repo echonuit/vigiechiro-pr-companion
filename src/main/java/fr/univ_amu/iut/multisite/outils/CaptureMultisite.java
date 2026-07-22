@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.AttenteTuiles;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -286,12 +287,6 @@ public final class CaptureMultisite {
         capturerCarte(scene, fichier);
     }
 
-    /// Délai d'attente des tuiles OpenStreetMap (#152), en millisecondes, avant la capture principale :
-    /// les tuiles se téléchargent en arrière-plan (réseau) puis se peignent sur le fil JavaFX ; on laisse
-    /// ce temps au fond de carte d'apparaître. **Best-effort** : hors-ligne, la capture reste lisible
-    /// (carrés/points sur fond clair), seul le fond photographique manque.
-    private static final long DELAI_TUILES_MS = 6000;
-
     /// Charge `Multisite.fxml` (le controller auto-charge le tableau en `initialize()`) et le rend, après
     /// avoir laissé les tuiles OSM se charger (la carte est l'élément vedette de cette capture).
     private static void rendreEcran(Injector injecteur, Path fichier) throws IOException {
@@ -299,23 +294,6 @@ public final class CaptureMultisite {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         capturerCarte(new Scene(vue, 1100, 620), fichier);
-    }
-
-    /// Laisse tourner le fil JavaFX (boucle d'évènements imbriquée) le temps que les tuiles arrivées en
-    /// fond soient peintes, puis rend la main. Un minuteur de fond déclenche la sortie de boucle.
-    private static void attendreTuiles() {
-        Object cle = new Object();
-        Thread minuteur = new Thread(() -> {
-            try {
-                Thread.sleep(DELAI_TUILES_MS);
-            } catch (InterruptedException interruption) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> Platform.exitNestedEventLoop(cle, null));
-        });
-        minuteur.setDaemon(true);
-        minuteur.start();
-        Platform.enterNestedEventLoop(cle);
     }
 
     /// Rend `scene` hors-écran en PNG et journalise (helper factorisé).
@@ -326,7 +304,7 @@ public final class CaptureMultisite {
 
     /// Rend `scene` **après attente des tuiles OSM** (#152) et journalise — pour les captures à carte.
     private static void capturerCarte(Scene scene, Path fichier) {
-        ApercuFx.capturerApresPreparation(scene, CaptureMultisite::attendreTuiles, fichier);
+        ApercuFx.capturerApresPreparation(scene, AttenteTuiles::attendre, fichier);
         journaliser(fichier);
     }
 

@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.AttenteTuiles;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureNavigationAudio;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
@@ -168,10 +169,6 @@ public final class CaptureAnalyse {
                 fichier);
     }
 
-    /// Délai d'attente des tuiles OpenStreetMap avant la capture carte (best-effort, comme `multisite`) :
-    /// hors-ligne, la capture reste lisible (carrés colorés sur fond clair, seul le fond manque).
-    private static final long DELAI_TUILES_MS = 6000;
-
     /// Rend l'écran en mode **carte de répartition**. La bascule « 🗺️ Carte » est activée **avant**
     /// l'affichage de la scène (le bouton est directement atteignable, hors `SplitPane`), pour que la
     /// `MapView` soit **visible et dimensionnée dès le premier affichage** : son moteur de tuiles ne
@@ -198,26 +195,9 @@ public final class CaptureAnalyse {
                             && !table.getItems().isEmpty()) {
                         table.getSelectionModel().select(0);
                     }
-                    attendreTuiles();
+                    AttenteTuiles.attendre();
                 },
                 fichier);
-    }
-
-    /// Laisse tourner le fil JavaFX (boucle d'évènements imbriquée) le temps que les tuiles OSM arrivées en
-    /// fond soient peintes, puis rend la main (minuteur de fond pour sortir de la boucle).
-    private static void attendreTuiles() {
-        Object cle = new Object();
-        Thread minuteur = new Thread(() -> {
-            try {
-                Thread.sleep(DELAI_TUILES_MS);
-            } catch (InterruptedException interruption) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> Platform.exitNestedEventLoop(cle, null));
-        });
-        minuteur.setDaemon(true);
-        minuteur.start();
-        Platform.enterNestedEventLoop(cle);
     }
 
     /// Préparation post-affichage : applique le regroupement Par carré, ou sélectionne la première espèce

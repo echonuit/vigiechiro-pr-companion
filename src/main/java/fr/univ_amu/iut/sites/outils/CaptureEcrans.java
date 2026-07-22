@@ -13,6 +13,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.AttenteTuiles;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -78,12 +79,6 @@ public final class CaptureEcrans {
     /// dans CaptureDialogues, parce que le dialogue n'avait pas de .fxml - elle pouvait donc deriver du
     /// vrai ecran sans que rien ne le signale.
     private static final String MODALE_SITE = "/fr/univ_amu/iut/sites/view/ModaleSite.fxml";
-
-    /// Délai d'attente des tuiles OpenStreetMap (#153) avant la capture d'une modale **à carte** : les
-    /// tuiles se téléchargent en arrière-plan (réseau) puis se peignent sur le fil JavaFX ; on laisse ce
-    /// temps au fond de carte d'apparaître (même patron que `CaptureMultisite`). **Best-effort** :
-    /// hors-ligne, la capture reste lisible (carré + marqueur sur fond clair), seul le fond manque.
-    private static final long DELAI_TUILES_MS = 6000;
 
     private CaptureEcrans() {}
 
@@ -171,7 +166,7 @@ public final class CaptureEcrans {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ((ModalePointController) loader.getController()).demarrerEdition(site, point, () -> {});
-        ApercuFx.capturerApresPreparation(new Scene(vue), CaptureEcrans::attendreTuiles, fichier);
+        ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
     }
 
     /// Modale de creation d'un point d'ecoute (formulaire vierge), rendue seule (fenetre modale). Comme
@@ -181,7 +176,7 @@ public final class CaptureEcrans {
         loader.setControllerFactory(injecteur::getInstance);
         Parent vue = loader.load();
         ((ModalePointController) loader.getController()).demarrerCreation(site, () -> {});
-        ApercuFx.capturerApresPreparation(new Scene(vue), CaptureEcrans::attendreTuiles, fichier);
+        ApercuFx.capturerApresPreparation(new Scene(vue), AttenteTuiles::attendre, fichier);
     }
 
     /// Modale d'edition d'un site (champs pre-remplis), rendue seule. Pas de carte-outil ici : aucun
@@ -201,24 +196,6 @@ public final class CaptureEcrans {
         Parent vue = loader.load();
         ((ModaleSiteController) loader.getController()).demarrerCreation(() -> {});
         ApercuFx.enregistrerPng(new Scene(vue), fichier);
-    }
-
-    /// Laisse tourner le fil JavaFX (boucle d'evenements imbriquee) le temps que les tuiles OSM arrivees
-    /// en fond soient peintes, puis rend la main (un minuteur de fond declenche la sortie de boucle).
-    /// Meme mecanisme que `CaptureMultisite#attendreTuiles`.
-    private static void attendreTuiles() {
-        Object cle = new Object();
-        Thread minuteur = new Thread(() -> {
-            try {
-                Thread.sleep(DELAI_TUILES_MS);
-            } catch (InterruptedException interruption) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> Platform.exitNestedEventLoop(cle, null));
-        });
-        minuteur.setDaemon(true);
-        minuteur.start();
-        Platform.enterNestedEventLoop(cle);
     }
 
     private static Parent chargerFxml(Injector injecteur, String chemin) throws IOException {

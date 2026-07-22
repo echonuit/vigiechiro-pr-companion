@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.Utilisateur;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.outils.ApercuFx;
+import fr.univ_amu.iut.commun.outils.AttenteTuiles;
 import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -69,7 +70,6 @@ public final class CaptureImport {
     private static final String ID_UTILISATEUR = "demo-enseignant";
     private static final LocalDate REFERENCE = LocalDate.of(2026, 9, 20);
     private static final String IMPORT_FXML = "/fr/univ_amu/iut/importation/view/Importation.fxml";
-    private static final long DELAI_TUILES_MS = 6000;
 
     private static final String LOG =
             "22/04/26 - 16:02:20 PR1925492 Demarrage Passive Recorder numero de serie 1925492, V1.01,"
@@ -280,24 +280,7 @@ public final class CaptureImport {
         rendreAjuste(
                 scene,
                 fichier,
-                (ajustee, cible) -> ApercuFx.capturerApresPreparation(ajustee, CaptureImport::attendreTuiles, cible));
-    }
-
-    /// Laisse tourner le fil JavaFX (boucle d'évènements imbriquée) le temps que les tuiles OSM arrivées
-    /// en fond soient peintes, puis rend la main (un minuteur de fond déclenche la sortie de boucle).
-    private static void attendreTuiles() {
-        Object cle = new Object();
-        Thread minuteur = new Thread(() -> {
-            try {
-                Thread.sleep(DELAI_TUILES_MS);
-            } catch (InterruptedException interruption) {
-                Thread.currentThread().interrupt();
-            }
-            Platform.runLater(() -> Platform.exitNestedEventLoop(cle, null));
-        });
-        minuteur.setDaemon(true);
-        minuteur.start();
-        Platform.enterNestedEventLoop(cle);
+                (ajustee, cible) -> ApercuFx.capturerApresPreparation(ajustee, AttenteTuiles::attendre, cible));
     }
 
     /// Pause (outil de capture uniquement) : laisse s'écouler un peu de temps après le début d'une
