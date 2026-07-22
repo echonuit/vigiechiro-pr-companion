@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.34.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.34.0...v2.34.1) (2026-07-22)
+
+
+### Bug Fixes
+
+* **cli:** un refus se dit 2 sur stderr, y compris pour restaurer ([#2294](https://github.com/echonuit/vigiechiro-pr-companion/issues/2294)) ([#2296](https://github.com/echonuit/vigiechiro-pr-companion/issues/2296)) ([13cef18](https://github.com/echonuit/vigiechiro-pr-companion/commit/13cef183223c3d7f9bd0cf29cfced02a311abbcc)), closes [#2278](https://github.com/echonuit/vigiechiro-pr-companion/issues/2278)
+
 # [2.34.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.33.0...v2.34.0) (2026-07-22)
 
 
