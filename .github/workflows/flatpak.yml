@@ -96,10 +96,16 @@ jobs:
         working-directory: flatpak
         # --disable-rofiles-fuse : le runner n'expose pas FUSE.
         # --install-deps-from : tire la Platform, le SDK et l'extension openjdk.
+        # Répertoire de sortie ET répertoire d'état hors du dépôt : par défaut,
+        # flatpak-builder écrit `builddir/` et `.flatpak-builder/` dans le dossier
+        # courant, soit des centaines de Mo au milieu des sources versionnées. Le
+        # premier essai a fini en push rejeté par GitHub (objet de 147 Mo).
         run: |
           set -euo pipefail
           flatpak-builder --disable-rofiles-fuse --install-deps-from=flathub \
-            --user --install --force-clean builddir "${APP_ID}.yml"
+            --state-dir="${RUNNER_TEMP}/flatpak-etat" \
+            --user --install --force-clean \
+            "${RUNNER_TEMP}/flatpak-build" "${APP_ID}.yml"
 
       - name: Démarrage réel du Flatpak
         if: steps.diff.outputs.change == 'true'
@@ -147,7 +153,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branche"
-          git add flatpak/
+          # Les deux fichiers nommément, jamais `git add flatpak/` : la
+          # construction a lieu avant ce pas, et un ajout du dossier entier
+          # embarquerait ses artefacts. Ce qu'on propose ici, ce sont exactement
+          # les deux fichiers que le vérificateur a réécrits.
+          git add flatpak/fr.echonuit.VigieChiroCompanion.yml \
+                  flatpak/fr.echonuit.VigieChiroCompanion.metainfo.xml
           git commit \
             -m "build(flatpak): aligner le manifeste sur la v${version}" \
             -m "Mise à jour produite par flatpak-external-data-checker depuis le bloc x-checker-data du manifeste, puis éprouvée : le Flatpak a été construit et démarré (45 s debout, sans erreur de chargement) avant d'être proposé." \
