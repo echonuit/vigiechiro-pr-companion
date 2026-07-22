@@ -2,7 +2,7 @@
 
 > **Type** : **composant transverse** de restitution, affiché à la fin d'une opération longue. Premier point d'application : la fin d'import ([M-Import](M-Import.md)). Vocation à servir aussi la fin de dépôt ([M-Lot](M-Lot.md)) et la fin de réactivation d'un passage archivé.
 > **Persona principal** : tous. C'est le moment où l'utilisateur décide s'il continue.
-> **Parcours couverts** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), puis [P4 - Préparer un lot prêt à déposer](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md).
+> **Parcours couverts** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), puis [P4 - Préparer un lot prêt à déposer](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md) et [P12 - Récupérer une nuit déposée sur VigieChiro](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md) (compte rendu de réactivation).
 > **Issue** : #2358 (chantier #2350, lot 2).
 
 Une opération lourde brasse plusieurs gigaoctets pendant plusieurs minutes, sans que l'utilisateur puisse rien vérifier par lui-même. Quand elle se termine, il a trois questions, et aucune n'appelle une liste :

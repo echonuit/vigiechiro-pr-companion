@@ -163,3 +163,12 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 - **Prismes** : l'ordre des sections suit l'énumération `Prisme` (Collecte & passages, puis Espèces & biodiversité) ; l'ordre des cartes **dans** un prisme suit le rang `ordre()` déclaré par chaque carte.
 - **Bandeau nocturne** : `StackPane` clippé à ses bornes (le filigrane lune déborde volontairement). Le `FlowPane` des compteurs et celui des sections se réagencent selon la largeur de la fenêtre.
 - **Icônes** : codes [Ikonli](https://kordamp.org/ikonli/) FontAwesome 5 fournis par chaque fonctionnalité sous forme de **chaîne** (le socle construit le `FontIcon`) ; les emojis de la maquette ne sont qu'un substitut basse fidélité.
+
+## Enrichissements prévus
+
+> Décidé et maquetté, pas encore livré.
+
+- Une carte **« Ma saison »** rejoint le prisme *Collecte & passages*, au rang qui suit
+  « Carte & passages ». Elle ouvre [M-Saison](M-Saison.md) et répond à la question
+  « qu'est-ce qu'il me reste à faire cette saison ? » (#2356). Comme toute carte d'accueil,
+  elle est publiée par sa fonctionnalité via le `Multibinder`, sans retouche du socle.

@@ -153,3 +153,16 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 - **Mise en avant dynamique** : la carte de la prochaine étape porte une pseudo-classe CSS `recommandee` (liseré bleu), pilotée par `actionRecommandee` (dérivée du statut). La mise en avant se déplace donc avec l'avancement, au lieu de rester figée sur la première action.
 - **Icônes** : `FontIcon` (Ikonli FontAwesome5) pour un rendu net, y compris en capture headless.
 - **Action « Modifier rattachement »** : re-renomme tous les fichiers du passage (R6/R7). Confirmation forte obligatoire.
+
+## Enrichissements prévus
+
+> Décidé et maquetté, pas encore livré.
+
+- Deux cartes d'action s'ajoutent à celles du passage, disponibles une fois les résultats
+  d'identification importés : **Synthèse de la nuit** ([M-Synthese](M-Synthese.md), #2351),
+  qui replace les comptages par espèce dans un référentiel de saison, de région et de
+  milieu, et **Activité** ([M-Activite](M-Activite.md), #2352), qui trace les contacts par
+  tranche horaire sur l'axe nocturne.
+- Les deux suivent la règle d'activation déjà en place : verrouillées tant que le passage
+  n'a pas d'observations, comme « Sons & validation » l'est tant que la nuit n'est pas
+  déposée.
