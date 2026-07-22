@@ -36,6 +36,17 @@ public final class Fonctionnalites {
     static final String PROP_DESACTIVEES = "vigiechiro.features.desactivees";
 
     /// Clé du flag persisté d'une feature dans `app_setting` : `feature.<id>.active`.
+    ///
+    /// **L'identifiant d'une fonctionnalité est une donnée persistée, pas un simple nom de code.** Le
+    /// renommer laisse en base une clé que plus personne ne lit, et la fonctionnalité reprend sa valeur
+    /// par défaut : celle qu'un utilisateur avait désactivée **réapparaît**, sans erreur ni journal.
+    /// C'est le mode de défaillance qui a fait fermer #1537 (renommer la feature « lot »).
+    ///
+    /// Une migration ne suffit pas à réparer ce renommage : les flags sont lus **avant** que les
+    /// migrations ne s'appliquent (`RacineInjecteur.creer()` précède `MigrationSchema.migrer()` dans
+    /// `App` comme dans `Cli`), donc elle arriverait trop tard et le premier lancement ignorerait le
+    /// choix de l'utilisateur (#2187). Un **alias en lecture**, déclaré à côté de l'identifiant, ne
+    /// dépend lui d'aucun ordre de démarrage.
     static final String PREFIXE_CLE = "feature.";
 
     static final String SUFFIXE_CLE = ".active";

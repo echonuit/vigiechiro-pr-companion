@@ -50,9 +50,14 @@ public class App extends Application {
 
         Injector injector = RacineInjecteur.creer();
 
-        // Garantit que le schéma existe avant le premier accès à la base (migration idempotente).
-        // Même amorçage que le CLI (Cli) et les outils Capture* : sans cela, le premier écran qui
-        // lit la base échoue sur « no such table ».
+        // Crée le schéma s'il manque (migration idempotente). Même amorçage que le CLI (Cli) et les
+        // outils Capture* : sans cela, le premier écran qui lit la base échoue sur « no such table ».
+        //
+        // Ce n'est PAS le premier accès à la base, contrairement à ce que ce commentaire a longtemps
+        // affirmé. La composition de l'injecteur, juste au-dessus, lit déjà `app_setting` pour filtrer
+        // les features (Fonctionnalites.filtreActives). Sans conséquence tant qu'aucune migration ne
+        // porte sur une clé `feature.*` : une telle migration s'appliquerait APRÈS cette lecture, et le
+        // choix de l'utilisateur serait ignoré, sans message, pendant tout le lancement (#2187).
         injector.getInstance(MigrationSchema.class).migrer();
 
         // Backfill applicatif de l'horodatage de capture (#530) : les séquences importées avant la colonne
