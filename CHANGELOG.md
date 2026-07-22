@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.39.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.38.1...v2.39.0) (2026-07-22)
+
+
+### Features
+
+* **adr:** rendre les decisions verifiables, et le declarer dans l'ADR ([#2389](https://github.com/echonuit/vigiechiro-pr-companion/issues/2389)) ([2421bd6](https://github.com/echonuit/vigiechiro-pr-companion/commit/2421bd6636705fb1136b1419ddbddf60b9ca3ecf))
+
 ## [2.38.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.38.0...v2.38.1) (2026-07-22)
 
 
