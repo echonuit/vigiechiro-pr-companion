@@ -1,0 +1,50 @@
+# ADR qui ne déclarent pas encore comment elles sont vérifiées.
+#
+# Cette liste est un CLIQUET : elle ne peut que raccourcir. Le garde-fou
+# DocumentationAJourTest échoue si une ADR y figure alors qu'elle déclare
+# désormais quelque chose - autrement dit, on ne peut pas oublier de l'en retirer.
+#
+# La classification de ces décisions est le chantier suivant : la majorité
+# partira en « humaine », et c'est un résultat, pas un échec.
+0001-reactivation-passage-reconstruit-identite-structurelle.md
+0002-detection-acoustique-energie-de-pointe.md
+0003-feature-plugin-desactivable-ports-optionnels.md
+0004-cross-feature-sans-cycle-ports-commun.md
+0005-reactivation-cascade-de-preuves-archive-etat-observe.md
+0006-depot-zip-par-defaut-perte-audio-serveur-assumee.md
+0007-retours-http-type-scelle-reponse-api.md
+0008-aucun-echec-silencieux-severite-a-l-emission.md
+0009-la-nuit-est-l-unite-bornee-a-midi.md
+0011-transformation-audio-pilotee-par-le-log.md
+0012-audit-coherence-tout-ecart-visible-etat-normal-silencieux.md
+0013-ancrage-passage-relie-a-sa-participation.md
+0014-parite-cli-ihm.md
+0015-generateur-deterministe-cartes-sd-recette.md
+0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md
+0017-origine-d-un-point-etat-porte-pas-deduit.md
+0018-la-synchro-rapatrie-l-identite-de-la-nuit.md
+0019-ancrage-acquis-quand-il-sert.md
+0020-ecrire-sur-la-plateforme-ne-rien-inventer-ni-effacer.md
+0021-double-clic-miroir-qui-rend-compte.md
+0022-le-verbe-dit-le-sens-de-l-echange.md
+0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md
+0024-les-heures-d-une-nuit-viennent-de-ses-preuves.md
+0025-une-capture-passe-par-le-code-de-production.md
+0026-le-nommage-des-tranches-est-une-etape-du-pipeline.md
+0027-une-attente-porte-toujours-un-nom.md
+0028-un-etat-n-est-pas-un-compte-rendu.md
+0031-un-retour-n-est-pas-un-compte-rendu.md
+0032-le-plan-precede-l-ecriture.md
+0033-la-fenetre-borne-le-disque.md
+0034-la-forme-du-depot-se-choisit.md
+0036-la-copie-des-bruts-est-une-option.md
+0037-une-barre-d-actions-plie-elle-ne-tronque-pas.md
+0039-une-barre-de-statut-est-neutre.md
+0041-un-check-requis-gouverne-la-branche.md
+0042-un-apercu-qui-ment-est-refuse.md
+0043-la-mesure-fait-foi-en-ci.md
+0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md
+0046-une-classe-css-a-une-seule-feuille.md
+0047-l-identite-de-distribution-est-le-projet-echonuit.md
+0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md
+1881-l-identifiant-d-une-adr-est-le-numero-de-son-chantier.md

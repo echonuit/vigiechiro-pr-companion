@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-20
 - **Chantier** : EPIC #2104 / lot 0 (#2105)
+- **Vérification** : certaine — `.github/scripts/verifie-titre-pr.sh`
 
 ## Contexte
 

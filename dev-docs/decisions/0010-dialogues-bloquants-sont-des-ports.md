@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : #789/#790 (affordance et validation), socle occupation #1014, notificateur #1405
+- **Vérification** : probable — `scripts/adr/0010-dialogue-hors-port.py` (cliquet : 4)
 
 ## Contexte
 

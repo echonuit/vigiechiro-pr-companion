@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1933 (lots #1989, #2011, #2016, #2024, #2026), suite de #700
+- **Vérification** : probable — `scripts/adr/0035-pictogramme-caractere.py` (cliquet : 3)
 
 ## Contexte
 

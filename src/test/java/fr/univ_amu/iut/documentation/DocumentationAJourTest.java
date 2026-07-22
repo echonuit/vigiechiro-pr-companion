@@ -12,11 +12,13 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -296,6 +298,213 @@ class DocumentationAJourTest {
                                 + "« Décisions », dans l'ordre de leur numéro.",
                         NAV_DEV)
                 .isEmpty();
+    }
+
+    /// Les trois niveaux de vérification qu'une ADR peut déclarer.
+    ///
+    /// - `certaine` : l'invariant se prouve. Un test déterministe le garde, et échoue en CI.
+    /// - `probable` : l'invariant ne se prouve pas, mais un script liste des **suspects** que l'humain
+    ///   trie. Le signal utile est « aucun **nouveau** suspect », d'où le cliquet.
+    /// - `humaine` : aucun invariant observable mécaniquement. C'est un classement **légitime**, pas un
+    ///   aveu : une décision de méthode ne se vérifie pas par un script, et lui en coller un
+    ///   fabriquerait un contrôle creux, c'est-à-dire pire que rien.
+    private static final Set<String> NIVEAUX_DE_VERIFICATION = Set.of("certaine", "probable", "humaine");
+
+    /// La puce d'en-tête qui déclare le niveau, à côté de `Statut` et `Chantier`.
+    private static final Pattern VERIFICATION_ADR =
+            Pattern.compile("^- \\*\\*Vérification\\*\\* : (\\w+) — (.+)$", Pattern.MULTILINE);
+
+    /// Une vérification `certaine` nomme son test : `ClasseDeTest#nom_de_la_methode`.
+    private static final Pattern REFERENCE_TEST = Pattern.compile("^`(\\w+)#([a-z0-9_]+)`$");
+
+    /// L'en-tête d'une ADR, ramené à la forme composée.
+    ///
+    /// Le motif contient un `é` : si le fichier porte sa forme **décomposée** (`e` suivi de l'accent
+    /// combinant, ce que produisent certains éditeurs et le système de fichiers macOS), la comparaison
+    /// échoue alors que le texte est visuellement identique. Le garde-fou annoncerait une ADR non
+    /// déclarée sur un fichier parfaitement conforme.
+    private static String lireNormalise(Path fichier) {
+        return Normalizer.normalize(lire(fichier), Normalizer.Form.NFC);
+    }
+
+    /// Une vérification `probable` nomme son script et le cliquet en vigueur.
+    private static final Pattern REFERENCE_SCRIPT = Pattern.compile("^`([^`]+)` \\(cliquet : (\\d+)\\)$");
+
+    /// Une vérification `certaine` peut aussi nommer un script, sans cliquet : il n'a rien à tolérer.
+    private static final Pattern REFERENCE_SCRIPT_SEUL = Pattern.compile("^`([^`]+)`$");
+
+    /// Les ADR pas encore classées, dispensées de déclarer **le temps de l'être**.
+    ///
+    /// Classer 47 décisions est un travail de jugement, pas une formalité : le faire d'un bloc pour
+    /// rendre ce test vert produirait 47 classements bâclés, dont une majorité de `humaine` posés sans
+    /// examen. La liste rend donc la dette **visible et décroissante**, là où un test désactivé se
+    /// serait fait oublier.
+    private static final Path NON_DECLAREES = Path.of("scripts", "adr", "non-declarees.txt");
+
+    /// Noms de fichiers listés dans [NON_DECLAREES], commentaires et lignes vides écartés.
+    private static List<String> adrNonDeclarees() {
+        return lire(NON_DECLAREES)
+                .lines()
+                .map(String::strip)
+                .filter(ligne -> !ligne.isEmpty() && !ligne.startsWith("#"))
+                .toList();
+    }
+
+    @Test
+    @DisplayName("Chaque ADR déclare, dans son en-tête, comment elle est vérifiée")
+    void chaque_adr_declare_comment_elle_est_verifiee() {
+        List<String> aClasser = adrNonDeclarees();
+        SoftAssertions verifs = new SoftAssertions();
+
+        // Le cliquet ne protège que dans un sens : il dispense de déclarer, jamais de retirer son nom
+        // une fois la déclaration écrite. Sans cette moitié-là, la liste se figerait pleine et
+        // dispenserait éternellement - un tapis, pas un cliquet.
+        List<String> aRetirer = aClasser.stream()
+                .filter(fichier -> Files.exists(DECISIONS.resolve(fichier)))
+                .filter(fichier -> VERIFICATION_ADR
+                        .matcher(lireNormalise(DECISIONS.resolve(fichier)))
+                        .find())
+                .toList();
+        verifs.assertThat(aRetirer)
+                .as(
+                        "Ces ADR déclarent désormais leur vérification mais figurent encore dans %s : "
+                                + "retirez-les de la liste, sinon elle cesse de décroître.",
+                        NON_DECLAREES)
+                .isEmpty();
+
+        List<String> fantomes = aClasser.stream()
+                .filter(fichier -> !Files.exists(DECISIONS.resolve(fichier)))
+                .toList();
+        verifs.assertThat(fantomes)
+                .as(
+                        "Ces noms figurent dans %s mais aucune ADR ne porte ce nom : la liste dispense des "
+                                + "fichiers qui n'existent plus.",
+                        NON_DECLAREES)
+                .isEmpty();
+
+        for (String fichier : fichiersAdr()) {
+            Matcher declaration = VERIFICATION_ADR.matcher(lireNormalise(DECISIONS.resolve(fichier)));
+            if (!declaration.find()) {
+                if (aClasser.contains(fichier)) {
+                    continue; // Classement à venir, tracé dans la liste décroissante.
+                }
+                verifs.fail(
+                        "%s : aucune puce « **Vérification** » dans l'en-tête. Une ADR dont personne ne sait "
+                                + "si elle est tenue finit par n'être tenue par personne. Déclarez son niveau "
+                                + "(%s) à côté de **Statut** et **Chantier**.",
+                        fichier, NIVEAUX_DE_VERIFICATION);
+                continue;
+            }
+            verifs.assertThat(declaration.group(1))
+                    .as(
+                            "%s : niveau de vérification « %s » inconnu. Les seuls admis sont %s.",
+                            fichier, declaration.group(1), NIVEAUX_DE_VERIFICATION)
+                    .isIn(NIVEAUX_DE_VERIFICATION);
+        }
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("Le test ou le script qu'une ADR déclare existe vraiment")
+    void la_verification_declaree_par_une_adr_existe_vraiment() {
+        // Le cœur du dispositif. Déclarer un contrôle ne coûte rien ; c'est de le vérifier que vient la
+        // protection. Sans ce test, un script supprimé ou un test renommé laisserait l'ADR annoncer une
+        // garde qui n'existe plus - exactement la dérive qui a fait pointer trois renvois du cycle de
+        // chantier vers un dépôt vidé de ses sources.
+        SoftAssertions verifs = new SoftAssertions();
+        for (String fichier : fichiersAdr()) {
+            Matcher declaration = VERIFICATION_ADR.matcher(lireNormalise(DECISIONS.resolve(fichier)));
+            if (!declaration.find()) {
+                continue; // Absence déjà signalée par le test précédent.
+            }
+            String reference = declaration.group(2).trim();
+            switch (declaration.group(1)) {
+                case "certaine" -> verifierReferenceCertaine(verifs, fichier, reference);
+                case "probable" -> verifierScriptNomme(verifs, fichier, reference);
+                case "humaine" ->
+                    verifs.assertThat(reference.length())
+                            .as(
+                                    "%s : une vérification « humaine » doit dire POURQUOI aucun contrôle "
+                                            + "mécanique n'est possible. « %s » est trop court pour être un motif.",
+                                    fichier, reference)
+                            .isGreaterThanOrEqualTo(20);
+                default -> {
+                    // Niveau inconnu : déjà signalé par le test précédent.
+                }
+            }
+        }
+        verifs.assertAll();
+    }
+
+    /// Une vérification `certaine` nomme un test **ou** un script.
+    ///
+    /// Les deux sont déterministes, et l'ADR 0040 le prouve : le sujet de commit est gardé par
+    /// `verifie-titre-pr.sh`, aussi sûrement qu'un test, mais ce n'est pas du JUnit. Exiger une classe
+    /// aurait forcé à reclasser en `probable` une décision parfaitement tenue - le format aurait menti
+    /// sur la solidité du contrôle.
+    private static void verifierReferenceCertaine(SoftAssertions verifs, String fichier, String reference) {
+        Matcher nomme = REFERENCE_TEST.matcher(reference);
+        // La forme « test » se reconnaît EN PREMIER : les deux références sont encadrées d'accents
+        // graves, et le motif « script » accepte donc aussi `Classe#methode`. Tester le plus général
+        // d'abord envoyait toute référence de test se faire chercher comme un fichier - le garde-fou
+        // s'est pris lui-même à ce piège en s'exécutant.
+        if (!nomme.matches() && REFERENCE_SCRIPT_SEUL.matcher(reference).matches()) {
+            verifierScriptExiste(verifs, fichier, reference.replace("`", ""));
+            return;
+        }
+        if (!nomme.matches()) {
+            verifs.fail(
+                    "%s : une vérification « certaine » nomme son test (`ClasseDeTest#nom_du_test`) ou "
+                            + "son script (`chemin/du/script`). Reçu : %s",
+                    fichier, reference);
+            return;
+        }
+        String classe = nomme.group(1);
+        String methode = nomme.group(2);
+        Optional<Path> source = chercherSource(classe + ".java");
+        if (source.isEmpty()) {
+            verifs.fail(
+                    "%s : l'ADR annonce le test `%s#%s`, mais aucune classe %s.java n'existe. L'ADR se "
+                            + "croit gardée et ne l'est pas.",
+                    fichier, classe, methode, classe);
+            return;
+        }
+        verifs.assertThat(lire(source.get()))
+                .as(
+                        "%s : la classe %s existe mais ne contient aucune méthode `%s`. Un test renommé "
+                                + "laisse l'ADR annoncer une garde disparue.",
+                        fichier, classe, methode)
+                .contains(methode);
+    }
+
+    private static void verifierScriptNomme(SoftAssertions verifs, String fichier, String reference) {
+        Matcher nomme = REFERENCE_SCRIPT.matcher(reference);
+        if (!nomme.matches()) {
+            verifs.fail(
+                    "%s : une vérification « probable » nomme son script et son cliquet, sous la forme "
+                            + "`chemin/du/script` (cliquet : N). Reçu : %s",
+                    fichier, reference);
+            return;
+        }
+        verifierScriptExiste(verifs, fichier, nomme.group(1));
+    }
+
+    private static void verifierScriptExiste(SoftAssertions verifs, String fichier, String chemin) {
+        verifs.assertThat(Path.of(chemin))
+                .as(
+                        "%s : l'ADR annonce le script `%s`, qui n'existe pas. Un rapport qu'aucun script "
+                                + "n'alimente est un silence qu'on prend pour un feu vert.",
+                        fichier, chemin)
+                .exists();
+    }
+
+    private static Optional<Path> chercherSource(String nomDeFichier) {
+        try (Stream<Path> sources = Files.walk(Path.of("src", "test", "java"))) {
+            return sources.filter(chemin -> chemin.getFileName().toString().equals(nomDeFichier))
+                    .findFirst();
+        } catch (IOException echec) {
+            throw new UncheckedIOException("parcours de src/test/java", echec);
+        }
     }
 
     @Test

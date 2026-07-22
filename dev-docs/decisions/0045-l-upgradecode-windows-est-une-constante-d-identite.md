@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-21
 - **Chantier** : EPIC #2104 / lot 5 (#2110) / winget (#2213)
+- **Vérification** : certaine — `DecisionsRespecteesTest#l_installeur_windows_porte_ses_constantes_d_identite`
 
 ## Contexte
 

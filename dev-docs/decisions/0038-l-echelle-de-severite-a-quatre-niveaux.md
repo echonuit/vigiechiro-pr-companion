@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : EPIC #1990 / sous-EPIC #2004 (#2045, #2050)
+- **Vérification** : certaine — `DecisionsRespecteesTest#l_echelle_de_severite_a_quatre_niveaux_dans_l_ordre`
 - **Applique** : [ADR 0035](0035-un-pictogramme-est-une-icone-pas-un-caractere.md) point 5, dont elle fournit le garde-fou.
 - **Amendée le 2026-07-20** (#2159) : le contexte ci-dessous était écrit depuis **une** des deux échelles de sévérité de l'application. Voir « Ce que cette ADR ignorait ».
 
