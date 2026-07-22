@@ -211,6 +211,46 @@ Deux détails qui comptent :
 | **JaCoCo** | Couverture | Seuils bloquants **sous `-Pquality-gate`** |
 | **PIT** | Qualité des tests par **mutation** | Non (à la demande, `-Pmutation`) |
 
+### SonarQube for IDE (facultatif, à configurer)
+
+L'extension **SonarQube for IDE** (ex-SonarLint) analyse à la frappe et complète utilement PMD :
+elle voit des bugs et des fuites de ressources que le ruleset ne cherche pas. Mais **PMD fait foi** :
+c'est lui qui bloque la CI. Or, laissée par défaut, l'extension applique le profil « Sonar way »
+(542 règles Java) et **contredit trois seuils** délibérément arbitrés dans
+[`pmd-ruleset.xml`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/pmd-ruleset.xml) :
+
+| Règle Sonar | Défaut | Ce que dit le ruleset PMD | Remontées sur `src/main/java` |
+|---|---|---|---|
+| `java:S107` (nb de paramètres) | 7 | `ExcessiveParameterList` **11** : les `@Provides` Guice agrègent leurs collaborateurs | **30** |
+| `java:S3776` (complexité cognitive) | 15 | pendant de `CyclomaticComplexity` **24** : les parseurs écrits à la main montent à 27 | **9** |
+| `java:S106` (sortie standard) | actif | aucun équivalent : `**/outils/**` et la CLI picocli écrivent sur stdout | **28 fichiers** |
+
+Le réglage qui les réaligne **ne peut pas être versionné** : `sonarlint.rules` est de scope
+`application`, donc VS Code le lit **uniquement** depuis les réglages utilisateur et ignore
+silencieusement un bloc placé dans `.vscode/settings.json`. À recopier dans ses réglages personnels :
+
+```json
+"sonarlint.rules": {
+    "java:S107":  { "level": "on", "parameters": { "maximum": "11", "constructorMax": "11" } },
+    "java:S3776": { "level": "on", "parameters": { "Threshold": "30" } },
+    "java:S106":  { "level": "off" }
+}
+```
+
+Trois points à ne pas redécouvrir :
+
+- La clé de `java:S3776` prend une **majuscule** (`Threshold`). Écrite en minuscule, elle est ignorée
+  sans le moindre message et le seuil reste à 15.
+- `java:S107` ne visite ni les **records** : les 27 records à 8 composants ou plus, dont
+  `LigneObservationAudio` et ses 30 composants, ne remontent pas. Inutile de relever le seuil pour eux.
+- On ne coupe **que** ces trois règles. Le reste de « Sonar way » est un complément, pas un doublon ;
+  le désactiver en bloc reviendrait à ne garder que ce que PMD sait déjà faire.
+
+Pour une configuration réellement **partagée** entre contributeurs, la seule voie serait le
+*connected mode* (SonarQube Cloud, gratuit sur dépôt public) avec un profil qualité côté serveur.
+Le coût est un second référentiel de règles à tenir en phase avec `pmd-ruleset.xml` ; tant que
+l'écart tient en trois lignes, le bloc ci-dessus suffit.
+
 ### Couverture et mutation
 
 - **JaCoCo** : sous `-Pquality-gate`, seuils **bloquants** au niveau `BUNDLE` — **85 % de lignes** et
