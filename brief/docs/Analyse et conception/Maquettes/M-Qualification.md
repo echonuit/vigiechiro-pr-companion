@@ -329,7 +329,7 @@ L'écran est divisé en **2 colonnes** surmontant un **bandeau de décision en p
 
 - **Fil d'Ariane et retour** : portés par le **chrome** (barre de navigation commune) via le contrat `EmplacementNavigation` ; l'écran ne dessine plus son propre fil ni de lien « retour au passage ». Emplacement affiché : `🏠 Accueil › Mes sites › Carré N › Détails du passage N° X › Vérifier l'enregistrement`.
 - **Bandeau infos passage** : 5 cellules de rappel (passage, date/plage, volumétrie, verdict actuel, statut).
-- **Pré-check consultatif (R13)** : trois « feux » (couverture horaire, nombre de fichiers, cohérence du renommage) qui aident à décider **sans jamais bloquer**. Chaque feu porte un pictogramme (✓/⚠/✗) en plus de sa couleur (lisibilité daltoniens) et une infobulle explicative.
+- **Pré-check consultatif (R13)** : trois « feux » (couverture horaire, nombre de fichiers, cohérence du renommage) qui aident à décider **sans jamais bloquer**. Chaque feu porte une **icône** distincte en plus de sa couleur (lisibilité daltoniens) et une infobulle explicative. L'icône est un glyphe rendu par la police d'icônes, non un caractère écrit dans le libellé : un caractère dépend des polices installées sur le poste et ne se teinte pas avec le texte, ce qui affaiblissait la garantie qu'il servait à donner.
 - **Colonne gauche - Liste séquences** :
     - En-tête avec compteur + boutons « Personnaliser… » / « Régénérer ».
     - **Barre tricolore** de répartition des verdicts par fichier (part `Bon` verte / `Mauvais` ambre / `Inexploitable` rouge, le reste gris = `Non jugé`) : un rouge dominant signale d'un coup d'œil un enregistrement à problème. Le résumé chiffré double la couleur en texte.
