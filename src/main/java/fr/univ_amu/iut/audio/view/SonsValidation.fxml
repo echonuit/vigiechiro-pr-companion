@@ -204,6 +204,14 @@
           <Label wrapText="true" maxWidth="560.0"
                  text="Cette séquence n'est plus écoutable : son fichier a été supprimé (passage archivé ou disque incomplet). Les observations restent consultables et modifiables ; pour réécouter, réimportez les fichiers d'origine."/>
         </VBox>
+        <!-- #2254 : le fichier est là, mais ce n'est pas le bon. On n'offre pas l'écoute plutôt que de
+             la laisser trompeuse : valider une espèce sur un autre enregistrement serait faux, et
+             silencieux. Distinct de l'encart ci-dessus : l'absence est un état, la substitution un conflit. -->
+        <VBox fx:id="encartAudioDivergent" alignment="CENTER" spacing="4.0" styleClass="audio-vide"
+              visible="false" managed="false">
+          <Label text="Ce fichier n'est pas celui attendu" styleClass="audio-vide"/>
+          <Label fx:id="lblMotifDivergence" wrapText="true" maxWidth="560.0"/>
+        </VBox>
       </StackPane>
       <StackPane fx:id="hoteDiscussion" managed="false" visible="false"/>
       </HBox>

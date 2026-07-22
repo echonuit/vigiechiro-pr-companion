@@ -27,7 +27,7 @@ final class PanneauEcouteAudio {
             TableColumn<LigneObservationAudio, String> colFreqTerminale,
             MenuButton menuActions,
             ReglagesReactifs reactifs) {
-        ConfigurationAudioView.installer(audioView, viewModel.cheminAudioCourantProperty(), reactifs);
+        ConfigurationAudioView.installer(audioView, viewModel.etatEcoute().cheminAudioCourantProperty(), reactifs);
         RepereCriAudio.installer(audioView, viewModel.selectionProperty());
         MetriquesAcoustiquesAudio.installer(audioView, viewModel.selectionProperty(), table, colFme, colFreqTerminale);
         LecteurAudio.installer(audioView, menuActions, reactifs);

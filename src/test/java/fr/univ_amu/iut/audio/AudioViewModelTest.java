@@ -199,7 +199,7 @@ class AudioViewModelTest {
             vm.selectionProperty().set(l);
 
             assertThat(vm.etatSelection().avecObservationProperty().get()).isTrue();
-            assertThat(vm.cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/transformes/a.wav"));
+            assertThat(vm.etatEcoute().cheminAudioCourantProperty().get()).isEqualTo(Path.of("/ws/transformes/a.wav"));
             assertThat(vm.detailProperty().get()).contains("Tadarida : Pippip").contains("À revoir");
         }
 
@@ -260,13 +260,58 @@ class AudioViewModelTest {
             vm.ouvrirSur(source());
             vm.selectionProperty().set(l);
 
-            assertThat(vm.cheminAudioCourantProperty().get()).isNull();
-            assertThat(vm.audioManquantProperty().get()).isTrue();
+            assertThat(vm.etatEcoute().cheminAudioCourantProperty().get()).isNull();
+            assertThat(vm.etatEcoute().audioManquantProperty().get()).isTrue();
 
             vm.selectionProperty().set(null);
-            assertThat(vm.audioManquantProperty().get())
+            assertThat(vm.etatEcoute().audioManquantProperty().get())
                     .as("plus de sélection : plus rien à expliquer")
                     .isFalse();
+        }
+
+        @Test
+        @DisplayName("#2254 : fichier présent mais divergent : l'écoute est gâtée, avec le motif")
+        void selection_avec_fichier_divergent() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            LigneObservationAudio l = ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false);
+            when(projections.lignesAudioDuPassage(7L)).thenReturn(List.of(l));
+            when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/a.wav")));
+            // Le fichier est bien là (présence vraie), mais son contenu n'est plus celui attendu :
+            // écouter dessus ferait valider une espèce sur un autre enregistrement.
+            when(service.divergenceAudio(10L)).thenReturn(Optional.of("empreinte de contenu différente"));
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(source());
+            vm.selectionProperty().set(l);
+
+            assertThat(vm.etatEcoute().audioDivergentProperty().get())
+                    .as("un fichier substitué ne doit pas s'écouter comme s'il était le bon")
+                    .isTrue();
+            assertThat(vm.etatEcoute().motifDivergenceProperty().get()).contains("empreinte de contenu différente");
+
+            vm.selectionProperty().set(null);
+            assertThat(vm.etatEcoute().audioDivergentProperty().get())
+                    .as("plus de sélection : plus rien à gâter")
+                    .isFalse();
+        }
+
+        @Test
+        @DisplayName("#2254 : fichier présent et concordant : l'écoute reste offerte")
+        void selection_avec_fichier_concordant() {
+            when(service.taxonsDisponibles()).thenReturn(List.of());
+            when(service.resultatsDuPassage(7L)).thenReturn(Optional.empty());
+            LigneObservationAudio l = ligne(1, 10, "Pippip", null, StatutObservation.NON_TOUCHEE, false);
+            when(projections.lignesAudioDuPassage(7L)).thenReturn(List.of(l));
+            when(service.cheminAudio(10L)).thenReturn(Optional.of(Path.of("/ws/transformes/a.wav")));
+            when(service.divergenceAudio(10L)).thenReturn(Optional.empty());
+
+            AudioViewModel vm = vm();
+            vm.ouvrirSur(source());
+            vm.selectionProperty().set(l);
+
+            assertThat(vm.etatEcoute().audioDivergentProperty().get()).isFalse();
+            assertThat(vm.etatEcoute().motifDivergenceProperty().get()).isEmpty();
         }
 
         @Test
@@ -519,13 +564,13 @@ class AudioViewModelTest {
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.References("u-1"));
             vm.selectionProperty().set(ligne);
-            assertThat(vm.cheminAudioCourantProperty().get()).isNotNull();
+            assertThat(vm.etatEcoute().cheminAudioCourantProperty().get()).isNotNull();
 
             assertThat(vm.basculerReference()).isTrue();
             verify(service).marquerReference(1L, false);
             assertThat(vm.selectionProperty().get()).isNull();
             assertThat(vm.etatSelection().avecObservationProperty().get()).isFalse();
-            assertThat(vm.cheminAudioCourantProperty().get()).isNull();
+            assertThat(vm.etatEcoute().cheminAudioCourantProperty().get()).isNull();
             assertThat(vm.detailProperty().get()).isEmpty();
         }
 

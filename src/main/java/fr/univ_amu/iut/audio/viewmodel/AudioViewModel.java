@@ -84,14 +84,8 @@ public class AudioViewModel {
     /// extrait dans [EtatSelectionAudio] pour la cohésion (seuil PMD GodClass) : pilote l'activation et les
     /// libellés des boutons de la barre d'actions.
     private final EtatSelectionAudio etatSelection = new EtatSelectionAudio();
-    private final ReadOnlyObjectWrapper<Path> cheminAudioCourant =
-            new ReadOnlyObjectWrapper<>(this, "cheminAudioCourant");
-
-    /// Vrai quand la ligne sélectionnée a une séquence dont le **fichier n'est plus sur disque**
-    /// (passage archivé #1297, ou disque incomplet) : la vue remplace alors le panneau d'écoute par
-    /// un encart qui explique, au lieu d'un lecteur inerte. [#cheminAudioCourant] reste `null` dans
-    /// ce cas : le lecteur ne reçoit jamais un chemin mort (#1301).
-    private final ReadOnlyBooleanWrapper audioManquant = new ReadOnlyBooleanWrapper(this, "audioManquant", false);
+    /// Ce que le panneau d'écoute doit savoir de la sélection : chemin servi, absence, divergence.
+    private final EtatEcouteAudio etatEcoute = new EtatEcouteAudio();
 
     /// Texte du bandeau « passage archivé / audio partiel » (#1301), vide quand l'audio est complet
     /// ou que la source couvre plusieurs passages (le gating ligne à ligne reste actif).
@@ -341,14 +335,11 @@ public class AudioViewModel {
         boolean present = courant != null;
         etatSelection.maj(courant);
         detail.set(present ? FormatLigneAudio.detail(courant) : "");
-        // #1301 : le lecteur ne reçoit jamais un chemin mort. Si le fichier de la séquence n'est plus
-        // sur disque (passage archivé, disque incomplet), le chemin reste null et audioManquant
-        // déclenche l'encart d'explication à la place du panneau d'écoute. Un seul contrôle de
-        // présence par sélection : négligeable.
         Path chemin = present ? service.cheminAudio(courant.idSequence()).orElse(null) : null;
-        boolean manquant = disponibiliteEcoute.manquant(chemin);
-        cheminAudioCourant.set(manquant ? null : chemin);
-        audioManquant.set(manquant);
+        etatEcoute.maj(
+                chemin,
+                disponibiliteEcoute::manquant,
+                ignore -> service.divergenceAudio(courant.idSequence()).orElse(""));
     }
 
     private void reinitialiser() {
@@ -359,7 +350,7 @@ public class AudioViewModel {
         taxons.clear();
         detail.set("");
         comptage.set(ComptageAudio.VIDE);
-        audioManquant.set(false);
+        etatEcoute.reinitialiser();
         bandeauArchive.set("");
         publicationImpossible.set(false);
         messages.reinitialiser();
@@ -395,6 +386,12 @@ public class AudioViewModel {
     /// État **dérivé de la sélection** (présence / observation / proposition Tadarida / référence / douteux),
     /// où la barre d'actions branche l'activation et les libellés de ses boutons. Extrait dans
     /// [EtatSelectionAudio] pour la cohésion (seuil PMD GodClass).
+    /// Ce que le panneau d'écoute doit savoir de la sélection (chemin servi, absence, divergence),
+    /// exposé en bloc comme [#etatSelection()] : un collaborateur, pas quatre accesseurs.
+    public EtatEcouteAudio etatEcoute() {
+        return etatEcoute;
+    }
+
     public EtatSelectionAudio etatSelection() {
         return etatSelection;
     }
@@ -425,19 +422,6 @@ public class AudioViewModel {
     /// Mode de revue (R18) pilotant [#valider()] : `ACTIVITE` (défaut) ou `INVENTAIRE` (propagation).
     public ObjectProperty<ModeRevue> modeRevueProperty() {
         return modeRevue;
-    }
-
-    /// Chemin du fichier audio (séquence transformée) de l'observation sélectionnée, ou `null` (E7.S3).
-    /// Jamais un chemin mort : si le fichier n'est plus sur disque, reste `null` et
-    /// [#audioManquantProperty()] passe à vrai (#1301).
-    public ReadOnlyObjectProperty<Path> cheminAudioCourantProperty() {
-        return cheminAudioCourant.getReadOnlyProperty();
-    }
-
-    /// Vrai quand la séquence sélectionnée n'a plus son fichier sur disque (#1301) : la vue remplace
-    /// le panneau d'écoute par un encart d'explication.
-    public ReadOnlyBooleanProperty audioManquantProperty() {
-        return audioManquant.getReadOnlyProperty();
     }
 
     /// Texte du bandeau de disponibilité de l'audio du passage (#1301) : vide = rien à signaler

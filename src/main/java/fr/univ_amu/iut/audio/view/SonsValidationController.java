@@ -322,6 +322,12 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
     @FXML
     private VBox encartAudioManquant;
 
+    @FXML
+    private VBox encartAudioDivergent;
+
+    @FXML
+    private Label lblMotifDivergence;
+
     @Inject
     public SonsValidationController(
             AudioViewModel viewModel,
@@ -515,9 +521,8 @@ public class SonsValidationController implements EmplacementNavigation, ResumeSt
         lblBandeauArchive.textProperty().bind(viewModel.bandeauArchiveProperty());
         lblBandeauArchive.visibleProperty().bind(bandeauPresent);
         lblBandeauArchive.managedProperty().bind(bandeauPresent);
-        encartAudioManquant.visibleProperty().bind(viewModel.audioManquantProperty());
-        encartAudioManquant.managedProperty().bind(viewModel.audioManquantProperty());
-        audioView.visibleProperty().bind(viewModel.audioManquantProperty().not());
+        EncartsEcouteAudio.installer(
+                audioView, encartAudioManquant, encartAudioDivergent, lblMotifDivergence, viewModel);
 
         // Glisser-déposer d'un CSV Tadarida sur l'écran : alternative au FileChooser natif (qui coince
         // parfois en devcontainer / bureau distant). Actif seulement pour la source workflow (ParPassage).

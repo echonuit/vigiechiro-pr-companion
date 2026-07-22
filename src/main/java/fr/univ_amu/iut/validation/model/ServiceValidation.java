@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.ModeValidation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.passage.model.IdentiteSequence;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.validation.model.dao.MessageObservationDao;
@@ -400,6 +401,16 @@ public class ServiceValidation implements CompteurValidations {
             return Optional.empty();
         }
         return sequenceDao.findById(idSequence).map(sequence -> Path.of(sequence.cheminFichier()));
+    }
+
+    /// Le **motif de divergence** du fichier de cette séquence, ou vide s'il concorde (ou n'est pas
+    /// vérifiable faute d'empreinte). Voisin de [#cheminAudio] : l'écoute a besoin des deux, le chemin
+    /// pour lire et celui-ci pour savoir si lire a encore un sens (#2254, ADR 0048).
+    public Optional<String> divergenceAudio(Long idSequence) {
+        if (idSequence == null) {
+            return Optional.empty();
+        }
+        return sequenceDao.findById(idSequence).flatMap(IdentiteSequence::divergence);
     }
 
     // ---------------------------------------------------------------------------------------------
