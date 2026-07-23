@@ -1,6 +1,6 @@
 # M-MultiSite - Carte & passages
 
-> **Type** : vue plein écran (carte « Vue multi-sites » de l'accueil).
+> **Type** : vue plein écran (carte « Carte & passages » de l'accueil).
 > **Persona principal** : [Karim](../Personas/Karim.md), [Samuel](../Personas/Samuel.md) (montée en charge multi-sites). [Marie](../Personas/Marie.md) reste surtout sur [M-Sites](M-Sites.md).
 > **Parcours couverts** : [P5 - Naviguer dans plusieurs sites et passages](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md).
 
@@ -20,6 +20,12 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
     .search-txt { fill: #9aa0b3; font: 13px sans-serif; }
     .pagesub { font: 13px sans-serif; fill: #6a737d; }
     .toolbar { fill: #ffffff; stroke: #e1e4e8; stroke-width: 1; }
+    .tab-active { fill: #ffffff; stroke: #4a90d9; stroke-width: 1.5; }
+    .tab { fill: #eef2f5; stroke: #d0d7de; stroke-width: 1; }
+    .tab-txt { font: 600 12px sans-serif; fill: #2c3e50; }
+    .tab-txt-inact { font: 12px sans-serif; fill: #6a737d; }
+    .puce { fill: #e8eefc; stroke: #4a90d9; stroke-width: 1; }
+    .puce-txt { font: 12px sans-serif; fill: #2563a3; }
     .field-input { fill: #ffffff; stroke: #6a737d; stroke-width: 1; }
     .field-text { font: 12px sans-serif; fill: #2c3e50; }
     .field-ph { font: 12px sans-serif; fill: #bdc3c7; }
@@ -54,28 +60,32 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
   <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
-  <text x="332" y="38" class="crumb-active">Vue multi-sites</text>
+  <text x="332" y="38" class="crumb-active">Carte &amp; passages</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
   <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
 
-  <text x="40" y="78" class="pagesub">5 passage(s) affiché(s).</text>
+  <!-- Onglets de vues memorisees (socle partage, cf. Maquettes/index.md) -->
+  <rect x="40" y="64" width="152" height="28" rx="4" class="tab-active"/>
+  <text x="52" y="82" class="tab-txt">Tous les passages</text>
+  <rect x="196" y="66" width="126" height="26" rx="4" class="tab"/>
+  <text x="208" y="83" class="tab-txt-inact">Déposés 2026</text>
+  <rect x="326" y="66" width="104" height="26" rx="4" class="tab"/>
+  <text x="338" y="83" class="tab-txt-inact">À revérifier</text>
+  <rect x="434" y="66" width="30" height="26" rx="4" class="tab"/>
+  <text x="449" y="83" class="tab-txt-inact" text-anchor="middle">＋</text>
+  <text x="1150" y="83" class="pagesub" text-anchor="end">5 passage(s) affiché(s)</text>
 
-  <!-- Barre de filtres (une rangée) + menu ☰ à droite -->
-  <rect x="40" y="90" width="1120" height="46" rx="4" class="toolbar"/>
-  <rect x="56" y="102" width="110" height="24" rx="3" class="field-input"/>
-  <text x="68" y="119" class="field-ph">N° carré</text>
-  <rect x="178" y="102" width="150" height="24" rx="3" class="field-input"/>
-  <text x="190" y="119" class="field-text">Tous les statuts  ▾</text>
-  <rect x="340" y="102" width="150" height="24" rx="3" class="field-input"/>
-  <text x="352" y="119" class="field-text">Tous les verdicts  ▾</text>
-  <rect x="502" y="102" width="90" height="24" rx="3" class="field-input"/>
-  <text x="514" y="119" class="field-ph">Année</text>
-  <rect x="604" y="102" width="140" height="24" rx="3" class="field-input"/>
-  <text x="616" y="119" class="field-text">Tri : Par site  ▾</text>
-  <rect x="756" y="102" width="110" height="24" rx="3" class="btn-secondary"/>
-  <text x="811" y="119" class="btn-txt-dark" text-anchor="middle">Réinitialiser</text>
-  <rect x="1100" y="102" width="44" height="24" rx="3" class="btn-secondary"/>
-  <text x="1122" y="119" class="btn-txt-dark" text-anchor="middle">☰ ▾</text>
+  <!-- Filtres a puces + choix des colonnes (socle partage) -->
+  <rect x="40" y="102" width="94" height="26" rx="4" class="btn-secondary"/>
+  <text x="87" y="119" class="btn-txt-dark" text-anchor="middle">＋ Filtre</text>
+  <rect x="144" y="102" width="150" height="26" rx="13" class="puce"/>
+  <text x="158" y="119" class="puce-txt">Statut : Déposé  ✕</text>
+  <rect x="302" y="102" width="126" height="26" rx="13" class="puce"/>
+  <text x="316" y="119" class="puce-txt">Année : 2026  ✕</text>
+  <rect x="436" y="102" width="104" height="26" rx="4" class="btn-secondary"/>
+  <text x="488" y="119" class="btn-txt-dark" text-anchor="middle">Réinitialiser</text>
+  <rect x="1046" y="102" width="114" height="26" rx="4" class="btn-secondary"/>
+  <text x="1103" y="119" class="btn-txt-dark" text-anchor="middle">☰ Colonnes ▾</text>
 
   <!-- ===== Carte (gauche) ===== -->
   <rect x="40" y="150" width="490" height="488" rx="4" class="map-bg"/>
@@ -164,16 +174,17 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
 
 - **Carte (à gauche)** : chaque **carré** (maille 2 km du carroyage national, indigo) affiche son numéro dans le coin ; ses **points d'écoute** sont des marqueurs **colorés selon le statut** du dernier passage. Un point **sans GPS** est posé **au centre de son carré** ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)). Une **légende** repliée en bas à gauche et un bouton **⤢** (recadrer) en haut à droite complètent. La carte montre **tous** les sites : elle n'est **pas** restreinte par les filtres du tableau.
 - **Tableau (à droite)** : un passage par ligne (carré, point, année, n° de passage, date, statut, verdict). On **trie** en cliquant un en-tête (Année et N° se trient numériquement) ; un **double-clic** ouvre [M-Passage](M-Passage.md).
-- **Barre de filtres** : filtrer par carré, statut, verdict, année ; un sélecteur de **tri** ; un bouton **Réinitialiser** ; et un menu **☰** qui regroupe les actions secondaires (**Vues** enregistrées, **Exporter**).
+- **Onglets de vues + filtres à puces** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, des **onglets de vues mémorisées** (« Tous les passages », les vues enregistrées, **＋** pour en créer une) ; en dessous, un bouton **＋ Filtre** puis les filtres actifs sous forme de **puces cumulables** (statut, verdict, année, carré…), plus **Réinitialiser**. Le menu **☰** ne porte que le **choix des colonnes** et l'**export** (CSV), **pas** les vues.
 - **Replis** : en bas, **◀ Carte** et **Tableau ▶** replient entièrement un panneau pour donner toute la largeur à l'autre ; on ne peut pas masquer les deux. Replier la carte est aussi la **dégradation élégante hors connexion** (le fond OpenStreetMap n'est alors pas joignable).
 
 ### Interactions clés
 
 | Élément | Action |
 |---|---|
-| Filtres (carré, statut, verdict, année) | Restreignent le **tableau** (la carte reste complète) |
-| Sélecteur **Tri** / clic d'en-tête | Trie le tableau |
-| Menu **☰** | Ouvre **Vues** enregistrées / **Exporter** (CSV) |
+| **Onglets de vues** (＋ pour en créer) | Rejouent une combinaison de filtres enregistrée |
+| **＋ Filtre** puis puces cumulables | Restreignent le **tableau** (la carte reste complète) |
+| Clic d'en-tête de colonne | Trie le tableau |
+| Menu **☰** | **Colonnes** affichées / **Exporter** (CSV) |
 | Double-clic sur une ligne | Ouvre [M-Passage](M-Passage.md) |
 | **◀ Carte** / **Tableau ▶** | Replient / rouvrent un panneau |
 | Marqueur de point (carte) | Survol = mini-stats ; en mode édition, glisser pour corriger la position (contraint au carré, [R26](../Modèle%20conceptuel/Règles%20métier.md#r26)) |
@@ -182,7 +193,7 @@ La vue **« Carte & passages »** rassemble **tous les passages**, tous sites co
 
 ## Variante - vues sauvegardées
 
-Une combinaison de filtres utile peut être **enregistrée sous un nom** pour être rejouée d'un clic, depuis le menu **☰ › Vues…**. La fenêtre permet d'**appliquer**, de **mettre à jour** ou de **supprimer** une vue.
+Une combinaison de filtres utile peut être **enregistrée sous un nom** : elle devient un **onglet de vue** en tête de tableau, rejouable d'un clic (**＋** pour en créer une). La fenêtre ci-dessous récapitule les vues et permet de les **appliquer**, **mettre à jour** ou **supprimer**.
 
 <div markdown="0">
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 360" role="img" aria-label="Maquette M-MultiSite - Vues sauvegardées" style="max-width: 100%; height: auto; border: 1px solid #d0d7de; border-radius: 6px; background: #6b7785;">
