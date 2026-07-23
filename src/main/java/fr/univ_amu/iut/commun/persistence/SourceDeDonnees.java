@@ -34,9 +34,9 @@ public class SourceDeDonnees {
     private final Workspace workspace;
     private final SQLiteDataSource dataSource;
 
-    /// Crée une source pointant vers `<workspace>/vigiechiro.db`. En test, on passe un `Workspace`
-    /// construit sur un `@TempDir` (base jetable) ; en production, c'est le workspace
-    /// par défaut.
+    /// Crée une source pointant vers la base du workspace, qui est `<workspace>/vigiechiro.db` sauf
+    /// emplacement choisi (#1038). En test, on passe un `Workspace` construit sur un `@TempDir` (base
+    /// jetable) ; en production, c'est le workspace résolu.
     public SourceDeDonnees(Workspace workspace) {
         this.workspace = workspace;
         SQLiteConfig config = new SQLiteConfig();
@@ -51,8 +51,10 @@ public class SourceDeDonnees {
     /// fermer (idéalement dans un `try-with-resources`).
     public Connection getConnection() {
         try {
-            // Création paresseuse du workspace : la base ne peut exister sans son dossier.
-            Files.createDirectories(workspace.racine());
+            // Création paresseuse : la base ne peut exister sans son dossier. C'est celui de la BASE
+            // qu'il faut créer, pas la racine du workspace : depuis #1038 les deux peuvent différer, et
+            // créer la racine ne servirait alors à rien pour ouvrir le fichier.
+            Files.createDirectories(workspace.cheminBaseDeDonnees().getParent());
             Connection connexion = dataSource.getConnection();
             try (Statement st = connexion.createStatement()) {
                 st.execute("PRAGMA foreign_keys = ON");
