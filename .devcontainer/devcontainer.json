@@ -1,11 +1,40 @@
 {
-    "name": "SAÉ 2.01 Development Environment",
-    // Image pré-buildée publiée par .github/workflows/devcontainer-image.yml.
-    // Les features (java/SDKMAN, desktop-lite, github-cli, common-utils) y sont
-    // déjà bakées : le démarrage d'un Codespace ne fait que pull cette image,
-    // sans aucun appel SDKMAN/noVNC -> fini les échecs sur HTTP 504 SDKMAN.
-    // Recette de l'image : .devcontainer/image/devcontainer.json.
-    "image": "ghcr.io/echonuit/vigiechiro-pr-companion-devcontainer:latest",
+    "name": "VigieChiro Companion",
+    // Le conteneur se construit à partir du Dockerfile voisin et des features
+    // ci-dessous. Il a un temps consommé une image pré-buildée publiée sur GHCR
+    // par un workflow dédié ; ce dispositif a été retiré (#2388) parce qu'il ne
+    // fonctionnait plus : le workflow se déclenchait sur une branche absente de
+    // ce dépôt, l'image n'a donc jamais été publiée sous cette organisation, et
+    // le conteneur ne pouvait plus se construire du tout. Un build local est
+    // plus lent au premier démarrage, mais il ne dépend que de sources vivantes.
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": "."
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/common-utils:2": {
+            "installZsh": true,
+            "installOhMyZsh": true,
+            "upgradePackages": true,
+            "username": "vscode",
+            "uid": "1000",
+            "gid": "1000"
+        },
+        // JDK 25 standard, sans Maven ni Gradle : tout passe par ./mvnw.
+        "ghcr.io/devcontainers/features/java:1": {
+            "version": "25-tem",
+            "installMaven": "false",
+            "installGradle": "false"
+        },
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        // Bureau léger + noVNC (port 6080) pour lancer l'application JavaFX
+        // depuis un navigateur quand on travaille sans affichage local.
+        "ghcr.io/devcontainers/features/desktop-lite:1": {
+            "password": "vscode",
+            "webPort": "6080",
+            "vncPort": "5901"
+        }
+    },
     "forwardPorts": [6080, 5901],
     // onCreateCommand : pré-télécharge les dépendances (dependency:go-offline)
     // pour que le LSP Java et le premier build ne soient pas bloqués par le

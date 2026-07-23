@@ -248,7 +248,8 @@ Reproduire les contrôles **en local** (la CI les répartit sur les deux workflo
 ```
 
 Les autres workflows : `capture-vues.yml` (régénère les aperçus de la doc), `docs.yml`
-(construit/publie le site de documentation), `devcontainer-image.yml` (image GHCR pré-buildée).
+(construit/publie les trois sites de documentation), `api-live.yml` (contrat de l'API Vigie-Chiro,
+hebdomadaire et en lecture seule), `release.yml`, `flatpak.yml` et `winget.yml` (publication).
 
 > 📖 Carte complète des workflows et du portail qualité :
 > [doc dev · CI/CD et release](https://companion-dev.echonuit.fr/ci-cd-release/).

@@ -14,7 +14,15 @@ publication.
 | [titre-pr.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/titre-pr.yml) | PR (dont `edited`) | Le **titre de la PR** suit Conventional Commits (c'est lui que semantic-release lira, cf. ci-dessous) | Non - **informatif**, et volontairement (cf. ci-dessous) |
 | [capture-vues.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/capture-vues.yml) | push `main` | Régénère les aperçus PNG (cf. [Captures](captures.md)) | — |
 | [release.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/release.yml) | push `main` | Version + Release + installeurs natifs (dormant tant que `ENABLE_RELEASE` ≠ true) | — |
-| [devcontainer-image.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/devcontainer-image.yml) | push `solution` | Build/push de l'image devcontainer | — |
+| [api-live.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/api-live.yml) | hebdomadaire (lundi) + manuel | Contrat de l'API Vigie-Chiro, **en lecture seule** ; sépare « jeton mort » (warning) de « contrat cassé » (rouge) | — |
+| [flatpak.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/flatpak.yml) | release | Paquet Flatpak (cf. plus bas) | — |
+| [winget.yml](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/.github/workflows/winget.yml) | release | Soumission winget (inerte sans `WINGET_TOKEN`) | — |
+
+!!! note "L'image devcontainer pré-buildée a été retirée"
+    Un workflow `devcontainer-image.yml` publiait une image sur GHCR pour accélérer le démarrage des
+    Codespaces. Il se déclenchait sur une branche `solution` **absente de ce dépôt** : il n'a jamais
+    tourné et l'image n'a jamais existé, si bien que le conteneur ne pouvait plus se construire.
+    Le `.devcontainer/` reconstruit désormais depuis son `Dockerfile` et ses features (#2388).
 
 !!! info "Workflows « dormants »"
     Pages et release ne s'activent que via des **variables de dépôt** (`ENABLE_PAGES`,
