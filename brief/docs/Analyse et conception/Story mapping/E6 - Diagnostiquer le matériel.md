@@ -33,6 +33,9 @@
 
 ## E6.S2 - Visualiser le niveau de batterie et lister les évènements anormaux { #e6s2 }
 
+!!! note "Partiellement livré"
+    La **liste des anomalies** et la **liste des évènements** du journal sont bien affichées dans l'onglet Diagnostic (`listeAnomalies`, `listeEvenements`), et une anomalie « batterie faible » (seuil 20 %) y figure. En revanche, l'**encart « Batterie »** (tension au démarrage, à la veille, delta) **n'est pas livré** : le code ne calcule ni n'affiche de tension.
+
 **En tant que** [Karim](../Personas/Karim.md)
 
 **Je veux** voir le niveau de batterie du PR au début et à la fin de la nuit, ainsi que la liste des évènements techniques anormaux qui se sont produits (réveils non programmés, erreurs SD, redémarrages, alerte batterie critique)
@@ -87,6 +90,9 @@
 
 ## E6.S4 - Comparer le diagnostic avec un passage précédent du même enregistreur { #e6s4 }
 
+!!! warning "Non livré (cible)"
+    Pas de comparaison de deux passages : le graphe climatique du Diagnostic ne trace qu'**un seul passage**. Aucun sélecteur de passage à comparer, aucune courbe superposée.
+
 **En tant que** [Karim](../Personas/Karim.md)
 
 **Je veux** afficher côte à côte le diagnostic d'un passage et celui d'un passage antérieur du même enregistreur
@@ -109,6 +115,9 @@
 ---
 
 ## E6.S5 - Exporter le diagnostic d'un passage en CSV ou PDF { #e6s5 }
+
+!!! note "Partiellement livré"
+    L'export du diagnostic produit **du CSV uniquement** (pas de PDF), en **deux fichiers séparés** (série climatique + anomalies), et **seulement en ligne de commande** (`diagnostiquer --csv ...`) : aucun bouton d'export dans l'IHM.
 
 **En tant que** [Karim](../Personas/Karim.md)
 
@@ -137,6 +146,9 @@
 ---
 
 ## E6.S6 - Détecter automatiquement un paramétrage de nuit anormal { #e6s6 }
+
+!!! warning "Non livré (cible)"
+    Le pré-check affiche **trois feux** (couverture horaire, nombre de fichiers, cohérence de renommage). Le 4ᵉ indicateur « paramétrage atypique » n'existe pas (aucune occurrence de « atypique » dans le code).
 
 **En tant que** [Samuel](../Personas/Samuel.md) ou [Karim](../Personas/Karim.md)
 

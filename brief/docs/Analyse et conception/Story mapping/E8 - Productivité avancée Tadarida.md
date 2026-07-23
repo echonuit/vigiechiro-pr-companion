@@ -12,6 +12,9 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 
 ## E8.S1 - Regrouper plusieurs passages successifs pour validation conjointe { #e8s1 }
 
+!!! warning "Non livré (cible COULD)"
+    Il n'existe ni service ni ViewModel de regroupement de nuits pour validation groupée (le test E2E du parcours le documente lui-même : « il n'existe aucun service ni ViewModel de regroupement »). L'axe d'inventaire `PAR_ESPECE` / `PAR_CARRE` existe par ailleurs, mais ce n'est pas la validation regroupée décrite ici.
+
 **En tant que** [Samuel](../Personas/Samuel.md) (qui déploie un PR sur le même point pendant 4 nuits successives)
 
 **Je veux** pouvoir sélectionner plusieurs passages successifs d'un même point et les valider ensemble dans une vue unifiée
@@ -36,6 +39,9 @@ Ces gains sont **secondaires** : ils enrichissent la validation sans en être un
 ---
 
 ## E8.S2 - Marquer des séquences comme référence et exporter une bibliothèque par espèce { #e8s2 }
+
+!!! note "Partiellement livré"
+    Le marquage « séquence de référence » et l'export existent, mais les sons sont exportés **à plat** dans un dossier unique, accompagnés d'un CSV récapitulatif où le taxon est une colonne. Ils ne sont **pas** rangés en **arborescence de sous-dossiers par taxon** (cf. [R32](../Modèle%20conceptuel/Règles%20métier.md#r32)).
 
 **En tant que** [Samuel](../Personas/Samuel.md) (qui forme un débutant)
 

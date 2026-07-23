@@ -119,6 +119,9 @@
 
 ## E0.S6 - Reprendre un import interrompu { #e0s6 }
 
+!!! warning "Non livré (cible)"
+    Il n'y a pas de file d'attente d'import persistée à reprendre au démarrage. La reprise d'un import interrompu est **idempotente** (re-scan qui saute les fichiers déjà copiés, #231), déclenchée par un **relancement manuel** : rien n'est notifié à l'ouverture de l'application.
+
 **En tant que** [Marie](../Personas/Marie.md)
 
 **Je veux** que mon import de nuit, s'il est interrompu (crash, fermeture inopinée, batterie à plat), puisse reprendre là où il s'est arrêté

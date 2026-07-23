@@ -103,6 +103,9 @@
 
 ## E1.S5 - Créer un nouveau site directement depuis la modale d'import { #e1s5 }
 
+!!! warning "Non livré (cible)"
+    Le sélecteur de site à l'import ne propose que les sites **existants** ; il n'y a pas de bouton « + Créer un nouveau site » à la volée. La création de site vit dans l'écran « Mes sites », hors du parcours d'import.
+
 **En tant que** [Marie](../Personas/Marie.md)
 
 **Je veux** pouvoir créer un nouveau site sans quitter le flux d'import si je réalise que je n'ai pas encore déclaré le site auquel ma nuit appartient

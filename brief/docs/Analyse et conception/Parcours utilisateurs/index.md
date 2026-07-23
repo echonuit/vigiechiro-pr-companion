@@ -1,6 +1,6 @@
 # Parcours utilisateurs
 
-Cette section présente les **parcours d'usage** de l'application, organisés en trois groupes. Chaque parcours a sa propre fiche dans la barre latérale - utilisez ce sommaire comme point d'entrée et table des matières. **Tous ces parcours sont supportés par l'application livrée.**
+Cette section présente les **parcours d'usage** de l'application, organisés en trois groupes. Chaque parcours a sa propre fiche dans la barre latérale - utilisez ce sommaire comme point d'entrée et table des matières. **La plupart de ces parcours sont supportés par l'application livrée**, à l'exception notable de [P9](P9%20-%20Regrouper%20les%20nuits%20successives%20par%20point.md) (regrouper les nuits d'un point pour une validation conjointe), qui reste une **cible non livrée** : ni service ni vue de regroupement n'existent (cf. [E8.S1](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md#e8s1)).
 
 - **Section A - Fil rouge** : un seul parcours, **P0**, qui raconte l'usage de bout-en-bout vu par Marie, de la carte SD au dépôt.
 - **Section B - Chaîne de production** : les parcours **P1 à P6** qui composent et enrichissent le fil rouge - déclaration de site, import, vérification, préparation du dépôt, navigation multi-sites et diagnostic matériel -, plus **P12** (récupérer une nuit déjà déposée sur la plateforme, en trois coutures : synchro, reconstruire, réactiver).
@@ -54,11 +54,13 @@ flowchart LR
 
     classDef livre fill:#1e8449,stroke:#0e5128,color:#fff,stroke-width:2px
     classDef transverse fill:#3f51b5,stroke:#283593,color:#fff,stroke-width:2px
-    class P1,P2,P3,P4,P5,P6,P7,P9,P10,P11,P12 livre
+    classDef nonlivre fill:#5d6d7e,stroke:#283747,color:#fff,stroke-width:2px,stroke-dasharray:5 3
+    class P1,P2,P3,P4,P5,P6,P7,P10,P11,P12 livre
     class P8 transverse
+    class P9 nonlivre
 ```
 
-Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Tous les nœuds verts sont des parcours **livrés** ; **P8** (bleu) est la recherche **transverse**, atteignable depuis tout écran.
+Le fil rouge **P0** est la concaténation P1 → P2 → P3 → P4. Les nœuds verts sont des parcours **livrés** ; **P8** (bleu) est la recherche **transverse**, atteignable depuis tout écran ; **P9** (gris pointillé) est une **cible non livrée** (regroupement de nuits pour validation, cf. [E8.S1](../Story%20mapping/E8%20-%20Productivité%20avancée%20Tadarida.md#e8s1)).
 
 | Section | Parcours | Persona principal | Rôle |
 |---|---|---|---|
