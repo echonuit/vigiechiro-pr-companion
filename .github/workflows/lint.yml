@@ -59,3 +59,22 @@ jobs:
         # sans jacoco.exec, jacoco:check passe silencieusement au vert au lieu de bloquer.
         # Le seuil de couverture bloquant est appliqué dans maven.yml, là où les tests tournent.
         run: ./mvnw -B -Pquality-gate compile pmd:check
+
+      - name: Cliquets ADR (bloquant)
+        # Chaque script `probable` (scripts/adr/NNNN-*.py) rend un code non nul quand le nombre de
+        # suspects DÉPASSE le cliquet déclaré dans l'ADR : un cas a été ajouté. C'est ici que le
+        # cliquet devient un vrai garde-fou, sur CHAQUE PR.
+        #
+        # Sans cette étape, le cliquet n'était vérifié que par le rapport hebdomadaire, qui observe
+        # sans juger : une régression (un `Alert` de plus hors port, une classe CSS redéfinie)
+        # passait donc en silence jusqu'au lundi suivant, et même là ne rougissait pas. La doc et les
+        # PR du chantier ADR affirmaient pourtant « le cliquet fait rougir la CI si un cas s'ajoute » ;
+        # cette étape rend l'affirmation vraie. python3 est préinstallé sur le runner, les scripts
+        # n'ont aucune dépendance hors stdlib.
+        run: |
+          set -euo pipefail
+          echec=0
+          for script in scripts/adr/[0-9]*.py; do
+            python3 "$script" || echec=1
+          done
+          exit "$echec"

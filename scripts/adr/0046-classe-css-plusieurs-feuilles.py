@@ -36,6 +36,8 @@ FRAMEWORK = {
 
 SELECTEUR = re.compile(r"(?:^|[\s,}])\.([A-Za-z_][\w-]*)\s*[,{:]")
 
+COMMENTAIRE = re.compile(r"/\*.*?\*/", re.S)
+
 
 def feuilles() -> list[pathlib.Path]:
     return sorted(pathlib.Path("src/main/resources").rglob("*.css")) + sorted(
@@ -46,7 +48,12 @@ def feuilles() -> list[pathlib.Path]:
 def suspects() -> list[str]:
     par_classe = collections.defaultdict(set)
     for f in feuilles():
-        for nom in SELECTEUR.findall(f.read_text(encoding="utf-8")):
+        # Retire les commentaires CSS AVANT de lire les sélecteurs. Sans cela, un commentaire qui cite
+        # une classe (« .field-label vient de design.css ») la compte comme une re-définition : c'est le
+        # faux positif trouvé en clôture, où les cinq « violations » n'étaient que des mentions en
+        # commentaire dans sites.css, l'ADR étant en réalité respectée.
+        contenu = COMMENTAIRE.sub("", f.read_text(encoding="utf-8"))
+        for nom in SELECTEUR.findall(contenu):
             if nom not in FRAMEWORK:
                 par_classe[nom].add(f.name)
     trouves = []

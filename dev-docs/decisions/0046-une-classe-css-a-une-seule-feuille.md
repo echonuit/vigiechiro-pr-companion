@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-21
 - **Chantier** : #1974
-- **Vérification** : probable — `scripts/adr/0046-classe-css-plusieurs-feuilles.py` (cliquet : 5)
+- **Vérification** : probable — `scripts/adr/0046-classe-css-plusieurs-feuilles.py` (cliquet : 0)
 
 ## Contexte
 
