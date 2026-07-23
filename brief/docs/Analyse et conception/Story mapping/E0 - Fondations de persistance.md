@@ -145,6 +145,9 @@
 
 ## E0.S7 - Reprendre une validation Tadarida en suspens { #e0s7 }
 
+!!! note "Partiellement livré"
+    Les observations validées ou corrigées sont bien **persistées** et relues. En revanche le **contexte de validation** (dernière observation vue, filtres actifs, mode) vit en **mémoire de session** (`MemoireRevueAudio`), **pas en BD** : il n'est pas restauré par passage ni au redémarrage. Les vues de filtres sauvegardées (#623) sont l'exception réellement persistée.
+
 **En tant que** [Marie](../Personas/Marie.md) ou [Samuel](../Personas/Samuel.md)
 
 **Je veux** que ma session de validation Tadarida ([P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)), si je la quitte avant la fin, puisse être reprise plus tard exactement là où je l'avais laissée
