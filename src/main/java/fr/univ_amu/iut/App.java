@@ -1,10 +1,9 @@
 package fr.univ_amu.iut;
 
 import com.google.inject.Injector;
-import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.Workspace;
-import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.view.ChargeurFxml;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
@@ -48,17 +47,13 @@ public class App extends Application {
             });
         });
 
-        Injector injector = RacineInjecteur.creer();
-
-        // Crée le schéma s'il manque (migration idempotente). Même amorçage que le CLI (Cli) et les
-        // outils Capture* : sans cela, le premier écran qui lit la base échoue sur « no such table ».
-        //
-        // Ce n'est PAS le premier accès à la base, contrairement à ce que ce commentaire a longtemps
-        // affirmé. La composition de l'injecteur, juste au-dessus, lit déjà `app_setting` pour filtrer
-        // les features (Fonctionnalites.filtreActives). Sans conséquence tant qu'aucune migration ne
-        // porte sur une clé `feature.*` : une telle migration s'appliquerait APRÈS cette lecture, et le
-        // choix de l'utilisateur serait ignoré, sans message, pendant tout le lancement (#2187).
-        injector.getInstance(MigrationSchema.class).migrer();
+        // Migrer, PUIS composer (ADR 1038). La composition lit `app_setting` pour filtrer les features
+        // (Fonctionnalites.filtreActives) : migrer d'abord garantit que les drapeaux sont lus dans une
+        // base à jour. Sans cet ordre, une migration portant sur une clé `feature.*` s'appliquerait trop
+        // tard et le choix de l'utilisateur serait ignoré, sans message, pendant tout un lancement
+        // (#2187). Le schéma est créé au besoin (migration idempotente) : sans cela, le premier écran qui
+        // lit la base échouerait sur « no such table ».
+        Injector injector = Amorcage.migrerPuisComposer();
 
         // Backfill applicatif de l'horodatage de capture (#530) : les séquences importées avant la colonne
         // recorded_at (V09) n'ont pas d'heure ; on la reconstruit en re-parsant leur nom de fichier. Idempotent
