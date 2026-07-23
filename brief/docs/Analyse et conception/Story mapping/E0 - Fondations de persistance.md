@@ -16,11 +16,11 @@
 
 **Critères d'acceptation** :
 
-- [ ] Au premier lancement, l'application crée un fichier `companion.db` dans le dossier de travail utilisateur si absent.
-- [ ] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Session d'enregistrement, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
-- [ ] Une classe `DaoGenerique<T>` ou équivalent fournit les opérations CRUD de base (`create`, `findById`, `findAll`, `update`, `delete`).
-- [ ] La connexion JDBC est gérée avec un pool ou un singleton thread-safe.
-- [ ] Un test d'intégration crée la BD, exécute une opération CRUD, et vérifie le résultat.
+- [x] Au premier lancement, l'application crée un fichier `companion.db` dans le dossier de travail utilisateur si absent.
+- [x] Le schéma initial contient toutes les tables vides correspondant aux entités du [modèle conceptuel](../Modèle%20conceptuel/index.md) (Utilisateur, Site, Point, Passage, Session d'enregistrement, EnregistrementOriginal, SéquenceDÉcoute, JournalCapteur, RelevéClimatique, SélectionDÉcoute, RésultatsIdentification, Observation, Taxon, GroupeTaxonomique).
+- [x] Une classe `DaoGenerique<T>` ou équivalent fournit les opérations CRUD de base (`create`, `findById`, `findAll`, `update`, `delete`).
+- [x] La connexion JDBC est gérée avec un pool ou un singleton thread-safe.
+- [x] Un test d'intégration crée la BD, exécute une opération CRUD, et vérifie le résultat.
 
 **Parcours rattaché** : aucun (transverse)<br>
 **Maquettes cibles** : aucune<br>
@@ -38,11 +38,11 @@
 
 **Critères d'acceptation** :
 
-- [ ] `SiteDao` permet de créer un site avec son n° de carré, son nom convivial, son protocole.
-- [ ] `PointEcouteDao` permet d'ajouter, modifier, supprimer des points sur un site existant.
-- [ ] Un site supprimé entraîne la suppression en cascade de ses points (ou refus si des passages y sont rattachés - à arbitrer).
-- [ ] Les contraintes d'unicité sont vérifiées (n° de carré unique, code de point unique par site).
-- [ ] Tests d'intégration sur les opérations CRUD.
+- [x] `SiteDao` permet de créer un site avec son n° de carré, son nom convivial, son protocole.
+- [x] `PointEcouteDao` permet d'ajouter, modifier, supprimer des points sur un site existant.
+- [x] Un site supprimé entraîne la suppression en cascade de ses points (ou refus si des passages y sont rattachés - à arbitrer).
+- [x] Les contraintes d'unicité sont vérifiées (n° de carré unique, code de point unique par site).
+- [x] Tests d'intégration sur les opérations CRUD.
 
 **Parcours rattaché** : sert [P1](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
@@ -60,12 +60,12 @@
 
 **Critères d'acceptation** :
 
-- [ ] `PassageDao` permet de créer un passage rattaché à un point d'écoute, une année, un n° de passage.
-- [ ] L'unicité du quadruplet `(carré, année, n° passage, point)` est garantie au niveau BD (contrainte unique).
-- [ ] Le statut d'avancement est persisté (`Importé`, `Transformé`, `Vérifié`, `Prêt à déposer`, `Déposé`).
-- [ ] Le verdict de vérification est persisté (`OK`, `Utilisable`, `Inexploitable`, ou null si non vérifié).
-- [ ] L'association `Enregistreur ↔ Site/Point` (mémorisée pour faciliter les imports suivants) est persistée.
-- [ ] Tests d'intégration couvrant la création, la transition de statut et le verdict.
+- [x] `PassageDao` permet de créer un passage rattaché à un point d'écoute, une année, un n° de passage.
+- [x] L'unicité du quadruplet `(carré, année, n° passage, point)` est garantie au niveau BD (contrainte unique).
+- [x] Le statut d'avancement est persisté (`Importé`, `Transformé`, `Vérifié`, `Prêt à déposer`, `Déposé`).
+- [x] Le verdict de vérification est persisté (`OK`, `Utilisable`, `Inexploitable`, ou null si non vérifié).
+- [x] L'association `Enregistreur ↔ Site/Point` (mémorisée pour faciliter les imports suivants) est persistée.
+- [x] Tests d'intégration couvrant la création, la transition de statut et le verdict.
 
 **Parcours rattaché** : sert [P2](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md), [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), [P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
@@ -83,11 +83,11 @@
 
 **Critères d'acceptation** :
 
-- [ ] `SequenceDEcouteDao` permet de stocker les métadonnées de chaque chunk produit lors de la transformation (nom de fichier, index, durée, fichier source).
-- [ ] `SelectionEcouteDao` permet de stocker une sélection (méthode de constitution, taille, séquences rattachées).
-- [ ] Une séquence peut appartenir à 0..N sélections (table de jointure).
-- [ ] Le statut « écouté oui/non » par séquence dans le contexte d'une sélection est persisté.
-- [ ] Tests d'intégration.
+- [x] `SequenceDEcouteDao` permet de stocker les métadonnées de chaque chunk produit lors de la transformation (nom de fichier, index, durée, fichier source).
+- [x] `SelectionEcouteDao` permet de stocker une sélection (méthode de constitution, taille, séquences rattachées).
+- [x] Une séquence peut appartenir à 0..N sélections (table de jointure).
+- [x] Le statut « écouté oui/non » par séquence dans le contexte d'une sélection est persisté.
+- [x] Tests d'intégration.
 
 **Parcours rattaché** : sert [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md)<br>
 **Maquettes cibles** : aucune (DAO pur)<br>
@@ -105,10 +105,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] `ResultatsIdentificationDao` permet de créer un import (chemin du CSV source, format détecté, date d'import) rattaché à un passage.
-- [ ] `ObservationDao` permet d'insérer en masse des observations (volumétrie potentielle : 4000+ par passage), avec leur taxon Tadarida, probabilité, séquence rattachée, statut de validation, taxon observateur, commentaire.
-- [ ] `TaxonDao` et `GroupeTaxonomiqueDao` permettent de gérer un référentiel des taxons (peuplé une fois pour toutes ou rafraîchi via un fichier de référence).
-- [ ] Insertion en masse (bulk insert) optimisée pour ne pas freezer l'IHM (cf. [O3](../../Objectifs%20qualités/Objectifs%20qualités/O3.md)).
+- [x] `ResultatsIdentificationDao` permet de créer un import (chemin du CSV source, format détecté, date d'import) rattaché à un passage.
+- [x] `ObservationDao` permet d'insérer en masse des observations (volumétrie potentielle : 4000+ par passage), avec leur taxon Tadarida, probabilité, séquence rattachée, statut de validation, taxon observateur, commentaire.
+- [x] `TaxonDao` et `GroupeTaxonomiqueDao` permettent de gérer un référentiel des taxons (peuplé une fois pour toutes ou rafraîchi via un fichier de référence).
+- [x] Insertion en masse (bulk insert) optimisée pour ne pas freezer l'IHM (cf. [O3](../../Objectifs%20qualités/Objectifs%20qualités/O3.md)).
 - [ ] Tests d'intégration avec un jeu de données représentatif (au moins 1000 observations).
 
 **Parcours rattaché** : sert [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)<br>
@@ -155,7 +155,7 @@
 
 - [ ] Le contexte de validation est persisté en BD : dernière observation vue, filtres actifs (taxon, groupe, seuil de probabilité, plage horaire), mode de validation choisi (inventaire/activité).
 - [ ] Au retour sur l'écran de validation pour le même passage, le contexte est restauré automatiquement.
-- [ ] Les observations déjà validées ou corrigées sont persistées et conservent leur statut.
+- [x] Les observations déjà validées ou corrigées sont persistées et conservent leur statut.
 - [ ] Test d'intégration : validation partielle, fermeture, réouverture, vérification de la restauration.
 
 **Parcours rattaché** : transverse à [P7](../Parcours%20utilisateurs/P7%20-%20Valider%20les%20résultats%20Tadarida.md)<br>
@@ -174,11 +174,11 @@
 
 **Critères d'acceptation** :
 
-- [ ] Une table `schema_version` mémorise la version courante du schéma.
-- [ ] Au démarrage, l'application compare la version code avec la version BD et applique les scripts de migration nécessaires.
-- [ ] Les scripts de migration sont versionnés dans les sources (ex. `db/migrations/V01__init.sql`, `V02__add_observations.sql`).
+- [x] Une table `schema_version` mémorise la version courante du schéma.
+- [x] Au démarrage, l'application compare la version code avec la version BD et applique les scripts de migration nécessaires.
+- [x] Les scripts de migration sont versionnés dans les sources (ex. `db/migrations/V01__init.sql`, `V02__add_observations.sql`).
 - [ ] Une migration ratée laisse la BD dans son état initial (rollback) et bloque l'application avec un message clair.
-- [ ] Test d'intégration : créer une BD en V01, lancer l'application qui fait passer en V02, vérifier la cohérence.
+- [x] Test d'intégration : créer une BD en V01, lancer l'application qui fait passer en V02, vérifier la cohérence.
 
 **Parcours rattaché** : transverse (technique pur)<br>
 **Maquettes cibles** : aucune<br>
@@ -196,10 +196,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] Un écran de réglages présente des **onglets auto-découverts** (Général, Fonctionnalités, Emplacements, Dépôt, Import, Audio).
-- [ ] Les réglages typés (booléen / texte / entier) sont **persistés** dans une table clé/valeur ; une valeur absente ou illisible retombe sur son **défaut sans planter** ; les énums sont sérialisés **par valeur stable** (jamais par `name()`).
-- [ ] Des fonctionnalités **optionnelles ou expérimentales** peuvent être **désactivées** ; une fonctionnalité **« cœur » reste toujours active**.
-- [ ] La **précédence** est explicite : propriété système > alias de désactivation > flag persisté > défaut de la catégorie.
+- [x] Un écran de réglages présente des **onglets auto-découverts** (Général, Fonctionnalités, Emplacements, Dépôt, Import, Audio).
+- [x] Les réglages typés (booléen / texte / entier) sont **persistés** dans une table clé/valeur ; une valeur absente ou illisible retombe sur son **défaut sans planter** ; les énums sont sérialisés **par valeur stable** (jamais par `name()`).
+- [x] Des fonctionnalités **optionnelles ou expérimentales** peuvent être **désactivées** ; une fonctionnalité **« cœur » reste toujours active**.
+- [x] La **précédence** est explicite : propriété système > alias de désactivation > flag persisté > défaut de la catégorie.
 
 **Parcours rattaché** : transverse (tous parcours)<br>
 **Maquettes cibles** : *écran de réglages non maquetté* (cf. [#2382](https://github.com/echonuit/vigiechiro-pr-companion/issues/2382))<br>
@@ -217,10 +217,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] Sauvegarde **« base seule »** : instantané **cohérent** horodaté, même base ouverte (`VACUUM INTO`).
-- [ ] **Restauration** : vérifie la lisibilité, **met de côté la base courante** (filet), remplace, purge les journaux, et **rejoue la migration** pour être à jour.
-- [ ] Sauvegarde / restauration **« complète »** : base **+ audio**, en **disant ce qui n'a pas pu être copié**.
-- [ ] L'**emplacement de destination** est choisi par l'utilisateur.
+- [x] Sauvegarde **« base seule »** : instantané **cohérent** horodaté, même base ouverte (`VACUUM INTO`).
+- [x] **Restauration** : vérifie la lisibilité, **met de côté la base courante** (filet), remplace, purge les journaux, et **rejoue la migration** pour être à jour.
+- [x] Sauvegarde / restauration **« complète »** : base **+ audio**, en **disant ce qui n'a pas pu être copié**.
+- [x] L'**emplacement de destination** est choisi par l'utilisateur.
 
 **Parcours rattaché** : transverse (tous parcours)<br>
 **Maquettes cibles** : *actions de menu non maquettées* (cf. [#2382](https://github.com/echonuit/vigiechiro-pr-companion/issues/2382))<br>
@@ -238,10 +238,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] Un **audit en lecture seule** vérifie, par passage, la présence disque, le préfixe attendu et la cohérence des unités déposées, plus un **balayage inverse** des orphelins ; **en ligne**, il confronte le dépôt au serveur et se **dégrade proprement hors connexion**.
-- [ ] Un **bilan de récupérabilité** classe chaque nuit **Disque → Serveur → Perdu** (un **dépôt ZIP** est « perdu » côté serveur) en lisant le **mode de dépôt réel**, jamais présumé.
-- [ ] Le **reset guidé** est ordonné : dire ce qu'on perdrait + acceptation, **exiger que la plateforme réponde avant de détruire**, sauvegarder, base neuve, repeupler depuis le serveur, audit final.
-- [ ] Une nuit **« perdue »** reste navigable en **passage archivé**, réactivable plus tard ([E4.S6](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6)).
+- [x] Un **audit en lecture seule** vérifie, par passage, la présence disque, le préfixe attendu et la cohérence des unités déposées, plus un **balayage inverse** des orphelins ; **en ligne**, il confronte le dépôt au serveur et se **dégrade proprement hors connexion**.
+- [x] Un **bilan de récupérabilité** classe chaque nuit **Disque → Serveur → Perdu** (un **dépôt ZIP** est « perdu » côté serveur) en lisant le **mode de dépôt réel**, jamais présumé.
+- [x] Le **reset guidé** est ordonné : dire ce qu'on perdrait + acceptation, **exiger que la plateforme réponde avant de détruire**, sauvegarder, base neuve, repeupler depuis le serveur, audit final.
+- [x] Une nuit **« perdue »** reste navigable en **passage archivé**, réactivable plus tard ([E4.S6](E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6)).
 
 **Parcours rattaché** : transverse (maintenance)<br>
 **Maquettes cibles** : *écran d'audit non maquetté* (cf. [#2382](https://github.com/echonuit/vigiechiro-pr-companion/issues/2382))<br>
