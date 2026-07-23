@@ -56,6 +56,12 @@
           <FontIcon iconLiteral="fas-file-archive"/>
         </graphic>
       </Button>
+      <Button fx:id="boutonTransformes" text="J'ai déjà les transformés…" styleClass="bouton-secondaire"
+              onAction="#importerTransformes">
+        <graphic>
+          <FontIcon iconLiteral="fas-link"/>
+        </graphic>
+      </Button>
     </HBox>
   </VBox>
 
