@@ -102,7 +102,9 @@ public final class Workspace {
         return racineSession.resolve(SOUS_DOSSIER_BRUTS);
     }
 
-    /// Sous-dossier `transformes/` d'une session (séquences R8 + CSV R23).
+    /// Sous-dossier `transformes/` d'une session : les séquences d'écoute (R8). Le CSV de résultats
+    /// Tadarida n'y est **pas** copié : il est lu à son emplacement d'origine, seul son chemin est
+    /// mémorisé (R23).
     public Path dossierTransformes(String prefixe) {
         return dossierSession(prefixe).resolve(SOUS_DOSSIER_TRANSFORMES);
     }

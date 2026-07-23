@@ -92,7 +92,7 @@ La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tê
 
   <!-- ===== 1. Vérifier et préparer ===== -->
   <text x="40" y="245" class="section-title">1. Vérifier et préparer le dépôt</text>
-  <text x="40" y="262" class="section-sub">Contrôles de cohérence (R31). Un ✗ bloque ; un ⚠ laisse déposer.</text>
+  <text x="40" y="262" class="section-sub">Contrôles de cohérence (R33). Un ✗ bloque ; un ⚠ laisse déposer.</text>
   <rect x="40" y="272" width="1120" height="128" rx="4" class="card"/>
   <text x="58" y="298" class="check-ok">✓</text><text x="80" y="298" class="check-row">Verdict de vérification : OK</text>
   <text x="58" y="322" class="check-ok">✓</text><text x="80" y="322" class="check-row">Transformation des enregistrements : 1 572 originaux → 3 614 séquences</text>
@@ -152,7 +152,7 @@ La vue déroule le dépôt en **quatre étapes** (un stepper les rappelle en tê
 - **Fil d'Ariane et retour** : portés par le **chrome** via le contrat `EmplacementNavigation` ; l'écran ne dessine pas son propre fil. Emplacement : `Accueil › Mes sites › Carré N › Passage N° X › Préparer le dépôt`.
 - **Stepper** (`1 · Préparer` / `2 · Générer les archives` / `3 · Téléverser` / `4 · Marquer déposé`) : rappelle les quatre temps. L'étape 2 devient **facultative** quand on est connecté : le téléversement produit les archives à la volée et n'en garde que quelques-unes sur disque.
 - **Bandeau passage** : rappel du passage, du verdict, du statut, du volume, et de la **forme du dépôt** (ZIP ou WAV, réglable).
-- **1. Vérifier et préparer** : la checklist de cohérence (R31) affiche **quatre contrôles bloquants** (verdict, transformation, nommage, journal) et **un avertissement non bloquant** (relevé climatique absent). Un ✗ interdit la préparation ; un ⚠ laisse déposer. Le bouton verrouille ensuite la liste des séquences et fait passer le passage à `Prêt à déposer`.
+- **1. Vérifier et préparer** : la checklist de cohérence (R33) affiche **quatre contrôles bloquants** (verdict, transformation, nommage, journal) et **un avertissement non bloquant** (relevé climatique absent). Un ✗ interdit la préparation ; un ⚠ laisse déposer. Le bouton verrouille ensuite la liste des séquences et fait passer le passage à `Prêt à déposer`.
 - **2. Générer les archives** : découpe les séquences en `préfixe-N.zip` (≤ 700 Mo, réglable), écrites dans `depot/`. La table suit chaque archive (numéro, fichiers, taille, progression). Facultatif si connecté (cf. stepper).
 - **3. Téléverser** : le bouton **☁ Téléverser sur Vigie-Chiro** est le chemin nominal (participation créée, envoi **reprenable** unité par unité). **📁 Ouvrir le dossier** ouvre `depot/` pour un **dépôt navigateur de repli** hors connexion.
 - **Traitement Vigie-Chiro** : téléverser **ne suffit pas** à lancer l'analyse. **▶ Lancer la participation** déclenche le calcul Tadarida serveur ; **↻ Actualiser** relève son état (Planifiée / En cours / Terminée / Échec) **à la demande**, sans sondage automatique.
