@@ -36,7 +36,7 @@ Chaque story est :
 Deux capacités sont **livrées** mais ne se décrivent pas comme un parcours utilisateur ; elles sont mentionnées ici plutôt que découpées en stories :
 
 - **Annonce de mise à jour applicative** : un bandeau signale, au démarrage, qu'une version plus récente est publiée (« La version X est disponible, vous utilisez la Y ») avec un lien vers cette version. L'annonce **reste silencieuse** tant qu'elle n'est pas sûre (version locale inconnue en développement, amont injoignable, locale déjà à jour).
-- **CLI (43 sous-commandes)** : l'application expose une ligne de commande `vigiechiro <sous-commande>` couvrant l'équivalent de l'IHM (import, qualification, validation, dépôt, traitement serveur, publication, sauvegarde, audit, diagnostic, reconstruction...), pour le scripting et l'automatisation sur gros volume. La **parité CLI ↔ IHM** est une contrainte de conception.
+- **CLI (<!--inv:cli-->44<!--/inv--> sous-commandes)** : l'application expose une ligne de commande `vigiechiro <sous-commande>` couvrant l'équivalent de l'IHM (import, qualification, validation, dépôt, traitement serveur, publication, sauvegarde, audit, diagnostic, reconstruction...), pour le scripting et l'automatisation sur gros volume. La **parité CLI ↔ IHM** est une contrainte de conception.
 
 ## Convention des liens vers maquettes
 

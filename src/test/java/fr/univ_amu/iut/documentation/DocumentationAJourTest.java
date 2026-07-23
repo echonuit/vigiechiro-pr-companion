@@ -7,6 +7,7 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.view.ActiviteAccueil;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -22,6 +23,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -637,5 +639,140 @@ class DocumentationAJourTest {
         } catch (IOException echec) {
             throw new UncheckedIOException("lecture de " + DECISIONS, echec);
         }
+    }
+
+    // #2385 - Conformité des chiffres documentés à l'inventaire réel du code.
+
+    /// Une **balise d'inventaire** ancre un chiffre de la doc à un décompte du code :
+    /// `<!--inv:clé-->N<!--/inv-->`. Le `N` reste **visible** (un commentaire HTML ne s'affiche pas), donc
+    /// la doc se lit normalement ; ce test relit `N` et le confronte au code. Convention détaillée dans
+    /// `dev-docs/tests-et-qualite.md`.
+    private static final Pattern BALISE_INVENTAIRE = Pattern.compile("<!--inv:([a-z-]+)-->(\\d+)<!--/inv-->");
+
+    /// Les clés d'inventaire connues (une par décompte que le code sait recalculer).
+    private static final Set<String> CLES_INVENTAIRE = Set.of("ouvrir", "etats-workflow", "features", "cli");
+
+    /// Paquets de `fr.univ_amu.iut` qui **ne sont pas** des features métier (socle + surfaces transverses).
+    private static final Set<String> PAQUETS_NON_FEATURE = Set.of("commun", "cli", "perf");
+
+    /// Racines de documentation balayées à la recherche de balises d'inventaire.
+    private static final List<Path> RACINES_DOC = List.of(Path.of("dev-docs"), Path.of("docs"), Path.of("brief"));
+
+    /// Fichiers Markdown de la racine (hors sites) qui peuvent porter une balise d'inventaire.
+    private static final List<Path> FICHIERS_DOC_RACINE = List.of(Path.of("README.md"));
+
+    /// Une ligne du tableau des commandes de `cli.md` : première cellule = commande entre accents graves.
+    private static final Pattern COMMANDE_DOCUMENTEE =
+            Pattern.compile("^\\|\\s*`([a-z][a-z0-9-]*)`\\s*\\|", Pattern.MULTILINE);
+
+    @Test
+    @DisplayName("#2385 : chaque chiffre balisé <!--inv:cle--> égale l'inventaire réel du code")
+    void chaque_chiffre_balise_egale_l_inventaire_reel() throws IOException {
+        SoftAssertions verifs = new SoftAssertions();
+        Set<String> clesRencontrees = new TreeSet<>();
+        for (Path fichier : corpusMarkdown()) {
+            Matcher balise = BALISE_INVENTAIRE.matcher(lire(fichier));
+            while (balise.find()) {
+                String cle = balise.group(1);
+                int annonce = Integer.parseInt(balise.group(2));
+                if (!CLES_INVENTAIRE.contains(cle)) {
+                    verifs.assertThat(CLES_INVENTAIRE)
+                            .as("%s : clé d'inventaire inconnue « %s »", fichier, cle)
+                            .contains(cle);
+                    continue;
+                }
+                clesRencontrees.add(cle);
+                int reel = inventaireReel(cle);
+                verifs.assertThat(annonce)
+                        .as(
+                                "%s : la balise <!--inv:%s--> annonce %d, mais l'inventaire réel du code vaut %d."
+                                        + " Ce chiffre est vérifié : corrigez-le (ou le code) plutôt que de le"
+                                        + " laisser dériver.",
+                                fichier, cle, annonce, reel)
+                        .isEqualTo(reel);
+            }
+        }
+        verifs.assertThat(clesRencontrees)
+                .as("Chaque inventaire vérifiable doit rester ancré par au moins une balise dans la doc,"
+                        + " sinon la garde ne protège plus rien.")
+                .containsAll(CLES_INVENTAIRE);
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#2385 : le tableau CLI ne décrit aucune commande disparue (renommée/supprimée)")
+    void aucune_commande_documentee_n_a_disparu_de_la_cli() {
+        List<String> cablees = sousCommandesCablees();
+        List<String> fantomes = new ArrayList<>();
+        Matcher ligne = COMMANDE_DOCUMENTEE.matcher(lire(DOC_CLI));
+        while (ligne.find()) {
+            String nom = ligne.group(1);
+            if (!cablees.contains(nom)) {
+                fantomes.add(nom);
+            }
+        }
+        assertThat(fantomes)
+                .as(
+                        "%s décrit des commandes que la CLI n'expose plus (renommées ou supprimées ?)."
+                                + " Sous-commandes réelles : %s",
+                        DOC_CLI, cablees)
+                .isEmpty();
+    }
+
+    /// Décompte réel du code pour une clé d'inventaire (la source de vérité des chiffres documentés).
+    private int inventaireReel(String cle) throws IOException {
+        return switch (cle) {
+            case "ouvrir" ->
+                (int) fichiersDe(
+                        Path.of("src", "main", "java", "fr", "univ_amu", "iut", "commun", "view"),
+                        nom -> nom.startsWith("Ouvrir") && nom.endsWith(".java"));
+            case "features" ->
+                (int) dossiersDe(
+                        Path.of("src", "main", "java", "fr", "univ_amu", "iut"),
+                        nom -> !PAQUETS_NON_FEATURE.contains(nom));
+            case "etats-workflow" -> StatutWorkflow.values().length;
+            case "cli" -> sousCommandesCablees().size();
+            default -> throw new AssertionError("clé d'inventaire inconnue : " + cle);
+        };
+    }
+
+    /// Nombre de fichiers d'un dossier dont le nom satisfait le filtre.
+    private static long fichiersDe(Path dossier, Predicate<String> filtre) throws IOException {
+        try (Stream<Path> flux = Files.list(dossier)) {
+            return flux.filter(Files::isRegularFile)
+                    .map(chemin -> chemin.getFileName().toString())
+                    .filter(filtre)
+                    .count();
+        }
+    }
+
+    /// Nombre de sous-dossiers d'une racine dont le nom satisfait le filtre.
+    private static long dossiersDe(Path racine, Predicate<String> filtre) throws IOException {
+        try (Stream<Path> flux = Files.list(racine)) {
+            return flux.filter(Files::isDirectory)
+                    .map(chemin -> chemin.getFileName().toString())
+                    .filter(filtre)
+                    .count();
+        }
+    }
+
+    /// Tous les fichiers Markdown susceptibles de porter une balise d'inventaire.
+    private static List<Path> corpusMarkdown() throws IOException {
+        List<Path> fichiers = new ArrayList<>();
+        for (Path racine : RACINES_DOC) {
+            if (Files.isDirectory(racine)) {
+                try (Stream<Path> flux = Files.walk(racine)) {
+                    flux.filter(Files::isRegularFile)
+                            .filter(chemin -> chemin.getFileName().toString().endsWith(".md"))
+                            .forEach(fichiers::add);
+                }
+            }
+        }
+        for (Path fichier : FICHIERS_DOC_RACINE) {
+            if (Files.isRegularFile(fichier)) {
+                fichiers.add(fichier);
+            }
+        }
+        return fichiers;
     }
 }

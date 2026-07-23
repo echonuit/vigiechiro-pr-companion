@@ -241,6 +241,7 @@ Une doc qui ment est **pire** qu'une doc absente : on la croit. Le dépôt l'ava
 | Les sous-commandes de l'annotation `@Command` de `CommandeRacine` | Le tableau de `dev-docs/cli.md` | Une commande livrée, testée, verte en CI… et **introuvable** dans sa propre doc |
 | Les `ActiviteAccueil` **liées dans l'injecteur** | La fiche `docs/ecrans/<pageDoc>.md` | Un **écran entier** offert à l'utilisateur, sans page |
 | Les fiches présentes sur le disque | La `nav` de `mkdocs.yml` **et** le tableau de `docs/ecrans/index.md` | Une page que le site ne publie pas, ou qu'on ne peut atteindre depuis l'index de sa section |
+| Les **chiffres balisés** `<!--inv:clé-->N<!--/inv-->` (#2385) | L'**inventaire réel du code** (contrats `Ouvrir*`, états de `StatutWorkflow`, features, sous-commandes) | Un décompte **figé dans la prose** qui dérive après un ajout : « 43 sous-commandes » quand le code en câble 44 |
 
 Deux détails qui comptent :
 
@@ -250,6 +251,35 @@ Deux détails qui comptent :
   déduit ni du titre (« Sons de référence » se documente dans `validation.md`) ni du paquet (la feature
   `audio` aussi) : il faut le **dire**. Le compilateur force donc à choisir une fiche, et le test refuse
   qu'elle soit absente.
+
+#### Ancrer un chiffre : les balises d'inventaire
+
+Certains nombres de la doc **décrivent le code** : le nombre de contrats `Ouvrir*`, d'états du workflow,
+de features, de sous-commandes CLI. Écrits en dur, ils **dérivent** au premier ajout (un contrat de plus,
+un état de plus) sans que rien ne rougisse. Une **balise d'inventaire** les ancre à un décompte que le
+test recalcule. On écrit le nombre entre deux commentaires :
+
+```markdown
+l'application compte **<!--inv:features-->N<!--/inv--> features** métier
+```
+
+où `N` est le chiffre (`15` aujourd'hui). Un commentaire HTML **ne s'affiche pas** : la phrase se lit
+« 15 features » comme avant, mais `chaque_chiffre_balise_egale_l_inventaire_reel` relit `N` et le
+confronte au code. Une divergence fait **rougir la CI**, le message portant le vrai chiffre. Clés
+reconnues :
+
+| Clé | Décompte réel |
+|---|---|
+| `ouvrir` | fichiers `commun/view/Ouvrir*.java` |
+| `etats-workflow` | valeurs de l'enum `StatutWorkflow` |
+| `features` | dossiers de `fr.univ_amu.iut` hors `commun`, `cli`, `perf` |
+| `cli` | sous-commandes câblées dans `CommandeRacine` |
+
+Poser une balise sur une **clé non listée** échoue aussi : on ajoute d'abord la clé et son décompte au
+test (une clé = un fait que le code sait recalculer). Et le test exige qu'**au moins une** balise subsiste
+par clé, pour qu'un inventaire ne perde pas discrètement son ancre. Enfin, `aucune_commande_documentee_n_a_disparu_de_la_cli`
+fait le trajet **inverse** du tableau CLI : une commande décrite dans `cli.md` mais **absente** du câblage
+(renommée, supprimée) fait rougir tout autant.
 
 ## Les outils qualité
 

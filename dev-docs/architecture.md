@@ -26,7 +26,7 @@ src/main/java/fr/univ_amu/iut/
 │
 ├── sites/        passage/       importation/   qualification/   lot/
 ├── validation/   multisite/     diagnostic/    bibliotheque/    recherche/
-├── analyse/      audio/         audit/         connexion/       maj/          ← les 15 features
+├── analyse/      audio/         audit/         connexion/       maj/          ← les features métier
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
 └── perf/outils/                 ← bancs de mesure de performance
@@ -35,6 +35,9 @@ src/main/java/fr/univ_amu/iut/
 Les deux dernières entrées sont des **surfaces transverses**, documentées à part :
 [`cli/`](cli.md) (seconde façade *headless* sur le métier) et
 [`perf/outils/`](performance.md) (bancs de mesure des objectifs O3/O5).
+
+Entre le socle et ces surfaces, l'application compte **<!--inv:features-->15<!--/inv--> features** métier
+(chacune un dossier autonome sous `fr.univ_amu.iut`, hors `commun`, `cli` et `perf`).
 
 ## Les 4 couches d'une fonctionnalité
 
@@ -146,7 +149,7 @@ sur la [`SourceDeDonnees`](https://github.com/echonuit/vigiechiro-pr-companion/b
 Le cœur du domaine est l'**agrégat « nuit de capture »** (feature `passage`), qui avance dans un
 **workflow à états** :
 
-`IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (6 états, cf. `StatutWorkflow`)
+`IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (<!--inv:etats-workflow-->6<!--/inv--> états, cf. `StatutWorkflow`)
 
 Le détail des entités, des tables (**28** au schéma courant, 19 à l'origine en `V01`) et de la correspondance avec le **MCD du brief** est sur
 [Modèle de données et domaine](modele-de-donnees.md) ; le **mécanisme** d'accès (DAO, transactions,

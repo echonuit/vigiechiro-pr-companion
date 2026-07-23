@@ -164,7 +164,7 @@ src/main/java/fr/univ_amu/iut/
 │
 ├── sites/        passage/       importation/   qualification/   lot/
 ├── validation/   multisite/     diagnostic/    bibliotheque/    analyse/
-├── recherche/    audio/         audit/         connexion/       maj/          ← les 15 features
+├── recherche/    audio/         audit/         connexion/       maj/          ← les features métier
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
 └── perf/outils/                 ← bancs de mesure de performance
@@ -180,11 +180,12 @@ Chaque **couche** a une règle stricte :
 | `di/` | **Injection** : le module Guice qui assemble la fonctionnalité | Publie ses services/VM au conteneur |
 
 Le cœur du modèle est l'**agrégat « nuit de capture »** (fonctionnalité `passage`), qui avance dans un
-workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (6 états). La persistance est en
+workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (<!--inv:etats-workflow-->6<!--/inv--> états). La persistance est en
 **SQLite** via des **DAO** en `PreparedStatement` (pas d'ORM) avec des **migrations** versionnées.
 
-Chaque fonctionnalité est un **paquet** autonome ; son nom renvoie à la **documentation de l'écran**,
-son **parcours** au **[brief](https://brief.echonuit.fr/)** (l'énoncé d'origine).
+Chacune des **<!--inv:features-->15<!--/inv--> fonctionnalités** est un **paquet** autonome ; son nom
+renvoie à la **documentation de l'écran**, son **parcours** au
+**[brief](https://brief.echonuit.fr/)** (l'énoncé d'origine).
 
 | Fonctionnalité | Parcours (brief) | Rôle |
 |---|---|---|
