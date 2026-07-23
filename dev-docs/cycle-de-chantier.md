@@ -174,6 +174,8 @@ Toute **décision structurante** prise pendant le chantier - un choix d'architec
 développeur futur pourrait raisonnablement remettre en cause faute d'en connaître les raisons - donne une
 **[ADR](decisions/index.md)** : une par décision, immuable, expliquant le pourquoi.
 
+Chaque ADR **déclare comment elle est vérifiée** ([ADR 2465](decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : une puce `- **Vérification** : certaine | probable | humaine — <référence>` dans son en-tête, au même titre que `Statut` et `Chantier`. Un garde-fou fait rougir la CI si elle manque, ou si le test/script nommé n'existe pas. `certaine` nomme un test ou script déterministe ; `probable` nomme un script de suspects et son **cliquet** ; `humaine` donne le motif, et peut adjoindre une **loupe**. Voir la section « Comment une ADR est vérifiée » de l'[index des décisions](decisions/index.md).
+
 ### 4. Passe de doc utilisateur
 
 Documenter le chantier pour les **utilisateurs** dans le site produit (`docs/`), avec **autant de

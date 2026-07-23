@@ -180,7 +180,7 @@ question reste le travail du triage.
 2. **Cohérence CLI ↔ UI** : quand le chantier ajoute/change une **capacité métier**, la **CLI**
    (`fr.univ_amu.iut.cli`) doit exposer l'équivalent (même comportement) ; aligner si petit, sinon
    ouvrir une issue. « Sans objet » si le chantier est purement présentationnel.
-3. **Doc développeur** (site `dev-docs/`) à jour **+ une ADR** (`dev-docs/decisions/`) pour toute **décision structurante** prise pendant le chantier. Son numéro **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC). Le compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md).
+3. **Doc développeur** (site `dev-docs/`) à jour **+ une ADR** (`dev-docs/decisions/`) pour toute **décision structurante** prise pendant le chantier. Son numéro **ne se choisit pas** : c'est celui de l'issue qui porte la décision (le lot, à défaut l'EPIC). Le compteur séquentiel est clos à 0048, voir le [journal](dev-docs/decisions/index.md). Chaque ADR **déclare comment elle est vérifiée** (puce `**Vérification** : certaine | probable | humaine`, [ADR 2465](dev-docs/decisions/2465-une-adr-declare-comment-elle-est-verifiee.md)) : un garde-fou fait rougir la CI si elle manque.
 4. **Doc utilisateur** (site `docs/`) + **captures** autant que nécessaire.
 5. **Brief projet** (`brief/`, dans ce dépôt) : répercuter dans le **brief projet** (document de
    conception vivant : besoin, parcours utilisateurs, maquettes, MCD - **pas** un sujet pédagogique) les
