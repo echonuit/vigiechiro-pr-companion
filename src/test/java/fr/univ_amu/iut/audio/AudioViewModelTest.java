@@ -31,6 +31,7 @@ import fr.univ_amu.iut.validation.model.StatutObservation;
 import fr.univ_amu.iut.validation.model.Taxon;
 import fr.univ_amu.iut.validation.model.ValidationManuelle;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -536,20 +538,34 @@ class AudioViewModelTest {
 
         @Test
         @DisplayName("exporterBibliotheque délègue au service bibliothèque et rapporte le bilan")
-        void exporter_bibliotheque() {
+        void exporter_bibliotheque(@TempDir Path sortie) {
             when(service.taxonsDisponibles()).thenReturn(List.of());
             when(projections.lignesAudioReferences("u-1")).thenReturn(List.of());
             ExportBiblioSons export = org.mockito.Mockito.mock(ExportBiblioSons.class);
             when(bibliotheque.exporterBibliotheque()).thenReturn(export);
-            when(export.exporterVers(Path.of("/sortie"))).thenReturn(3);
+            when(export.exporterVers(sortie)).thenReturn(3);
 
             AudioViewModel vm = vm();
             vm.ouvrirSur(new SourceObservations.References("u-1"));
 
-            assertThat(vm.exporterBibliotheque(Path.of("/sortie"))).isTrue();
+            assertThat(vm.exporterBibliotheque(sortie)).isTrue();
             verify(bibliotheque).exporterBibliotheque();
             assertThat(vm.retourProperty().get().texte()).contains("3 fichier(s)");
             assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.SUCCES);
+        }
+
+        @Test
+        @DisplayName("exporterBibliotheque refuse un dossier inutilisable AVANT toute copie (#2426)")
+        void exporter_bibliotheque_refuse_dossier_inutilisable(@TempDir Path racine) throws Exception {
+            // Une destination qui est un fichier, pas un dossier : la sonde la refuse sans rien écrire.
+            Path fichier = Files.createFile(racine.resolve("pas-un-dossier.txt"));
+
+            AudioViewModel vm = vm();
+
+            assertThat(vm.exporterBibliotheque(fichier)).isFalse();
+            verify(bibliotheque, never()).exporterBibliotheque();
+            assertThat(vm.retourProperty().get().severite()).isEqualTo(Severite.AVERTISSEMENT);
+            assertThat(vm.retourProperty().get().texte()).contains("un fichier, pas un dossier");
         }
 
         @Test
