@@ -106,3 +106,64 @@
     -fx-font-size: 14px;
     -fx-text-fill: -couleur-texte-discret;
 }
+
+/* Onglet « Emplacements » (#1038) : où vivent le dossier de travail et la base. */
+.emplacements {
+    -fx-spacing: 14;
+    -fx-padding: 20 24 24 24;
+}
+
+.emplacements-titre {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -couleur-primaire-sombre;
+}
+
+.emplacements-avertissement {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+.emplacements-bloc {
+    -fx-spacing: 4;
+    -fx-padding: 10 0 0 0;
+}
+
+.emplacements-libelle {
+    -fx-font-weight: bold;
+}
+
+.emplacements-aide {
+    -fx-font-size: 12px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+.emplacements-rangee {
+    -fx-spacing: 8;
+    -fx-alignment: center-left;
+}
+
+.emplacements-chemin {
+    -fx-text-fill: -couleur-primaire-sombre;
+}
+
+.emplacements-defaut {
+    -fx-font-size: 11px;
+    -fx-text-fill: -couleur-texte-discret;
+}
+
+.emplacements-boutons {
+    -fx-spacing: 10;
+    -fx-padding: 14 0 0 0;
+}
+
+.emplacements-avis {
+    -fx-spacing: 8;
+    -fx-padding: 14;
+    -fx-background-color: -couleur-primaire-voile;
+    -fx-background-radius: 6;
+}
+
+.emplacements-avis-texte {
+    -fx-text-fill: -couleur-primaire-sombre;
+}

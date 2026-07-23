@@ -36,6 +36,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheAsynchrone;
 import fr.univ_amu.iut.commun.view.Navigateur;
 import fr.univ_amu.iut.commun.view.OngletReglages;
+import fr.univ_amu.iut.commun.view.OngletReglagesEmplacements;
 import fr.univ_amu.iut.commun.view.OngletReglagesFonctionnalites;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.commun.view.OuvreurDeLienSysteme;
@@ -78,6 +79,9 @@ public class CommunModule extends AbstractModule {
         // Le socle contribue lui-même l'onglet « Général » (#928 : source des fiches espèces, puis
         // thème/daltonien).
         Multibinder.newSetBinder(binder(), OngletReglages.class).addBinding().to(OngletReglagesGeneral.class);
+        // Onglet « Emplacements » (#1038) : où vivent le dossier de travail et la base. Personnalisé
+        // (sélecteur de dossier + sonde + avis de redémarrage), donc en `commun.view` et non en viewmodel.
+        Multibinder.newSetBinder(binder(), OngletReglages.class).addBinding().to(OngletReglagesEmplacements.class);
         // Onglet « Fonctionnalités » (#1057) : un interrupteur par feature désactivable, calculé depuis le
         // registre des fonctionnalités. Les features COEUR (socle) n'y figurent pas.
         Multibinder.newSetBinder(binder(), OngletReglages.class)
