@@ -78,10 +78,10 @@ setup() {
   [ "${n}" -ge 20 ] # garde-fou : l'extraction a bien trouvé les commandes (35 attendues)
 }
 
-@test "reconstruire-passage hors connexion : refus métier expliqué, exit 1" {
+@test "reconstruire-passage hors connexion : refus métier expliqué, exit 2 (#2294)" {
   # Sans jeton, lister/reconstruire exige la plateforme : refus « non connecté » (pas un plantage muet).
   run cli reconstruire-passage
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 2 ]
   [[ "${output}" == *"connect"* ]]
 }
 
@@ -96,9 +96,9 @@ setup() {
   [[ "${output}" == *"passage"* ]]
 }
 
-@test "reactiver --passage 1 --source <dossier inexistant> : refus métier, exit 1" {
+@test "reactiver --passage 1 --source <dossier inexistant> : refus métier, exit 2 (#2294)" {
   run cli reactiver --passage 1 --source "${BATS_TEST_TMPDIR}/pas-la"
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 2 ]
   [[ "${output}" == *"Dossier introuvable"* ]]
 }
 
@@ -116,9 +116,9 @@ setup() {
   [[ "${output}" == *"Aucun passage"* ]]
 }
 
-@test "statut-passage --passage <inconnu> : refus métier, exit 1" {
+@test "statut-passage --passage <inconnu> : refus métier, exit 2 (#2294)" {
   run cli statut-passage --passage 999999
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 2 ]
   [[ "${output}" == *"introuvable"* ]]
 }
 
@@ -155,7 +155,7 @@ setup() {
   [[ "${output}" == *"A1"* ]]
 }
 
-@test "importer : --conserver-originaux et --sans-originaux s'excluent, exit 1 (#2181)" {
+@test "importer : --conserver-originaux et --sans-originaux s'excluent, exit 2 (#2181, #2294)" {
   # Contrat HORS-LIGNE : le conflit de flags est vérifié dès le lancement, AVANT toute lecture de la
   # source ou accès réseau. On sème un point (creer-site -> ajouter-point, qui écrit l'id sur stdout),
   # puis on passe les deux flags contradictoires avec une source qui n'a même pas besoin d'exister.
@@ -166,6 +166,6 @@ setup() {
 
   run cli importer --point "${point}" --source "${BATS_TEST_TMPDIR}/carte-sd-absente" \
     --conserver-originaux --sans-originaux
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 2 ]
   [[ "${output}" == *"s'excluent"* ]]
 }

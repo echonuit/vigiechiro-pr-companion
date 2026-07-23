@@ -8,7 +8,7 @@
 #   - options requises manquantes -> refus picocli (exit 2), AVANT toute logique (donc hors-ligne, même
 #     pour les commandes réseau : la validation des arguments précède l'appel serveur) ;
 #   - commandes locales sans option requise -> exécution sur base fraîche (exit 0) ;
-#   - une commande réseau sans jeton -> refus métier explicite (exit 1), pas un plantage muet.
+#   - une commande réseau sans jeton -> refus métier explicite (exit 2, #2294), pas un plantage muet.
 #
 # Les chemins RÉSEAU eux-mêmes (dépôt, import, traitement, ancrage effectifs) restent cadrés en suite
 # de #1592 (stub de serveur local ou profil `-Papi-live`).
@@ -72,11 +72,11 @@ COMMANDES_LOCALES_SANS_ARG=(audit-coherence sauvegarder reset-guide retro-emprei
   [[ "${output}" == *"aucun écart"* ]]
 }
 
-@test "recuperer-vigiechiro hors connexion : refus métier explicite (jeton absent), exit 1 (#1592)" {
+@test "recuperer-vigiechiro hors connexion : refus métier explicite (jeton absent), exit 2 (#1592, #2294)" {
   # La validation des arguments passe (aucune option requise) : la commande s'exécute puis refuse faute
   # de jeton, sans jamais joindre le réseau - refus lisible, pas un plantage muet.
   run cli recuperer-vigiechiro
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 2 ]
   [[ "${output}" == *"jeton"* ]]
 }
 
@@ -84,6 +84,6 @@ COMMANDES_LOCALES_SANS_ARG=(audit-coherence sauvegarder reset-guide retro-emprei
   # Le renommage (ADR 0022) ne doit pas rompre un contrat déjà publié : l'ancien nom mène à la même
   # commande, avec le même refus. Sans ce test, l'alias pourrait disparaître sans que rien ne le dise.
   run cli synchroniser-vigiechiro
-  [ "${status}" -eq 1 ]
+  [ "${status}" -eq 2 ]
   [[ "${output}" == *"jeton"* ]]
 }
