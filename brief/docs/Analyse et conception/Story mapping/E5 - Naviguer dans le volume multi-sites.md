@@ -47,14 +47,14 @@
 
 - [ ] Une bascule permet de basculer entre la vue arborescente ([E5.S1](#e5s1)) et la vue tabulaire.
 - [ ] La vue tabulaire affiche une ligne par passage avec colonnes : Site (n° carré + nom), Point, Année, N° passage, Date de session d'enregistrement, Statut d'avancement, Verdict, Date de dépôt.
-- [ ] Toutes les colonnes sont **triables** (clic sur l'en-tête).
+- [x] Toutes les colonnes sont **triables** (clic sur l'en-tête).
 - [ ] Chaque colonne propose un **filtre rapide** :
     - colonnes textuelles : input texte avec match partiel (Site, Point)
     - colonnes énumérées : multi-sélection (Statut d'avancement, Verdict)
     - colonnes dates : sélecteur de plage
-- [ ] Le tableau reste réactif jusqu'à au moins 500 lignes (cf. [O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md)) - pas de freeze IHM en tri/filtre.
-- [ ] Le clic sur une ligne ouvre la fiche détail du passage.
-- [ ] L'état des filtres et du tri est mémorisé en session (perdu au redémarrage, contrairement à la sélection d'écoute qui est persistée).
+- [ ] Le tableau reste réactif jusqu'à au moins 500 lignes (cf. [O5](../../Objectifs%20qualités/Objectifs%20qualités/O5.md)) - pas de freeze IHM en tri/filtre.  *(non verifiable depuis le code)*
+- [x] Le clic sur une ligne ouvre la fiche détail du passage.
+- [x] L'état des filtres et du tri est mémorisé en session (perdu au redémarrage, contrairement à la sélection d'écoute qui est persistée).
 
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), étape 2<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau principal en mode tableau)<br>
@@ -74,12 +74,12 @@
 
 - [ ] Un bouton « Filtres avancés » ouvre un panneau de composition de filtres avec une logique ET entre les critères, OU à l'intérieur d'une même catégorie.
 - [ ] Les critères disponibles couvrent : site (multi-select), point (multi-select), année, plage de n° de passage, plage de dates d'enregistrement, plage de dates de dépôt, statut d'avancement (multi-select), verdict (multi-select), enregistreur (par n° de série).
-- [ ] Un compteur en bas de panneau indique « N passages correspondent à ces critères ».
+- [x] Un compteur en bas de panneau indique « N passages correspondent à ces critères ».
 - [ ] Bouton « Appliquer » : la vue tabulaire ([E5.S2](#e5s2)) se rafraîchit avec les résultats filtrés.
-- [ ] Bouton « Sauvegarder cette vue » : permet de nommer le jeu de filtres et de le retrouver dans un menu de « Vues sauvegardées ».
-- [ ] Les vues sauvegardées sont **persistées** en BD et restent disponibles après redémarrage.
+- [x] Bouton « Sauvegarder cette vue » : permet de nommer le jeu de filtres et de le retrouver dans un menu de « Vues sauvegardées ».
+- [x] Les vues sauvegardées sont **persistées** en BD et restent disponibles après redémarrage.
 - [ ] Possibilité de définir une vue comme « vue par défaut à l'ouverture ».
-- [ ] Réactivité acceptable même avec 1 000+ passages (Samuel) - pagination ou virtualisation si nécessaire.
+- [ ] Réactivité acceptable même avec 1 000+ passages (Samuel) - pagination ou virtualisation si nécessaire.  *(non verifiable depuis le code)*
 
 **Parcours rattaché** : [P5](../Parcours%20utilisateurs/P5%20-%20Naviguer%20dans%20plusieurs%20sites%20et%20passages.md), Notes pour Samuel<br>
 **Maquettes cibles** : [M-MultiSite](../Maquettes/M-MultiSite.md) (panneau « Filtres avancés » dépliable + menu vues sauvegardées)<br>
@@ -150,10 +150,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] Un **champ de recherche** dans le bandeau (chrome) est accessible **depuis tout écran**.
-- [ ] La recherche **agrège sites, points, passages et espèces observées** ; la correspondance est **insensible à la casse et aux accents**.
-- [ ] Les résultats sont **plafonnés par type** (au plus 8) pour rester lisibles ; le surplus est omis.
-- [ ] La navigation se fait **au clavier** (flèche pour entrer dans la liste, Entrée pour ouvrir, Échap pour fermer) et un résultat est **annoncé** pour l'accessibilité.
+- [x] Un **champ de recherche** dans le bandeau (chrome) est accessible **depuis tout écran**.
+- [x] La recherche **agrège sites, points, passages et espèces observées** ; la correspondance est **insensible à la casse et aux accents**.
+- [x] Les résultats sont **plafonnés par type** (au plus 8) pour rester lisibles ; le surplus est omis.
+- [x] La navigation se fait **au clavier** (flèche pour entrer dans la liste, Entrée pour ouvrir, Échap pour fermer) et un résultat est **annoncé** pour l'accessibilité.
 
 **Parcours rattaché** : [P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md) (transverse)<br>
 **Maquettes cibles** : *champ de recherche du bandeau non maquetté* (cf. [#2382](https://github.com/echonuit/vigiechiro-pr-companion/issues/2382))<br>
