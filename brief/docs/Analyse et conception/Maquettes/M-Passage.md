@@ -70,10 +70,12 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 
   <!-- Titre + actions de tête -->
   <text x="40" y="124" class="pagetitle">Carré 640380 / A1 / N° 2 (2026)</text>
-  <rect x="812" y="104" width="190" height="34" rx="4" class="btn-secondary"/>
-  <text x="907" y="126" class="btn-txt-dark" text-anchor="middle">✏ Modifier rattachement</text>
-  <rect x="1012" y="104" width="148" height="34" rx="4" class="btn-danger"/>
-  <text x="1086" y="126" class="btn-txt-danger" text-anchor="middle">🗑 Supprimer</text>
+  <rect x="612" y="104" width="170" height="34" rx="4" class="btn-secondary"/>
+  <text x="697" y="126" class="btn-txt-dark" text-anchor="middle">🗺 Voir sur la carte</text>
+  <rect x="794" y="104" width="200" height="34" rx="4" class="btn-secondary"/>
+  <text x="894" y="126" class="btn-txt-dark" text-anchor="middle">✏ Modifier le passage</text>
+  <rect x="1006" y="104" width="154" height="34" rx="4" class="btn-danger"/>
+  <text x="1083" y="126" class="btn-txt-danger" text-anchor="middle">🗑 Supprimer</text>
 
   <!-- Bandeau d'identité (4 cellules) -->
   <rect x="40" y="152" width="1120" height="58" rx="4" class="info-bar"/>
@@ -123,7 +125,12 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 ### Annotations
 
 - **Barre du chrome (cadre commun)** : le bouton **← Retour** ramène à l'écran réellement précédent (historique de navigation) ; le **fil d'Ariane** affiche l'emplacement hiérarchique cliquable (`🏠 Accueil › Mes sites › Carré N › Détails du passage N° X`). Ces deux affordances ne sont **pas** propres à M-Passage : elles sont rendues par le chrome sur tous les écrans (navigation homogène). M-Passage déclare seulement son emplacement.
-- **En-tête** : le titre identifie le passage (`Carré N / Point / N° X (année)`) ; **✏ Modifier rattachement** et **🗑 Supprimer** agissent sur le passage.
+- **En-tête** : le titre identifie le passage (`Carré N / Point / N° X (année)`). Les actions de tête sont **contextuelles selon l'état** ; il en existe **six** :
+    - **toujours** : **🗺 Voir sur la carte**, **✏ Modifier le passage** (année, n° de passage, avec re-renommage des fichiers), **🗑 Supprimer** (refusé si le passage est déposé) ;
+    - **après dépôt** : **🔗 Voir la participation** (ouvre la fiche de la participation sur la plateforme), **↩ Annuler le dépôt** ;
+    - si le passage est **archivé** (audio absent du disque) : **♻ Réactiver ce passage**.
+
+    L'écran ci-dessus montre l'état **Vérifié** (pas encore déposé) : seules les **trois actions permanentes** s'y affichent.
 - **Bandeau d'identité** : 4 cellules condensées (date/plage horaire, enregistreur en monospace, statut d'avancement, verdict de vérification).
 - **Indicateur d’étapes du statut** : 5 étapes `Importé › Transformé › Vérifié › Prêt à déposer › Déposé`. Vert = franchi, bleu = étape courante, gris = à venir.
 - **Résumé de la nuit** : 4 statistiques clés (volume bruts, volume transformé, durée enregistrée, nombre de séquences). La **durée enregistrée** est la durée réelle captée par l'enregistreur (somme des durées des séquences), pas la durée d'écoute : les séquences étant ralenties ×10, les réécouter intégralement prend dix fois plus longtemps.
@@ -135,14 +142,27 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 |---|---|
 | **← Retour** (chrome) | Revient à l'écran précédent réel (historique), sans repasser par l'accueil |
 | **Fil d'Ariane** (chrome) | Remonte à un ancêtre (Accueil, Mes sites, Carré N) - emplacement cliquable |
-| Bouton **✏ Modifier rattachement** | Modale d'édition année / n° de passage, avec re-renommage des fichiers |
+| Bouton **🗺 Voir sur la carte** | Ouvre [M-MultiSite](M-MultiSite.md) centré sur le point du passage |
+| Bouton **✏ Modifier le passage** | Ouvre la **modale** d'édition (année, n° de passage), avec re-renommage des fichiers (voir variante ci-dessous) |
 | Bouton **🗑 Supprimer** | Confirmation forte (suppression de la nuit et des fichiers) ; refusée si le passage est déposé |
+| Bouton **🔗 Voir la participation** *(après dépôt)* | Ouvre la fiche de la participation sur la plateforme |
+| Bouton **↩ Annuler le dépôt** *(après dépôt)* | Ramène le passage à un état pré-dépôt (le dépôt en ligne n'est pas défait automatiquement) |
+| Bouton **♻ Réactiver ce passage** *(si archivé)* | Retrouve les fichiers d'un passage dont l'audio a été purgé ([E4.S6](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6)) |
 | Carte **🎧 Vérifier l'enregistrement** | Ouvre [M-Qualification](M-Qualification.md) (active dès que la nuit est transformée) |
 | Carte **🛠 Diagnostic matériel** | Ouvre [M-Diagnostic](M-Diagnostic.md) (toujours disponible : relevé climatique + journal) |
 | Carte **📦 Préparer le dépôt** | Ouvre [M-Lot](M-Lot.md) (active en phase de dépôt : `Vérifié` ou `Prêt à déposer`) |
 | Carte **✅ Validation Tadarida** | Ouvre [M-SonsValidation](M-SonsValidation.md) - **verrouillée** tant que le passage n'est pas `Déposé` |
 
 > **Diagnostic matériel** : son contenu (graphes T° / hygrométrie, batterie, évènements anormaux du `LogPR`) n'est pas un onglet de M-Passage mais un **écran à part entière** - voir [M-Diagnostic](M-Diagnostic.md), ouvert depuis la carte « Diagnostic matériel ».
+
+## Variante - modale « Modifier le passage »
+
+Le bouton **✏ Modifier le passage** ouvre une **modale** d'édition de l'**identité** du passage. Ce n'est pas un simple formulaire : changer ces valeurs **renomme tous les fichiers** de la session.
+
+- **Champs éditables** : **année** et **n° de passage** (le site et le point ne se changent pas ici) ; les valeurs courantes sont pré-remplies.
+- **Conséquence annoncée** : la modification recompose le **préfixe** `CarXXXXXX-AAAA-PassN-YY-` ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6)) et **re-renomme** tous les enregistrements et séquences ([R7](../Modèle%20conceptuel/Règles%20métier.md#r7)) ; la modale l'explique avant de valider.
+- **Garde d'unicité** : la nouvelle combinaison `(Site, Point, Année, n° de passage)` doit rester **unique** ([R5](../Modèle%20conceptuel/Règles%20métier.md#r5)) ; une collision est refusée.
+- **Confirmation forte** : l'opération touchant le disque, elle demande une confirmation explicite (**Enregistrer** / **Annuler**).
 
 ## Notes pour l'implémentation
 
@@ -152,7 +172,7 @@ C'est l'**écran pivot** d'un passage, présenté comme un **hub à plat** (une 
 - **États des cartes** : `Vérifier` activée dès `Transformé` ; `Préparer le dépôt` activée à `Vérifié`/`Prêt à déposer` ; `Validation Tadarida` verrouillée tant que ≠ `Déposé`. Les états sont liés aux propriétés du ViewModel (`verificationDisponible`, `depotDisponible`, `validationVerrouillee`).
 - **Mise en avant dynamique** : la carte de la prochaine étape porte une pseudo-classe CSS `recommandee` (liseré bleu), pilotée par `actionRecommandee` (dérivée du statut). La mise en avant se déplace donc avec l'avancement, au lieu de rester figée sur la première action.
 - **Icônes** : `FontIcon` (Ikonli FontAwesome5) pour un rendu net, y compris en capture headless.
-- **Action « Modifier rattachement »** : re-renomme tous les fichiers du passage (R6/R7). Confirmation forte obligatoire.
+- **Action « Modifier le passage »** : re-renomme tous les fichiers du passage (R6/R7). Confirmation forte obligatoire.
 
 ## Enrichissements prévus
 

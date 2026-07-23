@@ -50,8 +50,10 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
   <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
   <text x="210" y="38" class="retour">← Retour</text>
   <text x="290" y="38" class="crumb-active">Accueil</text>
-  <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
-  <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <rect x="910" y="22" width="200" height="22" rx="11" class="search"/>
+  <text x="926" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
+  <rect x="1120" y="22" width="40" height="22" rx="6" class="search"/>
+  <text x="1140" y="38" text-anchor="middle" font-size="14" font-weight="700" fill="#3f51b5">☰</text>
 
   <!-- Hero nocturne -->
   <rect x="10" y="54" width="1180" height="220" fill="url(#nuit)"/>
@@ -93,20 +95,29 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
   <text x="80" y="310" class="sect-titre">Collecte &amp; passages</text>
   <text x="278" y="310" class="sect-tag">produire la donnée</text>
 
-  <rect x="40" y="324" width="540" height="118" rx="10" class="card"/>
-  <circle cx="92" cy="383" r="26" fill="#4a90d9"/>
-  <text x="92" y="391" class="card-glyph" text-anchor="middle">🗺️</text>
-  <text x="140" y="362" font-family="sans-serif" font-size="17" font-weight="700" fill="#4a90d9">Mes sites</text>
-  <text x="140" y="392" class="card-desc">Vos carrés et points d'écoute.</text>
-  <text x="544" y="392" font-family="sans-serif" font-size="28" font-weight="700" fill="#4a90d9">›</text>
+  <rect x="40" y="324" width="360" height="118" rx="10" class="card"/>
+  <circle cx="86" cy="383" r="24" fill="#4a90d9"/>
+  <text x="86" y="391" class="card-glyph" text-anchor="middle">🗺️</text>
+  <text x="126" y="362" font-family="sans-serif" font-size="16" font-weight="700" fill="#4a90d9">Mes sites</text>
+  <text x="126" y="388" class="card-desc">Vos carrés et points</text>
+  <text x="126" y="406" class="card-desc">d'écoute.</text>
+  <text x="372" y="392" font-family="sans-serif" font-size="26" font-weight="700" fill="#4a90d9">›</text>
 
-  <rect x="620" y="324" width="540" height="118" rx="10" class="card"/>
-  <circle cx="672" cy="383" r="26" fill="#e8a838"/>
-  <text x="672" y="391" class="card-glyph" text-anchor="middle">📊</text>
-  <text x="720" y="362" font-family="sans-serif" font-size="17" font-weight="700" fill="#b9770e">Carte &amp; passages</text>
-  <text x="720" y="388" class="card-desc">La carte de vos sites et le tableau de tous</text>
-  <text x="720" y="408" class="card-desc">les passages : filtres, tri et export.</text>
-  <text x="1124" y="392" font-family="sans-serif" font-size="28" font-weight="700" fill="#e8a838">›</text>
+  <rect x="420" y="324" width="360" height="118" rx="10" class="card"/>
+  <circle cx="466" cy="383" r="24" fill="#e8a838"/>
+  <text x="466" y="391" class="card-glyph" text-anchor="middle">📊</text>
+  <text x="506" y="362" font-family="sans-serif" font-size="16" font-weight="700" fill="#b9770e">Carte &amp; passages</text>
+  <text x="506" y="386" class="card-desc">La carte des sites et le</text>
+  <text x="506" y="404" class="card-desc">tableau des passages.</text>
+  <text x="752" y="392" font-family="sans-serif" font-size="26" font-weight="700" fill="#e8a838">›</text>
+
+  <rect x="800" y="324" width="360" height="118" rx="10" class="card"/>
+  <circle cx="846" cy="383" r="24" fill="#16a085"/>
+  <text x="846" y="391" class="card-glyph" text-anchor="middle">🩺</text>
+  <text x="886" y="362" font-family="sans-serif" font-size="16" font-weight="700" fill="#0e6b57">Audit de cohérence</text>
+  <text x="886" y="386" class="card-desc">Vérifier base et fichiers,</text>
+  <text x="886" y="404" class="card-desc">réparer, réinitialiser.</text>
+  <text x="1132" y="392" font-family="sans-serif" font-size="26" font-weight="700" fill="#16a085">›</text>
 
   <line x1="40" y1="468" x2="1160" y2="468" class="sep"/>
 
@@ -139,10 +150,11 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 
 ### Annotations
 
+- **Chrome** : outre le fil d'Ariane (`Accueil`) et la **recherche globale**, le bandeau porte à droite un **menu outils ☰** (sauvegarde, restauration, connexion à Vigie-Chiro, à propos). Un **bandeau d'annonce** (masqué par défaut) s'insère sous le chrome quand une **mise à jour** applicative est disponible.
 - **Bandeau nocturne** : bandeau en dégradé bleu nuit (identité « une nuit de capture », filigrane lune 🌙) avec le titre de bienvenue et l'invite « deux entrées ». Il porte le **tableau de bord** de compteurs.
 - **Tableau de bord** : quatre compteurs chiffrés (**Sites**, **Points d'écoute**, **Passages**, **Observations**), chacun avec sa pastille d'icône colorée. Les valeurs sont **recalculées à chaque affichage** de l'accueil (elles reflètent l'état de la base après un import ou une déclaration de site). Le bandeau est **masqué tant qu'aucune donnée** n'existe (premier lancement).
 - **Sections-prismes** : les cartes d'activité sont regroupées en deux sections selon leur **prisme** :
-  - **🛰️ Collecte & passages** (*produire la donnée*) : **Mes sites** puis **Carte & passages** ;
+  - **🛰️ Collecte & passages** (*produire la donnée*) : **Mes sites**, **Carte & passages** puis **Audit de cohérence** ;
   - **🍃 Espèces & biodiversité** (*exploiter la donnée*) : **Espèces & observations** puis **Sons & validation**.
 - **Cartes** : chaque carte affiche une **pastille d'icône**, un **titre** et une **description** courte, teintés par la **couleur d'accent** de la fonctionnalité ; un **chevron** `›` apparaît au survol et la carte entière est cliquable.
 
@@ -152,8 +164,10 @@ L'accueil est la **porte d'entrée** de l'application : un **bandeau nocturne** 
 |---|---|
 | Carte **Mes sites** | Ouvre [M-Sites](M-Sites.md) (vos carrés et points d'écoute) |
 | Carte **Carte & passages** | Ouvre [M-MultiSite](M-MultiSite.md) (carte au carroyage + tableau des passages) |
+| Carte **Audit de cohérence** | Ouvre l'écran d'audit (vérifier base et fichiers, reset guidé) |
 | Carte **Espèces & observations** | Ouvre [M-Analyse](M-Analyse.md) (inventaire transverse) |
 | Carte **Sons & validation** | Ouvre [M-SonsValidation](M-SonsValidation.md) (source *références* : écoute, validation, export bibliothèque) |
+| Menu **☰** | Outils transverses : sauvegarde, restauration, connexion à Vigie-Chiro, à propos |
 | Compteur du tableau de bord | Repère visuel (non cliquable) ; reflète l'état courant de la base |
 | Champ **Rechercher** (Ctrl+F) | Recherche globale ([M-Recherche](M-Recherche.md)), disponible sur tous les écrans |
 
