@@ -18,12 +18,12 @@
 
 **Critères d'acceptation** :
 
-- [ ] L'onglet « Diagnostic » de la fiche détail d'un passage affiche deux courbes superposées (ou empilées) : température (axe gauche, °C) et hygrométrie (axe droit, %).
-- [ ] L'axe X est temporel et couvre toute la plage de la nuit (du premier au dernier enregistrement).
-- [ ] Les données sont parsées depuis le fichier `PaRecPR<sn>_THLog.csv` (une mesure toutes les 600 s, colonnes `Date;Hour;Temperature;Humidity`).
-- [ ] Si le relevé climatique est **absent** (sonde défaillante ou non installée), un message explicite remplace les graphes : « Pas de relevé climatique disponible pour ce passage. Sonde absente ou défaillante ? » ([R20](../Modèle%20conceptuel/Règles%20métier.md#r20)).
+- [x] L'onglet « Diagnostic » de la fiche détail d'un passage affiche deux courbes superposées (ou empilées) : température (axe gauche, °C) et hygrométrie (axe droit, %).
+- [x] L'axe X est temporel et couvre toute la plage de la nuit (du premier au dernier enregistrement).
+- [x] Les données sont parsées depuis le fichier `PaRecPR<sn>_THLog.csv` (une mesure toutes les 600 s, colonnes `Date;Hour;Temperature;Humidity`).
+- [x] Si le relevé climatique est **absent** (sonde défaillante ou non installée), un message explicite remplace les graphes : « Pas de relevé climatique disponible pour ce passage. Sonde absente ou défaillante ? » ([R20](../Modèle%20conceptuel/Règles%20métier.md#r20)).
 - [ ] Survol d'un point : tooltip avec timestamp précis + valeur exacte.
-- [ ] Les graphes se redessinent proprement même si le passage couvre plusieurs heures (1000+ points possibles).
+- [ ] Les graphes se redessinent proprement même si le passage couvre plusieurs heures (1000+ points possibles).  *(non verifiable depuis le code)*
 
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), étape 2 (sous-bloc T°/H)<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (onglet Diagnostic, partie haute)<br>
@@ -45,7 +45,7 @@
 **Critères d'acceptation** :
 
 - [ ] L'onglet « Diagnostic » affiche un encart « Batterie » avec : tension au démarrage, tension à la mise en veille, écart (delta).
-- [ ] Sous l'encart batterie, une **liste chronologique** des évènements anormaux extraits du `LogPR<n>.txt` :
+- [x] Sous l'encart batterie, une **liste chronologique** des évènements anormaux extraits du `LogPR<n>.txt` :
     - réveils non programmés (« wakeup non attendu »)
     - erreurs SD (« SD card error »)
     - redémarrages inopinés
@@ -71,7 +71,7 @@
 
 **Critères d'acceptation** :
 
-- [ ] L'onglet « Diagnostic » affiche un encart « Cohérence horaires » uniquement si les coordonnées GPS du point sont saisies (cf. [E1.S3](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s3)).
+- [x] L'onglet « Diagnostic » affiche un encart « Cohérence horaires » uniquement si les coordonnées GPS du point sont saisies (cf. [E1.S3](E1%20-%20Gérer%20ses%20sites%20et%20points%20de%20suivi.md#e1s3)).
 - [ ] L'encart affiche :
     - heure de coucher du soleil **calculée localement** d'après les coordonnées GPS et la date d'enregistrement
     - heure de lever du soleil idem
@@ -79,8 +79,8 @@
     - **plage effective enregistrée** (extraite du journal du capteur : heure de premier déclenchement → heure de mise en veille)
     - écart résumé : ✅ conforme (écart < 5 min), ⚠ écart mineur (5-30 min), ❌ écart majeur (> 30 min)
 - [ ] Si les coordonnées GPS sont absentes, l'encart est masqué avec une note discrète : « Renseignez les coordonnées GPS du point pour activer la vérification astronomique. » + lien direct vers la fiche site.
-- [ ] Le calcul astronomique est fait **localement** par une bibliothèque (ex. `commons-suncalc` ou implémentation maison) - aucun appel réseau.
-- [ ] Tests unitaires : sur une date et une coordonnée connues (ex. Aix-en-Provence, 22 avril 2026), vérifier que le coucher est calculé à ±2 min près de la valeur officielle.
+- [x] Le calcul astronomique est fait **localement** par une bibliothèque (ex. `commons-suncalc` ou implémentation maison) - aucun appel réseau.
+- [x] Tests unitaires : sur une date et une coordonnée connues (ex. Aix-en-Provence, 22 avril 2026), vérifier que le coucher est calculé à ±2 min près de la valeur officielle.
 
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md), section « Cohérence horaires (calcul astronomique) »<br>
 **Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) (onglet Diagnostic, encart cohérence horaires)<br>
