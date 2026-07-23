@@ -18,14 +18,14 @@
 
 **Critères d'acceptation** :
 
-- [ ] À l'ouverture de la vue détail d'un passage `Importé` ou `Transformé`, un encart **« État de la nuit »** affiche trois indicateurs sous forme de feux (🟢 OK / 🟠 suspect / 🔴 anomalie).
+- [x] À l'ouverture de la vue détail d'un passage `Importé` ou `Transformé`, un encart **« État de la nuit »** affiche trois indicateurs sous forme de feux (🟢 OK / 🟠 suspect / 🔴 anomalie).
 - [ ] **Indicateur 1 - Couverture horaire** : compare la plage `premier WAV → dernier WAV` (extraite des horodatages des fichiers) à la plage théorique `coucher de soleil - 30 min → lever de soleil + 30 min` ([R3](../Modèle%20conceptuel/Règles%20métier.md#r3)). La plage astronomique est calculée localement à partir des coordonnées GPS du point ([C3](../Modèle%20conceptuel/C3%20-%20Point%20d%27écoute.md)) et de la date de session d'enregistrement. Feu 🟠 si l'écart dépasse 30 min d'un côté, 🔴 si une moitié de nuit complète manque.
-- [ ] **Indicateur 2 - Nombre de fichiers** : feu 🟢 si nombre d'enregistrements originaux ≥ 50, 🟠 si entre 1 et 49 (nuit anormalement creuse), 🔴 si 0.
-- [ ] **Indicateur 3 - Cohérence du renommage** : feu 🟢 si tous les WAV portent le préfixe `Car<carre>-<annee>-Pass<n>-<point>-` attendu ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6)) avec les bons champs ; 🔴 dès qu'un fichier diverge (extra-fichier non préfixé ou incohérence de champ).
-- [ ] Chaque indicateur, au survol ou au clic, affiche le détail du calcul (valeurs attendues vs effectives).
+- [x] **Indicateur 2 - Nombre de fichiers** : feu 🟢 si nombre d'enregistrements originaux ≥ 50, 🟠 si entre 1 et 49 (nuit anormalement creuse), 🔴 si 0.
+- [x] **Indicateur 3 - Cohérence du renommage** : feu 🟢 si tous les WAV portent le préfixe `Car<carre>-<annee>-Pass<n>-<point>-` attendu ([R6](../Modèle%20conceptuel/Règles%20métier.md#r6)) avec les bons champs ; 🔴 dès qu'un fichier diverge (extra-fichier non préfixé ou incohérence de champ).
+- [x] Chaque indicateur, au survol ou au clic, affiche le détail du calcul (valeurs attendues vs effectives).
 - [ ] Si les coordonnées GPS du point ne sont pas renseignées, l'indicateur de couverture horaire affiche un état neutre `?` avec un message explicite « Renseignez les coordonnées du point pour activer ce check ».
 - [ ] Un lien explicite renvoie vers [P6 - Diagnostiquer le matériel](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) pour creuser (courbes T°/H, événements anormaux du journal, comparaison batterie inter-passages).
-- [ ] Test d'intégration : sur un passage de référence, vérifier les trois indicateurs (cas nominal 🟢/🟢/🟢, cas dégradé 🟠 sur couverture, cas critique 🔴 sur renommage).
+- [x] Test d'intégration : sur un passage de référence, vérifier les trois indicateurs (cas nominal 🟢/🟢/🟢, cas dégradé 🟠 sur couverture, cas critique 🔴 sur renommage).
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 1<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (encart « État de la nuit » en haut de la vue de vérification) - *à mettre à jour*<br>
@@ -43,12 +43,12 @@
 
 **Critères d'acceptation** :
 
-- [ ] À l'ouverture de l'onglet « Vérifier l'enregistrement » d'un passage `Transformé`, l'application constitue automatiquement une sélection de **10 à 30 séquences** ([R12](../Modèle%20conceptuel/Règles%20métier.md#r12)).
-- [ ] La méthode par défaut est `RéparTemporel` : les séquences sont **réparties uniformément** sur la plage horaire de la nuit (du premier au dernier enregistrement).
-- [ ] La sélection est **persistée** en BD pour pouvoir être reprise plus tard (cf. [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4)).
-- [ ] Si une sélection existe déjà pour ce passage, elle est rechargée plutôt que régénérée.
+- [x] À l'ouverture de l'onglet « Vérifier l'enregistrement » d'un passage `Transformé`, l'application constitue automatiquement une sélection de **10 à 30 séquences** ([R12](../Modèle%20conceptuel/Règles%20métier.md#r12)).
+- [x] La méthode par défaut est `RéparTemporel` : les séquences sont **réparties uniformément** sur la plage horaire de la nuit (du premier au dernier enregistrement).
+- [x] La sélection est **persistée** en BD pour pouvoir être reprise plus tard (cf. [E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4)).
+- [x] Si une sélection existe déjà pour ce passage, elle est rechargée plutôt que régénérée.
 - [ ] La taille par défaut (entre 10 et 30) est ajustée en fonction du volume total : 10 séquences pour < 50 enregistrements originaux, 30 pour > 500, interpolation linéaire entre.
-- [ ] Test d'intégration : génération sur un passage de 100 enregistrements → vérifier nombre, répartition temporelle, persistance.
+- [x] Test d'intégration : génération sur un passage de 100 enregistrements → vérifier nombre, répartition temporelle, persistance.
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 2<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (état initial à l'ouverture de l'onglet)<br>
@@ -66,11 +66,11 @@
 
 **Critères d'acceptation** :
 
-- [ ] Les séquences de la sélection sont affichées sous forme de tableau ou de liste, **triées chronologiquement** (du plus ancien au plus récent).
+- [x] Les séquences de la sélection sont affichées sous forme de tableau ou de liste, **triées chronologiquement** (du plus ancien au plus récent).
 - [ ] Pour chaque séquence on voit : horodatage de session d'enregistrement (heure du fichier source), durée affichée (5 s par défaut, plus court pour la dernière séquence d'un fichier), fréquence dominante indicative (en kHz, calculée à partir du WAV).
-- [ ] Un indicateur visuel distingue les séquences déjà écoutées des séquences pas encore écoutées (cf. [E3.S4](#e3s4)).
+- [x] Un indicateur visuel distingue les séquences déjà écoutées des séquences pas encore écoutées (cf. [E3.S4](#e3s4)).
 - [ ] Un bouton ▶ par ligne permet de déclencher la lecture d'une séquence (cf. [E3.S3](#e3s3)).
-- [ ] La liste reste lisible même avec 50 lignes (défilement vertical).
+- [x] La liste reste lisible même avec 50 lignes (défilement vertical).
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 3<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (tableau central de la vue de vérification)<br>
@@ -91,13 +91,13 @@
 
 **Critères d'acceptation** :
 
-- [ ] Le panneau de détail ([E3.S2](#e3s2)) affiche le composant audio fourni, alimenté par le chemin de la séquence courante.
+- [x] Le panneau de détail ([E3.S2](#e3s2)) affiche le composant audio fourni, alimenté par le chemin de la séquence courante.
 - [ ] Le clic sur le bouton ▶ d'une séquence dans la liste de gauche déclenche la lecture immédiate dans le composant.
-- [ ] Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)), la lecture se fait à vitesse normale (pas de re-échantillonnage à la volée).
-- [ ] Le curseur du composant est synchronisé entre le sonogramme, le spectrogramme et la barre de lecture.
-- [ ] Une seule séquence joue à la fois : démarrer une nouvelle lecture stoppe la précédente.
-- [ ] La lecture d'une séquence en marque la séquence comme « écoutée » (cf. [E3.S4](#e3s4)).
-- [ ] Si la séquence est introuvable sur disque (fichier supprimé, déplacé), le composant affiche un substitut explicite.
+- [x] Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)), la lecture se fait à vitesse normale (pas de re-échantillonnage à la volée).
+- [ ] Le curseur du composant est synchronisé entre le sonogramme, le spectrogramme et la barre de lecture.  *(non verifiable depuis le code)*
+- [x] Une seule séquence joue à la fois : démarrer une nouvelle lecture stoppe la précédente.
+- [x] La lecture d'une séquence en marque la séquence comme « écoutée » (cf. [E3.S4](#e3s4)).
+- [ ] Si la séquence est introuvable sur disque (fichier supprimé, déplacé), le composant affiche un substitut explicite.  *(non verifiable depuis le code)*
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 4<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (vue audio combinée)<br>
@@ -115,11 +115,11 @@
 
 **Critères d'acceptation** :
 
-- [ ] Chaque lecture d'une séquence (cf. [E3.S3](#e3s3)) marque automatiquement la séquence comme « écoutée » en BD ([E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4)).
+- [x] Chaque lecture d'une séquence (cf. [E3.S3](#e3s3)) marque automatiquement la séquence comme « écoutée » en BD ([E0.S4](E0%20-%20Fondations%20de%20persistance.md#e0s4)).
 - [ ] L'utilisateur peut aussi **manuellement** marquer/démarquer une séquence comme écoutée via une case à cocher ou une bascule dans la liste.
-- [ ] Un compteur visible affiche `N/M séquences écoutées` (ex. `12/30 séquences écoutées`).
-- [ ] L'état « écouté » est **persisté** : à la réouverture de l'onglet, on retrouve la progression.
-- [ ] L'utilisateur reste libre de saisir son verdict (cf. [E3.S5](#e3s5)) **sans avoir tout écouté** ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
+- [x] Un compteur visible affiche `N/M séquences écoutées` (ex. `12/30 séquences écoutées`).
+- [x] L'état « écouté » est **persisté** : à la réouverture de l'onglet, on retrouve la progression.
+- [x] L'utilisateur reste libre de saisir son verdict (cf. [E3.S5](#e3s5)) **sans avoir tout écouté** ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 4<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (compteur d'avancement, indicateur visuel par ligne)<br>
@@ -137,12 +137,12 @@
 
 **Critères d'acceptation** :
 
-- [ ] Un menu déroulant visible permet de choisir le verdict parmi `OK`, `Utilisable`, `Inexploitable`.
-- [ ] Un champ texte libre (multi-ligne) permet d'ajouter un commentaire optionnel (ex. « vent fort vers 02:00, sons à vérifier »).
-- [ ] La saisie du verdict est possible **dès le premier clic** sur le menu, sans contrainte d'avoir écouté un nombre minimum de séquences ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
-- [ ] À la validation du verdict, le passage passe au statut `Vérifié` en BD ([E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3)).
+- [x] Un menu déroulant visible permet de choisir le verdict parmi `OK`, `Utilisable`, `Inexploitable`.
+- [x] Un champ texte libre (multi-ligne) permet d'ajouter un commentaire optionnel (ex. « vent fort vers 02:00, sons à vérifier »).
+- [x] La saisie du verdict est possible **dès le premier clic** sur le menu, sans contrainte d'avoir écouté un nombre minimum de séquences ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
+- [x] À la validation du verdict, le passage passe au statut `Vérifié` en BD ([E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3)).
 - [ ] Le verdict et le commentaire sont **persistés** : ils sont restaurés à la réouverture de l'onglet et peuvent être modifiés à tout moment.
-- [ ] Un verdict `Inexploitable` est mis en évidence visuelle (couleur d'alerte) et affiche un rappel : « Ce passage ne pourra pas être inclus dans un dépôt » ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)).
+- [x] Un verdict `Inexploitable` est mis en évidence visuelle (couleur d'alerte) et affiche un rappel : « Ce passage ne pourra pas être inclus dans un dépôt » ([R14](../Modèle%20conceptuel/Règles%20métier.md#r14)).
 - [ ] L'utilisateur peut enchaîner sur la préparation du dépôt ([P4](../Parcours%20utilisateurs/P4%20-%20Préparer%20un%20lot%20prêt%20à%20déposer.md)) via un bouton mis en avant après saisie d'un verdict OK ou Utilisable.
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 6 et 7<br>
@@ -162,7 +162,7 @@
 **Critères d'acceptation** :
 
 - [ ] Un bouton « Modifier la sélection » ouvre un panneau avec : choix de la méthode (`RéparTemporel`, `Aléatoire`), choix de la taille (slider ou input numérique entre 10 et 100).
-- [ ] Le clic sur « Régénérer » re-constitue la sélection avec les nouveaux paramètres et la persiste.
+- [x] Le clic sur « Régénérer » re-constitue la sélection avec les nouveaux paramètres et la persiste.
 - [ ] Un bouton « + Ajouter une séquence » ouvre un sélecteur permettant de pointer une séquence précise (par horodatage ou par recherche dans tous les fichiers du passage). La séquence ajoutée vient compléter la sélection sans déclencher de régénération complète.
 - [ ] Les séquences déjà écoutées sont conservées dans le statut « écouté » même si elles ne sont plus dans la nouvelle sélection (historique préservé).
 - [ ] La régénération de la sélection est tracée (date de dernière régénération + paramètres utilisés) pour audit.
@@ -183,10 +183,10 @@
 
 **Critères d'acceptation** :
 
-- [ ] Chaque séquence écoutée reçoit un verdict **Bon / Mauvais / Inexploitable** ; une séquence non jugée reste **neutre** (on ne juge que ce qu'on écoute).
-- [ ] Le verdict global du passage est **dérivé des seuls verdicts saisis** : aucune écoute → « À vérifier » ; **majorité stricte** d'inexploitables → « Inexploitable » ; toutes bonnes → « OK » ; sinon « Utilisable ».
-- [ ] Le verdict global dérivé reste **surchargeable** à la main ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
-- [ ] Le lexique du verdict final (`Non vérifié / OK / Utilisable / Inexploitable`) est distinct du verdict par fichier ; badges, tri et filtres sauvegardés sont **préservés**.
+- [x] Chaque séquence écoutée reçoit un verdict **Bon / Mauvais / Inexploitable** ; une séquence non jugée reste **neutre** (on ne juge que ce qu'on écoute).
+- [x] Le verdict global du passage est **dérivé des seuls verdicts saisis** : aucune écoute → « À vérifier » ; **majorité stricte** d'inexploitables → « Inexploitable » ; toutes bonnes → « OK » ; sinon « Utilisable ».
+- [x] Le verdict global dérivé reste **surchargeable** à la main ([R13](../Modèle%20conceptuel/Règles%20métier.md#r13)).
+- [x] Le lexique du verdict final (`Non vérifié / OK / Utilisable / Inexploitable`) est distinct du verdict par fichier ; badges, tri et filtres sauvegardés sont **préservés**.
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), à l'écoute de chaque séquence<br>
 **Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (barre de verdicts par fichier)<br>
