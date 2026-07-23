@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-18
 - **Chantier** : EPIC #1870 (#1886)
+- **Vérification** : humaine — le choix bandeau/modal selon l'irréversibilité est une règle d'UX, non observable dans le code par un motif
 
 ## Contexte
 

@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1870 (lots #1886 à #1917)
+- **Vérification** : humaine — la séparation conceptuelle entre état et compte rendu se lit dans l'intention, pas dans un motif de code
 
 ## Contexte
 

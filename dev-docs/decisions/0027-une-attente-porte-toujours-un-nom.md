@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1931, #1935, #1940, #1946, #1951, #1959
+- **Vérification** : humaine — qu'aucune opération longue ne laisse l'écran muet est une propriété temporelle du déroulé, pas un invariant statique
 
 ## Contexte
 

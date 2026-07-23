@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-20
 - **Chantier** : #2012, #2046 ; analyse de #1641, #1701, #1873, #1579
+- **Vérification** : probable — `scripts/adr/0037-slot-actions-hbox.py` (cliquet : 2)
 
 ## Contexte
 

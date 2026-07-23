@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-20
 - **Chantier** : #2049, #1641, #1873, #1579, #2129
+- **Vérification** : certaine — `ApercuFxElisionTest#bouton_tronque_refuse`
 
 ## Contexte
 
