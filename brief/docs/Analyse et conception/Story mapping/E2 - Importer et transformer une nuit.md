@@ -153,6 +153,9 @@
 
 ## E2.S7 - Mémoriser l'association enregistreur ↔ site/point { #e2s7 }
 
+!!! warning "Non livré (cible)"
+    Rien ne persiste ni ne relit une **« dernière association » par n° de série** : le passage stocke bien `recorder_id` et `point_id`, mais aucun mécanisme ne présélectionne le site/point à l'import d'après l'enregistreur. Aucun des critères ci-dessous n'est tenu.
+
 **En tant que** [Karim](../Personas/Karim.md) ou [Samuel](../Personas/Samuel.md) (qui réutilise plusieurs fois le même enregistreur sur les mêmes points)
 
 **Je veux** que l'application se souvienne du dernier site/point sur lequel chaque enregistreur (n° de série) a été utilisé

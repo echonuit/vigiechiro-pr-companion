@@ -63,6 +63,9 @@
 
 ## E6.S3 - Vérifier la cohérence des horaires d'enregistrement vs astronomie locale { #e6s3 }
 
+!!! note "Partiellement livré"
+    Le **calcul astronomique local** (coucher / lever) et sa précondition GPS sont livrés et testés. Mais l'encart affiché **n'a pas** la **plage théorique** (coucher -30 min → lever +30 min), la **plage effective enregistrée**, ni l'**écart à trois niveaux** (✅ / ⚠ / ❌) ; l'absence de GPS n'offre pas de lien direct vers la fiche site.
+
 **En tant que** [Samuel](../Personas/Samuel.md)
 
 **Je veux** que l'application calcule les heures réelles de coucher/lever de soleil pour la date et le lieu d'enregistrement, et compare ces horaires avec la plage effective enregistrée par le PR

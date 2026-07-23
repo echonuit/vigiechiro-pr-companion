@@ -64,6 +64,9 @@
 
 ## E5.S3 - Filtres avancés multi-critères avec sauvegarde de vues { #e5s3 }
 
+!!! note "Partiellement livré"
+    Les **vues sauvegardées** (onglets « à la Notion », persistées en BD) et un **compteur de correspondances** sont livrés. Mais les filtres passent par une **barre à puces** (bouton « + Filtre »), pas par le panneau « Filtres avancés » décrit : pas de **multi-sélection** (statut / verdict / site en mono), pas de **plages de dates ou de n°**, pas de filtre **enregistreur**, et l'utilisateur ne peut pas épingler une **vue par défaut**.
+
 **En tant que** [Samuel](../Personas/Samuel.md)
 
 **Je veux** pouvoir combiner plusieurs filtres simultanément (ex. « tous les passages au statut Transformé sur les sites 64XXXX, importés depuis le 1er juin ») et sauvegarder ces combinaisons comme « vues » réutilisables
