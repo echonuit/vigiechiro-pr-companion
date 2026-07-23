@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.40.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.40.0...v2.40.1) (2026-07-23)
+
+
+### Bug Fixes
+
+* **amorcage:** migrer avant de composer, pour lire les drapeaux à jour (ADR 1038) ([#2395](https://github.com/echonuit/vigiechiro-pr-companion/issues/2395)) ([53098d8](https://github.com/echonuit/vigiechiro-pr-companion/commit/53098d8f1161e12c6cc90bc15cb45f444d11bd3d)), closes [#1038](https://github.com/echonuit/vigiechiro-pr-companion/issues/1038) [#2187](https://github.com/echonuit/vigiechiro-pr-companion/issues/2187) [#1038](https://github.com/echonuit/vigiechiro-pr-companion/issues/1038) [#2258](https://github.com/echonuit/vigiechiro-pr-companion/issues/2258)
+
 # [2.40.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.39.0...v2.40.0) (2026-07-23)
 
 
