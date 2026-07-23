@@ -86,6 +86,18 @@ class ServiceEmplacementsTest {
     }
 
     @Test
+    @DisplayName("Sonde : le fichier témoin est effacé, elle ne jonche pas le dossier de l'utilisateur")
+    void sonde_ne_laisse_pas_de_temoin(@TempDir Path racine) throws IOException {
+        assertThat(service.sonder(racine)).isEqualTo(Accessibilite.ACCESSIBLE);
+
+        try (var contenu = Files.list(racine)) {
+            assertThat(contenu)
+                    .as("la sonde écrit un témoin pour éprouver l'écriture : elle doit l'effacer ensuite")
+                    .isEmpty();
+        }
+    }
+
+    @Test
     @DisplayName("Sonde : un fichier n'est PAS un dossier")
     void sonde_fichier(@TempDir Path racine) throws IOException {
         Path fichier = Files.createFile(racine.resolve("un-fichier"));
