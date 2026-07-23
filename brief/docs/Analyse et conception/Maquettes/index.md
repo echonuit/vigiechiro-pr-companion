@@ -117,10 +117,11 @@ Le composant [M-CompteRendu](M-CompteRendu.md) ne figure pas sur ce graphe : il 
 
 Toutes les maquettes reprennent le **cadre fenêtre** du chrome (`MainView.fxml`) :
 
-- **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, et le champ de **recherche globale** (`Ctrl+F`) aligné à droite.
+- **Bandeau de navigation** indigo (`#3f51b5`) : nom de l'application « VigieChiro Companion », bouton **« ← Retour »** (historique de navigation), **fil d'Ariane** partant toujours d'`Accueil`, puis, alignés à droite, le champ de **recherche globale** (`Ctrl+F`) et un **menu outils ☰** (sauvegarde, restauration, connexion à Vigie-Chiro, à propos…).
+- **Bandeau d'annonce** transverse, **masqué par défaut**, qui apparaît sous le bandeau de navigation quand une **mise à jour applicative** est disponible.
 - **En-tête de page** avec titre principal et sous-titre éventuel, juste sous le bandeau.
 - **Sections numérotées** pour les écrans assistant (M-Import, M-Lot) ou **panneau de détail** « liste + détail » (M-Qualification, M-SonsValidation).
-- **Pied de page** discret (`VigieChiro Companion`).
+- **Barre de statut** contextuelle en pied de fenêtre, à **trois zones** : contexte à gauche, résumé au centre, compteurs et état vivant à droite (ce n'est pas un simple pied de page décoratif).
 
 L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titre, invite, tableau de bord de compteurs) puis deux **sections-prismes** de cartes d'activité.
 
@@ -139,6 +140,10 @@ L'[accueil](M-Accueil.md) ajoute, sous le bandeau, un **bandeau nocturne** (titr
 
 - [M-Qualification](M-Qualification.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même squelette « liste + écoute »** (une liste pilote un panneau d'écoute `AudioView` commun). Il n’y a qu’un seul patron de « lieu d’écoute » à implémenter, qui se décline pour les deux modes : **vérification** par échantillonnage d'une part, **validation** taxonomique d'autre part.
 - [M-Sites](M-Sites.md) et [M-Site-detail](M-Site-detail.md) utilisent le **même style de cards** pour les sites et les points d'écoute.
+- [M-MultiSite](M-MultiSite.md), [M-Analyse](M-Analyse.md) et [M-SonsValidation](M-SonsValidation.md) partagent le **même socle de tableau réactif**, décrit **une seule fois ici** (chaque fiche y renvoie plutôt que de le redécrire à sa façon) :
+    - des **onglets de vues mémorisées** (« à la Notion ») en tête de tableau, pas un sous-menu du ☰ ;
+    - un **constructeur de filtres à puces** : un bouton **« + Filtre »** ouvre le choix du critère, et chaque filtre actif devient une **puce cumulable** (et non une rangée de listes déroulantes fixes) ;
+    - un **choix des colonnes** affichées, dans le **menu outils ☰**.
 
 ## Cas non maquettés (documentés textuellement)
 
@@ -147,4 +152,11 @@ Certains écrans secondaires ne font pas l'objet d'une maquette complète mais s
 - **Formulaire de création d'un site** : décrit dans la variante de [M-Site-detail](M-Site-detail.md) et invocable depuis [M-Sites](M-Sites.md).
 - **Fenêtre modale de re-rattachement d'un passage** : action accessible depuis [M-Passage](M-Passage.md).
 - **Sélecteur de taxon de correction** : autocomplete sur code à 6 lettres. Décrit dans [M-SonsValidation](M-SonsValidation.md).
-- **Fenêtre modale de confirmation « J'ai déposé »** : avant transition vers le statut Déposé. Décrite dans [M-Lot](M-Lot.md).
+- **Confirmation « Marquer déposé »** : avant transition vers le statut Déposé (c'est le libellé réel du bouton). Décrite dans [M-Lot](M-Lot.md).
+- **Écran de connexion à Vigie-Chiro** : saisie du jeton d'API, trois états (connecté / enregistré non vérifié / non connecté). Cf. [E9.S1](../Story%20mapping/E9%20-%20Intégration%20plateforme%20VigieChiro.md#e9s1).
+- **Écran de réglages** : onglets auto-découverts (Général, Fonctionnalités, Emplacements, Dépôt, Import, Audio), ouvert depuis le menu ☰. Cf. [E0.S9](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s9).
+- **Écran d'audit de cohérence** et **reset guidé** : accessible aussi par une carte de l'accueil. Cf. [E0.S11](../Story%20mapping/E0%20-%20Fondations%20de%20persistance.md#e0s11).
+- **Modale de reconstruction** d'un passage déposé absent de la machine. Cf. [E9.S5](../Story%20mapping/E9%20-%20Intégration%20plateforme%20VigieChiro.md#e9s5).
+- **Modale de réactivation** d'un passage archivé (retrouver ses fichiers). Cf. [E4.S6](../Story%20mapping/E4%20-%20Préparer%20et%20tracer%20le%20dépôt%20VigieChiro.md#e4s6).
+- **Fenêtre « À propos »** : version de l'application et crédits, ouverte depuis le menu ☰.
+- **Bandeau d'annonce de mise à jour** : masqué par défaut, signale une version plus récente (cf. « capacités transverses » du [story mapping](../Story%20mapping/index.md)).
