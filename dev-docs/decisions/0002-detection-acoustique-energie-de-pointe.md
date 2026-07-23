@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-17
 - **Chantier** : EPIC #1653 (réactiver un passage reconstruit depuis les bruts)
+- **Vérification** : humaine — le choix de l'énergie de pointe plutôt que la moyenne globale est un algorithme de détection, vérifié par ses tests, pas par un motif
 
 ## Contexte
 

@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-18
 - **Chantier** : #1468, #1865 (suites de la clôture de #1838)
+- **Vérification** : humaine — qu'une capture appelle le code de production plutôt qu'un fac-similé est une discipline de conception, jugée en revue
 
 ## Contexte
 

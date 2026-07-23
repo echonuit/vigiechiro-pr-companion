@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : import Tadarida (unités CSV), bruts PR expansés (`FrequenceAcquisition`)
+- **Vérification** : humaine — que la transformation lise la fréquence dans le log et non l'en-tête WAV est un comportement, gardé par les tests de transformation
 
 ## Contexte
 

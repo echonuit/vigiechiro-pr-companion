@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : import multi-nuits #664 ; EPIC #1696 (partition par nuit)
+- **Vérification** : humaine — que la nuit soit l'unité bornée à midi est une règle de calcul de fenêtre, non observable dans un motif statique
 
 ## Contexte
 
