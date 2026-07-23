@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : garde-fou `ArchitectureTest.features_sans_cycle`
+- **Vérification** : certaine — `DecisionsRespecteesTest#aucun_cycle_entre_les_features`
 
 ## Contexte
 

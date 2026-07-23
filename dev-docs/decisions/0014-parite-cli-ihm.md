@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : CLI socle #619/#659 ; parité #1304 ; passe 2 du cycle de chantier
+- **Vérification** : humaine — la parité CLI/IHM est une passe de clôture (passe 2), une obligation de processus, pas un invariant du code à un instant donné
 
 ## Contexte
 

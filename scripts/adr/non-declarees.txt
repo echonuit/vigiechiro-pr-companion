@@ -8,17 +8,12 @@
 # partira en « humaine », et c'est un résultat, pas un échec.
 0001-reactivation-passage-reconstruit-identite-structurelle.md
 0002-detection-acoustique-energie-de-pointe.md
-0003-feature-plugin-desactivable-ports-optionnels.md
-0004-cross-feature-sans-cycle-ports-commun.md
 0005-reactivation-cascade-de-preuves-archive-etat-observe.md
 0006-depot-zip-par-defaut-perte-audio-serveur-assumee.md
-0007-retours-http-type-scelle-reponse-api.md
-0008-aucun-echec-silencieux-severite-a-l-emission.md
 0009-la-nuit-est-l-unite-bornee-a-midi.md
 0011-transformation-audio-pilotee-par-le-log.md
 0012-audit-coherence-tout-ecart-visible-etat-normal-silencieux.md
 0013-ancrage-passage-relie-a-sa-participation.md
-0014-parite-cli-ihm.md
 0015-generateur-deterministe-cartes-sd-recette.md
 0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md
 0017-origine-d-un-point-etat-porte-pas-deduit.md
@@ -43,7 +38,6 @@
 0041-un-check-requis-gouverne-la-branche.md
 0042-un-apercu-qui-ment-est-refuse.md
 0043-la-mesure-fait-foi-en-ci.md
-0044-le-mecanisme-de-parallelisme-suit-la-nature-de-l-attente.md
 0046-une-classe-css-a-une-seule-feuille.md
 0047-l-identite-de-distribution-est-le-projet-echonuit.md
 0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md
