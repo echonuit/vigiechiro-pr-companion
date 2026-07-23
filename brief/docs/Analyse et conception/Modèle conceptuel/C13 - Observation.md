@@ -1,6 +1,6 @@
 # C13 - Observation
 
-Une ligne du fichier de résultats. Une **séquence d'écoute peut générer plusieurs observations** : Tadarida produit 1 ligne par espèce distincte identifiée dans la séquence, avec son timing début/fin précis dans la séquence.
+Une détection dans une séquence d'écoute. Une **séquence peut en générer plusieurs** : Tadarida produit 1 ligne par espèce distincte identifiée, avec son timing début/fin précis. Sur une même détection, **trois avis peuvent coexister** : Tadarida **propose** (`taxon Tadarida`), l'observateur **corrige** (`taxon observateur` + certitude), et le validateur MNHN **tranche** (`taxon validateur`, en lecture seule) ; un **fil de discussion** peut s'y greffer. Une observation peut aussi être **créée à la main** sur une séquence que Tadarida n'a pas identifiée (elle n'a alors pas de `taxon Tadarida`).
 
 | Attribut | Type | Contraintes | Notes |
 |---|---|---|---|
@@ -17,6 +17,11 @@ Une ligne du fichier de résultats. Une **séquence d'écoute peut générer plu
 | commentaire utilisateur | texte | optionnel, ≤ 500 car. | « pic 39 kHz, morphologie atypique », etc. |
 | marqué comme référence | booléen | par défaut `false` | Sélection bonus pour la bibliothèque de sons exportable (COULD). |
 | mode de validation | énum | `manuel` \| `auto` \| `null` (défaut) | Trace comment le `taxon observateur` a été établi : saisie utilisateur explicite (`manuel`), propagation automatique par le mode inventaire (`auto`), ou pas encore validé (`null`). Cf. [R24](Règles%20métier.md#r24). |
+| douteuse | booléen | par défaut `false` | Drapeau « à repasser » posé par l'observateur (`is_doubtful`, #160). Distinct de « pas encore vue » : la détection a été regardée, mais laissée en suspens. |
+| taxon validateur | référence | optionnel | Taxon **tranché par l'expert MNHN** (`taxon_validator`, #1417). **Lecture seule** : le serveur refuse l'écriture depuis un jeton d'observateur. |
+| certitude validateur | énum | `SUR` \| `PROBABLE` \| `POSSIBLE` \| `null` | Certitude déclarée par le validateur (`validator_certainty`), même domaine que la certitude observateur. Lecture seule. |
+| identifiant donnée plateforme | texte | optionnel | `_id` de la donnée côté serveur (`vigiechiro_data_id`), acquis à l'ancrage. |
+| indice observation plateforme | entier | optionnel | Position **brute** de l'observation dans le tableau `observations` du serveur (`vigiechiro_obs_index`) : c'est la **cible du PATCH** de correction. |
 
 ## Règles applicables
 
@@ -29,8 +34,9 @@ Une ligne du fichier de résultats. Une **séquence d'écoute peut générer plu
 ## Voisins dans le modèle
 
 - **Détectée dans** 1 [Séquence d'écoute](C8%20-%20Séquence%20d%27écoute.md).
-- **Classée comme** 1 [Taxon](C14%20-%20Taxon.md).
-- **Agrégée par** 1 [Résultats d'identification](C12%20-%20Résultats%20d%27identification.md).
+- **Classée comme** 0..1 [Taxon](C14%20-%20Taxon.md) : le `taxon Tadarida` est **nullable** depuis l'observation manuelle (une détection créée à la main n'en a pas). L'observation porte en outre jusqu'à **trois** références de taxon (Tadarida, observateur, validateur).
+- **Agrégée par** 0..1 [Résultats d'identification](C12%20-%20Résultats%20d%27identification.md) : `results_id` est **nullable** ; une observation manuelle n'appartient à aucun jeu de résultats.
+- **Discutée par** 0..N **Message** (table `observation_message`, #1417) : le fil d'échange avec le validateur MNHN, ordonné, chaque message portant l'auteur (identifiant plateforme) et sa date.
 
 ## Retour
 

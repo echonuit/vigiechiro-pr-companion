@@ -17,6 +17,9 @@ Un fichier audio dérivé d'un enregistrement original par **découpage régulie
 | durée | décimal (s) | typiquement 5 s | Durée **réelle** enregistrée (la séquence dure ×10 à l'écoute, soit 50 s). La dernière séquence d'un enregistrement peut être plus courte. |
 | chemin sur disque | texte | obligatoire | Dans le sous-dossier `transformes/` de la session d'enregistrement (cf. [R22](Règles%20métier.md#r22)). |
 | inclus dans la sélection d'écoute | booléen | par défaut `false` | Mis à `true` si la séquence est sélectionnée pour la vérification d'enregistrement. |
+| horodatage de capture | texte (ISO) | optionnel | Heure réelle de capture (`recorded_at`), extraite du nom de fichier : permet le tri et le filtre par heure de la nuit. |
+| taille | entier (octets) | optionnel | `size_bytes` : preuve d'identité à la réactivation d'un passage archivé. |
+| empreinte de contenu | hex | optionnel | SHA-256 des 64 premiers Kio (`content_fingerprint`) : preuve que la séquence régénérée est bien l'originale (transformation déterministe, R11). |
 
 ## Règles applicables
 

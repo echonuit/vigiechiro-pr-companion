@@ -21,6 +21,7 @@ Un site est un **carreau de 2 km × 2 km** issu d'un **carroyage de référence 
 
 - **Possédé par** un [Utilisateur](C1%20-%20Utilisateur.md).
 - **Contient** ≥ 1 [Point d'écoute](C3%20-%20Point%20d%27écoute.md).
+- **Ancré par** 0..1 **Lien VigieChiro** (table `vigiechiro_link`, entité `site`) : l'`_id` du site sur la plateforme, et son état **verrouillé** (`verrouille`) qui conditionne la possibilité de déposer sous ce site.
 
 ## Retour
 
