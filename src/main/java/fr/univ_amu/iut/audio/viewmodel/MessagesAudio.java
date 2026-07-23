@@ -85,6 +85,12 @@ final class MessagesAudio {
         retour.set(RetourOperation.info(texte));
     }
 
+    /// Retour d'**avertissement** (ambre) : un geste refusé en amont, sans échec technique - une
+    /// destination inutilisable sondée avant l'écriture (#2426), au même niveau que `ActionsSauvegarde`.
+    void avertissement(String texte) {
+        retour.set(RetourOperation.avertissement(texte));
+    }
+
     void erreur(String texte) {
         retour.set(RetourOperation.erreur(texte));
     }
