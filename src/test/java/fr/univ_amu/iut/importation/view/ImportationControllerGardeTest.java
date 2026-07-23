@@ -1,14 +1,17 @@
 package fr.univ_amu.iut.importation.view;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Reglages;
+import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.view.ExecuteurTacheSynchrone;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.importation.model.ServiceImportReference;
 import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -47,8 +50,7 @@ class ImportationControllerGardeTest {
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
                 serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
-        ImportationController controller =
-                new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone());
+        ImportationController controller = controleur(viewModel, conservation);
 
         assertThat(controller.aSaisieNonEnregistree()).isFalse();
 
@@ -64,8 +66,7 @@ class ImportationControllerGardeTest {
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
                 serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
-        ImportationController controller =
-                new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone());
+        ImportationController controller = controleur(viewModel, conservation);
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         assertThat(controller.aSaisieNonEnregistree()).isTrue(); // import préparé (PRET)
@@ -86,8 +87,7 @@ class ImportationControllerGardeTest {
         PreferenceConservation conservation = new PreferenceConservation(reglages);
         ImportationViewModel viewModel = new ImportationViewModel(
                 serviceImport, serviceSites, horloge, "u-1", new NavigationViewModel(), conservation);
-        ImportationController controller =
-                new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone());
+        ImportationController controller = controleur(viewModel, conservation);
 
         viewModel.inspection().dossierSourceProperty().set(Path.of("/tmp/nuit-sd"));
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 60, 191, List.of()));
@@ -96,5 +96,17 @@ class ImportationControllerGardeTest {
         // Ré-éditer le rattachement après un succès prépare un nouvel import (PRET) : à protéger aussi.
         viewModel.rattachement().numeroPassageProperty().set(3);
         assertThat(controller.aSaisieNonEnregistree()).isTrue();
+    }
+
+    /// Contrôleur pour ces gardes de saisie : la fabrique de l'import de transformés est fournie avec des
+    /// doublures inertes, ces tests ne pilotant jamais ce bouton (ils lisent le prédicat de garde).
+    private ImportationController controleur(ImportationViewModel viewModel, PreferenceConservation conservation) {
+        FabriqueActionImportTransformes fabrique = new FabriqueActionImportTransformes(
+                mock(ServiceImportReference.class),
+                serviceSites,
+                "u-1",
+                mock(Workspace.class),
+                new ExecuteurTacheSynchrone());
+        return new ImportationController(viewModel, conservation, new ExecuteurTacheSynchrone(), fabrique);
     }
 }

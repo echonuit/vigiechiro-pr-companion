@@ -24,6 +24,34 @@ de 5 s devient 50 s à l'écoute, dans la bande audible). Un enregistrement de p
 `…_225854`, `…_225859`…) : c'est ce qui permet de retrouver, pour chaque observation Tadarida, la
 séquence audio correspondante.
 
+## J'ai déjà les fichiers transformés
+
+L'assistant ci-dessus part de vos **enregistrements bruts** (la carte SD) et les transforme. Mais il
+arrive que vous ayez **déjà** les séquences transformées d'une nuit dans un dossier, sans plus avoir la
+carte : une nuit préparée sur un autre poste, récupérée d'une sauvegarde, ou rangée sur un NAS. Dans ce
+cas, inutile de tout recalculer.
+
+Le bouton **« J'ai déjà les transformés… »** crée le passage **directement à partir de ce dossier**, sans
+rejouer la transformation. Vous désignez le dossier, puis le **point d'écoute** auquel rattacher la nuit ;
+la série de l'enregistreur et la date sont **lues dans les noms** des fichiers.
+
+L'application vous demande ensuite **quoi faire des fichiers** :
+
+![Référencer les fichiers là où ils sont, ou les copier dans le dossier de travail.](../assets/captures/apercu-import-transformes-question.png)
+
+- **Les laisser où ils sont** (les *référencer*) : l'application ne copie rien, elle pointe vos fichiers
+  là où ils vivent. C'est le choix recommandé quand ils sont déjà rangés ailleurs (disque externe, NAS,
+  votre dossier de travail habituel). La nuit **ne sera plus écoutable** si ce support n'est pas
+  accessible (disque débranché, dossier réseau hors ligne), et le **redeviendra** dès qu'il l'est de
+  nouveau : l'application revérifie alors leur **empreinte**, pour être sûre que ce sont bien les mêmes
+  fichiers.
+- **Les copier** dans votre dossier de travail : l'application en prend une copie, comme pour un import
+  ordinaire. La nuit reste écoutable même si le dossier d'origine disparaît.
+
+!!! note "Ce que ce geste ne remplace pas"
+    C'est un raccourci pour des séquences **déjà transformées**. Pour importer une nuit depuis la carte SD
+    (enregistrements bruts à renommer et transformer), utilisez l'**assistant d'import** ci-dessus.
+
 ## Conserver les originaux pour ré-analyse (option)
 
 L'import lit les enregistrements de la carte SD, les transforme en séquences d'écoute, et **n'en garde

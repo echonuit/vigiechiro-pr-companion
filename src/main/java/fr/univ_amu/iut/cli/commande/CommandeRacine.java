@@ -44,6 +44,7 @@ import picocli.CommandLine.Spec;
             ReconstruirePassage.class,
             MetadonneesPassage.class,
             Importer.class,
+            ImporterTransformes.class,
             ImporterTadarida.class,
             ImporterVigieChiro.class,
             PublierCorrectionsVigieChiro.class,

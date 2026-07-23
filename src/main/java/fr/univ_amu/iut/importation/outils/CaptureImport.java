@@ -130,7 +130,8 @@ public final class CaptureImport {
                 ? new ImportationController(
                         vm,
                         injecteur.getInstance(PreferenceConservation.class),
-                        injecteur.getInstance(ExecuteurTache.class))
+                        injecteur.getInstance(ExecuteurTache.class),
+                        injecteur.getInstance(fr.univ_amu.iut.importation.view.FabriqueActionImportTransformes.class))
                 : injecteur.getInstance(type));
         Parent vue = loader.load();
         // Seule la LARGEUR compte ici : chaque rendu se fait ensuite à la hauteur de son propre contenu

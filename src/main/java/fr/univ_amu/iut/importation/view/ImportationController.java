@@ -78,6 +78,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     /// sont **synchrones**.
     private final ExecuteurTache executeur;
 
+    /// Fabrique du geste « importer des transformés déjà présents » (#2258) : elle porte ses collaborateurs
+    /// durables (service, sites, utilisateur, espace de travail, exécuteur), pour que le contrôleur n'en
+    /// garde qu'**un** champ et reste sous le plafond `NcssCount` (cf. [FabriqueActionImportTransformes]).
+    private final FabriqueActionImportTransformes fabriqueImportTransformes;
+
     @FXML
     private VBox racineImport;
 
@@ -150,6 +155,11 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
     @FXML
     private Button boutonParcourir;
 
+    /// Entrée « J'ai déjà les transformés… » (#2258) : ouvre le geste qui référence un dossier de séquences
+    /// déjà transformées, gelée pendant un traitement comme les autres boutons de source.
+    @FXML
+    private Button boutonTransformes;
+
     @FXML
     private Button boutonImporter;
 
@@ -208,10 +218,14 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
 
     @Inject
     public ImportationController(
-            ImportationViewModel viewModel, PreferenceConservation conservation, ExecuteurTache executeur) {
+            ImportationViewModel viewModel,
+            PreferenceConservation conservation,
+            ExecuteurTache executeur,
+            FabriqueActionImportTransformes fabriqueImportTransformes) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
         this.executeur = Objects.requireNonNull(executeur, "executeur");
+        this.fabriqueImportTransformes = Objects.requireNonNull(fabriqueImportTransformes, "fabriqueImportTransformes");
     }
 
     @Override
@@ -413,6 +427,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                                 .otherwise("Pour lancer l'import : inspectez un dossier, choisissez le site"
                                         + " et le point, et renseignez un numéro de passage valide.")));
         boutonParcourir.disableProperty().bind(traitement);
+        boutonTransformes.disableProperty().bind(traitement);
         boutonZip.disableProperty().bind(traitement);
         comboSites.disableProperty().bind(traitement);
         // Désactivation guidée (#800) : choisir le point n'a de sens qu'une fois le site choisi (les points
@@ -506,6 +521,17 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         selecteur
                 .choisirDossier("Dossier de la nuit (carte SD ou copie sur disque)", Optional.empty())
                 .ifPresent(this::chargerSource);
+    }
+
+    /// « J'ai déjà les transformés… » (#2258) : délègue à [ActionImportTransformes] (composition de
+    /// dialogues existants, exécution hors fil JavaFX). Le contrôleur ne fait que **construire** l'action
+    /// avec ses collaborateurs de dialogue déjà en place et la lancer, comme `PassageController` délègue à
+    /// `ActionReactivation`.
+    @FXML
+    private void importerTransformes() {
+        fabriqueImportTransformes
+                .creer(() -> champDossier.getScene().getWindow(), selecteur, viewModel::chargerSites)
+                .importer();
     }
 
     /// « Choisir un .zip » : demande l'**archive** de la nuit puis charge la source (elle sera
