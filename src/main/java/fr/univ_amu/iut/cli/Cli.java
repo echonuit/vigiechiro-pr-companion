@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.cli.commande.CommandeRacine;
 import fr.univ_amu.iut.cli.di.CliModule;
 import fr.univ_amu.iut.cli.model.ErreurUsage;
+import fr.univ_amu.iut.commun.di.Amorcage;
 import fr.univ_amu.iut.commun.di.RacineInjecteur;
 import fr.univ_amu.iut.commun.model.ConfigurationJournalisation;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
@@ -165,6 +166,12 @@ public final class Cli {
         // Journalisation après la résolution du workspace (pour écrire dans le bon dossier), avant tout
         // travail : la CLI aussi laisse une trace de ses incidents (#1523).
         ConfigurationJournalisation.configurer(Workspace.resolu().dossierLogs());
+        // Migrer AVANT de composer l'injecteur (ADR 1038, #2187) : `applicative()` compose l'injecteur,
+        // ce qui lit les drapeaux de fonctionnalités en base ; une base à jour est donc nécessaire ici.
+        // Seulement si la base existe déjà : une aide sur une installation neuve ne doit créer aucun
+        // fichier (picocli n'a pas besoin de base pour imprimer un usage). Le cas « base absente + vraie
+        // sous-commande » reste couvert par la migration différée de `migrerPuisExecuter`, qui la crée.
+        Amorcage.migrerSiPresente();
         int code = applicative().executer(restants.toArray(new String[0]), System.out, System.err);
         System.exit(code);
     }

@@ -42,11 +42,13 @@ public final class Fonctionnalites {
     /// par défaut : celle qu'un utilisateur avait désactivée **réapparaît**, sans erreur ni journal.
     /// C'est le mode de défaillance qui a fait fermer #1537 (renommer la feature « lot »).
     ///
-    /// Une migration ne suffit pas à réparer ce renommage : les flags sont lus **avant** que les
-    /// migrations ne s'appliquent (`RacineInjecteur.creer()` précède `MigrationSchema.migrer()` dans
-    /// `App` comme dans `Cli`), donc elle arriverait trop tard et le premier lancement ignorerait le
-    /// choix de l'utilisateur (#2187). Un **alias en lecture**, déclaré à côté de l'identifiant, ne
-    /// dépend lui d'aucun ordre de démarrage.
+    /// Depuis l'ADR 1038 (#2187), la **migration précède la composition** : `Amorcage` met la base à
+    /// jour avant `RacineInjecteur.creer()`, dans `App` comme dans `Cli`. Une migration corrigeant une
+    /// clé `feature.*` s'applique donc **avant** que ces flags ne soient lus, et serait honorée dès le
+    /// premier lancement. Ce n'était **pas** le cas auparavant (les flags étaient lus avant les
+    /// migrations, et le choix de l'utilisateur ignoré pendant un lancement, sans message). Un **alias
+    /// en lecture**, déclaré à côté de l'identifiant, reste une option indépendante de tout ordre de
+    /// démarrage.
     static final String PREFIXE_CLE = "feature.";
 
     static final String SUFFIXE_CLE = ".active";
