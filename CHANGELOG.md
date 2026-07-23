@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.42.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.41.0...v2.42.0) (2026-07-23)
+
+
+### Features
+
+* **emplacements:** écran de choix du dossier de travail et de la base (ADR 1038) ([#2401](https://github.com/echonuit/vigiechiro-pr-companion/issues/2401)) ([fcbaf98](https://github.com/echonuit/vigiechiro-pr-companion/commit/fcbaf9853cccd8db95fd8a8a39d5744ddd16bd3d)), closes [#1038](https://github.com/echonuit/vigiechiro-pr-companion/issues/1038) [#2258](https://github.com/echonuit/vigiechiro-pr-companion/issues/2258)
+
 # [2.41.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.40.1...v2.41.0) (2026-07-23)
 
 
