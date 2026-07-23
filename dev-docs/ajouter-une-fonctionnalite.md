@@ -256,7 +256,7 @@ publiée (`feat:` mineure, `fix:` patch, `BREAKING CHANGE:` majeure ; cf.
 ## Checklist avant la PR
 
 - [ ] Les 4 couches respectent leurs frontières (`./mvnw test` → `ArchitectureTest` vert).
-- [ ] Module Guice enregistré dans `RacineInjecteur` (l'app démarre : `./mvnw javafx:run`).
+- [ ] Module de feature déclaré comme service `ModuleDeFeature` dans les **deux** listes `ServiceLoader` (auto-découverte, cf. [Injection](injection.md#la-racine-de-composition)) - **pas** dans `RacineInjecteur` - et l'app démarre (`./mvnw javafx:run`).
 - [ ] Navigation branchée par contrat `Ouvrir*` si ouverte depuis un autre écran.
 - [ ] Capture + manifeste si l'écran est documenté.
 - [ ] Tests verts et **`./mvnw -Pquality-gate verify`** vert (PMD + couverture).

@@ -325,14 +325,23 @@ impossible à substituer en test, et le câblage est dispersé partout.
 *Composition Root*, assemble le graphe complet.
 
 **Dans cette application.** [`RacineInjecteur`](https://github.com/echonuit/vigiechiro-pr-companion/blob/main/src/main/java/fr/univ_amu/iut/commun/di/RacineInjecteur.java)
-installe le socle + les 10 modules de feature (Guice). Même les controllers FXML sont injectés (cf.
-*Factory* plus bas). En test, on substitue une base jetable sans changer le code de production.
+installe un **socle explicite** (`CommunModule`, `PersistenceModule`) puis **auto-découvre** les
+modules de feature via `ServiceLoader<ModuleDeFeature>`, en ne gardant que ceux dont la fonctionnalité
+est active. Ajouter une feature ne modifie donc **pas** ce fichier (cf. [Injection](injection.md)).
+Même les controllers FXML sont injectés (cf. *Factory* plus bas). En test, on substitue une base
+jetable via `Modules.override(RacineInjecteur.modules())`, sans changer le code de production.
 
 ```java
-public static Injector creer() {
-    return Guice.createInjector(
-        new CommunModule(), new PersistenceModule(),
-        new SitesModule(), new PassageModule(), /* … */ new RechercheModule());
+public static List<Module> modules() {
+    List<Module> modules = new ArrayList<>();
+    modules.add(new CommunModule());        // socle : toujours explicite
+    modules.add(new PersistenceModule());
+    // features : auto-découvertes, filtrées par les feature-flags
+    ServiceLoader.load(ModuleDeFeature.class).stream()
+        .map(ServiceLoader.Provider::get)
+        .filter(Fonctionnalites.filtreActives())
+        .forEach(modules::add);
+    return modules;
 }
 ```
 

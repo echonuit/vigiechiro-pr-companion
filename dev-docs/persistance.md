@@ -34,12 +34,17 @@ applique des scripts **versionnés**
 et trace les versions dans une table `schema_version`. C'est **idempotent** : à la réouverture d'une
 base existante, les versions déjà présentes sont ignorées (« base présente → réutilisée »).
 
-État actuel : `V01__schema.sql` (toutes les tables) · `V02__seed_taxons.sql` (données de référence) ·
-`V03__perf_indexes.sql` (index).
+Les trois premières migrations posent l'essentiel : `V01__schema.sql` (le schéma initial),
+`V02__seed_taxons.sql` (données de référence), `V03__perf_indexes.sql` (index). Les suivantes le font
+**évoluer**, migration après migration. Le dossier
+[`db/migration/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/src/main/resources/db/migration)
+en fait foi : il en contient aujourd'hui bien plus que trois.
 
 !!! tip "Ajouter une migration"
-    1. Créez `db/migration/V0n__xxx.sql` (numéro suivant).
-    2. **Ajoutez son nom au tableau `MIGRATIONS`** de `MigrationSchema` — **l'ordre fait foi**.
+    1. Créez `db/migration/Vnn__description.sql`, où `nn` est le **numéro qui suit la dernière
+       migration présente** dans le dossier - **surtout pas** `V04`, le compteur est déjà bien plus
+       haut.
+    2. **Ajoutez son nom au tableau `MIGRATIONS`** de `MigrationSchema` - **l'ordre fait foi**.
 
     `App` appelle `MigrationSchema.migrer()` au démarrage ; les tests le font sur leur base jetable.
 
