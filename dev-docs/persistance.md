@@ -5,7 +5,7 @@ La persistance est **locale** : une base **SQLite** fichier, sans serveur. La co
 (infra technique) ; le **SQL métier** de chaque entité vit dans les `*/model/dao/` de sa feature.
 
 !!! abstract "Cette page = le *mécanisme*, pas le *modèle*"
-    Pour **quelles données** sont stockées (entités, 19 tables, MCD du brief, correspondance
+    Pour **quelles données** sont stockées (entités, 28 tables au schéma courant, MCD du brief, correspondance
     concept → record → table), voir [Modèle de données et domaine](modele-de-donnees.md). Cette
     page-ci décrit **comment** on y accède : source de données, migrations, DAO, transactions.
 

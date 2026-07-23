@@ -123,6 +123,11 @@ la sonde live `refus_serveur_est_un_refuse_explicite` verrouille que ce refus re
 | PATCH | `/participations/{id}` (`If-Match: _etag`) | pousse météo/config depuis la modale du passage |
 | POST | `/fichiers` (`lien_participation`) puis `PUT` S3 signé puis POST `/fichiers/{id}` | téléverse un fichier **rattaché à la participation** (3 temps, `PUT` **en flux**) |
 | POST | `/participations/{id}/compute` (corps `{}`) | déclenche le **traitement serveur** (Tadarida) de la participation déposée |
+| GET | `/grille_stoc/cercle?lng&lat&r` | mailles du carroyage national autour d'un point |
+| GET | `/participations/{id}/pieces_jointes` | pièces jointes d'une participation (audio déposé) |
+| GET | `/fichiers/{id}/acces` | URL d'accès (S3 signé) d'un fichier déposé |
+| PATCH | `/donnees/{id}/observations/{indice}` | pousse une **correction d'observation** (taxon + certitude) |
+| PUT | `/donnees/{id}/observations/{indice}/messages` | ajoute un **message** au fil de discussion d'une observation |
 
 ### Objet `participation` (schéma canonique)
 

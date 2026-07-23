@@ -59,7 +59,7 @@ accidentel d'une instance et aux bugs d'égalité (comparaison par référence).
 **La solution.** Modéliser le domaine en **`record` immuables** : champs finaux, égalité **par
 valeur**, aucun setter. Pour « modifier », on **crée** une nouvelle instance.
 
-**Dans cette application.** Le domaine est quasi entièrement en records (**≈ 70** : `Passage`, `Site`,
+**Dans cette application.** Le domaine est quasi entièrement en records (**plus de 250** : `Passage`, `Site`,
 `SequenceDEcoute`, `Observation`…). Les DAO **construisent** ces records ligne par ligne via un
 `RowMapper`, et les ViewModels les exposent dans des `ObservableList`.
 
@@ -362,7 +362,7 @@ historiques).
 tester et à substituer), on **délègue l'unicité au conteneur** : `@Singleton` Guice.
 
 **Dans cette application.** `SourceDeDonnees`, `Navigateur`, les `Navigation*` et la **plupart des providers
-de DAO et de services** des features sont `@Singleton` (~70 bindings) : une seule instance par
+de DAO et de services** des features sont `@Singleton` (plus de 130 déclarations) : une seule instance par
 injecteur, mais **toujours injectée** (donc remplaçable en test).
 
 **Principes.** Évite l'**état statique global** tout en restant **testable** : l'unicité est une
@@ -397,9 +397,8 @@ classDiagram
 ```
 
 **Principes.** **DIP** (les deux features dépendent du contrat, pas l'une de l'autre) et **OCP**
-(brancher une nouvelle implémentation sans modifier l'appelant). Tous les contrats : `OuvrirSite`,
-`OuvrirPassage`, `OuvrirVerification`, `OuvrirImportation`, `OuvrirLot`, `OuvrirValidation`,
-`OuvrirDiagnostic`. Voir aussi [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre).
+(brancher une nouvelle implémentation sans modifier l'appelant). La **liste de référence** des contrats
+`Ouvrir*` (**10**) est maintenue à un seul endroit : [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre).
 
 ---
 

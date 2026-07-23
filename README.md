@@ -65,7 +65,7 @@ espèces quelques jours plus tard.
 
 ## 📖 Découvrir les écrans
 
-L'application compte une dizaine d'écrans, documentés un par un. **Cliquez sur une vignette pour
+L'application compte treize écrans, documentés un par un. **Cliquez sur une vignette pour
 ouvrir sa page de documentation** (rôle, captures commentées, astuces).
 
 <table>
@@ -164,7 +164,7 @@ src/main/java/fr/univ_amu/iut/
 │
 ├── sites/        passage/       importation/   qualification/   lot/
 ├── validation/   multisite/     diagnostic/    bibliotheque/    analyse/
-├── recherche/                                                                ← les 11 fonctionnalités
+├── recherche/    audio/         audit/         connexion/       maj/          ← les 15 features
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
 └── perf/outils/                 ← bancs de mesure de performance
@@ -180,7 +180,7 @@ Chaque **couche** a une règle stricte :
 | `di/` | **Injection** : le module Guice qui assemble la fonctionnalité | Publie ses services/VM au conteneur |
 
 Le cœur du modèle est l'**agrégat « nuit de capture »** (fonctionnalité `passage`), qui avance dans un
-workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOSE`. La persistance est en
+workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (6 états). La persistance est en
 **SQLite** via des **DAO** en `PreparedStatement` (pas d'ORM) avec des **migrations** versionnées.
 
 Chaque fonctionnalité est un **paquet** autonome ; son nom renvoie à la **documentation de l'écran**,

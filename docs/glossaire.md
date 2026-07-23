@@ -20,7 +20,7 @@ Les termes du domaine employés dans cette documentation et dans l'application.
 | **Site** | Dans l'application, un carré de suivi et ses points d'écoute. Voir l'écran [Sites](ecrans/sites.md). |
 | **Sonogramme** | Représentation visuelle de l'amplitude du son au fil du temps. |
 | **Spectrogramme** | Représentation visuelle des fréquences du son au fil du temps (clair = forte intensité). |
-| **Statut** | Étape d'avancement d'un passage dans le traitement : Importé, Transformé, Vérifié, Prêt à déposer, Déposé. |
+| **Statut** | Étape d'avancement d'un passage dans le traitement : Importé, Transformé, Vérifié, Prêt à déposer, Dépôt en cours, Déposé. |
 | **Tadarida** | Outil d'identification **automatique** des espèces à partir des séquences. Après le dépôt, Vigie-Chiro renvoie ses résultats (un fichier CSV), relus dans l'écran [Validation](ecrans/validation.md). |
 | **Verdict** | Jugement de qualité porté sur une nuit à la vérification : **OK**, **Utilisable** ou **Inexploitable** (état initial **Non vérifié**), dérivé du verdict de chaque fichier son écouté. |
 | **Vigie-Chiro** | Programme national de suivi des chauves-souris et sa plateforme web, où les nuits sont déposées et où Tadarida restitue les identifications. |

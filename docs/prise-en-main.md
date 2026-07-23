@@ -103,10 +103,10 @@ sont immédiats.
 ## Découvrir l'écran d'accueil
 
 Au lancement, l'application ouvre son **écran d'accueil**. Le bandeau vous invite à
-« sélectionner une activité pour traiter une nuit d'enregistrement », et propose quatre points
+« sélectionner une activité pour traiter une nuit d'enregistrement », et propose cinq points
 d'entrée :
 
-![L'écran d'accueil de VigieChiro Companion et ses quatre activités.](assets/captures/apercu-accueil.png)
+![L'écran d'accueil de VigieChiro Companion et ses cinq activités.](assets/captures/apercu-accueil.png)
 
 | Activité | À quoi elle sert |
 |---|---|

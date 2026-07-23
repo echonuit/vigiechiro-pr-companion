@@ -25,7 +25,8 @@ src/main/java/fr/univ_amu/iut/
 │   └── outils/                  ·   harnais de capture d'écran (ApercuFx...)
 │
 ├── sites/        passage/       importation/   qualification/   lot/
-├── validation/   multisite/     diagnostic/    bibliotheque/   recherche/   ← les 10 fonctionnalités
+├── validation/   multisite/     diagnostic/    bibliotheque/    recherche/
+├── analyse/      audio/         audit/         connexion/       maj/          ← les 15 features
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
 └── perf/outils/                 ← bancs de mesure de performance
@@ -129,9 +130,8 @@ public class NavigationPassage implements OuvrirPassage {
 ```
 
 Ainsi `sites` ouvre M-Passage **sans dépendre de `passage.view`** : la règle ArchUnit
-`pas_de_dependance_inter_feature_vers_la_vue` reste respectée. Tous les contrats existants :
-`OuvrirSite`, `OuvrirPassage`, `OuvrirVerification`, `OuvrirImportation`, `OuvrirLot`,
-`OuvrirValidation`, `OuvrirDiagnostic`.
+`pas_de_dependance_inter_feature_vers_la_vue` reste respectée. La **liste de référence** des contrats
+`Ouvrir*` (**10**) est maintenue à un seul endroit : [Navigation](navigation.md#ouvrir-une-autre-feature-sans-en-dependre).
 
 ## Persistance
 
@@ -146,9 +146,9 @@ sur la [`SourceDeDonnees`](https://github.com/echonuit/vigiechiro-pr-companion/b
 Le cœur du domaine est l'**agrégat « nuit de capture »** (feature `passage`), qui avance dans un
 **workflow à états** :
 
-`IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOSE`
+`IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (6 états, cf. `StatutWorkflow`)
 
-Le détail des entités, des 19 tables et de la correspondance avec le **MCD du brief** est sur
+Le détail des entités, des tables (**28** au schéma courant, 19 à l'origine en `V01`) et de la correspondance avec le **MCD du brief** est sur
 [Modèle de données et domaine](modele-de-donnees.md) ; le **mécanisme** d'accès (DAO, transactions,
 migrations) sur [Persistance](persistance.md).
 

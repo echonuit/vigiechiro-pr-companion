@@ -13,6 +13,7 @@ Le workflow de **production** de la donnée : vos carrés, vos points d'écoute 
 |---|---|---|
 | **Mes sites** | [Sites](sites.md) | vos carrés et points d'écoute |
 | **Carte & passages** | [Carte & passages](multisite.md) | la carte de vos sites et le tableau de tous les passages (filtres, tri, export) |
+| **Audit de cohérence** | [Audit](audit.md) | vérifier base et fichiers, réparer, réinitialiser |
 
 ## Espèces & biodiversité
 

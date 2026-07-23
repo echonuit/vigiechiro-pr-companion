@@ -207,7 +207,8 @@ converti trop vite est un test qu'on ne relit plus.
 !!! warning "Un cliquet empêche de l'oublier"
     **Une migration opportuniste sans garde-fou est une migration qu'on oublie** - le même défaut que la
     doc, qui dérivait parce que rien ne rougissait. `CliquetFixturePassageTest` **épingle la liste** des
-    tests qui sèment encore un passage à la main (**66** au 2026-07-14), et elle ne peut que **rétrécir** :
+    tests qui sèment encore un passage à la main (le compte de référence vit **dans le test lui-même**,
+    pas ici, pour ne pas diverger), et elle ne peut que **rétrécir** :
 
     - **ajouter un semeur de plus** → CI rouge (c'est le cas qui compte : sans lui, la dette repousserait
       aussi vite qu'on la coupe) ;
