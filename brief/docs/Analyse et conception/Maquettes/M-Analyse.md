@@ -21,6 +21,12 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
     .pagetitle { font: 700 22px sans-serif; fill: #2c3e50; }
     .pagesub { font: 13px sans-serif; fill: #6a737d; }
     .toolbar { fill: #ffffff; stroke: #e1e4e8; stroke-width: 1; }
+    .tab-active { fill: #ffffff; stroke: #4a90d9; stroke-width: 1.5; }
+    .tab { fill: #eef2f5; stroke: #d0d7de; stroke-width: 1; }
+    .tab-txt { font: 600 12px sans-serif; fill: #2c3e50; }
+    .tab-txt-inact { font: 12px sans-serif; fill: #6a737d; }
+    .puce { fill: #e8eefc; stroke: #4a90d9; stroke-width: 1; }
+    .puce-txt { font: 12px sans-serif; fill: #2563a3; }
     .field-label { font: 12px sans-serif; fill: #34495e; }
     .field-input { fill: #ffffff; stroke: #6a737d; stroke-width: 1; }
     .field-text { font: 13px sans-serif; fill: #2c3e50; }
@@ -55,19 +61,29 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
   <text x="40" y="86" class="pagetitle">Espèces &amp; observations</text>
   <text x="40" y="106" class="pagesub">12 espèces · 3 980 observations retenues · 2 carrés</text>
 
-  <!-- Barre d'outils (sans étiquettes : chaque contrôle se décrit par sa valeur / son indice de saisie,
-       aligné sur M-MultiSite). Le bouton « 🗺️ Carte » bascule l'inventaire en carte de répartition. -->
-  <rect x="40" y="122" width="1120" height="44" rx="4" class="toolbar"/>
-  <rect x="58" y="132" width="160" height="26" rx="3" class="field-input"/>
-  <text x="72" y="149" class="field-text">Par espèce  ▾</text>
-  <rect x="232" y="132" width="170" height="26" rx="3" class="field-input"/>
-  <text x="246" y="149" class="field-text">Tous les statuts  ▾</text>
-  <rect x="416" y="132" width="180" height="26" rx="3" class="field-input"/>
-  <text x="430" y="149" class="field-ph">espèce, carré…</text>
-  <rect x="866" y="132" width="130" height="26" rx="3" class="btn-secondary"/>
-  <text x="931" y="149" class="btn-txt-dark" text-anchor="middle">🗺️ Carte</text>
-  <rect x="1010" y="132" width="150" height="26" rx="3" class="btn-secondary"/>
-  <text x="1085" y="149" class="btn-txt-dark" text-anchor="middle">📤 Exporter…</text>
+  <!-- Socle partage (cf. index.md) : onglets de vues memorisees -->
+  <rect x="40" y="112" width="150" height="26" rx="4" class="tab-active"/>
+  <text x="52" y="129" class="tab-txt">Toutes les espèces</text>
+  <rect x="194" y="112" width="120" height="26" rx="4" class="tab"/>
+  <text x="206" y="129" class="tab-txt-inact">Déposées 2026</text>
+  <rect x="318" y="112" width="28" height="26" rx="4" class="tab"/>
+  <text x="332" y="129" class="tab-txt-inact" text-anchor="middle">＋</text>
+
+  <!-- Regroupement (specifique) + filtres a puces + colonnes (socle) -->
+  <rect x="40" y="146" width="140" height="26" rx="3" class="field-input"/>
+  <text x="54" y="163" class="field-text">Par espèce  ▾</text>
+  <rect x="188" y="146" width="90" height="26" rx="4" class="btn-secondary"/>
+  <text x="233" y="163" class="btn-txt-dark" text-anchor="middle">＋ Filtre</text>
+  <rect x="286" y="146" width="150" height="26" rx="13" class="puce"/>
+  <text x="300" y="163" class="puce-txt">Statut : déposé  ✕</text>
+  <rect x="446" y="146" width="170" height="26" rx="3" class="field-input"/>
+  <text x="460" y="163" class="field-ph">espèce, carré…</text>
+  <rect x="800" y="146" width="110" height="26" rx="3" class="btn-secondary"/>
+  <text x="855" y="163" class="btn-txt-dark" text-anchor="middle">🗺️ Carte</text>
+  <rect x="918" y="146" width="130" height="26" rx="3" class="btn-secondary"/>
+  <text x="983" y="163" class="btn-txt-dark" text-anchor="middle">📤 Exporter…</text>
+  <rect x="1056" y="146" width="104" height="26" rx="3" class="btn-secondary"/>
+  <text x="1108" y="163" class="btn-txt-dark" text-anchor="middle">☰ Colonnes ▾</text>
 
   <!-- Inventaire (par espece) -->
   <rect x="40" y="180" width="1120" height="30" class="table-head"/>
@@ -164,7 +180,7 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
 
 ### Annotations
 
-- **Barre d'outils** : le sélecteur **Regrouper** bascule l'inventaire entre **Par espèce** (montré ici) et **Par carré** (richesse spécifique par carré) ; un **filtre de statut** restreint la lecture (par exemple aux passages déposés) ; un champ de filtre texte, le bouton **🗺️ Carte** (vers la [carte de répartition](#variante-mode-carte-choroplethe-de-richesse)) et un bouton **Exporter** complètent.
+- **Onglets de vues + barre d'outils** (socle partagé, décrit une fois dans le [pattern visuel partagé](index.md)) : en tête, les **onglets de vues mémorisées** (**＋** pour en créer). En dessous, le sélecteur **Regrouper** (spécifique à cet écran) bascule l'inventaire entre **Par espèce** (montré ici) et **Par carré** (richesse spécifique par carré) ; un bouton **＋ Filtre** ajoute des **puces** (statut, période…) ; un champ de filtre texte ; le bouton **🗺️ Carte** (vers la [carte de répartition](#variante-mode-carte-choroplethe-de-richesse)) ; un bouton **Exporter** ; et le menu **☰** pour le **choix des colonnes**.
 - **Inventaire (par espèce)** : une ligne par espèce, avec son **groupe** taxonomique, ses compteurs (détections, passages, carrés, points) et sa **période** d'observation. L'espèce retenue pour chaque observation est le **taxon validé** s'il existe, sinon la **proposition Tadarida** (cf. [R17](../Modèle%20conceptuel/Règles%20métier.md#r17)) ; les pseudo-taxons « bruit » et « oiseau » sont exclus.
 - **Détail (maître-détail)** : en sélectionnant une espèce, le panneau du bas liste **toutes ses observations** à travers les passages (passage, carré, point, proposition Tadarida + probabilité, votre taxon, statut). C'est la réponse à « où et quand ai-je détecté cette espèce ? », toutes nuits confondues.
 
@@ -172,9 +188,11 @@ L'écran est la porte d'entrée du prisme **biodiversité** : il **exploite tran
 
 | Élément | Action |
 |---|---|
+| **Onglets de vues** (＋ pour en créer) | Rejouent une combinaison de filtres enregistrée |
 | Sélecteur **Regrouper** | Bascule l'inventaire entre *Par espèce* et *Par carré* |
 | Bouton **🗺️ Carte** | Bascule la zone maître entre table d'inventaire et **carte de répartition** (choroplèthe de richesse) |
-| Filtre **Statut** / champ texte | Restreint l'inventaire et le détail |
+| **＋ Filtre** (puces) / champ texte | Restreint l'inventaire et le détail |
+| Menu **☰** | Choix des **colonnes** affichées |
 | Sélection d'une **espèce** | Charge ses observations dans le panneau du bas |
 | **🎧 Écouter / valider** | Ouvre [M-SonsValidation](M-SonsValidation.md) **droit sur cette détection** (réécoute / validation) |
 | **Ouvrir le passage →** | Ouvre [M-Passage](M-Passage.md) du passage concerné |
@@ -205,6 +223,12 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
     .pagetitle { font: 700 22px sans-serif; fill: #2c3e50; }
     .pagesub { font: 13px sans-serif; fill: #6a737d; }
     .toolbar { fill: #ffffff; stroke: #e1e4e8; stroke-width: 1; }
+    .tab-active { fill: #ffffff; stroke: #4a90d9; stroke-width: 1.5; }
+    .tab { fill: #eef2f5; stroke: #d0d7de; stroke-width: 1; }
+    .tab-txt { font: 600 12px sans-serif; fill: #2c3e50; }
+    .tab-txt-inact { font: 12px sans-serif; fill: #6a737d; }
+    .puce { fill: #e8eefc; stroke: #4a90d9; stroke-width: 1; }
+    .puce-txt { font: 12px sans-serif; fill: #2563a3; }
     .field-input { fill: #ffffff; stroke: #6a737d; stroke-width: 1; }
     .field-text { font: 13px sans-serif; fill: #2c3e50; }
     .field-ph { font: 13px sans-serif; fill: #bdc3c7; }
@@ -240,18 +264,29 @@ Le bouton **« 🗺️ Carte »** remplace la table d'inventaire par une **carte
   <text x="40" y="86" class="pagetitle">Espèces &amp; observations</text>
   <text x="40" y="106" class="pagesub">12 espèces · 3 980 observations retenues · 2 carrés</text>
 
-  <!-- Barre d'outils : bouton « 🗺️ Carte » actif (mode carte) -->
-  <rect x="40" y="122" width="1120" height="44" rx="4" class="toolbar"/>
-  <rect x="58" y="132" width="160" height="26" rx="3" class="field-input"/>
-  <text x="72" y="149" class="field-text">Par espèce  ▾</text>
-  <rect x="232" y="132" width="170" height="26" rx="3" class="field-input"/>
-  <text x="246" y="149" class="field-text">Tous les statuts  ▾</text>
-  <rect x="416" y="132" width="180" height="26" rx="3" class="field-input"/>
-  <text x="430" y="149" class="field-ph">espèce, carré…</text>
-  <rect x="866" y="132" width="130" height="26" rx="3" class="btn-active"/>
-  <text x="931" y="149" class="btn-txt" text-anchor="middle">🗺️ Carte</text>
-  <rect x="1010" y="132" width="150" height="26" rx="3" class="btn-secondary"/>
-  <text x="1085" y="149" class="btn-txt-dark" text-anchor="middle">📤 Exporter…</text>
+  <!-- Socle : onglets de vues memorisees -->
+  <rect x="40" y="112" width="150" height="26" rx="4" class="tab-active"/>
+  <text x="52" y="129" class="tab-txt">Toutes les espèces</text>
+  <rect x="194" y="112" width="120" height="26" rx="4" class="tab"/>
+  <text x="206" y="129" class="tab-txt-inact">Déposées 2026</text>
+  <rect x="318" y="112" width="28" height="26" rx="4" class="tab"/>
+  <text x="332" y="129" class="tab-txt-inact" text-anchor="middle">＋</text>
+
+  <!-- Regroupement + filtres a puces + « Carte » ACTIVE + colonnes -->
+  <rect x="40" y="146" width="140" height="26" rx="3" class="field-input"/>
+  <text x="54" y="163" class="field-text">Par espèce  ▾</text>
+  <rect x="188" y="146" width="90" height="26" rx="4" class="btn-secondary"/>
+  <text x="233" y="163" class="btn-txt-dark" text-anchor="middle">＋ Filtre</text>
+  <rect x="286" y="146" width="150" height="26" rx="13" class="puce"/>
+  <text x="300" y="163" class="puce-txt">Statut : déposé  ✕</text>
+  <rect x="446" y="146" width="170" height="26" rx="3" class="field-input"/>
+  <text x="460" y="163" class="field-ph">espèce, carré…</text>
+  <rect x="800" y="146" width="110" height="26" rx="3" class="btn-active"/>
+  <text x="855" y="163" class="btn-txt" text-anchor="middle">🗺️ Carte</text>
+  <rect x="918" y="146" width="130" height="26" rx="3" class="btn-secondary"/>
+  <text x="983" y="163" class="btn-txt-dark" text-anchor="middle">📤 Exporter…</text>
+  <rect x="1056" y="146" width="104" height="26" rx="3" class="btn-secondary"/>
+  <text x="1108" y="163" class="btn-txt-dark" text-anchor="middle">☰ Colonnes ▾</text>
 
   <!-- Zone maître : carte de répartition -->
   <rect x="40" y="180" width="1120" height="228" class="map"/>
