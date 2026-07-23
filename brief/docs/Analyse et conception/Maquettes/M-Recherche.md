@@ -4,7 +4,7 @@
 > **Persona principal** : tous.
 > **Parcours couverts** : [P8 - Rechercher globalement](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md).
 
-La recherche globale permet de **sauter directement** à un site, un point ou un passage depuis n'importe quel écran. On la déclenche par le champ **« 🔍 Rechercher »** du bandeau (ou **Ctrl+F**) ; la liste de résultats s'ouvre au fil de la frappe, **groupée par type**.
+La recherche globale permet de **sauter directement** à un site, un point, un passage ou une **espèce** depuis n'importe quel écran. On la déclenche par le champ **« 🔍 Rechercher »** du bandeau (ou **Ctrl+F**) ; la liste de résultats s'ouvre au fil de la frappe, **groupée par type**.
 
 ## Maquette - liste de résultats ouverte
 
@@ -48,7 +48,7 @@ La recherche globale permet de **sauter directement** à un site, un point ou un
   <text x="600" y="320" class="bg-label" text-anchor="middle">(écran courant, estompé pendant que la liste est ouverte)</text>
 
   <!-- Liste déroulante de résultats, ancrée sous le champ -->
-  <rect x="820" y="56" width="340" height="380" rx="6" class="popup"/>
+  <rect x="820" y="56" width="340" height="470" rx="6" class="popup"/>
 
   <!-- Groupe Sites -->
   <text x="838" y="80" class="grp">SITES</text>
@@ -71,8 +71,16 @@ La recherche globale permet de **sauter directement** à un site, un point ou un
   <text x="838" y="312" class="res-detail">Passage 2026 · 2026-06-22</text>
   <text x="838" y="340" class="res-main">640381 / B2 · n° 1</text>
   <text x="838" y="356" class="res-detail">Passage 2026 · 2026-06-15</text>
+  <line x1="822" y1="374" x2="1158" y2="374" class="sep"/>
 
-  <text x="838" y="400" class="res-detail">Résultats limités par type pour rester lisibles.</text>
+  <!-- Groupe Espèces -->
+  <text x="838" y="396" class="grp">ESPÈCES</text>
+  <text x="838" y="420" class="res-main">Pipistrelle commune</text>
+  <text x="838" y="436" class="res-detail">Pippip · 638 observations</text>
+  <text x="838" y="464" class="res-main">Petit rhinolophe</text>
+  <text x="838" y="480" class="res-detail">Rhifer · 80 observations</text>
+
+  <text x="838" y="508" class="res-detail">Résultats limités par type pour rester lisibles.</text>
 
   <!-- Aide navigation clavier -->
   <rect x="36" y="470" width="20" height="18" rx="3" class="kbd"/><text x="46" y="483" class="kbd-txt" text-anchor="middle">↓</text>
@@ -87,7 +95,7 @@ La recherche globale permet de **sauter directement** à un site, un point ou un
 ### Annotations
 
 - **Champ actif** : la saisie (`640380`) alimente la liste **au fil de la frappe**, **insensible à la casse et aux accents**.
-- **Résultats groupés par type** : **Sites** (par n° de carré ou nom), **Points** (par code ou description), **Passages** (par carré, code de point, n° de passage, année ou date). Chaque groupe porte un en-tête ; chaque ligne montre un libellé principal et un détail de contexte. Le nombre de résultats par type est **borné** pour garder la liste lisible.
+- **Résultats groupés par type** : **Sites** (par n° de carré ou nom), **Points** (par code ou description), **Passages** (par carré, code de point, n° de passage, année ou date) et **Espèces** (par nom ou code, avec le nombre d'observations). Chaque groupe porte un en-tête ; chaque ligne montre un libellé principal et un détail de contexte. Le nombre de résultats par type est **borné** (au plus 8) pour garder la liste lisible.
 - **Sélection** : à la souris, ou au clavier (la ligne mise en évidence suit les flèches).
 
 ### Interactions clés
@@ -98,10 +106,10 @@ La recherche globale permet de **sauter directement** à un site, un point ou un
 | Saisie | Met à jour la liste (anti-rebond : les frappes rapides sont regroupées) |
 | **↓** / **↑** | Parcourt les résultats ; **Entrée** ouvre l'élément (fiche du site ou écran du passage) |
 | **Échap** | Ferme la liste (puis vide la recherche) |
-| Clic sur un résultat | Ouvre l'écran de l'élément ([M-Site-detail](M-Site-detail.md) ou [M-Passage](M-Passage.md)) |
+| Clic sur un résultat | Ouvre l'écran de l'élément ([M-Site-detail](M-Site-detail.md), [M-Passage](M-Passage.md), ou [M-Analyse](M-Analyse.md) sur l'espèce) |
 
 ### Notes pour l'implémentation
 
-- La recherche vit dans le **socle** (`commun`) : le chrome consomme un contrat `RechercheGlobale` sans dépendre d'une fonctionnalité ; l'implémentation agrège les services `sites` (sites, points) et `multisite` (passages).
+- La recherche vit dans le **socle** (`commun`) : le chrome consomme un contrat `RechercheGlobale` sans dépendre d'une fonctionnalité ; l'implémentation agrège les services `sites` (sites, points), `multisite` (passages) et l'inventaire des **espèces observées**.
 - La saisie est **anti-rebondie** (frappes regroupées après une courte pause) ; la liste se ferme quand le focus quitte la zone de recherche.
 - Chaque résultat est **exposé aux lecteurs d'écran** (libellé accessible) : la recherche se pilote entièrement au clavier.

@@ -1,6 +1,6 @@
 # M-Import - Importer une nuit d'enregistrement
 
-> **Type** : assistant d'import (carte « Importer une nuit » de l'accueil).
+> **Type** : assistant d'import, ouvert par le bouton **« Importer une nuit »** d'un site (cf. [M-Site-detail](M-Site-detail.md)) ; il n'y a **pas** de carte d'import sur l'accueil, l'import part toujours d'un site déjà choisi.
 > **Persona principal** : tous ([Marie](../Personas/Marie.md), [Karim](../Personas/Karim.md), [Samuel](../Personas/Samuel.md)). C'est l'écran le plus utilisé après la mise en route.
 > **Parcours couverts** : [P2 - Importer une nuit d'enregistrement](../Parcours%20utilisateurs/P2%20-%20Importer%20une%20nuit%20d%27enregistrement.md).
 
@@ -56,8 +56,8 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
   <rect x="10" y="10" width="1180" height="44" rx="4" class="chrome"/>
   <rect x="10" y="26" width="1180" height="28" class="chrome"/>
   <text x="28" y="38" class="chrometxt">VigieChiro Companion</text>
-  <text x="260" y="38" class="crumb-link">Accueil  ›  </text>
-  <text x="332" y="38" class="crumb-active">Importer une nuit</text>
+  <text x="260" y="38" class="crumb-link">Accueil  ›  Mes sites  ›  Carré 640380  ›  </text>
+  <text x="566" y="38" class="crumb-active">Import</text>
   <rect x="940" y="22" width="220" height="22" rx="11" class="search"/>
   <text x="956" y="38" class="search-txt">🔍  Rechercher (Ctrl+F)</text>
 
@@ -166,6 +166,16 @@ C'est l'écran central de la chaîne de production. L'assistant est une **page u
 | Bouton **📥 Importer cette nuit** | Lance copie vérifiée + renommage + transformation (variante « en cours » ci-dessous) |
 
 ---
+
+## Variante - carte SD contenant plusieurs nuits
+
+Quand la carte SD (ou l'archive) contient **plusieurs nuits** enregistrées à la suite (le cas de [Samuel](../Personas/Samuel.md), dont les enregistreurs tournent plusieurs nuits d'affilée), l'inspection les **détecte** et insère, sous la section « Dossier source », un **tableau des nuits détectées** : une ligne par nuit (date, plage horaire, nombre de fichiers, complétude), chacune cochable.
+
+- Chaque nuit retenue devient un **passage distinct** ([E2.S9](../Story%20mapping/E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s9)) : le découpage suit la nuit **soir J → matin J+1** (bascule à midi).
+- Une nuit **tronquée** (cycle mal terminé, SD pleine) est signalée avec son motif, sans être exclue d'office ; une nuit **déjà importée** est signalée (doublon) et décochée par défaut.
+- Le **rattachement** (site, point, n° de passage) est demandé par nuit ; le n° de passage s'incrémente d'une nuit à l'autre.
+
+Le reste de l'assistant (copie protégée, renommage, transformation, progression) est identique, appliqué à chaque nuit retenue.
 
 ## Variante - cas « fichiers déjà préfixés » (re-import ou dossier déjà nommé)
 
