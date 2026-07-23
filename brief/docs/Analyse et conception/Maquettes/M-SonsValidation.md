@@ -234,7 +234,11 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
 ### Annotations
 
 - **Barre de filtres (« à la Notion »)** : un champ de **recherche libre** (fichier, espèce, commentaire) et un bouton **« + Filtre »** qui ajoute une **puce** parmi six critères combinés en ET : *Statut* (À revoir / Validée / Corrigée), *Groupe*, *Espèce*, *Références*, *Probabilité* (curseur), *Heure* (plage horaire de la nuit). Le tri et les filtres sont **mémorisés** d'une réouverture à l'autre.
-- **Menu ☰** (coin haut-droit) : actions selon la source. Source **passage** : `📥 Importer un CSV Tadarida…` (ou `🔁 Réimporter…`), `📤 Exporter _Vu…`, option *Inclure le mode de validation à l'export*. Source **références** : `📤 Exporter la bibliothèque…`. Toujours : `Colonnes…`, `🔊 Lecture automatique à la sélection`, `🔁 Lecture en boucle`.
+- **Menu ☰** (coin haut-droit) : il regroupe **toutes** les actions secondaires, variables selon la **source**. Ce n'est pas un menu court : il compte une douzaine d'entrées, réparties en groupes.
+    - *Navigation* : `🗺️ Voir sur la carte`, `Fiche de l'espèce`.
+    - *Plateforme Vigie-Chiro* : `📥 Importer depuis Vigie-Chiro…`, `📤 Publier les corrections vers Vigie-Chiro…`, `Ouvrir les données sur Vigie-Chiro`.
+    - *Import / export Tadarida* (source **passage**) : `📥 Importer un CSV Tadarida…` (ou `🔁 Réimporter…`), `📤 Exporter _Vu…` (+ option *Inclure le mode de validation*), `📤 Exporter les observations (CSV)…`. Source **références** : `📤 Exporter la bibliothèque…`.
+    - *Toujours* : `Colonnes…`, `🔊 Lecture automatique à la sélection`, `🔁 Lecture en boucle`.
 - **Table des observations** : une ligne par observation ; colonnes **Fichier**, **Proposition Tadarida** (verrouillée visible), **Proba.**, **Votre taxon** (« - » tant que non revue), **Avis du validateur**, **Fréquence**, **Statut**, **⭐ référence**, **💬 commentaire** (clic = édition en popup), **🗣 fil** (nombre de messages), plus **FME**, **Fréq. terminale**, **Début**, **Durée**, **Votre certitude**, **Certitude du validateur** (masquables). Les colonnes de **contexte** (Date/Heure/Passage/Carré/Point) sont **masquées** quand la source est un passage unique, **affichées** sinon.
 - **Avis du validateur** : le **troisième avis**. Tadarida **propose**, l'observateur **corrige**, et un validateur du MNHN **tranche**. Cette colonne rend visible ce dernier verdict, qui existait déjà dans les données et que l'écran **ignorait** : sans elle, l'application présente la correction de l'observateur comme le dernier mot, alors qu'un expert a pu la réviser. Le **désaccord** est mis en avant (badge rouge, ⚠) ; l'accord est discret (vert, ✓) ; l'absence d'avis se dit (« - pas encore d'avis »).
 - **Cet avis est en lecture seule.** L'observateur **ne peut pas** l'écrire : le serveur refuse (`403`) toute écriture des champs `validateur_*` par un compte `Observateur`. On l'affiche, on en discute - on ne le modifie pas.
@@ -259,7 +263,7 @@ Cet écran **unifie** la validation taxonomique (post-Tadarida) et la bibliothè
 | **Envoyer** (panneau de discussion) | Poste une réponse au validateur. **Définitif** : une confirmation **cite le texte** avant l'envoi |
 | **Double-clic** sur une ligne | Ouvre la **fiche de l'espèce** de la proposition Tadarida dans le navigateur |
 | **Clic droit** sur une ligne | Menu de la ligne : Ouvrir le passage, fiche de l'espèce, `Validation ▸` (valider, corriger, certitude, référence, douteux), `Copier ▸`, `Colonnes…` |
-| Menu **☰ → Importer / Exporter** | Import CSV Tadarida, export `_Vu` (passage), export bibliothèque (références) |
+| Menu **☰** | Actions **plateforme** (importer depuis / publier les corrections vers / ouvrir sur Vigie-Chiro), import CSV Tadarida, exports (`_Vu`, observations CSV, bibliothèque), navigation (carte, fiche espèce), colonnes, lecture |
 | Fil d'Ariane | Remonte selon la source (passage, accueil, espèces, carte) |
 
 ## Variante - source « références » (Sons de référence, ex-bibliothèque)
