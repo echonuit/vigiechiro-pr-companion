@@ -28,11 +28,11 @@ ADAPTATEURS = "fr/univ_amu/iut/commun/view/"
 APPEL = re.compile(r"new Alert\(|\.showAndWait\(\)")
 
 
-def suspects() -> list[str]:
+def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
     # Les commentaires sont retirés d'abord : un `///` qui CITE `Alert.showAndWait()` en expliquant un
     # bug passé n'est pas un appel (faux positif trouvé en clôture). Retrait mutualisé dans _commun.
     trouves = []
-    for source in sorted(SOURCES.rglob("*.java")):
+    for source in sorted(sources.rglob("*.java")):
         if ADAPTATEURS in source.as_posix():
             continue
         lignes = sans_commentaires_java(source.read_text(encoding="utf-8")).splitlines()

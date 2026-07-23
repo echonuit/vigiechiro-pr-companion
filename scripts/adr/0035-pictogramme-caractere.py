@@ -27,11 +27,11 @@ SOURCES = pathlib.Path("src/main/java")
 PICTOGRAMME = re.compile("[\U0001f300-\U0001faff←-⇿☀-➿⬀-⯿]")
 
 
-def suspects() -> list[str]:
+def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
     # Un commentaire est de la prose : le `↔` qui y décrit une barre « à rallonge » est le cas que
     # l'ADR autorise. On le retire donc d'abord (helper mutualisé dans _commun).
     trouves = []
-    for vue in sorted(SOURCES.rglob("*.fxml")):
+    for vue in sorted(sources.rglob("*.fxml")):
         contenu = sans_commentaires_xml(vue.read_text(encoding="utf-8"))
         for numero, ligne in enumerate(contenu.splitlines(), 1):
             for signe in PICTOGRAMME.findall(ligne):

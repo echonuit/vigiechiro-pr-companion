@@ -28,12 +28,12 @@ SOURCES = pathlib.Path("src/main/java")
 CATCH = re.compile(r"catch\s*\([^)]*\)\s*\{([^{}]*)\}", re.S)
 
 
-def suspects() -> list[str]:
+def suspects(sources: pathlib.Path = SOURCES) -> list[str]:
     # Les commentaires sont retirés du fichier ENTIER d'abord (helper mutualisé) : le corps devient
     # vide s'il ne portait qu'un « // ignoré volontairement », et un catch écrit dans un commentaire ne
     # se fait pas prendre pour du code. L'ADR veut une trace observable À L'EXÉCUTION, pas une note.
     trouves = []
-    for source in sorted(SOURCES.rglob("*.java")):
+    for source in sorted(sources.rglob("*.java")):
         texte = sans_commentaires_java(source.read_text(encoding="utf-8"))
         for bloc in CATCH.finditer(texte):
             if not bloc.group(1).strip():
