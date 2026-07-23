@@ -1,0 +1,13 @@
+Passage: réf passage, statut workflow
+Matériel micro: réf déploiement, position, hauteur, type de micro
+Unité de dépôt: réf unité, identifiant, type, statut
+Traitement de participation: réf traitement, état, relevé le
+Ancrage plateforme: entité, référence locale, objectid VigieChiro, verrouillé
+Observation: réf observation, taxon observateur, certitude observateur, taxon validateur
+Message de validation: réf message, rang, auteur, date
+
+Déployer, 01 Passage, 11 Matériel micro
+Téléverser, 0N Passage, 11 Unité de dépôt
+Traiter, 01 Passage, 11 Traitement de participation
+Ancrer, 01 Passage, 11 Ancrage plateforme
+Discuter, 0N Observation, 11 Message de validation

@@ -62,6 +62,13 @@ Le diagramme ci-dessus est **conceptuel** : il ne porte que les entités métier
 | `saved_filter_view`, `column_layout`, `app_setting` | **tables techniques** : vues de filtres, disposition des colonnes, réglages | persistance d'IHM et de préférences, hors modèle métier |
 | `saved_view` | **table morte** : créée en `V01`, remplacée par `saved_filter_view` (`V11`), plus référencée par le code | à retirer |
 
+Les tables **métier** d'intégration se lisent dans ce **diagramme complémentaire**, centré sur le [Passage](C5%20-%20Passage.md) et l'[Observation](C13%20-%20Observation.md) :
+
+<figure markdown="span">
+  ![Extension d'intégration plateforme : matériel micro du passage, unités de dépôt reprenable, traitement de la participation, ancrage plateforme, et fil de discussion des observations](../../assets/diagrammes/modele-integration-plateforme.svg){ width="100%" }
+  <figcaption>Entités d'intégration plateforme, greffées sur le Passage et l'Observation du MCD principal. L'<strong>ancrage plateforme</strong> (<code>vigiechiro_link</code>) est polymorphe : il relie de la même façon un site, un taxon ou un passage à son <code>_id</code> distant. Source <a href="../../assets/diagrammes/modele-integration-plateforme.mcd"><code>modele-integration-plateforme.mcd</code></a>, rendu avec <a href="https://www.mocodo.net/">Mocodo</a>.</figcaption>
+</figure>
+
 ### Autres fiches
 
 - [Cardinalités](Cardinalités.md) - tableau récapitulatif des cardinalités d'association.
