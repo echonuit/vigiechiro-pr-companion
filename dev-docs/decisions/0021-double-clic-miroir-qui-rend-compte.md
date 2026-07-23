@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-18
 - **Chantier** : EPIC #1792 (#1794, #1834, #1837)
+- **Vérification** : humaine — que le double-clic soit le miroir de l'action principale et rende compte de son échec se juge à l'usage, aucun motif ne le voit
 
 ## Contexte
 

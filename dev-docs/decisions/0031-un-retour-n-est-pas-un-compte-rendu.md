@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : EPIC #1990 (#2000)
+- **Vérification** : humaine — distinguer un retour d'opération d'un compte rendu tient au sens du message, non à sa forme
 - **Amende** : [ADR 0023](0023-rendre-compte-bandeau-par-defaut-modal-si-irreversible.md) et [ADR 0028](0028-un-etat-n-est-pas-un-compte-rendu.md), sur le **vocabulaire** ; leurs décisions restent entières.
 
 ## Contexte
