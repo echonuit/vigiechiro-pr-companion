@@ -4,7 +4,7 @@
 > **Persona principal** : [Marie](../Personas/Marie.md), partagée avec [Karim](../Personas/Karim.md). [Samuel](../Personas/Samuel.md) bascule sur [M-MultiSite](M-MultiSite.md) pour sa volumétrie.
 > **Parcours couverts** : [P1 - Déclarer un site de suivi](../Parcours%20utilisateurs/P1%20-%20Déclarer%20un%20site%20de%20suivi.md), [P12 - Récupérer une nuit déposée sur VigieChiro](../Parcours%20utilisateurs/P12%20-%20Récupérer%20une%20nuit%20déposée%20sur%20VigieChiro.md).
 
-L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec pour chacun : le n° de carré, le nom convivial (et la commune), le nombre de points d'écoute, le nombre de passages enregistrés cette saison, et un badge de fraîcheur (date du dernier passage). Un bouton `+ Nouveau site` est toujours visible en haut à droite. Le clic sur une carte ouvre [M-Site-detail](M-Site-detail.md). L'écran est atteint depuis l'accueil ; le **fil d'Ariane** du chrome (`Accueil › Mes sites`) et la **recherche globale** sont posés dans le bandeau.
+L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec pour chacun : le n° de carré, le nom convivial (et la commune), le nombre de points d'écoute, le nombre de passages enregistrés cette saison, et un badge de fraîcheur (date du dernier passage). Deux boutons sont toujours visibles en haut à droite : `+ Nouveau site` et `☁️ Récupérer depuis Vigie-Chiro`, qui **synchronise les sites et points depuis la plateforme** (utile après une réinstallation ou pour un compte déjà rempli côté web). Le clic sur une carte ouvre [M-Site-detail](M-Site-detail.md). L'écran est atteint depuis l'accueil ; le **fil d'Ariane** du chrome (`Accueil › Mes sites`) et la **recherche globale** sont posés dans le bandeau.
 
 ## Maquette principale - utilisateur avec plusieurs sites déclarés
 
@@ -22,6 +22,8 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
     .pagesub { font: 13px sans-serif; fill: #6a737d; }
     .btn-primary { fill: #4a90d9; stroke: #2563a3; stroke-width: 1; }
     .btn-txt { fill: #ffffff; font: 600 13px sans-serif; }
+    .btn-secondary { fill: #ffffff; stroke: #2c3e50; stroke-width: 1; }
+    .btn-txt-dark { fill: #2c3e50; font: 600 13px sans-serif; }
     .card { fill: #ffffff; stroke: #d0d7de; stroke-width: 1; }
     .card-hover { fill: #f6f8fa; stroke: #4a90d9; stroke-width: 1.5; }
     .carre-no { font: 700 20px sans-serif; fill: #2c3e50; }
@@ -55,6 +57,10 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
   <!-- En-tete de page -->
   <text x="40" y="100" class="pagetitle">Mes sites de suivi</text>
   <text x="40" y="122" class="pagesub">3 sites déclarés · 5 passages enregistrés en 2026</text>
+
+  <!-- Bouton secondaire "Recuperer depuis Vigie-Chiro" (synchro des sites, #1045) -->
+  <rect x="724" y="82" width="250" height="40" rx="4" class="btn-secondary"/>
+  <text x="849" y="107" class="btn-txt-dark" text-anchor="middle">☁️ Récupérer depuis Vigie-Chiro</text>
 
   <!-- Bouton primary "+ Nouveau site" -->
   <rect x="990" y="82" width="170" height="40" rx="4" class="btn-primary"/>
@@ -127,6 +133,7 @@ L'écran liste tous les sites de suivi déclarés sous forme de **cartes**, avec
 |---|---|
 | Clic sur une carte | Ouvre [M-Site-detail](M-Site-detail.md) avec le site sélectionné |
 | Bouton **+ Nouveau site** | Ouvre le formulaire de création d'un site (n° de carré, points) |
+| Bouton **☁️ Récupérer depuis Vigie-Chiro** | Synchronise les sites et points depuis la plateforme (rapatrie ceux qui existent côté web) |
 | Champ **🔍 Rechercher** (ou Ctrl+F) | Recherche globale : saute à un site, un point ou un passage ([P8](../Parcours%20utilisateurs/P8%20-%20Rechercher%20globalement.md)) |
 | Fil d'Ariane **Accueil** | Revient à l'accueil (cartes d'activités) |
 

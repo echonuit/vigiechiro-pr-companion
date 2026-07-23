@@ -65,30 +65,36 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
   <text x="40" y="92" class="pagetitle">Carré 640380 - Étang de la Tuilière</text>
   <text x="40" y="114" class="pagesub">📍 Ahetze (64) · Protocole PointFixeStandard</text>
 
-  <!-- Boutons d'action -->
-  <rect x="566" y="74" width="150" height="34" rx="4" class="btn-primary"/>
-  <text x="641" y="96" class="btn-txt" text-anchor="middle">📥 Importer une nuit</text>
-  <rect x="724" y="74" width="150" height="34" rx="4" class="btn-secondary"/>
-  <text x="799" y="96" class="btn-txt-dark" text-anchor="middle">🗺 Voir sur la carte</text>
-  <rect x="882" y="74" width="120" height="34" rx="4" class="btn-secondary"/>
-  <text x="942" y="96" class="btn-txt-dark" text-anchor="middle">✏ Modifier</text>
-  <rect x="1010" y="74" width="120" height="34" rx="4" class="btn-danger"/>
-  <text x="1070" y="96" class="btn-txt-danger" text-anchor="middle">🗑 Supprimer</text>
+  <!-- Boutons d'action (6 controles : 5 boutons + menu colonnes) -->
+  <rect x="470" y="74" width="138" height="34" rx="4" class="btn-primary"/>
+  <text x="539" y="96" class="btn-txt" text-anchor="middle">📥 Importer une nuit</text>
+  <rect x="614" y="74" width="82" height="34" rx="4" class="btn-secondary"/>
+  <text x="655" y="96" class="btn-txt-dark" text-anchor="middle">🗺 Carte</text>
+  <rect x="702" y="74" width="176" height="34" rx="4" class="btn-secondary"/>
+  <text x="790" y="96" class="btn-txt-dark" text-anchor="middle">☁️ Ouvrir sur Vigie-Chiro</text>
+  <rect x="884" y="74" width="98" height="34" rx="4" class="btn-secondary"/>
+  <text x="933" y="96" class="btn-txt-dark" text-anchor="middle">✏ Modifier</text>
+  <rect x="988" y="74" width="104" height="34" rx="4" class="btn-danger"/>
+  <text x="1040" y="96" class="btn-txt-danger" text-anchor="middle">🗑 Supprimer</text>
+  <rect x="1098" y="74" width="40" height="34" rx="4" class="btn-secondary"/>
+  <text x="1118" y="96" class="btn-txt-dark" text-anchor="middle">☰</text>
 
   <!-- Bandeau d'infos cles -->
   <rect x="40" y="132" width="1120" height="60" rx="4" class="info-bar"/>
   <text x="60" y="153" class="info-label">N° DE CARRÉ</text>
   <text x="60" y="177" class="info-value">640380</text>
-  <text x="200" y="153" class="info-label">DÉPARTEMENT</text>
-  <text x="200" y="177" class="info-value">64</text>
-  <text x="320" y="153" class="info-label">PROTOCOLE</text>
-  <text x="320" y="177" class="info-value">PointFixeStandard</text>
-  <text x="560" y="153" class="info-label">CRÉÉ LE</text>
-  <text x="560" y="177" class="info-value">2026-04-12</text>
-  <text x="720" y="153" class="info-label">DERNIÈRE NUIT IMPORTÉE</text>
-  <text x="720" y="177" class="info-value">2026-06-22 (il y a 2 j)</text>
-  <text x="960" y="153" class="info-label">PASSAGES (2026)</text>
-  <text x="960" y="177" class="info-value">4 (dont 1 à vérifier ⚠)</text>
+  <text x="185" y="153" class="info-label">DÉPARTEMENT</text>
+  <text x="185" y="177" class="info-value">64</text>
+  <text x="300" y="153" class="info-label">PROTOCOLE</text>
+  <text x="300" y="177" class="info-value">PointFixeStandard</text>
+  <text x="500" y="153" class="info-label">CRÉÉ LE</text>
+  <text x="500" y="177" class="info-value">2026-04-12</text>
+  <text x="650" y="153" class="info-label">DERNIÈRE NUIT</text>
+  <text x="650" y="177" class="info-value">2026-06-22 (2 j)</text>
+  <text x="830" y="153" class="info-label">PASSAGES (2026)</text>
+  <text x="830" y="177" class="info-value">4 (1 à vérifier ⚠)</text>
+  <text x="1010" y="153" class="info-label">VIGIE-CHIRO</text>
+  <text x="1010" y="177" class="info-value" fill="#1e6f3f">Lié ✓</text>
 
   <!-- Section Points d'ecoute -->
   <text x="40" y="232" class="section-title">Points d'écoute</text>
@@ -187,7 +193,7 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 
 ### Annotations
 
-- **Bandeau d'infos clés** : la fiche d'identité du site (n° de carré, département déduit des 2 premiers chiffres du carré [R1](../Modèle%20conceptuel/Règles%20métier.md#r1), protocole, date de création, dernière nuit importée, total passages de l'année).
+- **Bandeau d'infos clés** : la fiche d'identité du site (n° de carré, département déduit des 2 premiers chiffres du carré [R1](../Modèle%20conceptuel/Règles%20métier.md#r1), protocole, date de création, dernière nuit importée, total passages de l'année, et le **statut Vigie-Chiro** : lié ou non à la plateforme).
 - **Cartes points d'écoute** : pour A1 et B2 (géolocalisés), le lien vert **« GPS - voir sur la carte »**, précédé d'une **icône de validation**, ouvre la carte multi-sites centrée sur le point. Pour C3 (sans GPS), le lien ambré **« GPS manquant - placer sur la carte »**, précédé d'une **icône d'avertissement**, ouvre la carte sur le carré, **mode édition actif**, pour glisser le point à sa position ([R26](../Modèle%20conceptuel/Règles%20métier.md#r26), [R27](../Modèle%20conceptuel/Règles%20métier.md#r27)). Chaque carte indique le nombre de passages rattachés ; une carte qui en porte ne peut pas être supprimée ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)).
 - **Tableau passages** : colonnes Date, Point, N° de passage, Statut, Verdict, Enregistreur, Déposé le. Le **statut** suit le cycle `Importé → Transformé → Vérifié → Prêt à déposer → Déposé` (couleur dérivée du statut).
 
@@ -197,9 +203,11 @@ Cette vue présente **un site et tout ce qui s'y rattache** : sa fiche d'identit
 |---|---|
 | Fil d'Ariane **Mes sites** | Retour à [M-Sites](M-Sites.md) |
 | Bouton **📥 Importer une nuit** | Ouvre [M-Import](M-Import.md) avec le site pré-sélectionné |
-| Bouton **🗺 Voir sur la carte** | Ouvre [M-MultiSite](M-MultiSite.md) centré sur le carré du site |
+| Bouton **🗺 Carte** | Ouvre [M-MultiSite](M-MultiSite.md) centré sur le carré du site |
+| Bouton **☁️ Ouvrir sur Vigie-Chiro** | Ouvre la fiche du site sur le portail web (si le site est lié à la plateforme) |
 | Bouton **✏ Modifier** | Ouvre le formulaire d'édition du site (mêmes champs que la création) |
 | Bouton **🗑 Supprimer** | Désactivé tant que des passages sont rattachés au site ([R28](../Modèle%20conceptuel/Règles%20métier.md#r28)) ; sinon confirmation |
+| Menu **☰** | Choix des colonnes affichées (tableau des points) |
 | Lien **GPS / GPS manquant** d'une carte (icône de validation ou d'avertissement) | Ouvre la carte (voir / placer le point) |
 | **✏ / 🗑** d'une carte de point | Édite le point (modale) / le supprime (bloqué si passages, [R28](../Modèle%20conceptuel/Règles%20métier.md#r28)) |
 | Double-clic sur une ligne du tableau | Ouvre [M-Passage](M-Passage.md) du passage sélectionné |
