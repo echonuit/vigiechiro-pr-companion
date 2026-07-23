@@ -33,6 +33,7 @@ MAINS=(
   "fr.univ_amu.iut.sites.outils.CaptureEcrans"
   "fr.univ_amu.iut.importation.outils.CaptureImport"
   "fr.univ_amu.iut.importation.outils.CaptureConfirmationsImport"
+  "fr.univ_amu.iut.importation.outils.CaptureImportTransformes"
   "fr.univ_amu.iut.qualification.outils.CaptureQualification"
   "fr.univ_amu.iut.passage.outils.CapturePassage"
   "fr.univ_amu.iut.lot.outils.CaptureLot"
