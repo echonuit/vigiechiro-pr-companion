@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : EPIC #1523 (observabilité)
+- **Vérification** : probable — `scripts/adr/0008-echec-silencieux.py` (cliquet : 15)
 
 ## Contexte
 
