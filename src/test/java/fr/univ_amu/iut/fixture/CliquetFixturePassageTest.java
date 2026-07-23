@@ -40,10 +40,16 @@ class CliquetFixturePassageTest {
     /// Surefire s'exécute depuis la racine du projet.
     private static final Path TESTS = Path.of("src", "test", "java");
 
-    /// Les 64 tests qui sèment encore un passage à la main, au 2026-07-15.
+    /// Les 66 tests qui sèment encore un passage à la main, au 2026-07-15.
     ///
     /// **Cette liste ne doit que rétrécir.** Pour en retirer un : basculer son semis sur
     /// [JeuDeDonneesPassage], puis supprimer sa ligne ici.
+    ///
+    /// **Exception assumée : les tests du geste d'import** (`ServiceImportTest`, `ParcoursImporterNuitE2ETest`,
+    /// et depuis #2433 `ServiceImportReferenceTest` / `ActionImportTransformesTest`). Ils ne peuvent pas
+    /// utiliser [JeuDeDonneesPassage] : leur objet est précisément de vérifier que l'import **crée** le
+    /// passage, or `semer()` en pose déjà un - deux passages fausseraient leurs assertions. Ils sèment donc
+    /// le site et le point, puis lisent le passage produit ; leur présence ici n'est pas une dette à migrer.
     private static final List<String> SEMENT_ENCORE_A_LA_MAIN = List.of(
             "fr/univ_amu/iut/audit/model/ServiceAuditCoherenceTest.java",
             "fr/univ_amu/iut/audit/model/ServiceRecuperabiliteTest.java",
@@ -69,7 +75,9 @@ class CliquetFixturePassageTest {
             "fr/univ_amu/iut/e2e/ParcoursValidationExpertE2ETest.java",
             "fr/univ_amu/iut/e2e/ParcoursVerifierEchantillonnageE2ETest.java",
             "fr/univ_amu/iut/e2e/RetourApresVerificationE2ETest.java",
+            "fr/univ_amu/iut/importation/ServiceImportReferenceTest.java",
             "fr/univ_amu/iut/importation/ServiceImportTest.java",
+            "fr/univ_amu/iut/importation/view/ActionImportTransformesTest.java",
             "fr/univ_amu/iut/importation/view/ImportationVueIntegrationTest.java",
             "fr/univ_amu/iut/lot/DepotUniteDaoTest.java",
             "fr/univ_amu/iut/lot/DepotVigieChiroTest.java",
