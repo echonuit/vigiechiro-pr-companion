@@ -111,6 +111,21 @@ muet :
 marquer « douteux », corriger un taxon, changer votre certitude, exporter. Seule l'**écoute** est
 impossible — c'est bien ce qui distingue un passage archivé d'un passage perdu.
 
+## Quand un fichier substitué est signalé
+
+Il y a un cas plus sournois que l'absence : un fichier **est bien là** au chemin attendu, mais ce
+n'est **pas** celui qui a produit les observations. Cela arrive quand un enregistrement en a remplacé
+un autre au même endroit : une redécoupe, une autre nuit du même carré, une sauvegarde restaurée d'une
+autre version. L'écran s'en aperçoit en comparant l'**empreinte** du fichier à celle que la base a
+retenue.
+
+Plutôt que de vous laisser écouter (et valider une espèce sur) un autre enregistrement sans le savoir,
+l'écran **remplace le lecteur par un encart** qui dit pourquoi ce son n'est pas celui attendu et
+comment le retrouver : réactivez le passage depuis le dossier qui contient les bons fichiers. Là encore,
+tout le reste du travail sur les données reste possible.
+
+![À la place du lecteur, un encart signale que le fichier trouvé n'est pas celui qui a produit ces observations : l'écoute est retirée pour ne pas valider une espèce sur un autre enregistrement.](../assets/captures/apercu-sons-validation-substituee.png)
+
 ## Relire et corriger
 
 Pour l'observation sélectionnée, vous pouvez :

@@ -7,6 +7,7 @@ import com.google.inject.Injector;
 import fr.univ_amu.iut.analyse.outils.CaptureAnalyse;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidation;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes;
+import fr.univ_amu.iut.audio.outils.CaptureSonsValidationDivergence;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationFiltres;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationLot;
 import fr.univ_amu.iut.audio.outils.CaptureValidationTadarida;
@@ -100,6 +101,8 @@ class CablageInjecteursCaptureTest {
                         CaptureSonsValidationFiltres::creerInjecteur),
                 Arguments.of("CaptureSonsValidationColonnes", (Supplier<Injector>)
                         CaptureSonsValidationColonnes::creerInjecteur),
+                Arguments.of("CaptureSonsValidationDivergence", (Supplier<Injector>)
+                        CaptureSonsValidationDivergence::creerInjecteur),
                 Arguments.of("CaptureSonsValidationLot", (Supplier<Injector>) CaptureSonsValidationLot::creerInjecteur),
                 Arguments.of(
                         "CaptureValidationTadarida", (Supplier<Injector>) CaptureValidationTadarida::creerInjecteur),
