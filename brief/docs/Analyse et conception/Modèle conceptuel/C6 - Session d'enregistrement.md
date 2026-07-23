@@ -8,6 +8,8 @@ L'agrégat de données produit par un passage : tous les enregistrements origina
 | volume total enregistrements originaux | entier (octets) | calculé | Indicatif (peut atteindre ~40 Go pour une grosse nuit). |
 | volume total séquences d'écoute | entier (octets) | calculé | Typiquement légèrement supérieur aux enregistrements originaux (×10 en durée mais re-échantillonné). |
 
+> **Colonnes vestigiales.** Le schéma porte encore `archived_at` (V24) et `originals_purged_at` (V25), destinées à tracer un archivage et une purge des bruts. Ces gestes ont été **retirés** (ADR 0048 : « l'application observe, elle ne possède pas ») : les deux colonnes ne sont plus **ni lues ni écrites**.
+
 ## Règles applicables
 
 - [R9](Règles%20métier.md#r9) - copie protégée à l'import (aucune écriture sur la SD).

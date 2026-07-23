@@ -8,6 +8,7 @@ Un fichier audio sortant directement de l'enregistreur, après **copie protégé
 | chemin sur disque | texte | obligatoire | Dans le sous-dossier `bruts/` de la session **si les originaux sont conservés** (cf. [R22](Règles%20métier.md#r22)) ; sinon le chemin **sur la carte de l'utilisateur**, qui vaut alors comme **provenance** et non comme emplacement : la carte sera démontée. Aucun parcours de récupération ne s'appuie sur ce chemin - l'identité d'un original se prouve par son empreinte. |
 | durée | décimal (s) | typiquement 2-30 s | Déclenchée par seuil sur l'enregistreur. |
 | échantillonnage | entier (Hz) | 384 000 | Mono 16 bits. |
+| taille | entier (octets) | optionnelle | `size_bytes` : pré-contrôle rapide avant le hachage complet, pour la preuve d'identité à la réactivation. |
 | empreinte SHA-256 | hex | optionnelle | Si l'on veut garantir l'intégrité bit-à-bit dans le temps. |
 
 ## Règles applicables

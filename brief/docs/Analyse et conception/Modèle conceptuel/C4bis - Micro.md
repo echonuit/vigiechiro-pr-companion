@@ -8,6 +8,8 @@ Le **micro** monté sur le Passive Recorder est l'élément clé de la **qualit�
 | bande passante | texte | optionnel | Plage utile, ex. `8-150 kHz`. |
 | sensibilité | texte | optionnel | Caractéristique constructeur, ex. `-42 dBV/Pa @ 1 kHz`. |
 | date de mise en service | date | optionnel | Suit la vie matérielle du micro (utile pour repérer une dérive après remplacement). |
+| date de retrait | date | optionnel | Fin de service du micro (`decommissioned_at`), typiquement après un remplacement. |
+| actif | booléen | par défaut `true` | Micro actuellement monté (`is_active`). La table **historise** les micros : un seul `actif` par enregistreur, les précédents sont conservés avec leur date de retrait. |
 | commentaire libre | texte | optionnel | Provenance, intervention, défaut connu. |
 
 ## Voisins dans le modèle
