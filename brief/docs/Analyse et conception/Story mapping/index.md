@@ -1,8 +1,11 @@
 # Story mapping
 
 Les [parcours utilisateurs](../Parcours%20utilisateurs/index.md) sont décomposés en **9 épopées**,
-chacune contenant **2 à 8 stories**. Toutes les épopées E1 à E8 ont été livrées, et complétées par des
-écrans non prévus initialement (recherche globale, inventaire « Espèces & observations »). Les écrans
+chacune contenant **2 à 8 stories**. La plupart des stories sont livrées, et le produit a été complété
+par des écrans non prévus initialement (recherche globale, inventaire « Espèces & observations »).
+**Certaines stories restent cependant des cibles non livrées ou partiellement livrées** et portent une
+note en tête de fiche (non livrées : E1.S5, E5.S1, E5.S4, E5.S5, E6.S4, E6.S6, E8.S1 ; partielles :
+E6.S2, E6.S5, E8.S2). Les écrans
 réels sont décrits dans les [Maquettes](../Maquettes/index.md) et les
 [Parcours utilisateurs](../Parcours%20utilisateurs/index.md) ; cette page en donne la **décomposition
 fonctionnelle**, feature par feature.

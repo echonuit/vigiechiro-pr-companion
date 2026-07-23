@@ -10,6 +10,9 @@
 
 ## E5.S1 - Vue arborescente des sites avec compteurs de passages par point { #e5s1 }
 
+!!! warning "Non livré (cible)"
+    L'application n'a **pas** de vue arborescente (aucun `TreeView` dans le code) : le volume multi-sites se parcourt par la **vue tabulaire** ([E5.S2](#e5s2)), livrée. Les critères ci-dessous décrivent la cible.
+
 **En tant que** [Karim](../Personas/Karim.md)
 
 **Je veux** voir tous mes sites de suivi sous forme d'arbre où chaque site se déplie en points d'écoute, et chaque point affiche le nombre de passages cette saison + l'état du dernier passage
@@ -86,6 +89,9 @@
 
 ## E5.S4 - Actions de masse sur une sélection de passages { #e5s4 }
 
+!!! warning "Non livré (cible)"
+    Il n'existe ni sélection multiple de passages, ni actions de masse (verdict ou suppression en lot, saisie de « SUPPRIMER », journal d'opérations). La seule multi-sélection du code sert la **revue d'observations audio** ([E7](E7%20-%20Valider%20les%20résultats%20Tadarida.md)), pas cette story : suppression et verdict restent **unitaires**.
+
 **En tant que** [Samuel](../Personas/Samuel.md)
 
 **Je veux** pouvoir sélectionner plusieurs passages dans la vue tabulaire et leur appliquer une action commune (changer le verdict, supprimer, exporter)
@@ -109,6 +115,9 @@
 ---
 
 ## E5.S5 - Import groupé de plusieurs dossiers SD à la suite { #e5s5 }
+
+!!! warning "Non livré (cible)"
+    Pas de file d'attente d'import persistée ni de panneau « File d'attente ». Ce qui existe : une reprise **idempotente fichier par fichier** au **relancement manuel** (#231), sans mise en file ni notification au démarrage. Dépend de [E0.S6](E0%20-%20Fondations%20de%20persistance.md#e0s6), également non livrée.
 
 **En tant que** [Karim](../Personas/Karim.md) (qui revient d'une semaine de terrain avec 5 cartes SD)
 
