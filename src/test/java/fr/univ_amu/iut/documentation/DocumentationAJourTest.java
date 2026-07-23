@@ -775,4 +775,172 @@ class DocumentationAJourTest {
         }
         return fichiers;
     }
+
+    // #2386 - Unicité des règles métier et statut réel des ADR.
+
+    private static final Path REGLES =
+            Path.of("brief", "docs", "Analyse et conception", "Modèle conceptuel", "Règles métier.md");
+
+    /// Racine du brief : les renvois `[Rn](#rn)` à contrôler y vivent.
+    private static final Path BRIEF = Path.of("brief");
+
+    /// Une définition de règle : `**Rn**{ #rn }`. Le numéro en gras (1) doit égaler celui de l'ancre (2).
+    private static final Pattern DEFINITION_REGLE = Pattern.compile("\\*\\*R(\\d+)\\*\\*\\s*\\{\\s*#r(\\d+)\\s*\\}");
+
+    /// La cible d'ancre d'un lien Markdown vers une règle : `](…#rn)`.
+    private static final Pattern RENVOI_REGLE = Pattern.compile("\\]\\([^#)]*#r(\\d+)\\)");
+
+    /// Le corps d'un en-tête d'ADR déclarant qu'elle amende ou remplace une autre décision.
+    private static final Pattern RELATION_AMENDE =
+            Pattern.compile("^-\\s*\\*\\*(?:Amende|Amendée|Remplace|Remplacée)\\*\\*\\s*:\\s*(.+)$", Pattern.MULTILINE);
+
+    /// La ligne « Statut » d'une ADR.
+    private static final Pattern STATUT_ADR =
+            Pattern.compile("^-\\s*\\*\\*Statut\\*\\*\\s*:\\s*(.+)$", Pattern.MULTILINE);
+
+    /// Un numéro d'ADR (au moins 4 chiffres) cité dans un texte : `ADR 0048`.
+    private static final Pattern NUMERO_ADR_CITE = Pattern.compile("ADR\\s*(\\d{4,})");
+
+    /// Le premier mot d'un statut d'ADR (une suite de lettres, accents compris).
+    private static final Pattern PREMIER_MOT = Pattern.compile("^\\s*(\\p{L}+)");
+
+    /// Le vocabulaire attendu pour le premier mot d'un statut d'ADR.
+    private static final Set<String> VOCABULAIRE_STATUT =
+            Set.of("Accepté", "Proposé", "Rejeté", "Remplacé", "Déprécié");
+
+    @Test
+    @DisplayName("#2386 : chaque règle métier est définie une fois, gras et ancre concordent, sans trou")
+    void chaque_regle_metier_est_unique_et_bien_ancree() {
+        String texte = lire(REGLES);
+        SoftAssertions verifs = new SoftAssertions();
+        TreeMap<Integer, Integer> occurrences = new TreeMap<>();
+        Matcher def = DEFINITION_REGLE.matcher(texte);
+        while (def.find()) {
+            int enGras = Integer.parseInt(def.group(1));
+            int ancre = Integer.parseInt(def.group(2));
+            verifs.assertThat(ancre)
+                    .as(
+                            "Règle **R%d** : son ancre est #r%d ; le numéro en gras et l'ancre doivent concorder",
+                            enGras, ancre)
+                    .isEqualTo(enGras);
+            occurrences.merge(enGras, 1, Integer::sum);
+        }
+        List<Integer> doublons = occurrences.entrySet().stream()
+                .filter(entree -> entree.getValue() > 1)
+                .map(Map.Entry::getKey)
+                .toList();
+        verifs.assertThat(doublons)
+                .as("Numéros de règle définis plus d'une fois dans %s : l'ancre #rn devient ambiguë", REGLES)
+                .isEmpty();
+        int max = occurrences.isEmpty() ? 0 : occurrences.lastKey();
+        List<Integer> manquants = new ArrayList<>();
+        for (int n = 1; n <= max; n++) {
+            if (!occurrences.containsKey(n)) {
+                manquants.add(n);
+            }
+        }
+        verifs.assertThat(manquants)
+                .as(
+                        "Numéros de règle absents entre R1 et R%d : la numérotation saute sans que le trou soit"
+                                + " déclaré (renuméroter, ou documenter le trou comme le fait le compteur d'ADR).",
+                        max)
+                .isEmpty();
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#2386 : chaque renvoi [Rn](#rn) du brief pointe vers une règle qui existe")
+    void chaque_renvoi_de_regle_pointe_vers_une_regle_existante() throws IOException {
+        Set<Integer> definies = new TreeSet<>();
+        Matcher def = DEFINITION_REGLE.matcher(lire(REGLES));
+        while (def.find()) {
+            definies.add(Integer.parseInt(def.group(1)));
+        }
+        SoftAssertions verifs = new SoftAssertions();
+        for (Path page : fichiersMarkdownDe(BRIEF)) {
+            Matcher renvoi = RENVOI_REGLE.matcher(lire(page));
+            while (renvoi.find()) {
+                int cible = Integer.parseInt(renvoi.group(1));
+                verifs.assertThat(definies)
+                        .as("%s renvoie vers #r%d, mais aucune règle ne porte ce numéro dans %s", page, cible, REGLES)
+                        .contains(cible);
+            }
+        }
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#2386 : toute ADR déclarée « Amende X » impose que X porte la mention réciproque")
+    void toute_adr_amendee_porte_la_mention_reciproque() {
+        Map<String, String> statutParNumero = new TreeMap<>();
+        Map<String, String> texteParNumero = new TreeMap<>();
+        for (String fichier : fichiersAdr()) {
+            Matcher num = FICHIER_ADR.matcher(fichier);
+            if (!num.matches()) {
+                continue;
+            }
+            String texte = lire(DECISIONS.resolve(fichier));
+            texteParNumero.put(num.group(1), texte);
+            Matcher st = STATUT_ADR.matcher(texte);
+            statutParNumero.put(num.group(1), st.find() ? st.group(1) : "");
+        }
+        SoftAssertions verifs = new SoftAssertions();
+        for (Map.Entry<String, String> entree : texteParNumero.entrySet()) {
+            String amendeur = entree.getKey();
+            Matcher rel = RELATION_AMENDE.matcher(entree.getValue());
+            while (rel.find()) {
+                Matcher cite = NUMERO_ADR_CITE.matcher(rel.group(1));
+                while (cite.find()) {
+                    String amende = cite.group(1);
+                    String statut = statutParNumero.getOrDefault(amende, "").replace("*", "");
+                    verifs.assertThat(mentionneAmendementPar(statut, amendeur))
+                            .as(
+                                    "ADR %s déclare « Amende ADR %s », mais le statut de l'ADR %s ne porte pas la"
+                                            + " mention réciproque « amendé par [ADR %s] ».",
+                                    amendeur, amende, amende, amendeur)
+                            .isTrue();
+                }
+            }
+        }
+        verifs.assertAll();
+    }
+
+    @Test
+    @DisplayName("#2386 : le premier mot du statut d'une ADR appartient au vocabulaire attendu")
+    void le_statut_d_une_adr_est_du_vocabulaire_attendu() {
+        SoftAssertions verifs = new SoftAssertions();
+        for (String fichier : fichiersAdr()) {
+            Matcher st = STATUT_ADR.matcher(lire(DECISIONS.resolve(fichier)));
+            String premierMot = "";
+            if (st.find()) {
+                Matcher mot = PREMIER_MOT.matcher(st.group(1).replace("*", ""));
+                if (mot.find()) {
+                    premierMot = mot.group(1);
+                }
+            }
+            verifs.assertThat(VOCABULAIRE_STATUT)
+                    .as(
+                            "%s : statut de premier mot « %s », hors du vocabulaire %s",
+                            fichier, premierMot, VOCABULAIRE_STATUT)
+                    .contains(premierMot);
+        }
+        verifs.assertAll();
+    }
+
+    /// Vrai si un statut (débarrassé du gras Markdown) dit « amendé/remplacé/renversé par … ADR &lt;numéro&gt; ».
+    private static boolean mentionneAmendementPar(String statutSansGras, String numeroAmendeur) {
+        return Pattern.compile("(?i)(?:amend|remplac|renvers)\\p{L}*\\s+par\\b.*\\bADR\\s*" + numeroAmendeur + "\\b")
+                .matcher(statutSansGras)
+                .find();
+    }
+
+    /// Tous les fichiers Markdown d'une racine, triés.
+    private static List<Path> fichiersMarkdownDe(Path racine) throws IOException {
+        try (Stream<Path> flux = Files.walk(racine)) {
+            return flux.filter(Files::isRegularFile)
+                    .filter(chemin -> chemin.getFileName().toString().endsWith(".md"))
+                    .sorted()
+                    .toList();
+        }
+    }
 }
