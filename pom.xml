@@ -1009,6 +1009,16 @@
                                 <param>XML</param>
                             </outputFormats>
                             <timestampedReports>false</timestampedReports>
+                            <!-- PIT hérite de l'argLine de surefire, mais PAS de ses systemPropertyVariables :
+                                 sans ces quatre propriétés, le minion démarre JavaFX hors headless, TestFX
+                                 échoue, et PIT abandonne (« requires a green suite »). Une classe de vue
+                                 devenait ainsi impossible à mutation-tester. Reproduit ici pour le minion. -->
+                            <jvmArgs>
+                                <jvmArg>-Dglass.platform=Headless</jvmArg>
+                                <jvmArg>-Dprism.order=sw</jvmArg>
+                                <jvmArg>-Djava.awt.headless=true</jvmArg>
+                                <jvmArg>-Dtestfx.robot=glass</jvmArg>
+                            </jvmArgs>
                         </configuration>
                         <dependencies>
                             <dependency>

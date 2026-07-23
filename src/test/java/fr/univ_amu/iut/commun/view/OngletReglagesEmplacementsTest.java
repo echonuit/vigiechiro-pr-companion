@@ -72,9 +72,156 @@ class OngletReglagesEmplacementsTest {
         assertThat(ecrit.base())
                 .as("la base est nommée dans le dossier choisi")
                 .isEqualTo(coffre.resolve("vigiechiro.db").toAbsolutePath());
-        assertThat(surFx(() -> avis(racine).isVisible()))
-                .as("l'avis de redémarrage apparaît une fois le choix appliqué")
+        assertThat(surFx(() -> avis(racine).isVisible() && avis(racine).isManaged()))
+                .as("l'avis de redémarrage apparaît (visible ET pris en compte dans la mise en page)")
                 .isTrue();
+        assertThat(surFx(() -> textes(racine, "emplacements-chemin")))
+                .as("le chemin affiché suit le dossier choisi")
+                .contains(travail.toString(), coffre.toString());
+    }
+
+    @Test
+    @DisplayName("Réinitialiser efface le choix, rétablit les défauts, désactive son bouton et montre l'avis")
+    void reinitialiser_efface_le_choix() throws Exception {
+        // On part d'une configuration personnalisée : le service l'écrit d'abord.
+        Path travail = choix.resolve("nuits");
+        new ServiceEmplacements().enregistrer(travail, choix.resolve("coffre"));
+        OngletReglagesEmplacements onglet =
+                onglet(selecteurQuiRepond(travail, choix.resolve("coffre")), notificateurQuiCapture(), () -> {});
+
+        Region racine = construire(onglet);
+        Button reinitialiser = bouton(racine, "emplacements-reinitialiser");
+        assertThat(surFx(reinitialiser::isDisabled))
+                .as("le bouton est actif quand une configuration existe")
+                .isFalse();
+
+        surFx(reinitialiser::fire);
+
+        assertThat(new ServiceEmplacements().emplacementsCourants().personnalise())
+                .as("la configuration a été effacée")
+                .isFalse();
+        assertThat(surFx(reinitialiser::isDisabled))
+                .as("le bouton se désactive une fois les défauts rétablis")
+                .isTrue();
+        assertThat(surFx(() -> avis(racine).isVisible()))
+                .as("réinitialiser prend effet au prochain démarrage, l'avis le dit")
+                .isTrue();
+        assertThat(surFx(() -> textes(racine, "emplacements-chemin")))
+                .as("les DEUX chemins affichés repassent au défaut, aucun ne reste figé sur l'ancien choix")
+                .contains(new ServiceEmplacements()
+                        .emplacementsCourants()
+                        .espaceDeTravail()
+                        .toString())
+                .doesNotContain(travail.toString(), choix.resolve("coffre").toString());
+    }
+
+    @Test
+    @DisplayName("Une réinitialisation impossible est signalée, pas avalée")
+    void reinitialisation_impossible_est_signalee() throws Exception {
+        // Bouton actif : une configuration existe d'abord.
+        Path travail = choix.resolve("nuits");
+        new ServiceEmplacements().enregistrer(travail, choix.resolve("coffre"));
+        List<String> alertes = new ArrayList<>();
+        OngletReglagesEmplacements onglet = onglet(
+                selecteurQuiRepond(travail, choix.resolve("coffre")),
+                (niveau, entete, message) -> alertes.add(entete),
+                () -> {});
+        Region racine = construire(onglet);
+
+        // On rend l'écriture impossible en pointant la config SOUS un fichier (dossier non créable),
+        // le déclencheur fiable de `sonde_non_creable`. `reinitialiser` doit alors échouer à écrire.
+        Path obstacle = java.nio.file.Files.createFile(choix.resolve("obstacle"));
+        System.setProperty(PROP_CONFIG, obstacle.resolve("sous").toString());
+
+        surFx(() -> bouton(racine, "emplacements-reinitialiser").fire());
+
+        assertThat(alertes)
+                .as("l'échec de réinitialisation est dit, jamais silencieux")
+                .containsExactly("Réinitialisation impossible");
+    }
+
+    @Test
+    @DisplayName("Le formulaire est construit une seule fois : le même nœud est rendu à chaque appel")
+    void formulaire_mis_en_cache() {
+        OngletReglagesEmplacements onglet =
+                onglet(selecteurQuiRepond(choix.resolve("a"), choix.resolve("b")), notificateurQuiCapture(), () -> {});
+
+        Node premier = surFx(onglet::formulairePersonnalise);
+        Node second = surFx(onglet::formulairePersonnalise);
+
+        assertThat(second)
+                .as("rendu deux fois, l'onglet ne reconstruit pas son nœud (état du choix préservé)")
+                .isSameAs(premier);
+    }
+
+    @Test
+    @DisplayName("Sans configuration, le bouton « Rétablir les défauts » est désactivé")
+    void bouton_reinitialiser_desactive_sans_configuration() {
+        OngletReglagesEmplacements onglet =
+                onglet(selecteurQuiRepond(choix.resolve("a"), choix.resolve("b")), notificateurQuiCapture(), () -> {});
+
+        Region racine = construire(onglet);
+
+        assertThat(surFx(() -> bouton(racine, "emplacements-reinitialiser").isDisabled()))
+                .as("rien à rétablir tant qu'aucun emplacement n'est personnalisé")
+                .isTrue();
+        assertThat(surFx(() -> avis(racine).isVisible() || avis(racine).isManaged()))
+                .as("à l'ouverture, aucun avis de redémarrage : rien n'a encore été appliqué")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("Choisir un nouveau dossier après avoir appliqué masque l'avis de redémarrage")
+    void choisir_apres_appliquer_masque_l_avis() {
+        Path travail = choix.resolve("nuits");
+        OngletReglagesEmplacements onglet =
+                onglet(selecteurQuiRepond(travail, choix.resolve("coffre")), notificateurQuiCapture(), () -> {});
+
+        Region racine = construire(onglet);
+        surFx(() -> bouton(racine, "emplacements-appliquer").fire());
+        assertThat(surFx(() -> avis(racine).isVisible())).isTrue();
+
+        // Un nouveau choix invalide l'avis : ce qui est affiché ne correspond plus à ce qui est écrit.
+        surFx(() -> bouton(racine, "emplacements-choisir").fire());
+
+        assertThat(surFx(() -> avis(racine).isVisible() || avis(racine).isManaged()))
+                .as("l'avis disparaît dès qu'un nouveau dossier est choisi")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("Un enregistrement impossible est signalé, pas avalé")
+    void enregistrement_impossible_est_signale() throws Exception {
+        // On pointe la configuration vers un FICHIER : `enregistrerDans` échoue à créer le dossier.
+        Path fichierConfig = java.nio.file.Files.createFile(choix.resolve("config-est-un-fichier"));
+        System.setProperty(PROP_CONFIG, fichierConfig.toString());
+        List<String> alertes = new ArrayList<>();
+        OngletReglagesEmplacements onglet = onglet(
+                selecteurQuiRepond(choix.resolve("a"), choix.resolve("b")),
+                (niveau, entete, message) -> alertes.add(entete),
+                () -> {});
+
+        Region racine = construire(onglet);
+        surFx(() -> bouton(racine, "emplacements-appliquer").fire());
+
+        assertThat(alertes)
+                .as("l'échec d'écriture est dit à l'utilisateur, jamais silencieux")
+                .containsExactly("Enregistrement impossible");
+        assertThat(surFx(() -> avis(racine).isVisible()))
+                .as("pas d'avis de redémarrage quand rien n'a été écrit")
+                .isFalse();
+    }
+
+    @Test
+    @DisplayName("L'onglet se déclare : identité, titre, rang, icône")
+    void metadonnees_de_l_onglet() {
+        OngletReglagesEmplacements onglet =
+                onglet(selecteurQuiRepond(choix.resolve("a"), choix.resolve("b")), notificateurQuiCapture(), () -> {});
+
+        assertThat(onglet.idFeature()).isEqualTo("emplacements");
+        assertThat(onglet.titre()).isEqualTo("Emplacements");
+        assertThat(onglet.ordre()).isEqualTo(15);
+        assertThat(onglet.iconeLiteral()).isEqualTo("fas-folder-open");
     }
 
     @Test
@@ -171,6 +318,14 @@ class OngletReglagesEmplacementsTest {
 
     private static Button bouton(Region racine, String classe) {
         return (Button) racine.lookup("." + classe);
+    }
+
+    private static List<String> textes(Region racine, String classe) {
+        return racine.lookupAll("." + classe).stream()
+                .filter(javafx.scene.control.Label.class::isInstance)
+                .map(javafx.scene.control.Label.class::cast)
+                .map(javafx.scene.control.Label::getText)
+                .toList();
     }
 
     private static Node avis(Region racine) {
