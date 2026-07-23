@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-18
 - **Chantier** : #1838 (amende [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md))
+- **Vérification** : humaine — l'acquisition de l'ancrage au moment où il sert est une règle temporelle du déroulé, pas un invariant statique
 
 ## Contexte
 

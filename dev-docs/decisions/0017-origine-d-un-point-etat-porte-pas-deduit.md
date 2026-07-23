@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-17
 - **Chantier** : EPIC #1662 (#1738)
+- **Vérification** : humaine — que l'origine d'un point soit portée (drapeau) et non déduite est un comportement de vue ; le champ seul ne prouve pas la règle
 
 ## Contexte
 

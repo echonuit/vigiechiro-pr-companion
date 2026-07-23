@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : EPIC #720 (intégration API VigieChiro)
+- **Vérification** : humaine — l'ancrage explicite du passage à sa participation est un comportement de dépôt ; sa présence structurelle ne capture pas la décision
 
 ## Contexte
 

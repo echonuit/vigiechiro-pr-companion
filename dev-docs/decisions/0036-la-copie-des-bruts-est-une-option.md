@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-20
 - **Chantier** : EPIC #2061 (lots #2062 à #2064)
+- **Vérification** : humaine — la copie des bruts comme option non par défaut est un arbitrage produit, vérifié en revue et par les tests d'import
 
 ## Contexte
 

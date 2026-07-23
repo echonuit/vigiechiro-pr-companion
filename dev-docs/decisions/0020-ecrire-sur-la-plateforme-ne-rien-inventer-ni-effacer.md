@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-18
 - **Chantier** : #1828, #1844 (suites de l'EPIC #1662)
+- **Vérification** : humaine — les trois règles d'écriture serveur (ne rien inventer ni effacer) portent sur la sémantique des requêtes, jugée en revue
 
 ## Contexte
 

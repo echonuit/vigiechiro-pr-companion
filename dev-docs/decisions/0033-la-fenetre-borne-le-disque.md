@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
+- **Vérification** : humaine — la fenêtre bornée et les deux seuils disque sont un choix d'architecture du dépôt, non réductible à un motif observable
 
 ## Contexte
 

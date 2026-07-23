@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
+- **Vérification** : humaine — que le plan de dépôt précède l'écriture des archives est un ordonnancement du moteur, vérifié par ses tests, pas par un motif
 
 ## Contexte
 

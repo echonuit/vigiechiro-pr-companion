@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-17, **amendé** par [ADR 0018](0018-la-synchro-rapatrie-l-identite-de-la-nuit.md) (#1814) et [ADR 0019](0019-ancrage-acquis-quand-il-sert.md) (#1838)
 - **Chantier** : EPIC #1662 (refonte de la récupération d'une nuit)
+- **Vérification** : humaine — le rapatriement en squelettes hydratés à la demande est un comportement de synchro, non observable par un motif statique
 
 > [!NOTE]
 > **Amendement (ADR 0018)** : le squelette n'est plus « sans aucun appel de détail par nuit ». La synchro

@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : EPIC #1297 (passage archivé) ; cascade #1309, empreinte #1299
+- **Vérification** : certaine — `DecisionsRespecteesTest#archive_n_est_pas_un_statut_de_workflow`
 
 ## Contexte
 

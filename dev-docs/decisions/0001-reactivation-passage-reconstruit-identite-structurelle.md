@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-17
 - **Chantier** : EPIC #1653 (réactiver un passage reconstruit depuis les bruts)
+- **Vérification** : humaine — l'identité d'une tranche reconstruite (régénération structurelle vs empreinte) est une règle de reconstruction, vérifiée en revue et par les tests de réactivation
 
 ## Contexte
 

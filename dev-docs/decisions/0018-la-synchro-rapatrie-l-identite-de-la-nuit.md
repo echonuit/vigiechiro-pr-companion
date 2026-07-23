@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-18
 - **Chantier** : #1814 (suite de l'EPIC #1662)
+- **Vérification** : humaine — que la synchro pose l'identité réelle de la nuit relève du déroulé réseau, vérifié par les tests de synchro
 - **Amende** : [ADR 0016](0016-synchro-rapatrie-des-squelettes-hydrates-a-la-demande.md)
 
 ## Contexte

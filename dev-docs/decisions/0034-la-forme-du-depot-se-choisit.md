@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
+- **Vérification** : humaine — que la forme du dépôt se choisisse (réglage) plutôt qu'elle ne se déduise de la place est une règle de comportement
 
 ## Contexte
 

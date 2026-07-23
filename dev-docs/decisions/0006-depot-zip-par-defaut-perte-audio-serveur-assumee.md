@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — rétroactif
 - **Chantier** : spike #984 (ZIP vs WAV) ; EPIC #1297 (décision produit)
+- **Vérification** : humaine — le ZIP comme mode par défaut et la perte assumée de l'audio serveur sont un arbitrage produit, non un invariant du code
 
 ## Contexte
 

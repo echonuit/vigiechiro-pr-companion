@@ -3,11 +3,13 @@ package fr.univ_amu.iut.documentation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -168,6 +170,23 @@ class DecisionsRespecteesTest {
             prolonge.add(suivant);
             chercherCycle(arcs, suivant, prolonge, cycles);
         }
+    }
+
+    @Test
+    @DisplayName("ADR 0005 : « archivé » n'est pas un statut de workflow, StatutWorkflow ne le porte pas")
+    void archive_n_est_pas_un_statut_de_workflow() {
+        // StatutWorkflow est une progression MONOTONE qui se termine à DEPOSE. « Archivé » est un état
+        // OBSERVÉ (le passage a disparu de la plateforme), vérifié par une cascade de preuves - pas une
+        // étape de plus dans l'énum. Ajouter ARCHIVE ici ferait croire à un statut qui progresse, alors
+        // que rien ne « progresse » vers l'archivage : c'est un constat, pas une transition.
+        List<String> valeurs =
+                Arrays.stream(StatutWorkflow.values()).map(Enum::name).toList();
+
+        assertThat(valeurs)
+                .as("StatutWorkflow ne doit contenir aucune valeur évoquant l'archivage : l'ADR 0005 pose "
+                        + "que « archivé » est un état observé, pas un statut de workflow. Une telle valeur "
+                        + "réintroduirait précisément la confusion que la décision a écartée.")
+                .noneMatch(nom -> nom.contains("ARCHIV"));
     }
 
     private static String lire(Path fichier) {
