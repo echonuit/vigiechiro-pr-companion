@@ -18,7 +18,7 @@ Il est conçu pour être lu en ligne. Les sections principales :
 
 ## 📦 Jeux de données
 
-- 🟢 **Échantillon d'une nuit de capture** : jeu de données réduit (audio + observations complètes) versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit). Disponible immédiatement après `git clone`, suffisant pour développer et tester la chaîne fil rouge.
+- 🟢 **Échantillon d'une nuit de capture** : jeu de données réduit (audio + observations complètes) versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/echonuit/vigiechiro-pr-companion-exemple-nuit). Disponible immédiatement après `git clone`, suffisant pour développer et tester la chaîne fil rouge.
 - 🔵 **Jeu complet** (~4,2 Go compressés / ~11 Go décompressés) archivé sur Zenodo, DOI [10.5281/zenodo.20492247](https://doi.org/10.5281/zenodo.20492247), à décompresser dans le dossier `data/` du projet (ignoré par git). C'est lui qui permet de valider les objectifs de volumétrie ([O3](https://brief.echonuit.fr/Objectifs%20qualit%C3%A9s/Objectifs%20qualit%C3%A9s/O3/), [O5](https://brief.echonuit.fr/Objectifs%20qualit%C3%A9s/Objectifs%20qualit%C3%A9s/O5/)).
 
 ## 🔗 Les autres sites du projet

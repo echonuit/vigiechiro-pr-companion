@@ -109,7 +109,7 @@ concentrer le développement sur la chaîne métier :
   de plusieurs To).
 - Les **CSV d'observations** suivent le format produit par Tadarida : séparateur point-virgule, champs
   entre guillemets quand nécessaire, encodage UTF-8 (cf. exemples dans
-  [`transformes/`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit/tree/main/transformes)
+  [`transformes/`](https://github.com/echonuit/vigiechiro-pr-companion-exemple-nuit/tree/main/transformes)
   du dépôt d'échantillon). Sur une séquence (5 s réelles ralenties ×10), Tadarida peut produire **plusieurs
   lignes** (une par espèce distincte identifiée), avec un *timing* début/fin précis dans la séquence,
   exprimé en **secondes réelles** à l'intérieur de la tranche de 5 s.

@@ -4,7 +4,7 @@
 
 **Portée** : tout le travail base de données (schéma SQLite, DAO, persistance des entités cœur, mécanismes de reprise sur erreur). Cette épopée n'est rattachée à **aucun parcours** spécifique car elle **sert toutes les autres épopées** : sans elle, aucune story métier n'est livrable.
 
-**Justification du regroupement** : la couche de persistance (JDBC + SQLite, cf. [Contraintes techniques](../../Contraintes%20techniques.md)) est un livrable technique imposé par le brief. La regrouper comme épopée identifiée la rend visible, arbitrable, et donne un point d'entrée clair pour la partie persistance de l'application.
+**Justification du regroupement** : la couche de persistance (JDBC + SQLite, cf. [Contraintes techniques](../../Contraintes%20techniques.md)) est un **socle technique transverse**. La regrouper comme épopée identifiée la rend visible, arbitrable, et donne un point d'entrée clair pour la partie persistance de l'application.
 
 ## E0.S1 - Initialiser le schéma SQLite et les DAO génériques { #e0s1 }
 

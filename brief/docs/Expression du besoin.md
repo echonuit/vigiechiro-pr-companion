@@ -10,7 +10,7 @@ Plusieurs scripts ad hoc circulent dans la communauté (Python, R), et il existe
 
 Un jeu de données réel issu d'une session d'enregistrement nocturne (PR n° 1925492, nuit du 22 au 23 avril 2026, point fixe en zone Z1 de la carrée 640380 du protocole Vigie-Chiro Carré) est fourni comme jeu de test de référence. Il existe en deux variantes :
 
-- **Échantillon** versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit) : sous-ensemble représentatif (audio réduit, observations complètes sur tous les taxa principaux). Disponible immédiatement après `git clone` de ce dépôt.
+- **Échantillon** versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/echonuit/vigiechiro-pr-companion-exemple-nuit) : sous-ensemble représentatif (audio réduit, observations complètes sur tous les taxa principaux). Disponible immédiatement après `git clone` de ce dépôt.
 - **`data/`** (~4,2 Go zippés / ~11 Go décompressés, à télécharger depuis Zenodo, gitignored) : full dataset (1572 WAV bruts + 2109 WAV redécoupés + 4031 observations). Nécessaire pour valider la volumétrie. Cf. l'[accueil](index.md#donnees-dexemple-fournies).
 
 Le tableau ci-dessous décrit la structure du **full dataset**, conforme à [R22](Analyse%20et%20conception/Modèle%20conceptuel/Règles%20métier.md#r22) ; l'échantillon suit la même arborescence avec un sous-ensemble des fichiers audio.

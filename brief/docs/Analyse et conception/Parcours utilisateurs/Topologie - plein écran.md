@@ -56,6 +56,8 @@ flowchart LR
 | 🟧 Orange (SHOULD) | Approfondissements qui montent en charge ou ouvrent la cible étirable | P5, P6, P7 |
 | ⬜ Gris (COULD) | Cibles étirées et idées long terme issues des retours Samuel | P9, P10 |
 
+> Ce coloriage est la **priorité de conception** (MoSCoW), fixée au cadrage initial. Il ne dit **pas** le statut de livraison : la plupart de ces parcours sont **livrés** aujourd'hui (cf. le [sommaire des parcours](index.md)), à l'exception de **P9** (regroupement de nuits), qui reste une cible non livrée.
+
 ## Comment lire le diagramme
 
 - Les **flèches pleines** sont les enchaînements directs entre parcours.

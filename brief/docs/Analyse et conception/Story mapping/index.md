@@ -40,7 +40,7 @@ Deux capacités sont **livrées** mais ne se décrivent pas comme un parcours ut
 
 ## Convention des liens vers maquettes
 
-Les **maquettes** sont en cours de refonte (étape ultérieure du dossier). Chaque story référence une ou plusieurs **maquettes cibles** par leur identifiant prévisionnel :
+Les **maquettes** sont produites (16, dans [Maquettes](../Maquettes/index.md)). Chaque story référence une ou plusieurs **maquettes cibles** par leur identifiant :
 
 | ID | Écran |
 |---|---|

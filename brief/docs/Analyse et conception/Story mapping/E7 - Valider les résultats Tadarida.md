@@ -69,7 +69,7 @@ Les gains de productivité avancés (regroupement multi-nuits P9, bibliothèque 
 **Afin de** distinguer les caractéristiques discriminantes d'un cri (forme, fréquence dominante, harmoniques) qui complètent l'écoute pour prendre une décision de classification éclairée
 
 !!! info "Composant fourni"
-    Le composant de vue audio (sonogramme + spectrogramme avec zoom) est **fourni**. Le calcul FFT et le rendu graphique du spectrogramme ne sont pas à réimplémenter. Cette story se concentre sur l'**intégration** : instancier le composant, le lier au cycle de lecture audio, et synchroniser le curseur avec le lecteur. Ce composant est réutilisé tel quel dans [E3.S3](E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s3) (M-Qualification).
+    Le composant de vue audio (sonogramme + spectrogramme avec zoom) est une **dépendance externe** (`audio-view`, JitPack) : le calcul FFT et le rendu du spectrogramme y sont déjà réalisés. Cette story ne porte que l'**intégration** : instancier le composant, le lier au cycle de lecture audio, synchroniser le curseur avec le lecteur. Le même composant sert dans [E3.S3](E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s3) (M-Qualification).
 
 **Critères d'acceptation** :
 

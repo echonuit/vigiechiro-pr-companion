@@ -170,5 +170,5 @@
 - [ ] Test d'intégration : sur un `LogPR` de référence avec paramètres standards → indicateur absent ; sur un `LogPR` avec Fe modifiée → indicateur orange + détail explicite.
 
 **Parcours rattaché** : [P6](../Parcours%20utilisateurs/P6%20-%20Diagnostiquer%20le%20matériel.md) (signal partagé) + [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md) (indicateur affiché dans le pré-check)<br>
-**Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) + [M-Qualification](../Maquettes/M-Qualification.md) - *à mettre à jour avec un 4e indicateur*<br>
+**Maquettes cibles** : [M-Passage](../Maquettes/M-Passage.md) + [M-Qualification](../Maquettes/M-Qualification.md)<br>
 **Dépendances** : [E2.S2](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s2) (parsing du `LogPR`), [E3.S0](E3%20-%20Vérifier%20la%20qualité%20d%27enregistrement.md#e3s0) (encart « État de la nuit » qui accueille le 4e indicateur)<br>

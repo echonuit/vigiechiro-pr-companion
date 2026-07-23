@@ -31,7 +31,7 @@ Un jeu de données réel issu d'une session d'enregistrement nocturne (22-23 avr
 
 ### 🟢 Échantillon versionné dans un dépôt dédié
 
-Un **échantillon représentatif** d'une nuit (audio réduit + observations complètes) est versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/IUTInfoAix-S201/vigiechiro-pr-companion-exemple-nuit), disponible immédiatement après `git clone`. Suffit pour démarrer, pour la CI, et pour tester la majorité des stories. Le détail du contenu est décrit dans le `README` de ce dépôt.
+Un **échantillon représentatif** d'une nuit (audio réduit + observations complètes) est versionné dans le dépôt [`vigiechiro-pr-companion-exemple-nuit`](https://github.com/echonuit/vigiechiro-pr-companion-exemple-nuit), disponible immédiatement après `git clone`. Suffit pour démarrer, pour la CI, et pour tester la majorité des stories. Le détail du contenu est décrit dans le `README` de ce dépôt.
 
 ### 🔵 Full dataset sur Zenodo
 
@@ -42,7 +42,7 @@ Un **échantillon représentatif** d'une nuit (audio réduit + observations comp
 
     **Depuis votre navigateur** : [fiche Zenodo du jeu de données](https://zenodo.org/records/20492247).
 
-    **Depuis la ligne de commande**, à la racine de votre clone du brief :
+    **Depuis la ligne de commande**, à la racine de votre clone du dépôt :
 
     ```bash
     mkdir -p data

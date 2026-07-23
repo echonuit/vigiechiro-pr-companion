@@ -1,6 +1,6 @@
 # Personas
 
-Trois personas de référence représentent les utilisateurs cibles du *VigieChiro Companion*. Marie et Karim sont composés à partir d'utilisateurs réels du programme VigieChiro pour rendre lisibles des différences d'usage. **Samuel correspond au client réel de cette SAE**.
+Trois personas de référence représentent les utilisateurs cibles du *VigieChiro Companion*. Marie et Karim sont composés à partir d'utilisateurs réels du programme VigieChiro pour rendre lisibles des différences d'usage. **Samuel correspond au client réel du produit** (Samuel Busson, CEREMA).
 
 | | [Marie](Marie.md) | [Karim](Karim.md) | [Samuel](Samuel.md) ⭐ |
 |---|---|---|---|
@@ -23,7 +23,7 @@ Trois personas de référence représentent les utilisateurs cibles du *VigieChi
 
 L'application n'est pas conçue pour :
 
-- Un **utilisateur web** voulant consulter en ligne sans rien installer (l'app est desktop, mono-utilisateur, hors-ligne).
+- Un **utilisateur web** voulant consulter en ligne sans rien installer (l'app est une application desktop mono-utilisateur, à installer localement ; elle dialogue avec la plateforme Vigie-Chiro pour le dépôt et la validation).
 - Un **administrateur de base VigieChiro** souhaitant superviser la plateforme nationale (ce rôle est porté par la plateforme elle-même).
 - Un **chercheur en deep learning** voulant entraîner ses propres classifieurs (Tadarida est en amont, hors périmètre).
 

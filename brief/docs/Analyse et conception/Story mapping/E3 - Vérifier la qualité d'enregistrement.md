@@ -28,7 +28,7 @@
 - [x] Test d'intégration : sur un passage de référence, vérifier les trois indicateurs (cas nominal 🟢/🟢/🟢, cas dégradé 🟠 sur couverture, cas critique 🔴 sur renommage).
 
 **Parcours rattaché** : [P3](../Parcours%20utilisateurs/P3%20-%20Vérifier%20l%27enregistrement%20par%20échantillonnage.md), étape 1<br>
-**Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (encart « État de la nuit » en haut de la vue de vérification) - *à mettre à jour*<br>
+**Maquettes cibles** : [M-Qualification](../Maquettes/M-Qualification.md) (encart « État de la nuit » en haut de la vue de vérification)<br>
 **Dépendances** : [E0.S3](E0%20-%20Fondations%20de%20persistance.md#e0s3) (passage en BD), [E2.S6](E2%20-%20Importer%20et%20transformer%20une%20nuit.md#e2s6) (transformation terminée), librairie astronomique pour les horaires (re-use [E6.S3](E6%20-%20Diagnostiquer%20le%20matériel.md#e6s3) si possible)<br>
 
 ---
@@ -87,11 +87,11 @@
 **Afin de** vérifier de mes propres oreilles ET de mes propres yeux que la nuit est exploitable
 
 !!! info "Composant fourni"
-    Le composant de vue audio (sonogramme + spectrogramme avec contrôles de lecture et zoom) est **fourni**. Le même composant est utilisé dans [E7.S3](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s3) pour la validation Tadarida. Cette story se concentre sur l'**intégration** dans M-Qualification.
+    Le composant de vue audio (sonogramme + spectrogramme avec contrôles de lecture et zoom) est une **dépendance externe** (`audio-view`, JitPack). Le même composant est utilisé dans [E7.S3](E7%20-%20Valider%20les%20résultats%20Tadarida.md#e7s3) pour la validation Tadarida. Cette story ne porte que son **intégration** dans M-Qualification.
 
 **Critères d'acceptation** :
 
-- [x] Le panneau de détail ([E3.S2](#e3s2)) affiche le composant audio fourni, alimenté par le chemin de la séquence courante.
+- [x] Le panneau de détail ([E3.S2](#e3s2)) affiche le composant audio, alimenté par le chemin de la séquence courante.
 - [ ] Le clic sur le bouton ▶ d'une séquence dans la liste de gauche déclenche la lecture immédiate dans le composant.
 - [x] Comme les séquences sont **déjà ralenties ×10 sur disque** ([R10](../Modèle%20conceptuel/Règles%20métier.md#r10)), la lecture se fait à vitesse normale (pas de re-échantillonnage à la volée).
 - [ ] Le curseur du composant est synchronisé entre le sonogramme, le spectrogramme et la barre de lecture.  *(non verifiable depuis le code)*
