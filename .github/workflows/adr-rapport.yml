@@ -1,0 +1,97 @@
+# Rapport hebdomadaire de conformité aux ADR.
+#
+# Chaque semaine, il fait tourner les scripts de vérification (`scripts/adr/`) et publie leur bilan
+# dans le résumé du job : combien de suspects par cliquet, quels cliquets sont à resserrer, combien de
+# candidats par loupe. C'est la mesure régulière de l'écart et de la dette demandée au chantier ADR.
+#
+# Il rend aussi un service actif, dans la logique du workflow flatpak : quand la réalité fait mieux
+# qu'un cliquet (le dépôt s'est amélioré sans qu'on ait resserré la marge), il OUVRE une PR qui ramène
+# le cliquet à la réalité. Resserrer est mécanique et sûr ; desserrer reste un geste humain. Un cliquet
+# qu'on ne resserre jamais rouvre une marge morte où une régression se glisserait sans rougir.
+#
+# Il ne FAIT PAS échouer sur une régression de cliquet : ce n'est pas son rôle. Une régression fait
+# déjà rougir la CI sur la PR fautive, via le script lui-même. Ici on observe, on ne juge pas.
+
+name: rapport-adr
+
+on:
+  schedule:
+    # Lundi 6 h UTC : le bilan est prêt en début de semaine.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  rapport:
+    name: Mesurer l'écart et proposer les resserrements
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.x"
+
+      - name: Publier le rapport dans le résumé du job
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/rapport.py --markdown >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Appliquer les resserrements de cliquet
+        id: resserre
+        run: |
+          set -euo pipefail
+          python3 scripts/adr/resserre_cliquets.py
+          if git diff --quiet -- dev-docs/decisions/; then
+            echo "change=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Aucun cliquet à resserrer : les marges collent à la réalité."
+          else
+            echo "change=true" >> "$GITHUB_OUTPUT"
+            git diff --stat -- dev-docs/decisions/
+          fi
+
+      # Vérifie que les cliquets resserrés tiennent : chaque script `probable` doit rendre verdict=ok
+      # sur les nouvelles valeurs. Sans ce contrôle, on proposerait un resserrement qu'on n'a pas
+      # éprouvé - le piège que tout ce chantier combat.
+      - name: Éprouver les nouveaux cliquets
+        if: steps.resserre.outputs.change == 'true'
+        run: |
+          set -euo pipefail
+          for script in scripts/adr/[0-9]*.py; do
+            python3 "$script" || { echo "::error::$script rouge après resserrement"; exit 1; }
+          done
+
+      - name: Proposer les resserrements par une PR
+        if: steps.resserre.outputs.change == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          branche="adr/resserrer-cliquets-${GITHUB_RUN_ID}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branche"
+          git add dev-docs/decisions/
+          git commit -m "chore(adr): resserrer les cliquets sur la réalité mesurée" \
+            -m "Resserrement automatique : chaque cliquet dont la réalité était passée sous la marge est ramené à la réalité. Les scripts probable ont été rejoués verts sur les nouvelles valeurs avant l'ouverture de cette PR." \
+            -m "Refs #2247"
+          git push origin "$branche"
+
+          corps=$(mktemp)
+          {
+            echo "Resserrement automatique des cliquets ADR, calibré sur la réalité mesurée cette semaine."
+            echo
+            echo "Chaque cliquet dont le nombre réel de suspects était passé **sous** la marge est ramené à ce nombre. Le sens est à sens unique : le workflow resserre, il ne desserre jamais - desserrer reste un geste humain."
+            echo
+            echo "Les scripts \`probable\` ont été rejoués et rendent \`verdict=ok\` sur les nouvelles valeurs avant l'ouverture de cette PR."
+            echo
+            echo "Refs #2247"
+          } > "$corps"
+          gh pr create --base main --head "$branche" \
+            --title "chore(adr): resserrer les cliquets sur la réalité mesurée" \
+            --body-file "$corps"

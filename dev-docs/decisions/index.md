@@ -14,6 +14,18 @@ Une ADR n'est **pas** :
 
 On écrit une ADR quand un chantier prend une décision qu'un développeur futur **pourrait raisonnablement remettre en cause** faute d'en connaître les raisons : « pourquoi ne pas simplement comparer l'empreinte ? », « pourquoi une fenêtre courte plutôt qu'une moyenne ? ».
 
+## Comment une ADR est vérifiée
+
+Une décision qui n'est jamais reconfrontée au code se re-débat de la même façon qu'une décision oubliée. Chaque ADR déclare donc, dans son en-tête, **comment on sait si elle est tenue** :
+
+- **`certaine`** — un invariant qui se prouve. Un test (`DecisionsRespecteesTest`) ou un script déterministe échoue en CI si la règle est violée. L'en-tête nomme le test ou le script.
+- **`probable`** — pas de preuve possible, mais un script (`scripts/adr/NNNN-*.py`) liste des **suspects** qu'un humain trie. Le signal utile n'est pas « zéro » mais « aucun **nouveau** » : un **cliquet**, inscrit dans l'en-tête, borne la dette et fait rougir la CI si un cas s'ajoute.
+- **`humaine`** — aucun invariant mécanique. Le motif dit **pourquoi**. Une décision de méthode ou de comportement ne se prouve pas par un scan, et un test creux serait pire que rien. Quand un pattern reconnaissable existe malgré tout, une **loupe** (`scripts/adr/loupe-NNNN-*.py`) surface une *surface de revue* pour la passe humaine : elle ne bloque jamais, elle aide à ne rien oublier.
+
+Un garde-fou (`DocumentationAJourTest`) exige que **chaque** ADR déclare son niveau, et que le test, le script ou la loupe nommé **existe vraiment** : une ADR ne peut pas annoncer une garde disparue.
+
+Le **rapport hebdomadaire** (`scripts/adr/rapport.py`, workflow `rapport-adr`) agrège les cliquets et les loupes pour mesurer l'écart d'une semaine sur l'autre, et **resserre** automatiquement, par une PR, les cliquets dont la réalité est passée sous la marge. Resserrer est mécanique ; desserrer reste un geste humain.
+
 ## Quand en écrire une
 
 Au fil d'un chantier, à la **passe 3 (doc développeur)** de sa [clôture](../cycle-de-chantier.md) : chaque décision structurante prise pendant le chantier donne une ADR. La **passe 10 (bilan)** s'y réfère plutôt que de dupliquer le raisonnement.

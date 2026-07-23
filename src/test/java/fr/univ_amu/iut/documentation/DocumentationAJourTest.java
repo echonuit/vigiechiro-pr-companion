@@ -333,6 +333,9 @@ class DocumentationAJourTest {
     /// Une vérification `certaine` peut aussi nommer un script, sans cliquet : il n'a rien à tolérer.
     private static final Pattern REFERENCE_SCRIPT_SEUL = Pattern.compile("^`([^`]+)`$");
 
+    /// La partie « Loupe : `chemin` » qu'une vérification `humaine` peut adjoindre à son motif.
+    private static final Pattern LOUPE_HUMAINE = Pattern.compile("Loupe : `([^`]+)`");
+
     /// Les ADR pas encore classées, dispensées de déclarer **le temps de l'être**.
     ///
     /// Classer 47 décisions est un travail de jugement, pas une formalité : le faire d'un bloc pour
@@ -431,19 +434,40 @@ class DocumentationAJourTest {
             switch (declaration.group(1)) {
                 case "certaine" -> verifierReferenceCertaine(verifs, fichier, reference);
                 case "probable" -> verifierScriptNomme(verifs, fichier, reference);
-                case "humaine" ->
-                    verifs.assertThat(reference.length())
-                            .as(
-                                    "%s : une vérification « humaine » doit dire POURQUOI aucun contrôle "
-                                            + "mécanique n'est possible. « %s » est trop court pour être un motif.",
-                                    fichier, reference)
-                            .isGreaterThanOrEqualTo(20);
+                case "humaine" -> verifierMotifHumain(verifs, fichier, reference);
                 default -> {
                     // Niveau inconnu : déjà signalé par le test précédent.
                 }
             }
         }
         verifs.assertAll();
+    }
+
+    /// Une vérification `humaine` porte un motif, et peut adjoindre une **loupe**.
+    ///
+    /// La loupe (`scripts/adr/loupe-XXXX-*.py`) ne prouve ni ne borne rien : elle surface une surface de
+    /// revue pour la passe humaine, et ne bloque jamais la CI. Mais si l'ADR en annonce une, elle doit
+    /// exister - même exigence que pour un test ou un script, faute de quoi l'ADR renverrait vers un
+    /// outil disparu.
+    private static void verifierMotifHumain(SoftAssertions verifs, String fichier, String reference) {
+        Matcher loupe = LOUPE_HUMAINE.matcher(reference);
+        String motif = loupe.find() ? reference.substring(0, loupe.start()).trim() : reference;
+
+        verifs.assertThat(motif.length())
+                .as(
+                        "%s : une vérification « humaine » doit dire POURQUOI aucun contrôle mécanique n'est "
+                                + "possible. « %s » est trop court pour être un motif.",
+                        fichier, motif)
+                .isGreaterThanOrEqualTo(20);
+
+        if (loupe.reset().find()) {
+            verifs.assertThat(Path.of(loupe.group(1)))
+                    .as(
+                            "%s : l'ADR annonce la loupe `%s`, qui n'existe pas. Une loupe absente est une "
+                                    + "aide à la revue qu'on croit avoir et qui n'aidera personne.",
+                            fichier, loupe.group(1))
+                    .exists();
+        }
     }
 
     /// Une vérification `certaine` nomme un test **ou** un script.

@@ -71,3 +71,25 @@ def rapporte(numero: str, titre: str, suspects: list[str]) -> int:
             f"à {len(suspects)} dans l'ADR, sinon la marge regagnée se reperdra en silence."
         )
     return 0
+
+
+def loupe(numero: str, titre: str, candidats: list[str]) -> int:
+    """Une LOUPE, pour une ADR « humaine » dont un pattern reconnaissable existe.
+
+    Elle ne prouve rien et ne borne rien : elle surface une **surface de revue** - « voici les
+    endroits à regarder pour cette décision », que l'humain confronte à l'ADR pendant la passe humaine.
+    Elle ne bloque JAMAIS (toujours code 0) et n'a pas de cliquet : classer une infraction ici serait
+    prétendre à une certitude qu'un motif ne donne pas.
+
+    C'est le cran « moins formel que le cliquet » : le pattern démarre grossier et s'affine au fil des
+    cas connus. Sa valeur n'est pas « zéro candidat », c'est « aucun candidat oublié à la revue ».
+
+    Sortie normalisée pour le rapport :
+
+        LOUPE 0020 | candidats=7
+    """
+    print(f"LOUPE {numero} — {titre}")
+    for c in candidats:
+        print(f"  {c}")
+    print(f"\nLOUPE {numero} | candidats={len(candidats)}")
+    return 0
