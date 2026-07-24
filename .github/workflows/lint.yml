@@ -78,3 +78,11 @@ jobs:
             python3 "$script" || echec=1
           done
           exit "$echec"
+
+      - name: Auto-test des scripts ADR (bloquant, #2467)
+        # L'étape précédente échoue quand un script SUR-compte (un cas s'ajoute). Elle ne voit pas la
+        # déflation : un script qui, par régression, CESSERAIT de détecter ferait baisser son compte
+        # sous le cliquet, et resterait vert pendant qu'une vraie violation passe - un faux vert.
+        # Cet auto-test plante une violation témoin par script et exige qu'il la voie, et la même en
+        # commentaire pour qu'il ne la compte pas. Il ferme le trou de la passe 6 de clôture.
+        run: python3 scripts/adr/verifie_scripts.py

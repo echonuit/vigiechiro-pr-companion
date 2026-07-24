@@ -28,11 +28,11 @@ ECRITURE = re.compile(
 )
 
 
-def candidats() -> list[str]:
+def candidats(api: pathlib.Path = API) -> list[str]:
     trouves = []
-    if not API.exists():
+    if not api.exists():
         return trouves
-    for source in sorted(API.rglob("*.java")):
+    for source in sorted(api.rglob("*.java")):
         for numero, ligne in enumerate(source.read_text(encoding="utf-8").splitlines(), 1):
             if ECRITURE.search(ligne):
                 trouves.append(f"{source}:{numero}  {ligne.strip()[:100]}")
