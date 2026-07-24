@@ -44,8 +44,10 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
@@ -178,6 +180,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
 
     @FXML
     private Button btnSupprimerArchives;
+
+    /// Carte « Libérer l'espace disque » (#2028) : masquée tant qu'elle n'a rien à proposer, pour ne pas
+    /// occuper le même rang visuel que les étapes avec un bouton grisé et une consigne sans objet.
+    @FXML
+    private VBox zoneLibererEspace;
 
     @FXML
     private Button btnReinitialiserDepot;
@@ -377,11 +384,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // Progression déterminée (#769) : barre + libellé « Compression X/N · ETA », visibles seulement
         // pendant la génération hors-thread. La fraction et le libellé suivent le ProgressionOperation du VM.
         barreGeneration.progressProperty().bind(viewModel.progression().fractionProperty());
-        barreGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
-        barreGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
+        lierAffichage(barreGeneration, viewModel.generationEnCoursProperty());
         lblProgressionGeneration.textProperty().bind(viewModel.progression().messageProperty());
-        lblProgressionGeneration.visibleProperty().bind(viewModel.generationEnCoursProperty());
-        lblProgressionGeneration.managedProperty().bind(viewModel.generationEnCoursProperty());
+        lierAffichage(lblProgressionGeneration, viewModel.generationEnCoursProperty());
         // Table de suivi (#820) : colonnes #/Fichiers/Taille/Progression + cellule état/barre + rangées
         // colorées selon l'état, alimentée par les lignes du VM (pré-remplies au plan, animées au fil de la
         // compression parallèle, réhydratées du disque à la réouverture d'un passage déjà généré).
@@ -429,6 +434,11 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
                 .disableProperty()
                 .bind(viewModel.peutSupprimerArchivesProperty().not());
 
+        // La carte entière disparaît quand elle n'a rien à proposer (#2028) : plutôt qu'une 5e carte de
+        // même rang que les étapes, portant un bouton grisé et une consigne sans objet. Elle réapparaît
+        // dès que la suppression devient possible (déposé ET archives présentes).
+        lierAffichage(zoneLibererEspace, viewModel.peutSupprimerArchivesProperty());
+
         // Emphase de l'étape actionnable (#689) : parmi les trois actions applicatives du dépôt
         // (Préparer → Générer → Marquer déposé, l'étape ③ « Téléverser » étant manuelle), celle qui est
         // actionnable porte .bouton-primaire, les autres .bouton-secondaire — au plus une à la fois.
@@ -447,8 +457,7 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         // s'en faisaient recouvrir selon l'ordre des appels.
         lblEtatLot.textProperty().bind(viewModel.etatLotProperty());
         var etatPresent = viewModel.etatLotProperty().isNotEmpty();
-        lblEtatLot.visibleProperty().bind(etatPresent);
-        lblEtatLot.managedProperty().bind(etatPresent);
+        lierAffichage(lblEtatLot, etatPresent);
 
         BandeauLotUI.cabler(bandeauRetour, lblRetour, btnFermerRetour, viewModel, depotViewModel);
     }
@@ -482,6 +491,15 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     private static void appliquerRolePrimaire(Button bouton, boolean primaire) {
         bouton.getStyleClass().removeAll("bouton-primaire", "bouton-secondaire");
         bouton.getStyleClass().add(primaire ? "bouton-primaire" : "bouton-secondaire");
+    }
+
+    /// Lie l'**affichage** d'un nœud à une condition : `visible` ET `managed` ensemble, pour qu'il
+    /// disparaisse **sans laisser de trou** dans la mise en page quand la condition est fausse. Les deux
+    /// liaisons vont toujours de pair ; les réunir évite de n'en poser qu'une (nœud invisible mais qui
+    /// occupe encore sa place, ou l'inverse).
+    private static void lierAffichage(Node noeud, ObservableValue<? extends Boolean> condition) {
+        noeud.visibleProperty().bind(condition);
+        noeud.managedProperty().bind(condition);
     }
 
     /// Reconstruit le stepper du dépôt (#251) depuis [LotViewModel#etapes()] : une puce par étape,
@@ -622,11 +640,9 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
         GestionnaireColonnes.persister(tableDepot, colonnesDepot, depotColonnes, "lot", "depot");
         tableDepot.setItems(depotViewModel.suiviLignes().lignes());
         var depotEntame = Bindings.isNotEmpty(depotViewModel.suiviLignes().lignes());
-        tableDepot.visibleProperty().bind(depotEntame);
-        tableDepot.managedProperty().bind(depotEntame);
+        lierAffichage(tableDepot, depotEntame);
         // « Réinitialiser le dépôt » (#984) : visible dès qu'un plan existe, désactivé pendant un dépôt.
-        btnReinitialiserDepot.visibleProperty().bind(depotEntame);
-        btnReinitialiserDepot.managedProperty().bind(depotEntame);
+        lierAffichage(btnReinitialiserDepot, depotEntame);
         btnReinitialiserDepot.disableProperty().bind(depotViewModel.enCoursProperty());
         // Étape 3 (téléverser / reprendre, et l'annulation coopérative) : câblage déporté, comme l'étape 4.
         EtapeTeleverserUI.cabler(btnTeleverser, iconeTeleverser, btnAnnulerDepot, depotViewModel);

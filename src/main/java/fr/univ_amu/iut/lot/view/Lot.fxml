@@ -203,12 +203,13 @@
     </Button>
   </VBox>
 
-  <!-- Nettoyage optionnel - libérer l'espace disque (#…) : actif dès qu'il existe des archives ZIP dans
-       depot/. Les copies locales sont régénérables à l'identique (une fois téléversées, on peut les
-       supprimer sans risque). -->
-  <VBox spacing="4.0" styleClass="carte-section">
+  <!-- Nettoyage optionnel - libérer l'espace disque (#2028) : la carte ne s'affiche que quand elle a
+       quelque chose à proposer (passage déposé ET archives ZIP encore sur disque, cf.
+       peutSupprimerArchives). Un téléversement par l'application efface les siennes lui-même (#1995) ;
+       ces archives-ci viennent d'une génération pour dépôt manuel. Régénérables à l'identique. -->
+  <VBox fx:id="zoneLibererEspace" spacing="4.0" styleClass="carte-section">
     <Label text="Libérer l'espace disque" styleClass="section-titre"/>
-    <Label text="Après les avoir téléversées, vous pouvez supprimer les archives ZIP locales (dans depot/) pour libérer de l'espace : elles restent régénérables à l'identique via « Générer les archives »."
+    <Label text="Des archives ZIP occupent le dossier depot/. Vous pouvez les supprimer pour libérer de l'espace : elles se régénèrent à l'identique via « Générer les archives ». Un téléversement par l'application efface les siennes au fur et à mesure ; celles-ci subsistent (par exemple après une génération pour un dépôt manuel)."
            styleClass="section-sous" wrapText="true"/>
     <Button fx:id="btnSupprimerArchives" text="Supprimer les archives de dépôt"
             styleClass="bouton-secondaire" onAction="#supprimerArchives">

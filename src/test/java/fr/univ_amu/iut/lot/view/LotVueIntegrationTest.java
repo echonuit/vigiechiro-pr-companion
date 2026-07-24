@@ -313,6 +313,29 @@ class LotVueIntegrationTest {
     }
 
     @Test
+    @DisplayName("#2028 : la carte « Libérer l'espace disque » est masquée quand aucune archive n'est présente")
+    void carte_liberer_espace_masquee_sans_archives(FxRobot robot) {
+        // start() = Vérifié, aucune archive sur disque → la carte n'a rien à proposer, elle disparaît.
+        VBox carte = robot.lookup("#zoneLibererEspace").queryAs(VBox.class);
+
+        assertThat(carte.isVisible()).isFalse();
+        assertThat(carte.isManaged()).isFalse();
+    }
+
+    @Test
+    @DisplayName("#2028 : la carte « Libérer l'espace disque » réapparaît dès qu'il reste des archives à supprimer")
+    void carte_liberer_espace_visible_avec_archives(FxRobot robot) {
+        when(service.archivesDepot("/ws/session-42"))
+                .thenReturn(List.of(new ArchiveDepot(Path.of("/ws/session-42/depot/Car-1.zip"), 1, 2048L, 2)));
+        reouvrirAvec(robot, new EtatLot(StatutWorkflow.PRET_A_DEPOSER, "/ws/session-42", 2, 8192L, List.of(), null));
+
+        VBox carte = robot.lookup("#zoneLibererEspace").queryAs(VBox.class);
+
+        assertThat(carte.isVisible()).isTrue();
+        assertThat(carte.isManaged()).isTrue();
+    }
+
+    @Test
     @DisplayName("#823 : barre de statut 3 zones — contexte à gauche, statut · récap au centre, bilan à droite")
     void barre_de_statut_trois_zones(FxRobot robot) {
         when(service.archivesDepot("/ws/session-42"))
