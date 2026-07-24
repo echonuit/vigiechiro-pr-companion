@@ -41,7 +41,7 @@ C'est **PMD qui fait foi** : lui seul bloque la CI.
 
 ## 2. L'architecture : package-by-feature + MVVM
 
-L'architecture est **package-by-feature + MVVM** (cf. [README §3](README.md#3-architecture--package-by-feature--mvvm)).
+L'architecture est **package-by-feature + MVVM** (cf. [l'aperçu du README](README.md#architecture)).
 Chaque feature vit dans `src/main/java/fr/univ_amu/iut/<feature>/` et se découpe en `model/`,
 `viewmodel/`, `view/`, `di/`.
 

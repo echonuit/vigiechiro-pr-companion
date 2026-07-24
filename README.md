@@ -135,6 +135,8 @@ scientifique nationale. Il s'appuie sur, et complète, plusieurs projets ouverts
 | **Jeu de données exemple** | Une **nuit complète** de capture (échantillon audio + observations), pour tester sans matériel | [Dépôt](https://github.com/echonuit/vigiechiro-pr-companion-exemple-nuit) · [DOI Zenodo](https://doi.org/10.5281/zenodo.20492247) |
 | **Le brief** | Le **brief projet** : contexte, besoin, parcours utilisateurs, *story mapping* (document de conception vivant) | [brief.echonuit.fr](https://brief.echonuit.fr/) |
 
+<a id="architecture"></a>
+
 ## 🛠️ Sous le capot (pour les développeuses et développeurs)
 
 Application **JavaFX 26 / Java 25**, **locale** (base **SQLite** fichier, sans serveur), injectée par
@@ -205,6 +207,8 @@ S'ajoutent la fonctionnalité transverse **`cli`** (import/export en ligne de co
 **`perf/`** (mesures de performance, cf. [`docs/benchmarks/`](docs/benchmarks/README.md)).
 
 </details>
+
+<a id="dev-qualite"></a>
 
 ## 🤝 Contribuer, tester, sécurité
 

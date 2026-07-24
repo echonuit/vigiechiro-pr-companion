@@ -2,7 +2,7 @@
 
 Ce document décrit la **suite de tests** : comment l'exécuter, ce qu'elle contient, et ce qui bloque
 (ou non) l'intégration continue. Il complète [CONTRIBUTING.md](CONTRIBUTING.md) (workflow général) et
-le [README §4](README.md#4-développement-et-qualité) (vue d'ensemble).
+le [README (vue d'ensemble)](README.md#dev-qualite).
 
 > 📖 Version structurée (mêmes infos, navigation + recherche) :
 > [doc dev · Tests et qualité](https://companion-dev.echonuit.fr/tests-et-qualite/).
