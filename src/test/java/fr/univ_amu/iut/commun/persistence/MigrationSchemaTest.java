@@ -81,6 +81,18 @@ class MigrationSchemaTest {
                 .contains("participation_traitement");
     }
 
+    @Test
+    @DisplayName("V31 retire les colonnes mortes archived_at / originals_purged_at de recording_session (#2429)")
+    void colonnes_mortes_retirees() throws SQLException {
+        SourceDeDonnees source = new SourceDeDonnees(new Workspace(racine.resolve("ws")));
+        new MigrationSchema(source).migrer();
+
+        assertThat(colonnes(source, "recording_session"))
+                .as("« archivé » et « purgé » sont devenus des états observés (#2258) : les marqueurs V24/V25"
+                        + " ne sont plus lus ni écrits, leurs colonnes doivent avoir disparu du schéma")
+                .doesNotContain("archived_at", "originals_purged_at");
+    }
+
     private static List<Integer> versionsEnBase(SourceDeDonnees source) throws SQLException {
         List<Integer> versions = new ArrayList<>();
         try (Connection cx = source.getConnection();
@@ -103,5 +115,17 @@ class MigrationSchemaTest {
             }
         }
         return tables;
+    }
+
+    private static List<String> colonnes(SourceDeDonnees source, String table) throws SQLException {
+        List<String> colonnes = new ArrayList<>();
+        try (Connection cx = source.getConnection();
+                Statement st = cx.createStatement();
+                ResultSet rs = st.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                colonnes.add(rs.getString("name").toLowerCase(Locale.ROOT));
+            }
+        }
+        return colonnes;
     }
 }

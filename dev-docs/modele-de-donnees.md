@@ -125,20 +125,20 @@ S'ajoutent des tables techniques : `saved_view` (vues sauvegardées de M-Multisi
       suffit à distinguer deux WAV différents, dont les en-têtes et les premières trames diffèrent.
       Elle est posée **à l'import** (`TransformationAudio`) ; les nuits déjà importées se rattrapent
       avec `retro-empreintes` (`BackfillEmpreintes`).
-    - **`V24__archivage_passage.sql`** : `recording_session.archived_at`. **Colonne vestigiale** : le
-      geste d'archivage a été retiré ([ADR 0048](decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)),
-      plus personne ne l'écrit ni ne la lit. La disponibilité de l'audio s'**observe** sur le disque
-      (`DisponibiliteAudio`, cf. [patterns](patterns.md#etat-observe-un-statut-distant-nest-pas-un-statut-du-domaine)).
-      Son retrait effectif est une migration à venir.
-    - **`V25__purge_originaux_declaree.sql`** : `recording_session.originals_purged_at`, également
-      **vestigiale**. Le geste de purge a été retiré et l'audit ne contrôle plus les bruts : ce sont
-      des copies **optionnelles** de ré-analyse
-      ([ADR 0036](decisions/0036-la-copie-des-bruts-est-une-option.md)), absentes de la plupart des
-      nuits, donc leur absence est l'état normal.
+    - **`V24__archivage_passage.sql`** : avait ajouté `recording_session.archived_at`. Le geste
+      d'archivage a été retiré ([ADR 0048](decisions/0048-l-utilisateur-possede-ses-fichiers-l-app-observe.md)) :
+      la disponibilité de l'audio s'**observe** sur le disque (`DisponibiliteAudio`, cf.
+      [patterns](patterns.md#etat-observe-un-statut-distant-nest-pas-un-statut-du-domaine)). Devenue
+      morte, la colonne a été **retirée par `V31`** (#2429).
+    - **`V25__purge_originaux_declaree.sql`** : avait ajouté `recording_session.originals_purged_at`. Le
+      geste de purge a été retiré et l'audit ne contrôle plus les bruts : ce sont des copies
+      **optionnelles** de ré-analyse ([ADR 0036](decisions/0036-la-copie-des-bruts-est-une-option.md)),
+      absentes de la plupart des nuits, donc leur absence est l'état normal. Colonne également **retirée
+      par `V31`** (#2429).
 
     Ces deux marqueurs répondaient à la même question : *pourquoi* l'audio manque. La réponse ne
     change plus rien - **l'utilisateur possède ses fichiers**, leur absence n'est jamais une
-    corruption. Ils ne sont plus ni écrits ni lus ; leur retrait effectif est une migration à venir.
+    corruption. N'étant plus ni écrits ni lus, ils ont été **retirés du schéma par `V31`** (#2429).
 
 !!! note "Validation d'expert (V26, EPIC #1154)"
     **`V26__validation_expert.sql`** fait entrer en base le **troisième avis** — et la discussion qui

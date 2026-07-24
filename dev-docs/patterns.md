@@ -104,7 +104,9 @@ Ce basculement a rendu les marqueurs inutiles l'un après l'autre. `archived_at`
 `originals_purged_at` ne gouverne plus l'audit, qui ne contrôle **plus du tout** les bruts : ce sont
 des copies **optionnelles** de ré-analyse ([ADR 0036](decisions/0036-la-copie-des-bruts-est-une-option.md)),
 absentes de la plupart des nuits, donc leur absence est l'état normal - et un état normal reste
-silencieux. Il n'y avait plus rien à distinguer : le disque et la base disent la même chose.
+silencieux. Il n'y avait plus rien à distinguer : le disque et la base disent la même chose. Les deux
+colonnes devenues mortes (`archived_at`, `originals_purged_at`) ont depuis été **retirées du schéma**
+(`V31`, #2429).
 
 **Principes.** SSOT (la source de vérité reste distante : on ne la copie pas, on la **date**),
 **honnêteté de l'IHM** (« dernier état connu le… » plutôt qu'une fraîcheur feinte) et **KISS** (pas de
