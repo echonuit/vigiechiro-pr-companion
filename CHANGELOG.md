@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.45.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.45.0...v2.45.1) (2026-07-24)
+
+
+### Bug Fixes
+
+* **lot:** masquer « Libérer l'espace disque » quand il n'y a rien à supprimer ([#2028](https://github.com/echonuit/vigiechiro-pr-companion/issues/2028)) ([#2477](https://github.com/echonuit/vigiechiro-pr-companion/issues/2477)) ([7535584](https://github.com/echonuit/vigiechiro-pr-companion/commit/753558478d907fb2e3431afa83308959498f8be1)), closes [#1995](https://github.com/echonuit/vigiechiro-pr-companion/issues/1995)
+
 # [2.45.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.44.1...v2.45.0) (2026-07-23)
 
 
