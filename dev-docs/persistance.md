@@ -40,7 +40,7 @@ Les trois premières migrations posent l'essentiel : `V01__schema.sql` (le sché
 `V02__seed_taxons.sql` (données de référence), `V03__perf_indexes.sql` (index). Les suivantes le font
 **évoluer**, migration après migration. Le dossier
 [`db/migration/`](https://github.com/echonuit/vigiechiro-pr-companion/tree/main/src/main/resources/db/migration)
-en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations-->30<!--/inv--> à ce jour).
+en fait foi : il en contient aujourd'hui bien plus que trois (<!--inv:migrations-->31<!--/inv--> à ce jour).
 
 !!! tip "Ajouter une migration"
     1. Créez `db/migration/Vnn__description.sql`, où `nn` est le **numéro qui suit la dernière
