@@ -2,6 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-19
 - **Chantier** : #1991 (lots #1993 à #1999)
+- **Amende** : [ADR 0006](0006-depot-zip-par-defaut-perte-audio-serveur-assumee.md), sur la mécanique de contrepartie (le repli WAV ne se déduit plus de la place) ; sa décision de fond, le ZIP par défaut, reste entière.
 - **Vérification** : humaine — que la forme du dépôt se choisisse (réglage) plutôt qu'elle ne se déduise de la place est une règle de comportement
 
 ## Contexte

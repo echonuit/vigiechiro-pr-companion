@@ -1,6 +1,6 @@
 # ADR 0006 — Le dépôt par ZIP est le mode par défaut ; la perte de l'audio serveur est assumée
 
-- **Statut** : Accepté — rétroactif
+- **Statut** : Accepté — rétroactif, **amendé** par [ADR 0034](0034-la-forme-du-depot-se-choisit.md) (#1991)
 - **Chantier** : spike #984 (ZIP vs WAV) ; EPIC #1297 (décision produit)
 - **Vérification** : humaine — le ZIP comme mode par défaut et la perte assumée de l'audio serveur sont un arbitrage produit, non un invariant du code
 

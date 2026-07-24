@@ -1,6 +1,6 @@
 # ADR 0028 — Un état n'est pas un compte rendu, et ils ne partagent pas de canal
 
-- **Statut** : Accepté — 2026-07-19
+- **Statut** : Accepté — 2026-07-19, **amendé** par [ADR 0031](0031-un-retour-n-est-pas-un-compte-rendu.md) (sur le vocabulaire ; la décision reste entière)
 - **Chantier** : #1870 (lots #1886 à #1917)
 - **Vérification** : humaine — la séparation conceptuelle entre état et compte rendu se lit dans l'intention, pas dans un motif de code
 

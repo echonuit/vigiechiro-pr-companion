@@ -1,6 +1,6 @@
 # 0026 - Le nommage des tranches est une étape du pipeline, pas un détail de la découpe
 
-- **Statut** : acceptée
+- **Statut** : Accepté
 - **Date** : 2026-07-19
 - **Chantier** : EPIC #1944 (#1932, #1947, #1948, #1956)
 - **Vérification** : humaine — que le nommage des tranches soit une étape du pipeline traversée par tout chemin est un comportement, non un invariant statique

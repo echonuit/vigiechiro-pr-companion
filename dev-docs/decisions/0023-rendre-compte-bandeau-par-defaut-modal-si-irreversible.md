@@ -1,6 +1,6 @@
 # ADR 0023 — Rendre compte se fait au bandeau ; le modal est réservé à l'irréversible
 
-- **Statut** : Accepté — 2026-07-18
+- **Statut** : Accepté — 2026-07-18, **amendé** par [ADR 0031](0031-un-retour-n-est-pas-un-compte-rendu.md) (sur le vocabulaire ; la décision reste entière)
 - **Chantier** : EPIC #1870 (#1886)
 - **Vérification** : humaine — le choix bandeau/modal selon l'irréversibilité est une règle d'UX, non observable dans le code par un motif
 
