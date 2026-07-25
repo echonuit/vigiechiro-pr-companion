@@ -1028,4 +1028,45 @@ class DocumentationAJourTest {
         }
         return tampon.toString();
     }
+
+    // #2482 - Les méthodes de classes du projet citées dans cli.md existent (sens inverse, côté méthodes).
+
+    /// Une référence `Classe.methode` dans la doc : nom de classe (1), nom de méthode (2).
+    private static final Pattern REFERENCE_METHODE = Pattern.compile("`([A-Z][A-Za-z0-9]+)\\.([a-z][A-Za-z0-9]+)`");
+
+    /// Racine des sources de production.
+    private static final Path SOURCES = Path.of("src", "main", "java");
+
+    @Test
+    @DisplayName("#2482 : chaque méthode d'une classe du projet citée dans cli.md existe vraiment")
+    void chaque_methode_citee_dans_cli_existe() throws IOException {
+        String doc = lire(DOC_CLI);
+        SoftAssertions verifs = new SoftAssertions();
+        Matcher ref = REFERENCE_METHODE.matcher(doc);
+        while (ref.find()) {
+            String classe = ref.group(1);
+            String methode = ref.group(2);
+            Path source = fichierClasse(classe);
+            if (source == null) {
+                continue; // classe hors projet (JDK, dépendance) : hors périmètre de cette garde
+            }
+            verifs.assertThat(lire(source))
+                    .as(
+                            "cli.md cite `%s.%s`, mais %s.java ne déclare aucune méthode « %s »"
+                                    + " (renommée ou supprimée ?).",
+                            classe, methode, classe, methode)
+                    .containsPattern("\\b" + methode + "\\s*\\(");
+        }
+        verifs.assertAll();
+    }
+
+    /// Le fichier source d'une classe de production par son nom simple, ou `null` si elle n'appartient
+    /// pas au projet (classe du JDK ou d'une dépendance : hors périmètre).
+    private static Path fichierClasse(String nomSimple) throws IOException {
+        try (Stream<Path> flux = Files.walk(SOURCES)) {
+            return flux.filter(chemin -> chemin.getFileName().toString().equals(nomSimple + ".java"))
+                    .findFirst()
+                    .orElse(null);
+        }
+    }
 }
