@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-25
 - **Chantier** : #2493 (issu du fix connexion #2486, du patron #1534)
-- **Vérification** : probable — `scripts/adr/2493-modale-suit-croissance.py` (cliquet : 3)
+- **Vérification** : probable — `scripts/adr/2493-modale-suit-croissance.py` (cliquet : 1)
 
 ## Contexte
 
@@ -28,7 +28,7 @@ Un garde-fou `probable` (`scripts/adr/2493-modale-suit-croissance.py`) liste les
 
 - Un retour qui paraît dans une modale n'y pousse plus les boutons de validation hors du cadre.
 - La vérification est `probable`, pas `certaine` : « est-ce une modale ? » est approché par le nom du controller (`*Modale*Controller`), et un popup nommé autrement serait manqué ; « révèle-t-elle un bandeau qui pousse des boutons ? » se lit à l'intention. Un humain confirme les suspects.
-- Le cliquet démarre à **3** (la dette trouvée à l'audit) et descend à mesure que les modales sont câblées.
+- Le cliquet démarre à **3** (la dette trouvée à l'audit) et descend à mesure que les modales sont câblées. Deux l'ont été (ModalePoint, ModaleSite) ; **RattachementModale reste à 1** : sur cette grande modale, `sizeToScene` fait planter le rendu de la Headless Platform en test (`HeadlessWindow.blit`, IndexOutOfBounds). Le fix est correct en production mais bloqué en CI, d'où un report tracé - le cliquet à 1 le rend visible au lieu de le cacher.
 
 ## Alternatives écartées
 

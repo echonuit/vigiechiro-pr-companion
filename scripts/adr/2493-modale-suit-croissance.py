@@ -32,9 +32,9 @@ REVELE = re.compile(
 )
 
 
-def suspects() -> list[str]:
+def suspects(vues: pathlib.Path = VUES) -> list[str]:
     trouves = []
-    for source in sorted(VUES.rglob("*Controller.java")):
+    for source in sorted(vues.rglob("*Controller.java")):
         if not MODALE.search(source.name):
             continue
         code = sans_commentaires_java(source.read_text(encoding="utf-8"))

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.viewmodel.SiteEditViewModel;
@@ -81,6 +82,10 @@ public class ModaleSiteController {
 
     @FXML
     private void initialize() {
+        // Une modale est dimensionnée à son ouverture ; un bandeau de retour qui paraît ensuite
+        // pousserait les boutons du bas hors du cadre. On fait suivre à la fenêtre la croissance de
+        // son contenu (ADR 2493, #1534).
+        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty());
         titreModale.textProperty().bind(viewModel.titreProperty());
         champCarre.textProperty().bindBidirectional(viewModel.numeroCarreProperty());
         champNom.textProperty().bindBidirectional(viewModel.nomProperty());
