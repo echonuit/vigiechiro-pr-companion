@@ -151,7 +151,7 @@ Le cœur du domaine est l'**agrégat « nuit de capture »** (feature `passage`)
 
 `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (<!--inv:etats-workflow-->6<!--/inv--> états, cf. `StatutWorkflow`)
 
-Le détail des entités, des tables (**28** au schéma courant, 19 à l'origine en `V01`) et de la correspondance avec le **MCD du brief** est sur
+Le détail des entités, des tables et de la correspondance avec le **MCD du brief** est sur
 [Modèle de données et domaine](modele-de-donnees.md) ; le **mécanisme** d'accès (DAO, transactions,
 migrations) sur [Persistance](persistance.md).
 
