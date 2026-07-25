@@ -114,6 +114,7 @@ nav:
     - 1038 · La configuration d'amorçage vit hors de la base: decisions/1038-la-configuration-d-amorcage-vit-hors-de-la-base.md
     - 1881 · Le numéro d'une ADR est celui de son chantier: decisions/1881-l-identifiant-d-une-adr-est-le-numero-de-son-chantier.md
     - 2465 · Une ADR déclare comment elle est vérifiée: decisions/2465-une-adr-declare-comment-elle-est-verifiee.md
+    - 2493 · Une modale à révélation suit la croissance: decisions/2493-une-modale-a-revelation-suit-la-croissance.md
     - 2433 · Un dossier de transformés s'importe par référence: decisions/2433-un-dossier-de-transformes-s-importe-par-reference.md
     - 2385 · La doc chiffrée est adossée au code: decisions/2385-la-doc-chiffree-est-adossee-au-code.md
   - Recette (acceptation):

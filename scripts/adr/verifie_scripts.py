@@ -112,6 +112,35 @@ def test_0037_slot_actions() -> None:
         _verifie("0037 détecte un slot d'actions HBox, ignore le commentaire", n, 1)
 
 
+def test_2493_modale_suit_croissance() -> None:
+    m = _charge("2493-modale-suit-croissance.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        # Une modale qui révèle un bandeau sans câbler suivreLaCroissance -> suspect.
+        _ecrire(
+            racine,
+            "SuspectModaleController.java",
+            "class SuspectModaleController { void init() { BandeauRetour.installer(a, b); } }\n",
+        )
+        # Une modale qui révèle ET câble -> pas suspect.
+        _ecrire(
+            racine,
+            "SaineModaleController.java",
+            "class SaineModaleController { void init() {\n"
+            "  BandeauRetour.installer(a, b);\n"
+            "  Modales.suivreLaCroissance(racine, b.managedProperty());\n"
+            "} }\n",
+        )
+        # Une vue qui n'est pas une modale (nom sans « Modale ») -> hors champ, même si elle révèle.
+        _ecrire(
+            racine,
+            "AnalyseController.java",
+            "class AnalyseController { void init() { BandeauRetour.installer(a, b); } }\n",
+        )
+        n = len(m.suspects(vues=racine))
+        _verifie("2493 détecte la modale non câblée, épargne la câblée et la non-modale", n, 1)
+
+
 def test_loupe_0020() -> None:
     m = _charge("loupe-0020-ecritures-plateforme.py")
     with tempfile.TemporaryDirectory() as d:
@@ -149,6 +178,7 @@ if __name__ == "__main__":
         test_0010_dialogue_hors_port,
         test_0035_pictogramme,
         test_0037_slot_actions,
+        test_2493_modale_suit_croissance,
         test_loupe_0020,
         test_rapport_et_resserrement,
     ):

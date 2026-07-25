@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.LibelleRetour;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.carte.CarreGeo;
 import fr.univ_amu.iut.commun.view.carte.CarteSites;
 import fr.univ_amu.iut.commun.view.carte.DonneesCarte;
@@ -114,6 +115,10 @@ public class ModalePointController {
 
     @FXML
     private void initialize() {
+        // Une modale est dimensionnée à son ouverture ; un bandeau de retour qui paraît ensuite
+        // pousserait les boutons du bas hors du cadre. On fait suivre à la fenêtre la croissance de
+        // son contenu (ADR 2493, #1534).
+        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty(), messageCarre.managedProperty());
         titreModale.textProperty().bind(viewModel.titreProperty());
         champCode.textProperty().bindBidirectional(viewModel.codeProperty());
         champDescription.textProperty().bindBidirectional(viewModel.descriptionProperty());
