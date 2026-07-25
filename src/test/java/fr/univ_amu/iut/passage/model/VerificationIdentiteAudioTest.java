@@ -160,7 +160,17 @@ class VerificationIdentiteAudioTest {
 
     private static SequenceDEcoute sequence(Long taille, String empreinte) {
         return new SequenceDEcoute(
-                1L, NOM, 1L, 0, 0.0, DUREE_REELLE_S, "peu-importe/" + NOM, false, 1L, null, taille, empreinte);
+                1L,
+                NOM,
+                1L,
+                0,
+                0.0,
+                DUREE_REELLE_S,
+                "peu-importe/" + NOM,
+                false,
+                1L,
+                null,
+                new EmpreinteContenu(taille, empreinte));
     }
 
     private static EnregistrementOriginal original(String nom, String sha256) {

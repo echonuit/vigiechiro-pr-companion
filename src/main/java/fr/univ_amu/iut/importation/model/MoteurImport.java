@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -307,8 +308,7 @@ final class MoteurImport {
                             false,
                             null,
                             Prefixe.horodatageDe(sp.nomFichier()).orElse(null),
-                            sp.octets(),
-                            sp.empreinte());
+                            new EmpreinteContenu(sp.octets(), sp.empreinte()));
                     agregatDao.insererSequence(cx, ids[1], idOriginal, sequence);
                 }
             }

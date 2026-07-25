@@ -183,8 +183,7 @@ class AdoptionOriginauxReconstruitsTest {
                 false,
                 session.id(),
                 null,
-                null,
-                null));
+                EmpreinteContenu.ABSENTE));
         return new BrutRebranche(new BrutInventorie(source, nomBrut, 2048L), List.of(sequence), "empreinte-" + nomBrut);
     }
 

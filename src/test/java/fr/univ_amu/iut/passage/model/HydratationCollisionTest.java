@@ -157,8 +157,7 @@ class HydratationCollisionTest {
                 false,
                 ID_SESSION,
                 null,
-                null,
-                null);
+                EmpreinteContenu.ABSENTE);
     }
 
     // --- Helpers (autonomes, pas de helper partagé entre fichiers de test) --------------------

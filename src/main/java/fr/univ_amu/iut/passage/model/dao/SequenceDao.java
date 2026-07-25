@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.SequenceDEcoute;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -34,8 +35,7 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
             rs.getInt("in_selection") != 0,
             rs.getLong("session_id"),
             lireHorodatage(rs, "recorded_at"),
-            lireLongNullable(rs, "size_bytes"),
-            rs.getString("content_fingerprint"));
+            new EmpreinteContenu(lireLongNullable(rs, "size_bytes"), rs.getString("content_fingerprint")));
 
     /// Lit une colonne `INTEGER` nullable en [Integer], en préservant le `null`.
     private static Integer lireIntNullable(ResultSet rs, String colonne) throws SQLException {
@@ -134,8 +134,7 @@ public class SequenceDao extends DaoGenerique<SequenceDEcoute, Long> {
                 sequence.dansSelection(),
                 sequence.idSession(),
                 sequence.horodatageCapture(),
-                sequence.tailleOctets(),
-                sequence.empreinte());
+                sequence.empreinteContenu());
     }
 
     @Override

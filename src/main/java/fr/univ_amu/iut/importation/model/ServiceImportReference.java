@@ -12,6 +12,7 @@ import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
 import fr.univ_amu.iut.importation.model.InventaireTransformesReferences.OriginalTransforme;
 import fr.univ_amu.iut.importation.model.InventaireTransformesReferences.SequenceTransformee;
 import fr.univ_amu.iut.importation.model.dao.AgregatImportDao;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -291,8 +292,7 @@ public class ServiceImportReference {
                 false,
                 null,
                 seq.horodatageCapture(),
-                seq.tailleOctets(),
-                seq.empreinte());
+                new EmpreinteContenu(seq.tailleOctets(), seq.empreinte()));
     }
 
     private static long volumeSequences(List<OriginalTransforme> originaux) {
