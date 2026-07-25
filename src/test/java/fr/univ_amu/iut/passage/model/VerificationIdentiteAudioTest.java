@@ -174,7 +174,8 @@ class VerificationIdentiteAudioTest {
     }
 
     private static EnregistrementOriginal original(String nom, String sha256) {
-        return new EnregistrementOriginal(1L, nom, "peu-importe/" + nom, 1.0, 384_000, sha256, 1L, null);
+        return new EnregistrementOriginal(
+                1L, nom, "peu-importe/" + nom, 1.0, 384_000, 1L, new EmpreinteContenu(null, sha256));
     }
 
     private Path ecrireWav(String nom, List<CriAttendu> cris) throws IOException {

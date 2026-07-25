@@ -116,9 +116,8 @@ public class AdoptionOriginauxReconstruits {
                 racineBruts.resolve(brut.nomOriginal()).toString(),
                 duree,
                 frequenceAcquisitionHz,
-                brutRebranche.empreinteSource(),
                 idSession,
-                taille);
+                new EmpreinteContenu(taille, brutRebranche.empreinteSource()));
     }
 
     private static long tailleSource(Path brut) {

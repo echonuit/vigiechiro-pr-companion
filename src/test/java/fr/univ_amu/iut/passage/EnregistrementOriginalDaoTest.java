@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -112,7 +113,13 @@ class EnregistrementOriginalDaoTest {
     @DisplayName("#1299 : la taille est persistée et relue (size_bytes)")
     void taille_persistee() {
         EnregistrementOriginal avecTaille = new EnregistrementOriginal(
-                null, "orig.wav", "bruts/orig.wav", 12.5, 384000, "abc123", idSession, 14_746_040L);
+                null,
+                "orig.wav",
+                "bruts/orig.wav",
+                12.5,
+                384000,
+                idSession,
+                new EmpreinteContenu(14_746_040L, "abc123"));
 
         EnregistrementOriginal relu = dao.findById(dao.insert(avecTaille).id()).orElseThrow();
 

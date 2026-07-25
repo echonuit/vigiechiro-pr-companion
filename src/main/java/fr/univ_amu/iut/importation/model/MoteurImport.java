@@ -288,9 +288,8 @@ final class MoteurImport {
                         t.cheminOriginal().toString(),
                         t.dureeSourceSecondes(),
                         t.frequenceSourceHz(),
-                        t.sha256(),
                         null,
-                        t.tailleSourceOctets());
+                        new EmpreinteContenu(t.tailleSourceOctets(), t.sha256()));
                 long idOriginal = agregatDao.insererOriginal(cx, ids[1], original);
                 for (SequenceProduite sp : t.sequences()) {
                     // #530 : l'heure réelle de la tranche est encodée dans son nom (_AAAAMMJJ_HHMMSS_000),

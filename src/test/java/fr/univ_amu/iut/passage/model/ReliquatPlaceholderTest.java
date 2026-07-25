@@ -203,15 +203,14 @@ class ReliquatPlaceholderTest {
                 fichier.toString(),
                 duree,
                 FREQUENCE_ACQUISITION,
-                empreinte(fichier),
                 ID_SESSION,
-                Files.size(fichier));
+                new EmpreinteContenu(Files.size(fichier), empreinte(fichier)));
     }
 
     /// Le placeholder d'un passage reconstruit (#1648) : ni durée, ni empreinte, ni fichier.
     private static EnregistrementOriginal placeholder() {
         return new EnregistrementOriginal(
-                ID_PLACEHOLDER, "Car640380-2026-Pass2-Z1-reconstruit.wav", "", null, null, null, ID_SESSION, null);
+                ID_PLACEHOLDER, "Car640380-2026-Pass2-Z1-reconstruit.wav", "", null, null, null, ID_SESSION);
     }
 
     // --- Helpers (autonomes, pas de helper partagé entre fichiers de test) --------------------
