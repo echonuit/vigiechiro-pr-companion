@@ -16,8 +16,8 @@ import java.util.concurrent.ConcurrentHashMap;
 /// ## Le defaut que cette classe ferme
 ///
 /// Jusqu'ici, le moteur recevait la liste des ZIP **presents** sur le disque. Si les archives avaient
-/// disparu (liberation d'espace, nettoyage manuel, interruption), `ServiceLot.fichiersDepotParDefaut`
-/// n'en trouvait aucune et **basculait sur les sequences WAV**. Le plan de depot changeait alors
+/// disparu (liberation d'espace, nettoyage manuel, interruption), le **choix de depot par defaut
+/// d'alors** n'en trouvait aucune et **basculait sur les sequences WAV**. Le plan de depot changeait alors
 /// entierement d'identifiants, et `synchroniserPlan` supprimait les unites ZIP du suivi : la
 /// progression partielle etait **jetee en silence**, et le depot repartait de zero dans un autre mode.
 ///
