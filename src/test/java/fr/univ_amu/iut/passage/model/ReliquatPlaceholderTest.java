@@ -175,8 +175,7 @@ class ReliquatPlaceholderTest {
                     false,
                     ID_SESSION,
                     null,
-                    Files.size(tranche),
-                    empreinte(tranche)));
+                    new EmpreinteContenu(Files.size(tranche), empreinte(tranche))));
         }
         return lignes;
     }
@@ -194,8 +193,7 @@ class ReliquatPlaceholderTest {
                 sequence.dansSelection(),
                 sequence.idSession(),
                 sequence.horodatageCapture(),
-                sequence.tailleOctets(),
-                sequence.empreinte());
+                sequence.empreinteContenu());
     }
 
     private static EnregistrementOriginal original(long id, String nom, Path fichier, double duree) throws IOException {

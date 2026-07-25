@@ -11,6 +11,7 @@ import fr.univ_amu.iut.commun.model.dao.UtilisateurDao;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.Passage;
@@ -164,8 +165,7 @@ class SequenceDaoTest {
                 false,
                 idSession,
                 null,
-                1_474_604L,
-                "abc123");
+                new EmpreinteContenu(1_474_604L, "abc123"));
 
         SequenceDEcoute relu = dao.findById(dao.insert(avecEmpreinte).id()).orElseThrow();
 

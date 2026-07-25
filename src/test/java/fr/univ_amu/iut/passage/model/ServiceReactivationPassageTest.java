@@ -830,8 +830,9 @@ class ServiceReactivationPassageTest {
                     false,
                     idSession,
                     null,
-                    avecEmpreinte ? Files.size(fichier) : null,
-                    avecEmpreinte ? Empreintes.empreinteCourte(fichier) : null));
+                    new EmpreinteContenu(
+                            avecEmpreinte ? Files.size(fichier) : null,
+                            avecEmpreinte ? Empreintes.empreinteCourte(fichier) : null)));
             Files.delete(fichier); // l'audio quitte le workspace : absence observee
             index++;
         }
@@ -925,8 +926,7 @@ class ServiceReactivationPassageTest {
                     false,
                     idSession,
                     null,
-                    produite.octets(),
-                    produite.empreinte()));
+                    new EmpreinteContenu(produite.octets(), produite.empreinte())));
             Files.delete(produite.chemin()); // archivage : les tranches quittent le disque
         }
 
@@ -990,8 +990,7 @@ class ServiceReactivationPassageTest {
                     false,
                     idSession,
                     null,
-                    null,
-                    null));
+                    EmpreinteContenu.ABSENTE));
             index++;
         }
 
@@ -1055,8 +1054,7 @@ class ServiceReactivationPassageTest {
                     false,
                     idSession,
                     null,
-                    null,
-                    null));
+                    EmpreinteContenu.ABSENTE));
             Files.delete(produite.chemin()); // archivage : les tranches quittent le disque
             index++;
         }

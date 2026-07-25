@@ -147,7 +147,17 @@ class FenetreObserveeNuitTest {
 
     private static SequenceDEcoute sequence(LocalDateTime capture) {
         return new SequenceDEcoute(
-                null, "seq.wav", null, 0, 0.0, 5.0, "/tmp/nuit/seq.wav", false, ID_SESSION, capture, 0L, null);
+                null,
+                "seq.wav",
+                null,
+                0,
+                0.0,
+                5.0,
+                "/tmp/nuit/seq.wav",
+                false,
+                ID_SESSION,
+                capture,
+                new EmpreinteContenu(0L, null));
     }
 
     private static Passage passageAvec(String heureDebut, String heureFin) {

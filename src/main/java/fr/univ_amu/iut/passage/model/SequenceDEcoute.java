@@ -25,11 +25,12 @@ import java.time.LocalDateTime;
 /// @param idSession identifiant de la session contenante (FK → `recording_session.id`)
 /// @param horodatageCapture heure réelle de début de la tranche (extraite du nom de fichier à l'import,
 ///     `_AAAAMMJJ_HHMMSS`), ou `null` si le nom n'est pas horodaté (jeux de test, fichiers non standard)
-/// @param tailleOctets taille du fichier en octets (#1299), ou `null` si importée avant V23 et non
-///     rétro-remplie (fichier déjà parti : identité vérifiable seulement par la cascade #1309)
-/// @param empreinte empreinte courte de contenu (SHA-256 hexadécimal des 64 premiers Kio, cf.
-///     `Empreintes.empreinteCourte`), ou `null` dans les mêmes cas que [#tailleOctets] ; c'est la
-///     preuve d'identité la plus forte au moment de réactiver un passage archivé (#1302)
+/// @param empreinteContenu taille + empreinte courte de contenu (SHA-256 hexadécimal des 64 premiers
+///     Kio, cf. `Empreintes.empreinteCourte`), regroupées en un [EmpreinteContenu] (EPIC #2483). Ses
+///     deux champs valent `null` si la séquence a été importée avant V23 et non rétro-remplie (fichier
+///     déjà parti : identité vérifiable seulement par la cascade #1309) ; c'est la preuve d'identité la
+///     plus forte au moment de réactiver un passage archivé (#1302). Lecture par les accesseurs de
+///     compatibilité [#empreinte()] et [#tailleOctets()]
 public record SequenceDEcoute(
         Long id,
         String nomFichier,
@@ -41,8 +42,27 @@ public record SequenceDEcoute(
         boolean dansSelection,
         Long idSession,
         LocalDateTime horodatageCapture,
-        Long tailleOctets,
-        String empreinte) {
+        EmpreinteContenu empreinteContenu) {
+
+    /// Normalise l'absence de signature : un `empreinteContenu` nul devient [EmpreinteContenu#ABSENTE],
+    /// pour que les lecteurs (dont [#empreinte()] et [#tailleOctets()]) n'aient jamais à tester le nul.
+    public SequenceDEcoute {
+        if (empreinteContenu == null) {
+            empreinteContenu = EmpreinteContenu.ABSENTE;
+        }
+    }
+
+    /// Empreinte courte du contenu, ou `null` si inconnue. Accesseur de compatibilité : la valeur vit
+    /// désormais dans [#empreinteContenu()] (regroupée avec la taille, EPIC #2483).
+    public String empreinte() {
+        return empreinteContenu.empreinte();
+    }
+
+    /// Taille du fichier en octets, ou `null` si inconnue. Accesseur de compatibilité : la valeur vit
+    /// désormais dans [#empreinteContenu()] (regroupée avec l'empreinte, EPIC #2483).
+    public Long tailleOctets() {
+        return empreinteContenu.tailleOctets();
+    }
 
     /// Constructeur de **compatibilité** (sans horodatage de capture) : préserve les appels antérieurs à
     /// #530 (l'horodatage est `null`, rempli à l'import ou par backfill). Voir [#horodatageCapture].
@@ -94,8 +114,7 @@ public record SequenceDEcoute(
                 dansSelection,
                 idSession,
                 horodatageCapture,
-                null,
-                null);
+                EmpreinteContenu.ABSENTE);
     }
 
     /// Son fichier est-il **là** ? (EPIC #1944, passe 7)

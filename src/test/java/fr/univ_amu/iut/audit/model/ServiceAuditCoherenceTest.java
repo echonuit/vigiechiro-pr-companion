@@ -20,6 +20,7 @@ import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.VerificationDepot;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import fr.univ_amu.iut.passage.model.Enregistreur;
 import fr.univ_amu.iut.passage.model.JournalDuCapteur;
@@ -450,8 +451,7 @@ class ServiceAuditCoherenceTest {
                     true,
                     idSession,
                     null,
-                    Files.size(fichier),
-                    Empreintes.empreinteCourte(fichier)));
+                    new EmpreinteContenu(Files.size(fichier), Empreintes.empreinteCourte(fichier))));
         }
         Path journal = Files.write(racineSession.resolve("LogPR" + SERIE + ".txt"), new byte[16]);
         journalDao.insert(new JournalDuCapteur(null, journal.toString(), null, null, idSession));
