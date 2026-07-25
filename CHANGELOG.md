@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.45.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.45.1...v2.45.2) (2026-07-25)
+
+
+### Bug Fixes
+
+* **connexion:** le bandeau reserve sa place au lieu de pousser les boutons dehors ([#2486](https://github.com/echonuit/vigiechiro-pr-companion/issues/2486)) ([b607317](https://github.com/echonuit/vigiechiro-pr-companion/commit/b607317ed5b2f73ec4498a69cb6dd0369b9f9afd)), closes [#1534](https://github.com/echonuit/vigiechiro-pr-companion/issues/1534)
+
 ## [2.45.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.45.0...v2.45.1) (2026-07-24)
 
 
