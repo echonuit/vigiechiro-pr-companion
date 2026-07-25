@@ -33,6 +33,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
+import org.testfx.util.WaitForAsyncUtils;
 
 /// Test d'intégration TestFX de la modale « Connexion VigieChiro » (#727/#741) : chargement du FXML via
 /// Guice (client mocké, ouvreur de lien espionné, stockage sur un dossier temporaire vierge), état
@@ -100,6 +101,27 @@ class ConnexionModaleViewTest {
         Label bandeau = robot.lookup("#bandeauStatut").queryAs(Label.class);
         assertThat(bandeau.isVisible()).isTrue();
         assertThat(bandeau.getText()).contains("Marque-page copié");
+    }
+
+    @Test
+    @DisplayName("#1534 : le bandeau qui paraît agrandit la fenêtre au lieu de pousser les boutons dehors")
+    void bandeau_agrandit_la_fenetre(FxRobot robot) {
+        Stage fenetre = (Stage) robot.lookup("#racine").query().getScene().getWindow();
+        double avant = fenetre.getHeight();
+
+        // La modale a été dimensionnée à l'ouverture avec le bandeau masqué (managed=false). Le rendre
+        // visible réserve sa place ; sans suivi de croissance, la fenêtre ne bougeait pas et « Se
+        // déconnecter »/« Fermer » passaient sous la ligne de flottaison.
+        robot.clickOn("Copier le marque-page");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(robot.lookup("#bandeauStatut").queryAs(Label.class).isManaged())
+                .as("le bandeau doit occuper sa place une fois affiché")
+                .isTrue();
+        assertThat(fenetre.getHeight())
+                .as("la fenêtre grandit pour loger le bandeau (Modales.suivreLaCroissance), au lieu de "
+                        + "laisser son apparition pousser les boutons du bas hors du cadre (#1534)")
+                .isGreaterThan(avant);
     }
 
     @Test

@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
 import fr.univ_amu.iut.connexion.viewmodel.ConnexionViewModel;
 import java.util.Objects;
@@ -105,6 +106,11 @@ public class ConnexionModaleController {
 
     @FXML
     private void initialize() {
+        // Le bandeau de statut paraît (managed) sur une action - « Marque-page copié… », une invite. La
+        // modale ayant été dimensionnée à l'ouverture SANS lui, sa venue poussait les boutons du bas hors
+        // de la fenêtre (#1534). On fait suivre à la fenêtre la croissance de son contenu, comme les
+        // autres modales à révélation.
+        Modales.suivreLaCroissance(racine, bandeauStatut.managedProperty());
         labelIdentite.textProperty().bind(viewModel.identiteProperty());
         // Le badge d'identité vire au vert quand on est connecté, au gris sinon (affordance d'état).
         viewModel.connecteProperty().addListener((obs, ancien, connecte) -> majBadgeIdentite(connecte));
