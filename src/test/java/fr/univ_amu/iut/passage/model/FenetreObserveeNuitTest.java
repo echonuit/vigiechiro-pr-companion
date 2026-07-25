@@ -142,7 +142,7 @@ class FenetreObserveeNuitTest {
 
     private static EnregistrementOriginal original(String nomFichier) {
         return new EnregistrementOriginal(
-                null, nomFichier, "/tmp/nuit/" + nomFichier, 5.0, 384000, null, ID_SESSION, 0L);
+                null, nomFichier, "/tmp/nuit/" + nomFichier, 5.0, 384000, ID_SESSION, new EmpreinteContenu(0L, null));
     }
 
     private static SequenceDEcoute sequence(LocalDateTime capture) {

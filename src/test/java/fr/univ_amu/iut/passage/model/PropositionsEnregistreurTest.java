@@ -107,6 +107,6 @@ class PropositionsEnregistreurTest {
     }
 
     private static EnregistrementOriginal original(String nom) {
-        return new EnregistrementOriginal(1L, nom, "/ws/originaux/" + nom, null, null, null, ID_SESSION, null);
+        return new EnregistrementOriginal(1L, nom, "/ws/originaux/" + nom, null, null, null, ID_SESSION);
     }
 }

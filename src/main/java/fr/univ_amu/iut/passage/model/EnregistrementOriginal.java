@@ -17,23 +17,44 @@ package fr.univ_amu.iut.passage.model;
 ///     code qui suppose ce fichier ouvrable.
 /// @param dureeSecondes durée en secondes (optionnel, typiquement 2-30 s)
 /// @param frequenceEchantillonnageHz fréquence d'échantillonnage en Hz (optionnel, ex. 384000)
-/// @param sha256 empreinte SHA-256 hexadécimale (optionnel, intégrité bit-à-bit)
 /// @param idSession identifiant de la session contenante (FK → `recording_session.id`)
-/// @param tailleOctets taille du fichier en octets (#1299), pré-contrôle rapide avant le [#sha256]
-///     intégral quand une réactivation repart des bruts ; `null` si importé avant V23 et non
-///     rétro-rempli (fichier purgé)
+/// @param empreinteContenu taille + empreinte **SHA-256 intégrale** (intégrité bit-à-bit), regroupées
+///     en un [EmpreinteContenu] (EPIC #2483). La taille est le pré-contrôle rapide avant le hash quand
+///     une réactivation repart des bruts ; ses deux champs valent `null` si importé avant V23 et non
+///     rétro-rempli (fichier purgé). Lecture par les accesseurs de compatibilité [#sha256()] et
+///     [#tailleOctets()]
 public record EnregistrementOriginal(
         Long id,
         String nomFichier,
         String cheminFichier,
         Double dureeSecondes,
         Integer frequenceEchantillonnageHz,
-        String sha256,
         Long idSession,
-        Long tailleOctets) {
+        EmpreinteContenu empreinteContenu) {
+
+    /// Normalise l'absence de signature : un `empreinteContenu` nul devient [EmpreinteContenu#ABSENTE],
+    /// pour que les lecteurs (dont [#sha256()] et [#tailleOctets()]) n'aient jamais à tester le nul.
+    public EnregistrementOriginal {
+        if (empreinteContenu == null) {
+            empreinteContenu = EmpreinteContenu.ABSENTE;
+        }
+    }
+
+    /// Empreinte **SHA-256 intégrale** du fichier (intégrité bit-à-bit), ou `null` si inconnue.
+    /// Accesseur de compatibilité : la valeur vit désormais dans [#empreinteContenu()] (regroupée avec
+    /// la taille, EPIC #2483).
+    public String sha256() {
+        return empreinteContenu.empreinte();
+    }
+
+    /// Taille du fichier en octets, ou `null` si inconnue. Accesseur de compatibilité : la valeur vit
+    /// désormais dans [#empreinteContenu()] (regroupée avec l'empreinte, EPIC #2483).
+    public Long tailleOctets() {
+        return empreinteContenu.tailleOctets();
+    }
 
     /// Constructeur de **compatibilité** (sans taille) : préserve les appels antérieurs à #1299 (la
-    /// taille vaut `null`, remplie à l'import ou par le rétro-remplissage). Voir [#tailleOctets].
+    /// taille vaut `null`, remplie à l'import ou par le rétro-remplissage). Voir [#tailleOctets()].
     public EnregistrementOriginal(
             Long id,
             String nomFichier,
@@ -42,6 +63,13 @@ public record EnregistrementOriginal(
             Integer frequenceEchantillonnageHz,
             String sha256,
             Long idSession) {
-        this(id, nomFichier, cheminFichier, dureeSecondes, frequenceEchantillonnageHz, sha256, idSession, null);
+        this(
+                id,
+                nomFichier,
+                cheminFichier,
+                dureeSecondes,
+                frequenceEchantillonnageHz,
+                idSession,
+                new EmpreinteContenu(null, sha256));
     }
 }

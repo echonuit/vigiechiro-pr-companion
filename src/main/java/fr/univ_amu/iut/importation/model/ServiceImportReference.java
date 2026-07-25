@@ -273,7 +273,13 @@ public class ServiceImportReference {
     /// `NOT NULL` mais n'ouvre rien. L'`idSession` est posé par le DAO à l'insertion.
     private static EnregistrementOriginal placeholder(OriginalTransforme groupe) {
         return new EnregistrementOriginal(
-                null, groupe.nomOriginal(), groupe.cheminOriginalSentinelle().toString(), null, null, null, null, null);
+                null,
+                groupe.nomOriginal(),
+                groupe.cheminOriginalSentinelle().toString(),
+                null,
+                null,
+                null,
+                EmpreinteContenu.ABSENTE);
     }
 
     /// Séquence référencée : `cheminFichier` = WAV externe (mode référence) ou copie interne (mode copie),

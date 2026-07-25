@@ -907,9 +907,8 @@ class ServiceReactivationPassageTest {
                         brut.toString(),
                         transformation.dureeSourceSecondes(),
                         transformation.frequenceSourceHz(),
-                        transformation.sha256(),
                         idSession,
-                        transformation.tailleSourceOctets()))
+                        new EmpreinteContenu(transformation.tailleSourceOctets(), transformation.sha256())))
                 .id();
 
         List<String> noms = new ArrayList<>();

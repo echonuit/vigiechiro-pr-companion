@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.persistence.DaoGenerique;
 import fr.univ_amu.iut.commun.persistence.DataAccessException;
 import fr.univ_amu.iut.commun.persistence.RowMapper;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.EmpreinteContenu;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
 import java.sql.Connection;
 import java.sql.ResultSet;
@@ -24,9 +25,8 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
             rs.getString("file_path"),
             (Double) rs.getObject("duration_s"),
             lireIntNullable(rs, "sample_rate_hz"),
-            rs.getString("sha256"),
             rs.getLong("session_id"),
-            lireLongNullable(rs, "size_bytes"));
+            new EmpreinteContenu(lireLongNullable(rs, "size_bytes"), rs.getString("sha256")));
 
     /// Lit une colonne `INTEGER` nullable en [Integer], en préservant le `null`.
     private static Integer lireIntNullable(ResultSet rs, String colonne) throws SQLException {
@@ -95,9 +95,8 @@ public class EnregistrementOriginalDao extends DaoGenerique<EnregistrementOrigin
                 original.cheminFichier(),
                 original.dureeSecondes(),
                 original.frequenceEchantillonnageHz(),
-                original.sha256(),
                 original.idSession(),
-                original.tailleOctets());
+                original.empreinteContenu());
     }
 
     @Override
