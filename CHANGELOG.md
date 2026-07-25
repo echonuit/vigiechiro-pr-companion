@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+## [2.45.3](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.45.2...v2.45.3) (2026-07-25)
+
+
+### Bug Fixes
+
+* **sites:** les modales à révélation suivent la croissance, et un garde-fou les détecte ([#2493](https://github.com/echonuit/vigiechiro-pr-companion/issues/2493)) ([#2497](https://github.com/echonuit/vigiechiro-pr-companion/issues/2497)) ([d349a2f](https://github.com/echonuit/vigiechiro-pr-companion/commit/d349a2fb3930e58f752ea1964a580b9edaafb43f)), closes [#2486](https://github.com/echonuit/vigiechiro-pr-companion/issues/2486) [#1534](https://github.com/echonuit/vigiechiro-pr-companion/issues/1534) [#2496](https://github.com/echonuit/vigiechiro-pr-companion/issues/2496) [#2467](https://github.com/echonuit/vigiechiro-pr-companion/issues/2467)
+
 ## [2.45.2](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.45.1...v2.45.2) (2026-07-25)
 
 
