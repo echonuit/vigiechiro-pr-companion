@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.ConfirmateurModifiable;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
+import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
@@ -185,6 +186,9 @@ public class RattachementModaleController {
         // aussi des succès (« Métadonnées récupérées depuis Vigie-Chiro. ») et des guidages de saisie.
         BandeauRetour.installer(
                 bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+        // #2496 : le bandeau est épinglé sous le corps défilant ; quand il paraît, la fenêtre suit sa
+        // croissance (bornée, elle reste sous la taille de l'écran) pour ne pas rogner le pied.
+        Modales.suivreLaCroissance(racine, bandeauRetour.managedProperty());
 
         // Validation « en direct » (#790) : « Appliquer » reste désactivé tant que l'année n'a pas 4
         // chiffres et le n° de passage au moins 1 ; chaque spinner rougit sur une valeur hors domaine. Le

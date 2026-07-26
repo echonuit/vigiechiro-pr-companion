@@ -85,3 +85,20 @@
   -fx-text-fill: -couleur-texte-discret;
   -fx-text-alignment: center;
 }
+
+/* Corps defilant de la modale « Modifier le passage » (#2496). Le formulaire est trop long pour tenir
+   d'une traite sur un petit ecran ; il defile dans ce ScrollPane tandis que le pied et le bandeau
+   restent epingles. Le ScrollPane doit se FONDRE dans le fond blanc de `.modale-saisie` : ni bordure,
+   ni fond gris, ni lisere de focus. Seule la barre verticale apparait, au besoin. */
+.corps-modale {
+  -fx-background-color: transparent;
+  -fx-padding: 0;
+}
+
+.corps-modale > .viewport {
+  -fx-background-color: transparent;
+}
+
+.corps-modale:focused {
+  -fx-background-insets: 0;
+}

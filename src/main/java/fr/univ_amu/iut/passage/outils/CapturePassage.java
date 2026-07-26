@@ -299,6 +299,10 @@ public final class CapturePassage {
         RattachementModaleController controleur = loader.getController();
         controleur.demarrer(idPassage, NUMERO_CARRE, CODE_POINT, () -> {});
         Scene scene = new Scene(vue);
+        // Le corps du formulaire vit desormais dans un ScrollPane (#2496) : son contenu n'est atteignable
+        // par scene.lookup qu'une fois le skin construit, donc apres une passe CSS + layout.
+        vue.applyCss();
+        vue.layout();
         // On passe par le CHAMP et non par le ViewModel : c'est ce que fait l'utilisateur, et cela evite
         // d'ouvrir une couture d'apercu dans le controleur pour les besoins d'une capture.
         ((TextField) scene.lookup("#champTemperature")).setText("huit degres");

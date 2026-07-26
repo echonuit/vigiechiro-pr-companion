@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-25
 - **Chantier** : #2493 (issu du fix connexion #2486, du patron #1534)
-- **Vérification** : probable — `scripts/adr/2493-modale-suit-croissance.py` (cliquet : 1)
+- **Vérification** : probable — `scripts/adr/2493-modale-suit-croissance.py` (cliquet : 0)
 
 ## Contexte
 
@@ -28,10 +28,10 @@ Un garde-fou `probable` (`scripts/adr/2493-modale-suit-croissance.py`) liste les
 
 - Un retour qui paraît dans une modale n'y pousse plus les boutons de validation hors du cadre.
 - La vérification est `probable`, pas `certaine` : « est-ce une modale ? » est approché par le nom du controller (`*Modale*Controller`), et un popup nommé autrement serait manqué ; « révèle-t-elle un bandeau qui pousse des boutons ? » se lit à l'intention. Un humain confirme les suspects.
-- Le cliquet démarre à **3** (la dette trouvée à l'audit) et descend à mesure que les modales sont câblées. Deux l'ont été (ModalePoint, ModaleSite) ; **RattachementModale reste à 1** : sur cette grande modale, `sizeToScene` fait planter le rendu de la Headless Platform en test (`HeadlessWindow.blit`, IndexOutOfBounds). Le fix est correct en production mais bloqué en CI, d'où un report tracé - le cliquet à 1 le rend visible au lieu de le cacher.
+- Le cliquet démarre à **3** (la dette trouvée à l'audit) et descend à mesure que les modales sont câblées : ModalePoint, ModaleSite, puis **RattachementModale** ; **cliquet à 0**. Cette dernière a demandé plus que le câblage (#2496) : à ~1017 px une fois le bandeau révélé, elle dépassait l'écran headless de test (figé à 1000×1000, `HeadlessWindow.blit` débordait) **et** les vrais petits écrans. La borner (corps défilant + pied épinglé, cf. alternatives) l'a ramenée sous l'écran ; le câblage y est alors devenu sûr et suffisant.
 
 ## Alternatives écartées
 
 - **Réserver la place du bandeau (managed=true figé).** Un bandeau `wrapText` a une hauteur variable (1 à 3 lignes) : réserver une place fixe gaspille de l'espace quand il est vide, ou rogne quand il est haut. Faire suivre la croissance s'ajuste à la hauteur réelle.
-- **Un `ScrollPane` autour du contenu de la modale.** Déplace le problème : les boutons du bas passeraient sous une barre de défilement au lieu de disparaître. Une modale de saisie doit montrer ses actions, pas les faire défiler.
+- **Un `ScrollPane` autour de _tout_ le contenu de la modale.** Déplace le problème : les boutons du bas passeraient sous une barre de défilement au lieu de disparaître. Une modale de saisie doit montrer ses actions, pas les faire défiler. La variante retenue pour une modale **irréductiblement longue** (RattachementModale, #2496) échappe à cette objection : seul le **corps** défile, le bandeau et le pied restent **épinglés hors du défilement**, donc toujours visibles. C'est l'exception, pas la règle : une modale qui tient sur un écran ne prend pas de `ScrollPane`.
 - **Une `certaine` par test.** « Cette classe est-elle une modale, et ce nœud pousse-t-il vraiment des boutons ? » demande un jugement ; un test déterministe se tromperait dans les deux sens. D'où `probable` avec un humain dans la boucle.
