@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.view.ActiviteMaSaison;
 import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
@@ -39,8 +40,12 @@ public class SaisonModule extends ModuleDeFeature {
     @Provides
     @Singleton
     ServiceSoldeSaison fournirServiceSoldeSaison(
-            SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
-        return new ServiceSoldeSaison(siteDao, pointDao, passageDao, horloge);
+            SiteDao siteDao,
+            PointDao pointDao,
+            PassageDao passageDao,
+            PassageOpportunisteDao opportunistes,
+            Horloge horloge) {
+        return new ServiceSoldeSaison(siteDao, pointDao, passageDao, opportunistes, horloge);
     }
 
     // ViewModel volontairement NON @Singleton (comme MultisiteViewModel) : un VM frais par chargement

@@ -40,9 +40,11 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             "Statut P1",
             "Date P1",
             "Verdict P1",
+            "Opportuniste P1",
             "Statut P2",
             "Date P2",
             "Verdict P2",
+            "Opportuniste P2",
             "Reste à faire");
 
     @Option(names = "--annee", description = "Année de la saison (par défaut : la saison courante).")
@@ -122,6 +124,9 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
         if (cas.date() != null) {
             base += " " + cas.date().format(JOUR_MOIS);
         }
+        if (cas.opportuniste()) {
+            base += " opportuniste";
+        }
         if (cas.inexploitable()) {
             base += " inexploitable";
         }
@@ -138,9 +143,11 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
                     statut(ligne.passage1()),
                     date(ligne.passage1()),
                     verdict(ligne.passage1()),
+                    opportuniste(ligne.passage1()),
                     statut(ligne.passage2()),
                     date(ligne.passage2()),
                     verdict(ligne.passage2()),
+                    opportuniste(ligne.passage2()),
                     ligne.resteAFaire()));
         }
         return lignes;
@@ -155,9 +162,11 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
             objet.put("statut1", champ(statut(ligne.passage1())));
             objet.put("date1", champ(date(ligne.passage1())));
             objet.put("verdict1", champ(verdict(ligne.passage1())));
+            objet.put("opportuniste1", ligne.passage1().opportuniste());
             objet.put("statut2", champ(statut(ligne.passage2())));
             objet.put("date2", champ(date(ligne.passage2())));
             objet.put("verdict2", champ(verdict(ligne.passage2())));
+            objet.put("opportuniste2", ligne.passage2().opportuniste());
             objet.put("resteAFaire", ligne.resteAFaire());
             objets.add(objet);
         }
@@ -175,6 +184,11 @@ public final class AfficherSoldeSaison implements Callable<Integer> {
 
     private static String verdict(CasePassage cas) {
         return cas.verdict() == null ? "" : cas.verdict().libelle();
+    }
+
+    /// « oui » pour une nuit opportuniste (#2525, hors protocole), vide sinon (colonne CSV).
+    private static String opportuniste(CasePassage cas) {
+        return cas.opportuniste() ? "oui" : "";
     }
 
     /// Une chaîne vide (champ de passage absent) devient `null` en JSON, plus juste pour un script.

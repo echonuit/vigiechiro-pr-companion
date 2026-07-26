@@ -27,7 +27,7 @@ class SaisonViewModelTest {
     }
 
     private static CasePassage depose(String date) {
-        return new CasePassage(10L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.parse(date));
+        return new CasePassage(10L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.parse(date), false);
     }
 
     @Test

@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +38,9 @@ class CliSoldeSaisonTest {
     Path workspace;
 
     private Cli cli;
+    private Injector injecteur;
+    private SourceDeDonnees source;
+    private String idUser;
     private ByteArrayOutputStream tamponSortie;
     private ByteArrayOutputStream tamponErreur;
     private PrintStream sortie;
@@ -45,11 +49,11 @@ class CliSoldeSaisonTest {
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", workspace.toString());
-        Injector injecteur = Cli.injecteurApplicatif();
+        injecteur = Cli.injecteurApplicatif();
         cli = new Cli(injecteur);
         injecteur.getInstance(MigrationSchema.class).migrer();
-        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
-        String idUser = injecteur.getInstance(Key.get(String.class, Names.named("idUtilisateurCourant")));
+        source = injecteur.getInstance(SourceDeDonnees.class);
+        idUser = injecteur.getInstance(Key.get(String.class, Names.named("idUtilisateurCourant")));
 
         semer(source, idUser, "640001", "A1", 1, "2026-06-20", StatutWorkflow.DEPOSE, Verdict.OK);
         semer(source, idUser, "640001", "A1", 2, "2026-08-20", StatutWorkflow.DEPOSE, Verdict.OK);
@@ -68,7 +72,7 @@ class CliSoldeSaisonTest {
         System.clearProperty("vigiechiro.workspace");
     }
 
-    private static void semer(
+    private static long semer(
             SourceDeDonnees source,
             String idUser,
             String carre,
@@ -77,7 +81,7 @@ class CliSoldeSaisonTest {
             String date,
             StatutWorkflow statut,
             Verdict verdict) {
-        JeuDeDonneesPassage.dans(source)
+        return JeuDeDonneesPassage.dans(source)
                 .utilisateur(idUser)
                 .carre(carre)
                 .nomSite("Site " + carre)
@@ -85,7 +89,8 @@ class CliSoldeSaisonTest {
                 .nuit(numero, 2026, date)
                 .statut(statut)
                 .verdict(verdict)
-                .semer();
+                .semer()
+                .idPassage();
     }
 
     private String texteSortie() {
@@ -142,5 +147,24 @@ class CliSoldeSaisonTest {
         int code = cli.executer(new String[] {"solde-saison", "--format", "csv"}, sortie, erreur);
 
         assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+    }
+
+    @Test
+    @DisplayName("#2525 : une nuit opportuniste est signalée dans les trois formats")
+    void opportuniste_signale_dans_les_trois_formats() {
+        long id = semer(source, idUser, "640005", "E1", 1, "2026-06-25", StatutWorkflow.DEPOSE, Verdict.OK);
+        injecteur.getInstance(PassageOpportunisteDao.class).marquer(id);
+
+        assertThat(cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "csv"}, sortie, erreur))
+                .isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie()).contains("Opportuniste P1").contains("640005").contains("oui");
+
+        tamponSortie.reset();
+        cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "texte"}, sortie, erreur);
+        assertThat(texteSortie()).contains("opportuniste");
+
+        tamponSortie.reset();
+        cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, sortie, erreur);
+        assertThat(texteSortie()).contains("\"opportuniste1\"");
     }
 }

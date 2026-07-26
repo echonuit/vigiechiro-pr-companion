@@ -28,6 +28,7 @@ import java.util.List;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.TableView;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.DisplayName;
@@ -60,7 +61,8 @@ class SaisonViewTest {
                                 "640001",
                                 "A1",
                                 1L,
-                                new CasePassage(42L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 20)),
+                                new CasePassage(
+                                        42L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 20), false),
                                 CasePassage.absente(),
                                 "Poser l'enregistreur avant le 30/09"),
                         new LigneSaison(
@@ -69,7 +71,15 @@ class SaisonViewTest {
                                 2L,
                                 CasePassage.absente(),
                                 CasePassage.absente(),
-                                "Poser l'enregistreur avant le 31/07")));
+                                "Poser l'enregistreur avant le 31/07"),
+                        new LigneSaison(
+                                "640003",
+                                "C1",
+                                3L,
+                                new CasePassage(
+                                        99L, StatutWorkflow.DEPOSE, Verdict.OK, LocalDate.of(2026, 6, 25), true),
+                                CasePassage.absente(),
+                                "")));
         when(service.soldeCourant(anyString())).thenReturn(solde);
         when(service.soldePour(anyString(), anyInt())).thenReturn(solde);
 
@@ -97,7 +107,14 @@ class SaisonViewTest {
     @DisplayName("une ligne par point suivi")
     void une_ligne_par_point(FxRobot robot) {
         TableView<?> table = robot.lookup("#tableSaison").queryAs(TableView.class);
-        assertThat(table.getItems()).hasSize(2);
+        assertThat(table.getItems()).hasSize(3);
+    }
+
+    @Test
+    @DisplayName("#2525 : une nuit opportuniste s'affiche en pastille « hors protocole »")
+    void case_opportuniste_pastille(FxRobot robot) {
+        Labeled pastille = robot.lookup(".badge-opportuniste").queryAs(Labeled.class);
+        assertThat(pastille.getText()).contains("Opportuniste");
     }
 
     @Test

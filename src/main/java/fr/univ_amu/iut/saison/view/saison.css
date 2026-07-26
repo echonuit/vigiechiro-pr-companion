@@ -17,3 +17,12 @@
     -fx-text-fill: -badge-avertissement-texte;
     -fx-font-weight: bold;
 }
+
+/* Nuit opportuniste (#2525) : realisee sur le carre d'un tiers, hors protocole. Teinte indigo claire,
+ * categorie a part (ni statut de progression, ni verdict), distincte du decompte des passages normaux. */
+.badge-opportuniste {
+    -fx-background-color: #ede9fe;
+    -fx-text-fill: #5b21b6;
+    -fx-border-color: #c4b5fd;
+    -fx-border-radius: 11;
+}
