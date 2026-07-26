@@ -710,8 +710,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// (injectable), et le bouton n'est actif que dans l'état adéquat.
     @FXML
     private void supprimerArchives() {
-        if (confirmateur.confirmer("Supprimer définitivement les archives ZIP de dépôt du dossier « depot/ » ?\n\n"
-                + "Elles ont déjà été téléversées sur Vigie-Chiro et pourront être régénérées si besoin.")) {
+        if (confirmateur.confirmer("""
+                Supprimer définitivement les archives ZIP de dépôt du dossier « depot/ » ?
+
+                Elles ont déjà été téléversées sur Vigie-Chiro et pourront être régénérées si besoin.""")) {
             viewModel.supprimerArchives();
         }
     }
@@ -721,9 +723,10 @@ public class LotController implements EmplacementNavigation, ResumeStatut {
     /// injectable). Recharge la table (plan vidé) et l'état du passage (retour « Prêt à déposer »).
     @FXML
     private void reinitialiserDepot() {
-        if (confirmateur.confirmer("Réinitialiser le dépôt de cette nuit ?\n\n"
-                + "Le suivi local est effacé pour permettre un nouveau téléversement ; les archives ZIP"
-                + " sur disque et la participation Vigie-Chiro sont conservées.")) {
+        if (confirmateur.confirmer("""
+                Réinitialiser le dépôt de cette nuit ?
+
+                Le suivi local est effacé pour permettre un nouveau téléversement ; les archives ZIP sur disque et la participation Vigie-Chiro sont conservées.""")) {
             depotViewModel.reinitialiser(contexte.idPassage());
             viewModel.ouvrirSur(contexte.idPassage());
         }

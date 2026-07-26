@@ -109,7 +109,6 @@ public class ServiceImport {
                 agregatDao,
                 uniteDeTravail,
                 workspace,
-                horloge,
                 outils.espaceDisque());
     }
 
