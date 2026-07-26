@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.chart.LineChart?>
+<?import javafx.scene.chart.NumberAxis?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!--
+  M-Activite - courbe d'activité horaire d'une nuit (#2352, lot 2 du chantier #2348). Atteint depuis la
+  carte « Activité de la nuit » de M-Passage via le contrat socle OuvrirActivite. Pur câblage : tout est
+  lié à l'ActiviteViewModel par ActiviteController (courbe par espèce sur l'axe nocturne 18h vers 8h,
+  sélecteur de tranche et d'espèces).
+-->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.analyse.view.ActiviteController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
+      styleClass="ecran-activite"
+      spacing="14.0">
+
+  <!-- Barre de réglages : largeur de tranche horaire (15 / 30 / 60 min). -->
+  <HBox alignment="CENTER_LEFT" spacing="10.0">
+    <Label text="Tranche horaire" styleClass="section-sous"/>
+    <ChoiceBox fx:id="choixTranche"/>
+  </HBox>
+
+  <!-- Sélecteur d'espèces : une case par espèce de la nuit ; les cinq plus contactées sont cochées par
+       défaut. Au-delà de cinq courbes, le graphe devient illisible. -->
+  <Label text="Espèces" styleClass="section-sous"/>
+  <FlowPane fx:id="selecteurEspeces" hgap="14.0" vgap="6.0"/>
+
+  <!-- Courbe : une série par espèce sélectionnée, sur l'axe nocturne fixe 18h vers 8h (étiquettes HH
+       reconstruites par le controller). -->
+  <LineChart fx:id="grapheActivite" VBox.vgrow="ALWAYS" minHeight="280.0" legendVisible="true" animated="false">
+    <xAxis>
+      <NumberAxis label="Heure"/>
+    </xAxis>
+    <yAxis>
+      <NumberAxis label="Contacts"/>
+    </yAxis>
+  </LineChart>
+
+  <!-- État vide (#2352) : une nuit sans espèce détectée le dit, plutôt qu'un graphe vide muet. -->
+  <Label fx:id="lblEtatVide" styleClass="encart" wrapText="true"
+         text="Aucune activité à afficher : aucune espèce n'a été détectée cette nuit."/>
+
+  <padding>
+    <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
+  </padding>
+</VBox>
