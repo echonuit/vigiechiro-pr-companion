@@ -567,6 +567,21 @@ class ObservationDaoTest {
     }
 
     @Test
+    @DisplayName("#2352 : lignesAudioDeLUtilisateur ramène tous les passages de l'utilisateur, rien pour un autre")
+    void lignes_audio_de_l_utilisateur() {
+        dao.insert(observationComplete());
+        dao.insert(observation("Nyclei", null));
+
+        assertThat(audio.lignesAudioDeLUtilisateur("u-1"))
+                .as("toutes les observations des passages de u-1, avec leur contexte")
+                .hasSize(2)
+                .allSatisfy(ligne -> assertThat(ligne.numeroCarre()).isEqualTo("640380"));
+        assertThat(audio.lignesAudioDeLUtilisateur("autre"))
+                .as("cloisonnement par utilisateur")
+                .isEmpty();
+    }
+
+    @Test
     @DisplayName("#479 : updateTout applique les modifications du lot en une transaction et compte les lignes")
     void update_tout_ecrit_le_lot() {
         long id1 = dao.insert(observationComplete()).id();

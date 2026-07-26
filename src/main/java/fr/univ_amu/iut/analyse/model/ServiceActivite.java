@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-/// Service de la **courbe d'activité** d'une nuit (#2352, lot 2 du chantier #2348). Rassemble ce qu'il
-/// faut pour tracer l'activité d'un passage : les **contacts datés** de ses observations et la **fenêtre
-/// nocturne** (coucher → lever) à matérialiser sous la courbe.
+/// Service de la **courbe d'activité** (#2352, lot 2 du chantier #2348). Rassemble ce qu'il faut pour
+/// tracer l'activité d'un **passage** ou de **tous les passages** de l'utilisateur : les **contacts datés**
+/// des observations et la **fenêtre nocturne** (coucher → lever) à matérialiser sous la courbe.
 ///
 /// Il ne fait que **lire et projeter** : l'agrégation en tranches ([AgregationActivite]) et la réactivité
 /// (tranche, sélection d'espèces) restent au ViewModel, sur le modèle de la feature `analyse`
@@ -32,12 +32,23 @@ public class ServiceActivite {
         this.plageNuitPassage = plageNuitPassage;
     }
 
-    /// Les contacts datés d'un passage, prêts pour l'agrégation : chaque observation devient un
-    /// [ContactHoraire] (taxon retenu, nom, groupe, heure de capture), les pseudo-taxons `noise`/`piaf`
-    /// étant écartés. Les séquences non identifiées (sans taxon) et non horodatées **restent** dans la
-    /// liste : c'est [AgregationActivite] qui décide de leur sort, pas cette projection.
+    /// Les contacts datés d'un **passage**, prêts pour l'agrégation : chaque observation devient un
+    /// [ContactHoraire] (taxon retenu, nom, groupe, heure de capture, contexte carré/point/passage), les
+    /// pseudo-taxons `noise`/`piaf` étant écartés. Les séquences non identifiées (sans taxon) et non
+    /// horodatées **restent** dans la liste : c'est [AgregationActivite] qui décide de leur sort.
     public List<ContactHoraire> contactsDuPassage(long idPassage) {
-        return projections.lignesAudioDuPassage(idPassage).stream()
+        return versContacts(projections.lignesAudioDuPassage(idPassage));
+    }
+
+    /// **Tous** les contacts datés de l'utilisateur (tous ses passages), pour la vue Activité filtrable sur
+    /// l'ensemble des nuits : le sous-ensemble (carré, point, passage, espèce) se fait ensuite côté client,
+    /// via le socle `Filtres`. Même projection et mêmes exclusions que [#contactsDuPassage].
+    public List<ContactHoraire> contactsDeLUtilisateur(String idUtilisateur) {
+        return versContacts(projections.lignesAudioDeLUtilisateur(idUtilisateur));
+    }
+
+    private static List<ContactHoraire> versContacts(List<LigneObservationAudio> lignes) {
+        return lignes.stream()
                 .filter(ligne -> !estPseudoTaxon(taxonRetenu(ligne)))
                 .map(ServiceActivite::versContact)
                 .toList();
@@ -51,7 +62,14 @@ public class ServiceActivite {
     }
 
     private static ContactHoraire versContact(LigneObservationAudio ligne) {
-        return new ContactHoraire(taxonRetenu(ligne), ligne.nomEspece(), ligne.groupe(), ligne.heureCapture());
+        return new ContactHoraire(
+                taxonRetenu(ligne),
+                ligne.nomEspece(),
+                ligne.groupe(),
+                ligne.heureCapture(),
+                ligne.numeroCarre(),
+                ligne.codePoint(),
+                ligne.idPassage());
     }
 
     /// Taxon **retenu** d'une ligne : la correction de l'observateur si elle existe, sinon la proposition

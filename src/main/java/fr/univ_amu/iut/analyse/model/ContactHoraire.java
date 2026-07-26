@@ -13,8 +13,31 @@ import java.time.LocalDateTime;
 /// être placé sur l'axe, et un contact sans taxon (séquence non identifiée) n'est pas une espèce :
 /// [AgregationActivite] écarte les deux.
 ///
+/// Il porte aussi les **dimensions de contexte** (carré, point, passage) : elles ne servent pas à
+/// l'agrégation par espèce, mais elles rendent le contact **filtrable en cascade** (carré → point →
+/// passage → espèce) par le socle `Filtres`, quand la vue Activité couvre tous les passages et non un
+/// seul.
+///
 /// @param taxon code du taxon **retenu** (`COALESCE(observateur, tadarida)`), ou `null` (non identifié)
 /// @param nomEspece nom vernaculaire de l'espèce retenue, ou `null` (souche hors référentiel)
 /// @param groupe nom du groupe taxonomique parent (ex. « Chiroptères »), ou `null`
 /// @param heure instant réel de capture, ou `null` (séquence non horodatée)
-public record ContactHoraire(String taxon, String nomEspece, String groupe, LocalDateTime heure) {}
+/// @param numeroCarre numéro du carré du passage, ou `null`
+/// @param codePoint code du point d'écoute du passage, ou `null`
+/// @param idPassage identifiant du passage d'où vient le contact, ou `null`
+public record ContactHoraire(
+        String taxon,
+        String nomEspece,
+        String groupe,
+        LocalDateTime heure,
+        String numeroCarre,
+        String codePoint,
+        Long idPassage) {
+
+    /// Constructeur de compatibilité **sans contexte géographique** (carré/point/passage nuls) : pour les
+    /// usages qui n'agrègent ou ne trient que par espèce et heure (agrégation pure, sélection d'espèces),
+    /// où les dimensions de filtre n'ont pas de sens.
+    public ContactHoraire(String taxon, String nomEspece, String groupe, LocalDateTime heure) {
+        this(taxon, nomEspece, groupe, heure, null, null, null);
+    }
+}

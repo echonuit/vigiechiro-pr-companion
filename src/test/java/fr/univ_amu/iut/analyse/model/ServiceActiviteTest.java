@@ -31,8 +31,9 @@ class ServiceActiviteTest {
                 .thenReturn(List.of(ligne("PIPKUH", "PIPPIP", "Pipistrelle de Kuhl", "Chiroptères", HEURE)));
 
         assertThat(service.contactsDuPassage(PASSAGE))
-                .as("la correction de l'observateur l'emporte sur la proposition Tadarida")
-                .containsExactly(new ContactHoraire("PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", HEURE));
+                .as("taxon retenu (observateur prioritaire) et contexte carré/point/passage portés")
+                .containsExactly(new ContactHoraire(
+                        "PIPKUH", "Pipistrelle de Kuhl", "Chiroptères", HEURE, "640380", "A1", PASSAGE));
     }
 
     @Test
@@ -83,6 +84,19 @@ class ServiceActiviteTest {
         when(plageNuitPassage.pour(PASSAGE)).thenReturn(Optional.empty());
 
         assertThat(service.plageNuit(PASSAGE)).isEmpty();
+    }
+
+    @Test
+    void charge_tous_les_contacts_de_l_utilisateur() {
+        when(projections.lignesAudioDeLUtilisateur("u-1"))
+                .thenReturn(List.of(
+                        ligne("PIPKUH", "PIPPIP", "Pipistrelle de Kuhl", "Chiroptères", HEURE),
+                        ligne(null, "noise", null, null, HEURE)));
+
+        assertThat(service.contactsDeLUtilisateur("u-1"))
+                .as("tous les passages de l'utilisateur, pseudo-taxons écartés comme pour un passage")
+                .extracting(ContactHoraire::taxon)
+                .containsExactly("PIPKUH");
     }
 
     private static LigneObservationAudio ligne(

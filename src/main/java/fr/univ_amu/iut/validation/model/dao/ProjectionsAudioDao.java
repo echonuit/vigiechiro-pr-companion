@@ -136,6 +136,14 @@ public class ProjectionsAudioDao extends ProjectionGenerique {
                 SELECT_AUDIO + "user_id = ? AND obs.is_reference = 1" + ORDRE_AUDIO, MAPPER_LIGNE_AUDIO, idUtilisateur);
     }
 
+    /// Source **Utilisateur** : **toutes** les observations de tous les passages de l'utilisateur
+    /// (pseudo-taxons compris). Base de la vue Activité **filtrable** sur l'ensemble des nuits : le
+    /// sous-ensemble (carré, point, passage, espèce) se fait ensuite côté client, comme l'inventaire
+    /// « Espèces & observations » agrège en mémoire.
+    public List<LigneObservationAudio> lignesAudioDeLUtilisateur(String idUtilisateur) {
+        return projeter(SELECT_AUDIO + "user_id = ?" + ORDRE_AUDIO, MAPPER_LIGNE_AUDIO, idUtilisateur);
+    }
+
     /// Séquences d'un passage **sans observation Tadarida** (présentes sur disque, absentes du CSV),
     /// projetées comme des lignes audio « à revoir » : écoutables (via `idSequence`). Une éventuelle
     /// **observation manuelle** (`results_id IS NULL`, créée en validant à la main) est rattachée par un
