@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.64.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.63.0...v2.64.0) (2026-07-26)
+
+
+### Features
+
+* **analyse:** étiquettes au pic et états vides nommés sur la courbe d'activité ([#2546](https://github.com/echonuit/vigiechiro-pr-companion/issues/2546)) ([0fded20](https://github.com/echonuit/vigiechiro-pr-companion/commit/0fded203c7f8da118e87896a31fa41d0f72de165)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.63.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.62.0...v2.63.0) (2026-07-26)
 
 
