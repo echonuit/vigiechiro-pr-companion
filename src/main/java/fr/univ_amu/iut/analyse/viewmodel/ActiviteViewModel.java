@@ -9,6 +9,8 @@ import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.function.Function;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -45,6 +47,8 @@ public class ActiviteViewModel {
     private final ObservableList<CourbeEspece> especes = FXCollections.observableArrayList();
     private final ObservableSet<String> especesSelectionnees = FXCollections.observableSet(new LinkedHashSet<>());
     private final ObservableList<CourbeEspece> courbesAffichees = FXCollections.observableArrayList();
+    private final ObservableList<String> groupesDisponibles = FXCollections.observableArrayList();
+    private final ObservableList<String> carresDisponibles = FXCollections.observableArrayList();
     private final ObjectProperty<PlageNuit> plageNuit = new SimpleObjectProperty<>();
 
     public ActiviteViewModel(ServiceActivite service) {
@@ -70,9 +74,22 @@ public class ActiviteViewModel {
 
     private void remplacerContacts(List<ContactHoraire> contacts, PlageNuit fenetre) {
         tous.setAll(contacts);
+        groupesDisponibles.setAll(valeursDistinctes(ContactHoraire::groupe));
+        carresDisponibles.setAll(valeursDistinctes(ContactHoraire::numeroCarre));
         plageNuit.set(fenetre);
         reagreger();
         selectionnerLesPlusContactees();
+    }
+
+    /// Valeurs distinctes non nulles d'une dimension sur **tous** les contacts chargés (avant filtrage),
+    /// triées : peuplent les listes déroulantes des critères (groupe, carré) au moment où on ajoute la puce.
+    private List<String> valeursDistinctes(Function<ContactHoraire, String> dimension) {
+        return tous.stream()
+                .map(dimension)
+                .filter(Objects::nonNull)
+                .distinct()
+                .sorted()
+                .toList();
     }
 
     private void reagreger() {
@@ -95,6 +112,18 @@ public class ActiviteViewModel {
     /// la vue. Chaque changement ré-agrège le sous-ensemble.
     public Filtres<ContactHoraire> filtres() {
         return filtres;
+    }
+
+    /// Groupes taxonomiques présents dans les contacts chargés : peuple la liste déroulante du critère
+    /// « Taxon parent ».
+    public ObservableList<String> groupesDisponibles() {
+        return groupesDisponibles;
+    }
+
+    /// Numéros de carré présents dans les contacts chargés : peuplent la liste déroulante du critère
+    /// « Carré ».
+    public ObservableList<String> carresDisponibles() {
+        return carresDisponibles;
     }
 
     /// Largeur de tranche courante (15, 30 ou 60 min) ; la modifier ré-agrège la courbe.

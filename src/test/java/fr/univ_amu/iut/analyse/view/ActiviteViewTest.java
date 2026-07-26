@@ -27,6 +27,9 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
@@ -134,6 +137,39 @@ class ActiviteViewTest {
                 .singleElement()
                 .extracting(Lieu::libelle)
                 .isEqualTo("Activité de la nuit");
+    }
+
+    @Test
+    void le_menu_filtre_offre_carre_et_taxon_parent(FxRobot robot) {
+        MenuButton menu = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
+
+        assertThat(menu.getItems())
+                .extracting(MenuItem::getText)
+                .as("la barre propose les deux dimensions de contexte")
+                .contains("Carré", "Taxon parent");
+    }
+
+    @Test
+    void la_recherche_texte_restreint_la_courbe(FxRobot robot) {
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(
+                        concat(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5), nContacts("BARBAR", "Barbastelle", 2)));
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+        LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
+        assertThat(graphe.getData()).hasSize(2);
+
+        robot.clickOn(robot.lookup("#champRecherche").queryAs(TextField.class)).write("PIPKUH");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(graphe.getData())
+                .as("la recherche « PIPKUH » écarte la Barbastelle du sous-ensemble, ré-agrégé")
+                .hasSize(1);
+    }
+
+    private static List<ContactHoraire> concat(List<ContactHoraire> a, List<ContactHoraire> b) {
+        List<ContactHoraire> tous = new ArrayList<>(a);
+        tous.addAll(b);
+        return tous;
     }
 
     private void charger(FxRobot robot, List<ContactHoraire> contacts) {
