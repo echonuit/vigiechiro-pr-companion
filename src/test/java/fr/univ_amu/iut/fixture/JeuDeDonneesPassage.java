@@ -103,6 +103,8 @@ public final class JeuDeDonneesPassage {
     private String dateNuit = "2026-07-03";
     private StatutWorkflow statut = StatutWorkflow.IMPORTE;
     private Verdict verdict;
+    private String cheminSession = "/ws/session";
+    private boolean avecOriginal = true;
 
     private Long idSite;
     private Long idPoint;
@@ -156,6 +158,23 @@ public final class JeuDeDonneesPassage {
         return this;
     }
 
+    /// Chemin racine de la session, quand le test a besoin qu'il porte un **préfixe R6 lisible**
+    /// (`Car130711-2026-Pass1-Z41`). Le défaut `/ws/session` suffit à la plupart des tests, mais pas à ceux
+    /// qui relisent le préfixe depuis le nom du dossier ([SessionDEnregistrement#prefixe], seul endroit où
+    /// `passage` retrouve carré et point sans dépendre de `sites`).
+    public JeuDeDonneesPassage cheminSession(String chemin) {
+        this.cheminSession = chemin;
+        return this;
+    }
+
+    /// Sème le passage **sans enregistrement original** : l'état d'une nuit rapatriée de Vigie-Chiro en
+    /// **squelette** (ADR 0016), qui n'a ni fichier ni séquence. `semer()` en pose un, ce qui convient à une
+    /// nuit importée mais fausserait tout test de l'hydratation (#2555).
+    public JeuDeDonneesPassage semerSquelette() {
+        this.avecOriginal = false;
+        return semer();
+    }
+
     public JeuDeDonneesPassage nuit(int numero, int annee, String date) {
         this.numeroPassage = numero;
         this.annee = annee;
@@ -205,11 +224,13 @@ public final class JeuDeDonneesPassage {
                         null))
                 .id();
         idSession = new SessionDao(source)
-                .insert(new SessionDEnregistrement(null, "/ws/session", null, null, idPassage))
+                .insert(new SessionDEnregistrement(null, cheminSession, null, null, idPassage))
                 .id();
-        idOriginal = new EnregistrementOriginalDao(source)
-                .insert(new EnregistrementOriginal(null, "brut.wav", "/ws/brut.wav", 5.0, 384000, null, idSession))
-                .id();
+        if (avecOriginal) {
+            idOriginal = new EnregistrementOriginalDao(source)
+                    .insert(new EnregistrementOriginal(null, "brut.wav", "/ws/brut.wav", 5.0, 384000, null, idSession))
+                    .id();
+        }
         return this;
     }
 
