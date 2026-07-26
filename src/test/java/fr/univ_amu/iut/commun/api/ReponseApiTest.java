@@ -46,4 +46,28 @@ class ReponseApiTest {
                 };
         assertThat(message).isEqualTo("refusé HTTP 422 : max_results");
     }
+
+    @Test
+    @DisplayName("estReessayable : réseau et 429/5xx oui ; 4xx définitif, non connecté et succès non")
+    void est_reessayable() {
+        // Rejouable : un incident réseau, et un serveur temporairement indisponible.
+        assertThat(ReponseApi.injoignable("délai").estReessayable()).isTrue();
+        assertThat(ReponseApi.refuse(429, "slow down").estReessayable()).isTrue();
+        assertThat(ReponseApi.refuse(500, "boom").estReessayable()).isTrue();
+        assertThat(ReponseApi.refuse(503, "maintenance").estReessayable()).isTrue();
+        assertThat(ReponseApi.refuse(599, "réseau amont").estReessayable()).isTrue();
+
+        // Jamais rejoué : un refus définitif (4xx), un succès, une absence de jeton.
+        assertThat(ReponseApi.refuse(400, "corps refusé").estReessayable()).isFalse();
+        assertThat(ReponseApi.refuse(403, "URL signée expirée").estReessayable())
+                .isFalse();
+        assertThat(ReponseApi.refuse(404, "absent").estReessayable()).isFalse();
+        assertThat(ReponseApi.refuse(422, "validation").estReessayable()).isFalse();
+        assertThat(ReponseApi.succes("ok").estReessayable()).isFalse();
+        assertThat(ReponseApi.nonConnecte().estReessayable()).isFalse();
+
+        // Bornes : 499 reste un 4xx, 500 et 599 sont des 5xx, 600 n'est plus un 5xx.
+        assertThat(ReponseApi.refuse(499, "").estReessayable()).isFalse();
+        assertThat(ReponseApi.refuse(600, "").estReessayable()).isFalse();
+    }
 }

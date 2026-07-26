@@ -51,6 +51,11 @@ public sealed interface ReponseApi<T> {
         public Optional<String> echec() {
             return Optional.empty();
         }
+
+        @Override
+        public boolean estReessayable() {
+            return false;
+        }
     }
 
     /// Aucun jeton : l'appel n'a **pas eu lieu**. C'est le silence légitime du mode hors connexion,
@@ -79,6 +84,11 @@ public sealed interface ReponseApi<T> {
         @Override
         public Optional<String> echec() {
             return Optional.of("non connecté à Vigie-Chiro (aucun jeton).");
+        }
+
+        @Override
+        public boolean estReessayable() {
+            return false;
         }
     }
 
@@ -115,6 +125,11 @@ public sealed interface ReponseApi<T> {
         public Optional<String> echec() {
             return Optional.of("Vigie-Chiro injoignable : " + cause + ".");
         }
+
+        @Override
+        public boolean estReessayable() {
+            return true;
+        }
     }
 
     /// Le serveur a **répondu non** (statut hors 2xx) : l'information existe, on la garde. Le corps
@@ -148,6 +163,13 @@ public sealed interface ReponseApi<T> {
         public Optional<String> echec() {
             return Optional.of("HTTP " + statut + " : " + corps);
         }
+
+        @Override
+        public boolean estReessayable() {
+            // Seuls 429 (trop de requêtes) et 5xx (panne serveur) peuvent réussir plus tard ; un 4xx
+            // (URL signée expirée, corps refusé, jeton mort) ne deviendra jamais valide en réessayant.
+            return statut == 429 || (statut >= 500 && statut < 600);
+        }
     }
 
     /// Cause d'un `200` que nos parseurs ne savent pas lire : un portail captif ou un mandataire qui
@@ -174,6 +196,13 @@ public sealed interface ReponseApi<T> {
     /// La cause d'échec **en clair** (vocabulaire unique des messages : « non connecté... »,
     /// « VigieChiro injoignable : ... », « HTTP n : corps »), ou vide si succès.
     Optional<String> echec();
+
+    /// Si rejouer **le même appel** peut raisonnablement réussir : un incident réseau ([Injoignable]) ou
+    /// un serveur temporairement indisponible ([Refuse] `429`/`5xx`), oui ; un refus définitif (`4xx` :
+    /// URL signée expirée, corps refusé, jeton mort), l'absence de jeton ([NonConnecte]) ou un succès,
+    /// non. C'est le type scellé qui le dit, variante par variante (ADR politique de réessai), plutôt
+    /// qu'un `switch` disséminé chez les appelants qui oublierait un cas.
+    boolean estReessayable();
 
     static <T> ReponseApi<T> succes(T valeur) {
         return new Succes<>(valeur);
