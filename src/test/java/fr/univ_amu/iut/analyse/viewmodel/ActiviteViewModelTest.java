@@ -124,8 +124,51 @@ class ActiviteViewModelTest {
         assertThat(vm.plageNuitProperty().get()).isEqualTo(nuit);
     }
 
+    @Test
+    void charge_l_utilisateur_agrege_tous_ses_passages_sans_aplat_unique() {
+        when(service.contactsDeLUtilisateur("u-1")).thenReturn(concat(nContacts("PIPKUH", 4), nContacts("BARBAR", 2)));
+
+        vm.chargerUtilisateur("u-1");
+
+        assertThat(vm.especes()).extracting(CourbeEspece::taxon).containsExactly("PIPKUH", "BARBAR");
+        assertThat(vm.plageNuitProperty().get())
+                .as("plusieurs nuits : aucun aplat coucher/lever unique")
+                .isNull();
+    }
+
+    @Test
+    void un_filtre_geo_restreint_la_courbe_puis_se_relache() {
+        List<ContactHoraire> contacts = new ArrayList<>();
+        contacts.addAll(geoContacts("PIPKUH", 5, "640380"));
+        contacts.addAll(geoContacts("BARBAR", 3, "770123"));
+        when(service.contactsDeLUtilisateur("u-1")).thenReturn(contacts);
+        vm.chargerUtilisateur("u-1");
+        assertThat(vm.especes()).hasSize(2);
+
+        vm.filtres().definir("carre", contact -> "640380".equals(contact.numeroCarre()));
+
+        assertThat(vm.especes())
+                .as("le filtre carré ne laisse que l'espèce de ce carré, ré-agrégée")
+                .extracting(CourbeEspece::taxon)
+                .containsExactly("PIPKUH");
+
+        vm.filtres().reinitialiser();
+        assertThat(vm.especes())
+                .as("filtre retiré : les deux espèces reviennent")
+                .hasSize(2);
+    }
+
     private void stubContacts(List<ContactHoraire> contacts) {
         when(service.contactsDuPassage(PASSAGE)).thenReturn(contacts);
+    }
+
+    private static List<ContactHoraire> geoContacts(String taxon, int nombre, String carre) {
+        List<ContactHoraire> contacts = new ArrayList<>();
+        for (int i = 0; i < nombre; i++) {
+            contacts.add(new ContactHoraire(
+                    taxon, taxon + " (nom)", "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, i), carre, "A1", 1L));
+        }
+        return contacts;
     }
 
     private static List<ContactHoraire> nContacts(String taxon, int nombre) {
