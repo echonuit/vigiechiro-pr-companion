@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.58.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.57.0...v2.58.0) (2026-07-26)
+
+
+### Features
+
+* **analyse:** barre de filtres de la vue Activité (carré, taxon parent, recherche) ([#2531](https://github.com/echonuit/vigiechiro-pr-companion/issues/2531)) ([8e61dcf](https://github.com/echonuit/vigiechiro-pr-companion/commit/8e61dcfef55f1c5d145ad32d15b0f3d979fbeb00)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.57.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.56.0...v2.57.0) (2026-07-26)
 
 
