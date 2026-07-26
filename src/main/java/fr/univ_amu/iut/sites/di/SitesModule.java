@@ -21,8 +21,10 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.OuvrirImportation;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.ControleCarreStoc;
 import fr.univ_amu.iut.sites.model.PointLocalParLocalite;
+import fr.univ_amu.iut.sites.model.RapprochementNuitsOpportunistes;
 import fr.univ_amu.iut.sites.model.RapprochementSites;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
@@ -106,6 +108,12 @@ public class SitesModule extends ModuleDeFeature {
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
                 .to(RapprochementSites.class);
+        // Puis (phase DEPENDANTE, #2525) : les nuits réalisées sur un carré de tiers deviennent des
+        // participations opportunistes, sur la foi du référentiel que le rapprocheur ci-dessus vient
+        // d'établir au même tour.
+        Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
+                .addBinding()
+                .to(RapprochementNuitsOpportunistes.class);
     }
 
     @Provides
@@ -139,6 +147,15 @@ public class SitesModule extends ModuleDeFeature {
     @Singleton
     SiteTiersDao fournirSiteTiersDao(SourceDeDonnees source) {
         return new SiteTiersDao(source);
+    }
+
+    /// Conséquence du précédent (#2525) : les nuits des carrés de tiers deviennent opportunistes. Lit les
+    /// DAO de `passage` — dépendance `sites → passage` déjà établie (cf. [ServiceSites]).
+    @Provides
+    @Singleton
+    RapprochementNuitsOpportunistes fournirRapprochementNuitsOpportunistes(
+            SiteTiersDao siteTiers, PointDao pointDao, PassageDao passageDao, PassageOpportunisteDao opportunistes) {
+        return new RapprochementNuitsOpportunistes(siteTiers, pointDao, passageDao, opportunistes);
     }
 
     /// Service métier de référence. Reçoit ses DAO (dont [PassageDao], fourni par
