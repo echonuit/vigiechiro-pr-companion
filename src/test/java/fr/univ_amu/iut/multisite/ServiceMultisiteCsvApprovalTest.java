@@ -22,6 +22,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Optional;
 import org.approvaltests.Approvals;
 import org.approvaltests.reporters.QuietReporter;
 import org.approvaltests.reporters.UseReporter;
@@ -78,6 +79,7 @@ class ServiceMultisiteCsvApprovalTest {
                 injecteur.getInstance(PassageDao.class),
                 injecteur.getInstance(ReleveTraitementDao.class),
                 injecteur.getInstance(ResultatsIdentificationDao.class),
+                Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)));
     }
 

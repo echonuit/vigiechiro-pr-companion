@@ -65,6 +65,7 @@ class MultisiteReleveViewTest {
                 statut,
                 Verdict.OK,
                 EtatAnalyse.SANS_OBJET,
+                null,
                 null);
     }
 
