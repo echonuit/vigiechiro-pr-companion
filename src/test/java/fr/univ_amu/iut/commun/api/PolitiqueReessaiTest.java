@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import fr.univ_amu.iut.commun.api.PolitiqueReessai.Issue;
 import fr.univ_amu.iut.commun.api.PolitiqueReessai.Profil;
-import fr.univ_amu.iut.commun.api.PolitiqueReessai.Suivi;
 import fr.univ_amu.iut.commun.api.PolitiqueReessai.Temporisateur;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -43,7 +42,7 @@ class PolitiqueReessaiTest {
         ReponseApi<String> issue = ReponseApi.refuse(422, "validation");
 
         ReponseApi<String> resultat =
-                politique.executer(Profil.PREMIER_PLAN, Suivi.SILENCIEUX, scenario(Issue.de(issue)));
+                politique.executer(Profil.PREMIER_PLAN, SuiviReprise.SILENCIEUX, scenario(Issue.de(issue)));
 
         assertThat(resultat).isEqualTo(issue);
         assertThat(appels).hasValue(1);
@@ -55,7 +54,7 @@ class PolitiqueReessaiTest {
     void injoignable_puis_succes() {
         ReponseApi<String> resultat = politique.executer(
                 Profil.PREMIER_PLAN,
-                Suivi.SILENCIEUX,
+                SuiviReprise.SILENCIEUX,
                 scenario(Issue.de(ReponseApi.<String>injoignable("coupure")), Issue.de(ReponseApi.succes("ok"))));
 
         assertThat(resultat).isEqualTo(ReponseApi.succes("ok"));
@@ -67,7 +66,9 @@ class PolitiqueReessaiTest {
     @DisplayName("premier plan, toujours injoignable : 4 tentatives, 3 attentes, backoff croissant")
     void premier_plan_epuise_les_tentatives() {
         ReponseApi<String> resultat = politique.executer(
-                Profil.PREMIER_PLAN, Suivi.SILENCIEUX, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
+                Profil.PREMIER_PLAN,
+                SuiviReprise.SILENCIEUX,
+                scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
         assertThat(resultat).isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(appels).hasValue(4);
@@ -79,7 +80,9 @@ class PolitiqueReessaiTest {
     @DisplayName("arrière-plan : une seule reprise au plus, pour ne pas aggraver l'incident")
     void arriere_plan_une_seule_reprise() {
         politique.executer(
-                Profil.ARRIERE_PLAN, Suivi.SILENCIEUX, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
+                Profil.ARRIERE_PLAN,
+                SuiviReprise.SILENCIEUX,
+                scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
         assertThat(appels).hasValue(2);
         assertThat(attentes).hasSize(1);
@@ -90,7 +93,8 @@ class PolitiqueReessaiTest {
     void retry_after_fait_autorite() {
         Issue<String> imposee = new Issue<>(ReponseApi.refuse(429, "slow down"), Optional.of(Duration.ofSeconds(7)));
 
-        politique.executer(Profil.PREMIER_PLAN, Suivi.SILENCIEUX, scenario(imposee, Issue.de(ReponseApi.succes("ok"))));
+        politique.executer(
+                Profil.PREMIER_PLAN, SuiviReprise.SILENCIEUX, scenario(imposee, Issue.de(ReponseApi.succes("ok"))));
 
         assertThat(attentes).containsExactly(Duration.ofSeconds(7));
     }
@@ -119,7 +123,9 @@ class PolitiqueReessaiTest {
         PolitiqueReessai interrompue = new PolitiqueReessai(interrupteur, () -> 0.0);
 
         ReponseApi<String> resultat = interrompue.executer(
-                Profil.PREMIER_PLAN, Suivi.SILENCIEUX, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
+                Profil.PREMIER_PLAN,
+                SuiviReprise.SILENCIEUX,
+                scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
         assertThat(resultat).isInstanceOf(ReponseApi.Injoignable.class);
         assertThat(Thread.interrupted())
@@ -135,7 +141,7 @@ class PolitiqueReessaiTest {
     void suivi_prevenu_avant_chaque_attente() {
         record Avis(int tentative, Duration delai) {}
         List<Avis> avis = new ArrayList<>();
-        Suivi suivi = (tentative, delai) -> avis.add(new Avis(tentative, delai));
+        SuiviReprise suivi = (tentative, delai) -> avis.add(new Avis(tentative, delai));
 
         politique.executer(Profil.PREMIER_PLAN, suivi, scenario(Issue.de(ReponseApi.<String>injoignable("coupure"))));
 
