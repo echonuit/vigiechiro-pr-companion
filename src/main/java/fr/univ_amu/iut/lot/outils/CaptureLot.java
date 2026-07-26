@@ -36,13 +36,16 @@ import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
 import fr.univ_amu.iut.commun.viewmodel.NavigationViewModel;
 import fr.univ_amu.iut.lot.di.LotModule;
 import fr.univ_amu.iut.lot.model.ArchiveDepot;
+import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.DepotVigieChiro;
 import fr.univ_amu.iut.lot.model.ServiceLot;
+import fr.univ_amu.iut.lot.model.TypeDepotUnite;
 import fr.univ_amu.iut.lot.model.dao.DepotPlanDao;
 import fr.univ_amu.iut.lot.model.dao.DepotUniteDao;
 import fr.univ_amu.iut.lot.view.LotController;
 import fr.univ_amu.iut.lot.viewmodel.DepotViewModel;
 import fr.univ_amu.iut.lot.viewmodel.LotViewModel;
+import fr.univ_amu.iut.lot.viewmodel.SuiviLignesDepot;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.di.SynchronisationParticipationModule;
 import fr.univ_amu.iut.passage.model.EnregistrementOriginal;
@@ -67,12 +70,13 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 import javafx.application.Platform;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
@@ -99,7 +103,10 @@ import javafx.scene.Scene;
 /// - `apercu-lot-participation.png` : **participation liée** — le bouton de l'étape ④ bascule sur son
 ///   second libellé, « Lancer la participation » (#1890) ;
 /// - `apercu-lot-alertes.png` : passage **Vérifié incohérent** (séquences/journal manquants) — la
-///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé.
+///   zone d'alertes de cohérence (R14) apparaît et « Préparer le lot » est désactivé ;
+/// - `apercu-lot-reprise.png` : **dépôt en cours** (#2354) — une archive déjà déposée, une autre dont le
+///   `PUT` a rencontré une coupure momentanée : sa ligne porte la mention discrète « Nouvelle tentative
+///   dans N s… » à côté de la barre, l'unité restant « en cours ».
 ///
 /// Les deux aperçus **connectés** comblent un angle mort : l'étape ③ et le second mode du bouton ④ ne
 /// se rendent que si `Optional<DepotVigieChiro>` est non vide, ce que l'injecteur de capture ne
@@ -189,20 +196,39 @@ public final class CaptureLot {
                 injecteur,
                 idCoherent,
                 sortie.resolve("apercu-lot-generation.png"),
-                LotViewModel::marquerGenerationEnCours);
+                (vm, depot) -> vm.marquerGenerationEnCours());
         // ③ Archives générées : liste des ZIP, « Ouvrir le dossier » actif, étape « Téléverser » courante.
         rendrePilote(
                 injecteur,
                 idCoherent,
                 sortie.resolve("apercu-lot-archives.png"),
-                vm -> vm.appliquerGeneration(archivesDemo(vm)));
+                (vm, depot) -> vm.appliquerGeneration(archivesDemo(vm)));
         // ③ bis (#1890) : mêmes archives, mais **connecté**. L'étape « Téléverser sur Vigie-Chiro » n'est
         // visible que si le dépôt est disponible : sans ce rendu, aucun aperçu ne la montrait.
         rendrePilote(
                 connecte,
                 idCoherent,
                 sortie.resolve("apercu-lot-televerser.png"),
-                vm -> vm.appliquerGeneration(archivesDemo(vm)));
+                (vm, depot) -> vm.appliquerGeneration(archivesDemo(vm)));
+        // #2354 : dépôt EN COURS, une unité réessayée. Une archive déjà déposée, une en cours dont le PUT
+        // a rencontré une coupure momentanée : sa ligne porte la mention discrète « Nouvelle tentative
+        // dans N s… » (ambre d'avertissement), l'unité restant « en cours ».
+        rendrePilote(connecte, idCoherent, sortie.resolve("apercu-lot-reprise.png"), (vm, depot) -> {
+            // Dépôt EN COURS : l'écran bascule sur la table de suivi (le prompt « Téléverser… » cède la
+            // place), état où la reprise se donne à voir.
+            depot.marquerEnCours();
+            SuiviLignesDepot lignes = depot.suiviLignes();
+            String deposee = "Car040962-2026-Pass1-A1-originaux.zip";
+            String enCours = "Car040962-2026-Pass1-A1-sequences.zip";
+            lignes.planifier(List.of(
+                    DepotUnite.aDeposer(idCoherent, deposee, TypeDepotUnite.ZIP, "2026-06-21T09:00:00"),
+                    DepotUnite.aDeposer(idCoherent, enCours, TypeDepotUnite.ZIP, "2026-06-21T09:00:00")));
+            lignes.demarree(deposee);
+            lignes.deposee(deposee);
+            lignes.demarree(enCours);
+            lignes.progresse(enCours, 0.4);
+            lignes.reprise(enCours, Duration.ofSeconds(3));
+        });
         // ④ Déposé : état final, toutes les étapes franchies.
         service.marquerDepose(idCoherent);
         rendre(injecteur, idCoherent, sortie.resolve("apercu-lot-depose.png"));
@@ -352,19 +378,35 @@ public final class CaptureLot {
     /// ainsi par une ellipse, ce qui a été pris pour un défaut de mise en page du produit alors que
     /// c'était un défaut de la capture : elle montrait un écran que l'utilisateur ne voit jamais.
     private static void rendre(Injector injecteur, long idPassage, Path fichier) throws IOException {
-        rendrePilote(injecteur, idPassage, fichier, vm -> {});
+        rendrePilote(injecteur, idPassage, fichier, (vm, depot) -> {});
     }
 
     /// Variante de [#rendre] qui **pilote le ViewModel** après ouverture (états non reflétés par
     /// `consulterLot` : génération en cours, archives produites), via une `controllerFactory` à VM connu.
-    private static void rendrePilote(Injector injecteur, long idPassage, Path fichier, Consumer<LotViewModel> pilote)
+    private static void rendrePilote(
+            Injector injecteur, long idPassage, Path fichier, BiConsumer<LotViewModel, DepotViewModel> pilote)
+            throws IOException {
+        rendrePilote(injecteur, idPassage, fichier, 1180, pilote);
+    }
+
+    /// Variante à **hauteur de scène** explicite : un état plus chargé (table de dépôt peuplée, #2354)
+    /// a besoin de quelques pixels de plus, sinon le garde-fou anti-troncature rejette la capture.
+    private static void rendrePilote(
+            Injector injecteur,
+            long idPassage,
+            Path fichier,
+            int hauteur,
+            BiConsumer<LotViewModel, DepotViewModel> pilote)
             throws IOException {
         LotViewModel vm = injecteur.getInstance(LotViewModel.class);
+        // Tenue en local : l'instance n'est pas un singleton de l'injecteur de capture, donc un pilote qui
+        // la repêcherait par getInstance en obtiendrait une AUTRE que celle du controller (#2354).
+        DepotViewModel depotVm = injecteur.getInstance(DepotViewModel.class);
         FXMLLoader loader = new FXMLLoader(LotController.class.getResource("Lot.fxml"));
         loader.setControllerFactory(type -> type == LotController.class
                 ? new LotController(
                         vm,
-                        injecteur.getInstance(DepotViewModel.class),
+                        depotVm,
                         injecteur.getInstance(NavigationViewModel.class),
                         injecteur.getInstance(OuvrirSite.class),
                         injecteur.getInstance(OuvrirPassage.class),
@@ -379,11 +421,11 @@ public final class CaptureLot {
         LotController controleur = loader.getController();
         // Capture hors-chrome : le fil d'Ariane n'est pas rendu ; le contexte n'a donc pas à être réel.
         controleur.ouvrirSur(new ContextePassage(idPassage, 1, new ContexteSite(NUMERO_CARRE, CODE_POINT, null)));
-        pilote.accept(vm);
+        pilote.accept(vm, depotVm);
         // Hauteur généreuse : le flux ordonné à 4 étapes (#251) + la carte « Libérer l'espace disque » (#…)
         // sont hauts ; à l'écran ça défile dans le chrome, mais la capture hors-chrome doit tout rendre
         // (dont le bouton « Supprimer les archives ») sans écraser la zone d'alertes (R14).
-        ApercuFx.enregistrerPng(new Scene(vue, 980, 1180), fichier);
+        ApercuFx.enregistrerPng(new Scene(vue, 980, hauteur), fichier);
         System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
