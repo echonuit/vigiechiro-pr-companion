@@ -276,6 +276,56 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
     }
 
     @Test
+    @DisplayName(
+            "#2555 : une nuit rapatriée en squelette se réactive DIRECTEMENT depuis les bruts, sans reconstruction")
+    void squelette_reactive_sans_passer_par_la_reconstruction() throws Exception {
+        ClientVigieChiro client = plateformeBouchonnee();
+        Injector injector = injecteurAvec(client);
+        SourceDeDonnees source = injector.getInstance(SourceDeDonnees.class);
+        new MigrationSchema(source).migrer();
+
+        // 1. La synchro, telle que l'utilisateur la déclenche : la nuit devient un passage local en
+        //    SQUELETTE (point + date + identité, zéro séquence). C'est l'état où le bouton « Réactiver ce
+        //    passage » se grisait, laissant la nuit sans aucun geste utile sur sa fiche.
+        for (int passe = 0; passe < 2; passe++) {
+            for (RapprochementVigieChiro rapprocheur :
+                    injector.getInstance(Key.get(new TypeLiteral<Set<RapprochementVigieChiro>>() {}))) {
+                rapprocheur.synchroniser(client);
+            }
+        }
+        Long idPassage = new PassageDao(source)
+                .findAll().stream().map(Passage::id).findFirst().orElseThrow();
+        SessionDao sessionDao = new SessionDao(source);
+        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
+        assertThat(new SequenceDao(source).findBySession(idSession))
+                .as("point de départ : un squelette, sans la moindre séquence à confronter à un dossier")
+                .isEmpty();
+
+        // 2. L'utilisateur retrouve sa carte SD et réactive. AUCUNE reconstruction préalable : la
+        //    réactivation va chercher elle-même les observations (phase 0), recrée les séquences, puis
+        //    rebranche l'audio. C'est la couture entière, celle que le défaut traversait.
+        Path sd = Files.createTempDirectory("vc-e2e-squelette");
+        ecrireBrut(sd.resolve("PaRec_20260703_220529.wav"));
+        ecrireLog(sd.resolve("LogPR1925492.txt"));
+
+        RapportReactivation reactivation =
+                injector.getInstance(ServiceReactivationPassage.class).reactiver(idPassage, sd, progres -> {});
+
+        assertThat(reactivation.voie()).isEqualTo(VoieReactivation.BRUTS);
+        assertThat(reactivation.reactivees()).isEqualTo(2);
+        assertThat(reactivation.complete()).isTrue();
+        assertThat(injector.getInstance(ServiceDisponibiliteAudio.class).disponibilite(idPassage))
+                .as("la nuit synchronisée est devenue écoutable, en un seul geste")
+                .isEqualTo(DisponibiliteAudio.COMPLETE);
+        // Le passage a SURVÉCU à son hydratation : c'est ce qui distingue ce chemin de la reconstruction,
+        // qui aurait supprimé la nuit pour la recréer sous un nouvel identifiant.
+        assertThat(new PassageDao(source).findAll()).extracting(Passage::id).containsExactly(idPassage);
+        assertThat(sessionDao.trouverParPassage(idPassage).orElseThrow().id())
+                .as("même session : rien n'a été détruit puis recréé")
+                .isEqualTo(idSession);
+    }
+
+    @Test
     @DisplayName("#1808 : le bouton « Mes sites » rapatrie AUSSI les passages, en un seul tour (pas que la connexion)")
     void bouton_mes_sites_rapatrie_les_passages() throws Exception {
         ClientVigieChiro client = plateformeBouchonnee();

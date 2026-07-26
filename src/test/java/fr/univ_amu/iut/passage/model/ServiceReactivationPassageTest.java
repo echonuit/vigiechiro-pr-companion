@@ -138,11 +138,13 @@ class ServiceReactivationPassageTest {
                 originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
-                Optional.empty(), // pas de cris : cascade structurelle (injecteur partiel)
-                Optional.of(regeneration),
-                Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                 adoption,
-                Optional.empty()); // pas d'import : pas de phase d'ancrage (comportement historique)
+                new AppuisReactivation(
+                        Optional.empty(), // pas de cris : cascade structurelle (injecteur partiel)
+                        Optional.of(regeneration),
+                        Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
+                        Optional.empty(), // pas d'import : pas de phase d'ancrage (comportement historique)
+                        Optional.empty())); // pas d'hydratation : ces nuits ont déjà leurs séquences (#2555)
     }
 
     @Test
@@ -375,11 +377,13 @@ class ServiceReactivationPassageTest {
                 originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
-                Optional.empty(),
-                Optional.of(regeneration),
-                Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                 adoption,
-                Optional.of(importObservations));
+                new AppuisReactivation(
+                        Optional.empty(),
+                        Optional.of(regeneration),
+                        Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
+                        Optional.of(importObservations),
+                        Optional.empty()));
     }
 
     @Test
@@ -469,14 +473,16 @@ class ServiceReactivationPassageTest {
                 originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
-                Optional.of(idSequence -> {
-                    sequencesInterrogees.add(idSequence);
-                    return List.of(); // aucune observation : rien à corrompre, structurelle seule
-                }),
-                Optional.of(regeneration),
-                Optional.empty(),
                 adoption,
-                Optional.empty());
+                new AppuisReactivation(
+                        Optional.of(idSequence -> {
+                            sequencesInterrogees.add(idSequence);
+                            return List.of(); // aucune observation : rien à corrompre, structurelle seule
+                        }),
+                        Optional.of(regeneration),
+                        Optional.empty(),
+                        Optional.empty(),
+                        Optional.empty()));
 
         avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 
@@ -561,11 +567,8 @@ class ServiceReactivationPassageTest {
                 originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
-                Optional.empty(),
-                Optional.empty(),
-                Optional.empty(),
                 adoption,
-                Optional.empty());
+                AppuisReactivation.aucun());
 
         assertThatThrownBy(() -> sansRegeneration.reactiver(idPassage, sauvegarde, progres -> {}))
                 .isInstanceOf(RegleMetierException.class)
@@ -651,11 +654,13 @@ class ServiceReactivationPassageTest {
                 originalDao,
                 new VerificationIdentiteAudio(),
                 disponibilite,
-                Optional.of(idSequence -> List.of(new CriAttendu(0.1, 0.4, 8_000))),
-                Optional.of(regeneration),
-                Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
                 adoption,
-                Optional.empty());
+                new AppuisReactivation(
+                        Optional.of(idSequence -> List.of(new CriAttendu(0.1, 0.4, 8_000))),
+                        Optional.of(regeneration),
+                        Optional.of(new InventaireParInspection(new InspecteurDossier(new AnalyseurLogPR()))),
+                        Optional.empty(),
+                        Optional.empty()));
 
         RapportReactivation rapport = avecCris.reactiver(idPassage, sauvegarde, progres -> {});
 

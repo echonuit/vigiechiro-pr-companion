@@ -86,19 +86,9 @@ final class PlateformeReconstruction {
             ImportObservations importateur,
             Consumer<Progression> progres,
             JetonAnnulation jeton) {
-        jeton.leverSiAnnule();
-        progres.accept(new Progression("Téléchargement des observations…", 0.10));
-        Optional<String> csv =
-                exiger(client.csvObservations(idParticipation), "le CSV d'observations de cette participation");
-        if (csv.isPresent()) {
-            String contenu = csv.get();
-            List<String> noms = importateur.nomsSequencesCsv(contenu);
-            if (!noms.isEmpty()) {
-                return new ObservationsAReconstruire(
-                        noms,
-                        nbLignesObservations(contenu),
-                        idPassage -> importateur.importerCsv(idPassage, contenu, false));
-            }
+        Optional<ObservationsAReconstruire> parCsv = observationsCsv(idParticipation, importateur, progres, jeton);
+        if (parCsv.isPresent()) {
+            return parCsv.orElseThrow();
         }
 
         // Repli : le CSV n'est pas (encore) exposé - on rapatrie les donnees page par page (des dizaines de
@@ -118,6 +108,36 @@ final class PlateformeReconstruction {
                 .mapToInt(donnee -> donnee.observations().size())
                 .sum();
         return new ObservationsAReconstruire(noms, nb, idPassage -> importateur.importer(idPassage, donnees, false));
+    }
+
+    /// La source des observations **par le CSV seul** (#1565), sans repli sur la pagination `donnees` :
+    /// vide si la plateforme n'expose pas (encore) le CSV, ou s'il ne porte aucun nom de séquence.
+    ///
+    /// Séparée de [#observations] pour la synchro (#2557), qui balaie **tout un compte** : y replier sur
+    /// `donnees` ferait payer une cinquantaine de pages par nuit, exactement le coût qui avait fait écarter
+    /// « tout rapatrier à la synchro » (ADR 0016). Le repli reste légitime sur **une** nuit que l'utilisateur
+    /// a désignée, jamais sur un balayage.
+    ///
+    /// L'absence de CSV n'est donc **pas une erreur** ici : c'est une nuit qui reste à hydrater plus tard.
+    Optional<ObservationsAReconstruire> observationsCsv(
+            String idParticipation,
+            ImportObservations importateur,
+            Consumer<Progression> progres,
+            JetonAnnulation jeton) {
+        jeton.leverSiAnnule();
+        progres.accept(new Progression("Téléchargement des observations…", 0.10));
+        Optional<String> csv =
+                exiger(client.csvObservations(idParticipation), "le CSV d'observations de cette participation");
+        if (csv.isEmpty()) {
+            return Optional.empty();
+        }
+        String contenu = csv.orElseThrow();
+        List<String> noms = importateur.nomsSequencesCsv(contenu);
+        if (noms.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new ObservationsAReconstruire(
+                noms, nbLignesObservations(contenu), idPassage -> importateur.importerCsv(idPassage, contenu, false)));
     }
 
     private List<DonneeVigieChiro> donnees(String idParticipation, SuiviPagination suivi) {
