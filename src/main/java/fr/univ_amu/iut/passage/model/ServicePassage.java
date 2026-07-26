@@ -207,6 +207,14 @@ public class ServicePassage {
         return passage.id() != null && opportunistes.estOpportuniste(passage.id());
     }
 
+    /// (Dé)marque le passage `idPassage` comme participation opportuniste (#2525). Façade du service sur
+    /// [PassageOpportunisteDao#definir] : le concept vit avec les règles R3/R4 qu'il neutralise. Point
+    /// d'entrée des surfaces de saisie (import, modale « Modifier le passage »).
+    public void marquerOpportuniste(Long idPassage, boolean opportuniste) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        opportunistes.definir(idPassage, opportuniste);
+    }
+
     /// R3 (soft, `PointFixeStandard` uniquement) : le passage 1 est attendu entre le 15 juin et le
     /// 31 juillet, le passage 2 entre le 15 août et le 30 septembre. Hors fenêtre → alerte non
     /// bloquante. Sur [Protocole#RECHERCHE], ou pour un n° de passage sans fenêtre définie (autre
