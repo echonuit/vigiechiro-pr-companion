@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
+import fr.univ_amu.iut.commun.model.ExecutionParallele;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
@@ -20,6 +21,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// **Amène une nuit rapatriée au niveau « contenu »** (#2555) : lui crée ses séquences et rapatrie ses
 /// observations, **en place**, sans toucher à son identité.
@@ -59,7 +62,20 @@ import java.util.function.Consumer;
 /// **Hors du fil JavaFX** (réseau + écritures base).
 public final class HydratationSquelette {
 
+    private static final Logger LOG = Logger.getLogger(HydratationSquelette.class.getName());
+
+    /// Nombre de CSV téléchargés **de front** lors d'un balayage de compte (#2557). Borne d'**entrée /
+    /// sortie**, pas de calcul : chaque tâche est un GET qui passe son temps à attendre le réseau. Même
+    /// valeur que les appels de détail de la synchro (`PlateformeReconstruction`), et pour la même raison :
+    /// rester poli avec la plateforme.
+    private static final int TELECHARGEMENTS_DE_FRONT = 8;
+
     private final PlateformeReconstruction plateforme;
+
+    /// Fan-out borné des téléchargements d'un balayage. Il ne couvre **que** la phase réseau : les écritures
+    /// restent en série, SQLite étant mono-écrivain.
+    private final ExecutionParallele telechargements = new ExecutionParallele(TELECHARGEMENTS_DE_FRONT);
+
     private final CreationPassageArchive structure;
     private final LienVigieChiroDao liens;
     private final SessionDao sessionDao;
@@ -126,8 +142,99 @@ public final class HydratationSquelette {
         Objects.requireNonNull(progres, "progres");
         Objects.requireNonNull(jeton, "jeton");
 
+        Optional<NuitAHydrater> nuit = reconnaitre(idPassage, source);
+        if (nuit.isEmpty()) {
+            return Optional.empty();
+        }
+        jeton.leverSiAnnule();
+        Optional<ObservationsAReconstruire> observations =
+                telecharger(nuit.orElseThrow().idParticipation(), source, libelleSeul(progres), jeton);
+        if (observations.isEmpty()) {
+            return Optional.empty(); // CSV_SEULEMENT : pas encore de CSV, la nuit attend son tour
+        }
+        return Optional.of(ecrire(nuit.orElseThrow(), observations.orElseThrow(), progres));
+    }
+
+    /// **Amène au niveau « contenu » toutes les nuits encore en squelette** parmi `idsPassage` (#2557).
+    ///
+    /// C'est le geste de la synchro, et il vit ici plutôt qu'au service parce que
+    /// [ServiceReconstructionPassages] est au plafond God Class (PMD `NcssCount`, déjà franchi une fois par
+    /// #1814).
+    ///
+    /// **En trois temps, comme la synchro elle-même** ([ServiceReconstructionPassages#synchroniserStructure]) :
+    ///
+    /// 1. **lectures** : ne retenir que les nuits réellement en squelette, et parmi elles celles qu'on sait
+    ///    traiter (rattachées, préfixe lisible) ;
+    /// 2. **réseau, parallélisé** : le CSV de chacune, borne d'**entrée/sortie** (ce sont des GET qui
+    ///    attendent), best-effort - une nuit dont le CSV n'est pas exposé n'écarte pas les autres ;
+    /// 3. **écritures, EN SÉRIE** : SQLite est **mono-écrivain**, et huit transactions concurrentes
+    ///    s'attendraient l'une l'autre au mieux, se disputeraient le verrou au pire. Le parallélisme n'a de
+    ///    valeur que sur le temps réseau, qui domine largement.
+    ///
+    /// **Best-effort par nuit** : une nuit qui échoue est comptée « restée incomplète » et **sautée**, le
+    /// balayage continue. Elle est rendue à son état de squelette (compensation d'[#ecrire]), donc reprenable
+    /// telle quelle au prochain tour.
+    ///
+    /// @param idsPassage les nuits locales rattachées à une participation, squelettes ou non
+    /// @return combien ont été complétées, et combien restent en squelette
+    public BilanCompletion completerLesSquelettes(
+            List<Long> idsPassage, Consumer<Progression> progres, JetonAnnulation jeton) {
+        Objects.requireNonNull(idsPassage, "idsPassage");
+        Objects.requireNonNull(progres, "progres");
+        Objects.requireNonNull(jeton, "jeton");
+
+        // Compté AVANT tout traitement : c'est le dénominateur honnête du compte rendu. Une nuit qu'on ne
+        // sait pas traiter (non rattachée, dossier renommé) reste une nuit incomplète, et la taire ferait
+        // passer un balayage à moitié fait pour un balayage réussi.
+        List<Long> squelettes = idsPassage.stream().filter(this::estSquelette).toList();
+        List<NuitAHydrater> candidats = squelettes.stream()
+                .map(idPassage -> reconnaitre(idPassage, Source.CSV_SEULEMENT))
+                .flatMap(Optional::stream)
+                .toList();
+        if (candidats.isEmpty()) {
+            return new BilanCompletion(0, squelettes.size());
+        }
+
+        List<Optional<ObservationsAReconstruire>> sources =
+                telechargements.cartographier(candidats, "Nuits", this::telechargerSansBruit, progres, jeton);
+
+        int completees = 0;
+        for (int index = 0; index < candidats.size(); index++) {
+            jeton.leverSiAnnule();
+            Optional<ObservationsAReconstruire> observations = sources.get(index);
+            if (observations.isEmpty()) {
+                continue; // pas de CSV : la nuit attend son tour, sans que ce soit une erreur
+            }
+            try {
+                ecrire(candidats.get(index), observations.orElseThrow(), progres);
+                completees++;
+            } catch (RuntimeException echecNuit) {
+                // Best-effort : la nuit est rendue à son état de squelette par la compensation d'ecrire, le
+                // balayage continue, et elle sera reprise au prochain tour (la synchro est idempotente).
+                // Mais poursuivre n'est pas oublier : sans trace, « il me reste 12 nuits vides » serait
+                // indiagnosticable (ADR 0008).
+                consigner(candidats.get(index).idPassage(), echecNuit);
+            }
+        }
+        return new BilanCompletion(completees, squelettes.size() - completees);
+    }
+
+    /// Ce qu'un balayage a produit (#2557).
+    ///
+    /// @param completees nuits amenées au niveau « contenu »
+    /// @param resteesIncompletes nuits toujours en squelette (CSV pas encore exposé, nuit non rattachée,
+    ///     dossier renommé, échec d'écriture) : elles seront reprises au prochain tour
+    public record BilanCompletion(int completees, int resteesIncompletes) {}
+
+    /// Ce qu'il faut savoir d'une nuit avant de l'hydrater, résolu **une seule fois** : porté de la phase
+    /// des lectures à celle des écritures sans les recalculer.
+    private record NuitAHydrater(
+            Long idPassage, SessionDEnregistrement session, Prefixe prefixe, String idParticipation) {}
+
+    /// Reconnaît une nuit **hydratable**, ou renonce en disant pourquoi (selon la [Source]).
+    private Optional<NuitAHydrater> reconnaitre(Long idPassage, Source source) {
         Optional<SessionDEnregistrement> session = sessionDao.trouverParPassage(idPassage);
-        if (session.isEmpty() || !estSquelette(session.orElseThrow())) {
+        if (session.isEmpty() || !sansSequence(session.orElseThrow())) {
             return Optional.empty(); // rien à hydrater : idempotent, et sans objet sur une nuit importée
         }
         SessionDEnregistrement squelette = session.orElseThrow();
@@ -155,25 +262,26 @@ public final class HydratationSquelette {
                             + " n'est plus lisible, et les séquences ne peuvent pas être recréées sous le bon"
                             + " nom. Corrigez le nom du dossier, puis recommencez.");
         }
-
-        jeton.leverSiAnnule();
-        Optional<ObservationsAReconstruire> observations =
-                telecharger(idParticipation.orElseThrow(), source, progres, jeton);
-        if (observations.isEmpty()) {
-            return Optional.empty(); // CSV_SEULEMENT : pas encore de CSV, la nuit attend son tour
-        }
-        return Optional.of(ecrire(idPassage, squelette, prefixe.orElseThrow(), observations.orElseThrow(), progres));
+        return Optional.of(
+                new NuitAHydrater(idPassage, squelette, prefixe.orElseThrow(), idParticipation.orElseThrow()));
     }
 
-    /// Un passage est un **squelette** s'il porte une session **sans aucune séquence** (#1710).
-    private boolean estSquelette(SessionDEnregistrement session) {
+    /// Cette nuit est-elle un **squelette** (#1710) : une session **sans aucune séquence** ?
+    private boolean estSquelette(Long idPassage) {
+        return sessionDao
+                .trouverParPassage(idPassage)
+                .filter(this::sansSequence)
+                .isPresent();
+    }
+
+    private boolean sansSequence(SessionDEnregistrement session) {
         return sequenceDao.findBySession(session.id()).isEmpty();
     }
 
     /// Un empêchement : **passé sous silence** en [Source#CSV_SEULEMENT] (best-effort d'un balayage, la
     /// nuit sera reprise plus tard), **dit avec sa raison** en [Source#COMPLETE] (l'utilisateur attend une
     /// réponse sur la nuit qu'il vient de désigner).
-    private static Optional<BilanHydratation> renoncer(Source source, String raison) {
+    private static <T> Optional<T> renoncer(Source source, String raison) {
         if (source == Source.COMPLETE) {
             throw new RegleMetierException(raison);
         }
@@ -181,12 +289,22 @@ public final class HydratationSquelette {
     }
 
     private Optional<ObservationsAReconstruire> telecharger(
-            String idParticipation, Source source, Consumer<Progression> progres, JetonAnnulation jeton) {
+            String idParticipation, Source source, Consumer<Progression> suivi, JetonAnnulation jeton) {
         ImportObservations importateur = importObservations.orElseThrow();
-        Consumer<Progression> suivi = libelleSeul(progres);
         return source == Source.CSV_SEULEMENT
                 ? plateforme.observationsCsv(idParticipation, importateur, suivi, jeton)
                 : Optional.of(plateforme.observations(idParticipation, importateur, suivi, jeton));
+    }
+
+    /// Le CSV d'**une** nuit du balayage, sans rien dire de son avancement propre : c'est le **lot** qui
+    /// rythme (« Nuits k/N »), pas chaque nuit. Un échec réseau isolé n'écarte pas les autres.
+    private Optional<ObservationsAReconstruire> telechargerSansBruit(NuitAHydrater nuit) {
+        try {
+            return telecharger(nuit.idParticipation(), Source.CSV_SEULEMENT, progres -> {}, JetonAnnulation.neutre());
+        } catch (RuntimeException indisponible) {
+            consigner(nuit.idPassage(), indisponible);
+            return Optional.empty();
+        }
     }
 
     /// L'étape qui **écrit** : les lignes de séquences (une transaction), puis les observations qui s'y
@@ -198,17 +316,14 @@ public final class HydratationSquelette {
     /// comme le fait la reconstruction : ici le passage doit survivre. Mais l'état de repli est déjà un
     /// état légal du modèle, il n'y a donc rien à inventer.
     private BilanHydratation ecrire(
-            Long idPassage,
-            SessionDEnregistrement session,
-            Prefixe prefixe,
-            ObservationsAReconstruire observations,
-            Consumer<Progression> progres) {
+            NuitAHydrater nuit, ObservationsAReconstruire observations, Consumer<Progression> progres) {
+        SessionDEnregistrement session = nuit.session();
         Set<Long> avant = originauxDe(session);
         progres.accept(new Progression("Création des séquences…", 0.0));
-        int sequences = structure.hydraterSequences(session.id(), prefixe, observations.nomsFichiers());
+        int sequences = structure.hydraterSequences(session.id(), nuit.prefixe(), observations.nomsFichiers());
         try {
             progres.accept(new Progression("Import des observations…", 0.0));
-            observations.importer(idPassage);
+            observations.importer(nuit.idPassage());
         } catch (RuntimeException interruption) {
             annulerHydratationPartielle(session, avant, interruption);
             throw interruption;
@@ -238,6 +353,20 @@ public final class HydratationSquelette {
         Set<Long> ids = new HashSet<>();
         originaux.forEach(original -> ids.add(original.id()));
         return ids;
+    }
+
+    /// Consigne l'échec d'**une** nuit d'un balayage, au niveau qui correspond à sa **nature** (ADR 0008).
+    ///
+    /// Un balayage best-effort continue, mais continuer n'est pas oublier : sans trace, un utilisateur qui
+    /// signale « il me reste douze nuits vides » ne laisse rien à quoi se raccrocher. La distinction de
+    /// niveau importe autant que la trace elle-même - une analyse non terminée sur la plateforme est une
+    /// issue **normale** ; si elle partait en SEVERE, elle noierait les vrais bugs qu'on cherche ici.
+    private static void consigner(Long idPassage, RuntimeException echec) {
+        if (echec instanceof RegleMetierException) {
+            LOG.fine(() -> "Nuit " + idPassage + " laissée incomplète : " + echec.getMessage());
+        } else {
+            LOG.log(Level.WARNING, echec, () -> "Échec inattendu en complétant la nuit " + idPassage + ".");
+        }
     }
 
     /// Relaie le **libellé** d'une progression en gardant la fraction à zéro.

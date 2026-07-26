@@ -85,13 +85,19 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     /// l'import des observations ; la synchro « mes sites » le réutilisera pour rapatrier la structure.
     private final CreationPassageArchive creationStructure;
 
+    /// Noyau de **contenu** (#2557) : amène au niveau « observations » les nuits qui n'ont pas de séquences,
+    /// qu'elles viennent d'être créées ou qu'elles traînent en squelette depuis une synchro précédente. Le
+    /// balayage vit là-bas et non ici, ce service étant au plafond God Class.
+    private final HydratationSquelette hydratation;
+
     public ServiceReconstructionPassages(
             SourceDeDonnees source,
             ClientVigieChiro client,
             PointParLocalite pointParLocalite,
             Optional<ImportObservations> importObservations,
             Workspace workspace,
-            Horloge horloge) {
+            Horloge horloge,
+            HydratationSquelette hydratation) {
         Objects.requireNonNull(source, "source");
         this.passageDao = new PassageDao(source);
         this.liens = new LienVigieChiroDao(source);
@@ -101,6 +107,7 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
         this.pointParLocalite = Objects.requireNonNull(pointParLocalite, "pointParLocalite");
         this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
         this.creationStructure = new CreationPassageArchive(source, workspace, horloge);
+        this.hydratation = Objects.requireNonNull(hydratation, "hydratation");
     }
 
     /// Participations de la plateforme **à reconstruire ici** : celles qui n'ont aucun passage local, **ou**
@@ -153,11 +160,52 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     @Override
     public Optional<RapportSynchro> synchroniser(ClientVigieChiro client) {
         try {
-            int crees = synchroniserStructure();
-            return crees == 0 ? Optional.empty() : Optional.of(new RapportSynchro("passage(s) rapatrié(s)", crees));
+            return rapporter(synchroniserStructure());
         } catch (RuntimeException echecBestEffort) {
             return Optional.empty();
         }
+    }
+
+    /// Ce qu'un tour de synchro a fait des nuits du compte (#2557).
+    ///
+    /// @param crees nuits qui n'existaient pas ici et viennent d'apparaître
+    /// @param completees nuits amenées au niveau « contenu » (séquences + observations)
+    /// @param resteesIncompletes nuits toujours en squelette : leur analyse n'est pas terminée sur la
+    ///     plateforme, ou leur CSV n'y est pas encore exposé. Elles seront reprises au prochain tour
+    record BilanTour(int crees, int completees, int resteesIncompletes) {
+
+        /// Rien **ne s'est passé** : ni nuit créée, ni nuit complétée.
+        ///
+        /// Des nuits incomplètes ne suffisent pas à parler. Le contrat du port est de ne rendre un rapport
+        /// que s'il y a du neuf, et la synchro se rejoue à **chaque connexion** : annoncer « 0 récupérée,
+        /// 40 sans observations » à chaque ouverture serait un rappel qu'on apprend à ignorer, pas une
+        /// information. Ces nuits restent visibles là où on les cherche, dans la liste des nuits à
+        /// compléter. Ce qu'un clic **délibéré** sur « Synchroniser » mérite en retour est une autre
+        /// question, et elle appartient au compte rendu de l'opération (#2558).
+        boolean rienAAnnoncer() {
+            return crees == 0 && completees == 0;
+        }
+    }
+
+    /// Rend le compte rendu du tour, **ou rien** s'il n'y avait rien à annoncer.
+    ///
+    /// Le compteur seul mentirait par omission : « 12 nuit(s) récupérée(s) » est vrai et pourtant trompeur
+    /// quand quarante autres sont restées vides. La précision dit **ce qui reste**, dans le même souffle,
+    /// et **pourquoi** - une nuit incomplète n'est pas un échec, c'est une nuit que la plateforme n'a pas
+    /// encore fini d'analyser.
+    private static Optional<RapportSynchro> rapporter(BilanTour bilan) {
+        if (bilan.rienAAnnoncer()) {
+            return Optional.empty();
+        }
+        // Le compteur porte les nuits arrivées au niveau CONTENU, pas celles simplement créées : une nuit
+        // créée puis complétée au même tour est UNE nuit récupérée, et additionner les deux la compterait
+        // deux fois. Une nuit créée mais restée vide n'est pas perdue pour autant - elle est exactement l'une
+        // de celles que la précision annonce.
+        RapportSynchro rapport = new RapportSynchro("nuit(s) récupérée(s)", bilan.completees());
+        return Optional.of(
+                bilan.resteesIncompletes() == 0
+                        ? rapport
+                        : rapport.avecPrecision(bilan.resteesIncompletes() + " en attente d'analyse Vigie-Chiro"));
     }
 
     /// [Phase#DEPENDANTE] : les passages se rapatrient sur des points d'écoute **déjà locaux**, créés par le
@@ -180,8 +228,29 @@ public class ServiceReconstructionPassages implements RapprochementVigieChiro {
     ///    successifs pour un même point/année), via [CreationPassageArchive#creerNuitRapatriee] : avec
     ///    identité si le détail est là, repli sur le squelette nu (INCONNU) sinon.
     ///
+    /// **Depuis #2557, la synchro ne s'arrête plus à la structure** : elle amène chaque nuit au niveau
+    /// **contenu**, en deux temps.
+    ///
+    /// D'abord créer les nuits absentes (ci-dessous). Puis **hydrater toutes celles qui n'ont pas de
+    /// séquences** - les nuits qu'on vient de créer, mais aussi les squelettes **déjà là**. Ce second point
+    /// est celui qui compte : sans lui, le piège de #1814 se rejoue à l'identique. La création saute toute
+    /// nuit ayant déjà un passage local, ce qui rend la synchro idempotente mais condamnerait les nuits
+    /// rapatriées avant ce correctif à rester vides **à vie**. Un second clic doit réparer une base
+    /// existante.
+    ///
+    /// Le balayage lui-même vit dans [HydratationSquelette#completerLesSquelettes] : ce service est au
+    /// plafond God Class (PMD `NcssCount`, déjà franchi une fois par #1814).
+    ///
+    /// @return ce que le tour a fait des nuits du compte
+    BilanTour synchroniserStructure() {
+        int crees = creerLesNuitsAbsentes();
+        HydratationSquelette.BilanCompletion completion = hydratation.completerLesSquelettes(
+                passagesParParticipation().values().stream().toList(), progres -> {}, JetonAnnulation.neutre());
+        return new BilanTour(crees, completion.completees(), completion.resteesIncompletes());
+    }
+
     /// @return le nombre de passages créés
-    int synchroniserStructure() {
+    private int creerLesNuitsAbsentes() {
         Map<String, Long> passageParParticipation = passagesParParticipation();
         List<NuitARapatrier> candidats = new ArrayList<>();
         for (ParticipationVigieChiro participation : plateforme.participations()) {
