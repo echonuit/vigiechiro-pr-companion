@@ -33,6 +33,7 @@ class DecouverteModulesTest {
     /// partie : il est installé explicitement, jamais découvert).
     private static final Set<String> FEATURES_ATTENDUES = Set.of(
             "AnalyseModule",
+            "ActiviteModule",
             "AudioModule",
             "AuditModule",
             "ImportVigieChiroModule",
@@ -57,6 +58,10 @@ class DecouverteModulesTest {
             "SitesModule",
             "SynchronisationSitesModule",
             "ValidationModule");
+
+    /// Features EXPERIMENTALES (Categorie inactive par défaut) : découvertes par le ServiceLoader, donc
+    /// dans FEATURES_ATTENDUES, mais **absentes** de modules() tant qu'on ne les active pas explicitement.
+    private static final Set<String> FEATURES_EXPERIMENTALES = Set.of("ActiviteModule");
 
     @AfterEach
     void nettoyer() {
@@ -121,13 +126,18 @@ class DecouverteModulesTest {
     }
 
     @Test
-    @DisplayName("sans filtre, modules() = socle (2) + toutes les features")
-    void modules_assemble_socle_et_toutes_les_features(@TempDir Path tmp) {
+    @DisplayName("sans filtre, modules() = socle (2) + features actives par défaut (hors expérimentales)")
+    void modules_assemble_socle_et_features_actives(@TempDir Path tmp) {
         System.setProperty("vigiechiro.workspace", tmp.toString());
 
         List<Module> modules = RacineInjecteur.modules();
 
-        assertThat(modules).hasSize(2 + FEATURES_ATTENDUES.size());
+        // Les features EXPERIMENTALES (inactives par défaut) sont découvertes mais pas installées.
+        assertThat(modules).hasSize(2 + FEATURES_ATTENDUES.size() - FEATURES_EXPERIMENTALES.size());
+        assertThat(modules.stream()
+                        .map(module -> module.getClass().getSimpleName())
+                        .toList())
+                .doesNotContainAnyElementsOf(FEATURES_EXPERIMENTALES);
     }
 
     @Test

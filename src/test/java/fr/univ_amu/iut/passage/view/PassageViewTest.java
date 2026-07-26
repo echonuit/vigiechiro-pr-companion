@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -56,6 +57,7 @@ class PassageViewTest {
 
     private final AtomicReference<Long> verificationOuverte = new AtomicReference<>();
     private final AtomicReference<Long> diagnosticOuvert = new AtomicReference<>();
+    private final AtomicReference<Long> activiteOuverte = new AtomicReference<>();
     private final AtomicReference<Long> validationOuverte = new AtomicReference<>();
     private final AtomicReference<Long> depotOuvert = new AtomicReference<>();
     private final AtomicReference<String> carteFocalisee = new AtomicReference<>();
@@ -90,6 +92,9 @@ class PassageViewTest {
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> diagnosticOuvert.set(passage.idPassage()));
+                OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class)
+                        .setBinding()
+                        .toInstance(passage -> activiteOuverte.set(passage.idPassage()));
                 OptionalBinder.newOptionalBinder(binder(), OuvrirVerification.class)
                         .setBinding()
                         .toInstance(passage -> verificationOuverte.set(passage.idPassage()));
@@ -212,6 +217,17 @@ class PassageViewTest {
     }
 
     @Test
+    @DisplayName("« Activité de la nuit » ouvre M-Activite du passage courant (contrat socle)")
+    void activite_ouvre_l_activite(FxRobot robot) {
+        Button activite = robot.lookup("#boutonActivite").queryAs(Button.class);
+        assertThat(activite.isDisabled()).isFalse(); // lecture d'une nuit déjà en base, toujours disponible
+
+        robot.interact(activite::fire);
+
+        assertThat(activiteOuverte.get()).isEqualTo(ID_PASSAGE);
+    }
+
+    @Test
     @DisplayName("« Préparer le dépôt » ouvre M-Lot du passage courant (Vérifié → actif)")
     void depot_ouvre_le_lot(FxRobot robot) {
         Button depot = robot.lookup("#boutonDepot").queryAs(Button.class);
@@ -263,7 +279,9 @@ class PassageViewTest {
     void cartes_action_ont_un_nom_accessible(FxRobot robot) {
         // contentDisplay=GRAPHIC_ONLY : le libellé visible est dans le graphique, pas dans la propriété
         // text du bouton. Sans accessibleText, un lecteur d'écran n'annoncerait rien.
-        for (String id : new String[] {"#boutonVerifier", "#boutonDiagnostic", "#boutonDepot", "#boutonValidation"}) {
+        for (String id : new String[] {
+            "#boutonVerifier", "#boutonDiagnostic", "#boutonActivite", "#boutonDepot", "#boutonValidation"
+        }) {
             Button bouton = robot.lookup(id).queryAs(Button.class);
             assertThat(bouton.getAccessibleText()).as("nom accessible de " + id).isNotBlank();
         }

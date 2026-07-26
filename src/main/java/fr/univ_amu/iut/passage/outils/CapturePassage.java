@@ -21,6 +21,7 @@ import fr.univ_amu.iut.commun.outils.ModuleCaptureCommun;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.view.ExecuteurTache;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
@@ -237,6 +238,8 @@ public final class CapturePassage {
                         passageVm,
                         Optional.<OuvrirVerification>of(idp -> {}),
                         Optional.<OuvrirDiagnostic>of(idp -> {}),
+                        // Feature `activite-nuit` EXPERIMENTALE (OFF par défaut, #2352) : carte masquée sur l'aperçu.
+                        Optional.<OuvrirActivite>empty(),
                         idp -> {},
                         Optional.<OuvrirLot>of(idp -> {}),
                         injecteur.getInstance(NavigationPassage.class),

@@ -22,6 +22,7 @@ import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.Confirmateur;
 import fr.univ_amu.iut.commun.view.NiveauNotification;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -104,6 +105,7 @@ class PassageActionsFicheViewTest {
             @Override
             protected void configure() {
                 // Écrans voisins : présents mais inertes (ce test ne navigue pas).
+                OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> {});

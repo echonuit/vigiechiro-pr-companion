@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.IndicateurOccupation;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.NotificateurModifiable;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -69,6 +70,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private final PassageViewModel viewModel;
     private final Optional<OuvrirVerification> ouvrirVerification;
     private final Optional<OuvrirDiagnostic> ouvrirDiagnostic;
+    private final Optional<OuvrirActivite> ouvrirActivite;
     private final OuvrirValidation ouvrirValidation;
     private final Optional<OuvrirLot> ouvrirLot;
     private final NavigationPassage navigation;
@@ -176,6 +178,9 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     private Button boutonDiagnostic;
 
     @FXML
+    private Button boutonActivite;
+
+    @FXML
     private Button boutonValidation;
 
     @FXML
@@ -223,6 +228,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
             PassageViewModel viewModel,
             Optional<OuvrirVerification> ouvrirVerification,
             Optional<OuvrirDiagnostic> ouvrirDiagnostic,
+            Optional<OuvrirActivite> ouvrirActivite,
             OuvrirValidation ouvrirValidation,
             Optional<OuvrirLot> ouvrirLot,
             NavigationPassage navigation,
@@ -233,6 +239,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirVerification = Objects.requireNonNull(ouvrirVerification, "ouvrirVerification");
         this.ouvrirDiagnostic = Objects.requireNonNull(ouvrirDiagnostic, "ouvrirDiagnostic");
+        this.ouvrirActivite = Objects.requireNonNull(ouvrirActivite, "ouvrirActivite");
         this.ouvrirValidation = Objects.requireNonNull(ouvrirValidation, "ouvrirValidation");
         this.ouvrirLot = Objects.requireNonNull(ouvrirLot, "ouvrirLot");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
@@ -308,6 +315,11 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boolean diagnosticActif = ouvrirDiagnostic.isPresent();
         boutonDiagnostic.setVisible(diagnosticActif);
         boutonDiagnostic.setManaged(diagnosticActif);
+        // « Activité de la nuit » n'apparaît que si la feature `activite-nuit` est activée (#2352,
+        // EXPERIMENTALE le temps du chantier #2348) : coupée, le contrat est absent et la carte est retirée.
+        boolean activiteActive = ouvrirActivite.isPresent();
+        boutonActivite.setVisible(activiteActive);
+        boutonActivite.setManaged(activiteActive);
         boutonValidation.disableProperty().bind(viewModel.validationVerrouilleeProperty());
         boutonDepot.disableProperty().bind(viewModel.depotDisponibleProperty().not());
         // « Préparer le dépôt » n'apparaît que si la feature `lot` est activée (feature-flag #1087) : quand
@@ -454,6 +466,14 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
     @FXML
     private void diagnostiquer() {
         ouvrirDiagnostic.ifPresent(ouvrir -> ouvrir.ouvrir(contextePassage()));
+    }
+
+    /// « Activité de la nuit » : ouvre M-Activite sur ce passage via le contrat socle [OuvrirActivite]
+    /// (implémenté par la feature `analyse`, **désactivable** : la carte n'apparaît que si la feature
+    /// `activite-nuit` est activée, cf. #2352).
+    @FXML
+    private void voirActivite() {
+        ouvrirActivite.ifPresent(ouvrir -> ouvrir.ouvrir(contextePassage()));
     }
 
     /// « Sons & validation » : ouvre l'écran audio du passage (M-Vision-Tadarida) via le contrat socle

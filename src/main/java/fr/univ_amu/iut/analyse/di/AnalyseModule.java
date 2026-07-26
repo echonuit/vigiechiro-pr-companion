@@ -4,15 +4,19 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
 import com.google.inject.name.Named;
+import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.model.ServiceAnalyse;
 import fr.univ_amu.iut.analyse.view.ActiviteAnalyse;
 import fr.univ_amu.iut.analyse.view.NavigationAnalyse;
+import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.analyse.viewmodel.AnalyseViewModel;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirAnalyse;
+import fr.univ_amu.iut.validation.model.PlageNuitPassage;
 import fr.univ_amu.iut.validation.model.dao.ProjectionsAnalyseDao;
+import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 
 /// Module Guice de la feature `analyse` (prisme « Espèces & biodiversité »). Enregistre sa carte
 /// d'accueil et fournit son service (assemblé sur la projection de [ProjectionsAnalyseDao], feature
@@ -48,5 +52,20 @@ public class AnalyseModule extends ModuleDeFeature {
     AnalyseViewModel fournirAnalyseViewModel(
             ServiceAnalyse service, @Named("idUtilisateurCourant") String idUtilisateur) {
         return new AnalyseViewModel(service, idUtilisateur);
+    }
+
+    // Machinerie de l'écran « Activité de la nuit » (#2352). Fournie ici, avec le reste de la feature
+    // `analyse`, et non par ActiviteModule : ce dernier ne gate que l'ENTRÉE (contrat OuvrirActivite,
+    // expérimental et coupé par défaut). L'écran fait partie de la feature analyse, et son FXML doit
+    // rester chargeable (ChargementFxmlTest) même l'entrée coupée. Non-singleton (VM frais par écran).
+    @Provides
+    ActiviteViewModel fournirActiviteViewModel(ServiceActivite service) {
+        return new ActiviteViewModel(service);
+    }
+
+    @Provides
+    @Singleton
+    ServiceActivite fournirServiceActivite(ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage) {
+        return new ServiceActivite(projections, plageNuitPassage);
     }
 }

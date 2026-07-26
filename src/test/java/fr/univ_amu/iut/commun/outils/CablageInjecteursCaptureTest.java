@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 
 import com.google.inject.Injector;
+import fr.univ_amu.iut.analyse.outils.CaptureActivite;
 import fr.univ_amu.iut.analyse.outils.CaptureAnalyse;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidation;
 import fr.univ_amu.iut.audio.outils.CaptureSonsValidationColonnes;
@@ -96,6 +97,7 @@ class CablageInjecteursCaptureTest {
                 Arguments.of("CaptureMultisite", (Supplier<Injector>) CaptureMultisite::creerInjecteur),
                 Arguments.of("CaptureSaison", (Supplier<Injector>) CaptureSaison::creerInjecteur),
                 Arguments.of("CaptureAnalyse", (Supplier<Injector>) CaptureAnalyse::creerInjecteur),
+                Arguments.of("CaptureActivite", (Supplier<Injector>) CaptureActivite::creerInjecteur),
                 Arguments.of("CaptureAudit", (Supplier<Injector>) CaptureAudit::creerInjecteur),
                 Arguments.of("CaptureDiagnostic", (Supplier<Injector>) CaptureDiagnostic::creerInjecteur),
                 Arguments.of("CaptureSonsValidation", (Supplier<Injector>) CaptureSonsValidation::creerInjecteur),

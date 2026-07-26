@@ -23,6 +23,7 @@ import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -115,6 +116,7 @@ class PassageReactivationViewTest {
             @Override
             protected void configure() {
                 bind(NavigationPassage.class).toInstance(navigation);
+                OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> {});
