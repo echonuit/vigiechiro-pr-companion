@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
+import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -32,6 +33,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -181,6 +183,33 @@ class ActiviteViewTest {
         assertThat(etiquettes)
                 .as("une étiquette directe au pic par courbe affichée (identifier sans la seule couleur)")
                 .isEqualTo(2);
+    }
+
+    @Test
+    void l_aplat_marque_la_fenetre_nocturne_du_passage(FxRobot robot) {
+        when(service.plageNuit(PASSAGE)).thenReturn(Optional.of(new PlageNuit(21, 6)));
+        charger(robot, nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Rectangle aplat = robot.lookup(".aplat-nuit").queryAs(Rectangle.class);
+        assertThat(aplat.isVisible())
+                .as("la fenêtre coucher → lever du passage est matérialisée")
+                .isTrue();
+        assertThat(aplat.getWidth())
+                .as("l'aplat couvre une largeur non nulle sur l'axe nocturne")
+                .isGreaterThan(0.0);
+    }
+
+    @Test
+    void la_vue_transverse_multi_nuits_n_affiche_pas_d_aplat(FxRobot robot) {
+        when(service.contactsDeLUtilisateur("u-1")).thenReturn(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Rectangle aplat = robot.lookup(".aplat-nuit").queryAs(Rectangle.class);
+        assertThat(aplat.isVisible())
+                .as("sans nuit unique, pas d'aplat qui donnerait une fenêtre trompeuse")
+                .isFalse();
     }
 
     @Test

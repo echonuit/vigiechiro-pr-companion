@@ -7,6 +7,7 @@ import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.PointActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.Nuit;
+import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
@@ -27,7 +28,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
-import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
@@ -69,7 +69,7 @@ public class ActiviteController implements EmplacementNavigation {
     private ContextePassage contexte;
 
     @FXML
-    private LineChart<Number, Number> grapheActivite;
+    private GrapheNocturne grapheActivite;
 
     @FXML
     private ChoiceBox<LargeurTranche> choixTranche;
@@ -147,8 +147,21 @@ public class ActiviteController implements EmplacementNavigation {
         viewModel.courbesAffichees().addListener((ListChangeListener<CourbeEspece>) changement -> majGraphe());
         viewModel.especes().addListener((ListChangeListener<CourbeEspece>) changement -> construireSelecteur());
         viewModel.especesSelectionnees().addListener((SetChangeListener<String>) changement -> construireSelecteur());
+        viewModel.plageNuitProperty().addListener((observable, ancienne, plage) -> majFenetreNuit(plage));
         majGraphe();
         construireSelecteur();
+        majFenetreNuit(viewModel.plageNuitProperty().get());
+    }
+
+    /// Reporte la fenêtre nocturne du ViewModel sur l'aplat du graphe : convertit les heures pleines
+    /// (coucher, lever) en minutes sur l'axe, ou efface l'aplat quand la plage est absente (`null` : vue
+    /// multi-nuits ou passage sans GPS).
+    private void majFenetreNuit(PlageNuit plage) {
+        if (plage == null) {
+            grapheActivite.definirFenetreNuit(null, null);
+            return;
+        }
+        grapheActivite.definirFenetreNuit(minutesSurAxe(plage.heureDebut()), minutesSurAxe(plage.heureFin()));
     }
 
     /// Ouvre l'activité **d'un passage** (entrée depuis M-Passage). Appelée par [NavigationActivite] après
@@ -300,5 +313,13 @@ public class ActiviteController implements EmplacementNavigation {
     private static long minutesDepuis18h(LocalDateTime instant) {
         LocalDate soir = Nuit.de(instant);
         return Duration.between(soir.atTime(DEBUT_FENETRE), instant).toMinutes();
+    }
+
+    /// Position, en minutes sur l'axe nocturne (0 = 18 h), d'une **heure pleine** de la fenêtre (coucher ou
+    /// lever). Le soir (≥ 18 h) est à `(h − 18) × 60`, le matin (< 18 h, après minuit) à `(h + 6) × 60`.
+    /// Bornée à `[0, 840]` pour un coucher précoce ou un lever tardif qui déborderait de la fenêtre.
+    static double minutesSurAxe(int heure) {
+        double minutes = heure >= 18 ? (heure - 18) * 60.0 : (heure + 6) * 60.0;
+        return Math.max(0, Math.min(MINUTES_FENETRE, minutes));
     }
 }
