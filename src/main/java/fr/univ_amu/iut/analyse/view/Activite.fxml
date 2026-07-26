@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import fr.univ_amu.iut.analyse.view.GrapheNocturne?>
 <?import javafx.geometry.Insets?>
-<?import javafx.scene.chart.LineChart?>
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
@@ -44,15 +44,16 @@
   <FlowPane fx:id="selecteurEspeces" hgap="14.0" vgap="6.0"/>
 
   <!-- Courbe : une série par espèce sélectionnée, sur l'axe nocturne fixe 18h vers 8h (étiquettes HH
-       reconstruites par le controller). -->
-  <LineChart fx:id="grapheActivite" VBox.vgrow="ALWAYS" minHeight="280.0" legendVisible="true" animated="false">
+       reconstruites par le controller). GrapheNocturne matérialise en plus la fenêtre coucher -> lever
+       par un aplat pâle derrière les courbes. -->
+  <GrapheNocturne fx:id="grapheActivite" VBox.vgrow="ALWAYS" minHeight="280.0" legendVisible="true" animated="false">
     <xAxis>
       <NumberAxis label="Heure"/>
     </xAxis>
     <yAxis>
       <NumberAxis label="Contacts"/>
     </yAxis>
-  </LineChart>
+  </GrapheNocturne>
 
   <!-- État vide (#2352) : une nuit sans espèce détectée le dit, plutôt qu'un graphe vide muet. -->
   <Label fx:id="lblEtatVide" styleClass="encart" wrapText="true"
