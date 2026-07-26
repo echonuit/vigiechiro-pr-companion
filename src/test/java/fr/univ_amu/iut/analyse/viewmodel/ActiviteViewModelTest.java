@@ -183,6 +183,25 @@ class ActiviteViewModelTest {
                 .containsExactly("2026-06-20", "2026-06-25");
     }
 
+    @Test
+    void le_message_d_etat_vide_nomme_la_cause() {
+        assertThat(vm.messageEtatVide()).as("rien chargé").contains("Aucune espèce détectée");
+
+        when(service.contactsDeLUtilisateur("u-1")).thenReturn(nContacts("PIPKUH", 3));
+        vm.chargerUtilisateur("u-1");
+        vm.filtres().definir("carre", contact -> "absent".equals(contact.numeroCarre()));
+        assertThat(vm.messageEtatVide()).as("tout filtré").contains("ne correspond aux filtres");
+
+        vm.filtres().reinitialiser();
+        vm.especesSelectionnees().clear();
+        assertThat(vm.messageEtatVide()).as("aucune espèce cochée").contains("Aucune espèce sélectionnée");
+
+        vm.especesSelectionnees().add("PIPKUH");
+        assertThat(vm.messageEtatVide())
+                .as("une courbe tracée : pas de message")
+                .isEmpty();
+    }
+
     private void stubContacts(List<ContactHoraire> contacts) {
         when(service.contactsDuPassage(PASSAGE)).thenReturn(contacts);
     }

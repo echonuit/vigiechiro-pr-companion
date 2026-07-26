@@ -25,6 +25,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
@@ -164,6 +165,33 @@ class ActiviteViewTest {
         assertThat(graphe.getData())
                 .as("la recherche « PIPKUH » écarte la Barbastelle du sous-ensemble, ré-agrégé")
                 .hasSize(1);
+    }
+
+    @Test
+    void chaque_courbe_affichee_porte_une_etiquette_au_pic(FxRobot robot) {
+        charger(robot, concat(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5), nContacts("BARBAR", "Barbastelle", 2)));
+        LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
+
+        long etiquettes = graphe.getData().stream()
+                .flatMap(serie -> serie.getData().stream())
+                .map(XYChart.Data::getNode)
+                .filter(Label.class::isInstance)
+                .count();
+
+        assertThat(etiquettes)
+                .as("une étiquette directe au pic par courbe affichée (identifier sans la seule couleur)")
+                .isEqualTo(2);
+    }
+
+    @Test
+    void l_etat_vide_nomme_la_dimension_responsable(FxRobot robot) {
+        charger(robot, List.of());
+
+        Label vide = robot.lookup("#lblEtatVide").queryAs(Label.class);
+        assertThat(vide.isVisible()).isTrue();
+        assertThat(vide.getText())
+                .as("nuit sans donnée : la cause est nommée, pas un « aucune donnée » muet")
+                .contains("Aucune espèce détectée");
     }
 
     private static List<ContactHoraire> concat(List<ContactHoraire> a, List<ContactHoraire> b) {

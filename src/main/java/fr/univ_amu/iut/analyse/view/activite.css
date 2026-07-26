@@ -1,0 +1,15 @@
+/*
+ * Styles propres à l'écran Activité de la nuit (#2352). Feuille de feature, à côté de palette.css et
+ * design.css (patron de diagnostic.css).
+ */
+
+/* Étiquette directe au pic d'une courbe : petite, sur un fond clair translucide pour rester lisible
+ * par-dessus les lignes, sans masquer la couleur de la série. */
+.etiquette-pic {
+    -fx-font-size: 0.72em;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+    -fx-padding: 0 4 0 4;
+    -fx-background-color: rgba(255, 255, 255, 0.78);
+    -fx-background-radius: 3;
+}
