@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.view.MenuCopier;
 import fr.univ_amu.iut.commun.view.ResumeStatut;
 import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
 import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
+import fr.univ_amu.iut.commun.view.VisibiliteGeree;
 import fr.univ_amu.iut.commun.view.VueCompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.ZonesStatut;
@@ -36,10 +37,9 @@ import java.util.function.Consumer;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -133,6 +133,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
 
     @FXML
     private TextField champPassage;
+
+    @FXML
+    private CheckBox caseOpportuniste;
 
     @FXML
     private Label labelApercu;
@@ -293,14 +296,6 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         viewModel.chargerSites();
     }
 
-    /// Lie la **visibilité** d'un nœud à `condition` en gardant `managed` synchronisé avec `visible` : un
-    /// nœud masqué ne doit pas occuper d'espace dans la mise en page (sinon un « trou » subsisterait). Le
-    /// même couple visible/managed est appliqué à tous les éléments conditionnels de l'écran.
-    private static void lierVisibiliteGeree(Node noeud, ObservableValue<? extends Boolean> condition) {
-        noeud.visibleProperty().bind(condition);
-        noeud.managedProperty().bind(condition);
-    }
-
     /// Sections 1-2 : chemin du dossier source + section d'inspection (journal, relevé, compte, nommage,
     /// avertissements #33), liées au sous-VM d'inspection.
     private void lierDossierEtInspection(InspectionImportViewModel inspection) {
@@ -315,7 +310,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         inspection.dossierSourceProperty()));
 
         // 2. Inspection : section visible une fois le dossier inspecté.
-        lierVisibiliteGeree(sectionInspection, inspection.inspecteProperty());
+        VisibiliteGeree.lier(sectionInspection, inspection.inspecteProperty());
         // Présence dite par l'icône et la couleur, plus par un glyphe dans le texte (#2099, ADR 0035).
         DetailInspection.lier(
                 labelJournal,
@@ -357,7 +352,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
 
         // Table des nuits (#…) : construite par programme ([TableNuits]) et insérée dans sa zone, visible
         // seulement quand la carte contient plusieurs nuits.
-        lierVisibiliteGeree(zoneNuits, inspection.plusieursNuitsProperty());
+        VisibiliteGeree.lier(zoneNuits, inspection.plusieursNuitsProperty());
         // Table + avertissement de blocage de la numérotation multi-nuits (#801), délégués à un helper
         // dédié pour garder ce contrôleur sous le plafond de taille.
         ZoneNuits.remplir(
@@ -380,6 +375,9 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 champAnnee.textProperty(), rattachement.anneeProperty(), new NumberStringConverter("0"));
         Bindings.bindBidirectional(
                 champPassage.textProperty(), rattachement.numeroPassageProperty(), new NumberStringConverter("0"));
+        // Participation opportuniste (#2525) : la case pilote le drapeau du rattachement (appliqué aux
+        // passages créés après import).
+        caseOpportuniste.selectedProperty().bindBidirectional(rattachement.opportunisteProperty());
         labelApercu.textProperty().bind(rattachement.apercuPrefixeProperty());
         // Discordance de préfixe (#111) : déjà-préfixés ne correspondant pas au rattachement (non bloquant).
         // La visibilité est portée par le composant : un retour absent retire le libellé de la mise en page.
@@ -396,7 +394,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                 .etatProperty()
                 .isEqualTo(EtatImport.EN_COURS)
                 .or(viewModel.etatProperty().isEqualTo(EtatImport.EXTRACTION));
-        lierVisibiliteGeree(zoneProgression, traitement);
+        VisibiliteGeree.lier(zoneProgression, traitement);
         barreProgression.progressProperty().bind(viewModel.progression().fractionProperty());
         labelProgression.textProperty().bind(viewModel.progression().messageProperty());
         // Table de suivi par fichier (#947) : visible seulement quand un plan de nuit est établi (liaison
@@ -412,7 +410,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
                         new MenuCopier.Entree<>(
                                 "Nom du fichier", ligne -> ligne.nomFichier() == null ? "" : ligne.nomFichier())));
         tableFichiers.setItems(viewModel.suiviFichiers().lignes());
-        lierVisibiliteGeree(
+        VisibiliteGeree.lier(
                 tableFichiers, Bindings.isNotEmpty(viewModel.suiviFichiers().lignes()));
         boutonImporter.disableProperty().bind(viewModel.peutImporter().not().or(traitement));
         // Explique le grisage (#789) sur l'enveloppe (un Button désactivé n'affiche pas de tooltip). Le
@@ -444,7 +442,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         var aUnDoublon = Bindings.createBooleanBinding(
                 () -> viewModel.avertissementNumeroPassageProperty().get().present(),
                 viewModel.avertissementNumeroPassageProperty());
-        lierVisibiliteGeree(zonePassageExistant, aUnDoublon);
+        VisibiliteGeree.lier(zonePassageExistant, aUnDoublon);
         boutonNumeroLibre.disableProperty().bind(traitement);
         // « Écraser et réimporter » (#214) : possible seulement si une nuit est inspectée (sinon rien à
         // réimporter) et hors traitement. Visible dans la même zone que l'avertissement de doublon.
@@ -484,7 +482,7 @@ public class ImportationController implements GardeQuitter, AuDepartEcran, Resum
         // Rapport d'import (#155) : la liste des fichiers rejetés n'apparaît que s'il y en a.
         listeRejets.setItems(viewModel.rejetsImport());
         var aDesRejets = Bindings.isNotEmpty(viewModel.rejetsImport());
-        lierVisibiliteGeree(zoneRejets, aDesRejets);
+        VisibiliteGeree.lier(zoneRejets, aDesRejets);
     }
 
     /// Remplace les avertissements d'inspection affichés. Tous les détails sont montrés : ils nomment des

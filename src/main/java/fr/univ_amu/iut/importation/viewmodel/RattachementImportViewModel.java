@@ -8,12 +8,14 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
 import java.util.List;
 import java.util.Objects;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -42,6 +44,11 @@ public class RattachementImportViewModel {
     private final ObjectProperty<PointDEcoute> pointSelectionne = new SimpleObjectProperty<>(this, "pointSelectionne");
     private final IntegerProperty annee = new SimpleIntegerProperty(this, "annee");
     private final IntegerProperty numeroPassage = new SimpleIntegerProperty(this, "numeroPassage", 1);
+
+    /// Nature **opportuniste** (#2525) : la nuit importée est réalisée sur le carré d'un tiers, donc
+    /// exemptée de R3/R4. Cochée par l'utilisateur, elle s'applique à tous les passages créés par cet
+    /// import (une même demande cible un seul carré). N'influe ni sur le préfixe ni sur la numérotation.
+    private final BooleanProperty opportuniste = new SimpleBooleanProperty(this, "opportuniste", false);
     private final ReadOnlyStringWrapper apercuPrefixe = new ReadOnlyStringWrapper(this, "apercuPrefixe", "");
 
     /// Avertissement **non bloquant** (#33, #111) : non vide quand le dossier contient des originaux déjà
@@ -149,6 +156,17 @@ public class RattachementImportViewModel {
     /// Numéro de passage dans l'année pour ce point (défaut 1, éditable).
     public IntegerProperty numeroPassageProperty() {
         return numeroPassage;
+    }
+
+    /// Nature **opportuniste** de la participation (#2525) : la nuit importée est sur le carré d'un
+    /// tiers, donc exemptée de R3/R4. La vue s'y lie par une case à cocher.
+    public BooleanProperty opportunisteProperty() {
+        return opportuniste;
+    }
+
+    /// Raccourci booléen de [#opportunisteProperty()], pour l'orchestrateur qui marque les passages créés.
+    public boolean estOpportuniste() {
+        return opportuniste.get();
     }
 
     /// Aperçu du nom préfixé appliqué aux fichiers (R6), recalculé dès qu'un champ change ; vide tant

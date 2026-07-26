@@ -13,6 +13,7 @@ import fr.univ_amu.iut.importation.model.NuitAImporter;
 import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
+import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import java.nio.file.Path;
 import java.util.List;
@@ -51,6 +52,10 @@ import javafx.collections.ObservableList;
 public class ImportationViewModel {
 
     private final ServiceImport serviceImport;
+
+    /// Marquage opportuniste (#2525) des passages créés par un import, si la case du rattachement est
+    /// cochée. Collaborateur extrait (cf. [MarquageNuitsImportees]).
+    private final MarquageNuitsImportees marquageNuits;
 
     /// Préférence **« conserver les originaux »** (#…), extraite dans un collaborateur partagé : le VM la
     /// lit au lancement de l'import (et l'y mémorise) ; la vue lie la case à sa propriété. Cf.
@@ -133,7 +138,8 @@ public class ImportationViewModel {
             Horloge horloge,
             String idUtilisateur,
             NavigationViewModel navigation,
-            PreferenceConservation conservation) {
+            PreferenceConservation conservation,
+            MarquageOpportuniste marquageOpportuniste) {
         this.serviceImport = Objects.requireNonNull(serviceImport, "serviceImport");
         this.navigation = Objects.requireNonNull(navigation, "navigation");
         this.conservation = Objects.requireNonNull(conservation, "conservation");
@@ -141,6 +147,8 @@ public class ImportationViewModel {
         // Sous-VM rattachement (#183) : il valide serviceSites / horloge / idUtilisateur et préremplit
         // l'année courante.
         this.rattachement = new RattachementImportViewModel(serviceSites, horloge, idUtilisateur);
+        // Marquage opportuniste (#2525) : lit la case du rattachement, marque les passages après import.
+        this.marquageNuits = new MarquageNuitsImportees(marquageOpportuniste, rattachement::estOpportuniste);
         // Pré-contrôle R5 proactif (#108) : observe lui-même le rattachement et entretient son état.
         this.controleNumeroPassage = new ControleNumeroPassage(serviceImport, rattachement);
         // Coordination multi-nuits (#…) : s'abonne au rattachement et à la table des nuits pour
@@ -420,6 +428,7 @@ public class ImportationViewModel {
     /// (depuis un callback du socle).
     public void marquerTermine(ResultatImport resultatImport) {
         resultat.set(resultatImport);
+        marquageNuits.appliquer(resultatImport);
         messageExecution.set("");
         // Rapport (#155) : on expose la liste des fichiers rejetés (« nom — raison ») pour M-Import.
         rejetsImport.setAll(resultatImport.rapport().rejetsFormates());
@@ -436,6 +445,7 @@ public class ImportationViewModel {
     public void marquerTermineNuits(ResultatImportMultiNuits resultatMultiNuits) {
         resultatNuits.set(resultatMultiNuits);
         resultat.set(resultatMultiNuits.premier()); // compatibilité : le mono-résultat pointe la 1re nuit
+        marquageNuits.appliquer(resultatMultiNuits);
         messageExecution.set("");
         rejetsImport.setAll(resultatMultiNuits.rejetsFormates()); // rejets cumulés de toutes les nuits (#155)
         compteRendu.set(CompteRenduImport.de(resultatMultiNuits)); // agrégé sur toutes les nuits, pas la 1re

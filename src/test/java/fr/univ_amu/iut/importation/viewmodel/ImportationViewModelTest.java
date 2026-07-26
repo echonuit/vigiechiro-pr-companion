@@ -18,6 +18,7 @@ import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.Reglages;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Constat;
 import fr.univ_amu.iut.commun.viewmodel.CompteRendu.Detail;
@@ -35,6 +36,8 @@ import fr.univ_amu.iut.importation.model.ResultatImport;
 import fr.univ_amu.iut.importation.model.ResultatImportMultiNuits;
 import fr.univ_amu.iut.importation.model.ServiceImport;
 import fr.univ_amu.iut.importation.model.StatutImportFichier;
+import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.Site;
@@ -84,6 +87,9 @@ class ImportationViewModelTest {
     @Mock
     private Reglages reglages;
 
+    @Mock
+    private MarquageOpportuniste marquageOpportuniste;
+
     private final InspecteurDossier inspecteur = new InspecteurDossier(new AnalyseurLogPR());
     private final NavigationViewModel navigation = new NavigationViewModel();
     private PreferenceConservation conservation;
@@ -96,7 +102,13 @@ class ImportationViewModelTest {
         when(reglages.lireBooleen(anyString(), anyBoolean())).thenAnswer(invocation -> invocation.getArgument(1));
         conservation = new PreferenceConservation(reglages);
         viewModel = new ImportationViewModel(
-                serviceImport, serviceSites, new HorlogeFigee(JOUR), ID_USER, navigation, conservation);
+                serviceImport,
+                serviceSites,
+                new HorlogeFigee(JOUR),
+                ID_USER,
+                navigation,
+                conservation,
+                marquageOpportuniste);
         sd = Files.createDirectories(racine.resolve("sd"));
         Files.writeString(sd.resolve("LogPR1925492.txt"), LOG, StandardCharsets.UTF_8);
         Files.writeString(sd.resolve("PaRecPR1925492_THLog.csv"), "Date\tHour\n", StandardCharsets.UTF_8);
@@ -543,6 +555,59 @@ class ImportationViewModelTest {
 
         viewModel.marquerTermine(new ResultatImport(null, null, "1925492", 1, 5, List.of()));
         assertThat(navigation.isNavigationVerrouillee()).isFalse();
+    }
+
+    // --- #2525 : nature opportuniste appliquée après import ---
+
+    /// Passage « Transformé » minimal (valeur), pour renseigner le [ResultatImport] d'un import réussi.
+    private static Passage passageTransforme(long id) {
+        return new Passage(
+                id,
+                1,
+                2026,
+                "2026-07-03",
+                "22:00",
+                "06:00",
+                null,
+                StatutWorkflow.TRANSFORME,
+                null,
+                null,
+                null,
+                null,
+                7L,
+                "1925492",
+                null);
+    }
+
+    @Test
+    @DisplayName("#2525 : import opportuniste — le passage créé est marqué opportuniste")
+    void import_opportuniste_marque_le_passage() {
+        viewModel.rattachement().opportunisteProperty().set(true);
+
+        viewModel.marquerTermine(new ResultatImport(passageTransforme(42L), null, "1925492", 1, 5, List.of()));
+
+        verify(marquageOpportuniste).definir(42L, true);
+    }
+
+    @Test
+    @DisplayName("#2525 : import normal (case décochée) — aucun marquage")
+    void import_normal_ne_marque_pas() {
+        viewModel.marquerTermine(new ResultatImport(passageTransforme(42L), null, "1925492", 1, 5, List.of()));
+
+        verifyNoInteractions(marquageOpportuniste);
+    }
+
+    @Test
+    @DisplayName("#2525 : import multi-nuits opportuniste — chaque passage créé est marqué")
+    void import_multi_nuits_opportuniste_marque_chaque_passage() {
+        viewModel.rattachement().opportunisteProperty().set(true);
+        ResultatImport n1 = new ResultatImport(passageTransforme(10L), null, "1925492", 1, 3, List.of());
+        ResultatImport n2 = new ResultatImport(passageTransforme(11L), null, "1925492", 1, 3, List.of());
+
+        viewModel.marquerTermineNuits(new ResultatImportMultiNuits(List.of(n1, n2)));
+
+        verify(marquageOpportuniste).definir(10L, true);
+        verify(marquageOpportuniste).definir(11L, true);
     }
 
     @Test
