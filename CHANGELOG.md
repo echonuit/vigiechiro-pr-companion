@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.65.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.64.0...v2.65.0) (2026-07-26)
+
+
+### Features
+
+* **passage:** case « participation opportuniste » dans la modale « Modifier le passage » ([#2525](https://github.com/echonuit/vigiechiro-pr-companion/issues/2525), PR 3/5) ([#2545](https://github.com/echonuit/vigiechiro-pr-companion/issues/2545)) ([61cec50](https://github.com/echonuit/vigiechiro-pr-companion/commit/61cec50c61c9f0f786bf0a989e9bf03b72c777a1))
+
 # [2.64.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.63.0...v2.64.0) (2026-07-26)
 
 
