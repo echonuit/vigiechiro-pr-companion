@@ -14,6 +14,7 @@ import fr.univ_amu.iut.saison.view.ActiviteMaSaison;
 import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 
 /// Module Guice de la feature `saison` (#2356) : assemble [ServiceSoldeSaison] à partir des DAO des
 /// features `sites` et `passage` et de l'[Horloge] du socle. On utilise une méthode `@Provides` (et non
@@ -44,8 +45,9 @@ public class SaisonModule extends ModuleDeFeature {
             PointDao pointDao,
             PassageDao passageDao,
             PassageOpportunisteDao opportunistes,
+            SiteTiersDao carresDeTiers,
             Horloge horloge) {
-        return new ServiceSoldeSaison(siteDao, pointDao, passageDao, opportunistes, horloge);
+        return new ServiceSoldeSaison(siteDao, pointDao, passageDao, opportunistes, carresDeTiers, horloge);
     }
 
     // ViewModel volontairement NON @Singleton (comme MultisiteViewModel) : un VM frais par chargement
