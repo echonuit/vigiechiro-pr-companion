@@ -117,6 +117,29 @@ public final class CreationPassageArchive {
         return new PassageArchive(idPassage, sequences);
     }
 
+    /// Crée les séquences d'une session **déjà existante**, sans toucher au passage qui la porte (#2555).
+    ///
+    /// C'est [#creer] amputé de la création de structure : le passage, sa session et son matériel sont
+    /// déjà là. Sert à hydrater **en place** une nuit rapatriée en squelette par la synchro (#1707), là où
+    /// la reconstruction, elle, supprime le passage pour le recréer entier
+    /// (`ServiceReconstructionPassages#remplacerSiSquelette`).
+    ///
+    /// Hydrater en place plutôt que remplacer n'est pas un détail d'implémentation : le squelette porte
+    /// peut-être des **saisies manuelles** (n° de série #1828, météo #1688, heures de nuit) que la
+    /// plateforme ne connaît pas et qu'un delete + recreate écraserait, et son `idPassage` est celui sur
+    /// lequel un écran est ouvert.
+    ///
+    /// @param idSession session archivée à peupler (celle du squelette)
+    /// @param prefixe préfixe R6 réel de la nuit, celui que recalcule l'audit (#1050)
+    /// @param nomsFichiers noms des fichiers analysés distants (une séquence par nom)
+    /// @return le nombre de séquences créées
+    public int hydraterSequences(Long idSession, Prefixe prefixe, List<String> nomsFichiers) {
+        Objects.requireNonNull(idSession, "idSession");
+        Objects.requireNonNull(prefixe, "prefixe");
+        Objects.requireNonNull(nomsFichiers, "nomsFichiers");
+        return creerSequences(idSession, prefixe, nomsFichiers);
+    }
+
     /// Crée le squelette **minimal** d'un passage archivé : le passage (déposé, enregistreur « inconnu »,
     /// sans météo) et sa session marquée **archivée** (#1300), **sans séquences, sans matériel, sans
     /// observations**. C'est le **repli** de la synchro « mes sites » quand le détail d'une nuit est
