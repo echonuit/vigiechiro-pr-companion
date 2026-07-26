@@ -110,6 +110,23 @@ class RattachementImportViewModelTest {
     }
 
     @Test
+    @DisplayName("#2525 : la nature opportuniste est fausse par défaut, cochable, sans effet sur le préfixe")
+    void opportuniste_par_defaut_faux_sans_effet_sur_prefixe() {
+        when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));
+        vm.siteSelectionneProperty().set(ETANG);
+        vm.pointSelectionneProperty().set(A1);
+        String apercuAvant = vm.apercuPrefixeProperty().get();
+
+        assertThat(vm.estOpportuniste()).as("décochée par défaut").isFalse();
+
+        vm.opportunisteProperty().set(true);
+        assertThat(vm.estOpportuniste()).isTrue();
+        assertThat(vm.apercuPrefixeProperty().get())
+                .as("la nature opportuniste n'entre pas dans le préfixe R6")
+                .isEqualTo(apercuAvant);
+    }
+
+    @Test
     @DisplayName("Un n° de passage < 1 rend le rattachement incomplet")
     void numero_passage_invalide() {
         when(serviceSites.listerPoints(1L)).thenReturn(List.of(A1));

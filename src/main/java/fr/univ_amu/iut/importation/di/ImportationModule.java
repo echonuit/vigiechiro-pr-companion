@@ -31,6 +31,7 @@ import fr.univ_amu.iut.importation.viewmodel.ImportationViewModel;
 import fr.univ_amu.iut.importation.viewmodel.OngletReglagesImport;
 import fr.univ_amu.iut.importation.viewmodel.PreferenceConservation;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
+import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.sites.model.ServiceSites;
@@ -167,8 +168,10 @@ public class ImportationModule extends ModuleDeFeature {
             Horloge horloge,
             @Named("idUtilisateurCourant") String idUtilisateur,
             NavigationViewModel navigation,
-            PreferenceConservation conservation) {
-        return new ImportationViewModel(serviceImport, serviceSites, horloge, idUtilisateur, navigation, conservation);
+            PreferenceConservation conservation,
+            MarquageOpportuniste marquageOpportuniste) {
+        return new ImportationViewModel(
+                serviceImport, serviceSites, horloge, idUtilisateur, navigation, conservation, marquageOpportuniste);
     }
 
     /// Préférence « conserver les originaux » **partagée** (singleton) entre l'écran d'import (liaison de

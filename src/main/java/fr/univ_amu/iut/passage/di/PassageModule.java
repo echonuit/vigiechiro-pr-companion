@@ -24,6 +24,7 @@ import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
+import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
 import fr.univ_amu.iut.passage.model.MoteurWorkflowPassage;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
@@ -303,6 +304,14 @@ public class PassageModule extends ModuleDeFeature {
             ServiceDisponibiliteAudio disponibilite,
             PassageOpportunisteDao opportunistes) {
         return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao, disponibilite, opportunistes);
+    }
+
+    /// Pont [MarquageOpportuniste] (#2525) : expose le seul marquage opportuniste aux features qui créent
+    /// des passages (importation) sans leur livrer tout ServicePassage.
+    @Provides
+    @Singleton
+    MarquageOpportuniste fournirMarquageOpportuniste(ServicePassage service) {
+        return service::marquerOpportuniste;
     }
 
     /// Conditions de la nuit (météo #106/#697, matériel du micro #543), extraites de ServicePassage (#1192).
