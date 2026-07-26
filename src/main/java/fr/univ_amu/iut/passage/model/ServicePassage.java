@@ -199,7 +199,7 @@ public class ServicePassage {
         if (protocole != Protocole.STANDARD || passage.dateEnregistrement() == null) {
             return ResultatVerification.ok();
         }
-        Optional<Fenetre> fenetre = fenetrePour(passage.numeroPassage(), passage.annee());
+        Optional<FenetreSaisonniere> fenetre = FenetreSaisonniere.pour(passage.numeroPassage(), passage.annee());
         if (fenetre.isEmpty()) {
             return ResultatVerification.ok();
         }
@@ -406,20 +406,5 @@ public class ServicePassage {
         LocalDate plusTot = a.isAfter(b) ? b : a;
         LocalDate plusTard = a.isAfter(b) ? a : b;
         return plusTot.plusMonths(1).isAfter(plusTard);
-    }
-
-    private static Optional<Fenetre> fenetrePour(int numeroPassage, int annee) {
-        return switch (numeroPassage) {
-            case 1 -> Optional.of(new Fenetre(LocalDate.of(annee, 6, 15), LocalDate.of(annee, 7, 31)));
-            case 2 -> Optional.of(new Fenetre(LocalDate.of(annee, 8, 15), LocalDate.of(annee, 9, 30)));
-            default -> Optional.empty();
-        };
-    }
-
-    /// Fenêtre saisonnière fermée [debut, fin] pour la vérification R3.
-    private record Fenetre(LocalDate debut, LocalDate fin) {
-        boolean contient(LocalDate date) {
-            return !date.isBefore(debut) && !date.isAfter(fin);
-        }
     }
 }
