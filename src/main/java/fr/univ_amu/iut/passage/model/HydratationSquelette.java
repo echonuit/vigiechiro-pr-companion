@@ -21,6 +21,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /// **Amène une nuit rapatriée au niveau « contenu »** (#2555) : lui crée ses séquences et rapatrie ses
 /// observations, **en place**, sans toucher à son identité.
@@ -59,6 +61,8 @@ import java.util.function.Consumer;
 ///
 /// **Hors du fil JavaFX** (réseau + écritures base).
 public final class HydratationSquelette {
+
+    private static final Logger LOG = Logger.getLogger(HydratationSquelette.class.getName());
 
     /// Nombre de CSV téléchargés **de front** lors d'un balayage de compte (#2557). Borne d'**entrée /
     /// sortie**, pas de calcul : chaque tâche est un GET qui passe son temps à attendre le réseau. Même
@@ -206,7 +210,10 @@ public final class HydratationSquelette {
                 completees++;
             } catch (RuntimeException echecNuit) {
                 // Best-effort : la nuit est rendue à son état de squelette par la compensation d'ecrire, le
-                // balayage continue. Elle sera reprise au prochain tour, la synchro étant idempotente.
+                // balayage continue, et elle sera reprise au prochain tour (la synchro est idempotente).
+                // Mais poursuivre n'est pas oublier : sans trace, « il me reste 12 nuits vides » serait
+                // indiagnosticable (ADR 0008).
+                consigner(candidats.get(index).idPassage(), echecNuit);
             }
         }
         return new BilanCompletion(completees, squelettes.size() - completees);
@@ -295,6 +302,7 @@ public final class HydratationSquelette {
         try {
             return telecharger(nuit.idParticipation(), Source.CSV_SEULEMENT, progres -> {}, JetonAnnulation.neutre());
         } catch (RuntimeException indisponible) {
+            consigner(nuit.idPassage(), indisponible);
             return Optional.empty();
         }
     }
@@ -345,6 +353,20 @@ public final class HydratationSquelette {
         Set<Long> ids = new HashSet<>();
         originaux.forEach(original -> ids.add(original.id()));
         return ids;
+    }
+
+    /// Consigne l'échec d'**une** nuit d'un balayage, au niveau qui correspond à sa **nature** (ADR 0008).
+    ///
+    /// Un balayage best-effort continue, mais continuer n'est pas oublier : sans trace, un utilisateur qui
+    /// signale « il me reste douze nuits vides » ne laisse rien à quoi se raccrocher. La distinction de
+    /// niveau importe autant que la trace elle-même - une analyse non terminée sur la plateforme est une
+    /// issue **normale** ; si elle partait en SEVERE, elle noierait les vrais bugs qu'on cherche ici.
+    private static void consigner(Long idPassage, RuntimeException echec) {
+        if (echec instanceof RegleMetierException) {
+            LOG.fine(() -> "Nuit " + idPassage + " laissée incomplète : " + echec.getMessage());
+        } else {
+            LOG.log(Level.WARNING, echec, () -> "Échec inattendu en complétant la nuit " + idPassage + ".");
+        }
     }
 
     /// Relaie le **libellé** d'une progression en gardant la fraction à zéro.
