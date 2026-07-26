@@ -75,7 +75,8 @@ class DepotUniteDaoTest {
                 null,
                 null,
                 idPoint,
-                "1925492"));
+                "1925492",
+                null));
     }
 
     @Test

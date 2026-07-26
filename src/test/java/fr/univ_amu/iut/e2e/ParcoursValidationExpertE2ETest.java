@@ -201,7 +201,8 @@ class ParcoursValidationExpertE2ETest {
                         null,
                         null,
                         idPoint,
-                        SERIE));
+                        SERIE,
+                        null));
         idPassage = passage.id();
         Long idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, "/ws/session", null, null, idPassage))

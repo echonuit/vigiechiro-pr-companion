@@ -134,7 +134,8 @@ class SiteDetailSuppressionsViewTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"));
+                        "1925492",
+                        null));
         robot.interact(() -> controleur.afficher(site));
     }
 

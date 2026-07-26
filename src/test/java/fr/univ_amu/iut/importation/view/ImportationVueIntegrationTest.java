@@ -114,7 +114,8 @@ class ImportationVueIntegrationTest {
                         null,
                         null,
                         idPoint,
-                        "9999999"));
+                        "9999999",
+                        null));
     }
 
     @AfterEach

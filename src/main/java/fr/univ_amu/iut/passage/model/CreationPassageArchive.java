@@ -211,7 +211,8 @@ public final class CreationPassageArchive {
                         donneesMeteo,
                         debut.toLocalDate().toString(),
                         idPoint,
-                        idEnregistreur))
+                        idEnregistreur,
+                        null))
                 .id();
     }
 

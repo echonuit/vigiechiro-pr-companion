@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.passage.di.CampagneModule;
+import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import java.nio.file.Path;
 import org.junit.jupiter.api.AfterEach;
@@ -33,7 +34,8 @@ class CampagneModuleTest {
     void campagne_module_resout_le_service() {
         System.setProperty("vigiechiro.workspace", workspaceJetable.toString());
 
-        Injector injecteur = Guice.createInjector(new CommunModule(), new PersistenceModule(), new CampagneModule());
+        Injector injecteur = Guice.createInjector(
+                new CommunModule(), new PersistenceModule(), new PassageModule(), new CampagneModule());
 
         assertThat(injecteur.getInstance(ServiceCampagne.class)).isNotNull();
     }

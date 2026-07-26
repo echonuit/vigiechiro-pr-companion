@@ -463,6 +463,7 @@ public final class CaptureLot {
                         null,
                         null,
                         idPoint,
-                        SERIE));
+                        SERIE,
+                        null));
     }
 }

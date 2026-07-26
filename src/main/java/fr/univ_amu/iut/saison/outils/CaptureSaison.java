@@ -169,6 +169,7 @@ public final class CaptureSaison {
                 null,
                 null,
                 idPoint,
-                ENREGISTREUR));
+                ENREGISTREUR,
+                null));
     }
 }

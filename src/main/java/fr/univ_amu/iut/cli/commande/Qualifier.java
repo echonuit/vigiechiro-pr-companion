@@ -102,6 +102,7 @@ public final class Qualifier implements Callable<Integer> {
                 p.donneesMeteo(),
                 p.deposeLe(),
                 p.idPoint(),
-                p.idEnregistreur());
+                p.idEnregistreur(),
+                p.idCampagne());
     }
 }

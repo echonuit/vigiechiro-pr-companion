@@ -345,7 +345,8 @@ public final class DepotVigieChiro {
                 passage.donneesMeteo(),
                 deposeLe,
                 passage.idPoint(),
-                passage.idEnregistreur()));
+                passage.idEnregistreur(),
+                passage.idCampagne()));
     }
 
     private Passage chargerPassage(Long idPassage) {

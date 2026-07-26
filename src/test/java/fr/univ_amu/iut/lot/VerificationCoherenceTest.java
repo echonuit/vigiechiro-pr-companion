@@ -106,7 +106,8 @@ class VerificationCoherenceTest {
                 null,
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
     }
 
     private Long creerSession(Long idPassage) {

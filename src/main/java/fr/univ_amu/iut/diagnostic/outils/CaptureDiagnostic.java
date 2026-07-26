@@ -258,7 +258,8 @@ public final class CaptureDiagnostic {
                 "{\"tempDebut\":8.5}", // météo de début de nuit (#106) : montre la valeur sur l'aperçu
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
         Long idSession = sessionDao
                 .insert(new SessionDEnregistrement(
                         null, "Car640380-2026-Pass" + numero + "-A1", null, null, passage.id()))

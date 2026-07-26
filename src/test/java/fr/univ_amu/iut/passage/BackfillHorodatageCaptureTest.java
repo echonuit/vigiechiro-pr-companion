@@ -70,7 +70,8 @@ class BackfillHorodatageCaptureTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"))
+                        "1925492",
+                        null))
                 .id();
         idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, "racine", null, null, idPassage))

@@ -157,7 +157,8 @@ class BackfillEmpreintesTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         return sessionDao
                 .insert(new SessionDEnregistrement(

@@ -298,7 +298,8 @@ public class ServiceQualification {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
     }
 
     /// **Verdict final proposé** pour un passage, dérivé des verdicts par fichier de sa sélection
@@ -366,7 +367,8 @@ public class ServiceQualification {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
         passageDao.update(verifie);
         return verifie;
     }

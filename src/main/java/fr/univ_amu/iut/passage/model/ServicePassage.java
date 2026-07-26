@@ -173,7 +173,8 @@ public class ServicePassage {
                 donneesMeteo,
                 null,
                 idPoint,
-                idEnregistreur);
+                idEnregistreur,
+                null);
         return passageDao.insert(aCreer);
     }
 
@@ -296,7 +297,8 @@ public class ServicePassage {
                 passage.donneesMeteo(),
                 deposeLe,
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
         passageDao.update(misAJour);
         return misAJour;
     }
@@ -330,7 +332,8 @@ public class ServicePassage {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
         passageDao.update(misAJour);
         return misAJour;
     }
@@ -385,7 +388,8 @@ public class ServicePassage {
                 passage.donneesMeteo(),
                 null, // deposited_at effacé : le passage n'est plus déposé
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
         passageDao.update(misAJour);
         return misAJour;
     }

@@ -286,7 +286,8 @@ public final class CaptureEcrans {
                 null,
                 deposeLe,
                 idPoint,
-                enregistreur);
+                enregistreur,
+                null);
     }
 
     /// Donnees seedees reutilisees par les ecrans detail et modale.

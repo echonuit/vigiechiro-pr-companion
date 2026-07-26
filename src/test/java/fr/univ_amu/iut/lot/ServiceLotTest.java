@@ -128,7 +128,8 @@ class ServiceLotTest {
                 null,
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
     }
 
     /// Session entièrement cohérente : 2 séquences préfixées issues d'un original + journal.

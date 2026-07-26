@@ -66,7 +66,8 @@ class JournalDuCapteurDaoTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"))
+                        "1925492",
+                        null))
                 .id();
         sessionDao = new SessionDao(source);
         idSession = sessionDao

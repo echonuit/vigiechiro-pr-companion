@@ -195,7 +195,8 @@ class CliResetGuideTest {
                         null,
                         "2026-07-03",
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         String nomSession = "Car130711-2026-Pass" + numeroPassage + "-Z41";
         Path racine = workspace.dossierSession(nomSession);

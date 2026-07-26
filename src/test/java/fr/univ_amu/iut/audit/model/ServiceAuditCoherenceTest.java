@@ -373,7 +373,8 @@ class ServiceAuditCoherenceTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
     }
 

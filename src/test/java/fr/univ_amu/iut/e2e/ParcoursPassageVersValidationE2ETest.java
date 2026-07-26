@@ -124,7 +124,8 @@ class ParcoursPassageVersValidationE2ETest {
                 p.donneesMeteo(),
                 "2026-06-22",
                 p.idPoint(),
-                p.idEnregistreur());
+                p.idEnregistreur(),
+                null);
     }
 
     private static Path creerNuitSynthetique(Path sd) throws Exception {

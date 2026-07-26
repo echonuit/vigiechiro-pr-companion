@@ -357,6 +357,7 @@ public final class CaptureMultisite {
                 null,
                 null,
                 idPoint,
-                ENREGISTREUR));
+                ENREGISTREUR,
+                null));
     }
 }

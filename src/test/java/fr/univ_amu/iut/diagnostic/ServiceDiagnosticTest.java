@@ -96,7 +96,8 @@ class ServiceDiagnosticTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
 
         service = new ServiceDiagnostic(
@@ -141,7 +142,8 @@ class ServiceDiagnosticTest {
                 "{\"tempDebut\":8.5}",
                 p.deposeLe(),
                 p.idPoint(),
-                p.idEnregistreur()));
+                p.idEnregistreur(),
+                null));
 
         Diagnostic diagnostic = service.diagnostiquer(idPassage);
 

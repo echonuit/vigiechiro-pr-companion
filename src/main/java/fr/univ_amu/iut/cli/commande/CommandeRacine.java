@@ -38,6 +38,7 @@ import picocli.CommandLine.Spec;
             AfficherSoldeSaison.class,
             CreerCampagne.class,
             ListerCampagnes.class,
+            RattacherCampagne.class,
             StatutPassage.class,
             Diagnostiquer.class,
             VerifierMiseAJour.class,

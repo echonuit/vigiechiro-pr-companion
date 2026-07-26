@@ -95,7 +95,8 @@ class AuditNavigationViewTest {
                         null,
                         null,
                         idPoint,
-                        SERIE));
+                        SERIE,
+                        null));
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);

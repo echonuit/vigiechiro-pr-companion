@@ -65,7 +65,8 @@ class SessionDaoTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"))
+                        "1925492",
+                        null))
                 .id();
         dao = new SessionDao(source);
     }

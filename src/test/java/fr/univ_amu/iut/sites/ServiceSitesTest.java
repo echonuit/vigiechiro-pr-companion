@@ -351,7 +351,8 @@ class ServiceSitesTest {
                 null,
                 null,
                 point.id(),
-                "1925492"));
+                "1925492",
+                null));
 
         assertThatThrownBy(() -> service.supprimerSite(site.id()))
                 .isInstanceOf(RegleMetierException.class)

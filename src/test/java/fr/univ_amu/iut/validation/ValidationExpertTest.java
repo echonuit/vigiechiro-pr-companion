@@ -103,7 +103,8 @@ class ValidationExpertTest {
                 null,
                 null,
                 point.id(),
-                "1925492"));
+                "1925492",
+                null));
         idPassage = passage.id();
         SessionDEnregistrement session =
                 sessionDao.insert(new SessionDEnregistrement(null, "/ws/session", null, null, idPassage));

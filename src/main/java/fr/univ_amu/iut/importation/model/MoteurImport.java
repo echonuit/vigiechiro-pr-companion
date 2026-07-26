@@ -415,7 +415,8 @@ final class MoteurImport {
                 p.donneesMeteo(),
                 p.deposeLe(),
                 p.idPoint(),
-                p.idEnregistreur());
+                p.idEnregistreur(),
+                p.idCampagne());
     }
 
     /// Noms de fichiers (sans chemin) des originaux, dans l'ordre du plan (numéros 1..N du suivi #947).

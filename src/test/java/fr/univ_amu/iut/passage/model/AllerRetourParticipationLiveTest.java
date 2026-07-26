@@ -257,7 +257,21 @@ class AllerRetourParticipationLiveTest {
     /// Passage d'essai : seules comptent ici la nuit, ses bornes et son enregistreur.
     private static Passage nuitDEssai(String enregistreur, String heureDebut, String heureFin) {
         return new Passage(
-                1L, 1, 2026, "2026-07-04", heureDebut, heureFin, null, null, null, null, null, null, 1L, enregistreur);
+                1L,
+                1,
+                2026,
+                "2026-07-04",
+                heureDebut,
+                heureFin,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null,
+                1L,
+                enregistreur,
+                null);
     }
 
     /// Écrit une configuration seule, sans toucher aux autres champs de la participation.

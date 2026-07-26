@@ -163,7 +163,8 @@ public final class SynchronisationParticipation {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
     }
 
     /// Recopie la météo et la configuration micro de la participation vers le passage local (cas « préparé sur
@@ -286,6 +287,7 @@ public final class SynchronisationParticipation {
                 donneesMeteo,
                 p.deposeLe(),
                 p.idPoint(),
-                idEnregistreur);
+                idEnregistreur,
+                p.idCampagne());
     }
 }

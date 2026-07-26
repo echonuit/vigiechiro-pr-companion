@@ -100,7 +100,8 @@ class RattachementDaoTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         idSession = sessionDao
                 .insert(new SessionDEnregistrement(null, racine.toString(), 100L, 50L, idPassage))

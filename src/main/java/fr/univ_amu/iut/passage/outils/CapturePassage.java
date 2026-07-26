@@ -420,7 +420,8 @@ public final class CapturePassage {
                         null,
                         "2026-07-05",
                         idPoint,
-                        ENREGISTREUR))
+                        ENREGISTREUR,
+                        null))
                 .id();
     }
 
@@ -446,7 +447,8 @@ public final class CapturePassage {
                 "{\"tempDebut\":8.5}", // météo de début de nuit (#106) : montre la valeur sur l'aperçu
                 null,
                 idPoint,
-                ENREGISTREUR));
+                ENREGISTREUR,
+                null));
         SessionDEnregistrement session = sessionDao.insert(new SessionDEnregistrement(
                 null,
                 workspace.resolve(prefixe.nomDossierSession()).toString(),
