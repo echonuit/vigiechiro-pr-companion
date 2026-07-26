@@ -47,10 +47,26 @@ final class TransportVigieChiro {
     private final FournisseurToken fournisseurToken;
     private final HttpClient client;
 
+    /// Politique de réessai (#2354, ADR 2354) : le pare-chocs qui absorbe une coupure momentanée.
+    private final PolitiqueReessai politique;
+
     TransportVigieChiro(String baseUrl, FournisseurToken fournisseurToken) {
+        this(
+                baseUrl,
+                fournisseurToken,
+                HttpClient.newBuilder().connectTimeout(DELAI).build(),
+                PolitiqueReessai.systeme());
+    }
+
+    /// Constructeur d'injection (#2354) : le client HTTP et la politique de réessai sont fournis, pour
+    /// que les tests simulent un envoi (échec réseau puis succès, `Retry-After`) sans réseau réel -
+    /// JPMS interdisant un serveur HTTP local en test.
+    TransportVigieChiro(
+            String baseUrl, FournisseurToken fournisseurToken, HttpClient client, PolitiqueReessai politique) {
         this.baseUrl = Objects.requireNonNull(baseUrl, "baseUrl");
         this.fournisseurToken = Objects.requireNonNull(fournisseurToken, "fournisseurToken");
-        this.client = HttpClient.newBuilder().connectTimeout(DELAI).build();
+        this.client = Objects.requireNonNull(client, "client");
+        this.politique = Objects.requireNonNull(politique, "politique");
     }
 
     /// **GET authentifié** sur `chemin` (relatif à la base), trié : succès (2xx, corps), non connecté
@@ -200,7 +216,29 @@ final class TransportVigieChiro {
     /// déjà signée). Le `Content-Type` doit être le mime attendu par la signature (sinon S3 répond
     /// `SignatureDoesNotMatch`). `true` si 2xx, `false` sinon (fichier illisible compris) : le dépôt
     /// par unité a son propre canal de compte-rendu ([fr.univ_amu.iut.lot.model.DepotVigieChiro]).
+    ///
+    /// Sans suivi de reprise : le réessai reste silencieux (le câblage de la mention discrète vers le
+    /// suivi de dépôt vient au lot suivant).
     boolean deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime) {
+        return deposerVersS3(urlSignee, corps, mime, PolitiqueReessai.Suivi.SILENCIEUX);
+    }
+
+    /// Variante **réessayée** (#2354) : une coupure momentanée sur un gros téléversement (`PUT` S3 de
+    /// plusieurs dizaines de Mo depuis une connexion mobile) ne doit pas coûter l'unité. Le `PUT` est
+    /// **idempotent** (même URL signée, même clé, même objet), donc sûr à rejouer ; profil PREMIER_PLAN,
+    /// car le dépôt est attendu. `Retry-After` du serveur fait autorité (cf. [PolitiqueReessai]). `suivi`
+    /// est prévenu avant chaque nouvelle tentative (mention discrète).
+    boolean deposerVersS3(String urlSignee, CorpsAEnvoyer corps, String mime, PolitiqueReessai.Suivi suivi) {
+        ReponseApi<String> issue = politique.executer(
+                PolitiqueReessai.Profil.PREMIER_PLAN, suivi, () -> uneDepose(urlSignee, corps, mime));
+        return issue instanceof ReponseApi.Succes<String>;
+    }
+
+    /// Un **unique** envoi S3 : construit la requête, l'émet, la consigne, et rend l'issue **avec** le
+    /// délai que le serveur a éventuellement imposé (`Retry-After`), pour que la politique en tienne
+    /// compte. Une panne réseau ou un fichier illisible devient une issue [ReponseApi.Injoignable]
+    /// (réessayable), un statut hors 2xx un [ReponseApi.Refuse] (réessayable seulement en 429/5xx).
+    private PolitiqueReessai.Issue<String> uneDepose(String urlSignee, CorpsAEnvoyer corps, String mime) {
         long debut = System.nanoTime();
         String chemin = "?";
         try {
@@ -211,17 +249,32 @@ final class TransportVigieChiro {
                     .build();
             // Chemin SEUL : une URL S3 pré-signée porte sa signature dans sa requête (#1845).
             chemin = requete.uri().getPath();
-            HttpResponse<Void> reponse = client.send(requete, HttpResponse.BodyHandlers.discarding());
-            journaliser(GESTE_S3, chemin, TransportVigieChiro.triage(reponse.statusCode(), ""), debut, null);
-            return reponse.statusCode() >= 200 && reponse.statusCode() < 300;
+            HttpResponse<Void> http = client.send(requete, HttpResponse.BodyHandlers.discarding());
+            ReponseApi<String> reponse = triage(http.statusCode(), "");
+            journaliser(GESTE_S3, chemin, reponse, debut, null);
+            return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
             Thread.currentThread().interrupt();
-            journaliser(GESTE_S3, chemin, ReponseApi.injoignable("appel interrompu"), debut, interrompu);
-            return false;
+            ReponseApi<String> reponse = ReponseApi.injoignable("appel interrompu");
+            journaliser(GESTE_S3, chemin, reponse, debut, interrompu);
+            return PolitiqueReessai.Issue.de(reponse);
         } catch (RuntimeException | IOException indisponible) {
-            journaliser(GESTE_S3, chemin, ReponseApi.injoignable(cause(indisponible)), debut, indisponible);
-            return false;
+            ReponseApi<String> reponse = ReponseApi.injoignable(cause(indisponible));
+            journaliser(GESTE_S3, chemin, reponse, debut, indisponible);
+            return PolitiqueReessai.Issue.de(reponse);
         }
+    }
+
+    /// Le délai que le serveur demande d'attendre avant un nouvel essai (`Retry-After` en **secondes**),
+    /// s'il l'envoie sous forme entière. La forme alternative (date HTTP) est ignorée : le backoff prend
+    /// alors le relais. On ne fait donc jamais attendre plus longtemps qu'un serveur ne l'a demandé.
+    private static Optional<Duration> retryAfter(HttpResponse<?> reponse) {
+        return reponse.headers()
+                .firstValue("Retry-After")
+                .map(String::strip)
+                .filter(valeur -> !valeur.isEmpty() && valeur.chars().allMatch(Character::isDigit))
+                .map(Long::parseLong)
+                .map(Duration::ofSeconds);
     }
 
     /// Triage **pur** d'une réponse reçue : 2xx exploitable, tout autre statut est un refus qui garde

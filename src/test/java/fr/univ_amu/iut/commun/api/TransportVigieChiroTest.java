@@ -1,11 +1,22 @@
 package fr.univ_amu.iut.commun.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.io.IOException;
+import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
 import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.logging.Handler;
 import java.util.logging.Level;
@@ -158,7 +169,10 @@ class TransportVigieChiroTest {
     @Test
     @DisplayName("deposerVersS3 : hors-ligne ou corps illisible → false, sans lever")
     void depot_s3_degrade_en_booleen() {
-        TransportVigieChiro transport = new TransportVigieChiro("http://localhost:1/api/v1", TOKEN_ABC);
+        // Politique sans attente : l'URL injoignable épuise les tentatives instantanément (sinon le
+        // réessai réel dormirait plusieurs secondes, #2354).
+        TransportVigieChiro transport = new TransportVigieChiro(
+                "http://localhost:1/api/v1", TOKEN_ABC, HttpClient.newHttpClient(), sansAttente());
 
         assertThat(transport.deposerVersS3(
                         "http://localhost:1/s3/signe",
@@ -168,9 +182,96 @@ class TransportVigieChiroTest {
         assertThat(transport.deposerVersS3(
                         "http://localhost:1/s3/signe",
                         () -> {
-                            throw new java.io.IOException("fichier illisible");
+                            throw new IOException("fichier illisible");
                         },
                         "application/zip"))
                 .isFalse();
+    }
+
+    @Test
+    @DisplayName("#2354 : une coupure momentanée est réessayée, puis le PUT S3 réussit")
+    void depot_s3_reessaie_une_coupure_puis_reussit() throws Exception {
+        HttpResponse<Void> ok = reponse(200, Map.of());
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("paquet perdu")).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+
+        assertThat(depose).as("la seconde tentative aboutit").isTrue();
+        assertThat(attentes).as("une seule attente : une coupure, une reprise").hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2354 : un refus définitif (4xx) du PUT S3 n'est jamais rejoué")
+    void depot_s3_ne_reessaie_pas_un_refus_definitif() throws Exception {
+        // 403 SignatureDoesNotMatch : rejouer ne le rendra pas valide.
+        HttpResponse<Void> refus = reponse(403, Map.of());
+        HttpClient client = mock(HttpClient.class);
+        doReturn(refus).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+
+        assertThat(depose).isFalse();
+        assertThat(attentes).as("aucune attente : un 4xx ne se rejoue pas").isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2354 : le PUT S3 respecte le Retry-After du serveur (503 → attente imposée → succès)")
+    void depot_s3_respecte_retry_after() throws Exception {
+        HttpResponse<Void> occupe = reponse(503, Map.of("Retry-After", List.of("2")));
+        HttpResponse<Void> ok = reponse(200, Map.of());
+        HttpClient client = mock(HttpClient.class);
+        doReturn(occupe).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+
+        assertThat(depose).isTrue();
+        assertThat(attentes).as("le délai du serveur fait autorité").containsExactly(Duration.ofSeconds(2));
+    }
+
+    @Test
+    @DisplayName("#2354 : une coupure persistante épuise les tentatives du profil premier plan")
+    void depot_s3_epuise_les_tentatives_sur_coupure_persistante() throws Exception {
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("réseau à terre")).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        boolean depose = transport.deposerVersS3("http://s3.exemple/signe", octetUnique(), "application/zip");
+
+        assertThat(depose).isFalse();
+        assertThat(attentes).as("premier plan : 4 tentatives, donc 3 attentes").hasSize(3);
+    }
+
+    /// Corps d'un octet, reconstruit à chaque tentative (le publisher n'est pas rejouable une fois lu).
+    private static TransportVigieChiro.CorpsAEnvoyer octetUnique() {
+        return () -> HttpRequest.BodyPublishers.ofByteArray(new byte[] {1});
+    }
+
+    /// Politique sans vraie attente (aléa nul), pour des tests instantanés.
+    private static PolitiqueReessai sansAttente() {
+        return new PolitiqueReessai(delai -> {}, () -> 0.0);
+    }
+
+    /// Politique sans vraie attente qui **note** les durées demandées, pour compter les reprises.
+    private static PolitiqueReessai sansAttente(List<Duration> attentes) {
+        return new PolitiqueReessai(attentes::add, () -> 0.0);
+    }
+
+    private static HttpResponse<Void> reponse(int statut, Map<String, List<String>> entetes) {
+        HttpResponse<Void> reponse = mock(HttpResponse.class);
+        when(reponse.statusCode()).thenReturn(statut);
+        when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
+        return reponse;
     }
 }
