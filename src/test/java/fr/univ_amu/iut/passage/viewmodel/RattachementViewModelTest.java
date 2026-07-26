@@ -656,6 +656,29 @@ class RattachementViewModelTest {
         assertThat(viewModel.campagnes()).isEmpty();
     }
 
+    @Test
+    @DisplayName("#2525 : ouvrirSur charge l'état opportuniste du passage dans la case")
+    void opportuniste_charge_a_l_ouverture() {
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        when(service.estOpportuniste(ID)).thenReturn(true);
+
+        viewModel.ouvrirSur(ID, "040962", "A1");
+
+        assertThat(viewModel.opportunisteProperty().get()).isTrue();
+    }
+
+    @Test
+    @DisplayName("#2525 : appliquer persiste la nature opportuniste saisie")
+    void opportuniste_enregistre_a_appliquer() {
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        viewModel.ouvrirSur(ID, "040962", "A1");
+
+        viewModel.opportunisteProperty().set(true);
+        assertThat(viewModel.appliquer()).isTrue();
+
+        verify(service).marquerOpportuniste(ID, true);
+    }
+
     // « Importer les observations » a quitté cette modale (#1350) : ses tests vivent désormais dans
     // PassageViewModelTest, avec l'action.
 }

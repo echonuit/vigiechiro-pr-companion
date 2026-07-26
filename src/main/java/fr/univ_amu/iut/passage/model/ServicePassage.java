@@ -215,6 +215,13 @@ public class ServicePassage {
         opportunistes.definir(idPassage, opportuniste);
     }
 
+    /// Le passage `idPassage` est-il marqué opportuniste (#2525) ? Lecture pour les surfaces de saisie
+    /// (case de la modale « Modifier le passage »).
+    public boolean estOpportuniste(Long idPassage) {
+        Objects.requireNonNull(idPassage, ID_PASSAGE);
+        return opportunistes.estOpportuniste(idPassage);
+    }
+
     /// R3 (soft, `PointFixeStandard` uniquement) : le passage 1 est attendu entre le 15 juin et le
     /// 31 juillet, le passage 2 entre le 15 août et le 30 septembre. Hors fenêtre → alerte non
     /// bloquante. Sur [Protocole#RECHERCHE], ou pour un n° de passage sans fenêtre définie (autre

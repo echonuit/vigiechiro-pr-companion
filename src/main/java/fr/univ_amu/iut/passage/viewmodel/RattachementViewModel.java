@@ -15,6 +15,7 @@ import fr.univ_amu.iut.passage.model.ServiceRattachement;
 import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import java.util.Objects;
 import java.util.Optional;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
@@ -67,6 +68,11 @@ public class RattachementViewModel {
     /// désactivable. Absent le service, la modale masque son champ (rien à proposer, rien à enregistrer).
     private final SelectionCampagne selectionCampagne;
 
+    /// Nature opportuniste du passage (#2525), extraite en sous-ViewModel : une participation sur le carré
+    /// d'un tiers, exemptée de R3/R4. Attribut COEUR (toujours disponible), notamment pour les
+    /// participations **non connectées** où la dérivation automatique est impossible.
+    private final SaisieOpportuniste saisieOpportuniste;
+
     private Long idPassage;
     private String carre;
     private String codePoint;
@@ -85,6 +91,7 @@ public class RattachementViewModel {
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
         this.selectionCampagne = new SelectionCampagne(campagneService);
+        this.saisieOpportuniste = new SaisieOpportuniste(service);
         this.conditions = new SaisiePassageConditions(conditionsPassage, propositionsEnregistreur, messages);
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
@@ -112,6 +119,7 @@ public class RattachementViewModel {
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
         selectionCampagne.charger(idPassage);
+        saisieOpportuniste.charger(idPassage);
         majRecap();
     }
 
@@ -128,6 +136,11 @@ public class RattachementViewModel {
     /// Campagne sélectionnée (`null` = aucune) ; liée en bidirectionnel au ComboBox.
     public ObjectProperty<Campagne> campagneProperty() {
         return selectionCampagne.selectionProperty();
+    }
+
+    /// Nature opportuniste du passage (#2525) ; liée en bidirectionnel à la case de la modale.
+    public BooleanProperty opportunisteProperty() {
+        return saisieOpportuniste.opportunisteProperty();
     }
 
     /// Applique le nouveau rattachement (année + n° saisis), après validation des bornes.
@@ -168,9 +181,10 @@ public class RattachementViewModel {
                 || !conditions.horaires().enregistrer()) {
             return false;
         }
-        // Le rattachement à une campagne est une métadonnée indépendante du renommage : on l'applique même
-        // sur un passage déposé (renommage verrouillé).
+        // Le rattachement à une campagne et la nature opportuniste sont des métadonnées indépendantes du
+        // renommage : on les applique même sur un passage déposé (renommage verrouillé).
         selectionCampagne.enregistrer(idPassage);
+        saisieOpportuniste.enregistrer(idPassage);
         if (renommageVerrouille.get()) {
             return true;
         }

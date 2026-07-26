@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ProgressIndicator?>
@@ -96,6 +97,12 @@
           <ComboBox fx:id="champCampagne" prefWidth="260.0" maxWidth="Infinity"/>
         </VBox>
       </HBox>
+
+      <!-- Nature opportuniste (#2525) : passage réalisé sur le carré d'un tiers, exempté de R3/R4 (ni
+           contrainte de date, ni de fréquence). Toujours présent, notamment pour une participation non
+           connectée où la dérivation automatique côté API est impossible. -->
+      <CheckBox fx:id="caseOpportuniste" wrapText="true"
+                text="Participation opportuniste (carré d'un tiers : sans contrainte de date ni de fréquence)"/>
 
       <Separator/>
 
