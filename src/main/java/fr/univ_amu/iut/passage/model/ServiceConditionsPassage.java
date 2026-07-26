@@ -94,7 +94,8 @@ public class ServiceConditionsPassage {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                idEnregistreur);
+                idEnregistreur,
+                passage.idCampagne());
     }
 
     /// Renseigne le **relevé météo complet** d'un passage (température début/fin, vent, couverture
@@ -127,7 +128,8 @@ public class ServiceConditionsPassage {
                 donneesMeteo,
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
     }
 
     /// Matériel du micro déployé pour le passage `idPassage` (position sol/canopée, hauteur de fixation,
@@ -258,6 +260,7 @@ public class ServiceConditionsPassage {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
     }
 }

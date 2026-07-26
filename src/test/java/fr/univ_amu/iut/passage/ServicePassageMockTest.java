@@ -79,7 +79,8 @@ class ServicePassageMockTest {
                 null,
                 null,
                 7L,
-                "1997632");
+                "1997632",
+                null);
     }
 
     private ServicePassage service() {
@@ -145,7 +146,8 @@ class ServicePassageMockTest {
                 null,
                 null,
                 1L,
-                "1925492");
+                "1925492",
+                null);
         when(passageDao.trouverParPointAnneePassage(1L, 2026, 1)).thenReturn(Optional.of(existant));
 
         assertThatThrownBy(() -> service()
@@ -172,7 +174,8 @@ class ServicePassageMockTest {
                 null,
                 null,
                 1L,
-                "1925492");
+                "1925492",
+                null);
         when(passageDao.trouverParPointAnneePassage(1L, 2026, 1)).thenReturn(Optional.empty());
         when(passageDao.insert(any())).thenReturn(attendu);
 
@@ -220,6 +223,7 @@ class ServicePassageMockTest {
                 null,
                 null,
                 1L,
-                "1925492");
+                "1925492",
+                null);
     }
 }

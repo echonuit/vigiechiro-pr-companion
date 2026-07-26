@@ -103,7 +103,8 @@ class PublicationMessageTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"));
+                        "1925492",
+                        null));
         Long idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, "/ws/session", null, null, passage.id()))
                 .id();

@@ -133,7 +133,8 @@ class CorrespondanceParticipationTest {
                 modele.donneesMeteo(),
                 modele.deposeLe(),
                 modele.idPoint(),
-                serie);
+                serie,
+                null);
     }
 
     @Test
@@ -206,7 +207,8 @@ class CorrespondanceParticipationTest {
                 donneesMeteo,
                 null,
                 7L,
-                "1997632");
+                "1997632",
+                null);
     }
 
     private static LocalDateTime instantLocal(String rfc1123) {
@@ -274,7 +276,8 @@ class CorrespondanceParticipationTest {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                null);
     }
 
     @Test

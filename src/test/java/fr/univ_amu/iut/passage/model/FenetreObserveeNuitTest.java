@@ -175,6 +175,7 @@ class FenetreObserveeNuitTest {
                 null,
                 null,
                 1L,
-                "1997632");
+                "1997632",
+                null);
     }
 }

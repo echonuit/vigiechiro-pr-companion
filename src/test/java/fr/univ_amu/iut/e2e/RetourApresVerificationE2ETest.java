@@ -212,7 +212,8 @@ class RetourApresVerificationE2ETest {
                         null,
                         null,
                         point.id(),
-                        ENREGISTREUR));
+                        ENREGISTREUR,
+                        null));
         SessionDEnregistrement session = new SessionDao(source)
                 .insert(new SessionDEnregistrement(
                         null, workspace.resolve("session").toString(), null, null, passage.id()));

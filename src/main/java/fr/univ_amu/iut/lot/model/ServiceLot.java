@@ -389,6 +389,7 @@ public class ServiceLot {
                 passage.donneesMeteo(),
                 deposeLe,
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
     }
 }

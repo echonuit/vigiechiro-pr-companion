@@ -368,7 +368,8 @@ class SynchronisationParticipationTest {
                 modele.donneesMeteo(),
                 modele.deposeLe(),
                 modele.idPoint(),
-                serie);
+                serie,
+                null);
     }
 
     private static Passage passage(String donneesMeteo) {
@@ -386,6 +387,7 @@ class SynchronisationParticipationTest {
                 donneesMeteo,
                 null,
                 7L,
-                "1997632");
+                "1997632",
+                null);
     }
 }

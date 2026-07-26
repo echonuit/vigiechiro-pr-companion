@@ -266,7 +266,8 @@ class ParcoursRegrouperNuitsParPointE2ETest {
                 null,
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
         SessionDEnregistrement session =
                 sessionDao.insert(new SessionDEnregistrement(null, "/ws/" + prefixe, null, null, passage.id()));
         String base = prefixe + "seqA";

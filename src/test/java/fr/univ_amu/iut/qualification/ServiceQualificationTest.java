@@ -103,7 +103,8 @@ class ServiceQualificationTest {
                 null,
                 null,
                 point.id(),
-                "1925492"));
+                "1925492",
+                null));
         idPassage = passage.id();
         SessionDEnregistrement session = sessionDao.insert(
                 new SessionDEnregistrement(null, "/ws/" + prefixe.nomDossierSession(), null, null, idPassage));
@@ -410,7 +411,8 @@ class ServiceQualificationTest {
                 passage.donneesMeteo(),
                 "2026-06-23T08:00",
                 passage.idPoint(),
-                passage.idEnregistreur()));
+                passage.idEnregistreur(),
+                null));
 
         assertThatThrownBy(() -> service.enregistrerVerdict(idPassage, Verdict.A_JETER, null))
                 .isInstanceOf(RegleMetierException.class)

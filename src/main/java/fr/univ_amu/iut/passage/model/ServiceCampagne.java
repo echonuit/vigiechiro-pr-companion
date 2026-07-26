@@ -3,6 +3,7 @@ package fr.univ_amu.iut.passage.model;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.util.List;
 import java.util.Objects;
 
@@ -18,10 +19,12 @@ import java.util.Objects;
 public class ServiceCampagne {
 
     private final CampagneDao campagneDao;
+    private final PassageDao passageDao;
     private final Horloge horloge;
 
-    public ServiceCampagne(CampagneDao campagneDao, Horloge horloge) {
+    public ServiceCampagne(CampagneDao campagneDao, PassageDao passageDao, Horloge horloge) {
         this.campagneDao = Objects.requireNonNull(campagneDao, "campagneDao");
+        this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
@@ -55,6 +58,44 @@ public class ServiceCampagne {
     public void supprimerCampagne(Long idCampagne) {
         charger(idCampagne);
         campagneDao.delete(idCampagne);
+    }
+
+    /// Rattache un passage à une campagne, ou l'en **détache** si `idCampagne` est `null`. Le
+    /// rattachement est un simple lien facultatif : rien d'autre du passage n'est modifié.
+    ///
+    /// @return le passage mis à jour (persisté)
+    /// @throws RegleMetierException si le passage, ou la campagne visée, est introuvable
+    public Passage rattacherPassage(Long idPassage, Long idCampagne) {
+        Objects.requireNonNull(idPassage, "idPassage");
+        if (idCampagne != null) {
+            charger(idCampagne); // la campagne visée doit exister
+        }
+        Passage passage = passageDao
+                .findById(idPassage)
+                .orElseThrow(() -> new RegleMetierException("Passage introuvable : " + idPassage));
+        Passage misAJour = new Passage(
+                passage.id(),
+                passage.numeroPassage(),
+                passage.annee(),
+                passage.dateEnregistrement(),
+                passage.heureDebut(),
+                passage.heureFin(),
+                passage.parametresAcquisition(),
+                passage.statutWorkflow(),
+                passage.verdictVerification(),
+                passage.commentaire(),
+                passage.donneesMeteo(),
+                passage.deposeLe(),
+                passage.idPoint(),
+                passage.idEnregistreur(),
+                idCampagne);
+        passageDao.update(misAJour);
+        return misAJour;
+    }
+
+    /// Détache un passage de sa campagne (raccourci de [rattacherPassage] avec `null`).
+    public Passage detacherPassage(Long idPassage) {
+        return rattacherPassage(idPassage, null);
     }
 
     /// Toutes les campagnes, de la plus récente à la plus ancienne.

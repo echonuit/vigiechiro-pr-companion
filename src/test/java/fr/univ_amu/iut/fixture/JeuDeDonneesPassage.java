@@ -201,7 +201,8 @@ public final class JeuDeDonneesPassage {
                         null,
                         null,
                         idPoint,
-                        numeroSerie))
+                        numeroSerie,
+                        null))
                 .id();
         idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, "/ws/session", null, null, idPassage))

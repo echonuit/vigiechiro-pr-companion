@@ -187,7 +187,8 @@ class ParcoursResetE2ETest {
                         null,
                         null,
                         idPoint,
-                        SERIE));
+                        SERIE,
+                        null));
         new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, "/disque/qui/n/existe/plus", null, null, passage.id()));
         return source;

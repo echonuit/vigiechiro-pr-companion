@@ -154,7 +154,8 @@ class ServicePassageDetailTest {
                 null,
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
     }
 
     private void insererSequence(Long idSession, double duree) {
@@ -264,7 +265,8 @@ class ServicePassageDetailTest {
                 "{\"hygro\":80}", // une autre clé météo déjà présente
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
 
         conditions.definirMeteo(passage.id(), new MeteoReleve(8.5, null, null, null));
 

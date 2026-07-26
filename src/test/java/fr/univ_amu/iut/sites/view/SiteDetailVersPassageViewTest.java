@@ -76,7 +76,8 @@ class SiteDetailVersPassageViewTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"));
+                        "1925492",
+                        null));
 
         FXMLLoader loader = new FXMLLoader(App.class.getResource("commun/view/MainView.fxml"));
         loader.setControllerFactory(injector::getInstance);

@@ -68,7 +68,8 @@ class MaterielMicroDaoTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         dao = new MaterielMicroDao(source);
     }

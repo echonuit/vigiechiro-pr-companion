@@ -177,7 +177,8 @@ class ServiceDisponibiliteAudioTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
     }
 

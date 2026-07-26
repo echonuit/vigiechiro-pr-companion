@@ -63,7 +63,8 @@ class ServiceLotMockTest {
                 null,
                 null,
                 10L,
-                "1925492");
+                "1925492",
+                null);
     }
 
     @Test

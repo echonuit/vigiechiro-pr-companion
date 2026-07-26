@@ -181,7 +181,8 @@ public final class CaptureRecherche {
                         null,
                         null,
                         idPoint,
-                        ENREGISTREUR))
+                        ENREGISTREUR,
+                        null))
                 .id();
     }
 

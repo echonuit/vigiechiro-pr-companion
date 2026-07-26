@@ -415,7 +415,8 @@ public final class CaptureImport {
                         null,
                         null,
                         point.id(),
-                        SERIE));
+                        SERIE,
+                        null));
     }
 
     /// Dossier d'exemple **standard** (chemin déterministe) : journal + relevé + deux WAV cohérents

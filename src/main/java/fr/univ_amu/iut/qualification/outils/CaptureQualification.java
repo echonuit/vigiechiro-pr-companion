@@ -262,7 +262,8 @@ public final class CaptureQualification {
                 null,
                 null,
                 point.id(),
-                ENREGISTREUR));
+                ENREGISTREUR,
+                null));
         SessionDEnregistrement session = sessionDao.insert(new SessionDEnregistrement(
                 null, workspace.resolve(PREFIXE.nomDossierSession()).toString(), null, null, passage.id()));
 

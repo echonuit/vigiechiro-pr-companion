@@ -60,7 +60,8 @@ class MetadonneesPassageTest {
     }
 
     private static Passage passage(String debut, String fin) {
-        return new Passage(1L, 1, 2026, "2026-07-04", debut, fin, null, null, null, null, null, null, 1L, "1925492");
+        return new Passage(
+                1L, 1, 2026, "2026-07-04", debut, fin, null, null, null, null, null, null, 1L, "1925492", null);
     }
 
     @Test

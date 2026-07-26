@@ -37,7 +37,8 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
             rs.getString("weather_data"),
             rs.getString("deposited_at"),
             rs.getLong("point_id"),
-            rs.getString("recorder_id"));
+            rs.getString("recorder_id"),
+            lireLongNullable(rs, "campaign_id"));
 
     public PassageDao(SourceDeDonnees source) {
         super(source);
@@ -47,6 +48,13 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
     private static Verdict lireVerdict(ResultSet rs) throws SQLException {
         String libelle = rs.getString("verification_verdict");
         return libelle == null ? null : Verdict.parLibelle(libelle);
+    }
+
+    /// Lit une clé étrangère `Long` nullable : `null` en base reste `null` (ici, passage non rattaché
+    /// à une campagne).
+    private static Long lireLongNullable(ResultSet rs, String colonne) throws SQLException {
+        long valeur = rs.getLong(colonne);
+        return rs.wasNull() ? null : valeur;
     }
 
     @Override
@@ -99,8 +107,8 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
                 "INSERT INTO passage"
                         + " (passage_number, year, recording_date, start_time, end_time,"
                         + " acquisition_params, workflow_status, verification_verdict, comment,"
-                        + " weather_data, deposited_at, point_id, recorder_id)"
-                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                        + " weather_data, deposited_at, point_id, recorder_id, campaign_id)"
+                        + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
                 passage.numeroPassage(),
                 passage.annee(),
                 passage.dateEnregistrement(),
@@ -115,7 +123,8 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
         return new Passage(
                 id,
                 passage.numeroPassage(),
@@ -130,7 +139,8 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
                 passage.donneesMeteo(),
                 passage.deposeLe(),
                 passage.idPoint(),
-                passage.idEnregistreur());
+                passage.idEnregistreur(),
+                passage.idCampagne());
     }
 
     @Override
@@ -139,7 +149,7 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
                 "UPDATE passage SET"
                         + " passage_number = ?, year = ?, recording_date = ?, start_time = ?, end_time = ?,"
                         + " acquisition_params = ?, workflow_status = ?, verification_verdict = ?, comment = ?,"
-                        + " weather_data = ?, deposited_at = ?, point_id = ?, recorder_id = ?"
+                        + " weather_data = ?, deposited_at = ?, point_id = ?, recorder_id = ?, campaign_id = ?"
                         + " WHERE id = ?",
                 passage.numeroPassage(),
                 passage.annee(),
@@ -156,6 +166,7 @@ public class PassageDao extends DaoGenerique<Passage, Long> {
                 passage.deposeLe(),
                 passage.idPoint(),
                 passage.idEnregistreur(),
+                passage.idCampagne(),
                 passage.id());
     }
 }

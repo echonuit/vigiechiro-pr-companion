@@ -787,7 +787,8 @@ class ServiceImportTest {
                     null,
                     null,
                     idPoint,
-                    "9999999"));
+                    "9999999",
+                    null));
         }
 
         // Bloc de 1 : comble le premier trou (2). Bloc de 2 ou 3 : les trous 2/4/6 sont isolés → 8.

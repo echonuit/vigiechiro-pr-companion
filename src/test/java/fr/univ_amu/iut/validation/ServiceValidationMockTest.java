@@ -133,7 +133,8 @@ class ServiceValidationMockTest {
                 null,
                 null,
                 5L,
-                "1925492");
+                "1925492",
+                null);
     }
 
     private static Observation observation(String taxonTadarida, String observateur, Double probObs) {

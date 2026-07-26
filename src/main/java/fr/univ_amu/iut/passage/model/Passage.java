@@ -30,6 +30,8 @@ import fr.univ_amu.iut.commun.model.Verdict;
 /// @param deposeLe date/heure de dépôt sur Vigie-Chiro (ISO, `null` tant que non déposé)
 /// @param idPoint identifiant du point d'écoute (FK → `listening_point.id`)
 /// @param idEnregistreur n° de série de l'enregistreur (FK → `recorder.serial_number`)
+/// @param idCampagne identifiant de la campagne de rattachement (FK → `campagne.id`), `null` si le
+///     passage n'est rattaché à aucune campagne (le rattachement est facultatif)
 public record Passage(
         Long id,
         int numeroPassage,
@@ -44,4 +46,5 @@ public record Passage(
         String donneesMeteo,
         String deposeLe,
         Long idPoint,
-        String idEnregistreur) {}
+        String idEnregistreur,
+        Long idCampagne) {}

@@ -11,11 +11,16 @@ import fr.univ_amu.iut.commun.di.CommunModule;
 import fr.univ_amu.iut.commun.di.PersistenceModule;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
+import fr.univ_amu.iut.commun.model.StatutWorkflow;
+import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.passage.model.Passage;
 import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.CampagneDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
@@ -31,15 +36,29 @@ class ServiceCampagneTest {
     @TempDir
     Path dossier;
 
+    private SourceDeDonnees source;
     private ServiceCampagne service;
 
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", dossier.toString());
         Injector injecteur = Guice.createInjector(new CommunModule(), new PersistenceModule());
-        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
-        service = new ServiceCampagne(new CampagneDao(source), new HorlogeFigee(LocalDate.of(2026, 7, 20)));
+        service = new ServiceCampagne(
+                new CampagneDao(source), new PassageDao(source), new HorlogeFigee(LocalDate.of(2026, 7, 20)));
+    }
+
+    /// Sème un passage minimal et renvoie son id (pour les tests de rattachement).
+    private long semerPassage() {
+        return JeuDeDonneesPassage.dans(source)
+                .carre("640380")
+                .point("A1")
+                .nuit(1, 2026, "2026-06-20")
+                .statut(StatutWorkflow.DEPOSE)
+                .verdict(Verdict.OK)
+                .semer()
+                .idPassage();
     }
 
     @AfterEach
@@ -111,5 +130,52 @@ class ServiceCampagneTest {
         service.creerCampagne("B", 2026, null);
         service.creerCampagne("C", 2025, null);
         assertThat(service.listerCampagnes()).extracting(Campagne::annee).containsExactly(2026, 2025, 2024);
+    }
+
+    @Test
+    @DisplayName("rattacher puis détacher un passage")
+    void rattacher_puis_detacher() {
+        long idPassage = semerPassage();
+        Campagne campagne = service.creerCampagne("Suivi ENS", 2026, null);
+
+        Passage rattache = service.rattacherPassage(idPassage, campagne.id());
+        assertThat(rattache.idCampagne()).isEqualTo(campagne.id());
+        assertThat(new PassageDao(source).findById(idPassage).orElseThrow().idCampagne())
+                .as("rattachement persisté")
+                .isEqualTo(campagne.id());
+
+        Passage detache = service.detacherPassage(idPassage);
+        assertThat(detache.idCampagne()).isNull();
+    }
+
+    @Test
+    @DisplayName("supprimer une campagne détache ses passages, sans les effacer")
+    void supprimer_campagne_detache_les_passages() {
+        long idPassage = semerPassage();
+        Campagne campagne = service.creerCampagne("À supprimer", 2026, null);
+        service.rattacherPassage(idPassage, campagne.id());
+
+        service.supprimerCampagne(campagne.id());
+
+        Passage apres = new PassageDao(source).findById(idPassage).orElseThrow();
+        assertThat(apres.idCampagne())
+                .as("détaché par ON DELETE SET NULL, pas effacé")
+                .isNull();
+    }
+
+    @Test
+    @DisplayName("rattacher à une campagne inconnue lève une erreur métier")
+    void rattacher_campagne_inconnue() {
+        long idPassage = semerPassage();
+        assertThatExceptionOfType(RegleMetierException.class)
+                .isThrownBy(() -> service.rattacherPassage(idPassage, 999L));
+    }
+
+    @Test
+    @DisplayName("rattacher un passage inconnu lève une erreur métier")
+    void rattacher_passage_inconnu() {
+        Campagne campagne = service.creerCampagne("Suivi", 2026, null);
+        assertThatExceptionOfType(RegleMetierException.class)
+                .isThrownBy(() -> service.rattacherPassage(999L, campagne.id()));
     }
 }

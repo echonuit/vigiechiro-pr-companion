@@ -54,7 +54,8 @@ final class FabriqueEntitesImport {
                 null,
                 null,
                 idPoint,
-                journal.numeroSerie());
+                journal.numeroSerie(),
+                null);
     }
 
     /// Micro déduit du journal, ou `null` si ni bande passante ni sensibilité ne sont journalisées.

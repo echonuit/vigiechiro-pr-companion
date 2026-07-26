@@ -81,7 +81,8 @@ class PassageDaoTest {
                 "{\"tempDebut\":18.5}",
                 null,
                 idPoint,
-                SERIE);
+                SERIE,
+                null);
     }
 
     @Test
@@ -117,7 +118,8 @@ class PassageDaoTest {
                 null,
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
 
         Passage relu = dao.findById(insere.id()).orElseThrow();
         assertThat(relu.statutWorkflow()).isEqualTo(StatutWorkflow.VERIFIE);
@@ -142,7 +144,8 @@ class PassageDaoTest {
                 null,
                 null,
                 9999L,
-                SERIE);
+                SERIE,
+                null);
         Passage recorderInconnu = new Passage(
                 null,
                 1,
@@ -157,7 +160,8 @@ class PassageDaoTest {
                 null,
                 null,
                 idPoint,
-                "inconnu");
+                "inconnu",
+                null);
 
         assertThatThrownBy(() -> dao.insert(pointInconnu)).isInstanceOf(DataAccessException.class);
         assertThatThrownBy(() -> dao.insert(recorderInconnu)).isInstanceOf(DataAccessException.class);

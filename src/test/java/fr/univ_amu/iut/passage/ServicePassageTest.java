@@ -109,7 +109,8 @@ class ServicePassageTest {
                 null,
                 null,
                 idPoint,
-                SERIE);
+                SERIE,
+                null);
     }
 
     // --- Création + R5 (dure) ---
@@ -319,7 +320,8 @@ class ServicePassageTest {
                 null,
                 "2026-05-31T00:00",
                 idPoint,
-                SERIE);
+                SERIE,
+                null);
 
         assertThatThrownBy(() -> service.avancerStatut(depose))
                 .isInstanceOf(RegleMetierException.class)
@@ -362,7 +364,8 @@ class ServicePassageTest {
                 null,
                 "2026-05-31T00:00",
                 idPoint,
-                SERIE);
+                SERIE,
+                null);
 
         assertThatThrownBy(() -> service.poserVerdict(depose, Verdict.A_JETER))
                 .isInstanceOf(RegleMetierException.class);
@@ -409,7 +412,8 @@ class ServicePassageTest {
                 null,
                 "2026-06-21T08:00",
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
 
         assertThatThrownBy(() -> service.supprimer(depose.id()))
                 .isInstanceOf(RegleMetierException.class)
@@ -444,7 +448,8 @@ class ServicePassageTest {
                 null,
                 "2026-06-21T08:00",
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
 
         Passage annule = service.annulerDepot(depose.id());
 
@@ -550,7 +555,8 @@ class ServicePassageTest {
                 null,
                 "2026-06-21T08:00",
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
 
         assertThatThrownBy(() -> rattachement.modifierRattachement(depose.id(), new Prefixe("040962", 2026, 2, "A1")))
                 .isInstanceOf(RegleMetierException.class)
@@ -577,7 +583,8 @@ class ServicePassageTest {
                 null,
                 null,
                 idPoint,
-                SERIE));
+                SERIE,
+                null));
 
         assertThatThrownBy(() -> rattachement.modifierRattachement(enCours.id(), new Prefixe("040962", 2026, 2, "A1")))
                 .isInstanceOf(RegleMetierException.class)
@@ -610,7 +617,8 @@ class ServicePassageTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         long idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, racine.toString(), 100L, 50L, id))

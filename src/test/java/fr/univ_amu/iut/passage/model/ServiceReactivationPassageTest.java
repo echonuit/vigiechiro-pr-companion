@@ -792,7 +792,8 @@ class ServiceReactivationPassageTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
@@ -884,7 +885,8 @@ class ServiceReactivationPassageTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
@@ -964,7 +966,8 @@ class ServiceReactivationPassageTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao
@@ -1021,7 +1024,8 @@ class ServiceReactivationPassageTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         Path racineSession = dossier.resolve(PREFIXE.nomDossierSession());
         idSession = sessionDao

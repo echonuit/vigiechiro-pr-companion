@@ -138,7 +138,8 @@ class CliAuditTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         Prefixe prefixe = new Prefixe("040962", 2026, 1, "A1");
         Path racineSession = workspace.resolve(prefixe.nomDossierSession());

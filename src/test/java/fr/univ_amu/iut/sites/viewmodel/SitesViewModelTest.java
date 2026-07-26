@@ -307,6 +307,7 @@ class SitesViewModelTest {
                 null,
                 null,
                 point.id(),
-                "1925492"));
+                "1925492",
+                null));
     }
 }

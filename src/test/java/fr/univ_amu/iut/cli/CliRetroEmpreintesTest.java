@@ -112,7 +112,8 @@ class CliRetroEmpreintesTest {
                         null,
                         null,
                         idPoint,
-                        SERIE))
+                        SERIE,
+                        null))
                 .id();
         Long idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(null, workspace.resolve("session") + "", null, null, idPassage))

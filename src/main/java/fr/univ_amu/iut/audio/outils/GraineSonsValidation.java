@@ -305,7 +305,8 @@ final class GraineSonsValidation {
                 null,
                 null,
                 idPoint,
-                ENREGISTREUR));
+                ENREGISTREUR,
+                null));
         SessionDEnregistrement session = sessionDao.insert(
                 new SessionDEnregistrement(null, RACINE_DEMO + "/Etang-Tuiliere-Pass2", null, null, passage.id()));
 

@@ -118,7 +118,8 @@ class DepotVigieChiroTest {
                         null,
                         null,
                         idPoint,
-                        "1925492"))
+                        "1925492",
+                        null))
                 .id();
         depotUnites = new DepotUniteDao(source);
         depotPlans = new DepotPlanDao(source);

@@ -128,7 +128,8 @@ public final class CaptureAudit {
                         null,
                         null,
                         idPoint,
-                        SERIE));
+                        SERIE,
+                        null));
         Long idSession = new SessionDao(source)
                 .insert(new SessionDEnregistrement(
                         null, "/media/carte-sd-absente/Car640380-2026-Pass2-A1", 0L, 0L, passage.id()))

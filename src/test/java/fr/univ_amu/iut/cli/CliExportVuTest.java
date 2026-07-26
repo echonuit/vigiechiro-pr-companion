@@ -98,7 +98,8 @@ class CliExportVuTest {
                         null,
                         "2026-05-30T10:00",
                         point.id(),
-                        SERIE));
+                        SERIE,
+                        null));
         idPassage = passage.id();
         SessionDEnregistrement session = injecteur
                 .getInstance(SessionDao.class)
