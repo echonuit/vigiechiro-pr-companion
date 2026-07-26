@@ -35,6 +35,7 @@ import picocli.CommandLine.Spec;
             AjouterPoint.class,
             ListerSites.class,
             ListerPassages.class,
+            AfficherSoldeSaison.class,
             StatutPassage.class,
             Diagnostiquer.class,
             VerifierMiseAJour.class,
