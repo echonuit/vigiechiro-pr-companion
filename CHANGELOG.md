@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.68.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.67.0...v2.68.0) (2026-07-26)
+
+
+### Features
+
+* **saison:** exclure et distinguer les nuits opportunistes du solde ([#2525](https://github.com/echonuit/vigiechiro-pr-companion/issues/2525), PR 5/5) ([#2552](https://github.com/echonuit/vigiechiro-pr-companion/issues/2552)) ([7df2a84](https://github.com/echonuit/vigiechiro-pr-companion/commit/7df2a8427b44054c4caec118fba24fa13a661662)), closes [#2356](https://github.com/echonuit/vigiechiro-pr-companion/issues/2356)
+
 # [2.67.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.66.0...v2.67.0) (2026-07-26)
 
 
