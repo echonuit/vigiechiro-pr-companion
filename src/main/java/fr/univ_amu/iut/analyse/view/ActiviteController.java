@@ -9,6 +9,7 @@ import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.model.VersionApplication;
+import fr.univ_amu.iut.commun.view.BandeauRetour;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
 import fr.univ_amu.iut.commun.view.FiltreFichier;
@@ -42,6 +43,7 @@ import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.util.StringConverter;
 
 /// Controller de l'écran **M-Activite** (`Activite.fxml`, #2352, lot 2 du chantier #2348).
@@ -103,6 +105,15 @@ public class ActiviteController implements EmplacementNavigation {
 
     @FXML
     private Button boutonExporterImage;
+
+    @FXML
+    private HBox bandeauRetour;
+
+    @FXML
+    private Label lblRetour;
+
+    @FXML
+    private Button btnFermerRetour;
 
     /// Barre de filtres cascadés (patron « à la Notion »), gardée en champ pour vivre autant que l'écran.
     private GestionnaireFiltres<ContactHoraire> gestionnaireFiltres;
@@ -180,6 +191,10 @@ public class ActiviteController implements EmplacementNavigation {
         // sans effet (affordance, cf. #790).
         boutonExporterImage.disableProperty().bind(Bindings.isEmpty(viewModel.courbesAffichees()));
 
+        // Bandeau de retour mutualisé (#1837) : dit l'export réussi et, surtout, l'export échoué.
+        BandeauRetour.installer(
+                bandeauRetour, lblRetour, btnFermerRetour, viewModel.retourProperty(), viewModel::effacerRetour);
+
         // Sans espèce détectée, le titre du sélecteur s'efface avec lui : un intitulé suivi de rien laisse
         // croire à un affichage tronqué (constaté sur l'aperçu de l'état vide).
         lblTitreEspeces.visibleProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
@@ -231,12 +246,26 @@ public class ActiviteController implements EmplacementNavigation {
     /// une imitation, tout en restant **déterministe** — un `LocalDate.now()` interne reverserait un PNG
     /// différent chaque jour dans un dépôt qui les versionne.
     public void exporterVers(java.nio.file.Path fichier, LocalDate dateExport) {
-        ExportImageActivite.ecrire(
-                List.copyOf(viewModel.courbesAffichees()),
-                ActiviteController::configurerAxeNocturne,
-                fenetreNuitSurAxe(),
-                lignesLegende(dateExport),
-                fichier);
+        try {
+            ExportImageActivite.ecrire(
+                    List.copyOf(viewModel.courbesAffichees()),
+                    ActiviteController::configurerAxeNocturne,
+                    fenetreNuitSurAxe(),
+                    lignesLegende(dateExport),
+                    fichier);
+            viewModel.signalerExport(String.valueOf(fichier.getFileName()));
+        } catch (RuntimeException echec) {
+            // Disque plein, dossier en lecture seule, rendu refusé par la garde des libellés : sans ce
+            // rattrapage, l'exception remonte au fil JavaFX, qui l'avale — le bouton « ne fait rien ».
+            viewModel.signalerEchecExport(motif(echec));
+        }
+    }
+
+    /// Message d'un échec, à défaut de message une mention du type : une chaîne vide dans le bandeau ne
+    /// vaudrait pas mieux que le silence qu'on corrige.
+    private static String motif(RuntimeException echec) {
+        String message = echec.getMessage();
+        return message == null || message.isBlank() ? echec.getClass().getSimpleName() : message;
     }
 
     /// Les lignes de contexte estampillées sur l'image : identité (carré, point, passage), réglages

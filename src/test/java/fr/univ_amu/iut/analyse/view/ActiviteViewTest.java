@@ -242,6 +242,38 @@ class ActiviteViewTest {
     }
 
     @Test
+    void un_export_reussi_le_dit(FxRobot robot) {
+        charger(robot, nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        controleur.selecteur().definir(new SelecteurFige(dossier.resolve("activite.png")));
+
+        robot.clickOn("#boutonExporterImage");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Label retour = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(retour.getText())
+                .as("un export qui a marché sans rien dire est indiscernable d'un clic sans effet")
+                .contains("activite.png");
+    }
+
+    @Test
+    void un_export_impossible_le_dit_au_lieu_de_ne_rien_faire(FxRobot robot) throws Exception {
+        charger(robot, nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+        // Destination impossible : le « dossier » parent est en réalité un fichier, l'écriture échoue.
+        Path obstacle = dossier.resolve("obstacle");
+        Files.writeString(obstacle, "je ne suis pas un dossier");
+        controleur.selecteur().definir(new SelecteurFige(obstacle.resolve("activite.png")));
+
+        robot.clickOn("#boutonExporterImage");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        Label retour = robot.lookup("#lblRetour").queryAs(Label.class);
+        assertThat(retour.getText())
+                .as("l'échec est dit : sans cela l'exception est avalée par le fil JavaFX, et le bouton"
+                        + " « ne fait rien »")
+                .contains("échoué");
+    }
+
+    @Test
     void sans_courbe_tracee_l_export_est_grise(FxRobot robot) {
         charger(robot, List.of());
 

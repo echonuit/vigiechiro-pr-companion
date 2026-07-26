@@ -7,11 +7,14 @@ import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.commun.model.PlageNuit;
 import fr.univ_amu.iut.commun.viewmodel.Filtres;
+import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -52,6 +55,11 @@ public class ActiviteViewModel {
     private final ObservableList<String> pointsDisponibles = FXCollections.observableArrayList();
     private final ObservableList<String> nuitsDisponibles = FXCollections.observableArrayList();
     private final ObjectProperty<PlageNuit> plageNuit = new SimpleObjectProperty<>();
+
+    /// Retour de la dernière opération de l'écran (aujourd'hui l'export d'image), pour le bandeau
+    /// mutualisé : un export qui réussit ou qui échoue sans rien dire se lit comme un clic sans effet.
+    private final ReadOnlyObjectWrapper<RetourOperation> retour =
+            new ReadOnlyObjectWrapper<>(this, "retour", RetourOperation.AUCUN);
 
     public ActiviteViewModel(ServiceActivite service) {
         this.service = service;
@@ -190,5 +198,28 @@ public class ActiviteViewModel {
     /// sans aplat.
     public ObjectProperty<PlageNuit> plageNuitProperty() {
         return plageNuit;
+    }
+
+    /// Retour de la **dernière opération** avec sa sévérité, pour le bandeau de feedback mutualisé
+    /// ([RetourOperation#AUCUN] en nominal).
+    public ReadOnlyObjectProperty<RetourOperation> retourProperty() {
+        return retour.getReadOnlyProperty();
+    }
+
+    /// Signale un **export réussi**, en nommant le fichier écrit : sans cela, un export qui a marché est
+    /// indiscernable d'un clic sans effet.
+    public void signalerExport(String nomFichier) {
+        retour.set(RetourOperation.succes("Image exportée vers " + nomFichier + "."));
+    }
+
+    /// Signale un **échec d'export** (disque plein, dossier en lecture seule, rendu refusé). Le dire est le
+    /// point : une exception avalée par le fil JavaFX laisse l'utilisateur devant un bouton qui ne fait rien.
+    public void signalerEchecExport(String motif) {
+        retour.set(RetourOperation.erreur("L'export d'image a échoué : " + motif));
+    }
+
+    /// Efface le retour (l'utilisateur a lu le bandeau et le ferme).
+    public void effacerRetour() {
+        retour.set(RetourOperation.AUCUN);
     }
 }

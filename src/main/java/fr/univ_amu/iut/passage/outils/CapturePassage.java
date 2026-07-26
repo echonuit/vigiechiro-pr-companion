@@ -259,7 +259,11 @@ public final class CapturePassage {
         Parent vue = loader.load();
         PassageController controleur = loader.getController();
         controleur.ouvrirSur(idPassage, new ContexteSite(NUMERO_CARRE, CODE_POINT, NOM_SITE));
-        ApercuFx.enregistrerPng(new Scene(vue, 1100, 620), fichier);
+        // 1280 et non 1100 depuis la 5e carte d'actions (« Activité de la nuit », #2352) : à largeur
+        // constante, cinq cartes se partagent ce que quatre occupaient, les titres passent à deux lignes et
+        // la garde des libellés comprimés refuse l'aperçu. On rend donc la fenêtre de référence d'un cran
+        // plus large, ce qui redonne à chaque carte la largeur qu'elle avait à quatre.
+        ApercuFx.enregistrerPng(new Scene(vue, 1280, 620), fichier);
         System.out.println(APERCU_ECRIT + fichier.toAbsolutePath());
     }
 
