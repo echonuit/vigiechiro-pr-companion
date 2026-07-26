@@ -106,6 +106,8 @@ public class ActiviteController implements EmplacementNavigation {
                 viewModel.filtres(),
                 List.of(
                         CriteresActivite.carre(viewModel::carresDisponibles),
+                        CriteresActivite.point(viewModel::pointsDisponibles),
+                        CriteresActivite.nuit(viewModel::nuitsDisponibles),
                         CriteresActivite.groupe(viewModel::groupesDisponibles)),
                 CriteresActivite.rechercheTexte());
 

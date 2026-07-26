@@ -24,14 +24,29 @@ final class CriteresActivite {
     private CriteresActivite() {}
 
     /// Critère **Carré** : liste déroulante des carrés présents (fournis par `carresPresents`, lus à l'ajout
-    /// de la puce), sans présélection.
+    /// de la puce), sans présélection. Tête de la cascade carré → point → nuit.
     static CritereFiltre<ContactHoraire> carre(Supplier<? extends List<String>> carresPresents) {
         return liste("carre", "Carré", "Choisir un carré", carresPresents, ContactHoraire::numeroCarre);
+    }
+
+    /// Critère **Point** d'écoute : liste déroulante des points présents, sans présélection.
+    static CritereFiltre<ContactHoraire> point(Supplier<? extends List<String>> pointsPresents) {
+        return liste("point", "Point", "Choisir un point", pointsPresents, ContactHoraire::codePoint);
+    }
+
+    /// Critère **Nuit** (une nuit = un passage) : liste déroulante des nuits présentes (dates du soir),
+    /// sans présélection.
+    static CritereFiltre<ContactHoraire> nuit(Supplier<? extends List<String>> nuitsPresentes) {
+        return liste("nuit", "Nuit", "Choisir une nuit", nuitsPresentes, CriteresActivite::libelleNuit);
     }
 
     /// Critère **Taxon parent** (groupe) : liste déroulante des groupes présents, sans présélection.
     static CritereFiltre<ContactHoraire> groupe(Supplier<? extends List<String>> groupesPresents) {
         return liste("groupe", "Taxon parent", "Choisir un taxon parent", groupesPresents, ContactHoraire::groupe);
+    }
+
+    private static String libelleNuit(ContactHoraire contact) {
+        return contact.nuit() == null ? null : contact.nuit().toString();
     }
 
     /// Fabrique d'un critère « liste déroulante sur une dimension texte » : `ComboBox` peuplée à l'ouverture
