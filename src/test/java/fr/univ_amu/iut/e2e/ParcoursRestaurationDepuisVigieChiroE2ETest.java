@@ -345,7 +345,7 @@ class ParcoursRestaurationDepuisVigieChiroE2ETest {
         assertThat(rapports)
                 .as("le bouton annonce et les sites et les passages : plus jamais « 41 points, 0 passage »")
                 .extracting(RapportSynchro::libelle)
-                .contains("sites", "passage(s) rapatrié(s)");
+                .contains("sites", "nuit(s) récupérée(s)");
         assertThat(new PassageDao(source).findAll())
                 .as("un passage archivé est créé dès ce clic, sur le point tout juste rapatrié")
                 .singleElement()

@@ -117,7 +117,15 @@ class ServiceReconstructionPassagesTest {
                 pointParLocalite,
                 Optional.of(importObservations),
                 new Workspace(dossier),
-                new HorlogeFigee(MAINTENANT));
+                new HorlogeFigee(MAINTENANT),
+                hydratation(Optional.of(importObservations)));
+    }
+
+    /// Le noyau de **contenu** de la synchro (#2557), branché sur la même plateforme bouchonnée : c'est lui
+    /// qui hydrate les nuits sans séquences, celles qui viennent d'être créées comme les squelettes déjà là.
+    private HydratationSquelette hydratation(Optional<ImportObservations> importateur) {
+        return new HydratationSquelette(
+                source, client, new Workspace(dossier), new HorlogeFigee(MAINTENANT), importateur);
     }
 
     @Test
@@ -304,7 +312,8 @@ class ServiceReconstructionPassagesTest {
                 (carre, point) -> Optional.of(idPoint),
                 Optional.empty(),
                 new Workspace(dossier),
-                new HorlogeFigee(MAINTENANT));
+                new HorlogeFigee(MAINTENANT),
+                hydratation(Optional.empty()));
 
         assertThatThrownBy(() -> sansImport.reconstruire(PARTICIPATION))
                 .isInstanceOf(RegleMetierException.class)
@@ -443,8 +452,12 @@ class ServiceReconstructionPassagesTest {
         Optional<RapportSynchro> rapport = service.synchroniser(client);
 
         assertThat(rapport).hasValueSatisfying(compteRendu -> {
-            assertThat(compteRendu.nombre()).isEqualTo(1);
-            assertThat(compteRendu.enClair()).isEqualTo("1 passage(s) rapatrié(s)");
+            // #2557 : la nuit apparaît, mais la plateforme n'expose pas encore son CSV. Le compteur ne la
+            // revendique donc PAS comme récupérée - elle est annoncée pour ce qu'elle est, en attente.
+            assertThat(compteRendu.nombre()).isZero();
+            assertThat(compteRendu.enClair())
+                    .startsWith("0 nuit(s) récupérée(s)")
+                    .contains("1 en attente d'analyse");
         });
         List<Passage> passages = passageDao.findAll();
         assertThat(passages).hasSize(1);
@@ -544,6 +557,60 @@ class ServiceReconstructionPassagesTest {
 
         assertThat(seconde).as("2e synchro : déjà rattaché, rien à annoncer").isEmpty();
         assertThat(passageDao.findAll()).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("#2557 synchro : la nuit rapatriée reçoit AUSSI ses séquences et ses observations")
+    void synchroniser_va_jusqu_au_contenu() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+
+        Optional<RapportSynchro> rapport = service.synchroniser(client);
+
+        assertThat(rapport)
+                .hasValueSatisfying(compteRendu -> assertThat(compteRendu.enClair())
+                        .as("rien ne reste en suspens : la précision ne s'affiche pas")
+                        .isEqualTo("1 nuit(s) récupérée(s)"));
+        Long idPassage = passageDao.findAll().getFirst().id();
+        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
+        assertThat(sequenceDao.findBySession(idSession))
+                .as("la nuit n'est plus un squelette : elle porte les fichiers que le CSV annonce")
+                .hasSize(2);
+        verify(importObservations).importerCsv(idPassage, CSV_OBSERVATIONS, false);
+    }
+
+    @Test
+    @DisplayName("#2557 : un squelette rapatrié AVANT ce correctif est complété au tour suivant, pas laissé à vie")
+    void synchroniser_rattrape_un_squelette_preexistant() {
+        when(client.mesParticipations()).thenReturn(new ReponseApi.Succes<>(List.of(participation(PARTICIPATION))));
+        when(client.participation(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(detailComplet()));
+        // 1er tour : la plateforme n'expose pas encore le CSV. La nuit existe, vide - exactement l'état
+        // dans lequel #1707 laissait les bases, et que la création seule ne rattraperait JAMAIS puisqu'elle
+        // saute toute nuit déjà rattachée (le piège de #1814).
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.empty()));
+        service.synchroniser(client);
+        Long idPassage = passageDao.findAll().getFirst().id();
+        Long idSession = sessionDao.trouverParPassage(idPassage).orElseThrow().id();
+        assertThat(sequenceDao.findBySession(idSession)).isEmpty();
+
+        // 2e tour : l'analyse est terminée, le CSV est là.
+        when(client.csvObservations(PARTICIPATION)).thenReturn(new ReponseApi.Succes<>(Optional.of(CSV_OBSERVATIONS)));
+        when(importObservations.nomsSequencesCsv(CSV_OBSERVATIONS)).thenReturn(List.of(SEQ_1, SEQ_2));
+
+        Optional<RapportSynchro> second = service.synchroniser(client);
+
+        assertThat(second)
+                .hasValueSatisfying(
+                        compteRendu -> assertThat(compteRendu.enClair()).isEqualTo("1 nuit(s) récupérée(s)"));
+        assertThat(sequenceDao.findBySession(idSession))
+                .as("la nuit préexistante a été complétée SANS être recréée")
+                .hasSize(2);
+        assertThat(passageDao.findAll())
+                .extracting(Passage::id)
+                .as("même passage : la synchro complète, elle ne remplace pas")
+                .containsExactly(idPassage);
     }
 
     @Test

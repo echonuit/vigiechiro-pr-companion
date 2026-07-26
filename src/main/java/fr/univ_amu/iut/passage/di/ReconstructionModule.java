@@ -84,8 +84,9 @@ public class ReconstructionModule extends ModuleDeFeature {
             PointParLocalite pointParLocalite,
             Optional<ImportObservations> importObservations,
             Workspace workspace,
-            Horloge horloge) {
+            Horloge horloge,
+            @Named(QUALIFIANT) HydratationSquelette hydratation) {
         return new ServiceReconstructionPassages(
-                source, client, pointParLocalite, importObservations, workspace, horloge);
+                source, client, pointParLocalite, importObservations, workspace, horloge, hydratation);
     }
 }
