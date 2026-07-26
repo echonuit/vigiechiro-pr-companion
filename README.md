@@ -185,7 +185,7 @@ Le cœur du modèle est l'**agrégat « nuit de capture »** (fonctionnalité `p
 workflow à états : `IMPORTE → TRANSFORME → VERIFIE → PRET_A_DEPOSER → DEPOT_EN_COURS → DEPOSE` (<!--inv:etats-workflow-->6<!--/inv--> états). La persistance est en
 **SQLite** via des **DAO** en `PreparedStatement` (pas d'ORM) avec des **migrations** versionnées.
 
-Chacune des **<!--inv:features-->15<!--/inv--> fonctionnalités** est un **paquet** autonome ; son nom
+Chacune des **<!--inv:features-->16<!--/inv--> fonctionnalités** est un **paquet** autonome ; son nom
 renvoie à la **documentation de l'écran**, son **parcours** au
 **[brief](https://brief.echonuit.fr/)** (l'énoncé d'origine).
 

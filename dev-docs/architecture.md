@@ -26,7 +26,8 @@ src/main/java/fr/univ_amu/iut/
 │
 ├── sites/        passage/       importation/   qualification/   lot/
 ├── validation/   multisite/     diagnostic/    bibliotheque/    recherche/
-├── analyse/      audio/         audit/         connexion/       maj/          ← les features métier
+├── analyse/      audio/         audit/         connexion/       maj/
+├── saison/                                                     ← les features métier
 │
 ├── cli/                         ← interface en ligne de commande (import/export scriptables)
 └── perf/outils/                 ← bancs de mesure de performance
@@ -36,7 +37,7 @@ Les deux dernières entrées sont des **surfaces transverses**, documentées à 
 [`cli/`](cli.md) (seconde façade *headless* sur le métier) et
 [`perf/outils/`](performance.md) (bancs de mesure des objectifs O3/O5).
 
-Entre le socle et ces surfaces, l'application compte **<!--inv:features-->15<!--/inv--> features** métier
+Entre le socle et ces surfaces, l'application compte **<!--inv:features-->16<!--/inv--> features** métier
 (chacune un dossier autonome sous `fr.univ_amu.iut`, hors `commun`, `cli` et `perf`).
 
 ## Les 4 couches d'une fonctionnalité
