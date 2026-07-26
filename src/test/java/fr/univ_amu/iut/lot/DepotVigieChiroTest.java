@@ -652,6 +652,43 @@ class DepotVigieChiroTest {
         };
     }
 
+    @Test
+    @DisplayName("#2354 : une grosse archive (> seuil) passe par le dépôt multipart, pas le single-part")
+    void depot_multipart_grosse_archive(@TempDir Path dossier) throws IOException {
+        Path gros = grosFichier(dossier, "Car-1.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichierMultipart(anyString(), anyString())).thenReturn(ReponseApi.succes("f-multi"));
+        when(client.deposerEnParts(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenReturn(ReponseApi.succes("{}"));
+
+        depot.deposer(idPassage, List.of(gros));
+
+        verify(client).creerFichierMultipart(eq("Car-1.zip"), eq("part-1"));
+        verify(client).deposerEnParts(eq("f-multi"), eq(gros), anyString(), any(), any());
+        verify(client, never()).creerFichier(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("#2354 : un échec du dépôt multipart abandonne l'upload (DELETE) : pas de parties orphelines")
+    void depot_multipart_echec_abandonne(@TempDir Path dossier) throws IOException {
+        Path gros = grosFichier(dossier, "Car-1.zip");
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichierMultipart(anyString(), anyString())).thenReturn(ReponseApi.succes("f-multi"));
+        when(client.deposerEnParts(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenReturn(ReponseApi.injoignable("coupure"));
+
+        depot.deposer(idPassage, List.of(gros));
+
+        verify(client).abandonnerFichier("f-multi");
+    }
+
+    /// Fichier juste au-delà du seuil multipart (#2354), pour exercer la branche par parties.
+    private static Path grosFichier(Path dossier, String nom) throws IOException {
+        Path chemin = dossier.resolve(nom);
+        Files.write(chemin, new byte[(int) (ClientVigieChiro.SEUIL_MULTIPART_OCTETS + 1024)]);
+        return chemin;
+    }
+
     private static Path fichier(Path dossier, String nom) throws IOException {
         Path chemin = dossier.resolve(nom);
         Files.write(chemin, new byte[] {1, 2, 3});

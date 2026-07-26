@@ -17,6 +17,7 @@ final class ReponsesVigieChiro {
 
     /// Clé de l'identifiant MongoDB, commune à tous les documents Eve (`_id`).
     private static final String CLE_ID = "_id";
+    private static final String CLE_URL_SIGNEE = "s3_signed_url";
 
     private ReponsesVigieChiro() {}
 
@@ -102,8 +103,19 @@ final class ReponsesVigieChiro {
         try {
             JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
             String id = texte(objet, CLE_ID);
-            String url = texte(objet, "s3_signed_url");
+            String url = texte(objet, CLE_URL_SIGNEE);
             return id != null && url != null ? Optional.of(new FichierSigne(id, url)) : Optional.empty();
+        } catch (RuntimeException illisible) {
+            return Optional.empty();
+        }
+    }
+
+    /// L'URL S3 signée d'une **partie** multipart (#2354) : la réponse de `PUT /fichiers/{id}/multipart`
+    /// ne porte que `s3_signed_url` (pas d'`_id`, le fichier existe déjà).
+    static Optional<String> urlDePartie(String corps) {
+        try {
+            JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
+            return Optional.ofNullable(texte(objet, CLE_URL_SIGNEE));
         } catch (RuntimeException illisible) {
             return Optional.empty();
         }
@@ -116,7 +128,7 @@ final class ReponsesVigieChiro {
     static Optional<String> urlSignee(String corps) {
         try {
             JsonObject objet = JsonParser.parseString(corps).getAsJsonObject();
-            return Optional.ofNullable(texte(objet, "s3_signed_url"));
+            return Optional.ofNullable(texte(objet, CLE_URL_SIGNEE));
         } catch (RuntimeException illisible) {
             return Optional.empty();
         }

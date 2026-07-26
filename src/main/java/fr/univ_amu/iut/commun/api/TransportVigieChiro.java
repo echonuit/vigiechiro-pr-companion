@@ -234,10 +234,18 @@ final class TransportVigieChiro {
         return issue instanceof ReponseApi.Succes<String>;
     }
 
+    /// **PUT** d'une **partie** multipart (#2354) vers son URL S3 signée, réessayé comme un dépôt entier
+    /// (idempotent, PREMIER_PLAN, `Retry-After`). Rend l'issue triée : un succès **porte l'`ETag`** de la
+    /// partie (requis pour recoller l'objet à la finalisation), un échec sa cause.
+    ReponseApi<String> deposerPartie(String urlSignee, CorpsAEnvoyer corps, String mime, SuiviReprise suivi) {
+        return politique.executer(PolitiqueReessai.Profil.PREMIER_PLAN, suivi, () -> uneDepose(urlSignee, corps, mime));
+    }
+
     /// Un **unique** envoi S3 : construit la requête, l'émet, la consigne, et rend l'issue **avec** le
     /// délai que le serveur a éventuellement imposé (`Retry-After`), pour que la politique en tienne
-    /// compte. Une panne réseau ou un fichier illisible devient une issue [ReponseApi.Injoignable]
-    /// (réessayable), un statut hors 2xx un [ReponseApi.Refuse] (réessayable seulement en 429/5xx).
+    /// compte. Un succès porte l'`ETag` S3 (utile au multipart ; ignoré par le dépôt entier, qui ne lit
+    /// que la variante de l'issue). Une panne réseau ou un fichier illisible devient une issue
+    /// [ReponseApi.Injoignable] (réessayable), un statut hors 2xx un [ReponseApi.Refuse] (429/5xx seulement).
     private PolitiqueReessai.Issue<String> uneDepose(String urlSignee, CorpsAEnvoyer corps, String mime) {
         long debut = System.nanoTime();
         String chemin = "?";
@@ -250,7 +258,9 @@ final class TransportVigieChiro {
             // Chemin SEUL : une URL S3 pré-signée porte sa signature dans sa requête (#1845).
             chemin = requete.uri().getPath();
             HttpResponse<Void> http = client.send(requete, HttpResponse.BodyHandlers.discarding());
-            ReponseApi<String> reponse = triage(http.statusCode(), "");
+            ReponseApi<String> reponse = http.statusCode() >= 200 && http.statusCode() < 300
+                    ? ReponseApi.succes(etag(http))
+                    : triage(http.statusCode(), "");
             journaliser(GESTE_S3, chemin, reponse, debut, null);
             return new PolitiqueReessai.Issue<>(reponse, retryAfter(http));
         } catch (InterruptedException interrompu) {
@@ -275,6 +285,12 @@ final class TransportVigieChiro {
                 .filter(valeur -> !valeur.isEmpty() && valeur.chars().allMatch(Character::isDigit))
                 .map(Long::parseLong)
                 .map(Duration::ofSeconds);
+    }
+
+    /// L'`ETag` rendu par S3 au `PUT` (guillemets retirés), ou vide s'il manque. S3 le renvoie à chaque
+    /// `PUT` réussi ; il est requis pour recoller les parties d'un multipart à la finalisation (#2354).
+    private static String etag(HttpResponse<?> reponse) {
+        return reponse.headers().firstValue("ETag").orElse("").replace("\"", "");
     }
 
     /// Triage **pur** d'une réponse reçue : 2xx exploitable, tout autre statut est un refus qui garde

@@ -126,4 +126,13 @@ class ReponsesVigieChiroTest {
         assertThat(ReponsesVigieChiro.urlSignee("{}")).isEmpty();
         assertThat(ReponsesVigieChiro.urlSignee("pas du json")).isEmpty();
     }
+
+    @Test
+    @DisplayName("#2354 : urlDePartie lit s3_signed_url de PUT /fichiers/{id}/multipart ; absent → vide")
+    void url_de_partie() {
+        assertThat(ReponsesVigieChiro.urlDePartie("{\"s3_signed_url\": \"https://s3/part-3?sig=z\"}"))
+                .contains("https://s3/part-3?sig=z");
+        assertThat(ReponsesVigieChiro.urlDePartie("{}")).isEmpty();
+        assertThat(ReponsesVigieChiro.urlDePartie("pas du json")).isEmpty();
+    }
 }

@@ -1,11 +1,9 @@
 package fr.univ_amu.iut.lot.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
-import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
-import fr.univ_amu.iut.commun.api.SuiviReprise;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -28,7 +26,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
-import java.util.function.DoubleConsumer;
 
 /// **Dépôt d'une nuit** (un passage) sur l'API VigieChiro (#142), **reprenable par unité** (#982) :
 /// s'assure d'abord que la **participation existe** (réutilisée via le lien `ENTITE_PASSAGE`, créée en
@@ -62,6 +59,9 @@ public final class DepotVigieChiro {
     private final SynchronisationParticipation participations;
     private final ClientVigieChiro client;
 
+    /// Téléverse une archive (single-part ou multipart), extrait ici (#2354, Extract Class).
+    private final TeleverseurArchive televerseur;
+
     /// Traitement serveur (compute + lecture de l'état) : le client transporte, celui-ci décide (#1261).
     private final TraitementVigieChiro traitement;
     private final DepotUniteDao depotUnites;
@@ -82,6 +82,7 @@ public final class DepotVigieChiro {
             Horloge horloge) {
         this.participations = Objects.requireNonNull(participations, "participations");
         this.client = Objects.requireNonNull(client, "client");
+        this.televerseur = new TeleverseurArchive(client);
         this.traitement = Objects.requireNonNull(traitement, "traitement");
         this.depotUnites = Objects.requireNonNull(depotUnites, "depotUnites");
         this.depotPlans = Objects.requireNonNull(depotPlans, "depotPlans");
@@ -262,13 +263,11 @@ public final class DepotVigieChiro {
             DepotUnite unite, Path fichier, String participationId, SuiviDepot suivi, SourceDepot source) {
         depotUnites.mettreAJour(unite.id(), StatutDepotUnite.EN_COURS, unite.fichierIdDistant(), null, maintenant());
         suivi.uniteDemarree(unite.identifiantUnite());
-        Televersement resultat = fichier == null
-                ? Televersement.echec("fichier introuvable sur le disque (archives à régénérer ?)")
-                : televerser(
-                        fichier,
-                        participationId,
-                        fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction),
-                        (tentative, delai) -> suivi.uniteReprise(unite.identifiantUnite(), delai));
+        TeleverseurArchive.Resultat resultat = televerseur.televerser(
+                fichier,
+                participationId,
+                fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction),
+                (tentative, delai) -> suivi.uniteReprise(unite.identifiantUnite(), delai));
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
@@ -380,47 +379,6 @@ public final class DepotVigieChiro {
                         "Création de la participation refusée par Vigie-Chiro : " + creation.echec()));
     }
 
-    /// Téléverse un fichier en trois temps (déclaration → `PUT` S3 **en flux** → finalisation) et renvoie
-    /// l'issue : l'id distant du fichier créé, ou la raison de l'échec de l'étape fautive.
-    private Televersement televerser(
-            Path fichier, String participationId, DoubleConsumer progression, SuiviReprise reprise) {
-        String titre = fichier.getFileName().toString();
-        // #1284 : chaque étape échoue avec sa cause exacte (non connecté / injoignable / HTTP n),
-        // plus jamais un « refusé par VigieChiro » générique quand c'était le réseau.
-        ReponseApi<FichierSigne> declaration = client.creerFichier(titre, participationId);
-        if (!(declaration instanceof ReponseApi.Succes<FichierSigne>(FichierSigne signe))) {
-            return Televersement.echec("déclaration du fichier : " + causeDe(declaration));
-        }
-        if (!client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression, reprise)) {
-            return Televersement.echec("téléversement S3 refusé (réseau ou fichier illisible)");
-        }
-        ReponseApi<String> finalisation = client.finaliserFichier(signe.id());
-        if (finalisation.echec().isPresent()) {
-            return Televersement.echec("finalisation : " + causeDe(finalisation));
-        }
-        return Televersement.reussi(signe.id());
-    }
-
-    /// Cause d'échec en clair d'une étape du téléversement (vocabulaire unique [ReponseApi#echec()]).
-    private static String causeDe(ReponseApi<?> reponse) {
-        return reponse.echec().orElse("issue inattendue");
-    }
-
-    /// Issue d'un téléversement unitaire : l'id distant en cas de succès, la raison sinon.
-    private record Televersement(String fichierId, String raison) {
-        static Televersement reussi(String fichierId) {
-            return new Televersement(fichierId, null);
-        }
-
-        static Televersement echec(String raison) {
-            return new Televersement(null, raison);
-        }
-
-        boolean reussi() {
-            return fichierId != null;
-        }
-    }
-
     private String maintenant() {
         return horloge.maintenant().toString();
     }
@@ -428,16 +386,5 @@ public final class DepotVigieChiro {
     /// Type d'unité déduit de l'extension (`.zip` → archive, sinon séquence WAV).
     private static TypeDepotUnite typeDe(String nom) {
         return nom.toLowerCase(Locale.ROOT).endsWith(".zip") ? TypeDepotUnite.ZIP : TypeDepotUnite.WAV;
-    }
-
-    /// Type de média déduit de l'extension du fichier, pour le `Content-Type` du `PUT` S3 (il doit
-    /// correspondre à la signature calculée côté serveur). `.wav` → `audio/x-wav`, `.zip` →
-    /// `application/zip`, sinon binaire.
-    private static String mime(String nom) {
-        String minuscule = nom.toLowerCase(Locale.ROOT);
-        if (minuscule.endsWith(".wav")) {
-            return "audio/x-wav";
-        }
-        return minuscule.endsWith(".zip") ? "application/zip" : "application/octet-stream";
     }
 }
