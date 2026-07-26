@@ -2,6 +2,7 @@ package fr.univ_amu.iut.sites.model;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.RapprochementVigieChiro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
@@ -10,6 +11,7 @@ import fr.univ_amu.iut.commun.model.LienVigieChiro;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.commun.model.dao.LienVigieChiroDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -44,13 +46,23 @@ public class RapprochementSites implements RapprochementVigieChiro {
     private final SiteDao siteDao;
     private final ServiceSites serviceSites;
     private final LienVigieChiroDao liens;
+
+    /// Marquage « carré d'un tiers » (#2525), dérivé de `site.observateur` : entretenu **à chaque**
+    /// synchronisation, la propriété d'un carré pouvant changer côté plateforme.
+    private final SiteTiersDao siteTiers;
+
     private final String idUtilisateur;
 
     public RapprochementSites(
-            SiteDao siteDao, ServiceSites serviceSites, LienVigieChiroDao liens, String idUtilisateur) {
+            SiteDao siteDao,
+            ServiceSites serviceSites,
+            LienVigieChiroDao liens,
+            SiteTiersDao siteTiers,
+            String idUtilisateur) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.serviceSites = Objects.requireNonNull(serviceSites, "serviceSites");
         this.liens = Objects.requireNonNull(liens, "liens");
+        this.siteTiers = Objects.requireNonNull(siteTiers, "siteTiers");
         this.idUtilisateur = Objects.requireNonNull(idUtilisateur, "idUtilisateur");
     }
 
@@ -60,7 +72,8 @@ public class RapprochementSites implements RapprochementVigieChiro {
             // Toute issue non-succès = ne toucher à rien (ni création, ni purge : garde anti-purge).
             // Depuis #1284 la cause remonte, au lieu d'être omise en silence — sauf « non connecté ».
             return switch (client.mesSites()) {
-                case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> distants) -> importer(distants);
+                case ReponseApi.Succes<List<SiteVigieChiro>>(List<SiteVigieChiro> distants) ->
+                    importer(distants, idProfilConnecte(client));
                 case ReponseApi.NonConnecte<List<SiteVigieChiro>> nonConnecte -> Optional.empty();
                 case ReponseApi.Injoignable<List<SiteVigieChiro>>(String cause) ->
                     Optional.of(RapportSynchro.empechee(LIBELLE_SITES, "Vigie-Chiro injoignable : " + cause));
@@ -73,9 +86,19 @@ public class RapprochementSites implements RapprochementVigieChiro {
         }
     }
 
+    /// Identifiant plateforme de l'observateur connecté (`GET /moi`), ou `null` si le profil n'a pas pu
+    /// être lu. On le demande **au client déjà fourni** plutôt qu'à la feature `connexion` (dont cette
+    /// classe ne dépend pas, cf. note d'en-tête). Sans profil, aucun carré n'est présumé « d'un tiers » :
+    /// le rapprochement se comporte comme avant #2525.
+    private static String idProfilConnecte(ClientVigieChiro client) {
+        return client.moi() instanceof ReponseApi.Succes<ProfilVigieChiro>(ProfilVigieChiro profil)
+                ? profil.id()
+                : null;
+    }
+
     /// Import/liaison de sites effectivement reçus. Une liste vide (observateur sans participation)
     /// reste un no-op prudent.
-    private Optional<RapportSynchro> importer(List<SiteVigieChiro> distants) {
+    private Optional<RapportSynchro> importer(List<SiteVigieChiro> distants, String idProfilConnecte) {
         if (distants.isEmpty()) {
             return Optional.empty();
         }
@@ -86,7 +109,7 @@ public class RapprochementSites implements RapprochementVigieChiro {
             }
             List<LienVigieChiro> correspondances = new ArrayList<>();
             for (SiteVigieChiro distant : distants) {
-                importerOuLier(distant, localesParCarre).ifPresent(correspondances::add);
+                importerOuLier(distant, localesParCarre, idProfilConnecte).ifPresent(correspondances::add);
             }
             if (correspondances.isEmpty()) {
                 return Optional.empty();
@@ -98,7 +121,8 @@ public class RapprochementSites implements RapprochementVigieChiro {
 
     /// Relie le site distant à son pendant local (créé si absent), et renvoie le lien. Un site distant
     /// sans carré exploitable, ou dont la création échoue, est ignoré (best-effort par site).
-    private Optional<LienVigieChiro> importerOuLier(SiteVigieChiro distant, Map<String, Site> localesParCarre) {
+    private Optional<LienVigieChiro> importerOuLier(
+            SiteVigieChiro distant, Map<String, Site> localesParCarre, String idProfilConnecte) {
         String carre = distant.numeroCarre();
         if (carre == null) {
             return Optional.empty();
@@ -109,6 +133,9 @@ public class RapprochementSites implements RapprochementVigieChiro {
                 local = creerDepuis(distant);
                 localesParCarre.put(carre, local);
             }
+            // Propriété du carré (#2525) : réévaluée à chaque synchro, dans les deux sens (un carré peut
+            // changer de main côté plateforme). Sans profil lisible, `appartientAUnTiers` répond faux.
+            siteTiers.definir(local.id(), distant.appartientAUnTiers(idProfilConnecte));
             return Optional.of(new LienVigieChiro(
                     LienVigieChiro.ENTITE_SITE, String.valueOf(local.id()), distant.id(), distant.verrouille()));
         } catch (RuntimeException echecSite) {

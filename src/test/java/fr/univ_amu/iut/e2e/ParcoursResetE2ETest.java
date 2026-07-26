@@ -220,7 +220,7 @@ class ParcoursResetE2ETest {
         when(client.taxons()).thenReturn(new ReponseApi.Succes<List<TaxonVigieChiro>>(List.of()));
         when(client.mesSites())
                 .thenReturn(new ReponseApi.Succes<>(List.of(new SiteVigieChiro(
-                        "site-1", SITE_TITRE, true, CARRE, List.of(new PointVigieChiro(POINT, 43.5, 5.4))))));
+                        "site-1", SITE_TITRE, true, CARRE, null, List.of(new PointVigieChiro(POINT, 43.5, 5.4))))));
         when(client.mesParticipations())
                 .thenReturn(new ReponseApi.Succes<>(List.of(
                         new ParticipationVigieChiro(PARTICIPATION, POINT, "2026-07-03T22:00:00+02:00", SITE_TITRE))));

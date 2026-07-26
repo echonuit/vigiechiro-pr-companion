@@ -54,7 +54,10 @@ final class ParticipationsVigieChiro {
                 continue;
             }
             String titre = ReponsesVigieChiro.texte(site, "titre");
-            parId.put(id, new SiteVigieChiro(id, titre, true, carreDepuisTitre(titre), lirePoints(site)));
+            // `observateur` (#2525) : propriétaire du carré. Absent du JSON → null, et le carré est alors
+            // traité comme le sien (on ne présume pas un tiers sans preuve).
+            String observateur = ReponsesVigieChiro.texte(site, "observateur");
+            parId.put(id, new SiteVigieChiro(id, titre, true, carreDepuisTitre(titre), observateur, lirePoints(site)));
         }
         return List.copyOf(parId.values());
     }

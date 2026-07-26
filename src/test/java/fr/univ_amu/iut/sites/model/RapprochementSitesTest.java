@@ -5,6 +5,7 @@ import static org.mockito.Mockito.when;
 
 import fr.univ_amu.iut.commun.api.ClientVigieChiro;
 import fr.univ_amu.iut.commun.api.PointVigieChiro;
+import fr.univ_amu.iut.commun.api.ProfilVigieChiro;
 import fr.univ_amu.iut.commun.api.RapportSynchro;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.SiteVigieChiro;
@@ -20,6 +21,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
@@ -51,6 +53,7 @@ class RapprochementSitesTest {
     private PointDao pointDao;
     private ServiceSites service;
     private LienVigieChiroDao liens;
+    private SiteTiersDao siteTiers;
     private RapprochementSites rapprochement;
 
     @BeforeEach
@@ -63,11 +66,19 @@ class RapprochementSitesTest {
         PassageDao passageDao = new PassageDao(source);
         service = new ServiceSites(siteDao, pointDao, passageDao, new HorlogeFigee(LocalDate.of(2026, 6, 1)));
         liens = new LienVigieChiroDao(source);
-        rapprochement = new RapprochementSites(siteDao, service, liens, ID_USER);
+        siteTiers = new SiteTiersDao(source);
+        rapprochement = new RapprochementSites(siteDao, service, liens, siteTiers, ID_USER);
     }
 
+    /// Site distant **sans propriétaire déclaré** (`observateur` absent) : cas des tests antérieurs à
+    /// #2525, où la propriété du carré n'entrait pas en jeu.
     private static SiteVigieChiro siteDistant(String id, String carre, List<PointVigieChiro> points) {
-        return new SiteVigieChiro(id, "Vigiechiro - Point Fixe-" + carre, true, carre, points);
+        return siteDistant(id, carre, points, null);
+    }
+
+    private static SiteVigieChiro siteDistant(
+            String id, String carre, List<PointVigieChiro> points, String observateur) {
+        return new SiteVigieChiro(id, "Vigiechiro - Point Fixe-" + carre, true, carre, observateur, points);
     }
 
     @Test
@@ -135,5 +146,62 @@ class RapprochementSitesTest {
         assertThat(rapprochement.synchroniser(client))
                 .as("non connecté : silence légitime")
                 .isEmpty();
+    }
+
+    // --- #2525 : propriété du carré dérivée de `site.observateur` ---
+
+    /// Identifiant du carré local créé pour `carre` (les tests ci-dessous vérifient son marquage).
+    private long idLocal(String carre) {
+        return siteDao.findByUtilisateur(ID_USER).stream()
+                .filter(site -> site.numeroCarre().equals(carre))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Carré absent en local : " + carre))
+                .id();
+    }
+
+    @Test
+    @DisplayName("#2525 : le carré d'un autre observateur est marqué « tiers », le sien ne l'est pas")
+    void derive_la_propriete_du_carre() {
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("moi-42", "Testeur", "Observateur")));
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(
+                        siteDistant("s1", "130711", List.of(), "moi-42"),
+                        siteDistant("s2", "130712", List.of(), "quelqu-un-dautre"))));
+
+        rapprochement.synchroniser(client);
+
+        assertThat(siteTiers.estTiers(idLocal("130711"))).as("mon propre carré").isFalse();
+        assertThat(siteTiers.estTiers(idLocal("130712"))).as("carré d'un tiers").isTrue();
+    }
+
+    @Test
+    @DisplayName("#2525 : la propriété est réévaluée à chaque synchro (un carré peut changer de main)")
+    void propriete_reevaluee_a_chaque_synchro() {
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("moi-42", "Testeur", "Observateur")));
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(siteDistant("s1", "130711", List.of(), "quelqu-un-dautre"))));
+        rapprochement.synchroniser(client);
+        assertThat(siteTiers.estTiers(idLocal("130711"))).isTrue();
+
+        // Le carré m'est transféré côté plateforme : la synchro suivante retire le marquage.
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(siteDistant("s1", "130711", List.of(), "moi-42"))));
+        rapprochement.synchroniser(client);
+
+        assertThat(siteTiers.estTiers(idLocal("130711"))).isFalse();
+    }
+
+    @Test
+    @DisplayName("#2525 : sans profil lisible, aucun carré n'est présumé « tiers »")
+    void sans_profil_aucun_carre_presume_tiers() {
+        when(client.moi()).thenReturn(ReponseApi.injoignable("profil illisible"));
+        when(client.mesSites())
+                .thenReturn(ReponseApi.succes(List.of(siteDistant("s1", "130711", List.of(), "quelqu-un-dautre"))));
+
+        rapprochement.synchroniser(client);
+
+        assertThat(siteTiers.estTiers(idLocal("130711")))
+                .as("sans preuve du contraire, on ne présume pas un tiers")
+                .isFalse();
     }
 }

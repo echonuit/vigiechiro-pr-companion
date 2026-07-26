@@ -73,7 +73,7 @@ class AuditPointsServeurTest {
     void point_absent_serveur() {
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(
-                        List.of(new SiteVigieChiro(OBJECTID_SITE, "Étang", true, "040962", List.of()))));
+                        List.of(new SiteVigieChiro(OBJECTID_SITE, "Étang", true, "040962", null, List.of()))));
 
         assertThat(audit.auditer()).singleElement().satisfies(c -> {
             assertThat(c.categorie()).isEqualTo(CategorieConstat.POINT_DIVERGENT);
@@ -87,7 +87,7 @@ class AuditPointsServeurTest {
     void position_differente() {
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
-                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 44.0, 5.4))))));
+                        OBJECTID_SITE, "Étang", true, "040962", null, List.of(new PointVigieChiro("A1", 44.0, 5.4))))));
 
         assertThat(audit.auditer())
                 .extracting(ConstatAudit::categorie)
@@ -99,7 +99,7 @@ class AuditPointsServeurTest {
     void point_identique() {
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
-                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
+                        OBJECTID_SITE, "Étang", true, "040962", null, List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
 
         assertThat(audit.auditer()).isEmpty();
     }
@@ -214,6 +214,6 @@ class AuditPointsServeurTest {
     private void siteAJour() {
         when(client.mesSites())
                 .thenReturn(ReponseApi.succes(List.of(new SiteVigieChiro(
-                        OBJECTID_SITE, "Étang", true, "040962", List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
+                        OBJECTID_SITE, "Étang", true, "040962", null, List.of(new PointVigieChiro("A1", 43.5, 5.4))))));
     }
 }
