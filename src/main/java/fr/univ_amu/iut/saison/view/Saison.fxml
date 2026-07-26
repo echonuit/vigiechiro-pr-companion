@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="fr.univ_amu.iut.saison.view.SaisonController"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @saison.css"
+      spacing="12.0">
+    <padding>
+        <Insets top="16.0" right="16.0" bottom="16.0" left="16.0"/>
+    </padding>
+
+    <HBox spacing="10.0" alignment="CENTER_LEFT">
+        <Label text="Saison"/>
+        <ComboBox fx:id="choixAnnee"/>
+    </HBox>
+
+    <Label fx:id="lblResume" wrapText="true"/>
+    <Label fx:id="lblSignalement" styleClass="signalement-fenetre" wrapText="true" managed="false" visible="false"/>
+
+    <TableView fx:id="tableSaison" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="colCarre" text="Carré" prefWidth="80.0"/>
+            <TableColumn fx:id="colPoint" text="Point" prefWidth="70.0"/>
+            <TableColumn fx:id="colPassage1" text="Passage 1" prefWidth="180.0"/>
+            <TableColumn fx:id="colPassage2" text="Passage 2" prefWidth="180.0"/>
+            <TableColumn fx:id="colResteAFaire" text="Reste à faire" prefWidth="280.0"/>
+        </columns>
+        <placeholder>
+            <Label text="Aucun point suivi pour cette saison. Déclarez un site et un point d'écoute pour commencer." wrapText="true"/>
+        </placeholder>
+    </TableView>
+</VBox>
