@@ -50,7 +50,7 @@
 
   <!-- Sélecteur d'espèces : une case par espèce de la nuit ; les cinq plus contactées sont cochées par
        défaut. Au-delà de cinq courbes, le graphe devient illisible. -->
-  <Label text="Espèces" styleClass="section-sous"/>
+  <Label fx:id="lblTitreEspeces" text="Espèces" styleClass="section-sous"/>
   <FlowPane fx:id="selecteurEspeces" hgap="14.0" vgap="6.0"/>
 
   <!-- Courbe : une série par espèce sélectionnée, sur l'axe nocturne fixe 18h vers 8h (étiquettes HH

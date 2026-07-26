@@ -19,8 +19,9 @@ De haut en bas :
 - **Statut du workflow** : une frise qui situe la nuit dans sa progression
   (Importé, Transformé, Vérifié, Prêt à déposer, Dépôt en cours, Déposé).
 - **Résumé de la nuit** : volumes (bruts et transformés), durée enregistrée, nombre de séquences.
-- **Cartes d'actions** : Vérifier l'enregistrement, Diagnostic matériel, Préparer le dépôt et
-  Sons & validation. Une seule carte est mise en avant : la **prochaine action recommandée**.
+- **Cartes d'actions** : Vérifier l'enregistrement, Diagnostic matériel, [Activité de la
+  nuit](activite.md), Préparer le dépôt et Sons & validation. Une seule carte est mise en avant :
+  la **prochaine action recommandée**.
 
 ## Le déverrouillage de la validation
 

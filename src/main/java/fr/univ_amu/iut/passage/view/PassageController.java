@@ -316,7 +316,7 @@ public class PassageController implements EmplacementNavigation, RafraichirAuRet
         boutonDiagnostic.setVisible(diagnosticActif);
         boutonDiagnostic.setManaged(diagnosticActif);
         // « Activité de la nuit » n'apparaît que si la feature `activite-nuit` est activée (#2352,
-        // EXPERIMENTALE le temps du chantier #2348) : coupée, le contrat est absent et la carte est retirée.
+        // OPTIONNELLE depuis la clôture du lot #2352) : coupée, le contrat est absent et la carte est retirée.
         boolean activiteActive = ouvrirActivite.isPresent();
         boutonActivite.setVisible(activiteActive);
         boutonActivite.setManaged(activiteActive);

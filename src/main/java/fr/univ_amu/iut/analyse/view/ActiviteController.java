@@ -87,6 +87,9 @@ public class ActiviteController implements EmplacementNavigation {
     private FlowPane selecteurEspeces;
 
     @FXML
+    private Label lblTitreEspeces;
+
+    @FXML
     private Label lblEtatVide;
 
     @FXML
@@ -177,6 +180,11 @@ public class ActiviteController implements EmplacementNavigation {
         // sans effet (affordance, cf. #790).
         boutonExporterImage.disableProperty().bind(Bindings.isEmpty(viewModel.courbesAffichees()));
 
+        // Sans espèce détectée, le titre du sélecteur s'efface avec lui : un intitulé suivi de rien laisse
+        // croire à un affichage tronqué (constaté sur l'aperçu de l'état vide).
+        lblTitreEspeces.visibleProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
+        lblTitreEspeces.managedProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
+
         viewModel.courbesAffichees().addListener((ListChangeListener<CourbeEspece>) changement -> majGraphe());
         viewModel.especes().addListener((ListChangeListener<CourbeEspece>) changement -> construireSelecteur());
         viewModel.especesSelectionnees().addListener((SetChangeListener<String>) changement -> construireSelecteur());
@@ -209,26 +217,36 @@ public class ActiviteController implements EmplacementNavigation {
         selecteur
                 .enregistrerFichier(
                         "Exporter l'image de la courbe d'activité", "activite-nuit.png", FiltreFichier.png())
-                .ifPresent(this::ecrireImage);
+                .ifPresent(this::exporterVers);
     }
 
-    private void ecrireImage(java.nio.file.Path fichier) {
+    /// Écrit l'image de la courbe dans `fichier`, datée du jour.
+    public void exporterVers(java.nio.file.Path fichier) {
+        exporterVers(fichier, LocalDate.now());
+    }
+
+    /// Écrit l'image de la courbe dans `fichier`, en la datant de `dateExport`. Publique, et la date
+    /// **passée en paramètre**, parce que l'outil de capture s'en sert pour produire l'aperçu de l'export :
+    /// la capture passe ainsi par le **vrai** chemin de production (ADR 0025) plutôt que d'en reconstruire
+    /// une imitation, tout en restant **déterministe** — un `LocalDate.now()` interne reverserait un PNG
+    /// différent chaque jour dans un dépôt qui les versionne.
+    public void exporterVers(java.nio.file.Path fichier, LocalDate dateExport) {
         ExportImageActivite.ecrire(
                 List.copyOf(viewModel.courbesAffichees()),
                 ActiviteController::configurerAxeNocturne,
                 fenetreNuitSurAxe(),
-                lignesLegende(),
+                lignesLegende(dateExport),
                 fichier);
     }
 
     /// Les lignes de contexte estampillées sur l'image : identité (carré, point, passage), réglages
     /// (tranche, filtres actifs) et provenance (version, date).
-    private List<String> lignesLegende() {
+    private List<String> lignesLegende(LocalDate dateExport) {
         return List.of(
                 LegendeExportActivite.identite(contexte),
                 LegendeExportActivite.reglages(
                         viewModel.trancheProperty().get().minutes(), gestionnaireFiltres.decrire()),
-                LegendeExportActivite.provenance(version.libelle(), LocalDate.now()));
+                LegendeExportActivite.provenance(version.libelle(), dateExport));
     }
 
     /// La fenêtre nocturne en minutes sur l'axe (`[début, fin]`), ou `null` si elle n'est pas connue : l'image

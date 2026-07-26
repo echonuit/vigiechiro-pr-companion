@@ -67,6 +67,7 @@ nav:
       - "Carte & passages": ecrans/multisite.md
       - "Ma saison": ecrans/saison.md
       - "Espèces & observations": ecrans/analyse.md
+      - "Activité de la nuit": ecrans/activite.md
       - Diagnostic: ecrans/diagnostic.md
       - Audit de cohérence: ecrans/audit.md
       - Réglages: ecrans/reglages.md

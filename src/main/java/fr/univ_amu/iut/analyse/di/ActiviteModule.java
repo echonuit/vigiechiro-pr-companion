@@ -21,12 +21,13 @@ import fr.univ_amu.iut.commun.view.OuvrirActivite;
 /// gate donc que **l'accès**, jamais les composants.
 public class ActiviteModule extends ModuleDeFeature {
 
-    /// Identité de la feature. `EXPERIMENTALE` (désactivable, **inactive par défaut**) le temps du chantier
-    /// #2348 : la carte n'apparaît pas tant que l'écran n'est pas complet, si bien que les paliers
-    /// intermédiaires se mergent sans exposer un écran à moitié fait. Passera `OPTIONNELLE` à la clôture.
+    /// Identité de la feature. `OPTIONNELLE` (désactivable, **active par défaut**) depuis la clôture du lot
+    /// #2352 : l'écran est complet, il s'offre donc comme les autres. Elle a été `EXPERIMENTALE` le temps du
+    /// chantier, ce qui a permis de fusionner les paliers intermédiaires sans exposer un écran à moitié
+    /// fait.
     @Override
     public Fonctionnalite fonctionnalite() {
-        return new Fonctionnalite("activite-nuit", "Activité de la nuit", Categorie.EXPERIMENTALE);
+        return new Fonctionnalite("activite-nuit", "Activité de la nuit", Categorie.OPTIONNELLE);
     }
 
     /// Fournit le contrat de navigation socle [OuvrirActivite] : M-Passage l'injecte pour ouvrir l'écran

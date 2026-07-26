@@ -78,10 +78,12 @@ forte à la plus faible :
     constructible.
 
 Sont `OPTIONNELLE` (désactivables) : `import-vigiechiro` (aucun `Ouvrir*`, `OptionalBinder` vide dès
-l'origine) **et** les 6 feuilles autrefois couplées au runtime dont le contrat `Ouvrir*` a été
+l'origine), les 6 feuilles autrefois couplées au runtime dont le contrat `Ouvrir*` a été
 **neutralisé** (`OptionalBinder` vide côté consommateur + `setBinding` côté feuille, le consommateur
 masquant son point d'entrée si absent) : `diagnostic`, `lot`, `qualification`, `importation`, `analyse`,
-`recherche` (#1087). Le reste demeure `COEUR` : `sites`, `passage`, `validation`, `audio`,
+`recherche` (#1087), **et** `activite-nuit`, née `EXPERIMENTALE` le temps du chantier #2348 puis passée
+`OPTIONNELLE` à la clôture du lot #2352 — la bascule d'une feature achevée est le cas nominal, pas une
+exception. Le reste demeure `COEUR` : `sites`, `passage`, `validation`, `audio`,
 `bibliotheque`, `multisite`, `connexion`, `synchronisation-participation`, `depot-vigiechiro`
 (dépendances EAGER ; cf. [Ajouter une fonctionnalité](ajouter-une-fonctionnalite.md)).
 

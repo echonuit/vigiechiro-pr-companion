@@ -240,8 +240,9 @@ public final class CapturePassage {
                         passageVm,
                         Optional.<OuvrirVerification>of(idp -> {}),
                         Optional.<OuvrirDiagnostic>of(idp -> {}),
-                        // Feature `activite-nuit` EXPERIMENTALE (OFF par défaut, #2352) : carte masquée sur l'aperçu.
-                        Optional.<OuvrirActivite>empty(),
+                        // Feature `activite-nuit` OPTIONNELLE (offerte par défaut depuis la clôture du lot
+                        // #2352) : la carte figure donc sur l'aperçu, comme dans le produit.
+                        Optional.<OuvrirActivite>of(idp -> {}),
                         idp -> {},
                         Optional.<OuvrirLot>of(idp -> {}),
                         injecteur.getInstance(NavigationPassage.class),

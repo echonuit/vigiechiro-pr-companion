@@ -53,7 +53,7 @@ public final class CaptureActivite {
 
     private CaptureActivite() {}
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main() throws InterruptedException {
         CountDownLatch fini = new CountDownLatch(1);
         AtomicReference<Throwable> erreur = new AtomicReference<>();
         Platform.startup(() -> {
@@ -79,24 +79,64 @@ public final class CaptureActivite {
         System.setProperty("vigiechiro.workspace", workspace.toString());
         Path sortie = Path.of(System.getProperty("capture.outDir", ".github/assets"));
         rendre(creerInjecteur(), sortie.resolve("apercu-activite.png"));
+        rendre(injecteurAvec(List.of()), sortie.resolve("apercu-activite-vide.png"));
+        exporter(creerInjecteur(), sortie.resolve("apercu-activite-export.png"));
     }
 
     /// Injecteur (partiel) utilisé par cet outil de capture. Exposé pour le garde-fou de câblage
     /// (`CablageInjecteursCaptureTest`).
     public static Injector creerInjecteur() {
-        return Guice.createInjector(ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new ModuleDemo());
+        return injecteurAvec(contactsDemo());
+    }
+
+    /// Injecteur de démonstration alimenté par les `contacts` donnés : la liste vide sert l'aperçu de
+    /// l'**état vide**, qui nomme la cause de l'absence.
+    private static Injector injecteurAvec(List<ContactHoraire> contacts) {
+        return Guice.createInjector(
+                ModuleCaptureCommun.communSynchrone(), new PersistenceModule(), new ModuleDemo(contacts));
     }
 
     /// Charge `Activite.fxml`, l'ouvre sur le passage de démonstration puis rend la scène hors-écran en
     /// PNG. Scène bornée sous 1000 px (le rendu headless plafonne le blit à 1000×1000).
     private static void rendre(Injector injecteur, Path fichier) throws IOException {
+        ApercuFx.enregistrerPng(new Scene(ouvrir(injecteur), 980, 620), fichier);
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    /// Aperçu de l'**image exportée** (#2352) : passe par le vrai geste d'export du controller, qui
+    /// redessine le graphe hors écran et l'estampille de son contexte. Reconstruire ici une imitation de
+    /// l'export produirait une capture qui dériverait du produit (ADR 0025).
+    private static void exporter(Injector injecteur, Path fichier) throws IOException {
+        ActiviteController controleur = ouvrirControleur(injecteur);
+        // Date d'export FIXE : les PNG sont versionnés, et un `LocalDate.now()` reverserait une capture
+        // différente à chaque jour de CI.
+        controleur.exporterVers(fichier, SOIR.plusDays(1));
+        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
+    }
+
+    private static Parent ouvrir(Injector injecteur) throws IOException {
+        FXMLLoader loader = chargeur(injecteur);
+        Parent vue = loader.load();
+        ouvrirSurLaDemo(loader.getController());
+        return vue;
+    }
+
+    private static ActiviteController ouvrirControleur(Injector injecteur) throws IOException {
+        FXMLLoader loader = chargeur(injecteur);
+        loader.load();
+        ActiviteController controleur = loader.getController();
+        ouvrirSurLaDemo(controleur);
+        return controleur;
+    }
+
+    private static FXMLLoader chargeur(Injector injecteur) {
         FXMLLoader loader = new FXMLLoader(ActiviteController.class.getResource("Activite.fxml"));
         loader.setControllerFactory(injecteur::getInstance);
-        Parent vue = loader.load();
-        ActiviteController controleur = loader.getController();
+        return loader;
+    }
+
+    private static void ouvrirSurLaDemo(ActiviteController controleur) {
         controleur.ouvrirSur(new ContextePassage(1L, 2, new ContexteSite("640380", "A1", null)));
-        ApercuFx.enregistrerPng(new Scene(vue, 980, 620), fichier);
-        System.out.println("Apercu ecrit dans " + fichier.toAbsolutePath());
     }
 
     /// Contacts de démonstration : cinq espèces avec une forme de nuit plausible (comptes par heure de
@@ -125,9 +165,17 @@ public final class CaptureActivite {
     /// fixes, et les contrats de fil d'Ariane inertes (la capture est rendue hors-chrome).
     private static final class ModuleDemo extends AbstractModule {
 
+        /// Contacts que le service de démonstration renverra : la nuit type, ou **rien** pour l'aperçu de
+        /// l'état vide.
+        private final List<ContactHoraire> contacts;
+
+        private ModuleDemo(List<ContactHoraire> contacts) {
+            this.contacts = List.copyOf(contacts);
+        }
+
         @Provides
         ActiviteViewModel viewModel() {
-            return new ActiviteViewModel(serviceDemo());
+            return new ActiviteViewModel(serviceDemo(contacts));
         }
 
         @Provides
@@ -154,11 +202,11 @@ public final class CaptureActivite {
 
         /// Service à contacts fixes : les deux lectures sont surchargées, les DAO (nuls) ne sont jamais
         /// touchés. Un seul but, montrer une courbe déterministe sans base.
-        private static ServiceActivite serviceDemo() {
+        private static ServiceActivite serviceDemo(List<ContactHoraire> contacts) {
             return new ServiceActivite(null, null) {
                 @Override
                 public List<ContactHoraire> contactsDuPassage(long idPassage) {
-                    return contactsDemo();
+                    return contacts;
                 }
 
                 @Override
