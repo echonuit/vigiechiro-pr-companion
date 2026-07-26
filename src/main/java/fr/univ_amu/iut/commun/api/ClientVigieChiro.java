@@ -1,8 +1,13 @@
 package fr.univ_amu.iut.commun.api;
 
 import fr.univ_amu.iut.commun.model.Certitude;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.http.HttpRequest;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +43,9 @@ public final class ClientVigieChiro {
     /// de la marge pour répondre « le carré voisin » plutôt que « aucun » quand la position est en limite.
     private static final int RAYON_CARRE_STOC_METRES = 10_000;
 
+    /// Racine des ressources « fichier » de l'API (déclaration, finalisation, multipart, abandon).
+    private static final String CHEMIN_FICHIERS = "/fichiers";
+
     private final TransportVigieChiro transport;
 
     public ClientVigieChiro(FournisseurToken fournisseurToken) {
@@ -49,6 +57,12 @@ public final class ClientVigieChiro {
     /// des E2E CLI via la surcharge `vigiechiro.url` / `VIGIECHIRO_URL` (cf. `ConnexionModule#urlDeBase`).
     public ClientVigieChiro(String baseUrl, FournisseurToken fournisseurToken) {
         this.transport = new TransportVigieChiro(baseUrl, fournisseurToken);
+    }
+
+    /// Constructeur d'**injection du transport** (#2354), réservé aux tests : un transport à `HttpClient`
+    /// mocké simule le dialogue multipart (URL de partie, `PUT` S3, finalisation) sans réseau réel.
+    ClientVigieChiro(TransportVigieChiro transport) {
+        this.transport = java.util.Objects.requireNonNull(transport, "transport");
     }
 
     /// Profil de l'utilisateur connecté (`GET /moi`), **trié** (#1284) : un jeton refusé (`401`)
@@ -173,7 +187,7 @@ public final class ClientVigieChiro {
     /// une panne en `Injoignable`.
     public ReponseApi<String> accesFichier(String fichierId) {
         return transport
-                .lire("/fichiers/" + fichierId + "/acces")
+                .lire(CHEMIN_FICHIERS + "/" + fichierId + "/acces")
                 .lireAvec(ReponsesVigieChiro::urlSignee)
                 .puis(transport::telecharger);
     }
@@ -281,7 +295,7 @@ public final class ClientVigieChiro {
     /// mime n'est pas transmis (déduit de l'extension du titre) ; le titre doit respecter la
     /// convention de nommage VigieChiro (`Car…-Pass…`).
     public ReponseApi<FichierSigne> creerFichier(String titre, String participationId) {
-        return poster("/fichiers", RequetesVigieChiro.fichier(titre, participationId))
+        return poster(CHEMIN_FICHIERS, RequetesVigieChiro.fichier(titre, participationId))
                 .lireAvec(ReponsesVigieChiro::fichierSigne);
     }
 
@@ -318,7 +332,85 @@ public final class ClientVigieChiro {
     /// Finalise un fichier téléversé (`POST /fichiers/#id`, étape 3/3), issue **triée** (#1284) : un
     /// refus revient avec son statut et son corps, une panne avec sa cause.
     public ReponseApi<String> finaliserFichier(String fichierId) {
-        return poster("/fichiers/" + fichierId, RequetesVigieChiro.finalisation());
+        return poster(CHEMIN_FICHIERS + "/" + fichierId, RequetesVigieChiro.finalisation());
+    }
+
+    /// Seuil de bascule en **multipart** (#2354) : au-delà, le `PUT` S3 est découpé en parties
+    /// réessayables séparément. 5 Mo est le minimum d'une partie S3 (sauf la dernière) et la taille de
+    /// chunk retenue - valeur reprise de l'implémentation de référence ChiroTool.
+    public static final long SEUIL_MULTIPART_OCTETS = 5L * 1024 * 1024;
+
+    /// Déclare un fichier **multipart** (#2354, `POST /fichiers {multipart:true}`) : la réponse ne porte
+    /// qu'un `_id` (aucune URL unique, les URL viennent partie par partie), rendu en cas de succès.
+    public ReponseApi<String> creerFichierMultipart(String titre, String participationId) {
+        return poster(CHEMIN_FICHIERS, RequetesVigieChiro.fichier(titre, participationId, true))
+                .lireAvec(ReponsesVigieChiro::idCree);
+    }
+
+    /// Téléverse `fichier` en **parties** (#2354) sous le fichier déjà déclaré `fichierId` : pour chaque
+    /// chunk de [#SEUIL_MULTIPART_OCTETS], demande son URL signée (`PUT /fichiers/{id}/multipart`), la
+    /// dépose (réessayée, `ETag` collecté), puis finalise (`POST /fichiers/{id} {parts}`). Rend le succès
+    /// de la finalisation, ou la **première** issue en échec (URL, partie ou finalisation) - à charge de
+    /// l'appelant d'[#abandonnerFichier] pour ne pas laisser de parties orphelines côté serveur.
+    public ReponseApi<String> deposerEnParts(
+            String fichierId, Path fichier, String mime, DoubleConsumer progression, SuiviReprise reprise) {
+        return deposerEnParts(fichierId, fichier, mime, SEUIL_MULTIPART_OCTETS, progression, reprise);
+    }
+
+    /// Variante à **taille de chunk** explicite (#2354) : la production découpe en [#SEUIL_MULTIPART_OCTETS],
+    /// les tests en petits chunks pour exercer la boucle sur un fichier minuscule.
+    ReponseApi<String> deposerEnParts(
+            String fichierId,
+            Path fichier,
+            String mime,
+            long tailleChunk,
+            DoubleConsumer progression,
+            SuiviReprise reprise) {
+        long taille;
+        try {
+            taille = Files.size(fichier);
+        } catch (IOException illisible) {
+            return ReponseApi.injoignable("fichier illisible : " + illisible.getMessage());
+        }
+        List<PartieDeposee> parties = new ArrayList<>();
+        long envoye = 0;
+        try (InputStream flux = Files.newInputStream(fichier)) {
+            byte[] tampon = new byte[(int) tailleChunk];
+            for (int numero = 1; ; numero++) {
+                int lus = flux.readNBytes(tampon, 0, tampon.length);
+                if (lus == 0) {
+                    break;
+                }
+                byte[] chunk = lus == tampon.length ? tampon.clone() : Arrays.copyOf(tampon, lus);
+                ReponseApi<String> url = transport
+                        .ecrire(
+                                "PUT",
+                                CHEMIN_FICHIERS + "/" + fichierId + "/multipart",
+                                RequetesVigieChiro.demandePartie(numero),
+                                null)
+                        .lireAvec(ReponsesVigieChiro::urlDePartie);
+                if (!(url instanceof ReponseApi.Succes<String>(String urlSignee))) {
+                    return url;
+                }
+                ReponseApi<String> partie = transport.deposerPartie(
+                        urlSignee, () -> HttpRequest.BodyPublishers.ofByteArray(chunk), mime, reprise);
+                if (!(partie instanceof ReponseApi.Succes<String>(String etag))) {
+                    return partie;
+                }
+                parties.add(new PartieDeposee(numero, etag));
+                envoye += lus;
+                progression.accept(taille == 0 ? 1.0 : (double) envoye / taille);
+            }
+        } catch (IOException interrompu) {
+            return ReponseApi.injoignable("lecture du fichier interrompue : " + interrompu.getMessage());
+        }
+        return poster(CHEMIN_FICHIERS + "/" + fichierId, RequetesVigieChiro.finalisationMultipart(parties));
+    }
+
+    /// Abandonne un upload multipart (#2354, `DELETE /fichiers/{id}`) : à appeler quand une partie a
+    /// échoué définitivement, pour que le serveur ne conserve pas de parties orphelines. Best-effort.
+    public ReponseApi<String> abandonnerFichier(String fichierId) {
+        return transport.ecrire("DELETE", CHEMIN_FICHIERS + "/" + fichierId, "", null);
     }
 
     // Le traitement serveur (lancer le compute, lire son etat) vit dans TraitementVigieChiro :

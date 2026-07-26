@@ -1,10 +1,23 @@
 package fr.univ_amu.iut.commun.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import java.net.http.HttpClient;
+import java.net.http.HttpHeaders;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 /// Façade des points d'accès VigieChiro (#725/#728) : les endpoints encore « dégradation propre »
 /// rendent vide/false sur toute issue non-succès (la mécanique HTTP et son tri sont testés dans
@@ -138,5 +151,80 @@ class ClientVigieChiroTest {
         assertThat(sansToken.echec()).contains("jeton");
         assertThat(horsLigne.estReussie()).isFalse();
         assertThat(horsLigne.echec()).contains("injoignable");
+    }
+
+    @Test
+    @DisplayName("#2354 : deposerEnParts découpe, demande une URL par partie, dépose et finalise")
+    void depot_en_parts_boucle_complete(@TempDir Path dossier) throws Exception {
+        Path fichier = dossier.resolve("Car-1.zip");
+        Files.write(fichier, new byte[] {1, 2, 3, 4, 5, 6, 7}); // 7 octets, chunk 3 → 3 parties (3+3+1)
+
+        AtomicInteger putsS3 = new AtomicInteger();
+        HttpResponse<Object> urlPartie = reponse(200, "{\"s3_signed_url\": \"http://s3.exemple/part\"}", Map.of());
+        HttpResponse<Object> s3ok = reponse(200, "", Map.of("ETag", List.of("\"etag-x\"")));
+        HttpResponse<Object> finale = reponse(200, "{}", Map.of());
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenAnswer(invocation -> {
+            HttpRequest requete = invocation.getArgument(0);
+            if ("s3.exemple".equals(requete.uri().getHost())) {
+                putsS3.incrementAndGet();
+                return s3ok;
+            }
+            return requete.uri().getPath().endsWith("/multipart") ? urlPartie : finale;
+        });
+        ClientVigieChiro client = clientAvec(http);
+
+        ReponseApi<String> issue =
+                client.deposerEnParts("f-1", fichier, "application/zip", 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+
+        assertThat(issue).as("la finalisation aboutit").isInstanceOf(ReponseApi.Succes.class);
+        assertThat(putsS3).as("7 octets en chunks de 3 → 3 parties déposées").hasValue(3);
+    }
+
+    @Test
+    @DisplayName("#2354 : deposerEnParts s'arrête à la première partie refusée (4xx), sans finaliser")
+    void depot_en_parts_echoue_sur_une_partie(@TempDir Path dossier) throws Exception {
+        Path fichier = dossier.resolve("Car-1.zip");
+        Files.write(fichier, new byte[] {1, 2, 3, 4}); // 2 parties de 3+1, la 1re échoue
+
+        AtomicInteger finalisations = new AtomicInteger();
+        HttpResponse<Object> urlPartie = reponse(200, "{\"s3_signed_url\": \"http://s3.exemple/part\"}", Map.of());
+        HttpResponse<Object> s3refus = reponse(403, "", Map.of()); // partie refusée : 4xx, non rejouable
+        HttpResponse<Object> finale = reponse(200, "{}", Map.of());
+        HttpClient http = mock(HttpClient.class);
+        when(http.send(any(), any())).thenAnswer(invocation -> {
+            HttpRequest requete = invocation.getArgument(0);
+            if ("s3.exemple".equals(requete.uri().getHost())) {
+                return s3refus;
+            }
+            if (requete.uri().getPath().endsWith("/multipart")) {
+                return urlPartie;
+            }
+            finalisations.incrementAndGet();
+            return finale;
+        });
+        ClientVigieChiro client = clientAvec(http);
+
+        ReponseApi<String> issue =
+                client.deposerEnParts("f-1", fichier, "application/zip", 3, fraction -> {}, SuiviReprise.SILENCIEUX);
+
+        assertThat(issue).as("le refus de la partie est propagé").isInstanceOf(ReponseApi.Refuse.class);
+        assertThat(finalisations)
+                .as("aucune finalisation quand une partie a échoué")
+                .hasValue(0);
+    }
+
+    /// Client sur un transport à `HttpClient` mocké et politique sans vraie attente (tests instantanés).
+    private static ClientVigieChiro clientAvec(HttpClient http) {
+        return new ClientVigieChiro(new TransportVigieChiro(
+                "http://api.exemple/v1", TOKEN_ABC, http, new PolitiqueReessai(d -> {}, () -> 0.0)));
+    }
+
+    private static HttpResponse<Object> reponse(int statut, String corps, Map<String, List<String>> entetes) {
+        HttpResponse<Object> reponse = mock(HttpResponse.class);
+        when(reponse.statusCode()).thenReturn(statut);
+        when(reponse.body()).thenReturn(corps);
+        when(reponse.headers()).thenReturn(HttpHeaders.of(entetes, (nom, valeur) -> true));
+        return reponse;
     }
 }

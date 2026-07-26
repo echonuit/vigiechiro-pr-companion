@@ -253,6 +253,38 @@ class TransportVigieChiroTest {
         assertThat(attentes).as("premier plan : 4 tentatives, donc 3 attentes").hasSize(3);
     }
 
+    @Test
+    @DisplayName("#2354 : deposerPartie rend Succes portant l'ETag S3 (guillemets retirés)")
+    void depot_partie_rend_l_etag() throws Exception {
+        HttpResponse<Void> ok = reponse(200, Map.of("ETag", List.of("\"etag-abc\"")));
+        HttpClient client = mock(HttpClient.class);
+        doReturn(ok).when(client).send(any(), any());
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente());
+
+        ReponseApi<String> issue = transport.deposerPartie(
+                "http://s3.exemple/part-1", octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
+
+        assertThat(issue).isEqualTo(ReponseApi.succes("etag-abc"));
+    }
+
+    @Test
+    @DisplayName("#2354 : deposerPartie réessaie une coupure momentanée, puis rend l'ETag")
+    void depot_partie_reessaie_puis_reussit() throws Exception {
+        HttpResponse<Void> ok = reponse(200, Map.of("ETag", List.of("etag-2")));
+        HttpClient client = mock(HttpClient.class);
+        doThrow(new IOException("coupure")).doReturn(ok).when(client).send(any(), any());
+        List<Duration> attentes = new ArrayList<>();
+        TransportVigieChiro transport =
+                new TransportVigieChiro("http://s3.exemple/api/v1", TOKEN_ABC, client, sansAttente(attentes));
+
+        ReponseApi<String> issue = transport.deposerPartie(
+                "http://s3.exemple/part-1", octetUnique(), "application/zip", SuiviReprise.SILENCIEUX);
+
+        assertThat(issue).isEqualTo(ReponseApi.succes("etag-2"));
+        assertThat(attentes).hasSize(1);
+    }
+
     /// Corps d'un octet, reconstruit à chaque tentative (le publisher n'est pas rejouable une fois lu).
     private static TransportVigieChiro.CorpsAEnvoyer octetUnique() {
         return () -> HttpRequest.BodyPublishers.ofByteArray(new byte[] {1});

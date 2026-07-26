@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -113,5 +114,26 @@ class RequetesVigieChiroTest {
         assertThat(corps.size())
                 .as("aucun autre champ (422 unknown field sinon)")
                 .isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("#2354 : fichier(multipart=true), demandePartie(part_number), finalisationMultipart(parts)")
+    void corps_multipart() {
+        JsonObject fichier = JsonParser.parseString(RequetesVigieChiro.fichier("Car-1.zip", "p-1", true))
+                .getAsJsonObject();
+        assertThat(fichier.get("multipart").getAsBoolean()).isTrue();
+        assertThat(fichier.get("lien_participation").getAsString()).isEqualTo("p-1");
+
+        JsonObject demande =
+                JsonParser.parseString(RequetesVigieChiro.demandePartie(3)).getAsJsonObject();
+        assertThat(demande.get("part_number").getAsInt()).isEqualTo(3);
+
+        JsonObject finale = JsonParser.parseString(RequetesVigieChiro.finalisationMultipart(
+                        List.of(new PartieDeposee(1, "etag-1"), new PartieDeposee(2, "etag-2"))))
+                .getAsJsonObject();
+        assertThat(finale.getAsJsonArray("parts")).hasSize(2);
+        JsonObject premiere = finale.getAsJsonArray("parts").get(0).getAsJsonObject();
+        assertThat(premiere.get("part_number").getAsInt()).isEqualTo(1);
+        assertThat(premiere.get("etag").getAsString()).isEqualTo("etag-1");
     }
 }

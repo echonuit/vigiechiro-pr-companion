@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import fr.univ_amu.iut.commun.model.Certitude;
+import java.util.List;
 import java.util.Map;
 
 /// Construction des **corps JSON des écritures** VigieChiro (#142) : pendant en écriture de
@@ -42,12 +43,31 @@ final class RequetesVigieChiro {
     /// **orphelin** (rattaché à aucune participation), et le traitement serveur (`compute`) « n'extrait 0
     /// fichier ». C'est le champ que pose le front web à chaque déclaration.
     static String fichier(String titre, String lienParticipation) {
-        return GSON.toJson(Map.of("titre", titre, "multipart", false, "lien_participation", lienParticipation));
+        return fichier(titre, lienParticipation, false);
+    }
+
+    /// Variante avec le drapeau `multipart` explicite (#2354) : à `true`, l'API ouvre un **upload
+    /// multipart** (la réponse ne porte plus d'URL unique ; les URL viennent partie par partie via
+    /// [#demandePartie]) ; à `false`, l'upload simple d'origine (URL unique dans la réponse).
+    static String fichier(String titre, String lienParticipation, boolean multipart) {
+        return GSON.toJson(Map.of("titre", titre, "multipart", multipart, "lien_participation", lienParticipation));
+    }
+
+    /// Corps de `PUT /fichiers/#id/multipart` (#2354) : demande l'URL S3 signée de la **partie**
+    /// `partNumber`. Une URL par partie, obtenue juste avant de la téléverser.
+    static String demandePartie(int partNumber) {
+        return GSON.toJson(Map.of("part_number", partNumber));
     }
 
     /// Corps de finalisation `POST /fichiers/#id` : aucun champ requis (accusé de fin d'upload).
     static String finalisation() {
         return CORPS_VIDE;
+    }
+
+    /// Corps de finalisation d'un **multipart** (#2354) : la liste ordonnée des parties déposées
+    /// (`{parts: [{part_number, etag}, …]}`), pour que S3 recolle l'objet.
+    static String finalisationMultipart(List<PartieDeposee> parties) {
+        return GSON.toJson(Map.of("parts", parties));
     }
 
     /// Corps de `PATCH /donnees/#id/observations/#index` (#723, contrat #1203) : le taxon observateur en
