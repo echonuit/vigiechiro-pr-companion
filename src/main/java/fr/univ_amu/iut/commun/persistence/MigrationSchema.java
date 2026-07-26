@@ -57,7 +57,8 @@ public class MigrationSchema {
         "V28__bascule_lexique_verdict.sql",
         "V29__point_synchronise.sql",
         "V30__depot_plan.sql",
-        "V31__retrait_colonnes_mortes_archivage.sql"
+        "V31__retrait_colonnes_mortes_archivage.sql",
+        "V32__campagne.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";
