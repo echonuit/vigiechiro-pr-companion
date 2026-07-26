@@ -129,15 +129,41 @@ public record CompteRenduChiffre(
     /// @param libelle ce que le segment représente (« Importés », « séquences »)
     /// @param quantite la quantité réelle, pour l'échelle
     /// @param valeurLisible la quantité telle qu'elle se lit, unité comprise
-    public record Segment(String libelle, long quantite, String valeurLisible) {
+    /// @param teinte le **rôle** du segment, dont la feuille de style déduit la couleur
+    public record Segment(String libelle, long quantite, String valeurLisible, Teinte teinte) {
 
         public Segment {
             Objects.requireNonNull(libelle, LIBELLE);
             Objects.requireNonNull(valeurLisible, "valeurLisible");
+            Objects.requireNonNull(teinte, "teinte");
             if (quantite < 0) {
                 throw new IllegalArgumentException("quantité négative pour « " + libelle + " » : " + quantite);
             }
         }
+    }
+
+    /// **Rôle** d'un segment, d'où la feuille de style tire sa couleur.
+    ///
+    /// Un rôle et non une couleur, ni un nom de classe CSS : le modèle dit ce que le segment **est** dans
+    /// le compte rendu, la surface décide de son apparence. C'est aussi ce qui permet au thème sombre de
+    /// réinterpréter la palette sans toucher aux appelants.
+    ///
+    /// Les trois premiers rôles qualifient un **devenir** (ce qui est passé, écarté, refusé) ; les trois
+    /// suivants qualifient un **volume**, où aucune sévérité n'a de sens : sur la barre « écrit », les
+    /// bruts conservés et les séquences produites ne sont ni bons ni mauvais, ils se distinguent.
+    public enum Teinte {
+        /// Ce qui est passé (importé, déposé, réactivé).
+        RETENU,
+        /// Ce qui a été écarté sans que ce soit un échec (déjà présent, non pertinent).
+        ECARTE,
+        /// Ce qui a été refusé ou a échoué.
+        REFUSE,
+        /// Une quantité de référence, sans jugement (ce qui a été lu).
+        REFERENCE,
+        /// La part principale d'un volume écrit (les bruts conservés).
+        PRINCIPALE,
+        /// La part secondaire d'un volume écrit (les séquences produites).
+        SECONDAIRE
     }
 
     /// Le **devenir d'un ensemble**, ventilé **entièrement**.
