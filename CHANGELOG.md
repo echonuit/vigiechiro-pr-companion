@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.55.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.54.0...v2.55.0) (2026-07-26)
+
+
+### Features
+
+* **analyse:** entrée transverse de la vue Activité (carte d'accueil) ([#2526](https://github.com/echonuit/vigiechiro-pr-companion/issues/2526)) ([feba4ee](https://github.com/echonuit/vigiechiro-pr-companion/commit/feba4ee9bbee1a5aa70f9ba90c953e994f3719fa)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.54.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.53.0...v2.54.0) (2026-07-26)
 
 
