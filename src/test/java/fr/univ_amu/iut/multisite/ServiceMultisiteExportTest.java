@@ -16,6 +16,7 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -51,7 +52,8 @@ class ServiceMultisiteExportTest {
     @Test
     @DisplayName("exporterCsvVers écrit dans le fichier le même CSV que exporterCsv")
     void exporterCsvVers_ecrit_le_meme_csv(@TempDir Path dossier) throws Exception {
-        ServiceMultisite service = new ServiceMultisite(siteDao, pointDao, passageDao, releves, resultats, horloge);
+        ServiceMultisite service =
+                new ServiceMultisite(siteDao, pointDao, passageDao, releves, resultats, Optional.empty(), horloge);
         List<LignePassage> lignes = List.of(
                 new LignePassage(
                         1L,
@@ -63,7 +65,8 @@ class ServiceMultisiteExportTest {
                         StatutWorkflow.DEPOSE,
                         Verdict.OK,
                         EtatAnalyse.A_IMPORTER,
-                        "2026-07-14T09:00:00Z"),
+                        "2026-07-14T09:00:00Z",
+                        null),
                 new LignePassage(
                         2L,
                         "640381",
@@ -74,6 +77,7 @@ class ServiceMultisiteExportTest {
                         StatutWorkflow.VERIFIE,
                         null,
                         EtatAnalyse.SANS_OBJET,
+                        null,
                         null));
         Path fichier = dossier.resolve("vue.csv");
 

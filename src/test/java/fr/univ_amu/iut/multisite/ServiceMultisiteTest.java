@@ -23,6 +23,9 @@ import fr.univ_amu.iut.multisite.model.PointAgrege;
 import fr.univ_amu.iut.multisite.model.ServiceMultisite;
 import fr.univ_amu.iut.multisite.model.TriMultisite;
 import fr.univ_amu.iut.passage.di.PassageModule;
+import fr.univ_amu.iut.passage.model.Campagne;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.di.SitesModule;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -31,6 +34,7 @@ import fr.univ_amu.iut.validation.model.dao.ResultatsIdentificationDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -63,13 +67,15 @@ class ServiceMultisiteTest {
     Path dossier;
 
     private ServiceMultisite service;
+    private Injector injecteur;
+    private SourceDeDonnees source;
 
     @BeforeEach
     void preparer() {
         System.setProperty("vigiechiro.workspace", dossier.toString());
         // Injecteur minimal : juste de quoi résoudre les DAO du service. Pas de `MultisiteModule` (on ne
         // veut pas la carte d'accueil et son chrome), et `ResultatsIdentificationDao` fourni localement.
-        Injector injecteur = Guice.createInjector(
+        injecteur = Guice.createInjector(
                 new CommunModule(),
                 new PersistenceModule(),
                 new SitesModule(),
@@ -80,7 +86,7 @@ class ServiceMultisiteTest {
                         return new ResultatsIdentificationDao(source);
                     }
                 });
-        SourceDeDonnees source = injecteur.getInstance(SourceDeDonnees.class);
+        source = injecteur.getInstance(SourceDeDonnees.class);
         new MigrationSchema(source).migrer();
 
         semer(source, 1, 2025, "2025-06-20", StatutWorkflow.TRANSFORME, Verdict.OK, "640380", "Étang", "A1");
@@ -97,6 +103,7 @@ class ServiceMultisiteTest {
                 injecteur.getInstance(PassageDao.class),
                 injecteur.getInstance(ReleveTraitementDao.class),
                 injecteur.getInstance(ResultatsIdentificationDao.class),
+                Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 5, 31)));
     }
 
@@ -180,6 +187,38 @@ class ServiceMultisiteTest {
                         tuple("640380", "B2", 2026, 1),
                         tuple("640381", "A1", 2026, 1),
                         tuple("640381", "A1", 2026, 2));
+    }
+
+    @Test
+    @DisplayName("#2355 : le nom de la campagne du passage remonte dans la ligne, vide pour les autres")
+    void campagne_du_passage_remonte() {
+        // Chaîne réelle : on crée une campagne et on y rattache la première nuit (640380 / A1 / 2025).
+        PassageDao passages = injecteur.getInstance(PassageDao.class);
+        HorlogeFigee horloge = new HorlogeFigee(LocalDate.of(2026, 5, 31));
+        ServiceCampagne campagnes = new ServiceCampagne(new CampagneDao(source), passages, horloge);
+        Campagne suivi = campagnes.creerCampagne("Suivi ENS", 2026, null);
+        campagnes.rattacherPassage(service.listerPassages(ID_USER).getFirst().idPassage(), suivi.id());
+
+        ServiceMultisite avecCampagnes = new ServiceMultisite(
+                injecteur.getInstance(SiteDao.class),
+                injecteur.getInstance(PointDao.class),
+                passages,
+                injecteur.getInstance(ReleveTraitementDao.class),
+                injecteur.getInstance(ResultatsIdentificationDao.class),
+                Optional.of(campagnes),
+                horloge);
+
+        assertThat(avecCampagnes.listerPassages(ID_USER))
+                .extracting(LignePassage::campagne)
+                .containsExactly("Suivi ENS", null, null, null, null);
+    }
+
+    @Test
+    @DisplayName("#2355 : feature campagne coupée, la colonne reste vide sans rien casser")
+    void campagne_desactivee_colonne_vide() {
+        assertThat(service.listerPassages(ID_USER))
+                .extracting(LignePassage::campagne)
+                .containsOnlyNulls();
     }
 
     @Test

@@ -90,7 +90,7 @@ class MultisiteVueIntegrationTest {
             EtatAnalyse analyse,
             String releveLe) {
         return new LignePassage(
-                id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, verdict, analyse, releveLe);
+                id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, verdict, analyse, releveLe, null);
     }
 
     @SuppressWarnings("unchecked")

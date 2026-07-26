@@ -49,7 +49,17 @@ class ServiceRechercheGlobaleTest {
 
     private static LignePassage passage(Long id, String carre, String point, int annee, int numero, String date) {
         return new LignePassage(
-                id, carre, point, annee, numero, date, StatutWorkflow.DEPOSE, Verdict.OK, EtatAnalyse.SANS_OBJET, null);
+                id,
+                carre,
+                point,
+                annee,
+                numero,
+                date,
+                StatutWorkflow.DEPOSE,
+                Verdict.OK,
+                EtatAnalyse.SANS_OBJET,
+                null,
+                null);
     }
 
     @BeforeEach

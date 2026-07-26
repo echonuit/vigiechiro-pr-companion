@@ -5,7 +5,9 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ReleveTraitement;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.dao.ReleveTraitementDao;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.Passage;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
@@ -21,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /// Service métier de la feature `multisite` : construit la **vue agrégée multi-sites** du
 /// parcours P5 (épopée E5), un tableau haute densité listant tous les passages de tous les sites
@@ -50,8 +53,17 @@ public class ServiceMultisite {
     /// En-tête du tableau / export CSV : ordre stable des colonnes (P5-CA2). `analyse` et
     /// `analyse_relevee_le` (#1338) closent la ligne : exporter la vue « Résultats à importer » sans dire
     /// l'état d'analyse — ni **de quand il date** — livrerait une liste que rien ne justifie.
-    private static final List<String> ENTETE =
-            List.of("site", "point", "annee", "passage", "date", "statut", "verdict", "analyse", "analyse_relevee_le");
+    private static final List<String> ENTETE = List.of(
+            "site",
+            "point",
+            "annee",
+            "passage",
+            "date",
+            "statut",
+            "verdict",
+            "analyse",
+            "analyse_relevee_le",
+            "campagne");
 
     /// Nom du paramètre `filtres` (messages `requireNonNull`).
     private static final String FILTRES = "filtres";
@@ -67,19 +79,35 @@ public class ServiceMultisite {
     /// Résultats d'identification déjà importés (C12) : l'autre moitié de la question « à importer ? ».
     private final ResultatsIdentificationDao resultatsDao;
 
+    /// Campagnes (#2355), **optionnelles** : la feature est désactivable. Absente, la colonne « campagne »
+    /// reste vide et le reste de la vue est inchangé.
+    private final Optional<ServiceCampagne> campagnes;
+
     public ServiceMultisite(
             SiteDao siteDao,
             PointDao pointDao,
             PassageDao passageDao,
             ReleveTraitementDao relevesDao,
             ResultatsIdentificationDao resultatsDao,
+            Optional<ServiceCampagne> campagnes,
             Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.relevesDao = Objects.requireNonNull(relevesDao, "relevesDao");
         this.resultatsDao = Objects.requireNonNull(resultatsDao, "resultatsDao");
+        this.campagnes = Objects.requireNonNull(campagnes, "campagnes");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
+    }
+
+    /// Noms des campagnes par identifiant, lus **une seule fois** par listing (même raison que les relevés
+    /// ci-dessous : le tableau peut afficher des milliers de lignes). Vide si la feature `campagne` est
+    /// coupée — la colonne reste alors vide, sans que rien d'autre ne change.
+    private Map<Long, String> nomsDesCampagnes() {
+        return campagnes
+                .map(service ->
+                        service.listerCampagnes().stream().collect(Collectors.toMap(Campagne::id, Campagne::nom)))
+                .orElseGet(Map::of);
     }
 
     // --- Agrégation, tri, filtres ---
@@ -111,6 +139,7 @@ public class ServiceMultisite {
         // requêtes. Les deux tables ne portent qu'une ligne par nuit déposée : elles tiennent en mémoire.
         Map<Long, ReleveTraitement> releves = relevesDao.parPassage();
         Set<Long> importes = resultatsDao.passagesAvecResultats();
+        Map<Long, String> nomsCampagnes = nomsDesCampagnes();
         List<LignePassage> lignes = new ArrayList<>();
         for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
             for (PointDEcoute point : pointDao.findBySite(site.id())) {
@@ -126,7 +155,8 @@ public class ServiceMultisite {
                             passage.statutWorkflow(),
                             passage.verdictVerification(),
                             EtatAnalyse.deduire(passage.statutWorkflow(), releve, importes.contains(passage.id())),
-                            releve.map(ReleveTraitement::releveLe).orElse(null));
+                            releve.map(ReleveTraitement::releveLe).orElse(null),
+                            passage.idCampagne() == null ? null : nomsCampagnes.get(passage.idCampagne()));
                     if (filtres.accepte(ligne)) {
                         lignes.add(ligne);
                     }
@@ -210,7 +240,8 @@ public class ServiceMultisite {
                     ligne.statut().libelle(),
                     ligne.verdict() == null ? "" : ligne.verdict().libelle(),
                     ligne.etatAnalyse().libelle(),
-                    ligne.analyseReleveeLe() == null ? "" : ligne.analyseReleveeLe()));
+                    ligne.analyseReleveeLe() == null ? "" : ligne.analyseReleveeLe(),
+                    ligne.campagne() == null ? "" : ligne.campagne()));
         }
         return table;
     }

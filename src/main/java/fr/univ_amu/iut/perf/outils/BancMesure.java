@@ -25,6 +25,7 @@ import java.sql.Statement;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.function.IntSupplier;
 
 /// Outil de capture/mesure, utilisable tel quel.
@@ -74,6 +75,9 @@ public final class BancMesure {
                 // mesurer le coût réel de la vue, pas une version amputée de deux tables.
                 new ReleveTraitementDao(source),
                 new ResultatsIdentificationDao(source),
+                // Campagnes (#2355) hors périmètre du banc : ce qu'on mesure ici, c'est le coût de la
+                // vue elle-même, pas la résolution d'un libellé lu une fois par listage.
+                Optional.empty(),
                 new HorlogeFigee(LocalDate.of(2026, 6, 4)));
 
         System.out.println("=== Banc de mesure couche données (#29) — base " + racine + " ===");
