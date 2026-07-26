@@ -55,6 +55,7 @@ MAINS=(
   "fr.univ_amu.iut.audio.outils.CapturePublicationCorrections"
   "fr.univ_amu.iut.commun.outils.CaptureFicheEspece"
   "fr.univ_amu.iut.commun.outils.CaptureDialogues"
+  "fr.univ_amu.iut.commun.outils.CaptureCompteRendu"
   "fr.univ_amu.iut.connexion.outils.CaptureConnexion"
 )
 JAVA_BIN="${JAVA_HOME:+$JAVA_HOME/bin/}java"
