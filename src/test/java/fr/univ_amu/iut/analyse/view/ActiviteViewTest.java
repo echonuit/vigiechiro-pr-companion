@@ -12,6 +12,7 @@ import com.google.inject.Provides;
 import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
+import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
@@ -116,6 +117,23 @@ class ActiviteViewTest {
         WaitForAsyncUtils.waitForFxEvents();
 
         assertThat(graphe.getData()).as("décocher une espèce retire sa courbe").hasSize(1);
+    }
+
+    @Test
+    void ouvrir_tout_charge_les_passages_de_l_utilisateur_en_racine(FxRobot robot) {
+        when(service.contactsDeLUtilisateur("u-1")).thenReturn(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5));
+
+        robot.interact(() -> controleur.ouvrirTout("u-1"));
+
+        LineChart<?, ?> graphe = robot.lookup("#grapheActivite").queryAs(LineChart.class);
+        assertThat(graphe.getData())
+                .as("la courbe couvre tous les passages de l'utilisateur")
+                .hasSize(1);
+        assertThat(controleur.emplacement())
+                .as("en transverse (racine), le fil d'Ariane se réduit au segment courant")
+                .singleElement()
+                .extracting(Lieu::libelle)
+                .isEqualTo("Activité de la nuit");
     }
 
     private void charger(FxRobot robot, List<ContactHoraire> contacts) {
