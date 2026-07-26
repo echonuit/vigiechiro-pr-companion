@@ -26,6 +26,7 @@ import fr.univ_amu.iut.multisite.outils.CaptureMultisite;
 import fr.univ_amu.iut.passage.outils.CapturePassage;
 import fr.univ_amu.iut.qualification.outils.CaptureQualification;
 import fr.univ_amu.iut.recherche.outils.CaptureRecherche;
+import fr.univ_amu.iut.saison.outils.CaptureSaison;
 import fr.univ_amu.iut.sites.outils.CaptureEcrans;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -93,6 +94,7 @@ class CablageInjecteursCaptureTest {
                 // l'étape ③ et le second libellé du bouton ④, invisibles dans le mode déconnecté.
                 Arguments.of("CaptureLot (connecté)", (Supplier<Injector>) CaptureLot::creerInjecteurConnecte),
                 Arguments.of("CaptureMultisite", (Supplier<Injector>) CaptureMultisite::creerInjecteur),
+                Arguments.of("CaptureSaison", (Supplier<Injector>) CaptureSaison::creerInjecteur),
                 Arguments.of("CaptureAnalyse", (Supplier<Injector>) CaptureAnalyse::creerInjecteur),
                 Arguments.of("CaptureAudit", (Supplier<Injector>) CaptureAudit::creerInjecteur),
                 Arguments.of("CaptureDiagnostic", (Supplier<Injector>) CaptureDiagnostic::creerInjecteur),

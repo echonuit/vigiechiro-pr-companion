@@ -38,6 +38,7 @@ MAINS=(
   "fr.univ_amu.iut.passage.outils.CapturePassage"
   "fr.univ_amu.iut.lot.outils.CaptureLot"
   "fr.univ_amu.iut.multisite.outils.CaptureMultisite"
+  "fr.univ_amu.iut.saison.outils.CaptureSaison"
   "fr.univ_amu.iut.analyse.outils.CaptureAnalyse"
   "fr.univ_amu.iut.diagnostic.outils.CaptureDiagnostic"
   "fr.univ_amu.iut.audit.outils.CaptureAudit"

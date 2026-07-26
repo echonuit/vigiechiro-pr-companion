@@ -1,0 +1,19 @@
+/*
+ * Feature saison (ecran M-Saison, #2356). Les pastilles des passages presents reutilisent les classes
+ * badge-statut-* / badge-verdict-* de design.css (couleurs reprises du modele). Deux classes propres a
+ * l'ecran restent a definir ici.
+ */
+
+/* Passage attendu mais absent (« Non planifie ») : pastille neutre en creux, distincte d'un statut reel. */
+.badge-non-planifie {
+    -fx-background-color: -badge-neutre-fond;
+    -fx-text-fill: -couleur-texte;
+    -fx-border-color: #d0d7de;
+    -fx-border-radius: 11;
+}
+
+/* Signalement de fermeture de fenetre : information (l'application signale, elle n'alerte pas). */
+.signalement-fenetre {
+    -fx-text-fill: -badge-avertissement-texte;
+    -fx-font-weight: bold;
+}

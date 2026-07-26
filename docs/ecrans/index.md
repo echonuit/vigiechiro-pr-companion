@@ -15,6 +15,7 @@ référence explique *en détail* ce que chaque écran propose.
 | [Préparer le dépôt](lot.md) | Préparer et déposer une nuit vérifiée |
 | [Sons & validation](validation.md) | Relire les observations Tadarida (espèces), écouter, discuter avec le validateur |
 | [Carte & passages](multisite.md) | Vue agrégée des passages (tri, filtres, vues sauvegardées) |
+| [Ma saison](saison.md) | Solde de la saison : ce qu'il reste à faire, point par point |
 | [Espèces & observations](analyse.md) | Exploiter les observations toutes nuits confondues : quelles espèces, où, quand, combien |
 | [Diagnostic](diagnostic.md) | Diagnostic d'une nuit (climat, anomalies) |
 | [Audit de cohérence](audit.md) | Confronter disque, base et Vigie-Chiro : plus rien ne diverge en silence |

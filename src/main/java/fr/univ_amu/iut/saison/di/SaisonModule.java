@@ -2,12 +2,15 @@ package fr.univ_amu.iut.saison.di;
 
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
+import fr.univ_amu.iut.saison.view.ActiviteMaSaison;
+import fr.univ_amu.iut.saison.viewmodel.SaisonViewModel;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
 
@@ -28,8 +31,9 @@ public class SaisonModule extends ModuleDeFeature {
 
     @Override
     protected void configure() {
-        // Aucune contribution au socle pour l'instant : la carte d'accueil « Ma saison » arrivera avec
-        // l'écran (lot 2, PR 3). Ce module ne fait pour l'heure que fournir le service ci-dessous.
+        // Carte d'accueil « Ma saison » (prisme Collecte & passages) : le MainController la découvre via
+        // Set<ActiviteAccueil> sans que `commun` dépende de `saison`.
+        activite(ActiviteMaSaison.class);
     }
 
     @Provides
@@ -37,5 +41,14 @@ public class SaisonModule extends ModuleDeFeature {
     ServiceSoldeSaison fournirServiceSoldeSaison(
             SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
         return new ServiceSoldeSaison(siteDao, pointDao, passageDao, horloge);
+    }
+
+    // ViewModel volontairement NON @Singleton (comme MultisiteViewModel) : un VM frais par chargement
+    // de vue évite que des listeners de vues fermées restent accrochés. Reçoit l'identité de
+    // l'utilisateur courant publiée par SitesModule.
+    @Provides
+    SaisonViewModel fournirSaisonViewModel(
+            ServiceSoldeSaison service, @Named("idUtilisateurCourant") String idUtilisateur) {
+        return new SaisonViewModel(service, idUtilisateur);
     }
 }

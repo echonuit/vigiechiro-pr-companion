@@ -65,6 +65,7 @@ nav:
       - Préparer le dépôt: ecrans/lot.md
       - "Sons & validation": ecrans/validation.md
       - "Carte & passages": ecrans/multisite.md
+      - "Ma saison": ecrans/saison.md
       - "Espèces & observations": ecrans/analyse.md
       - Diagnostic: ecrans/diagnostic.md
       - Audit de cohérence: ecrans/audit.md
