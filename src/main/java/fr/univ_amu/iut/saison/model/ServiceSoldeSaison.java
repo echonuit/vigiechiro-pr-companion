@@ -9,6 +9,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /// Service de la feature `saison` : calcule le **solde de saison** d'un observateur, c'est-à-dire,
 /// pour une année donnée, ce qu'il lui reste à faire **point par point** (#2356).
@@ -29,6 +31,11 @@ import java.util.Optional;
 /// an et par point, dans des fenêtres » : c'est le protocole [Protocole#STANDARD]. Les sites en
 /// [Protocole#RECHERCHE] suivent des dates libres, sans solde de saison au sens R3/R4 ; ils sont
 /// donc écartés du décompte.
+///
+/// **Périmètre : vos propres carrés.** Un carré appartenant à un **tiers** (#2525, dérivé de
+/// `site.observateur`) est écarté lui aussi : y participer est une occasion, pas une obligation de
+/// protocole. Les nuits qu'on y réalise restent visibles ailleurs (M-Passage), simplement le solde
+/// n'en fait pas un « reste à faire ».
 ///
 /// Constructeur **simple** (sans annotation d'injection), à la manière de `ServiceMultisite` : DAO et
 /// service restent de simples objets réutilisables, `SaisonModule` sait les assembler.
@@ -44,6 +51,11 @@ public class ServiceSoldeSaison {
     private final PointDao pointDao;
     private final PassageDao passageDao;
     private final PassageOpportunisteDao opportunistes;
+
+    /// Carrés appartenant à un **tiers** (#2525), dérivés de l'API : le solde ne parle que de **vos**
+    /// carrés — ceux d'un autre observateur n'engagent aucune obligation de protocole.
+    private final SiteTiersDao carresDeTiers;
+
     private final Horloge horloge;
 
     public ServiceSoldeSaison(
@@ -51,11 +63,13 @@ public class ServiceSoldeSaison {
             PointDao pointDao,
             PassageDao passageDao,
             PassageOpportunisteDao opportunistes,
+            SiteTiersDao carresDeTiers,
             Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
+        this.carresDeTiers = Objects.requireNonNull(carresDeTiers, "carresDeTiers");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
@@ -70,8 +84,10 @@ public class ServiceSoldeSaison {
         Objects.requireNonNull(idUtilisateur, "idUtilisateur");
         LocalDate aujourdhui = horloge.aujourdhui();
         List<LigneSaison> lignes = new ArrayList<>();
+        // Lecture groupée : un seul accès pour écarter tous les carrés de tiers (#2525).
+        Set<Long> tiers = carresDeTiers.tousLesIds();
         for (Site site : siteDao.findByUtilisateur(idUtilisateur)) {
-            if (site.protocole() != Protocole.STANDARD) {
+            if (site.protocole() != Protocole.STANDARD || tiers.contains(site.id())) {
                 continue;
             }
             for (PointDEcoute point : pointDao.findBySite(site.id())) {

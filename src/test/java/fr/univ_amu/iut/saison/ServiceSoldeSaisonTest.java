@@ -25,6 +25,7 @@ import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
@@ -57,8 +58,10 @@ class ServiceSoldeSaisonTest {
     Path dossier;
 
     private SourceDeDonnees source;
+    private SiteDao siteDao;
     private ServiceSoldeSaison service;
     private PassageOpportunisteDao opportunistes;
+    private SiteTiersDao carresDeTiers;
 
     @BeforeEach
     void preparer() {
@@ -76,7 +79,7 @@ class ServiceSoldeSaisonTest {
         semer("640002", "B2", 1, 2026, "2026-06-23", StatutWorkflow.VERIFIE, Verdict.A_JETER);
         semer("640003", "C1", 1, 2026, "2026-06-24", StatutWorkflow.IMPORTE, null);
         // 640004 / D1 : un point déclaré, aucune nuit (semé via DAO pour n'avoir aucun passage).
-        SiteDao siteDao = injecteur.getInstance(SiteDao.class);
+        siteDao = injecteur.getInstance(SiteDao.class);
         PointDao pointDao = injecteur.getInstance(PointDao.class);
         Site d = siteDao.insert(
                 new Site(null, "640004", "Site 640004", Protocole.STANDARD, null, "2026-01-01", ID_USER));
@@ -86,11 +89,13 @@ class ServiceSoldeSaisonTest {
         pointDao.insert(new PointDEcoute(null, "R1", null, null, null, r.id()));
 
         opportunistes = injecteur.getInstance(PassageOpportunisteDao.class);
+        carresDeTiers = injecteur.getInstance(SiteTiersDao.class);
         service = new ServiceSoldeSaison(
                 siteDao,
                 pointDao,
                 injecteur.getInstance(PassageDao.class),
                 opportunistes,
+                carresDeTiers,
                 new HorlogeFigee(LocalDate.of(2026, 7, 20)));
     }
 
@@ -242,5 +247,33 @@ class ServiceSoldeSaisonTest {
         assertThat(ligne.resteAFaire())
                 .as("hors protocole : ni « poser l'enregistreur », ni action")
                 .isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2525 : un carré appartenant à un tiers sort du solde (ses points ne sont plus suivis)")
+    void carre_de_tiers_exclu_du_solde() {
+        SoldeSaison avant = service.soldePour(ID_USER, 2026);
+        int pointsAvant = avant.pointsSuivis();
+        assertThat(avant.lignes()).anyMatch(ligne -> ligne.numeroCarre().equals("640002"));
+
+        // Le carré 640002 se révèle être celui d'un autre observateur (dérivé de site.observateur).
+        carresDeTiers.marquer(idDuCarre("640002"));
+
+        SoldeSaison apres = service.soldePour(ID_USER, 2026);
+        assertThat(apres.lignes())
+                .as("un carré de tiers n'engage aucune obligation de protocole")
+                .noneMatch(ligne -> ligne.numeroCarre().equals("640002"));
+        assertThat(apres.pointsSuivis())
+                .as("640002 portait deux points (B1 et B2)")
+                .isEqualTo(pointsAvant - 2);
+    }
+
+    /// Identifiant local du carré `carre`.
+    private long idDuCarre(String carre) {
+        return siteDao.findByUtilisateur(ID_USER).stream()
+                .filter(site -> site.numeroCarre().equals(carre))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Carré absent : " + carre))
+                .id();
     }
 }
