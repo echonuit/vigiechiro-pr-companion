@@ -28,6 +28,7 @@ import fr.univ_amu.iut.sites.model.ServiceSites;
 import fr.univ_amu.iut.sites.model.SynchronisationSites;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
 import fr.univ_amu.iut.sites.model.dao.SiteDao;
+import fr.univ_amu.iut.sites.model.dao.SiteTiersDao;
 import fr.univ_amu.iut.sites.view.ActiviteMesSites;
 import fr.univ_amu.iut.sites.view.NavigationSites;
 import fr.univ_amu.iut.sites.viewmodel.IndicateurPoints;
@@ -128,8 +129,16 @@ public class SitesModule extends ModuleDeFeature {
             SiteDao siteDao,
             ServiceSites serviceSites,
             LienVigieChiroDao liens,
+            SiteTiersDao siteTiers,
             @Named("idUtilisateurCourant") String idUtilisateur) {
-        return new RapprochementSites(siteDao, serviceSites, liens, idUtilisateur);
+        return new RapprochementSites(siteDao, serviceSites, liens, siteTiers, idUtilisateur);
+    }
+
+    /// Marquage « carré d'un tiers » (#2525), dérivé de `site.observateur` à chaque synchronisation.
+    @Provides
+    @Singleton
+    SiteTiersDao fournirSiteTiersDao(SourceDeDonnees source) {
+        return new SiteTiersDao(source);
     }
 
     /// Service métier de référence. Reçoit ses DAO (dont [PassageDao], fourni par

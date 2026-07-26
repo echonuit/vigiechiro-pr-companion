@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.commun.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.tuple;
 
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
@@ -50,6 +51,29 @@ class ParticipationsVigieChiroTest {
                 .extracting(SiteVigieChiro::id)
                 .containsExactly("s1");
         assertThat(ParticipationsVigieChiro.sites("nope")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2525 : le propriétaire du carré (`observateur`) est lu ; absent → null")
+    void sites_observateur_proprietaire() {
+        String corps = "{\"_items\":["
+                + "{\"_id\":\"p1\",\"site\":{\"_id\":\"s1\",\"titre\":\"A-100001\","
+                + "\"observateur\":\"5eb12120cbe7410011f0a97f\"}},"
+                + "{\"_id\":\"p2\",\"site\":{\"_id\":\"s2\",\"titre\":\"A-100002\"}}]}"; // sans observateur
+
+        List<SiteVigieChiro> sites = ParticipationsVigieChiro.sites(corps);
+
+        assertThat(sites)
+                .extracting(SiteVigieChiro::id, SiteVigieChiro::observateur)
+                .containsExactly(tuple("s1", "5eb12120cbe7410011f0a97f"), tuple("s2", null));
+        // Le carré est « d'un tiers » quand son observateur n'est pas le profil connecté.
+        assertThat(sites.getFirst().appartientAUnTiers("moi-42")).isTrue();
+        assertThat(sites.getFirst().appartientAUnTiers("5eb12120cbe7410011f0a97f"))
+                .as("mon propre carré")
+                .isFalse();
+        assertThat(sites.get(1).appartientAUnTiers("moi-42"))
+                .as("observateur inconnu : on ne présume pas un tiers")
+                .isFalse();
     }
 
     @Test
