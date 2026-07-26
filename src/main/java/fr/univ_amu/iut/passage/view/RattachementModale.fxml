@@ -89,6 +89,14 @@
              text="Passage déposé : l'année et le n° sont verrouillés (identité serveur). Vous pouvez ajuster la météo et le micro ci-dessous."
              styleClass="section-sous" wrapText="true"/>
 
+      <!-- Rattachement facultatif à une campagne (#2355). Ligne masquée si la feature `campagne` est coupée. -->
+      <HBox fx:id="ligneCampagne" spacing="24.0">
+        <VBox spacing="4.0">
+          <Label text="Campagne" styleClass="bandeau-label"/>
+          <ComboBox fx:id="champCampagne" prefWidth="260.0" maxWidth="Infinity"/>
+        </VBox>
+      </HBox>
+
       <Separator/>
 
       <!-- Conditions météo (optionnel) : grandeurs éditables (vide pour effacer). Deux colonnes (#2496) :

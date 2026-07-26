@@ -83,7 +83,8 @@ class RattachementModaleFermetureViewTest {
                         mock(ServiceRattachement.class),
                         mock(ServiceConditionsPassage.class),
                         propositions,
-                        Optional.of(synchronisation));
+                        Optional.of(synchronisation),
+                        Optional.empty());
             }
         });
         FXMLLoader loader = new FXMLLoader(RattachementModaleController.class.getResource("RattachementModale.fxml"));

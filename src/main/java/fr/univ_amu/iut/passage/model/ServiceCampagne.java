@@ -6,6 +6,7 @@ import fr.univ_amu.iut.passage.model.dao.CampagneDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /// Service métier de la feature **campagne** (#2355) : créer, renommer et supprimer une campagne, en
 /// lister. La campagne est un regroupement **facultatif** de passages ; ce service ne connaît pas les
@@ -106,6 +107,16 @@ public class ServiceCampagne {
     /// Nombre de campagnes (compteur éventuel d'accueil).
     public long compterCampagnes() {
         return campagneDao.compter();
+    }
+
+    /// La campagne à laquelle un passage est rattaché, ou [Optional#empty()] s'il ne l'est pas (ou si
+    /// le passage est introuvable). Sert à pré-sélectionner la modale « Modifier le passage ».
+    public Optional<Campagne> campagneDePassage(Long idPassage) {
+        return passageDao
+                .findById(idPassage)
+                .map(Passage::idCampagne)
+                .filter(Objects::nonNull)
+                .flatMap(campagneDao::findById);
     }
 
     private Campagne charger(Long idCampagne) {

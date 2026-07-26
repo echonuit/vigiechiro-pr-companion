@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.DecompteAudio;
 import fr.univ_amu.iut.passage.model.DetailPassage;
@@ -23,6 +24,7 @@ import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.PositionMicro;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
@@ -30,6 +32,7 @@ import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import fr.univ_amu.iut.passage.model.Vent;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -64,7 +67,8 @@ class RattachementViewModelTest {
         org.mockito.Mockito.lenient()
                 .when(propositions.pour(org.mockito.ArgumentMatchers.any()))
                 .thenReturn(java.util.List.of());
-        viewModel = new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.empty());
+        viewModel = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.empty(), Optional.empty());
     }
 
     private static DetailPassage detail(int numero, int annee, int nombreSequences) {
@@ -411,8 +415,8 @@ class RattachementViewModelTest {
     void pousser_vers_vigiechiro_delegue() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie("part-1")));
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -435,8 +439,8 @@ class RattachementViewModelTest {
                         ResultatEcriture.reussie(),
                         Optional.of(
                                 new EnvoiParticipation.Realignement("15:00:00", "15:00:00", "21:30:00", "06:15:00"))));
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -461,8 +465,8 @@ class RattachementViewModelTest {
     void sans_realignement_la_modale_peut_fermer() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.reussie()));
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -483,8 +487,8 @@ class RattachementViewModelTest {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID))
                 .thenReturn(EnvoiParticipation.sansRealignement(ResultatEcriture.echouee("HTTP 412 : etag périmé")));
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -503,8 +507,8 @@ class RattachementViewModelTest {
     void pousser_vers_vigiechiro_empechement_dit_sa_cause() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         when(sync.pousserVers(ID)).thenThrow(new RegleMetierException("Point d'écoute introuvable"));
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -542,8 +546,8 @@ class RattachementViewModelTest {
     @DisplayName("Phase 2b : tirerDepuisVigie-Chiro délègue puis rechargerApresTir recharge les champs")
     void tirer_depuis_vigiechiro_recupere() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID))
                 .thenReturn(detailMeteo(new MeteoReleve(9.0, 3.0, Vent.FORT, CouvertureNuageuse.DE_75_A_100)));
         avecSync.ouvrirSur(ID, "040962", "A1");
@@ -565,8 +569,8 @@ class RattachementViewModelTest {
     void tirer_depuis_vigiechiro_non_lie() {
         SynchronisationParticipation sync = mock(SynchronisationParticipation.class);
         doThrow(new RegleMetierException("pas lié")).when(sync).tirerDepuis(ID);
-        RattachementViewModel avecSync =
-                new RattachementViewModel(service, rattachement, conditionsPassage, propositions, Optional.of(sync));
+        RattachementViewModel avecSync = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.of(sync), Optional.empty());
         when(service.detailPassage(ID)).thenReturn(detailMeteo(MeteoReleve.VIDE));
         avecSync.ouvrirSur(ID, "040962", "A1");
 
@@ -612,9 +616,44 @@ class RattachementViewModelTest {
                                 rattachement,
                                 conditionsPassage,
                                 propositions,
-                                Optional.of(mock(SynchronisationParticipation.class)))
+                                Optional.of(mock(SynchronisationParticipation.class)),
+                                Optional.empty())
                         .peutRecuperer())
                 .isTrue();
+    }
+
+    @Test
+    @DisplayName("#2355 : la modale charge les campagnes, pré-sélectionne celle du passage et l'enregistre")
+    void campagne_chargee_selectionnee_enregistree() {
+        ServiceCampagne campagneService = mock(ServiceCampagne.class);
+        Campagne suivi = new Campagne(1L, "Suivi ENS", 2026, null);
+        Campagne autre = new Campagne(2L, "Autre", 2025, null);
+        when(campagneService.listerCampagnes()).thenReturn(List.of(suivi, autre));
+        when(campagneService.campagneDePassage(ID)).thenReturn(Optional.of(suivi));
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+        RattachementViewModel vm = new RattachementViewModel(
+                service, rattachement, conditionsPassage, propositions, Optional.empty(), Optional.of(campagneService));
+
+        vm.ouvrirSur(ID, "040962", "A1");
+
+        assertThat(vm.campagneActivee()).isTrue();
+        assertThat(vm.campagnes()).containsExactly(null, suivi, autre); // null = « aucune » en tête
+        assertThat(vm.campagneProperty().get()).isEqualTo(suivi);
+
+        vm.campagneProperty().set(autre);
+        assertThat(vm.appliquer()).isTrue();
+        verify(campagneService).rattacherPassage(ID, 2L);
+    }
+
+    @Test
+    @DisplayName("#2355 : campagne désactivée, la modale ne propose ni n'enregistre de campagne")
+    void campagne_desactivee() {
+        when(service.detailPassage(ID)).thenReturn(detail(1, 2026, 30));
+
+        viewModel.ouvrirSur(ID, "040962", "A1");
+
+        assertThat(viewModel.campagneActivee()).isFalse();
+        assertThat(viewModel.campagnes()).isEmpty();
     }
 
     // « Importer les observations » a quitté cette modale (#1350) : ses tests vivent désormais dans

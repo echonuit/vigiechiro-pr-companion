@@ -4,9 +4,11 @@ import fr.univ_amu.iut.commun.model.Prefixe;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.viewmodel.RetourOperation;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.DetailPassage;
 import fr.univ_amu.iut.passage.model.EnvoiParticipation;
 import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceRattachement;
@@ -14,12 +16,14 @@ import fr.univ_amu.iut.passage.model.SynchronisationParticipation;
 import java.util.Objects;
 import java.util.Optional;
 import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyStringProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleIntegerProperty;
+import javafx.collections.ObservableList;
 
 /// ViewModel de la modale « Modifier le rattachement » (E2.S8) : corrige l'année ou le numéro de
 /// passage d'un passage importé, sans changer de site/point.
@@ -59,6 +63,10 @@ public class RattachementViewModel {
     /// M-Passage. Partage la ligne de message d'erreur de la modale.
     private final SaisiePassageConditions conditions;
 
+    /// Rattachement à une campagne (facultatif), extrait en sous-ViewModel : la feature `campagne` est
+    /// désactivable. Absent le service, la modale masque son champ (rien à proposer, rien à enregistrer).
+    private final SelectionCampagne selectionCampagne;
+
     private Long idPassage;
     private String carre;
     private String codePoint;
@@ -71,10 +79,12 @@ public class RattachementViewModel {
             ServiceRattachement rattachement,
             ServiceConditionsPassage conditionsPassage,
             PropositionsEnregistreur propositionsEnregistreur,
-            Optional<SynchronisationParticipation> synchronisation) {
+            Optional<SynchronisationParticipation> synchronisation,
+            Optional<ServiceCampagne> campagneService) {
         this.service = Objects.requireNonNull(service, "service");
         this.synchronisation = Objects.requireNonNull(synchronisation, "synchronisation");
         this.rattachement = Objects.requireNonNull(rattachement, "rattachement");
+        this.selectionCampagne = new SelectionCampagne(campagneService);
         this.conditions = new SaisiePassageConditions(conditionsPassage, propositionsEnregistreur, messages);
         annee.addListener((observable, avant, apres) -> majRecap());
         numeroPassage.addListener((observable, avant, apres) -> majRecap());
@@ -101,7 +111,23 @@ public class RattachementViewModel {
         messages.effacer();
         annee.set(detail.annee());
         numeroPassage.set(detail.numeroPassage());
+        selectionCampagne.charger(idPassage);
         majRecap();
+    }
+
+    /// La feature `campagne` est-elle active (donc le champ campagne affiché) ?
+    public boolean campagneActivee() {
+        return selectionCampagne.activee();
+    }
+
+    /// Campagnes proposées au ComboBox de la modale (vide si la feature est coupée).
+    public ObservableList<Campagne> campagnes() {
+        return selectionCampagne.campagnes();
+    }
+
+    /// Campagne sélectionnée (`null` = aucune) ; liée en bidirectionnel au ComboBox.
+    public ObjectProperty<Campagne> campagneProperty() {
+        return selectionCampagne.selectionProperty();
     }
 
     /// Applique le nouveau rattachement (année + n° saisis), après validation des bornes.
@@ -142,6 +168,9 @@ public class RattachementViewModel {
                 || !conditions.horaires().enregistrer()) {
             return false;
         }
+        // Le rattachement à une campagne est une métadonnée indépendante du renommage : on l'applique même
+        // sur un passage déposé (renommage verrouillé).
+        selectionCampagne.enregistrer(idPassage);
         if (renommageVerrouille.get()) {
             return true;
         }

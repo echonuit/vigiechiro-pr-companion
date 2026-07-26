@@ -85,7 +85,12 @@ class RattachementModaleViewTest {
                 when(propositions.pour(org.mockito.ArgumentMatchers.any()))
                         .thenReturn(java.util.List.of("1925492", "1997632"));
                 viewModel = new RattachementViewModel(
-                        service, mock(ServiceRattachement.class), conditionsService, propositions, Optional.empty());
+                        service,
+                        mock(ServiceRattachement.class),
+                        conditionsService,
+                        propositions,
+                        Optional.empty(),
+                        Optional.empty());
                 return viewModel;
             }
         });

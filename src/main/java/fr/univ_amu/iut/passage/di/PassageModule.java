@@ -30,6 +30,7 @@ import fr.univ_amu.iut.passage.model.PropositionsEnregistreur;
 import fr.univ_amu.iut.passage.model.RattrapageMetadonnees;
 import fr.univ_amu.iut.passage.model.RegenerationSequences;
 import fr.univ_amu.iut.passage.model.ReprefixeurSession;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
 import fr.univ_amu.iut.passage.model.ServiceConditionsPassage;
 import fr.univ_amu.iut.passage.model.ServiceDisponibiliteAudio;
 import fr.univ_amu.iut.passage.model.ServicePassage;
@@ -97,6 +98,11 @@ public class PassageModule extends ModuleDeFeature {
         // module réel SynchronisationParticipationModule (chargé par RacineInjecteur avec la connexion) pose
         // le binding ; hors connexion, l'Optional reste vide (patron de DepotVigieChiro).
         OptionalBinder.newOptionalBinder(binder(), SynchronisationParticipation.class);
+
+        // Port ServiceCampagne (#2355) : la campagne est une feature OPTIONNELLE (CampagneModule). OptionalBinder
+        // VIDE ici ; CampagneModule pose le binding quand la feature est active. Absent (campagne coupée), la
+        // modale « Modifier le passage » masque son champ campagne.
+        OptionalBinder.newOptionalBinder(binder(), ServiceCampagne.class);
 
         // Port CrisAttendus (#1302) : les observations appartiennent à `validation`, qui dépend déjà de
         // `passage` — l'inverse fermerait un cycle. OptionalBinder VIDE ici ; ValidationModule pose le
@@ -344,7 +350,9 @@ public class PassageModule extends ModuleDeFeature {
             ServiceRattachement rattachement,
             ServiceConditionsPassage conditions,
             PropositionsEnregistreur propositionsEnregistreur,
-            Optional<SynchronisationParticipation> synchronisation) {
-        return new RattachementViewModel(service, rattachement, conditions, propositionsEnregistreur, synchronisation);
+            Optional<SynchronisationParticipation> synchronisation,
+            Optional<ServiceCampagne> campagneService) {
+        return new RattachementViewModel(
+                service, rattachement, conditions, propositionsEnregistreur, synchronisation, campagneService);
     }
 }
