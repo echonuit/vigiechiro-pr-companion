@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.53.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.52.0...v2.53.0) (2026-07-26)
+
+
+### Features
+
+* **campagne:** lien passage↔campagne (lot 1, PR 2/4) ([#2519](https://github.com/echonuit/vigiechiro-pr-companion/issues/2519)) ([a00533c](https://github.com/echonuit/vigiechiro-pr-companion/commit/a00533c540df432969f274a572c844fc48002a44)), closes [#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355)
+
 # [2.52.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.51.0...v2.52.0) (2026-07-26)
 
 
