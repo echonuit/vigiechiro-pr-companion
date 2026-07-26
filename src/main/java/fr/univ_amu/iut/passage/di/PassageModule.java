@@ -10,6 +10,7 @@ import fr.univ_amu.iut.commun.model.CoordonneesPoint;
 import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
@@ -20,9 +21,11 @@ import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirVerification;
 import fr.univ_amu.iut.passage.model.AdoptionOriginauxReconstruits;
+import fr.univ_amu.iut.passage.model.AppuisReactivation;
 import fr.univ_amu.iut.passage.model.CrisAttendus;
 import fr.univ_amu.iut.passage.model.FenetreObserveeNuit;
 import fr.univ_amu.iut.passage.model.FournisseurMeteo;
+import fr.univ_amu.iut.passage.model.HydratationSquelette;
 import fr.univ_amu.iut.passage.model.InventaireBrutsSource;
 import fr.univ_amu.iut.passage.model.MarquageOpportuniste;
 import fr.univ_amu.iut.passage.model.MeteoOpenMeteo;
@@ -135,6 +138,10 @@ public class PassageModule extends ModuleDeFeature {
         // binding ; hors connexion, l'Optional reste vide et l'IHM/CLI le disent.
         OptionalBinder.newOptionalBinder(binder(), ServiceReconstructionPassages.class);
 
+        // Hydratation d'une nuit rapatriée (#2555) : même patron, même raison. Absente, la réactivation
+        // d'un squelette refuse en disant quoi faire, et le bouton est grisé en amont (#789).
+        OptionalBinder.newOptionalBinder(binder(), HydratationSquelette.class);
+
         // Rattrapage des métadonnées en lot (#1861) : même patron, il s'appuie sur la passerelle de
         // synchronisation. SynchronisationParticipationModule pose le binding avec elle.
         OptionalBinder.newOptionalBinder(binder(), RattrapageMetadonnees.class);
@@ -228,6 +235,20 @@ public class PassageModule extends ModuleDeFeature {
         return new VerificationIdentiteAudio();
     }
 
+    /// Ce que la réactivation emprunte aux autres features (#2483) : cinq ports **optionnels**, réunis pour
+    /// ce qu'ils ont en commun - pouvoir manquer, et faire alors moins plutôt qu'échouer.
+    @Provides
+    @Singleton
+    AppuisReactivation fournirAppuisReactivation(
+            Optional<CrisAttendus> crisAttendus,
+            Optional<RegenerationSequences> regeneration,
+            Optional<InventaireBrutsSource> inventaireBruts,
+            Optional<ImportObservations> importObservations,
+            Optional<HydratationSquelette> hydratationSquelette) {
+        return new AppuisReactivation(
+                crisAttendus, regeneration, inventaireBruts, importObservations, hydratationSquelette);
+    }
+
     /// Réactivation d'un passage archivé (#1302) : rebranchement **vérifié** des séquences depuis un
     /// dossier réimporté.
     @Provides
@@ -239,23 +260,10 @@ public class PassageModule extends ModuleDeFeature {
             EnregistrementOriginalDao originalDao,
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
-            Optional<CrisAttendus> crisAttendus,
-            Optional<RegenerationSequences> regeneration,
-            Optional<InventaireBrutsSource> inventaireBruts,
             AdoptionOriginauxReconstruits adoption,
-            Optional<ImportObservations> importObservations) {
+            AppuisReactivation appuis) {
         return new ServiceReactivationPassage(
-                workspace,
-                sessionDao,
-                sequenceDao,
-                originalDao,
-                verification,
-                disponibilite,
-                crisAttendus,
-                regeneration,
-                inventaireBruts,
-                adoption,
-                importObservations);
+                workspace, sessionDao, sequenceDao, originalDao, verification, disponibilite, adoption, appuis);
     }
 
     /// Moteur (pur) des transitions de workflow d'un passage.
@@ -343,8 +351,9 @@ public class PassageModule extends ModuleDeFeature {
     /// ViewModel de l'écran M-Passage. **Non-singleton** (un VM frais par chargement FXML, comme les
     /// autres features) : un écran rouvert ne réutilise pas l'état d'un précédent.
     @Provides
-    PassageViewModel fournirPassageViewModel(ServicePassage service, ServiceReactivationPassage reactivation) {
-        return new PassageViewModel(service, reactivation);
+    PassageViewModel fournirPassageViewModel(
+            ServicePassage service, ServiceReactivationPassage reactivation, PortailVigieChiro portail) {
+        return new PassageViewModel(service, reactivation, portail);
     }
 
     /// Numéros de série à proposer quand l'utilisateur doit désigner l'enregistreur lui-même (#1828) :

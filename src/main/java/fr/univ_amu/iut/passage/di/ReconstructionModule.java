@@ -17,6 +17,7 @@ import fr.univ_amu.iut.commun.model.ImportObservations;
 import fr.univ_amu.iut.commun.model.PointParLocalite;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
+import fr.univ_amu.iut.passage.model.HydratationSquelette;
 import fr.univ_amu.iut.passage.model.ServiceReconstructionPassages;
 import java.util.Optional;
 
@@ -49,6 +50,29 @@ public class ReconstructionModule extends ModuleDeFeature {
         Multibinder.newSetBinder(binder(), RapprochementVigieChiro.class)
                 .addBinding()
                 .to(Key.get(ServiceReconstructionPassages.class, Names.named(QUALIFIANT)));
+        // Hydratation d'une nuit rapatriée (#2555) : même conditionnement que la reconstruction, et pour la
+        // même raison (elle lit les observations sur la plateforme). L'OptionalBinder vide de PassageModule
+        // reste vide hors connexion, et la réactivation d'un squelette le DIT au lieu d'échouer. Même
+        // qualificateur que ci-dessus, pour la même raison : éviter l'auto-référence (`RecursiveBinding`).
+        OptionalBinder.newOptionalBinder(binder(), HydratationSquelette.class)
+                .setBinding()
+                .to(Key.get(HydratationSquelette.class, Names.named(QUALIFIANT)));
+    }
+
+    /// L'hydratation d'un squelette (#2555) : elle rapatrie les observations d'une nuit récupérée pour lui
+    /// recréer ses séquences, **en place**. Partage les collaborateurs de la reconstruction (client,
+    /// espace de travail, port d'import) sans partager son geste : la reconstruction remplace la nuit,
+    /// l'hydratation la complète.
+    @Provides
+    @Singleton
+    @Named(QUALIFIANT)
+    HydratationSquelette fournirHydratationSquelette(
+            SourceDeDonnees source,
+            ClientVigieChiro client,
+            Workspace workspace,
+            Horloge horloge,
+            Optional<ImportObservations> importObservations) {
+        return new HydratationSquelette(source, client, workspace, horloge, importObservations);
     }
 
     @Provides

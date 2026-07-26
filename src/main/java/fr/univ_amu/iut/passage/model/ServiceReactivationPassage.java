@@ -106,6 +106,14 @@ public class ServiceReactivationPassage {
     /// l'utilisateur : c'est cette question qui décide du mode proposé (#2255).
     private final Workspace workspace;
 
+    /// Rapatriement des observations d'une nuit **rapatriée mais jamais hydratée** (#2555), en phase 0.
+    /// **Optionnel** comme les autres passerelles VigieChiro : hors connexion, ou fonctionnalité « Import
+    /// Vigie-Chiro » éteinte, il est absent - et la réactivation d'un squelette le **dit** au lieu
+    /// d'échouer plus loin sans raison lisible.
+    private final Optional<HydratationSquelette> hydratationSquelette;
+
+    /// @param appuis les collaborateurs **optionnels** empruntés aux autres features (#2483) : réunis en
+    ///     objet-paramètre parce qu'ils partagent tous le même trait, pouvoir manquer
     public ServiceReactivationPassage(
             Workspace workspace,
             SessionDao sessionDao,
@@ -113,31 +121,28 @@ public class ServiceReactivationPassage {
             EnregistrementOriginalDao originalDao,
             VerificationIdentiteAudio verification,
             ServiceDisponibiliteAudio disponibilite,
-            Optional<CrisAttendus> crisAttendus,
-            Optional<RegenerationSequences> regeneration,
-            Optional<InventaireBrutsSource> inventaireBruts,
             AdoptionOriginauxReconstruits adoption,
-            Optional<ImportObservations> importObservations) {
+            AppuisReactivation appuis) {
         this.workspace = Objects.requireNonNull(workspace, "workspace");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.originalDao = Objects.requireNonNull(originalDao, "originalDao");
         this.disponibilite = Objects.requireNonNull(disponibilite, "disponibilite");
-        this.rebranchement = new RebranchementSequences(
-                Objects.requireNonNull(verification, "verification"),
-                Objects.requireNonNull(crisAttendus, "crisAttendus"));
-        this.depuisBruts = new ReactivationDepuisBruts(
-                verification, rebranchement, Objects.requireNonNull(regeneration, "regeneration"));
+        Objects.requireNonNull(appuis, "appuis");
+        this.rebranchement =
+                new RebranchementSequences(Objects.requireNonNull(verification, "verification"), appuis.crisAttendus());
+        this.depuisBruts = new ReactivationDepuisBruts(verification, rebranchement, appuis.regeneration());
         // Voie hydratation (#1682) : les tranches y sont **régénérées** depuis le brut désigné, l'acoustique
         // n'y est donc qu'un indice (pas de veto). Un rebranchement dédié, en mode régénération, porte cette
         // règle - même vérification, même port de cris, mais acceptation structurelle.
         this.hydratation = new HydratationDepuisBruts(
-                Objects.requireNonNull(inventaireBruts, "inventaireBruts"),
-                regeneration,
-                new RebranchementSequences(verification, crisAttendus, true),
+                appuis.inventaireBruts(),
+                appuis.regeneration(),
+                new RebranchementSequences(verification, appuis.crisAttendus(), true),
                 new ExecutionParallele(PARALLELISME));
         this.adoption = Objects.requireNonNull(adoption, "adoption");
-        this.importObservations = Objects.requireNonNull(importObservations, "importObservations");
+        this.importObservations = appuis.importObservations();
+        this.hydratationSquelette = appuis.hydratationSquelette();
     }
 
     /// Réactive le passage depuis `dossierSource` (exploré **récursivement**).
@@ -157,6 +162,18 @@ public class ServiceReactivationPassage {
         return !dossier.toAbsolutePath()
                 .normalize()
                 .startsWith(workspace.racine().toAbsolutePath().normalize());
+    }
+
+    /// La passerelle qui récupère les observations d'une nuit **rapatriée** est-elle là (#2555) ?
+    ///
+    /// Autrement dit : est-on connecté à Vigie-Chiro, la fonctionnalité « Import Vigie-Chiro » est-elle
+    /// active ? Sert le **gating en amont** (#789) de l'écran passage, qui grise « Réactiver ce passage »
+    /// avec une explication au lieu de laisser découvrir le refus après avoir désigné un dossier.
+    ///
+    /// Ne dit **rien** d'une nuit en particulier : une réactivation ordinaire (la nuit a déjà ses
+    /// séquences) n'a besoin d'aucune passerelle.
+    public boolean hydratationDisponible() {
+        return hydratationSquelette.isPresent();
     }
 
     public RapportReactivation reactiver(Long idPassage, Path dossierSource, Consumer<Progression> progres) {
@@ -213,6 +230,14 @@ public class ServiceReactivationPassage {
                 .orElseThrow(() -> new RegleMetierException(
                         "Passage jamais importé localement : rien à réactiver pour " + idPassage + "."));
 
+        // Phase 0 (#2555) : une nuit rapatriée par la synchro est un SQUELETTE (ADR 0016) - point, date,
+        // identité, mais aucune séquence. Il n'y a donc rien à confronter au dossier désigné. On rapatrie
+        // ses observations ICI, juste avant la procédure : c'est le geste qui en a besoin qui les paie,
+        // et ce sont elles qui apportent les NOMS et l'HORODATAGE sur lesquels la cascade (#1309)
+        // reconnaît les fichiers de CETTE nuit dans une carte qui en contient plusieurs.
+        // Sans objet (et sans coût) sur une nuit qui a déjà ses séquences.
+        hydraterSiSquelette(idPassage, session, progresRegeneration, jeton);
+
         // #2255 : copier ou référencer. En référence, aucun fichier ne bouge - c'est la base qui suit
         // l'audio là où l'utilisateur le garde. Le candidat a été vérifié avant d'arriver ici.
         RebranchementSequences.PoseurCandidat poseur = mode == ModeRebranchement.REFERENCE
@@ -221,7 +246,7 @@ public class ServiceReactivationPassage {
         List<SequenceDEcoute> sequences = sequenceDao.findBySession(session.id());
         List<EnregistrementOriginal> originaux = originalDao.findBySession(session.id());
         CandidatsReactivation candidats = CandidatsReactivation.dans(dossierSource);
-        Optional<Prefixe> prefixe = prefixeDe(session);
+        Optional<Prefixe> prefixe = session.prefixe();
 
         // Ce que le dossier contient, constaté et non supposé.
         jeton.leverSiAnnule();
@@ -263,6 +288,31 @@ public class ServiceReactivationPassage {
         jeton.leverSiAnnule();
         progresRegeneration.accept(new Progression(RECHERCHE_ANCRAGE, 1.0));
         return rapport.avecRapatriement(acquerirAncrageSiNecessaire(idPassage, rapport, progresAncrage, jeton));
+    }
+
+    /// **Phase 0** (#2555) : si la nuit est un **squelette** rapatrié par la synchro (ADR 0016), rapatrie
+    /// ses observations pour lui recréer ses séquences, **en place**. Sans objet - et sans coût, sans même
+    /// un appel réseau - sur une nuit qui a déjà les siennes : c'est [HydratationSquelette] qui le constate.
+    ///
+    /// Mode [HydratationSquelette.Source#COMPLETE] : l'utilisateur vient de désigner **une** nuit et attend
+    /// une réponse à son sujet, donc le repli sur la pagination `donnees` est justifié et un empêchement se
+    /// **dit**, avec sa raison. Le balayage de compte de la synchro, lui, se contentera du CSV (#2557).
+    ///
+    /// La passerelle absente (hors connexion, fonctionnalité d'import éteinte) n'est un refus **que** pour
+    /// un squelette : une réactivation ordinaire n'a rien à rapatrier, et n'a donc aucune raison d'exiger
+    /// le réseau.
+    private void hydraterSiSquelette(
+            Long idPassage, SessionDEnregistrement session, Consumer<Progression> progres, JetonAnnulation jeton) {
+        if (hydratationSquelette.isPresent()) {
+            hydratationSquelette
+                    .orElseThrow()
+                    .hydraterSiSquelette(idPassage, HydratationSquelette.Source.COMPLETE, progres, jeton);
+        } else if (sequenceDao.findBySession(session.id()).isEmpty()) {
+            throw new RegleMetierException("Cette nuit a été rapatriée de Vigie-Chiro mais ses observations n'ont"
+                    + " pas encore été récupérées, et ce sont elles qui permettent de reconnaître vos"
+                    + " fichiers. Connectez-vous (menu ☰ > Se connecter à Vigie-Chiro) et vérifiez que la"
+                    + " fonctionnalité « Import Vigie-Chiro » est active, puis recommencez.");
+        }
     }
 
     /// **Phase d'ancrage** (#1571) : acquiert l'ancrage plateforme (`idDonneeVigieChiro` / indice) des
@@ -364,14 +414,6 @@ public class ServiceReactivationPassage {
         return bilan.acoustiqueMesurees > 0
                 ? new IndiceAcoustique(bilan.acoustiqueMesurees, bilan.acoustiqueConcordantes)
                 : null;
-    }
-
-    /// Préfixe de la session, relu du **nom de son dossier** (`Car…-2026-Pass1-A1`) : c'est le seul endroit
-    /// où `passage` peut le retrouver sans dépendre de `sites` (cycle). Vide si le dossier a été renommé à
-    /// la main : la voie « transformés » n'en a pas besoin, seule la voie « bruts » s'y refusera.
-    private static Optional<Prefixe> prefixeDe(SessionDEnregistrement session) {
-        Path nom = Path.of(session.cheminRacine()).getFileName();
-        return Prefixe.depuisNomDossier(nom == null ? null : nom.toString());
     }
 
     /// Volume des séquences **présentes** sur disque, pour remettre la fiche du passage d'aplomb
