@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.49.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.48.0...v2.49.0) (2026-07-26)
+
+
+### Features
+
+* **cli:** commande solde-saison + module saison (lot 2, PR 2/3) ([#2506](https://github.com/echonuit/vigiechiro-pr-companion/issues/2506)) ([7fabaef](https://github.com/echonuit/vigiechiro-pr-companion/commit/7fabaef6c0d04439fd78f334013259ef30401b28)), closes [#1537](https://github.com/echonuit/vigiechiro-pr-companion/issues/1537)
+
 # [2.48.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.47.0...v2.48.0) (2026-07-26)
 
 
