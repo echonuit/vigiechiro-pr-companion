@@ -2,6 +2,7 @@ package fr.univ_amu.iut.lot.viewmodel;
 
 import fr.univ_amu.iut.commun.viewmodel.LigneSuivi;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
+import java.time.Duration;
 
 /// Ligne **observable** de la table de dépôt VigieChiro (#983) : une unité téléversée (archive ZIP ou
 /// séquence WAV) et son avancement, réhydratée depuis `depot_unite` (#981) et mise à jour en direct
@@ -18,6 +19,13 @@ public final class LigneDepot extends LigneSuivi {
         super(numero);
         this.identifiant = identifiant;
         this.type = type;
+    }
+
+    /// Une coupure momentanée est réessayée (#2354) : affiche « Nouvelle tentative dans N s… » via la
+    /// mention de reprise du socle. L'unité reste « en cours » ; la mention s'efface d'elle-même dès que
+    /// l'envoi reprend ou que l'unité se conclut (cf. [LigneSuivi]).
+    public void reprise(Duration delai) {
+        signalerReprise("Nouvelle tentative dans " + delai.toSeconds() + " s…");
     }
 
     /// Nom du fichier téléversé (unique par passage, clé de ciblage des événements de dépôt).

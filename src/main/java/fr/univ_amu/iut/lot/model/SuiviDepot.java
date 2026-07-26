@@ -30,6 +30,11 @@ public interface SuiviDepot {
     /// l'exploitent (les suivis inerte / console l'ignorent).
     default void uniteProgresse(String identifiant, double fraction) {}
 
+    /// Le téléversement de l'unité `identifiant` a rencontré une coupure momentanée : une **nouvelle
+    /// tentative** est prévue dans `delai` (#2354). No-op par défaut : seuls les suivis IHM en font une
+    /// mention discrète (« nouvelle tentative dans N s »), ni silence trompeur ni alarme (#2350).
+    default void uniteReprise(String identifiant, java.time.Duration delai) {}
+
     /// Suivi **inerte** (aucun affichage) : valeur par défaut des appels sans IHM et des tests qui
     /// n'observent pas le détail par unité.
     static SuiviDepot inerte() {

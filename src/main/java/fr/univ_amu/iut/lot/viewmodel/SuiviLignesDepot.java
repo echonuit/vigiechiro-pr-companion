@@ -87,6 +87,13 @@ public final class SuiviLignesDepot extends SuiviLignes<LigneDepot> {
         parIdentifiant(identifiant).ifPresent(ligne -> ligne.progresser(fraction));
     }
 
+    /// Une coupure momentanée est réessayée (#2354) : la ligne affiche une mention discrète « nouvelle
+    /// tentative dans N s ». L'unité reste « en cours » ; la mention s'efface dès que les octets
+    /// repartent (le nouvel envoi rappelle [#progresse]).
+    public void reprise(String identifiant, java.time.Duration delai) {
+        parIdentifiant(identifiant).ifPresent(ligne -> ligne.reprise(delai));
+    }
+
     /// Vide la table **et** le drapeau de reprise (retour à « Téléverser sur Vigie-Chiro »).
     @Override
     public void reinitialiser() {

@@ -303,7 +303,16 @@ public final class ClientVigieChiro {
     /// Comme [#televerserVersS3(String, Path, String)], en **remontant l'avancement** octet par octet
     /// (#984) à `progression` (fraction 0 à 1) pour alimenter une barre de progression par archive.
     public boolean televerserVersS3(String urlSignee, Path fichier, String mime, DoubleConsumer progression) {
-        return transport.deposerVersS3(urlSignee, () -> CorpsFichierAvecProgression.depuis(fichier, progression), mime);
+        return televerserVersS3(urlSignee, fichier, mime, progression, SuiviReprise.SILENCIEUX);
+    }
+
+    /// Comme ci-dessus, en **remontant les reprises** (#2354) à `reprise` : une coupure momentanée sur ce
+    /// gros `PUT` est réessayée (le `PUT` S3 est idempotent), et chaque nouvelle tentative est signalée
+    /// pour une mention discrète côté IHM.
+    public boolean televerserVersS3(
+            String urlSignee, Path fichier, String mime, DoubleConsumer progression, SuiviReprise reprise) {
+        return transport.deposerVersS3(
+                urlSignee, () -> CorpsFichierAvecProgression.depuis(fichier, progression), mime, reprise);
     }
 
     /// Finalise un fichier téléversé (`POST /fichiers/#id`, étape 3/3), issue **triée** (#1284) : un

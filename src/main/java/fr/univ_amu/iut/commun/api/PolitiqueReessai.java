@@ -77,16 +77,6 @@ final class PolitiqueReessai {
         }
     }
 
-    /// Prévenu **avant chaque attente** (décision utilisateur #2350 : une mention discrète « nouvelle
-    /// tentative dans N s », ni silence trompeur ni bandeau d'erreur). No-op par défaut : le câblage
-    /// vers le canal de statut vient au lot suivant.
-    @FunctionalInterface
-    interface Suivi {
-        void nouvelleTentativePrevue(int tentative, Duration delai);
-
-        Suivi SILENCIEUX = (tentative, delai) -> {};
-    }
-
     private final Temporisateur temporisateur;
 
     /// Source d'aléa dans `[0, 1[`, injectée pour des tests déterministes.
@@ -106,12 +96,12 @@ final class PolitiqueReessai {
     /// Émet `tentative`, et la rejoue tant qu'elle rend une issue réessayable et qu'il reste des
     /// tentatives au profil. Rend la dernière issue obtenue (succès, refus définitif, ou dernier échec
     /// après épuisement). Une interruption pendant l'attente rend l'issue courante sans réessayer.
-    <T> ReponseApi<T> executer(Profil profil, Suivi suivi, Supplier<Issue<T>> tentative) {
+    <T> ReponseApi<T> executer(Profil profil, SuiviReprise suivi, Supplier<Issue<T>> tentative) {
         Issue<T> issue = tentative.get();
         int tentativesFaites = 1;
         while (tentativesFaites < profil.maxTentatives && issue.reponse().estReessayable()) {
             Duration delai = delaiAvantReprise(profil, tentativesFaites, issue.retryAfter());
-            suivi.nouvelleTentativePrevue(tentativesFaites + 1, delai);
+            suivi.nouvelleTentative(tentativesFaites + 1, delai);
             try {
                 temporisateur.attendre(delai);
             } catch (InterruptedException interrompu) {

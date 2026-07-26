@@ -6,6 +6,7 @@ import fr.univ_amu.iut.commun.viewmodel.EtatUnite;
 import fr.univ_amu.iut.lot.model.DepotUnite;
 import fr.univ_amu.iut.lot.model.StatutDepotUnite;
 import fr.univ_amu.iut.lot.model.TypeDepotUnite;
+import java.time.Duration;
 import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,23 @@ class SuiviLignesDepotTest {
         suivi.reinitialiser();
         assertThat(suivi.resteAReprendreProperty().get()).isFalse();
         assertThat(suivi.lignes()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2354 : reprise() pose la mention discrète, effacée dès que les octets repartent")
+    void reprise_affiche_la_mention_puis_l_efface() {
+        SuiviLignesDepot suivi = new SuiviLignesDepot();
+        suivi.planifier(List.of(unite(1L, "a.zip", StatutDepotUnite.A_DEPOSER, null)));
+        suivi.demarree("a.zip");
+
+        suivi.reprise("a.zip", Duration.ofSeconds(3));
+        LigneDepot ligne = suivi.lignes().get(0);
+        assertThat(ligne.messageRepriseProperty().get()).contains("3 s");
+        assertThat(ligne.etatProperty().get()).as("l'unité reste « en cours »").isEqualTo(EtatUnite.EN_COURS);
+
+        // Les octets repartent : la mention s'efface d'elle-même.
+        suivi.progresse("a.zip", 0.1);
+        assertThat(ligne.messageRepriseProperty().get()).isEmpty();
     }
 
     private static DepotUnite unite(Long id, String identifiant, StatutDepotUnite statut, String erreur) {

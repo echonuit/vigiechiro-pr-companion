@@ -5,6 +5,7 @@ import fr.univ_amu.iut.commun.api.FichierSigne;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
+import fr.univ_amu.iut.commun.api.SuiviReprise;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.Horloge;
@@ -264,7 +265,10 @@ public final class DepotVigieChiro {
         Televersement resultat = fichier == null
                 ? Televersement.echec("fichier introuvable sur le disque (archives à régénérer ?)")
                 : televerser(
-                        fichier, participationId, fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction));
+                        fichier,
+                        participationId,
+                        fraction -> suivi.uniteProgresse(unite.identifiantUnite(), fraction),
+                        (tentative, delai) -> suivi.uniteReprise(unite.identifiantUnite(), delai));
         if (resultat.reussi()) {
             depotUnites.mettreAJour(unite.id(), StatutDepotUnite.DEPOSE, resultat.fichierId(), null, maintenant());
             suivi.uniteDeposee(depotUnites.findById(unite.id()).orElse(unite));
@@ -378,7 +382,8 @@ public final class DepotVigieChiro {
 
     /// Téléverse un fichier en trois temps (déclaration → `PUT` S3 **en flux** → finalisation) et renvoie
     /// l'issue : l'id distant du fichier créé, ou la raison de l'échec de l'étape fautive.
-    private Televersement televerser(Path fichier, String participationId, DoubleConsumer progression) {
+    private Televersement televerser(
+            Path fichier, String participationId, DoubleConsumer progression, SuiviReprise reprise) {
         String titre = fichier.getFileName().toString();
         // #1284 : chaque étape échoue avec sa cause exacte (non connecté / injoignable / HTTP n),
         // plus jamais un « refusé par VigieChiro » générique quand c'était le réseau.
@@ -386,7 +391,7 @@ public final class DepotVigieChiro {
         if (!(declaration instanceof ReponseApi.Succes<FichierSigne>(FichierSigne signe))) {
             return Televersement.echec("déclaration du fichier : " + causeDe(declaration));
         }
-        if (!client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression)) {
+        if (!client.televerserVersS3(signe.urlSignee(), fichier, mime(titre), progression, reprise)) {
             return Televersement.echec("téléversement S3 refusé (réseau ou fichier illisible)");
         }
         ReponseApi<String> finalisation = client.finaliserFichier(signe.id());
