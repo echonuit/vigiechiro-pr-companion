@@ -140,13 +140,13 @@ class ActiviteViewTest {
     }
 
     @Test
-    void le_menu_filtre_offre_carre_et_taxon_parent(FxRobot robot) {
+    void le_menu_filtre_offre_la_cascade_geo_et_le_taxon_parent(FxRobot robot) {
         MenuButton menu = robot.lookup("#menuAjoutFiltre").queryAs(MenuButton.class);
 
         assertThat(menu.getItems())
                 .extracting(MenuItem::getText)
-                .as("la barre propose les deux dimensions de contexte")
-                .contains("Carré", "Taxon parent");
+                .as("cascade carré → point → nuit, plus le taxon parent")
+                .contains("Carré", "Point", "Nuit", "Taxon parent");
     }
 
     @Test
