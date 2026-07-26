@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.75.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.74.0...v2.75.0) (2026-07-26)
+
+
+### Features
+
+* **multisite:** porter la campagne dans la vue agrégée et son export CSV ([#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355), lot 1) ([#2572](https://github.com/echonuit/vigiechiro-pr-companion/issues/2572)) ([84a8a90](https://github.com/echonuit/vigiechiro-pr-companion/commit/84a8a90befe5e4b42612309358d500506c7df266)), closes [#2529](https://github.com/echonuit/vigiechiro-pr-companion/issues/2529) [#1338](https://github.com/echonuit/vigiechiro-pr-companion/issues/1338)
+
 # [2.74.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.73.0...v2.74.0) (2026-07-26)
 
 
