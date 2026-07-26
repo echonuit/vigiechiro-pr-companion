@@ -14,6 +14,7 @@ import fr.univ_amu.iut.commun.model.ReferentielPoint;
 import fr.univ_amu.iut.commun.model.Workspace;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.commun.persistence.UniteDeTravail;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
@@ -130,13 +131,16 @@ public class PassageModule extends ModuleDeFeature {
         // synchronisation. SynchronisationParticipationModule pose le binding avec elle.
         OptionalBinder.newOptionalBinder(binder(), RattrapageMetadonnees.class);
 
-        // Contrats de navigation vers M-Diagnostic, M-Qualification et M-Lot : OptionalBinder VIDE (features
-        // `diagnostic`, `qualification` et `lot` désactivables, #1087). Chaque module réel fait `setBinding`
-        // quand sa feature est active ; sinon l'Optional reste vide et PassageController masque la carte
-        // correspondante.
+        // Contrats de navigation vers M-Diagnostic, M-Qualification, M-Lot et M-Activite : OptionalBinder
+        // VIDE (features `diagnostic`, `qualification`, `lot` désactivables #1087, `activite-nuit`
+        // expérimentale #2352). Chaque module réel fait `setBinding` quand sa feature est active ; sinon
+        // l'Optional reste vide et PassageController masque la carte correspondante. Le binder de base doit
+        // vivre ici (consommateur toujours installé) : sans lui, l'Optional serait NON LIÉ dès que le
+        // fournisseur est absent, et l'injection du PassageController échouerait.
         OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class);
         OptionalBinder.newOptionalBinder(binder(), OuvrirLot.class);
         OptionalBinder.newOptionalBinder(binder(), OuvrirVerification.class);
+        OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
     }
 
     @Provides
