@@ -118,8 +118,8 @@ class PassageActionsFicheViewTest {
             }
 
             @Provides
-            PassageViewModel viewModel() {
-                return new PassageViewModel(service, reactivation);
+            PassageViewModel viewModel(PortailVigieChiro portail) {
+                return new PassageViewModel(service, reactivation, portail);
             }
 
             @Provides

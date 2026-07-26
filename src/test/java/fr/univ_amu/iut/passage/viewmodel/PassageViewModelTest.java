@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.RegleMetierException;
 import fr.univ_amu.iut.commun.model.Severite;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
@@ -19,6 +20,7 @@ import fr.univ_amu.iut.passage.model.MeteoReleve;
 import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.ServiceReactivationPassage;
 import java.nio.file.Path;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -42,11 +44,16 @@ class PassageViewModelTest {
     @Mock
     private ServiceReactivationPassage reactivation;
 
+    /// Résolution locale du rattachement (#2555) : par défaut le mock rend `Optional.empty()`, donc « nuit
+    /// non rattachée » - ce qui laisse les cas historiques (nuits porteuses de séquences) inchangés.
+    @Mock
+    private PortailVigieChiro portail;
+
     private PassageViewModel viewModel;
 
     @BeforeEach
     void preparer() {
-        viewModel = new PassageViewModel(service, reactivation);
+        viewModel = new PassageViewModel(service, reactivation, portail);
     }
 
     private static DetailPassage detail(StatutWorkflow statut) {
@@ -348,6 +355,47 @@ class PassageViewModelTest {
     }
 
     @Test
+    @DisplayName("#2555 : une nuit rapatriée de Vigie-Chiro est réactivable, ses observations viendront à ce moment-là")
+    void reactivation_possible_sur_nuit_rapatriee() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailSquelette());
+        when(portail.pageParticipation(ID_PASSAGE)).thenReturn(Optional.of("https://vigiechiro/participations/abc"));
+        when(reactivation.hydratationDisponible()).thenReturn(true);
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        // Le défaut d'origine : le bouton était grisé sur EXACTEMENT cette nuit, celle que la synchro
+        // venait de ramener, avec pour tout motif « ce passage n'a aucune séquence importée localement ».
+        assertThat(viewModel.reactivationPossibleProperty().get()).isTrue();
+        assertThat(viewModel.motifBlocageReactivationProperty().get()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("#2555 : nuit rapatriée mais hors connexion, le motif dit de se connecter plutôt que « rien à faire »")
+    void reactivation_bloquee_sur_nuit_rapatriee_hors_connexion() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailSquelette());
+        when(portail.pageParticipation(ID_PASSAGE)).thenReturn(Optional.of("https://vigiechiro/participations/abc"));
+        when(reactivation.hydratationDisponible()).thenReturn(false);
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.reactivationPossibleProperty().get()).isFalse();
+        assertThat(viewModel.motifBlocageReactivationProperty().get())
+                .contains("rapatriée")
+                .contains("connectez-vous");
+    }
+
+    @Test
+    @DisplayName("#2555 : nuit sans séquence ET sans participation, il n'existe vraiment aucune source")
+    void reactivation_bloquee_sur_nuit_sans_source() {
+        when(service.detailPassage(ID_PASSAGE)).thenReturn(detailSquelette());
+
+        viewModel.ouvrirSur(ID_PASSAGE, CONTEXTE);
+
+        assertThat(viewModel.reactivationPossibleProperty().get()).isFalse();
+        assertThat(viewModel.motifBlocageReactivationProperty().get()).contains("rattaché à aucune participation");
+    }
+
+    @Test
     @DisplayName("#1302 : rien à réactiver quand l'audio est déjà là, avec le motif affiché")
     void reactivation_bloquee_si_audio_present() {
         when(service.detailPassage(ID_PASSAGE)).thenReturn(detail(StatutWorkflow.DEPOSE));
@@ -371,6 +419,28 @@ class PassageViewModelTest {
 
     /// Fiche d'un passage dont l'audio n'est plus conservé (volumes bruts et séquences à zéro :
     /// l'état après archivage #1300).
+    /// Une nuit **rapatriée par la synchro** et jamais hydratée (ADR 0016) : elle existe, elle est datée,
+    /// elle porte son enregistreur, mais elle n'a **aucune séquence** (`total` = 0). C'est l'état dans
+    /// lequel « Synchroniser depuis VigieChiro » laisse l'historique d'un compte.
+    private static DetailPassage detailSquelette() {
+        return new DetailPassage(
+                2,
+                2026,
+                "2026-06-22",
+                "20:25:00",
+                "07:47:00",
+                "1925492",
+                StatutWorkflow.DEPOSE,
+                null,
+                null,
+                0L,
+                0L,
+                0,
+                0.0,
+                MeteoReleve.VIDE,
+                new DecompteAudio(0, 0));
+    }
+
     private static DetailPassage detailSansAudio(StatutWorkflow statut) {
         return new DetailPassage(
                 2,

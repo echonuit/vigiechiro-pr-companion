@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.passage.viewmodel;
 
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
+import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.Progression;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
@@ -38,6 +39,7 @@ public class PassageViewModel {
 
     private final ServicePassage service;
     private final ServiceReactivationPassage reactivation;
+    private final PortailVigieChiro portail;
 
     private final ReadOnlyStringWrapper titreContexte = new ReadOnlyStringWrapper(this, "titreContexte", "");
     private final ReadOnlyStringWrapper plageHoraire = new ReadOnlyStringWrapper(this, "plageHoraire", "");
@@ -80,9 +82,14 @@ public class PassageViewModel {
     /// n'est chargé.
     private int numeroPassage;
 
-    public PassageViewModel(ServicePassage service, ServiceReactivationPassage reactivation) {
+    /// @param portail résolution **locale** du rattachement à une participation Vigie-Chiro (#1124, aucun
+    ///     appel réseau) : c'est ce qui dit si une nuit sans séquence a une source d'où les récupérer
+    ///     (#2555), et donc si « Réactiver ce passage » a un sens
+    public PassageViewModel(
+            ServicePassage service, ServiceReactivationPassage reactivation, PortailVigieChiro portail) {
         this.service = Objects.requireNonNull(service, "service");
         this.reactivation = Objects.requireNonNull(reactivation, "reactivation");
+        this.portail = Objects.requireNonNull(portail, "portail");
     }
 
     /// Ouvre l'écran sur le passage `idPassage` en **synchrone**, composition de [#charger] +
@@ -218,8 +225,13 @@ public class PassageViewModel {
                 detail.statut() != StatutWorkflow.DEPOSE && detail.statut() != StatutWorkflow.DEPOT_EN_COURS);
         // Réactivation (#1302) : gating en amont (#789), le motif alimente le tooltip de
         // l'enveloppe. Règles pures extraites dans GatingReactivation.
-        reactivationPossible.set(GatingReactivation.reactivationPossible(detail));
-        motifBlocageReactivation.set(GatingReactivation.motifReactivation(detail));
+        // Depuis #2555, une nuit SANS séquence peut aussi se réactiver : c'est une nuit rapatriée par la
+        // synchro (ADR 0016), dont la réactivation ira d'abord chercher ses observations. La règle a donc
+        // besoin de savoir d'où l'audio pourrait revenir - deux faits que le détail ne porte pas.
+        GatingReactivation.ContexteReactivation contexteReactivation = new GatingReactivation.ContexteReactivation(
+                portail.pageParticipation(idPassage).isPresent(), reactivation.hydratationDisponible());
+        reactivationPossible.set(GatingReactivation.reactivationPossible(detail, contexteReactivation));
+        motifBlocageReactivation.set(GatingReactivation.motifReactivation(detail, contexteReactivation));
         actionRecommandee.set(EtapesWorkflow.prochaineAction(detail.statut()));
     }
 

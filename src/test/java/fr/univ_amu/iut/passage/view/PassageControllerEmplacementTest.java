@@ -80,7 +80,7 @@ class PassageControllerEmplacementTest {
                         150.0,
                         null,
                         new DecompteAudio(0, 0)));
-        PassageViewModel vm = new PassageViewModel(service, reactivation);
+        PassageViewModel vm = new PassageViewModel(service, reactivation, mock(PortailVigieChiro.class));
         List<String> ouvertures = new ArrayList<>();
         OuvrirSite ouvrirSite = new OuvrirSite() {
             @Override
@@ -115,7 +115,7 @@ class PassageControllerEmplacementTest {
     @Test
     @DisplayName("Sans contexte (passage non ouvert), l'emplacement se limite au segment courant")
     void emplacement_sans_contexte() {
-        PassageViewModel vm = new PassageViewModel(service, reactivation);
+        PassageViewModel vm = new PassageViewModel(service, reactivation, mock(PortailVigieChiro.class));
         OuvrirSite ouvrirSite = new OuvrirSite() {
             @Override
             public void ouvrirListe() {}
