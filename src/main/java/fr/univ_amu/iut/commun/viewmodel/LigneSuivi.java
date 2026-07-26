@@ -22,12 +22,18 @@ public class LigneSuivi {
     private final ReadOnlyDoubleWrapper fraction;
     private final ReadOnlyStringWrapper raisonEchec;
 
+    /// Mention transitoire de **reprise réseau** (#2354) : « Nouvelle tentative dans N s… » pendant
+    /// qu'une coupure momentanée est réessayée. Vide en temps normal ; effacée dès que le travail
+    /// (re)progresse ou se conclut. Générique : toute opération longue réessayée peut la poser.
+    private final ReadOnlyStringWrapper messageReprise;
+
     /// Crée une ligne « en attente », de fraction nulle et sans raison d'échec.
     public LigneSuivi(int numero) {
         this.numero = numero;
         this.etat = new ReadOnlyObjectWrapper<>(this, "etat", EtatUnite.EN_ATTENTE);
         this.fraction = new ReadOnlyDoubleWrapper(this, "fraction", 0.0);
         this.raisonEchec = new ReadOnlyStringWrapper(this, "raisonEchec", "");
+        this.messageReprise = new ReadOnlyStringWrapper(this, "messageReprise", "");
     }
 
     /// Numéro croissant de l'unité (1, 2, …), par lequel les événements de suivi ciblent leur ligne.
@@ -47,27 +53,44 @@ public class LigneSuivi {
         return raisonEchec.getReadOnlyProperty();
     }
 
+    /// Mention de reprise réseau à afficher (vide si aucune reprise en cours), observable par la cellule
+    /// de progression.
+    public ReadOnlyStringProperty messageRepriseProperty() {
+        return messageReprise.getReadOnlyProperty();
+    }
+
+    /// Pose la mention de reprise (#2354), réservée aux spécialisations qui réessaient (le dépôt). Elle
+    /// s'efface d'elle-même au prochain changement d'état de l'unité.
+    protected void signalerReprise(String message) {
+        messageReprise.set(message == null ? "" : message);
+    }
+
     /// Le traitement de l'unité commence : passe « en cours » (fraction remise à 0).
     public void demarrer() {
         etat.set(EtatUnite.EN_COURS);
         fraction.set(0.0);
+        messageReprise.set("");
     }
 
-    /// Avancement intra-unité `f` (0→1) : garde la fraction **monotone** et l'état « en cours ».
+    /// Avancement intra-unité `f` (0→1) : garde la fraction **monotone** et l'état « en cours ». Efface
+    /// une éventuelle mention de reprise : les octets repartent, la coupure est absorbée.
     public void progresser(double f) {
         etat.set(EtatUnite.EN_COURS);
         fraction.set(Math.max(fraction.get(), f));
+        messageReprise.set("");
     }
 
     /// L'unité est traitée : passe « terminée », fraction à 1.
     public void terminer() {
         etat.set(EtatUnite.TERMINEE);
         fraction.set(1.0);
+        messageReprise.set("");
     }
 
     /// Le traitement a échoué : passe « échec » et retient `raison` (pour une infobulle côté IHM).
     public void echouer(String raison) {
         etat.set(EtatUnite.ECHEC);
         raisonEchec.set(raison == null ? "" : raison);
+        messageReprise.set("");
     }
 }

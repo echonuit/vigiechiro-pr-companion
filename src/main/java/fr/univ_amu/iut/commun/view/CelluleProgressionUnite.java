@@ -25,6 +25,11 @@ final class CelluleProgressionUnite<L extends LigneSuivi> extends TableCell<L, L
     private final ProgressBar barre = new ProgressBar(0);
     private final FontIcon icone = new FontIcon();
     private final Label libelle = new Label();
+
+    /// Mention discrète de reprise réseau (#2354), affichée à côté de la barre pendant qu'une coupure
+    /// momentanée est réessayée. Vide (donc absente) en temps normal.
+    private final Label reprise = new Label();
+
     private final HBox contenu = new HBox(6, icone, libelle);
     private final ChangeListener<Object> auChangement = (obs, avant, apres) -> rendre();
     private LigneSuivi ligne;
@@ -33,6 +38,7 @@ final class CelluleProgressionUnite<L extends LigneSuivi> extends TableCell<L, L
         contenu.setAlignment(Pos.CENTER_LEFT);
         libelle.getStyleClass().add("libelle-etat-unite");
         icone.getStyleClass().add("icone-etat-unite");
+        reprise.getStyleClass().add("reprise-unite");
         barre.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(barre, Priority.ALWAYS);
     }
@@ -43,6 +49,7 @@ final class CelluleProgressionUnite<L extends LigneSuivi> extends TableCell<L, L
         if (ligne != null) {
             ligne.etatProperty().removeListener(auChangement);
             ligne.fractionProperty().removeListener(auChangement);
+            ligne.messageRepriseProperty().removeListener(auChangement);
         }
         ligne = vide ? null : item;
         if (ligne == null) {
@@ -52,6 +59,7 @@ final class CelluleProgressionUnite<L extends LigneSuivi> extends TableCell<L, L
         }
         ligne.etatProperty().addListener(auChangement);
         ligne.fractionProperty().addListener(auChangement);
+        ligne.messageRepriseProperty().addListener(auChangement);
         rendre();
     }
 
@@ -62,7 +70,14 @@ final class CelluleProgressionUnite<L extends LigneSuivi> extends TableCell<L, L
         EtatUnite etat = ligne.etatProperty().get();
         if (etat == EtatUnite.EN_COURS) {
             barre.setProgress(ligne.fractionProperty().get());
-            contenu.getChildren().setAll(barre);
+            String note = ligne.messageRepriseProperty().get();
+            if (note == null || note.isEmpty()) {
+                contenu.getChildren().setAll(barre);
+            } else {
+                // Reprise réseau en cours (#2354) : la barre reste, la mention discrète s'affiche à côté.
+                reprise.setText(note);
+                contenu.getChildren().setAll(barre, reprise);
+            }
             setTooltip(null);
         } else {
             icone.setIconLiteral(iconePour(etat));

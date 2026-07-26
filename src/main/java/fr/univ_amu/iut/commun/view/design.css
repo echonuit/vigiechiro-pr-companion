@@ -613,6 +613,14 @@
   -fx-icon-color: -couleur-danger;
 }
 
+/* Mention discrete de reprise reseau (#2354) : une coupure momentanee est reessayee, a cote de la
+   barre. Ton AMBRE d'avertissement - ni neutre (elle se cacherait), ni rouge (elle alarmerait pour un
+   incident absorbe) - et petite taille pour rester discrete. */
+.reprise-unite {
+  -fx-text-fill: -couleur-avertissement-texte;
+  -fx-font-size: 11px;
+}
+
 /*
  * Stepper (fil d'étapes) : une puce par étape, colorée selon son état (franchie / courante / à venir).
  * Rendu par le composant partagé `commun.view.Stepper` ; utilisé par M-Passage (workflow) et M-Lot

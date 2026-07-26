@@ -46,4 +46,9 @@ final class RelaisSuiviDepot implements SuiviDepot {
     public void uniteProgresse(String identifiant, double fraction) {
         filJavaFx.execute(() -> cible.progresse(identifiant, fraction));
     }
+
+    @Override
+    public void uniteReprise(String identifiant, java.time.Duration delai) {
+        filJavaFx.execute(() -> cible.reprise(identifiant, delai));
+    }
 }

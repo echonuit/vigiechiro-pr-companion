@@ -20,6 +20,7 @@ import fr.univ_amu.iut.commun.api.IssueLancement;
 import fr.univ_amu.iut.commun.api.ReponseApi;
 import fr.univ_amu.iut.commun.api.ResultatEcriture;
 import fr.univ_amu.iut.commun.api.ResultatLancement;
+import fr.univ_amu.iut.commun.api.SuiviReprise;
 import fr.univ_amu.iut.commun.api.Traitement;
 import fr.univ_amu.iut.commun.api.TraitementVigieChiro;
 import fr.univ_amu.iut.commun.model.HorlogeFigee;
@@ -53,6 +54,7 @@ import fr.univ_amu.iut.sites.model.dao.SiteDao;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -179,7 +181,7 @@ class DepotVigieChiroTest {
         when(client.creerFichier(eq("ok.wav"), anyString()))
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
         depot.deposer(idPassage, List.of(ok, ko));
@@ -267,7 +269,7 @@ class DepotVigieChiroTest {
 
         depot.deposer(idPassage, List.of(a));
 
-        verify(client).televerserVersS3(anyString(), eq(a), eq("application/zip"), any());
+        verify(client).televerserVersS3(anyString(), eq(a), eq("application/zip"), any(), any());
         verify(client, never()).televerserVersS3(anyString(), any(byte[].class), anyString());
         // #984 : le fichier est déclaré AVEC son lien de participation (sinon orphelin côté serveur → le
         // compute « extrait 0 fichier »).
@@ -304,7 +306,7 @@ class DepotVigieChiroTest {
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
         // Le client mocké invoque le callback de progression comme le ferait un vrai PUT streamé.
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
                 .thenAnswer(invocation -> {
                     DoubleConsumer progression = invocation.getArgument(3);
                     progression.accept(0.5);
@@ -317,6 +319,27 @@ class DepotVigieChiroTest {
 
         verify(suivi).uniteProgresse("Car-1.zip", 0.5);
         verify(suivi).uniteProgresse("Car-1.zip", 1.0);
+    }
+
+    @Test
+    @DisplayName("#2354 : une reprise réseau du PUT est remontée au suivi par unité (uniteReprise)")
+    void reprise_upload_remontee_au_suivi(@TempDir Path dossier) throws IOException {
+        when(participations.participationDe(idPassage)).thenReturn(Optional.of("part-1"));
+        when(client.creerFichier(anyString(), anyString()))
+                .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
+        when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
+        // Le client mocké simule une coupure réessayée : il signale la reprise, puis réussit.
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
+                .thenAnswer(invocation -> {
+                    SuiviReprise reprise = invocation.getArgument(4);
+                    reprise.nouvelleTentative(2, Duration.ofSeconds(3));
+                    return true;
+                });
+        SuiviDepot suivi = mock(SuiviDepot.class);
+
+        depot.deposer(idPassage, SourceDepot.desFichiers(List.of(fichier(dossier, "Car-1.zip"))), () -> false, suivi);
+
+        verify(suivi).uniteReprise("Car-1.zip", Duration.ofSeconds(3));
     }
 
     @Test
@@ -405,7 +428,7 @@ class DepotVigieChiroTest {
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier(eq("ko.wav"), anyString()))
                 .thenReturn(ReponseApi.refuse(422, "titre invalide")); // déclaration refusée
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
 
@@ -428,7 +451,7 @@ class DepotVigieChiroTest {
         when(client.creerFichier(eq("ok.wav"), anyString()))
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
         when(client.creerFichier(eq("ko.wav"), anyString())).thenReturn(ReponseApi.refuse(422, "titre invalide"));
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
         depot.deposer(idPassage, List.of(ok, ko)); // 1re tentative : ko.wav en échec
@@ -598,7 +621,7 @@ class DepotVigieChiroTest {
     private void armerUploadOk() {
         when(client.creerFichier(anyString(), anyString()))
                 .thenReturn(ReponseApi.succes(new FichierSigne("f", "https://s3/x")));
-        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any()))
+        when(client.televerserVersS3(anyString(), any(Path.class), anyString(), any(), any()))
                 .thenReturn(true);
         when(client.finaliserFichier(anyString())).thenReturn(ReponseApi.succes("{}"));
     }
