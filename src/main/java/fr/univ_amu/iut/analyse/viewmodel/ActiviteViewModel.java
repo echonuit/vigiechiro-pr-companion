@@ -169,6 +169,22 @@ public class ActiviteViewModel {
         return courbesAffichees;
     }
 
+    /// Message d'état vide **nommant la dimension responsable** (`""` si une courbe est tracée) : rien de
+    /// chargé, filtres trop stricts, ou aucune espèce cochée. Un « aucune donnée » générique n'est pas
+    /// actionnable ; nommer la cause l'est.
+    public String messageEtatVide() {
+        if (!courbesAffichees.isEmpty()) {
+            return "";
+        }
+        if (tous.isEmpty()) {
+            return "Aucune espèce détectée sur les nuits chargées.";
+        }
+        if (especes.isEmpty()) {
+            return "Aucune espèce ne correspond aux filtres. Élargissez ou retirez un filtre.";
+        }
+        return "Aucune espèce sélectionnée. Cochez une espèce à afficher.";
+    }
+
     /// Fenêtre nocturne (coucher → lever) à matérialiser sous la courbe, ou `null` si elle n'est pas
     /// calculable (passage sans GPS, nuit polaire) ou pas unique (vue multi-passages) : la vue trace alors
     /// sans aplat.

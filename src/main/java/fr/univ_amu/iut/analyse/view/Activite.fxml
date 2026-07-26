@@ -20,7 +20,7 @@
 <VBox xmlns="http://javafx.com/javafx"
       xmlns:fx="http://javafx.com/fxml"
       fx:controller="fr.univ_amu.iut.analyse.view.ActiviteController"
-      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
+      stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css, @activite.css"
       styleClass="ecran-activite"
       spacing="14.0">
 
