@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.50.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.49.1...v2.50.0) (2026-07-26)
+
+
+### Features
+
+* **saison:** écran « Ma saison » (lot 2, PR 3/3) ([#2511](https://github.com/echonuit/vigiechiro-pr-companion/issues/2511)) ([ebc10f1](https://github.com/echonuit/vigiechiro-pr-companion/commit/ebc10f13de9299c048a238d87d2883e97831c95b)), closes [#2356](https://github.com/echonuit/vigiechiro-pr-companion/issues/2356) [#1376](https://github.com/echonuit/vigiechiro-pr-companion/issues/1376) [#2355](https://github.com/echonuit/vigiechiro-pr-companion/issues/2355)
+
 ## [2.49.1](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.49.0...v2.49.1) (2026-07-26)
 
 
