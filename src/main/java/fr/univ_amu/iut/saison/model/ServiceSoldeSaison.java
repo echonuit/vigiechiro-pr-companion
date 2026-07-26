@@ -4,6 +4,7 @@ import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.Protocole;
 import fr.univ_amu.iut.passage.model.FenetreSaisonniere;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
 import fr.univ_amu.iut.sites.model.Site;
 import fr.univ_amu.iut.sites.model.dao.PointDao;
@@ -42,12 +43,19 @@ public class ServiceSoldeSaison {
     private final SiteDao siteDao;
     private final PointDao pointDao;
     private final PassageDao passageDao;
+    private final PassageOpportunisteDao opportunistes;
     private final Horloge horloge;
 
-    public ServiceSoldeSaison(SiteDao siteDao, PointDao pointDao, PassageDao passageDao, Horloge horloge) {
+    public ServiceSoldeSaison(
+            SiteDao siteDao,
+            PointDao pointDao,
+            PassageDao passageDao,
+            PassageOpportunisteDao opportunistes,
+            Horloge horloge) {
         this.siteDao = Objects.requireNonNull(siteDao, "siteDao");
         this.pointDao = Objects.requireNonNull(pointDao, "pointDao");
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
+        this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
     }
 
@@ -84,7 +92,7 @@ public class ServiceSoldeSaison {
     private CasePassage casePour(Long idPoint, int annee, int numero) {
         return passageDao
                 .trouverParPointAnneePassage(idPoint, annee, numero)
-                .map(CasePassage::de)
+                .map(passage -> CasePassage.de(passage, opportunistes.estOpportuniste(passage.id())))
                 .orElseGet(CasePassage::absente);
     }
 
@@ -99,6 +107,9 @@ public class ServiceSoldeSaison {
     }
 
     private String actionPour(CasePassage cas, int numero, int annee, LocalDate aujourdhui) {
+        if (cas.opportuniste()) {
+            return ""; // hors protocole (carré d'un tiers) : rien à faire, pas de « poser l'enregistreur »
+        }
         if (cas.terminee()) {
             return "";
         }

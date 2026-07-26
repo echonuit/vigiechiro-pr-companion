@@ -16,6 +16,7 @@ import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
 import fr.univ_amu.iut.passage.di.PassageModule;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.saison.model.LigneSaison;
 import fr.univ_amu.iut.saison.model.ServiceSoldeSaison;
 import fr.univ_amu.iut.saison.model.SoldeSaison;
@@ -57,6 +58,7 @@ class ServiceSoldeSaisonTest {
 
     private SourceDeDonnees source;
     private ServiceSoldeSaison service;
+    private PassageOpportunisteDao opportunistes;
 
     @BeforeEach
     void preparer() {
@@ -83,10 +85,12 @@ class ServiceSoldeSaisonTest {
         Site r = siteDao.insert(new Site(null, "640099", "Labo", Protocole.RECHERCHE, null, "2026-01-01", ID_USER));
         pointDao.insert(new PointDEcoute(null, "R1", null, null, null, r.id()));
 
+        opportunistes = injecteur.getInstance(PassageOpportunisteDao.class);
         service = new ServiceSoldeSaison(
                 siteDao,
                 pointDao,
                 injecteur.getInstance(PassageDao.class),
+                opportunistes,
                 new HorlogeFigee(LocalDate.of(2026, 7, 20)));
     }
 
@@ -95,9 +99,9 @@ class ServiceSoldeSaisonTest {
         System.clearProperty("vigiechiro.workspace");
     }
 
-    private void semer(
+    private long semer(
             String carre, String point, int numero, int annee, String date, StatutWorkflow statut, Verdict verdict) {
-        JeuDeDonneesPassage.dans(source)
+        return JeuDeDonneesPassage.dans(source)
                 .utilisateur(ID_USER)
                 .carre(carre)
                 .nomSite("Site " + carre)
@@ -105,7 +109,8 @@ class ServiceSoldeSaisonTest {
                 .nuit(numero, annee, date)
                 .statut(statut)
                 .verdict(verdict)
-                .semer();
+                .semer()
+                .idPassage();
     }
 
     private LigneSaison ligne(SoldeSaison solde, String carre, String point) {
@@ -217,5 +222,25 @@ class ServiceSoldeSaisonTest {
         assertThat(solde.lignes()).isEmpty();
         assertThat(solde.pointsSuivis()).isZero();
         assertThat(solde.passagesAttendus()).isZero();
+    }
+
+    @Test
+    @DisplayName("#2525 : les nuits opportunistes sont hors décompte et n'engendrent aucune action")
+    void nuits_opportunistes_hors_protocole() {
+        long id1 = semer("640005", "E1", 1, 2026, "2026-06-25", StatutWorkflow.DEPOSE, Verdict.OK);
+        long id2 = semer("640005", "E1", 2, 2026, "2026-08-25", StatutWorkflow.DEPOSE, Verdict.OK);
+        opportunistes.marquer(id1);
+        opportunistes.marquer(id2);
+
+        LigneSaison ligne = ligne(service.soldePour(ID_USER, 2026), "640005", "E1");
+
+        assertThat(ligne.passage1().opportuniste()).isTrue();
+        assertThat(ligne.passage1().faite())
+                .as("une nuit opportuniste ne compte pas comme faite")
+                .isFalse();
+        assertThat(ligne.passage2().faite()).isFalse();
+        assertThat(ligne.resteAFaire())
+                .as("hors protocole : ni « poser l'enregistreur », ni action")
+                .isEmpty();
     }
 }

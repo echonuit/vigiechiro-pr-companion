@@ -141,7 +141,12 @@ public class SaisonController implements RafraichirAuRetour {
         if (!cas.presente()) {
             return "Non planifié";
         }
-        String etat = cas.inexploitable() ? "Inexploitable" : cas.statut().libelle();
+        String etat;
+        if (cas.opportuniste()) {
+            etat = "Opportuniste"; // hors protocole (carré d'un tiers, #2525)
+        } else {
+            etat = cas.inexploitable() ? "Inexploitable" : cas.statut().libelle();
+        }
         return cas.date() == null ? etat : etat + " · " + cas.date().format(JOUR_MOIS);
     }
 
@@ -150,6 +155,9 @@ public class SaisonController implements RafraichirAuRetour {
     private static String classeCase(CasePassage cas) {
         if (!cas.presente()) {
             return "badge-non-planifie";
+        }
+        if (cas.opportuniste()) {
+            return "badge-opportuniste";
         }
         return cas.inexploitable() ? ColonneBadge.classe(cas.verdict()) : ColonneBadge.classe(cas.statut());
     }
