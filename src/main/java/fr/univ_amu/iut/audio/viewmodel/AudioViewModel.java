@@ -213,8 +213,8 @@ public class AudioViewModel {
     public void signalerErreur(SourceObservations source, Throwable erreur) {
         this.source = source;
         reinitialiser();
-        String detail = erreur.getMessage();
-        messages.erreur(detail != null && !detail.isBlank() ? detail : "Chargement des sons impossible.");
+        String message = erreur.getMessage();
+        messages.erreur(message != null && !message.isBlank() ? message : "Chargement des sons impossible.");
     }
 
     /// Plage **nuit** par défaut à proposer au filtre « Heure » (#549) : déléguée à [ResolveurSourceAudio]
