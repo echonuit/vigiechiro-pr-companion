@@ -1,6 +1,7 @@
 package fr.univ_amu.iut.analyse.view;
 
 import com.google.inject.Inject;
+import fr.univ_amu.iut.analyse.model.ContactHoraire;
 import fr.univ_amu.iut.analyse.model.CourbeEspece;
 import fr.univ_amu.iut.analyse.model.LargeurTranche;
 import fr.univ_amu.iut.analyse.model.PointActivite;
@@ -8,6 +9,7 @@ import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
@@ -30,6 +32,8 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuButton;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.util.StringConverter;
 
@@ -70,6 +74,18 @@ public class ActiviteController implements EmplacementNavigation {
     @FXML
     private Label lblEtatVide;
 
+    @FXML
+    private TextField champRecherche;
+
+    @FXML
+    private MenuButton menuAjoutFiltre;
+
+    @FXML
+    private FlowPane pucesFiltres;
+
+    /// Barre de filtres cascadés (patron « à la Notion »), gardée en champ pour vivre autant que l'écran.
+    private GestionnaireFiltres<ContactHoraire> gestionnaireFiltres;
+
     @Inject
     public ActiviteController(ActiviteViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -80,6 +96,18 @@ public class ActiviteController implements EmplacementNavigation {
     @FXML
     private void initialize() {
         configurerAxeNocturne();
+
+        // Barre de filtres cascadés (socle Filtres) : Carré et Taxon parent en puces, recherche texte
+        // permanente. Chaque changement ré-agrège le sous-ensemble via le callback du ViewModel.
+        gestionnaireFiltres = new GestionnaireFiltres<>(
+                champRecherche,
+                menuAjoutFiltre,
+                pucesFiltres,
+                viewModel.filtres(),
+                List.of(
+                        CriteresActivite.carre(viewModel::carresDisponibles),
+                        CriteresActivite.groupe(viewModel::groupesDisponibles)),
+                CriteresActivite.rechercheTexte());
 
         choixTranche.setItems(FXCollections.observableArrayList(LargeurTranche.values()));
         choixTranche.setConverter(new StringConverter<>() {

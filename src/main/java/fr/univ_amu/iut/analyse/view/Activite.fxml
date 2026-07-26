@@ -5,6 +5,8 @@
 <?import javafx.scene.chart.NumberAxis?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.MenuButton?>
+<?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
@@ -21,6 +23,14 @@
       stylesheets="@../../commun/view/palette.css, @../../commun/view/design.css"
       styleClass="ecran-activite"
       spacing="14.0">
+
+  <!-- Barre de filtres (patron « à la Notion », socle Filtres) : recherche permanente, menu « + Filtre »
+       (Carré, Taxon parent) et puces des filtres actifs. Le sous-ensemble filtré est ré-agrégé en direct. -->
+  <HBox spacing="8.0" alignment="CENTER_LEFT" styleClass="barre-filtres">
+    <TextField fx:id="champRecherche" promptText="Rechercher (espèce, carré…)" prefWidth="240.0"/>
+    <MenuButton fx:id="menuAjoutFiltre" minWidth="-Infinity" text="+ Filtre" styleClass="menu-ajout-filtre"/>
+    <FlowPane fx:id="pucesFiltres" hgap="6.0" vgap="6.0" alignment="CENTER_LEFT" HBox.hgrow="ALWAYS"/>
+  </HBox>
 
   <!-- Barre de réglages : largeur de tranche horaire (15 / 30 / 60 min). -->
   <HBox alignment="CENTER_LEFT" spacing="10.0">
