@@ -34,6 +34,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.FlowPane;
 import javafx.util.StringConverter;
 
@@ -54,6 +55,10 @@ public class ActiviteController implements EmplacementNavigation {
     private static final LocalTime DEBUT_FENETRE = LocalTime.of(18, 0);
 
     private static final DateTimeFormatter HEURE = DateTimeFormatter.ofPattern("HH");
+
+    /// Format de l'heure d'un point au survol : heure et minute (`22:30`), plus précis que l'étiquette
+    /// d'axe (`HH`), puisqu'on donne la valeur exacte d'une tranche.
+    private static final DateTimeFormatter HEURE_MINUTE = DateTimeFormatter.ofPattern("HH:mm");
 
     private final ActiviteViewModel viewModel;
     private final OuvrirSite ouvrirSite;
@@ -199,9 +204,33 @@ public class ActiviteController implements EmplacementNavigation {
         XYChart.Series<Number, Number> serie = new XYChart.Series<>();
         serie.setName(nomAffiche(courbe));
         for (PointActivite point : courbe.points()) {
-            serie.getData().add(new XYChart.Data<>(minutesDepuis18h(point.debutTranche()), point.nombre()));
+            XYChart.Data<Number, Number> donnee =
+                    new XYChart.Data<>(minutesDepuis18h(point.debutTranche()), point.nombre());
+            installerInfobulle(donnee, texteInfobulle(nomAffiche(courbe), point));
+            serie.getData().add(donnee);
         }
         return serie;
+    }
+
+    /// Texte de l'infobulle d'un point : espèce, heure de la tranche (`HH:mm`) et nombre de contacts, avec
+    /// l'accord singulier/pluriel. La valeur exacte que l'axe ne donne qu'approximativement.
+    static String texteInfobulle(String espece, PointActivite point) {
+        String heure = point.debutTranche().toLocalTime().format(HEURE_MINUTE);
+        String contacts = point.nombre() > 1 ? " contacts" : " contact";
+        return espece + " · " + heure + " · " + point.nombre() + contacts;
+    }
+
+    /// Pose l'infobulle sur le symbole du point. Le nœud n'existe qu'une fois le graphe mis en page : on
+    /// l'attend via `nodeProperty` (et on le prend s'il est déjà là).
+    private static void installerInfobulle(XYChart.Data<Number, Number> donnee, String texte) {
+        if (donnee.getNode() != null) {
+            Tooltip.install(donnee.getNode(), new Tooltip(texte));
+        }
+        donnee.nodeProperty().addListener((observable, ancien, noeud) -> {
+            if (noeud != null) {
+                Tooltip.install(noeud, new Tooltip(texte));
+            }
+        });
     }
 
     /// (Re)construit le sélecteur d'espèces : une case par espèce de la nuit, cochée si sélectionnée. La
