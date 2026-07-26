@@ -75,6 +75,7 @@ import picocli.CommandLine.Spec;
             VerifierDepotVigieChiro.class,
             ExporterVu.class,
             ExporterObservations.class,
+            ExporterActivite.class,
             Sauvegarder.class,
             Restaurer.class,
             ResetGuide.class,

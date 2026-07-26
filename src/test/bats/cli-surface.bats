@@ -24,7 +24,7 @@ setup() {
 # option requise la ferait tomber. (Les commandes réseau y figurent : leur validation est hors-ligne.)
 COMMANDES_OPTIONS_REQUISES=(
   lister-observations discussion
-  exporter-observations exporter-vu exporter-lot
+  exporter-observations exporter-vu exporter-lot exporter-activite
   importer importer-tadarida
   marquer-douteux marquer-reference poser-certitude
   valider-observations corriger-observations qualifier qualifier-fichier lister-selection pre-check constituer-selection
