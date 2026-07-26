@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.62.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.61.0...v2.62.0) (2026-07-26)
+
+
+### Features
+
+* **analyse:** survol des points de la courbe d'activité (heure · N contacts) ([#2542](https://github.com/echonuit/vigiechiro-pr-companion/issues/2542)) ([372a8d2](https://github.com/echonuit/vigiechiro-pr-companion/commit/372a8d268c0f87de55e16989282243ce77be21b6)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.61.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.60.0...v2.61.0) (2026-07-26)
 
 
