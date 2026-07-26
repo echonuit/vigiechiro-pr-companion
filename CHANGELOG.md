@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.69.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.68.0...v2.69.0) (2026-07-26)
+
+
+### Features
+
+* **cli:** commande exporter-activite, parité CLI de la courbe d'activité ([#2553](https://github.com/echonuit/vigiechiro-pr-companion/issues/2553)) ([8c669ad](https://github.com/echonuit/vigiechiro-pr-companion/commit/8c669ad80eded450407655769d677f4ab486f838)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.68.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.67.0...v2.68.0) (2026-07-26)
 
 
