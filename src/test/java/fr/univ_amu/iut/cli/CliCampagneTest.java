@@ -1,0 +1,74 @@
+package fr.univ_amu.iut.cli;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.google.inject.Injector;
+import fr.univ_amu.iut.commun.persistence.MigrationSchema;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+/// Invocation de bout en bout de `creer-campagne` / `lister-campagnes` (#2355) sur l'injecteur
+/// applicatif complet. Les campagnes ne sont pas rattachées à l'utilisateur (mono-poste) : pas de seed
+/// d'identité nécessaire.
+class CliCampagneTest {
+
+    @TempDir
+    Path workspace;
+
+    private Cli cli;
+    private PrintStream erreur;
+
+    @BeforeEach
+    void preparer() {
+        System.setProperty("vigiechiro.workspace", workspace.toString());
+        Injector injecteur = Cli.injecteurApplicatif();
+        cli = new Cli(injecteur);
+        injecteur.getInstance(MigrationSchema.class).migrer();
+        erreur = new PrintStream(new ByteArrayOutputStream(), true, StandardCharsets.UTF_8);
+    }
+
+    @AfterEach
+    void nettoyer() {
+        System.clearProperty("vigiechiro.workspace");
+    }
+
+    /// Exécute une commande avec un flux de sortie neuf et renvoie sa sortie standard (élaguée).
+    private String executerSortie(String... args) {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        int code = cli.executer(args, new PrintStream(out, true, StandardCharsets.UTF_8), erreur);
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        return out.toString(StandardCharsets.UTF_8).strip();
+    }
+
+    @Test
+    @DisplayName("creer-campagne puis lister-campagnes : la campagne apparaît")
+    void creer_puis_lister() {
+        String creation = executerSortie("creer-campagne", "--nom", "Suivi ENS", "--annee", "2026");
+        assertThat(creation).contains("Campagne créée").contains("Suivi ENS");
+
+        String liste = executerSortie("lister-campagnes");
+        assertThat(liste).contains("Suivi ENS").contains("2026");
+    }
+
+    @Test
+    @DisplayName("lister-campagnes --json expose des champs stables")
+    void lister_json() {
+        executerSortie("creer-campagne", "--nom", "Campagne JSON", "--annee", "2025");
+
+        String json = executerSortie("lister-campagnes", "--json");
+        assertThat(json).contains("\"nom\"").contains("Campagne JSON").contains("2025");
+    }
+
+    @Test
+    @DisplayName("lister-campagnes sur une base vide : message explicite")
+    void lister_vide() {
+        assertThat(executerSortie("lister-campagnes")).contains("Aucune campagne");
+    }
+}

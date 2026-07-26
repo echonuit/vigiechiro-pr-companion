@@ -46,6 +46,7 @@ class DecouverteModulesTest {
             "LotModule",
             "MajModule",
             "MultisiteModule",
+            "CampagneModule",
             "PassageModule",
             "ReconstructionModule",
             "SynchronisationParticipationModule",
