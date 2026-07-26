@@ -108,17 +108,28 @@ public class ActiviteController implements EmplacementNavigation {
         construireSelecteur();
     }
 
-    /// Ouvre l'activité du passage `passage`. Appelée par [NavigationActivite] après le chargement du
-    /// FXML ; mémorise le contexte pour le fil d'Ariane.
+    /// Ouvre l'activité **d'un passage** (entrée depuis M-Passage). Appelée par [NavigationActivite] après
+    /// le chargement du FXML ; mémorise le contexte pour le fil d'Ariane.
     public void ouvrirSur(ContextePassage passage) {
         this.contexte = passage;
         viewModel.chargerPassage(passage.idPassage());
     }
 
-    /// Emplacement dans le fil d'Ariane : `Mes sites › Carré N › Détails du passage N° X › Activité de la
-    /// nuit` (rendu par le chrome). Le segment passage rouvre M-Passage.
+    /// Ouvre l'activité de **tous les passages** de l'utilisateur (entrée transverse, écran racine). Sans
+    /// contexte de passage : le fil d'Ariane se réduit au segment courant.
+    public void ouvrirTout(String idUtilisateur) {
+        this.contexte = null;
+        viewModel.chargerUtilisateur(idUtilisateur);
+    }
+
+    /// Emplacement dans le fil d'Ariane. Depuis un passage : `Mes sites › Carré N › Détails du passage N° X
+    /// › Activité de la nuit`. En transverse (racine, sans contexte) : le seul segment courant, le chrome
+    /// préfixant « Accueil ».
     @Override
     public List<Lieu> emplacement() {
+        if (contexte == null) {
+            return List.of(Lieu.courant("Activité de la nuit"));
+        }
         return EmplacementPassage.emplacementEnfant(contexte, ouvrirSite, ouvrirPassage, "Activité de la nuit");
     }
 
