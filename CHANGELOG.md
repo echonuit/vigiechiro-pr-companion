@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.74.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.73.0...v2.74.0) (2026-07-26)
+
+
+### Features
+
+* **commun:** modèle du compte rendu chiffré, ses règles tenues par le type ([#2358](https://github.com/echonuit/vigiechiro-pr-companion/issues/2358)) ([#2567](https://github.com/echonuit/vigiechiro-pr-companion/issues/2567)) ([3465f80](https://github.com/echonuit/vigiechiro-pr-companion/commit/3465f80437f6d482e5603f53a2defe69615d6b35))
+
 # [2.73.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.72.0...v2.73.0) (2026-07-26)
 
 
