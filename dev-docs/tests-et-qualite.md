@@ -68,6 +68,60 @@ headless vient de `glass.platform=Headless`, pas de TestFX. Le `argLine` ajoute 
     export JAVA_HOME=~/.sdkman/candidates/java/25.0.2-open
     ```
 
+### L'écran headless est figé à 1000×1000
+
+La Headless Platform de JavaFX 26 rend dans un écran **codé en dur à 1000×1000 px**
+(`HeadlessApplication.staticScreen_getScreens`, avec le `stride` de `HeadlessWindow`) : aucune
+propriété ni variable d'environnement ne le change, et le framebuffer est un `ByteBuffer` de
+`1000*1000*4` octets alloué une fois pour toutes.
+
+Conséquence : une fenêtre qui, une fois affichée, **dépasse 1000 px** - typiquement une modale qui
+grandit quand un bandeau se révèle et que `sizeToScene` la redimensionne - fait **déborder** le rendu :
+
+```text
+java.lang.IndexOutOfBoundsException
+    at com.sun.glass.ui.headless.HeadlessWindow.blit(HeadlessWindow.java:333)
+    at javafx.stage.Window.sizeToScene(...)
+```
+
+C'est un artefact du **test**, pas un défaut de production : un vrai écran (≥ 1000 px) et un vrai
+gestionnaire de fenêtres n'ont pas ce framebuffer figé.
+
+**La bonne réponse est de faire tenir la fenêtre sous 1000 px**, ce qui corrige du même coup le vrai
+bug côté utilisateur (une fenêtre trop grande déborde aussi les petits portables). C'est ce qu'a fait
+#2496 pour `RattachementModale` : corps dans un `ScrollPane`, pied épinglé, la fenêtre reste bornée
+(cf. [ADR 2493](decisions/2493-une-modale-a-revelation-suit-la-croissance.md)). **À privilégier
+systématiquement.**
+
+!!! warning "Dernier recours : agrandir le framebuffer par réflexion"
+    Pour un écran **vraiment irréductible** - un test dont la fenêtre ne *peut pas* descendre sous
+    1000 px sans dénaturer ce qu'il vérifie - on peut agrandir le seul **nombre de lignes** du
+    framebuffer au bootstrap du test (le `stride` reste à 1000, on ajoute des lignes). En test, JavaFX
+    est chargé dans le **module sans nom** (classpath, `useModulePath=false`), donc la réflexion
+    atteint le champ privé **sans `--add-opens`** :
+
+    ```java
+    /// Agrandit le framebuffer de la Headless Platform (lignes seulement, stride inchangé).
+    /// À appeler sur le fil JavaFX, après le démarrage du toolkit et avant tout rendu.
+    /// DERNIER RECOURS : couple le test aux internes de glass. À éviter si la fenêtre peut être bornée.
+    static void agrandirEcranHeadless(int lignes) throws ReflectiveOperationException {
+      Object app = Class.forName("com.sun.glass.ui.Application")
+          .getMethod("GetApplication").invoke(null);
+      if (app == null) {
+        return;
+      }
+      java.lang.reflect.Field champ = app.getClass().getDeclaredField("frameBuffer");
+      champ.setAccessible(true);
+      champ.set(app, java.nio.ByteBuffer.allocate(1000 * lignes * 4));
+    }
+    ```
+
+    Validé pendant #2496 : sur `RattachementModale` câblée, `agrandirEcranHeadless(3000)` rend ses
+    12 tests verts au lieu du `blit` qui débordait. **Coûts** : ~`1000 * lignes * 4` octets par fork ;
+    dépendance à un champ privé (`frameBuffer`) et à un nom de méthode (`GetApplication`) qui peuvent
+    changer d'une version de JavaFX à l'autre. D'où « dernier recours » : préférer **borner la
+    fenêtre**.
+
 ### Les butoirs TestFX sont des coupe-circuits, pas des budgets
 
 `FxToolkit` borne deux attentes : le démarrage du toolkit JavaFX (`testfx.launch.timeout`) et la mise
