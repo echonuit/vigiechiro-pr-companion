@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.52.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.51.0...v2.52.0) (2026-07-26)
+
+
+### Features
+
+* **analyse:** écran Activité de la nuit atteignable depuis le passage ([#2509](https://github.com/echonuit/vigiechiro-pr-companion/issues/2509)) ([2ad9d3c](https://github.com/echonuit/vigiechiro-pr-companion/commit/2ad9d3c6019f6922c2298cc121442cee93423e18)), closes [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2348](https://github.com/echonuit/vigiechiro-pr-companion/issues/2348) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352) [#2352](https://github.com/echonuit/vigiechiro-pr-companion/issues/2352)
+
 # [2.51.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.50.0...v2.51.0) (2026-07-26)
 
 
