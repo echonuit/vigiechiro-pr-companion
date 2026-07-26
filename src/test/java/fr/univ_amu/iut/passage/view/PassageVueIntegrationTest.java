@@ -15,6 +15,7 @@ import fr.univ_amu.iut.commun.model.PortailVigieChiro;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.view.OuvreurDeLien;
+import fr.univ_amu.iut.commun.view.OuvrirActivite;
 import fr.univ_amu.iut.commun.view.OuvrirDiagnostic;
 import fr.univ_amu.iut.commun.view.OuvrirLot;
 import fr.univ_amu.iut.commun.view.OuvrirMultisite;
@@ -269,6 +270,8 @@ class PassageVueIntegrationTest {
         Injector injector = Guice.createInjector(new AbstractModule() {
             @Override
             protected void configure() {
+                // Feature `activite-nuit` absente de ce test : contrat non bindé, la carte est masquée.
+                OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class);
                 OptionalBinder.newOptionalBinder(binder(), OuvrirDiagnostic.class)
                         .setBinding()
                         .toInstance(passage -> diagnosticOuvert.set(passage.idPassage()));
