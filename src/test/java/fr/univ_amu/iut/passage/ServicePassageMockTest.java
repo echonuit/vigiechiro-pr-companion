@@ -26,6 +26,7 @@ import fr.univ_amu.iut.passage.model.ServicePassage;
 import fr.univ_amu.iut.passage.model.Vent;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.time.LocalDate;
@@ -63,6 +64,9 @@ class ServicePassageMockTest {
     @Mock
     private MaterielMicroDao materielDao;
 
+    @Mock
+    private PassageOpportunisteDao opportunistes;
+
     /// Passage minimal pour exercer une règle de décision : seules ses heures nous intéressent ici.
     private static Passage passageDeReference() {
         return new Passage(
@@ -90,7 +94,8 @@ class ServicePassageMockTest {
                 new HorlogeFigee(LocalDate.of(2026, 6, 20)),
                 sessionDao,
                 sequenceDao,
-                mock(ServiceDisponibiliteAudio.class));
+                mock(ServiceDisponibiliteAudio.class),
+                opportunistes);
     }
 
     /// Conditions de la nuit (météo), extraites de ServicePassage (#1192).

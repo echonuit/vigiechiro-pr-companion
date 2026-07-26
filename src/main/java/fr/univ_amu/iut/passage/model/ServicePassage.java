@@ -8,6 +8,7 @@ import fr.univ_amu.iut.commun.model.ResultatVerification;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import java.nio.file.Path;
@@ -15,6 +16,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
 /// Service métier central de la feature `passage` : lecture/détail d'un passage, création,
 /// vérifications de protocole (R3/R4/R5), pilotage du workflow et pose du verdict. Calqué sur le
@@ -63,19 +65,26 @@ public class ServicePassage {
     private final ServiceDisponibiliteAudio disponibilite;
     private final UniciteQuadruplet unicite;
 
+    /// Marquage opportuniste des passages (#2525) : un passage réalisé sur le carré d'un tiers est
+    /// **exempté de R3 et R4** (ni contrainte de date, ni de fréquence). La table latérale
+    /// `passage_opportuniste` porte ce fait hors du record [Passage].
+    private final PassageOpportunisteDao opportunistes;
+
     public ServicePassage(
             PassageDao passageDao,
             MoteurWorkflowPassage moteur,
             Horloge horloge,
             SessionDao sessionDao,
             SequenceDao sequenceDao,
-            ServiceDisponibiliteAudio disponibilite) {
+            ServiceDisponibiliteAudio disponibilite,
+            PassageOpportunisteDao opportunistes) {
         this.passageDao = Objects.requireNonNull(passageDao, "passageDao");
         this.moteur = Objects.requireNonNull(moteur, "moteur");
         this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.sessionDao = Objects.requireNonNull(sessionDao, "sessionDao");
         this.sequenceDao = Objects.requireNonNull(sequenceDao, "sequenceDao");
         this.disponibilite = Objects.requireNonNull(disponibilite, "disponibilite");
+        this.opportunistes = Objects.requireNonNull(opportunistes, "opportunistes");
         this.unicite = new UniciteQuadruplet(passageDao);
     }
 
@@ -191,12 +200,22 @@ public class ServicePassage {
         return resultat;
     }
 
+    /// Un passage **opportuniste** (#2525, réalisé sur le carré d'un tiers) est hors protocole Point
+    /// Fixe : R3 et R4 le laissent muet. Un passage non encore persisté (`id` nul) ne peut pas être
+    /// marqué : il est traité comme normal.
+    private boolean estOpportuniste(Passage passage) {
+        return passage.id() != null && opportunistes.estOpportuniste(passage.id());
+    }
+
     /// R3 (soft, `PointFixeStandard` uniquement) : le passage 1 est attendu entre le 15 juin et le
     /// 31 juillet, le passage 2 entre le 15 août et le 30 septembre. Hors fenêtre → alerte non
     /// bloquante. Sur [Protocole#RECHERCHE], ou pour un n° de passage sans fenêtre définie (autre
     /// que 1 ou 2), la règle est muette.
     public ResultatVerification verifierFenetreSaisonniere(Passage passage, Protocole protocole) {
         Objects.requireNonNull(passage, PASSAGE);
+        if (estOpportuniste(passage)) {
+            return ResultatVerification.ok(); // participation opportuniste : hors fenêtre R3
+        }
         if (protocole != Protocole.STANDARD || passage.dateEnregistrement() == null) {
             return ResultatVerification.ok();
         }
@@ -229,16 +248,23 @@ public class ServicePassage {
     /// est une lecture fidèle de la règle. Sur [Protocole#RECHERCHE], muette.
     public ResultatVerification verifierIntervalleEntrePassages(Passage passage, Protocole protocole) {
         Objects.requireNonNull(passage, PASSAGE);
+        if (estOpportuniste(passage)) {
+            return ResultatVerification.ok(); // participation opportuniste : hors intervalle R4
+        }
         if (protocole != Protocole.STANDARD || passage.dateEnregistrement() == null) {
             return ResultatVerification.ok();
         }
         LocalDate dateCourante = LocalDate.parse(passage.dateEnregistrement());
+        // Les passages opportunistes du point ne sont pas des passages protocolaires : on ne les
+        // compare pas (un traitement groupé évite une requête par voisin).
+        Set<Long> idsOpportunistes = opportunistes.tousLesIds();
         ResultatVerification resultat = ResultatVerification.ok();
         for (Passage autre : passageDao.findByPoint(passage.idPoint())) {
             if (estLeMemePassage(autre, passage)
                     || autre.numeroPassage() == passage.numeroPassage()
                     || autre.annee() != passage.annee()
-                    || autre.dateEnregistrement() == null) {
+                    || autre.dateEnregistrement() == null
+                    || (autre.id() != null && idsOpportunistes.contains(autre.id()))) {
                 continue;
             }
             LocalDate dateAutre = LocalDate.parse(autre.dateEnregistrement());

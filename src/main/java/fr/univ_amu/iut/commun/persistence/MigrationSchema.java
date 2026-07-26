@@ -59,7 +59,8 @@ public class MigrationSchema {
         "V30__depot_plan.sql",
         "V31__retrait_colonnes_mortes_archivage.sql",
         "V32__campagne.sql",
-        "V33__passage_campagne.sql"
+        "V33__passage_campagne.sql",
+        "V34__passage_opportuniste.sql"
     };
 
     private static final String DOSSIER = "/db/migration/";

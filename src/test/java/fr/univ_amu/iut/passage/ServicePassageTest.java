@@ -28,6 +28,7 @@ import fr.univ_amu.iut.passage.model.SessionDEnregistrement;
 import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
@@ -64,6 +65,7 @@ class ServicePassageTest {
     private ServicePassage service;
     private ServiceRattachement rattachement;
     private PassageDao passageDao;
+    private PassageOpportunisteDao opportunistesDao;
     private Long idPoint;
 
     @BeforeEach
@@ -78,13 +80,15 @@ class ServicePassageTest {
                 .id();
         new EnregistreurDao(source).insert(new Enregistreur(SERIE, "V1.01", null));
         passageDao = new PassageDao(source);
+        opportunistesDao = new PassageOpportunisteDao(source);
         service = new ServicePassage(
                 passageDao,
                 new MoteurWorkflowPassage(),
                 new HorlogeFigee(JOUR_FIXE),
                 new SessionDao(source),
                 new SequenceDao(source),
-                new ServiceDisponibiliteAudio(new SessionDao(source), new SequenceDao(source), new Workspace(dossier)));
+                new ServiceDisponibiliteAudio(new SessionDao(source), new SequenceDao(source), new Workspace(dossier)),
+                opportunistesDao);
         rattachement = new ServiceRattachement(
                 passageDao,
                 new SessionDao(source),
@@ -254,6 +258,56 @@ class ServicePassageTest {
 
         assertThat(resultat.messages()).hasSize(2);
         assertThat(resultat.estBloquant()).isFalse();
+    }
+
+    // --- Participations opportunistes : exemption R3/R4 (#2525) ---
+
+    @Test
+    @DisplayName("R3 : un passage opportuniste est muet, même hors fenêtre")
+    void r3_opportuniste_muette() {
+        // Passage 1 le 1er août : normalement hors fenêtre R3 [15 juin - 31 juillet].
+        Passage passage = service.creerPassage(
+                idPoint, SERIE, 1, LocalDate.of(2026, 8, 1), "21:30:00", "05:15:00", null, null, null);
+        opportunistesDao.marquer(passage.id());
+
+        var resultat = service.verifierFenetreSaisonniere(passage, Protocole.STANDARD);
+
+        assertThat(resultat.estConforme())
+                .as("opportuniste : hors contrainte de date R3")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("R4 : un passage opportuniste est muet, même à moins d'un mois du voisin")
+    void r4_opportuniste_muette() {
+        service.creerPassage(idPoint, SERIE, 1, LocalDate.of(2026, 6, 20), "21:30:00", "05:15:00", null, null, null);
+        Passage passage2 = service.creerPassage(
+                idPoint, SERIE, 2, LocalDate.of(2026, 7, 5), "21:30:00", "05:15:00", null, null, null);
+        opportunistesDao.marquer(passage2.id());
+
+        var resultat = service.verifierIntervalleEntrePassages(passage2, Protocole.STANDARD);
+
+        assertThat(resultat.estConforme())
+                .as("opportuniste : hors contrainte de fréquence R4")
+                .isTrue();
+    }
+
+    @Test
+    @DisplayName("R4 : un voisin opportuniste n'est pas compté dans l'intervalle d'un passage normal")
+    void r4_voisin_opportuniste_ignore() {
+        // Le passage 1 est opportuniste (20 juin) ; le passage 2 normal (5 juillet) est à moins d'un
+        // mois — mais son unique voisin étant hors protocole, R4 doit rester muette.
+        Passage passage1 = service.creerPassage(
+                idPoint, SERIE, 1, LocalDate.of(2026, 6, 20), "21:30:00", "05:15:00", null, null, null);
+        opportunistesDao.marquer(passage1.id());
+        Passage passage2 = service.creerPassage(
+                idPoint, SERIE, 2, LocalDate.of(2026, 7, 5), "21:30:00", "05:15:00", null, null, null);
+
+        var resultat = service.verifierIntervalleEntrePassages(passage2, Protocole.STANDARD);
+
+        assertThat(resultat.estConforme())
+                .as("le voisin opportuniste est hors protocole")
+                .isTrue();
     }
 
     // --- Transitions de workflow ---

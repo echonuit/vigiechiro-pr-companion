@@ -28,6 +28,7 @@ import fr.univ_amu.iut.passage.model.dao.EnregistrementOriginalDao;
 import fr.univ_amu.iut.passage.model.dao.EnregistreurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
 import fr.univ_amu.iut.passage.model.dao.SessionDao;
 import fr.univ_amu.iut.sites.model.PointDEcoute;
@@ -84,7 +85,8 @@ class ServicePassageDetailTest {
                 new HorlogeFigee(LocalDate.of(2026, 6, 22)),
                 sessionDao,
                 sequenceDao,
-                new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)));
+                new ServiceDisponibiliteAudio(sessionDao, sequenceDao, new Workspace(dossier)),
+                new PassageOpportunisteDao(source));
         conditions = new ServiceConditionsPassage(
                 passageDao,
                 new MaterielMicroDao(source),

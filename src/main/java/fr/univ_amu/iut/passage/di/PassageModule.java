@@ -45,6 +45,7 @@ import fr.univ_amu.iut.passage.model.dao.JournalDuCapteurDao;
 import fr.univ_amu.iut.passage.model.dao.MaterielMicroDao;
 import fr.univ_amu.iut.passage.model.dao.MicroDao;
 import fr.univ_amu.iut.passage.model.dao.PassageDao;
+import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import fr.univ_amu.iut.passage.model.dao.RattachementDao;
 import fr.univ_amu.iut.passage.model.dao.ReleveClimatiqueDao;
 import fr.univ_amu.iut.passage.model.dao.SequenceDao;
@@ -175,6 +176,12 @@ public class PassageModule extends ModuleDeFeature {
 
     @Provides
     @Singleton
+    PassageOpportunisteDao fournirPassageOpportunisteDao(SourceDeDonnees source) {
+        return new PassageOpportunisteDao(source);
+    }
+
+    @Provides
+    @Singleton
     SessionDao fournirSessionDao(SourceDeDonnees source) {
         return new SessionDao(source);
     }
@@ -293,8 +300,9 @@ public class PassageModule extends ModuleDeFeature {
             Horloge horloge,
             SessionDao sessionDao,
             SequenceDao sequenceDao,
-            ServiceDisponibiliteAudio disponibilite) {
-        return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao, disponibilite);
+            ServiceDisponibiliteAudio disponibilite,
+            PassageOpportunisteDao opportunistes) {
+        return new ServicePassage(passageDao, moteur, horloge, sessionDao, sequenceDao, disponibilite, opportunistes);
     }
 
     /// Conditions de la nuit (météo #106/#697, matériel du micro #543), extraites de ServicePassage (#1192).
