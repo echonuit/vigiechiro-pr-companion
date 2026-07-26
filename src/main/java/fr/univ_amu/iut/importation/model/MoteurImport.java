@@ -1,7 +1,6 @@
 package fr.univ_amu.iut.importation.model;
 
 import fr.univ_amu.iut.commun.model.EspaceDisque;
-import fr.univ_amu.iut.commun.model.Horloge;
 import fr.univ_amu.iut.commun.model.JetonAnnulation;
 import fr.univ_amu.iut.commun.model.OperationAnnuleeException;
 import fr.univ_amu.iut.commun.model.Prefixe;
@@ -52,7 +51,6 @@ final class MoteurImport {
     private final AgregatImportDao agregatDao;
     private final UniteDeTravail uniteDeTravail;
     private final Workspace workspace;
-    private final Horloge horloge;
 
     /// Lecture de l'espace disque, injectée pour que le garde-fou soit testable sans dépendre de la
     /// machine (#2041). Par défaut la lecture réelle.
@@ -66,7 +64,6 @@ final class MoteurImport {
             AgregatImportDao agregatDao,
             UniteDeTravail uniteDeTravail,
             Workspace workspace,
-            Horloge horloge,
             EspaceDisque espaceDisque) {
         this.copie = Objects.requireNonNull(copie, "copie");
         this.preparation = Objects.requireNonNull(preparation, "preparation");
@@ -75,7 +72,6 @@ final class MoteurImport {
         this.agregatDao = Objects.requireNonNull(agregatDao, "agregatDao");
         this.uniteDeTravail = Objects.requireNonNull(uniteDeTravail, "uniteDeTravail");
         this.workspace = Objects.requireNonNull(workspace, "workspace");
-        this.horloge = Objects.requireNonNull(horloge, "horloge");
         this.espaceDisque = Objects.requireNonNull(espaceDisque, "espaceDisque");
     }
 
