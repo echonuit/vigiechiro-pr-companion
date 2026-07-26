@@ -49,6 +49,8 @@ public class ActiviteViewModel {
     private final ObservableList<CourbeEspece> courbesAffichees = FXCollections.observableArrayList();
     private final ObservableList<String> groupesDisponibles = FXCollections.observableArrayList();
     private final ObservableList<String> carresDisponibles = FXCollections.observableArrayList();
+    private final ObservableList<String> pointsDisponibles = FXCollections.observableArrayList();
+    private final ObservableList<String> nuitsDisponibles = FXCollections.observableArrayList();
     private final ObjectProperty<PlageNuit> plageNuit = new SimpleObjectProperty<>();
 
     public ActiviteViewModel(ServiceActivite service) {
@@ -76,6 +78,8 @@ public class ActiviteViewModel {
         tous.setAll(contacts);
         groupesDisponibles.setAll(valeursDistinctes(ContactHoraire::groupe));
         carresDisponibles.setAll(valeursDistinctes(ContactHoraire::numeroCarre));
+        pointsDisponibles.setAll(valeursDistinctes(ContactHoraire::codePoint));
+        nuitsDisponibles.setAll(valeursDistinctes(ActiviteViewModel::libelleNuit));
         plageNuit.set(fenetre);
         reagreger();
         selectionnerLesPlusContactees();
@@ -90,6 +94,12 @@ public class ActiviteViewModel {
                 .distinct()
                 .sorted()
                 .toList();
+    }
+
+    /// Libellé de la nuit d'un contact (date du soir, [ContactHoraire#nuit]) pour le filtre « Nuit », ou
+    /// `null` si le contact n'a pas d'heure.
+    private static String libelleNuit(ContactHoraire contact) {
+        return contact.nuit() == null ? null : contact.nuit().toString();
     }
 
     private void reagreger() {
@@ -124,6 +134,17 @@ public class ActiviteViewModel {
     /// « Carré ».
     public ObservableList<String> carresDisponibles() {
         return carresDisponibles;
+    }
+
+    /// Codes de point d'écoute présents : peuplent la liste déroulante du critère « Point ».
+    public ObservableList<String> pointsDisponibles() {
+        return pointsDisponibles;
+    }
+
+    /// Nuits (dates du soir) présentes : peuplent la liste déroulante du critère « Nuit » (une nuit = un
+    /// passage).
+    public ObservableList<String> nuitsDisponibles() {
+        return nuitsDisponibles;
     }
 
     /// Largeur de tranche courante (15, 30 ou 60 min) ; la modifier ré-agrège la courbe.

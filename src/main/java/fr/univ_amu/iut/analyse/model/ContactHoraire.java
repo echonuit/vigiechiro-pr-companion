@@ -1,5 +1,7 @@
 package fr.univ_amu.iut.analyse.model;
 
+import fr.univ_amu.iut.commun.model.Nuit;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /// Un **contact daté** d'une espèce : l'entrée atomique de l'agrégation d'activité (#2352). Projection
@@ -39,5 +41,11 @@ public record ContactHoraire(
     /// où les dimensions de filtre n'ont pas de sens.
     public ContactHoraire(String taxon, String nomEspece, String groupe, LocalDateTime heure) {
         this(taxon, nomEspece, groupe, heure, null, null, null);
+    }
+
+    /// La **nuit biologique** du contact : sa date du soir ([Nuit#de], bascule à midi), ou `null` si le
+    /// contact n'a pas d'heure. Sert de dimension de filtre « Nuit » (une nuit = un passage).
+    public LocalDate nuit() {
+        return heure == null ? null : Nuit.de(heure);
     }
 }

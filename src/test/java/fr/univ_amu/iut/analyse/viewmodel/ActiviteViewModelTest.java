@@ -158,6 +158,31 @@ class ActiviteViewModelTest {
                 .hasSize(2);
     }
 
+    @Test
+    void les_valeurs_disponibles_listent_points_et_nuits_distincts() {
+        when(service.contactsDeLUtilisateur("u-1"))
+                .thenReturn(List.of(
+                        new ContactHoraire(
+                                "PIPKUH", "n", "Chiroptères", LocalDateTime.of(2026, 6, 20, 22, 0), "640380", "A1", 1L),
+                        new ContactHoraire(
+                                "PIPKUH", "n", "Chiroptères", LocalDateTime.of(2026, 6, 21, 2, 0), "640380", "A1", 1L),
+                        new ContactHoraire(
+                                "BARBAR",
+                                "n",
+                                "Chiroptères",
+                                LocalDateTime.of(2026, 6, 25, 23, 0),
+                                "640380",
+                                "B2",
+                                2L)));
+
+        vm.chargerUtilisateur("u-1");
+
+        assertThat(vm.pointsDisponibles()).containsExactly("A1", "B2");
+        assertThat(vm.nuitsDisponibles())
+                .as("02:00 le 21 reste la nuit du 20 (bascule à midi) : deux nuits distinctes")
+                .containsExactly("2026-06-20", "2026-06-25");
+    }
+
     private void stubContacts(List<ContactHoraire> contacts) {
         when(service.contactsDuPassage(PASSAGE)).thenReturn(contacts);
     }
