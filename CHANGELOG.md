@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.71.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.70.0...v2.71.0) (2026-07-26)
+
+
+### Features
+
+* **sites:** dériver de l'API le carré appartenant à un tiers ([#2525](https://github.com/echonuit/vigiechiro-pr-companion/issues/2525)) ([#2560](https://github.com/echonuit/vigiechiro-pr-companion/issues/2560)) ([b178618](https://github.com/echonuit/vigiechiro-pr-companion/commit/b1786184554403c2ab108ec702c7c559656791b9)), closes [#2483](https://github.com/echonuit/vigiechiro-pr-companion/issues/2483)
+
 # [2.70.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.69.0...v2.70.0) (2026-07-26)
 
 
