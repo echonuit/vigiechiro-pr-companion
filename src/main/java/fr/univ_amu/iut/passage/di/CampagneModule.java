@@ -1,7 +1,11 @@
 package fr.univ_amu.iut.passage.di;
 
+import com.google.inject.Key;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.multibindings.OptionalBinder;
+import com.google.inject.name.Named;
+import com.google.inject.name.Names;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
@@ -28,9 +32,14 @@ public class CampagneModule extends ModuleDeFeature {
 
     @Override
     protected void configure() {
-        // Aucune contribution au socle (pas de carte d'accueil ni d'onglet) : la campagne se gère
-        // depuis la modale « Modifier le passage », les exports et la CLI. Ce module ne fait que
-        // fournir les services ci-dessous.
+        // ServiceCampagne rendu OPTIONNEL : la modale « Modifier le passage » (feature `passage`,
+        // toujours présente) l'injecte en Optional pour masquer son champ campagne quand la feature est
+        // coupée. L'OptionalBinder pointe l'implémentation construite par le @Provides qualifié
+        // ci-dessous (garde ServiceCampagne, un service `model`, hors des annotations Guice). Le défaut
+        // vide est déclaré par PassageModule, toujours chargé.
+        OptionalBinder.newOptionalBinder(binder(), ServiceCampagne.class)
+                .setBinding()
+                .to(Key.get(ServiceCampagne.class, Names.named("campagne.impl")));
     }
 
     @Provides
@@ -41,6 +50,7 @@ public class CampagneModule extends ModuleDeFeature {
 
     @Provides
     @Singleton
+    @Named("campagne.impl")
     ServiceCampagne fournirServiceCampagne(CampagneDao campagneDao, PassageDao passageDao, Horloge horloge) {
         return new ServiceCampagne(campagneDao, passageDao, horloge);
     }

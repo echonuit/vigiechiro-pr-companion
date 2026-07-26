@@ -7,6 +7,7 @@ import fr.univ_amu.iut.commun.view.ExecuteurTache;
 import fr.univ_amu.iut.commun.view.IndicateurBlocage;
 import fr.univ_amu.iut.commun.view.Modales;
 import fr.univ_amu.iut.commun.view.ValidationFormulaire;
+import fr.univ_amu.iut.passage.model.Campagne;
 import fr.univ_amu.iut.passage.model.CouvertureNuageuse;
 import fr.univ_amu.iut.passage.model.MaterielMicro;
 import fr.univ_amu.iut.passage.model.PositionMicro;
@@ -143,6 +144,12 @@ public class RattachementModaleController {
     @FXML
     private Label aideHeures;
 
+    @FXML
+    private HBox ligneCampagne;
+
+    @FXML
+    private ComboBox<Campagne> champCampagne;
+
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -215,6 +222,15 @@ public class RattachementModaleController {
 
         lierConditions();
 
+        // Champ campagne : présent seulement si la feature `campagne` est active (Optional présent).
+        // Coupée, la ligne disparaît (managed=false) et rien n'est lié ni enregistré.
+        boolean campagneActivee = viewModel.campagneActivee();
+        ligneCampagne.setVisible(campagneActivee);
+        ligneCampagne.setManaged(campagneActivee);
+        if (campagneActivee) {
+            lierCampagne();
+        }
+
         // « Récupérer depuis VigieChiro » n'apparaît que si l'observateur est connecté (passerelle
         // disponible) : inutile de proposer un tir hors connexion.
         boolean peutRecuperer = viewModel.peutRecuperer();
@@ -278,6 +294,24 @@ public class RattachementModaleController {
         champEnregistreur.setItems(conditions.enregistreursProposes());
         champEnregistreur.getEditor().textProperty().bindBidirectional(conditions.enregistreurSaisieProperty());
         cablerHeures(conditions);
+    }
+
+    /// Lie le ComboBox de campagne à la liste proposée et à la sélection du ViewModel. La liste porte
+    /// une sentinelle `null` (« aucune campagne ») en tête, rendue lisible par le convertisseur.
+    private void lierCampagne() {
+        champCampagne.setItems(viewModel.campagnes());
+        champCampagne.setConverter(new StringConverter<>() {
+            @Override
+            public String toString(Campagne campagne) {
+                return campagne == null ? "(aucune campagne)" : campagne.nom() + " (" + campagne.annee() + ")";
+            }
+
+            @Override
+            public Campagne fromString(String texte) {
+                return null;
+            }
+        });
+        champCampagne.valueProperty().bindBidirectional(viewModel.campagneProperty());
     }
 
     /// Peuple un `ComboBox` d'énum (avec une entrée « non renseigné » `null` en tête) et le lie en
