@@ -2,7 +2,7 @@
 
 - **Statut** : Accepté — 2026-07-20
 - **Chantier** : #2040 (EPIC #2116)
-- **Vérification** : humaine — le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code
+- **Vérification** : humaine — le choix du mécanisme de parallélisme selon la nature de l'attente est un jugement de conception, non observable dans le code. Loupe : `scripts/adr/loupe-0044-mecanisme-parallelisme.py`
 
 ## Contexte
 

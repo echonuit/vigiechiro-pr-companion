@@ -157,6 +157,22 @@ def test_loupe_0020() -> None:
         _verifie("loupe 0020 liste les écritures, pas les lectures", n, 1)
 
 
+def test_loupe_0044() -> None:
+    m = _charge("loupe-0044-mecanisme-parallelisme.py")
+    with tempfile.TemporaryDirectory() as d:
+        racine = pathlib.Path(d)
+        _ecrire(
+            racine,
+            "Service.java",
+            "class Service {\n"
+            "  void go() { Thread.ofVirtual().start(r); }\n"  # mécanisme réel -> compte
+            "  /// autrefois un Thread.ofVirtual() maison, remplacé par ExecuteurTache\n"  # cité en Javadoc -> non
+            "}\n",
+        )
+        n = len(m.candidats(racine=racine))
+        _verifie("loupe 0044 voit un mécanisme réel, ignore le Javadoc qui le cite", n, 1)
+
+
 def test_rapport_et_resserrement() -> None:
     rapport = _charge("rapport.py")
     # Le parsing : une ligne normalisée doit être reconnue.
@@ -180,6 +196,7 @@ if __name__ == "__main__":
         test_0037_slot_actions,
         test_2493_modale_suit_croissance,
         test_loupe_0020,
+        test_loupe_0044,
         test_rapport_et_resserrement,
     ):
         essai()
