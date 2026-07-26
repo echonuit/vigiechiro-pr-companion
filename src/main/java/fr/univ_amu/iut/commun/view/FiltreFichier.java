@@ -28,4 +28,9 @@ public record FiltreFichier(String libelle, String motif) {
     public static FiltreFichier csv() {
         return new FiltreFichier("CSV", "*.csv");
     }
+
+    /// Image PNG : le format des exports **graphiques** (la courbe d'activité redessinée, #2352).
+    public static FiltreFichier png() {
+        return new FiltreFichier("Image PNG (*.png)", "*.png");
+    }
 }

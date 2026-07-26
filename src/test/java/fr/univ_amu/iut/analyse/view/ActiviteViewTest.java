@@ -18,15 +18,21 @@ import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import fr.univ_amu.iut.commun.viewmodel.ContexteSite;
+import java.awt.image.BufferedImage;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuButton;
@@ -35,8 +41,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javax.imageio.ImageIO;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.testfx.api.FxRobot;
 import org.testfx.framework.junit5.ApplicationExtension;
 import org.testfx.framework.junit5.Start;
@@ -49,6 +57,9 @@ import org.testfx.util.WaitForAsyncUtils;
 class ActiviteViewTest {
 
     private static final long PASSAGE = 1L;
+
+    @TempDir
+    Path dossier;
 
     private ServiceActivite service;
     private ActiviteController controleur;
@@ -210,6 +221,68 @@ class ActiviteViewTest {
         assertThat(aplat.isVisible())
                 .as("sans nuit unique, pas d'aplat qui donnerait une fenêtre trompeuse")
                 .isFalse();
+    }
+
+    @Test
+    void l_export_image_redessine_un_graphe_reellement_dessine(FxRobot robot) throws Exception {
+        when(service.plageNuit(PASSAGE)).thenReturn(Optional.of(new PlageNuit(21, 6)));
+        charger(robot, concat(nContacts("PIPKUH", "Pipistrelle de Kuhl", 5), nContacts("BARBAR", "Barbastelle", 2)));
+        Path image = dossier.resolve("activite.png");
+        controleur.selecteur().definir(new SelecteurFige(image));
+
+        robot.clickOn("#boutonExporterImage");
+        WaitForAsyncUtils.waitForFxEvents();
+
+        assertThat(Files.exists(image)).as("l'export écrit bien le PNG demandé").isTrue();
+        BufferedImage rendu = ImageIO.read(image.toFile());
+        assertThat(rendu).as("le PNG est lisible").isNotNull();
+        assertThat(couleursDistinctes(rendu))
+                .as("le graphe est REDESSINÉ : une capture d'un nœud masqué rendrait une image unie (noire)")
+                .isGreaterThan(5);
+    }
+
+    @Test
+    void sans_courbe_tracee_l_export_est_grise(FxRobot robot) {
+        charger(robot, List.of());
+
+        Button exporter = robot.lookup("#boutonExporterImage").queryAs(Button.class);
+        assertThat(exporter.isDisabled())
+                .as("rien à exporter : le bouton le dit en se grisant plutôt que d'accepter un clic sans effet")
+                .isTrue();
+    }
+
+    /// Nombre de couleurs distinctes d'un rendu, plafonné : au-delà de quelques teintes, l'image porte du
+    /// dessin (courbes, axes, texte) et n'est donc pas l'aplat uni d'une capture ratée.
+    private static int couleursDistinctes(BufferedImage image) {
+        Set<Integer> couleurs = new HashSet<>();
+        for (int x = 0; x < image.getWidth() && couleurs.size() <= 32; x += 4) {
+            for (int y = 0; y < image.getHeight() && couleurs.size() <= 32; y += 4) {
+                couleurs.add(image.getRGB(x, y));
+            }
+        }
+        return couleurs.size();
+    }
+
+    /// Sélecteur de fichier **figé** : répond toujours le même chemin, sans ouvrir de `FileChooser` natif
+    /// (qui figerait le test headless).
+    private record SelecteurFige(Path fichier) implements fr.univ_amu.iut.commun.view.SelecteurFichier {
+
+        @Override
+        public Optional<Path> choisirDossier(String titre, Optional<Path> dossierInitial) {
+            return Optional.of(fichier);
+        }
+
+        @Override
+        public Optional<Path> choisirFichier(
+                String titre, Optional<Path> dossierInitial, fr.univ_amu.iut.commun.view.FiltreFichier filtre) {
+            return Optional.of(fichier);
+        }
+
+        @Override
+        public Optional<Path> enregistrerFichier(
+                String titre, String nomPropose, fr.univ_amu.iut.commun.view.FiltreFichier filtre) {
+            return Optional.of(fichier);
+        }
     }
 
     @Test

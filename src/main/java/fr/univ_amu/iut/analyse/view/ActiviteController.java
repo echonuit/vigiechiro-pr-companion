@@ -8,12 +8,16 @@ import fr.univ_amu.iut.analyse.model.PointActivite;
 import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.model.Nuit;
 import fr.univ_amu.iut.commun.model.PlageNuit;
+import fr.univ_amu.iut.commun.model.VersionApplication;
 import fr.univ_amu.iut.commun.view.EmplacementNavigation;
 import fr.univ_amu.iut.commun.view.EmplacementPassage;
+import fr.univ_amu.iut.commun.view.FiltreFichier;
 import fr.univ_amu.iut.commun.view.GestionnaireFiltres;
 import fr.univ_amu.iut.commun.view.Lieu;
 import fr.univ_amu.iut.commun.view.OuvrirPassage;
 import fr.univ_amu.iut.commun.view.OuvrirSite;
+import fr.univ_amu.iut.commun.view.SelecteurFichierJavaFx;
+import fr.univ_amu.iut.commun.view.SelecteurFichierModifiable;
 import fr.univ_amu.iut.commun.viewmodel.ContextePassage;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -30,6 +34,7 @@ import javafx.collections.SetChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
@@ -65,6 +70,10 @@ public class ActiviteController implements EmplacementNavigation {
     private final OuvrirSite ouvrirSite;
     private final OuvrirPassage ouvrirPassage;
 
+    /// Version empaquetée, estampillée sur l'image exportée : sans elle, impossible de savoir avec quelle
+    /// version de l'application une image trouvée dans un dossier a été produite.
+    private final VersionApplication version;
+
     /// Contexte de navigation (passage + site), mémorisé pour reconstruire le fil d'Ariane du chrome.
     private ContextePassage contexte;
 
@@ -89,14 +98,34 @@ public class ActiviteController implements EmplacementNavigation {
     @FXML
     private FlowPane pucesFiltres;
 
+    @FXML
+    private Button boutonExporterImage;
+
     /// Barre de filtres cascadés (patron « à la Notion »), gardée en champ pour vivre autant que l'écran.
     private GestionnaireFiltres<ContactHoraire> gestionnaireFiltres;
 
+    /// Désignation du fichier d'export, derrière le port du socle : un `FileChooser` natif en dur **fige**
+    /// un test TestFX headless, et l'action ne serait pas testable du tout.
+    private final SelecteurFichierModifiable selecteur = new SelecteurFichierModifiable(
+            // `this.boutonExporterImage` : le champ @FXML est déclaré plus haut mais reste nul jusqu'au
+            // chargement ; la fenêtre n'est lue qu'au clic.
+            new SelecteurFichierJavaFx(() -> this.boutonExporterImage.getScene().getWindow()));
+
+    /// Porteur de désignation exposé aux tests : `selecteur().definir(...)`.
+    SelecteurFichierModifiable selecteur() {
+        return selecteur;
+    }
+
     @Inject
-    public ActiviteController(ActiviteViewModel viewModel, OuvrirSite ouvrirSite, OuvrirPassage ouvrirPassage) {
+    public ActiviteController(
+            ActiviteViewModel viewModel,
+            OuvrirSite ouvrirSite,
+            OuvrirPassage ouvrirPassage,
+            VersionApplication version) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
         this.ouvrirSite = Objects.requireNonNull(ouvrirSite, "ouvrirSite");
         this.ouvrirPassage = Objects.requireNonNull(ouvrirPassage, "ouvrirPassage");
+        this.version = Objects.requireNonNull(version, "version");
     }
 
     @FXML
@@ -144,6 +173,10 @@ public class ActiviteController implements EmplacementNavigation {
         grapheActivite.visibleProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
         grapheActivite.managedProperty().bind(Bindings.isNotEmpty(viewModel.especes()));
 
+        // Rien de tracé, rien à exporter : le bouton le dit en se grisant, plutôt que d'accepter un clic
+        // sans effet (affordance, cf. #790).
+        boutonExporterImage.disableProperty().bind(Bindings.isEmpty(viewModel.courbesAffichees()));
+
         viewModel.courbesAffichees().addListener((ListChangeListener<CourbeEspece>) changement -> majGraphe());
         viewModel.especes().addListener((ListChangeListener<CourbeEspece>) changement -> construireSelecteur());
         viewModel.especesSelectionnees().addListener((SetChangeListener<String>) changement -> construireSelecteur());
@@ -162,6 +195,50 @@ public class ActiviteController implements EmplacementNavigation {
             return;
         }
         grapheActivite.definirFenetreNuit(minutesSurAxe(plage.heureDebut()), minutesSurAxe(plage.heureFin()));
+    }
+
+    /// **Exporte l'image** de la courbe : demande où écrire, puis **redessine** le graphe hors écran (jamais
+    /// une capture de l'affichage, qui rendrait une image noire dès que le graphe est masqué) en
+    /// l'estampillant de son contexte. Sans courbe tracée, il n'y a rien à exporter : on ne produit pas un
+    /// fichier vide.
+    @FXML
+    private void exporterImage() {
+        if (viewModel.courbesAffichees().isEmpty()) {
+            return;
+        }
+        selecteur
+                .enregistrerFichier(
+                        "Exporter l'image de la courbe d'activité", "activite-nuit.png", FiltreFichier.png())
+                .ifPresent(this::ecrireImage);
+    }
+
+    private void ecrireImage(java.nio.file.Path fichier) {
+        ExportImageActivite.ecrire(
+                List.copyOf(viewModel.courbesAffichees()),
+                ActiviteController::configurerAxeNocturne,
+                fenetreNuitSurAxe(),
+                lignesLegende(),
+                fichier);
+    }
+
+    /// Les lignes de contexte estampillées sur l'image : identité (carré, point, passage), réglages
+    /// (tranche, filtres actifs) et provenance (version, date).
+    private List<String> lignesLegende() {
+        return List.of(
+                LegendeExportActivite.identite(contexte),
+                LegendeExportActivite.reglages(
+                        viewModel.trancheProperty().get().minutes(), gestionnaireFiltres.decrire()),
+                LegendeExportActivite.provenance(version.libelle(), LocalDate.now()));
+    }
+
+    /// La fenêtre nocturne en minutes sur l'axe (`[début, fin]`), ou `null` si elle n'est pas connue : l'image
+    /// se dessine alors sans aplat, comme l'écran.
+    private double[] fenetreNuitSurAxe() {
+        PlageNuit plage = viewModel.plageNuitProperty().get();
+        if (plage == null) {
+            return null;
+        }
+        return new double[] {minutesSurAxe(plage.heureDebut()), minutesSurAxe(plage.heureFin())};
     }
 
     /// Ouvre l'activité **d'un passage** (entrée depuis M-Passage). Appelée par [NavigationActivite] après
@@ -193,7 +270,12 @@ public class ActiviteController implements EmplacementNavigation {
     /// étiquetée `HH` en reconstruisant l'heure du jour depuis 18 h. Fixe et non calé sur les données pour
     /// que deux nuits se comparent d'un coup d'œil.
     private void configurerAxeNocturne() {
-        NumberAxis axeTemps = (NumberAxis) grapheActivite.getXAxis();
+        configurerAxeNocturne((NumberAxis) grapheActivite.getXAxis());
+    }
+
+    /// La configuration de l'axe nocturne, isolée pour être appliquée **aussi** à l'axe neuf de l'image
+    /// exportée : l'export redessine le graphe, il doit donc reposer sur le même repère que l'écran.
+    static void configurerAxeNocturne(NumberAxis axeTemps) {
         axeTemps.setAutoRanging(false);
         axeTemps.setLowerBound(0);
         axeTemps.setUpperBound(MINUTES_FENETRE);
@@ -221,7 +303,10 @@ public class ActiviteController implements EmplacementNavigation {
         grapheActivite.getData().setAll(series);
     }
 
-    private static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
+    /// Traduit une courbe en série de graphe. Visible du paquet : [ExportImageActivite] la réutilise pour
+    /// **redessiner** les mêmes courbes hors écran, plutôt que d'emprunter les séries de l'écran (une série
+    /// n'appartient qu'à un graphe à la fois).
+    static XYChart.Series<Number, Number> versSerie(CourbeEspece courbe) {
         XYChart.Series<Number, Number> serie = new XYChart.Series<>();
         serie.setName(nomAffiche(courbe));
         PointActivite pic = pointCulminant(courbe);
