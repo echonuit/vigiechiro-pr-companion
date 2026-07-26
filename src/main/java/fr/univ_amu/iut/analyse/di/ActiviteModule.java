@@ -1,27 +1,22 @@
 package fr.univ_amu.iut.analyse.di;
 
-import com.google.inject.Provides;
-import com.google.inject.Singleton;
 import com.google.inject.multibindings.OptionalBinder;
-import fr.univ_amu.iut.analyse.model.ServiceActivite;
 import fr.univ_amu.iut.analyse.view.NavigationActivite;
-import fr.univ_amu.iut.analyse.viewmodel.ActiviteViewModel;
 import fr.univ_amu.iut.commun.di.Categorie;
 import fr.univ_amu.iut.commun.di.Fonctionnalite;
 import fr.univ_amu.iut.commun.di.ModuleDeFeature;
 import fr.univ_amu.iut.commun.view.OuvrirActivite;
-import fr.univ_amu.iut.validation.model.PlageNuitPassage;
-import fr.univ_amu.iut.validation.model.dao.ProjectionsAudioDao;
 
-/// Second module de feature du paquet `analyse` (à côté d'[AnalyseModule]) : l'écran **Activité de la
-/// nuit** (#2352, lot 2 du chantier #2348). Deux modules dans une même feature suivent le précédent de
-/// `audio` (AudioModule, DiscussionModule…).
+/// Module de feature du paquet `analyse` qui **gate l'entrée** de l'écran **Activité de la nuit** (#2352,
+/// lot 2 du chantier #2348), à côté d'[AnalyseModule]. Deux modules dans une même feature suivent le
+/// précédent de `audio` (AudioModule, DiscussionModule…).
 ///
-/// Assemble [ServiceActivite] sur deux sources déjà publiées par `validation` : [ProjectionsAudioDao]
-/// (observations avec leur `heureCapture`) et [PlageNuitPassage] (fenêtre nocturne au point d'écoute) —
-/// `analyse → validation` est déjà une arête autorisée, aucune nouvelle dépendance. Fournit aussi le
-/// [ActiviteViewModel] (non-singleton) et le contrat socle [OuvrirActivite] (implémenté par
-/// [NavigationActivite]), que `passage` injecte pour ouvrir l'écran sans dépendre de son `view`.
+/// Il ne porte **que le point d'entrée** : le contrat socle [OuvrirActivite] (implémenté par
+/// [NavigationActivite]), que `passage` injecte pour ouvrir l'écran sans dépendre de son `view`. La
+/// **machinerie** de l'écran (le [...viewmodel.ActiviteViewModel] et le [...model.ServiceActivite]) est
+/// fournie par [AnalyseModule] — toujours actif — et **non** ici : l'écran fait partie de la feature
+/// `analyse`, et son FXML doit rester chargeable (garde-fou `ChargementFxmlTest`) même quand cette entrée
+/// est coupée. Ce module ne gate donc que **l'accès**, jamais les composants.
 public class ActiviteModule extends ModuleDeFeature {
 
     /// Identité de la feature. `EXPERIMENTALE` (désactivable, **inactive par défaut**) le temps du chantier
@@ -33,23 +28,12 @@ public class ActiviteModule extends ModuleDeFeature {
     }
 
     /// Fournit le contrat de navigation socle [OuvrirActivite] : M-Passage l'injecte pour ouvrir l'écran
-    /// d'activité sans dépendre de cette feature (évite le cycle `passage ↔ analyse`).
+    /// d'activité sans dépendre de cette feature (évite le cycle `passage ↔ analyse`). Coupé, le binder de
+    /// base de `PassageModule` laisse l'Optional vide et la carte est masquée.
     @Override
     protected void configure() {
         OptionalBinder.newOptionalBinder(binder(), OuvrirActivite.class)
                 .setBinding()
                 .to(NavigationActivite.class);
-    }
-
-    /// ViewModel de M-Activite. **Non-singleton** (un VM frais par chargement FXML).
-    @Provides
-    ActiviteViewModel fournirActiviteViewModel(ServiceActivite service) {
-        return new ActiviteViewModel(service);
-    }
-
-    @Provides
-    @Singleton
-    ServiceActivite fournirServiceActivite(ProjectionsAudioDao projections, PlageNuitPassage plageNuitPassage) {
-        return new ServiceActivite(projections, plageNuitPassage);
     }
 }
