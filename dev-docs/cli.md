@@ -55,6 +55,8 @@ un **puits** (aucune feature ne dépend de lui), donc le graphe reste acyclique.
 | `creer-site` | `--carre <n> [--nom ..] [--protocole ..] [--commentaire ..]` | A10 | `ServiceSites.creerSite` |
 | `ajouter-point` | `--site <id> --code <c> [--lat ..] [--lon ..] [--description ..]` | A10 | `ServiceSites.ajouterPoint` |
 | `lister-sites` | `[--json]` | A10 | `ServiceSites` (lecture) |
+| `creer-campagne` | `--nom <n> [--annee N] [--commentaire ..]` | #2355 | `ServiceCampagne.creerCampagne` : crée une campagne (regroupement **facultatif** de passages). Année par défaut = année courante. Feature `campagne` (désactivable) |
+| `lister-campagnes` | `[--json]` | #2355 | `ServiceCampagne` (lecture) : les campagnes de suivi, de la plus récente à la plus ancienne |
 | `lister-passages` | `[--json]` | P5 | `RegistrePassages` (lecture) |
 | `solde-saison` | `[--annee N] [--format texte\|csv\|json]` | #2356 | `ServiceSoldeSaison` (lecture) : ce qu'il reste à faire, point par point, pour une saison (règles R3/R4 restituées). Même décompte que l'écran « Ma saison » (service partagé, parité IHM/CLI). `texte` par défaut, `csv`/`json` scriptables |
 | `statut-passage` | `--passage <id> [--json]` | M-Passage, #1878 | `ServicePassage.detailPassage` + `ResultatsIdentificationDao` + `ServiceConditionsPassage.heuresProuvees` (lecture). La ligne « Nuit » dit l'**origine** de ses heures - `[attestées par les enregistrements]` ou `[déclarées, modifiables]` -, et le JSON porte `heuresProuvees` : un script sait ainsi **avant** d'essayer si `metadonnees-passage --heure-debut` sera refusé, au lieu de l'apprendre en échouant |
