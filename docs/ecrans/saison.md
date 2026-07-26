@@ -7,6 +7,8 @@ vérifie déjà ; cet écran est ce qui les **restitue**, point par point.
 
 On y accède depuis la carte **« Ma saison »** de l'accueil (section *Collecte & passages*).
 
+![L'écran Ma saison : une ligne par point, l'état des deux passages en pastilles, et la colonne « reste à faire ».](../assets/captures/apercu-saison.png)
+
 ## Le tableau, une ligne par point
 
 Chaque ligne est un **point suivi** de vos sites. Les colonnes disent, d'un coup d'œil, où en est ce
