@@ -2,6 +2,13 @@
 
 Le format suit [Keep a Changelog](https://keepachangelog.com/fr/) et le versionnage [SemVer](https://semver.org/lang/fr/). Les entrées sont ajoutées automatiquement par semantic-release à chaque version.
 
+# [2.73.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.72.0...v2.73.0) (2026-07-26)
+
+
+### Features
+
+* **sites:** marquer les nuits des carrés de tiers et les écarter du solde ([#2525](https://github.com/echonuit/vigiechiro-pr-companion/issues/2525)) ([#2566](https://github.com/echonuit/vigiechiro-pr-companion/issues/2566)) ([1732a0c](https://github.com/echonuit/vigiechiro-pr-companion/commit/1732a0cc4883c52963e7b85aeabe4f1471ea190b)), closes [#2552](https://github.com/echonuit/vigiechiro-pr-companion/issues/2552)
+
 # [2.72.0](https://github.com/echonuit/vigiechiro-pr-companion/compare/v2.71.0...v2.72.0) (2026-07-26)
 
 
