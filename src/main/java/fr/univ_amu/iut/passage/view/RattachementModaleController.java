@@ -23,6 +23,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
@@ -150,6 +151,9 @@ public class RattachementModaleController {
     @FXML
     private ComboBox<Campagne> champCampagne;
 
+    @FXML
+    private CheckBox caseOpportuniste;
+
     @Inject
     public RattachementModaleController(RattachementViewModel viewModel, ExecuteurTache executeur) {
         this.viewModel = Objects.requireNonNull(viewModel, "viewModel");
@@ -230,6 +234,10 @@ public class RattachementModaleController {
         if (campagneActivee) {
             lierCampagne();
         }
+
+        // Case « participation opportuniste » (#2525) : attribut COEUR, toujours présent (notamment pour
+        // les participations non connectées, où la dérivation automatique côté API est impossible).
+        caseOpportuniste.selectedProperty().bindBidirectional(viewModel.opportunisteProperty());
 
         // « Récupérer depuis VigieChiro » n'apparaît que si l'observateur est connecté (passerelle
         // disponible) : inutile de proposer un tir hors connexion.
