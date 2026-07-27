@@ -21,20 +21,23 @@ import java.time.LocalDate;
 /// @param verdict verdict de vérification de la nuit, `null` si absente ou non vérifiée
 /// @param date date d'enregistrement de la nuit, `null` si absente
 /// @param opportuniste nuit hors protocole (carré d'un tiers) : présente mais hors décompte
+/// @param campagne nom de la campagne de rattachement (#2355), ou `null` si la nuit n'est rattachée à
+///     aucune. Sert au **filtrage** du solde par campagne ; le solde n'en fait pas une colonne (une ligne
+///     porte deux passages, qui peuvent relever de campagnes différentes)
 public record CasePassage(
-        Long idPassage, StatutWorkflow statut, Verdict verdict, LocalDate date, boolean opportuniste) {
+        Long idPassage, StatutWorkflow statut, Verdict verdict, LocalDate date, boolean opportuniste, String campagne) {
 
     /// Case **absente** : aucune nuit enregistrée pour ce numéro de passage.
     public static CasePassage absente() {
-        return new CasePassage(null, null, null, null, false);
+        return new CasePassage(null, null, null, null, false, null);
     }
 
-    /// Case **présente**, projetée depuis une nuit existante (avec sa nature opportuniste). La date est
-    /// parsée depuis l'ISO `AAAA-MM-JJ` du passage (tolère une date absente, laissée à `null`).
-    public static CasePassage de(Passage passage, boolean opportuniste) {
+    /// Case **présente**, projetée depuis une nuit existante (avec sa nature opportuniste et sa campagne).
+    /// La date est parsée depuis l'ISO `AAAA-MM-JJ` du passage (tolère une date absente, laissée à `null`).
+    public static CasePassage de(Passage passage, boolean opportuniste, String campagne) {
         LocalDate date = passage.dateEnregistrement() == null ? null : LocalDate.parse(passage.dateEnregistrement());
         return new CasePassage(
-                passage.id(), passage.statutWorkflow(), passage.verdictVerification(), date, opportuniste);
+                passage.id(), passage.statutWorkflow(), passage.verdictVerification(), date, opportuniste, campagne);
     }
 
     /// Vrai si une nuit existe pour ce numéro de passage.

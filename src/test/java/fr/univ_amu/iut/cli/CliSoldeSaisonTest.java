@@ -5,16 +5,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import fr.univ_amu.iut.commun.model.HorlogeFigee;
 import fr.univ_amu.iut.commun.model.StatutWorkflow;
 import fr.univ_amu.iut.commun.model.Verdict;
 import fr.univ_amu.iut.commun.persistence.MigrationSchema;
 import fr.univ_amu.iut.commun.persistence.SourceDeDonnees;
 import fr.univ_amu.iut.fixture.JeuDeDonneesPassage;
+import fr.univ_amu.iut.passage.model.ServiceCampagne;
+import fr.univ_amu.iut.passage.model.dao.CampagneDao;
+import fr.univ_amu.iut.passage.model.dao.PassageDao;
 import fr.univ_amu.iut.passage.model.dao.PassageOpportunisteDao;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -166,5 +171,28 @@ class CliSoldeSaisonTest {
         tamponSortie.reset();
         cli.executer(new String[] {"solde-saison", "--annee", "2026", "--format", "json"}, sortie, erreur);
         assertThat(texteSortie()).contains("\"opportuniste1\"");
+    }
+
+    @Test
+    @DisplayName("#2355 : --campagne ne garde que les points de la campagne demandée")
+    void filtre_par_campagne() {
+        long id = semer(source, idUser, "640005", "E1", 1, "2026-06-25", StatutWorkflow.DEPOSE, Verdict.OK);
+        ServiceCampagne campagnes = new ServiceCampagne(
+                new CampagneDao(source),
+                injecteur.getInstance(PassageDao.class),
+                new HorlogeFigee(LocalDate.of(2026, 7, 20)));
+        campagnes.rattacherPassage(
+                id, campagnes.creerCampagne("Suivi ENS", 2026, null).id());
+
+        int code = cli.executer(
+                new String[] {"solde-saison", "--annee", "2026", "--campagne", "ens", "--format", "csv"},
+                sortie,
+                erreur);
+
+        assertThat(code).isEqualTo(Cli.CODE_SUCCES);
+        assertThat(texteSortie())
+                .as("fragment insensible à la casse : seul le point rattaché ressort")
+                .contains("640005")
+                .doesNotContain("640001");
     }
 }
