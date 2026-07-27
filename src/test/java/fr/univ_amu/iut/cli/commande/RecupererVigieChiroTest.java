@@ -56,6 +56,41 @@ class RecupererVigieChiroTest {
     }
 
     @Test
+    @DisplayName("#2558 : la commande RELAIE la progression d un rapprocheur long, ligne par ligne")
+    void progression_relayee_ligne_par_ligne() {
+        when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
+        // Un rapprocheur LONG, qui surcharge la variante suivie : c'est le cas des passages depuis #2557.
+        // Les lambdas des autres tests passent, elles, par le `default` du port, qui ignore le suivi - donc
+        // aucune n'exerçait ce relais.
+        RapprochementVigieChiro passages = new RapprochementVigieChiro() {
+            @Override
+            public Optional<RapportSynchro> synchroniser(ClientVigieChiro c) {
+                return Optional.of(new RapportSynchro("nuit(s) récupérée(s)", 2));
+            }
+
+            @Override
+            public Optional<RapportSynchro> synchroniser(
+                    ClientVigieChiro c,
+                    java.util.function.Consumer<fr.univ_amu.iut.commun.model.Progression> suivi,
+                    fr.univ_amu.iut.commun.model.JetonAnnulation jeton) {
+                suivi.accept(new fr.univ_amu.iut.commun.model.Progression("Nuits 1/2", 0.5));
+                suivi.accept(new fr.univ_amu.iut.commun.model.Progression("Nuits 2/2", 1.0));
+                return synchroniser(c);
+            }
+        };
+        StringWriter sortie = new StringWriter();
+
+        int code = ligne(Set.of(passages), sortie).execute();
+
+        assertThat(code).isZero();
+        assertThat(sortie.toString())
+                .as("sans ces lignes, la commande reste muette plusieurs minutes sur un gros compte")
+                .contains("Nuits 1/2")
+                .contains("Nuits 2/2")
+                .contains("2 nuit(s) récupérée(s)");
+    }
+
+    @Test
     @DisplayName("rien récupéré (rapprocheurs muets) : message explicite, code 0 quand même")
     void rien_a_recuperer() {
         when(client.moi()).thenReturn(ReponseApi.succes(new ProfilVigieChiro("u-1", "sebastien", "Observateur")));
